@@ -1,6 +1,12 @@
 {
-  "name": "@carekit/tokens",
+  "name": "@carekit/shared",
   "version": "1.0.0",
-  "main": "tokens/index.ts",
-  "types": "tokens/index.ts"
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    "./tokens": "./tokens/index.ts",
+    "./types": "./types/index.ts",
+    "./enums": "./enums/index.ts",
+    "./constants": "./constants/index.ts"
+  }
 }
