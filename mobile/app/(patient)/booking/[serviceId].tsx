@@ -23,6 +23,8 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedButton } from '@/theme/components/ThemedButton';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
+import { useAppSelector } from '@/hooks/use-redux';
+import { requireEmailVerification } from '@/components/ui/EmailVerificationBanner';
 import type { BookingType } from '@/types/models';
 
 /**
@@ -50,6 +52,7 @@ export default function BookingTypeScreen() {
   const { theme, isRTL } = useTheme();
 
   const [selected, setSelected] = useState<BookingType | null>(null);
+  const user = useAppSelector((s) => s.auth.user);
 
   const types: TypeOption[] = [
     {
@@ -82,6 +85,7 @@ export default function BookingTypeScreen() {
 
   const handleNext = () => {
     if (!selected) return;
+    if (!requireEmailVerification(user, t)) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
       pathname: '/(patient)/booking/schedule',

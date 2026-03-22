@@ -51,7 +51,7 @@ api.interceptors.response.use(
 
         const { data } = await axios.post<
           ApiResponse<{ accessToken: string; refreshToken: string }>
-        >(`${API_URL}/auth/refresh`, { refreshToken });
+        >(`${API_URL}/auth/refresh-token`, { refreshToken });
 
         if (data.success && data.data) {
           await SecureStore.setItemAsync(

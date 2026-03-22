@@ -49,7 +49,8 @@
     "loginError": "Login failed. Check your credentials",
     "registerError": "Registration failed. Please try again",
     "otpError": "Invalid code. Please try again",
-    "otpSent": "Verification code sent successfully"
+    "otpSent": "Verification code sent successfully",
+    "practitionerNote": "Practitioners and staff are registered from the admin dashboard"
   },
   "tabs": {
     "home": "Home",
@@ -183,6 +184,12 @@
     "step": "Step",
     "of": "of",
     "confirmAndPay": "Confirm & Pay"
+  },
+  "verification": {
+    "bannerTitle": "Verify your email to access all services",
+    "resend": "Resend verification link",
+    "requiredTitle": "Email Verification Required",
+    "requiredMessage": "Please verify your email before booking or making payments. Check your inbox"
   },
   "common": {
     "loading": "Loading...",

@@ -22,7 +22,14 @@ import { useTheme } from '@/theme/useTheme';
 import { useAppDispatch } from '@/hooks/use-redux';
 import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
 import { authService } from '@/services/auth';
+import { getPrimaryRole } from '@/types/auth';
 
+/**
+ * Login Screen — unified for patients + practitioners.
+ * No role selection — backend detects role automatically.
+ * Two options: password login OR OTP login.
+ * Register link = patients only (practitioners added from dashboard).
+ */
 export default function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -37,6 +44,15 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
+
+  const validateEmail = useCallback((): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      setErrors({ email: t('auth.invalidEmail') });
+      return false;
+    }
+    return true;
+  }, [email, t]);
 
   const validate = useCallback((): boolean => {
     const newErrors: typeof errors = {};
@@ -55,7 +71,21 @@ export default function LoginScreen() {
     return Object.keys(newErrors).length === 0;
   }, [email, password, t]);
 
-  const handleLogin = useCallback(async () => {
+  /** Navigate to correct interface based on role from backend */
+  const navigateByRole = useCallback(
+    (user: { roles: Array<{ slug: string }> }) => {
+      const role = getPrimaryRole(user as Parameters<typeof getPrimaryRole>[0]);
+      if (role === 'practitioner') {
+        router.replace('/(practitioner)/(tabs)/today');
+      } else {
+        router.replace('/(patient)/(tabs)/home');
+      }
+    },
+    [router],
+  );
+
+  /** Login with email + password */
+  const handlePasswordLogin = useCallback(async () => {
     if (!validate()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
@@ -69,11 +99,7 @@ export default function LoginScreen() {
       if (response.success && response.data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         dispatch(setCredentials(response.data));
-        if (response.data.user.role === 'practitioner') {
-          router.replace('/(practitioner)/(tabs)/today');
-        } else {
-          router.replace('/(patient)/(tabs)/home');
-        }
+        navigateByRole(response.data.user);
       }
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -82,17 +108,17 @@ export default function LoginScreen() {
       setIsLoading(false);
       dispatch(setLoading(false));
     }
-  }, [email, password, validate, dispatch, router, t]);
+  }, [email, password, validate, dispatch, navigateByRole, t]);
 
+  /** Login with OTP — also auto-verifies email */
   const handleOtpLogin = useCallback(() => {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrors({ email: t('auth.invalidEmail') });
+    if (!validateEmail()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({ pathname: '/(auth)/otp-verify', params: { email } });
-  }, [email, router, t]);
+  }, [email, validateEmail, router]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
@@ -148,11 +174,7 @@ export default function LoginScreen() {
               autoComplete="email"
               error={errors.email}
               suffixIcon={
-                <Mail
-                  size={18}
-                  strokeWidth={1.5}
-                  color={theme.colors.textMuted}
-                />
+                <Mail size={18} strokeWidth={1.5} color={theme.colors.textMuted} />
               }
             />
 
@@ -171,17 +193,9 @@ export default function LoginScreen() {
               error={errors.password}
               suffixIcon={
                 showPassword ? (
-                  <Eye
-                    size={18}
-                    strokeWidth={1.5}
-                    color={theme.colors.textMuted}
-                  />
+                  <Eye size={18} strokeWidth={1.5} color={theme.colors.textMuted} />
                 ) : (
-                  <EyeOff
-                    size={18}
-                    strokeWidth={1.5}
-                    color={theme.colors.textMuted}
-                  />
+                  <EyeOff size={18} strokeWidth={1.5} color={theme.colors.textMuted} />
                 )
               }
               onSuffixPress={() => setShowPassword(!showPassword)}
@@ -189,9 +203,7 @@ export default function LoginScreen() {
 
             {/* Forgot Password */}
             <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }}
+              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
               style={[
                 styles.forgotRow,
                 { alignSelf: isRTL ? 'flex-start' : 'flex-end' },
@@ -202,9 +214,9 @@ export default function LoginScreen() {
               </ThemedText>
             </Pressable>
 
-            {/* Login Button */}
+            {/* Password Login */}
             <ThemedButton
-              onPress={handleLogin}
+              onPress={handlePasswordLogin}
               variant="primary"
               size="lg"
               full
@@ -216,19 +228,11 @@ export default function LoginScreen() {
 
             {/* Divider */}
             <View style={styles.dividerRow}>
-              <View
-                style={[styles.divider, { backgroundColor: theme.colors.surfaceHigh }]}
-              />
-              <ThemedText
-                variant="caption"
-                color={theme.colors.textMuted}
-                style={styles.dividerText}
-              >
+              <View style={[styles.divider, { backgroundColor: theme.colors.surfaceHigh }]} />
+              <ThemedText variant="caption" color={theme.colors.textMuted} style={styles.dividerText}>
                 {t('auth.orContinueWith')}
               </ThemedText>
-              <View
-                style={[styles.divider, { backgroundColor: theme.colors.surfaceHigh }]}
-              />
+              <View style={[styles.divider, { backgroundColor: theme.colors.surfaceHigh }]} />
             </View>
 
             {/* OTP Login */}
@@ -237,15 +241,13 @@ export default function LoginScreen() {
               variant="outline"
               size="lg"
               full
-              icon={
-                <Mail size={16} strokeWidth={1.5} color="#1D4ED8" />
-              }
+              icon={<Mail size={16} strokeWidth={1.5} color="#1D4ED8" />}
             >
               {t('auth.loginWithOtp')}
             </ThemedButton>
           </View>
 
-          {/* Register Link */}
+          {/* Register — patients only */}
           <View style={styles.bottomRow}>
             <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
               {t('auth.noAccount')}{' '}
@@ -261,6 +263,16 @@ export default function LoginScreen() {
               </ThemedText>
             </Pressable>
           </View>
+
+          {/* Note: practitioners are added from dashboard */}
+          <ThemedText
+            variant="caption"
+            color={theme.colors.textMuted}
+            align="center"
+            style={styles.note}
+          >
+            {t('auth.practitionerNote')}
+          </ThemedText>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -298,4 +310,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 32,
   },
+  note: { marginTop: 12 },
 });

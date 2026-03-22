@@ -11,11 +11,11 @@ carekit/
 ├── dashboard/        # Next.js 14 + shadcn/ui + Tailwind
 ├── shared/           # Shared types, constants, i18n
 ├── docker/           # Docker Compose + Nginx + MinIO
-├── docs/             # PRD, ERD, API spec, milestones
+├── docs/             # PRD, API spec, sprint plan
 │   ├── CareKit-PRD-EN.md
-│   ├── CareKit-PRD-AR.md
-│   ├── CareKit-Resources-Milestones.md
-│   └── decisions.md
+│   ├── sprint-plan.md        # المرجع الوحيد للتقدم والمراحل
+│   ├── api-spec.md
+│   └── design/
 └── CLAUDE.md         # This file
 ```
 
@@ -177,5 +177,5 @@ Phase 1: Design & Planning — Start with ERD and API Design.
 
 ## Important Files to Read First
 1. `docs/CareKit-PRD-EN.md` — Full product requirements (English)
-2. `docs/CareKit-Resources-Milestones.md` — All milestones and GitHub resources
+2. `docs/sprint-plan.md` — المرجع الوحيد: المراحل + التقدم + الموارد + سجل الإنجازات
 3. This file (`CLAUDE.md`) — Architecture and coding standards

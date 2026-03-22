@@ -1,14 +1,35 @@
+/**
+ * Auth types — matches backend UserPayload + AuthResponse exactly
+ */
+
+export type UserRole = 'patient' | 'practitioner' | 'super_admin' | 'receptionist' | 'accountant';
+
+export interface UserRoleItem {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
   phone: string | null;
-  role: 'patient' | 'practitioner' | 'super_admin' | 'receptionist' | 'accountant';
-  avatarUrl: string | null;
+  gender: string | null;
   isActive: boolean;
+  emailVerified: boolean;
   createdAt: string;
-  updatedAt: string;
+  roles: UserRoleItem[];
+  permissions: string[];
+  avatarUrl?: string | null;
+}
+
+/** Derived primary role from roles[] array */
+export function getPrimaryRole(user: User): UserRole {
+  if (!user.roles.length) return 'patient';
+  const slug = user.roles[0].slug;
+  return (slug as UserRole) ?? 'patient';
 }
 
 export interface AuthState {
@@ -27,16 +48,19 @@ export interface LoginWithOtpRequest {
   email: string;
 }
 
+/** Backend expects field named "code", not "otp" */
 export interface VerifyOtpRequest {
   email: string;
-  otp: string;
+  code: string;
 }
 
+/** Matches backend AuthResponse exactly */
 export interface AuthResponse {
   success: boolean;
   data: {
     accessToken: string;
     refreshToken: string;
+    expiresIn: number;
     user: User;
   };
 }

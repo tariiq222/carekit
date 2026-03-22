@@ -21,6 +21,7 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
 import { useAppSelector } from '@/hooks/use-redux';
+import { EmailVerificationBanner } from '@/components/ui/EmailVerificationBanner';
 import { specialtiesService } from '@/services/specialties';
 import { practitionersService } from '@/services/practitioners';
 import { bookingsService } from '@/services/bookings';
@@ -102,6 +103,9 @@ export default function PatientHomeScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
+          {/* Email Verification Banner */}
+          <EmailVerificationBanner />
+
           {/* Upcoming Appointment */}
           {upcoming ? (
             <View style={styles.section}>
