@@ -19,6 +19,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PractitionersService } from '../practitioners.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { PractitionerAvailabilityService } from '../practitioner-availability.service.js';
+import { PractitionerVacationService } from '../practitioner-vacation.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -181,6 +183,8 @@ describe('PractitionersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PractitionersService,
+        PractitionerAvailabilityService,
+        PractitionerVacationService,
         { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();

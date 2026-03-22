@@ -6,15 +6,15 @@
  *   - findOne throws NotFoundException for invalid id
  *   - createPayment throws if booking not found
  *   - createPayment throws if payment already exists for booking
- *   - uploadReceipt throws if payment method is not bank_transfer
- *   - reviewReceipt sets payment to paid when approved=true
+ *   - uploadReceipt delegates to BankTransferService
+ *   - reviewReceipt delegates to BankTransferService
  *   - getPaymentStats returns correct structure
- *   - createMoyasarPayment mocks fetch, verifies Moyasar API called, Payment record created
- *   - handleMoyasarWebhook invalid signature throws UnauthorizedException, valid 'paid' webhook updates status
- *   - uploadBankTransferReceipt mocks MinioService, creates payment + receipt
- *   - verifyBankTransfer approve sets status to 'paid', reject sets 'rejected'
+ *   - createMoyasarPayment delegates to MoyasarPaymentService
+ *   - handleMoyasarWebhook delegates to MoyasarPaymentService
+ *   - uploadBankTransferReceipt delegates to BankTransferService
+ *   - verifyBankTransfer delegates to BankTransferService
  *
- * PrismaService, MinioService, InvoicesService, and ConfigService are mocked
+ * PrismaService, MoyasarPaymentService, and BankTransferService are mocked
  * so tests run without external services.
  */
 
@@ -22,14 +22,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   NotFoundException,
   BadRequestException,
-  UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as crypto from 'crypto';
 import { PaymentsService } from '../payments.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
-import { MinioService } from '../../../common/services/minio.service.js';
-import { InvoiceCreatorService } from '../../invoices/invoice-creator.service.js';
+import { MoyasarPaymentService } from '../moyasar-payment.service.js';
+import { BankTransferService } from '../bank-transfer.service.js';
 
 // ---------------------------------------------------------------------------
 // Mock PrismaService
@@ -57,43 +54,26 @@ const mockPrismaService: any = {
 };
 
 // ---------------------------------------------------------------------------
-// Mock MinioService
+// Mock MoyasarPaymentService
 // ---------------------------------------------------------------------------
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockMinioService: any = {
-  uploadFile: jest.fn(),
-  ensureBucket: jest.fn(),
+const mockMoyasarPaymentService: any = {
+  createMoyasarPayment: jest.fn(),
+  handleMoyasarWebhook: jest.fn(),
+  refund: jest.fn(),
 };
 
 // ---------------------------------------------------------------------------
-// Mock InvoicesService
+// Mock BankTransferService
 // ---------------------------------------------------------------------------
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockInvoicesService: any = {
-  createInvoice: jest.fn(),
-};
-
-// ---------------------------------------------------------------------------
-// Mock ConfigService
-// ---------------------------------------------------------------------------
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockConfigService: any = {
-  get: jest.fn((key: string, defaultValue?: string) => {
-    const values: Record<string, string> = {
-      MOYASAR_API_KEY: 'sk_test_mock_key',
-      MOYASAR_WEBHOOK_SECRET: 'webhook_secret_mock',
-      BACKEND_URL: 'http://localhost:3000',
-      MINIO_ENDPOINT: 'localhost',
-      MINIO_PORT: '9000',
-      MINIO_USE_SSL: 'false',
-      MINIO_ACCESS_KEY: 'minioadmin',
-      MINIO_SECRET_KEY: 'minioadmin',
-    };
-    return values[key] ?? defaultValue;
-  }),
+const mockBankTransferService: any = {
+  uploadReceipt: jest.fn(),
+  reviewReceipt: jest.fn(),
+  uploadBankTransferReceipt: jest.fn(),
+  verifyBankTransfer: jest.fn(),
 };
 
 // ---------------------------------------------------------------------------
@@ -189,9 +169,8 @@ describe('PaymentsService', () => {
       providers: [
         PaymentsService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: MinioService, useValue: mockMinioService },
-        { provide: InvoiceCreatorService, useValue: mockInvoicesService },
-        { provide: ConfigService, useValue: mockConfigService },
+        { provide: MoyasarPaymentService, useValue: mockMoyasarPaymentService },
+        { provide: BankTransferService, useValue: mockBankTransferService },
       ],
     }).compile();
 
@@ -430,47 +409,39 @@ describe('PaymentsService', () => {
   });
 
   // ─────────────────────────────────────────────────────────────
-  // uploadReceipt — Upload Bank Transfer Receipt (legacy)
+  // uploadReceipt — Delegates to BankTransferService
   // ─────────────────────────────────────────────────────────────
 
   describe('uploadReceipt', () => {
     const uploadDto = { receiptUrl: 'https://example.com/receipt.jpg' };
 
-    it('should create a receipt for a bank_transfer payment', async () => {
-      mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment); // method: bank_transfer
-      mockPrismaService.bankTransferReceipt.create.mockResolvedValue(
-        mockReceipt,
-      );
+    it('should delegate to BankTransferService.uploadReceipt', async () => {
+      mockBankTransferService.uploadReceipt.mockResolvedValue(mockReceipt);
 
       const result = await service.uploadReceipt(mockPaymentId, uploadDto);
 
+      expect(mockBankTransferService.uploadReceipt).toHaveBeenCalledWith(
+        mockPaymentId,
+        uploadDto,
+      );
       expect(result).toBeDefined();
       expect(result.id).toBe(mockReceiptId);
-      expect(
-        mockPrismaService.bankTransferReceipt.create,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            paymentId: mockPaymentId,
-            receiptUrl: uploadDto.receiptUrl,
-            aiVerificationStatus: 'pending',
-          }),
-        }),
-      );
     });
 
-    it('should throw BadRequestException if payment method is not bank_transfer', async () => {
-      mockPrismaService.payment.findUnique.mockResolvedValue(
-        mockMoyasarPayment,
-      ); // method: moyasar
+    it('should propagate BadRequestException from BankTransferService', async () => {
+      mockBankTransferService.uploadReceipt.mockRejectedValue(
+        new BadRequestException('Receipts can only be uploaded for bank transfer payments'),
+      );
 
       await expect(
         service.uploadReceipt(mockPaymentId, uploadDto),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw NotFoundException if payment not found', async () => {
-      mockPrismaService.payment.findUnique.mockResolvedValue(null);
+    it('should propagate NotFoundException from BankTransferService', async () => {
+      mockBankTransferService.uploadReceipt.mockRejectedValue(
+        new NotFoundException('Payment not found'),
+      );
 
       await expect(
         service.uploadReceipt('non-existent-id', uploadDto),
@@ -479,78 +450,56 @@ describe('PaymentsService', () => {
   });
 
   // ─────────────────────────────────────────────────────────────
-  // reviewReceipt — Admin Reviews Receipt (legacy)
+  // reviewReceipt — Delegates to BankTransferService
   // ─────────────────────────────────────────────────────────────
 
   describe('reviewReceipt', () => {
-    it('should approve receipt and set payment status to paid', async () => {
-      mockPrismaService.bankTransferReceipt.findUnique.mockResolvedValue(
-        mockReceipt,
-      );
-      mockPrismaService.bankTransferReceipt.update.mockResolvedValue({
+    it('should delegate to BankTransferService.reviewReceipt with approve', async () => {
+      const approvedReceipt = {
         ...mockReceipt,
         aiVerificationStatus: 'approved',
         reviewedById: mockReviewerId,
         reviewedAt: new Date(),
         adminNotes: 'Looks good',
-      });
-      mockPrismaService.payment.update.mockResolvedValue({
-        ...mockPayment,
-        status: 'paid',
-      });
+      };
+      mockBankTransferService.reviewReceipt.mockResolvedValue(approvedReceipt);
 
-      const result = await service.reviewReceipt(mockReceiptId, mockReviewerId, {
-        approved: true,
-        adminNotes: 'Looks good',
-      });
+      const dto = { approved: true, adminNotes: 'Looks good' };
+      const result = await service.reviewReceipt(mockReceiptId, mockReviewerId, dto);
 
+      expect(mockBankTransferService.reviewReceipt).toHaveBeenCalledWith(
+        mockReceiptId,
+        mockReviewerId,
+        dto,
+      );
       expect(result.aiVerificationStatus).toBe('approved');
-      expect(
-        mockPrismaService.bankTransferReceipt.update,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: mockReceiptId },
-          data: expect.objectContaining({
-            aiVerificationStatus: 'approved',
-            reviewedById: mockReviewerId,
-            reviewedAt: expect.any(Date),
-            adminNotes: 'Looks good',
-          }),
-        }),
-      );
-      // Payment should be updated to paid
-      expect(mockPrismaService.payment.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: mockPaymentId },
-          data: { status: 'paid' },
-        }),
-      );
     });
 
-    it('should reject receipt and NOT set payment to paid', async () => {
-      mockPrismaService.bankTransferReceipt.findUnique.mockResolvedValue(
-        mockReceipt,
-      );
-      mockPrismaService.bankTransferReceipt.update.mockResolvedValue({
+    it('should delegate to BankTransferService.reviewReceipt with reject', async () => {
+      const rejectedReceipt = {
         ...mockReceipt,
         aiVerificationStatus: 'rejected',
         reviewedById: mockReviewerId,
         reviewedAt: new Date(),
         adminNotes: 'Amount mismatch',
-      });
+      };
+      mockBankTransferService.reviewReceipt.mockResolvedValue(rejectedReceipt);
 
-      const result = await service.reviewReceipt(mockReceiptId, mockReviewerId, {
-        approved: false,
-        adminNotes: 'Amount mismatch',
-      });
+      const dto = { approved: false, adminNotes: 'Amount mismatch' };
+      const result = await service.reviewReceipt(mockReceiptId, mockReviewerId, dto);
 
+      expect(mockBankTransferService.reviewReceipt).toHaveBeenCalledWith(
+        mockReceiptId,
+        mockReviewerId,
+        dto,
+      );
       expect(result.aiVerificationStatus).toBe('rejected');
-      // Payment should NOT be updated when rejected
-      expect(mockPrismaService.payment.update).not.toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException if receipt not found', async () => {
-      mockPrismaService.bankTransferReceipt.findUnique.mockResolvedValue(null);
+    it('should propagate NotFoundException from BankTransferService', async () => {
+      mockBankTransferService.reviewReceipt.mockRejectedValue(
+        new NotFoundException('Receipt not found'),
+      );
 
       await expect(
         service.reviewReceipt('non-existent-id', mockReviewerId, {
@@ -655,7 +604,7 @@ describe('PaymentsService', () => {
   });
 
   // ─────────────────────────────────────────────────────────────
-  // createMoyasarPayment — Moyasar Payment Flow
+  // createMoyasarPayment — Delegates to MoyasarPaymentService
   // ─────────────────────────────────────────────────────────────
 
   describe('createMoyasarPayment', () => {
@@ -671,138 +620,47 @@ describe('PaymentsService', () => {
       },
     };
 
-    beforeEach(() => {
-      global.fetch = jest.fn();
-    });
+    it('should delegate to MoyasarPaymentService and return payment + redirectUrl', async () => {
+      const moyasarResult = {
+        payment: { ...mockPayment, method: 'moyasar', moyasarPaymentId: 'moyasar-id-abc' },
+        redirectUrl: 'https://checkout.moyasar.com/pay/abc',
+      };
+      mockMoyasarPaymentService.createMoyasarPayment.mockResolvedValue(moyasarResult);
 
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
+      const result = await service.createMoyasarPayment(mockUserId, createMoyasarDto);
 
-    it('should call Moyasar API and create a payment record', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
-      mockPrismaService.payment.findUnique.mockResolvedValue(null);
-      mockPrismaService.payment.create.mockResolvedValue({
-        ...mockPayment,
-        method: 'moyasar',
-        moyasarPaymentId: 'moyasar-id-abc',
-      });
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          id: 'moyasar-id-abc',
-          status: 'initiated',
-          source: { transaction_url: 'https://checkout.moyasar.com/pay/abc' },
-        }),
-      });
-
-      const result = await service.createMoyasarPayment(
+      expect(mockMoyasarPaymentService.createMoyasarPayment).toHaveBeenCalledWith(
         mockUserId,
         createMoyasarDto,
       );
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        'https://api.moyasar.com/v1/payments',
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            Authorization: expect.stringContaining('Basic '),
-            'Content-Type': 'application/json',
-          }),
-          body: expect.stringContaining(mockBookingId),
-        }),
-      );
-
-      expect(mockPrismaService.payment.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            bookingId: mockBookingId,
-            method: 'moyasar',
-            status: 'pending',
-            moyasarPaymentId: 'moyasar-id-abc',
-          }),
-        }),
-      );
-
       expect(result).toHaveProperty('payment');
       expect(result).toHaveProperty('redirectUrl');
-      expect(result.redirectUrl).toBe(
-        'https://checkout.moyasar.com/pay/abc',
-      );
+      expect(result.redirectUrl).toBe('https://checkout.moyasar.com/pay/abc');
     });
 
-    it('should throw NotFoundException if booking not found', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(null);
+    it('should propagate NotFoundException from MoyasarPaymentService', async () => {
+      mockMoyasarPaymentService.createMoyasarPayment.mockRejectedValue(
+        new NotFoundException('Booking not found'),
+      );
 
       await expect(
         service.createMoyasarPayment(mockUserId, createMoyasarDto),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException if payment already exists', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
-      mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment);
-
-      await expect(
-        service.createMoyasarPayment(mockUserId, createMoyasarDto),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should throw BadRequestException when Moyasar API returns error', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
-      mockPrismaService.payment.findUnique.mockResolvedValue(null);
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'Invalid card number' }),
-      });
-
-      await expect(
-        service.createMoyasarPayment(mockUserId, createMoyasarDto),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should calculate VAT correctly (15%) for clinic_visit', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue({
-        ...mockBooking,
-        type: 'clinic_visit',
-      });
-      mockPrismaService.payment.findUnique.mockResolvedValue(null);
-      mockPrismaService.payment.create.mockResolvedValue({
-        ...mockPayment,
-        method: 'moyasar',
-        amount: 20000,
-        vatAmount: 3000,
-        totalAmount: 23000,
-      });
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          id: 'moyasar-id-xyz',
-          status: 'initiated',
-          source: {},
-        }),
-      });
-
-      await service.createMoyasarPayment(mockUserId, createMoyasarDto);
-
-      // priceClinic=20000, vat=3000, total=23000
-      expect(mockPrismaService.payment.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            amount: 20000,
-            vatAmount: 3000,
-            totalAmount: 23000,
-          }),
-        }),
+    it('should propagate BadRequestException from MoyasarPaymentService', async () => {
+      mockMoyasarPaymentService.createMoyasarPayment.mockRejectedValue(
+        new BadRequestException('Payment already exists for this booking'),
       );
+
+      await expect(
+        service.createMoyasarPayment(mockUserId, createMoyasarDto),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
   // ─────────────────────────────────────────────────────────────
-  // handleMoyasarWebhook — Webhook Processing
+  // handleMoyasarWebhook — Delegates to MoyasarPaymentService
   // ─────────────────────────────────────────────────────────────
 
   describe('handleMoyasarWebhook', () => {
@@ -815,97 +673,38 @@ describe('PaymentsService', () => {
       metadata: { bookingId: mockBookingId },
     };
 
-    const buildSignature = (body: Buffer, secret: string): string =>
-      crypto.createHmac('sha256', secret).update(body).digest('hex');
+    it('should delegate to MoyasarPaymentService.handleMoyasarWebhook', async () => {
+      const rawBody = Buffer.from(JSON.stringify(webhookDto));
+      const signature = 'valid-signature';
 
-    it('should throw UnauthorizedException for invalid signature', async () => {
+      mockMoyasarPaymentService.handleMoyasarWebhook.mockResolvedValue({ success: true });
+
+      const result = await service.handleMoyasarWebhook(signature, rawBody, webhookDto);
+
+      expect(mockMoyasarPaymentService.handleMoyasarWebhook).toHaveBeenCalledWith(
+        signature,
+        rawBody,
+        webhookDto,
+      );
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should propagate errors from MoyasarPaymentService', async () => {
       const rawBody = Buffer.from(JSON.stringify(webhookDto));
       const invalidSig = 'invalid-signature-hex';
 
+      mockMoyasarPaymentService.handleMoyasarWebhook.mockRejectedValue(
+        new BadRequestException('Invalid webhook signature'),
+      );
+
       await expect(
         service.handleMoyasarWebhook(invalidSig, rawBody, webhookDto),
-      ).rejects.toThrow(UnauthorizedException);
-    });
-
-    it('should update payment status to paid for valid paid webhook', async () => {
-      const rawBody = Buffer.from(JSON.stringify(webhookDto));
-      const signature = buildSignature(rawBody, 'webhook_secret_mock');
-
-      mockPrismaService.payment.findFirst.mockResolvedValue({
-        ...mockMoyasarPayment,
-        status: 'pending',
-      });
-      mockPrismaService.payment.update.mockResolvedValue({
-        ...mockMoyasarPayment,
-        status: 'paid',
-      });
-      mockInvoicesService.createInvoice.mockResolvedValue({ id: 'invoice-1' });
-
-      const result = await service.handleMoyasarWebhook(
-        signature,
-        rawBody,
-        webhookDto,
-      );
-
-      expect(mockPrismaService.payment.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: mockMoyasarPayment.id },
-          data: { status: 'paid' },
-        }),
-      );
-      expect(mockInvoicesService.createInvoice).toHaveBeenCalledWith({
-        paymentId: mockMoyasarPayment.id,
-      });
-      expect(result).toEqual({ success: true });
-    });
-
-    it('should update payment status to failed for failed webhook', async () => {
-      const failedDto = { ...webhookDto, status: 'failed' };
-      const rawBody = Buffer.from(JSON.stringify(failedDto));
-      const signature = buildSignature(rawBody, 'webhook_secret_mock');
-
-      mockPrismaService.payment.findFirst.mockResolvedValue({
-        ...mockMoyasarPayment,
-        status: 'pending',
-      });
-      mockPrismaService.payment.update.mockResolvedValue({
-        ...mockMoyasarPayment,
-        status: 'failed',
-      });
-
-      const result = await service.handleMoyasarWebhook(
-        signature,
-        rawBody,
-        failedDto,
-      );
-
-      expect(mockPrismaService.payment.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { status: 'failed' },
-        }),
-      );
-      expect(result).toEqual({ success: true });
-    });
-
-    it('should return success even if no matching payment found', async () => {
-      const rawBody = Buffer.from(JSON.stringify(webhookDto));
-      const signature = buildSignature(rawBody, 'webhook_secret_mock');
-
-      mockPrismaService.payment.findFirst.mockResolvedValue(null);
-
-      const result = await service.handleMoyasarWebhook(
-        signature,
-        rawBody,
-        webhookDto,
-      );
-
-      expect(result).toEqual({ success: true });
-      expect(mockPrismaService.payment.update).not.toHaveBeenCalled();
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
   // ─────────────────────────────────────────────────────────────
-  // uploadBankTransferReceipt — MinIO file upload flow
+  // uploadBankTransferReceipt — Delegates to BankTransferService
   // ─────────────────────────────────────────────────────────────
 
   describe('uploadBankTransferReceipt', () => {
@@ -922,23 +721,12 @@ describe('PaymentsService', () => {
       stream: null as unknown as NodeJS.ReadableStream,
     };
 
-    it('should upload file to MinIO and create payment + receipt', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
-      mockPrismaService.payment.findUnique.mockResolvedValue(null);
-      mockPrismaService.payment.create.mockResolvedValue({
-        ...mockPayment,
-        method: 'bank_transfer',
-        amount: 20000,
-        vatAmount: 3000,
-        totalAmount: 23000,
-      });
-      mockPrismaService.bankTransferReceipt.create.mockResolvedValue({
-        ...mockReceipt,
-        receiptUrl: 'http://localhost:9000/carekit/receipts/uuid.jpg',
-      });
-      mockMinioService.uploadFile.mockResolvedValue(
-        'http://localhost:9000/carekit/receipts/uuid.jpg',
-      );
+    it('should delegate to BankTransferService and return payment + receipt', async () => {
+      const bankTransferResult = {
+        payment: { ...mockPayment, method: 'bank_transfer', amount: 20000, vatAmount: 3000, totalAmount: 23000 },
+        receipt: { ...mockReceipt, receiptUrl: 'http://localhost:9000/carekit/receipts/uuid.jpg' },
+      };
+      mockBankTransferService.uploadBankTransferReceipt.mockResolvedValue(bankTransferResult);
 
       const result = await service.uploadBankTransferReceipt(
         mockUserId,
@@ -946,44 +734,29 @@ describe('PaymentsService', () => {
         mockFile,
       );
 
-      expect(mockMinioService.uploadFile).toHaveBeenCalledWith(
-        'carekit',
-        expect.stringMatching(/^receipts\/.+\.jpg$/),
-        mockFile.buffer,
-        'image/jpeg',
-      );
-      expect(mockPrismaService.payment.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            bookingId: mockBookingId,
-            method: 'bank_transfer',
-            status: 'pending',
-          }),
-        }),
-      );
-      expect(mockPrismaService.bankTransferReceipt.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            receiptUrl: 'http://localhost:9000/carekit/receipts/uuid.jpg',
-            aiVerificationStatus: 'pending',
-          }),
-        }),
+      expect(mockBankTransferService.uploadBankTransferReceipt).toHaveBeenCalledWith(
+        mockUserId,
+        mockBookingId,
+        mockFile,
       );
       expect(result).toHaveProperty('payment');
       expect(result).toHaveProperty('receipt');
     });
 
-    it('should throw NotFoundException if booking not found', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(null);
+    it('should propagate NotFoundException from BankTransferService', async () => {
+      mockBankTransferService.uploadBankTransferReceipt.mockRejectedValue(
+        new NotFoundException('Booking not found'),
+      );
 
       await expect(
         service.uploadBankTransferReceipt(mockUserId, mockBookingId, mockFile),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException if payment already exists', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
-      mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment);
+    it('should propagate BadRequestException from BankTransferService', async () => {
+      mockBankTransferService.uploadBankTransferReceipt.mockRejectedValue(
+        new BadRequestException('Payment already exists for this booking'),
+      );
 
       await expect(
         service.uploadBankTransferReceipt(mockUserId, mockBookingId, mockFile),
@@ -992,90 +765,48 @@ describe('PaymentsService', () => {
   });
 
   // ─────────────────────────────────────────────────────────────
-  // verifyBankTransfer — Admin approve / reject receipt
+  // verifyBankTransfer — Delegates to BankTransferService
   // ─────────────────────────────────────────────────────────────
 
   describe('verifyBankTransfer', () => {
-    it('should approve receipt and set payment status to paid', async () => {
-      mockPrismaService.bankTransferReceipt.findUnique.mockResolvedValue(
-        mockReceipt,
-      );
-      mockPrismaService.bankTransferReceipt.update.mockResolvedValue({
-        ...mockReceipt,
-        aiVerificationStatus: 'approved',
-        reviewedById: mockReviewerId,
-        reviewedAt: new Date(),
-      });
-      mockPrismaService.payment.update.mockResolvedValue({
-        ...mockPayment,
-        status: 'paid',
-      });
-      mockPrismaService.payment.findUnique.mockResolvedValue({
-        ...mockPayment,
-        status: 'paid',
-      });
-      mockInvoicesService.createInvoice.mockResolvedValue({ id: 'invoice-1' });
+    it('should delegate approve to BankTransferService.verifyBankTransfer', async () => {
+      const approvedPayment = { ...mockPayment, status: 'paid' };
+      mockBankTransferService.verifyBankTransfer.mockResolvedValue(approvedPayment);
 
+      const dto = { action: 'approve' as const, adminNotes: 'Valid receipt' };
       const result = await service.verifyBankTransfer(
         mockReceiptId,
         mockReviewerId,
-        { action: 'approve', adminNotes: 'Valid receipt' },
+        dto,
       );
 
-      expect(mockPrismaService.bankTransferReceipt.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: mockReceiptId },
-          data: expect.objectContaining({
-            aiVerificationStatus: 'approved',
-            reviewedById: mockReviewerId,
-            reviewedAt: expect.any(Date),
-            adminNotes: 'Valid receipt',
-          }),
-        }),
+      expect(mockBankTransferService.verifyBankTransfer).toHaveBeenCalledWith(
+        mockReceiptId,
+        mockReviewerId,
+        dto,
       );
-      expect(mockPrismaService.payment.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: mockPaymentId },
-          data: { status: 'paid' },
-        }),
-      );
-      expect(mockInvoicesService.createInvoice).toHaveBeenCalledWith({
-        paymentId: mockPaymentId,
-      });
       expect(result).toBeDefined();
+      expect(result.status).toBe('paid');
     });
 
-    it('should reject receipt and NOT update payment to paid', async () => {
-      mockPrismaService.bankTransferReceipt.findUnique.mockResolvedValue(
-        mockReceipt,
-      );
-      mockPrismaService.bankTransferReceipt.update.mockResolvedValue({
-        ...mockReceipt,
-        aiVerificationStatus: 'rejected',
-        reviewedById: mockReviewerId,
-        reviewedAt: new Date(),
-      });
-      mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment);
+    it('should delegate reject to BankTransferService.verifyBankTransfer', async () => {
+      const rejectedPayment = { ...mockPayment, status: 'pending' };
+      mockBankTransferService.verifyBankTransfer.mockResolvedValue(rejectedPayment);
 
-      await service.verifyBankTransfer(mockReceiptId, mockReviewerId, {
-        action: 'reject',
-        adminNotes: 'Receipt is invalid',
-      });
+      const dto = { action: 'reject' as const, adminNotes: 'Receipt is invalid' };
+      await service.verifyBankTransfer(mockReceiptId, mockReviewerId, dto);
 
-      expect(mockPrismaService.bankTransferReceipt.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            aiVerificationStatus: 'rejected',
-          }),
-        }),
+      expect(mockBankTransferService.verifyBankTransfer).toHaveBeenCalledWith(
+        mockReceiptId,
+        mockReviewerId,
+        dto,
       );
-      // payment.update should NOT be called for rejected receipts
-      expect(mockPrismaService.payment.update).not.toHaveBeenCalled();
-      expect(mockInvoicesService.createInvoice).not.toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException if receipt not found', async () => {
-      mockPrismaService.bankTransferReceipt.findUnique.mockResolvedValue(null);
+    it('should propagate NotFoundException from BankTransferService', async () => {
+      mockBankTransferService.verifyBankTransfer.mockRejectedValue(
+        new NotFoundException('Receipt not found'),
+      );
 
       await expect(
         service.verifyBankTransfer('non-existent-id', mockReviewerId, {

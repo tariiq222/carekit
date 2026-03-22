@@ -19,6 +19,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { TokenService } from '../token.service.js';
+import { OtpService } from '../otp.service.js';
 
 interface RegisterDto {
   email: string;
@@ -100,6 +102,8 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        TokenService,
+        OtpService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },

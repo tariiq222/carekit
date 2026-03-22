@@ -15,6 +15,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { UsersService } from '../users.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { UserRolesService } from '../user-roles.service.js';
 import { CreateUserDto, UpdateUserDto } from '../dto/create-user.dto.js';
 
 // ---------------------------------------------------------------------------
@@ -49,6 +50,11 @@ const mockPrismaService = {
   },
 };
 
+const mockUserRolesService = {
+  assignRole: jest.fn().mockResolvedValue(undefined),
+  removeRole: jest.fn().mockResolvedValue(undefined),
+};
+
 // ---------------------------------------------------------------------------
 // Test Suite
 // ---------------------------------------------------------------------------
@@ -63,6 +69,7 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: UserRolesService, useValue: mockUserRolesService },
       ],
     }).compile();
 
@@ -521,24 +528,16 @@ describe('UsersService', () => {
   // =========================================================================
 
   describe('assignRole', () => {
-    it('should create user-role association', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id', deletedAt: null });
-      mockPrismaService.role.findUnique.mockResolvedValue({ id: 'role-id' });
-      mockPrismaService.userRole.findFirst.mockResolvedValue(null); // not duplicate
-      mockPrismaService.userRole.create.mockResolvedValue({});
-
+    it('should delegate to UserRolesService', async () => {
       await service.assignRole('user-id', 'role-id');
 
-      expect(mockPrismaService.userRole.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { userId: 'user-id', roleId: 'role-id' },
-        }),
-      );
+      expect(mockUserRolesService.assignRole).toHaveBeenCalledWith('user-id', 'role-id');
     });
 
-    it('should throw if role does not exist', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id', deletedAt: null });
-      mockPrismaService.role.findUnique.mockResolvedValue(null);
+    it('should propagate errors from UserRolesService', async () => {
+      mockUserRolesService.assignRole.mockRejectedValueOnce(
+        new NotFoundException('Role not found'),
+      );
 
       await expect(
         service.assignRole('user-id', 'nonexistent-role'),
@@ -547,29 +546,16 @@ describe('UsersService', () => {
   });
 
   describe('removeRole', () => {
-    it('should delete user-role association', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id', deletedAt: null });
-      mockPrismaService.userRole.findFirst.mockResolvedValue({
-        id: 'ur-id',
-        userId: 'user-id',
-        roleId: 'role-id',
-      });
-      mockPrismaService.userRole.count.mockResolvedValue(2); // has 2 roles
-      mockPrismaService.userRole.delete.mockResolvedValue({});
-
+    it('should delegate to UserRolesService', async () => {
       await service.removeRole('user-id', 'role-id');
 
-      expect(mockPrismaService.userRole.delete).toHaveBeenCalled();
+      expect(mockUserRolesService.removeRole).toHaveBeenCalledWith('user-id', 'role-id');
     });
 
-    it('should throw BadRequestException when removing last role', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id', deletedAt: null });
-      mockPrismaService.userRole.findFirst.mockResolvedValue({
-        id: 'ur-id',
-        userId: 'user-id',
-        roleId: 'role-id',
-      });
-      mockPrismaService.userRole.count.mockResolvedValue(1); // only 1 role
+    it('should propagate BadRequestException from UserRolesService', async () => {
+      mockUserRolesService.removeRole.mockRejectedValueOnce(
+        new BadRequestException('Cannot remove the last role from a user'),
+      );
 
       await expect(
         service.removeRole('user-id', 'role-id'),

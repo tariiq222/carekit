@@ -27,6 +27,7 @@ import {
 } from '@nestjs/common';
 import { BookingsService } from '../bookings.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { BookingCancellationService } from '../booking-cancellation.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -98,6 +99,13 @@ const mockPrismaService: any = {
 // Mock ZoomService for video consultation link generation
 const mockZoomService = {
   createMeeting: jest.fn(),
+};
+
+// Mock BookingCancellationService (cancellation logic delegated from BookingsService)
+const mockCancellationService = {
+  requestCancellation: jest.fn(),
+  approveCancellation: jest.fn(),
+  rejectCancellation: jest.fn(),
 };
 
 // ---------------------------------------------------------------------------
@@ -193,6 +201,7 @@ describe('BookingsService', () => {
         BookingsService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: 'ZoomService', useValue: mockZoomService },
+        { provide: BookingCancellationService, useValue: mockCancellationService },
       ],
     }).compile();
 
@@ -726,15 +735,12 @@ describe('BookingsService', () => {
 
   describe('requestCancellation', () => {
     it('should transition confirmed booking to pending_cancellation', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue({
-        ...mockBooking,
-        status: 'confirmed',
-      });
-      mockPrismaService.booking.update.mockResolvedValue({
+      const cancellationResult = {
         ...mockBooking,
         status: 'pending_cancellation',
         cancellationReason: 'تعارض في الجدول',
-      });
+      };
+      mockCancellationService.requestCancellation.mockResolvedValue(cancellationResult);
 
       const result = await service.requestCancellation(
         mockBooking.id,
@@ -744,13 +750,21 @@ describe('BookingsService', () => {
 
       expect(result.status).toBe('pending_cancellation');
       expect(result.cancellationReason).toBe('تعارض في الجدول');
+      expect(mockCancellationService.requestCancellation).toHaveBeenCalledWith(
+        mockBooking.id,
+        mockPatientId,
+        'تعارض في الجدول',
+      );
     });
 
     it('should throw ForbiddenException if patient is not the owner', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue({
-        ...mockBooking,
-        status: 'confirmed',
-      });
+      mockCancellationService.requestCancellation.mockRejectedValue(
+        new ForbiddenException({
+          statusCode: 403,
+          message: 'You can only request cancellation for your own bookings',
+          error: 'FORBIDDEN',
+        }),
+      );
 
       await expect(
         service.requestCancellation(
@@ -762,10 +776,13 @@ describe('BookingsService', () => {
     });
 
     it('should throw ConflictException if already pending_cancellation', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue({
-        ...mockBooking,
-        status: 'pending_cancellation',
-      });
+      mockCancellationService.requestCancellation.mockRejectedValue(
+        new ConflictException({
+          statusCode: 409,
+          message: "Cannot request cancellation for booking with status 'pending_cancellation'",
+          error: 'CONFLICT',
+        }),
+      );
 
       await expect(
         service.requestCancellation(mockBooking.id, mockPatientId, 'Duplicate'),
@@ -773,10 +790,13 @@ describe('BookingsService', () => {
     });
 
     it('should throw ConflictException if booking is already cancelled', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue({
-        ...mockBooking,
-        status: 'cancelled',
-      });
+      mockCancellationService.requestCancellation.mockRejectedValue(
+        new ConflictException({
+          statusCode: 409,
+          message: "Cannot request cancellation for booking with status 'cancelled'",
+          error: 'CONFLICT',
+        }),
+      );
 
       await expect(
         service.requestCancellation(mockBooking.id, mockPatientId, 'Too late'),
@@ -784,7 +804,13 @@ describe('BookingsService', () => {
     });
 
     it('should throw NotFoundException if booking not found', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(null);
+      mockCancellationService.requestCancellation.mockRejectedValue(
+        new NotFoundException({
+          statusCode: 404,
+          message: 'Booking not found',
+          error: 'NOT_FOUND',
+        }),
+      );
 
       await expect(
         service.requestCancellation('non-existent-id', mockPatientId, 'Test'),
@@ -803,27 +829,31 @@ describe('BookingsService', () => {
     };
 
     it('should transition pending_cancellation to cancelled', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue({
-        ...mockBooking,
-        status: 'pending_cancellation',
-      });
-      mockPrismaService.booking.update.mockResolvedValue({
+      const cancelledResult = {
         ...mockBooking,
         status: 'cancelled',
         cancelledAt: new Date(),
-      });
+      };
+      mockCancellationService.approveCancellation.mockResolvedValue(cancelledResult);
 
       const result = await service.approveCancellation(mockBooking.id, approveDto);
 
       expect(result.status).toBe('cancelled');
       expect(result.cancelledAt).toBeDefined();
+      expect(mockCancellationService.approveCancellation).toHaveBeenCalledWith(
+        mockBooking.id,
+        approveDto,
+      );
     });
 
     it('should throw ConflictException if not in pending_cancellation state', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue({
-        ...mockBooking,
-        status: 'confirmed',
-      });
+      mockCancellationService.approveCancellation.mockRejectedValue(
+        new ConflictException({
+          statusCode: 409,
+          message: "Cannot approve cancellation for booking with status 'confirmed'",
+          error: 'CONFLICT',
+        }),
+      );
 
       await expect(
         service.approveCancellation(mockBooking.id, approveDto),
@@ -831,7 +861,13 @@ describe('BookingsService', () => {
     });
 
     it('should throw NotFoundException if booking not found', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(null);
+      mockCancellationService.approveCancellation.mockRejectedValue(
+        new NotFoundException({
+          statusCode: 404,
+          message: 'Booking not found',
+          error: 'NOT_FOUND',
+        }),
+      );
 
       await expect(
         service.approveCancellation('non-existent-id', approveDto),
@@ -840,11 +876,7 @@ describe('BookingsService', () => {
 
     it('should accept all valid refund types (full, partial, none)', async () => {
       for (const refundType of ['full', 'partial', 'none'] as const) {
-        mockPrismaService.booking.findFirst.mockResolvedValue({
-          ...mockBooking,
-          status: 'pending_cancellation',
-        });
-        mockPrismaService.booking.update.mockResolvedValue({
+        mockCancellationService.approveCancellation.mockResolvedValue({
           ...mockBooking,
           status: 'cancelled',
           cancelledAt: new Date(),
@@ -866,28 +898,32 @@ describe('BookingsService', () => {
 
   describe('rejectCancellation', () => {
     it('should transition pending_cancellation back to confirmed', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue({
-        ...mockBooking,
-        status: 'pending_cancellation',
-      });
-      mockPrismaService.booking.update.mockResolvedValue({
+      const rejectedResult = {
         ...mockBooking,
         status: 'confirmed',
         cancellationReason: null,
-      });
+      };
+      mockCancellationService.rejectCancellation.mockResolvedValue(rejectedResult);
 
       const result = await service.rejectCancellation(mockBooking.id, {
         adminNotes: 'Cannot cancel within 24 hours',
       });
 
       expect(result.status).toBe('confirmed');
+      expect(mockCancellationService.rejectCancellation).toHaveBeenCalledWith(
+        mockBooking.id,
+        { adminNotes: 'Cannot cancel within 24 hours' },
+      );
     });
 
     it('should throw ConflictException if not in pending_cancellation state', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue({
-        ...mockBooking,
-        status: 'confirmed',
-      });
+      mockCancellationService.rejectCancellation.mockRejectedValue(
+        new ConflictException({
+          statusCode: 409,
+          message: "Cannot reject cancellation for booking with status 'confirmed'",
+          error: 'CONFLICT',
+        }),
+      );
 
       await expect(
         service.rejectCancellation(mockBooking.id, {}),
@@ -895,7 +931,13 @@ describe('BookingsService', () => {
     });
 
     it('should throw NotFoundException if booking not found', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(null);
+      mockCancellationService.rejectCancellation.mockRejectedValue(
+        new NotFoundException({
+          statusCode: 404,
+          message: 'Booking not found',
+          error: 'NOT_FOUND',
+        }),
+      );
 
       await expect(
         service.rejectCancellation('non-existent-id', {}),

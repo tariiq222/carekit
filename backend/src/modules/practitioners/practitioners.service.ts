@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -10,12 +9,16 @@ import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto.js';
 import { SetAvailabilityDto } from './dto/set-availability.dto.js';
 import { CreateVacationDto } from './dto/create-vacation.dto.js';
-
-const TIME_REGEX = /^\d{2}:\d{2}$/;
+import { PractitionerAvailabilityService } from './practitioner-availability.service.js';
+import { PractitionerVacationService } from './practitioner-vacation.service.js';
 
 @Injectable()
 export class PractitionersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly availabilityService: PractitionerAvailabilityService,
+    private readonly vacationService: PractitionerVacationService,
+  ) {}
 
   async findAll(params?: {
     page?: number;
@@ -57,10 +60,7 @@ export class PractitionersService {
     const [practitioners, total] = await Promise.all([
       this.prisma.practitioner.findMany({
         where,
-        include: {
-          user: true,
-          specialty: true,
-        },
+        include: { user: true, specialty: true },
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * perPage,
         take: perPage,
@@ -86,10 +86,7 @@ export class PractitionersService {
   async findOne(id: string) {
     const practitioner = await this.prisma.practitioner.findFirst({
       where: { id, deletedAt: null },
-      include: {
-        user: true,
-        specialty: true,
-      },
+      include: { user: true, specialty: true },
     });
 
     if (!practitioner) {
@@ -104,10 +101,7 @@ export class PractitionersService {
   }
 
   async create(dto: CreatePractitionerDto) {
-    // Verify user exists
-    const user = await this.prisma.user.findUnique({
-      where: { id: dto.userId },
-    });
+    const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
@@ -116,10 +110,7 @@ export class PractitionersService {
       });
     }
 
-    // Verify specialty exists
-    const specialty = await this.prisma.specialty.findUnique({
-      where: { id: dto.specialtyId },
-    });
+    const specialty = await this.prisma.specialty.findUnique({ where: { id: dto.specialtyId } });
     if (!specialty) {
       throw new NotFoundException({
         statusCode: 404,
@@ -128,15 +119,13 @@ export class PractitionersService {
       });
     }
 
-    // Check if practitioner profile already exists for this user
     const existing = await this.prisma.practitioner.findFirst({
       where: { userId: dto.userId },
     });
 
     if (existing) {
-      // If it was auto-created (no bio/education set), update it with full data
       if (!existing.bio && !existing.education && existing.deletedAt === null) {
-        const updated = await this.prisma.practitioner.update({
+        return this.prisma.practitioner.update({
           where: { id: existing.id },
           data: {
             specialtyId: dto.specialtyId,
@@ -150,19 +139,10 @@ export class PractitionersService {
             priceVideo: dto.priceVideo ?? 0,
           },
           include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                avatarUrl: true,
-              },
-            },
+            user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
             specialty: true,
           },
         });
-        return updated;
       }
 
       throw new ConflictException({
@@ -172,7 +152,7 @@ export class PractitionersService {
       });
     }
 
-    const practitioner = await this.prisma.practitioner.create({
+    return this.prisma.practitioner.create({
       data: {
         userId: dto.userId,
         specialtyId: dto.specialtyId,
@@ -186,31 +166,16 @@ export class PractitionersService {
         priceVideo: dto.priceVideo ?? 0,
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            avatarUrl: true,
-          },
-        },
+        user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
         specialty: true,
       },
     });
-
-    return practitioner;
   }
 
   async update(id: string, dto: UpdatePractitionerDto, currentUserId?: string) {
-    // Try to find by practitioner ID first, then by userId
-    let practitioner = await this.prisma.practitioner.findFirst({
-      where: { id },
-    });
+    let practitioner = await this.prisma.practitioner.findFirst({ where: { id } });
     if (!practitioner) {
-      practitioner = await this.prisma.practitioner.findFirst({
-        where: { userId: id },
-      });
+      practitioner = await this.prisma.practitioner.findFirst({ where: { userId: id } });
     }
     if (!practitioner || practitioner.deletedAt) {
       throw new NotFoundException({
@@ -220,16 +185,12 @@ export class PractitionersService {
       });
     }
 
-    // Check ownership if currentUserId is provided
     if (currentUserId) {
       await this.checkOwnership(practitioner.userId, currentUserId);
     }
 
-    // Validate specialty if updating
     if (dto.specialtyId) {
-      const specialty = await this.prisma.specialty.findUnique({
-        where: { id: dto.specialtyId },
-      });
+      const specialty = await this.prisma.specialty.findUnique({ where: { id: dto.specialtyId } });
       if (!specialty) {
         throw new NotFoundException({
           statusCode: 404,
@@ -239,7 +200,7 @@ export class PractitionersService {
       }
     }
 
-    const updated = await this.prisma.practitioner.update({
+    return this.prisma.practitioner.update({
       where: { id: practitioner.id },
       data: {
         specialtyId: dto.specialtyId,
@@ -254,26 +215,14 @@ export class PractitionersService {
         isActive: dto.isActive,
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            avatarUrl: true,
-          },
-        },
+        user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
         specialty: true,
       },
     });
-
-    return updated;
   }
 
   async delete(id: string) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id },
-    });
+    const practitioner = await this.prisma.practitioner.findFirst({ where: { id } });
     if (!practitioner || practitioner.deletedAt) {
       throw new NotFoundException({
         statusCode: 404,
@@ -293,383 +242,45 @@ export class PractitionersService {
     return this.delete(id);
   }
 
-  // --- Availability ---
+  // --- Delegated: Availability ---
 
   async getAvailability(practitionerId: string) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-
-    return this.prisma.practitionerAvailability.findMany({
-      where: { practitionerId, isActive: true },
-      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
-    });
+    return this.availabilityService.getAvailability(practitionerId);
   }
 
-  async setAvailability(
-    practitionerId: string,
-    dto: SetAvailabilityDto,
-    currentUserId?: string,
-  ) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-
-    // Check ownership if currentUserId is provided
-    if (currentUserId) {
-      await this.checkOwnership(practitioner.userId, currentUserId);
-    }
-
-    // Validate each slot
-    for (const slot of dto.schedule) {
-      // Validate dayOfWeek
-      if (slot.dayOfWeek < 0 || slot.dayOfWeek > 6) {
-        throw new BadRequestException({
-          statusCode: 400,
-          message: 'dayOfWeek must be between 0 and 6',
-          error: 'VALIDATION_ERROR',
-        });
-      }
-
-      // Validate time format
-      if (!TIME_REGEX.test(slot.startTime) || !TIME_REGEX.test(slot.endTime)) {
-        throw new BadRequestException({
-          statusCode: 400,
-          message: 'Time must be in HH:mm format',
-          error: 'VALIDATION_ERROR',
-        });
-      }
-
-      // Validate startTime < endTime
-      if (slot.startTime >= slot.endTime) {
-        throw new BadRequestException({
-          statusCode: 400,
-          message: 'startTime must be before endTime',
-          error: 'VALIDATION_ERROR',
-        });
-      }
-    }
-
-    // Check for overlapping time slots on same day
-    const byDay = new Map<number, Array<{ startTime: string; endTime: string }>>();
-    for (const slot of dto.schedule) {
-      const daySlots = byDay.get(slot.dayOfWeek) ?? [];
-      for (const existing of daySlots) {
-        if (slot.startTime < existing.endTime && slot.endTime > existing.startTime) {
-          throw new BadRequestException({
-            statusCode: 400,
-            message: 'Overlapping time slots on the same day',
-            error: 'VALIDATION_ERROR',
-          });
-        }
-      }
-      daySlots.push({ startTime: slot.startTime, endTime: slot.endTime });
-      byDay.set(slot.dayOfWeek, daySlots);
-    }
-
-    // Replace all availability records
-    await this.prisma.practitionerAvailability.deleteMany({
-      where: { practitionerId },
-    });
-
-    await this.prisma.practitionerAvailability.createMany({
-      data: dto.schedule.map((slot) => ({
-        practitionerId,
-        dayOfWeek: slot.dayOfWeek,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        isActive: slot.isActive ?? true,
-      })),
-    });
-
-    return this.prisma.practitionerAvailability.findMany({
-      where: { practitionerId },
-      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
-    });
+  async setAvailability(practitionerId: string, dto: SetAvailabilityDto, currentUserId?: string) {
+    return this.availabilityService.setAvailability(practitionerId, dto, currentUserId);
   }
 
-  async getSlots(practitionerId: string, date: string, duration: number = 30) {
-    if (!date) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'date query parameter is required',
-        error: 'VALIDATION_ERROR',
-      });
-    }
-
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-
-    const targetDate = new Date(date);
-    const dayOfWeek = targetDate.getDay();
-
-    // Get availability for this day
-    const availabilities = await this.prisma.practitionerAvailability.findMany({
-      where: {
-        practitionerId,
-        dayOfWeek,
-        isActive: true,
-      },
-      orderBy: { startTime: 'asc' },
-    });
-
-    // Check for vacation on this date
-    const vacation = await this.prisma.practitionerVacation.findFirst({
-      where: {
-        practitionerId,
-        startDate: { lte: targetDate },
-        endDate: { gte: targetDate },
-      },
-    });
-
-    if (vacation) {
-      return { date, practitionerId, slots: [] };
-    }
-
-    // Generate time slots from availability windows
-    const slots: Array<{ startTime: string; endTime: string; available: boolean }> = [];
-
-    for (const avail of availabilities) {
-      const [startH, startM] = avail.startTime.split(':').map(Number);
-      const [endH, endM] = avail.endTime.split(':').map(Number);
-      const startMinutes = startH * 60 + startM;
-      const endMinutes = endH * 60 + endM;
-
-      for (let m = startMinutes; m + duration <= endMinutes; m += duration) {
-        const slotStart = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-        const slotEnd = `${String(Math.floor((m + duration) / 60)).padStart(2, '0')}:${String((m + duration) % 60).padStart(2, '0')}`;
-        slots.push({ startTime: slotStart, endTime: slotEnd, available: true });
-      }
-    }
-
-    return { date, practitionerId, slots };
+  async getSlots(practitionerId: string, date: string, duration?: number) {
+    return this.availabilityService.getSlots(practitionerId, date, duration);
   }
 
-  /** Alias for getSlots — unit tests use getAvailableSlots and expect array return */
-  async getAvailableSlots(practitionerId: string, date: string, duration: number = 30) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-
-    const targetDate = new Date(date);
-    const dayOfWeek = targetDate.getDay();
-
-    // Get availability for this day
-    const availabilities = await this.prisma.practitionerAvailability.findMany({
-      where: {
-        practitionerId,
-        dayOfWeek,
-        isActive: true,
-      },
-      orderBy: { startTime: 'asc' },
-    });
-
-    // Check for vacation
-    const vacations = await this.prisma.practitionerVacation.findMany({
-      where: { practitionerId },
-    });
-    const isOnVacation = vacations.some((v: { startDate: Date; endDate: Date }) => {
-      const start = new Date(v.startDate);
-      const end = new Date(v.endDate);
-      return targetDate >= start && targetDate <= end;
-    });
-
-    if (isOnVacation) {
-      return [];
-    }
-
-    // Get existing bookings for this date
-    const bookings = await this.prisma.booking.findMany({
-      where: {
-        practitionerId,
-        status: { in: ['confirmed', 'pending'] },
-      },
-    });
-
-    // Generate time slots from availability windows
-    const slots: Array<{ startTime: string; endTime: string; available: boolean }> = [];
-
-    for (const avail of availabilities) {
-      const [startH, startM] = avail.startTime.split(':').map(Number);
-      const [endH, endM] = avail.endTime.split(':').map(Number);
-      const startMinutes = startH * 60 + startM;
-      const endMinutes = endH * 60 + endM;
-
-      for (let m = startMinutes; m + duration <= endMinutes; m += duration) {
-        const slotStart = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-        const slotEnd = `${String(Math.floor((m + duration) / 60)).padStart(2, '0')}:${String((m + duration) % 60).padStart(2, '0')}`;
-
-        // Check if this slot is booked
-        const isBooked = bookings.some((b: { startTime: string; endTime: string }) =>
-          b.startTime === slotStart && b.endTime === slotEnd,
-        );
-
-        if (!isBooked) {
-          slots.push({ startTime: slotStart, endTime: slotEnd, available: true });
-        }
-      }
-    }
-
-    return slots;
+  async getAvailableSlots(practitionerId: string, date: string, duration?: number) {
+    return this.availabilityService.getAvailableSlots(practitionerId, date, duration);
   }
 
-  // --- Vacations ---
+  // --- Delegated: Vacations ---
 
   async getVacations(practitionerId: string) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-
-    return this.prisma.practitionerVacation.findMany({
-      where: { practitionerId },
-      orderBy: { startDate: 'desc' },
-    });
+    return this.vacationService.getVacations(practitionerId);
   }
 
-  /** Alias for getVacations — unit tests use listVacations */
   async listVacations(practitionerId: string) {
-    return this.getVacations(practitionerId);
+    return this.vacationService.listVacations(practitionerId);
   }
 
-  async createVacation(
-    practitionerId: string,
-    dto: CreateVacationDto,
-    currentUserId?: string,
-  ) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-
-    if (currentUserId) {
-      await this.checkOwnership(practitioner.userId, currentUserId);
-    }
-
-    const startDate = new Date(dto.startDate);
-    const endDate = new Date(dto.endDate);
-
-    // Validate startDate < endDate
-    if (startDate >= endDate) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'startDate must be before endDate',
-        error: 'VALIDATION_ERROR',
-      });
-    }
-
-    // Check for overlapping vacations
-    const existingVacations = await this.prisma.practitionerVacation.findMany({
-      where: { practitionerId },
-    });
-
-    const hasOverlap = existingVacations.some((v: { startDate: Date; endDate: Date }) => {
-      const existStart = new Date(v.startDate);
-      const existEnd = new Date(v.endDate);
-      return startDate <= existEnd && endDate >= existStart;
-    });
-
-    if (hasOverlap) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'Vacation period overlaps with an existing vacation',
-        error: 'VALIDATION_ERROR',
-      });
-    }
-
-    return this.prisma.practitionerVacation.create({
-      data: {
-        practitionerId,
-        startDate,
-        endDate,
-        reason: dto.reason,
-      },
-    });
+  async createVacation(practitionerId: string, dto: CreateVacationDto, currentUserId?: string) {
+    return this.vacationService.createVacation(practitionerId, dto, currentUserId);
   }
 
-  async deleteVacation(
-    practitionerId: string,
-    vacationId: string,
-    currentUserId?: string,
-  ) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-
-    if (currentUserId) {
-      await this.checkOwnership(practitioner.userId, currentUserId);
-    }
-
-    const vacation = await this.prisma.practitionerVacation.findUnique({
-      where: { id: vacationId },
-    });
-    if (!vacation || vacation.practitionerId !== practitionerId) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Vacation not found',
-        error: 'VACATION_NOT_FOUND',
-      });
-    }
-
-    await this.prisma.practitionerVacation.delete({
-      where: { id: vacationId },
-    });
+  async deleteVacation(practitionerId: string, vacationId: string, currentUserId?: string) {
+    return this.vacationService.deleteVacation(practitionerId, vacationId, currentUserId);
   }
 
   // --- Ratings ---
 
-  async getRatings(practitionerId: string, params?: {
-    page?: number;
-    perPage?: number;
-  }) {
+  async getRatings(practitionerId: string, params?: { page?: number; perPage?: number }) {
     const practitioner = await this.prisma.practitioner.findUnique({
       where: { id: practitionerId },
     });
@@ -688,9 +299,7 @@ export class PractitionersService {
       this.prisma.rating.findMany({
         where: { practitionerId },
         include: {
-          patient: {
-            select: { id: true, firstName: true, lastName: true },
-          },
+          patient: { select: { id: true, firstName: true, lastName: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * perPage,
@@ -703,14 +312,7 @@ export class PractitionersService {
 
     return {
       items: ratings,
-      meta: {
-        total,
-        page,
-        perPage,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
+      meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
     };
   }
 
