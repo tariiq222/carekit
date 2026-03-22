@@ -22,7 +22,7 @@
 ```
 Phase 1 — الأساسيات (Backend + Schema + Dashboard هيكل)    ✅ 100%
 Phase 2 — ZATCA + Dashboard Integration                     ✅ 100%
-Phase 3 — Mobile App                                        ⚠️  ~85% (شاشات موجودة، ربط API ناقص)
+Phase 3 — Mobile App                                        ⚠️  ~85% (ناقص: Payment, Settings, FCM)
 Phase 4 — AI Chatbot                                        🔲 5%  (هيكل فاضي فقط)
 Phase 5 — Production Readiness                              🔲 0%
 Phase 6 — Testing & Delivery                                🔲 0%
@@ -115,9 +115,27 @@ Phase 6 — Testing & Delivery                                🔲 0%
 - 32 UI components (shadcn/ui)
 - 13 feature components (stat-card, revenue-chart, permissions-matrix, etc.)
 - 4 layout components (header, sidebar, language-switcher, theme-toggle)
-- 11 hooks (use-bookings, use-invoices, use-patients, use-payments, etc.)
-- 10 API modules (`dashboard/src/lib/api/`)
+- 12 hooks (use-bookings, use-invoices, use-patients, use-payments, use-services, use-practitioner, etc.)
+- 11 API modules (`dashboard/src/lib/api/` — practitioners, patients, bookings, payments, invoices, users, roles, reports, whitelabel, zatca, services)
 - i18n: AR + EN (`dashboard/src/i18n/`)
+
+### Sprint 2.5 — Dashboard API Integration ✅
+
+| الصفحة | قبل | بعد |
+| -------- | ------ | ------ |
+| Dashboard Home | ✅ API | ✅ |
+| Appointments | ✅ API | ✅ |
+| Practitioners List | ✅ API | ✅ |
+| Practitioner Detail | ❌ placeholder | ✅ API — `use-practitioner.ts` + تقسيم لـ profile-tab + ratings-tab |
+| Patients + Detail | ✅ API | ✅ |
+| Services | ❌ placeholder | ✅ API — `lib/api/services.ts` + `use-services.ts` + `use-categories.ts` |
+| Invoices + ZATCA | ✅ API | ✅ |
+| Payments | ✅ API | ✅ |
+| Reports | ✅ API | ✅ |
+| Users + Roles | ✅ API | ✅ |
+| Settings | ✅ API | ✅ |
+
+**النتيجة:** 16/16 صفحة متصلة بالـ API ✅
 
 ### Sprint 2.3 — Bug Fixes ✅
 
@@ -141,7 +159,7 @@ Phase 6 — Testing & Delivery                                🔲 0%
 | invoice-creator.service.spec.ts | 18 | ✅ |
 | patients.service.spec.ts | 16 | ✅ |
 | ratings.service.spec.ts | 15 | ✅ |
-| **المجموع** | **459 في 21 suite** | ✅ |
+| **المجموع** | **455 في 21 suite** | ✅ |
 
 ---
 
@@ -384,7 +402,9 @@ POST /invoices/clearance/single  # فاتورة معيارية (Phase 2)
 | 2026-03 | Phase 1 مكتمل: Backend 18 module + Prisma 28 model/13 enum |
 | 2026-03 | Phase 2 مكتمل: ZATCA module (6 services) + Dashboard 16 صفحة + 459 test |
 | 2026-03 | Phase 3 ~85%: Mobile 28 شاشة (auth + patient + practitioner) + theme + i18n |
-| 2026-03 | Refactor: استخراج services إلى ملفات منفصلة (file size rule) |
+| 2026-03 | Refactor: تقسيم 5 service files كبيرة (auth, practitioners, payments, bookings, users) — 455 test يمرّون |
+| 2026-03 | Dashboard API: ربط Services + Practitioners detail بالـ API (16/16 صفحة متصلة) |
+| 2026-03 | PRD: إضافة `docs/CareKit-PRD-EN.md` — Phase 1 Design & Planning مكتملة 100% |
 | 2026-03 | توحيد ملفات التخطيط في sprint-plan.md |
 
 ---
