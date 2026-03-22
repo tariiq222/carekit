@@ -12,6 +12,10 @@ import { CancelApproveDto } from './dto/cancel-approve.dto.js';
 import { CancelRejectDto } from './dto/cancel-reject.dto.js';
 import { ZoomService } from './zoom.service.js';
 import { BookingCancellationService } from './booking-cancellation.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
+import { validateAvailability } from './booking-validation.helper.js';
+import { timeSlotsOverlap, shiftTime, calculateEndTime } from '../../common/helpers/booking-time.helper.js';
+import { bookingInclude } from './booking.constants.js';
 
 interface BookingListQuery {
   page?: number;
@@ -24,23 +28,13 @@ interface BookingListQuery {
   dateTo?: string;
 }
 
-const bookingInclude = {
-  patient: true,
-  practitioner: {
-    include: {
-      user: { select: { id: true, firstName: true, lastName: true } },
-      specialty: { select: { nameEn: true, nameAr: true } },
-    },
-  },
-  service: true,
-};
-
 @Injectable()
 export class BookingsService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject('ZoomService') private readonly zoomService: ZoomService,
     private readonly cancellationService: BookingCancellationService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(patientId: string, dto: CreateBookingDto) {
@@ -58,6 +52,20 @@ export class BookingsService {
       throw new NotFoundException({ statusCode: 404, message: 'Service not found', error: 'NOT_FOUND' });
     }
 
+    // Validate practitioner offers this service
+    const ps = await this.prisma.practitionerService.findUnique({
+      where: { practitionerId_serviceId: { practitionerId: dto.practitionerId, serviceId: dto.serviceId } },
+    });
+    if (!ps) {
+      throw new BadRequestException({ statusCode: 400, message: 'Practitioner does not offer this service', error: 'SERVICE_NOT_OFFERED' });
+    }
+    if (!ps.isActive) {
+      throw new BadRequestException({ statusCode: 400, message: 'This service is currently unavailable for this practitioner', error: 'SERVICE_INACTIVE' });
+    }
+    if (!ps.availableTypes.includes(dto.type)) {
+      throw new BadRequestException({ statusCode: 400, message: `Booking type '${dto.type}' is not available for this service`, error: 'TYPE_NOT_AVAILABLE' });
+    }
+
     const bookingDate = new Date(dto.date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -65,8 +73,11 @@ export class BookingsService {
       throw new BadRequestException({ statusCode: 400, message: 'Cannot book in the past', error: 'VALIDATION_ERROR' });
     }
 
-    const endTime = this.calculateEndTime(dto.startTime, service.duration);
-    await this.checkDoubleBooking(dto.practitionerId, bookingDate, dto.startTime, endTime);
+    const duration = ps.customDuration ?? service.duration;
+    const endTime = calculateEndTime(dto.startTime, duration);
+
+    await validateAvailability(this.prisma,dto.practitionerId, bookingDate, dto.startTime, endTime);
+    await this.checkDoubleBooking(dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, ps.bufferBefore, ps.bufferAfter);
 
     let zoomData: { zoomMeetingId?: string; zoomJoinUrl?: string; zoomHostUrl?: string } = {};
     if (dto.type === 'video_consultation') {
@@ -74,11 +85,12 @@ export class BookingsService {
       zoomData = { zoomMeetingId: meeting.meetingId, zoomJoinUrl: meeting.joinUrl, zoomHostUrl: meeting.hostUrl };
     }
 
-    return this.prisma.booking.create({
+    const booking = await this.prisma.booking.create({
       data: {
         patientId,
         practitionerId: dto.practitionerId,
         serviceId: dto.serviceId,
+        practitionerServiceId: ps.id,
         type: dto.type,
         date: bookingDate,
         startTime: dto.startTime,
@@ -89,6 +101,16 @@ export class BookingsService {
       },
       include: bookingInclude,
     });
+
+    // Notify practitioner about new booking
+    if (practitioner.userId) {
+      const d = bookingDate.toISOString().split('T')[0];
+      await this.notify(practitioner.userId, 'booking_confirmed', 'حجز جديد', 'New Booking',
+        `لديك حجز جديد بتاريخ ${d} الساعة ${dto.startTime}`,
+        `You have a new booking on ${d} at ${dto.startTime}`, { bookingId: booking.id });
+    }
+
+    return booking;
   }
 
   async findAll(query: BookingListQuery) {
@@ -139,11 +161,13 @@ export class BookingsService {
     const newStartTime = dto.startTime ?? booking.startTime;
     const newDate = dto.date ? new Date(dto.date) : booking.date;
 
+    const ps = await this.prisma.practitionerService.findUnique({ where: { id: booking.practitionerServiceId } });
     const service = await this.prisma.service.findFirst({ where: { id: booking.serviceId } });
-    const duration = service?.duration ?? 30;
-    const newEndTime = this.calculateEndTime(newStartTime, duration);
+    const duration = ps?.customDuration ?? service?.duration ?? 30;
+    const newEndTime = calculateEndTime(newStartTime, duration);
 
-    await this.checkDoubleBooking(booking.practitionerId, newDate, newStartTime, newEndTime, id);
+    await validateAvailability(this.prisma,booking.practitionerId, newDate, newStartTime, newEndTime);
+    await this.checkDoubleBooking(booking.practitionerId, newDate, newStartTime, newEndTime, id, ps?.bufferBefore ?? 0, ps?.bufferAfter ?? 0);
 
     return this.prisma.booking.update({
       where: { id },
@@ -157,7 +181,22 @@ export class BookingsService {
     if (booking.status !== 'pending') {
       throw new ConflictException({ statusCode: 409, message: `Cannot confirm booking with status '${booking.status}'`, error: 'CONFLICT' });
     }
-    return this.prisma.booking.update({ where: { id }, data: { status: 'confirmed', confirmedAt: new Date() }, include: bookingInclude });
+
+    // Prepayment required — check payment exists and is paid
+    const payment = await this.prisma.payment.findFirst({ where: { bookingId: id } });
+    if (!payment || payment.status !== 'paid') {
+      throw new ConflictException({ statusCode: 409, message: 'Payment is required before confirming a booking', error: 'PAYMENT_REQUIRED' });
+    }
+
+    const confirmed = await this.prisma.booking.update({ where: { id }, data: { status: 'confirmed', confirmedAt: new Date() }, include: bookingInclude });
+
+    if (confirmed.patientId) {
+      const d = confirmed.date.toISOString().split('T')[0];
+      await this.notify(confirmed.patientId, 'booking_confirmed', 'تأكيد الموعد', 'Booking Confirmed',
+        `تم تأكيد موعدك بتاريخ ${d} الساعة ${confirmed.startTime}`,
+        `Your booking on ${d} at ${confirmed.startTime} has been confirmed`, { bookingId: id });
+    }
+    return confirmed;
   }
 
   async complete(id: string) {
@@ -165,37 +204,50 @@ export class BookingsService {
     if (booking.status !== 'confirmed') {
       throw new ConflictException({ statusCode: 409, message: `Cannot complete booking with status '${booking.status}'`, error: 'CONFLICT' });
     }
-    return this.prisma.booking.update({ where: { id }, data: { status: 'completed', completedAt: new Date() }, include: bookingInclude });
+    const completed = await this.prisma.booking.update({ where: { id }, data: { status: 'completed', completedAt: new Date() }, include: bookingInclude });
+
+    if (completed.patientId) {
+      await this.notify(completed.patientId, 'booking_completed', 'اكتمل الموعد', 'Booking Completed',
+        'تم اكتمال موعدك. يمكنك الآن تقييم تجربتك',
+        'Your booking is completed. You can now rate your experience', { bookingId: id });
+    }
+    return completed;
   }
 
-  async findMyBookings(patientId: string) {
+  async findMyBookings(patientId: string, page = 1, perPage = 20) {
+    perPage = Math.min(perPage, 100);
+    const skip = (page - 1) * perPage;
     const where = { patientId, deletedAt: null };
     const [rawItems, total] = await Promise.all([
-      this.prisma.booking.findMany({ where, include: bookingInclude, orderBy: { createdAt: 'desc' } }),
+      this.prisma.booking.findMany({ where, include: bookingInclude, orderBy: { createdAt: 'desc' }, skip, take: perPage }),
       this.prisma.booking.count({ where }),
     ]);
     const items = rawItems.map(({ deletedAt: _, zoomMeetingId: _z, ...item }) => item);
-    return { items, meta: { total, page: 1, perPage: total || 20, totalPages: 1, hasNextPage: false, hasPreviousPage: false } };
+    const totalPages = Math.ceil(total / perPage);
+    return { items, meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 } };
   }
 
-  async findTodayBookings(userId: string) {
+  async findTodayBookings(userId: string, page = 1, perPage = 50) {
     const practitioner = await this.prisma.practitioner.findFirst({ where: { userId, deletedAt: null } });
     if (!practitioner) {
       throw new NotFoundException({ statusCode: 404, message: 'Practitioner profile not found', error: 'NOT_FOUND' });
     }
 
+    perPage = Math.min(perPage, 100);
+    const skip = (page - 1) * perPage;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const rawItems = await this.prisma.booking.findMany({
-      where: { practitionerId: practitioner.id, date: { gte: today, lt: tomorrow }, deletedAt: null },
-      include: bookingInclude,
-      orderBy: { startTime: 'asc' },
-    });
+    const where = { practitionerId: practitioner.id, date: { gte: today, lt: tomorrow }, deletedAt: null };
+    const [rawItems, total] = await Promise.all([
+      this.prisma.booking.findMany({ where, include: bookingInclude, orderBy: { startTime: 'asc' }, skip, take: perPage }),
+      this.prisma.booking.count({ where }),
+    ]);
     const items = rawItems.map(({ deletedAt: _, zoomMeetingId: _z, ...item }) => item);
-    return { items, meta: { total: items.length, page: 1, perPage: items.length || 20, totalPages: 1, hasNextPage: false, hasPreviousPage: false } };
+    const totalPages = Math.ceil(total / perPage);
+    return { items, meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 } };
   }
 
   // --- Delegated: Cancellation ---
@@ -222,36 +274,33 @@ export class BookingsService {
     return booking;
   }
 
-  private async checkDoubleBooking(practitionerId: string, date: Date, startTime: string, endTime: string, excludeId?: string) {
+  private async checkDoubleBooking(
+    practitionerId: string, date: Date, startTime: string, endTime: string,
+    excludeId?: string, bufferBefore: number = 0, bufferAfter: number = 0,
+  ) {
     const whereClause: Record<string, unknown> = {
-      practitionerId,
-      date,
+      practitionerId, date,
       status: { in: ['pending', 'confirmed'] },
       deletedAt: null,
     };
     if (excludeId) whereClause.id = { not: excludeId };
 
     const existingBookings = await this.prisma.booking.findMany({ where: whereClause });
-    const hasConflict = existingBookings.some((existing) => this.timeSlotsOverlap(startTime, endTime, existing.startTime, existing.endTime));
-
+    // Expand slot by buffer: effective = (startTime - bufferBefore) to (endTime + bufferAfter)
+    const effectiveStart = shiftTime(startTime, -bufferBefore);
+    const effectiveEnd = shiftTime(endTime, bufferAfter);
+    const hasConflict = existingBookings.some((existing) =>
+      timeSlotsOverlap(effectiveStart, effectiveEnd, existing.startTime, existing.endTime),
+    );
     if (hasConflict) {
       throw new ConflictException({ statusCode: 409, message: 'Practitioner already has a booking at this time', error: 'BOOKING_CONFLICT' });
     }
   }
 
-  private calculateEndTime(startTime: string, durationMinutes: number): string {
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + durationMinutes;
-    const endHours = Math.floor(totalMinutes / 60) % 24;
-    const endMinutes = totalMinutes % 60;
-    return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-  }
-
-  private timeSlotsOverlap(start1: string, end1: string, start2: string, end2: string): boolean {
-    const toMinutes = (time: string) => {
-      const [h, m] = time.split(':').map(Number);
-      return h * 60 + m;
-    };
-    return toMinutes(start1) < toMinutes(end2) && toMinutes(start2) < toMinutes(end1);
+  private async notify(
+    userId: string, type: string, titleAr: string, titleEn: string,
+    bodyAr: string, bodyEn: string, data?: Record<string, unknown>,
+  ) {
+    await this.notificationsService.createNotification({ userId, titleAr, titleEn, bodyAr, bodyEn, type, data });
   }
 }

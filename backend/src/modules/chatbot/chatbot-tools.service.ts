@@ -41,7 +41,7 @@ export class ChatbotToolsService {
         case 'get_my_upcoming_bookings':
           return await this.getMyBookings(ctx);
         case 'reschedule_booking':
-          return await this.rescheduleBooking(args);
+          return await this.rescheduleBooking(args, ctx);
         case 'request_cancellation':
           return await this.requestCancellation(args, ctx);
         case 'search_knowledge_base':
@@ -81,7 +81,17 @@ export class ChatbotToolsService {
     const serviceId = args.serviceId as string | undefined;
 
     let duration: number | undefined;
-    if (serviceId) {
+    if (serviceId && practitionerId) {
+      const ps = await this.prisma.practitionerService.findUnique({
+        where: { practitionerId_serviceId: { practitionerId, serviceId } },
+      });
+      if (ps?.customDuration) {
+        duration = ps.customDuration;
+      } else {
+        const service = await this.servicesService.findOne(serviceId);
+        duration = service.duration;
+      }
+    } else if (serviceId) {
       const service = await this.servicesService.findOne(serviceId);
       duration = service.duration;
     }
@@ -124,14 +134,26 @@ export class ChatbotToolsService {
     return { success: true, data: upcoming };
   }
 
-  private async rescheduleBooking(args: Record<string, unknown>): Promise<ToolResult> {
+  private async rescheduleBooking(args: Record<string, unknown>, ctx: ToolExecutionContext): Promise<ToolResult> {
     const bookingId = args.bookingId as string;
+
+    // Verify the booking belongs to this patient
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: bookingId, deletedAt: null },
+    });
+    if (!booking) {
+      return { success: false, error: 'Booking not found' };
+    }
+    if (booking.patientId !== ctx.userId) {
+      return { success: false, error: 'You can only reschedule your own bookings' };
+    }
+
     const dto: { date?: string; startTime?: string } = {};
     if (args.newDate) dto.date = args.newDate as string;
     if (args.newStartTime) dto.startTime = args.newStartTime as string;
 
-    const booking = await this.bookingsService.reschedule(bookingId, dto);
-    return { success: true, data: booking };
+    const updated = await this.bookingsService.reschedule(bookingId, dto);
+    return { success: true, data: updated };
   }
 
   private async requestCancellation(

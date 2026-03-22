@@ -1,6 +1,6 @@
 # CareKit — Sprint Plan & Progress Tracker
 
-> **آخر تحديث:** 2026-03-22
+> **آخر تحديث:** 2026-03-23 (Sprint 4.6 completed)
 > **المرجع الوحيد** لتتبع التقدم والمراحل والموارد — كل شيء ننجزه يُوثق هنا
 
 ---
@@ -24,6 +24,8 @@ Phase 1 — الأساسيات (Backend + Schema + Dashboard هيكل)    ✅ 10
 Phase 2 — ZATCA + Dashboard Integration                     ✅ 100%
 Phase 3 — Mobile App                                        ✅ 100%
 Phase 4 — AI Chatbot                                        ✅ 100% (Backend + Mobile + Dashboard + Tests + Migration)
+Sprint 4.5 — Bug Fixes + Pricing Refactor                   ✅ 100% (9 fixes + PractitionerService pricing)
+Sprint 4.6 — Code Audit & Hardening                         ✅ 100% (28 fix: 8 bugs + 4 security + 6 incomplete + 4 perf + 8 quality — 3 مؤجلة)
 Phase 5 — Production Readiness                              🔲 0%
 Phase 6 — Testing & Delivery                                🔲 0%
 ```
@@ -40,10 +42,10 @@ Phase 6 — Testing & Delivery                                🔲 0%
 | Users | users.service, user-roles.service | ✅ |
 | Roles | roles.service, roles.controller | ✅ |
 | Permissions | permissions.controller | ✅ |
-| Practitioners | practitioners.service, practitioner-availability.service, practitioner-vacation.service | ✅ |
+| Practitioners | practitioners.service, practitioner-availability.service, practitioner-vacation.service, practitioner-service.service | ✅ |
 | Specialties | specialties.service, specialties.controller | ✅ |
 | Services | services.service, services.controller | ✅ |
-| Bookings | bookings.service, booking-cancellation.service, zoom.service | ✅ |
+| Bookings | bookings.service, booking-cancellation.service, booking-validation.helper, zoom.service | ✅ |
 | Payments | payments.service, moyasar-payment.service, bank-transfer.service, payments.helpers | ✅ |
 | Invoices | invoices.service, invoice-creator.service, invoice-stats.service, invoice.constants | ✅ |
 | Notifications | notifications.service, notifications.controller | ✅ |
@@ -59,7 +61,7 @@ Phase 6 — Testing & Delivery                                🔲 0%
 
 | الوحدة | العدد | الحالة |
 |--------|-------|--------|
-| Models | 28 (User, Practitioner, Booking, Payment, Invoice, Rating, etc.) | ✅ |
+| Models | 29 (User, Practitioner, PractitionerService, Booking, Payment, Invoice, Rating, etc.) | ✅ |
 | Models إضافية | FcmToken, ActivityLog | ✅ |
 | Enums | 13 (BookingType, BookingStatus, PaymentMethod, PaymentStatus, TransferVerificationStatus, NotificationType, ProblemReportType, ProblemReportStatus, ChatRole, HandoffType, ConfigValueType, UserGender, ZatcaStatus) | ✅ |
 
@@ -311,6 +313,206 @@ Phase 6 — Testing & Delivery                                🔲 0%
 
 ---
 
+## Sprint 4.5 — Bug Fixes + Pricing Refactor ✅
+
+### Bug Fixes (9 issues) ✅
+
+| # | المشكلة | الحل | الملف |
+|---|---------|------|-------|
+| 1 | لا يتحقق من جدول الممارس/الإجازات عند الحجز | `validateAvailability()` مستخرج + يُنفذ عند create/reschedule | `booking-validation.helper.ts`, `bookings.service.ts` |
+| 2 | `getAvailableSlots()` لا يفلتر بالتاريخ — يحمّل كل المواعيد | إضافة `date` filter + `deletedAt: null` في query | `practitioner-availability.service.ts` |
+| 3 | `getSlots()` العامة لا تحذف السلوتات المحجوزة | تحميل الحجوزات + overlap check → `available: true/false` | `practitioner-availability.service.ts` |
+| 4 | لا جدول ربط بين ممارس وخدمة | `PractitionerService` join table + تحقق عند الحجز | `schema.prisma`, `bookings.service.ts` |
+| 5 | `partial` refund = `full` refund (لا فرق) | `refundAmount` field + validation عند partial | `cancel-approve.dto.ts`, `booking-cancellation.service.ts`, `schema.prisma` |
+| 6 | حذف الفئة hard delete + خدمات soft-deleted = FK error | الآن يحسب **كل** الخدمات (شاملة soft-deleted) | `services.service.ts` |
+| 7 | Zoom stub بدون تحذير واضح | `Logger.warn()` + TODO comment مفصّل | `zoom.service.ts` |
+| 8 | لا إشعارات تُرسل من نظام المواعيد | إشعارات عند confirm/complete/cancel + notify helper | `bookings.service.ts`, `booking-cancellation.service.ts`, `bookings.module.ts` |
+| 9 | أسماء المرضى مكشوفة في التقييمات العامة | إخفاء اسم العائلة: "أحمد م." | `practitioners.service.ts` |
+
+### Pricing Refactor — PractitionerService ✅
+
+**المشكلة:** الممارس عنده 3 أسعار ثابتة لكل خدماته (priceClinic/Phone/Video على Practitioner).
+**الحل:** نقل الأسعار لجدول `PractitionerService` — كل ممارس × خدمة = أسعار + مدة + buffer + أنواع حجز مستقلة.
+
+| التغيير | التفاصيل |
+|---------|----------|
+| **Schema** | `PractitionerService` += priceClinic/Phone/Video (nullable), customDuration, bufferBefore/After, availableTypes, isActive |
+| **Booking FK** | `practitionerServiceId` (required) على كل حجز — يثبّت السعر وقت الحجز |
+| **تسعير 3 مستويات** | PractitionerService → Practitioner (legacy) → Service (catalog) — null ≠ مجاني |
+| **availableTypes** | `BookingType[]` لكل خدمة — يمنع حجز نوع غير مدعوم (مثل: تنظيف أسنان عن بُعد) |
+| **buffer** | `bufferBefore` (تحضير) + `bufferAfter` (تعقيم) — يوسّع الفترة المحجوزة في checkDoubleBooking |
+| **4 endpoints جديدة** | `GET/POST/PATCH/DELETE /practitioners/:id/services` — إدارة الخدمات والأسعار |
+| **checkOwnership** | مستخرج لـ `common/helpers/ownership.helper.ts` (كان مكرر في 3 ملفات) |
+| **Chatbot** | RAG sync يعرض أسعار per-service، Tools تستخدم customDuration |
+
+**Migrations:**
+1. `enrich_practitioner_service_pricing` — الحقول الجديدة + FK optional
+2. Data migration SQL — نسخ أسعار + ربط حجوزات + إنشاء records يتيمة
+3. `make_practitioner_service_id_required` — تحويل FK لـ required
+
+**ملفات جديدة (5):**
+- `practitioner-service.service.ts` (CRUD — 161 سطر)
+- `assign-practitioner-service.dto.ts`
+- `update-practitioner-service.dto.ts`
+- `ownership.helper.ts`
+- `booking-validation.helper.ts`
+
+**ملفات معدّلة (10):**
+- `schema.prisma`, `payments.helpers.ts`, `bookings.service.ts`, `booking-cancellation.service.ts`, `bookings.module.ts`
+- `practitioners.service.ts`, `practitioners.controller.ts`, `practitioners.module.ts`
+- `chatbot-rag.service.ts`, `chatbot-tools.service.ts`
+- `shared/types/practitioner.ts`
+
+---
+
+## Sprint 4.6 — Code Audit & Hardening ✅ مكتمل
+
+> **تاريخ الاكتشاف:** 2026-03-23
+> **المدة المقدّرة:** 5–7 أيام
+> **الأولوية:** 🔴 حرجة — يجب إنهاؤها قبل Phase 5 (Production Readiness)
+
+### المجموعة أ — أخطاء منطقية (Bugs) 🔴
+
+| # | المشكلة | الملف | الأولوية | التقدير |
+|---|---------|-------|----------|---------|
+| B-01 | `complete()` يرسل إشعار `booking_confirmed` بدل `booking_completed` — enum غير موجود أصلاً | `bookings.service.ts` | 🔴 | 15 دقيقة |
+| B-02 | `shiftTime` يلف حول منتصف الليل بـ `% 24` — buffer بعد 23:45 يصير 00:15 ويفشل overlap check | `bookings.service.ts` | 🔴 | 30 دقيقة |
+| B-03 | `setAvailability` يحذف ثم ينشئ بدون transaction — crash بينهم = ممارس بدون أوقات | `practitioner-availability.service.ts` | 🔴 | 15 دقيقة |
+| B-04 | `syncFromDatabase` يحذف الكل ثم يعيد الإنشاء — فشل embedding يترك knowledge base ناقصة | `chatbot-rag.service.ts` | 🟠 | 45 دقيقة |
+| B-05 | `rescheduleBooking` في chatbot ما يتحقق أن الحجز للمريض نفسه — أي مريض يقدر يغيّر حجز غيره | `chatbot-tools.service.ts` | 🔴 | 20 دقيقة |
+| B-06 | مقارنة تواريخ الإجازات حساسة للـ timezone — UTC vs server timezone | `booking-validation.helper.ts` | 🟠 | 30 دقيقة |
+| B-07 | `priceClinic \|\| null` يعامل السعر `0` (مجاني) كـ null — يرجع سعر الكتالوج بدل المجاني | `payments.helpers.ts` | 🔴 | 10 دقيقة |
+| B-08 | `findAll` في Services ما يفلتر `isActive` بشكل افتراضي — خدمات غير نشطة تظهر للجمهور | `services.service.ts` | 🟠 | 10 دقيقة |
+
+### المجموعة ب — ثغرات أمنية (Security) 🔴
+
+| # | المشكلة | الملف | الأولوية | التقدير |
+|---|---------|-------|----------|---------|
+| S-01 | Controller يستخدم `PrismaService` مباشرة لفحص الصلاحيات — منطق RBAC مكرر في 3 أماكن | `bookings.controller.ts` | 🟠 | ساعة |
+| S-02 | `duration` query param في slots endpoint بدون حدود — يكشف جدول الممارس الكامل | `practitioners.controller.ts` | 🟠 | 15 دقيقة |
+| S-03 | Chatbot reschedule بدون ownership check (= B-05) | `chatbot-tools.service.ts` | 🔴 | 20 دقيقة |
+| S-04 | `localStorage` للتوكنات في وضع الويب — عرضة لـ XSS | `mobile/stores/secure-storage.ts` | 🟡 | 20 دقيقة |
+
+### المجموعة ج — تنفيذ ناقص (Incomplete) 🟠
+
+| # | المشكلة | الملف | الأولوية | التقدير |
+|---|---------|-------|----------|---------|
+| I-01 | Zoom integration كلها stub — روابط وهمية في production | `zoom.service.ts` | 🟡 يؤجل لـ Phase 5 | — |
+| I-02 | `CancelRejectDto.adminNotes` يُستقبل لكن لا يُحفظ — بيانات تُهمل بصمت | `booking-cancellation.service.ts` | 🟠 | 30 دقيقة |
+| I-03 | لا تحقق من الدفع قبل تأكيد الحجز — المفروض prepayment مطلوب | `bookings.service.ts` | 🔴 | 30 دقيقة |
+| I-04 | `findMyBookings` و `findTodayBookings` بدون pagination — unbounded query | `bookings.service.ts` | 🟠 | 30 دقيقة |
+| I-05 | لا Swagger decorators على DTOs/endpoints الجديدة | ملفات متعددة | 🟡 | ساعة |
+| I-06 | `update()` في RAG يجلب السجل مرتين (redundant DB call) | `chatbot-rag.service.ts` | 🟡 | 10 دقيقة |
+| I-07 | لا إشعار للممارس عند حجز جديد أو إلغاء | `bookings.service.ts` | 🟠 | 20 دقيقة |
+| I-08 | لا `booking_completed` enum في NotificationType | `schema.prisma` | 🟠 | 15 دقيقة |
+| I-09 | Zoom link لا يتحدث عند reschedule لحجز video | `bookings.service.ts` | 🟡 يؤجل مع I-01 | — |
+
+### المجموعة د — أداء (Performance) 🟠
+
+| # | المشكلة | الملف | الأولوية | التقدير |
+|---|---------|-------|----------|---------|
+| P-01 | N+1 في `syncFromDatabase` — HTTP call تسلسلي لكل embedding | `chatbot-rag.service.ts` | 🟡 | 45 دقيقة |
+| P-02 | `findAll` bookings controller يعمل 2-3 DB queries إضافية لكل request | `bookings.controller.ts` | 🟠 | 45 دقيقة |
+| P-03 | `getAvailableSlots` يحمّل **كل** الإجازات بدون فلتر تاريخ | `practitioner-availability.service.ts` | 🟠 | 15 دقيقة |
+| P-04 | `sortBy` من query string بدون whitelist — يكسر Prisma runtime | `practitioners.service.ts` | 🟠 | 15 دقيقة |
+
+### المجموعة هـ — جودة الكود (Code Quality) 🟡
+
+| # | المشكلة | الملف | الأولوية | التقدير |
+|---|---------|-------|----------|---------|
+| Q-01 | `bookings.service.ts` عند 316 سطر — قريب جداً من حد الـ 350 | `bookings.service.ts` | 🟠 | 30 دقيقة |
+| Q-02 | `timeSlotsOverlap` مكرر في ملفين مختلفين — انتهاك DRY | `bookings.service.ts` + `practitioner-availability.service.ts` | 🟡 | 20 دقيقة |
+| Q-03 | `as never[]` type cast بدل استخدام `BookingType[]` الصحيح | `practitioner-service.service.ts` | 🟡 | 10 دقيقة |
+| Q-04 | `delete()` و `softDelete()` نفس الكود — duplication بلا سبب | `practitioners.service.ts` | 🟡 | 5 دقيقة |
+| Q-05 | `bookingInclude` معرّف في ملفين بمحتوى مختلف — responses غير متسقة | `bookings.service.ts` + `booking-cancellation.service.ts` | 🟠 | 15 دقيقة |
+| Q-06 | `@IsNotEmpty()` على array بدل `@ArrayNotEmpty()` | `assign-practitioner-service.dto.ts` | 🟡 | 5 دقيقة |
+| Q-07 | `shared/types/practitioner.ts` ناقص `deletedAt` + `availableTypes` نوعه خطأ | `shared/types/practitioner.ts` | 🟡 | 10 دقيقة |
+| Q-08 | `persistTokens` parameter type يقبل `undefined` بدون guard | `mobile/services/auth.ts` | 🟡 | 5 دقيقة |
+
+### Dashboard — مشاكل مرصودة من السكرين شوت 🟡
+
+| # | المشكلة | الملاحظة |
+|---|---------|----------|
+| D-01 | صفحة الـ Chatbot Settings حقول فارغة بدون placeholder text | يحتاج UX improvement |
+| D-02 | صفحة Notifications placeholder فاضي (معروف — Sprint 2.5) | ينتظر Phase 5 |
+
+---
+
+### خطة التنفيذ المقترحة (ترتيب حسب الأولوية)
+
+**اليوم 1 — الأخطاء الحرجة (B + S):**
+
+```
+1. B-07: إصلاح || → ?? في payments.helpers.ts (10 دقائق)
+2. B-01: إضافة booking_completed enum + إصلاح complete() (15 دقيقة + I-08)
+3. B-05/S-03: إضافة ownership check في chatbot reschedule (20 دقيقة)
+4. B-02: إصلاح midnight wrap في shiftTime (30 دقيقة)
+5. B-03: لف setAvailability بـ $transaction (15 دقيقة)
+6. I-03: إضافة payment check قبل confirm (30 دقيقة)
+```
+
+**اليوم 2 — التنفيذ الناقص + الأداء:**
+
+```
+7. I-02: حفظ adminNotes في الإلغاء (30 دقيقة)
+8. I-04: إضافة pagination لـ findMyBookings/findTodayBookings (30 دقيقة)
+9. I-07: إشعار الممارس عند حجز/إلغاء (20 دقيقة)
+10. P-03: فلتر تاريخ على الإجازات في getAvailableSlots (15 دقيقة)
+11. P-04: whitelist لـ sortBy (15 دقيقة)
+12. B-08: فلتر isActive افتراضي في Services (10 دقائق)
+```
+
+**اليوم 3 — جودة الكود + Refactoring:**
+
+```
+13. Q-01+Q-02: نقل helpers مكررة لـ booking-time.helper.ts (30 دقيقة)
+14. Q-05: توحيد bookingInclude في ملف مشترك (15 دقيقة)
+15. Q-03: إصلاح as never[] → BookingType[] (10 دقائق)
+16. Q-04: حذف softDelete duplicate (5 دقائق)
+17. Q-06: @ArrayNotEmpty بدل @IsNotEmpty (5 دقائق)
+18. Q-07: تحديث shared types (10 دقائق)
+19. Q-08: NonNullable type في persistTokens (5 دقائق)
+```
+
+**اليوم 4 — الأمان والأداء:**
+
+```
+20. S-01: نقل RBAC logic من controller للـ service layer (ساعة)
+21. S-02: validation على duration parameter (15 دقيقة)
+22. P-02: تقليل DB queries في bookings controller (45 دقيقة)
+23. B-06: توحيد timezone handling (30 دقيقة)
+```
+
+**اليوم 5 — التحسينات:**
+
+```
+24. B-04: transaction في syncFromDatabase (45 دقيقة)
+25. P-01: batching/concurrency في embedding generation (45 دقيقة)
+26. I-05: Swagger decorators للـ DTOs الجديدة (ساعة)
+27. I-06: إزالة redundant findUnique في RAG update (10 دقائق)
+28. S-04: تحسين token storage للويب (20 دقيقة)
+```
+
+**مؤجل لـ Phase 5:**
+
+- I-01: Zoom API integration الفعلية
+- I-09: Zoom link update عند reschedule
+- D-02: صفحة Notifications كاملة
+
+---
+
+### معيار إتمام Sprint 4.6
+
+- كل الأخطاء المنطقية (B-01 → B-08) مُصلحة
+- كل الثغرات الأمنية (S-01 → S-04) مُعالجة
+- التنفيذ الناقص الحرج (I-02, I-03, I-04, I-07, I-08) مكتمل
+- مشاكل الأداء (P-02, P-03, P-04) محلولة
+- جودة الكود (Q-01 → Q-08) محسّنة
+- كل ملف تحت 350 سطر
+- لا `as never[]` أو `|| null` على قيم رقمية
+
+---
+
 ## Phase 5 — Production Readiness 🔲 لم يُبدأ
 
 | Task | الوصف | الحالة |
@@ -458,7 +660,9 @@ POST /invoices/clearance/single  # فاتورة معيارية (Phase 2)
 | 2026-03 | توحيد ملفات التخطيط في sprint-plan.md |
 | 2026-03 | Sprint 3.5: Payment Flow + Notifications + Video Call + Settings (10 ملفات جديدة + 8 تعديلات، 0 TS errors) |
 | 2026-03-22 | Phase 4 مكتمل: AI Chatbot — Backend 23 ملف + Mobile chat (GiftedChat + RTL) + Dashboard 3 tabs + KB editor + File processing + 39 unit test + Migration applied |
+| 2026-03-23 | Sprint 4.5: إصلاح 9 bugs حرجة (availability validation, date filter, slot booking display, category delete FK, partial refund, notifications, patient name anonymization) |
+| 2026-03-23 | Pricing Refactor: نقل الأسعار من Practitioner لـ PractitionerService — 3-tier pricing + availableTypes + bufferBefore/After + customDuration + 4 endpoints جديدة + 3 migrations + 5 ملفات جديدة + 10 معدّلة |
 
 ---
 
-*CareKit — WebVue Technology Solutions — آخر تحديث: 2026-03-22*
+*CareKit — WebVue Technology Solutions — آخر تحديث: 2026-03-23*

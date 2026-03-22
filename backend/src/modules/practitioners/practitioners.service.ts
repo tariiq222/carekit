@@ -1,16 +1,19 @@
 import {
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { checkOwnership } from '../../common/helpers/ownership.helper.js';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto.js';
 import { SetAvailabilityDto } from './dto/set-availability.dto.js';
 import { CreateVacationDto } from './dto/create-vacation.dto.js';
+import { AssignPractitionerServiceDto } from './dto/assign-practitioner-service.dto.js';
+import { UpdatePractitionerServiceDto } from './dto/update-practitioner-service.dto.js';
 import { PractitionerAvailabilityService } from './practitioner-availability.service.js';
 import { PractitionerVacationService } from './practitioner-vacation.service.js';
+import { PractitionerServiceService } from './practitioner-service.service.js';
 
 @Injectable()
 export class PractitionersService {
@@ -18,6 +21,7 @@ export class PractitionersService {
     private readonly prisma: PrismaService,
     private readonly availabilityService: PractitionerAvailabilityService,
     private readonly vacationService: PractitionerVacationService,
+    private readonly practitionerServiceService: PractitionerServiceService,
   ) {}
 
   async findAll(params?: {
@@ -32,7 +36,8 @@ export class PractitionersService {
   }) {
     const page = params?.page ?? 1;
     const perPage = Math.min(params?.perPage ?? 20, 100);
-    const sortBy = params?.sortBy ?? 'rating';
+    const allowedSortFields = ['rating', 'reviewCount', 'experience', 'createdAt'];
+    const sortBy = allowedSortFields.includes(params?.sortBy ?? '') ? params!.sortBy! : 'rating';
     const sortOrder = params?.sortOrder ?? 'desc';
 
     const where: Record<string, unknown> = {
@@ -60,7 +65,7 @@ export class PractitionersService {
     const [practitioners, total] = await Promise.all([
       this.prisma.practitioner.findMany({
         where,
-        include: { user: true, specialty: true },
+        include: { user: true, specialty: true, practitionerServices: { where: { isActive: true }, include: { service: { select: { id: true, nameAr: true, nameEn: true } } } } },
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * perPage,
         take: perPage,
@@ -186,7 +191,7 @@ export class PractitionersService {
     }
 
     if (currentUserId) {
-      await this.checkOwnership(practitioner.userId, currentUserId);
+      await checkOwnership(this.prisma,practitioner.userId, currentUserId);
     }
 
     if (dto.specialtyId) {
@@ -235,11 +240,6 @@ export class PractitionersService {
       where: { id },
       data: { deletedAt: new Date(), isActive: false },
     });
-  }
-
-  /** Alias for delete — unit tests use softDelete */
-  async softDelete(id: string) {
-    return this.delete(id);
   }
 
   // --- Delegated: Availability ---
@@ -295,11 +295,11 @@ export class PractitionersService {
     const page = params?.page ?? 1;
     const perPage = Math.min(params?.perPage ?? 20, 100);
 
-    const [ratings, total] = await Promise.all([
+    const [rawRatings, total] = await Promise.all([
       this.prisma.rating.findMany({
         where: { practitionerId },
         include: {
-          patient: { select: { id: true, firstName: true, lastName: true } },
+          patient: { select: { firstName: true, lastName: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * perPage,
@@ -307,6 +307,14 @@ export class PractitionersService {
       }),
       this.prisma.rating.count({ where: { practitionerId } }),
     ]);
+
+    // Anonymize patient names in public endpoint: "أحمد م."
+    const ratings = rawRatings.map(({ patient, ...rating }) => ({
+      ...rating,
+      patient: patient
+        ? { firstName: patient.firstName, lastName: patient.lastName.charAt(0) + '.' }
+        : null,
+    }));
 
     const totalPages = Math.ceil(total / perPage);
 
@@ -316,25 +324,21 @@ export class PractitionersService {
     };
   }
 
-  // --- Helpers ---
+  // --- Delegated: Practitioner Services ---
 
-  private async checkOwnership(ownerUserId: string, currentUserId: string) {
-    if (ownerUserId === currentUserId) return;
+  async assignService(practitionerId: string, dto: AssignPractitionerServiceDto, currentUserId?: string) {
+    return this.practitionerServiceService.assignService(practitionerId, dto, currentUserId);
+  }
 
-    const dbUser = await this.prisma.user.findUnique({
-      where: { id: currentUserId },
-      include: { userRoles: { include: { role: true } } },
-    });
+  async listPractitionerServices(practitionerId: string) {
+    return this.practitionerServiceService.listServices(practitionerId);
+  }
 
-    const roles = dbUser?.userRoles.map((ur: { role: { slug: string } }) => ur.role.slug) ?? [];
-    const isAdmin = roles.includes('super_admin') || roles.includes('receptionist');
+  async updatePractitionerService(practitionerId: string, serviceId: string, dto: UpdatePractitionerServiceDto, currentUserId?: string) {
+    return this.practitionerServiceService.updateService(practitionerId, serviceId, dto, currentUserId);
+  }
 
-    if (!isAdmin) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'You can only edit your own profile',
-        error: 'FORBIDDEN',
-      });
-    }
+  async removePractitionerService(practitionerId: string, serviceId: string, currentUserId?: string) {
+    return this.practitionerServiceService.removeService(practitionerId, serviceId, currentUserId);
   }
 }

@@ -1,5 +1,9 @@
 import api from './api';
-import * as SecureStore from 'expo-secure-store';
+import {
+  getSecureItem,
+  setSecureItem,
+  deleteSecureItem,
+} from '@/stores/secure-storage';
 import { store } from '@/stores/store';
 import { logout as logoutAction } from '@/stores/slices/auth-slice';
 import type {
@@ -57,18 +61,18 @@ export const authService = {
     return response.data;
   },
 
-  /** Logout: call backend + clear SecureStore + clear Redux */
+  /** Logout: call backend + clear storage + clear Redux */
   async logout(): Promise<void> {
     try {
-      const refreshToken = await SecureStore.getItemAsync('refreshToken');
+      const refreshToken = await getSecureItem('refreshToken');
       if (refreshToken) {
         await api.post('/auth/logout', { refreshToken });
       }
     } catch {
       // Backend call may fail — still clear local state
     }
-    await SecureStore.deleteItemAsync('accessToken');
-    await SecureStore.deleteItemAsync('refreshToken');
+    await deleteSecureItem('accessToken');
+    await deleteSecureItem('refreshToken');
     store.dispatch(logoutAction());
   },
 
@@ -84,15 +88,15 @@ export const authService = {
     return response.data;
   },
 
-  /** Hydrate: read tokens from SecureStore for app restart */
+  /** Hydrate: read tokens from storage for app restart */
   async getStoredTokens() {
-    const accessToken = await SecureStore.getItemAsync('accessToken');
-    const refreshToken = await SecureStore.getItemAsync('refreshToken');
+    const accessToken = await getSecureItem('accessToken');
+    const refreshToken = await getSecureItem('refreshToken');
     return { accessToken, refreshToken };
   },
 };
 
-async function persistTokens(data: AuthResponse['data']) {
-  await SecureStore.setItemAsync('accessToken', data.accessToken);
-  await SecureStore.setItemAsync('refreshToken', data.refreshToken);
+async function persistTokens(data: NonNullable<AuthResponse['data']>) {
+  await setSecureItem('accessToken', data.accessToken);
+  await setSecureItem('refreshToken', data.refreshToken);
 }

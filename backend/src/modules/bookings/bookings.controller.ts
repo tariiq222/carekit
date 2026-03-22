@@ -24,6 +24,7 @@ import { CancelApproveDto } from './dto/cancel-approve.dto.js';
 import { CancelRejectDto } from './dto/cancel-reject.dto.js';
 import { BookingListQueryDto } from './dto/booking-list-query.dto.js';
 import { PrismaService } from '../../database/prisma.service.js';
+import { resolveUserRoleContext } from '../../common/helpers/user-role.helper.js';
 
 const uuidPipe = new ParseUUIDPipe({
   exceptionFactory: () =>
@@ -95,26 +96,12 @@ export class BookingsController {
     @Query() query: BookingListQueryDto,
     @CurrentUser() user: { id: string },
   ) {
-    // Auto-filter by role: practitioners see only their bookings, patients see only theirs
-    const dbUser = await this.prisma.user.findUnique({
-      where: { id: user.id },
-      include: { userRoles: { include: { role: true } } },
-    });
-    const roles = dbUser?.userRoles.map((ur) => ur.role.slug) ?? [];
-    const isAdmin =
-      roles.includes('super_admin') ||
-      roles.includes('receptionist') ||
-      roles.includes('accountant');
+    const ctx = await resolveUserRoleContext(this.prisma, user.id);
 
-    if (!isAdmin) {
-      // Check if practitioner
-      const practitioner = await this.prisma.practitioner.findFirst({
-        where: { userId: user.id, deletedAt: null },
-      });
-      if (practitioner) {
-        query.practitionerId = practitioner.id;
+    if (!ctx.isAdmin) {
+      if (ctx.isPractitioner && ctx.practitionerId) {
+        query.practitionerId = ctx.practitionerId;
       } else {
-        // Patient — filter by patientId
         query.patientId = user.id;
       }
     }
@@ -132,35 +119,11 @@ export class BookingsController {
     @CurrentUser() user: { id: string },
   ) {
     const booking = await this.bookingsService.findOne(id);
+    const ctx = await resolveUserRoleContext(this.prisma, user.id);
 
-    // Check user's role for access control
-    const dbUser = await this.prisma.user.findUnique({
-      where: { id: user.id },
-      include: { userRoles: { include: { role: true } } },
-    });
-
-    const roles = dbUser?.userRoles.map((ur) => ur.role.slug) ?? [];
-    const isAdmin =
-      roles.includes('super_admin') ||
-      roles.includes('receptionist') ||
-      roles.includes('accountant');
-
-    if (isAdmin) {
-      return booking;
-    }
-
-    // Check if user is the owning patient
-    if (booking.patientId === user.id) {
-      return booking;
-    }
-
-    // Check if user is the assigned practitioner
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { userId: user.id, deletedAt: null },
-    });
-    if (practitioner && booking.practitionerId === practitioner.id) {
-      return booking;
-    }
+    if (ctx.isAdmin) return booking;
+    if (booking.patientId === user.id) return booking;
+    if (ctx.practitionerId && booking.practitionerId === ctx.practitionerId) return booking;
 
     throw new ForbiddenException({
       statusCode: 403,

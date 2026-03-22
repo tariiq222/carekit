@@ -4,6 +4,7 @@
 
 datasource db {
   provider   = "postgresql"
+  url        = env("DATABASE_URL")
   extensions = [pgvector(map: "vector")]
 }
 
@@ -65,6 +66,7 @@ enum TransferVerificationStatus {
 
 enum NotificationType {
   booking_confirmed
+  booking_completed
   booking_cancelled
   reminder
   payment_received
@@ -285,10 +287,11 @@ model Practitioner {
   // Relations
   user           User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
   specialty      Specialty                  @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
-  availabilities PractitionerAvailability[]
-  vacations      PractitionerVacation[]
-  bookings       Booking[]
-  ratings        Rating[]
+  availabilities      PractitionerAvailability[]
+  vacations           PractitionerVacation[]
+  bookings            Booking[]
+  ratings             Rating[]
+  practitionerServices PractitionerService[]
 
   @@index([specialtyId])
   @@map("practitioners")
@@ -344,6 +347,31 @@ model PractitionerVacation {
   @@map("practitioner_vacations")
 }
 
+model PractitionerService {
+  id             String        @id @default(uuid())
+  practitionerId String        @map("practitioner_id")
+  serviceId      String        @map("service_id")
+  priceClinic    Int?          @map("price_clinic") // halalat — null = use fallback
+  pricePhone     Int?          @map("price_phone") // halalat — null = use fallback
+  priceVideo     Int?          @map("price_video") // halalat — null = use fallback
+  customDuration Int?          @map("custom_duration") // minutes — overrides service.duration
+  bufferBefore   Int           @default(0) @map("buffer_before") // minutes before appointment
+  bufferAfter    Int           @default(0) @map("buffer_after") // minutes after appointment
+  availableTypes BookingType[] @map("available_types") // supported booking types
+  isActive       Boolean       @default(true) @map("is_active")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+  service      Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+
+  @@unique([practitionerId, serviceId])
+  @@index([serviceId])
+  @@map("practitioner_services")
+}
+
 // ──────────────────────────────────────────────
 // Services
 // ──────────────────────────────────────────────
@@ -378,8 +406,9 @@ model Service {
   deletedAt     DateTime? @map("deleted_at")
 
   // Relations
-  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  bookings Booking[]
+  category             ServiceCategory      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  bookings             Booking[]
+  practitionerServices PractitionerService[]
 
   @@index([categoryId])
   @@map("services")
@@ -392,9 +421,10 @@ model Service {
 model Booking {
   id                 String        @id @default(uuid())
   patientId          String?       @map("patient_id")
-  practitionerId     String        @map("practitioner_id")
-  serviceId          String        @map("service_id")
-  type               BookingType
+  practitionerId        String        @map("practitioner_id")
+  serviceId             String        @map("service_id")
+  practitionerServiceId String        @map("practitioner_service_id")
+  type                  BookingType
   date               DateTime
   startTime          String        @map("start_time") // "HH:mm"
   endTime            String        @map("end_time") // "HH:mm"
@@ -404,6 +434,7 @@ model Booking {
   zoomJoinUrl        String?       @map("zoom_join_url")
   zoomHostUrl        String?       @map("zoom_host_url")
   cancellationReason String?       @map("cancellation_reason")
+  adminNotes         String?       @map("admin_notes")
   cancelledAt        DateTime?     @map("cancelled_at")
   confirmedAt        DateTime?     @map("confirmed_at")
   completedAt        DateTime?     @map("completed_at")
@@ -412,16 +443,18 @@ model Booking {
   deletedAt          DateTime?     @map("deleted_at")
 
   // Relations
-  patient        User?           @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
-  practitioner   Practitioner    @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
-  service        Service         @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  payment        Payment?
-  rating         Rating?
-  problemReports ProblemReport[]
+  patient             User?                @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
+  practitioner        Practitioner         @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  service             Service              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  practitionerService PractitionerService @relation(fields: [practitionerServiceId], references: [id], onDelete: Restrict)
+  payment             Payment?
+  rating              Rating?
+  problemReports      ProblemReport[]
 
   @@index([practitionerId, date])
   @@index([patientId, status])
   @@index([status])
+  @@index([practitionerServiceId])
   @@map("bookings")
 }
 
@@ -435,6 +468,7 @@ model Payment {
   amount           Int // halalat
   vatAmount        Int           @default(0) @map("vat_amount") // halalat
   totalAmount      Int           @default(0) @map("total_amount") // halalat
+  refundAmount     Int?          @map("refund_amount") // halalat — null = no refund, totalAmount = full refund
   method           PaymentMethod
   status           PaymentStatus @default(pending)
   moyasarPaymentId String?       @map("moyasar_payment_id")

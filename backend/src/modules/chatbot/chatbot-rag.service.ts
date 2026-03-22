@@ -110,78 +110,103 @@ export class ChatbotRagService {
 
   /**
    * Auto-sync services and practitioners from database to knowledge base.
+   * Uses concurrent embedding generation + atomic transaction.
    */
   async syncFromDatabase(): Promise<number> {
-    // Delete old auto-synced entries
-    await this.prisma.knowledgeBase.deleteMany({
-      where: { source: 'auto_sync' },
-    });
+    // 1. Collect all entries to sync
+    const entries: Array<{ title: string; content: string; category: string }> = [];
 
-    let count = 0;
-
-    // Sync services
     const services = await this.prisma.service.findMany({
       where: { isActive: true, deletedAt: null },
       include: { category: true },
     });
 
     for (const svc of services) {
-      const content = [
-        `Service: ${svc.nameEn} / ${svc.nameAr}`,
-        `Category: ${svc.category.nameEn} / ${svc.category.nameAr}`,
-        `Price: ${svc.price / 100} SAR`,
-        `Duration: ${svc.duration} minutes`,
-        svc.descriptionEn ? `Description: ${svc.descriptionEn}` : '',
-        svc.descriptionAr ? `الوصف: ${svc.descriptionAr}` : '',
-      ]
-        .filter(Boolean)
-        .join('\n');
-
-      await this.upsertEntry({
+      entries.push({
         title: `${svc.nameEn} / ${svc.nameAr}`,
-        content,
+        content: [
+          `Service: ${svc.nameEn} / ${svc.nameAr}`,
+          `Category: ${svc.category.nameEn} / ${svc.category.nameAr}`,
+          `Price: ${svc.price / 100} SAR`,
+          `Duration: ${svc.duration} minutes`,
+          svc.descriptionEn ? `Description: ${svc.descriptionEn}` : '',
+          svc.descriptionAr ? `الوصف: ${svc.descriptionAr}` : '',
+        ].filter(Boolean).join('\n'),
         category: 'services',
-        source: 'auto_sync',
       });
-      count++;
     }
 
-    // Sync practitioners
     const practitioners = await this.prisma.practitioner.findMany({
       where: { isActive: true, deletedAt: null },
       include: {
         user: { select: { firstName: true, lastName: true } },
         specialty: { select: { nameEn: true, nameAr: true } },
+        practitionerServices: {
+          where: { isActive: true },
+          include: { service: { select: { nameEn: true, nameAr: true } } },
+        },
       },
     });
 
     for (const doc of practitioners) {
       const name = `${doc.user.firstName} ${doc.user.lastName}`;
-      const content = [
-        `Practitioner: ${name}`,
-        `Specialty: ${doc.specialty.nameEn} / ${doc.specialty.nameAr}`,
-        `Clinic Visit: ${doc.priceClinic / 100} SAR`,
-        `Phone Consultation: ${doc.pricePhone / 100} SAR`,
-        `Video Consultation: ${doc.priceVideo / 100} SAR`,
-        `Experience: ${doc.experience} years`,
-        `Rating: ${doc.rating}/5 (${doc.reviewCount} reviews)`,
-        doc.bio ? `Bio: ${doc.bio}` : '',
-        doc.bioAr ? `السيرة: ${doc.bioAr}` : '',
-      ]
-        .filter(Boolean)
-        .join('\n');
-
-      await this.upsertEntry({
-        title: name,
-        content,
-        category: 'practitioners',
-        source: 'auto_sync',
+      const serviceLines = doc.practitionerServices.map((ps) => {
+        const prices = [
+          ps.priceClinic != null ? `Clinic: ${ps.priceClinic / 100} SAR` : null,
+          ps.pricePhone != null ? `Phone: ${ps.pricePhone / 100} SAR` : null,
+          ps.priceVideo != null ? `Video: ${ps.priceVideo / 100} SAR` : null,
+        ].filter(Boolean).join(', ');
+        return `  - ${ps.service.nameEn}: ${prices}`;
       });
-      count++;
+      entries.push({
+        title: name,
+        content: [
+          `Practitioner: ${name}`,
+          `Specialty: ${doc.specialty.nameEn} / ${doc.specialty.nameAr}`,
+          serviceLines.length > 0 ? `Services:\n${serviceLines.join('\n')}` : '',
+          `Experience: ${doc.experience} years`,
+          `Rating: ${doc.rating}/5 (${doc.reviewCount} reviews)`,
+          doc.bio ? `Bio: ${doc.bio}` : '',
+          doc.bioAr ? `السيرة: ${doc.bioAr}` : '',
+        ].filter(Boolean).join('\n'),
+        category: 'practitioners',
+      });
     }
 
-    this.logger.log(`Auto-synced ${count} entries to knowledge base`);
-    return count;
+    // 2. Generate embeddings concurrently (batches of 5)
+    const BATCH_SIZE = 5;
+    const embeddings: string[] = [];
+    for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+      const batch = entries.slice(i, i + BATCH_SIZE);
+      const results = await Promise.all(
+        batch.map((e) => this.generateEmbedding(`${e.title}\n${e.content}`)),
+      );
+      embeddings.push(...results.map((emb) => `[${emb.join(',')}]`));
+    }
+
+    // 3. Atomic replace: delete old + insert new in one transaction
+    await this.prisma.$transaction(async (tx) => {
+      await tx.knowledgeBase.deleteMany({ where: { source: 'auto_sync' } });
+
+      for (let i = 0; i < entries.length; i++) {
+        const entry = await tx.knowledgeBase.create({
+          data: {
+            title: entries[i].title,
+            content: entries[i].content,
+            category: entries[i].category,
+            source: 'auto_sync',
+          },
+        });
+        await tx.$executeRawUnsafe(
+          `UPDATE knowledge_base SET embedding = $1::vector WHERE id = $2`,
+          embeddings[i],
+          entry.id,
+        );
+      }
+    });
+
+    this.logger.log(`Auto-synced ${entries.length} entries to knowledge base`);
+    return entries.length;
   }
 
   // ── KB CRUD ──
@@ -221,18 +246,15 @@ export class ChatbotRagService {
       data,
     });
 
-    // Re-generate embedding if content changed
+    // Re-generate embedding if content changed — use the already-returned entry
     if (data.title || data.content) {
-      const updated = await this.prisma.knowledgeBase.findUnique({ where: { id } });
-      if (updated) {
-        const embedding = await this.generateEmbedding(`${updated.title}\n${updated.content}`);
-        const vectorStr = `[${embedding.join(',')}]`;
-        await this.prisma.$executeRawUnsafe(
-          `UPDATE knowledge_base SET embedding = $1::vector WHERE id = $2`,
-          vectorStr,
-          id,
-        );
-      }
+      const embedding = await this.generateEmbedding(`${entry.title}\n${entry.content}`);
+      const vectorStr = `[${embedding.join(',')}]`;
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE knowledge_base SET embedding = $1::vector WHERE id = $2`,
+        vectorStr,
+        id,
+      );
     }
 
     return entry;

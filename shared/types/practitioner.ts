@@ -7,14 +7,37 @@ export interface Practitioner {
   experience: number;
   education: string | null;
   educationAr: string | null;
+  /** @deprecated Use PractitionerServicePricing per service instead */
   priceClinic: number;
+  /** @deprecated Use PractitionerServicePricing per service instead */
   pricePhone: number;
+  /** @deprecated Use PractitionerServicePricing per service instead */
   priceVideo: number;
   rating: number;
   reviewCount: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface PractitionerServicePricing {
+  id: string;
+  practitionerId: string;
+  serviceId: string;
+  priceClinic: number | null;
+  pricePhone: number | null;
+  priceVideo: number | null;
+  customDuration: number | null;
+  bufferBefore: number;
+  bufferAfter: number;
+  availableTypes: ('clinic_visit' | 'phone_consultation' | 'video_consultation')[];
+  isActive: boolean;
+  service?: {
+    id: string;
+    nameAr: string;
+    nameEn: string;
+  };
 }
 
 export interface PractitionerWithUser extends Practitioner {

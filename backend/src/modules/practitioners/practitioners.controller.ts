@@ -23,6 +23,8 @@ import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto.js';
 import { SetAvailabilityDto } from './dto/set-availability.dto.js';
 import { CreateVacationDto } from './dto/create-vacation.dto.js';
+import { AssignPractitionerServiceDto } from './dto/assign-practitioner-service.dto.js';
+import { UpdatePractitionerServiceDto } from './dto/update-practitioner-service.dto.js';
 
 @Controller('practitioners')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -117,11 +119,15 @@ export class PractitionersController {
         error: 'VALIDATION_ERROR',
       });
     }
-    return this.practitionersService.getSlots(
-      id,
-      date,
-      duration ? parseInt(duration, 10) : 30,
-    );
+    const parsedDuration = duration ? parseInt(duration, 10) : 30;
+    if (parsedDuration < 5 || parsedDuration > 240) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'duration must be between 5 and 240 minutes',
+        error: 'VALIDATION_ERROR',
+      });
+    }
+    return this.practitionersService.getSlots(id, date, parsedDuration);
   }
 
   // --- Vacations ---
@@ -151,6 +157,45 @@ export class PractitionersController {
   ) {
     await this.practitionersService.deleteVacation(id, vacationId, user.id);
     return { success: true };
+  }
+
+  // --- Practitioner Services (pricing) ---
+
+  @Get(':id/services')
+  @Public()
+  async listServices(@Param('id') id: string) {
+    return this.practitionersService.listPractitionerServices(id);
+  }
+
+  @Post(':id/services')
+  @CheckPermissions({ module: 'practitioners', action: 'edit' })
+  async assignService(
+    @Param('id') id: string,
+    @Body() dto: AssignPractitionerServiceDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.practitionersService.assignService(id, dto, user.id);
+  }
+
+  @Patch(':id/services/:serviceId')
+  @CheckPermissions({ module: 'practitioners', action: 'edit' })
+  async updateService(
+    @Param('id') id: string,
+    @Param('serviceId') serviceId: string,
+    @Body() dto: UpdatePractitionerServiceDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.practitionersService.updatePractitionerService(id, serviceId, dto, user.id);
+  }
+
+  @Delete(':id/services/:serviceId')
+  @CheckPermissions({ module: 'practitioners', action: 'edit' })
+  async removeService(
+    @Param('id') id: string,
+    @Param('serviceId') serviceId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.practitionersService.removePractitionerService(id, serviceId, user.id);
   }
 
   // --- Ratings ---

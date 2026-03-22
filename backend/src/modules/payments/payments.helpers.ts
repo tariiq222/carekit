@@ -27,31 +27,61 @@ export const paymentInclude = {
 export const bookingWithPriceInclude = {
   practitioner: true,
   service: true,
+  practitionerService: true,
 };
 
+/**
+ * 3-tier price resolution:
+ * 1. PractitionerService (per service × practitioner) — null = skip
+ * 2. Practitioner (legacy flat pricing) — null/0 = skip
+ * 3. Service catalog default
+ */
 export function calculateAmounts(booking: {
   type: string;
-  practitioner: { priceClinic: number; pricePhone: number; priceVideo: number } | null;
+  practitionerService?: {
+    priceClinic: number | null;
+    pricePhone: number | null;
+    priceVideo: number | null;
+  } | null;
+  practitioner: {
+    priceClinic: number;
+    pricePhone: number;
+    priceVideo: number;
+  } | null;
   service: { price: number } | null;
 }): { amount: number; vatAmount: number; totalAmount: number } {
-  let amount = 0;
-
-  if (booking.practitioner) {
-    if (booking.type === 'clinic_visit') {
-      amount = booking.practitioner.priceClinic;
-    } else if (booking.type === 'phone_consultation') {
-      amount = booking.practitioner.pricePhone;
-    } else if (booking.type === 'video_consultation') {
-      amount = booking.practitioner.priceVideo;
-    }
-  }
-
-  if (amount === 0 && booking.service) {
-    amount = booking.service.price;
-  }
-
+  const priceByType = resolvePriceByType(booking);
+  const amount = priceByType ?? booking.service?.price ?? 0;
   const vatAmount = Math.round(amount * 0.15);
   const totalAmount = amount + vatAmount;
 
   return { amount, vatAmount, totalAmount };
+}
+
+function resolvePriceByType(booking: {
+  type: string;
+  practitionerService?: {
+    priceClinic: number | null;
+    pricePhone: number | null;
+    priceVideo: number | null;
+  } | null;
+  practitioner: {
+    priceClinic: number;
+    pricePhone: number;
+    priceVideo: number;
+  } | null;
+}): number | null {
+  const ps = booking.practitionerService;
+  const pr = booking.practitioner;
+
+  if (booking.type === 'clinic_visit') {
+    return ps?.priceClinic ?? pr?.priceClinic ?? null;
+  }
+  if (booking.type === 'phone_consultation') {
+    return ps?.pricePhone ?? pr?.pricePhone ?? null;
+  }
+  if (booking.type === 'video_consultation') {
+    return ps?.priceVideo ?? pr?.priceVideo ?? null;
+  }
+  return null;
 }

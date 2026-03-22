@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { SetAvailabilityDto } from './dto/set-availability.dto.js';
+import { timeSlotsOverlap } from '../../common/helpers/booking-time.helper.js';
 
 const TIME_REGEX = /^\d{2}:\d{2}$/;
 
@@ -36,20 +37,21 @@ export class PractitionerAvailabilityService {
     this.validateScheduleSlots(dto.schedule);
     this.checkOverlappingSlots(dto.schedule);
 
-    // Replace all availability records
-    await this.prisma.practitionerAvailability.deleteMany({
-      where: { practitionerId },
-    });
-
-    await this.prisma.practitionerAvailability.createMany({
-      data: dto.schedule.map((slot) => ({
-        practitionerId,
-        dayOfWeek: slot.dayOfWeek,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        isActive: slot.isActive ?? true,
-      })),
-    });
+    // Replace all availability records atomically
+    await this.prisma.$transaction([
+      this.prisma.practitionerAvailability.deleteMany({
+        where: { practitionerId },
+      }),
+      this.prisma.practitionerAvailability.createMany({
+        data: dto.schedule.map((slot) => ({
+          practitionerId,
+          dayOfWeek: slot.dayOfWeek,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          isActive: slot.isActive ?? true,
+        })),
+      }),
+    ]);
 
     return this.prisma.practitionerAvailability.findMany({
       where: { practitionerId },
@@ -70,6 +72,8 @@ export class PractitionerAvailabilityService {
 
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
+    // Normalize to UTC midnight for consistent vacation comparison
+    const normalizedDate = new Date(Date.UTC(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()));
 
     const availabilities = await this.prisma.practitionerAvailability.findMany({
       where: { practitionerId, dayOfWeek, isActive: true },
@@ -80,8 +84,8 @@ export class PractitionerAvailabilityService {
     const vacation = await this.prisma.practitionerVacation.findFirst({
       where: {
         practitionerId,
-        startDate: { lte: targetDate },
-        endDate: { gte: targetDate },
+        startDate: { lte: normalizedDate },
+        endDate: { gte: normalizedDate },
       },
     });
 
@@ -89,7 +93,30 @@ export class PractitionerAvailabilityService {
       return { date, practitionerId, slots: [] };
     }
 
-    const slots = this.generateSlots(availabilities, duration);
+    const allSlots = this.generateSlots(availabilities, duration);
+
+    // Subtract booked slots so the public API shows real availability
+    const targetDateStart = new Date(normalizedDate);
+    const targetDateEnd = new Date(normalizedDate);
+    targetDateEnd.setUTCHours(23, 59, 59, 999);
+
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        practitionerId,
+        date: { gte: targetDateStart, lte: targetDateEnd },
+        status: { in: ['confirmed', 'pending'] },
+        deletedAt: null,
+      },
+      select: { startTime: true, endTime: true },
+    });
+
+    const slots = allSlots.map((slot) => {
+      const isBooked = bookings.some((b) =>
+        timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime),
+      );
+      return { ...slot, available: !isBooked };
+    });
+
     return { date, practitionerId, slots };
   }
 
@@ -98,39 +125,46 @@ export class PractitionerAvailabilityService {
 
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
+    const normalizedDate = new Date(Date.UTC(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()));
 
     const availabilities = await this.prisma.practitionerAvailability.findMany({
       where: { practitionerId, dayOfWeek, isActive: true },
       orderBy: { startTime: 'asc' },
     });
 
-    // Check for vacation
-    const vacations = await this.prisma.practitionerVacation.findMany({
-      where: { practitionerId },
-    });
-    const isOnVacation = vacations.some((v: { startDate: Date; endDate: Date }) => {
-      const start = new Date(v.startDate);
-      const end = new Date(v.endDate);
-      return targetDate >= start && targetDate <= end;
+    // Check for vacation on this specific date
+    const vacation = await this.prisma.practitionerVacation.findFirst({
+      where: {
+        practitionerId,
+        startDate: { lte: normalizedDate },
+        endDate: { gte: normalizedDate },
+      },
     });
 
-    if (isOnVacation) {
+    if (vacation) {
       return [];
     }
 
-    // Get existing bookings for this date
+    // Get existing bookings for this specific date
+    const targetDateStart = new Date(normalizedDate);
+    const targetDateEnd = new Date(normalizedDate);
+    targetDateEnd.setUTCHours(23, 59, 59, 999);
+
     const bookings = await this.prisma.booking.findMany({
       where: {
         practitionerId,
+        date: { gte: targetDateStart, lte: targetDateEnd },
         status: { in: ['confirmed', 'pending'] },
+        deletedAt: null,
       },
+      select: { startTime: true, endTime: true },
     });
 
     const allSlots = this.generateSlots(availabilities, duration);
 
     return allSlots.filter((slot) => {
-      const isBooked = bookings.some((b: { startTime: string; endTime: string }) =>
-        b.startTime === slot.startTime && b.endTime === slot.endTime,
+      const isBooked = bookings.some((b) =>
+        timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime),
       );
       return !isBooked;
     });
