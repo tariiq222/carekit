@@ -1,11 +1,9 @@
-import { useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Alert,
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -27,105 +25,16 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedInput } from '@/theme/components/ThemedInput';
 import { ThemedButton } from '@/theme/components/ThemedButton';
 import { useTheme } from '@/theme/useTheme';
-import { useAppDispatch } from '@/hooks/use-redux';
-import { setCredentials, setLoading } from '@/stores/slices/auth-slice';
-import { authService } from '@/services/auth';
-
-interface FormErrors {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-}
+import { useRegisterForm } from '@/hooks/use-register-form';
 
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const dispatch = useAppDispatch();
   const { theme, isRTL } = useTheme();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhoneNum] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
-
-  const clearError = useCallback(
-    (field: keyof FormErrors) => {
-      if (errors[field]) {
-        setErrors((prev) => ({ ...prev, [field]: undefined }));
-      }
-    },
-    [errors],
-  );
-
-  const validate = useCallback((): boolean => {
-    const newErrors: FormErrors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!firstName.trim()) newErrors.firstName = t('auth.firstNameRequired');
-    if (!lastName.trim()) newErrors.lastName = t('auth.lastNameRequired');
-    if (!email || !emailRegex.test(email))
-      newErrors.email = t('auth.invalidEmail');
-    if (!password) {
-      newErrors.password = t('auth.passwordRequired');
-    } else if (password.length < 8) {
-      newErrors.password = t('auth.passwordMinLength');
-    }
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = t('auth.passwordMismatch');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [firstName, lastName, email, password, confirmPassword, t]);
-
-  const handleRegister = useCallback(async () => {
-    if (!validate()) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-
-    setIsLoading(true);
-    dispatch(setLoading(true));
-
-    try {
-      const response = await authService.register({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email,
-        password,
-        phone: phone || undefined,
-      });
-      if (response.success && response.data) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        dispatch(setCredentials(response.data));
-        router.replace('/(patient)/(tabs)/home');
-      }
-    } catch {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert(t('common.error'), t('auth.registerError'));
-    } finally {
-      setIsLoading(false);
-      dispatch(setLoading(false));
-    }
-  }, [
-    validate,
-    firstName,
-    lastName,
-    email,
-    password,
-    phone,
-    dispatch,
-    router,
-    t,
-  ]);
+  const { fields, setters, errors, clearError, loading, handleRegister } =
+    useRegisterForm();
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
@@ -192,9 +101,9 @@ export default function RegisterScreen() {
                   labelAr={t('auth.firstName')}
                   placeholder={t('auth.firstNamePlaceholder')}
                   placeholderAr={t('auth.firstNamePlaceholder')}
-                  value={firstName}
+                  value={fields.firstName}
                   onChangeText={(text) => {
-                    setFirstName(text);
+                    setters.setFirstName(text);
                     clearError('firstName');
                   }}
                   error={errors.firstName}
@@ -213,9 +122,9 @@ export default function RegisterScreen() {
                   labelAr={t('auth.lastName')}
                   placeholder={t('auth.lastNamePlaceholder')}
                   placeholderAr={t('auth.lastNamePlaceholder')}
-                  value={lastName}
+                  value={fields.lastName}
                   onChangeText={(text) => {
-                    setLastName(text);
+                    setters.setLastName(text);
                     clearError('lastName');
                   }}
                   error={errors.lastName}
@@ -228,9 +137,9 @@ export default function RegisterScreen() {
               labelAr={t('auth.email')}
               placeholder={t('auth.emailPlaceholder')}
               placeholderAr={t('auth.emailPlaceholder')}
-              value={email}
+              value={fields.email}
               onChangeText={(text) => {
-                setEmail(text);
+                setters.setEmail(text);
                 clearError('email');
               }}
               keyboardType="email-address"
@@ -251,8 +160,8 @@ export default function RegisterScreen() {
               labelAr={t('auth.phone')}
               placeholder={t('auth.phonePlaceholder')}
               placeholderAr={t('auth.phonePlaceholder')}
-              value={phone}
-              onChangeText={setPhoneNum}
+              value={fields.phone}
+              onChangeText={setters.setPhoneNum}
               keyboardType="phone-pad"
               suffixIcon={
                 <Phone
@@ -268,15 +177,15 @@ export default function RegisterScreen() {
               labelAr={t('auth.password')}
               placeholder={t('auth.passwordPlaceholder')}
               placeholderAr={t('auth.passwordPlaceholder')}
-              value={password}
+              value={fields.password}
               onChangeText={(text) => {
-                setPassword(text);
+                setters.setPassword(text);
                 clearError('password');
               }}
-              secureTextEntry={!showPassword}
+              secureTextEntry={!fields.showPassword}
               error={errors.password}
               suffixIcon={
-                showPassword ? (
+                fields.showPassword ? (
                   <Eye
                     size={18}
                     strokeWidth={1.5}
@@ -290,7 +199,7 @@ export default function RegisterScreen() {
                   />
                 )
               }
-              onSuffixPress={() => setShowPassword(!showPassword)}
+              onSuffixPress={() => setters.setShowPassword(!fields.showPassword)}
             />
 
             <ThemedInput
@@ -298,12 +207,12 @@ export default function RegisterScreen() {
               labelAr={t('auth.confirmPassword')}
               placeholder={t('auth.confirmPasswordPlaceholder')}
               placeholderAr={t('auth.confirmPasswordPlaceholder')}
-              value={confirmPassword}
+              value={fields.confirmPassword}
               onChangeText={(text) => {
-                setConfirmPassword(text);
+                setters.setConfirmPassword(text);
                 clearError('confirmPassword');
               }}
-              secureTextEntry={!showPassword}
+              secureTextEntry={!fields.showPassword}
               error={errors.confirmPassword}
             />
 
