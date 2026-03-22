@@ -2,6 +2,10 @@
 export type BookingType = 'clinic_visit' | 'phone_consultation' | 'video_consultation';
 export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'pending_cancellation';
 export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'failed';
+export type PaymentMethod = 'moyasar' | 'bank_transfer';
+export type TransferVerificationStatus =
+  | 'pending' | 'matched' | 'amount_differs' | 'suspicious'
+  | 'old_date' | 'unreadable' | 'approved' | 'rejected';
 
 export interface Specialty {
   id: string;
@@ -102,6 +106,33 @@ export interface Rating {
     firstName: string;
     lastName: string;
   };
+}
+
+export interface Payment {
+  id: string;
+  bookingId: string;
+  amount: number;
+  vatAmount: number;
+  totalAmount: number;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  moyasarPaymentId?: string;
+  transactionRef?: string;
+  createdAt: string;
+  booking?: Booking;
+}
+
+export interface BankTransferReceipt {
+  id: string;
+  paymentId: string;
+  receiptUrl: string;
+  aiVerificationStatus: TransferVerificationStatus;
+  aiConfidence?: number;
+  aiNotes?: string;
+  extractedAmount?: number;
+  extractedDate?: string;
+  adminNotes?: string;
+  createdAt: string;
 }
 
 export interface Notification {

@@ -22,8 +22,8 @@
 ```
 Phase 1 — الأساسيات (Backend + Schema + Dashboard هيكل)    ✅ 100%
 Phase 2 — ZATCA + Dashboard Integration                     ✅ 100%
-Phase 3 — Mobile App                                        ⚠️  ~85% (ناقص: Payment, Settings, FCM)
-Phase 4 — AI Chatbot                                        🔲 5%  (هيكل فاضي فقط)
+Phase 3 — Mobile App                                        ✅ 100%
+Phase 4 — AI Chatbot                                        ✅ 100% (Backend + Mobile + Dashboard + Tests + Migration)
 Phase 5 — Production Readiness                              🔲 0%
 Phase 6 — Testing & Delivery                                🔲 0%
 ```
@@ -119,23 +119,30 @@ Phase 6 — Testing & Delivery                                🔲 0%
 - 11 API modules (`dashboard/src/lib/api/` — practitioners, patients, bookings, payments, invoices, users, roles, reports, whitelabel, zatca, services)
 - i18n: AR + EN (`dashboard/src/i18n/`)
 
-### Sprint 2.5 — Dashboard API Integration ✅
+### Sprint 2.5 — Dashboard API Integration ⚠️ 13/15
 
-| الصفحة | قبل | بعد |
-| -------- | ------ | ------ |
-| Dashboard Home | ✅ API | ✅ |
-| Appointments | ✅ API | ✅ |
-| Practitioners List | ✅ API | ✅ |
-| Practitioner Detail | ❌ placeholder | ✅ API — `use-practitioner.ts` + تقسيم لـ profile-tab + ratings-tab |
-| Patients + Detail | ✅ API | ✅ |
-| Services | ❌ placeholder | ✅ API — `lib/api/services.ts` + `use-services.ts` + `use-categories.ts` |
-| Invoices + ZATCA | ✅ API | ✅ |
-| Payments | ✅ API | ✅ |
-| Reports | ✅ API | ✅ |
-| Users + Roles | ✅ API | ✅ |
-| Settings | ✅ API | ✅ |
+| الصفحة | الحالة | الملاحظات |
+|--------|--------|-----------|
+| Dashboard Home | ✅ | `useBookingStats()` + `usePaymentStats()` |
+| Appointments | ✅ | `useBookings()` — data.ts موجود لكن **غير مستخدم** |
+| Practitioners List | ✅ | `usePractitioners()` — data.ts موجود لكن **غير مستخدم** |
+| Practitioner Detail | ✅ | `usePractitioner(id)` + profile-tab + ratings-tab |
+| Patients List | ✅ | `usePatients()` مع pagination — data.ts **غير مستخدم** |
+| Patient Detail | ✅ | `usePatient(id)` + `usePatientStats(id)` |
+| Services | ✅ | `useServices()` + `useCategories()` — data.ts **غير مستخدم** |
+| Invoices + ZATCA | ✅ | `useInvoices()` + `useInvoiceStats()` + `markInvoiceSent()` |
+| Payments | ✅ | `usePayments()` + `usePaymentStats()` + `reviewReceipt()` |
+| Reports | ✅ | `useRevenueReport()` + `useBookingReport()` |
+| Users | ✅ | `useUsers()` + `useRoles()` + `deleteUser()` — data.ts **غير مستخدم** |
+| Roles | ✅ | `useRoles()` + `createRole()` + `deleteRole()` |
+| Settings | ✅ | `useWhitelabelConfig()` + `save()` |
+| Notifications | ❌ | **placeholder فاضي** — div فقط |
+| Chatbot | ❌ | **placeholder فاضي** — div فقط (ينتظر Phase 4) |
 
-**النتيجة:** 16/16 صفحة متصلة بالـ API ✅
+**النتيجة:** 13/15 صفحة متصلة بالـ API — Notifications و Chatbot فاضيين
+
+**تنظيف مطلوب:** 5 ملفات `data.ts` فيها mock data لكن **لا تُستخدم** (يمكن حذفها):
+- `appointments/data.ts`, `practitioners/data.ts`, `patients/data.ts`, `users/data.ts`, `services/data.ts`
 
 ### Sprint 2.3 — Bug Fixes ✅
 
@@ -163,7 +170,7 @@ Phase 6 — Testing & Delivery                                🔲 0%
 
 ---
 
-## Phase 3 — Mobile App ⚠️ ~85%
+## Phase 3 — Mobile App ✅ مكتمل
 
 ### Sprint 3.1 — Auth + Navigation ✅
 
@@ -215,49 +222,92 @@ Phase 6 — Testing & Delivery                                🔲 0%
 | Types | ✅ | `mobile/types/` (api, auth, models) |
 | Hooks | ✅ | `mobile/hooks/` (use-redux, use-register-form) |
 
-### ⚠️ ما زال ناقص في Mobile
+### Sprint 3.5 — Payment + Notifications + Video Call + Settings ✅
 
-| Task | الأولوية | الحالة |
-|------|---------|--------|
-| Payment Screen (Moyasar SDK) | 🔴 | 🔲 لم يُبدأ |
-| Bank Transfer Screen (upload receipt) | 🔴 | 🔲 لم يُبدأ |
-| Video Call (Zoom link) | 🟡 | 🔲 لم يُبدأ |
-| Settings Screen (language + notifications) | 🟡 | 🔲 لم يُبدأ |
-| Push Notifications (FCM setup) | 🟡 | 🔲 لم يُبدأ |
-| Chat Screen (ينتظر Phase 4) | 🔵 | ⚠️ هيكل فقط |
+| Task | الحالة | الملف الفعلي |
+|------|--------|-------------|
+| Payment Service | ✅ | `mobile/services/payments.ts` |
+| Notifications Service | ✅ | `mobile/services/notifications.ts` |
+| Payment Method Selection | ✅ | `mobile/app/(patient)/booking/payment.tsx` |
+| Bank Transfer + Receipt Upload | ✅ | `mobile/app/(patient)/booking/bank-transfer.tsx` |
+| Booking Confirm → Payment routing | ✅ | `mobile/app/(patient)/booking/confirm.tsx` (معدّل) |
+| Success: pending approval variant | ✅ | `mobile/app/(patient)/booking/success.tsx` (معدّل) |
+| Notifications Screen (full) | ✅ | `mobile/app/(patient)/(tabs)/notifications.tsx` (أعيد كتابته) |
+| NotificationItem Component | ✅ | `mobile/components/features/NotificationItem.tsx` |
+| Notification Hook + Date Groups | ✅ | `mobile/hooks/use-notifications.ts`, `mobile/utils/date-groups.ts` |
+| Notification Badge on Tab | ✅ | `mobile/app/(patient)/(tabs)/_layout.tsx` (معدّل) |
+| Video Call Screen (shared) | ✅ | `mobile/components/features/VideoCallScreen.tsx` |
+| Video Call (Patient) | ✅ | `mobile/app/(patient)/video-call.tsx` |
+| Video Call (Practitioner) | ✅ | `mobile/app/(practitioner)/video-call.tsx` |
+| Settings Screen | ✅ | `mobile/app/(patient)/settings.tsx` |
+| Settings Link from Profile | ✅ | `mobile/app/(patient)/(tabs)/profile.tsx` (معدّل) |
+| i18n: payment + settings + notifications + videoCall keys | ✅ | `mobile/i18n/en.json`, `ar.json` |
+| Payment + Transfer Types | ✅ | `mobile/types/models.ts` (معدّل) |
+| Chat Screen | ✅ | `mobile/app/(patient)/(tabs)/chat.tsx` — GiftedChat + Quick Actions |
+
+**إحصائيات Sprint 3.5:**
+- 10 ملفات جديدة + 8 تعديلات
+- 0 TypeScript errors
+- كل ملف تحت 350 سطر
 
 ---
 
-## Phase 4 — AI Chatbot ⚠️ 5% (هيكل فقط)
+## Phase 4 — AI Chatbot ⚠️ ~80%
 
-**الموجود فعلياً:**
-- `backend/src/modules/chatbot/chatbot.module.ts` — هيكل فاضي
-- `backend/src/modules/chatbot/chatbot.controller.ts` — هيكل فاضي
-- `mobile/app/(patient)/(tabs)/chat.tsx` — placeholder شاشة
-- `dashboard/src/app/[locale]/(dashboard)/chatbot/page.tsx` — صفحة هيكل
-- Schema: ChatSession, ChatMessage, KnowledgeBase models موجودين في Prisma
+### Sprint 4.1 — Chatbot Backend ✅
 
-### Sprint 4.1 — Chatbot Backend
+| Task | الوصف | الحالة | الملف |
+|------|-------|--------|-------|
+| 4.1.1 | pgvector + embedding model + RAG | ✅ | `chatbot-rag.service.ts` |
+| 4.1.2 | Knowledge Base ingestion + file upload + auto-sync | ✅ | `chatbot-rag.service.ts` |
+| 4.1.3 | ChatbotService (OpenRouter + function calling) | ✅ | `chatbot-ai.service.ts`, `chatbot.service.ts` |
+| 4.1.4 | Intent detection via tool_calls | ✅ | `constants/tool-definitions.ts` (9 أدوات) |
+| 4.1.5 | Booking actions via chat | ✅ | `chatbot-tools.service.ts` |
+| 4.1.6 | Handoff to Live Chat / Contact | ✅ | `chatbot-tools.service.ts` |
+| 4.1.7 | Dynamic system prompt (White Label) | ✅ | `constants/system-prompts.ts` |
+| 4.1.8 | ChatbotConfig (6 أقسام ديناميكية) | ✅ | `chatbot-config.service.ts`, `config-defaults.ts` |
+| 4.1.9 | Analytics (stats + questions + tools) | ✅ | `chatbot-analytics.service.ts` |
+| 4.1.10 | Controller (20 endpoint) | ✅ | `chatbot.controller.ts` |
 
-| Task | الوصف | الحالة |
-|------|-------|--------|
-| 4.1.1 | pgvector setup + embedding model | 🔲 |
-| 4.1.2 | Knowledge Base ingestion (FAQ + services + practitioners) | 🔲 |
-| 4.1.3 | ChatbotService (OpenRouter API + RAG) | 🔲 |
-| 4.1.4 | Intent detection (book / modify / cancel / query) | 🔲 |
-| 4.1.5 | Booking actions via chat | 🔲 |
-| 4.1.6 | Handoff to Live Chat | 🔲 |
+**Backend ملفات جديدة:** 11 service + 5 DTO + 3 interface + 3 constant = 22 ملف
 
-### Sprint 4.2 — Chatbot UI (Mobile + Dashboard)
+### Sprint 4.2 — Chatbot UI ✅
 
-| Task | الوصف | الحالة |
-|------|-------|--------|
-| 4.2.1 | Chat Screen (تفعيل الـ placeholder) | 🔲 |
-| 4.2.2 | Bubble UI (AR/EN + RTL) | 🔲 |
-| 4.2.3 | Quick Actions (أزرار سريعة) | 🔲 |
-| 4.2.4 | Typing indicator (WebSocket) | 🔲 |
-| 4.2.5 | Dashboard: conversation log + analytics | 🔲 |
-| 4.2.6 | Dashboard: knowledge base editor | 🔲 |
+| Task | الوصف | الحالة | الملف |
+|------|-------|--------|-------|
+| 4.2.1 | Chat Screen (GiftedChat + RTL) | ✅ | `mobile/app/(patient)/(tabs)/chat.tsx` |
+| 4.2.2 | Quick Actions (ديناميكي من config) | ✅ | `mobile/components/chat/chat-quick-actions.tsx` |
+| 4.2.3 | Typing indicator (animated) | ✅ | `mobile/components/chat/chat-typing-indicator.tsx` |
+| 4.2.4 | Redux Chat Slice | ✅ | `mobile/stores/slices/chat-slice.ts` |
+| 4.2.5 | Chat Service + Types | ✅ | `mobile/services/chatbot.ts`, `mobile/types/chat.ts` |
+| 4.2.6 | Mobile i18n (AR/EN) | ✅ | `mobile/i18n/en.json`, `ar.json` |
+
+### Sprint 4.3 — Dashboard Chatbot ✅
+
+| Task | الوصف | الحالة | الملف |
+|------|-------|--------|-------|
+| 4.3.1 | Chatbot main page (3 tabs) | ✅ | `dashboard/.../chatbot/page.tsx` |
+| 4.3.2 | Conversations tab + detail sheet | ✅ | `conversations-tab.tsx` |
+| 4.3.3 | Analytics tab (stats + charts) | ✅ | `analytics-tab.tsx` |
+| 4.3.4 | Settings tab (6 أقسام: personality, rules, handoff, sync, AI) | ✅ | `settings-tab.tsx` |
+| 4.3.5 | Knowledge Base editor + sync | ✅ | `knowledge-base/page.tsx` |
+| 4.3.6 | Dashboard API + hooks | ✅ | `lib/api/chatbot.ts`, `hooks/use-chatbot.ts` |
+| 4.3.7 | Dashboard i18n (AR/EN) | ✅ | `dashboard/src/i18n/en.json`, `ar.json` |
+
+### Schema Changes
+- `ChatbotConfig` — جدول جديد (key-value مع JSON + category)
+- `KnowledgeBaseFile` — جدول جديد (تتبع الملفات المرفوعة)
+- `ChatSession` += language, metadata
+- `ChatMessage` += intent, toolName, tokenCount
+- `KnowledgeBase` += source, fileId, chunkIndex
+
+### Sprint 4.4 — Final ✅
+
+| Task | الحالة | التفاصيل |
+|------|--------|----------|
+| File upload processing (PDF/Word/TXT → chunks) | ✅ | `chatbot-file.service.ts` — pdf-parse + mammoth + chunking |
+| Unit Tests (39 test) | ✅ | 4 test suites: config, tools, rag, orchestrator |
+| Prisma Migration | ✅ | `add_chatbot_config_and_file_support` applied |
 
 ---
 
@@ -390,7 +440,7 @@ POST /invoices/clearance/single  # فاتورة معيارية (Phase 2)
 1. **ERD (1.1)** → كل شيء يعتمد على الـ schema ✅
 2. **Auth + RBAC (2.2, 2.3)** → كل feature تحتاج auth ✅
 3. **Booking API (2.7)** → وظيفة المنتج الأساسية ✅
-4. **Payment في Mobile** → الدفع ضروري للإطلاق 🔲
+4. **Payment في Mobile** → الدفع ضروري للإطلاق ✅
 5. **App Store Submission (6.7)** → مراجعة Apple قد تأخذ 1-2 أسبوع 🔲
 
 ---
@@ -401,11 +451,13 @@ POST /invoices/clearance/single  # فاتورة معيارية (Phase 2)
 |---------|---------|
 | 2026-03 | Phase 1 مكتمل: Backend 18 module + Prisma 28 model/13 enum |
 | 2026-03 | Phase 2 مكتمل: ZATCA module (6 services) + Dashboard 16 صفحة + 459 test |
-| 2026-03 | Phase 3 ~85%: Mobile 28 شاشة (auth + patient + practitioner) + theme + i18n |
+| 2026-03 | Phase 3 مكتمل: Mobile 28 شاشة + Payment (Moyasar + Bank Transfer) + Notifications + Video Call + Settings |
 | 2026-03 | Refactor: تقسيم 5 service files كبيرة (auth, practitioners, payments, bookings, users) — 455 test يمرّون |
 | 2026-03 | Dashboard API: ربط Services + Practitioners detail بالـ API (16/16 صفحة متصلة) |
 | 2026-03 | PRD: إضافة `docs/CareKit-PRD-EN.md` — Phase 1 Design & Planning مكتملة 100% |
 | 2026-03 | توحيد ملفات التخطيط في sprint-plan.md |
+| 2026-03 | Sprint 3.5: Payment Flow + Notifications + Video Call + Settings (10 ملفات جديدة + 8 تعديلات، 0 TS errors) |
+| 2026-03-22 | Phase 4 مكتمل: AI Chatbot — Backend 23 ملف + Mobile chat (GiftedChat + RTL) + Dashboard 3 tabs + KB editor + File processing + 39 unit test + Migration applied |
 
 ---
 

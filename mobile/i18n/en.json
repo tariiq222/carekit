@@ -185,6 +185,71 @@
     "of": "of",
     "confirmAndPay": "Confirm & Pay"
   },
+  "payment": {
+    "title": "Payment",
+    "selectMethod": "Select Payment Method",
+    "cardPayment": "Card Payment",
+    "cardPaymentDesc": "Mada, Visa, Mastercard, Apple Pay",
+    "bankTransfer": "Bank Transfer",
+    "bankTransferDesc": "Upload bank transfer receipt",
+    "payNow": "Pay Now",
+    "continue": "Continue",
+    "processing": "Processing payment...",
+    "bankDetails": "Bank Account Details",
+    "bankName": "Bank Name",
+    "iban": "IBAN",
+    "accountHolder": "Account Holder",
+    "transferAmount": "Amount to Transfer",
+    "uploadReceipt": "Upload Receipt",
+    "takePhoto": "Take Photo",
+    "chooseGallery": "Choose from Gallery",
+    "changePhoto": "Change Photo",
+    "submitReceipt": "Submit Receipt",
+    "receiptUploaded": "Receipt Uploaded",
+    "pendingApproval": "Pending Approval",
+    "pendingApprovalDesc": "Your bank transfer receipt is being reviewed. You will be notified once approved.",
+    "uploadError": "Failed to upload receipt. Please try again.",
+    "paymentError": "Payment failed. Please try again.",
+    "summary": "Payment Summary",
+    "amount": "Amount",
+    "vat": "VAT (15%)",
+    "total": "Total"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "arabic": "العربية",
+    "english": "English",
+    "pushNotifications": "Push Notifications",
+    "pushNotificationsDesc": "Receive appointment reminders and updates",
+    "about": "About",
+    "version": "Version",
+    "buildNumber": "Build",
+    "languageChangeRestart": "Language change requires app restart to fully apply",
+    "restartNow": "Restart Now",
+    "restartLater": "Later"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications yet",
+    "noNotificationsDesc": "You'll receive updates about your appointments here",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "earlier": "Earlier",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "videoCall": {
+    "title": "Video Consultation",
+    "joinMeeting": "Join Meeting",
+    "meetingNotReady": "Meeting link not available yet",
+    "meetingStartsIn": "Meeting starts in",
+    "refresh": "Refresh",
+    "openingZoom": "Opening Zoom...",
+    "meetingInfo": "Meeting Information"
+  },
   "verification": {
     "bannerTitle": "Verify your email to access all services",
     "resend": "Resend verification link",
@@ -206,5 +271,16 @@
     "noResults": "No results found",
     "appName": "CareKit",
     "viewAll": "View All"
+  },
+  "chatbot": {
+    "title": "AI Assistant",
+    "placeholder": "Type your message...",
+    "typing": "Typing...",
+    "sessionEnded": "Session ended",
+    "newSession": "New Conversation",
+    "errorSending": "Failed to send message. Please try again.",
+    "maxMessages": "You have reached the maximum number of messages for this session.",
+    "bookingConfirmed": "Appointment booked successfully!",
+    "cancellationSubmitted": "Cancellation request submitted for admin review."
   }
 }

@@ -150,19 +150,20 @@ model User {
   deletedAt     DateTime?   @map("deleted_at")
 
   // Relations
-  otpCodes         OtpCode[]
-  refreshTokens    RefreshToken[]
-  userRoles        UserRole[]
-  practitioner     Practitioner?
-  bookingsAsPatient Booking[]           @relation("PatientBookings")
-  ratingsAsPatient  Rating[]            @relation("PatientRatings")
-  problemReports    ProblemReport[]     @relation("PatientProblemReports")
-  resolvedReports   ProblemReport[]     @relation("ResolvedByUser")
+  otpCodes          OtpCode[]
+  refreshTokens     RefreshToken[]
+  userRoles         UserRole[]
+  practitioner      Practitioner?
+  bookingsAsPatient Booking[]             @relation("PatientBookings")
+  ratingsAsPatient  Rating[]              @relation("PatientRatings")
+  problemReports    ProblemReport[]       @relation("PatientProblemReports")
+  resolvedReports   ProblemReport[]       @relation("ResolvedByUser")
   reviewedReceipts  BankTransferReceipt[] @relation("ReviewedByUser")
   chatSessions      ChatSession[]
   notifications     Notification[]
   fcmTokens         FcmToken[]
   activityLogs      ActivityLog[]
+  kbFiles           KnowledgeBaseFile[]
 
   @@map("users")
 }
@@ -171,7 +172,7 @@ model OtpCode {
   id        String    @id @default(uuid())
   userId    String    @map("user_id")
   code      String
-  type      String    // login, reset_password, verify_email
+  type      String // login, reset_password, verify_email
   expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
   createdAt DateTime  @default(now()) @map("created_at")
@@ -263,27 +264,27 @@ model UserRole {
 // ──────────────────────────────────────────────
 
 model Practitioner {
-  id           String    @id @default(uuid())
-  userId       String    @unique @map("user_id")
-  specialtyId  String    @map("specialty_id")
-  bio          String?
-  bioAr        String?   @map("bio_ar")
-  experience   Int       @default(0)
-  education    String?
-  educationAr  String?   @map("education_ar")
-  priceClinic  Int       @default(0) @map("price_clinic")  // halalat
-  pricePhone   Int       @default(0) @map("price_phone")   // halalat
-  priceVideo   Int       @default(0) @map("price_video")   // halalat
-  rating       Float     @default(0)
-  reviewCount  Int       @default(0) @map("review_count")
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  deletedAt    DateTime? @map("deleted_at")
+  id          String    @id @default(uuid())
+  userId      String    @unique @map("user_id")
+  specialtyId String    @map("specialty_id")
+  bio         String?
+  bioAr       String?   @map("bio_ar")
+  experience  Int       @default(0)
+  education   String?
+  educationAr String?   @map("education_ar")
+  priceClinic Int       @default(0) @map("price_clinic") // halalat
+  pricePhone  Int       @default(0) @map("price_phone") // halalat
+  priceVideo  Int       @default(0) @map("price_video") // halalat
+  rating      Float     @default(0)
+  reviewCount Int       @default(0) @map("review_count")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
 
   // Relations
   user           User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  specialty      Specialty                   @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+  specialty      Specialty                  @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
   availabilities PractitionerAvailability[]
   vacations      PractitionerVacation[]
   bookings       Booking[]
@@ -315,8 +316,8 @@ model PractitionerAvailability {
   id             String   @id @default(uuid())
   practitionerId String   @map("practitioner_id")
   dayOfWeek      Int      @map("day_of_week") // 0 = Sunday, 6 = Saturday
-  startTime      String   @map("start_time")  // "HH:mm"
-  endTime        String   @map("end_time")    // "HH:mm"
+  startTime      String   @map("start_time") // "HH:mm"
+  endTime        String   @map("end_time") // "HH:mm"
   isActive       Boolean  @default(true) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
@@ -396,7 +397,7 @@ model Booking {
   type               BookingType
   date               DateTime
   startTime          String        @map("start_time") // "HH:mm"
-  endTime            String        @map("end_time")   // "HH:mm"
+  endTime            String        @map("end_time") // "HH:mm"
   status             BookingStatus @default(pending)
   notes              String?
   zoomMeetingId      String?       @map("zoom_meeting_id")
@@ -411,9 +412,9 @@ model Booking {
   deletedAt          DateTime?     @map("deleted_at")
 
   // Relations
-  patient        User?          @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
-  practitioner   Practitioner   @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
-  service        Service        @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  patient        User?           @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
+  practitioner   Practitioner    @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  service        Service         @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   payment        Payment?
   rating         Rating?
   problemReports ProblemReport[]
@@ -431,7 +432,7 @@ model Booking {
 model Payment {
   id               String        @id @default(uuid())
   bookingId        String        @unique @map("booking_id")
-  amount           Int           // halalat
+  amount           Int // halalat
   vatAmount        Int           @default(0) @map("vat_amount") // halalat
   totalAmount      Int           @default(0) @map("total_amount") // halalat
   method           PaymentMethod
@@ -502,7 +503,7 @@ model Rating {
   bookingId      String   @unique @map("booking_id")
   patientId      String?  @map("patient_id")
   practitionerId String   @map("practitioner_id")
-  stars          Int      // 1-5
+  stars          Int // 1-5
   comment        String?
   createdAt      DateTime @default(now()) @map("created_at")
 
@@ -548,6 +549,8 @@ model ChatSession {
   endedAt     DateTime?    @map("ended_at")
   handedOff   Boolean      @default(false) @map("handed_off")
   handoffType HandoffType? @map("handoff_type")
+  language    String? // 'ar' | 'en' — detected from first message
+  metadata    Json? // bot version, model used, etc.
   createdAt   DateTime     @default(now()) @map("created_at")
 
   // Relations
@@ -564,6 +567,9 @@ model ChatMessage {
   role         ChatRole
   content      String
   functionCall Json?    @map("function_call")
+  intent       String? // book | modify | cancel | query | handoff | greeting
+  toolName     String?  @map("tool_name")
+  tokenCount   Int?     @map("token_count")
   createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -574,16 +580,56 @@ model ChatMessage {
 }
 
 model KnowledgeBase {
-  id        String                          @id @default(uuid())
-  title     String
-  content   String
-  embedding Unsupported("vector(1536)")?
-  category  String?
-  isActive  Boolean                         @default(true) @map("is_active")
-  createdAt DateTime                        @default(now()) @map("created_at")
-  updatedAt DateTime                        @updatedAt @map("updated_at")
+  id         String                       @id @default(uuid())
+  title      String
+  content    String
+  embedding  Unsupported("vector(1536)")?
+  category   String?
+  source     String? // manual | auto_sync | file_upload
+  fileId     String?                      @map("file_id")
+  chunkIndex Int?                         @map("chunk_index")
+  isActive   Boolean                      @default(true) @map("is_active")
+  createdAt  DateTime                     @default(now()) @map("created_at")
+  updatedAt  DateTime                     @updatedAt @map("updated_at")
 
+  @@index([source])
+  @@index([fileId])
   @@map("knowledge_base")
+}
+
+// ──────────────────────────────────────────────
+// Chatbot Configuration (White Label)
+// ──────────────────────────────────────────────
+
+model ChatbotConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  category  String // personality | rules | handoff | quick_replies | sync | ai_model
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("chatbot_config")
+}
+
+model KnowledgeBaseFile {
+  id          String   @id @default(uuid())
+  fileName    String   @map("file_name")
+  fileUrl     String   @map("file_url")
+  fileType    String   @map("file_type") // pdf | docx | txt
+  fileSize    Int      @map("file_size") // bytes
+  chunksCount Int      @default(0) @map("chunks_count")
+  status      String   @default("pending") // pending | processing | completed | failed
+  error       String?
+  uploadedBy  String   @map("uploaded_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [uploadedBy], references: [id])
+
+  @@map("knowledge_base_files")
 }
 
 // ──────────────────────────────────────────────
@@ -609,8 +655,8 @@ model WhiteLabelConfig {
 model ActivityLog {
   id          String   @id @default(uuid())
   userId      String?  @map("user_id")
-  action      String   // created | updated | deleted | login | logout | approved | rejected
-  module      String   // bookings | users | practitioners | payments | whitelabel | roles | ...
+  action      String // created | updated | deleted | login | logout | approved | rejected
+  module      String // bookings | users | practitioners | payments | whitelabel | roles | ...
   resourceId  String?  @map("resource_id")
   description String?
   oldValues   Json?    @map("old_values")
@@ -656,7 +702,7 @@ model FcmToken {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   token     String
-  platform  String   // ios | android
+  platform  String // ios | android
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

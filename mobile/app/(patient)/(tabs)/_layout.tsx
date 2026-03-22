@@ -1,19 +1,28 @@
-import React from 'react';
-import { Pressable, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Pressable, StyleSheet, Platform, Text } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Home, Calendar, BellDot, User, Sparkles } from 'lucide-react-native';
+import { Home, Calendar, Bell, User, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 
 import { ThemedText } from '@/theme/components/ThemedText';
+import { notificationsService } from '@/services/notifications';
 
 export default function PatientTabsLayout() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    notificationsService
+      .getUnreadCount()
+      .then((res) => setUnreadCount(res.data?.count ?? 0))
+      .catch(() => {});
+  }, []);
 
   return (
     <Tabs
@@ -113,11 +122,20 @@ export default function PatientTabsLayout() {
         options={{
           title: t('tabs.notifications'),
           tabBarIcon: ({ color, focused }) => (
-            <BellDot
-              size={22}
-              strokeWidth={focused ? 2 : 1.5}
-              color={color}
-            />
+            <View>
+              <Bell
+                size={22}
+                strokeWidth={focused ? 2 : 1.5}
+                color={color}
+              />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />
@@ -158,4 +176,21 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   aiLabel: { fontSize: 9, fontWeight: '600' },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '700',
+    lineHeight: 12,
+  },
 });

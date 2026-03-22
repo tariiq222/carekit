@@ -6,6 +6,7 @@ import {
   User,
   CreditCard,
   Bell,
+  Settings,
   Globe,
   Info,
   HelpCircle,
@@ -136,6 +137,11 @@ export default function PatientProfileScreen() {
             icon={Bell}
             label={t('profile.notifications')}
             onPress={() => {}}
+          />
+          <MenuItem
+            icon={Settings}
+            label={t('settings.title')}
+            onPress={() => router.push('/(patient)/settings')}
           />
           <MenuItem
             icon={Globe}

@@ -185,6 +185,71 @@
     "of": "من",
     "confirmAndPay": "تأكيد والدفع"
   },
+  "payment": {
+    "title": "الدفع",
+    "selectMethod": "اختر طريقة الدفع",
+    "cardPayment": "الدفع بالبطاقة",
+    "cardPaymentDesc": "مدى، فيزا، ماستركارد، أبل باي",
+    "bankTransfer": "تحويل بنكي",
+    "bankTransferDesc": "رفع إيصال التحويل البنكي",
+    "payNow": "ادفع الآن",
+    "continue": "متابعة",
+    "processing": "جاري معالجة الدفع...",
+    "bankDetails": "تفاصيل الحساب البنكي",
+    "bankName": "اسم البنك",
+    "iban": "الآيبان",
+    "accountHolder": "اسم صاحب الحساب",
+    "transferAmount": "مبلغ التحويل",
+    "uploadReceipt": "رفع الإيصال",
+    "takePhoto": "التقاط صورة",
+    "chooseGallery": "اختيار من المعرض",
+    "changePhoto": "تغيير الصورة",
+    "submitReceipt": "إرسال الإيصال",
+    "receiptUploaded": "تم رفع الإيصال",
+    "pendingApproval": "بانتظار الموافقة",
+    "pendingApprovalDesc": "إيصال التحويل قيد المراجعة. سيتم إشعارك عند الموافقة.",
+    "uploadError": "فشل رفع الإيصال. حاول مجدداً.",
+    "paymentError": "فشل الدفع. حاول مجدداً.",
+    "summary": "ملخص الدفع",
+    "amount": "المبلغ",
+    "vat": "ضريبة القيمة المضافة (15%)",
+    "total": "الإجمالي"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "language": "اللغة",
+    "arabic": "العربية",
+    "english": "English",
+    "pushNotifications": "إشعارات الجوال",
+    "pushNotificationsDesc": "تلقي تذكيرات المواعيد والتحديثات",
+    "about": "عن التطبيق",
+    "version": "الإصدار",
+    "buildNumber": "رقم البناء",
+    "languageChangeRestart": "تغيير اللغة يتطلب إعادة تشغيل التطبيق",
+    "restartNow": "أعد التشغيل الآن",
+    "restartLater": "لاحقاً"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "markAllRead": "تحديد الكل كمقروء",
+    "noNotifications": "لا توجد إشعارات بعد",
+    "noNotificationsDesc": "ستصلك تحديثات مواعيدك هنا",
+    "today": "اليوم",
+    "yesterday": "أمس",
+    "earlier": "أقدم",
+    "minutesAgo": "منذ {{count}} د",
+    "hoursAgo": "منذ {{count}} س",
+    "daysAgo": "منذ {{count}} ي"
+  },
+  "videoCall": {
+    "title": "الاستشارة المرئية",
+    "joinMeeting": "انضم للاجتماع",
+    "meetingNotReady": "رابط الاجتماع غير متوفر بعد",
+    "meetingStartsIn": "يبدأ الاجتماع خلال",
+    "refresh": "تحديث",
+    "openingZoom": "جاري فتح Zoom...",
+    "meetingInfo": "معلومات الاجتماع"
+  },
   "verification": {
     "bannerTitle": "فعّل بريدك الإلكتروني للاستفادة من كامل الخدمات",
     "resend": "إعادة إرسال رابط التفعيل",
@@ -206,5 +271,16 @@
     "noResults": "لا توجد نتائج",
     "appName": "كيركت",
     "viewAll": "عرض الكل"
+  },
+  "chatbot": {
+    "title": "المساعد الذكي",
+    "placeholder": "اكتب رسالتك...",
+    "typing": "يكتب...",
+    "sessionEnded": "انتهت الجلسة",
+    "newSession": "محادثة جديدة",
+    "errorSending": "فشل إرسال الرسالة. حاول مرة أخرى.",
+    "maxMessages": "وصلت الحد الأقصى لعدد الرسائل في هذه الجلسة.",
+    "bookingConfirmed": "تم حجز الموعد بنجاح!",
+    "cancellationSubmitted": "تم إرسال طلب الإلغاء لمراجعة الإدارة."
   }
 }

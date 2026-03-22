@@ -81,9 +81,13 @@ export default function BookingConfirmScreen() {
       });
       if (res.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace({
-          pathname: '/(patient)/booking/success',
-          params: { bookingId: res.data?.id ?? '' },
+        router.push({
+          pathname: '/(patient)/booking/payment',
+          params: {
+            bookingId: res.data?.id ?? '',
+            total: String(total),
+            type: params.type ?? 'clinic_visit',
+          },
         });
       }
     } catch {
@@ -110,14 +114,14 @@ export default function BookingConfirmScreen() {
         {/* Progress */}
         <View style={styles.progressRow}>
           <ThemedText variant="caption" color={theme.colors.textSecondary}>
-            {t('booking.step')} 3 {t('booking.of')} 3
+            {t('booking.step')} 3 {t('booking.of')} 4
           </ThemedText>
           <View style={[styles.progressTrack, { backgroundColor: theme.colors.surfaceHigh }]}>
             <LinearGradient
               colors={['#0037B0', '#1D4ED8']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={[styles.progressFill, { width: '100%' }]}
+              style={[styles.progressFill, { width: '75%' }]}
             />
           </View>
         </View>
@@ -211,7 +215,7 @@ export default function BookingConfirmScreen() {
           disabled={loading}
           style={{ marginTop: 24 }}
         >
-          {t('booking.confirmAndPay')}
+          {t('booking.confirmBooking')}
         </ThemedButton>
       </ScrollView>
     </View>

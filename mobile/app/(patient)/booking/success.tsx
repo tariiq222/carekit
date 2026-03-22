@@ -1,7 +1,7 @@
 import { View, StyleSheet } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Check } from 'lucide-react-native';
+import { Check, Clock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -10,11 +10,20 @@ import { ThemedButton } from '@/theme/components/ThemedButton';
 import { useTheme } from '@/theme/useTheme';
 
 export default function BookingSuccessScreen() {
-  const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
+  const { bookingId, pendingApproval } = useLocalSearchParams<{
+    bookingId: string;
+    pendingApproval: string;
+  }>();
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+
+  const isPending = pendingApproval === 'true';
+  const StatusIcon = isPending ? Clock : Check;
+  const gradientColors: [string, string] = isPending
+    ? ['#F59E0B', '#F97316']
+    : ['#047857', '#059669'];
 
   return (
     <View
@@ -28,20 +37,22 @@ export default function BookingSuccessScreen() {
       ]}
     >
       <View style={styles.content}>
-        {/* Success Icon */}
+        {/* Status Icon */}
         <View style={styles.iconWrap}>
           <LinearGradient
-            colors={['#047857', '#059669']}
+            colors={gradientColors}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.successCircle}
           >
-            <Check size={36} strokeWidth={2.5} color="#FFF" />
+            <StatusIcon size={36} strokeWidth={2.5} color="#FFF" />
           </LinearGradient>
         </View>
 
         <ThemedText variant="displaySm" align="center">
-          {t('appointments.confirmed')}
+          {isPending
+            ? t('payment.pendingApproval')
+            : t('appointments.confirmed')}
         </ThemedText>
         <ThemedText
           variant="bodySm"
@@ -49,7 +60,11 @@ export default function BookingSuccessScreen() {
           align="center"
           style={styles.sub}
         >
-          {bookingId ? `#${bookingId}` : ''}
+          {isPending
+            ? t('payment.pendingApprovalDesc')
+            : bookingId
+              ? `#${bookingId}`
+              : ''}
         </ThemedText>
       </View>
 
