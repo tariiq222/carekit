@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.next/
+.expo/
+.turbo/
+.git/
+*.env
+!.env.example
+coverage/
+*.log
+.DS_Store
+docs/
+*.md
+!README.md

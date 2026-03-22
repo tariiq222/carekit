@@ -1,0 +1,81 @@
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
+import { UserGender } from '@prisma/client';
+
+export class CreateUserDto {
+  @IsEmail()
+  @IsNotEmpty()
+  @Transform(({ value }: { value: string }) => value?.trim().toLowerCase())
+  email!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  password!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Transform(({ value }: { value: string }) => value?.trim())
+  firstName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Transform(({ value }: { value: string }) => value?.trim())
+  lastName!: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phone must be a valid international phone number' })
+  phone?: string;
+
+  @IsOptional()
+  @IsEnum(UserGender, { message: 'gender must be either male or female' })
+  gender?: UserGender;
+
+  @IsString()
+  @IsNotEmpty()
+  roleSlug!: string;
+}
+
+export class UpdateUserDto {
+  @IsOptional()
+  @IsEmail()
+  @Transform(({ value }: { value: string }) => value?.trim().toLowerCase())
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }: { value: string }) => value?.trim())
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }: { value: string }) => value?.trim())
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsEnum(UserGender)
+  gender?: UserGender;
+}
+
+export class AssignRoleDto {
+  @IsOptional()
+  @IsString()
+  roleId?: string;
+
+  @IsOptional()
+  @IsString()
+  roleSlug?: string;
+}

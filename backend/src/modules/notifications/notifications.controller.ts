@@ -1,0 +1,110 @@
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { NotificationsService } from './notifications.service.js';
+import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
+import { UnregisterFcmTokenDto } from './dto/unregister-fcm-token.dto.js';
+import { NotificationListQueryDto } from './dto/notification-list-query.dto.js';
+
+const uuidPipe = new ParseUUIDPipe({
+  exceptionFactory: () =>
+    new BadRequestException({
+      statusCode: 400,
+      message: 'Invalid UUID format',
+      error: 'VALIDATION_ERROR',
+    }),
+});
+
+@Controller('notifications')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+export class NotificationsController {
+  constructor(
+    private readonly notificationsService: NotificationsService,
+  ) {}
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET /notifications — List user's notifications
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get()
+  async findAll(
+    @Query() query: NotificationListQueryDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.notificationsService.findAll(user.id, query);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET /notifications/unread-count
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get('unread-count')
+  async getUnreadCount(@CurrentUser() user: { id: string }) {
+    const count = await this.notificationsService.getUnreadCount(user.id);
+    return { count };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  PATCH /notifications/read-all — must be before :id routes
+  // ═══════════════════════════════════════════════════════════════
+
+  @Patch('read-all')
+  @HttpCode(200)
+  async markAllAsRead(@CurrentUser() user: { id: string }) {
+    await this.notificationsService.markAllAsRead(user.id);
+    return { updated: true };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  PATCH /notifications/:id/read — Mark single as read
+  // ═══════════════════════════════════════════════════════════════
+
+  @Patch(':id/read')
+  @HttpCode(200)
+  async markAsRead(
+    @Param('id', uuidPipe) id: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.notificationsService.markAsRead(id, user.id);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  POST /notifications/fcm-token — Register FCM token
+  // ═══════════════════════════════════════════════════════════════
+
+  @Post('fcm-token')
+  async registerFcmToken(
+    @Body() dto: RegisterFcmTokenDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.notificationsService.registerFcmToken(user.id, dto);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  DELETE /notifications/fcm-token — Unregister FCM token
+  // ═══════════════════════════════════════════════════════════════
+
+  @Delete('fcm-token')
+  @HttpCode(200)
+  async unregisterFcmToken(
+    @Body() dto: UnregisterFcmTokenDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    await this.notificationsService.unregisterFcmToken(user.id, dto.token);
+    return { deleted: true };
+  }
+}

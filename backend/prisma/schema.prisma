@@ -1,0 +1,669 @@
+// CareKit — Prisma Schema (ERD)
+// Single source of truth for database structure
+// Changes require Schema Change Protocol approval from maestro
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [pgvector(map: "vector")]
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+// ──────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────
+
+enum BookingType {
+  clinic_visit
+  phone_consultation
+  video_consultation
+
+  @@map("booking_type")
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  completed
+  cancelled
+  pending_cancellation
+
+  @@map("booking_status")
+}
+
+enum PaymentMethod {
+  moyasar
+  bank_transfer
+
+  @@map("payment_method")
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  refunded
+  failed
+
+  @@map("payment_status")
+}
+
+enum TransferVerificationStatus {
+  pending
+  matched
+  amount_differs
+  suspicious
+  old_date
+  unreadable
+  approved
+  rejected
+
+  @@map("transfer_verification_status")
+}
+
+enum NotificationType {
+  booking_confirmed
+  booking_cancelled
+  reminder
+  payment_received
+  new_rating
+  problem_report
+
+  @@map("notification_type")
+}
+
+enum ProblemReportType {
+  no_call
+  late
+  technical
+  other
+
+  @@map("problem_report_type")
+}
+
+enum ProblemReportStatus {
+  open
+  reviewing
+  resolved
+
+  @@map("problem_report_status")
+}
+
+enum ChatRole {
+  user
+  assistant
+  system
+
+  @@map("chat_role")
+}
+
+enum HandoffType {
+  live_chat
+  contact_number
+
+  @@map("handoff_type")
+}
+
+enum ConfigValueType {
+  string
+  json
+  file
+
+  @@map("config_value_type")
+}
+
+enum UserGender {
+  male
+  female
+
+  @@map("user_gender")
+}
+
+enum ZatcaStatus {
+  not_applicable
+  pending
+  reported
+  failed
+
+  @@map("zatca_status")
+}
+
+// ──────────────────────────────────────────────
+// Auth & Users
+// ──────────────────────────────────────────────
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  passwordHash  String?     @map("password_hash")
+  firstName     String      @map("first_name")
+  lastName      String      @map("last_name")
+  phone         String?
+  gender        UserGender?
+  avatarUrl     String?     @map("avatar_url")
+  isActive      Boolean     @default(true) @map("is_active")
+  emailVerified Boolean     @default(false) @map("email_verified")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  deletedAt     DateTime?   @map("deleted_at")
+
+  // Relations
+  otpCodes         OtpCode[]
+  refreshTokens    RefreshToken[]
+  userRoles        UserRole[]
+  practitioner     Practitioner?
+  bookingsAsPatient Booking[]           @relation("PatientBookings")
+  ratingsAsPatient  Rating[]            @relation("PatientRatings")
+  problemReports    ProblemReport[]     @relation("PatientProblemReports")
+  resolvedReports   ProblemReport[]     @relation("ResolvedByUser")
+  reviewedReceipts  BankTransferReceipt[] @relation("ReviewedByUser")
+  chatSessions      ChatSession[]
+  notifications     Notification[]
+  fcmTokens         FcmToken[]
+  activityLogs      ActivityLog[]
+
+  @@map("users")
+}
+
+model OtpCode {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  code      String
+  type      String    // login, reset_password, verify_email
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("otp_codes")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ──────────────────────────────────────────────
+// RBAC
+// ──────────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  isDefault   Boolean  @default(false) @map("is_default")
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  module      String
+  action      String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  rolePermissions RolePermission[]
+
+  @@unique([module, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  // Relations
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  roleId String @map("role_id")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// ──────────────────────────────────────────────
+// Clinic
+// ──────────────────────────────────────────────
+
+model Practitioner {
+  id           String    @id @default(uuid())
+  userId       String    @unique @map("user_id")
+  specialtyId  String    @map("specialty_id")
+  bio          String?
+  bioAr        String?   @map("bio_ar")
+  experience   Int       @default(0)
+  education    String?
+  educationAr  String?   @map("education_ar")
+  priceClinic  Int       @default(0) @map("price_clinic")  // halalat
+  pricePhone   Int       @default(0) @map("price_phone")   // halalat
+  priceVideo   Int       @default(0) @map("price_video")   // halalat
+  rating       Float     @default(0)
+  reviewCount  Int       @default(0) @map("review_count")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  // Relations
+  user           User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty      Specialty                   @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+  availabilities PractitionerAvailability[]
+  vacations      PractitionerVacation[]
+  bookings       Booking[]
+  ratings        Rating[]
+
+  @@index([specialtyId])
+  @@map("practitioners")
+}
+
+model Specialty {
+  id            String   @id @default(uuid())
+  nameAr        String   @map("name_ar")
+  nameEn        String   @unique @map("name_en")
+  iconUrl       String?  @map("icon_url")
+  descriptionAr String?  @map("description_ar")
+  descriptionEn String?  @map("description_en")
+  sortOrder     Int      @default(0) @map("sort_order")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  practitioners Practitioner[]
+
+  @@map("specialties")
+}
+
+model PractitionerAvailability {
+  id             String   @id @default(uuid())
+  practitionerId String   @map("practitioner_id")
+  dayOfWeek      Int      @map("day_of_week") // 0 = Sunday, 6 = Saturday
+  startTime      String   @map("start_time")  // "HH:mm"
+  endTime        String   @map("end_time")    // "HH:mm"
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerId, dayOfWeek])
+  @@map("practitioner_availabilities")
+}
+
+model PractitionerVacation {
+  id             String   @id @default(uuid())
+  practitionerId String   @map("practitioner_id")
+  startDate      DateTime @map("start_date")
+  endDate        DateTime @map("end_date")
+  reason         String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerId])
+  @@map("practitioner_vacations")
+}
+
+// ──────────────────────────────────────────────
+// Services
+// ──────────────────────────────────────────────
+
+model ServiceCategory {
+  id        String   @id @default(uuid())
+  nameAr    String   @map("name_ar")
+  nameEn    String   @map("name_en")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  services Service[]
+
+  @@map("service_categories")
+}
+
+model Service {
+  id            String    @id @default(uuid())
+  nameAr        String    @map("name_ar")
+  nameEn        String    @map("name_en")
+  descriptionAr String?   @map("description_ar")
+  descriptionEn String?   @map("description_en")
+  categoryId    String    @map("category_id")
+  price         Int       @default(0) // halalat
+  duration      Int       @default(30) // minutes
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  // Relations
+  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  bookings Booking[]
+
+  @@index([categoryId])
+  @@map("services")
+}
+
+// ──────────────────────────────────────────────
+// Bookings
+// ──────────────────────────────────────────────
+
+model Booking {
+  id                 String        @id @default(uuid())
+  patientId          String?       @map("patient_id")
+  practitionerId     String        @map("practitioner_id")
+  serviceId          String        @map("service_id")
+  type               BookingType
+  date               DateTime
+  startTime          String        @map("start_time") // "HH:mm"
+  endTime            String        @map("end_time")   // "HH:mm"
+  status             BookingStatus @default(pending)
+  notes              String?
+  zoomMeetingId      String?       @map("zoom_meeting_id")
+  zoomJoinUrl        String?       @map("zoom_join_url")
+  zoomHostUrl        String?       @map("zoom_host_url")
+  cancellationReason String?       @map("cancellation_reason")
+  cancelledAt        DateTime?     @map("cancelled_at")
+  confirmedAt        DateTime?     @map("confirmed_at")
+  completedAt        DateTime?     @map("completed_at")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  deletedAt          DateTime?     @map("deleted_at")
+
+  // Relations
+  patient        User?          @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
+  practitioner   Practitioner   @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  service        Service        @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  payment        Payment?
+  rating         Rating?
+  problemReports ProblemReport[]
+
+  @@index([practitionerId, date])
+  @@index([patientId, status])
+  @@index([status])
+  @@map("bookings")
+}
+
+// ──────────────────────────────────────────────
+// Payments
+// ──────────────────────────────────────────────
+
+model Payment {
+  id               String        @id @default(uuid())
+  bookingId        String        @unique @map("booking_id")
+  amount           Int           // halalat
+  vatAmount        Int           @default(0) @map("vat_amount") // halalat
+  totalAmount      Int           @default(0) @map("total_amount") // halalat
+  method           PaymentMethod
+  status           PaymentStatus @default(pending)
+  moyasarPaymentId String?       @map("moyasar_payment_id")
+  transactionRef   String?       @map("transaction_ref")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  booking Booking              @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  receipt BankTransferReceipt?
+  invoice Invoice?
+
+  @@index([status])
+  @@map("payments")
+}
+
+model BankTransferReceipt {
+  id                   String                     @id @default(uuid())
+  paymentId            String                     @unique @map("payment_id")
+  receiptUrl           String                     @map("receipt_url")
+  aiVerificationStatus TransferVerificationStatus @default(pending) @map("ai_verification_status")
+  aiConfidence         Float?                     @map("ai_confidence")
+  aiNotes              String?                    @map("ai_notes")
+  extractedAmount      Int?                       @map("extracted_amount") // halalat
+  extractedDate        DateTime?                  @map("extracted_date")
+  reviewedById         String?                    @map("reviewed_by_id")
+  reviewedAt           DateTime?                  @map("reviewed_at")
+  adminNotes           String?                    @map("admin_notes")
+  createdAt            DateTime                   @default(now()) @map("created_at")
+
+  // Relations
+  payment    Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  reviewedBy User?   @relation("ReviewedByUser", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@map("bank_transfer_receipts")
+}
+
+model Invoice {
+  id            String      @id @default(uuid())
+  paymentId     String      @unique @map("payment_id")
+  invoiceNumber String      @unique @map("invoice_number")
+  pdfUrl        String?     @map("pdf_url")
+  sentAt        DateTime?   @map("sent_at")
+  vatAmount     Int         @default(0) @map("vat_amount")
+  vatRate       Int         @default(0) @map("vat_rate")
+  invoiceHash   String?     @map("invoice_hash")
+  previousHash  String?     @map("previous_hash")
+  qrCodeData    String?     @map("qr_code_data")
+  zatcaStatus   ZatcaStatus @default(not_applicable) @map("zatca_status")
+  zatcaResponse Json?       @map("zatca_response")
+  xmlContent    String?     @map("xml_content")
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  // Relations
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("invoices")
+}
+
+// ──────────────────────────────────────────────
+// Ratings
+// ──────────────────────────────────────────────
+
+model Rating {
+  id             String   @id @default(uuid())
+  bookingId      String   @unique @map("booking_id")
+  patientId      String?  @map("patient_id")
+  practitionerId String   @map("practitioner_id")
+  stars          Int      // 1-5
+  comment        String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  booking      Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  patient      User?        @relation("PatientRatings", fields: [patientId], references: [id], onDelete: SetNull)
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerId])
+  @@map("ratings")
+}
+
+model ProblemReport {
+  id           String              @id @default(uuid())
+  bookingId    String              @map("booking_id")
+  patientId    String?             @map("patient_id")
+  type         ProblemReportType
+  description  String?
+  status       ProblemReportStatus @default(open)
+  resolvedById String?             @map("resolved_by_id")
+  resolvedAt   DateTime?           @map("resolved_at")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  booking    Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  patient    User?   @relation("PatientProblemReports", fields: [patientId], references: [id], onDelete: SetNull)
+  resolvedBy User?   @relation("ResolvedByUser", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([bookingId])
+  @@index([status])
+  @@map("problem_reports")
+}
+
+// ──────────────────────────────────────────────
+// Chatbot
+// ──────────────────────────────────────────────
+
+model ChatSession {
+  id          String       @id @default(uuid())
+  userId      String       @map("user_id")
+  startedAt   DateTime     @default(now()) @map("started_at")
+  endedAt     DateTime?    @map("ended_at")
+  handedOff   Boolean      @default(false) @map("handed_off")
+  handoffType HandoffType? @map("handoff_type")
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  // Relations
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id           String   @id @default(uuid())
+  sessionId    String   @map("session_id")
+  role         ChatRole
+  content      String
+  functionCall Json?    @map("function_call")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("chat_messages")
+}
+
+model KnowledgeBase {
+  id        String                          @id @default(uuid())
+  title     String
+  content   String
+  embedding Unsupported("vector(1536)")?
+  category  String?
+  isActive  Boolean                         @default(true) @map("is_active")
+  createdAt DateTime                        @default(now()) @map("created_at")
+  updatedAt DateTime                        @updatedAt @map("updated_at")
+
+  @@map("knowledge_base")
+}
+
+// ──────────────────────────────────────────────
+// White Label
+// ──────────────────────────────────────────────
+
+model WhiteLabelConfig {
+  id          String          @id @default(uuid())
+  key         String          @unique
+  value       String
+  type        ConfigValueType @default(string)
+  description String?
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@map("white_label_config")
+}
+
+// ──────────────────────────────────────────────
+// Audit
+// ──────────────────────────────────────────────
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  action      String   // created | updated | deleted | login | logout | approved | rejected
+  module      String   // bookings | users | practitioners | payments | whitelabel | roles | ...
+  resourceId  String?  @map("resource_id")
+  description String?
+  oldValues   Json?    @map("old_values")
+  newValues   Json?    @map("new_values")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([module])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+// ──────────────────────────────────────────────
+// Notifications
+// ──────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  titleAr   String           @map("title_ar")
+  titleEn   String           @map("title_en")
+  bodyAr    String           @map("body_ar")
+  bodyEn    String           @map("body_en")
+  type      NotificationType
+  isRead    Boolean          @default(false) @map("is_read")
+  data      Json?
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model FcmToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String
+  platform  String   // ios | android
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@index([userId])
+  @@map("fcm_tokens")
+}

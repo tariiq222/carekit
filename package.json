@@ -1,0 +1,30 @@
+{
+  "name": "carekit",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "mobile",
+    "dashboard",
+    "shared"
+  ],
+  "scripts": {
+    "dev:backend": "turbo run dev --filter=backend",
+    "dev:mobile": "turbo run dev --filter=mobile",
+    "dev:dashboard": "turbo run dev --filter=dashboard",
+    "dev:all": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "turbo": "^2"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "function-bind": "^1.1.2",
+    "hasown": "^2.0.2",
+    "string-width": "^4.2.3"
+  }
+}

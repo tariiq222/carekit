@@ -1,0 +1,6 @@
+{
+  "name": "@carekit/tokens",
+  "version": "1.0.0",
+  "main": "tokens/index.ts",
+  "types": "tokens/index.ts"
+}

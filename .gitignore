@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+.expo/
+out/
+
+# Turborepo
+.turbo/
+
+# Environment variables
+*.env
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage
+coverage/
+
+# Docker volumes (local)
+docker/data/
+
+# Prisma
+backend/prisma/*.db
+
+# Expo
+mobile/.expo/
+mobile/ios/
+mobile/android/
+
+# Next.js
+dashboard/.next/
+dashboard/out/
+
+# Temporary files
+*.tmp
+*.temp
