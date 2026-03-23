@@ -4,7 +4,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -29,15 +28,8 @@ import { CreateMoyasarPaymentDto } from './dto/create-moyasar-payment.dto.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
 import { RefundDto } from './dto/refund.dto.js';
 import { BankTransferUploadDto } from './dto/bank-transfer-upload.dto.js';
-
-const uuidPipe = new ParseUUIDPipe({
-  exceptionFactory: () =>
-    new BadRequestException({
-      statusCode: 400,
-      message: 'Invalid UUID format',
-      error: 'VALIDATION_ERROR',
-    }),
-});
+import { VerifyBankTransferDto } from './dto/verify-bank-transfer.dto.js';
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @Controller('payments')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -149,7 +141,7 @@ export class PaymentsController {
   async verifyBankTransfer(
     @Param('id', uuidPipe) receiptId: string,
     @CurrentUser() user: { id: string },
-    @Body() dto: { action: 'approve' | 'reject'; adminNotes?: string },
+    @Body() dto: VerifyBankTransferDto,
   ) {
     return this.paymentsService.verifyBankTransfer(receiptId, user.id, dto);
   }

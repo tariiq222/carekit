@@ -1,11 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   UseGuards,
@@ -17,15 +15,7 @@ import { Public } from '../auth/decorators/public.decorator.js';
 import { SpecialtiesService } from './specialties.service.js';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto.js';
 import { UpdateSpecialtyDto } from './dto/update-specialty.dto.js';
-
-const uuidPipe = new ParseUUIDPipe({
-  exceptionFactory: () =>
-    new BadRequestException({
-      statusCode: 400,
-      message: 'Invalid UUID format',
-      error: 'VALIDATION_ERROR',
-    }),
-});
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @Controller('specialties')
 @UseGuards(JwtAuthGuard, PermissionsGuard)

@@ -8,8 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto.js';
 import { UserRolesService } from './user-roles.service.js';
-
-const SALT_ROUNDS = 10;
+import { SALT_ROUNDS } from '../../config/constants.js';
 
 @Injectable()
 export class UsersService {
@@ -293,8 +292,32 @@ export class UsersService {
     return this.sanitizeUser(updated);
   }
 
-  async assignRole(userId: string, roleId: string) {
-    return this.userRolesService.assignRole(userId, roleId);
+  async assignRole(userId: string, roleId?: string, roleSlug?: string) {
+    let resolvedRoleId = roleId;
+
+    if (!resolvedRoleId && roleSlug) {
+      const role = await this.prisma.role.findUnique({
+        where: { slug: roleSlug },
+      });
+      if (!role) {
+        throw new NotFoundException({
+          statusCode: 404,
+          message: 'Role not found',
+          error: 'ROLE_NOT_FOUND',
+        });
+      }
+      resolvedRoleId = role.id;
+    }
+
+    if (!resolvedRoleId) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'roleId or roleSlug is required',
+        error: 'VALIDATION_ERROR',
+      });
+    }
+
+    return this.userRolesService.assignRole(userId, resolvedRoleId);
   }
 
   async removeRole(userId: string, roleId: string) {

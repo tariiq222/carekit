@@ -15,12 +15,21 @@ export class MinioService {
     this.useSSL =
       this.config.get<string>('MINIO_USE_SSL', 'false') === 'true';
 
+    const accessKey = this.config.get<string>('MINIO_ACCESS_KEY');
+    const secretKey = this.config.get<string>('MINIO_SECRET_KEY');
+
+    if (!accessKey || !secretKey) {
+      throw new Error(
+        'MINIO_ACCESS_KEY and MINIO_SECRET_KEY environment variables are required',
+      );
+    }
+
     this.client = new Minio.Client({
       endPoint: this.endpoint,
       port: this.port,
       useSSL: this.useSSL,
-      accessKey: this.config.get<string>('MINIO_ACCESS_KEY', 'minioadmin'),
-      secretKey: this.config.get<string>('MINIO_SECRET_KEY', 'minioadmin'),
+      accessKey,
+      secretKey,
     });
   }
 

@@ -27,6 +27,8 @@ import { SessionListQueryDto } from './dto/session-list-query.dto.js';
 import { CreateKbEntryDto, UpdateKbEntryDto } from './dto/kb-entry.dto.js';
 import { UpdateChatbotConfigDto } from './dto/update-chatbot-config.dto.js';
 
+const ADMIN_ROLE_SLUGS = ['super_admin', 'receptionist', 'accountant'];
+
 @Controller('chatbot')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ChatbotController {
@@ -58,8 +60,8 @@ export class ChatbotController {
     const isAdmin = this.isAdmin(user);
     return this.chatbotService.listSessions({
       userId: isAdmin ? undefined : user.id,
-      page: query.page ? parseInt(query.page) : 1,
-      perPage: query.perPage ? parseInt(query.perPage) : 20,
+      page: query.page ? parseInt(query.page, 10) : 1,
+      perPage: query.perPage ? parseInt(query.perPage, 10) : 20,
       handedOff: query.handedOff === 'true' ? true : query.handedOff === 'false' ? false : undefined,
       language: query.language,
       dateFrom: query.dateFrom,
@@ -106,8 +108,8 @@ export class ChatbotController {
     @Query('category') category?: string,
   ) {
     return this.ragService.findAll({
-      page: page ? parseInt(page) : 1,
-      perPage: perPage ? parseInt(perPage) : 20,
+      page: page ? parseInt(page, 10) : 1,
+      perPage: perPage ? parseInt(perPage, 10) : 20,
       source,
       category,
     });
@@ -158,8 +160,8 @@ export class ChatbotController {
     @Query('perPage') perPage?: string,
   ) {
     return this.fileService.listFiles({
-      page: page ? parseInt(page) : 1,
-      perPage: perPage ? parseInt(perPage) : 20,
+      page: page ? parseInt(page, 10) : 1,
+      perPage: perPage ? parseInt(perPage, 10) : 20,
     });
   }
 
@@ -225,14 +227,13 @@ export class ChatbotController {
   @CheckPermissions({ module: 'chatbot', action: 'view' })
   async getMostAskedQuestions(@Query('limit') limit?: string) {
     return this.analyticsService.getMostAskedQuestions(
-      limit ? parseInt(limit) : 10,
+      limit ? parseInt(limit, 10) : 10,
     );
   }
 
   // ── Helper ──
 
   private isAdmin(user: { roles?: string[] }): boolean {
-    const adminRoles = ['super_admin', 'receptionist', 'accountant'];
-    return (user.roles ?? []).some((r) => adminRoles.includes(r));
+    return (user.roles ?? []).some((r) => ADMIN_ROLE_SLUGS.includes(r));
   }
 }

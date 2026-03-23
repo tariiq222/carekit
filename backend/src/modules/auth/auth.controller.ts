@@ -10,7 +10,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
-import { PrismaService } from '../../database/prisma.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto.js';
@@ -27,10 +26,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @Post('register')
@@ -69,7 +65,7 @@ export class AuthController {
   @UseGuards(new EmailThrottleGuard(3, 60000))
   async sendLoginOtp(@Body() dto: SendOtpDto) {
     // Always return success for security (don't reveal if email exists)
-    const user = await this.findUserByEmailSilent(dto.email);
+    const user = await this.authService.findUserByEmail(dto.email);
     if (user) {
       await this.authService.generateOtp(user.id, OtpType.LOGIN);
       // In production, would send email here
@@ -132,7 +128,7 @@ export class AuthController {
   @UseGuards(new EmailThrottleGuard(3, 60000))
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     // Always return success for security
-    const user = await this.findUserByEmailSilent(dto.email);
+    const user = await this.authService.findUserByEmail(dto.email);
     if (user) {
       await this.authService.generateOtp(user.id, OtpType.RESET_PASSWORD);
       // In production, would send email here
@@ -196,14 +192,4 @@ export class AuthController {
     };
   }
 
-  // ---- Private helpers ----
-
-  private async findUserByEmailSilent(
-    email: string,
-  ): Promise<{ id: string } | null> {
-    return this.prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
-      select: { id: true },
-    });
-  }
 }

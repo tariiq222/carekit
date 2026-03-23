@@ -1,11 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -21,15 +19,7 @@ import { UpdateServiceDto } from './dto/update-service.dto.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { ServiceListQueryDto } from './dto/service-list-query.dto.js';
-
-const uuidPipe = new ParseUUIDPipe({
-  exceptionFactory: () =>
-    new BadRequestException({
-      statusCode: 400,
-      message: 'Invalid UUID format',
-      error: 'VALIDATION_ERROR',
-    }),
-});
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @Controller('services')
 @UseGuards(JwtAuthGuard, PermissionsGuard)

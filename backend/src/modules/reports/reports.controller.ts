@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -11,15 +10,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
 import { ReportsService } from './reports.service.js';
-
-const uuidPipe = new ParseUUIDPipe({
-  exceptionFactory: () =>
-    new BadRequestException({
-      statusCode: 400,
-      message: 'Invalid UUID format',
-      error: 'VALIDATION_ERROR',
-    }),
-});
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @Controller('reports')
 @UseGuards(JwtAuthGuard, PermissionsGuard)

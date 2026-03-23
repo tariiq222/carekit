@@ -2,8 +2,10 @@ import {
   BadRequestException,
   Injectable,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service.js';
+import { SALT_ROUNDS } from '../../config/constants.js';
 import { OtpType } from './enums/otp-type.enum.js';
 import { UserPayload } from './types/user-payload.type.js';
 import { TokenService } from './token.service.js';
@@ -31,23 +33,6 @@ export class OtpService {
     await this.prisma.otpCode.create({
       data: { userId, code, type: type as string, expiresAt },
     });
-
-    // Create expired fixture for e2e testing
-    try {
-      await this.prisma.otpCode.upsert({
-        where: { id: `fixture-${userId}-${type as string}` },
-        update: { expiresAt: new Date(Date.now() - 60 * 1000), usedAt: null },
-        create: {
-          id: `fixture-${userId}-${type as string}`,
-          userId,
-          code: '000000',
-          type: type as string,
-          expiresAt: new Date(Date.now() - 60 * 1000),
-        },
-      });
-    } catch {
-      // Ignore in unit tests
-    }
 
     return code;
   }
@@ -194,7 +179,7 @@ export class OtpService {
       data: { usedAt: new Date() },
     });
 
-    const newHash = await bcrypt.hash(newPassword, 10);
+    const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
     await this.prisma.user.update({
       where: { id: user.id },
       data: { passwordHash: newHash },
@@ -202,10 +187,9 @@ export class OtpService {
   }
 
   private generateOtpCode(): string {
-    const digits = '0123456789';
     let otp = '';
     for (let i = 0; i < OTP_LENGTH; i++) {
-      otp += digits[Math.floor(Math.random() * digits.length)];
+      otp += crypto.randomInt(0, 10).toString();
     }
     return otp;
   }

@@ -1,12 +1,13 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { SetAvailabilityDto } from './dto/set-availability.dto.js';
 import { timeSlotsOverlap } from '../../common/helpers/booking-time.helper.js';
+import { checkOwnership } from '../../common/helpers/ownership.helper.js';
+import { ensurePractitionerExists } from '../../common/helpers/practitioner.helper.js';
 
 const TIME_REGEX = /^\d{2}:\d{2}$/;
 
@@ -15,7 +16,7 @@ export class PractitionerAvailabilityService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAvailability(practitionerId: string) {
-    await this.ensurePractitionerExists(practitionerId);
+    await ensurePractitionerExists(this.prisma, practitionerId);
 
     return this.prisma.practitionerAvailability.findMany({
       where: { practitionerId, isActive: true },
@@ -28,10 +29,10 @@ export class PractitionerAvailabilityService {
     dto: SetAvailabilityDto,
     currentUserId?: string,
   ) {
-    const practitioner = await this.ensurePractitionerExists(practitionerId);
+    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
 
     if (currentUserId) {
-      await this.checkOwnership(practitioner.userId, currentUserId);
+      await checkOwnership(this.prisma, practitioner.userId, currentUserId);
     }
 
     this.validateScheduleSlots(dto.schedule);
@@ -68,7 +69,7 @@ export class PractitionerAvailabilityService {
       });
     }
 
-    await this.ensurePractitionerExists(practitionerId);
+    await ensurePractitionerExists(this.prisma, practitionerId);
 
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
@@ -121,7 +122,7 @@ export class PractitionerAvailabilityService {
   }
 
   async getAvailableSlots(practitionerId: string, date: string, duration: number = 30) {
-    await this.ensurePractitionerExists(practitionerId);
+    await ensurePractitionerExists(this.prisma, practitionerId);
 
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
@@ -237,40 +238,6 @@ export class PractitionerAvailabilityService {
       }
       daySlots.push({ startTime: slot.startTime, endTime: slot.endTime });
       byDay.set(slot.dayOfWeek, daySlots);
-    }
-  }
-
-  private async ensurePractitionerExists(practitionerId: string) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-    return practitioner;
-  }
-
-  private async checkOwnership(ownerUserId: string, currentUserId: string) {
-    if (ownerUserId === currentUserId) return;
-
-    const dbUser = await this.prisma.user.findUnique({
-      where: { id: currentUserId },
-      include: { userRoles: { include: { role: true } } },
-    });
-
-    const roles = dbUser?.userRoles.map((ur: { role: { slug: string } }) => ur.role.slug) ?? [];
-    const isAdmin = roles.includes('super_admin') || roles.includes('receptionist');
-
-    if (!isAdmin) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'You can only edit your own profile',
-        error: 'FORBIDDEN',
-      });
     }
   }
 }

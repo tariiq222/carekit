@@ -1,18 +1,19 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CreateVacationDto } from './dto/create-vacation.dto.js';
+import { checkOwnership } from '../../common/helpers/ownership.helper.js';
+import { ensurePractitionerExists } from '../../common/helpers/practitioner.helper.js';
 
 @Injectable()
 export class PractitionerVacationService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getVacations(practitionerId: string) {
-    await this.ensurePractitionerExists(practitionerId);
+    await ensurePractitionerExists(this.prisma, practitionerId);
 
     return this.prisma.practitionerVacation.findMany({
       where: { practitionerId },
@@ -30,10 +31,10 @@ export class PractitionerVacationService {
     dto: CreateVacationDto,
     currentUserId?: string,
   ) {
-    const practitioner = await this.ensurePractitionerExists(practitionerId);
+    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
 
     if (currentUserId) {
-      await this.checkOwnership(practitioner.userId, currentUserId);
+      await checkOwnership(this.prisma, practitioner.userId, currentUserId);
     }
 
     const startDate = new Date(dto.startDate);
@@ -81,10 +82,10 @@ export class PractitionerVacationService {
     vacationId: string,
     currentUserId?: string,
   ) {
-    const practitioner = await this.ensurePractitionerExists(practitionerId);
+    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
 
     if (currentUserId) {
-      await this.checkOwnership(practitioner.userId, currentUserId);
+      await checkOwnership(this.prisma, practitioner.userId, currentUserId);
     }
 
     const vacation = await this.prisma.practitionerVacation.findUnique({
@@ -101,41 +102,5 @@ export class PractitionerVacationService {
     await this.prisma.practitionerVacation.delete({
       where: { id: vacationId },
     });
-  }
-
-  // --- Private helpers ---
-
-  private async ensurePractitionerExists(practitionerId: string) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-    return practitioner;
-  }
-
-  private async checkOwnership(ownerUserId: string, currentUserId: string) {
-    if (ownerUserId === currentUserId) return;
-
-    const dbUser = await this.prisma.user.findUnique({
-      where: { id: currentUserId },
-      include: { userRoles: { include: { role: true } } },
-    });
-
-    const roles = dbUser?.userRoles.map((ur: { role: { slug: string } }) => ur.role.slug) ?? [];
-    const isAdmin = roles.includes('super_admin') || roles.includes('receptionist');
-
-    if (!isAdmin) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'You can only edit your own profile',
-        error: 'FORBIDDEN',
-      });
-    }
   }
 }

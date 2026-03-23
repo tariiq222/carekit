@@ -7,6 +7,7 @@ import { buildSystemPrompt } from './constants/system-prompts.js';
 import { buildToolDefinitions } from './constants/tool-definitions.js';
 import type { OpenRouterMessage } from './interfaces/chatbot-tool.interface.js';
 import type { ChatbotConfigMap } from './interfaces/chatbot-config.interface.js';
+import { detectLanguage, classifyIntent, buildActionCard } from './chatbot.helpers.js';
 
 export interface HandleMessageResult {
   message: string;
@@ -111,7 +112,7 @@ export class ChatbotService {
 
     // Detect language from first user message
     if (!session.language) {
-      const detectedLang = this.detectLanguage(content);
+      const detectedLang = detectLanguage(content);
       await this.prisma.chatSession.update({
         where: { id: sessionId },
         data: { language: detectedLang },
@@ -125,8 +126,13 @@ export class ChatbotService {
     });
     const patientName = user ? `${user.firstName} ${user.lastName}` : 'Patient';
 
+    const clinicConfig = await this.prisma.whiteLabelConfig.findFirst({
+      where: { key: 'clinic_name' },
+    });
+    const clinicName = clinicConfig?.value ?? 'CareKit Clinic';
+
     const systemPrompt = buildSystemPrompt(config, {
-      clinicName: 'CareKit Clinic', // TODO: read from WhiteLabelConfig
+      clinicName,
       patientName,
       today: new Date().toISOString().split('T')[0],
     });
@@ -168,7 +174,7 @@ export class ChatbotService {
             sessionId,
             role: 'assistant',
             content: responseText,
-            intent: this.classifyIntent(lastToolName),
+            intent: classifyIntent(lastToolName),
             toolName: lastToolName,
             tokenCount: totalTokens,
           },
@@ -176,7 +182,7 @@ export class ChatbotService {
 
         return {
           message: responseText,
-          intent: this.classifyIntent(lastToolName),
+          intent: classifyIntent(lastToolName),
           toolName: lastToolName,
           actionCard: lastActionCard,
         };
@@ -203,7 +209,7 @@ export class ChatbotService {
         );
 
         // Build action card from tool results
-        lastActionCard = this.buildActionCard(toolCall.function.name, toolResult);
+        lastActionCard = buildActionCard(toolCall.function.name, toolResult);
 
         // Save tool call in message
         await this.prisma.chatMessage.create({
@@ -233,12 +239,12 @@ export class ChatbotService {
         sessionId,
         role: 'assistant',
         content: finalText,
-        intent: this.classifyIntent(lastToolName),
+        intent: classifyIntent(lastToolName),
         tokenCount: totalTokens + finalResult.tokenCount,
       },
     });
 
-    return { message: finalText, intent: this.classifyIntent(lastToolName), actionCard: lastActionCard };
+    return { message: finalText, intent: classifyIntent(lastToolName), actionCard: lastActionCard };
   }
 
   async endSession(sessionId: string, userId: string) {
@@ -317,48 +323,6 @@ export class ChatbotService {
     }));
   }
 
-  private detectLanguage(text: string): string {
-    const arabicRegex = /[\u0600-\u06FF]/;
-    return arabicRegex.test(text) ? 'ar' : 'en';
-  }
-
-  private classifyIntent(toolName?: string): string | undefined {
-    if (!toolName) return 'query';
-    const intentMap: Record<string, string> = {
-      create_booking: 'book',
-      reschedule_booking: 'modify',
-      request_cancellation: 'cancel',
-      handoff_to_human: 'handoff',
-      get_my_upcoming_bookings: 'query',
-      list_services: 'query',
-      list_practitioners: 'query',
-      get_available_slots: 'query',
-      search_knowledge_base: 'query',
-    };
-    return intentMap[toolName] ?? 'query';
-  }
-
-  private buildActionCard(
-    toolName: string,
-    result: { success: boolean; data?: unknown },
-  ): { type: string; payload: unknown } | undefined {
-    if (!result.success) return undefined;
-
-    const cardMap: Record<string, string> = {
-      create_booking: 'booking_created',
-      get_my_upcoming_bookings: 'bookings_list',
-      list_services: 'services_list',
-      list_practitioners: 'practitioners_list',
-      get_available_slots: 'slots_list',
-      request_cancellation: 'cancellation_requested',
-      handoff_to_human: 'handoff',
-    };
-
-    const type = cardMap[toolName];
-    if (!type) return undefined;
-
-    return { type, payload: result.data };
-  }
 }
 
 // Type import for the loop

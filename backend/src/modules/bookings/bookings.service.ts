@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -293,6 +294,20 @@ export class BookingsService {
     const items = rawItems.map(({ deletedAt: _, zoomMeetingId: _z, ...item }) => item);
     const totalPages = Math.ceil(total / perPage);
     return { items, meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 } };
+  }
+
+  async findTodayBookingsForUser(userId: string) {
+    const practitioner = await this.prisma.practitioner.findFirst({
+      where: { userId, deletedAt: null },
+    });
+    if (!practitioner) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: "Only practitioners can access today's bookings",
+        error: 'FORBIDDEN',
+      });
+    }
+    return this.findTodayBookings(userId);
   }
 
   async findTodayBookings(userId: string, page = 1, perPage = 50) {

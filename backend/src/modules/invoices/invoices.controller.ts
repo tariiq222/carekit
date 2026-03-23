@@ -1,11 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
   HttpCode,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -22,15 +20,7 @@ import { InvoiceCreatorService } from './invoice-creator.service.js';
 import { InvoiceStatsService } from './invoice-stats.service.js';
 import { CreateInvoiceDto } from './dto/create-invoice.dto.js';
 import { InvoiceFilterDto } from './dto/invoice-filter.dto.js';
-
-const uuidPipe = new ParseUUIDPipe({
-  exceptionFactory: () =>
-    new BadRequestException({
-      statusCode: 400,
-      message: 'Invalid UUID format',
-      error: 'VALIDATION_ERROR',
-    }),
-});
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Invoices')
 @Controller('invoices')

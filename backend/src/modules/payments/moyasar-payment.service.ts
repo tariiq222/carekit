@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -14,6 +16,8 @@ import { paymentInclude, bookingWithPriceInclude, calculateAmounts } from './pay
 
 @Injectable()
 export class MoyasarPaymentService {
+  private readonly logger = new Logger(MoyasarPaymentService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly invoicesService: InvoiceCreatorService,
@@ -140,8 +144,10 @@ export class MoyasarPaymentService {
 
       try {
         await this.invoicesService.createInvoice({ paymentId: payment.id });
-      } catch {
-        // Invoice may already exist
+      } catch (err) {
+        if (!(err instanceof ConflictException)) {
+          this.logger.error(`Invoice creation failed for payment ${payment.id}`, err);
+        }
       }
     } else if (dto.status === 'failed') {
       await this.prisma.payment.update({

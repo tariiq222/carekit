@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
@@ -15,6 +17,8 @@ const MINIO_BUCKET = 'carekit';
 
 @Injectable()
 export class BankTransferService {
+  private readonly logger = new Logger(BankTransferService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly minioService: MinioService,
@@ -126,27 +130,31 @@ export class BankTransferService {
       file.mimetype ?? 'image/jpeg',
     );
 
-    const payment = await this.prisma.payment.create({
-      data: {
-        bookingId,
-        amount,
-        vatAmount,
-        totalAmount,
-        method: 'bank_transfer',
-        status: 'pending',
-      },
-      include: paymentInclude,
+    const result = await this.prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.create({
+        data: {
+          bookingId,
+          amount,
+          vatAmount,
+          totalAmount,
+          method: 'bank_transfer',
+          status: 'pending',
+        },
+        include: paymentInclude,
+      });
+
+      const receipt = await tx.bankTransferReceipt.create({
+        data: {
+          paymentId: payment.id,
+          receiptUrl,
+          aiVerificationStatus: 'pending',
+        },
+      });
+
+      return { payment, receipt };
     });
 
-    const receipt = await this.prisma.bankTransferReceipt.create({
-      data: {
-        paymentId: payment.id,
-        receiptUrl,
-        aiVerificationStatus: 'pending',
-      },
-    });
-
-    return { payment, receipt };
+    return result;
   }
 
   async verifyBankTransfer(
@@ -167,26 +175,32 @@ export class BankTransferService {
 
     const newStatus = dto.action === 'approve' ? 'approved' : 'rejected';
 
-    await this.prisma.bankTransferReceipt.update({
-      where: { id: receiptId },
-      data: {
-        aiVerificationStatus: newStatus,
-        reviewedById: adminId,
-        reviewedAt: new Date(),
-        adminNotes: dto.adminNotes,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.bankTransferReceipt.update({
+        where: { id: receiptId },
+        data: {
+          aiVerificationStatus: newStatus,
+          reviewedById: adminId,
+          reviewedAt: new Date(),
+          adminNotes: dto.adminNotes,
+        },
+      });
+
+      if (dto.action === 'approve') {
+        await tx.payment.update({
+          where: { id: receipt.paymentId },
+          data: { status: 'paid' },
+        });
+      }
     });
 
     if (dto.action === 'approve') {
-      await this.prisma.payment.update({
-        where: { id: receipt.paymentId },
-        data: { status: 'paid' },
-      });
-
       try {
         await this.invoicesService.createInvoice({ paymentId: receipt.paymentId });
-      } catch {
-        // Invoice may already exist
+      } catch (err) {
+        if (!(err instanceof ConflictException)) {
+          this.logger.error(`Invoice creation failed for payment ${receipt.paymentId}`, err);
+        }
       }
     }
 

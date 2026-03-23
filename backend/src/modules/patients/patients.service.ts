@@ -19,7 +19,7 @@ export class PatientsService {
       deletedAt: null,
       userRoles: {
         some: {
-          role: { name: 'patient' },
+          role: { slug: 'patient' },
         },
       },
       ...(search && {

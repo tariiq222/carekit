@@ -1,12 +1,10 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -19,15 +17,7 @@ import { NotificationsService } from './notifications.service.js';
 import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
 import { UnregisterFcmTokenDto } from './dto/unregister-fcm-token.dto.js';
 import { NotificationListQueryDto } from './dto/notification-list-query.dto.js';
-
-const uuidPipe = new ParseUUIDPipe({
-  exceptionFactory: () =>
-    new BadRequestException({
-      statusCode: 400,
-      message: 'Invalid UUID format',
-      error: 'VALIDATION_ERROR',
-    }),
-});
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @Controller('notifications')
 @UseGuards(JwtAuthGuard, PermissionsGuard)

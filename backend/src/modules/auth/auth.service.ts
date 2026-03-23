@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service.js';
+import { SALT_ROUNDS } from '../../config/constants.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { OtpType } from './enums/otp-type.enum.js';
 import { UserPayload } from './types/user-payload.type.js';
@@ -19,8 +20,6 @@ import { OtpService } from './otp.service.js';
 interface MailQueue {
   add(name: string, data: Record<string, unknown>): Promise<unknown>;
 }
-
-const SALT_ROUNDS = 10;
 
 @Injectable()
 export class AuthService {
@@ -51,22 +50,26 @@ export class AuthService {
       where: { slug: 'patient', isDefault: true },
     });
 
-    const user = await this.prisma.user.create({
-      data: {
-        email,
-        passwordHash,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        phone: dto.phone,
-        gender: dto.gender,
-      },
-    });
-
-    if (patientRole) {
-      await this.prisma.userRole.create({
-        data: { userId: user.id, roleId: patientRole.id },
+    const user = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email,
+          passwordHash,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          phone: dto.phone,
+          gender: dto.gender,
+        },
       });
-    }
+
+      if (patientRole) {
+        await tx.userRole.create({
+          data: { userId: created.id, roleId: patientRole.id },
+        });
+      }
+
+      return created;
+    });
 
     const tokens = await this.tokenService.generateTokens(user.id, user.email);
     await this.tokenService.storeRefreshToken(user.id, tokens.refreshToken);
@@ -170,6 +173,13 @@ export class AuthService {
 
   async getUserProfile(userId: string): Promise<UserPayload> {
     return this.tokenService.buildUserPayloadFromId(userId);
+  }
+
+  async findUserByEmail(email: string): Promise<{ id: string } | null> {
+    return this.prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { id: true },
+    });
   }
 
   // --- Delegated: OTP ---

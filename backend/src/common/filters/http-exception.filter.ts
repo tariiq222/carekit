@@ -34,6 +34,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
+
+      // Log auth failures for audit trail (401, 403)
+      if (status === HttpStatus.UNAUTHORIZED || status === HttpStatus.FORBIDDEN) {
+        const request = ctx.getRequest<{ url?: string; method?: string; ip?: string }>();
+        this.logger.warn(
+          `Auth failure [${status}] ${request.method} ${request.url} — IP: ${request.ip}`,
+        );
+      }
+
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === 'string') {

@@ -1,12 +1,10 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   ForbiddenException,
   Get,
   HttpCode,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -25,15 +23,7 @@ import { CancelRejectDto } from './dto/cancel-reject.dto.js';
 import { BookingListQueryDto } from './dto/booking-list-query.dto.js';
 import { PrismaService } from '../../database/prisma.service.js';
 import { resolveUserRoleContext } from '../../common/helpers/user-role.helper.js';
-
-const uuidPipe = new ParseUUIDPipe({
-  exceptionFactory: () =>
-    new BadRequestException({
-      statusCode: 400,
-      message: 'Invalid UUID format',
-      error: 'VALIDATION_ERROR',
-    }),
-});
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @Controller('bookings')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -71,19 +61,7 @@ export class BookingsController {
 
   @Get('today')
   async findTodayBookings(@CurrentUser() user: { id: string }) {
-    // Check user is a practitioner
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { userId: user.id, deletedAt: null },
-    });
-    if (!practitioner) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'Only practitioners can access today\'s bookings',
-        error: 'FORBIDDEN',
-      });
-    }
-
-    return this.bookingsService.findTodayBookings(user.id);
+    return this.bookingsService.findTodayBookingsForUser(user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════

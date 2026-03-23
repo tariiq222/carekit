@@ -5,18 +5,15 @@ import {
   Param,
   Post,
   Query,
-  Request,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { RatingsService } from './ratings.service.js';
-
-interface AuthenticatedRequest {
-  user: { id: string };
-}
+import { CreateRatingDto } from './dto/create-rating.dto.js';
 
 @ApiTags('Ratings')
 @Controller('ratings')
@@ -28,14 +25,14 @@ export class RatingsController {
   @CheckPermissions({ module: 'ratings', action: 'create' })
   @ApiOperation({ summary: 'Submit a rating for a completed booking' })
   create(
-    @Body() body: { bookingId: string; stars: number; comment?: string },
-    @Request() req: AuthenticatedRequest,
+    @Body() dto: CreateRatingDto,
+    @CurrentUser() user: { id: string },
   ) {
     return this.ratingsService.create({
-      bookingId: body.bookingId,
-      patientId: req.user.id,
-      stars: body.stars,
-      comment: body.comment,
+      bookingId: dto.bookingId,
+      patientId: user.id,
+      stars: dto.stars,
+      comment: dto.comment,
     });
   }
 
