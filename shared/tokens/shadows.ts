@@ -1,6 +1,14 @@
 /**
  * CareKit Design System — Shadow Tokens
  * Rule: Never use pure black shadows — use #001551 tint
+ *
+ * Levels (from DS spec):
+ *   subtle   → stat cards, sidebar (resting)
+ *   ambient  → hover on action cards
+ *   medium   → hover on stat cards
+ *   elevated → dropdowns
+ *   high     → calendar popup
+ *   modal    → modals/dialogs
  */
 export const shadows = {
   none: 'none',
@@ -8,6 +16,13 @@ export const shadows = {
   md: '0 4px 24px rgba(0,21,81,0.04)',
   lg: '0 8px 32px rgba(0,21,81,0.06)',
   xl: '0 12px 40px rgba(0,21,81,0.08)',
+  /* DS-specific named levels */
+  subtle: '0 1px 3px rgba(0,21,81,0.03)',
+  ambient: '0 4px 12px rgba(0,21,81,0.05)',
+  medium: '0 8px 24px rgba(0,21,81,0.06)',
+  elevated: '0 12px 36px rgba(0,21,81,0.10)',
+  high: '0 16px 48px rgba(0,21,81,0.12)',
+  modal: '0 20px 50px rgba(0,21,81,0.12)',
 } as const;
 
 // React Native shadow objects — #001551 tint

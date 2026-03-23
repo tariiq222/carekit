@@ -30,6 +30,7 @@ enum BookingStatus {
   completed
   cancelled
   pending_cancellation
+  no_show
 
   @@map("booking_status")
 }
@@ -224,8 +225,9 @@ model Permission {
   id          String   @id @default(uuid())
   module      String
   action      String
-  description String?
-  createdAt   DateTime @default(now()) @map("created_at")
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   // Relations
   rolePermissions RolePermission[]
@@ -419,7 +421,7 @@ model Service {
 
 model Booking {
   id                 String        @id @default(uuid())
-  patientId          String?       @map("patient_id")
+  patientId          String?       @map("patient_id") // nullable ONLY for onDelete:SetNull — always required at creation
   practitionerId        String        @map("practitioner_id")
   serviceId             String        @map("service_id")
   practitionerServiceId String        @map("practitioner_service_id")
@@ -436,6 +438,7 @@ model Booking {
   adminNotes         String?       @map("admin_notes")
   cancelledAt        DateTime?     @map("cancelled_at")
   confirmedAt        DateTime?     @map("confirmed_at")
+  rescheduledFromId  String?       @unique @map("rescheduled_from_id") // links to original booking when rescheduled
   completedAt        DateTime?     @map("completed_at")
   createdAt          DateTime      @default(now()) @map("created_at")
   updatedAt          DateTime      @updatedAt @map("updated_at")
@@ -446,6 +449,8 @@ model Booking {
   practitioner        Practitioner         @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
   service             Service              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   practitionerService PractitionerService @relation(fields: [practitionerServiceId], references: [id], onDelete: Restrict)
+  rescheduledFrom     Booking?             @relation("RescheduleChain", fields: [rescheduledFromId], references: [id], onDelete: SetNull)
+  rescheduledTo       Booking?             @relation("RescheduleChain")
   payment             Payment?
   rating              Rating?
   problemReports      ProblemReport[]
@@ -721,6 +726,7 @@ model Notification {
   bodyEn    String           @map("body_en")
   type      NotificationType
   isRead    Boolean          @default(false) @map("is_read")
+  readAt    DateTime?        @map("read_at")
   data      Json?
   createdAt DateTime         @default(now()) @map("created_at")
 

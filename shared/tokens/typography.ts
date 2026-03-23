@@ -2,6 +2,8 @@ export const typography = {
   fontFamily: {
     arabic: '"IBM Plex Sans Arabic", "Noto Sans Arabic", sans-serif',
     english: '"Inter", sans-serif',
+    /** Numbers, dates, amounts — always render in DM Sans */
+    numeric: '"DM Sans", "Inter", sans-serif',
     mono: '"IBM Plex Mono", monospace',
   },
   fontSize: {

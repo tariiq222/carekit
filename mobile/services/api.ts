@@ -2,12 +2,16 @@ import axios, {
   type AxiosError,
   type InternalAxiosRequestConfig,
 } from 'axios';
-import * as SecureStore from 'expo-secure-store';
 
 import { API_URL } from '@/constants/config';
 import type { ApiResponse } from '@/types/api';
 import { store } from '@/stores/store';
 import { logout } from '@/stores/slices/auth-slice';
+import {
+  getSecureItem,
+  setSecureItem,
+  deleteSecureItem,
+} from '@/stores/secure-storage';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -20,7 +24,7 @@ const api = axios.create({
 // Request interceptor: inject JWT token
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const token = await SecureStore.getItemAsync('accessToken');
+    const token = await getSecureItem('accessToken');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -44,7 +48,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = await SecureStore.getItemAsync('refreshToken');
+        const refreshToken = await getSecureItem('refreshToken');
         if (!refreshToken) {
           return Promise.reject(error);
         }
@@ -54,14 +58,8 @@ api.interceptors.response.use(
         >(`${API_URL}/auth/refresh-token`, { refreshToken });
 
         if (data.success && data.data) {
-          await SecureStore.setItemAsync(
-            'accessToken',
-            data.data.accessToken,
-          );
-          await SecureStore.setItemAsync(
-            'refreshToken',
-            data.data.refreshToken,
-          );
+          await setSecureItem('accessToken', data.data.accessToken);
+          await setSecureItem('refreshToken', data.data.refreshToken);
 
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
@@ -70,8 +68,8 @@ api.interceptors.response.use(
         }
       } catch {
         // Refresh failed — clear tokens + Redux state
-        await SecureStore.deleteItemAsync('accessToken');
-        await SecureStore.deleteItemAsync('refreshToken');
+        await deleteSecureItem('accessToken');
+        await deleteSecureItem('refreshToken');
         store.dispatch(logout());
       }
     }

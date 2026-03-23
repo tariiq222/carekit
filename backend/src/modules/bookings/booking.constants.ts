@@ -9,4 +9,5 @@ export const bookingInclude = {
   },
   service: true,
   practitionerService: true,
+  rescheduledFrom: { select: { id: true, date: true, startTime: true } },
 };

@@ -3,6 +3,7 @@ import { PractitionersController } from './practitioners.controller.js';
 import { PractitionersService } from './practitioners.service.js';
 import { PractitionerAvailabilityService } from './practitioner-availability.service.js';
 import { PractitionerVacationService } from './practitioner-vacation.service.js';
+import { PractitionerServiceService } from './practitioner-service.service.js';
 
 @Module({
   controllers: [PractitionersController],
@@ -10,7 +11,8 @@ import { PractitionerVacationService } from './practitioner-vacation.service.js'
     PractitionersService,
     PractitionerAvailabilityService,
     PractitionerVacationService,
+    PractitionerServiceService,
   ],
-  exports: [PractitionersService],
+  exports: [PractitionersService, PractitionerServiceService],
 })
 export class PractitionersModule {}

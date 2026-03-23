@@ -17,7 +17,7 @@ export class PatientsService {
 
     const where = {
       deletedAt: null,
-      roles: {
+      userRoles: {
         some: {
           role: { name: 'patient' },
         },

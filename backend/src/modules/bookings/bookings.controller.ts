@@ -87,6 +87,17 @@ export class BookingsController {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  //  GET /bookings/stats — Booking Statistics
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get('stats')
+  @CheckPermissions({ module: 'bookings', action: 'view' })
+  async getStats() {
+    const data = await this.bookingsService.getStats();
+    return { success: true, data };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   //  GET /bookings — List Bookings
   // ═══════════════════════════════════════════════════════════════
 
@@ -165,6 +176,17 @@ export class BookingsController {
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   async complete(@Param('id', uuidPipe) id: string) {
     return this.bookingsService.complete(id);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  POST /bookings/:id/no-show
+  // ═══════════════════════════════════════════════════════════════
+
+  @Post(':id/no-show')
+  @HttpCode(200)
+  @CheckPermissions({ module: 'bookings', action: 'edit' })
+  async markNoShow(@Param('id', uuidPipe) id: string) {
+    return this.bookingsService.markNoShow(id);
   }
 
   // ═══════════════════════════════════════════════════════════════

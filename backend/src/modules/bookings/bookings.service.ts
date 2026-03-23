@@ -113,6 +113,25 @@ export class BookingsService {
     return booking;
   }
 
+  async getStats() {
+    const counts = await this.prisma.booking.groupBy({
+      by: ['status'],
+      where: { deletedAt: null },
+      _count: { _all: true },
+    });
+
+    const map = Object.fromEntries(counts.map((g) => [g.status, g._count._all]));
+
+    return {
+      total: counts.reduce((acc, g) => acc + g._count._all, 0),
+      confirmed: map['confirmed'] ?? 0,
+      pending: map['pending'] ?? 0,
+      completed: map['completed'] ?? 0,
+      cancelled: map['cancelled'] ?? 0,
+      pendingCancellation: map['pending_cancellation'] ?? 0,
+    };
+  }
+
   async findAll(query: BookingListQuery) {
     const page = query.page ?? 1;
     const perPage = query.perPage ?? 20;
@@ -153,11 +172,12 @@ export class BookingsService {
   }
 
   async reschedule(id: string, dto: RescheduleBookingDto) {
-    const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null } });
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, deletedAt: null },
+    });
     if (!booking) {
       throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
     }
-
     const newStartTime = dto.startTime ?? booking.startTime;
     const newDate = dto.date ? new Date(dto.date) : booking.date;
 
@@ -166,13 +186,49 @@ export class BookingsService {
     const duration = ps?.customDuration ?? service?.duration ?? 30;
     const newEndTime = calculateEndTime(newStartTime, duration);
 
-    await validateAvailability(this.prisma,booking.practitionerId, newDate, newStartTime, newEndTime);
+    await validateAvailability(this.prisma, booking.practitionerId, newDate, newStartTime, newEndTime);
     await this.checkDoubleBooking(booking.practitionerId, newDate, newStartTime, newEndTime, id, ps?.bufferBefore ?? 0, ps?.bufferAfter ?? 0);
 
-    return this.prisma.booking.update({
-      where: { id },
-      data: { date: newDate, startTime: newStartTime, endTime: newEndTime },
-      include: bookingInclude,
+    // Create new booking linked to original, cancel the old one
+    return this.prisma.$transaction(async (tx) => {
+      const newBooking = await tx.booking.create({
+        data: {
+          patientId: booking.patientId,
+          practitionerId: booking.practitionerId,
+          serviceId: booking.serviceId,
+          practitionerServiceId: booking.practitionerServiceId,
+          type: booking.type,
+          date: newDate,
+          startTime: newStartTime,
+          endTime: newEndTime,
+          status: booking.status,
+          notes: booking.notes,
+          zoomMeetingId: booking.zoomMeetingId,
+          zoomJoinUrl: booking.zoomJoinUrl,
+          zoomHostUrl: booking.zoomHostUrl,
+          confirmedAt: booking.confirmedAt,
+          rescheduledFromId: id,
+        },
+        include: bookingInclude,
+      });
+
+      // Cancel old booking with reschedule note
+      await tx.booking.update({
+        where: { id },
+        data: {
+          status: 'cancelled',
+          cancelledAt: new Date(),
+          adminNotes: `Rescheduled to booking ${newBooking.id}`,
+        },
+      });
+
+      // Move payment to new booking if exists
+      await tx.payment.updateMany({
+        where: { bookingId: id },
+        data: { bookingId: newBooking.id },
+      });
+
+      return newBooking;
     });
   }
 
@@ -212,6 +268,18 @@ export class BookingsService {
         'Your booking is completed. You can now rate your experience', { bookingId: id });
     }
     return completed;
+  }
+
+  async markNoShow(id: string) {
+    const booking = await this.ensureBookingExists(id);
+    if (booking.status !== 'confirmed') {
+      throw new ConflictException({ statusCode: 409, message: `Cannot mark no-show for booking with status '${booking.status}'`, error: 'CONFLICT' });
+    }
+    return this.prisma.booking.update({
+      where: { id },
+      data: { status: 'no_show' },
+      include: bookingInclude,
+    });
   }
 
   async findMyBookings(patientId: string, page = 1, perPage = 20) {

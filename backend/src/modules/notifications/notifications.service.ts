@@ -96,7 +96,7 @@ export class NotificationsService {
 
     return this.prisma.notification.update({
       where: { id: notificationId },
-      data: { isRead: true },
+      data: { isRead: true, readAt: new Date() },
     });
   }
 
@@ -110,7 +110,7 @@ export class NotificationsService {
         userId,
         isRead: false,
       },
-      data: { isRead: true },
+      data: { isRead: true, readAt: new Date() },
     });
   }
 

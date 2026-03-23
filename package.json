@@ -1,6 +1,7 @@
 {
   "name": "carekit",
   "private": true,
+  "packageManager": "npm@11.6.2",
   "workspaces": [
     "backend",
     "mobile",
@@ -25,6 +26,13 @@
     "express": "^5.2.1",
     "function-bind": "^1.1.2",
     "hasown": "^2.0.2",
+    "react-native-gesture-handler": "~2.30.0",
+    "react-native-reanimated": "4.2.1",
+    "react-native-worklets": "0.7.2",
     "string-width": "^4.2.3"
+  },
+  "overrides": {
+    "@types/react": "18.3.28",
+    "@types/react-dom": "18.3.7"
   }
 }

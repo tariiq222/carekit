@@ -1,10 +1,12 @@
 # CLAUDE.md — CareKit
 
 ## Project Overview
+
 CareKit is a White Label smart clinic management platform built by WebVue Technology Solutions. It includes a mobile app (iOS + Android), a custom-designed website per client, an admin dashboard, and an AI chatbot assistant.
 
 ## Architecture
-```
+
+```text
 carekit/
 ├── backend/          # NestJS + Prisma + PostgreSQL
 ├── mobile/           # React Native (Expo SDK 54)
@@ -20,6 +22,7 @@ carekit/
 ```
 
 ## Tech Stack
+
 - **Backend:** NestJS 10+ / Prisma ORM / PostgreSQL / Redis / BullMQ
 - **Mobile:** React Native (Expo SDK 54) / Expo Router v6 / Redux Toolkit / TypeScript
 - **Dashboard:** Next.js 14 / shadcn/ui / Tailwind CSS / Recharts / TanStack Table
@@ -35,23 +38,27 @@ carekit/
 ## Key Decisions (Read Before Coding)
 
 ### Authentication
+
 - Patient login: Email + password OR Email + OTP (code sent via email). NO SMS.
 - Practitioner/Staff login: Email + password (account created by admin).
 - JWT with refresh tokens. Tokens stored securely (httpOnly cookies on web, expo-secure-store on mobile).
 
 ### Authorization (Dynamic RBAC)
+
 - Permission-based system using CASL library.
 - 5 default roles: super_admin, receptionist, accountant, practitioner, patient.
 - Admins can create custom roles from dashboard and assign granular permissions (view, create, edit, delete) per module.
 - Every API endpoint must check permissions via CASL guards.
 
 ### Mobile App — Dual Role
+
 - Single app with role-based routing. After login, check user.role and redirect:
   - patient → patient tab navigator (home, appointments, chat, profile)
   - practitioner → doctor tab navigator (today, calendar, patients, profile)
 - Shared modules: notifications, video call link, settings, about.
 
 ### Booking System
+
 - 3 booking types: clinic_visit, phone_consultation, video_consultation
 - Phone consultation: booking only — practitioner calls patient outside platform. System shows patient phone number.
 - Video consultation: booking + auto-generated Zoom link sent to both parties.
@@ -59,11 +66,13 @@ carekit/
 - Cancellation: patient requests → goes to admin queue → admin approves/rejects with refund decision.
 
 ### Payment
+
 - Moyasar: primary electronic payment (Mada, Apple Pay, Visa/MC).
 - Bank transfer: patient uploads receipt photo → AI reads receipt via OpenRouter Vision API → generates tags (matched/amount_differs/suspicious/old_date/unreadable) → admin reviews and approves/rejects.
 - Prepayment required for all consultation types.
 
 ### AI Chatbot
+
 - Powered by OpenRouter (multi-model).
 - Capabilities: book appointment, modify appointment time, view upcoming appointments, request cancellation (does NOT execute — sends to admin).
 - Reads from clinic's knowledge base (FAQ, services, practitioners, prices) stored in pgvector.
@@ -71,20 +80,24 @@ carekit/
 - Works in Arabic and English.
 
 ### White Label
+
 - Each deployment is an independent Docker container on client's server.
 - All branding configurable from admin dashboard: logo, colors, fonts, app name, domain, payment keys, Zoom keys, chatbot knowledge base, email templates, cancellation policy text.
 - Website is custom-designed per client by WebVue (not part of the White Label product code).
 
 ### Cancellation Policy
+
 - Each client sets their own policy text from dashboard (displayed to patient).
 - No automatic rules — admin decides each case manually (full refund / partial / none).
 
 ### Language
+
 - Arabic + English from day 1.
 - RTL-first design. All components must support RTL.
 - Use i18n library (nestjs-i18n for backend, next-intl for dashboard, i18next for mobile).
 
 ### Ratings & Feedback
+
 - After every appointment: star rating (1-5) + optional text feedback + problem report option.
 - Problem reports trigger instant notification to admin.
 - Ratings affect practitioner ranking in search results.
@@ -111,6 +124,7 @@ carekit/
 ## Coding Standards
 
 ### General
+
 - TypeScript strict mode everywhere. No `any` types.
 - All API responses follow consistent shape: `{ success: boolean, data?: T, error?: { code: string, message: string } }`
 - All dates in UTC. Convert to client timezone on frontend only.
@@ -118,6 +132,7 @@ carekit/
 - Environment variables: never hardcode secrets. Use .env files + Docker secrets.
 
 ### Backend (NestJS)
+
 - Modular architecture: one module per domain (auth, users, practitioners, bookings, payments, invoices, notifications, chatbot, whitelabel).
 - Prisma schema is the single source of truth for database.
 - Every endpoint documented in Swagger via decorators.
@@ -127,6 +142,7 @@ carekit/
 - Tests: at minimum, unit tests for services + e2e tests for critical flows (auth, booking, payment).
 
 ### Mobile (Expo)
+
 - File-based routing with Expo Router v6.
 - Redux Toolkit for global state. Redux Persist for auth token.
 - react-hook-form + zod for all forms.
@@ -136,6 +152,7 @@ carekit/
 - Never store sensitive data in AsyncStorage.
 
 ### Dashboard (Next.js)
+
 - App Router (not pages router).
 - shadcn/ui for all UI components. Do not use other UI libraries.
 - TanStack Table for all data tables.
@@ -144,7 +161,75 @@ carekit/
 - Server components by default. Client components only when needed (interactivity).
 - API calls from server components where possible (no client-side fetching for initial data).
 
+### Dashboard Implementation Law — STRICT (NO EXCEPTIONS)
+
+> **Role: IMPLEMENT using the existing system only. Do NOT design. Do NOT guess UI.**
+> **اقرأ `dashboard/DESIGN-SYSTEM.md` قبل كتابة أي كود Dashboard.**
+
+#### 1) Source of Truth (MANDATORY)
+
+- **Layout:** shadcn Sidebar + `header.tsx` ONLY
+- **Design tokens:** `globals.css` ONLY
+- **Components:** `components/ui/` + `components/features/` ONLY
+- **Forms:** react-hook-form + zod ONLY
+- **Styling:** Tailwind mapped to CSS variables ONLY
+- **Icons:** Lucide React ONLY (no Font Awesome, no Material Icons)
+- **DS tokens reference:** `dashboard/src/lib/ds.ts`
+
+#### 2) STRICT RULES
+
+- Do NOT use legacy files (`src/pages/`, TopBar, PageLayout, SidebarContext)
+- Do NOT create new design styles or style files
+- Do NOT use `text-gray-*` or arbitrary Tailwind colors
+- Do NOT use hex colors — use semantic tokens only
+- Do NOT use raw HTML inputs (`<input>`, `<select>`, `<textarea>`) — use shadcn equivalents
+- Do NOT duplicate components — reuse existing ones
+- Do NOT inline styles
+- Do NOT guess UI — if unclear → STOP and ASK
+
+#### 3) Semantic Tokens (USE ONLY THESE)
+
+- Text: `text-foreground`, `text-muted-foreground`
+- Background: `bg-background`, `bg-card`
+- Border: `border-border`
+- Shadows: DS shadow tokens only (`shadow-subtle`, `shadow-elevated`, etc.) — no pure black shadows
+- Numbers/Dates/Amounts: always use `font-numeric` class
+- Spacing: 8px grid only (8, 16, 24, 32)
+- Typography: H1 = `text-xl font-semibold`, Body = `text-sm`
+
+#### 4) Component Usage (ALWAYS PREFER)
+
+- `PageHeader` — page titles
+- `StatCard` / `ActionCard` — cards
+- `DataTable` (TanStack Table) — all data tables
+- `StatusBadge` / `BookingTypeBadge` — badges
+- `EmptyState` — empty states
+- shadcn `Select` — no raw `<select>`
+- shadcn `Calendar`/`DatePicker` — no raw `<input type="date">`
+- If component exists → reuse it. If not → ask before creating.
+
+#### 5) Page Structure (MANDATORY)
+
+Every dashboard page MUST follow:
+
+```tsx
+<ListPageShell>
+  <PageHeader />
+  <StatsGrid />
+  <DataTable />
+</ListPageShell>
+```
+
+States: Loading → `ListSkeleton` | Error → `ErrorBanner` | Empty → `EmptyState`
+
+#### 6) RTL Support (MANDATORY)
+
+- Use `start`/`end` (not `left`/`right`)
+- Use `ps-`/`pe-`, `ms-`/`me-` (not `pl-`/`pr-`/`ml-`/`mr-`)
+- Do NOT hardcode directions
+
 ### Database (Prisma)
+
 - Use meaningful model names: User, Practitioner, Booking, Service, Invoice, Payment, Role, Permission, ChatMessage, Rating, WhiteLabelConfig.
 - Soft delete (deletedAt timestamp) for all important models.
 - Created/updated timestamps on all models.
@@ -162,20 +247,27 @@ carekit/
 - Track all migrations in `docs/migration-log.md`
 
 ## File Naming
+
 - Backend: `kebab-case` (booking.service.ts, create-booking.dto.ts)
 - Mobile: `kebab-case` for files, `PascalCase` for components
 - Dashboard: `kebab-case` for files, `PascalCase` for components
 - Database: `PascalCase` for Prisma models, `snake_case` for table/column names
 
 ## Git Convention
+
 - Branch naming: `feature/booking-system`, `fix/auth-otp`, `chore/docker-setup`
 - Commit messages: Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`)
 - PR required for main branch. At least 1 review.
 
 ## Current Phase
-Phase 1: Design & Planning — Start with ERD and API Design.
+
+Phase 5: إعادة تصميم وتوحيد Dashboard — التفاصيل في `docs/sprint-plan.md`
 
 ## Important Files to Read First
+
 1. `docs/CareKit-PRD-EN.md` — Full product requirements (English)
-2. `docs/sprint-plan.md` — المرجع الوحيد: المراحل + التقدم + الموارد + سجل الإنجازات
-3. This file (`CLAUDE.md`) — Architecture and coding standards
+2. `docs/sprint-plan.md` — المهام المتبقية والمراحل القادمة (Phase 5–9)
+3. `docs/achievements.md` — سجل المنجزات المكتملة (Phase 1–4 + Sprints)
+4. `dashboard/DESIGN-SYSTEM.md` — **قانون التصميم** — يُقرأ قبل أي عمل على Dashboard
+5. `dashboard/src/lib/ds.ts` — DS tokens و style mappings
+6. This file (`CLAUDE.md`) — Architecture and coding standards

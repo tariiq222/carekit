@@ -1,7 +1,8 @@
-# CareKit — Sprint Plan & Progress Tracker
+# CareKit — خطة المهام المتبقية
 
-> **آخر تحديث:** 2026-03-23 (Sprint 4.6 completed)
-> **المرجع الوحيد** لتتبع التقدم والمراحل والموارد — كل شيء ننجزه يُوثق هنا
+> **آخر تحديث:** 2026-03-23
+> **المنجزات السابقة:** [`docs/achievements.md`](achievements.md)
+> المراحل المكتملة: Phase 1–4 + Sprint 4.5 + Sprint 4.6
 
 ---
 
@@ -17,530 +18,246 @@
 
 ---
 
-## نظرة عامة — الحالة الحالية
+## نظرة عامة — المراحل المتبقية
 
 ```
-Phase 1 — الأساسيات (Backend + Schema + Dashboard هيكل)    ✅ 100%
-Phase 2 — ZATCA + Dashboard Integration                     ✅ 100%
-Phase 3 — Mobile App                                        ✅ 100%
-Phase 4 — AI Chatbot                                        ✅ 100% (Backend + Mobile + Dashboard + Tests + Migration)
-Sprint 4.5 — Bug Fixes + Pricing Refactor                   ✅ 100% (9 fixes + PractitionerService pricing)
-Sprint 4.6 — Code Audit & Hardening                         ✅ 100% (28 fix: 8 bugs + 4 security + 6 incomplete + 4 perf + 8 quality — 3 مؤجلة)
-Phase 5 — Production Readiness                              🔲 0%
-Phase 6 — Testing & Delivery                                🔲 0%
+Phase 5 — إعادة تصميم وتوحيد Dashboard          🔲 0%
+Phase 6 — الموقع الإلكتروني (Website)             🔲 0%
+Phase 7 — التطبيق (Mobile Polishing + Store)      🔲 0%
+Phase 8 — Production Readiness                     🔲 0%
+Phase 9 — Testing & Delivery                       🔲 0%
 ```
 
 ---
 
-## Phase 1 — الأساسيات ✅ مكتمل
+## مؤجلات من Sprint 4.6
 
-### Backend — 18 module فعلي
+> يجب إنهاؤها قبل أو خلال المراحل القادمة
 
-| الوحدة | الملفات | الحالة |
-|--------|---------|--------|
-| Auth (JWT + OTP + CASL) | auth.service, otp.service, token.service, casl-ability.factory | ✅ |
-| Users | users.service, user-roles.service | ✅ |
-| Roles | roles.service, roles.controller | ✅ |
-| Permissions | permissions.controller | ✅ |
-| Practitioners | practitioners.service, practitioner-availability.service, practitioner-vacation.service, practitioner-service.service | ✅ |
-| Specialties | specialties.service, specialties.controller | ✅ |
-| Services | services.service, services.controller | ✅ |
-| Bookings | bookings.service, booking-cancellation.service, booking-validation.helper, zoom.service | ✅ |
-| Payments | payments.service, moyasar-payment.service, bank-transfer.service, payments.helpers | ✅ |
-| Invoices | invoices.service, invoice-creator.service, invoice-stats.service, invoice.constants | ✅ |
-| Notifications | notifications.service, notifications.controller | ✅ |
-| WhiteLabel | whitelabel.service, whitelabel.controller | ✅ |
-| Patients | patients.service, patients.controller | ✅ |
-| Ratings | ratings.service, ratings.controller | ✅ |
-| Reports | reports.service, reports.controller | ✅ |
-| AI (Receipt) | receipt-verification.service, receipt-verification.processor | ✅ |
-| ZATCA | zatca.service + 4 sub-services + controller | ✅ |
-| Chatbot | chatbot.controller, chatbot.module | ⚠️ هيكل فاضي فقط |
-
-### Database Schema — Prisma
-
-| الوحدة | العدد | الحالة |
-|--------|-------|--------|
-| Models | 29 (User, Practitioner, PractitionerService, Booking, Payment, Invoice, Rating, etc.) | ✅ |
-| Models إضافية | FcmToken, ActivityLog | ✅ |
-| Enums | 13 (BookingType, BookingStatus, PaymentMethod, PaymentStatus, TransferVerificationStatus, NotificationType, ProblemReportType, ProblemReportStatus, ChatRole, HandoffType, ConfigValueType, UserGender, ZatcaStatus) | ✅ |
-
-### Design & Planning
-
-| الوحدة | الحالة |
-|--------|--------|
-| ERD: 28 model + 13 enum في Prisma | ✅ |
-| API Spec: `docs/api-spec.md` | ✅ |
-| PRD: `docs/CareKit-PRD-EN.md` | ✅ |
-| Design System: `docs/design/` | ✅ |
-| Monorepo + Docker Infrastructure | ✅ |
+| # | المهمة | الملف | تُنجز في |
+|---|--------|-------|----------|
+| I-01 | Zoom API integration الفعلية (بدل الـ stub الحالي) | `zoom.service.ts` | Phase 8 |
+| I-09 | تحديث Zoom link عند reschedule لحجز فيديو | `bookings.service.ts` | Phase 8 |
+| D-02 | صفحة Notifications في Dashboard (حالياً placeholder) | Dashboard | Phase 5 |
 
 ---
 
-## Phase 2 — ZATCA + Dashboard Integration ✅ مكتمل
+## Phase 5 — إعادة تصميم وتوحيد Dashboard 🔲
 
-### Sprint 2.1 — ZATCA Module (Backend)
+> **الهدف:** توحيد التصميم المرئي لكل صفحات الداشبورد — تجربة مستخدم متسقة واحترافية
 
-| Task | الحالة | الملف |
-|------|--------|-------|
-| ZatcaService | ✅ | `backend/src/modules/zatca/zatca.service.ts` |
-| InvoiceHashService (SHA-256) | ✅ | `backend/src/modules/zatca/services/invoice-hash.service.ts` |
-| QrGeneratorService (TLV) | ✅ | `backend/src/modules/zatca/services/qr-generator.service.ts` |
-| XmlBuilderService (UBL 2.1) | ✅ | `backend/src/modules/zatca/services/xml-builder.service.ts` |
-| ZatcaApiService | ✅ | `backend/src/modules/zatca/services/zatca-api.service.ts` |
-| ZatcaSandboxService | ✅ | `backend/src/modules/zatca/services/zatca-sandbox.service.ts` |
-| ZatcaController | ✅ | `backend/src/modules/zatca/zatca.controller.ts` |
-| InvoiceCreatorService (مدمج مع ZATCA) | ✅ | `backend/src/modules/invoices/invoice-creator.service.ts` |
+### 5.1 — Design System & Tokens
 
-### Sprint 2.2 — Dashboard (15 صفحة + login)
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 5.1.1 | تعريف Design Tokens | ألوان، spacing، typography، shadows، border-radius — متغيرات CSS موحدة | 🔲 |
+| 5.1.2 | Color Palette | ألوان رئيسية + ثانوية + neutral + semantic (success/warning/error/info) + dark mode | 🔲 |
+| 5.1.3 | Typography Scale | أحجام الخطوط + line-height + font-weight — نظام واحد | 🔲 |
+| 5.1.4 | Spacing System | نظام spacing متسق (4px base) | 🔲 |
+| 5.1.5 | RTL Audit | مراجعة كل المكونات للتأكد من دعم RTL الصحيح | 🔲 |
 
-| الصفحة | الحالة | المسار الفعلي |
-|--------|--------|--------------|
-| Login | ✅ | `dashboard/src/app/[locale]/(auth)/login/page.tsx` |
-| Dashboard Home | ✅ | `dashboard/src/app/[locale]/(dashboard)/page.tsx` |
-| Appointments | ✅ | `dashboard/src/app/[locale]/(dashboard)/appointments/page.tsx` |
-| Practitioners | ✅ | `dashboard/src/app/[locale]/(dashboard)/practitioners/page.tsx` |
-| Practitioner Detail | ✅ | `dashboard/src/app/[locale]/(dashboard)/practitioners/[id]/page.tsx` |
-| Patients | ✅ | `dashboard/src/app/[locale]/(dashboard)/patients/page.tsx` |
-| Patient Detail | ✅ | `dashboard/src/app/[locale]/(dashboard)/patients/[id]/page.tsx` |
-| Services | ✅ | `dashboard/src/app/[locale]/(dashboard)/services/page.tsx` |
-| Invoices + ZATCA | ✅ | `dashboard/src/app/[locale]/(dashboard)/invoices/page.tsx` |
-| Payments | ✅ | `dashboard/src/app/[locale]/(dashboard)/payments/page.tsx` |
-| Reports | ✅ | `dashboard/src/app/[locale]/(dashboard)/reports/page.tsx` |
-| Users | ✅ | `dashboard/src/app/[locale]/(dashboard)/users/page.tsx` |
-| Roles | ✅ | `dashboard/src/app/[locale]/(dashboard)/roles/page.tsx` |
-| Notifications | ✅ | `dashboard/src/app/[locale]/(dashboard)/notifications/page.tsx` |
-| Chatbot | ✅ | `dashboard/src/app/[locale]/(dashboard)/chatbot/page.tsx` |
-| Settings (7 tabs) | ✅ | `dashboard/src/app/[locale]/(dashboard)/settings/page.tsx` |
+### 5.2 — توحيد المكونات الأساسية
 
-**Dashboard Components:**
-- 32 UI components (shadcn/ui)
-- 13 feature components (stat-card, revenue-chart, permissions-matrix, etc.)
-- 4 layout components (header, sidebar, language-switcher, theme-toggle)
-- 12 hooks (use-bookings, use-invoices, use-patients, use-payments, use-services, use-practitioner, etc.)
-- 11 API modules (`dashboard/src/lib/api/` — practitioners, patients, bookings, payments, invoices, users, roles, reports, whitelabel, zatca, services)
-- i18n: AR + EN (`dashboard/src/i18n/`)
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 5.2.1 | Data Tables | توحيد شكل الجداول في كل الصفحات (header, rows, pagination, search, filters) | 🔲 |
+| 5.2.2 | Forms | توحيد شكل الفورمات (labels, inputs, validation errors, buttons) | 🔲 |
+| 5.2.3 | Cards & Stats | توحيد البطاقات الإحصائية والمعلوماتية | 🔲 |
+| 5.2.4 | Modals & Sheets | توحيد الحوارات والـ side sheets | 🔲 |
+| 5.2.5 | Navigation | تحسين Sidebar + Header + Breadcrumbs | 🔲 |
+| 5.2.6 | Empty States | تصميم حالات "لا بيانات" موحدة لكل صفحة | 🔲 |
+| 5.2.7 | Loading States | Skeleton loaders موحدة | 🔲 |
 
-### Sprint 2.5 — Dashboard API Integration ⚠️ 13/15
+### 5.3 — إعادة تصميم الصفحات
 
-| الصفحة | الحالة | الملاحظات |
-|--------|--------|-----------|
-| Dashboard Home | ✅ | `useBookingStats()` + `usePaymentStats()` |
-| Appointments | ✅ | `useBookings()` — data.ts موجود لكن **غير مستخدم** |
-| Practitioners List | ✅ | `usePractitioners()` — data.ts موجود لكن **غير مستخدم** |
-| Practitioner Detail | ✅ | `usePractitioner(id)` + profile-tab + ratings-tab |
-| Patients List | ✅ | `usePatients()` مع pagination — data.ts **غير مستخدم** |
-| Patient Detail | ✅ | `usePatient(id)` + `usePatientStats(id)` |
-| Services | ✅ | `useServices()` + `useCategories()` — data.ts **غير مستخدم** |
-| Invoices + ZATCA | ✅ | `useInvoices()` + `useInvoiceStats()` + `markInvoiceSent()` |
-| Payments | ✅ | `usePayments()` + `usePaymentStats()` + `reviewReceipt()` |
-| Reports | ✅ | `useRevenueReport()` + `useBookingReport()` |
-| Users | ✅ | `useUsers()` + `useRoles()` + `deleteUser()` — data.ts **غير مستخدم** |
-| Roles | ✅ | `useRoles()` + `createRole()` + `deleteRole()` |
-| Settings | ✅ | `useWhitelabelConfig()` + `save()` |
-| Notifications | ❌ | **placeholder فاضي** — div فقط |
-| Chatbot | ❌ | **placeholder فاضي** — div فقط (ينتظر Phase 4) |
+| # | الصفحة | المطلوب | الحالة |
+|---|--------|---------|--------|
+| 5.3.1 | Dashboard Home | إعادة تصميم الصفحة الرئيسية — stats + charts + recent activity + quick actions | 🔲 |
+| 5.3.2 | Appointments | تحسين العرض — calendar view + list view + filters | 🔲 |
+| 5.3.3 | Practitioners | تحسين القائمة + صفحة التفاصيل (profile, schedule, services, ratings) | 🔲 |
+| 5.3.4 | Patients | تحسين القائمة + صفحة التفاصيل (medical history, bookings, payments) | 🔲 |
+| 5.3.5 | Services | تحسين عرض الخدمات والفئات | 🔲 |
+| 5.3.6 | Invoices | تحسين العرض مع ZATCA status واضح | 🔲 |
+| 5.3.7 | Payments | تحسين العرض + مراجعة التحويلات البنكية | 🔲 |
+| 5.3.8 | Reports | تحسين التقارير والرسوم البيانية | 🔲 |
+| 5.3.9 | Users & Roles | توحيد إدارة المستخدمين والأدوار | 🔲 |
+| 5.3.10 | Notifications | بناء صفحة Notifications كاملة (بدل placeholder) | 🔲 |
+| 5.3.11 | Chatbot | تحسين واجهة Chatbot settings + conversations + analytics | 🔲 |
+| 5.3.12 | Settings | تحسين صفحة الإعدادات (7 tabs) | 🔲 |
 
-**النتيجة:** 13/15 صفحة متصلة بالـ API — Notifications و Chatbot فاضيين
+### 5.4 — تحسينات UX
 
-**تنظيف مطلوب:** 5 ملفات `data.ts` فيها mock data لكن **لا تُستخدم** (يمكن حذفها):
-- `appointments/data.ts`, `practitioners/data.ts`, `patients/data.ts`, `users/data.ts`, `services/data.ts`
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 5.4.1 | Responsive Design | التأكد من عمل كل الصفحات على tablet + mobile | 🔲 |
+| 5.4.2 | Dark Mode | تطبيق dark mode متسق على كل الصفحات | 🔲 |
+| 5.4.3 | Animations | transitions ناعمة بين الصفحات والحالات | 🔲 |
+| 5.4.4 | Toast & Feedback | توحيد رسائل النجاح والخطأ | 🔲 |
+| 5.4.5 | Keyboard Shortcuts | اختصارات لوحة مفاتيح للعمليات الشائعة | 🔲 |
 
-### Sprint 2.3 — Bug Fixes ✅
+### معيار إتمام Phase 5
 
-| Bug | الحالة |
-|-----|--------|
-| patients.service: search → firstName/lastName | ✅ |
-| dashboard: apiToLocalPatient حقول خاطئة | ✅ |
-| E2E: GET /reports/revenue → 400 | ✅ |
-| E2E: PUT /whitelabel/config جسم خاطئ | ✅ |
-| Base UI Popover: إزالة asChild | ✅ |
-
-### Sprint 2.4 — Unit Tests ✅
-
-| Test Suite | الاختبارات | الحالة |
-|------------|-----------|--------|
-| zatca.service.spec.ts | 21 | ✅ |
-| qr-generator.service.spec.ts | 14 | ✅ |
-| invoice-hash.service.spec.ts | 14 | ✅ |
-| xml-builder.service.spec.ts | 22 | ✅ |
-| zatca-sandbox.service.spec.ts | 14 | ✅ |
-| invoice-creator.service.spec.ts | 18 | ✅ |
-| patients.service.spec.ts | 16 | ✅ |
-| ratings.service.spec.ts | 15 | ✅ |
-| **المجموع** | **455 في 21 suite** | ✅ |
+- كل الصفحات بتصميم موحد ومتسق
+- Dark mode يعمل على كل الصفحات
+- RTL يعمل بشكل صحيح
+- لا صفحات placeholder فاضية
+- Responsive على tablet
 
 ---
 
-## Phase 3 — Mobile App ✅ مكتمل
+## Phase 6 — الموقع الإلكتروني (Website) 🔲
 
-### Sprint 3.1 — Auth + Navigation ✅
+> **الهدف:** موقع تعريفي احترافي للعيادة — يتخصص حسب إعدادات White Label
 
-| Task | الحالة | الملف الفعلي |
-|------|--------|-------------|
-| Redux + persist + secure-storage | ✅ | `mobile/stores/store.ts`, `mobile/stores/secure-storage.ts` |
-| Auth Slice | ✅ | `mobile/stores/slices/auth-slice.ts` |
-| Login Screen | ✅ | `mobile/app/(auth)/login.tsx` |
-| OTP Screen | ✅ | `mobile/app/(auth)/otp-verify.tsx` |
-| Register Screen | ✅ | `mobile/app/(auth)/register.tsx` |
-| Auth Guard + Role routing | ✅ | `mobile/app/_layout.tsx`, `mobile/app/index.tsx` |
-| API Client (axios + interceptors) | ✅ | `mobile/services/api.ts` |
-| Auth Service | ✅ | `mobile/services/auth.ts` |
-| Theme System (RTL + light/dark) | ✅ | `mobile/theme/` (10 ملفات) |
+### 6.1 — الهيكل والبنية
 
-### Sprint 3.2 — Patient Screens ✅
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 6.1.1 | إنشاء مشروع Website | Next.js 14 + Tailwind + i18n (AR/EN) داخل الـ monorepo | 🔲 |
+| 6.1.2 | ربط بـ White Label Config | سحب اللوقو والألوان والخطوط من إعدادات الداشبورد | 🔲 |
+| 6.1.3 | SEO Setup | meta tags, sitemap, robots.txt, structured data (Schema.org) | 🔲 |
 
-| Task | الحالة | الملف الفعلي |
-|------|--------|-------------|
-| Patient Home | ✅ | `mobile/app/(patient)/(tabs)/home.tsx` |
-| Appointments List | ✅ | `mobile/app/(patient)/(tabs)/appointments.tsx` |
-| Chat (placeholder) | ⚠️ | `mobile/app/(patient)/(tabs)/chat.tsx` — هيكل، ينتظر Phase 4 |
-| Notifications | ✅ | `mobile/app/(patient)/(tabs)/notifications.tsx` |
-| Profile | ✅ | `mobile/app/(patient)/(tabs)/profile.tsx` |
-| Practitioner Detail | ✅ | `mobile/app/(patient)/practitioner/[id].tsx` |
-| Booking Flow (4 شاشات) | ✅ | `mobile/app/(patient)/booking/[serviceId].tsx`, `schedule.tsx`, `confirm.tsx`, `success.tsx` |
-| Appointment Detail | ✅ | `mobile/app/(patient)/appointment/[id].tsx` |
-| Rating Screen | ✅ | `mobile/app/(patient)/rate/[bookingId].tsx` |
+### 6.2 — الصفحات
 
-### Sprint 3.3 — Practitioner Screens ✅
+| # | الصفحة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 6.2.1 | الرئيسية (Landing) | hero + خدمات + أطباء مميزين + تقييمات + CTA | 🔲 |
+| 6.2.2 | من نحن (About) | تعريف العيادة + الرؤية + الفريق | 🔲 |
+| 6.2.3 | الخدمات (Services) | عرض كل الخدمات مع التفاصيل والأسعار | 🔲 |
+| 6.2.4 | الأطباء (Practitioners) | قائمة الأطباء مع التخصص والتقييمات + صفحة تفصيلية لكل طبيب | 🔲 |
+| 6.2.5 | احجز موعد (Book) | نموذج حجز مبسّط — أو redirect للتطبيق | 🔲 |
+| 6.2.6 | تواصل معنا (Contact) | نموذج تواصل + خريطة + معلومات الاتصال | 🔲 |
+| 6.2.7 | الأسئلة الشائعة (FAQ) | أسئلة وأجوبة من Knowledge Base | 🔲 |
+| 6.2.8 | سياسة الخصوصية + الشروط | صفحات قانونية | 🔲 |
 
-| Task | الحالة | الملف الفعلي |
-|------|--------|-------------|
-| Today's Schedule | ✅ | `mobile/app/(practitioner)/(tabs)/today.tsx` |
-| Calendar View | ✅ | `mobile/app/(practitioner)/(tabs)/calendar.tsx` |
-| Patients List | ✅ | `mobile/app/(practitioner)/(tabs)/patients.tsx` |
-| Practitioner Profile | ✅ | `mobile/app/(practitioner)/(tabs)/profile.tsx` |
-| Appointment Detail (Doctor) | ✅ | `mobile/app/(practitioner)/appointment/[id].tsx` |
-| Patient Detail (Doctor view) | ✅ | `mobile/app/(practitioner)/patient/[id].tsx` |
+### 6.3 — المميزات
 
-### Sprint 3.4 — Shared & Infrastructure ✅
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 6.3.1 | Chatbot Widget | ويدجت المحادثة الذكية على الموقع | 🔲 |
+| 6.3.2 | Online Booking | حجز مواعيد مباشرة من الموقع (أو redirect للتطبيق) | 🔲 |
+| 6.3.3 | Practitioner Profiles | صفحات SEO-friendly لكل طبيب | 🔲 |
+| 6.3.4 | Blog/Articles | مقالات طبية (اختياري — حسب العميل) | 🔲 |
+| 6.3.5 | WhatsApp Integration | زر واتساب للتواصل المباشر | 🔲 |
 
-| Task | الحالة | الملف الفعلي |
-|------|--------|-------------|
-| i18n (AR/EN) | ✅ | `mobile/i18n/index.ts`, `en.json`, `ar.json` |
-| API Services | ✅ | `mobile/services/` (api, auth, bookings, practitioners, specialties) |
-| Components | ✅ | `mobile/components/ui/` (Avatar, StatusPill, EmailVerificationBanner) |
-| Feature Components | ✅ | `mobile/components/features/` (AppointmentCard, PractitionerCard, SpecialtyCard) |
-| Types | ✅ | `mobile/types/` (api, auth, models) |
-| Hooks | ✅ | `mobile/hooks/` (use-redux, use-register-form) |
+### معيار إتمام Phase 6
 
-### Sprint 3.5 — Payment + Notifications + Video Call + Settings ✅
-
-| Task | الحالة | الملف الفعلي |
-|------|--------|-------------|
-| Payment Service | ✅ | `mobile/services/payments.ts` |
-| Notifications Service | ✅ | `mobile/services/notifications.ts` |
-| Payment Method Selection | ✅ | `mobile/app/(patient)/booking/payment.tsx` |
-| Bank Transfer + Receipt Upload | ✅ | `mobile/app/(patient)/booking/bank-transfer.tsx` |
-| Booking Confirm → Payment routing | ✅ | `mobile/app/(patient)/booking/confirm.tsx` (معدّل) |
-| Success: pending approval variant | ✅ | `mobile/app/(patient)/booking/success.tsx` (معدّل) |
-| Notifications Screen (full) | ✅ | `mobile/app/(patient)/(tabs)/notifications.tsx` (أعيد كتابته) |
-| NotificationItem Component | ✅ | `mobile/components/features/NotificationItem.tsx` |
-| Notification Hook + Date Groups | ✅ | `mobile/hooks/use-notifications.ts`, `mobile/utils/date-groups.ts` |
-| Notification Badge on Tab | ✅ | `mobile/app/(patient)/(tabs)/_layout.tsx` (معدّل) |
-| Video Call Screen (shared) | ✅ | `mobile/components/features/VideoCallScreen.tsx` |
-| Video Call (Patient) | ✅ | `mobile/app/(patient)/video-call.tsx` |
-| Video Call (Practitioner) | ✅ | `mobile/app/(practitioner)/video-call.tsx` |
-| Settings Screen | ✅ | `mobile/app/(patient)/settings.tsx` |
-| Settings Link from Profile | ✅ | `mobile/app/(patient)/(tabs)/profile.tsx` (معدّل) |
-| i18n: payment + settings + notifications + videoCall keys | ✅ | `mobile/i18n/en.json`, `ar.json` |
-| Payment + Transfer Types | ✅ | `mobile/types/models.ts` (معدّل) |
-| Chat Screen | ✅ | `mobile/app/(patient)/(tabs)/chat.tsx` — GiftedChat + Quick Actions |
-
-**إحصائيات Sprint 3.5:**
-- 10 ملفات جديدة + 8 تعديلات
-- 0 TypeScript errors
-- كل ملف تحت 350 سطر
+- موقع كامل يعمل بالعربي والإنجليزي
+- متجاوب (mobile-first)
+- SEO محسّن
+- متصل بـ White Label Config
+- سرعة تحميل ممتازة (Core Web Vitals)
 
 ---
 
-## Phase 4 — AI Chatbot ⚠️ ~80%
+## Phase 7 — التطبيق (Mobile Polishing + Store) 🔲
 
-### Sprint 4.1 — Chatbot Backend ✅
+> **الهدف:** تجهيز التطبيق للنشر على App Store و Google Play
 
-| Task | الوصف | الحالة | الملف |
-|------|-------|--------|-------|
-| 4.1.1 | pgvector + embedding model + RAG | ✅ | `chatbot-rag.service.ts` |
-| 4.1.2 | Knowledge Base ingestion + file upload + auto-sync | ✅ | `chatbot-rag.service.ts` |
-| 4.1.3 | ChatbotService (OpenRouter + function calling) | ✅ | `chatbot-ai.service.ts`, `chatbot.service.ts` |
-| 4.1.4 | Intent detection via tool_calls | ✅ | `constants/tool-definitions.ts` (9 أدوات) |
-| 4.1.5 | Booking actions via chat | ✅ | `chatbot-tools.service.ts` |
-| 4.1.6 | Handoff to Live Chat / Contact | ✅ | `chatbot-tools.service.ts` |
-| 4.1.7 | Dynamic system prompt (White Label) | ✅ | `constants/system-prompts.ts` |
-| 4.1.8 | ChatbotConfig (6 أقسام ديناميكية) | ✅ | `chatbot-config.service.ts`, `config-defaults.ts` |
-| 4.1.9 | Analytics (stats + questions + tools) | ✅ | `chatbot-analytics.service.ts` |
-| 4.1.10 | Controller (20 endpoint) | ✅ | `chatbot.controller.ts` |
+### 7.1 — تحسين التصميم
 
-**Backend ملفات جديدة:** 11 service + 5 DTO + 3 interface + 3 constant = 22 ملف
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 7.1.1 | Design System Review | مراجعة وتوحيد tokens/theme عبر كل الشاشات | 🔲 |
+| 7.1.2 | Onboarding Screens | شاشات ترحيبية للمستخدم الجديد (3-4 slides) | 🔲 |
+| 7.1.3 | Splash Screen | شاشة تحميل بلوقو العيادة (من White Label) | 🔲 |
+| 7.1.4 | App Icon | أيقونة التطبيق (ديناميكية حسب العميل أو ثابتة) | 🔲 |
+| 7.1.5 | Animations & Transitions | حركات سلسة بين الشاشات | 🔲 |
+| 7.1.6 | Error States | شاشات خطأ محسّنة (no internet, server error, empty states) | 🔲 |
+| 7.1.7 | Pull to Refresh | تحديث بالسحب في القوائم | 🔲 |
 
-### Sprint 4.2 — Chatbot UI ✅
+### 7.2 — المميزات الناقصة
 
-| Task | الوصف | الحالة | الملف |
-|------|-------|--------|-------|
-| 4.2.1 | Chat Screen (GiftedChat + RTL) | ✅ | `mobile/app/(patient)/(tabs)/chat.tsx` |
-| 4.2.2 | Quick Actions (ديناميكي من config) | ✅ | `mobile/components/chat/chat-quick-actions.tsx` |
-| 4.2.3 | Typing indicator (animated) | ✅ | `mobile/components/chat/chat-typing-indicator.tsx` |
-| 4.2.4 | Redux Chat Slice | ✅ | `mobile/stores/slices/chat-slice.ts` |
-| 4.2.5 | Chat Service + Types | ✅ | `mobile/services/chatbot.ts`, `mobile/types/chat.ts` |
-| 4.2.6 | Mobile i18n (AR/EN) | ✅ | `mobile/i18n/en.json`, `ar.json` |
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 7.2.1 | Push Notifications (FCM) | ربط فعلي بـ Firebase Cloud Messaging | 🔲 |
+| 7.2.2 | Deep Links | فتح شاشات محددة من الإشعارات أو الروابط | 🔲 |
+| 7.2.3 | Offline Support | تخزين مؤقت للبيانات الأساسية | 🔲 |
+| 7.2.4 | Biometric Auth | Face ID / Fingerprint لتسجيل الدخول | 🔲 |
+| 7.2.5 | Image Upload (Profile) | رفع صورة الملف الشخصي (MinIO) | 🔲 |
+| 7.2.6 | Practitioner Notifications | شاشة إشعارات الممارس | 🔲 |
+| 7.2.7 | Practitioner Settings | إعدادات الممارس (أوقات العمل، إجازات) | 🔲 |
 
-### Sprint 4.3 — Dashboard Chatbot ✅
+### 7.3 — App Store Submission
 
-| Task | الوصف | الحالة | الملف |
-|------|-------|--------|-------|
-| 4.3.1 | Chatbot main page (3 tabs) | ✅ | `dashboard/.../chatbot/page.tsx` |
-| 4.3.2 | Conversations tab + detail sheet | ✅ | `conversations-tab.tsx` |
-| 4.3.3 | Analytics tab (stats + charts) | ✅ | `analytics-tab.tsx` |
-| 4.3.4 | Settings tab (6 أقسام: personality, rules, handoff, sync, AI) | ✅ | `settings-tab.tsx` |
-| 4.3.5 | Knowledge Base editor + sync | ✅ | `knowledge-base/page.tsx` |
-| 4.3.6 | Dashboard API + hooks | ✅ | `lib/api/chatbot.ts`, `hooks/use-chatbot.ts` |
-| 4.3.7 | Dashboard i18n (AR/EN) | ✅ | `dashboard/src/i18n/en.json`, `ar.json` |
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 7.3.1 | EAS Build Setup | إعداد Expo Application Services للبناء | 🔲 |
+| 7.3.2 | Apple Developer Account | إعداد الحساب + certificates + provisioning profiles | 🔲 |
+| 7.3.3 | Google Play Console | إعداد الحساب + signing key | 🔲 |
+| 7.3.4 | App Store Screenshots | سكرين شوتات لكل حجم شاشة (iPhone + iPad + Android) | 🔲 |
+| 7.3.5 | App Store Listing | وصف التطبيق + keywords + privacy policy | 🔲 |
+| 7.3.6 | TestFlight / Internal Testing | اختبار داخلي قبل النشر | 🔲 |
+| 7.3.7 | Submit to Stores | رفع للمراجعة (Apple 1-2 أسبوع) | 🔲 |
 
-### Schema Changes
-- `ChatbotConfig` — جدول جديد (key-value مع JSON + category)
-- `KnowledgeBaseFile` — جدول جديد (تتبع الملفات المرفوعة)
-- `ChatSession` += language, metadata
-- `ChatMessage` += intent, toolName, tokenCount
-- `KnowledgeBase` += source, fileId, chunkIndex
+### معيار إتمام Phase 7
 
-### Sprint 4.4 — Final ✅
-
-| Task | الحالة | التفاصيل |
-|------|--------|----------|
-| File upload processing (PDF/Word/TXT → chunks) | ✅ | `chatbot-file.service.ts` — pdf-parse + mammoth + chunking |
-| Unit Tests (39 test) | ✅ | 4 test suites: config, tools, rag, orchestrator |
-| Prisma Migration | ✅ | `add_chatbot_config_and_file_support` applied |
+- تصميم موحد واحترافي على iOS + Android
+- Push notifications تعمل
+- Deep links تعمل
+- التطبيق مرفوع على TestFlight + Internal Testing
+- جاهز للنشر
 
 ---
 
-## Sprint 4.5 — Bug Fixes + Pricing Refactor ✅
+## Phase 8 — Production Readiness 🔲
 
-### Bug Fixes (9 issues) ✅
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 8.1 | Zoom API Integration | ربط فعلي بـ Zoom API — إنشاء اجتماعات تلقائياً + تحديث عند reschedule | 🔲 |
+| 8.2 | PDF Invoices | توليد فواتير PDF (Puppeteer أو React-PDF) | 🔲 |
+| 8.3 | ZATCA Phase 2 | CSR + CSID + production flow كامل | 🔲 |
+| 8.4 | Email Templates | قوالب بريد إلكتروني احترافية (تأكيد حجز، إلغاء، إيصال، OTP) | 🔲 |
+| 8.5 | Docker Production | multi-stage builds + secrets + health checks + nginx | 🔲 |
+| 8.6 | CI/CD Pipeline | GitHub Actions → build → test → deploy to Dokploy | 🔲 |
+| 8.7 | Monitoring | Sentry (errors) + health check endpoints + logging | 🔲 |
+| 8.8 | Security Hardening | rate limiting, CORS, helmet, input sanitization, OWASP audit | 🔲 |
+| 8.9 | Performance | load testing, DB query optimization, caching strategy (Redis) | 🔲 |
+| 8.10 | Backup & Recovery | نسخ احتياطي تلقائي لقاعدة البيانات + MinIO | 🔲 |
 
-| # | المشكلة | الحل | الملف |
-|---|---------|------|-------|
-| 1 | لا يتحقق من جدول الممارس/الإجازات عند الحجز | `validateAvailability()` مستخرج + يُنفذ عند create/reschedule | `booking-validation.helper.ts`, `bookings.service.ts` |
-| 2 | `getAvailableSlots()` لا يفلتر بالتاريخ — يحمّل كل المواعيد | إضافة `date` filter + `deletedAt: null` في query | `practitioner-availability.service.ts` |
-| 3 | `getSlots()` العامة لا تحذف السلوتات المحجوزة | تحميل الحجوزات + overlap check → `available: true/false` | `practitioner-availability.service.ts` |
-| 4 | لا جدول ربط بين ممارس وخدمة | `PractitionerService` join table + تحقق عند الحجز | `schema.prisma`, `bookings.service.ts` |
-| 5 | `partial` refund = `full` refund (لا فرق) | `refundAmount` field + validation عند partial | `cancel-approve.dto.ts`, `booking-cancellation.service.ts`, `schema.prisma` |
-| 6 | حذف الفئة hard delete + خدمات soft-deleted = FK error | الآن يحسب **كل** الخدمات (شاملة soft-deleted) | `services.service.ts` |
-| 7 | Zoom stub بدون تحذير واضح | `Logger.warn()` + TODO comment مفصّل | `zoom.service.ts` |
-| 8 | لا إشعارات تُرسل من نظام المواعيد | إشعارات عند confirm/complete/cancel + notify helper | `bookings.service.ts`, `booking-cancellation.service.ts`, `bookings.module.ts` |
-| 9 | أسماء المرضى مكشوفة في التقييمات العامة | إخفاء اسم العائلة: "أحمد م." | `practitioners.service.ts` |
+### معيار إتمام Phase 8
 
-### Pricing Refactor — PractitionerService ✅
-
-**المشكلة:** الممارس عنده 3 أسعار ثابتة لكل خدماته (priceClinic/Phone/Video على Practitioner).
-**الحل:** نقل الأسعار لجدول `PractitionerService` — كل ممارس × خدمة = أسعار + مدة + buffer + أنواع حجز مستقلة.
-
-| التغيير | التفاصيل |
-|---------|----------|
-| **Schema** | `PractitionerService` += priceClinic/Phone/Video (nullable), customDuration, bufferBefore/After, availableTypes, isActive |
-| **Booking FK** | `practitionerServiceId` (required) على كل حجز — يثبّت السعر وقت الحجز |
-| **تسعير 3 مستويات** | PractitionerService → Practitioner (legacy) → Service (catalog) — null ≠ مجاني |
-| **availableTypes** | `BookingType[]` لكل خدمة — يمنع حجز نوع غير مدعوم (مثل: تنظيف أسنان عن بُعد) |
-| **buffer** | `bufferBefore` (تحضير) + `bufferAfter` (تعقيم) — يوسّع الفترة المحجوزة في checkDoubleBooking |
-| **4 endpoints جديدة** | `GET/POST/PATCH/DELETE /practitioners/:id/services` — إدارة الخدمات والأسعار |
-| **checkOwnership** | مستخرج لـ `common/helpers/ownership.helper.ts` (كان مكرر في 3 ملفات) |
-| **Chatbot** | RAG sync يعرض أسعار per-service، Tools تستخدم customDuration |
-
-**Migrations:**
-1. `enrich_practitioner_service_pricing` — الحقول الجديدة + FK optional
-2. Data migration SQL — نسخ أسعار + ربط حجوزات + إنشاء records يتيمة
-3. `make_practitioner_service_id_required` — تحويل FK لـ required
-
-**ملفات جديدة (5):**
-- `practitioner-service.service.ts` (CRUD — 161 سطر)
-- `assign-practitioner-service.dto.ts`
-- `update-practitioner-service.dto.ts`
-- `ownership.helper.ts`
-- `booking-validation.helper.ts`
-
-**ملفات معدّلة (10):**
-- `schema.prisma`, `payments.helpers.ts`, `bookings.service.ts`, `booking-cancellation.service.ts`, `bookings.module.ts`
-- `practitioners.service.ts`, `practitioners.controller.ts`, `practitioners.module.ts`
-- `chatbot-rag.service.ts`, `chatbot-tools.service.ts`
-- `shared/types/practitioner.ts`
+- كل الخدمات الخارجية (Zoom, Email, FCM, Moyasar) مربوطة فعلياً
+- Docker production-ready
+- CI/CD يعمل
+- Monitoring مُعد
+- Security audit passed
 
 ---
 
-## Sprint 4.6 — Code Audit & Hardening ✅ مكتمل
+## Phase 9 — Testing & Delivery 🔲
 
-> **تاريخ الاكتشاف:** 2026-03-23
-> **المدة المقدّرة:** 5–7 أيام
-> **الأولوية:** 🔴 حرجة — يجب إنهاؤها قبل Phase 5 (Production Readiness)
+| # | المهمة | الوصف | الحالة |
+|---|--------|-------|--------|
+| 9.1 | E2E Testing | Playwright — كل user flows الأساسية (auth, booking, payment, cancel) | 🔲 |
+| 9.2 | Integration Testing | اختبار تكاملي لكل الـ API endpoints | 🔲 |
+| 9.3 | RTL + i18n Testing | اختبار كل الشاشات بالعربي والإنجليزي | 🔲 |
+| 9.4 | Performance Testing | load testing + Core Web Vitals | 🔲 |
+| 9.5 | Security Testing | penetration testing + OWASP top 10 | 🔲 |
+| 9.6 | UAT | اختبار قبول المستخدم مع العميل | 🔲 |
+| 9.7 | Documentation | دليل تثبيت + API docs (Swagger) + دليل مستخدم عربي | 🔲 |
+| 9.8 | App Store Publish | نشر على App Store + Google Play | 🔲 |
+| 9.9 | Client Training | تدريب العميل على الداشبورد | 🔲 |
+| 9.10 | Go Live | إطلاق رسمي 🚀 | 🔲 |
 
-### المجموعة أ — أخطاء منطقية (Bugs) 🔴
+### معيار إتمام Phase 9
 
-| # | المشكلة | الملف | الأولوية | التقدير |
-|---|---------|-------|----------|---------|
-| B-01 | `complete()` يرسل إشعار `booking_confirmed` بدل `booking_completed` — enum غير موجود أصلاً | `bookings.service.ts` | 🔴 | 15 دقيقة |
-| B-02 | `shiftTime` يلف حول منتصف الليل بـ `% 24` — buffer بعد 23:45 يصير 00:15 ويفشل overlap check | `bookings.service.ts` | 🔴 | 30 دقيقة |
-| B-03 | `setAvailability` يحذف ثم ينشئ بدون transaction — crash بينهم = ممارس بدون أوقات | `practitioner-availability.service.ts` | 🔴 | 15 دقيقة |
-| B-04 | `syncFromDatabase` يحذف الكل ثم يعيد الإنشاء — فشل embedding يترك knowledge base ناقصة | `chatbot-rag.service.ts` | 🟠 | 45 دقيقة |
-| B-05 | `rescheduleBooking` في chatbot ما يتحقق أن الحجز للمريض نفسه — أي مريض يقدر يغيّر حجز غيره | `chatbot-tools.service.ts` | 🔴 | 20 دقيقة |
-| B-06 | مقارنة تواريخ الإجازات حساسة للـ timezone — UTC vs server timezone | `booking-validation.helper.ts` | 🟠 | 30 دقيقة |
-| B-07 | `priceClinic \|\| null` يعامل السعر `0` (مجاني) كـ null — يرجع سعر الكتالوج بدل المجاني | `payments.helpers.ts` | 🔴 | 10 دقيقة |
-| B-08 | `findAll` في Services ما يفلتر `isActive` بشكل افتراضي — خدمات غير نشطة تظهر للجمهور | `services.service.ts` | 🟠 | 10 دقيقة |
-
-### المجموعة ب — ثغرات أمنية (Security) 🔴
-
-| # | المشكلة | الملف | الأولوية | التقدير |
-|---|---------|-------|----------|---------|
-| S-01 | Controller يستخدم `PrismaService` مباشرة لفحص الصلاحيات — منطق RBAC مكرر في 3 أماكن | `bookings.controller.ts` | 🟠 | ساعة |
-| S-02 | `duration` query param في slots endpoint بدون حدود — يكشف جدول الممارس الكامل | `practitioners.controller.ts` | 🟠 | 15 دقيقة |
-| S-03 | Chatbot reschedule بدون ownership check (= B-05) | `chatbot-tools.service.ts` | 🔴 | 20 دقيقة |
-| S-04 | `localStorage` للتوكنات في وضع الويب — عرضة لـ XSS | `mobile/stores/secure-storage.ts` | 🟡 | 20 دقيقة |
-
-### المجموعة ج — تنفيذ ناقص (Incomplete) 🟠
-
-| # | المشكلة | الملف | الأولوية | التقدير |
-|---|---------|-------|----------|---------|
-| I-01 | Zoom integration كلها stub — روابط وهمية في production | `zoom.service.ts` | 🟡 يؤجل لـ Phase 5 | — |
-| I-02 | `CancelRejectDto.adminNotes` يُستقبل لكن لا يُحفظ — بيانات تُهمل بصمت | `booking-cancellation.service.ts` | 🟠 | 30 دقيقة |
-| I-03 | لا تحقق من الدفع قبل تأكيد الحجز — المفروض prepayment مطلوب | `bookings.service.ts` | 🔴 | 30 دقيقة |
-| I-04 | `findMyBookings` و `findTodayBookings` بدون pagination — unbounded query | `bookings.service.ts` | 🟠 | 30 دقيقة |
-| I-05 | لا Swagger decorators على DTOs/endpoints الجديدة | ملفات متعددة | 🟡 | ساعة |
-| I-06 | `update()` في RAG يجلب السجل مرتين (redundant DB call) | `chatbot-rag.service.ts` | 🟡 | 10 دقيقة |
-| I-07 | لا إشعار للممارس عند حجز جديد أو إلغاء | `bookings.service.ts` | 🟠 | 20 دقيقة |
-| I-08 | لا `booking_completed` enum في NotificationType | `schema.prisma` | 🟠 | 15 دقيقة |
-| I-09 | Zoom link لا يتحدث عند reschedule لحجز video | `bookings.service.ts` | 🟡 يؤجل مع I-01 | — |
-
-### المجموعة د — أداء (Performance) 🟠
-
-| # | المشكلة | الملف | الأولوية | التقدير |
-|---|---------|-------|----------|---------|
-| P-01 | N+1 في `syncFromDatabase` — HTTP call تسلسلي لكل embedding | `chatbot-rag.service.ts` | 🟡 | 45 دقيقة |
-| P-02 | `findAll` bookings controller يعمل 2-3 DB queries إضافية لكل request | `bookings.controller.ts` | 🟠 | 45 دقيقة |
-| P-03 | `getAvailableSlots` يحمّل **كل** الإجازات بدون فلتر تاريخ | `practitioner-availability.service.ts` | 🟠 | 15 دقيقة |
-| P-04 | `sortBy` من query string بدون whitelist — يكسر Prisma runtime | `practitioners.service.ts` | 🟠 | 15 دقيقة |
-
-### المجموعة هـ — جودة الكود (Code Quality) 🟡
-
-| # | المشكلة | الملف | الأولوية | التقدير |
-|---|---------|-------|----------|---------|
-| Q-01 | `bookings.service.ts` عند 316 سطر — قريب جداً من حد الـ 350 | `bookings.service.ts` | 🟠 | 30 دقيقة |
-| Q-02 | `timeSlotsOverlap` مكرر في ملفين مختلفين — انتهاك DRY | `bookings.service.ts` + `practitioner-availability.service.ts` | 🟡 | 20 دقيقة |
-| Q-03 | `as never[]` type cast بدل استخدام `BookingType[]` الصحيح | `practitioner-service.service.ts` | 🟡 | 10 دقيقة |
-| Q-04 | `delete()` و `softDelete()` نفس الكود — duplication بلا سبب | `practitioners.service.ts` | 🟡 | 5 دقيقة |
-| Q-05 | `bookingInclude` معرّف في ملفين بمحتوى مختلف — responses غير متسقة | `bookings.service.ts` + `booking-cancellation.service.ts` | 🟠 | 15 دقيقة |
-| Q-06 | `@IsNotEmpty()` على array بدل `@ArrayNotEmpty()` | `assign-practitioner-service.dto.ts` | 🟡 | 5 دقيقة |
-| Q-07 | `shared/types/practitioner.ts` ناقص `deletedAt` + `availableTypes` نوعه خطأ | `shared/types/practitioner.ts` | 🟡 | 10 دقيقة |
-| Q-08 | `persistTokens` parameter type يقبل `undefined` بدون guard | `mobile/services/auth.ts` | 🟡 | 5 دقيقة |
-
-### Dashboard — مشاكل مرصودة من السكرين شوت 🟡
-
-| # | المشكلة | الملاحظة |
-|---|---------|----------|
-| D-01 | صفحة الـ Chatbot Settings حقول فارغة بدون placeholder text | يحتاج UX improvement |
-| D-02 | صفحة Notifications placeholder فاضي (معروف — Sprint 2.5) | ينتظر Phase 5 |
+- كل الاختبارات تمر
+- التوثيق مكتمل
+- التطبيق منشور على المتاجر
+- العميل مدرّب
+- النظام يعمل في Production
 
 ---
 
-### خطة التنفيذ المقترحة (ترتيب حسب الأولوية)
+## نقاط مراجعة إلزامية
 
-**اليوم 1 — الأخطاء الحرجة (B + S):**
-
-```
-1. B-07: إصلاح || → ?? في payments.helpers.ts (10 دقائق)
-2. B-01: إضافة booking_completed enum + إصلاح complete() (15 دقيقة + I-08)
-3. B-05/S-03: إضافة ownership check في chatbot reschedule (20 دقيقة)
-4. B-02: إصلاح midnight wrap في shiftTime (30 دقيقة)
-5. B-03: لف setAvailability بـ $transaction (15 دقيقة)
-6. I-03: إضافة payment check قبل confirm (30 دقيقة)
-```
-
-**اليوم 2 — التنفيذ الناقص + الأداء:**
-
-```
-7. I-02: حفظ adminNotes في الإلغاء (30 دقيقة)
-8. I-04: إضافة pagination لـ findMyBookings/findTodayBookings (30 دقيقة)
-9. I-07: إشعار الممارس عند حجز/إلغاء (20 دقيقة)
-10. P-03: فلتر تاريخ على الإجازات في getAvailableSlots (15 دقيقة)
-11. P-04: whitelist لـ sortBy (15 دقيقة)
-12. B-08: فلتر isActive افتراضي في Services (10 دقائق)
-```
-
-**اليوم 3 — جودة الكود + Refactoring:**
-
-```
-13. Q-01+Q-02: نقل helpers مكررة لـ booking-time.helper.ts (30 دقيقة)
-14. Q-05: توحيد bookingInclude في ملف مشترك (15 دقيقة)
-15. Q-03: إصلاح as never[] → BookingType[] (10 دقائق)
-16. Q-04: حذف softDelete duplicate (5 دقائق)
-17. Q-06: @ArrayNotEmpty بدل @IsNotEmpty (5 دقائق)
-18. Q-07: تحديث shared types (10 دقائق)
-19. Q-08: NonNullable type في persistTokens (5 دقائق)
-```
-
-**اليوم 4 — الأمان والأداء:**
-
-```
-20. S-01: نقل RBAC logic من controller للـ service layer (ساعة)
-21. S-02: validation على duration parameter (15 دقيقة)
-22. P-02: تقليل DB queries في bookings controller (45 دقيقة)
-23. B-06: توحيد timezone handling (30 دقيقة)
-```
-
-**اليوم 5 — التحسينات:**
-
-```
-24. B-04: transaction في syncFromDatabase (45 دقيقة)
-25. P-01: batching/concurrency في embedding generation (45 دقيقة)
-26. I-05: Swagger decorators للـ DTOs الجديدة (ساعة)
-27. I-06: إزالة redundant findUnique في RAG update (10 دقائق)
-28. S-04: تحسين token storage للويب (20 دقيقة)
-```
-
-**مؤجل لـ Phase 5:**
-
-- I-01: Zoom API integration الفعلية
-- I-09: Zoom link update عند reschedule
-- D-02: صفحة Notifications كاملة
-
----
-
-### معيار إتمام Sprint 4.6
-
-- كل الأخطاء المنطقية (B-01 → B-08) مُصلحة
-- كل الثغرات الأمنية (S-01 → S-04) مُعالجة
-- التنفيذ الناقص الحرج (I-02, I-03, I-04, I-07, I-08) مكتمل
-- مشاكل الأداء (P-02, P-03, P-04) محلولة
-- جودة الكود (Q-01 → Q-08) محسّنة
-- كل ملف تحت 350 سطر
-- لا `as never[]` أو `|| null` على قيم رقمية
-
----
-
-## Phase 5 — Production Readiness 🔲 لم يُبدأ
-
-| Task | الوصف | الحالة |
-|------|-------|--------|
-| 5.1 | PDF Generation (Puppeteer) — الفواتير | 🔲 |
-| 5.2 | ZATCA Phase 2 Full Flow (CSR + CSID + production) | 🔲 |
-| 5.3 | Performance Testing (load + DB optimization) | 🔲 |
-| 5.4 | Security Audit (OWASP + penetration testing) | 🔲 |
-| 5.5 | Docker Production Setup (multi-stage + secrets) | 🔲 |
-| 5.6 | CI/CD Pipeline (GitHub Actions → Dokploy) | 🔲 |
-| 5.7 | Monitoring (Sentry + Grafana + health checks) | 🔲 |
-| 5.8 | App Store Submission (iOS + Android) | 🔲 |
-
----
-
-## Phase 6 — Testing & Delivery 🔲 لم يُبدأ
-
-| Task | الوصف | الحالة |
-|------|-------|--------|
-| 6.1 | Integration Testing (all user flows E2E) | 🔲 |
-| 6.2 | Security Audit | 🔲 |
-| 6.3 | Performance Testing | 🔲 |
-| 6.4 | RTL + i18n Testing | 🔲 |
-| 6.5 | Docker Image (production compose) | 🔲 |
-| 6.6 | Documentation (install guide + API docs + user guide AR) | 🔲 |
-| 6.7 | App Store Submission | 🔲 |
-| 6.8 | Client Training + Handoff | 🔲 |
-| 6.9 | Go Live | 🔲 |
+- ✋ تطبيق أي migration على قاعدة البيانات
+- ✋ إرسال أي طلب لـ ZATCA حتى Sandbox
+- ✋ أي تعديل على Payment model
+- ✋ الانتقال من Phase 1 لـ Phase 2 في ZATCA
+- ✋ نشر أي build لـ App Store / Play Store
+- ✋ أي push لـ production
 
 ---
 
@@ -578,21 +295,13 @@ Phase 6 — Testing & Delivery                                🔲 0%
 
 | Package | Purpose |
 |---------|---------|
-| `shadcn/ui` (32 component) | UI Components |
+| `shadcn/ui` (33 component) | UI Components |
 | `@tanstack/react-table` | Data Tables |
 | `recharts` | Charts |
 | `react-hook-form` + `zod` | Forms |
 | `next-intl` | i18n |
 | `nuqs` | URL State |
 | `lucide-react` | Icons |
-
-### AI & Chatbot (Phase 4)
-
-| Package | Purpose |
-|---------|---------|
-| OpenRouter API | Multi-model AI gateway |
-| `langchain` or `vercel/ai` | AI SDK |
-| `pgvector` | Knowledge base embeddings |
 
 ### External Services
 
@@ -603,65 +312,17 @@ Phase 6 — Testing & Delivery                                🔲 0%
 | Email | Resend / SendGrid |
 | Push | Firebase FCM |
 | Storage | MinIO (self-hosted) |
-
----
-
-## ZATCA Sandbox معلومات
-
-```
-URL:          https://sandbox.zatca.gov.sa/
-API Base:     https://gw-apic-gov.gazt.gov.sa/e-invoicing/developer-portal
-API Version:  V2
-Auth:         Basic Auth — Base64(CSID:Secret)
-```
-
-**Endpoints:**
-
-```
-POST /compliance/csids           # Compliance CSID
-POST /production/csids           # Production CSID
-POST /compliance/invoices        # فحص امتثال
-POST /invoices/reporting/single  # فاتورة مبسطة (Phase 2)
-POST /invoices/clearance/single  # فاتورة معيارية (Phase 2)
-```
-
----
-
-## نقاط مراجعة إلزامية
-
-- ✋ تطبيق أي migration على قاعدة البيانات
-- ✋ إرسال أي طلب لـ ZATCA حتى Sandbox
-- ✋ أي تعديل على Payment model
-- ✋ الانتقال من Phase 1 لـ Phase 2 في ZATCA
-- ✋ نشر أي build لـ App Store / Play Store
+| AI | OpenRouter API (multi-model) |
 
 ---
 
 ## Critical Path
 
-1. **ERD (1.1)** → كل شيء يعتمد على الـ schema ✅
-2. **Auth + RBAC (2.2, 2.3)** → كل feature تحتاج auth ✅
-3. **Booking API (2.7)** → وظيفة المنتج الأساسية ✅
-4. **Payment في Mobile** → الدفع ضروري للإطلاق ✅
-5. **App Store Submission (6.7)** → مراجعة Apple قد تأخذ 1-2 أسبوع 🔲
-
----
-
-## سجل الإنجازات
-
-| التاريخ | الإنجاز |
-|---------|---------|
-| 2026-03 | Phase 1 مكتمل: Backend 18 module + Prisma 28 model/13 enum |
-| 2026-03 | Phase 2 مكتمل: ZATCA module (6 services) + Dashboard 16 صفحة + 459 test |
-| 2026-03 | Phase 3 مكتمل: Mobile 28 شاشة + Payment (Moyasar + Bank Transfer) + Notifications + Video Call + Settings |
-| 2026-03 | Refactor: تقسيم 5 service files كبيرة (auth, practitioners, payments, bookings, users) — 455 test يمرّون |
-| 2026-03 | Dashboard API: ربط Services + Practitioners detail بالـ API (16/16 صفحة متصلة) |
-| 2026-03 | PRD: إضافة `docs/CareKit-PRD-EN.md` — Phase 1 Design & Planning مكتملة 100% |
-| 2026-03 | توحيد ملفات التخطيط في sprint-plan.md |
-| 2026-03 | Sprint 3.5: Payment Flow + Notifications + Video Call + Settings (10 ملفات جديدة + 8 تعديلات، 0 TS errors) |
-| 2026-03-22 | Phase 4 مكتمل: AI Chatbot — Backend 23 ملف + Mobile chat (GiftedChat + RTL) + Dashboard 3 tabs + KB editor + File processing + 39 unit test + Migration applied |
-| 2026-03-23 | Sprint 4.5: إصلاح 9 bugs حرجة (availability validation, date filter, slot booking display, category delete FK, partial refund, notifications, patient name anonymization) |
-| 2026-03-23 | Pricing Refactor: نقل الأسعار من Practitioner لـ PractitionerService — 3-tier pricing + availableTypes + bufferBefore/After + customDuration + 4 endpoints جديدة + 3 migrations + 5 ملفات جديدة + 10 معدّلة |
+```
+Phase 5 (Dashboard Design) → Phase 6 (Website) → Phase 7 (Mobile + Store)
+                                                          ↓
+                                              Phase 8 (Production) → Phase 9 (Testing & Go Live)
+```
 
 ---
 
