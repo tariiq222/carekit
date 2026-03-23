@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
+import { type OtpType as PrismaOtpType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { SALT_ROUNDS } from '../../config/constants.js';
 import { OtpType } from './enums/otp-type.enum.js';
@@ -26,12 +27,12 @@ export class OtpService {
 
     // Invalidate existing OTPs of same type
     await this.prisma.otpCode.updateMany({
-      where: { userId, type: type as string, usedAt: null },
+      where: { userId, type: type as PrismaOtpType, usedAt: null },
       data: { usedAt: new Date() },
     });
 
     await this.prisma.otpCode.create({
-      data: { userId, code, type: type as string, expiresAt },
+      data: { userId, code, type: type as PrismaOtpType, expiresAt },
     });
 
     return code;
@@ -53,7 +54,7 @@ export class OtpService {
     }
 
     const otpRecord = await this.prisma.otpCode.findFirst({
-      where: { userId: user.id, type: type as string, code, usedAt: null },
+      where: { userId: user.id, type: type as PrismaOtpType, code, usedAt: null },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -61,7 +62,7 @@ export class OtpService {
       const activeOtp = await this.prisma.otpCode.findFirst({
         where: {
           userId: user.id,
-          type: type as string,
+          type: type as PrismaOtpType,
           usedAt: null,
           expiresAt: { gt: new Date() },
         },

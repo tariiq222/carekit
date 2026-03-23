@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { type SessionLanguage } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotAiService } from './chatbot-ai.service.js';
 import { ChatbotToolsService } from './chatbot-tools.service.js';
@@ -31,7 +32,7 @@ export class ChatbotService {
     const config = await this.configService.getConfigMap();
 
     const session = await this.prisma.chatSession.create({
-      data: { userId, language },
+      data: { userId, language: language as SessionLanguage | undefined },
     });
 
     // Send welcome message
@@ -112,7 +113,7 @@ export class ChatbotService {
 
     // Detect language from first user message
     if (!session.language) {
-      const detectedLang = detectLanguage(content);
+      const detectedLang = detectLanguage(content) as SessionLanguage;
       await this.prisma.chatSession.update({
         where: { id: sessionId },
         data: { language: detectedLang },
