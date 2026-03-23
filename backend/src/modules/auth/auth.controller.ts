@@ -42,6 +42,8 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @SkipThrottle()
+  @UseGuards(new EmailThrottleGuard(5, 60000))
   async login(@Body() dto: LoginDto) {
     const user = await this.authService.validateUser(dto.email, dto.password);
     if (!user) {
@@ -79,6 +81,8 @@ export class AuthController {
   @Public()
   @Post('login/otp/verify')
   @HttpCode(HttpStatus.OK)
+  @SkipThrottle()
+  @UseGuards(new EmailThrottleGuard(5, 60000))
   async verifyLoginOtp(@Body() dto: VerifyOtpDto) {
     const userPayload = await this.authService.verifyOtp(
       dto.email,
@@ -142,6 +146,8 @@ export class AuthController {
   @Public()
   @Post('password/reset')
   @HttpCode(HttpStatus.OK)
+  @SkipThrottle()
+  @UseGuards(new EmailThrottleGuard(3, 60000))
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto.email, dto.code, dto.newPassword);
     return {

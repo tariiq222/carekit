@@ -1,33 +1,23 @@
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CreateBookingDto } from './dto/create-booking.dto.js';
+import { BookingListQueryDto } from './dto/booking-list-query.dto.js';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto.js';
 import { CancelApproveDto } from './dto/cancel-approve.dto.js';
 import { CancelRejectDto } from './dto/cancel-reject.dto.js';
 import { ZoomService } from './zoom.service.js';
 import { BookingCancellationService } from './booking-cancellation.service.js';
+import { BookingQueryService } from './booking-query.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { validateAvailability } from './booking-validation.helper.js';
 import { timeSlotsOverlap, shiftTime, calculateEndTime } from '../../common/helpers/booking-time.helper.js';
 import { bookingInclude } from './booking.constants.js';
-
-interface BookingListQuery {
-  page?: number;
-  perPage?: number;
-  status?: string;
-  type?: string;
-  practitionerId?: string;
-  patientId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-}
 
 @Injectable()
 export class BookingsService {
@@ -35,6 +25,7 @@ export class BookingsService {
     private readonly prisma: PrismaService,
     @Inject('ZoomService') private readonly zoomService: ZoomService,
     private readonly cancellationService: BookingCancellationService,
+    private readonly queryService: BookingQueryService,
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -114,6 +105,16 @@ export class BookingsService {
     return booking;
   }
 
+  // --- Delegated: Queries ---
+
+  async findAll(query: BookingListQueryDto) { return this.queryService.findAll(query); }
+  async findOne(id: string) { return this.queryService.findOne(id); }
+  async findAllScoped(query: BookingListQueryDto, userId: string) { return this.queryService.findAllScoped(query, userId); }
+  async findOneScoped(bookingId: string, userId: string) { return this.queryService.findOneScoped(bookingId, userId); }
+  async findMyBookings(patientId: string) { return this.queryService.findMyBookings(patientId); }
+  async findTodayBookingsForUser(userId: string) { return this.queryService.findTodayBookingsForUser(userId); }
+  async findTodayBookings(userId: string) { return this.queryService.findTodayBookings(userId); }
+
   async getStats() {
     const counts = await this.prisma.booking.groupBy({
       by: ['status'],
@@ -131,45 +132,6 @@ export class BookingsService {
       cancelled: map['cancelled'] ?? 0,
       pendingCancellation: map['pending_cancellation'] ?? 0,
     };
-  }
-
-  async findAll(query: BookingListQuery) {
-    const page = query.page ?? 1;
-    const perPage = query.perPage ?? 20;
-    const skip = (page - 1) * perPage;
-
-    const where: Record<string, unknown> = { deletedAt: null };
-    if (query.status) where.status = query.status;
-    if (query.type) where.type = query.type;
-    if (query.practitionerId) where.practitionerId = query.practitionerId;
-    if (query.patientId) where.patientId = query.patientId;
-    if (query.dateFrom || query.dateTo) {
-      const dateFilter: Record<string, Date> = {};
-      if (query.dateFrom) dateFilter.gte = new Date(query.dateFrom);
-      if (query.dateTo) dateFilter.lte = new Date(query.dateTo);
-      where.date = dateFilter;
-    }
-
-    const [rawItems, total] = await Promise.all([
-      this.prisma.booking.findMany({ where, include: bookingInclude, orderBy: { createdAt: 'desc' }, skip, take: perPage }),
-      this.prisma.booking.count({ where }),
-    ]);
-
-    const items = rawItems.map(({ deletedAt: _, zoomMeetingId: _z, ...item }) => item);
-    const totalPages = Math.ceil(total / perPage);
-
-    return {
-      items,
-      meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
-    };
-  }
-
-  async findOne(id: string) {
-    const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null }, include: bookingInclude });
-    if (!booking) {
-      throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
-    }
-    return booking;
   }
 
   async reschedule(id: string, dto: RescheduleBookingDto) {
@@ -281,56 +243,6 @@ export class BookingsService {
       data: { status: 'no_show' },
       include: bookingInclude,
     });
-  }
-
-  async findMyBookings(patientId: string, page = 1, perPage = 20) {
-    perPage = Math.min(perPage, 100);
-    const skip = (page - 1) * perPage;
-    const where = { patientId, deletedAt: null };
-    const [rawItems, total] = await Promise.all([
-      this.prisma.booking.findMany({ where, include: bookingInclude, orderBy: { createdAt: 'desc' }, skip, take: perPage }),
-      this.prisma.booking.count({ where }),
-    ]);
-    const items = rawItems.map(({ deletedAt: _, zoomMeetingId: _z, ...item }) => item);
-    const totalPages = Math.ceil(total / perPage);
-    return { items, meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 } };
-  }
-
-  async findTodayBookingsForUser(userId: string) {
-    const practitioner = await this.prisma.practitioner.findFirst({
-      where: { userId, deletedAt: null },
-    });
-    if (!practitioner) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: "Only practitioners can access today's bookings",
-        error: 'FORBIDDEN',
-      });
-    }
-    return this.findTodayBookings(userId);
-  }
-
-  async findTodayBookings(userId: string, page = 1, perPage = 50) {
-    const practitioner = await this.prisma.practitioner.findFirst({ where: { userId, deletedAt: null } });
-    if (!practitioner) {
-      throw new NotFoundException({ statusCode: 404, message: 'Practitioner profile not found', error: 'NOT_FOUND' });
-    }
-
-    perPage = Math.min(perPage, 100);
-    const skip = (page - 1) * perPage;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const where = { practitionerId: practitioner.id, date: { gte: today, lt: tomorrow }, deletedAt: null };
-    const [rawItems, total] = await Promise.all([
-      this.prisma.booking.findMany({ where, include: bookingInclude, orderBy: { startTime: 'asc' }, skip, take: perPage }),
-      this.prisma.booking.count({ where }),
-    ]);
-    const items = rawItems.map(({ deletedAt: _, zoomMeetingId: _z, ...item }) => item);
-    const totalPages = Math.ceil(total / perPage);
-    return { items, meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 } };
   }
 
   // --- Delegated: Cancellation ---

@@ -5,20 +5,17 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PrismaService } from '../../../database/prisma.service.js';
 import {
   PERMISSIONS_KEY,
   RequiredPermission,
 } from '../decorators/check-permissions.decorator.js';
+import type { UserPayload } from '../types/user-payload.type.js';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(
-    private reflector: Reflector,
-    private prisma: PrismaService,
-  ) {}
+  constructor(private reflector: Reflector) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const requiredPermissions = this.reflector.getAllAndOverride<
       RequiredPermission[] | undefined
     >(PERMISSIONS_KEY, [context.getHandler(), context.getClass()]);
@@ -28,7 +25,7 @@ export class PermissionsGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<{
-      user?: { id: string; email: string };
+      user?: UserPayload;
     }>();
 
     const user = request.user;
@@ -40,41 +37,8 @@ export class PermissionsGuard implements CanActivate {
       });
     }
 
-    // Fetch user's permissions from DB
-    const dbUser = await this.prisma.user.findUnique({
-      where: { id: user.id },
-      include: {
-        userRoles: {
-          include: {
-            role: {
-              include: {
-                rolePermissions: {
-                  include: { permission: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    const userPermissions = new Set(user.permissions ?? []);
 
-    if (!dbUser) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'Access denied',
-        error: 'FORBIDDEN',
-      });
-    }
-
-    // Build user's permission set
-    const userPermissions = new Set<string>();
-    for (const ur of dbUser.userRoles) {
-      for (const rp of ur.role.rolePermissions) {
-        userPermissions.add(`${rp.permission.module}:${rp.permission.action}`);
-      }
-    }
-
-    // Check if user has ALL required permissions
     for (const required of requiredPermissions) {
       if (!userPermissions.has(`${required.module}:${required.action}`)) {
         throw new ForbiddenException({

@@ -102,6 +102,7 @@ export class ReportsService {
     // Fetch all bookings in range with payment info
     const bookings = await this.prisma.booking.findMany({
       where: bookingWhere,
+      take: 10000, // Safety cap — prevents loading unlimited records
       include: {
         payment: true,
         practitioner: {
@@ -205,6 +206,7 @@ export class ReportsService {
         date: { gte: from, lte: to },
         deletedAt: null,
       },
+      take: 10000, // Safety cap — prevents loading unlimited records
       select: {
         status: true,
         type: true,
@@ -309,6 +311,7 @@ export class ReportsService {
     const ratings = await this.prisma.rating.findMany({
       where: { practitionerId },
       orderBy: { createdAt: 'desc' },
+      take: 50, // Show latest 50 ratings
       include: {
         patient: { select: { firstName: true, lastName: true } },
       },

@@ -132,6 +132,37 @@ enum ZatcaStatus {
   @@map("zatca_status")
 }
 
+enum OtpType {
+  login
+  reset_password
+  verify_email
+
+  @@map("otp_type")
+}
+
+enum KbFileStatus {
+  pending
+  processing
+  completed
+  failed
+
+  @@map("kb_file_status")
+}
+
+enum DevicePlatform {
+  ios
+  android
+
+  @@map("device_platform")
+}
+
+enum SessionLanguage {
+  ar
+  en
+
+  @@map("session_language")
+}
+
 // ──────────────────────────────────────────────
 // Auth & Users
 // ──────────────────────────────────────────────
@@ -174,7 +205,7 @@ model OtpCode {
   id        String    @id @default(uuid())
   userId    String    @map("user_id")
   code      String
-  type      String // login, reset_password, verify_email
+  type      OtpType
   expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
   createdAt DateTime  @default(now()) @map("created_at")
@@ -295,6 +326,7 @@ model Practitioner {
   practitionerServices PractitionerService[]
 
   @@index([specialtyId])
+  @@index([isActive, deletedAt])
   @@map("practitioners")
 }
 
@@ -459,6 +491,7 @@ model Booking {
   @@index([patientId, status])
   @@index([status])
   @@index([practitionerServiceId])
+  @@index([date])
   @@map("bookings")
 }
 
@@ -475,10 +508,11 @@ model Payment {
   refundAmount     Int?          @map("refund_amount") // halalat — null = no refund, totalAmount = full refund
   method           PaymentMethod
   status           PaymentStatus @default(pending)
-  moyasarPaymentId String?       @map("moyasar_payment_id")
+  moyasarPaymentId String?       @unique @map("moyasar_payment_id")
   transactionRef   String?       @map("transaction_ref")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
+  deletedAt        DateTime?     @map("deleted_at")
 
   // Relations
   booking Booking              @relation(fields: [bookingId], references: [id], onDelete: Cascade)
@@ -502,6 +536,8 @@ model BankTransferReceipt {
   reviewedAt           DateTime?                  @map("reviewed_at")
   adminNotes           String?                    @map("admin_notes")
   createdAt            DateTime                   @default(now()) @map("created_at")
+  updatedAt            DateTime                   @updatedAt @map("updated_at")
+  deletedAt            DateTime?                  @map("deleted_at")
 
   // Relations
   payment    Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
@@ -525,6 +561,8 @@ model Invoice {
   zatcaResponse Json?       @map("zatca_response")
   xmlContent    String?     @map("xml_content")
   createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  deletedAt     DateTime?   @map("deleted_at")
 
   // Relations
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
@@ -544,6 +582,8 @@ model Rating {
   stars          Int // 1-5
   comment        String?
   createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
 
   // Relations
   booking      Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
@@ -587,9 +627,10 @@ model ChatSession {
   endedAt     DateTime?    @map("ended_at")
   handedOff   Boolean      @default(false) @map("handed_off")
   handoffType HandoffType? @map("handoff_type")
-  language    String? // 'ar' | 'en' — detected from first message
+  language    SessionLanguage? // detected from first message
   metadata    Json? // bot version, model used, etc.
   createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
 
   // Relations
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -658,7 +699,7 @@ model KnowledgeBaseFile {
   fileType    String   @map("file_type") // pdf | docx | txt
   fileSize    Int      @map("file_size") // bytes
   chunksCount Int      @default(0) @map("chunks_count")
-  status      String   @default("pending") // pending | processing | completed | failed
+  status      KbFileStatus @default(pending)
   error       String?
   uploadedBy  String   @map("uploaded_by")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -729,6 +770,7 @@ model Notification {
   readAt    DateTime?        @map("read_at")
   data      Json?
   createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -741,7 +783,7 @@ model FcmToken {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   token     String
-  platform  String // ios | android
+  platform  DevicePlatform
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

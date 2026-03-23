@@ -5,7 +5,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
-import { CaslAbilityFactory } from './casl-ability.factory.js';
 import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';
 
@@ -24,7 +23,7 @@ import { OtpService } from './otp.service.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TokenService, OtpService, JwtStrategy, CaslAbilityFactory],
-  exports: [AuthService, TokenService, JwtStrategy, CaslAbilityFactory, PassportModule],
+  providers: [AuthService, TokenService, OtpService, JwtStrategy],
+  exports: [AuthService, TokenService, JwtStrategy, PassportModule],
 })
 export class AuthModule {}

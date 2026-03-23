@@ -2,11 +2,16 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { JwtPayload } from '../types/jwt-payload.type.js';
+import { TokenService } from '../token.service.js';
+import type { JwtPayload } from '../types/jwt-payload.type.js';
+import type { UserPayload } from '../types/user-payload.type.js';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly tokenService: TokenService,
+  ) {
     const secret = configService.get<string>('JWT_SECRET');
     if (!secret) {
       throw new Error('JWT_SECRET is not defined');
@@ -19,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload): { id: string; email: string } {
+  async validate(payload: JwtPayload): Promise<UserPayload> {
     if (!payload.sub) {
       throw new UnauthorizedException({
         statusCode: 401,
@@ -27,6 +32,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         error: 'AUTH_TOKEN_INVALID',
       });
     }
-    return { id: payload.sub, email: payload.email };
+
+    try {
+      return await this.tokenService.buildUserPayloadFromId(payload.sub);
+    } catch {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        message: 'Invalid token',
+        error: 'AUTH_TOKEN_INVALID',
+      });
+    }
   }
 }

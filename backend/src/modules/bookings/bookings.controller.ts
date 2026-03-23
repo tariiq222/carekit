@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   HttpCode,
   Param,
@@ -21,17 +20,12 @@ import { CancelRequestDto } from './dto/cancel-request.dto.js';
 import { CancelApproveDto } from './dto/cancel-approve.dto.js';
 import { CancelRejectDto } from './dto/cancel-reject.dto.js';
 import { BookingListQueryDto } from './dto/booking-list-query.dto.js';
-import { PrismaService } from '../../database/prisma.service.js';
-import { resolveUserRoleContext } from '../../common/helpers/user-role.helper.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @Controller('bookings')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class BookingsController {
-  constructor(
-    private readonly bookingsService: BookingsService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly bookingsService: BookingsService) {}
 
   // ═══════════════════════════════════════════════════════════════
   //  POST /bookings — Create Booking
@@ -85,17 +79,7 @@ export class BookingsController {
     @Query() query: BookingListQueryDto,
     @CurrentUser() user: { id: string },
   ) {
-    const ctx = await resolveUserRoleContext(this.prisma, user.id);
-
-    if (!ctx.isAdmin) {
-      if (ctx.isPractitioner && ctx.practitionerId) {
-        query.practitionerId = ctx.practitionerId;
-      } else {
-        query.patientId = user.id;
-      }
-    }
-
-    return this.bookingsService.findAll(query);
+    return this.bookingsService.findAllScoped(query, user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -107,18 +91,7 @@ export class BookingsController {
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
   ) {
-    const booking = await this.bookingsService.findOne(id);
-    const ctx = await resolveUserRoleContext(this.prisma, user.id);
-
-    if (ctx.isAdmin) return booking;
-    if (booking.patientId === user.id) return booking;
-    if (ctx.practitionerId && booking.practitionerId === ctx.practitionerId) return booking;
-
-    throw new ForbiddenException({
-      statusCode: 403,
-      message: 'You do not have access to this booking',
-      error: 'FORBIDDEN',
-    });
+    return this.bookingsService.findOneScoped(id, user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════
