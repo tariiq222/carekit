@@ -1,17 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  ZATCA_API_BASE,
+  ZATCA_SANDBOX_BASE,
   ZATCA_ENDPOINTS,
   ZATCA_API_VERSION,
 } from '../constants/zatca.constants.js';
 
-interface ZatcaRequestBody {
+export interface ZatcaRequestBody {
   invoiceHash: string;
   uuid: string;
-  invoice: string;  // Base64-encoded XML
+  invoice: string; // Base64-encoded XML
 }
 
-interface ZatcaApiResponse {
+export interface ZatcaApiResponse {
   status: string;
   validationResults?: {
     status: string;
@@ -24,9 +24,17 @@ interface ZatcaApiResponse {
   clearedInvoice?: string;
 }
 
-interface ZatcaCredentials {
-  csid: string;   // binarySecurityToken
+export interface ZatcaCredentials {
+  csid: string; // binarySecurityToken
   secret: string;
+}
+
+export interface CsidResponse {
+  requestID: string;
+  binarySecurityToken: string;
+  secret: string;
+  tokenType?: string;
+  dispositionMessage?: string;
 }
 
 @Injectable()
@@ -38,7 +46,10 @@ export class ZatcaApiService {
     return `Basic ${Buffer.from(raw).toString('base64')}`;
   }
 
-  private buildHeaders(credentials: ZatcaCredentials, language = 'ar'): HeadersInit {
+  private buildHeaders(
+    credentials: ZatcaCredentials,
+    language = 'ar',
+  ): HeadersInit {
     return {
       'Content-Type': 'application/json',
       Authorization: this.buildAuthHeader(credentials),
@@ -47,46 +58,109 @@ export class ZatcaApiService {
     };
   }
 
+  // ── Invoice endpoints ─────────────────────────────────────
+
   async reportInvoice(
     body: ZatcaRequestBody,
     credentials: ZatcaCredentials,
+    baseUrl?: string,
   ): Promise<ZatcaApiResponse> {
-    const url = `${ZATCA_API_BASE}${ZATCA_ENDPOINTS.reportingInvoice}`;
-    return this.post(url, body, credentials);
+    const url = `${baseUrl ?? ZATCA_SANDBOX_BASE}${ZATCA_ENDPOINTS.reportingInvoice}`;
+    return this.postInvoice(url, body, credentials);
   }
 
   async clearInvoice(
     body: ZatcaRequestBody,
     credentials: ZatcaCredentials,
+    baseUrl?: string,
   ): Promise<ZatcaApiResponse> {
-    const url = `${ZATCA_API_BASE}${ZATCA_ENDPOINTS.clearanceInvoice}`;
-    return this.post(url, body, credentials);
+    const url = `${baseUrl ?? ZATCA_SANDBOX_BASE}${ZATCA_ENDPOINTS.clearanceInvoice}`;
+    return this.postInvoice(url, body, credentials);
   }
 
   async checkCompliance(
     body: ZatcaRequestBody,
     credentials: ZatcaCredentials,
+    baseUrl?: string,
   ): Promise<ZatcaApiResponse> {
-    const url = `${ZATCA_API_BASE}${ZATCA_ENDPOINTS.complianceInvoice}`;
-    return this.post(url, body, credentials);
+    const url = `${baseUrl ?? ZATCA_SANDBOX_BASE}${ZATCA_ENDPOINTS.complianceInvoice}`;
+    return this.postInvoice(url, body, credentials);
   }
 
-  private async post(
+  // ── Onboarding CSID endpoints ─────────────────────────────
+
+  /**
+   * Step 1 of onboarding: request a compliance CSID from ZATCA.
+   * No auth header — just the OTP in a custom header.
+   */
+  async requestComplianceCsid(
+    csrBase64: string,
+    otp: string,
+    baseUrl?: string,
+  ): Promise<CsidResponse> {
+    const url = `${baseUrl ?? ZATCA_SANDBOX_BASE}${ZATCA_ENDPOINTS.complianceCsid}`;
+
+    const response = await this.fetchJson<CsidResponse>(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept-Version': ZATCA_API_VERSION,
+        OTP: otp,
+      },
+      body: JSON.stringify({ csr: csrBase64 }),
+    });
+
+    return response;
+  }
+
+  /**
+   * Step 3 of onboarding: exchange compliance CSID for production CSID.
+   * Auth: Basic(complianceBST:secret).
+   */
+  async requestProductionCsid(
+    complianceRequestId: string,
+    credentials: ZatcaCredentials,
+    baseUrl?: string,
+  ): Promise<CsidResponse> {
+    const url = `${baseUrl ?? ZATCA_SANDBOX_BASE}${ZATCA_ENDPOINTS.productionCsid}`;
+
+    const response = await this.fetchJson<CsidResponse>(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept-Version': ZATCA_API_VERSION,
+        Authorization: this.buildAuthHeader(credentials),
+      },
+      body: JSON.stringify({ compliance_request_id: complianceRequestId }),
+    });
+
+    return response;
+  }
+
+  // ── Private helpers ────────────────────────────────────────
+
+  private async postInvoice(
     url: string,
     body: ZatcaRequestBody,
     credentials: ZatcaCredentials,
   ): Promise<ZatcaApiResponse> {
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.buildHeaders(credentials),
-        body: JSON.stringify(body),
-      });
+    return this.fetchJson<ZatcaApiResponse>(url, {
+      method: 'POST',
+      headers: this.buildHeaders(credentials),
+      body: JSON.stringify(body),
+    });
+  }
 
-      const data = (await response.json()) as ZatcaApiResponse;
+  private async fetchJson<T>(url: string, init: RequestInit): Promise<T> {
+    try {
+      const response = await fetch(url, init);
+      const data = (await response.json()) as T;
 
       if (!response.ok) {
-        this.logger.warn(`ZATCA API error ${response.status}: ${JSON.stringify(data)}`);
+        this.logger.warn(
+          `ZATCA API error ${response.status}: ${JSON.stringify(data)}`,
+        );
+        throw new Error(`ZATCA API request failed: ${response.status}`);
       }
 
       return data;

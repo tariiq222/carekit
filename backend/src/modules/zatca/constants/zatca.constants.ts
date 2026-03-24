@@ -1,8 +1,13 @@
-export const ZATCA_API_BASE =
-  'https://gw-apic-gov.gazt.gov.sa/e-invoicing/developer-portal';
-
+// Sandbox (developer portal)
 export const ZATCA_SANDBOX_BASE =
   'https://gw-apic-gov.gazt.gov.sa/e-invoicing/developer-portal';
+
+// Production
+export const ZATCA_PRODUCTION_BASE =
+  'https://gw-apic-gov.gazt.gov.sa/e-invoicing/core';
+
+/** @deprecated Use ZATCA_SANDBOX_BASE or ZATCA_PRODUCTION_BASE directly */
+export const ZATCA_API_BASE = ZATCA_SANDBOX_BASE;
 
 export const ZATCA_ENDPOINTS = {
   complianceCsid: '/compliance/csids',

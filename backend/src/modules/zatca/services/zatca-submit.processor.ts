@@ -1,0 +1,138 @@
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Logger } from '@nestjs/common';
+import { Job } from 'bullmq';
+import { PrismaService } from '../../../database/prisma.service.js';
+import { ZatcaApiService } from './zatca-api.service.js';
+import { XmlSigningService } from './xml-signing.service.js';
+import { InvoiceHashService } from './invoice-hash.service.js';
+
+export interface ZatcaSubmitJobData {
+  invoiceId: string;
+}
+
+@Processor('zatca-submit')
+export class ZatcaSubmitProcessor extends WorkerHost {
+  private readonly logger = new Logger(ZatcaSubmitProcessor.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly apiService: ZatcaApiService,
+    private readonly signingService: XmlSigningService,
+    private readonly hashService: InvoiceHashService,
+  ) {
+    super();
+  }
+
+  async process(job: Job<ZatcaSubmitJobData>): Promise<void> {
+    const { invoiceId } = job.data;
+    this.logger.log(`Processing ZATCA submission for invoice ${invoiceId}`);
+
+    const invoice = await this.findInvoice(invoiceId);
+    if (!invoice) return;
+
+    if (invoice.zatcaStatus === 'reported') {
+      this.logger.log(`Invoice ${invoiceId} already reported — skipping`);
+      return;
+    }
+
+    const credentials = await this.loadCredentials();
+
+    // Sign the XML
+    const signedXml = await this.signingService.signXml(invoice.xmlContent);
+    const xmlBase64 = Buffer.from(signedXml).toString('base64');
+
+    // Recompute hash of the signed XML
+    const signedHash = this.hashService.toBase64(
+      this.hashService.hashXml(signedXml),
+    );
+
+    // Submit to ZATCA
+    const response = await this.apiService.reportInvoice(
+      { invoiceHash: signedHash, uuid: invoice.id, invoice: xmlBase64 },
+      credentials,
+    );
+
+    const succeeded =
+      response.reportingStatus === 'REPORTED' ||
+      response.validationResults?.status === 'PASS';
+
+    await this.updateInvoice(invoiceId, succeeded, signedXml, response);
+
+    if (!succeeded) {
+      this.logger.error(
+        `ZATCA submission failed for ${invoiceId}: ${JSON.stringify(response.validationResults?.errorMessages)}`,
+      );
+      throw new Error('ZATCA submission failed'); // Triggers retry
+    }
+
+    this.logger.log(`Invoice ${invoiceId} reported to ZATCA successfully`);
+  }
+
+  private async findInvoice(invoiceId: string) {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      select: {
+        id: true,
+        xmlContent: true,
+        invoiceHash: true,
+        zatcaStatus: true,
+      },
+    });
+
+    if (!invoice || !invoice.xmlContent) {
+      this.logger.warn(
+        `Invoice ${invoiceId} not found or missing XML — skipping`,
+      );
+      return null;
+    }
+
+    return invoice as {
+      id: string;
+      xmlContent: string;
+      invoiceHash: string | null;
+      zatcaStatus: string;
+    };
+  }
+
+  private async loadCredentials(): Promise<{
+    csid: string;
+    secret: string;
+  }> {
+    const configs = await this.prisma.whiteLabelConfig.findMany({
+      where: { key: { in: ['zatca_csid', 'zatca_secret'] } },
+      select: { key: true, value: true },
+    });
+
+    const configMap = Object.fromEntries(
+      configs.map((c) => [c.key, c.value]),
+    );
+
+    if (!configMap['zatca_csid'] || !configMap['zatca_secret']) {
+      this.logger.error('ZATCA credentials not configured — cannot submit');
+      throw new Error('ZATCA credentials missing'); // Will trigger retry
+    }
+
+    return {
+      csid: configMap['zatca_csid'],
+      secret: configMap['zatca_secret'],
+    };
+  }
+
+  private async updateInvoice(
+    invoiceId: string,
+    succeeded: boolean,
+    signedXml: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    response: Record<string, any>,
+  ): Promise<void> {
+    await this.prisma.invoice.update({
+      where: { id: invoiceId },
+      data: {
+        zatcaStatus: succeeded ? 'reported' : 'failed',
+        sentAt: succeeded ? new Date() : undefined,
+        zatcaResponse: JSON.parse(JSON.stringify(response)),
+        xmlContent: signedXml,
+      },
+    });
+  }
+}
