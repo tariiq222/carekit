@@ -1,5 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
+import { MinioService } from '../../common/services/minio.service.js';
 import { ChatbotRagService } from './chatbot-rag.service.js';
 
 // Dynamic imports for file parsing (ESM compatibility)
@@ -17,7 +19,35 @@ export class ChatbotFileService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ragService: ChatbotRagService,
+    private readonly minioService: MinioService,
   ) {}
+
+  async uploadFile(userId: string, file: Express.Multer.File) {
+    const ext = file.originalname.split('.').pop()?.toLowerCase() ?? 'pdf';
+    const objectName = `kb-files/${crypto.randomUUID()}.${ext}`;
+
+    const fileUrl = await this.minioService.uploadFile(
+      'carekit',
+      objectName,
+      file.buffer,
+      file.mimetype,
+    );
+
+    const fileType = ext === 'docx' || ext === 'doc' ? ext : ext === 'txt' ? 'txt' : 'pdf';
+
+    const record = await this.prisma.knowledgeBaseFile.create({
+      data: {
+        fileName: file.originalname,
+        fileUrl,
+        fileType,
+        fileSize: file.size,
+        status: 'pending',
+        uploadedById: userId,
+      },
+    });
+
+    return record;
+  }
 
   /**
    * Process an uploaded file: read content, split into chunks, generate embeddings.

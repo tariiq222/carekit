@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,8 +11,11 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
@@ -155,6 +159,42 @@ export class ChatbotController {
   // ═══════════════════════════════════════════════════════════
   //  FILES — Admin only
   // ═══════════════════════════════════════════════════════════
+
+  @Post('knowledge-base/files')
+  @CheckPermissions({ module: 'chatbot', action: 'create' })
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 20 * 1024 * 1024 },
+    fileFilter: (_req: unknown, file: { mimetype: string }, cb: (err: Error | null, accept: boolean) => void) => {
+      const allowed = [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword',
+        'text/plain',
+      ];
+      if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new BadRequestException({
+          statusCode: 400,
+          message: 'Only PDF, DOCX, and TXT files are allowed',
+          error: 'INVALID_FILE_TYPE',
+        }), false);
+      }
+    },
+  }))
+  async uploadFile(
+    @CurrentUser() user: { id: string },
+    @Req() req: { file?: Express.Multer.File },
+  ) {
+    if (!req.file) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'File is required',
+        error: 'MISSING_FILE',
+      });
+    }
+    return this.fileService.uploadFile(user.id, req.file);
+  }
 
   @Get('knowledge-base/files')
   @CheckPermissions({ module: 'chatbot', action: 'view' })

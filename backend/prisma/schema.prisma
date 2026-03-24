@@ -520,6 +520,7 @@ model Payment {
   invoice Invoice?
 
   @@index([status])
+  @@index([createdAt])
   @@map("payments")
 }
 

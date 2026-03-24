@@ -7,6 +7,7 @@ import { ChatbotRagService } from './chatbot-rag.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
 import { ChatbotAnalyticsService } from './chatbot-analytics.service.js';
 import { ChatbotFileService } from './chatbot-file.service.js';
+import { MinioService } from '../../common/services/minio.service.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { ServicesModule } from '../services/services.module.js';
 import { PractitionersModule } from '../practitioners/practitioners.module.js';
@@ -22,6 +23,7 @@ import { PractitionersModule } from '../practitioners/practitioners.module.js';
     ChatbotConfigService,
     ChatbotAnalyticsService,
     ChatbotFileService,
+    MinioService,
   ],
   exports: [ChatbotService, ChatbotConfigService],
 })

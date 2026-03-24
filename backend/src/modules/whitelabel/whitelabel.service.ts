@@ -11,6 +11,23 @@ export class WhitelabelService {
   //  GET ALL — Return all configs ordered by key
   // ═══════════════════════════════════════════════════════════════
 
+  private static readonly PUBLIC_KEYS = [
+    'clinic_name', 'clinic_name_en', 'logo_url', 'favicon_url',
+    'primary_color', 'secondary_color', 'contact_phone', 'contact_email',
+    'app_name', 'app_name_en',
+  ];
+
+  async getPublicBranding(): Promise<Record<string, string>> {
+    const configs = await this.prisma.whiteLabelConfig.findMany({
+      where: { key: { in: WhitelabelService.PUBLIC_KEYS } },
+      select: { key: true, value: true },
+    });
+    return configs.reduce<Record<string, string>>((acc, c) => {
+      acc[c.key] = c.value;
+      return acc;
+    }, {});
+  }
+
   async getConfig(): Promise<WhiteLabelConfig[]> {
     return this.prisma.whiteLabelConfig.findMany({
       orderBy: { key: 'asc' },

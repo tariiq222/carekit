@@ -13,6 +13,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
+import { Public } from '../auth/decorators/public.decorator.js';
 import { WhitelabelService } from './whitelabel.service.js';
 import { UpdateConfigDto } from './dto/update-config.dto.js';
 
@@ -22,6 +23,16 @@ import { UpdateConfigDto } from './dto/update-config.dto.js';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class WhitelabelController {
   constructor(private readonly whitelabelService: WhitelabelService) {}
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET /whitelabel/public — Public branding (no auth, for mobile pre-login)
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get('public')
+  @Public()
+  async getPublicBranding() {
+    return this.whitelabelService.getPublicBranding();
+  }
 
   // ═══════════════════════════════════════════════════════════════
   //  GET /whitelabel/config — List all config entries
