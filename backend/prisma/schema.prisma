@@ -77,6 +77,10 @@ enum NotificationType {
 }
 
 enum ProblemReportType {
+  wait_time
+  staff_behavior
+  cleanliness
+  billing
   no_call
   late
   technical
@@ -87,8 +91,9 @@ enum ProblemReportType {
 
 enum ProblemReportStatus {
   open
-  reviewing
+  in_review
   resolved
+  dismissed
 
   @@map("problem_report_status")
 }
@@ -600,8 +605,9 @@ model ProblemReport {
   bookingId    String              @map("booking_id")
   patientId    String?             @map("patient_id")
   type         ProblemReportType
-  description  String?
+  description  String
   status       ProblemReportStatus @default(open)
+  adminNotes   String?             @map("admin_notes")
   resolvedById String?             @map("resolved_by_id")
   resolvedAt   DateTime?           @map("resolved_at")
   createdAt    DateTime            @default(now()) @map("created_at")
@@ -613,6 +619,7 @@ model ProblemReport {
   resolvedBy User?   @relation("ResolvedByUser", fields: [resolvedById], references: [id], onDelete: SetNull)
 
   @@index([bookingId])
+  @@index([patientId])
   @@index([status])
   @@map("problem_reports")
 }

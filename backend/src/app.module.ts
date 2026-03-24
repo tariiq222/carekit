@@ -32,6 +32,7 @@ import { ZatcaModule } from './modules/zatca/zatca.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { EmailModule } from './modules/email/email.module.js';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module.js';
+import { ProblemReportsModule } from './modules/problem-reports/problem-reports.module.js';
 import { TasksModule } from './modules/tasks/tasks.module.js';
 
 @Module({
@@ -79,6 +80,7 @@ import { TasksModule } from './modules/tasks/tasks.module.js';
     AiModule,
     ZatcaModule,
     HealthModule,
+    ProblemReportsModule,
     TasksModule,
   ],
   controllers: [AppController],

@@ -4,13 +4,16 @@ import {
   Get,
   Param,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { type Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
 import { ReportsService } from './reports.service.js';
+import { ExportService } from './export.service.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Reports')
@@ -18,7 +21,10 @@ import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 @Controller('reports')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ReportsController {
-  constructor(private readonly reportsService: ReportsService) {}
+  constructor(
+    private readonly reportsService: ReportsService,
+    private readonly exportService: ExportService,
+  ) {}
 
   // ═══════════════════════════════════════════════════════════════
   //  GET /reports/revenue?dateFrom=&dateTo=&practitionerId=
@@ -26,18 +32,13 @@ export class ReportsController {
 
   @Get('revenue')
   @CheckPermissions({ module: 'reports', action: 'view' })
+  @ApiOperation({ summary: 'Get revenue report (SQL aggregated)' })
   async getRevenue(
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
     @Query('practitionerId') practitionerId?: string,
   ) {
-    if (!dateFrom || !dateTo) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'dateFrom and dateTo are required',
-        error: 'VALIDATION_ERROR',
-      });
-    }
+    this.validateDateRange(dateFrom, dateTo);
     const data = await this.reportsService.getRevenueReport(
       dateFrom,
       dateTo,
@@ -47,24 +48,65 @@ export class ReportsController {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  //  GET /reports/revenue/export?dateFrom=&dateTo=
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get('revenue/export')
+  @CheckPermissions({ module: 'reports', action: 'view' })
+  @ApiOperation({ summary: 'Export revenue report as CSV' })
+  async exportRevenue(
+    @Query('dateFrom') dateFrom: string,
+    @Query('dateTo') dateTo: string,
+    @Res() res: Response,
+  ) {
+    this.validateDateRange(dateFrom, dateTo);
+    const csv = await this.exportService.exportRevenueCsv(dateFrom, dateTo);
+    this.sendCsv(res, csv, `revenue-${dateFrom}-to-${dateTo}.csv`);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   //  GET /reports/bookings?dateFrom=&dateTo=
   // ═══════════════════════════════════════════════════════════════
 
   @Get('bookings')
   @CheckPermissions({ module: 'reports', action: 'view' })
+  @ApiOperation({ summary: 'Get booking report (SQL aggregated)' })
   async getBookings(
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
   ) {
-    if (!dateFrom || !dateTo) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'dateFrom and dateTo are required',
-        error: 'VALIDATION_ERROR',
-      });
-    }
+    this.validateDateRange(dateFrom, dateTo);
     const data = await this.reportsService.getBookingReport(dateFrom, dateTo);
     return { success: true, data };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET /reports/bookings/export?dateFrom=&dateTo=
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get('bookings/export')
+  @CheckPermissions({ module: 'reports', action: 'view' })
+  @ApiOperation({ summary: 'Export bookings as CSV' })
+  async exportBookings(
+    @Query('dateFrom') dateFrom: string,
+    @Query('dateTo') dateTo: string,
+    @Res() res: Response,
+  ) {
+    this.validateDateRange(dateFrom, dateTo);
+    const csv = await this.exportService.exportBookingsCsv(dateFrom, dateTo);
+    this.sendCsv(res, csv, `bookings-${dateFrom}-to-${dateTo}.csv`);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET /reports/patients/export
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get('patients/export')
+  @CheckPermissions({ module: 'reports', action: 'view' })
+  @ApiOperation({ summary: 'Export all patients as CSV' })
+  async exportPatients(@Res() res: Response) {
+    const csv = await this.exportService.exportPatientsCsv();
+    this.sendCsv(res, csv, 'patients.csv');
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -73,11 +115,26 @@ export class ReportsController {
 
   @Get('practitioners/:id')
   @CheckPermissions({ module: 'reports', action: 'view' })
+  @ApiOperation({ summary: 'Get practitioner performance report' })
   async getPractitioner(
     @Param('id', uuidPipe) id: string,
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
   ) {
+    this.validateDateRange(dateFrom, dateTo);
+    const data = await this.reportsService.getPractitionerReport(
+      id,
+      dateFrom,
+      dateTo,
+    );
+    return { success: true, data };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  HELPERS
+  // ═══════════════════════════════════════════════════════════════
+
+  private validateDateRange(dateFrom: string, dateTo: string): void {
     if (!dateFrom || !dateTo) {
       throw new BadRequestException({
         statusCode: 400,
@@ -85,11 +142,14 @@ export class ReportsController {
         error: 'VALIDATION_ERROR',
       });
     }
-    const data = await this.reportsService.getPractitionerReport(
-      id,
-      dateFrom,
-      dateTo,
+  }
+
+  private sendCsv(res: Response, csv: string, filename: string): void {
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${filename}"`,
     );
-    return { success: true, data };
+    res.send(csv);
   }
 }
