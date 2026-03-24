@@ -145,7 +145,7 @@ export class InvoiceCreatorService {
     const clinicName = configMap['clinic_name'] ?? 'CareKit Clinic';
     const clinicPhone = configMap['contact_phone'] ?? '';
 
-    return this.buildHtml({ invoice, clinicName, clinicPhone });
+    return this.buildHtml({ invoice, clinicName, clinicPhone, qrCodeData: invoice.qrCodeData });
   }
 
   private generateInvoiceNumber(): string {
@@ -163,8 +163,9 @@ export class InvoiceCreatorService {
     invoice: Record<string, any>;
     clinicName: string;
     clinicPhone: string;
+    qrCodeData?: string | null;
   }): string {
-    const { invoice, clinicName, clinicPhone } = params;
+    const { invoice, clinicName, clinicPhone, qrCodeData } = params;
     const { payment } = invoice;
     const { booking } = payment;
 
@@ -303,6 +304,38 @@ export class InvoiceCreatorService {
         </div>
       </div>
     </div>
+    ${qrCodeData ? `
+      <div style="padding:1.5rem 2.5rem;text-align:center;border-top:1px solid #e2e8f0;">
+        <div class="sec-title" style="text-align:center;">رمز الاستجابة السريع (QR)</div>
+        <canvas id="qr-canvas" style="margin-top:0.5rem;"></canvas>
+      </div>
+      <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"><\/script>
+      <script>
+        (function() {
+          var qr = qrcode(0, 'M');
+          qr.addData('${qrCodeData}');
+          qr.make();
+          var canvas = document.getElementById('qr-canvas');
+          var size = qr.getModuleCount();
+          var cellSize = 4;
+          var margin = 8;
+          var total = size * cellSize + margin * 2;
+          canvas.width = total;
+          canvas.height = total;
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, total, total);
+          ctx.fillStyle = '#000';
+          for (var r = 0; r < size; r++) {
+            for (var c = 0; c < size; c++) {
+              if (qr.isDark(r, c)) {
+                ctx.fillRect(c * cellSize + margin, r * cellSize + margin, cellSize, cellSize);
+              }
+            }
+          }
+        })();
+      <\/script>
+    ` : ''}
     <div class="footer">هذه الفاتورة صادرة إلكترونياً ولا تحتاج إلى توقيع أو ختم &nbsp;•&nbsp; ${clinicName}</div>
   </div>
 </body>

@@ -49,8 +49,9 @@ export class XmlBuilderService {
     this.addHeader(root, input);
     this.addSeller(root, input.seller);
     this.addBuyer(root, input.buyer);
-    this.addTaxTotal(root, input.vatAmount, input.vatAmount > 0 ? input.lines[0]?.vatRate ?? 15 : 0);
+    this.addTaxTotal(root, input.totalExcludingVat, input.vatAmount, input.vatAmount > 0 ? input.lines[0]?.vatRate ?? 15 : 0);
     this.addLegalMonetaryTotal(root, input);
+    this.addInvoiceLines(root, input.lines);
 
     return root.end({ prettyPrint: false });
   }
@@ -81,7 +82,9 @@ export class XmlBuilderService {
 
   private addSeller(root: ReturnType<typeof create>, seller: InvoiceParty): void {
     const party = root.ele('cac:AccountingSupplierParty').ele('cac:Party');
-    party.ele('cac:PartyIdentification').ele('cbc:ID', { schemeID: 'CRN' }).txt(seller.vatNumber).up().up();
+    // Use TIN scheme if VAT number starts with 3 (15-digit TIN), otherwise CRN
+    const schemeID = seller.vatNumber.length === 15 && seller.vatNumber.startsWith('3') ? 'TIN' : 'CRN';
+    party.ele('cac:PartyIdentification').ele('cbc:ID', { schemeID }).txt(seller.vatNumber).up().up();
     party.ele('cac:PostalAddress').ele('cbc:CityName').txt(seller.city).up().ele('cbc:StreetName').txt(seller.address).up().ele('cac:Country').ele('cbc:IdentificationCode').txt('SA').up().up().up();
     party.ele('cac:PartyTaxScheme').ele('cbc:CompanyID').txt(seller.vatNumber).up().ele('cac:TaxScheme').ele('cbc:ID').txt('VAT').up().up().up();
     party.ele('cac:PartyLegalEntity').ele('cbc:RegistrationName').txt(seller.name).up().up();
@@ -97,19 +100,52 @@ export class XmlBuilderService {
     root.up();
   }
 
-  private addTaxTotal(root: ReturnType<typeof create>, vatAmountHalalat: number, vatRate: number): void {
+  private addTaxTotal(root: ReturnType<typeof create>, totalExclVatHalalat: number, vatAmountHalalat: number, vatRate: number): void {
     const vatAmountSar = (vatAmountHalalat / 100).toFixed(2);
+    const taxableAmountSar = (totalExclVatHalalat / 100).toFixed(2);
     root
       .ele('cac:TaxTotal')
       .ele('cbc:TaxAmount', { currencyID: 'SAR' }).txt(vatAmountSar).up()
       .ele('cac:TaxSubtotal')
-      .ele('cbc:TaxableAmount', { currencyID: 'SAR' }).txt('0.00').up()
+      .ele('cbc:TaxableAmount', { currencyID: 'SAR' }).txt(taxableAmountSar).up()
       .ele('cbc:TaxAmount', { currencyID: 'SAR' }).txt(vatAmountSar).up()
       .ele('cac:TaxCategory')
       .ele('cbc:ID', { schemeAgencyID: '6', schemeID: 'UN/ECE 5305' }).txt('S').up()
       .ele('cbc:Percent').txt(vatRate.toString()).up()
       .ele('cac:TaxScheme').ele('cbc:ID').txt('VAT').up().up()
       .up().up().up();
+  }
+
+  private addInvoiceLines(root: ReturnType<typeof create>, lines: InvoiceLine[]): void {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const unitPriceSar = (line.unitPrice / 100).toFixed(2);
+      const lineTotalSar = (line.lineTotal / 100).toFixed(2);
+      const vatAmountSar = (line.vatAmount / 100).toFixed(2);
+
+      root
+        .ele('cac:InvoiceLine')
+        .ele('cbc:ID').txt(String(i + 1)).up()
+        .ele('cbc:InvoicedQuantity', { unitCode: 'PCE' }).txt(line.quantity.toString()).up()
+        .ele('cbc:LineExtensionAmount', { currencyID: 'SAR' }).txt(lineTotalSar).up()
+        .ele('cac:TaxTotal')
+          .ele('cbc:TaxAmount', { currencyID: 'SAR' }).txt(vatAmountSar).up()
+          .ele('cbc:RoundingAmount', { currencyID: 'SAR' })
+            .txt(((line.lineTotal + line.vatAmount) / 100).toFixed(2)).up()
+        .up()
+        .ele('cac:Item')
+          .ele('cbc:Name').txt(line.description).up()
+          .ele('cac:ClassifiedTaxCategory')
+            .ele('cbc:ID').txt('S').up()
+            .ele('cbc:Percent').txt(line.vatRate.toString()).up()
+            .ele('cac:TaxScheme').ele('cbc:ID').txt('VAT').up().up()
+          .up()
+        .up()
+        .ele('cac:Price')
+          .ele('cbc:PriceAmount', { currencyID: 'SAR' }).txt(unitPriceSar).up()
+        .up()
+        .up();
+    }
   }
 
   private addLegalMonetaryTotal(root: ReturnType<typeof create>, input: ZatcaXmlInput): void {

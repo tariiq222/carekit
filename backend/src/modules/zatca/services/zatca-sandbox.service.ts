@@ -66,6 +66,7 @@ export class ZatcaSandboxService {
       data: {
         zatcaStatus: succeeded ? 'reported' : 'failed',
         sentAt: succeeded ? new Date() : undefined,
+        zatcaResponse: JSON.parse(JSON.stringify(response)),
       },
     });
 
