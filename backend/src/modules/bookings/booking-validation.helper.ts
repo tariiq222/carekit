@@ -1,13 +1,22 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service.js';
 import { toMinutes, timeSlotsOverlap, shiftTime } from '../../common/helpers/booking-time.helper.js';
+
+/** Prisma client or transaction client — both expose the same query methods.
+ *  Using 'any' for args because Prisma's generated types differ between
+ *  PrismaClient and the transaction delegate, but the runtime API is identical. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PrismaLike = {
+  practitionerVacation: { findFirst: (args: any) => Promise<any> };
+  practitionerAvailability: { findMany: (args: any) => Promise<any[]> };
+  booking: { findMany: (args: any) => Promise<any[]> };
+};
 
 /**
  * Validates that the requested time slot falls within the practitioner's
  * availability schedule and they are not on vacation.
  */
 export async function validateAvailability(
-  prisma: PrismaService,
+  prisma: PrismaLike,
   practitionerId: string,
   date: Date,
   startTime: string,
@@ -63,7 +72,7 @@ export async function validateAvailability(
  * accounting for buffer times before/after appointments.
  */
 export async function checkDoubleBooking(
-  prisma: PrismaService,
+  prisma: PrismaLike,
   practitionerId: string, date: Date, startTime: string, endTime: string,
   excludeId?: string, bufferBefore: number = 0, bufferAfter: number = 0,
 ): Promise<void> {

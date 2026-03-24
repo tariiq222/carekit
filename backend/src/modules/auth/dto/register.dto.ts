@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Matches,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
@@ -19,6 +20,7 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
+  @MaxLength(128)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,128}$/, {
     message: 'password must contain at least one uppercase letter, one lowercase letter, one digit, and be 8-128 characters',
   })
@@ -26,16 +28,19 @@ export class RegisterDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim().replace(/<[^>]*>/g, ''))
   firstName!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim().replace(/<[^>]*>/g, ''))
   lastName!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phone must be a valid international phone number' })
   phone?: string;
 

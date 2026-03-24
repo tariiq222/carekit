@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -18,10 +19,12 @@ export class CreatePractitionerDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   bio?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   bioAr?: string;
 
   @IsOptional()
@@ -31,10 +34,12 @@ export class CreatePractitionerDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   education?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   educationAr?: string;
 
   @IsOptional()

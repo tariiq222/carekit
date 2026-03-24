@@ -5,12 +5,11 @@
 set -euo pipefail
 
 BACKUP_DIR="/backups/postgres"
-MINIO_BACKUP_DIR="/backups/minio"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
 
-# Create backup directories
-mkdir -p "$BACKUP_DIR" "$MINIO_BACKUP_DIR"
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
 
 # PostgreSQL backup
 echo "[$(date)] Starting PostgreSQL backup..."

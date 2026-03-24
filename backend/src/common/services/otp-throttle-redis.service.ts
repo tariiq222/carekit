@@ -1,6 +1,6 @@
-import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Redis } from 'ioredis';
+import { REDIS_CLIENT } from '../redis/redis.constants.js';
 import {
   OTP_LOCKOUT_THRESHOLD,
   OTP_LOCKOUT_TTL_SECONDS,
@@ -32,15 +32,12 @@ return count
 `;
 
 @Injectable()
-export class OtpThrottleRedisService implements OnModuleDestroy {
-  private readonly redis: Redis;
+export class OtpThrottleRedisService {
   private readonly logger = new Logger(OtpThrottleRedisService.name);
 
-  constructor(private readonly config: ConfigService) {
-    this.redis = new Redis(
-      this.config.get<string>('REDIS_URL') ?? 'redis://localhost:6379',
-    );
-  }
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+  ) {}
 
   /**
    * Check if the email+route combination is within rate limits.
@@ -117,9 +114,5 @@ export class OtpThrottleRedisService implements OnModuleDestroy {
     } catch (err) {
       this.logger.warn('Failed to reset OTP fail counter', err);
     }
-  }
-
-  onModuleDestroy(): void {
-    this.redis.disconnect();
   }
 }

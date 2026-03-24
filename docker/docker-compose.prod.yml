@@ -36,8 +36,8 @@ services:
       ZOOM_ACCOUNT_ID: ${ZOOM_ACCOUNT_ID}
       ZOOM_CLIENT_ID: ${ZOOM_CLIENT_ID}
       ZOOM_CLIENT_SECRET: ${ZOOM_CLIENT_SECRET}
-    ports:
-      - "${BACKEND_PORT:-3100}:3100"
+    expose:
+      - "3100"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3100/api/v1/health || exit 1"]
       interval: 30s
@@ -83,7 +83,7 @@ services:
       redis-server
       --requirepass ${REDIS_PASSWORD}
       --maxmemory 200mb
-      --maxmemory-policy allkeys-lru
+      --maxmemory-policy noeviction
       --appendonly yes
       --appendfsync everysec
     ports: !override []
@@ -157,5 +157,69 @@ services:
         max-size: "5m"
         max-file: "3"
 
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: carekit-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/proxy_params_common.conf:/etc/nginx/proxy_params_common.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/nginx-health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  minio-backup:
+    image: minio/mc:latest
+    container_name: carekit-minio-backup
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+    volumes:
+      - ./scripts/backup-minio.sh:/scripts/backup-minio.sh:ro
+      - minio_backup_data:/backups
+    entrypoint: /bin/sh
+    command: >
+      -c "
+      chmod +x /scripts/backup-minio.sh &&
+      echo '30 2 * * * /scripts/backup-minio.sh >> /var/log/minio-backup.log 2>&1' | crontab - &&
+      crond -f -l 2
+      "
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
 volumes:
   backup_data:
+  minio_backup_data:
+  nginx_logs:

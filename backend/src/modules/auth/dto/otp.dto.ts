@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class SendOtpDto {
@@ -16,5 +16,6 @@ export class VerifyOtpDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   code!: string;
 }

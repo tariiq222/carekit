@@ -5,6 +5,10 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { StructuredLogger } from './common/services/structured-logger.service.js';
+import { initSentry } from './common/sentry/sentry.config.js';
+
+// Sentry must init before NestFactory.create() to hook into Node.js internals
+initSentry();
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {

@@ -4,10 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { AuthCacheService } from '../auth/auth-cache.service.js';
 
 @Injectable()
 export class UserRolesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly authCache: AuthCacheService,
+  ) {}
 
   async assignRole(userId: string, roleId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -36,6 +40,9 @@ export class UserRolesService {
     await this.prisma.userRole.create({
       data: { userId, roleId },
     });
+
+    // Invalidate cached permissions so the user gets the new role immediately
+    await this.authCache.invalidate(userId);
   }
 
   async removeRole(userId: string, roleId: string) {
@@ -69,5 +76,8 @@ export class UserRolesService {
     }
 
     await this.prisma.userRole.delete({ where: { id: userRole.id } });
+
+    // Invalidate cached permissions so the role removal takes effect immediately
+    await this.authCache.invalidate(userId);
   }
 }

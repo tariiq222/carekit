@@ -9,6 +9,7 @@ import {
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service.js';
+import { resilientFetch } from '../../common/helpers/resilient-fetch.helper.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { CreateMoyasarPaymentDto } from './dto/create-moyasar-payment.dto.js';
@@ -66,14 +67,14 @@ export class MoyasarPaymentService {
       metadata: { bookingId: booking.id, userId },
     };
 
-    const response = await fetch('https://api.moyasar.com/v1/payments', {
+    const response = await resilientFetch('https://api.moyasar.com/v1/payments', {
       method: 'POST',
       headers: {
         Authorization: `Basic ${credentials}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(moyasarBody),
-    });
+    }, { circuit: 'moyasar', timeoutMs: 15_000 });
 
     if (!response.ok) {
       const errorBody = (await response.json().catch(() => ({
@@ -251,7 +252,7 @@ export class MoyasarPaymentService {
       const credentials = Buffer.from(`${apiKey}:`).toString('base64');
       const refundAmount = amount ?? payment.totalAmount;
 
-      const response = await fetch(
+      const response = await resilientFetch(
         `https://api.moyasar.com/v1/payments/${payment.moyasarPaymentId}/refund`,
         {
           method: 'POST',
@@ -261,6 +262,7 @@ export class MoyasarPaymentService {
           },
           body: JSON.stringify({ amount: refundAmount }),
         },
+        { circuit: 'moyasar', timeoutMs: 15_000 },
       );
 
       if (!response.ok) {

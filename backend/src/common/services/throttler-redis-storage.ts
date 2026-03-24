@@ -1,15 +1,13 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable } from '@nestjs/common';
 import { ThrottlerStorage } from '@nestjs/throttler';
 import { Redis } from 'ioredis';
+import { REDIS_CLIENT } from '../redis/redis.constants.js';
 
 @Injectable()
-export class ThrottlerRedisStorage implements ThrottlerStorage, OnModuleDestroy {
-  private readonly redis: Redis;
-
-  constructor(private readonly config: ConfigService) {
-    this.redis = new Redis(this.config.get<string>('REDIS_URL') ?? 'redis://localhost:6379');
-  }
+export class ThrottlerRedisStorage implements ThrottlerStorage {
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+  ) {}
 
   async increment(
     key: string,
@@ -52,9 +50,5 @@ export class ThrottlerRedisStorage implements ThrottlerStorage, OnModuleDestroy 
     }
 
     return { totalHits, timeToExpire, isBlocked, timeToBlockExpire };
-  }
-
-  onModuleDestroy() {
-    this.redis.disconnect();
   }
 }

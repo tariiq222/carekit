@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class ReviewReceiptDto {
   @IsBoolean()
@@ -7,5 +7,6 @@ export class ReviewReceiptDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   adminNotes?: string;
 }

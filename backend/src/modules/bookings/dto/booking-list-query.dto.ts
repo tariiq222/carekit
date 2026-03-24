@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, IsUUID, Matches, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, IsUUID, Matches, MaxLength, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class BookingListQueryDto {
@@ -16,10 +16,12 @@ export class BookingListQueryDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   status?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   type?: string;
 
   @IsOptional()
@@ -32,11 +34,13 @@ export class BookingListQueryDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'dateFrom must be in YYYY-MM-DD format' })
   dateFrom?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'dateTo must be in YYYY-MM-DD format' })
   dateTo?: string;
 }

@@ -23,6 +23,8 @@ const CRITICAL_OPTIONAL_KEYS: CriticalKey[] = [
   { key: 'FIREBASE_PROJECT_ID', feature: 'Push Notifications (FCM)' },
   { key: 'FIREBASE_CLIENT_EMAIL', feature: 'Push Notifications (FCM)' },
   { key: 'FIREBASE_PRIVATE_KEY', feature: 'Push Notifications (FCM)' },
+  { key: 'SMS_PROVIDER', feature: 'SMS Notifications' },
+  { key: 'SMS_API_KEY', feature: 'SMS Notifications' },
 ];
 
 export function logMissingOptionalKeys(
@@ -160,6 +162,22 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   COOKIE_DOMAIN?: string;
+
+  @IsString()
+  @IsOptional()
+  SENTRY_DSN?: string;
+
+  @IsString()
+  @IsOptional()
+  SMS_PROVIDER?: string;
+
+  @IsString()
+  @IsOptional()
+  SMS_API_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  SMS_SENDER_ID?: string;
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {

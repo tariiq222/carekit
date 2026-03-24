@@ -5,6 +5,7 @@ import {
   OPENROUTER_EMBEDDINGS_URL,
   OPENROUTER_HEADERS,
 } from '../../config/constants/api-urls.js';
+import { resilientFetch } from '../helpers/resilient-fetch.helper.js';
 
 export interface ChatCompletionOptions {
   model: string;
@@ -50,11 +51,11 @@ export class OpenRouterService {
       body.stream = true;
     }
 
-    return fetch(OPENROUTER_CHAT_URL, {
+    return resilientFetch(OPENROUTER_CHAT_URL, {
       method: 'POST',
       headers: this.buildHeaders(),
       body: JSON.stringify(body),
-    });
+    }, { circuit: 'openrouter', timeoutMs: options.stream ? 60_000 : 30_000 });
   }
 
   /**
@@ -62,14 +63,14 @@ export class OpenRouterService {
    * Returns the embedding vector.
    */
   async generateEmbedding(options: EmbeddingOptions): Promise<number[]> {
-    const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
+    const response = await resilientFetch(OPENROUTER_EMBEDDINGS_URL, {
       method: 'POST',
       headers: this.buildHeaders(),
       body: JSON.stringify({
         model: options.model,
         input: options.input,
       }),
-    });
+    }, { circuit: 'openrouter', timeoutMs: 15_000 });
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error');

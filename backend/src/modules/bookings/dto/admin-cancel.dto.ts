@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class AdminCancelDto {
   @IsEnum(['full', 'partial', 'none'])
@@ -11,9 +11,11 @@ export class AdminCancelDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   reason?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   adminNotes?: string;
 }

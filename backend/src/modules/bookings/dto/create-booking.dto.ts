@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, Matches } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
 
 export class CreateBookingDto {
   @IsUUID()
@@ -15,16 +15,19 @@ export class CreateBookingDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be in YYYY-MM-DD format' })
   date!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   @Matches(/^\d{2}:\d{2}$/, { message: 'startTime must be in HH:mm format' })
   startTime!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   notes?: string;
 
   /** Fix 7: Admin can book on behalf of a patient */

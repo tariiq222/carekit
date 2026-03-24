@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class ServiceListQueryDto {
@@ -29,5 +29,6 @@ export class ServiceListQueryDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   search?: string;
 }

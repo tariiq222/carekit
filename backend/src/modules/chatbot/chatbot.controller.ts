@@ -10,6 +10,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
@@ -37,6 +38,7 @@ export class ChatbotController {
   // ═══════════════════════════════════════════════════════════
 
   @Post('sessions')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   async createSession(
     @Body() dto: CreateSessionDto,
     @CurrentUser() user: { id: string },
@@ -70,6 +72,7 @@ export class ChatbotController {
   }
 
   @Post('sessions/:id/messages')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   async sendMessage(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SendMessageDto,
@@ -84,6 +87,7 @@ export class ChatbotController {
    * text, tool, action, done, error.
    */
   @Post('sessions/:id/messages/stream')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   async streamMessage(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SendMessageDto,

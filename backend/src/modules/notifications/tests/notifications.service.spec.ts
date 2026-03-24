@@ -26,6 +26,7 @@ import {
 import { NotificationsService } from '../notifications.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { PushService } from '../push.service.js';
+import { SmsService } from '../sms.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -64,6 +65,9 @@ const mockPrismaService: any = {
     upsert: jest.fn(),
     deleteMany: jest.fn(),
     findFirst: jest.fn(),
+  },
+  user: {
+    findUnique: jest.fn().mockResolvedValue(null),
   },
   $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
 };
@@ -124,6 +128,10 @@ const mockPushService: any = {
   sendToUser: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockSmsService: any = {
+  sendSms: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('NotificationsService', () => {
   let service: NotificationsService;
 
@@ -133,6 +141,7 @@ describe('NotificationsService', () => {
         NotificationsService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: PushService, useValue: mockPushService },
+        { provide: SmsService, useValue: mockSmsService },
       ],
     }).compile();
 

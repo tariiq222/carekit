@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import type { NotificationType, Prisma } from '@prisma/client';
@@ -8,7 +9,16 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { CreateNotificationDto } from './dto/create-notification.dto.js';
 import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
 import { PushService } from './push.service.js';
+import { SmsService } from './sms.service.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+
+/** Notification types that warrant an SMS to the user */
+const SMS_ELIGIBLE_TYPES: ReadonlySet<string> = new Set([
+  'reminder',
+  'booking_confirmed',
+  'booking_cancelled',
+  'cancellation_rejected',
+]);
 
 interface NotificationListQuery {
   page?: number;
@@ -17,9 +27,12 @@ interface NotificationListQuery {
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly pushService: PushService,
+    private readonly smsService: SmsService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -139,7 +152,28 @@ export class NotificationsService {
       })
       .catch(() => {}); // Never fail the main operation
 
+    // Fire-and-forget SMS for critical notification types
+    if (SMS_ELIGIBLE_TYPES.has(dto.type)) {
+      this.sendSmsToUser(dto.userId, dto.bodyAr || dto.bodyEn);
+    }
+
     return notification;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  SMS — fire-and-forget helper
+  // ═══════════════════════════════════════════════════════════════
+
+  private sendSmsToUser(userId: string, message: string): void {
+    this.prisma.user
+      .findUnique({ where: { id: userId }, select: { phone: true } })
+      .then((user) => {
+        if (!user?.phone) return;
+        return this.smsService.sendSms(user.phone, message);
+      })
+      .catch((err) => {
+        this.logger.error(`SMS send failed for user ${userId}`, err);
+      });
   }
 
   // ═══════════════════════════════════════════════════════════════

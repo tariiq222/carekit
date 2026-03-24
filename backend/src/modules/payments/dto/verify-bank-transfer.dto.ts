@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class VerifyBankTransferDto {
   @IsEnum(['approve', 'reject'])
@@ -6,5 +6,6 @@ export class VerifyBankTransferDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   adminNotes?: string;
 }

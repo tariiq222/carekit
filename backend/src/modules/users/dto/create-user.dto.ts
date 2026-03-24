@@ -28,16 +28,19 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   firstName!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   lastName!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phone must be a valid international phone number' })
   phone?: string;
 
@@ -47,6 +50,7 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   roleSlug!: string;
 }
 
@@ -58,16 +62,19 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   firstName?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   lastName?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phone must be a valid international phone number' })
   phone?: string;
 
@@ -79,9 +86,11 @@ export class UpdateUserDto {
 export class AssignRoleDto {
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   roleId?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   roleSlug?: string;
 }

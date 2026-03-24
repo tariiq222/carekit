@@ -56,6 +56,12 @@ export class ChatbotRagService {
    */
   async searchSimilar(query: string, limit = 5): Promise<KbSearchResult[]> {
     const embedding = await this.generateEmbedding(query);
+
+    if (!Array.isArray(embedding) || !embedding.every(v => typeof v === 'number' && isFinite(v))) {
+      this.logger.error('Invalid embedding received from API');
+      return [];
+    }
+
     const vectorStr = `[${embedding.join(',')}]`;
 
     // SAFETY: $queryRawUnsafe is required because Prisma cannot parameterize

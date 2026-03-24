@@ -5,6 +5,7 @@ import { ThrottlerModule, ThrottlerGuard, ThrottlerStorage } from '@nestjs/throt
 import { ThrottlerRedisStorage } from './common/services/throttler-redis-storage.js';
 import { THROTTLE_TTL, THROTTLE_LIMIT, DEFAULT_JOB_OPTIONS } from './config/constants.js';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { RedisModule } from './common/redis/redis.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { StorageModule } from './common/services/storage.module.js';
 import { AiServiceModule } from './common/services/ai.module.js';
@@ -39,6 +40,8 @@ import { ActivityLogModule } from './modules/activity-log/activity-log.module.js
 import { ProblemReportsModule } from './modules/problem-reports/problem-reports.module.js';
 import { TasksModule } from './modules/tasks/tasks.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
+import { MetricsModule } from './common/metrics/metrics.module.js';
+import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
 
 @Module({
   imports: [
@@ -46,6 +49,7 @@ import { QueueModule } from './common/queue/queue.module.js';
       isGlobal: true,
       validate,
     }),
+    RedisModule,
     BullModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         connection: {
@@ -88,6 +92,7 @@ import { QueueModule } from './common/queue/queue.module.js';
     AiModule,
     ZatcaModule,
     HealthModule,
+    MetricsModule,
     ProblemReportsModule,
     TasksModule,
   ],
@@ -113,6 +118,10 @@ import { QueueModule } from './common/queue/queue.module.js';
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
     },
   ],
 })

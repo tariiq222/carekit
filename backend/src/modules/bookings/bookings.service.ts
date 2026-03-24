@@ -76,25 +76,7 @@ export class BookingsService {
     const endTime = calculateEndTime(dto.startTime, duration);
     validateNoCrossMidnight(dto.startTime, duration);
 
-    await validateAvailability(this.prisma, dto.practitionerId, bookingDate, dto.startTime, endTime);
-    try {
-      await checkDoubleBooking(this.prisma, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, ps.bufferBefore, ps.bufferAfter);
-    } catch (err) {
-      if (err instanceof ConflictException) {
-        const settings = await this.bookingSettingsService.get();
-        if (settings.suggestAlternativesOnConflict) {
-          const alternatives = await this.queryService.getNextAvailableSlots(
-            dto.practitionerId, bookingDate, settings.suggestAlternativesCount,
-          );
-          throw new ConflictException({
-            statusCode: 409, message: 'Practitioner already has a booking at this time',
-            error: 'BOOKING_CONFLICT', alternatives,
-          });
-        }
-      }
-      throw err;
-    }
-
+    // Zoom must be created before the transaction (external API call)
     let zoomData: { zoomMeetingId?: string; zoomJoinUrl?: string; zoomHostUrl?: string } = {};
     if (dto.type === 'video_consultation') {
       const isoStart = `${dto.date}T${dto.startTime}:00`;
@@ -102,28 +84,51 @@ export class BookingsService {
       zoomData = { zoomMeetingId: meeting.meetingId, zoomJoinUrl: meeting.joinUrl, zoomHostUrl: meeting.hostUrl };
     }
 
-    // Fix 9: Walk-ins start as confirmed
+    // Serializable transaction: availability check + double-booking check + create
+    // This prevents race conditions where two concurrent requests both pass the
+    // conflict check and create bookings for the same slot.
     const isWalkIn = dto.type === 'walk_in';
-    const booking = await this.prisma.booking.create({
-      data: {
-        patientId: actualPatientId,
-        practitionerId: dto.practitionerId,
-        serviceId: dto.serviceId,
-        practitionerServiceId: ps.id,
-        type: dto.type,
-        date: bookingDate,
-        startTime: dto.startTime,
-        endTime,
-        status: isWalkIn ? 'confirmed' : 'pending',
-        confirmedAt: isWalkIn ? new Date() : undefined,
-        isWalkIn,
-        notes: dto.notes,
-        ...zoomData,
-      },
-      include: bookingInclude,
-    });
+    const booking = await this.prisma.$transaction(async (tx) => {
+      await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime);
+      try {
+        await checkDoubleBooking(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, ps.bufferBefore, ps.bufferAfter);
+      } catch (err) {
+        if (err instanceof ConflictException) {
+          const settings = await this.bookingSettingsService.get();
+          if (settings.suggestAlternativesOnConflict) {
+            const alternatives = await this.queryService.getNextAvailableSlots(
+              dto.practitionerId, bookingDate, settings.suggestAlternativesCount,
+            );
+            throw new ConflictException({
+              statusCode: 409, message: 'Practitioner already has a booking at this time',
+              error: 'BOOKING_CONFLICT', alternatives,
+            });
+          }
+        }
+        throw err;
+      }
 
-    // Fix 3: Create payment record
+      return tx.booking.create({
+        data: {
+          patientId: actualPatientId,
+          practitionerId: dto.practitionerId,
+          serviceId: dto.serviceId,
+          practitionerServiceId: ps.id,
+          type: dto.type,
+          date: bookingDate,
+          startTime: dto.startTime,
+          endTime,
+          status: isWalkIn ? 'confirmed' : 'pending',
+          confirmedAt: isWalkIn ? new Date() : undefined,
+          isWalkIn,
+          notes: dto.notes,
+          ...zoomData,
+        },
+        include: bookingInclude,
+      });
+    }, { isolationLevel: 'Serializable', timeout: 10000 });
+
+    // Side effects outside transaction (non-critical, fire-and-forget safe)
     await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, ps, practitioner, service);
 
     if (practitioner.userId) {
@@ -174,9 +179,7 @@ export class BookingsService {
     const duration = ps?.customDuration ?? service?.duration ?? 30;
     const newEndTime = calculateEndTime(newStartTime, duration);
 
-    await validateAvailability(this.prisma, booking.practitionerId, newDate, newStartTime, newEndTime);
-    await checkDoubleBooking(this.prisma, booking.practitionerId, newDate, newStartTime, newEndTime, id, ps?.bufferBefore ?? 0, ps?.bufferAfter ?? 0);
-
+    // Zoom must be created before the transaction (external API call)
     let zoomData: { zoomMeetingId?: string; zoomJoinUrl?: string; zoomHostUrl?: string } = {};
     if (booking.type === 'video_consultation') {
       const isoStart = `${newDate.toISOString().split('T')[0]}T${newStartTime}:00`;
@@ -185,7 +188,13 @@ export class BookingsService {
     }
     const oldZoomMeetingId = booking.zoomMeetingId;
 
+    // Serializable transaction: availability + conflict check + reschedule
+    const bufBefore = ps?.bufferBefore ?? 0;
+    const bufAfter = ps?.bufferAfter ?? 0;
     const result = await this.prisma.$transaction(async (tx) => {
+      await validateAvailability(tx, booking.practitionerId, newDate, newStartTime, newEndTime);
+      await checkDoubleBooking(tx, booking.practitionerId, newDate, newStartTime, newEndTime, id, bufBefore, bufAfter);
+
       const newBooking = await tx.booking.create({
         data: {
           patientId: booking.patientId, practitionerId: booking.practitionerId,
@@ -202,7 +211,7 @@ export class BookingsService {
       });
       await tx.payment.updateMany({ where: { bookingId: id }, data: { bookingId: newBooking.id } });
       return newBooking;
-    });
+    }, { isolationLevel: 'Serializable', timeout: 10000 });
 
     // Delete old Zoom meeting after successful transaction (fire-and-forget)
     if (booking.type === 'video_consultation' && oldZoomMeetingId) {

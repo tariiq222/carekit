@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
 
 export class CreateRecurringBookingDto {
   @IsUUID()
@@ -15,16 +15,19 @@ export class CreateRecurringBookingDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be in YYYY-MM-DD format' })
   date!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   @Matches(/^\d{2}:\d{2}$/, { message: 'startTime must be in HH:mm format' })
   startTime!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   notes?: string;
 
   @IsEnum(['weekly', 'biweekly'])

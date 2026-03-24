@@ -15,6 +15,7 @@ import { AuthResponse, TokenPair } from './types/auth-response.type.js';
 import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';
 import { EmailService } from '../email/email.service.js';
+import { AuthCacheService } from './auth-cache.service.js';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +26,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly otpService: OtpService,
     private readonly emailService: EmailService,
+    private readonly authCache: AuthCacheService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
@@ -159,6 +161,10 @@ export class AuthService {
       where: { id: userId },
       data: { passwordHash: newHash },
     });
+
+    // Invalidate all sessions: revoke refresh tokens + clear auth cache
+    await this.prisma.refreshToken.deleteMany({ where: { userId } });
+    await this.authCache.invalidate(userId);
   }
 
   async getUserProfile(userId: string): Promise<UserPayload> {

@@ -11,6 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -89,6 +90,7 @@ export class PaymentsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post('moyasar')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   async createMoyasarPayment(
     @CurrentUser() user: { id: string },
     @Body() dto: CreateMoyasarPaymentDto,
@@ -116,6 +118,7 @@ export class PaymentsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post('bank-transfer')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @UseInterceptors(FileInterceptor('receipt', {
     limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (_req: unknown, file: { mimetype: string }, cb: (err: Error | null, accept: boolean) => void) => {

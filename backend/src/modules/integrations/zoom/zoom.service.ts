@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { CacheService } from '../../../common/services/cache.service.js';
+import { resilientFetch } from '../../../common/helpers/resilient-fetch.helper.js';
 
 export interface ZoomMeeting {
   meetingId: string;
@@ -19,13 +21,17 @@ interface ZoomMeetingResponse {
   start_url: string;
 }
 
+const ZOOM_TOKEN_CACHE_KEY = 'zoom:access_token';
+const TOKEN_BUFFER_SECONDS = 60;
+
 @Injectable()
 export class ZoomService {
   private readonly logger = new Logger(ZoomService.name);
-  private accessToken: string | null = null;
-  private tokenExpiresAt = 0;
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly cache: CacheService,
+  ) {}
 
   async createMeeting(
     topic?: string,
@@ -44,7 +50,7 @@ export class ZoomService {
 
     const token = await this.getAccessToken();
 
-    const response = await fetch('https://api.zoom.us/v2/users/me/meetings', {
+    const response = await resilientFetch('https://api.zoom.us/v2/users/me/meetings', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -65,7 +71,7 @@ export class ZoomService {
           auto_recording: 'none',
         },
       }),
-    });
+    }, { circuit: 'zoom', timeoutMs: 10_000 });
 
     if (!response.ok) {
       const error = await response.text();
@@ -91,7 +97,7 @@ export class ZoomService {
 
     const token = await this.getAccessToken();
 
-    const response = await fetch(
+    const response = await resilientFetch(
       `https://api.zoom.us/v2/meetings/${meetingId}`,
       {
         method: 'DELETE',
@@ -99,6 +105,7 @@ export class ZoomService {
           Authorization: `Bearer ${token}`,
         },
       },
+      { circuit: 'zoom', timeoutMs: 10_000 },
     );
 
     if (!response.ok && response.status !== 404) {
@@ -117,9 +124,10 @@ export class ZoomService {
   }
 
   private async getAccessToken(): Promise<string> {
-    // Return cached token if still valid (with 60s buffer)
-    if (this.accessToken && Date.now() < this.tokenExpiresAt - 60_000) {
-      return this.accessToken;
+    // Return cached token from Redis if still valid
+    const cached = await this.cache.get<string>(ZOOM_TOKEN_CACHE_KEY);
+    if (cached) {
+      return cached;
     }
 
     const accountId = this.config.get<string>('ZOOM_ACCOUNT_ID');
@@ -130,7 +138,7 @@ export class ZoomService {
       'base64',
     );
 
-    const response = await fetch(
+    const response = await resilientFetch(
       `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${accountId}`,
       {
         method: 'POST',
@@ -139,6 +147,7 @@ export class ZoomService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       },
+      { circuit: 'zoom', timeoutMs: 10_000 },
     );
 
     if (!response.ok) {
@@ -150,9 +159,9 @@ export class ZoomService {
     }
 
     const data = (await response.json()) as ZoomTokenResponse;
-    this.accessToken = data.access_token;
-    this.tokenExpiresAt = Date.now() + data.expires_in * 1000;
+    const ttl = Math.max(data.expires_in - TOKEN_BUFFER_SECONDS, 1);
+    await this.cache.set(ZOOM_TOKEN_CACHE_KEY, data.access_token, ttl);
 
-    return this.accessToken;
+    return data.access_token;
   }
 }

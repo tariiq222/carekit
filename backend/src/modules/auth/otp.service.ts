@@ -10,6 +10,7 @@ import { SALT_ROUNDS } from '../../config/constants.js';
 import { OtpType } from './enums/otp-type.enum.js';
 import { UserPayload } from '../../common/types/user-payload.type.js';
 import { TokenService } from './token.service.js';
+import { AuthCacheService } from './auth-cache.service.js';
 
 const OTP_LENGTH = 6;
 const OTP_EXPIRY_MINUTES = 10;
@@ -19,6 +20,7 @@ export class OtpService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
+    private readonly authCache: AuthCacheService,
   ) {}
 
   async generateOtp(userId: string, type: OtpType | string): Promise<string> {
@@ -185,6 +187,10 @@ export class OtpService {
       where: { id: user.id },
       data: { passwordHash: newHash },
     });
+
+    // Invalidate all sessions: revoke refresh tokens + clear auth cache
+    await this.prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+    await this.authCache.invalidate(user.id);
   }
 
   private generateOtpCode(): string {

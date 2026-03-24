@@ -1,4 +1,4 @@
-import { IsOptional, IsNumberString, IsString, IsIn } from 'class-validator';
+import { IsOptional, IsNumberString, IsString, IsIn, MaxLength } from 'class-validator';
 
 export class SessionListQueryDto {
   @IsOptional()
@@ -11,6 +11,7 @@ export class SessionListQueryDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   search?: string;
 
   @IsOptional()
@@ -19,10 +20,12 @@ export class SessionListQueryDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   dateFrom?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   dateTo?: string;
 
   @IsOptional()

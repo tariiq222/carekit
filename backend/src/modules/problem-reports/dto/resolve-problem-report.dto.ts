@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export enum ResolveStatusValue {
   RESOLVED = 'resolved',
@@ -11,5 +11,6 @@ export class ResolveProblemReportDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   adminNotes?: string;
 }

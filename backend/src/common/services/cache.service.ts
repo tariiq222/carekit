@@ -1,19 +1,16 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Redis } from 'ioredis';
+import { REDIS_CLIENT } from '../redis/redis.constants.js';
 
 const SCAN_BATCH_SIZE = 100;
 
 @Injectable()
-export class CacheService implements OnModuleDestroy {
-  private readonly redis: Redis;
+export class CacheService {
   private readonly logger = new Logger(CacheService.name);
 
-  constructor(private readonly config: ConfigService) {
-    this.redis = new Redis(
-      this.config.get<string>('REDIS_URL') ?? 'redis://localhost:6379',
-    );
-  }
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+  ) {}
 
   async get<T>(key: string): Promise<T | null> {
     const raw = await this.redis.get(key);
@@ -55,9 +52,5 @@ export class CacheService implements OnModuleDestroy {
         await this.redis.del(...keys);
       }
     } while (cursor !== '0');
-  }
-
-  onModuleDestroy() {
-    this.redis.disconnect();
   }
 }

@@ -1,20 +1,16 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
+import { REDIS_CLIENT } from '../../common/redis/redis.constants.js';
 import type { UserPayload } from '../../common/types/user-payload.type.js';
 
 const AUTH_CACHE_PREFIX = 'auth:user:';
 const AUTH_CACHE_TTL = 900; // 15 minutes — matches access token lifetime
 
 @Injectable()
-export class AuthCacheService implements OnModuleDestroy {
-  private readonly redis: Redis;
-
-  constructor(private readonly config: ConfigService) {
-    this.redis = new Redis(
-      this.config.get<string>('REDIS_URL') ?? 'redis://localhost:6379',
-    );
-  }
+export class AuthCacheService {
+  constructor(
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+  ) {}
 
   async get(userId: string): Promise<UserPayload | null> {
     const cached = await this.redis.get(`${AUTH_CACHE_PREFIX}${userId}`);
@@ -37,9 +33,5 @@ export class AuthCacheService implements OnModuleDestroy {
 
   async invalidate(userId: string): Promise<void> {
     await this.redis.del(`${AUTH_CACHE_PREFIX}${userId}`);
-  }
-
-  onModuleDestroy() {
-    this.redis.disconnect();
   }
 }

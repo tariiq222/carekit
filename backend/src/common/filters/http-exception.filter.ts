@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
+import * as Sentry from '@sentry/nestjs';
 import {
   correlationStorage,
   CORRELATION_HEADER,
@@ -48,13 +49,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         );
       }
 
-      // Log server errors (5xx) for debugging
+      // Log server errors (5xx) for debugging + report to Sentry
       if (status >= 500) {
         const request = ctx.getRequest<{ url?: string; method?: string }>();
         this.logger.error(
           `Server error [${status}] ${request.method} ${request.url}: ${exception.message} [${CORRELATION_HEADER}=${correlationId}]`,
           exception.stack,
         );
+        Sentry.captureException(exception);
       }
 
       const exceptionResponse = exception.getResponse();
@@ -97,6 +99,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         `Unhandled exception: ${exception.message} [${CORRELATION_HEADER}=${correlationId}]`,
         exception.stack,
       );
+      Sentry.captureException(exception);
     } else {
       this.logger.error('Unknown exception type', String(exception));
     }

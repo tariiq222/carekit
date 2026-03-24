@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class RefundDto {
   @IsOptional()
@@ -8,5 +8,6 @@ export class RefundDto {
 
   @IsNotEmpty()
   @IsString()
+  @MaxLength(1000)
   reason!: string;
 }

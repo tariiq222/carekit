@@ -1,4 +1,8 @@
 export enum ProblemReportType {
+  WAIT_TIME = 'wait_time',
+  STAFF_BEHAVIOR = 'staff_behavior',
+  CLEANLINESS = 'cleanliness',
+  BILLING = 'billing',
   NO_CALL = 'no_call',
   LATE = 'late',
   TECHNICAL = 'technical',
@@ -7,6 +11,7 @@ export enum ProblemReportType {
 
 export enum ProblemReportStatus {
   OPEN = 'open',
-  REVIEWING = 'reviewing',
+  IN_REVIEW = 'in_review',
   RESOLVED = 'resolved',
+  DISMISSED = 'dismissed',
 }

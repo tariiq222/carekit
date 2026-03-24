@@ -1,9 +1,10 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString, MaxLength, ValidateNested } from 'class-validator';
 
 export class ConfigItemDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   key: string;
 
   @IsNotEmpty()
@@ -11,6 +12,7 @@ export class ConfigItemDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   category: string;
 }
 

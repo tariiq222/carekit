@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min, ValidateIf } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min, ValidateIf } from 'class-validator';
 
 export class CancelApproveDto {
   @IsEnum(['full', 'partial', 'none'])
@@ -12,5 +12,6 @@ export class CancelApproveDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   adminNotes?: string;
 }

@@ -1,13 +1,15 @@
-import { IsOptional, IsString, Matches } from 'class-validator';
+import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 export class RescheduleBookingDto {
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be in YYYY-MM-DD format' })
   date?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Matches(/^\d{2}:\d{2}$/, { message: 'startTime must be in HH:mm format' })
   startTime?: string;
 }

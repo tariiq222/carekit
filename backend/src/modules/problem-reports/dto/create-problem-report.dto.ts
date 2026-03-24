@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export enum ProblemReportTypeValue {
   WAIT_TIME = 'wait_time',
@@ -20,5 +20,6 @@ export class CreateProblemReportDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(2000)
   description!: string;
 }

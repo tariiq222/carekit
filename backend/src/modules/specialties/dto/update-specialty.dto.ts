@@ -1,27 +1,32 @@
-import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateSpecialtyDto {
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   nameEn?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   nameAr?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   descriptionEn?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   descriptionAr?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   iconUrl?: string;
 
   @IsOptional()

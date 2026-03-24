@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class LoginDto {
@@ -9,5 +9,6 @@ export class LoginDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(128)
   password!: string;
 }
