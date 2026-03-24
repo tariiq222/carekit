@@ -69,8 +69,8 @@ export class AuthController {
     // Always return success for security (don't reveal if email exists)
     const user = await this.authService.findUserByEmail(dto.email);
     if (user) {
-      await this.authService.generateOtp(user.id, OtpType.LOGIN);
-      // In production, would send email here
+      const code = await this.authService.generateOtp(user.id, OtpType.LOGIN);
+      await this.authService.sendOtpEmail(dto.email, code, 'login');
     }
     return {
       success: true,
@@ -134,8 +134,8 @@ export class AuthController {
     // Always return success for security
     const user = await this.authService.findUserByEmail(dto.email);
     if (user) {
-      await this.authService.generateOtp(user.id, OtpType.RESET_PASSWORD);
-      // In production, would send email here
+      const code = await this.authService.generateOtp(user.id, OtpType.RESET_PASSWORD);
+      await this.authService.sendOtpEmail(dto.email, code, 'reset_password');
     }
     return {
       success: true,
@@ -176,8 +176,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('email/verify/send')
   @HttpCode(HttpStatus.OK)
-  async sendEmailVerification(@CurrentUser('id') userId: string) {
-    await this.authService.generateOtp(userId, OtpType.VERIFY_EMAIL);
+  async sendEmailVerification(
+    @CurrentUser('id') userId: string,
+    @CurrentUser('email') email: string,
+  ) {
+    const code = await this.authService.generateOtp(userId, OtpType.VERIFY_EMAIL);
+    await this.authService.sendOtpEmail(email, code, 'verify_email');
     return {
       success: true,
       message: 'Verification OTP sent',

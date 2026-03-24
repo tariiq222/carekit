@@ -30,7 +30,9 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AiModule } from './modules/ai/ai.module.js';
 import { ZatcaModule } from './modules/zatca/zatca.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { EmailModule } from './modules/email/email.module.js';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module.js';
+import { TasksModule } from './modules/tasks/tasks.module.js';
 
 @Module({
   imports: [
@@ -56,6 +58,7 @@ import { ActivityLogModule } from './modules/activity-log/activity-log.module.js
     }),
     // Redis storage is provided below for ThrottlerModule
     DatabaseModule,
+    EmailModule,
     ActivityLogModule,
     AuthModule,
     RolesModule,
@@ -76,6 +79,7 @@ import { ActivityLogModule } from './modules/activity-log/activity-log.module.js
     AiModule,
     ZatcaModule,
     HealthModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [

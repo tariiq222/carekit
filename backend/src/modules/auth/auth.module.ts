@@ -7,9 +7,11 @@ import { AuthController } from './auth.controller.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';
+import { EmailModule } from '../email/email.module.js';
 
 @Module({
   imports: [
+    EmailModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

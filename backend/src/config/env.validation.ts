@@ -48,6 +48,22 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
+  MAIL_PORT?: string;
+
+  @IsString()
+  @IsOptional()
+  MAIL_USER?: string;
+
+  @IsString()
+  @IsOptional()
+  MAIL_PASSWORD?: string;
+
+  @IsString()
+  @IsOptional()
+  MAIL_FROM?: string;
+
+  @IsString()
+  @IsOptional()
   OPENROUTER_API_KEY?: string;
 
   @IsString()
@@ -77,6 +93,18 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   MINIO_USE_SSL?: string;
+
+  @IsString()
+  @IsOptional()
+  FIREBASE_PROJECT_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  FIREBASE_CLIENT_EMAIL?: string;
+
+  @IsString()
+  @IsOptional()
+  FIREBASE_PRIVATE_KEY?: string;
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {

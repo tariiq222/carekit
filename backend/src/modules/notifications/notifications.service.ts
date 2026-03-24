@@ -7,6 +7,7 @@ import type { NotificationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CreateNotificationDto } from './dto/create-notification.dto.js';
 import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
+import { PushService } from './push.service.js';
 
 interface NotificationListQuery {
   page?: number;
@@ -15,7 +16,10 @@ interface NotificationListQuery {
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pushService: PushService,
+  ) {}
 
   // ═══════════════════════════════════════════════════════════════
   //  FIND ALL — paginated, user-scoped
@@ -119,7 +123,7 @@ export class NotificationsService {
   // ═══════════════════════════════════════════════════════════════
 
   async createNotification(dto: CreateNotificationDto) {
-    return this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         userId: dto.userId,
         titleAr: dto.titleAr,
@@ -130,6 +134,22 @@ export class NotificationsService {
         data: dto.data as Prisma.InputJsonValue | undefined,
       },
     });
+
+    // Fire-and-forget push notification
+    this.pushService
+      .sendToUser(dto.userId, {
+        titleAr: dto.titleAr,
+        titleEn: dto.titleEn,
+        bodyAr: dto.bodyAr,
+        bodyEn: dto.bodyEn,
+        data: {
+          type: dto.type,
+          ...(dto.data ? { payload: JSON.stringify(dto.data) } : {}),
+        },
+      })
+      .catch(() => {}); // Never fail the main operation
+
+    return notification;
   }
 
   // ═══════════════════════════════════════════════════════════════

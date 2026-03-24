@@ -1,8 +1,6 @@
 import {
   ConflictException,
-  Inject,
   Injectable,
-  Optional,
   BadRequestException,
   ForbiddenException,
   Logger,
@@ -16,10 +14,7 @@ import { UserPayload } from './types/user-payload.type.js';
 import { AuthResponse, TokenPair } from './types/auth-response.type.js';
 import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';
-
-interface MailQueue {
-  add(name: string, data: Record<string, unknown>): Promise<unknown>;
-}
+import { EmailService } from '../email/email.service.js';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +24,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
     private readonly otpService: OtpService,
-    @Optional() @Inject('BullQueue_email') private readonly mailQueue?: MailQueue,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
@@ -74,12 +69,7 @@ export class AuthService {
     const tokens = await this.tokenService.generateTokens(user.id, user.email);
     await this.tokenService.storeRefreshToken(user.id, tokens.refreshToken);
 
-    if (this.mailQueue) {
-      await this.mailQueue.add('verification', {
-        email: user.email,
-        firstName: user.firstName,
-      });
-    }
+    await this.emailService.sendWelcome(user.email, user.firstName);
 
     const roleInfo = patientRole as { id: string; slug: string; name?: string } | null;
     const userPayload: UserPayload = {
@@ -198,6 +188,16 @@ export class AuthService {
 
   async verifyEmail(userId: string, code: string): Promise<void> {
     return this.otpService.verifyEmail(userId, code);
+  }
+
+  // --- Delegated: Email ---
+
+  async sendOtpEmail(
+    email: string,
+    code: string,
+    type: 'login' | 'reset_password' | 'verify_email',
+  ): Promise<void> {
+    await this.emailService.sendOtp(email, code, type);
   }
 
   // --- Delegated: Token ---
