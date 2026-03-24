@@ -99,6 +99,7 @@ const mockPrismaService: any = {
 // Mock ZoomService for video consultation link generation
 const mockZoomService = {
   createMeeting: jest.fn(),
+  deleteMeeting: jest.fn(),
 };
 
 // Mock BookingCancellationService (cancellation logic delegated from BookingsService)

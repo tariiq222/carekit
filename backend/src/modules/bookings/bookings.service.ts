@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
@@ -21,6 +22,8 @@ import { bookingInclude } from './booking.constants.js';
 
 @Injectable()
 export class BookingsService {
+  private readonly logger = new Logger(BookingsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject('ZoomService') private readonly zoomService: ZoomService,
@@ -73,7 +76,8 @@ export class BookingsService {
 
     let zoomData: { zoomMeetingId?: string; zoomJoinUrl?: string; zoomHostUrl?: string } = {};
     if (dto.type === 'video_consultation') {
-      const meeting = await this.zoomService.createMeeting();
+      const isoStart = `${dto.date}T${dto.startTime}:00`;
+      const meeting = await this.zoomService.createMeeting('CareKit Video Consultation', isoStart, duration);
       zoomData = { zoomMeetingId: meeting.meetingId, zoomJoinUrl: meeting.joinUrl, zoomHostUrl: meeting.hostUrl };
     }
 
@@ -160,8 +164,18 @@ export class BookingsService {
     await validateAvailability(this.prisma, booking.practitionerId, newDate, newStartTime, newEndTime);
     await this.checkDoubleBooking(booking.practitionerId, newDate, newStartTime, newEndTime, id, ps?.bufferBefore ?? 0, ps?.bufferAfter ?? 0);
 
+    // Create new Zoom meeting for video consultations instead of cloning the old one
+    let zoomData: { zoomMeetingId?: string; zoomJoinUrl?: string; zoomHostUrl?: string } = {};
+    if (booking.type === 'video_consultation') {
+      const isoStart = `${newDate.toISOString().split('T')[0]}T${newStartTime}:00`;
+      const meeting = await this.zoomService.createMeeting('CareKit Video Consultation', isoStart, duration);
+      zoomData = { zoomMeetingId: meeting.meetingId, zoomJoinUrl: meeting.joinUrl, zoomHostUrl: meeting.hostUrl };
+    }
+
+    const oldZoomMeetingId = booking.zoomMeetingId;
+
     // Create new booking linked to original, cancel the old one
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const newBooking = await tx.booking.create({
         data: {
           patientId: booking.patientId,
@@ -174,9 +188,7 @@ export class BookingsService {
           endTime: newEndTime,
           status: booking.status,
           notes: booking.notes,
-          zoomMeetingId: booking.zoomMeetingId,
-          zoomJoinUrl: booking.zoomJoinUrl,
-          zoomHostUrl: booking.zoomHostUrl,
+          ...zoomData,
           confirmedAt: booking.confirmedAt,
           rescheduledFromId: id,
         },
@@ -201,6 +213,15 @@ export class BookingsService {
 
       return newBooking;
     });
+
+    // Delete old Zoom meeting after successful transaction (fire-and-forget)
+    if (booking.type === 'video_consultation' && oldZoomMeetingId) {
+      this.zoomService.deleteMeeting(oldZoomMeetingId).catch((err) =>
+        this.logger.warn(`Failed to delete old Zoom meeting: ${err.message}`),
+      );
+    }
+
+    return result;
   }
 
   async confirm(id: string) {

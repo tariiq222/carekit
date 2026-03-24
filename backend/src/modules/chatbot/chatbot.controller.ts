@@ -12,9 +12,11 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -22,6 +24,7 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { ChatbotService, type HandleMessageResult } from './chatbot.service.js';
+import { ChatbotStreamService } from './chatbot-stream.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
 import { ChatbotRagService } from './chatbot-rag.service.js';
 import { ChatbotAnalyticsService, type SessionStats } from './chatbot-analytics.service.js';
@@ -41,6 +44,7 @@ const ADMIN_ROLE_SLUGS = ['super_admin', 'receptionist', 'accountant'];
 export class ChatbotController {
   constructor(
     private readonly chatbotService: ChatbotService,
+    private readonly streamService: ChatbotStreamService,
     private readonly configService: ChatbotConfigService,
     private readonly ragService: ChatbotRagService,
     private readonly analyticsService: ChatbotAnalyticsService,
@@ -91,6 +95,45 @@ export class ChatbotController {
     @CurrentUser() user: { id: string },
   ): Promise<HandleMessageResult> {
     return this.chatbotService.handleMessage(id, user.id, dto.content);
+  }
+
+  /**
+   * SSE streaming variant of sendMessage.
+   * Returns a text/event-stream response with typed events:
+   * text, tool, action, done, error.
+   */
+  @Post('sessions/:id/messages/stream')
+  async streamMessage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: SendMessageDto,
+    @CurrentUser() user: { id: string },
+    @Res() res: Response,
+  ) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const observable = this.streamService.handleMessageStream(
+      id,
+      user.id,
+      dto.content,
+    );
+
+    observable.subscribe({
+      next: (event: MessageEvent) => {
+        res.write(`data: ${typeof event.data === 'string' ? event.data : JSON.stringify(event.data)}\n\n`);
+      },
+      complete: () => {
+        res.write('data: [DONE]\n\n');
+        res.end();
+      },
+      error: (err: Error) => {
+        const payload = JSON.stringify({ event: 'error', message: err.message });
+        res.write(`data: ${payload}\n\n`);
+        res.end();
+      },
+    });
   }
 
   @Post('sessions/:id/end')

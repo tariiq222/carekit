@@ -105,6 +105,18 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   FIREBASE_PRIVATE_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  ZOOM_ACCOUNT_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  ZOOM_CLIENT_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  ZOOM_CLIENT_SECRET?: string;
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {

@@ -2,7 +2,9 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
@@ -10,14 +12,18 @@ import { CancelApproveDto } from './dto/cancel-approve.dto.js';
 import { CancelRejectDto } from './dto/cancel-reject.dto.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
+import { ZoomService } from './zoom.service.js';
 import { bookingInclude } from './booking.constants.js';
 
 @Injectable()
 export class BookingCancellationService {
+  private readonly logger = new Logger(BookingCancellationService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly activityLogService: ActivityLogService,
+    @Inject('ZoomService') private readonly zoomService: ZoomService,
   ) {}
 
   async requestCancellation(id: string, patientId: string, reason?: string) {
@@ -114,8 +120,8 @@ export class BookingCancellationService {
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const cancelledBooking = await tx.booking.update({
+    const cancelledBooking = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.booking.update({
         where: { id },
         data: { status: 'cancelled', cancelledAt: new Date(), adminNotes: dto.adminNotes },
         include: bookingInclude,
@@ -136,9 +142,9 @@ export class BookingCancellationService {
         });
       }
 
-      if (cancelledBooking.patientId) {
+      if (result.patientId) {
         await this.notificationsService.createNotification({
-          userId: cancelledBooking.patientId,
+          userId: result.patientId,
           titleAr: 'تم إلغاء الموعد',
           titleEn: 'Booking Cancelled',
           bodyAr: 'تم الموافقة على طلب إلغاء موعدك',
@@ -149,14 +155,14 @@ export class BookingCancellationService {
       }
 
       // Notify practitioner about cancellation
-      if (cancelledBooking.practitioner?.userId) {
-        const d = cancelledBooking.date.toISOString().split('T')[0];
+      if (result.practitioner?.userId) {
+        const d = result.date.toISOString().split('T')[0];
         await this.notificationsService.createNotification({
-          userId: cancelledBooking.practitioner.userId,
+          userId: result.practitioner.userId,
           titleAr: 'تم إلغاء موعد',
           titleEn: 'Booking Cancelled',
-          bodyAr: `تم إلغاء الموعد بتاريخ ${d} الساعة ${cancelledBooking.startTime}`,
-          bodyEn: `Booking on ${d} at ${cancelledBooking.startTime} has been cancelled`,
+          bodyAr: `تم إلغاء الموعد بتاريخ ${d} الساعة ${result.startTime}`,
+          bodyEn: `Booking on ${d} at ${result.startTime} has been cancelled`,
           type: 'booking_cancelled',
           data: { bookingId: id },
         });
@@ -169,8 +175,17 @@ export class BookingCancellationService {
         description: `Booking cancellation approved. Refund type: ${dto.refundType}`,
       });
 
-      return cancelledBooking;
+      return result;
     });
+
+    // Delete Zoom meeting after successful cancellation (fire-and-forget)
+    if (booking.type === 'video_consultation' && booking.zoomMeetingId) {
+      this.zoomService.deleteMeeting(booking.zoomMeetingId).catch((err) =>
+        this.logger.warn(`Failed to delete Zoom meeting on cancellation: ${err.message}`),
+      );
+    }
+
+    return cancelledBooking;
   }
 
   async rejectCancellation(id: string, dto: CancelRejectDto) {
