@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 
@@ -12,8 +11,7 @@ export class ReminderService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  // Run every hour at minute 0 — check for bookings 24h away
-  @Cron('0 0 * * * *')
+  /** Check for bookings ~24h away and notify both patient and practitioner */
   async sendDayBeforeReminders() {
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -38,41 +36,49 @@ export class ReminderService {
       },
     });
 
-    for (const booking of bookings) {
-      const dateStr = booking.date.toISOString().split('T')[0];
+    await Promise.all(
+      bookings.flatMap((booking) => {
+        const dateStr = booking.date.toISOString().split('T')[0];
+        const notifications: Promise<unknown>[] = [];
 
-      // Notify patient
-      await this.notificationsService.createNotification({
-        userId: booking.patientId,
-        titleAr: 'تذكير بموعدك غداً',
-        titleEn: 'Appointment Reminder — Tomorrow',
-        bodyAr: `لديك موعد غداً ${dateStr} الساعة ${booking.startTime}`,
-        bodyEn: `You have an appointment tomorrow ${dateStr} at ${booking.startTime}`,
-        type: 'booking_reminder',
-        data: { bookingId: booking.id },
-      });
+        if (booking.patientId) {
+          notifications.push(
+            this.notificationsService.createNotification({
+              userId: booking.patientId,
+              titleAr: 'تذكير بموعدك غداً',
+              titleEn: 'Appointment Reminder — Tomorrow',
+              bodyAr: `لديك موعد غداً ${dateStr} الساعة ${booking.startTime}`,
+              bodyEn: `You have an appointment tomorrow ${dateStr} at ${booking.startTime}`,
+              type: 'booking_reminder',
+              data: { bookingId: booking.id },
+            }),
+          );
+        }
 
-      // Notify practitioner
-      if (booking.practitioner?.userId) {
-        await this.notificationsService.createNotification({
-          userId: booking.practitioner.userId,
-          titleAr: 'تذكير بموعد غداً',
-          titleEn: 'Appointment Reminder — Tomorrow',
-          bodyAr: `لديك موعد غداً ${dateStr} الساعة ${booking.startTime}`,
-          bodyEn: `You have an appointment tomorrow ${dateStr} at ${booking.startTime}`,
-          type: 'booking_reminder',
-          data: { bookingId: booking.id },
-        });
-      }
-    }
+        if (booking.practitioner?.userId) {
+          notifications.push(
+            this.notificationsService.createNotification({
+              userId: booking.practitioner.userId,
+              titleAr: 'تذكير بموعد غداً',
+              titleEn: 'Appointment Reminder — Tomorrow',
+              bodyAr: `لديك موعد غداً ${dateStr} الساعة ${booking.startTime}`,
+              bodyEn: `You have an appointment tomorrow ${dateStr} at ${booking.startTime}`,
+              type: 'booking_reminder',
+              data: { bookingId: booking.id },
+            }),
+          );
+        }
+
+        return notifications;
+      }),
+    );
 
     if (bookings.length > 0) {
       this.logger.log(`Sent ${bookings.length} day-before reminders`);
     }
   }
 
-  // Run every 15 minutes — check for bookings 1h away
-  @Cron('0 */15 * * * *')
+  /** Check for bookings ~1h away and notify the patient */
   async sendHourBeforeReminders() {
     const now = new Date();
     const oneHour = new Date(now.getTime() + 60 * 60 * 1000);
@@ -92,17 +98,21 @@ export class ReminderService {
       },
     });
 
-    for (const booking of bookings) {
-      await this.notificationsService.createNotification({
-        userId: booking.patientId,
-        titleAr: 'موعدك بعد ساعة',
-        titleEn: 'Appointment in 1 Hour',
-        bodyAr: `تذكير: موعدك بعد ساعة الساعة ${booking.startTime}`,
-        bodyEn: `Reminder: Your appointment is in 1 hour at ${booking.startTime}`,
-        type: 'booking_reminder',
-        data: { bookingId: booking.id },
-      });
-    }
+    await Promise.all(
+      bookings
+        .filter((booking) => booking.patientId)
+        .map((booking) =>
+          this.notificationsService.createNotification({
+            userId: booking.patientId!,
+            titleAr: 'موعدك بعد ساعة',
+            titleEn: 'Appointment in 1 Hour',
+            bodyAr: `تذكير: موعدك بعد ساعة الساعة ${booking.startTime}`,
+            bodyEn: `Reminder: Your appointment is in 1 hour at ${booking.startTime}`,
+            type: 'booking_reminder',
+            data: { bookingId: booking.id },
+          }),
+        ),
+    );
 
     if (bookings.length > 0) {
       this.logger.log(`Sent ${bookings.length} hour-before reminders`);

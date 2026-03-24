@@ -13,7 +13,7 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
     BookingsService,
     BookingQueryService,
     BookingCancellationService,
-    { provide: 'ZoomService', useClass: ZoomService },
+    ZoomService,
   ],
   exports: [BookingsService],
 })

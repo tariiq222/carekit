@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -26,7 +25,7 @@ export class BookingsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    @Inject('ZoomService') private readonly zoomService: ZoomService,
+    private readonly zoomService: ZoomService,
     private readonly cancellationService: BookingCancellationService,
     private readonly queryService: BookingQueryService,
     private readonly notificationsService: NotificationsService,

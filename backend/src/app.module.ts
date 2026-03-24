@@ -7,6 +7,7 @@ import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { DatabaseModule } from './database/database.module.js';
+import { StorageModule } from './common/services/storage.module.js';
 import { validate } from './config/env.validation.js';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter.js';
 import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor.js';
@@ -59,6 +60,7 @@ import { TasksModule } from './modules/tasks/tasks.module.js';
     }),
     // Redis storage is provided below for ThrottlerModule
     DatabaseModule,
+    StorageModule,
     EmailModule,
     ActivityLogModule,
     AuthModule,

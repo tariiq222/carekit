@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
-  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -23,7 +22,7 @@ export class BookingCancellationService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly activityLogService: ActivityLogService,
-    @Inject('ZoomService') private readonly zoomService: ZoomService,
+    private readonly zoomService: ZoomService,
   ) {}
 
   async requestCancellation(id: string, patientId: string, reason?: string) {
@@ -66,8 +65,8 @@ export class BookingCancellationService {
       select: { userId: true },
     });
     const d = booking.date.toISOString().split('T')[0];
-    for (const { userId } of adminRoles) {
-      await this.notificationsService.createNotification({
+    await Promise.all(adminRoles.map(({ userId }) =>
+      this.notificationsService.createNotification({
         userId,
         titleAr: 'طلب إلغاء موعد جديد',
         titleEn: 'New Cancellation Request',
@@ -75,8 +74,8 @@ export class BookingCancellationService {
         bodyEn: `A patient requested cancellation for booking on ${d}`,
         type: 'booking_cancellation_requested',
         data: { bookingId: id },
-      });
-    }
+      }),
+    ));
 
     return updatedBooking;
   }

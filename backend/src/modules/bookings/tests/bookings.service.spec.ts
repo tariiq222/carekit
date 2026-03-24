@@ -28,6 +28,7 @@ import {
 import { BookingsService } from '../bookings.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { BookingCancellationService } from '../booking-cancellation.service.js';
+import { ZoomService } from '../zoom.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -201,7 +202,7 @@ describe('BookingsService', () => {
       providers: [
         BookingsService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: 'ZoomService', useValue: mockZoomService },
+        { provide: ZoomService, useValue: mockZoomService },
         { provide: BookingCancellationService, useValue: mockCancellationService },
       ],
     }).compile();

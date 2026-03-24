@@ -9,7 +9,6 @@ import { ChatbotAnalyticsService } from './chatbot-analytics.service.js';
 import { ChatbotFileService } from './chatbot-file.service.js';
 import { ChatbotStreamService } from './chatbot-stream.service.js';
 import { ChatbotStreamLoopService } from './chatbot-stream-loop.service.js';
-import { MinioService } from '../../common/services/minio.service.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { ServicesModule } from '../services/services.module.js';
 import { PractitionersModule } from '../practitioners/practitioners.module.js';
@@ -27,7 +26,6 @@ import { PractitionersModule } from '../practitioners/practitioners.module.js';
     ChatbotFileService,
     ChatbotStreamService,
     ChatbotStreamLoopService,
-    MinioService,
   ],
   exports: [ChatbotService, ChatbotConfigService],
 })

@@ -76,22 +76,26 @@ export class BankTransferService {
 
     const newStatus = dto.approved ? 'approved' : 'rejected';
 
-    const updatedReceipt = await this.prisma.bankTransferReceipt.update({
-      where: { id: receiptId },
-      data: {
-        aiVerificationStatus: newStatus,
-        adminNotes: dto.adminNotes,
-        reviewedById: reviewerId,
-        reviewedAt: new Date(),
-      },
-    });
-
-    if (dto.approved) {
-      await this.prisma.payment.update({
-        where: { id: receipt.paymentId },
-        data: { status: 'paid' },
+    const updatedReceipt = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.bankTransferReceipt.update({
+        where: { id: receiptId },
+        data: {
+          aiVerificationStatus: newStatus,
+          adminNotes: dto.adminNotes,
+          reviewedById: reviewerId,
+          reviewedAt: new Date(),
+        },
       });
-    }
+
+      if (dto.approved) {
+        await tx.payment.update({
+          where: { id: receipt.paymentId },
+          data: { status: 'paid' },
+        });
+      }
+
+      return updated;
+    });
 
     return updatedReceipt;
   }

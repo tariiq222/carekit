@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -131,7 +132,7 @@ export class UsersService {
       });
       const isSuperAdmin = requesterRoles.some((ur) => ur.role.slug === 'super_admin');
       if (!isSuperAdmin) {
-        throw new BadRequestException({
+        throw new ForbiddenException({
           statusCode: 403,
           message: 'Only super admins can assign the super_admin role',
           error: 'PRIVILEGE_ESCALATION',
@@ -141,39 +142,35 @@ export class UsersService {
 
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        passwordHash,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        phone: dto.phone,
-        gender: dto.gender,
-      },
-    });
-
-    // Assign role separately
-    await this.prisma.userRole.create({
-      data: {
-        userId: user.id,
-        roleId: role.id,
-      },
-    });
-
-    // If role is practitioner, create a default practitioner record
-    if (dto.roleSlug === 'practitioner') {
-      const defaultSpecialty = await this.prisma.specialty.findFirst({
-        where: { isActive: true },
+    const user = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email: normalizedEmail,
+          passwordHash,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          phone: dto.phone,
+          gender: dto.gender,
+        },
       });
-      if (defaultSpecialty) {
-        await this.prisma.practitioner.create({
-          data: {
-            userId: user.id,
-            specialtyId: defaultSpecialty.id,
-          },
+
+      await tx.userRole.create({
+        data: { userId: created.id, roleId: role.id },
+      });
+
+      if (dto.roleSlug === 'practitioner') {
+        const defaultSpecialty = await tx.specialty.findFirst({
+          where: { isActive: true },
         });
+        if (defaultSpecialty) {
+          await tx.practitioner.create({
+            data: { userId: created.id, specialtyId: defaultSpecialty.id },
+          });
+        }
       }
-    }
+
+      return created;
+    });
 
     await this.activityLogService.log({
       userId: requesterId,
