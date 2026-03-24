@@ -135,6 +135,14 @@ export class BookingsService {
   }
 
   async reschedule(id: string, dto: RescheduleBookingDto) {
+    if (!dto.date && !dto.startTime) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'At least one of date or startTime must be provided',
+        error: 'VALIDATION_ERROR',
+      });
+    }
+
     const booking = await this.prisma.booking.findFirst({
       where: { id, deletedAt: null },
     });

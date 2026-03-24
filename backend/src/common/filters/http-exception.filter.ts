@@ -43,6 +43,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         );
       }
 
+      // Log server errors (5xx) for debugging
+      if (status >= 500) {
+        const request = ctx.getRequest<{ url?: string; method?: string }>();
+        this.logger.error(
+          `Server error [${status}] ${request.method} ${request.url}: ${exception.message}`,
+          exception.stack,
+        );
+      }
+
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === 'string') {

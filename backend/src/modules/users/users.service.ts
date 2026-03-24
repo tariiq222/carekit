@@ -28,7 +28,8 @@ export class UsersService {
   }) {
     const page = params?.page ?? 1;
     const perPage = Math.min(params?.perPage ?? 20, 100);
-    const sortBy = params?.sortBy ?? 'createdAt';
+    const allowedSortFields = ['createdAt', 'updatedAt', 'firstName', 'lastName', 'email', 'isActive'];
+    const sortBy = allowedSortFields.includes(params?.sortBy ?? '') ? params!.sortBy! : 'createdAt';
     const sortOrder = params?.sortOrder ?? 'desc';
 
     const where: Record<string, unknown> = { deletedAt: null };
@@ -100,7 +101,7 @@ export class UsersService {
     return this.sanitizeUser(user);
   }
 
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto, requesterId?: string) {
     const normalizedEmail = dto.email.toLowerCase();
 
     // Check duplicate email
@@ -122,9 +123,25 @@ export class UsersService {
     if (!role) {
       throw new NotFoundException({
         statusCode: 404,
-        message: `Role '${dto.roleSlug}' not found`,
+        message: 'Role not found',
         error: 'ROLE_NOT_FOUND',
       });
+    }
+
+    // Prevent privilege escalation: only super_admin can assign super_admin
+    if (role.slug === 'super_admin' && requesterId) {
+      const requesterRoles = await this.prisma.userRole.findMany({
+        where: { userId: requesterId },
+        include: { role: true },
+      });
+      const isSuperAdmin = requesterRoles.some((ur) => ur.role.slug === 'super_admin');
+      if (!isSuperAdmin) {
+        throw new BadRequestException({
+          statusCode: 403,
+          message: 'Only super admins can assign the super_admin role',
+          error: 'PRIVILEGE_ESCALATION',
+        });
+      }
     }
 
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);

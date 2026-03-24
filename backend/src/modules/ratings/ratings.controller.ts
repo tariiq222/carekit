@@ -7,15 +7,17 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { RatingsService } from './ratings.service.js';
 import { CreateRatingDto } from './dto/create-rating.dto.js';
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Ratings')
+@ApiBearerAuth()
 @Controller('ratings')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class RatingsController {
@@ -40,7 +42,7 @@ export class RatingsController {
   @CheckPermissions({ module: 'ratings', action: 'view' })
   @ApiOperation({ summary: 'Get all ratings for a practitioner' })
   findByPractitioner(
-    @Param('practitionerId') practitionerId: string,
+    @Param('practitionerId', uuidPipe) practitionerId: string,
     @Query('page') page?: string,
     @Query('perPage') perPage?: string,
   ) {
@@ -53,7 +55,7 @@ export class RatingsController {
   @Get('booking/:bookingId')
   @CheckPermissions({ module: 'ratings', action: 'view' })
   @ApiOperation({ summary: 'Get rating for a specific booking' })
-  findByBooking(@Param('bookingId') bookingId: string) {
+  findByBooking(@Param('bookingId', uuidPipe) bookingId: string) {
     return this.ratingsService.findByBooking(bookingId);
   }
 }

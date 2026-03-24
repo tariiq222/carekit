@@ -5,13 +5,15 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
 import { PatientsService } from './patients.service.js';
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Patients')
+@ApiBearerAuth()
 @Controller('patients')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class PatientsController {
@@ -38,14 +40,14 @@ export class PatientsController {
   @Get(':id')
   @CheckPermissions({ module: 'patients', action: 'view' })
   @ApiOperation({ summary: 'Get patient by ID with recent bookings' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', uuidPipe) id: string) {
     return this.patientsService.findOne(id);
   }
 
   @Get(':id/stats')
   @CheckPermissions({ module: 'patients', action: 'view' })
   @ApiOperation({ summary: 'Get patient booking and payment statistics' })
-  getStats(@Param('id') id: string) {
+  getStats(@Param('id', uuidPipe) id: string) {
     return this.patientsService.getPatientStats(id);
   }
 }

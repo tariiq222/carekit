@@ -19,13 +19,17 @@ import { CheckPermissions } from '../auth/decorators/check-permissions.decorator
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { PractitionersService } from './practitioners.service.js';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto.js';
 import { SetAvailabilityDto } from './dto/set-availability.dto.js';
 import { CreateVacationDto } from './dto/create-vacation.dto.js';
 import { AssignPractitionerServiceDto } from './dto/assign-practitioner-service.dto.js';
 import { UpdatePractitionerServiceDto } from './dto/update-practitioner-service.dto.js';
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
+@ApiTags('Practitioners')
+@ApiBearerAuth()
 @Controller('practitioners')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class PractitionersController {
@@ -57,7 +61,7 @@ export class PractitionersController {
 
   @Get(':id')
   @Public()
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', uuidPipe) id: string) {
     return this.practitionersService.findOne(id);
   }
 
@@ -70,7 +74,7 @@ export class PractitionersController {
   @Patch(':id')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async update(
-    @Param('id') id: string,
+    @Param('id', uuidPipe) id: string,
     @Body() dto: UpdatePractitionerDto,
     @CurrentUser() user: { id: string },
   ) {
@@ -79,7 +83,7 @@ export class PractitionersController {
 
   @Delete(':id')
   @CheckPermissions({ module: 'practitioners', action: 'delete' })
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id', uuidPipe) id: string) {
     await this.practitionersService.delete(id);
     return { success: true };
   }
@@ -88,7 +92,7 @@ export class PractitionersController {
 
   @Get(':id/availability')
   @Public()
-  async getAvailability(@Param('id') id: string) {
+  async getAvailability(@Param('id', uuidPipe) id: string) {
     const schedule = await this.practitionersService.getAvailability(id);
     return { schedule };
   }
@@ -97,7 +101,7 @@ export class PractitionersController {
   @HttpCode(HttpStatus.OK)
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async setAvailability(
-    @Param('id') id: string,
+    @Param('id', uuidPipe) id: string,
     @Body() dto: SetAvailabilityDto,
     @CurrentUser() user: { id: string },
   ) {
@@ -108,7 +112,7 @@ export class PractitionersController {
   @Get(':id/slots')
   @Public()
   async getSlots(
-    @Param('id') id: string,
+    @Param('id', uuidPipe) id: string,
     @Query('date') date?: string,
     @Query('duration') duration?: string,
   ) {
@@ -134,14 +138,14 @@ export class PractitionersController {
 
   @Get(':id/vacations')
   @CheckPermissions({ module: 'practitioners', action: 'view' })
-  async getVacations(@Param('id') id: string) {
+  async getVacations(@Param('id', uuidPipe) id: string) {
     return this.practitionersService.getVacations(id);
   }
 
   @Post(':id/vacations')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async createVacation(
-    @Param('id') id: string,
+    @Param('id', uuidPipe) id: string,
     @Body() dto: CreateVacationDto,
     @CurrentUser() user: { id: string },
   ) {
@@ -151,8 +155,8 @@ export class PractitionersController {
   @Delete(':id/vacations/:vacationId')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async deleteVacation(
-    @Param('id') id: string,
-    @Param('vacationId') vacationId: string,
+    @Param('id', uuidPipe) id: string,
+    @Param('vacationId', uuidPipe) vacationId: string,
     @CurrentUser() user: { id: string },
   ) {
     await this.practitionersService.deleteVacation(id, vacationId, user.id);
@@ -163,14 +167,14 @@ export class PractitionersController {
 
   @Get(':id/services')
   @Public()
-  async listServices(@Param('id') id: string) {
+  async listServices(@Param('id', uuidPipe) id: string) {
     return this.practitionersService.listPractitionerServices(id);
   }
 
   @Post(':id/services')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async assignService(
-    @Param('id') id: string,
+    @Param('id', uuidPipe) id: string,
     @Body() dto: AssignPractitionerServiceDto,
     @CurrentUser() user: { id: string },
   ) {
@@ -180,8 +184,8 @@ export class PractitionersController {
   @Patch(':id/services/:serviceId')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async updateService(
-    @Param('id') id: string,
-    @Param('serviceId') serviceId: string,
+    @Param('id', uuidPipe) id: string,
+    @Param('serviceId', uuidPipe) serviceId: string,
     @Body() dto: UpdatePractitionerServiceDto,
     @CurrentUser() user: { id: string },
   ) {
@@ -191,8 +195,8 @@ export class PractitionersController {
   @Delete(':id/services/:serviceId')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async removeService(
-    @Param('id') id: string,
-    @Param('serviceId') serviceId: string,
+    @Param('id', uuidPipe) id: string,
+    @Param('serviceId', uuidPipe) serviceId: string,
     @CurrentUser() user: { id: string },
   ) {
     return this.practitionersService.removePractitionerService(id, serviceId, user.id);
@@ -203,7 +207,7 @@ export class PractitionersController {
   @Get(':id/ratings')
   @Public()
   async getRatings(
-    @Param('id') id: string,
+    @Param('id', uuidPipe) id: string,
     @Query('page') page?: string,
     @Query('perPage') perPage?: string,
   ) {

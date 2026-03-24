@@ -4,7 +4,10 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
 import { MinioService } from '../../common/services/minio.service.js';
@@ -23,6 +26,9 @@ export class BankTransferService {
     private readonly prisma: PrismaService,
     private readonly minioService: MinioService,
     private readonly invoicesService: InvoiceCreatorService,
+    @Optional()
+    @InjectQueue('receipt-verification')
+    private readonly receiptQueue?: Queue,
   ) {}
 
   async uploadReceipt(paymentId: string, dto: UploadReceiptDto) {
@@ -153,6 +159,16 @@ export class BankTransferService {
 
       return { payment, receipt };
     });
+
+    if (this.receiptQueue) {
+      await this.receiptQueue.add('verify', {
+        receiptId: result.receipt.id,
+        receiptUrl,
+      });
+      this.logger.log(
+        `Enqueued receipt verification job for receipt ${result.receipt.id}`,
+      );
+    }
 
     return result;
   }

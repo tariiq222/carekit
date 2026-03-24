@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
 import { Public } from '../auth/decorators/public.decorator.js';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ServicesService } from './services.service.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
@@ -21,6 +22,8 @@ import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { ServiceListQueryDto } from './dto/service-list-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
+@ApiTags('Services')
+@ApiBearerAuth()
 @Controller('services')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ServicesController {

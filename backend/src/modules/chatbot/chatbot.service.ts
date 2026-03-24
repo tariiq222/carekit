@@ -69,7 +69,7 @@ export class ChatbotService {
       },
     });
 
-    if (!session) {
+    if (!session || session.userId !== userId) {
       throw new NotFoundException({ statusCode: 404, message: 'Session not found', error: 'NOT_FOUND' });
     }
 

@@ -548,7 +548,7 @@ describe('PractitionersService', () => {
         deletedAt: new Date(),
       });
 
-      await service.softDelete(mockPractitioner.id);
+      await service.delete(mockPractitioner.id);
 
       expect(mockPrismaService.practitioner.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -563,7 +563,7 @@ describe('PractitionersService', () => {
     it('should throw NotFoundException if practitioner not found', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(null);
 
-      await expect(service.softDelete('non-existent-id')).rejects.toThrow(
+      await expect(service.delete('non-existent-id')).rejects.toThrow(
         NotFoundException,
       );
     });

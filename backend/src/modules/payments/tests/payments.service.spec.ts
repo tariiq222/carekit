@@ -786,7 +786,7 @@ describe('PaymentsService', () => {
         dto,
       );
       expect(result).toBeDefined();
-      expect(result.status).toBe('paid');
+      expect(result!.status).toBe('paid');
     });
 
     it('should delegate reject to BankTransferService.verifyBankTransfer', async () => {

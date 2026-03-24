@@ -6,12 +6,15 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
 import { ReportsService } from './reports.service.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
+@ApiTags('Reports')
+@ApiBearerAuth()
 @Controller('reports')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ReportsController {

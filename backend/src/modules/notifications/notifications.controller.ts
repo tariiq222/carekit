@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
@@ -19,6 +20,8 @@ import { UnregisterFcmTokenDto } from './dto/unregister-fcm-token.dto.js';
 import { NotificationListQueryDto } from './dto/notification-list-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
+@ApiTags('Notifications')
+@ApiBearerAuth()
 @Controller('notifications')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class NotificationsController {

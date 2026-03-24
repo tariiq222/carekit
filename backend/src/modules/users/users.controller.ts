@@ -11,6 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service.js';
 import { CreateUserDto, UpdateUserDto, AssignRoleDto } from './dto/create-user.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -19,6 +20,8 @@ import { CheckPermissions } from '../auth/decorators/check-permissions.decorator
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
+@ApiTags('Users')
+@ApiBearerAuth()
 @Controller('users')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class UsersController {
@@ -54,8 +57,8 @@ export class UsersController {
 
   @Post()
   @CheckPermissions({ module: 'users', action: 'create' })
-  async create(@Body() dto: CreateUserDto) {
-    const data = await this.usersService.create(dto);
+  async create(@Body() dto: CreateUserDto, @CurrentUser() user: { id: string }) {
+    const data = await this.usersService.create(dto, user.id);
     return {
       success: true,
       data,

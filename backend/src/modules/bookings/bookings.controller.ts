@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
@@ -22,6 +23,8 @@ import { CancelRejectDto } from './dto/cancel-reject.dto.js';
 import { BookingListQueryDto } from './dto/booking-list-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
+@ApiTags('Bookings')
+@ApiBearerAuth()
 @Controller('bookings')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class BookingsController {

@@ -1,12 +1,14 @@
 import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
 import { ZatcaService } from './zatca.service.js';
 import { ZatcaSandboxService } from './services/zatca-sandbox.service.js';
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('ZATCA')
+@ApiBearerAuth()
 @Controller('zatca')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ZatcaController {
@@ -33,7 +35,7 @@ export class ZatcaController {
   @CheckPermissions({ module: 'invoices', action: 'edit' })
   @ApiOperation({ summary: 'Report an invoice to ZATCA sandbox for compliance testing' })
   @ApiParam({ name: 'invoiceId', description: 'Invoice UUID' })
-  reportToSandbox(@Param('invoiceId') invoiceId: string) {
+  reportToSandbox(@Param('invoiceId', uuidPipe) invoiceId: string) {
     return this.sandboxService.reportInvoiceToSandbox(invoiceId);
   }
 }

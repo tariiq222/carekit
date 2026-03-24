@@ -7,12 +7,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RolesService } from './roles.service.js';
 import { CreateRoleDto, AssignPermissionDto } from './dto/create-role.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
+import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
+@ApiTags('Roles')
+@ApiBearerAuth()
 @Controller('roles')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class RolesController {
@@ -62,14 +66,14 @@ export class RolesController {
 
   @Delete(':id')
   @CheckPermissions({ module: 'roles', action: 'delete' })
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id', uuidPipe) id: string) {
     return this.rolesService.delete(id);
   }
 
   @Post(':id/permissions')
   @CheckPermissions({ module: 'roles', action: 'edit' })
   async assignPermission(
-    @Param('id') id: string,
+    @Param('id', uuidPipe) id: string,
     @Body() dto: AssignPermissionDto,
   ) {
     return this.rolesService.assignPermission(id, dto.module, dto.action);
@@ -78,7 +82,7 @@ export class RolesController {
   @Delete(':id/permissions')
   @CheckPermissions({ module: 'roles', action: 'edit' })
   async removePermission(
-    @Param('id') id: string,
+    @Param('id', uuidPipe) id: string,
     @Body() dto: AssignPermissionDto,
   ) {
     return this.rolesService.removePermission(id, dto.module, dto.action);

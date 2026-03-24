@@ -12,6 +12,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
@@ -29,6 +30,8 @@ import { UpdateChatbotConfigDto } from './dto/update-chatbot-config.dto.js';
 
 const ADMIN_ROLE_SLUGS = ['super_admin', 'receptionist', 'accountant'];
 
+@ApiTags('Chatbot')
+@ApiBearerAuth()
 @Controller('chatbot')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ChatbotController {

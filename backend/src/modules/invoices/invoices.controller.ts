@@ -10,7 +10,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { type Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
@@ -23,6 +23,7 @@ import { InvoiceFilterDto } from './dto/invoice-filter.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Invoices')
+@ApiBearerAuth()
 @Controller('invoices')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class InvoicesController {

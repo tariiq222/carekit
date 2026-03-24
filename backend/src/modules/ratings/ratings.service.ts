@@ -65,9 +65,9 @@ export class RatingsService {
     const skip = (page - 1) * perPage;
 
     const [total, ratings] = await Promise.all([
-      this.prisma.rating.count({ where: { practitionerId } }),
+      this.prisma.rating.count({ where: { practitionerId, deletedAt: null } }),
       this.prisma.rating.findMany({
-        where: { practitionerId },
+        where: { practitionerId, deletedAt: null },
         include: {
           patient: { select: { firstName: true, lastName: true } },
         },
@@ -99,7 +99,7 @@ export class RatingsService {
 
   async updatePractitionerRating(practitionerId: string) {
     const stats = await this.prisma.rating.aggregate({
-      where: { practitionerId },
+      where: { practitionerId, deletedAt: null },
       _avg: { stars: true },
       _count: { id: true },
     });

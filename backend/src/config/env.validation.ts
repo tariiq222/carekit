@@ -64,6 +64,14 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
+  ALLOWED_ORIGINS?: string;
+
+  @IsString()
+  @IsOptional()
+  NODE_ENV?: string;
+
+  @IsString()
+  @IsOptional()
   MINIO_PORT?: string;
 
   @IsString()

@@ -30,9 +30,15 @@ async function bootstrap(): Promise<void> {
   // production and e2e test contexts.
 
   // CORS — restrict to allowed origins
-  const allowedOrigins = process.env['ALLOWED_ORIGINS']?.split(',') ?? [
+  const isProduction = process.env['NODE_ENV'] === 'production';
+  const originsEnv = process.env['ALLOWED_ORIGINS'];
+  if (isProduction && !originsEnv) {
+    throw new Error('ALLOWED_ORIGINS must be set in production');
+  }
+  const allowedOrigins = originsEnv?.split(',').map((o) => o.trim()) ?? [
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://localhost:3007',
   ];
   app.enableCors({
     origin: allowedOrigins,
@@ -41,7 +47,6 @@ async function bootstrap(): Promise<void> {
   });
 
   // Swagger — disabled in production
-  const isProduction = process.env['NODE_ENV'] === 'production';
   if (!isProduction) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('CareKit API')
@@ -53,6 +58,9 @@ async function bootstrap(): Promise<void> {
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('api/docs', app, document);
   }
+
+  // Graceful shutdown — clean up connections on SIGTERM/SIGINT
+  app.enableShutdownHooks();
 
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port);

@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
@@ -31,6 +32,8 @@ import { BankTransferUploadDto } from './dto/bank-transfer-upload.dto.js';
 import { VerifyBankTransferDto } from './dto/verify-bank-transfer.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
+@ApiTags('Payments')
+@ApiBearerAuth()
 @Controller('payments')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class PaymentsController {
@@ -112,7 +115,21 @@ export class PaymentsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post('bank-transfer')
-  @UseInterceptors(FileInterceptor('receipt'))
+  @UseInterceptors(FileInterceptor('receipt', {
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (_req: unknown, file: { mimetype: string }, cb: (err: Error | null, accept: boolean) => void) => {
+      const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+      if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new BadRequestException({
+          statusCode: 400,
+          message: 'Only JPEG, PNG, WebP, and PDF files are allowed',
+          error: 'INVALID_FILE_TYPE',
+        }), false);
+      }
+    },
+  }))
   async uploadBankTransferReceipt(
     @CurrentUser() user: { id: string },
     @Body() dto: BankTransferUploadDto,

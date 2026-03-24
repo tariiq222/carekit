@@ -31,7 +31,7 @@ export class PaymentsService {
     const perPage = query.perPage ?? 20;
     const skip = (page - 1) * perPage;
 
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { deletedAt: null };
 
     if (query.status) where.status = query.status;
     if (query.method) where.method = query.method;
@@ -61,7 +61,7 @@ export class PaymentsService {
 
   async findOne(id: string) {
     const payment = await this.prisma.payment.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       include: paymentInclude,
     });
     if (!payment) {
@@ -172,6 +172,7 @@ export class PaymentsService {
 
     const where: Record<string, unknown> = {
       booking: { patientId: userId },
+      deletedAt: null,
     };
 
     if (query.status) where.status = query.status;

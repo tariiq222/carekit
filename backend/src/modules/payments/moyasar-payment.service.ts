@@ -115,6 +115,15 @@ export class MoyasarPaymentService {
     dto: MoyasarWebhookDto,
   ) {
     const secret = this.config.get<string>('MOYASAR_WEBHOOK_SECRET', '');
+    if (!secret) {
+      this.logger.error('MOYASAR_WEBHOOK_SECRET is not configured');
+      throw new UnauthorizedException({
+        statusCode: 401,
+        message: 'Webhook verification not configured',
+        error: 'WEBHOOK_CONFIG_ERROR',
+      });
+    }
+
     const expectedSig = crypto
       .createHmac('sha256', secret)
       .update(rawBody)
