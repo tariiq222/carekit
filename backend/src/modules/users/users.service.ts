@@ -9,6 +9,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto.js';
 import { UserRolesService } from './user-roles.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
+import { sanitizeUser, SanitizableUser, userRolesInclude } from './users.helpers.js';
 import { SALT_ROUNDS } from '../../config/constants.js';
 
 @Injectable()
@@ -57,11 +58,7 @@ export class UsersService {
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where,
-        include: {
-          userRoles: {
-            include: { role: true },
-          },
-        },
+        include: userRolesInclude,
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * perPage,
         take: perPage,
@@ -72,7 +69,7 @@ export class UsersService {
     const totalPages = Math.ceil(total / perPage);
 
     return {
-      items: users.map((u) => this.sanitizeUser(u)),
+      items: users.map((u) => sanitizeUser(u)),
       meta: {
         total,
         page,
@@ -87,11 +84,7 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      include: {
-        userRoles: {
-          include: { role: true },
-        },
-      },
+      include: userRolesInclude,
     });
     if (!user || user.deletedAt) {
       throw new NotFoundException({
@@ -100,7 +93,7 @@ export class UsersService {
         error: 'USER_NOT_FOUND',
       });
     }
-    return this.sanitizeUser(user);
+    return sanitizeUser(user);
   }
 
   async create(dto: CreateUserDto, requesterId?: string) {
@@ -191,10 +184,10 @@ export class UsersService {
     });
 
     return {
-      ...this.sanitizeUser({
+      ...sanitizeUser({
         ...user,
         userRoles: [{ role }],
-      } as Parameters<typeof this.sanitizeUser>[0]),
+      } as SanitizableUser),
     };
   }
 
@@ -231,14 +224,10 @@ export class UsersService {
         phone: dto.phone,
         gender: dto.gender,
       },
-      include: {
-        userRoles: {
-          include: { role: true },
-        },
-      },
+      include: userRolesInclude,
     });
 
-    return this.sanitizeUser(updated);
+    return sanitizeUser(updated);
   }
 
   async softDelete(id: string, requesterId: string) {
@@ -286,14 +275,10 @@ export class UsersService {
     const updated = await this.prisma.user.update({
       where: { id },
       data: { isActive: true },
-      include: {
-        userRoles: {
-          include: { role: true },
-        },
-      },
+      include: userRolesInclude,
     });
 
-    return this.sanitizeUser(updated);
+    return sanitizeUser(updated);
   }
 
   async deactivate(id: string, requesterId: string) {
@@ -317,14 +302,10 @@ export class UsersService {
     const updated = await this.prisma.user.update({
       where: { id },
       data: { isActive: false },
-      include: {
-        userRoles: {
-          include: { role: true },
-        },
-      },
+      include: userRolesInclude,
     });
 
-    return this.sanitizeUser(updated);
+    return sanitizeUser(updated);
   }
 
   async assignRole(userId: string, roleId?: string, roleSlug?: string) {
@@ -357,42 +338,5 @@ export class UsersService {
 
   async removeRole(userId: string, roleId: string) {
     return this.userRolesService.removeRole(userId, roleId);
-  }
-
-  private sanitizeUser(user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    phone?: string | null;
-    gender?: string | null;
-    isActive: boolean;
-    emailVerified?: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
-    userRoles?: Array<{
-      role: {
-        id?: string;
-        name?: string;
-        slug: string;
-      };
-    }>;
-    passwordHash?: string | null;
-    deletedAt?: Date | null;
-    avatarUrl?: string | null;
-  }) {
-    return {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      phone: user.phone ?? null,
-      gender: user.gender ?? null,
-      isActive: user.isActive,
-      emailVerified: user.emailVerified ?? false,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      roles: (user.userRoles ?? []).map((ur) => ur.role.slug),
-    };
   }
 }
