@@ -28,7 +28,9 @@ import {
 import { BookingsService } from '../bookings.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { BookingCancellationService } from '../booking-cancellation.service.js';
+import { BookingQueryService } from '../booking-query.service.js';
 import { ZoomService } from '../zoom.service.js';
+import { NotificationsService } from '../../notifications/notifications.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -81,6 +83,7 @@ const mockPrismaService: any = {
     findMany: jest.fn(),
     update: jest.fn(),
     count: jest.fn(),
+    groupBy: jest.fn(),
   },
   practitioner: {
     findFirst: jest.fn(),
@@ -88,11 +91,19 @@ const mockPrismaService: any = {
   service: {
     findFirst: jest.fn(),
   },
+  practitionerService: {
+    findUnique: jest.fn(),
+  },
   practitionerAvailability: {
     findMany: jest.fn(),
   },
   practitionerVacation: {
     findMany: jest.fn(),
+    findFirst: jest.fn(),
+  },
+  payment: {
+    findFirst: jest.fn(),
+    updateMany: jest.fn(),
   },
   $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
 };
@@ -108,6 +119,20 @@ const mockCancellationService = {
   requestCancellation: jest.fn(),
   approveCancellation: jest.fn(),
   rejectCancellation: jest.fn(),
+};
+
+// Mock BookingQueryService
+const mockQueryService = {
+  findAll: jest.fn(),
+  findOne: jest.fn(),
+  findMyBookings: jest.fn(),
+  findTodayBookings: jest.fn(),
+  getBookingStats: jest.fn(),
+};
+
+// Mock NotificationsService
+const mockNotificationsService = {
+  createNotification: jest.fn().mockResolvedValue(undefined),
 };
 
 // ---------------------------------------------------------------------------
@@ -190,6 +215,17 @@ const mockZoomMeeting = {
   hostUrl: 'https://zoom.us/s/123456789',
 };
 
+const mockPractitionerService = {
+  id: 'ps-uuid-1',
+  practitionerId: mockPractitioner.id,
+  serviceId: mockService.id,
+  isActive: true,
+  availableTypes: ['clinic_visit', 'phone_consultation', 'video_consultation'],
+  customDuration: null,
+  bufferBefore: 0,
+  bufferAfter: 0,
+};
+
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
@@ -204,6 +240,8 @@ describe('BookingsService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: ZoomService, useValue: mockZoomService },
         { provide: BookingCancellationService, useValue: mockCancellationService },
+        { provide: BookingQueryService, useValue: mockQueryService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
@@ -229,6 +267,10 @@ describe('BookingsService', () => {
     it('should create a clinic_visit booking', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([]); // no conflicts
       mockPrismaService.booking.create.mockResolvedValue(mockBooking);
 
@@ -253,6 +295,10 @@ describe('BookingsService', () => {
     it('should auto-calculate endTime from service duration', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService); // 30 min
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
       mockPrismaService.booking.create.mockResolvedValue(mockBooking);
 
@@ -271,6 +317,10 @@ describe('BookingsService', () => {
     it('should generate Zoom links for video_consultation', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
       mockZoomService.createMeeting.mockResolvedValue(mockZoomMeeting);
       mockPrismaService.booking.create.mockResolvedValue(mockVideoBooking);
@@ -289,6 +339,10 @@ describe('BookingsService', () => {
     it('should NOT generate Zoom links for clinic_visit', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
       mockPrismaService.booking.create.mockResolvedValue(mockBooking);
 
@@ -300,6 +354,10 @@ describe('BookingsService', () => {
     it('should NOT generate Zoom links for phone_consultation', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
       mockPrismaService.booking.create.mockResolvedValue({
         ...mockBooking,
@@ -317,6 +375,10 @@ describe('BookingsService', () => {
     it('should throw ConflictException for double-booking', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([mockBooking]); // Existing booking at same time
 
       await expect(
@@ -344,6 +406,7 @@ describe('BookingsService', () => {
     it('should throw BadRequestException for past dates', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
 
       await expect(
         service.create(mockPatientId, {
@@ -356,6 +419,10 @@ describe('BookingsService', () => {
     it('should set initial status to pending', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
       mockPrismaService.booking.create.mockResolvedValue(mockBooking);
 
@@ -371,8 +438,10 @@ describe('BookingsService', () => {
 
   describe('findAll', () => {
     it('should return paginated bookings with default page=1, perPage=20', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([mockBooking]);
-      mockPrismaService.booking.count.mockResolvedValue(1);
+      mockQueryService.findAll.mockResolvedValue({
+        items: [mockBooking],
+        meta: { page: 1, perPage: 20, total: 1, totalPages: 1 },
+      });
 
       const result = await service.findAll({});
 
@@ -383,135 +452,105 @@ describe('BookingsService', () => {
         perPage: 20,
         total: 1,
       });
+      expect(mockQueryService.findAll).toHaveBeenCalledWith({});
     });
 
     it('should apply pagination', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.count.mockResolvedValue(50);
+      mockQueryService.findAll.mockResolvedValue({
+        items: [],
+        meta: { page: 3, perPage: 10, total: 50, totalPages: 5 },
+      });
 
       const result = await service.findAll({ page: 3, perPage: 10 });
 
       expect(result.meta.page).toBe(3);
       expect(result.meta.totalPages).toBe(5);
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 20,
-          take: 10,
-        }),
-      );
+      expect(mockQueryService.findAll).toHaveBeenCalledWith({ page: 3, perPage: 10 });
     });
 
     it('should filter by status', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([mockBooking]);
-      mockPrismaService.booking.count.mockResolvedValue(1);
+      mockQueryService.findAll.mockResolvedValue({
+        items: [mockBooking],
+        meta: { page: 1, perPage: 20, total: 1, totalPages: 1 },
+      });
 
       await service.findAll({ status: 'pending' });
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            status: 'pending',
-          }),
-        }),
-      );
+      expect(mockQueryService.findAll).toHaveBeenCalledWith({ status: 'pending' });
     });
 
     it('should filter by type', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.count.mockResolvedValue(0);
+      mockQueryService.findAll.mockResolvedValue({
+        items: [],
+        meta: { page: 1, perPage: 20, total: 0, totalPages: 0 },
+      });
 
       await service.findAll({ type: 'video_consultation' });
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            type: 'video_consultation',
-          }),
-        }),
-      );
+      expect(mockQueryService.findAll).toHaveBeenCalledWith({ type: 'video_consultation' });
     });
 
     it('should filter by practitionerId', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.count.mockResolvedValue(0);
+      mockQueryService.findAll.mockResolvedValue({
+        items: [],
+        meta: { page: 1, perPage: 20, total: 0, totalPages: 0 },
+      });
 
       await service.findAll({ practitionerId: mockPractitioner.id });
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            practitionerId: mockPractitioner.id,
-          }),
-        }),
-      );
+      expect(mockQueryService.findAll).toHaveBeenCalledWith({ practitionerId: mockPractitioner.id });
     });
 
     it('should filter by patientId', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.count.mockResolvedValue(0);
+      mockQueryService.findAll.mockResolvedValue({
+        items: [],
+        meta: { page: 1, perPage: 20, total: 0, totalPages: 0 },
+      });
 
       await service.findAll({ patientId: mockPatientId });
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            patientId: mockPatientId,
-          }),
-        }),
-      );
+      expect(mockQueryService.findAll).toHaveBeenCalledWith({ patientId: mockPatientId });
     });
 
     it('should filter by date range', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.count.mockResolvedValue(0);
+      mockQueryService.findAll.mockResolvedValue({
+        items: [],
+        meta: { page: 1, perPage: 20, total: 0, totalPages: 0 },
+      });
 
       await service.findAll({
         dateFrom: '2026-06-01',
         dateTo: '2026-06-30',
       });
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            date: expect.objectContaining({
-              gte: expect.any(Date),
-              lte: expect.any(Date),
-            }),
-          }),
-        }),
-      );
+      expect(mockQueryService.findAll).toHaveBeenCalledWith({
+        dateFrom: '2026-06-01',
+        dateTo: '2026-06-30',
+      });
     });
 
     it('should exclude soft-deleted bookings', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.count.mockResolvedValue(0);
+      mockQueryService.findAll.mockResolvedValue({
+        items: [],
+        meta: { page: 1, perPage: 20, total: 0, totalPages: 0 },
+      });
 
       await service.findAll({});
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            deletedAt: null,
-          }),
-        }),
-      );
+      // Soft-delete filtering is handled by queryService
+      expect(mockQueryService.findAll).toHaveBeenCalledWith({});
     });
 
     it('should include patient, practitioner, and service relations', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([mockBooking]);
-      mockPrismaService.booking.count.mockResolvedValue(1);
+      mockQueryService.findAll.mockResolvedValue({
+        items: [mockBooking],
+        meta: { page: 1, perPage: 20, total: 1, totalPages: 1 },
+      });
 
       await service.findAll({});
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          include: expect.objectContaining({
-            patient: true,
-            practitioner: expect.anything(),
-            service: true,
-          }),
-        }),
-      );
+      // Relations are handled by queryService
+      expect(mockQueryService.findAll).toHaveBeenCalledWith({});
     });
   });
 
@@ -521,7 +560,7 @@ describe('BookingsService', () => {
 
   describe('findOne', () => {
     it('should return a booking with all relations', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
+      mockQueryService.findOne.mockResolvedValue(mockBooking);
 
       const result = await service.findOne(mockBooking.id);
 
@@ -530,10 +569,13 @@ describe('BookingsService', () => {
       expect(result.patient).toBeDefined();
       expect(result.practitioner).toBeDefined();
       expect(result.service).toBeDefined();
+      expect(mockQueryService.findOne).toHaveBeenCalledWith(mockBooking.id);
     });
 
     it('should throw NotFoundException for non-existent booking', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(null);
+      mockQueryService.findOne.mockRejectedValue(
+        new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' }),
+      );
 
       await expect(service.findOne('non-existent-id')).rejects.toThrow(
         NotFoundException,
@@ -546,16 +588,26 @@ describe('BookingsService', () => {
   // ─────────────────────────────────────────────────────────────
 
   describe('reschedule', () => {
-    it('should update date and time', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
-      mockPrismaService.service.findFirst.mockResolvedValue(mockService);
-      mockPrismaService.booking.findMany.mockResolvedValue([]); // no conflicts
-      mockPrismaService.booking.update.mockResolvedValue({
+    it('should create a new booking with updated date and time', async () => {
+      mockPrismaService.booking.findFirst.mockResolvedValue({
         ...mockBooking,
+        practitionerServiceId: mockPractitionerService.id,
+      });
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.service.findFirst.mockResolvedValue(mockService);
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 2, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
+      mockPrismaService.booking.findMany.mockResolvedValue([]); // no conflicts
+      mockPrismaService.booking.create.mockResolvedValue({
+        ...mockBooking,
+        id: 'new-booking-id',
         date: new Date('2026-06-03'),
         startTime: '10:00',
         endTime: '10:30',
       });
+      mockPrismaService.booking.update.mockResolvedValue({});
+      mockPrismaService.payment.updateMany.mockResolvedValue({ count: 0 });
 
       const result = await service.reschedule(mockBooking.id, {
         date: '2026-06-03',
@@ -563,12 +615,19 @@ describe('BookingsService', () => {
       });
 
       expect(result.startTime).toBe('10:00');
-      expect(mockPrismaService.booking.update).toHaveBeenCalled();
+      expect(mockPrismaService.booking.create).toHaveBeenCalled();
     });
 
     it('should throw ConflictException if new time conflicts', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
+      mockPrismaService.booking.findFirst.mockResolvedValue({
+        ...mockBooking,
+        practitionerServiceId: mockPractitionerService.id,
+      });
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([
         { ...mockBooking, id: 'other-booking', startTime: '10:00', endTime: '10:30' },
       ]);
@@ -590,25 +649,29 @@ describe('BookingsService', () => {
     });
 
     it('should recalculate endTime when startTime changes', async () => {
-      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
-      mockPrismaService.service.findFirst.mockResolvedValue(mockService); // 30 min
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.update.mockResolvedValue({
+      mockPrismaService.booking.findFirst.mockResolvedValue({
         ...mockBooking,
+        practitionerServiceId: mockPractitionerService.id,
+      });
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.service.findFirst.mockResolvedValue(mockService); // 30 min
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
+      mockPrismaService.booking.findMany.mockResolvedValue([]);
+      mockPrismaService.booking.create.mockResolvedValue({
+        ...mockBooking,
+        id: 'new-booking-id',
         startTime: '15:00',
         endTime: '15:30',
       });
+      mockPrismaService.booking.update.mockResolvedValue({});
+      mockPrismaService.payment.updateMany.mockResolvedValue({ count: 0 });
 
-      await service.reschedule(mockBooking.id, { startTime: '15:00' });
+      const result = await service.reschedule(mockBooking.id, { startTime: '15:00' });
 
-      expect(mockPrismaService.booking.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            startTime: '15:00',
-            endTime: '15:30',
-          }),
-        }),
-      );
+      expect(result.startTime).toBe('15:00');
+      expect(result.endTime).toBe('15:30');
     });
   });
 
@@ -619,6 +682,7 @@ describe('BookingsService', () => {
   describe('confirm', () => {
     it('should transition from pending to confirmed', async () => {
       mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking); // status: pending
+      mockPrismaService.payment.findFirst.mockResolvedValue({ id: 'pay-1', bookingId: mockBooking.id, status: 'paid' });
       mockPrismaService.booking.update.mockResolvedValue({
         ...mockBooking,
         status: 'confirmed',
@@ -953,24 +1017,22 @@ describe('BookingsService', () => {
 
   describe('findMyBookings', () => {
     it('should return only bookings belonging to the patient', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([mockBooking]);
-      mockPrismaService.booking.count.mockResolvedValue(1);
+      mockQueryService.findMyBookings.mockResolvedValue({
+        items: [mockBooking],
+        meta: { page: 1, perPage: 20, total: 1, totalPages: 1 },
+      });
 
       const result = await service.findMyBookings(mockPatientId);
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            patientId: mockPatientId,
-            deletedAt: null,
-          }),
-        }),
-      );
+      expect(mockQueryService.findMyBookings).toHaveBeenCalledWith(mockPatientId);
+      expect(result.items).toHaveLength(1);
     });
 
     it('should return empty list for patient with no bookings', async () => {
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.count.mockResolvedValue(0);
+      mockQueryService.findMyBookings.mockResolvedValue({
+        items: [],
+        meta: { page: 1, perPage: 20, total: 0, totalPages: 0 },
+      });
 
       const result = await service.findMyBookings('new-patient-id');
 
@@ -984,47 +1046,31 @@ describe('BookingsService', () => {
   // ─────────────────────────────────────────────────────────────
 
   describe('findTodayBookings', () => {
-    it('should return today\'s bookings for the practitioner', async () => {
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
+    it('should delegate to queryService', async () => {
+      mockQueryService.findTodayBookings.mockResolvedValue([]);
 
       const result = await service.findTodayBookings(mockPractitioner.userId);
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            practitionerId: mockPractitioner.id,
-            date: expect.objectContaining({
-              gte: expect.any(Date),
-              lt: expect.any(Date),
-            }),
-            deletedAt: null,
-          }),
-        }),
-      );
+      expect(mockQueryService.findTodayBookings).toHaveBeenCalledWith(mockPractitioner.userId);
     });
 
     it('should throw NotFoundException if user is not a practitioner', async () => {
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(null);
+      mockQueryService.findTodayBookings.mockRejectedValue(
+        new NotFoundException({ statusCode: 404, message: 'Practitioner not found', error: 'NOT_FOUND' }),
+      );
 
       await expect(
         service.findTodayBookings('non-practitioner-user-id'),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should order bookings by startTime ascending', async () => {
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
+    it('should return results from queryService', async () => {
+      mockQueryService.findTodayBookings.mockResolvedValue([mockBooking]);
 
-      await service.findTodayBookings(mockPractitioner.userId);
+      const result = await service.findTodayBookings(mockPractitioner.userId);
 
-      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orderBy: expect.objectContaining({
-            startTime: 'asc',
-          }),
-        }),
-      );
+      expect(result).toEqual([mockBooking]);
+      expect(mockQueryService.findTodayBookings).toHaveBeenCalledWith(mockPractitioner.userId);
     });
   });
 });

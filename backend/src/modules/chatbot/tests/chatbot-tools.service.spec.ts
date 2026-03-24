@@ -36,6 +36,8 @@ const mockConfigService: any = {
 
 const mockPrisma: any = {
   chatSession: { update: jest.fn() },
+  practitionerService: { findUnique: jest.fn() },
+  booking: { findFirst: jest.fn() },
 };
 
 const ctx = { userId: 'user-1', sessionId: 'session-1' };
@@ -100,6 +102,8 @@ describe('ChatbotToolsService', () => {
     });
 
     it('resolves service duration when serviceId provided', async () => {
+      // practitionerService has no customDuration, so falls back to servicesService.findOne
+      mockPrisma.practitionerService.findUnique.mockResolvedValue({ id: 'ps-1', customDuration: null });
       mockServicesService.findOne.mockResolvedValue({ duration: 45 });
       mockPractitionersService.getAvailableSlots.mockResolvedValue([]);
 

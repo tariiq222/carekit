@@ -23,6 +23,7 @@ const mockPrisma: any = {
   practitioner: { findMany: jest.fn() },
   $queryRawUnsafe: jest.fn(),
   $executeRawUnsafe: jest.fn(),
+  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(mockPrisma)),
 };
 
 const mockConfigService: any = {
@@ -142,9 +143,14 @@ describe('ChatbotRagService', () => {
           id: 'p-1',
           user: { firstName: 'Ahmed', lastName: 'Ali' },
           specialty: { nameEn: 'Dermatology', nameAr: 'جلدية' },
-          priceClinic: 20000,
-          pricePhone: 15000,
-          priceVideo: 15000,
+          practitionerServices: [
+            {
+              priceClinic: 20000,
+              pricePhone: 15000,
+              priceVideo: 15000,
+              service: { nameEn: 'Skin Checkup', nameAr: 'فحص جلدي' },
+            },
+          ],
           experience: 10,
           rating: 4.5,
           reviewCount: 50,

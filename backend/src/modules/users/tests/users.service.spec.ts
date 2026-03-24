@@ -16,13 +16,14 @@ import { NotFoundException, ConflictException, BadRequestException } from '@nest
 import { UsersService } from '../users.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { UserRolesService } from '../user-roles.service.js';
+import { ActivityLogService } from '../../activity-log/activity-log.service.js';
 import { CreateUserDto, UpdateUserDto } from '../dto/create-user.dto.js';
 
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
-const mockPrismaService = {
+const mockPrismaService: any = {
   user: {
     findMany: jest.fn(),
     findUnique: jest.fn(),
@@ -40,6 +41,7 @@ const mockPrismaService = {
     delete: jest.fn(),
     deleteMany: jest.fn(),
     findFirst: jest.fn(),
+    findMany: jest.fn(),
     count: jest.fn(),
   },
   practitioner: {
@@ -48,11 +50,16 @@ const mockPrismaService = {
   specialty: {
     findFirst: jest.fn(),
   },
+  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(mockPrismaService)),
 };
 
 const mockUserRolesService = {
   assignRole: jest.fn().mockResolvedValue(undefined),
   removeRole: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockActivityLogService = {
+  log: jest.fn().mockResolvedValue(undefined),
 };
 
 // ---------------------------------------------------------------------------
@@ -70,6 +77,7 @@ describe('UsersService', () => {
         UsersService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: UserRolesService, useValue: mockUserRolesService },
+        { provide: ActivityLogService, useValue: mockActivityLogService },
       ],
     }).compile();
 

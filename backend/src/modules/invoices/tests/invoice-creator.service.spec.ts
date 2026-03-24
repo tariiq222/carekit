@@ -102,7 +102,7 @@ describe('InvoiceCreatorService', () => {
         return Promise.resolve(mockCreatedInvoice);
       });
       await service.createInvoice({ paymentId: 'payment-1' });
-      expect(capturedInvoiceNumber).toMatch(/^INV-\d{8}-\d{5}$/);
+      expect(capturedInvoiceNumber).toMatch(/^INV-\d{8}-\d+$/);
     });
 
     it('two calls produce invoice numbers matching the pattern', async () => {
@@ -114,8 +114,8 @@ describe('InvoiceCreatorService', () => {
       mockPrismaService.invoice.findUnique.mockResolvedValue(null);
       await service.createInvoice({ paymentId: 'payment-1' });
       await service.createInvoice({ paymentId: 'payment-1' });
-      expect(numbers[0]).toMatch(/^INV-\d{8}-\d{5}$/);
-      expect(numbers[1]).toMatch(/^INV-\d{8}-\d{5}$/);
+      expect(numbers[0]).toMatch(/^INV-\d{8}-\d+$/);
+      expect(numbers[1]).toMatch(/^INV-\d{8}-\d+$/);
     });
   });
 

@@ -301,14 +301,14 @@ describe('PaymentsService', () => {
       );
     });
 
-    it('should call findUnique with correct id', async () => {
+    it('should call findUnique with correct id and deletedAt filter', async () => {
       mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment);
 
       await service.findOne(mockPaymentId);
 
       expect(mockPrismaService.payment.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: mockPaymentId },
+          where: { id: mockPaymentId, deletedAt: null },
         }),
       );
     });

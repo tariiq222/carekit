@@ -21,6 +21,7 @@ import { PractitionersService } from '../practitioners.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { PractitionerAvailabilityService } from '../practitioner-availability.service.js';
 import { PractitionerVacationService } from '../practitioner-vacation.service.js';
+import { PractitionerServiceService } from '../practitioner-service.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -99,6 +100,7 @@ const mockPrismaService: any = {
   practitionerVacation: {
     create: jest.fn(),
     findUnique: jest.fn(),
+    findFirst: jest.fn(),
     findMany: jest.fn(),
     delete: jest.fn(),
   },
@@ -111,7 +113,21 @@ const mockPrismaService: any = {
   booking: {
     findMany: jest.fn(),
   },
-  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
+  practitionerService: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+  service: {
+    findUnique: jest.fn(),
+  },
+  $transaction: jest.fn((fnOrArray: unknown) => {
+    if (typeof fnOrArray === 'function') return fnOrArray(mockPrismaService);
+    // Sequential transaction (array of promises)
+    return Promise.all(fnOrArray as Promise<unknown>[]);
+  }),
 };
 
 // ---------------------------------------------------------------------------
@@ -185,6 +201,7 @@ describe('PractitionersService', () => {
         PractitionersService,
         PractitionerAvailabilityService,
         PractitionerVacationService,
+        PractitionerServiceService,
         { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
@@ -686,6 +703,7 @@ describe('PractitionersService', () => {
       mockPrismaService.practitionerAvailability.findMany.mockResolvedValue(
         mockAvailability.filter((a) => a.dayOfWeek === 0),
       );
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
 
@@ -705,6 +723,7 @@ describe('PractitionersService', () => {
       mockPrismaService.practitionerAvailability.findMany.mockResolvedValue(
         mockAvailability.filter((a) => a.dayOfWeek === 0),
       );
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
       mockPrismaService.booking.findMany.mockResolvedValue([
         { startTime: '09:00', endTime: '09:30', status: 'confirmed' },
@@ -723,6 +742,7 @@ describe('PractitionersService', () => {
       const date = '2026-04-12'; // Within mockVacation range
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(mockVacation);
       mockPrismaService.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
 
       const result = await service.getAvailableSlots(mockPractitioner.id, date, 30);
@@ -735,6 +755,7 @@ describe('PractitionersService', () => {
       const date = '2026-04-04';
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([]);
+      mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.practitionerVacation.findMany.mockResolvedValue([]);
 
       const result = await service.getAvailableSlots(mockPractitioner.id, date, 30);

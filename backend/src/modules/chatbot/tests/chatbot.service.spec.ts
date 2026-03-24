@@ -50,6 +50,10 @@ const mockPrisma: any = {
   user: {
     findUnique: jest.fn(),
   },
+  whiteLabelConfig: {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+  },
 };
 
 const mockAiService: any = {

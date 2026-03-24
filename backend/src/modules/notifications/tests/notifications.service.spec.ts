@@ -25,6 +25,7 @@ import {
 } from '@nestjs/common';
 import { NotificationsService } from '../notifications.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { PushService } from '../push.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -119,6 +120,10 @@ const mockFcmToken = {
 // Test suite
 // ---------------------------------------------------------------------------
 
+const mockPushService: any = {
+  sendToUser: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('NotificationsService', () => {
   let service: NotificationsService;
 
@@ -127,6 +132,7 @@ describe('NotificationsService', () => {
       providers: [
         NotificationsService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: PushService, useValue: mockPushService },
       ],
     }).compile();
 
@@ -268,7 +274,7 @@ describe('NotificationsService', () => {
       expect(result.isRead).toBe(true);
       expect(mockPrismaService.notification.update).toHaveBeenCalledWith({
         where: { id: mockNotification.id },
-        data: { isRead: true },
+        data: { isRead: true, readAt: expect.any(Date) },
       });
     });
 
@@ -313,7 +319,7 @@ describe('NotificationsService', () => {
           userId: mockUserId,
           isRead: false,
         },
-        data: { isRead: true },
+        data: { isRead: true, readAt: expect.any(Date) },
       });
     });
 

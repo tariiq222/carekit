@@ -21,6 +21,7 @@ import { AuthService } from '../auth.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { TokenService } from '../token.service.js';
 import { OtpService } from '../otp.service.js';
+import { EmailService } from '../../email/email.service.js';
 
 interface RegisterDto {
   email: string;
@@ -37,7 +38,7 @@ type OtpType = 'login' | 'reset_password' | 'verify_email';
 // Mock factories
 // ---------------------------------------------------------------------------
 
-const mockPrismaService = {
+const mockPrismaService: any = {
   user: {
     create: jest.fn(),
     findUnique: jest.fn(),
@@ -64,6 +65,7 @@ const mockPrismaService = {
     findFirst: jest.fn(),
     findUnique: jest.fn(),
   },
+  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(mockPrismaService)),
 };
 
 const mockJwtService = {
@@ -84,8 +86,9 @@ const mockConfigService = {
   }),
 };
 
-const mockMailQueue = {
-  add: jest.fn(),
+const mockEmailService = {
+  sendWelcome: jest.fn().mockResolvedValue(undefined),
+  sendOtp: jest.fn().mockResolvedValue(undefined),
 };
 
 // ---------------------------------------------------------------------------
@@ -107,7 +110,7 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
-        { provide: 'BullQueue_email', useValue: mockMailQueue },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
@@ -247,12 +250,10 @@ describe('AuthService', () => {
 
       await service.register(registerDto);
 
-      // Verify email job was queued (not sent synchronously)
-      expect(mockMailQueue.add).toHaveBeenCalledWith(
-        expect.any(String), // job name
-        expect.objectContaining({
-          email: registerDto.email,
-        }),
+      // Verify welcome email was sent
+      expect(mockEmailService.sendWelcome).toHaveBeenCalledWith(
+        registerDto.email,
+        registerDto.firstName,
       );
     });
 
@@ -601,13 +602,18 @@ describe('AuthService', () => {
 
       await service.logout('refresh-token-to-revoke');
 
+      // Token is hashed (SHA-256) before DB lookup
       expect(mockPrismaService.refreshToken.deleteMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            token: 'refresh-token-to-revoke',
+            token: expect.any(String),
           }),
         }),
       );
+      // Ensure it was actually called (token is not the raw value but a hash)
+      const callArg = mockPrismaService.refreshToken.deleteMany.mock.calls[0][0];
+      expect(callArg.where.token).not.toBe('refresh-token-to-revoke');
+      expect(callArg.where.token).toHaveLength(64); // SHA-256 hex digest
     });
   });
 
