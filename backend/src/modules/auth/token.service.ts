@@ -36,17 +36,22 @@ export class TokenService {
     return { accessToken, refreshToken, expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS };
   }
 
+  private hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
   async storeRefreshToken(userId: string, token: string): Promise<void> {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await this.prisma.refreshToken.create({
-      data: { userId, token, expiresAt },
+      data: { userId, token: this.hashToken(token), expiresAt },
     });
   }
 
   async refreshToken(token: string): Promise<TokenPair> {
+    const tokenHash = this.hashToken(token);
     const storedToken = await this.prisma.refreshToken.findFirst({
-      where: { token },
+      where: { token: tokenHash },
     });
 
     if (!storedToken) {
@@ -88,7 +93,7 @@ export class TokenService {
   }
 
   async deleteRefreshToken(token: string): Promise<void> {
-    await this.prisma.refreshToken.deleteMany({ where: { token } });
+    await this.prisma.refreshToken.deleteMany({ where: { token: this.hashToken(token) } });
   }
 
   buildUserPayload(user: {

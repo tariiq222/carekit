@@ -12,6 +12,7 @@ import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
 import { MinioService } from '../../common/services/minio.service.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
+import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { UploadReceiptDto } from './dto/upload-receipt.dto.js';
 import { ReviewReceiptDto } from './dto/review-receipt.dto.js';
 import { paymentInclude, bookingWithPriceInclude, calculateAmounts } from './payments.helpers.js';
@@ -26,6 +27,7 @@ export class BankTransferService {
     private readonly prisma: PrismaService,
     private readonly minioService: MinioService,
     private readonly invoicesService: InvoiceCreatorService,
+    private readonly activityLogService: ActivityLogService,
     @Optional()
     @InjectQueue('receipt-verification')
     private readonly receiptQueue?: Queue,
@@ -208,6 +210,14 @@ export class BankTransferService {
           data: { status: 'paid' },
         });
       }
+    });
+
+    await this.activityLogService.log({
+      userId: adminId,
+      action: dto.action === 'approve' ? 'receipt_approved' : 'receipt_rejected',
+      module: 'payments',
+      resourceId: receiptId,
+      description: `Bank transfer receipt ${dto.action}d by admin`,
     });
 
     if (dto.action === 'approve') {

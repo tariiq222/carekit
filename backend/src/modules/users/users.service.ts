@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto.js';
 import { UserRolesService } from './user-roles.service.js';
+import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { SALT_ROUNDS } from '../../config/constants.js';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userRolesService: UserRolesService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   async findAll(params?: {
@@ -180,6 +182,14 @@ export class UsersService {
       }
     }
 
+    await this.activityLogService.log({
+      userId: requesterId,
+      action: 'user_created',
+      module: 'users',
+      resourceId: user.id,
+      description: `User created with role ${dto.roleSlug}`,
+    });
+
     return {
       ...this.sanitizeUser({
         ...user,
@@ -252,6 +262,14 @@ export class UsersService {
     await this.prisma.user.update({
       where: { id },
       data: { deletedAt: new Date(), isActive: false },
+    });
+
+    await this.activityLogService.log({
+      userId: requesterId,
+      action: 'user_deleted',
+      module: 'users',
+      resourceId: id,
+      description: 'User soft-deleted',
     });
   }
 

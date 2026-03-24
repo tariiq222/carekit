@@ -9,6 +9,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { CancelApproveDto } from './dto/cancel-approve.dto.js';
 import { CancelRejectDto } from './dto/cancel-reject.dto.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { bookingInclude } from './booking.constants.js';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class BookingCancellationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly activityLogService: ActivityLogService,
   ) {}
 
   async requestCancellation(id: string, patientId: string, reason?: string) {
@@ -46,11 +48,31 @@ export class BookingCancellationService {
       });
     }
 
-    return this.prisma.booking.update({
+    const updatedBooking = await this.prisma.booking.update({
       where: { id },
       data: { status: 'pending_cancellation', cancellationReason: reason },
       include: bookingInclude,
     });
+
+    // Notify admin users about cancellation request
+    const adminRoles = await this.prisma.userRole.findMany({
+      where: { role: { slug: { in: ['super_admin', 'receptionist'] } } },
+      select: { userId: true },
+    });
+    const d = booking.date.toISOString().split('T')[0];
+    for (const { userId } of adminRoles) {
+      await this.notificationsService.createNotification({
+        userId,
+        titleAr: 'طلب إلغاء موعد جديد',
+        titleEn: 'New Cancellation Request',
+        bodyAr: `طلب مريض إلغاء الموعد بتاريخ ${d}`,
+        bodyEn: `A patient requested cancellation for booking on ${d}`,
+        type: 'booking_cancellation_requested',
+        data: { bookingId: id },
+      });
+    }
+
+    return updatedBooking;
   }
 
   async approveCancellation(id: string, dto: CancelApproveDto) {
@@ -140,6 +162,13 @@ export class BookingCancellationService {
         });
       }
 
+      await this.activityLogService.log({
+        action: 'cancel_approved',
+        module: 'bookings',
+        resourceId: id,
+        description: `Booking cancellation approved. Refund type: ${dto.refundType}`,
+      });
+
       return cancelledBooking;
     });
   }
@@ -164,7 +193,7 @@ export class BookingCancellationService {
       });
     }
 
-    return this.prisma.booking.update({
+    const updatedBooking = await this.prisma.booking.update({
       where: { id },
       data: {
         status: 'confirmed',
@@ -173,5 +202,14 @@ export class BookingCancellationService {
       },
       include: bookingInclude,
     });
+
+    await this.activityLogService.log({
+      action: 'cancel_rejected',
+      module: 'bookings',
+      resourceId: id,
+      description: 'Booking cancellation request rejected',
+    });
+
+    return updatedBooking;
   }
 }

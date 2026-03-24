@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ZatcaService } from '../zatca/zatca.service.js';
@@ -152,8 +153,9 @@ export class InvoiceCreatorService {
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
     const day = String(now.getUTCDate()).padStart(2, '0');
-    const random = String(Math.floor(10000 + Math.random() * 90000));
-    return `INV-${year}${month}${day}-${random}`;
+    const ts = String(now.getTime()).slice(-6);
+    const rand = String(crypto.randomInt(1000, 9999));
+    return `INV-${year}${month}${day}-${ts}${rand}`;
   }
 
   private buildHtml(params: {

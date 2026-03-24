@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
+import { ThrottlerRedisStorage } from './common/services/throttler-redis-storage.js';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
@@ -9,6 +10,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { validate } from './config/env.validation.js';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter.js';
 import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor.js';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { RolesModule } from './modules/roles/roles.module.js';
 import { PermissionsModule } from './modules/permissions/permissions.module.js';
@@ -27,6 +29,8 @@ import { SpecialtiesModule } from './modules/specialties/specialties.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { AiModule } from './modules/ai/ai.module.js';
 import { ZatcaModule } from './modules/zatca/zatca.module.js';
+import { HealthModule } from './modules/health/health.module.js';
+import { ActivityLogModule } from './modules/activity-log/activity-log.module.js';
 
 @Module({
   imports: [
@@ -50,7 +54,9 @@ import { ZatcaModule } from './modules/zatca/zatca.module.js';
         },
       ],
     }),
+    // Redis storage is provided below for ThrottlerModule
     DatabaseModule,
+    ActivityLogModule,
     AuthModule,
     RolesModule,
     PermissionsModule,
@@ -69,10 +75,15 @@ import { ZatcaModule } from './modules/zatca/zatca.module.js';
     NotificationsModule,
     AiModule,
     ZatcaModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: ThrottlerStorage,
+      useClass: ThrottlerRedisStorage,
+    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
@@ -84,6 +95,10 @@ import { ZatcaModule } from './modules/zatca/zatca.module.js';
     {
       provide: APP_INTERCEPTOR,
       useClass: ResponseTransformInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
     },
   ],
 })

@@ -146,10 +146,29 @@ export class MoyasarPaymentService {
     }
 
     if (dto.status === 'paid') {
+      // Idempotency: skip if already paid
+      if (payment.status === 'paid') {
+        return { success: true };
+      }
+
       await this.prisma.payment.update({
         where: { id: payment.id },
         data: { status: 'paid' },
       });
+
+      // Auto-confirm booking after successful payment
+      try {
+        const booking = await this.prisma.booking.findUnique({ where: { id: payment.bookingId } });
+        if (booking && booking.status === 'pending') {
+          await this.prisma.booking.update({
+            where: { id: booking.id },
+            data: { status: 'confirmed' },
+          });
+          this.logger.log(`Auto-confirmed booking ${booking.id} after payment`);
+        }
+      } catch (err) {
+        this.logger.error(`Auto-confirm failed for booking of payment ${payment.id}`, err);
+      }
 
       try {
         await this.invoicesService.createInvoice({ paymentId: payment.id });
