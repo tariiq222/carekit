@@ -13,7 +13,12 @@ import { REDIS_CLIENT } from './redis.constants.js';
         const url =
           config.get<string>('REDIS_URL') ?? 'redis://localhost:6379';
         logger.log('Creating shared Redis connection');
-        return new Redis(url);
+        const client = new Redis(url, { lazyConnect: false, maxRetriesPerRequest: 3 });
+        client.on('error', (err: Error) =>
+          logger.error(`Redis connection error: ${err.message}`),
+        );
+        client.on('connect', () => logger.log('Redis connected'));
+        return client;
       },
       inject: [ConfigService],
     },

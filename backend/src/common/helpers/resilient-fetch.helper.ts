@@ -13,6 +13,8 @@ interface CircuitState {
   failures: number;
   lastFailure: number;
   state: 'closed' | 'open' | 'half-open';
+  /** Prevents multiple concurrent probes in half-open state */
+  halfOpenProbeActive: boolean;
 }
 
 const circuits = new Map<string, CircuitState>();
@@ -22,7 +24,7 @@ const RESET_TIMEOUT_MS = 30_000; // 30 seconds before trying again
 
 function getCircuit(name: string): CircuitState {
   if (!circuits.has(name)) {
-    circuits.set(name, { failures: 0, lastFailure: 0, state: 'closed' });
+    circuits.set(name, { failures: 0, lastFailure: 0, state: 'closed', halfOpenProbeActive: false });
   }
   return circuits.get(name)!;
 }
@@ -31,12 +33,14 @@ function recordSuccess(name: string): void {
   const circuit = getCircuit(name);
   circuit.failures = 0;
   circuit.state = 'closed';
+  circuit.halfOpenProbeActive = false;
 }
 
 function recordFailure(name: string): void {
   const circuit = getCircuit(name);
   circuit.failures++;
   circuit.lastFailure = Date.now();
+  circuit.halfOpenProbeActive = false;
   if (circuit.failures >= FAILURE_THRESHOLD) {
     circuit.state = 'open';
     logger.warn(`Circuit breaker OPEN for "${name}" after ${circuit.failures} failures`);
@@ -48,14 +52,20 @@ function canAttempt(name: string): boolean {
   if (circuit.state === 'closed') return true;
   if (circuit.state === 'open') {
     if (Date.now() - circuit.lastFailure > RESET_TIMEOUT_MS) {
-      circuit.state = 'half-open';
-      logger.log(`Circuit breaker HALF-OPEN for "${name}" — allowing one attempt`);
-      return true;
+      // Atomically transition to half-open and allow exactly one probe
+      if (!circuit.halfOpenProbeActive) {
+        circuit.state = 'half-open';
+        circuit.halfOpenProbeActive = true;
+        logger.log(`Circuit breaker HALF-OPEN for "${name}" — allowing one probe`);
+        return true;
+      }
+      // Another probe is already in-flight — block this one
+      return false;
     }
     return false;
   }
-  // half-open: allow attempt
-  return true;
+  // half-open: only the single probe request is allowed through
+  return false;
 }
 
 // --- Resilient Fetch ---
@@ -90,10 +100,8 @@ export async function resilientFetch(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-  // Merge with any existing signal
-  const mergedSignal = init.signal
-    ? AbortSignal.any([init.signal, controller.signal])
-    : controller.signal;
+  // Use our timeout signal (ignore any existing signal to avoid AbortSignal.any Node 20.3+ requirement)
+  const mergedSignal = controller.signal;
 
   try {
     const response = await fetch(url, { ...init, signal: mergedSignal });

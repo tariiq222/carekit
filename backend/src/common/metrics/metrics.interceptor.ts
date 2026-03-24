@@ -19,7 +19,8 @@ export class MetricsInterceptor implements NestInterceptor {
     const method = req.method;
     // Prefer the route pattern (e.g. /api/v1/users/:id) over the actual URL
     // to avoid high-cardinality label explosion in Prometheus.
-    const route = req.route?.path ?? req.url;
+    // For unmatched routes (404), use a static label instead of the raw URL.
+    const route = req.route?.path ?? '/unmatched';
     const end = this.metrics.httpRequestDuration.startTimer({ method, route });
 
     return next.handle().pipe(

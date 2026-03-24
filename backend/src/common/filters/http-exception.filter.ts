@@ -99,7 +99,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         `Unhandled exception: ${exception.message} [${CORRELATION_HEADER}=${correlationId}]`,
         exception.stack,
       );
-      Sentry.captureException(exception);
+      // Only report truly unexpected errors to Sentry — skip Prisma known errors
+      // (P2025 = not found, P2002 = unique constraint, P2003 = FK constraint)
+      const isPrismaKnown = exception.constructor?.name === 'PrismaClientKnownRequestError'
+        || exception.constructor?.name === 'PrismaClientValidationError';
+      if (!isPrismaKnown) {
+        Sentry.captureException(exception);
+      }
     } else {
       this.logger.error('Unknown exception type', String(exception));
     }

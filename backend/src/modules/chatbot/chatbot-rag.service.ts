@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import { resilientFetch } from '../../common/helpers/resilient-fetch.helper.js';
 
 interface KbSearchResult {
   id: string;
@@ -31,7 +32,7 @@ export class ChatbotRagService {
     const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
     const model = this.config.get<string>('OPENROUTER_EMBEDDING_MODEL') ?? 'openai/text-embedding-3-small';
 
-    const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
+    const response = await resilientFetch('https://openrouter.ai/api/v1/embeddings', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -40,7 +41,7 @@ export class ChatbotRagService {
         'X-Title': 'CareKit',
       },
       body: JSON.stringify({ model, input: text }),
-    });
+    }, { circuit: 'openrouter', timeoutMs: 15_000 });
 
     if (!response.ok) {
       const errorText = await response.text();

@@ -50,6 +50,20 @@ export class SmsService implements OnModuleInit {
     this.logger.log(`SMS channel initialized with provider: ${this.provider}`);
   }
 
+  /** Normalize phone to E.164 format for Saudi numbers */
+  private normalizePhone(phone: string): string | null {
+    const digits = phone.replace(/[^\d+]/g, '');
+    // Already E.164: +966...
+    if (/^\+966\d{9}$/.test(digits)) return digits;
+    // International without +: 966...
+    if (/^966\d{9}$/.test(digits)) return `+${digits}`;
+    // Local Saudi: 05...
+    if (/^05\d{8}$/.test(digits)) return `+966${digits.slice(1)}`;
+    // Local without leading 0: 5...
+    if (/^5\d{8}$/.test(digits)) return `+966${digits}`;
+    return null;
+  }
+
   /** Send an SMS. Throws on failure — caller should handle errors. */
   async sendSms(phone: string, message: string): Promise<void> {
     if (!this.enabled || !this.provider) return;
@@ -57,6 +71,18 @@ export class SmsService implements OnModuleInit {
     if (!phone || !message) {
       this.logger.warn('sendSms called with empty phone or message — skipped');
       return;
+    }
+
+    const normalized = this.normalizePhone(phone);
+    if (!normalized) {
+      this.logger.warn(`Invalid phone number format: "${phone}" — SMS skipped`);
+      return;
+    }
+    phone = normalized;
+
+    // Truncate to avoid multi-segment SMS cost explosion (320 chars ≈ 2 segments max)
+    if (message.length > 320) {
+      message = message.slice(0, 317) + '...';
     }
 
     switch (this.provider) {
@@ -105,8 +131,10 @@ export class SmsService implements OnModuleInit {
   // ─── Twilio ───────────────────────────────────────────────────
 
   private async sendViaTwilio(phone: string, message: string): Promise<void> {
-    // Twilio uses SMS_API_KEY as "AccountSID:AuthToken"
-    const [accountSid, authToken] = this.apiKey.split(':');
+    // Twilio uses SMS_API_KEY as "AccountSID:AuthToken" — split on first colon only
+    const colonIdx = this.apiKey.indexOf(':');
+    const accountSid = colonIdx > 0 ? this.apiKey.slice(0, colonIdx) : '';
+    const authToken = colonIdx > 0 ? this.apiKey.slice(colonIdx + 1) : '';
 
     if (!accountSid || !authToken) {
       this.logger.error(
