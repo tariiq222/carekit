@@ -1,11 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { CacheService } from '../../common/services/cache.service.js';
+import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
 import { UpdateConfigDto } from './dto/update-config.dto.js';
 import { WhiteLabelConfig } from '@prisma/client';
 
 @Injectable()
 export class WhitelabelService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
 
   // ═══════════════════════════════════════════════════════════════
   //  GET ALL — Return all configs ordered by key
@@ -18,20 +23,44 @@ export class WhitelabelService {
   ];
 
   async getPublicBranding(): Promise<Record<string, string>> {
+    const cached = await this.cache.get<Record<string, string>>(
+      CACHE_KEYS.WHITELABEL_BRANDING,
+    );
+    if (cached) return cached;
+
     const configs = await this.prisma.whiteLabelConfig.findMany({
       where: { key: { in: WhitelabelService.PUBLIC_KEYS } },
       select: { key: true, value: true },
     });
-    return configs.reduce<Record<string, string>>((acc, c) => {
+    const result = configs.reduce<Record<string, string>>((acc, c) => {
       acc[c.key] = c.value;
       return acc;
     }, {});
+
+    await this.cache.set(
+      CACHE_KEYS.WHITELABEL_BRANDING,
+      result,
+      CACHE_TTL.WHITELABEL_CONFIG,
+    );
+    return result;
   }
 
   async getConfig(): Promise<WhiteLabelConfig[]> {
-    return this.prisma.whiteLabelConfig.findMany({
+    const cached = await this.cache.get<WhiteLabelConfig[]>(
+      CACHE_KEYS.WHITELABEL_CONFIG,
+    );
+    if (cached) return cached;
+
+    const configs = await this.prisma.whiteLabelConfig.findMany({
       orderBy: { key: 'asc' },
     });
+
+    await this.cache.set(
+      CACHE_KEYS.WHITELABEL_CONFIG,
+      configs,
+      CACHE_TTL.WHITELABEL_CONFIG,
+    );
+    return configs;
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -39,9 +68,7 @@ export class WhitelabelService {
   // ═══════════════════════════════════════════════════════════════
 
   async getConfigMap(): Promise<Record<string, string>> {
-    const configs = await this.prisma.whiteLabelConfig.findMany({
-      orderBy: { key: 'asc' },
-    });
+    const configs = await this.getConfig();
 
     return configs.reduce<Record<string, string>>((acc, config) => {
       acc[config.key] = config.value;
@@ -73,6 +100,7 @@ export class WhitelabelService {
       ),
     );
 
+    await this.invalidateCache();
     return this.getConfig();
   }
 
@@ -113,8 +141,22 @@ export class WhitelabelService {
       });
     }
 
-    return this.prisma.whiteLabelConfig.delete({
+    const deleted = await this.prisma.whiteLabelConfig.delete({
       where: { key },
     });
+
+    await this.invalidateCache();
+    return deleted;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  CACHE INVALIDATION
+  // ═══════════════════════════════════════════════════════════════
+
+  private async invalidateCache(): Promise<void> {
+    await Promise.all([
+      this.cache.del(CACHE_KEYS.WHITELABEL_CONFIG),
+      this.cache.del(CACHE_KEYS.WHITELABEL_BRANDING),
+    ]);
   }
 }

@@ -10,10 +10,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
-import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
-import { Public } from '../auth/decorators/public.decorator.js';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { Public } from '../../common/decorators/public.decorator.js';
 import { WhitelabelService } from './whitelabel.service.js';
 import { UpdateConfigDto } from './dto/update-config.dto.js';
 

@@ -6,7 +6,8 @@ import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service.js';
-import { UserPayload } from './types/user-payload.type.js';
+import { AuthCacheService } from './auth-cache.service.js';
+import { UserPayload } from '../../common/types/user-payload.type.js';
 import { TokenPair } from './types/auth-response.type.js';
 
 const ACCESS_TOKEN_EXPIRY_SECONDS = 900; // 15 minutes
@@ -17,6 +18,7 @@ export class TokenService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly authCache: AuthCacheService,
   ) {}
 
   async generateTokens(userId: string, email: string): Promise<TokenPair> {
@@ -149,6 +151,10 @@ export class TokenService {
   }
 
   async buildUserPayloadFromId(userId: string): Promise<UserPayload> {
+    // Check Redis cache first
+    const cached = await this.authCache.get(userId);
+    if (cached) return cached;
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -172,6 +178,11 @@ export class TokenService {
       });
     }
 
-    return this.buildUserPayload(user);
+    const payload = this.buildUserPayload(user);
+
+    // Cache for subsequent requests
+    await this.authCache.set(userId, payload);
+
+    return payload;
   }
 }

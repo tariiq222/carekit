@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
-import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { ZatcaService } from './zatca.service.js';
 import { ZatcaSandboxService } from './services/zatca-sandbox.service.js';
 import { ZatcaOnboardingService } from './services/zatca-onboarding.service.js';

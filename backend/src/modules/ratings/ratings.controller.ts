@@ -8,10 +8,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
-import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
-import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { RatingsService } from './ratings.service.js';
 import { CreateRatingDto } from './dto/create-rating.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';

@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 interface CreateRatingDto {
   bookingId: string;
@@ -61,8 +62,7 @@ export class RatingsService {
   }
 
   async findByPractitioner(practitionerId: string, query: RatingListQuery = {}) {
-    const { page = 1, perPage = 20 } = query;
-    const skip = (page - 1) * perPage;
+    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
 
     const [total, ratings] = await Promise.all([
       this.prisma.rating.count({ where: { practitionerId, deletedAt: null } }),
@@ -79,12 +79,7 @@ export class RatingsService {
 
     return {
       data: ratings,
-      meta: {
-        total,
-        page,
-        perPage,
-        totalPages: Math.ceil(total / perPage),
-      },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 

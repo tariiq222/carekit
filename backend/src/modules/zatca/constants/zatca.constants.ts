@@ -28,5 +28,4 @@ export const QR_TAGS = {
   VAT_AMOUNT: 5,
 } as const;
 
-export const VAT_RATE_DEFAULT = 15;
-export const VAT_RATE_NONE = 0;
+export { VAT_RATE_DEFAULT, VAT_RATE_NONE } from '../../../config/constants/tax.js';

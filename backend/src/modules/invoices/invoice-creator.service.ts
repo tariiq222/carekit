@@ -15,6 +15,7 @@ import { ZatcaService } from '../zatca/zatca.service.js';
 import { CreateInvoiceDto } from './dto/create-invoice.dto.js';
 import { invoiceInclude } from './invoice.constants.js';
 import { buildInvoiceHtml } from './invoice-html.builder.js';
+import { correlationStorage } from '../../common/middleware/correlation-id.middleware.js';
 
 @Injectable()
 export class InvoiceCreatorService {
@@ -116,7 +117,10 @@ export class InvoiceCreatorService {
     if (this.zatcaQueue && zatcaData.status === 'pending') {
       await this.zatcaQueue.add(
         'submit',
-        { invoiceId: invoice.id },
+        {
+          invoiceId: invoice.id,
+          correlationId: correlationStorage.getStore() ?? null,
+        },
         {
           attempts: 3,
           backoff: { type: 'exponential', delay: 30_000 },

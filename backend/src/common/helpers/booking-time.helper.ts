@@ -4,9 +4,15 @@
  * and practitioner-availability.service.ts.
  */
 
+import { BadRequestException } from '@nestjs/common';
+
 export function toMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
+}
+
+export function minutesToTime(minutes: number): string {
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 }
 
 export function timeSlotsOverlap(
@@ -27,7 +33,19 @@ export function shiftTime(time: string, minutes: number): string {
 
 export function calculateEndTime(startTime: string, durationMinutes: number): string {
   const totalMinutes = toMinutes(startTime) + durationMinutes;
-  const endHours = Math.floor(totalMinutes / 60) % 24;
-  const endMinutes = totalMinutes % 60;
-  return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+  const capped = Math.min(totalMinutes, 23 * 60 + 59);
+  const h = Math.floor(capped / 60);
+  const m = capped % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+export function validateNoCrossMidnight(startTime: string, durationMinutes: number): void {
+  const totalMinutes = toMinutes(startTime) + durationMinutes;
+  if (totalMinutes >= 24 * 60) {
+    throw new BadRequestException({
+      statusCode: 400,
+      message: 'Booking cannot cross midnight',
+      error: 'BOOKING_CROSSES_MIDNIGHT',
+    });
+  }
 }

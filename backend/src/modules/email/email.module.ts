@@ -4,10 +4,11 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EmailService } from './email.service.js';
 import { EmailProcessor } from './email.processor.js';
+import { DEFAULT_JOB_OPTIONS, QUEUE_EMAIL } from '../../config/constants/queues.js';
 
 @Module({
   imports: [
-    BullModule.registerQueue({ name: 'email' }),
+    BullModule.registerQueue({ name: QUEUE_EMAIL, defaultJobOptions: DEFAULT_JOB_OPTIONS }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

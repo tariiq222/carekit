@@ -1,5 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import type { Prisma } from '@prisma/client';
 
 export interface LogActivityParams {
   userId?: string;
@@ -11,6 +13,18 @@ export interface LogActivityParams {
   newValues?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
+}
+
+interface FindAllParams {
+  page?: number;
+  perPage?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  module?: string;
+  action?: string;
+  userId?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 @Injectable()
@@ -39,8 +53,74 @@ export class ActivityLogService {
         },
       });
     } catch (err) {
-      // Never fail the main operation because of audit logging
       this.logger.error('Failed to write activity log', err);
     }
+  }
+
+  async findAll(params: FindAllParams) {
+    const page = params.page ?? 1;
+    const perPage = params.perPage ?? 20;
+    const sortBy = params.sortBy ?? 'createdAt';
+    const sortOrder = params.sortOrder ?? 'desc';
+
+    const where: Prisma.ActivityLogWhereInput = {};
+
+    if (params.module) where.module = params.module;
+    if (params.action) where.action = params.action;
+    if (params.userId) where.userId = params.userId;
+
+    if (params.dateFrom || params.dateTo) {
+      where.createdAt = {};
+      if (params.dateFrom) where.createdAt.gte = new Date(params.dateFrom);
+      if (params.dateTo) where.createdAt.lte = new Date(params.dateTo);
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.activityLog.findMany({
+        where,
+        orderBy: { [sortBy]: sortOrder },
+        skip: (page - 1) * perPage,
+        take: perPage,
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+      }),
+      this.prisma.activityLog.count({ where }),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        items,
+        meta: buildPaginationMeta(total, page, perPage),
+      },
+    };
+  }
+
+  async findOne(id: string) {
+    const log = await this.prisma.activityLog.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!log) throw new NotFoundException('Activity log not found');
+
+    return { success: true, data: log };
   }
 }

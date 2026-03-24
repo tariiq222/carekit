@@ -9,9 +9,9 @@ export class CreateBookingDto {
   @IsNotEmpty()
   serviceId!: string;
 
-  @IsEnum(['clinic_visit', 'phone_consultation', 'video_consultation'])
+  @IsEnum(['clinic_visit', 'phone_consultation', 'video_consultation', 'walk_in'])
   @IsNotEmpty()
-  type!: 'clinic_visit' | 'phone_consultation' | 'video_consultation';
+  type!: 'clinic_visit' | 'phone_consultation' | 'video_consultation' | 'walk_in';
 
   @IsString()
   @IsNotEmpty()
@@ -26,4 +26,9 @@ export class CreateBookingDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  /** Fix 7: Admin can book on behalf of a patient */
+  @IsOptional()
+  @IsUUID()
+  patientId?: string;
 }

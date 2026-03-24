@@ -4,12 +4,16 @@ import {
   Get,
   Patch,
   Post,
+  Req,
+  Res,
   UseGuards,
   HttpCode,
   HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
+import { type Request, type Response } from 'express';
 import { AuthService } from './auth.service.js';
+import { CookieService } from './cookie.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto.js';
@@ -17,25 +21,34 @@ import { RefreshTokenDto } from './dto/refresh-token.dto.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/reset-password.dto.js';
 import { VerifyEmailDto } from './dto/verify-email.dto.js';
-import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
-import { Public } from './decorators/public.decorator.js';
-import { CurrentUser } from './decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { Public } from '../../common/decorators/public.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { OtpType } from './enums/otp-type.enum.js';
 import { EmailThrottleGuard } from '../../common/guards/email-throttle.guard.js';
+import { OtpThrottle } from '../../common/decorators/otp-throttle.decorator.js';
 import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly cookieService: CookieService,
+  ) {}
 
   @Public()
   @Post('register')
-  async register(@Body() dto: RegisterDto) {
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.authService.register(dto);
+    this.cookieService.setRefreshTokenCookie(res, result.refreshToken);
+    const { refreshToken: _rt, ...responseData } = result;
     return {
       success: true,
       message: 'Registration successful',
-      data: result,
+      data: responseData,
     };
   }
 
@@ -43,8 +56,12 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @SkipThrottle()
-  @UseGuards(new EmailThrottleGuard(5, 60000))
-  async login(@Body() dto: LoginDto) {
+  @OtpThrottle('login', 5)
+  @UseGuards(EmailThrottleGuard)
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const user = await this.authService.validateUser(dto.email, dto.password);
     if (!user) {
       throw new UnauthorizedException({
@@ -54,9 +71,11 @@ export class AuthController {
       });
     }
     const result = await this.authService.login(user);
+    this.cookieService.setRefreshTokenCookie(res, result.refreshToken);
+    const { refreshToken: _rt, ...responseData } = result;
     return {
       success: true,
-      data: result,
+      data: responseData,
     };
   }
 
@@ -64,7 +83,8 @@ export class AuthController {
   @Post('login/otp/send')
   @HttpCode(HttpStatus.OK)
   @SkipThrottle()
-  @UseGuards(new EmailThrottleGuard(3, 60000))
+  @OtpThrottle('otp_send', 3)
+  @UseGuards(EmailThrottleGuard)
   async sendLoginOtp(@Body() dto: SendOtpDto) {
     // Always return success for security (don't reveal if email exists)
     const user = await this.authService.findUserByEmail(dto.email);
@@ -82,36 +102,73 @@ export class AuthController {
   @Post('login/otp/verify')
   @HttpCode(HttpStatus.OK)
   @SkipThrottle()
-  @UseGuards(new EmailThrottleGuard(5, 60000))
-  async verifyLoginOtp(@Body() dto: VerifyOtpDto) {
+  @OtpThrottle('otp_verify', 5)
+  @UseGuards(EmailThrottleGuard)
+  async verifyLoginOtp(
+    @Body() dto: VerifyOtpDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const userPayload = await this.authService.verifyOtp(
       dto.email,
       dto.code,
       OtpType.LOGIN,
     );
     const result = await this.authService.login(userPayload);
+    this.cookieService.setRefreshTokenCookie(res, result.refreshToken);
+    const { refreshToken: _rt, ...responseData } = result;
     return {
       success: true,
-      data: result,
+      data: responseData,
     };
   }
 
   @Public()
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
-  async refreshToken(@Body() dto: RefreshTokenDto) {
-    const tokens = await this.authService.refreshToken(dto.refreshToken);
+  async refreshToken(
+    @Body() dto: RefreshTokenDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const cookieToken = this.cookieService.extractRefreshToken(req);
+    const bodyToken = dto.refreshToken;
+    const token = cookieToken || bodyToken;
+
+    if (!token) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        message: 'Refresh token is required',
+        error: 'AUTH_REFRESH_TOKEN_MISSING',
+      });
+    }
+
+    const tokens = await this.authService.refreshToken(token);
+    this.cookieService.setRefreshTokenCookie(res, tokens.refreshToken);
+
+    // Mobile compatibility: if token came from body, include refreshToken in response
+    const responseData = bodyToken && !cookieToken
+      ? tokens
+      : { accessToken: tokens.accessToken, expiresIn: tokens.expiresIn };
+
     return {
       success: true,
-      data: tokens,
+      data: responseData,
     };
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Body() dto: RefreshTokenDto) {
-    await this.authService.logout(dto.refreshToken);
+  async logout(
+    @Body() dto: RefreshTokenDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const token = this.cookieService.extractRefreshToken(req) || dto.refreshToken;
+    if (token) {
+      await this.authService.logout(token);
+    }
+    this.cookieService.clearRefreshTokenCookie(res);
     return {
       success: true,
       message: 'Logged out successfully',
@@ -129,7 +186,8 @@ export class AuthController {
   @Post('password/forgot')
   @HttpCode(HttpStatus.OK)
   @SkipThrottle()
-  @UseGuards(new EmailThrottleGuard(3, 60000))
+  @OtpThrottle('pw_forgot', 3)
+  @UseGuards(EmailThrottleGuard)
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     // Always return success for security
     const user = await this.authService.findUserByEmail(dto.email);
@@ -147,7 +205,8 @@ export class AuthController {
   @Post('password/reset')
   @HttpCode(HttpStatus.OK)
   @SkipThrottle()
-  @UseGuards(new EmailThrottleGuard(3, 60000))
+  @OtpThrottle('pw_reset', 3)
+  @UseGuards(EmailThrottleGuard)
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto.email, dto.code, dto.newPassword);
     return {
@@ -188,7 +247,9 @@ export class AuthController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @SkipThrottle()
+  @OtpThrottle('email_verify', 5)
+  @UseGuards(JwtAuthGuard, EmailThrottleGuard)
   @Post('email/verify')
   @HttpCode(HttpStatus.OK)
   async verifyEmail(
@@ -201,5 +262,4 @@ export class AuthController {
       message: 'Email verified successfully',
     };
   }
-
 }

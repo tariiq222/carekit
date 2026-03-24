@@ -1,41 +1,26 @@
 import {
-  BadRequestException,
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   Param,
   ParseUUIDPipe,
-  Patch,
   Post,
-  Put,
   Query,
-  Req,
   Res,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
-import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
-import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ChatbotService, type HandleMessageResult } from './chatbot.service.js';
 import { ChatbotStreamService } from './chatbot-stream.service.js';
-import { ChatbotConfigService } from './chatbot-config.service.js';
-import { ChatbotRagService } from './chatbot-rag.service.js';
-import { ChatbotAnalyticsService, type SessionStats } from './chatbot-analytics.service.js';
-import { ChatbotFileService } from './chatbot-file.service.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
 import { CreateSessionDto } from './dto/create-session.dto.js';
 import { SessionListQueryDto } from './dto/session-list-query.dto.js';
-import { CreateKbEntryDto, UpdateKbEntryDto } from './dto/kb-entry.dto.js';
-import { UpdateChatbotConfigDto } from './dto/update-chatbot-config.dto.js';
-
-const ADMIN_ROLE_SLUGS = ['super_admin', 'receptionist', 'accountant'];
+import { ADMIN_ROLE_SLUGS } from '../../config/constants.js';
 
 @ApiTags('Chatbot')
 @ApiBearerAuth()
@@ -45,10 +30,6 @@ export class ChatbotController {
   constructor(
     private readonly chatbotService: ChatbotService,
     private readonly streamService: ChatbotStreamService,
-    private readonly configService: ChatbotConfigService,
-    private readonly ragService: ChatbotRagService,
-    private readonly analyticsService: ChatbotAnalyticsService,
-    private readonly fileService: ChatbotFileService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════
@@ -145,181 +126,11 @@ export class ChatbotController {
     return this.chatbotService.endSession(id, user.id);
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  KNOWLEDGE BASE — Admin only
-  // ═══════════════════════════════════════════════════════════
-
-  @Get('knowledge-base')
-  @CheckPermissions({ module: 'chatbot', action: 'view' })
-  async listKnowledgeBase(
-    @Query('page') page?: string,
-    @Query('perPage') perPage?: string,
-    @Query('source') source?: string,
-    @Query('category') category?: string,
-  ) {
-    return this.ragService.findAll({
-      page: page ? parseInt(page, 10) : 1,
-      perPage: perPage ? parseInt(perPage, 10) : 20,
-      source,
-      category,
-    });
-  }
-
-  @Post('knowledge-base')
-  @CheckPermissions({ module: 'chatbot', action: 'create' })
-  async createKbEntry(@Body() dto: CreateKbEntryDto) {
-    return this.ragService.upsertEntry({
-      title: dto.title,
-      content: dto.content,
-      category: dto.category,
-      source: 'manual',
-    });
-  }
-
-  @Patch('knowledge-base/:id')
-  @CheckPermissions({ module: 'chatbot', action: 'edit' })
-  async updateKbEntry(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateKbEntryDto,
-  ) {
-    return this.ragService.update(id, dto);
-  }
-
-  @Delete('knowledge-base/:id')
-  @CheckPermissions({ module: 'chatbot', action: 'delete' })
-  async deleteKbEntry(@Param('id', ParseUUIDPipe) id: string) {
-    return this.ragService.delete(id);
-  }
-
-  @Post('knowledge-base/sync')
-  @HttpCode(200)
-  @CheckPermissions({ module: 'chatbot', action: 'edit' })
-  async syncKnowledgeBase() {
-    const count = await this.ragService.syncFromDatabase();
-    return { synced: count };
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  //  FILES — Admin only
-  // ═══════════════════════════════════════════════════════════
-
-  @Post('knowledge-base/files')
-  @CheckPermissions({ module: 'chatbot', action: 'create' })
-  @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize: 20 * 1024 * 1024 },
-    fileFilter: (_req: unknown, file: { mimetype: string }, cb: (err: Error | null, accept: boolean) => void) => {
-      const allowed = [
-        'application/pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/msword',
-        'text/plain',
-      ];
-      if (allowed.includes(file.mimetype)) {
-        cb(null, true);
-      } else {
-        cb(new BadRequestException({
-          statusCode: 400,
-          message: 'Only PDF, DOCX, and TXT files are allowed',
-          error: 'INVALID_FILE_TYPE',
-        }), false);
-      }
-    },
-  }))
-  async uploadFile(
-    @CurrentUser() user: { id: string },
-    @Req() req: { file?: Express.Multer.File },
-  ) {
-    if (!req.file) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'File is required',
-        error: 'MISSING_FILE',
-      });
-    }
-    return this.fileService.uploadFile(user.id, req.file);
-  }
-
-  @Get('knowledge-base/files')
-  @CheckPermissions({ module: 'chatbot', action: 'view' })
-  async listFiles(
-    @Query('page') page?: string,
-    @Query('perPage') perPage?: string,
-  ) {
-    return this.fileService.listFiles({
-      page: page ? parseInt(page, 10) : 1,
-      perPage: perPage ? parseInt(perPage, 10) : 20,
-    });
-  }
-
-  @Post('knowledge-base/files/:id/process')
-  @HttpCode(200)
-  @CheckPermissions({ module: 'chatbot', action: 'edit' })
-  async processFile(@Param('id', ParseUUIDPipe) id: string) {
-    await this.fileService.processFile(id);
-    return { processed: true };
-  }
-
-  @Delete('knowledge-base/files/:id')
-  @CheckPermissions({ module: 'chatbot', action: 'delete' })
-  async deleteFile(@Param('id', ParseUUIDPipe) id: string) {
-    await this.fileService.deleteFile(id);
-    return { deleted: true };
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  //  CONFIG — Admin only
-  // ═══════════════════════════════════════════════════════════
-
-  @Get('config')
-  @CheckPermissions({ module: 'chatbot', action: 'view' })
-  async getConfig() {
-    return this.configService.getAll();
-  }
-
-  @Get('config/:category')
-  @CheckPermissions({ module: 'chatbot', action: 'view' })
-  async getConfigByCategory(@Param('category') category: string) {
-    return this.configService.getByCategory(category);
-  }
-
-  @Put('config')
-  @CheckPermissions({ module: 'chatbot', action: 'edit' })
-  async updateConfig(@Body() dto: UpdateChatbotConfigDto) {
-    return this.configService.bulkUpsert(dto.configs);
-  }
-
-  @Post('config/seed')
-  @HttpCode(200)
-  @CheckPermissions({ module: 'chatbot', action: 'edit' })
-  async seedDefaults() {
-    const count = await this.configService.seedDefaults();
-    return { seeded: count };
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  //  ANALYTICS — Admin only
-  // ═══════════════════════════════════════════════════════════
-
-  @Get('analytics')
-  @CheckPermissions({ module: 'chatbot', action: 'view' })
-  async getAnalytics(
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ): Promise<SessionStats> {
-    return this.analyticsService.getSessionStats({ from, to });
-  }
-
-  @Get('analytics/questions')
-  @CheckPermissions({ module: 'chatbot', action: 'view' })
-  async getMostAskedQuestions(@Query('limit') limit?: string) {
-    return this.analyticsService.getMostAskedQuestions(
-      limit ? parseInt(limit, 10) : 10,
-    );
-  }
-
   // ── Helper ──
 
   private isAdmin(user: { roles?: string[] }): boolean {
-    return (user.roles ?? []).some((r) => ADMIN_ROLE_SLUGS.includes(r));
+    return (user.roles ?? []).some((r) =>
+      (ADMIN_ROLE_SLUGS as readonly string[]).includes(r),
+    );
   }
 }

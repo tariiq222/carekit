@@ -8,7 +8,7 @@ import { type OtpType as PrismaOtpType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { SALT_ROUNDS } from '../../config/constants.js';
 import { OtpType } from './enums/otp-type.enum.js';
-import { UserPayload } from './types/user-payload.type.js';
+import { UserPayload } from '../../common/types/user-payload.type.js';
 import { TokenService } from './token.service.js';
 
 const OTP_LENGTH = 6;

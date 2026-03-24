@@ -1,18 +1,40 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, OnModuleInit } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { CleanupService } from './cleanup.service.js';
 import { ReminderService } from './reminder.service.js';
+import { BookingAutomationService } from './booking-automation.service.js';
+import { QueueFailureService } from '../../common/queue/queue-failure.service.js';
+import { JOB_ATTEMPTS, QUEUE_TASKS } from '../../config/constants/queues.js';
 
-@Processor('tasks')
-export class TasksProcessor extends WorkerHost {
+@Processor(QUEUE_TASKS)
+export class TasksProcessor extends WorkerHost implements OnModuleInit {
   private readonly logger = new Logger(TasksProcessor.name);
 
   constructor(
     private readonly cleanupService: CleanupService,
     private readonly reminderService: ReminderService,
+    private readonly bookingAutomationService: BookingAutomationService,
+    private readonly queueFailureService: QueueFailureService,
   ) {
     super();
+  }
+
+  onModuleInit() {
+    this.worker.on('failed', async (job, error) => {
+      const isFinal =
+        (job && job.attemptsMade >= (job.opts.attempts ?? JOB_ATTEMPTS)) ||
+        error.name === 'UnrecoverableError';
+      if (isFinal) {
+        await this.queueFailureService.notifyAdminsOfFailure(
+          QUEUE_TASKS,
+          job?.name ?? 'unknown',
+          job?.id,
+          job?.data,
+          error,
+        );
+      }
+    });
   }
 
   async process(job: Job): Promise<void> {
@@ -30,6 +52,15 @@ export class TasksProcessor extends WorkerHost {
         break;
       case 'reminder-1h':
         await this.reminderService.sendHourBeforeReminders();
+        break;
+      case 'expire-pending-bookings':
+        await this.bookingAutomationService.expirePendingBookings();
+        break;
+      case 'auto-complete-bookings':
+        await this.bookingAutomationService.autoCompleteBookings();
+        break;
+      case 'auto-no-show':
+        await this.bookingAutomationService.autoNoShow();
         break;
       default:
         this.logger.warn(`Unknown task job: ${job.name}`);

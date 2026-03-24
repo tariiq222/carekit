@@ -16,14 +16,22 @@ import { ConfigService } from '@nestjs/config';
 import { MoyasarPaymentService } from '../moyasar-payment.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { InvoiceCreatorService } from '../../invoices/invoice-creator.service.js';
+import { BookingStatusService } from '../../bookings/booking-status.service.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
-  payment: { findUnique: jest.fn(), findFirst: jest.fn(), create: jest.fn(), update: jest.fn() },
+  payment: {
+    findUnique: jest.fn(), findFirst: jest.fn(),
+    create: jest.fn(), update: jest.fn(), updateMany: jest.fn(),
+  },
+  processedWebhook: { findUnique: jest.fn(), create: jest.fn() },
+  $transaction: jest.fn().mockImplementation(async (fn) => fn(mockPrisma)),
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockInvoicesService: any = { createInvoice: jest.fn() };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockBookingStatusService: any = { confirm: jest.fn() };
 const configMap: Record<string, string> = {
   MOYASAR_API_KEY: 'test-api-key',
   BACKEND_URL: 'http://localhost:3000',
@@ -67,10 +75,13 @@ describe('MoyasarPaymentService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: InvoiceCreatorService, useValue: mockInvoicesService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: BookingStatusService, useValue: mockBookingStatusService },
       ],
     }).compile();
     service = module.get<MoyasarPaymentService>(MoyasarPaymentService);
     jest.clearAllMocks();
+    // Re-set $transaction mock after clearAllMocks
+    mockPrisma.$transaction.mockImplementation(async (fn: Function) => fn(mockPrisma));
   });
 
   describe('createMoyasarPayment', () => {
@@ -146,21 +157,26 @@ describe('MoyasarPaymentService', () => {
 
     it('should update payment to paid, auto-confirm booking, and create invoice', async () => {
       const rawBody = Buffer.from(JSON.stringify(webhookDto));
+      mockPrisma.processedWebhook.findUnique.mockResolvedValue(null);
       mockPrisma.payment.findFirst.mockResolvedValue({ ...mockPayment, status: 'pending' });
-      mockPrisma.payment.update.mockResolvedValue({ ...mockPayment, status: 'paid' });
-      mockPrisma.booking.findUnique.mockResolvedValue({ id: bookingId, status: 'pending' });
-      mockPrisma.booking.update.mockResolvedValue({});
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.processedWebhook.create.mockResolvedValue({});
+      mockBookingStatusService.confirm.mockResolvedValue({});
       mockInvoicesService.createInvoice.mockResolvedValue({});
 
       const result = await service.handleMoyasarWebhook(validSig(rawBody), rawBody, webhookDto);
 
       expect(result).toEqual({ success: true });
-      expect(mockPrisma.payment.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { status: 'paid' } }),
+      expect(mockPrisma.payment.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: paymentId, status: 'pending' },
+          data: { status: 'paid' },
+        }),
       );
-      expect(mockPrisma.booking.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { status: 'confirmed' } }),
-      );
+      expect(mockPrisma.processedWebhook.create).toHaveBeenCalledWith({
+        data: { eventId: moyasarPayId },
+      });
+      expect(mockBookingStatusService.confirm).toHaveBeenCalledWith(bookingId);
       expect(mockInvoicesService.createInvoice).toHaveBeenCalledWith({ paymentId: mockPayment.id });
     });
 
@@ -188,41 +204,73 @@ describe('MoyasarPaymentService', () => {
 
     it('should return success silently when payment not found', async () => {
       const rawBody = Buffer.from(JSON.stringify(webhookDto));
+      mockPrisma.processedWebhook.findUnique.mockResolvedValue(null);
       mockPrisma.payment.findFirst.mockResolvedValue(null);
       const result = await service.handleMoyasarWebhook(validSig(rawBody), rawBody, webhookDto);
       expect(result).toEqual({ success: true });
-      expect(mockPrisma.payment.update).not.toHaveBeenCalled();
+      expect(mockPrisma.payment.updateMany).not.toHaveBeenCalled();
     });
 
-    it('should skip update when already paid (idempotency)', async () => {
+    it('should return success immediately when eventId already processed', async () => {
       const rawBody = Buffer.from(JSON.stringify(webhookDto));
-      mockPrisma.payment.findFirst.mockResolvedValue({ ...mockPayment, status: 'paid' });
+      mockPrisma.processedWebhook.findUnique.mockResolvedValue({
+        id: 'some-uuid', eventId: moyasarPayId, processedAt: new Date(),
+      });
+
       const result = await service.handleMoyasarWebhook(validSig(rawBody), rawBody, webhookDto);
+
       expect(result).toEqual({ success: true });
-      expect(mockPrisma.payment.update).not.toHaveBeenCalled();
+      expect(mockPrisma.payment.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.payment.updateMany).not.toHaveBeenCalled();
+      expect(mockBookingStatusService.confirm).not.toHaveBeenCalled();
       expect(mockInvoicesService.createInvoice).not.toHaveBeenCalled();
     });
 
-    it('should update payment to failed on failed status', async () => {
+    it('should skip side effects when payment already not pending', async () => {
+      const rawBody = Buffer.from(JSON.stringify(webhookDto));
+      mockPrisma.processedWebhook.findUnique.mockResolvedValue(null);
+      mockPrisma.payment.findFirst.mockResolvedValue({ ...mockPayment, status: 'paid' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.processedWebhook.create.mockResolvedValue({});
+
+      const result = await service.handleMoyasarWebhook(validSig(rawBody), rawBody, webhookDto);
+
+      expect(result).toEqual({ success: true });
+      expect(mockPrisma.payment.updateMany).toHaveBeenCalled();
+      expect(mockBookingStatusService.confirm).not.toHaveBeenCalled();
+      expect(mockInvoicesService.createInvoice).not.toHaveBeenCalled();
+    });
+
+    it('should handle failed webhook status', async () => {
       const failedDto = { ...webhookDto, status: 'failed' };
       const rawBody = Buffer.from(JSON.stringify(failedDto));
+      mockPrisma.processedWebhook.findUnique.mockResolvedValue(null);
       mockPrisma.payment.findFirst.mockResolvedValue({ ...mockPayment, status: 'pending' });
-      mockPrisma.payment.update.mockResolvedValue({ ...mockPayment, status: 'failed' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.processedWebhook.create.mockResolvedValue({});
 
       const result = await service.handleMoyasarWebhook(validSig(rawBody), rawBody, failedDto);
 
       expect(result).toEqual({ success: true });
-      expect(mockPrisma.payment.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { status: 'failed' } }),
+      expect(mockPrisma.payment.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: paymentId, status: 'pending' },
+          data: { status: 'failed' },
+        }),
       );
+      expect(mockPrisma.processedWebhook.create).toHaveBeenCalledWith({
+        data: { eventId: moyasarPayId },
+      });
       expect(mockInvoicesService.createInvoice).not.toHaveBeenCalled();
     });
 
     it('should not fail if invoice creation throws ConflictException', async () => {
       const rawBody = Buffer.from(JSON.stringify(webhookDto));
+      mockPrisma.processedWebhook.findUnique.mockResolvedValue(null);
       mockPrisma.payment.findFirst.mockResolvedValue({ ...mockPayment, status: 'pending' });
-      mockPrisma.payment.update.mockResolvedValue({});
-      mockPrisma.booking.findUnique.mockResolvedValue({ id: bookingId, status: 'confirmed' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.processedWebhook.create.mockResolvedValue({});
+      mockBookingStatusService.confirm.mockResolvedValue({});
       mockInvoicesService.createInvoice.mockRejectedValue(new ConflictException('exists'));
 
       const result = await service.handleMoyasarWebhook(validSig(rawBody), rawBody, webhookDto);

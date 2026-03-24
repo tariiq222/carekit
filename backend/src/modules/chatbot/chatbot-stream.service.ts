@@ -8,10 +8,8 @@ import { type SessionLanguage } from '@prisma/client';
 import { Observable, type Subscriber } from 'rxjs';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
+import { ChatbotContextService } from './chatbot-context.service.js';
 import { ChatbotStreamLoopService } from './chatbot-stream-loop.service.js';
-import { buildSystemPrompt } from './constants/system-prompts.js';
-import { buildToolDefinitions } from './constants/tool-definitions.js';
-import type { OpenRouterMessage } from './interfaces/chatbot-tool.interface.js';
 import type { ChatbotConfigMap } from './interfaces/chatbot-config.interface.js';
 import { detectLanguage } from './chatbot.helpers.js';
 
@@ -28,6 +26,7 @@ export class ChatbotStreamService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ChatbotConfigService,
+    private readonly contextService: ChatbotContextService,
     private readonly streamLoop: ChatbotStreamLoopService,
   ) {}
 
@@ -82,7 +81,7 @@ export class ChatbotStreamService {
     }
 
     // Build AI context
-    const { messages, tools } = await this.buildAiContext(
+    const { messages, tools } = await this.contextService.buildAiContext(
       sessionId,
       userId,
       content,
@@ -141,65 +140,7 @@ export class ChatbotStreamService {
     return session;
   }
 
-  // ── Context building ──
-
-  private async buildAiContext(
-    sessionId: string,
-    userId: string,
-    content: string,
-    config: ChatbotConfigMap,
-  ) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { firstName: true, lastName: true },
-    });
-    const patientName = user
-      ? `${user.firstName} ${user.lastName}`
-      : 'Patient';
-
-    const clinicConfig = await this.prisma.whiteLabelConfig.findFirst({
-      where: { key: 'clinic_name' },
-    });
-    const clinicName = clinicConfig?.value ?? 'CareKit Clinic';
-
-    const systemPrompt = buildSystemPrompt(config, {
-      clinicName,
-      patientName,
-      today: new Date().toISOString().split('T')[0],
-    });
-
-    const tools = buildToolDefinitions(config);
-    const history = await this.loadHistory(
-      sessionId,
-      config.context_window_size,
-    );
-
-    const messages: OpenRouterMessage[] = [
-      { role: 'system', content: systemPrompt },
-      ...history,
-      { role: 'user', content },
-    ];
-
-    return { messages, tools };
-  }
-
   // ── Helpers ──
-
-  private async loadHistory(
-    sessionId: string,
-    windowSize: number,
-  ): Promise<OpenRouterMessage[]> {
-    const messages = await this.prisma.chatMessage.findMany({
-      where: { sessionId, role: { in: ['user', 'assistant'] } },
-      orderBy: { createdAt: 'desc' },
-      take: windowSize,
-    });
-
-    return messages.reverse().map((m) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content,
-    }));
-  }
 
   private emit(
     subscriber: Subscriber<MessageEvent>,

@@ -10,6 +10,7 @@ import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
+import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { CreateMoyasarPaymentDto } from './dto/create-moyasar-payment.dto.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
 import { paymentInclude, bookingWithPriceInclude, calculateAmounts } from './payments.helpers.js';
@@ -22,6 +23,7 @@ export class MoyasarPaymentService {
     private readonly prisma: PrismaService,
     private readonly invoicesService: InvoiceCreatorService,
     private readonly config: ConfigService,
+    private readonly bookingStatusService: BookingStatusService,
   ) {}
 
   async createMoyasarPayment(userId: string, dto: CreateMoyasarPaymentDto) {
@@ -114,6 +116,33 @@ export class MoyasarPaymentService {
     rawBody: Buffer,
     dto: MoyasarWebhookDto,
   ) {
+    this.verifySignature(signature, rawBody);
+
+    const existing = await this.prisma.processedWebhook.findUnique({
+      where: { eventId: dto.id },
+    });
+    if (existing) {
+      return { success: true };
+    }
+
+    const payment = await this.prisma.payment.findFirst({
+      where: { moyasarPaymentId: dto.id },
+    });
+    if (!payment) {
+      this.logger.warn(`No payment found for Moyasar event ${dto.id}`);
+      return { success: true };
+    }
+
+    if (dto.status === 'paid') {
+      await this.processPaidWebhook(payment.id, payment.bookingId, dto.id);
+    } else if (dto.status === 'failed') {
+      await this.processFailedWebhook(payment.id, dto.id);
+    }
+
+    return { success: true };
+  }
+
+  private verifySignature(signature: string, rawBody: Buffer): void {
     const secret = this.config.get<string>('MOYASAR_WEBHOOK_SECRET', '');
     if (!secret) {
       this.logger.error('MOYASAR_WEBHOOK_SECRET is not configured');
@@ -136,55 +165,65 @@ export class MoyasarPaymentService {
         error: 'INVALID_SIGNATURE',
       });
     }
+  }
 
-    const payment = await this.prisma.payment.findFirst({
-      where: { moyasarPaymentId: dto.id },
-    });
-
-    if (!payment) {
-      return { success: true };
-    }
-
-    if (dto.status === 'paid') {
-      // Idempotency: skip if already paid
-      if (payment.status === 'paid') {
-        return { success: true };
-      }
-
-      await this.prisma.payment.update({
-        where: { id: payment.id },
+  private async processPaidWebhook(
+    paymentId: string,
+    bookingId: string,
+    eventId: string,
+  ): Promise<void> {
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.payment.updateMany({
+        where: { id: paymentId, status: 'pending' },
         data: { status: 'paid' },
       });
+      await tx.processedWebhook.create({ data: { eventId } });
+      return result;
+    });
 
-      // Auto-confirm booking after successful payment
-      try {
-        const booking = await this.prisma.booking.findUnique({ where: { id: payment.bookingId } });
-        if (booking && booking.status === 'pending') {
-          await this.prisma.booking.update({
-            where: { id: booking.id },
-            data: { status: 'confirmed' },
-          });
-          this.logger.log(`Auto-confirmed booking ${booking.id} after payment`);
-        }
-      } catch (err) {
-        this.logger.error(`Auto-confirm failed for booking of payment ${payment.id}`, err);
-      }
-
-      try {
-        await this.invoicesService.createInvoice({ paymentId: payment.id });
-      } catch (err) {
-        if (!(err instanceof ConflictException)) {
-          this.logger.error(`Invoice creation failed for payment ${payment.id}`, err);
-        }
-      }
-    } else if (dto.status === 'failed') {
-      await this.prisma.payment.update({
-        where: { id: payment.id },
-        data: { status: 'failed' },
-      });
+    if (updated.count === 0) {
+      return;
     }
 
-    return { success: true };
+    await this.confirmBookingAfterPayment(paymentId, bookingId);
+    await this.createInvoiceAfterPayment(paymentId);
+  }
+
+  private async processFailedWebhook(
+    paymentId: string,
+    eventId: string,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.payment.updateMany({
+        where: { id: paymentId, status: 'pending' },
+        data: { status: 'failed' },
+      });
+      await tx.processedWebhook.create({ data: { eventId } });
+    });
+  }
+
+  private async confirmBookingAfterPayment(
+    paymentId: string,
+    bookingId: string,
+  ): Promise<void> {
+    try {
+      await this.bookingStatusService.confirm(bookingId);
+      this.logger.log(`Auto-confirmed booking ${bookingId} after payment`);
+    } catch (err) {
+      this.logger.warn(
+        `Auto-confirm skipped for booking of payment ${paymentId}: ${err instanceof Error ? err.message : 'unknown'}`,
+      );
+    }
+  }
+
+  private async createInvoiceAfterPayment(paymentId: string): Promise<void> {
+    try {
+      await this.invoicesService.createInvoice({ paymentId });
+    } catch (err) {
+      if (!(err instanceof ConflictException)) {
+        this.logger.error(`Invoice creation failed for payment ${paymentId}`, err);
+      }
+    }
   }
 
   async refund(paymentId: string, amount?: number) {

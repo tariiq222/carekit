@@ -14,11 +14,11 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
-import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
-import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
-import { Public } from '../auth/decorators/public.decorator.js';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { Public } from '../../common/decorators/public.decorator.js';
 import { PaymentsService } from './payments.service.js';
 import { CreatePaymentDto } from './dto/create-payment.dto.js';
 import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto.js';
@@ -31,6 +31,7 @@ import { RefundDto } from './dto/refund.dto.js';
 import { BankTransferUploadDto } from './dto/bank-transfer-upload.dto.js';
 import { VerifyBankTransferDto } from './dto/verify-bank-transfer.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
+import { validateFileContent } from '../../common/helpers/file-validation.helper.js';
 
 @ApiTags('Payments')
 @ApiBearerAuth()
@@ -142,6 +143,7 @@ export class PaymentsController {
         error: 'MISSING_FILE',
       });
     }
+    validateFileContent(req.file.buffer, req.file.mimetype);
     return this.paymentsService.uploadBankTransferReceipt(
       user.id,
       dto.bookingId,

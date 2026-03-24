@@ -4,76 +4,85 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { OtpThrottleRedisService } from '../services/otp-throttle-redis.service.js';
+import { ActivityLogService } from '../../modules/activity-log/activity-log.service.js';
+import {
+  OTP_THROTTLE_META,
+  type OtpThrottleMeta,
+} from '../decorators/otp-throttle.decorator.js';
 
-interface ThrottleEntry {
-  count: number;
-  resetAt: number;
+interface RequestUser {
+  email?: string;
+  id?: string;
 }
 
-const CLEANUP_INTERVAL_MS = 60_000;
-
 /**
- * Rate limiter that throttles by email address from request body.
- * Uses a shared static Map with periodic cleanup to prevent memory leaks.
+ * Guard that enforces per-email OTP rate limiting using Redis.
+ * Reads configuration from @OtpThrottle() decorator metadata.
+ * If no metadata is present, the guard allows the request through.
  */
 @Injectable()
 export class EmailThrottleGuard implements CanActivate {
-  private static readonly store = new Map<string, ThrottleEntry>();
-  private static lastCleanup = Date.now();
-  private readonly limit: number;
-  private readonly ttlMs: number;
+  private readonly logger = new Logger(EmailThrottleGuard.name);
 
-  constructor(limit = 3, ttlMs = 60_000) {
-    this.limit = limit;
-    this.ttlMs = ttlMs;
-  }
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly otpThrottle: OtpThrottleRedisService,
+    private readonly activityLog: ActivityLogService,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const meta = this.reflector.get<OtpThrottleMeta | undefined>(
+      OTP_THROTTLE_META,
+      context.getHandler(),
+    );
+
+    // No @OtpThrottle metadata — allow through
+    if (!meta) return true;
+
     const request = context.switchToHttp().getRequest<Request>();
-    const email = (request.body as Record<string, unknown>)?.email;
+    const body = request.body as Record<string, unknown>;
+    const user = (request as Request & { user?: RequestUser }).user;
 
-    if (!email || typeof email !== 'string') {
-      return true;
-    }
+    const email = (body?.email as string) ?? user?.email;
+    if (!email || typeof email !== 'string') return true;
 
-    // Periodic cleanup of expired entries
-    this.cleanup();
+    const { routeKey, limit, ttlMs } = meta;
+    const result = await this.otpThrottle.check(email, routeKey, limit, ttlMs);
 
-    const key = `${request.path}:${email.toLowerCase()}`;
-    const now = Date.now();
-    const entry = EmailThrottleGuard.store.get(key);
+    if (!result.allowed) {
+      const isLocked = result.lockedUntilMs !== undefined;
 
-    if (!entry || now >= entry.resetAt) {
-      EmailThrottleGuard.store.set(key, { count: 1, resetAt: now + this.ttlMs });
-      return true;
-    }
+      // Fire-and-forget activity log
+      this.activityLog
+        .log({
+          userId: user?.id,
+          action: isLocked ? 'OTP_EMAIL_LOCKED' : 'OTP_RATE_LIMIT_EXCEEDED',
+          module: 'auth',
+          description: `Rate limit hit for ${routeKey} by ${email}`,
+          ipAddress: request.ip,
+          userAgent: request.headers['user-agent'],
+        })
+        .catch((err) =>
+          this.logger.warn('Failed to log rate limit event', err),
+        );
 
-    if (entry.count >= this.limit) {
       throw new HttpException(
         {
           statusCode: HttpStatus.TOO_MANY_REQUESTS,
-          message: 'Too many requests. Please try again later.',
-          error: 'RATE_LIMIT_EXCEEDED',
+          message: isLocked
+            ? 'Account temporarily locked due to repeated violations. Try again later.'
+            : 'Too many requests. Please try again later.',
+          error: isLocked ? 'OTP_EMAIL_LOCKED' : 'OTP_RATE_LIMIT_EXCEEDED',
         },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 
-    entry.count++;
     return true;
-  }
-
-  private cleanup(): void {
-    const now = Date.now();
-    if (now - EmailThrottleGuard.lastCleanup < CLEANUP_INTERVAL_MS) return;
-
-    EmailThrottleGuard.lastCleanup = now;
-    for (const [key, entry] of EmailThrottleGuard.store) {
-      if (now >= entry.resetAt) {
-        EmailThrottleGuard.store.delete(key);
-      }
-    }
   }
 }

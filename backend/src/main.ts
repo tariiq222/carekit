@@ -2,13 +2,23 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
+import { StructuredLogger } from './common/services/structured-logger.service.js';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
+
+  // Use the custom structured logger for all NestJS logging
+  app.useLogger(app.get(StructuredLogger));
 
   // Security headers
   app.use(helmet());
+
+  // Cookie parser — must be before CORS
+  app.use(cookieParser());
 
   // Global prefix
   app.setGlobalPrefix('api/v1');

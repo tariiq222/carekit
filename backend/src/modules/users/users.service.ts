@@ -10,8 +10,10 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto.js';
 import { UserRolesService } from './user-roles.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
+import { PractitionersService } from '../practitioners/practitioners.service.js';
 import { sanitizeUser, SanitizableUser, userRolesInclude } from './users.helpers.js';
-import { SALT_ROUNDS } from '../../config/constants.js';
+import { SALT_ROUNDS, ROLE_PRACTITIONER } from '../../config/constants.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +21,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly userRolesService: UserRolesService,
     private readonly activityLogService: ActivityLogService,
+    private readonly practitionersService: PractitionersService,
   ) {}
 
   async findAll(params?: {
@@ -30,8 +33,7 @@ export class UsersService {
     role?: string;
     isActive?: boolean;
   }) {
-    const page = params?.page ?? 1;
-    const perPage = Math.min(params?.perPage ?? 20, 100);
+    const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage, 100);
     const allowedSortFields = ['createdAt', 'updatedAt', 'firstName', 'lastName', 'email', 'isActive'];
     const sortBy = allowedSortFields.includes(params?.sortBy ?? '') ? params!.sortBy! : 'createdAt';
     const sortOrder = params?.sortOrder ?? 'desc';
@@ -61,24 +63,15 @@ export class UsersService {
         where,
         include: userRolesInclude,
         orderBy: { [sortBy]: sortOrder },
-        skip: (page - 1) * perPage,
+        skip,
         take: perPage,
       }),
       this.prisma.user.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / perPage);
-
     return {
       items: users.map((u) => sanitizeUser(u)),
-      meta: {
-        total,
-        page,
-        perPage,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 
@@ -158,27 +151,21 @@ export class UsersService {
         data: { userId: created.id, roleId: role.id },
       });
 
-      if (dto.roleSlug === 'practitioner') {
-        const defaultSpecialty = await tx.specialty.findFirst({
-          where: { isActive: true },
-        });
-        if (defaultSpecialty) {
-          await tx.practitioner.create({
-            data: { userId: created.id, specialtyId: defaultSpecialty.id },
-          });
-        }
-      }
-
       return created;
     });
 
-    await this.activityLogService.log({
+    // Create practitioner profile if role is practitioner (delegated to PractitionersService)
+    if (dto.roleSlug === ROLE_PRACTITIONER) {
+      await this.practitionersService.createForUser(user.id);
+    }
+
+    this.activityLogService.log({
       userId: requesterId,
       action: 'user_created',
       module: 'users',
       resourceId: user.id,
       description: `User created with role ${dto.roleSlug}`,
-    });
+    }).catch(() => {});
 
     return {
       ...sanitizeUser({
@@ -250,13 +237,13 @@ export class UsersService {
       data: { deletedAt: new Date(), isActive: false },
     });
 
-    await this.activityLogService.log({
+    this.activityLogService.log({
       userId: requesterId,
       action: 'user_deleted',
       module: 'users',
       resourceId: id,
       description: 'User soft-deleted',
-    });
+    }).catch(() => {});
   }
 
   async activate(id: string) {

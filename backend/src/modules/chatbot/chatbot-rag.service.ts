@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 interface KbSearchResult {
   id: string;
@@ -57,6 +58,10 @@ export class ChatbotRagService {
     const embedding = await this.generateEmbedding(query);
     const vectorStr = `[${embedding.join(',')}]`;
 
+    // SAFETY: $queryRawUnsafe is required because Prisma cannot parameterize
+    // pgvector's Unsupported("vector") type via tagged template literals.
+    // vectorStr is safe: generated from OpenRouter API float[] (never user input).
+    // All values ($1, $2) are parameterized — no SQL injection risk.
     const results = await this.prisma.$queryRawUnsafe<KbSearchResult[]>(
       `SELECT id, title, content, category,
               1 - (embedding <=> $1::vector) AS similarity
@@ -98,7 +103,8 @@ export class ChatbotRagService {
       },
     });
 
-    // Update embedding via raw SQL (Prisma can't handle Unsupported types)
+    // SAFETY: $executeRawUnsafe required for pgvector Unsupported type.
+    // vectorStr is from OpenRouter API float[] only. Values are parameterized.
     await this.prisma.$executeRawUnsafe(
       `UPDATE knowledge_base SET embedding = $1::vector WHERE id = $2`,
       vectorStr,
@@ -212,8 +218,7 @@ export class ChatbotRagService {
   // ── KB CRUD ──
 
   async findAll(params?: { source?: string; category?: string; page?: number; perPage?: number }) {
-    const page = params?.page ?? 1;
-    const perPage = params?.perPage ?? 20;
+    const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage);
     const where: Record<string, unknown> = {};
 
     if (params?.source) where.source = params.source;
@@ -223,16 +228,15 @@ export class ChatbotRagService {
       this.prisma.knowledgeBase.findMany({
         where,
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * perPage,
+        skip,
         take: perPage,
       }),
       this.prisma.knowledgeBase.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / perPage);
     return {
       items,
-      meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 

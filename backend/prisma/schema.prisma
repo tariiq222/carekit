@@ -20,6 +20,7 @@ enum BookingType {
   clinic_visit
   phone_consultation
   video_consultation
+  walk_in
 
   @@map("booking_type")
 }
@@ -27,10 +28,13 @@ enum BookingType {
 enum BookingStatus {
   pending
   confirmed
+  checked_in
+  in_progress
   completed
   cancelled
   pending_cancellation
   no_show
+  expired
 
   @@map("booking_status")
 }
@@ -44,6 +48,7 @@ enum PaymentMethod {
 
 enum PaymentStatus {
   pending
+  awaiting
   paid
   refunded
   failed
@@ -68,12 +73,28 @@ enum NotificationType {
   booking_confirmed
   booking_completed
   booking_cancelled
+  booking_rescheduled
+  booking_expired
+  cancellation_rejected
+  cancellation_requested
   reminder
   payment_received
   new_rating
   problem_report
+  waitlist_slot_available
+  system_alert
 
   @@map("notification_type")
+}
+
+enum WaitlistStatus {
+  waiting
+  notified
+  booked
+  expired
+  cancelled
+
+  @@map("waitlist_status")
 }
 
 enum ProblemReportType {
@@ -188,20 +209,22 @@ model User {
   deletedAt     DateTime?   @map("deleted_at")
 
   // Relations
-  otpCodes          OtpCode[]
-  refreshTokens     RefreshToken[]
-  userRoles         UserRole[]
-  practitioner      Practitioner?
-  bookingsAsPatient Booking[]             @relation("PatientBookings")
-  ratingsAsPatient  Rating[]              @relation("PatientRatings")
-  problemReports    ProblemReport[]       @relation("PatientProblemReports")
-  resolvedReports   ProblemReport[]       @relation("ResolvedByUser")
-  reviewedReceipts  BankTransferReceipt[] @relation("ReviewedByUser")
-  chatSessions      ChatSession[]
-  notifications     Notification[]
-  fcmTokens         FcmToken[]
-  activityLogs      ActivityLog[]
-  kbFiles           KnowledgeBaseFile[]
+  otpCodes              OtpCode[]
+  refreshTokens         RefreshToken[]
+  userRoles             UserRole[]
+  practitioner          Practitioner?
+  bookingsAsPatient     Booking[]             @relation("PatientBookings")
+  ratingsAsPatient      Rating[]              @relation("PatientRatings")
+  problemReports        ProblemReport[]       @relation("PatientProblemReports")
+  resolvedReports       ProblemReport[]       @relation("ResolvedByUser")
+  reviewedReceipts      BankTransferReceipt[] @relation("ReviewedByUser")
+  chatSessions          ChatSession[]
+  notifications         Notification[]
+  fcmTokens             FcmToken[]
+  activityLogs          ActivityLog[]
+  kbFiles               KnowledgeBaseFile[]
+  waitlistEntries       WaitlistEntry[]       @relation("WaitlistPatient")
+  favoritePractitioners FavoritePractitioner[]
 
   @@map("users")
 }
@@ -322,13 +345,15 @@ model Practitioner {
   deletedAt   DateTime? @map("deleted_at")
 
   // Relations
-  user           User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  specialty      Specialty                  @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
-  availabilities      PractitionerAvailability[]
-  vacations           PractitionerVacation[]
-  bookings            Booking[]
-  ratings             Rating[]
+  user                 User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty            Specialty                  @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+  availabilities       PractitionerAvailability[]
+  vacations            PractitionerVacation[]
+  bookings             Booking[]
+  ratings              Rating[]
   practitionerServices PractitionerService[]
+  waitlistEntries      WaitlistEntry[]
+  favoritedBy          FavoritePractitioner[]
 
   @@index([specialtyId])
   @@index([isActive, deletedAt])
@@ -447,6 +472,7 @@ model Service {
   category             ServiceCategory      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   bookings             Booking[]
   practitionerServices PractitionerService[]
+  waitlistEntries      WaitlistEntry[]
 
   @@index([categoryId])
   @@map("services")
@@ -457,35 +483,46 @@ model Service {
 // ──────────────────────────────────────────────
 
 model Booking {
-  id                 String        @id @default(uuid())
-  patientId          String?       @map("patient_id") // nullable ONLY for onDelete:SetNull — always required at creation
+  id                    String        @id @default(uuid())
+  patientId             String?       @map("patient_id") // nullable ONLY for onDelete:SetNull — always required at creation
   practitionerId        String        @map("practitioner_id")
   serviceId             String        @map("service_id")
   practitionerServiceId String        @map("practitioner_service_id")
   type                  BookingType
-  date               DateTime
-  startTime          String        @map("start_time") // "HH:mm"
-  endTime            String        @map("end_time") // "HH:mm"
-  status             BookingStatus @default(pending)
-  notes              String?
-  zoomMeetingId      String?       @map("zoom_meeting_id")
-  zoomJoinUrl        String?       @map("zoom_join_url")
-  zoomHostUrl        String?       @map("zoom_host_url")
-  cancellationReason String?       @map("cancellation_reason")
-  adminNotes         String?       @map("admin_notes")
-  cancelledAt        DateTime?     @map("cancelled_at")
-  confirmedAt        DateTime?     @map("confirmed_at")
-  rescheduledFromId  String?       @unique @map("rescheduled_from_id") // links to original booking when rescheduled
-  completedAt        DateTime?     @map("completed_at")
-  createdAt          DateTime      @default(now()) @map("created_at")
-  updatedAt          DateTime      @updatedAt @map("updated_at")
-  deletedAt          DateTime?     @map("deleted_at")
+  date                  DateTime
+  startTime             String        @map("start_time") // "HH:mm"
+  endTime               String        @map("end_time") // "HH:mm"
+  status                BookingStatus @default(pending)
+  notes                 String?
+  zoomMeetingId         String?       @map("zoom_meeting_id")
+  zoomJoinUrl           String?       @map("zoom_join_url")
+  zoomHostUrl           String?       @map("zoom_host_url")
+  cancellationReason    String?       @map("cancellation_reason")
+  adminNotes            String?       @map("admin_notes")
+  cancelledAt           DateTime?     @map("cancelled_at")
+  confirmedAt           DateTime?     @map("confirmed_at")
+  rescheduledFromId     String?       @unique @map("rescheduled_from_id")
+  completedAt           DateTime?     @map("completed_at")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  deletedAt             DateTime?     @map("deleted_at")
+
+  // New fields — booking overhaul
+  cancelledBy           String?       @map("cancelled_by") // patient | practitioner | admin | system
+  noShowAt              DateTime?     @map("no_show_at")
+  checkedInAt           DateTime?     @map("checked_in_at")
+  inProgressAt          DateTime?     @map("in_progress_at")
+  completionNotes       String?       @map("completion_notes")
+  isWalkIn              Boolean       @default(false) @map("is_walk_in")
+  recurringGroupId      String?       @map("recurring_group_id")
+  rescheduleCount       Int           @default(0) @map("reschedule_count")
+  suggestedRefundType   String?       @map("suggested_refund_type")
 
   // Relations
   patient             User?                @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
   practitioner        Practitioner         @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
   service             Service              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  practitionerService PractitionerService @relation(fields: [practitionerServiceId], references: [id], onDelete: Restrict)
+  practitionerService PractitionerService  @relation(fields: [practitionerServiceId], references: [id], onDelete: Restrict)
   rescheduledFrom     Booking?             @relation("RescheduleChain", fields: [rescheduledFromId], references: [id], onDelete: SetNull)
   rescheduledTo       Booking?             @relation("RescheduleChain")
   payment             Payment?
@@ -497,7 +534,111 @@ model Booking {
   @@index([status])
   @@index([practitionerServiceId])
   @@index([date])
+  @@index([recurringGroupId])
   @@map("bookings")
+}
+
+// ──────────────────────────────────────────────
+// Booking Settings (admin-configurable per clinic)
+// ──────────────────────────────────────────────
+
+model BookingSettings {
+  id                             String   @id @default(uuid())
+
+  // Payment timeout
+  paymentTimeoutMinutes          Int      @default(60) @map("payment_timeout_minutes")
+
+  // Cancellation policy
+  freeCancelBeforeHours          Int      @default(24) @map("free_cancel_before_hours")
+  freeCancelRefundType           String   @default("full") @map("free_cancel_refund_type")
+  lateCancelRefundType           String   @default("none") @map("late_cancel_refund_type")
+  lateCancelRefundPercent        Int      @default(0) @map("late_cancel_refund_percent")
+  adminCanDirectCancel           Boolean  @default(true) @map("admin_can_direct_cancel")
+  patientCanCancelPending        Boolean  @default(true) @map("patient_can_cancel_pending")
+
+  // Rescheduling policy
+  patientCanReschedule           Boolean  @default(true) @map("patient_can_reschedule")
+  rescheduleBeforeHours          Int      @default(12) @map("reschedule_before_hours")
+  maxReschedulesPerBooking       Int      @default(2) @map("max_reschedules_per_booking")
+
+  // Walk-in
+  allowWalkIn                    Boolean  @default(true) @map("allow_walk_in")
+  walkInPaymentRequired          Boolean  @default(false) @map("walk_in_payment_required")
+
+  // Recurring
+  allowRecurring                 Boolean  @default(false) @map("allow_recurring")
+  maxRecurringWeeks              Int      @default(12) @map("max_recurring_weeks")
+
+  // Waitlist
+  waitlistEnabled                Boolean  @default(false) @map("waitlist_enabled")
+  waitlistMaxPerSlot             Int      @default(5) @map("waitlist_max_per_slot")
+  waitlistAutoNotify             Boolean  @default(true) @map("waitlist_auto_notify")
+
+  // Buffer between appointments
+  bufferMinutes                  Int      @default(0) @map("buffer_minutes")
+
+  // Auto-complete / no-show
+  autoCompleteAfterHours         Int      @default(2) @map("auto_complete_after_hours")
+  autoNoShowAfterMinutes         Int      @default(30) @map("auto_no_show_after_minutes")
+
+  // Reminders
+  reminder24hEnabled             Boolean  @default(true) @map("reminder_24h_enabled")
+  reminder1hEnabled              Boolean  @default(true) @map("reminder_1h_enabled")
+  reminderInteractive            Boolean  @default(false) @map("reminder_interactive")
+
+  // Suggestions
+  suggestAlternativesOnConflict  Boolean  @default(true) @map("suggest_alternatives_on_conflict")
+  suggestAlternativesCount       Int      @default(3) @map("suggest_alternatives_count")
+
+  createdAt                      DateTime @default(now()) @map("created_at")
+  updatedAt                      DateTime @updatedAt @map("updated_at")
+
+  @@map("booking_settings")
+}
+
+// ──────────────────────────────────────────────
+// Waitlist
+// ──────────────────────────────────────────────
+
+model WaitlistEntry {
+  id              String         @id @default(uuid())
+  patientId       String         @map("patient_id")
+  practitionerId  String         @map("practitioner_id")
+  serviceId       String?        @map("service_id")
+  preferredDate   DateTime?      @map("preferred_date")
+  preferredTime   String?        @map("preferred_time") // "morning" | "afternoon" | "any"
+  status          WaitlistStatus @default(waiting)
+  notifiedAt      DateTime?      @map("notified_at")
+  bookedBookingId String?        @map("booked_booking_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  patient      User         @relation("WaitlistPatient", fields: [patientId], references: [id], onDelete: Cascade)
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+  service      Service?     @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  @@index([practitionerId, status])
+  @@index([patientId])
+  @@map("waitlist_entries")
+}
+
+// ──────────────────────────────────────────────
+// Favorite Practitioners
+// ──────────────────────────────────────────────
+
+model FavoritePractitioner {
+  id             String   @id @default(uuid())
+  patientId      String   @map("patient_id")
+  practitionerId String   @map("practitioner_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  patient      User         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, practitionerId])
+  @@map("favorite_practitioners")
 }
 
 // ──────────────────────────────────────────────
@@ -574,6 +715,15 @@ model Invoice {
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
   @@map("invoices")
+}
+
+model ProcessedWebhook {
+  id          String   @id @default(uuid())
+  eventId     String   @unique @map("event_id")
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@index([processedAt])
+  @@map("processed_webhooks")
 }
 
 // ──────────────────────────────────────────────

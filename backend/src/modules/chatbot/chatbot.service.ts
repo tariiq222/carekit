@@ -4,11 +4,12 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotAiService } from './chatbot-ai.service.js';
 import { ChatbotToolsService } from './chatbot-tools.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
-import { buildSystemPrompt } from './constants/system-prompts.js';
-import { buildToolDefinitions } from './constants/tool-definitions.js';
-import type { OpenRouterMessage } from './interfaces/chatbot-tool.interface.js';
+import { ChatbotContextService } from './chatbot-context.service.js';
+import type { OpenRouterMessage, OpenRouterTool } from './interfaces/chatbot-tool.interface.js';
 import type { ChatbotConfigMap } from './interfaces/chatbot-config.interface.js';
 import { detectLanguage, classifyIntent, buildActionCard } from './chatbot.helpers.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
 
 export interface HandleMessageResult {
   message: string;
@@ -26,6 +27,7 @@ export class ChatbotService {
     private readonly aiService: ChatbotAiService,
     private readonly toolsService: ChatbotToolsService,
     private readonly configService: ChatbotConfigService,
+    private readonly contextService: ChatbotContextService,
   ) {}
 
   async createSession(userId: string, language?: string) {
@@ -121,31 +123,9 @@ export class ChatbotService {
     }
 
     // Build context
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { firstName: true, lastName: true },
-    });
-    const patientName = user ? `${user.firstName} ${user.lastName}` : 'Patient';
-
-    const clinicConfig = await this.prisma.whiteLabelConfig.findFirst({
-      where: { key: 'clinic_name' },
-    });
-    const clinicName = clinicConfig?.value ?? 'CareKit Clinic';
-
-    const systemPrompt = buildSystemPrompt(config, {
-      clinicName,
-      patientName,
-      today: new Date().toISOString().split('T')[0],
-    });
-
-    const tools = buildToolDefinitions(config);
-    const history = await this.loadHistory(sessionId, config.context_window_size);
-
-    const messages: OpenRouterMessage[] = [
-      { role: 'system', content: systemPrompt },
-      ...history,
-      { role: 'user', content },
-    ];
+    const { messages, tools } = await this.contextService.buildAiContext(
+      sessionId, userId, content, config,
+    );
 
     // AI loop — handle tool calls iteratively
     return this.runAiLoop(messages, tools, config, sessionId, userId);
@@ -272,19 +252,14 @@ export class ChatbotService {
     dateTo?: string;
     search?: string;
   }) {
-    const page = params.page ?? 1;
-    const perPage = params.perPage ?? 20;
+    const { page, perPage, skip } = parsePaginationParams(params.page, params.perPage);
     const where: Record<string, unknown> = {};
 
     if (params.userId) where.userId = params.userId;
     if (params.handedOff !== undefined) where.handedOff = params.handedOff;
     if (params.language) where.language = params.language;
-    if (params.dateFrom || params.dateTo) {
-      const dateFilter: Record<string, Date> = {};
-      if (params.dateFrom) dateFilter.gte = new Date(params.dateFrom);
-      if (params.dateTo) dateFilter.lte = new Date(params.dateTo);
-      where.createdAt = dateFilter;
-    }
+    const dateRange = buildDateRangeFilter(params.dateFrom, params.dateTo);
+    if (dateRange) where.createdAt = dateRange;
 
     const include = {
       user: { select: { id: true, firstName: true, lastName: true } },
@@ -296,35 +271,16 @@ export class ChatbotService {
         where,
         include,
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * perPage,
+        skip,
         take: perPage,
       }),
       this.prisma.chatSession.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / perPage);
     return {
       items,
-      meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 
-  // ── Helpers ──
-
-  private async loadHistory(sessionId: string, windowSize: number): Promise<OpenRouterMessage[]> {
-    const messages = await this.prisma.chatMessage.findMany({
-      where: { sessionId, role: { in: ['user', 'assistant'] } },
-      orderBy: { createdAt: 'desc' },
-      take: windowSize,
-    });
-
-    return messages.reverse().map((m) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content,
-    }));
-  }
-
 }
-
-// Type import for the loop
-type OpenRouterTool = import('./interfaces/chatbot-tool.interface.js').OpenRouterTool;

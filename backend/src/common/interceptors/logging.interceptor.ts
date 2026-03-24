@@ -5,7 +5,11 @@ import {
   Logger,
   NestInterceptor,
 } from '@nestjs/common';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, catchError, throwError } from 'rxjs';
+import {
+  correlationStorage,
+  CORRELATION_HEADER,
+} from '../middleware/correlation-id.middleware.js';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -17,6 +21,7 @@ export class LoggingInterceptor implements NestInterceptor {
       .getRequest<{ method: string; url: string; ip: string }>();
     const { method, url, ip } = req;
     const start = Date.now();
+    const correlationId = correlationStorage.getStore() ?? '-';
 
     return next.handle().pipe(
       tap(() => {
@@ -25,8 +30,15 @@ export class LoggingInterceptor implements NestInterceptor {
           .getResponse<{ statusCode: number }>();
         const duration = Date.now() - start;
         this.logger.log(
-          `${method} ${url} ${res.statusCode} ${duration}ms — ${ip}`,
+          `${method} ${url} ${res.statusCode} ${duration}ms — ${ip} [${CORRELATION_HEADER}=${correlationId}]`,
         );
+      }),
+      catchError((err: Error) => {
+        const duration = Date.now() - start;
+        this.logger.error(
+          `${method} ${url} ERR ${duration}ms — ${ip} [${CORRELATION_HEADER}=${correlationId}] ${err.message}`,
+        );
+        return throwError(() => err);
       }),
     );
   }

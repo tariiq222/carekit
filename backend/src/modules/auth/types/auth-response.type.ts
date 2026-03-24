@@ -1,4 +1,4 @@
-import { UserPayload } from './user-payload.type.js';
+import { UserPayload } from '../../../common/types/user-payload.type.js';
 
 export interface AuthResponse {
   user: UserPayload;

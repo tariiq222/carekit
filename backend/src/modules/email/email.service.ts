@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { correlationStorage } from '../../common/middleware/correlation-id.middleware.js';
 
 interface BookingDetails {
   date: string;
@@ -45,6 +46,7 @@ export class EmailService {
       to: email,
       subject,
       context: { code, firstName: firstName ?? '' },
+      correlationId: correlationStorage.getStore() ?? null,
     });
 
     this.logger.log(`Queued ${template} email to ${email}`);
@@ -56,6 +58,7 @@ export class EmailService {
       to: email,
       subject: 'Welcome to CareKit | أهلا بك في كيركت',
       context: { firstName },
+      correlationId: correlationStorage.getStore() ?? null,
     });
 
     this.logger.log(`Queued welcome email to ${email}`);
@@ -77,6 +80,7 @@ export class EmailService {
         practitioner: bookingDetails.practitioner,
         service: bookingDetails.service,
       },
+      correlationId: correlationStorage.getStore() ?? null,
     });
 
     this.logger.log(`Queued booking-confirmation email to ${email}`);

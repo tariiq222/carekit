@@ -1,17 +1,19 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Logger, OnModuleInit } from '@nestjs/common';
+import { Job, UnrecoverableError } from 'bullmq';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { ZatcaApiService } from './zatca-api.service.js';
 import { XmlSigningService } from './xml-signing.service.js';
 import { InvoiceHashService } from './invoice-hash.service.js';
+import { QueueFailureService } from '../../../common/queue/queue-failure.service.js';
+import { JOB_ATTEMPTS, QUEUE_ZATCA_SUBMIT } from '../../../config/constants/queues.js';
 
 export interface ZatcaSubmitJobData {
   invoiceId: string;
 }
 
-@Processor('zatca-submit')
-export class ZatcaSubmitProcessor extends WorkerHost {
+@Processor(QUEUE_ZATCA_SUBMIT)
+export class ZatcaSubmitProcessor extends WorkerHost implements OnModuleInit {
   private readonly logger = new Logger(ZatcaSubmitProcessor.name);
 
   constructor(
@@ -19,8 +21,26 @@ export class ZatcaSubmitProcessor extends WorkerHost {
     private readonly apiService: ZatcaApiService,
     private readonly signingService: XmlSigningService,
     private readonly hashService: InvoiceHashService,
+    private readonly queueFailureService: QueueFailureService,
   ) {
     super();
+  }
+
+  onModuleInit() {
+    this.worker.on('failed', async (job, error) => {
+      const isFinal =
+        (job && job.attemptsMade >= (job.opts.attempts ?? JOB_ATTEMPTS)) ||
+        error.name === 'UnrecoverableError';
+      if (isFinal) {
+        await this.queueFailureService.notifyAdminsOfFailure(
+          QUEUE_ZATCA_SUBMIT,
+          job?.name ?? 'unknown',
+          job?.id,
+          job?.data,
+          error,
+        );
+      }
+    });
   }
 
   async process(job: Job<ZatcaSubmitJobData>): Promise<void> {
@@ -109,7 +129,8 @@ export class ZatcaSubmitProcessor extends WorkerHost {
 
     if (!configMap['zatca_csid'] || !configMap['zatca_secret']) {
       this.logger.error('ZATCA credentials not configured — cannot submit');
-      throw new Error('ZATCA credentials missing'); // Will trigger retry
+      // No point retrying — credentials won't appear magically
+      throw new UnrecoverableError('ZATCA credentials missing');
     }
 
     return {

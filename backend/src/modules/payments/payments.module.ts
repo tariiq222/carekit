@@ -5,10 +5,12 @@ import { PaymentsService } from './payments.service.js';
 import { MoyasarPaymentService } from './moyasar-payment.service.js';
 import { BankTransferService } from './bank-transfer.service.js';
 import { InvoicesModule } from '../invoices/invoices.module.js';
+import { BookingsModule } from '../bookings/bookings.module.js';
 
 @Module({
   imports: [
     InvoicesModule,
+    BookingsModule,
     BullModule.registerQueue({ name: 'receipt-verification' }),
   ],
   controllers: [PaymentsController],

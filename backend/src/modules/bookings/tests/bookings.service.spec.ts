@@ -29,8 +29,12 @@ import { BookingsService } from '../bookings.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { BookingCancellationService } from '../booking-cancellation.service.js';
 import { BookingQueryService } from '../booking-query.service.js';
-import { ZoomService } from '../zoom.service.js';
+import { ZoomService } from '../../integrations/zoom/zoom.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
+import { BookingSettingsService } from '../booking-settings.service.js';
+import { BookingStatusService } from '../booking-status.service.js';
+import { ActivityLogService } from '../../activity-log/activity-log.service.js';
+import { BookingPaymentHelper } from '../booking-payment.helper.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -87,6 +91,7 @@ const mockPrismaService: any = {
   },
   practitioner: {
     findFirst: jest.fn(),
+    findUnique: jest.fn(),
   },
   service: {
     findFirst: jest.fn(),
@@ -242,6 +247,28 @@ describe('BookingsService', () => {
         { provide: BookingCancellationService, useValue: mockCancellationService },
         { provide: BookingQueryService, useValue: mockQueryService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: BookingSettingsService, useValue: { get: jest.fn().mockResolvedValue({}) } },
+        { provide: BookingStatusService, useValue: {
+          confirm: jest.fn().mockImplementation(async (id: string) => {
+            const booking = await mockPrismaService.booking.findFirst({ where: { id, deletedAt: null } });
+            if (!booking) throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
+            if (booking.status !== 'pending') throw new ConflictException({ statusCode: 409, message: `Cannot confirm booking with status '${booking.status}'`, error: 'CONFLICT' });
+            const payment = await mockPrismaService.payment.findFirst({ where: { bookingId: id } });
+            if (!payment || payment.status !== 'paid') throw new ConflictException({ statusCode: 409, message: 'Payment is required', error: 'PAYMENT_REQUIRED' });
+            return mockPrismaService.booking.update({ where: { id }, data: { status: 'confirmed', confirmedAt: new Date() } });
+          }),
+          complete: jest.fn().mockImplementation(async (id: string) => {
+            const booking = await mockPrismaService.booking.findFirst({ where: { id, deletedAt: null } });
+            if (!booking) throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
+            if (!['confirmed', 'checked_in', 'in_progress'].includes(booking.status)) throw new ConflictException({ statusCode: 409, message: `Cannot complete booking with status '${booking.status}'`, error: 'CONFLICT' });
+            return mockPrismaService.booking.update({ where: { id }, data: { status: 'completed', completedAt: new Date() } });
+          }),
+          checkIn: jest.fn(),
+          startSession: jest.fn(),
+          markNoShow: jest.fn(),
+        } },
+        { provide: ActivityLogService, useValue: { log: jest.fn().mockResolvedValue(undefined) } },
+        { provide: BookingPaymentHelper, useValue: { resolvePatientId: jest.fn().mockImplementation((_caller: string, patientId?: string) => Promise.resolve(patientId ?? _caller)), createPaymentIfNeeded: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

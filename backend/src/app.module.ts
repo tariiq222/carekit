@@ -1,17 +1,20 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
 import { ThrottlerRedisStorage } from './common/services/throttler-redis-storage.js';
+import { THROTTLE_TTL, THROTTLE_LIMIT, DEFAULT_JOB_OPTIONS } from './config/constants.js';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
 import { DatabaseModule } from './database/database.module.js';
 import { StorageModule } from './common/services/storage.module.js';
+import { AiServiceModule } from './common/services/ai.module.js';
+import { CacheModule } from './common/services/cache.module.js';
 import { validate } from './config/env.validation.js';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter.js';
 import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor.js';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor.js';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
+import { StructuredLogger } from './common/services/structured-logger.service.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { RolesModule } from './modules/roles/roles.module.js';
 import { PermissionsModule } from './modules/permissions/permissions.module.js';
@@ -35,6 +38,7 @@ import { EmailModule } from './modules/email/email.module.js';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module.js';
 import { ProblemReportsModule } from './modules/problem-reports/problem-reports.module.js';
 import { TasksModule } from './modules/tasks/tasks.module.js';
+import { QueueModule } from './common/queue/queue.module.js';
 
 @Module({
   imports: [
@@ -47,20 +51,22 @@ import { TasksModule } from './modules/tasks/tasks.module.js';
         connection: {
           url: configService.get<string>('REDIS_URL'),
         },
+        defaultJobOptions: DEFAULT_JOB_OPTIONS,
       }),
       inject: [ConfigService],
     }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 100,
-        },
-      ],
+    ThrottlerModule.forRootAsync({
+      useFactory: (storage: ThrottlerStorage) => ({
+        throttlers: [{ ttl: THROTTLE_TTL, limit: THROTTLE_LIMIT }],
+        storage,
+      }),
+      inject: [ThrottlerStorage],
     }),
-    // Redis storage is provided below for ThrottlerModule
     DatabaseModule,
     StorageModule,
+    AiServiceModule,
+    CacheModule,
+    QueueModule,
     EmailModule,
     ActivityLogModule,
     AuthModule,
@@ -85,9 +91,9 @@ import { TasksModule } from './modules/tasks/tasks.module.js';
     ProblemReportsModule,
     TasksModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
+    StructuredLogger,
     {
       provide: ThrottlerStorage,
       useClass: ThrottlerRedisStorage,
@@ -110,4 +116,8 @@ import { TasksModule } from './modules/tasks/tasks.module.js';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+  }
+}

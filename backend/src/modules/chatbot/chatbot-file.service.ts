@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
 import { MinioService } from '../../common/services/minio.service.js';
 import { ChatbotRagService } from './chatbot-rag.service.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 // Dynamic imports for file parsing (ESM compatibility)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,7 +43,7 @@ export class ChatbotFileService {
         fileType,
         fileSize: file.size,
         status: 'pending',
-        uploadedById: userId,
+        uploadedBy: userId,
       },
     });
 
@@ -157,13 +158,12 @@ export class ChatbotFileService {
    * List all uploaded files with pagination.
    */
   async listFiles(params?: { page?: number; perPage?: number }) {
-    const page = params?.page ?? 1;
-    const perPage = params?.perPage ?? 20;
+    const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage);
 
     const [items, total] = await Promise.all([
       this.prisma.knowledgeBaseFile.findMany({
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * perPage,
+        skip,
         take: perPage,
         include: {
           user: { select: { firstName: true, lastName: true } },
@@ -172,17 +172,9 @@ export class ChatbotFileService {
       this.prisma.knowledgeBaseFile.count(),
     ]);
 
-    const totalPages = Math.ceil(total / perPage);
     return {
       items,
-      meta: {
-        total,
-        page,
-        perPage,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 

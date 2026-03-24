@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ChatbotController } from './chatbot.controller.js';
+import { ChatbotKbController } from './chatbot-kb.controller.js';
+import { ChatbotAdminController } from './chatbot-admin.controller.js';
 import { ChatbotService } from './chatbot.service.js';
 import { ChatbotAiService } from './chatbot-ai.service.js';
 import { ChatbotToolsService } from './chatbot-tools.service.js';
 import { ChatbotRagService } from './chatbot-rag.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
+import { ChatbotContextService } from './chatbot-context.service.js';
 import { ChatbotAnalyticsService } from './chatbot-analytics.service.js';
 import { ChatbotFileService } from './chatbot-file.service.js';
 import { ChatbotStreamService } from './chatbot-stream.service.js';
@@ -15,13 +18,14 @@ import { PractitionersModule } from '../practitioners/practitioners.module.js';
 
 @Module({
   imports: [BookingsModule, ServicesModule, PractitionersModule],
-  controllers: [ChatbotController],
+  controllers: [ChatbotController, ChatbotKbController, ChatbotAdminController],
   providers: [
     ChatbotService,
     ChatbotAiService,
     ChatbotToolsService,
     ChatbotRagService,
     ChatbotConfigService,
+    ChatbotContextService,
     ChatbotAnalyticsService,
     ChatbotFileService,
     ChatbotStreamService,

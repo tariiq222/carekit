@@ -15,6 +15,8 @@ import { CreateMoyasarPaymentDto } from './dto/create-moyasar-payment.dto.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
 import { RefundDto } from './dto/refund.dto.js';
 import { paymentInclude } from './payments.helpers.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
 
 @Injectable()
 export class PaymentsService {
@@ -27,20 +29,14 @@ export class PaymentsService {
   // --- Core ---
 
   async findAll(query: PaymentFilterDto) {
-    const page = query.page ?? 1;
-    const perPage = query.perPage ?? 20;
-    const skip = (page - 1) * perPage;
+    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
 
     const where: Record<string, unknown> = { deletedAt: null };
 
     if (query.status) where.status = query.status;
     if (query.method) where.method = query.method;
-    if (query.dateFrom || query.dateTo) {
-      const dateFilter: Record<string, Date> = {};
-      if (query.dateFrom) dateFilter.gte = new Date(query.dateFrom);
-      if (query.dateTo) dateFilter.lte = new Date(query.dateTo);
-      where.createdAt = dateFilter;
-    }
+    const dateRange = buildDateRangeFilter(query.dateFrom, query.dateTo);
+    if (dateRange) where.createdAt = dateRange;
 
     const [items, total] = await Promise.all([
       this.prisma.payment.findMany({
@@ -55,7 +51,7 @@ export class PaymentsService {
 
     return {
       data: items,
-      meta: { total, page, perPage, totalPages: Math.ceil(total / perPage) },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 
@@ -166,9 +162,7 @@ export class PaymentsService {
   }
 
   async getMyPayments(userId: string, query: PaymentFilterDto) {
-    const page = query.page ?? 1;
-    const perPage = query.perPage ?? 20;
-    const skip = (page - 1) * perPage;
+    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
 
     const where: Record<string, unknown> = {
       booking: { patientId: userId },
@@ -177,12 +171,8 @@ export class PaymentsService {
 
     if (query.status) where.status = query.status;
     if (query.method) where.method = query.method;
-    if (query.dateFrom || query.dateTo) {
-      const dateFilter: Record<string, Date> = {};
-      if (query.dateFrom) dateFilter.gte = new Date(query.dateFrom);
-      if (query.dateTo) dateFilter.lte = new Date(query.dateTo);
-      where.createdAt = dateFilter;
-    }
+    const dateRange = buildDateRangeFilter(query.dateFrom, query.dateTo);
+    if (dateRange) where.createdAt = dateRange;
 
     const [items, total] = await Promise.all([
       this.prisma.payment.findMany({
@@ -197,7 +187,7 @@ export class PaymentsService {
 
     return {
       data: items,
-      meta: { total, page, perPage, totalPages: Math.ceil(total / perPage) },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 

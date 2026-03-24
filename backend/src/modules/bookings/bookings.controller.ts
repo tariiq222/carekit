@@ -10,16 +10,20 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { PermissionsGuard } from '../auth/guards/permissions.guard.js';
-import { CheckPermissions } from '../auth/decorators/check-permissions.decorator.js';
-import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { BookingsService } from './bookings.service.js';
+import { BookingRecurringService } from './booking-recurring.service.js';
 import { CreateBookingDto } from './dto/create-booking.dto.js';
+import { CreateRecurringBookingDto } from './dto/create-recurring-booking.dto.js';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto.js';
 import { CancelRequestDto } from './dto/cancel-request.dto.js';
 import { CancelApproveDto } from './dto/cancel-approve.dto.js';
 import { CancelRejectDto } from './dto/cancel-reject.dto.js';
+import { AdminCancelDto } from './dto/admin-cancel.dto.js';
+import { CompleteBookingDto } from './dto/complete-booking.dto.js';
 import { BookingListQueryDto } from './dto/booking-list-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
@@ -28,7 +32,10 @@ import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 @Controller('bookings')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(
+    private readonly bookingsService: BookingsService,
+    private readonly bookingRecurringService: BookingRecurringService,
+  ) {}
 
   // ═══════════════════════════════════════════════════════════════
   //  POST /bookings — Create Booking
@@ -48,6 +55,7 @@ export class BookingsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get('my')
+  @CheckPermissions({ module: 'bookings', action: 'view' })
   async findMyBookings(@CurrentUser() user: { id: string }) {
     return this.bookingsService.findMyBookings(user.id);
   }
@@ -57,6 +65,7 @@ export class BookingsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get('today')
+  @CheckPermissions({ module: 'bookings', action: 'view' })
   async findTodayBookings(@CurrentUser() user: { id: string }) {
     return this.bookingsService.findTodayBookingsForUser(user.id);
   }
@@ -69,6 +78,20 @@ export class BookingsController {
   @CheckPermissions({ module: 'bookings', action: 'view' })
   async getStats() {
     const data = await this.bookingsService.getStats();
+    return { success: true, data };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  POST /bookings/recurring — Create Recurring Bookings
+  // ═══════════════════════════════════════════════════════════════
+
+  @Post('recurring')
+  @CheckPermissions({ module: 'bookings', action: 'create' })
+  async createRecurring(
+    @Body() dto: CreateRecurringBookingDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    const data = await this.bookingRecurringService.createRecurring(user.id, dto);
     return { success: true, data };
   }
 
@@ -90,6 +113,7 @@ export class BookingsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get(':id')
+  @CheckPermissions({ module: 'bookings', action: 'view' })
   async findOne(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -111,6 +135,22 @@ export class BookingsController {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  //  POST /bookings/:id/patient-reschedule — Patient Self-Reschedule
+  // ═══════════════════════════════════════════════════════════════
+
+  @Post(':id/patient-reschedule')
+  @HttpCode(200)
+  @CheckPermissions({ module: 'bookings', action: 'edit' })
+  async patientReschedule(
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: RescheduleBookingDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    const data = await this.bookingsService.patientReschedule(id, user.id, dto);
+    return { success: true, data };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   //  POST /bookings/:id/confirm
   // ═══════════════════════════════════════════════════════════════
 
@@ -122,14 +162,45 @@ export class BookingsController {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  //  POST /bookings/:id/check-in
+  // ═══════════════════════════════════════════════════════════════
+
+  @Post(':id/check-in')
+  @HttpCode(200)
+  @CheckPermissions({ module: 'bookings', action: 'edit' })
+  async checkIn(@Param('id', uuidPipe) id: string) {
+    const data = await this.bookingsService.checkIn(id);
+    return { success: true, data };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  POST /bookings/:id/start — Start Session (practitioner only)
+  // ═══════════════════════════════════════════════════════════════
+
+  @Post(':id/start')
+  @HttpCode(200)
+  @CheckPermissions({ module: 'bookings', action: 'edit' })
+  async startSession(
+    @Param('id', uuidPipe) id: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    const data = await this.bookingsService.startSession(id, user.id);
+    return { success: true, data };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   //  POST /bookings/:id/complete
   // ═══════════════════════════════════════════════════════════════
 
   @Post(':id/complete')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
-  async complete(@Param('id', uuidPipe) id: string) {
-    return this.bookingsService.complete(id);
+  async complete(
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: CompleteBookingDto,
+  ) {
+    const data = await this.bookingsService.complete(id, dto);
+    return { success: true, data };
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -149,6 +220,7 @@ export class BookingsController {
 
   @Post(':id/cancel-request')
   @HttpCode(200)
+  @CheckPermissions({ module: 'bookings', action: 'edit' })
   async cancelRequest(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelRequestDto,
@@ -201,6 +273,46 @@ export class BookingsController {
       success: true,
       data,
       message: 'Cancellation rejected successfully',
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  POST /bookings/:id/admin-cancel — Admin direct cancel
+  // ═══════════════════════════════════════════════════════════════
+
+  @Post(':id/admin-cancel')
+  @HttpCode(200)
+  @CheckPermissions({ module: 'bookings', action: 'delete' })
+  async adminCancel(
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: AdminCancelDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    const data = await this.bookingsService.adminDirectCancel(id, user.id, dto);
+    return {
+      success: true,
+      data,
+      message: 'Booking cancelled by admin successfully',
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  POST /bookings/:id/practitioner-cancel — Practitioner cancel
+  // ═══════════════════════════════════════════════════════════════
+
+  @Post(':id/practitioner-cancel')
+  @HttpCode(200)
+  @CheckPermissions({ module: 'bookings', action: 'delete' })
+  async practitionerCancel(
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: CancelRequestDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    const data = await this.bookingsService.practitionerCancel(id, user.id, dto.reason);
+    return {
+      success: true,
+      data,
+      message: 'Booking cancelled by practitioner successfully',
     };
   }
 }

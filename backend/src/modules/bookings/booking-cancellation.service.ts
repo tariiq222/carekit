@@ -1,41 +1,37 @@
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
-  Logger,
-  NotFoundException,
 } from '@nestjs/common';
+import { Booking, BookingSettings } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CancelApproveDto } from './dto/cancel-approve.dto.js';
 import { CancelRejectDto } from './dto/cancel-reject.dto.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { AdminCancelDto } from './dto/admin-cancel.dto.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
-import { ZoomService } from './zoom.service.js';
+import { BookingSettingsService } from './booking-settings.service.js';
+import { BookingCancelHelpersService } from './booking-cancel-helpers.service.js';
+import { BookingLookupHelper } from './booking-lookup.helper.js';
+import { WaitlistService } from './waitlist.service.js';
 import { bookingInclude } from './booking.constants.js';
 
 @Injectable()
 export class BookingCancellationService {
-  private readonly logger = new Logger(BookingCancellationService.name);
-
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
     private readonly activityLogService: ActivityLogService,
-    private readonly zoomService: ZoomService,
+    private readonly bookingSettingsService: BookingSettingsService,
+    private readonly helpers: BookingCancelHelpersService,
+    private readonly lookup: BookingLookupHelper,
+    private readonly waitlistService: WaitlistService,
   ) {}
 
+  // ───────────────────────────────────────────────────────────────
+  //  Fix 1 + Fix 12: Patient requests cancellation
+  // ───────────────────────────────────────────────────────────────
+
   async requestCancellation(id: string, patientId: string, reason?: string) {
-    const booking = await this.prisma.booking.findFirst({
-      where: { id, deletedAt: null },
-    });
-    if (!booking) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Booking not found',
-        error: 'NOT_FOUND',
-      });
-    }
+    const booking = await this.lookup.findBookingOrFail(id);
 
     if (booking.patientId !== patientId) {
       throw new ForbiddenException({
@@ -45,53 +41,121 @@ export class BookingCancellationService {
       });
     }
 
-    if (booking.status !== 'confirmed') {
-      throw new ConflictException({
-        statusCode: 409,
-        message: `Cannot request cancellation for booking with status '${booking.status}'`,
-        error: 'CONFLICT',
-      });
+    const settings = await this.bookingSettingsService.get();
+
+    if (booking.status === 'pending') {
+      return this.handlePendingCancel(booking, settings, reason);
     }
 
-    const updatedBooking = await this.prisma.booking.update({
-      where: { id },
-      data: { status: 'pending_cancellation', cancellationReason: reason },
-      include: bookingInclude,
-    });
+    if (booking.status === 'confirmed') {
+      return this.handleConfirmedCancelRequest(booking, settings, reason);
+    }
 
-    // Notify admin users about cancellation request
-    const adminRoles = await this.prisma.userRole.findMany({
-      where: { role: { slug: { in: ['super_admin', 'receptionist'] } } },
-      select: { userId: true },
+    throw new ConflictException({
+      statusCode: 409,
+      message: `Cannot request cancellation for booking with status '${booking.status}'`,
+      error: 'CONFLICT',
     });
-    const d = booking.date.toISOString().split('T')[0];
-    await Promise.all(adminRoles.map(({ userId }) =>
-      this.notificationsService.createNotification({
-        userId,
-        titleAr: 'طلب إلغاء موعد جديد',
-        titleEn: 'New Cancellation Request',
-        bodyAr: `طلب مريض إلغاء الموعد بتاريخ ${d}`,
-        bodyEn: `A patient requested cancellation for booking on ${d}`,
-        type: 'booking_cancellation_requested',
-        data: { bookingId: id },
-      }),
-    ));
-
-    return updatedBooking;
   }
 
-  async approveCancellation(id: string, dto: CancelApproveDto) {
-    const booking = await this.prisma.booking.findFirst({
-      where: { id, deletedAt: null },
-      include: { payment: true },
+  // ───────────────────────────────────────────────────────────────
+  //  Fix 8: Admin direct cancel — any non-terminal status
+  // ───────────────────────────────────────────────────────────────
+
+  async adminDirectCancel(bookingId: string, adminUserId: string, dto: AdminCancelDto) {
+    const booking = await this.lookup.findWithPayment(bookingId);
+    this.lookup.assertCancellable(booking);
+    this.helpers.validatePartialRefund(dto, booking.payment);
+
+    const cancelled = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: 'cancelled',
+          cancelledBy: 'admin',
+          cancelledAt: new Date(),
+          cancellationReason: dto.reason,
+          adminNotes: dto.adminNotes,
+        },
+        include: bookingInclude,
+      });
+      await this.helpers.processRefund(tx, dto.refundType, booking.payment, dto.refundAmount);
+      return result;
     });
-    if (!booking) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Booking not found',
-        error: 'NOT_FOUND',
+
+    await this.helpers.notifyPatientCancelled(cancelled, 'admin');
+    await this.helpers.notifyPractitionerCancelled(cancelled);
+    this.activityLogService.log({
+      userId: adminUserId,
+      action: 'admin_direct_cancel',
+      module: 'bookings',
+      resourceId: bookingId,
+      description: `Admin cancelled booking. Refund: ${dto.refundType}`,
+    }).catch(() => {});
+
+    this.helpers.deleteZoomIfNeeded(booking);
+    await this.waitlistService.checkAndNotify(booking.practitionerId, booking.date);
+    return cancelled;
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  //  Fix 13: Practitioner cancels own booking
+  // ───────────────────────────────────────────────────────────────
+
+  async practitionerCancel(bookingId: string, practitionerUserId: string, reason?: string) {
+    const booking = await this.lookup.findWithRelations(bookingId);
+
+    if (booking.practitioner?.userId !== practitionerUserId) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: 'You can only cancel your own bookings',
+        error: 'FORBIDDEN',
       });
     }
+    this.lookup.assertCancellable(booking);
+
+    const cancelled = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: 'cancelled',
+          cancelledBy: 'practitioner',
+          cancelledAt: new Date(),
+          cancellationReason: reason,
+        },
+        include: bookingInclude,
+      });
+      // Always full refund — clinic's fault
+      await this.helpers.processRefund(tx, 'full', booking.payment);
+      return result;
+    });
+
+    await this.helpers.notifyPatientPractitionerCancelled(cancelled);
+    const d = cancelled.date.toISOString().split('T')[0];
+    await this.helpers.notifyAdmins(
+      'إلغاء موعد من طبيب', 'Practitioner Cancelled Booking',
+      `قام طبيب بإلغاء موعد بتاريخ ${d}`, `A practitioner cancelled a booking on ${d}`,
+      'booking_practitioner_cancelled', { bookingId },
+    );
+    this.activityLogService.log({
+      userId: practitionerUserId,
+      action: 'practitioner_cancel',
+      module: 'bookings',
+      resourceId: bookingId,
+      description: 'Practitioner cancelled booking. Full refund applied',
+    }).catch(() => {});
+
+    this.helpers.deleteZoomIfNeeded(booking);
+    await this.waitlistService.checkAndNotify(booking.practitionerId, booking.date);
+    return cancelled;
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  //  Approve / Reject — existing flow
+  // ───────────────────────────────────────────────────────────────
+
+  async approveCancellation(id: string, dto: CancelApproveDto) {
+    const booking = await this.lookup.findWithPayment(id);
 
     if (booking.status !== 'pending_cancellation') {
       throw new ConflictException({
@@ -101,103 +165,34 @@ export class BookingCancellationService {
       });
     }
 
-    // Validate partial refund amount
-    if (dto.refundType === 'partial') {
-      if (!dto.refundAmount) {
-        throw new BadRequestException({
-          statusCode: 400,
-          message: 'refundAmount is required when refundType is partial',
-          error: 'VALIDATION_ERROR',
-        });
-      }
-      if (booking.payment && dto.refundAmount > booking.payment.totalAmount) {
-        throw new BadRequestException({
-          statusCode: 400,
-          message: 'refundAmount cannot exceed the total payment amount',
-          error: 'VALIDATION_ERROR',
-        });
-      }
-    }
+    this.helpers.validatePartialRefund(dto, booking.payment);
 
-    const cancelledBooking = await this.prisma.$transaction(async (tx) => {
+    const cancelled = await this.prisma.$transaction(async (tx) => {
       const result = await tx.booking.update({
         where: { id },
-        data: { status: 'cancelled', cancelledAt: new Date(), adminNotes: dto.adminNotes },
+        data: { status: 'cancelled', cancelledBy: 'patient', cancelledAt: new Date(), adminNotes: dto.adminNotes },
         include: bookingInclude,
       });
-
-      if (
-        dto.refundType !== 'none' &&
-        booking.payment &&
-        booking.payment.status === 'paid'
-      ) {
-        const refundAmount = dto.refundType === 'full'
-          ? booking.payment.totalAmount
-          : dto.refundAmount!;
-
-        await tx.payment.update({
-          where: { id: booking.payment.id },
-          data: { status: 'refunded', refundAmount },
-        });
-      }
-
-      if (result.patientId) {
-        await this.notificationsService.createNotification({
-          userId: result.patientId,
-          titleAr: 'تم إلغاء الموعد',
-          titleEn: 'Booking Cancelled',
-          bodyAr: 'تم الموافقة على طلب إلغاء موعدك',
-          bodyEn: 'Your booking cancellation request has been approved',
-          type: 'booking_cancelled',
-          data: { bookingId: id },
-        });
-      }
-
-      // Notify practitioner about cancellation
-      if (result.practitioner?.userId) {
-        const d = result.date.toISOString().split('T')[0];
-        await this.notificationsService.createNotification({
-          userId: result.practitioner.userId,
-          titleAr: 'تم إلغاء موعد',
-          titleEn: 'Booking Cancelled',
-          bodyAr: `تم إلغاء الموعد بتاريخ ${d} الساعة ${result.startTime}`,
-          bodyEn: `Booking on ${d} at ${result.startTime} has been cancelled`,
-          type: 'booking_cancelled',
-          data: { bookingId: id },
-        });
-      }
-
-      await this.activityLogService.log({
-        action: 'cancel_approved',
-        module: 'bookings',
-        resourceId: id,
-        description: `Booking cancellation approved. Refund type: ${dto.refundType}`,
-      });
-
+      await this.helpers.processRefund(tx, dto.refundType, booking.payment, dto.refundAmount);
       return result;
     });
 
-    // Delete Zoom meeting after successful cancellation (fire-and-forget)
-    if (booking.type === 'video_consultation' && booking.zoomMeetingId) {
-      this.zoomService.deleteMeeting(booking.zoomMeetingId).catch((err) =>
-        this.logger.warn(`Failed to delete Zoom meeting on cancellation: ${err.message}`),
-      );
-    }
+    this.activityLogService.log({
+      action: 'cancel_approved',
+      module: 'bookings',
+      resourceId: id,
+      description: `Booking cancellation approved. Refund type: ${dto.refundType}`,
+    }).catch(() => {});
 
-    return cancelledBooking;
+    await this.helpers.notifyPatientCancelled(cancelled, 'approved');
+    await this.helpers.notifyPractitionerCancelled(cancelled);
+    this.helpers.deleteZoomIfNeeded(booking);
+    await this.waitlistService.checkAndNotify(booking.practitionerId, booking.date);
+    return cancelled;
   }
 
   async rejectCancellation(id: string, dto: CancelRejectDto) {
-    const booking = await this.prisma.booking.findFirst({
-      where: { id, deletedAt: null },
-    });
-    if (!booking) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Booking not found',
-        error: 'NOT_FOUND',
-      });
-    }
+    const booking = await this.lookup.findBookingOrFail(id);
 
     if (booking.status !== 'pending_cancellation') {
       throw new ConflictException({
@@ -207,23 +202,97 @@ export class BookingCancellationService {
       });
     }
 
-    const updatedBooking = await this.prisma.booking.update({
+    const updated = await this.prisma.booking.update({
       where: { id },
-      data: {
-        status: 'confirmed',
-        cancellationReason: null,
-        adminNotes: dto.adminNotes,
-      },
+      data: { status: 'confirmed', cancellationReason: null, adminNotes: dto.adminNotes },
       include: bookingInclude,
     });
 
-    await this.activityLogService.log({
+    this.activityLogService.log({
       action: 'cancel_rejected',
       module: 'bookings',
       resourceId: id,
       description: 'Booking cancellation request rejected',
+    }).catch(() => {});
+
+    // Fix 4: Notify patient that cancellation was rejected
+    if (updated.patientId) {
+      await this.helpers.notifyPatientCancellationRejected(updated.patientId, id);
+    }
+
+    return updated;
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  //  Private: pending & confirmed cancel flows
+  // ───────────────────────────────────────────────────────────────
+
+  private async handlePendingCancel(booking: Booking, settings: BookingSettings, reason?: string) {
+    if (!settings.patientCanCancelPending) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: 'Cannot cancel pending booking',
+        error: 'CONFLICT',
+      });
+    }
+
+    const cancelled = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.booking.update({
+        where: { id: booking.id },
+        data: {
+          status: 'cancelled',
+          cancelledBy: 'patient',
+          cancelledAt: new Date(),
+          cancellationReason: reason,
+        },
+        include: bookingInclude,
+      });
+      await tx.payment.deleteMany({
+        where: { bookingId: booking.id, status: { in: ['awaiting', 'pending'] } },
+      });
+      return result;
     });
 
-    return updatedBooking;
+    await this.helpers.notifyPractitionerCancelled(cancelled);
+    this.helpers.deleteZoomIfNeeded(booking);
+    await this.waitlistService.checkAndNotify(booking.practitionerId, booking.date);
+
+    this.activityLogService.log({
+      action: 'booking_cancellation_requested',
+      module: 'bookings',
+      resourceId: booking.id,
+      description: 'Patient cancelled pending booking directly',
+    }).catch(() => {});
+
+    return cancelled;
   }
+
+  private async handleConfirmedCancelRequest(
+    booking: Booking, settings: BookingSettings, reason?: string,
+  ) {
+    const suggestedRefundType = this.helpers.calculateSuggestedRefund(booking, settings);
+
+    const updated = await this.prisma.booking.update({
+      where: { id: booking.id },
+      data: { status: 'pending_cancellation', cancellationReason: reason, suggestedRefundType },
+      include: bookingInclude,
+    });
+
+    const d = booking.date.toISOString().split('T')[0];
+    await this.helpers.notifyAdmins(
+      'طلب إلغاء موعد جديد', 'New Cancellation Request',
+      `طلب مريض إلغاء الموعد بتاريخ ${d}`, `A patient requested cancellation for booking on ${d}`,
+      'booking_cancellation_requested', { bookingId: booking.id },
+    );
+
+    this.activityLogService.log({
+      action: 'booking_cancellation_requested',
+      module: 'bookings',
+      resourceId: booking.id,
+      description: `Patient requested cancellation for booking on ${d}`,
+    }).catch(() => {});
+
+    return updated;
+  }
+
 }

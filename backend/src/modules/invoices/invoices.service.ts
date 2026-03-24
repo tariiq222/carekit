@@ -2,24 +2,20 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { InvoiceFilterDto } from './dto/invoice-filter.dto.js';
 import { invoiceInclude } from './invoice.constants.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
 
 @Injectable()
 export class InvoicesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: InvoiceFilterDto) {
-    const page = query.page ?? 1;
-    const perPage = query.perPage ?? 20;
-    const skip = (page - 1) * perPage;
+    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
 
     const where: Record<string, unknown> = {};
 
-    if (query.dateFrom || query.dateTo) {
-      const dateFilter: Record<string, Date> = {};
-      if (query.dateFrom) dateFilter.gte = new Date(query.dateFrom);
-      if (query.dateTo) dateFilter.lte = new Date(query.dateTo);
-      where.createdAt = dateFilter;
-    }
+    const dateRange = buildDateRangeFilter(query.dateFrom, query.dateTo);
+    if (dateRange) where.createdAt = dateRange;
 
     if (query.zatcaStatus) {
       where.zatcaStatus = query.zatcaStatus;
@@ -38,12 +34,7 @@ export class InvoicesService {
 
     return {
       items,
-      meta: {
-        page,
-        perPage,
-        total,
-        totalPages: Math.ceil(total / perPage),
-      },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 

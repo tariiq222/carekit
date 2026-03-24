@@ -7,6 +7,10 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
+import {
+  correlationStorage,
+  CORRELATION_HEADER,
+} from '../middleware/correlation-id.middleware.js';
 
 interface ValidationErrorDetail {
   field: string;
@@ -26,6 +30,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const correlationId = correlationStorage.getStore() ?? null;
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let code = 'INTERNAL_ERROR';
@@ -39,7 +44,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       if (status === HttpStatus.UNAUTHORIZED || status === HttpStatus.FORBIDDEN) {
         const request = ctx.getRequest<{ url?: string; method?: string; ip?: string }>();
         this.logger.warn(
-          `Auth failure [${status}] ${request.method} ${request.url} — IP: ${request.ip}`,
+          `Auth failure [${status}] ${request.method} ${request.url} — IP: ${request.ip} [${CORRELATION_HEADER}=${correlationId}]`,
         );
       }
 
@@ -47,7 +52,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       if (status >= 500) {
         const request = ctx.getRequest<{ url?: string; method?: string }>();
         this.logger.error(
-          `Server error [${status}] ${request.method} ${request.url}: ${exception.message}`,
+          `Server error [${status}] ${request.method} ${request.url}: ${exception.message} [${CORRELATION_HEADER}=${correlationId}]`,
           exception.stack,
         );
       }
@@ -89,7 +94,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
     } else if (exception instanceof Error) {
       this.logger.error(
-        `Unhandled exception: ${exception.message}`,
+        `Unhandled exception: ${exception.message} [${CORRELATION_HEADER}=${correlationId}]`,
         exception.stack,
       );
     } else {
@@ -102,6 +107,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         code,
         message,
         ...(details ? { details } : {}),
+        ...(correlationId ? { correlationId } : {}),
       },
     };
 

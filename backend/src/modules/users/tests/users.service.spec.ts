@@ -17,6 +17,7 @@ import { UsersService } from '../users.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { UserRolesService } from '../user-roles.service.js';
 import { ActivityLogService } from '../../activity-log/activity-log.service.js';
+import { PractitionersService } from '../../practitioners/practitioners.service.js';
 import { CreateUserDto, UpdateUserDto } from '../dto/create-user.dto.js';
 
 // ---------------------------------------------------------------------------
@@ -62,6 +63,10 @@ const mockActivityLogService = {
   log: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockPractitionersService = {
+  createForUser: jest.fn().mockResolvedValue(undefined),
+};
+
 // ---------------------------------------------------------------------------
 // Test Suite
 // ---------------------------------------------------------------------------
@@ -78,6 +83,7 @@ describe('UsersService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: UserRolesService, useValue: mockUserRolesService },
         { provide: ActivityLogService, useValue: mockActivityLogService },
+        { provide: PractitionersService, useValue: mockPractitionersService },
       ],
     }).compile();
 
@@ -278,7 +284,7 @@ describe('UsersService', () => {
       expect(createCall.data).not.toHaveProperty('password');
     });
 
-    it('should create Practitioner record when role is practitioner', async () => {
+    it('should delegate practitioner profile creation to PractitionersService', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
       mockPrismaService.role.findFirst.mockResolvedValue({
         id: 'prac-role-id',
@@ -289,26 +295,33 @@ describe('UsersService', () => {
         email: 'prac@clinic.com',
       });
       mockPrismaService.userRole.create.mockResolvedValue({});
-      mockPrismaService.specialty.findFirst.mockResolvedValue({
-        id: 'default-specialty-id',
-        nameEn: 'General',
-        isActive: true,
-      });
-      mockPrismaService.practitioner.create.mockResolvedValue({
-        id: 'prac-id',
-        userId: 'prac-user-id',
-      });
 
       await service.create({ ...createDto, roleSlug: 'practitioner' });
 
-      // Should create a Practitioner record linked to the user
-      expect(mockPrismaService.practitioner.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            userId: 'prac-user-id',
-          }),
-        }),
-      );
+      // Should delegate to PractitionersService, not directly use Prisma
+      expect(mockPractitionersService.createForUser).toHaveBeenCalledWith('prac-user-id');
+      expect(mockPrismaService.practitioner.create).not.toHaveBeenCalled();
+    });
+
+    it('should not call PractitionersService for non-practitioner roles', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+      mockPrismaService.role.findFirst.mockResolvedValue({
+        id: 'rec-role-id',
+        slug: 'receptionist',
+      });
+      mockPrismaService.user.create.mockResolvedValue({
+        id: 'new-id',
+        email: createDto.email,
+        firstName: createDto.firstName,
+        lastName: createDto.lastName,
+        isActive: true,
+        emailVerified: false,
+      });
+      mockPrismaService.userRole.create.mockResolvedValue({});
+
+      await service.create(createDto);
+
+      expect(mockPractitionersService.createForUser).not.toHaveBeenCalled();
     });
 
     it('should throw ConflictException for duplicate email', async () => {

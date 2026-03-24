@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 interface PatientListQuery {
   page?: number;
@@ -12,8 +13,8 @@ export class PatientsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: PatientListQuery = {}) {
-    const { page = 1, perPage = 20, search } = query;
-    const skip = (page - 1) * perPage;
+    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { search } = query;
 
     const where = {
       deletedAt: null,
@@ -56,12 +57,7 @@ export class PatientsService {
 
     return {
       data: patients,
-      meta: {
-        total,
-        page,
-        perPage,
-        totalPages: Math.ceil(total / perPage),
-      },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 

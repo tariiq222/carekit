@@ -4,6 +4,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { CacheService } from '../../common/services/cache.service.js';
+import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
@@ -19,20 +22,25 @@ interface ServiceListQuery {
 
 @Injectable()
 export class ServicesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
 
   // ═══════════════════════════════════════════════════════════════
   //  SERVICE CATEGORIES
   // ═══════════════════════════════════════════════════════════════
 
   async createCategory(dto: CreateCategoryDto) {
-    return this.prisma.serviceCategory.create({
+    const category = await this.prisma.serviceCategory.create({
       data: {
         nameEn: dto.nameEn,
         nameAr: dto.nameAr,
         sortOrder: dto.sortOrder ?? 0,
       },
     });
+    await this.invalidateServicesCache();
+    return category;
   }
 
   async findAllCategories() {
@@ -54,7 +62,7 @@ export class ServicesService {
       });
     }
 
-    return this.prisma.serviceCategory.update({
+    const updated = await this.prisma.serviceCategory.update({
       where: { id },
       data: {
         nameEn: dto.nameEn,
@@ -63,6 +71,8 @@ export class ServicesService {
         isActive: dto.isActive,
       },
     });
+    await this.invalidateServicesCache();
+    return updated;
   }
 
   async deleteCategory(id: string) {
@@ -91,6 +101,7 @@ export class ServicesService {
     }
 
     await this.prisma.serviceCategory.delete({ where: { id } });
+    await this.invalidateServicesCache();
     return { deleted: true };
   }
 
@@ -111,7 +122,7 @@ export class ServicesService {
       });
     }
 
-    return this.prisma.service.create({
+    const service = await this.prisma.service.create({
       data: {
         nameEn: dto.nameEn,
         nameAr: dto.nameAr,
@@ -123,56 +134,36 @@ export class ServicesService {
       },
       include: { category: true },
     });
+    await this.invalidateServicesCache();
+    return service;
   }
 
   async findAll(query: ServiceListQuery) {
-    const page = query.page ?? 1;
-    const perPage = query.perPage ?? 20;
-    const skip = (page - 1) * perPage;
+    // Only cache the default active-services query (no filters, no search, page 1)
+    const isDefaultQuery =
+      !query.categoryId &&
+      !query.search &&
+      (query.isActive === undefined || query.isActive === true) &&
+      (query.page === undefined || query.page === 1);
 
-    const where: Record<string, unknown> = {
-      deletedAt: null,
-      isActive: query.isActive ?? true,
-    };
-
-    if (query.categoryId) {
-      where.categoryId = query.categoryId;
+    if (isDefaultQuery) {
+      const cached = await this.cache.get<ReturnType<typeof this.buildFindAllResult>>(
+        CACHE_KEYS.SERVICES_ACTIVE,
+      );
+      if (cached) return cached;
     }
 
-    if (query.search) {
-      where.OR = [
-        { nameEn: { contains: query.search, mode: 'insensitive' } },
-        { nameAr: { contains: query.search, mode: 'insensitive' } },
-      ];
+    const result = await this.queryServices(query);
+
+    if (isDefaultQuery) {
+      await this.cache.set(
+        CACHE_KEYS.SERVICES_ACTIVE,
+        result,
+        CACHE_TTL.SERVICES_LIST,
+      );
     }
 
-    const [rawItems, total] = await Promise.all([
-      this.prisma.service.findMany({
-        where,
-        include: { category: true },
-        orderBy: { createdAt: 'asc' },
-        skip,
-        take: perPage,
-      }),
-      this.prisma.service.count({ where }),
-    ]);
-
-    // Strip deletedAt from public response
-    const items = rawItems.map(({ deletedAt: _, ...item }) => item);
-
-    const totalPages = Math.ceil(total / perPage);
-
-    return {
-      items,
-      meta: {
-        total,
-        page,
-        perPage,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
+    return result;
   }
 
   async findOne(id: string) {
@@ -216,7 +207,7 @@ export class ServicesService {
       }
     }
 
-    return this.prisma.service.update({
+    const updated = await this.prisma.service.update({
       where: { id },
       data: {
         nameEn: dto.nameEn,
@@ -230,6 +221,8 @@ export class ServicesService {
       },
       include: { category: true },
     });
+    await this.invalidateServicesCache();
+    return updated;
   }
 
   async softDelete(id: string) {
@@ -249,6 +242,61 @@ export class ServicesService {
       data: { deletedAt: new Date() },
     });
 
+    await this.invalidateServicesCache();
     return { deleted: true };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  PRIVATE HELPERS
+  // ═══════════════════════════════════════════════════════════════
+
+  private async queryServices(query: ServiceListQuery) {
+    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+
+    const where: Record<string, unknown> = {
+      deletedAt: null,
+      isActive: query.isActive ?? true,
+    };
+
+    if (query.categoryId) {
+      where.categoryId = query.categoryId;
+    }
+
+    if (query.search) {
+      where.OR = [
+        { nameEn: { contains: query.search, mode: 'insensitive' } },
+        { nameAr: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [rawItems, total] = await Promise.all([
+      this.prisma.service.findMany({
+        where,
+        include: { category: true },
+        orderBy: { createdAt: 'asc' },
+        skip,
+        take: perPage,
+      }),
+      this.prisma.service.count({ where }),
+    ]);
+
+    return this.buildFindAllResult(rawItems, total, page, perPage);
+  }
+
+  private buildFindAllResult(
+    rawItems: Array<Record<string, unknown>>,
+    total: number,
+    page: number,
+    perPage: number,
+  ) {
+    const items = rawItems.map(({ deletedAt: _, ...item }) => item);
+    return {
+      items,
+      meta: buildPaginationMeta(total, page, perPage),
+    };
+  }
+
+  private async invalidateServicesCache(): Promise<void> {
+    await this.cache.del(CACHE_KEYS.SERVICES_ACTIVE);
   }
 }

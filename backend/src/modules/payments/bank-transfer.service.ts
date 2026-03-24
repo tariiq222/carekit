@@ -12,10 +12,12 @@ import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
 import { MinioService } from '../../common/services/minio.service.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
+import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { UploadReceiptDto } from './dto/upload-receipt.dto.js';
 import { ReviewReceiptDto } from './dto/review-receipt.dto.js';
 import { paymentInclude, bookingWithPriceInclude, calculateAmounts } from './payments.helpers.js';
+import { correlationStorage } from '../../common/middleware/correlation-id.middleware.js';
 
 const MINIO_BUCKET = 'carekit';
 
@@ -27,6 +29,7 @@ export class BankTransferService {
     private readonly prisma: PrismaService,
     private readonly minioService: MinioService,
     private readonly invoicesService: InvoiceCreatorService,
+    private readonly bookingStatusService: BookingStatusService,
     private readonly activityLogService: ActivityLogService,
     @Optional()
     @InjectQueue('receipt-verification')
@@ -96,6 +99,22 @@ export class BankTransferService {
 
       return updated;
     });
+
+    // Auto-confirm booking after approved bank transfer
+    if (dto.approved) {
+      const payment = await this.prisma.payment.findUnique({
+        where: { id: receipt.paymentId },
+      });
+      if (payment?.bookingId) {
+        try {
+          await this.bookingStatusService.confirm(payment.bookingId);
+        } catch (err) {
+          this.logger.warn(
+            `Auto-confirm skipped for booking: ${err instanceof Error ? err.message : 'unknown'}`,
+          );
+        }
+      }
+    }
 
     return updatedReceipt;
   }
@@ -170,6 +189,7 @@ export class BankTransferService {
       await this.receiptQueue.add('verify', {
         receiptId: result.receipt.id,
         receiptUrl,
+        correlationId: correlationStorage.getStore() ?? null,
       });
       this.logger.log(
         `Enqueued receipt verification job for receipt ${result.receipt.id}`,
@@ -216,13 +236,29 @@ export class BankTransferService {
       }
     });
 
-    await this.activityLogService.log({
+    // Auto-confirm booking after approved bank transfer
+    if (dto.action === 'approve') {
+      const payment = await this.prisma.payment.findUnique({
+        where: { id: receipt.paymentId },
+      });
+      if (payment?.bookingId) {
+        try {
+          await this.bookingStatusService.confirm(payment.bookingId);
+        } catch (err) {
+          this.logger.warn(
+            `Auto-confirm skipped for booking: ${err instanceof Error ? err.message : 'unknown'}`,
+          );
+        }
+      }
+    }
+
+    this.activityLogService.log({
       userId: adminId,
       action: dto.action === 'approve' ? 'receipt_approved' : 'receipt_rejected',
       module: 'payments',
       resourceId: receiptId,
       description: `Bank transfer receipt ${dto.action}d by admin`,
-    });
+    }).catch(() => {});
 
     if (dto.action === 'approve') {
       try {

@@ -22,6 +22,7 @@ import { PrismaService } from '../../../database/prisma.service.js';
 import { TokenService } from '../token.service.js';
 import { OtpService } from '../otp.service.js';
 import { EmailService } from '../../email/email.service.js';
+import { AuthCacheService } from '../auth-cache.service.js';
 
 interface RegisterDto {
   email: string;
@@ -91,6 +92,12 @@ const mockEmailService = {
   sendOtp: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockAuthCacheService = {
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue(undefined),
+  invalidate: jest.fn().mockResolvedValue(undefined),
+};
+
 // ---------------------------------------------------------------------------
 // Test Suite
 // ---------------------------------------------------------------------------
@@ -111,6 +118,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: EmailService, useValue: mockEmailService },
+        { provide: AuthCacheService, useValue: mockAuthCacheService },
       ],
     }).compile();
 

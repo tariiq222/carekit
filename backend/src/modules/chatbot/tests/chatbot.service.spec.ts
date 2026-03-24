@@ -6,6 +6,7 @@ import { ChatbotService } from '../chatbot.service.js';
 import { ChatbotAiService } from '../chatbot-ai.service.js';
 import { ChatbotToolsService } from '../chatbot-tools.service.js';
 import { ChatbotConfigService } from '../chatbot-config.service.js';
+import { ChatbotContextService } from '../chatbot-context.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 
 const defaultConfig = {
@@ -68,6 +69,17 @@ const mockConfigService: any = {
   getConfigMap: jest.fn().mockResolvedValue(defaultConfig),
 };
 
+const mockContextService: any = {
+  buildAiContext: jest.fn().mockResolvedValue({
+    messages: [
+      { role: 'system', content: 'You are a clinic assistant.' },
+      { role: 'user', content: 'Hi' },
+    ],
+    tools: [],
+  }),
+  loadHistory: jest.fn().mockResolvedValue([]),
+};
+
 describe('ChatbotService', () => {
   let service: ChatbotService;
 
@@ -80,6 +92,7 @@ describe('ChatbotService', () => {
         { provide: ChatbotAiService, useValue: mockAiService },
         { provide: ChatbotToolsService, useValue: mockToolsService },
         { provide: ChatbotConfigService, useValue: mockConfigService },
+        { provide: ChatbotContextService, useValue: mockContextService },
       ],
     }).compile();
     service = module.get<ChatbotService>(ChatbotService);

@@ -10,7 +10,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { SALT_ROUNDS } from '../../config/constants.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { OtpType } from './enums/otp-type.enum.js';
-import { UserPayload } from './types/user-payload.type.js';
+import { UserPayload } from '../../common/types/user-payload.type.js';
 import { AuthResponse, TokenPair } from './types/auth-response.type.js';
 import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';

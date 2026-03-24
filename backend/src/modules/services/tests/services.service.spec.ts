@@ -23,6 +23,7 @@ import {
 } from '@nestjs/common';
 import { ServicesService } from '../services.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { CacheService } from '../../../common/services/cache.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -75,6 +76,14 @@ interface ServiceListQuery {
 // ---------------------------------------------------------------------------
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockCacheService: any = {
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue(undefined),
+  del: jest.fn().mockResolvedValue(undefined),
+  delPattern: jest.fn().mockResolvedValue(undefined),
+};
+
 const mockPrismaService: any = {
   service: {
     create: jest.fn(),
@@ -147,6 +156,7 @@ describe('ServicesService', () => {
       providers: [
         ServicesService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: CacheService, useValue: mockCacheService },
       ],
     }).compile();
 

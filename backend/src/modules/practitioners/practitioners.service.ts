@@ -14,6 +14,8 @@ import { UpdatePractitionerServiceDto } from './dto/update-practitioner-service.
 import { PractitionerAvailabilityService } from './practitioner-availability.service.js';
 import { PractitionerVacationService } from './practitioner-vacation.service.js';
 import { PractitionerServiceService } from './practitioner-service.service.js';
+import { PractitionerRatingsService } from './practitioner-ratings.service.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 @Injectable()
 export class PractitionersService {
@@ -22,7 +24,25 @@ export class PractitionersService {
     private readonly availabilityService: PractitionerAvailabilityService,
     private readonly vacationService: PractitionerVacationService,
     private readonly practitionerServiceService: PractitionerServiceService,
+    private readonly ratingsService: PractitionerRatingsService,
   ) {}
+
+  /** Creates a practitioner profile for a new user with the first active specialty. */
+  async createForUser(userId: string): Promise<void> {
+    const existing = await this.prisma.practitioner.findFirst({
+      where: { userId },
+    });
+    if (existing) return;
+
+    const defaultSpecialty = await this.prisma.specialty.findFirst({
+      where: { isActive: true },
+    });
+    if (!defaultSpecialty) return;
+
+    await this.prisma.practitioner.create({
+      data: { userId, specialtyId: defaultSpecialty.id },
+    });
+  }
 
   async findAll(params?: {
     page?: number;
@@ -34,8 +54,7 @@ export class PractitionersService {
     minRating?: number;
     isActive?: boolean;
   }) {
-    const page = params?.page ?? 1;
-    const perPage = Math.min(params?.perPage ?? 20, 100);
+    const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage, 100);
     const allowedSortFields = ['rating', 'reviewCount', 'experience', 'createdAt'];
     const sortBy = allowedSortFields.includes(params?.sortBy ?? '') ? params!.sortBy! : 'rating';
     const sortOrder = params?.sortOrder ?? 'desc';
@@ -67,24 +86,15 @@ export class PractitionersService {
         where,
         include: { user: true, specialty: true, practitionerServices: { where: { isActive: true }, include: { service: { select: { id: true, nameAr: true, nameEn: true } } } } },
         orderBy: { [sortBy]: sortOrder },
-        skip: (page - 1) * perPage,
+        skip,
         take: perPage,
       }),
       this.prisma.practitioner.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / perPage);
-
     return {
       items: practitioners,
-      meta: {
-        total,
-        page,
-        perPage,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 
@@ -278,50 +288,10 @@ export class PractitionersService {
     return this.vacationService.deleteVacation(practitionerId, vacationId, currentUserId);
   }
 
-  // --- Ratings ---
+  // --- Delegated: Ratings ---
 
   async getRatings(practitionerId: string, params?: { page?: number; perPage?: number }) {
-    const practitioner = await this.prisma.practitioner.findUnique({
-      where: { id: practitionerId },
-    });
-    if (!practitioner || practitioner.deletedAt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Practitioner not found',
-        error: 'PRACTITIONER_NOT_FOUND',
-      });
-    }
-
-    const page = params?.page ?? 1;
-    const perPage = Math.min(params?.perPage ?? 20, 100);
-
-    const [rawRatings, total] = await Promise.all([
-      this.prisma.rating.findMany({
-        where: { practitionerId },
-        include: {
-          patient: { select: { firstName: true, lastName: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * perPage,
-        take: perPage,
-      }),
-      this.prisma.rating.count({ where: { practitionerId } }),
-    ]);
-
-    // Anonymize patient names in public endpoint: "أحمد م."
-    const ratings = rawRatings.map(({ patient, ...rating }) => ({
-      ...rating,
-      patient: patient
-        ? { firstName: patient.firstName, lastName: patient.lastName.charAt(0) + '.' }
-        : null,
-    }));
-
-    const totalPages = Math.ceil(total / perPage);
-
-    return {
-      items: ratings,
-      meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
-    };
+    return this.ratingsService.getRatings(practitionerId, params);
   }
 
   // --- Delegated: Practitioner Services ---

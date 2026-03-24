@@ -1,5 +1,44 @@
 import { plainToInstance } from 'class-transformer';
 import { IsString, IsNotEmpty, IsOptional, validateSync } from 'class-validator';
+import { Logger } from '@nestjs/common';
+
+interface CriticalKey {
+  key: string;
+  feature: string;
+}
+
+const CRITICAL_OPTIONAL_KEYS: CriticalKey[] = [
+  { key: 'OPENROUTER_API_KEY', feature: 'AI Chatbot & Receipt Verification' },
+  { key: 'MOYASAR_API_KEY', feature: 'Electronic Payments (Moyasar)' },
+  { key: 'MOYASAR_WEBHOOK_SECRET', feature: 'Payment Webhook Verification' },
+  { key: 'MINIO_ENDPOINT', feature: 'File Storage (MinIO)' },
+  { key: 'MINIO_ACCESS_KEY', feature: 'File Storage (MinIO)' },
+  { key: 'MINIO_SECRET_KEY', feature: 'File Storage (MinIO)' },
+  { key: 'MAIL_HOST', feature: 'Email Sending' },
+  { key: 'MAIL_USER', feature: 'Email Sending' },
+  { key: 'MAIL_PASSWORD', feature: 'Email Sending' },
+  { key: 'ZOOM_ACCOUNT_ID', feature: 'Video Consultations (Zoom)' },
+  { key: 'ZOOM_CLIENT_ID', feature: 'Video Consultations (Zoom)' },
+  { key: 'ZOOM_CLIENT_SECRET', feature: 'Video Consultations (Zoom)' },
+  { key: 'FIREBASE_PROJECT_ID', feature: 'Push Notifications (FCM)' },
+  { key: 'FIREBASE_CLIENT_EMAIL', feature: 'Push Notifications (FCM)' },
+  { key: 'FIREBASE_PRIVATE_KEY', feature: 'Push Notifications (FCM)' },
+];
+
+export function logMissingOptionalKeys(
+  config: Record<string, unknown>,
+): void {
+  const missing = CRITICAL_OPTIONAL_KEYS.filter(({ key }) => !config[key]);
+  if (missing.length === 0) return;
+
+  const logger = new Logger('EnvValidation');
+  logger.warn('=== Missing Optional Environment Variables ===');
+  for (const { key, feature } of missing) {
+    logger.warn(`  ${key} — required for: ${feature}`);
+  }
+  logger.warn('These features will fail at runtime until configured.');
+  logger.warn('===============================================');
+}
 
 export class EnvironmentVariables {
   @IsString()
@@ -117,6 +156,10 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   ZOOM_CLIENT_SECRET?: string;
+
+  @IsString()
+  @IsOptional()
+  COOKIE_DOMAIN?: string;
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {
@@ -133,6 +176,8 @@ export function validate(config: Record<string, unknown>): EnvironmentVariables 
       `Environment validation failed:\n${errors.map((e) => Object.values(e.constraints ?? {}).join(', ')).join('\n')}`,
     );
   }
+
+  logMissingOptionalKeys(config);
 
   return validatedConfig;
 }

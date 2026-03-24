@@ -1,8 +1,8 @@
 # CareKit — خطة المهام المتبقية
 
-> **آخر تحديث:** 2026-03-23
+> **آخر تحديث:** 2026-03-24
 > **المنجزات السابقة:** [`docs/achievements.md`](achievements.md)
-> المراحل المكتملة: Phase 1–4 + Sprint 4.5 + Sprint 4.6
+> المراحل المكتملة: Phase 1–5 + Sprint 4.5 + Sprint 4.6
 
 ---
 
@@ -21,7 +21,7 @@
 ## نظرة عامة — المراحل المتبقية
 
 ```
-Phase 5 — إعادة تصميم وتوحيد Dashboard          🔲 0%
+Phase 5 — إعادة تصميم وتوحيد Dashboard          ✅ 100%  ← docs/phase5-workplan.md
 Phase 6 — الموقع الإلكتروني (Website)             🔲 0%
 Phase 7 — التطبيق (Mobile Polishing + Store)      🔲 0%
 Phase 8 — Production Readiness                     🔲 0%
@@ -45,6 +45,9 @@ Phase 9 — Testing & Delivery                       🔲 0%
 ## Phase 5 — إعادة تصميم وتوحيد Dashboard 🔲
 
 > **الهدف:** توحيد التصميم المرئي لكل صفحات الداشبورد — تجربة مستخدم متسقة واحترافية
+> **خطة العمل التفصيلية:** [`docs/phase5-workplan.md`](phase5-workplan.md)
+> **الحالة الحالية:** 5 صفحات من 12 (4 mock + 1 API) — تغطية API: 10%
+> **الهيكل:** 4 sprints فرعية (5.0 بنية تحتية → 5.1 صفحات أساسية → 5.2 صفحات ثانوية → 5.3 DS + 5.4 UX)
 
 ### 5.1 — Design System & Tokens
 

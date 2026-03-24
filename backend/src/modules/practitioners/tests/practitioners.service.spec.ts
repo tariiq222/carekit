@@ -22,6 +22,7 @@ import { PrismaService } from '../../../database/prisma.service.js';
 import { PractitionerAvailabilityService } from '../practitioner-availability.service.js';
 import { PractitionerVacationService } from '../practitioner-vacation.service.js';
 import { PractitionerServiceService } from '../practitioner-service.service.js';
+import { PractitionerRatingsService } from '../practitioner-ratings.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -203,6 +204,7 @@ describe('PractitionersService', () => {
         PractitionerVacationService,
         PractitionerServiceService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: PractitionerRatingsService, useValue: { getRatings: jest.fn().mockResolvedValue({ items: [], meta: { page: 1, perPage: 20, total: 0, totalPages: 0 } }) } },
       ],
     }).compile();
 

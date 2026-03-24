@@ -21,12 +21,21 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { SpecialtiesService } from '../specialties.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { CacheService } from '../../../common/services/cache.service.js';
 import { CreateSpecialtyDto } from '../dto/create-specialty.dto.js';
 import { UpdateSpecialtyDto } from '../dto/update-specialty.dto.js';
 
 // ---------------------------------------------------------------------------
 // Mock factories
 // ---------------------------------------------------------------------------
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockCacheService: any = {
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue(undefined),
+  del: jest.fn().mockResolvedValue(undefined),
+  delPattern: jest.fn().mockResolvedValue(undefined),
+};
 
 const mockPrismaService = {
   specialty: {
@@ -90,6 +99,7 @@ describe('SpecialtiesService', () => {
       providers: [
         SpecialtiesService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: CacheService, useValue: mockCacheService },
       ],
     }).compile();
 

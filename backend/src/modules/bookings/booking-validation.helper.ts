@@ -1,6 +1,6 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
-import { toMinutes } from '../../common/helpers/booking-time.helper.js';
+import { toMinutes, timeSlotsOverlap, shiftTime } from '../../common/helpers/booking-time.helper.js';
 
 /**
  * Validates that the requested time slot falls within the practitioner's
@@ -55,5 +55,35 @@ export async function validateAvailability(
       message: 'Requested time is outside practitioner availability hours',
       error: 'OUTSIDE_AVAILABILITY',
     });
+  }
+}
+
+/**
+ * Checks that no existing booking conflicts with the requested time slot,
+ * accounting for buffer times before/after appointments.
+ */
+export async function checkDoubleBooking(
+  prisma: PrismaService,
+  practitionerId: string, date: Date, startTime: string, endTime: string,
+  excludeId?: string, bufferBefore: number = 0, bufferAfter: number = 0,
+): Promise<void> {
+  const whereClause: Record<string, unknown> = {
+    practitionerId, date,
+    status: { in: ['pending', 'confirmed'] },
+    deletedAt: null,
+  };
+  if (excludeId) whereClause.id = { not: excludeId };
+
+  const existingBookings = await prisma.booking.findMany({ where: whereClause });
+  // Expand slot by buffer on both new and existing bookings (symmetric)
+  const effectiveStart = shiftTime(startTime, -bufferBefore);
+  const effectiveEnd = shiftTime(endTime, bufferAfter);
+  const hasConflict = existingBookings.some((existing) => {
+    const existingEffectiveStart = shiftTime(existing.startTime, -bufferBefore);
+    const existingEffectiveEnd = shiftTime(existing.endTime, bufferAfter);
+    return timeSlotsOverlap(effectiveStart, effectiveEnd, existingEffectiveStart, existingEffectiveEnd);
+  });
+  if (hasConflict) {
+    throw new ConflictException({ statusCode: 409, message: 'Practitioner already has a booking at this time', error: 'BOOKING_CONFLICT' });
   }
 }

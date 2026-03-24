@@ -8,6 +8,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { CreateNotificationDto } from './dto/create-notification.dto.js';
 import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
 import { PushService } from './push.service.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 interface NotificationListQuery {
   page?: number;
@@ -26,9 +27,7 @@ export class NotificationsService {
   // ═══════════════════════════════════════════════════════════════
 
   async findAll(userId: string, query: NotificationListQuery) {
-    const page = query.page ?? 1;
-    const perPage = query.perPage ?? 20;
-    const skip = (page - 1) * perPage;
+    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
 
     const where = { userId };
 
@@ -45,18 +44,9 @@ export class NotificationsService {
     // Strip userId and user from public response
     const items = rawItems.map(({ userId: _, ...item }) => item);
 
-    const totalPages = Math.ceil(total / perPage);
-
     return {
       items,
-      meta: {
-        total,
-        page,
-        perPage,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 

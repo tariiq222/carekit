@@ -1,22 +1,38 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { CacheService } from '../../common/services/cache.service.js';
+import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto.js';
 import { UpdateSpecialtyDto } from './dto/update-specialty.dto.js';
 
 @Injectable()
 export class SpecialtiesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
 
   async findAll() {
-    return this.prisma.specialty.findMany({
+    const cached = await this.cache.get<unknown[]>(
+      CACHE_KEYS.SPECIALTIES_ACTIVE,
+    );
+    if (cached) return cached;
+
+    const specialties = await this.prisma.specialty.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
+
+    await this.cache.set(
+      CACHE_KEYS.SPECIALTIES_ACTIVE,
+      specialties,
+      CACHE_TTL.SPECIALTIES_LIST,
+    );
+    return specialties;
   }
 
   async findOne(id: string) {
@@ -46,7 +62,7 @@ export class SpecialtiesService {
       });
     }
 
-    return this.prisma.specialty.create({
+    const specialty = await this.prisma.specialty.create({
       data: {
         nameEn: dto.nameEn,
         nameAr: dto.nameAr,
@@ -56,6 +72,9 @@ export class SpecialtiesService {
         sortOrder: dto.sortOrder ?? 0,
       },
     });
+
+    await this.invalidateCache();
+    return specialty;
   }
 
   async update(id: string, dto: UpdateSpecialtyDto) {
@@ -84,7 +103,7 @@ export class SpecialtiesService {
       }
     }
 
-    return this.prisma.specialty.update({
+    const updated = await this.prisma.specialty.update({
       where: { id },
       data: {
         nameEn: dto.nameEn,
@@ -96,6 +115,9 @@ export class SpecialtiesService {
         isActive: dto.isActive,
       },
     });
+
+    await this.invalidateCache();
+    return updated;
   }
 
   async delete(id: string) {
@@ -120,7 +142,12 @@ export class SpecialtiesService {
     }
 
     await this.prisma.specialty.delete({ where: { id } });
+    await this.invalidateCache();
 
     return { deleted: true };
+  }
+
+  private async invalidateCache(): Promise<void> {
+    await this.cache.del(CACHE_KEYS.SPECIALTIES_ACTIVE);
   }
 }

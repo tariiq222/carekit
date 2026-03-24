@@ -6,6 +6,7 @@ import {
 import type { ProblemReportStatus, ProblemReportType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 const ADMIN_ROLE_SLUGS = ['super_admin', 'receptionist'];
 
@@ -71,8 +72,8 @@ export class ProblemReportsService {
   }
 
   async findAll(query: ReportListQuery) {
-    const { page = 1, perPage = 20, status, patientId } = query;
-    const skip = (page - 1) * perPage;
+    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { status, patientId } = query;
 
     const where: Prisma.ProblemReportWhereInput = {};
     if (status) {
@@ -103,18 +104,9 @@ export class ProblemReportsService {
       this.prisma.problemReport.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / perPage);
-
     return {
       items,
-      meta: {
-        total,
-        page,
-        perPage,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
+      meta: buildPaginationMeta(total, page, perPage),
     };
   }
 

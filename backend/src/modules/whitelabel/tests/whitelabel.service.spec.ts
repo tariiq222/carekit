@@ -15,6 +15,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { WhitelabelService } from '../whitelabel.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { CacheService } from '../../../common/services/cache.service.js';
 import { ConfigValueType } from '@prisma/client';
 
 // ---------------------------------------------------------------------------
@@ -22,6 +23,14 @@ import { ConfigValueType } from '@prisma/client';
 // ---------------------------------------------------------------------------
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockCacheService: any = {
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue(undefined),
+  del: jest.fn().mockResolvedValue(undefined),
+  delPattern: jest.fn().mockResolvedValue(undefined),
+};
+
 const mockPrismaService: any = {
   whiteLabelConfig: {
     findMany: jest.fn(),
@@ -79,6 +88,7 @@ describe('WhitelabelService', () => {
       providers: [
         WhitelabelService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: CacheService, useValue: mockCacheService },
       ],
     }).compile();
 

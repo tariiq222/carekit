@@ -13,6 +13,7 @@ out/
 # Environment variables
 *.env
 !.env.example
+!.env.prod.example
 
 # OS files
 .DS_Store

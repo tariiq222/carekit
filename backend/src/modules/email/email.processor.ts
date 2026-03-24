@@ -1,8 +1,10 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, OnModuleInit } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Job } from 'bullmq';
 import { buildPlainText } from './email.helpers.js';
+import { QueueFailureService } from '../../common/queue/queue-failure.service.js';
+import { JOB_ATTEMPTS, QUEUE_EMAIL } from '../../config/constants/queues.js';
 
 interface SendEmailJobData {
   template: string;
@@ -11,12 +13,32 @@ interface SendEmailJobData {
   context: Record<string, unknown>;
 }
 
-@Processor('email')
-export class EmailProcessor extends WorkerHost {
+@Processor(QUEUE_EMAIL)
+export class EmailProcessor extends WorkerHost implements OnModuleInit {
   private readonly logger = new Logger(EmailProcessor.name);
 
-  constructor(private readonly mailerService: MailerService) {
+  constructor(
+    private readonly mailerService: MailerService,
+    private readonly queueFailureService: QueueFailureService,
+  ) {
     super();
+  }
+
+  onModuleInit() {
+    this.worker.on('failed', async (job, error) => {
+      const isFinal =
+        (job && job.attemptsMade >= (job.opts.attempts ?? JOB_ATTEMPTS)) ||
+        error.name === 'UnrecoverableError';
+      if (isFinal) {
+        await this.queueFailureService.notifyAdminsOfFailure(
+          QUEUE_EMAIL,
+          job?.name ?? 'unknown',
+          job?.id,
+          job?.data,
+          error,
+        );
+      }
+    });
   }
 
   async process(job: Job<SendEmailJobData>): Promise<void> {
