@@ -1,7 +1,7 @@
 # CareKit — سجل المنجزات
 
 > كل ما تم بناؤه وإنجازه في المشروع — موثق بناءً على الكود الفعلي
-> آخر تحديث: 2026-03-23
+> آخر تحديث: 2026-03-24
 
 ---
 
@@ -204,22 +204,50 @@
 
 ---
 
+## Sprint 4.7 — Architecture Gap Analysis & Hardening ✅
+
+تحليل معماري شامل كشف 32 ثغرة (18 أصلية + 14 مكتشفة بالتدقيق) — كلها مُصلحة:
+
+| الفئة | العدد | أبرز الإصلاحات |
+|-------|-------|----------------|
+| **Critical** | 3 | Race condition في الحجز (serializable tx + DB unique index)، Nginx reverse proxy + SSL، MinIO backup |
+| **High** | 6 | Token invalidation عند تغيير كلمة المرور/الأدوار، Redis noeviction، Circuit breaker لـ 4 APIs خارجية، SMS channel (Unifonic/Twilio)، Dashboard middleware |
+| **Medium** | 6 | مزامنة shared enums (4 updated + 4 new)، @MaxLength على 80+ DTO field، embedding validation، per-endpoint rate limiting، Zoom token → Redis، shared Redis module (5→1 connection) |
+| **Low** | 3 | إزالة dev credentials من source، migration rollback runbook، Sentry + Prometheus |
+| **Post-Audit** | 14 | Redis error handler، E.164 phone validation، metrics IP restriction، Nginx security headers inheritance، circuit breaker half-open race fix، Node.js engines constraint، metrics label explosion fix، Prisma error Sentry filter، chatbot-rag resilientFetch، server_tokens off، Twilio parsing fix، Sentry sampling fix |
+
+**وثائق جديدة:**
+- `docs/system-architecture.md` — خريطة تشغيل النظام الكاملة
+- `docs/gap-analysis-report.md` — تقرير الثغرات والإصلاحات
+- `docs/security-audit-summary.md` — ملخص التدقيق الأمني
+- `docs/migration-rollback-runbook.md` — إجراء طوارئ الـ migrations
+
+**586 test passed | 31 suites | 0 failures**
+
+---
+
 ## إحصائيات عامة
 
 | المقياس | القيمة |
 |---------|--------|
-| Backend modules | 18 |
-| Prisma models | 29 |
-| Prisma enums | 13 |
-| Dashboard pages | 15 + login |
-| Dashboard components | 52 (33 UI + 14 Feature + 4 Layout + 1 Provider) |
+| Backend modules | 33 |
+| Prisma models | 35 |
+| Prisma enums | 18 |
+| Dashboard pages | 16 + login |
+| Dashboard components | 52+ (UI + Feature + Layout + Providers) |
 | Dashboard hooks | 15 |
-| Dashboard API modules | 12 |
-| Mobile screens | 33 |
+| Dashboard API modules | 14 |
+| Mobile screens | 26 |
 | Mobile services | 8 |
 | Mobile components | 10 |
-| Unit tests | 494+ (21 suite backend + 4 suite chatbot) |
-| Migrations | 5 |
+| Unit tests | 586 (31 suites) |
+| Migrations | 16 |
+| Docker services (prod) | 7 (nginx + backend + postgres + redis + minio + 2 backup) |
+| BullMQ queues | 4 |
+| Cron jobs | 7 |
+| Circuit breakers | 4 (moyasar, zoom, openrouter, sms) |
+| Notification channels | 3 (in-app DB + FCM push + SMS) |
+| Security layers | 8 |
 | Languages | Arabic + English (RTL-first) |
 
 ---
@@ -236,7 +264,8 @@
 | 2026-03-22 | Phase 4: AI Chatbot — Backend 24 ملف + Mobile chat + Dashboard 3 tabs + 39 test |
 | 2026-03-23 | Sprint 4.5: 9 bugs + Pricing Refactor (3-tier pricing + 4 endpoints + 3 migrations) |
 | 2026-03-23 | Sprint 4.6: Code Audit — 28 إصلاح (bugs + security + performance + quality) |
+| 2026-03-24 | Sprint 4.7: Architecture Gap Analysis — 32 ثغرة مكتشفة ومُصلحة + 4 وثائق معمارية |
 
 ---
 
-*CareKit — WebVue Technology Solutions*
+CareKit — WebVue Technology Solutions
