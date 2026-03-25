@@ -86,6 +86,8 @@ export class InvoiceCreatorService {
 
     // ZATCA hash chaining must be atomic: read previous hash + create invoice in a
     // serializable transaction to prevent two concurrent invoices sharing the same previousHash.
+    let zatcaDataOuter: Awaited<ReturnType<typeof this.zatcaService.generateForInvoice>>;
+
     const invoice = await this.prisma.$transaction(async (tx) => {
       // Read the last invoice hash inside the transaction for atomic chaining
       const lastInvoice = await tx.invoice.findFirst({
@@ -106,6 +108,7 @@ export class InvoiceCreatorService {
         previousInvoiceHash: previousHash,
         config: zatcaConfig,
       });
+      zatcaDataOuter = zatcaData;
 
       return tx.invoice.create({
         data: {
@@ -125,7 +128,7 @@ export class InvoiceCreatorService {
     }, { isolationLevel: 'Serializable' });
 
     // Enqueue ZATCA Phase 2 auto-submit if invoice is pending
-    if (this.zatcaQueue && zatcaData.status === 'pending') {
+    if (this.zatcaQueue && zatcaDataOuter!.status === 'pending') {
       await this.zatcaQueue.add(
         'submit',
         {

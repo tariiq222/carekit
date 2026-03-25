@@ -147,7 +147,7 @@ export class MoyasarPaymentService {
     }
 
     if (dto.status === 'paid') {
-      await this.processPaidWebhook(payment.id, payment.bookingId, dto.id);
+      await this.processPaidWebhook(payment.id, payment.bookingId, dto.id, dto.amount);
     } else if (dto.status === 'failed') {
       await this.processFailedWebhook(payment.id, dto.id);
     }
@@ -184,17 +184,38 @@ export class MoyasarPaymentService {
     paymentId: string,
     bookingId: string,
     eventId: string,
+    webhookAmount: number,
   ): Promise<void> {
     const updated = await this.prisma.$transaction(async (tx) => {
+      // H2: Verify the paid amount matches the stored totalAmount before confirming.
+      // Moyasar sends amounts in halalat (smallest currency unit).
+      const storedPayment = await tx.payment.findUnique({
+        where: { id: paymentId },
+        select: { totalAmount: true, status: true },
+      });
+      if (storedPayment && storedPayment.status === 'pending' && storedPayment.totalAmount !== webhookAmount) {
+        this.logger.warn(
+          `Payment amount mismatch for payment ${paymentId}: ` +
+          `expected ${storedPayment.totalAmount} halalat, got ${webhookAmount} halalat from Moyasar`,
+        );
+        // Mark as failed and record the webhook — do not confirm booking
+        const result = await tx.payment.updateMany({
+          where: { id: paymentId, status: 'pending' },
+          data: { status: 'failed' },
+        });
+        await tx.processedWebhook.create({ data: { eventId } });
+        return { count: 0, amountMismatch: true, mismatchResult: result };
+      }
+
       const result = await tx.payment.updateMany({
         where: { id: paymentId, status: 'pending' },
         data: { status: 'paid' },
       });
       await tx.processedWebhook.create({ data: { eventId } });
-      return result;
+      return { count: result.count, amountMismatch: false };
     });
 
-    if (updated.count === 0) {
+    if (updated.count === 0 || updated.amountMismatch) {
       return;
     }
 

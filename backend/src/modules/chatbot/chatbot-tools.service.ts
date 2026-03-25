@@ -1,20 +1,27 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { BookingsService } from '../bookings/bookings.service.js';
-import { ServicesService } from '../services/services.service.js';
-import { PractitionersService } from '../practitioners/practitioners.service.js';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotRagService } from './chatbot-rag.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
 import type { ToolExecutionContext, ToolResult } from './interfaces/chatbot-tool.interface.js';
+import type {
+  IChatbotBookingPort,
+  IChatbotServicePort,
+  IChatbotPractitionerPort,
+} from './interfaces/chatbot-domain.interface.js';
+import {
+  CHATBOT_BOOKING_PORT,
+  CHATBOT_SERVICE_PORT,
+  CHATBOT_PRACTITIONER_PORT,
+} from './interfaces/chatbot-domain.interface.js';
 
 @Injectable()
 export class ChatbotToolsService {
   private readonly logger = new Logger(ChatbotToolsService.name);
 
   constructor(
-    private readonly bookingsService: BookingsService,
-    private readonly servicesService: ServicesService,
-    private readonly practitionersService: PractitionersService,
+    @Inject(CHATBOT_BOOKING_PORT) private readonly bookingsPort: IChatbotBookingPort,
+    @Inject(CHATBOT_SERVICE_PORT) private readonly servicesPort: IChatbotServicePort,
+    @Inject(CHATBOT_PRACTITIONER_PORT) private readonly practitionersPort: IChatbotPractitionerPort,
     private readonly ragService: ChatbotRagService,
     private readonly configService: ChatbotConfigService,
     private readonly prisma: PrismaService,
@@ -59,7 +66,7 @@ export class ChatbotToolsService {
   }
 
   private async listServices(args: Record<string, unknown>): Promise<ToolResult> {
-    const result = await this.servicesService.findAll({
+    const result = await this.servicesPort.findAll({
       search: args.search as string | undefined,
       perPage: 100,
     });
@@ -67,7 +74,7 @@ export class ChatbotToolsService {
   }
 
   private async listPractitioners(args: Record<string, unknown>): Promise<ToolResult> {
-    const result = await this.practitionersService.findAll({
+    const result = await this.practitionersPort.findAll({
       search: args.search as string | undefined,
       specialty: args.specialty as string | undefined,
       perPage: 100,
@@ -88,19 +95,15 @@ export class ChatbotToolsService {
       if (ps?.customDuration) {
         duration = ps.customDuration;
       } else {
-        const service = await this.servicesService.findOne(serviceId);
+        const service = await this.servicesPort.findOne(serviceId);
         duration = service.duration;
       }
     } else if (serviceId) {
-      const service = await this.servicesService.findOne(serviceId);
+      const service = await this.servicesPort.findOne(serviceId);
       duration = service.duration;
     }
 
-    const slots = await this.practitionersService.getAvailableSlots(
-      practitionerId,
-      date,
-      duration,
-    );
+    const slots = await this.practitionersPort.getAvailableSlots(practitionerId, date, duration);
     return { success: true, data: slots };
   }
 
@@ -114,7 +117,7 @@ export class ChatbotToolsService {
       return { success: false, error: 'Booking via chatbot is disabled by clinic settings.' };
     }
 
-    const booking = await this.bookingsService.create(ctx.userId, {
+    const booking = await this.bookingsPort.create(ctx.userId, {
       practitionerId: args.practitionerId as string,
       serviceId: args.serviceId as string,
       type: args.type as 'clinic_visit' | 'phone_consultation' | 'video_consultation',
@@ -127,7 +130,7 @@ export class ChatbotToolsService {
   }
 
   private async getMyBookings(ctx: ToolExecutionContext): Promise<ToolResult> {
-    const result = await this.bookingsService.findMyBookings(ctx.userId);
+    const result = await this.bookingsPort.findMyBookings(ctx.userId);
     const upcoming = result.items.filter(
       (b: { status: string }) => b.status === 'pending' || b.status === 'confirmed',
     );
@@ -154,7 +157,7 @@ export class ChatbotToolsService {
 
     // Use patientReschedule (not reschedule) to enforce patient-facing policies:
     // patientCanReschedule toggle, rescheduleBeforeHours, maxReschedulesPerBooking
-    const updated = await this.bookingsService.patientReschedule(bookingId, ctx.userId, dto);
+    const updated = await this.bookingsPort.patientReschedule(bookingId, ctx.userId, dto);
     return { success: true, data: updated };
   }
 
@@ -165,7 +168,7 @@ export class ChatbotToolsService {
     const bookingId = args.bookingId as string;
     const reason = (args.reason as string) ?? 'Requested via AI chatbot';
 
-    const booking = await this.bookingsService.requestCancellation(
+    const booking = await this.bookingsPort.requestCancellation(
       bookingId,
       ctx.userId,
       reason,

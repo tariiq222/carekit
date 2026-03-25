@@ -1,6 +1,5 @@
 import {
   ConflictException,
-  ForbiddenException,
   Injectable,
 } from '@nestjs/common';
 import { Booking, BookingSettings } from '@prisma/client';
@@ -14,6 +13,7 @@ import { BookingCancelHelpersService } from './booking-cancel-helpers.service.js
 import { BookingLookupHelper } from './booking-lookup.helper.js';
 import { WaitlistService } from './waitlist.service.js';
 import { bookingInclude } from './booking.constants.js';
+import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class BookingCancellationService {
@@ -33,13 +33,7 @@ export class BookingCancellationService {
   async requestCancellation(id: string, patientId: string, reason?: string) {
     const booking = await this.lookup.findBookingOrFail(id);
 
-    if (booking.patientId !== patientId) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'You can only request cancellation for your own bookings',
-        error: 'FORBIDDEN',
-      });
-    }
+    this.lookup.assertPatientOwnership(booking, patientId);
 
     const settings = await this.bookingSettingsService.get();
 
@@ -105,13 +99,7 @@ export class BookingCancellationService {
   async practitionerCancel(bookingId: string, practitionerUserId: string, reason?: string) {
     const booking = await this.lookup.findWithRelations(bookingId);
 
-    if (booking.practitioner?.userId !== practitionerUserId) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'You can only cancel your own bookings',
-        error: 'FORBIDDEN',
-      });
-    }
+    this.lookup.assertPractitionerOwnership(booking, practitionerUserId);
     this.lookup.assertCancellable(booking);
 
     const cancelled = await this.prisma.$transaction(async (tx) => {
@@ -133,7 +121,7 @@ export class BookingCancellationService {
     await this.helpers.notifyPatientPractitionerCancelled(cancelled);
     const d = cancelled.date.toISOString().split('T')[0];
     await this.helpers.notifyAdmins(
-      'إلغاء موعد من طبيب', 'Practitioner Cancelled Booking',
+      NOTIF.PRACTITIONER_CANCELLED_BOOKING.titleAr, NOTIF.PRACTITIONER_CANCELLED_BOOKING.titleEn,
       `قام طبيب بإلغاء موعد بتاريخ ${d}`, `A practitioner cancelled a booking on ${d}`,
       'booking_practitioner_cancelled', { bookingId },
     );
@@ -253,7 +241,7 @@ export class BookingCancellationService {
       return result;
     });
 
-    await this.helpers.notifyPatientCancelled(cancelled);
+    await this.helpers.notifyPatientCancelled(cancelled, 'approved');
     await this.helpers.notifyPractitionerCancelled(cancelled);
     this.helpers.deleteZoomIfNeeded(booking);
     await this.waitlistService.checkAndNotify(booking.practitionerId, booking.date);
@@ -281,7 +269,7 @@ export class BookingCancellationService {
 
     const d = booking.date.toISOString().split('T')[0];
     await this.helpers.notifyAdmins(
-      'طلب إلغاء موعد جديد', 'New Cancellation Request',
+      NOTIF.CANCELLATION_REQUEST_NEW.titleAr, NOTIF.CANCELLATION_REQUEST_NEW.titleEn,
       `طلب مريض إلغاء الموعد بتاريخ ${d}`, `A patient requested cancellation for booking on ${d}`,
       'booking_cancellation_requested', { bookingId: booking.id },
     );

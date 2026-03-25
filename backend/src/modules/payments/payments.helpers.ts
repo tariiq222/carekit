@@ -1,4 +1,11 @@
 /** Shared constants and helpers for payment services */
+import { VAT_RATE_DEFAULT } from '../../config/constants/index.js';
+
+/** M10: Single VAT calculation — avoids hardcoded 0.15 duplicated across files */
+export function applyVat(amount: number): { amount: number; vatAmount: number; totalAmount: number } {
+  const vatAmount = Math.round(amount * VAT_RATE_DEFAULT / 100);
+  return { amount, vatAmount, totalAmount: amount + vatAmount };
+}
 
 export const paymentInclude = {
   booking: {
@@ -51,10 +58,7 @@ export function calculateAmounts(booking: {
 }): { amount: number; vatAmount: number; totalAmount: number } {
   const priceByType = resolvePriceByType(booking);
   const amount = priceByType ?? booking.service?.price ?? 0;
-  const vatAmount = Math.round(amount * 0.15);
-  const totalAmount = amount + vatAmount;
-
-  return { amount, vatAmount, totalAmount };
+  return applyVat(amount);
 }
 
 function resolvePriceByType(booking: {

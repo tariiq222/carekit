@@ -74,25 +74,6 @@ export default async function globalSetup(): Promise<void> {
       where: { isSystem: false },
     });
 
-    // Delete test-created specialties (those not from seed data)
-    // Seed data has 8 specialties — delete any extras that tests created
-    await prisma.specialty.deleteMany({
-      where: {
-        nameEn: {
-          notIn: [
-            'General Medicine',
-            'Dentistry',
-            'Dermatology',
-            'Pediatrics',
-            'Ophthalmology',
-            'Cardiology',
-            'Orthopedics',
-            'ENT',
-          ],
-        },
-      },
-    });
-
     // Delete test-created services (soft-deleted or otherwise)
     await prisma.service.deleteMany({});
 

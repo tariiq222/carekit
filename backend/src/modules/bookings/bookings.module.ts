@@ -13,6 +13,7 @@ import { BookingStatusLogService } from './booking-status-log.service.js';
 import { BookingPaymentHelper } from './booking-payment.helper.js';
 import { BookingLookupHelper } from './booking-lookup.helper.js';
 import { PriceResolverService } from './price-resolver.service.js';
+import { BookingRescheduleService } from './booking-reschedule.service.js';
 import { WaitlistService } from './waitlist.service.js';
 import { ZoomModule } from '../integrations/zoom/zoom.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
@@ -33,6 +34,7 @@ import { ClinicModule } from '../clinic/clinic.module.js';
     BookingPaymentHelper,
     BookingLookupHelper,
     PriceResolverService,
+    BookingRescheduleService,
     WaitlistService,
   ],
   exports: [BookingsService, BookingSettingsService, BookingStatusService, BookingStatusLogService, PriceResolverService, WaitlistService],

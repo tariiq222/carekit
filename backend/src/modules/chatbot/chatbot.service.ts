@@ -207,7 +207,7 @@ export class ChatbotService {
         await this.prisma.chatMessage.create({
           data: {
             sessionId,
-            role: 'tool',
+            role: 'tool' as any,
             content: toolResultContent,
             toolName: toolCall.function.name,
             functionCall: { tool_call_id: toolCall.id },

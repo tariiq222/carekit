@@ -52,46 +52,68 @@ export class TokenService {
 
   async refreshToken(token: string): Promise<TokenPair> {
     const tokenHash = this.hashToken(token);
-    const storedToken = await this.prisma.refreshToken.findFirst({
-      where: { token: tokenHash },
-    });
 
-    if (!storedToken) {
-      throw new UnauthorizedException({
-        statusCode: 401,
-        message: 'Invalid refresh token',
-        error: 'AUTH_REFRESH_TOKEN_INVALID',
+    // Atomic token rotation inside a serializable transaction:
+    // 1) Find the token record (includes userId + expiry)
+    // 2) Delete it atomically — concurrent request gets count=0 on its deleteMany
+    // 3) Issue new token pair and store it — all in one transaction
+    //
+    // Token theft detection: if a token that was already rotated is presented again,
+    // we decode the JWT to extract userId and revoke ALL tokens for that user
+    // (token family invalidation).
+    return this.prisma.$transaction(async (tx) => {
+      const storedToken = await tx.refreshToken.findFirst({
+        where: { token: tokenHash },
       });
-    }
 
-    if (storedToken.expiresAt < new Date()) {
-      await this.prisma.refreshToken.delete({ where: { id: storedToken.id } });
-      throw new UnauthorizedException({
-        statusCode: 401,
-        message: 'Refresh token has expired',
-        error: 'AUTH_REFRESH_TOKEN_EXPIRED',
+      if (!storedToken) {
+        // Token not found in DB. Decode JWT to check if this userId had tokens — if
+        // the JWT is structurally valid, it may be a reused/rotated token (theft).
+        const decoded = this.jwtService.decode(token) as { sub?: string } | null;
+        if (decoded?.sub) {
+          // Revoke all tokens for this user as a compromise response
+          await tx.refreshToken.deleteMany({ where: { userId: decoded.sub } });
+          await this.authCache.invalidate(decoded.sub);
+        }
+        throw new UnauthorizedException({
+          statusCode: 401,
+          message: 'Invalid refresh token',
+          error: 'AUTH_REFRESH_TOKEN_INVALID',
+        });
+      }
+
+      if (storedToken.expiresAt < new Date()) {
+        await tx.refreshToken.delete({ where: { id: storedToken.id } });
+        throw new UnauthorizedException({
+          statusCode: 401,
+          message: 'Refresh token has expired',
+          error: 'AUTH_REFRESH_TOKEN_EXPIRED',
+        });
+      }
+
+      const user = await tx.user.findUnique({ where: { id: storedToken.userId } });
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException({
+          statusCode: 401,
+          message: 'Account is deactivated',
+          error: 'AUTH_REFRESH_TOKEN_INVALID',
+        });
+      }
+
+      // Rotate: delete old token atomically within the same transaction
+      await tx.refreshToken.delete({ where: { id: storedToken.id } });
+
+      // Generate new token pair
+      const tokens = await this.generateTokens(user.id, user.email);
+
+      // Store new refresh token within the same transaction
+      const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      await tx.refreshToken.create({
+        data: { userId: user.id, token: this.hashToken(tokens.refreshToken), expiresAt: newExpiresAt },
       });
-    }
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: storedToken.userId },
-    });
-
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException({
-        statusCode: 401,
-        message: 'Account is deactivated',
-        error: 'AUTH_REFRESH_TOKEN_INVALID',
-      });
-    }
-
-    // Rotate: delete old, generate new
-    await this.prisma.refreshToken.delete({ where: { id: storedToken.id } });
-
-    const tokens = await this.generateTokens(user.id, user.email);
-    await this.storeRefreshToken(user.id, tokens.refreshToken);
-
-    return tokens;
+      return tokens;
+    }, { isolationLevel: 'Serializable' });
   }
 
   async deleteRefreshToken(token: string): Promise<void> {
@@ -155,34 +177,48 @@ export class TokenService {
     const cached = await this.authCache.get(userId);
     if (cached) return cached;
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        userRoles: {
-          include: {
-            role: {
-              include: {
-                rolePermissions: { include: { permission: true } },
+    // M6: Acquire lock to prevent cache stampede (thundering herd).
+    // Only one request populates the cache; others wait briefly then re-check.
+    const lockAcquired = await this.authCache.acquirePopulateLock(userId);
+    if (!lockAcquired) {
+      // Another request is populating — wait briefly and return from cache
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const cached2 = await this.authCache.get(userId);
+      if (cached2) return cached2;
+      // Still not cached — fall through and fetch directly (lock may have expired)
+    }
+
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          userRoles: {
+            include: {
+              role: {
+                include: {
+                  rolePermissions: { include: { permission: true } },
+                },
               },
             },
           },
         },
-      },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException({
-        statusCode: 401,
-        message: 'User not found',
-        error: 'AUTH_TOKEN_INVALID',
       });
+
+      if (!user) {
+        throw new UnauthorizedException({
+          statusCode: 401,
+          message: 'User not found',
+          error: 'AUTH_TOKEN_INVALID',
+        });
+      }
+
+      const payload = this.buildUserPayload(user);
+      await this.authCache.set(userId, payload);
+      return payload;
+    } finally {
+      if (lockAcquired) {
+        await this.authCache.releasePopulateLock(userId);
+      }
     }
-
-    const payload = this.buildUserPayload(user);
-
-    // Cache for subsequent requests
-    await this.authCache.set(userId, payload);
-
-    return payload;
   }
 }

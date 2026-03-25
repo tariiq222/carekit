@@ -41,6 +41,6 @@ import { EmailThrottleGuard } from '../../common/guards/email-throttle.guard.js'
     OtpThrottleRedisService,
     EmailThrottleGuard,
   ],
-  exports: [AuthService, AuthCacheService, TokenService, CookieService, JwtStrategy, PassportModule],
+  exports: [AuthService, AuthCacheService, TokenService, OtpService, CookieService, JwtStrategy, PassportModule],
 })
 export class AuthModule {}

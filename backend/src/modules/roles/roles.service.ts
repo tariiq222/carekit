@@ -81,15 +81,15 @@ export class RolesService {
     }
 
     // Find all users with this role before deleting it
-    const affected = await this.prisma.user.findMany({
+    const affected = await this.prisma.userRole.findMany({
       where: { roleId: id },
-      select: { id: true },
+      select: { userId: true },
     });
 
     await this.prisma.role.delete({ where: { id } });
 
     // Invalidate auth cache for all affected users
-    await Promise.all(affected.map((u) => this.authCache.invalidate(u.id)));
+    await Promise.all(affected.map((u) => this.authCache.invalidate(u.userId)));
 
     return { deleted: true };
   }
@@ -167,10 +167,10 @@ export class RolesService {
   }
 
   private async invalidateCacheForRole(roleId: string): Promise<void> {
-    const users = await this.prisma.user.findMany({
+    const userRoles = await this.prisma.userRole.findMany({
       where: { roleId },
-      select: { id: true },
+      select: { userId: true },
     });
-    await Promise.all(users.map((u) => this.authCache.invalidate(u.id)));
+    await Promise.all(userRoles.map((u) => this.authCache.invalidate(u.userId)));
   }
 }

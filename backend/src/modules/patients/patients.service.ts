@@ -69,31 +69,39 @@ export class PatientsService {
     });
     if (!patient) throw new NotFoundException('Patient not found');
 
-    return this.prisma.user.update({
-      where: { id },
-      data: {
-        ...(dto.firstName !== undefined && { firstName: dto.firstName }),
-        ...(dto.middleName !== undefined && { middleName: dto.middleName }),
-        ...(dto.lastName !== undefined && { lastName: dto.lastName }),
-        ...(dto.gender !== undefined && { gender: dto.gender }),
-        ...(dto.dateOfBirth !== undefined && { dateOfBirth: new Date(dto.dateOfBirth) }),
-        ...(dto.nationality !== undefined && { nationality: dto.nationality }),
-        ...(dto.nationalId !== undefined && { nationalId: dto.nationalId }),
-        ...(dto.phone !== undefined && { phone: dto.phone }),
-        ...(dto.emergencyName !== undefined && { emergencyName: dto.emergencyName }),
-        ...(dto.emergencyPhone !== undefined && { emergencyPhone: dto.emergencyPhone }),
-        ...(dto.bloodType !== undefined && { bloodType: dto.bloodType }),
-        ...(dto.allergies !== undefined && { allergies: dto.allergies }),
-        ...(dto.chronicConditions !== undefined && { chronicConditions: dto.chronicConditions }),
-      },
-      select: {
-        id: true, firstName: true, middleName: true, lastName: true,
-        email: true, phone: true, gender: true, nationality: true,
-        nationalId: true, dateOfBirth: true, emergencyName: true,
-        emergencyPhone: true, bloodType: true, allergies: true,
-        chronicConditions: true, isActive: true, updatedAt: true,
-      },
-    });
+    // Profile fields that live in PatientProfile
+    const profileFields = {
+      ...(dto.dateOfBirth !== undefined && { dateOfBirth: new Date(dto.dateOfBirth) }),
+      ...(dto.nationality !== undefined && { nationality: dto.nationality }),
+      ...(dto.nationalId !== undefined && { nationalId: dto.nationalId }),
+      ...(dto.emergencyName !== undefined && { emergencyName: dto.emergencyName }),
+      ...(dto.emergencyPhone !== undefined && { emergencyPhone: dto.emergencyPhone }),
+      ...(dto.bloodType !== undefined && { bloodType: dto.bloodType }),
+      ...(dto.allergies !== undefined && { allergies: dto.allergies }),
+      ...(dto.chronicConditions !== undefined && { chronicConditions: dto.chronicConditions }),
+    };
+
+    const [user] = await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id },
+        data: {
+          ...(dto.firstName !== undefined && { firstName: dto.firstName }),
+          ...(dto.middleName !== undefined && { middleName: dto.middleName }),
+          ...(dto.lastName !== undefined && { lastName: dto.lastName }),
+          ...(dto.gender !== undefined && { gender: dto.gender }),
+          ...(dto.phone !== undefined && { phone: dto.phone }),
+        },
+        select: { id: true, firstName: true, middleName: true, lastName: true, email: true, phone: true, gender: true, isActive: true, updatedAt: true },
+      }),
+      ...(Object.keys(profileFields).length > 0
+        ? [this.prisma.patientProfile.upsert({
+            where: { userId: id },
+            update: profileFields,
+            create: { userId: id, ...profileFields },
+          })]
+        : []),
+    ]);
+    return user;
   }
 
   async findOne(id: string) {
@@ -107,17 +115,16 @@ export class PatientsService {
         email: true,
         phone: true,
         gender: true,
-        nationality: true,
-        nationalId: true,
-        dateOfBirth: true,
-        emergencyName: true,
-        emergencyPhone: true,
-        bloodType: true,
-        allergies: true,
-        chronicConditions: true,
         isActive: true,
         updatedAt: true,
         createdAt: true,
+        patientProfile: {
+          select: {
+            nationalId: true, nationality: true, dateOfBirth: true,
+            emergencyName: true, emergencyPhone: true,
+            bloodType: true, allergies: true, chronicConditions: true,
+          },
+        },
         bookingsAsPatient: {
           where: { deletedAt: null },
           orderBy: { date: 'desc' },

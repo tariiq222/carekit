@@ -4,6 +4,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../bookings/booking-settings.service.js';
 import { WaitlistService } from '../bookings/waitlist.service.js';
+import { CLINIC_TIMEZONE } from '../../config/constants/index.js';
 
 @Injectable()
 export class BookingAutomationService {
@@ -108,7 +109,7 @@ export class BookingAutomationService {
     const now = new Date();
     // Use Riyadh date for "tomorrow" boundary to avoid UTC drift
     const riyadhTomorrow = new Date(
-      new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(now) + 'T00:00:00+03:00',
+      new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE }).format(now) + 'T00:00:00+03:00',
     );
     riyadhTomorrow.setDate(riyadhTomorrow.getDate() + 1);
 
@@ -125,7 +126,7 @@ export class BookingAutomationService {
     const autoCompleteMs = settings.autoCompleteAfterHours * 60 * 60 * 1000;
     const bookings = candidates.filter((b) => {
       // Parse date as Riyadh local date string to avoid UTC offset
-      const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })
+      const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE })
         .format(b.date);
       const bookingEnd = new Date(`${dateStr}T${b.endTime}:00+03:00`);
       return now.getTime() > bookingEnd.getTime() + autoCompleteMs;
@@ -167,7 +168,7 @@ export class BookingAutomationService {
     const cutoffMinutes = settings.autoNoShowAfterMinutes;
 
     // Compute today's start/end in Riyadh time to avoid UTC drift
-    const riyadhTodayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(now);
+    const riyadhTodayStr = new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE }).format(now);
     const todayStart = new Date(`${riyadhTodayStr}T00:00:00+03:00`);
     const todayEnd = new Date(`${riyadhTodayStr}T23:59:59+03:00`);
 
@@ -190,7 +191,7 @@ export class BookingAutomationService {
 
     const noShowBookings = bookings.filter((b) => {
       // Parse booking start in Riyadh timezone
-      const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })
+      const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE })
         .format(b.date);
       const bookingStart = new Date(`${dateStr}T${b.startTime}:00+03:00`);
       const noShowDeadline = new Date(bookingStart.getTime() + cutoffMinutes * 60 * 1000);

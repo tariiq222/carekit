@@ -133,8 +133,10 @@ export class BookingsController {
   async reschedule(
     @Param('id', uuidPipe) id: string,
     @Body() dto: RescheduleBookingDto,
+    @CurrentUser() user: { id: string },
   ) {
-    return this.bookingsService.reschedule(id, dto);
+    // H7: Pass adminUserId for audit trail — ownership is role-based (bookings:edit permission)
+    return this.bookingsService.reschedule(id, dto, user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -161,8 +163,11 @@ export class BookingsController {
   @Post(':id/confirm')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
-  async confirm(@Param('id', uuidPipe) id: string) {
-    return this.bookingsService.confirm(id);
+  async confirm(
+    @Param('id', uuidPipe) id: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.bookingsService.confirm(id, user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -172,8 +177,11 @@ export class BookingsController {
   @Post(':id/check-in')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
-  async checkIn(@Param('id', uuidPipe) id: string) {
-    const data = await this.bookingsService.checkIn(id);
+  async checkIn(
+    @Param('id', uuidPipe) id: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    const data = await this.bookingsService.checkIn(id, user.id);
     return { success: true, data };
   }
 

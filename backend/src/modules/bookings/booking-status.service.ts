@@ -10,6 +10,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingStatusLogService } from './booking-status-log.service.js';
 import { bookingInclude } from './booking.constants.js';
+import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class BookingStatusService {
@@ -20,7 +21,7 @@ export class BookingStatusService {
     private readonly statusLogService: BookingStatusLogService,
   ) {}
 
-  async confirm(id: string) {
+  async confirm(id: string, performedByUserId?: string) {
     const booking = await this.ensureBookingExists(id);
     if (booking.status !== 'pending') {
       throw new ConflictException({
@@ -49,7 +50,7 @@ export class BookingStatusService {
       const d = confirmed.date.toISOString().split('T')[0];
       await this.notificationsService.createNotification({
         userId: confirmed.patientId, type: 'booking_confirmed',
-        titleAr: 'تأكيد الموعد', titleEn: 'Booking Confirmed',
+        ...NOTIF.BOOKING_CONFIRMED,
         bodyAr: `تم تأكيد موعدك بتاريخ ${d} الساعة ${confirmed.startTime}`,
         bodyEn: `Your booking on ${d} at ${confirmed.startTime} has been confirmed`,
         data: { bookingId: id },
@@ -60,6 +61,7 @@ export class BookingStatusService {
       action: 'booking_confirmed',
       module: 'bookings',
       resourceId: id,
+      userId: performedByUserId,
       description: `Booking confirmed for ${confirmed.date.toISOString().split('T')[0]} at ${confirmed.startTime}`,
     }).catch(() => {});
 
@@ -72,7 +74,7 @@ export class BookingStatusService {
     return confirmed;
   }
 
-  async checkIn(id: string) {
+  async checkIn(id: string, performedByUserId?: string) {
     const booking = await this.ensureBookingExists(id);
     if (booking.status !== 'confirmed') {
       throw new ConflictException({
@@ -93,8 +95,7 @@ export class BookingStatusService {
     if (practitioner?.userId) {
       await this.notificationsService.createNotification({
         userId: practitioner.userId, type: 'patient_arrived',
-        titleAr: 'وصول المريض', titleEn: 'Patient Arrived',
-        bodyAr: 'المريض وصل وجاهز للموعد', bodyEn: 'Patient has arrived and is ready',
+        ...NOTIF.PATIENT_ARRIVED,
         data: { bookingId: id },
       });
     }
@@ -103,6 +104,7 @@ export class BookingStatusService {
       action: 'booking_checked_in',
       module: 'bookings',
       resourceId: id,
+      userId: performedByUserId,
       description: 'Patient checked in for booking',
     }).catch(() => {});
 
@@ -176,9 +178,7 @@ export class BookingStatusService {
     if (completed.patientId) {
       await this.notificationsService.createNotification({
         userId: completed.patientId, type: 'booking_completed',
-        titleAr: 'اكتمل الموعد', titleEn: 'Booking Completed',
-        bodyAr: 'تم اكتمال موعدك. يمكنك الآن تقييم تجربتك',
-        bodyEn: 'Your booking is completed. You can now rate your experience',
+        ...NOTIF.BOOKING_COMPLETED,
         data: { bookingId: id },
       });
     }

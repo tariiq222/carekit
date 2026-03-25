@@ -9,6 +9,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
 import { resilientFetch } from '../../common/helpers/resilient-fetch.helper.js';
+import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class BookingCancelHelpersService {
@@ -132,8 +133,7 @@ export class BookingCancelHelpersService {
     };
     await this.notificationsService.createNotification({
       userId: booking.patientId,
-      titleAr: 'تم إلغاء الموعد',
-      titleEn: 'Booking Cancelled',
+      ...NOTIF.BOOKING_CANCELLED,
       bodyAr: bodyMap[trigger].ar,
       bodyEn: bodyMap[trigger].en,
       type: 'booking_cancelled',
@@ -149,8 +149,7 @@ export class BookingCancelHelpersService {
     const d = booking.date.toISOString().split('T')[0];
     await this.notificationsService.createNotification({
       userId: booking.practitioner.userId,
-      titleAr: 'تم إلغاء موعد',
-      titleEn: 'Booking Cancelled',
+      ...NOTIF.BOOKING_CANCELLED,
       bodyAr: `تم إلغاء الموعد بتاريخ ${d} الساعة ${booking.startTime}`,
       bodyEn: `Booking on ${d} at ${booking.startTime} has been cancelled`,
       type: 'booking_cancelled',
@@ -166,8 +165,7 @@ export class BookingCancelHelpersService {
     const d = booking.date.toISOString().split('T')[0];
     await this.notificationsService.createNotification({
       userId: booking.patientId,
-      titleAr: 'تم إلغاء موعدك من قبل الطبيب',
-      titleEn: 'Your Booking Was Cancelled by Practitioner',
+      ...NOTIF.BOOKING_CANCELLED_BY_PRACTITIONER,
       bodyAr: `نعتذر، تم إلغاء موعدك بتاريخ ${d}. سيتم استرداد المبلغ كاملاً`,
       bodyEn: `We apologize, your booking on ${d} has been cancelled. A full refund will be processed`,
       type: 'booking_cancelled',
@@ -192,10 +190,7 @@ export class BookingCancelHelpersService {
   async notifyPatientCancellationRejected(patientId: string, bookingId: string): Promise<void> {
     await this.notificationsService.createNotification({
       userId: patientId,
-      titleAr: 'تم رفض طلب الإلغاء',
-      titleEn: 'Cancellation Rejected',
-      bodyAr: 'تم رفض طلب إلغاء موعدك. الموعد لا يزال مؤكداً',
-      bodyEn: 'Your cancellation request was rejected. The booking remains confirmed',
+      ...NOTIF.CANCELLATION_REJECTED,
       type: 'booking_cancellation_rejected',
       data: { bookingId },
     });

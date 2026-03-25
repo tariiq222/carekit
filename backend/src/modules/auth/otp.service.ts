@@ -55,25 +55,33 @@ export class OtpService {
       });
     }
 
-    const otpRecord = await this.prisma.otpCode.findFirst({
-      where: { userId: user.id, type: type as PrismaOtpType, code, usedAt: null },
-      orderBy: { createdAt: 'desc' },
+    // Atomic OTP claim: updateMany atomically marks the OTP as used and returns
+    // count > 0 only if the record existed AND was not yet used AND not expired.
+    // This prevents two concurrent requests from both verifying the same OTP code.
+    const now = new Date();
+    const claimed = await this.prisma.otpCode.updateMany({
+      where: {
+        userId: user.id,
+        type: type as PrismaOtpType,
+        code,
+        usedAt: null,
+        expiresAt: { gt: now },
+      },
+      data: { usedAt: now },
     });
 
-    if (!otpRecord) {
-      // Check if there's an active OTP with a different code (wrong code entered)
-      // vs no active OTP at all (expired or already used)
+    if (claimed.count === 0) {
+      // Distinguish expired vs wrong code for better UX
       const activeOtp = await this.prisma.otpCode.findFirst({
         where: {
           userId: user.id,
           type: type as PrismaOtpType,
           usedAt: null,
-          expiresAt: { gt: new Date() },
+          expiresAt: { gt: now },
         },
       });
 
       if (activeOtp) {
-        // Active OTP exists but code doesn't match → wrong code
         throw new BadRequestException({
           statusCode: 400,
           message: 'Invalid OTP',
@@ -81,26 +89,12 @@ export class OtpService {
         });
       }
 
-      // No active OTP found → it expired or was already used
       throw new BadRequestException({
         statusCode: 400,
         message: 'OTP has expired or was already used',
         error: 'AUTH_OTP_EXPIRED',
       });
     }
-
-    if (otpRecord.expiresAt < new Date()) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'OTP has expired',
-        error: 'AUTH_OTP_EXPIRED',
-      });
-    }
-
-    await this.prisma.otpCode.update({
-      where: { id: otpRecord.id },
-      data: { usedAt: new Date() },
-    });
 
     if (!user.emailVerified) {
       await this.prisma.user.update({
@@ -113,31 +107,19 @@ export class OtpService {
   }
 
   async verifyEmail(userId: string, code: string): Promise<void> {
-    const otpRecord = await this.prisma.otpCode.findFirst({
-      where: { userId, type: OtpType.VERIFY_EMAIL, code, usedAt: null },
-      orderBy: { createdAt: 'desc' },
+    const now = new Date();
+    const claimed = await this.prisma.otpCode.updateMany({
+      where: { userId, type: OtpType.VERIFY_EMAIL as PrismaOtpType, code, usedAt: null, expiresAt: { gt: now } },
+      data: { usedAt: now },
     });
 
-    if (!otpRecord) {
+    if (claimed.count === 0) {
       throw new BadRequestException({
         statusCode: 400,
-        message: 'Invalid OTP',
+        message: 'Invalid or expired OTP',
         error: 'AUTH_OTP_INVALID',
       });
     }
-
-    if (otpRecord.expiresAt < new Date()) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'OTP has expired',
-        error: 'AUTH_OTP_EXPIRED',
-      });
-    }
-
-    await this.prisma.otpCode.update({
-      where: { id: otpRecord.id },
-      data: { usedAt: new Date() },
-    });
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -160,36 +142,24 @@ export class OtpService {
       });
     }
 
-    const otpRecord = await this.prisma.otpCode.findFirst({
-      where: { userId: user.id, type: OtpType.RESET_PASSWORD, code, usedAt: null },
-      orderBy: { createdAt: 'desc' },
+    const now = new Date();
+    const claimed = await this.prisma.otpCode.updateMany({
+      where: { userId: user.id, type: OtpType.RESET_PASSWORD as PrismaOtpType, code, usedAt: null, expiresAt: { gt: now } },
+      data: { usedAt: now },
     });
 
-    if (!otpRecord) {
+    if (claimed.count === 0) {
       throw new BadRequestException({
         statusCode: 400,
-        message: 'Invalid OTP',
+        message: 'Invalid or expired OTP',
         error: 'AUTH_OTP_INVALID',
       });
     }
 
-    if (otpRecord.expiresAt < new Date()) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'OTP has expired',
-        error: 'AUTH_OTP_EXPIRED',
-      });
-    }
-
-    await this.prisma.otpCode.update({
-      where: { id: otpRecord.id },
-      data: { usedAt: new Date() },
-    });
-
     const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: newHash },
+      data: { passwordHash: newHash, isActive: true },
     });
 
     // Invalidate all sessions: revoke refresh tokens + clear auth cache

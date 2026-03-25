@@ -4,7 +4,9 @@ import { REDIS_CLIENT } from '../../common/redis/redis.constants.js';
 import type { UserPayload } from '../../common/types/user-payload.type.js';
 
 const AUTH_CACHE_PREFIX = 'auth:user:';
+const AUTH_CACHE_LOCK_PREFIX = 'auth:user:lock:';
 const AUTH_CACHE_TTL = 900; // 15 minutes — matches access token lifetime
+const AUTH_CACHE_LOCK_TTL = 5; // seconds — short lock to prevent stampede
 
 @Injectable()
 export class AuthCacheService {
@@ -33,5 +35,21 @@ export class AuthCacheService {
 
   async invalidate(userId: string): Promise<void> {
     await this.redis.del(`${AUTH_CACHE_PREFIX}${userId}`);
+  }
+
+  /**
+   * M6: Acquire a short-lived lock to prevent cache stampede.
+   * Returns true if the lock was acquired (caller should populate cache).
+   * Returns false if another request is already populating the cache.
+   */
+  async acquirePopulateLock(userId: string): Promise<boolean> {
+    const key = `${AUTH_CACHE_LOCK_PREFIX}${userId}`;
+    // SET key value NX EX ttl — atomic acquire
+    const result = await this.redis.set(key, '1', 'EX', AUTH_CACHE_LOCK_TTL, 'NX');
+    return result === 'OK';
+  }
+
+  async releasePopulateLock(userId: string): Promise<void> {
+    await this.redis.del(`${AUTH_CACHE_LOCK_PREFIX}${userId}`);
   }
 }

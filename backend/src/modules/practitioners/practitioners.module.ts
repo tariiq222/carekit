@@ -8,10 +8,13 @@ import { PractitionerServiceService } from './practitioner-service.service.js';
 import { PractitionerRatingsService } from './practitioner-ratings.service.js';
 import { PractitionerBreaksService } from './practitioner-breaks.service.js';
 import { FavoritePractitionersService } from './favorite-practitioners.service.js';
+import { PractitionerOnboardingService } from './practitioner-onboarding.service.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
+import { AuthModule } from '../auth/auth.module.js';
+import { EmailModule } from '../email/email.module.js';
 
 @Module({
-  imports: [BookingsModule],
+  imports: [BookingsModule, AuthModule, EmailModule],
   controllers: [FavoritePractitionersController, PractitionersController],
   providers: [
     PractitionersService,
@@ -21,6 +24,7 @@ import { BookingsModule } from '../bookings/bookings.module.js';
     PractitionerServiceService,
     PractitionerRatingsService,
     FavoritePractitionersService,
+    PractitionerOnboardingService,
   ],
   exports: [PractitionersService, PractitionerServiceService],
 })

@@ -64,6 +64,22 @@ export class EmailService {
     this.logger.log(`Queued welcome email to ${email}`);
   }
 
+  async sendPractitionerWelcome(
+    email: string,
+    firstName: string,
+    otpCode: string,
+  ): Promise<void> {
+    await this.emailQueue.add('send-email', {
+      template: 'practitioner-welcome',
+      to: email,
+      subject: 'Welcome to CareKit — Set Your Password | مرحبا بك في كيركت — عيّن كلمة مرورك',
+      context: { firstName, otpCode },
+      correlationId: correlationStorage.getStore() ?? null,
+    });
+
+    this.logger.log(`Queued practitioner-welcome email to ${email}`);
+  }
+
   async sendBookingConfirmation(
     email: string,
     firstName: string,

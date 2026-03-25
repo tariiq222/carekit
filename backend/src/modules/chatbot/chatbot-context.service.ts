@@ -74,13 +74,13 @@ export class ChatbotContextService {
     windowSize: number,
   ): Promise<OpenRouterMessage[]> {
     const messages = await this.prisma.chatMessage.findMany({
-      where: { sessionId, role: { in: ['user', 'assistant', 'tool'] } },
+      where: { sessionId, role: { in: ['user', 'assistant', 'tool'] as any[] } },
       orderBy: { createdAt: 'desc' },
       take: windowSize,
     });
 
     return messages.reverse().map((m) => {
-      if (m.role === 'tool') {
+      if ((m.role as string) === 'tool') {
         const fc = m.functionCall as { tool_call_id?: string } | null;
         return {
           role: 'tool' as const,

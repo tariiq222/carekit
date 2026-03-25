@@ -19,6 +19,7 @@ import { BookingCancellationService } from './booking-cancellation.service.js';
 import { BookingQueryService } from './booking-query.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
 import { BookingStatusService } from './booking-status.service.js';
+import { BookingRescheduleService } from './booking-reschedule.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { validateAvailability, checkDoubleBooking, validateClinicAvailability } from './booking-validation.helper.js';
@@ -28,6 +29,8 @@ import { BookingPaymentHelper } from './booking-payment.helper.js';
 import { PriceResolverService } from './price-resolver.service.js';
 import { ClinicHoursService } from '../clinic/clinic-hours.service.js';
 import { ClinicHolidaysService } from '../clinic/clinic-holidays.service.js';
+import { CLINIC_TIMEZONE } from '../../config/constants/index.js';
+import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class BookingsService {
@@ -40,6 +43,7 @@ export class BookingsService {
     private readonly queryService: BookingQueryService,
     private readonly bookingSettingsService: BookingSettingsService,
     private readonly statusService: BookingStatusService,
+    private readonly rescheduleService: BookingRescheduleService,
     private readonly notificationsService: NotificationsService,
     private readonly activityLogService: ActivityLogService,
     private readonly paymentHelper: BookingPaymentHelper,
@@ -84,7 +88,7 @@ export class BookingsService {
     const duration = resolved.duration;
 
     const bookingDate = new Date(dto.date);
-    const nowRiyadh = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(new Date());
+    const nowRiyadh = new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE }).format(new Date());
     const today = new Date(nowRiyadh); // midnight in Riyadh
     if (bookingDate < today) throw new BadRequestException({ statusCode: 400, message: 'Cannot book in the past', error: 'VALIDATION_ERROR' });
 
@@ -198,14 +202,27 @@ export class BookingsService {
       throw err;
     }
 
-    // Side effects outside transaction (non-critical, fire-and-forget safe)
-    await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, resolved.price);
+    // H5: Payment creation is critical — if it fails, cancel the booking to avoid
+    // orphaned bookings stuck in 'pending' with no payment record.
+    try {
+      await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, resolved.price);
+    } catch (paymentErr) {
+      this.logger.error(
+        `Payment creation failed for booking ${booking.id} — cancelling booking to prevent orphan`,
+        paymentErr,
+      );
+      await this.prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: 'cancelled', cancelledAt: new Date(), adminNotes: 'Auto-cancelled: payment record creation failed' },
+      });
+      throw paymentErr;
+    }
 
     if (practitioner.userId) {
       const d = bookingDate.toISOString().split('T')[0];
       await this.notificationsService.createNotification({
         userId: practitioner.userId, type: 'booking_confirmed',
-        titleAr: 'حجز جديد', titleEn: 'New Booking',
+        ...NOTIF.BOOKING_NEW_FOR_PRACTITIONER,
         bodyAr: `لديك حجز جديد بتاريخ ${d} الساعة ${dto.startTime}`,
         bodyEn: `You have a new booking on ${d} at ${dto.startTime}`,
         data: { bookingId: booking.id },
@@ -232,57 +249,11 @@ export class BookingsService {
   findTodayBookings(userId: string) { return this.queryService.findTodayBookings(userId); }
   getStats() { return this.queryService.getStats(); }
 
-  async reschedule(id: string, dto: RescheduleBookingDto) {
-    if (!dto.date && !dto.startTime) throw new BadRequestException({ statusCode: 400, message: 'At least one of date or startTime must be provided', error: 'VALIDATION_ERROR' });
-    const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null } });
-    if (!booking) throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
-
-    const newStartTime = dto.startTime ?? booking.startTime;
-    const newDate = dto.date ? new Date(dto.date) : booking.date;
-    const [ps, svc, settings] = await Promise.all([
-      this.prisma.practitionerService.findUnique({ where: { id: booking.practitionerServiceId } }),
-      this.prisma.service.findFirst({ where: { id: booking.serviceId } }),
-      this.bookingSettingsService.get(),
-    ]);
-    const duration = booking.bookedDuration ?? ps?.customDuration ?? svc?.duration ?? 30;
-    const newEndTime = calculateEndTime(newStartTime, duration);
-
-    let zoomData: { zoomMeetingId?: string; zoomJoinUrl?: string; zoomHostUrl?: string } = {};
-    if (booking.type === 'video_consultation') {
-      const isoStart = `${newDate.toISOString().split('T')[0]}T${newStartTime}:00`;
-      const mtg = await this.zoomService.createMeeting('CareKit Video Consultation', isoStart, duration);
-      zoomData = { zoomMeetingId: mtg.meetingId, zoomJoinUrl: mtg.joinUrl, zoomHostUrl: mtg.hostUrl };
+  async reschedule(id: string, dto: RescheduleBookingDto, adminUserId?: string) {
+    if (!dto.date && !dto.startTime) {
+      throw new BadRequestException({ statusCode: 400, message: 'At least one of date or startTime must be provided', error: 'VALIDATION_ERROR' });
     }
-    const oldZoomId = booking.zoomMeetingId;
-    // Override chain: PractitionerService > Service > BookingSettings (global)
-    const bufferMinutes = ps?.bufferMinutes || svc?.bufferMinutes || settings.bufferMinutes;
-
-    const result = await this.prisma.$transaction(async (tx) => {
-      await validateAvailability(tx, booking.practitionerId, newDate, newStartTime, newEndTime);
-      await checkDoubleBooking(tx, booking.practitionerId, newDate, newStartTime, newEndTime, id, bufferMinutes);
-      const nb = await tx.booking.create({
-        data: {
-          patientId: booking.patientId, practitionerId: booking.practitionerId,
-          serviceId: booking.serviceId, practitionerServiceId: booking.practitionerServiceId,
-          type: booking.type, date: newDate, startTime: newStartTime, endTime: newEndTime,
-          status: booking.status, notes: booking.notes, ...zoomData,
-          confirmedAt: booking.confirmedAt, rescheduledFromId: id,
-          bookedPrice: booking.bookedPrice, bookedDuration: booking.bookedDuration,
-          durationOptionId: booking.durationOptionId,
-        },
-        include: bookingInclude,
-      });
-      await tx.booking.update({ where: { id }, data: { status: 'cancelled', cancelledAt: new Date(), adminNotes: `Rescheduled to booking ${nb.id}` } });
-      await tx.payment.updateMany({ where: { bookingId: id }, data: { bookingId: nb.id } });
-      return nb;
-    }, { isolationLevel: 'Serializable', timeout: 10000 });
-
-    if (booking.type === 'video_consultation' && oldZoomId) {
-      this.zoomService.deleteMeeting(oldZoomId).catch((e) => this.logger.warn(`Failed to delete old Zoom meeting: ${e.message}`));
-    }
-    await this.notifyReschedule(booking, result, newDate, newStartTime);
-    this.activityLogService.log({ action: 'booking_rescheduled', module: 'bookings', resourceId: result.id, description: `Booking rescheduled to ${newDate.toISOString().split('T')[0]} at ${newStartTime}` }).catch(() => {});
-    return result;
+    return this.rescheduleService.reschedule(id, dto, adminUserId);
   }
 
   async patientReschedule(bookingId: string, patientId: string, dto: RescheduleBookingDto) {
@@ -306,8 +277,8 @@ export class BookingsService {
   }
 
   // --- Delegated: Status Transitions ---
-  confirm(id: string) { return this.statusService.confirm(id); }
-  checkIn(id: string) { return this.statusService.checkIn(id); }
+  confirm(id: string, userId?: string) { return this.statusService.confirm(id, userId); }
+  checkIn(id: string, userId?: string) { return this.statusService.checkIn(id, userId); }
   startSession(id: string, userId: string) { return this.statusService.startSession(id, userId); }
   complete(id: string, dto?: CompleteBookingDto) { return this.statusService.complete(id, dto); }
   markNoShow(id: string) { return this.statusService.markNoShow(id); }
@@ -335,9 +306,7 @@ export class BookingsService {
         durationOptionId: dto.durationOptionId,
       });
     } catch (err) {
-      // Re-throw intentional business rule errors — do NOT fall back silently
       if (err instanceof BadRequestException) throw err;
-      // Fallback to legacy pricing if ServiceBookingType not configured yet
       const duration = ps.customDuration ?? service.duration;
       const priceField = dto.type === 'clinic_visit' || dto.type === 'walk_in' ? 'priceClinic' as const
         : dto.type === 'phone_consultation' ? 'pricePhone' as const : 'priceVideo' as const;
@@ -350,31 +319,5 @@ export class BookingsService {
     const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null } });
     if (!booking) throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
     return booking;
-  }
-
-  /** Notify patient + practitioner about reschedule */
-  private async notifyReschedule(
-    old: { patientId: string | null; practitionerId: string; date: Date; startTime: string },
-    newB: { id: string }, newDate: Date, newStart: string,
-  ): Promise<void> {
-    const [oldD, newD] = [old.date.toISOString().split('T')[0], newDate.toISOString().split('T')[0]];
-    if (old.patientId) {
-      await this.notificationsService.createNotification({
-        userId: old.patientId, type: 'booking_rescheduled',
-        titleAr: 'إعادة جدولة الموعد', titleEn: 'Booking Rescheduled',
-        bodyAr: `تم إعادة جدولة موعدك من ${oldD} ${old.startTime} إلى ${newD} ${newStart}`,
-        bodyEn: `Your booking rescheduled from ${oldD} ${old.startTime} to ${newD} ${newStart}`,
-        data: { bookingId: newB.id },
-      });
-    }
-    const pract = await this.prisma.practitioner.findUnique({ where: { id: old.practitionerId } });
-    if (pract?.userId) {
-      await this.notificationsService.createNotification({
-        userId: pract.userId, type: 'booking_rescheduled',
-        titleAr: 'إعادة جدولة موعد', titleEn: 'Booking Rescheduled',
-        bodyAr: 'تم إعادة جدولة أحد مواعيدك', bodyEn: 'One of your bookings has been rescheduled',
-        data: { bookingId: newB.id },
-      });
-    }
   }
 }

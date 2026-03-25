@@ -52,6 +52,7 @@ enum PaymentStatus {
   paid
   refunded
   failed
+  rejected // Bank transfer receipt rejected by admin — audit trail preserved
 
   @@map("payment_status")
 }
@@ -308,7 +309,8 @@ model OtpCode {
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  // H9: Composite index for atomic OTP verification (userId + type + usedAt)
+  @@index([userId, type, usedAt])
   @@map("otp_codes")
 }
 
@@ -323,6 +325,7 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([expiresAt]) // For scheduled cleanup of expired tokens
   @@map("refresh_tokens")
 }
 
@@ -442,7 +445,8 @@ model PractitionerAvailability {
   // Relations
   practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
 
-  @@index([practitionerId, dayOfWeek])
+  // H10: Add isActive to composite index to avoid filtering in-memory after index lookup
+  @@index([practitionerId, dayOfWeek, isActive])
   @@map("practitioner_availabilities")
 }
 

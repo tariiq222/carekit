@@ -20,7 +20,7 @@ export class BookingSettingsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get()
-  @CheckPermissions({ module: 'whitelabel', action: 'view' })
+  @CheckPermissions({ module: 'bookings', action: 'view' })
   async get() {
     const data = await this.bookingSettingsService.get();
     return { success: true, data };

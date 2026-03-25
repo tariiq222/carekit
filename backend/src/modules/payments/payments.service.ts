@@ -81,28 +81,32 @@ export class PaymentsService {
       });
     }
 
-    const existingPayment = await this.prisma.payment.findUnique({
-      where: { bookingId: dto.bookingId },
-    });
-    if (existingPayment) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'Payment already exists for this booking',
-        error: 'DUPLICATE_PAYMENT',
+    // Atomic check-then-create inside a serializable transaction to prevent
+    // duplicate payments from concurrent requests on the same booking.
+    return this.prisma.$transaction(async (tx) => {
+      const existingPayment = await tx.payment.findUnique({
+        where: { bookingId: dto.bookingId },
       });
-    }
+      if (existingPayment) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: 'Payment already exists for this booking',
+          error: 'DUPLICATE_PAYMENT',
+        });
+      }
 
-    return this.prisma.payment.create({
-      data: {
-        bookingId: dto.bookingId,
-        amount: dto.amount,
-        vatAmount: 0,
-        totalAmount: dto.amount,
-        method: dto.method,
-        status: 'pending',
-      },
-      include: paymentInclude,
-    });
+      return tx.payment.create({
+        data: {
+          bookingId: dto.bookingId,
+          amount: dto.amount,
+          vatAmount: 0,
+          totalAmount: dto.amount,
+          method: dto.method,
+          status: 'pending',
+        },
+        include: paymentInclude,
+      });
+    }, { isolationLevel: 'Serializable' });
   }
 
   async updateStatus(id: string, dto: UpdatePaymentStatusDto) {

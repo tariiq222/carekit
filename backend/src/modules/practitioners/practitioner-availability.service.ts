@@ -9,6 +9,7 @@ import { SetAvailabilityDto } from './dto/set-availability.dto.js';
 import { timeSlotsOverlap } from '../../common/helpers/booking-time.helper.js';
 import { checkOwnership } from '../../common/helpers/ownership.helper.js';
 import { ensurePractitionerExists } from '../../common/helpers/practitioner.helper.js';
+import { CLINIC_TIMEZONE } from '../../config/constants/index.js';
 
 const TIME_REGEX = /^\d{2}:\d{2}$/;
 
@@ -84,34 +85,34 @@ export class PractitionerAvailabilityService {
     // Normalize to UTC midnight for consistent vacation comparison
     const normalizedDate = new Date(Date.UTC(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()));
 
-    const availabilities = await this.prisma.practitionerAvailability.findMany({
-      where: { practitionerId, dayOfWeek, isActive: true },
-      orderBy: { startTime: 'asc' },
-    });
-
-    // Check for vacation on this date
-    const vacation = await this.prisma.practitionerVacation.findFirst({
-      where: {
-        practitionerId,
-        startDate: { lte: normalizedDate },
-        endDate: { gte: normalizedDate },
-      },
-    });
+    // M8: Parallelize independent queries — availabilities and vacation check are independent
+    const [availabilities, vacation] = await Promise.all([
+      this.prisma.practitionerAvailability.findMany({
+        where: { practitionerId, dayOfWeek, isActive: true },
+        orderBy: { startTime: 'asc' },
+      }),
+      this.prisma.practitionerVacation.findFirst({
+        where: {
+          practitionerId,
+          startDate: { lte: normalizedDate },
+          endDate: { gte: normalizedDate },
+        },
+      }),
+    ]);
 
     if (vacation) {
       return { date, practitionerId, slots: [] };
     }
 
-    const settings = await this.bookingSettingsService.get();
+    // settings and breaks are independent of each other — run in parallel
+    const [settings, breaks] = await Promise.all([
+      this.bookingSettingsService.get(),
+      this.prisma.practitionerBreak.findMany({ where: { practitionerId, dayOfWeek } }),
+    ]);
     const bufferMinutes = settings.bufferMinutes ?? 0;
     const isToday = this.isSameLocalDate(targetDate, new Date());
 
     const allSlots = this.generateSlots(availabilities, duration, bufferMinutes, isToday);
-
-    // Subtract breaks for this day
-    const breaks = await this.prisma.practitionerBreak.findMany({
-      where: { practitionerId, dayOfWeek },
-    });
 
     const slotsWithoutBreaks = allSlots.filter((slot) =>
       !breaks.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
@@ -247,7 +248,7 @@ export class PractitionerAvailabilityService {
   private getNowMinutesRiyadh(): number {
     const now = new Date();
     const riyadhTime = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Riyadh',
+      timeZone: CLINIC_TIMEZONE,
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
@@ -259,7 +260,7 @@ export class PractitionerAvailabilityService {
   /** Compares two dates by local calendar day in Asia/Riyadh timezone */
   private isSameLocalDate(a: Date, b: Date): boolean {
     const fmt = (d: Date) =>
-      new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(d);
+      new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE }).format(d);
     return fmt(a) === fmt(b);
   }
 

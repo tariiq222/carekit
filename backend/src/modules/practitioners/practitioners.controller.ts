@@ -19,8 +19,10 @@ import { CheckPermissions } from '../../common/decorators/check-permissions.deco
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { PractitionersService } from './practitioners.service.js';
+import { PractitionerOnboardingService } from './practitioner-onboarding.service.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
+import { OnboardPractitionerDto } from './dto/onboard-practitioner.dto.js';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto.js';
 import { SetAvailabilityDto } from './dto/set-availability.dto.js';
 import { CreateVacationDto } from './dto/create-vacation.dto.js';
@@ -34,7 +36,10 @@ import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 @Controller('practitioners')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class PractitionersController {
-  constructor(private readonly practitionersService: PractitionersService) {}
+  constructor(
+    private readonly practitionersService: PractitionersService,
+    private readonly onboardingService: PractitionerOnboardingService,
+  ) {}
 
   @Get()
   @Public()
@@ -77,6 +82,12 @@ export class PractitionersController {
   @CheckPermissions({ module: 'practitioners', action: 'create' })
   async create(@Body() dto: CreatePractitionerDto) {
     return this.practitionersService.create(dto);
+  }
+
+  @Post('onboard')
+  @CheckPermissions({ module: 'practitioners', action: 'create' })
+  async onboard(@Body() dto: OnboardPractitionerDto) {
+    return this.onboardingService.onboard(dto);
   }
 
   @Patch(':id')

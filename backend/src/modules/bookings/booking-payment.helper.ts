@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
-import { VAT_RATE_DEFAULT } from '../../config/constants/index.js';
+import { applyVat } from '../payments/payments.helpers.js';
 
 @Injectable()
 export class BookingPaymentHelper {
@@ -33,9 +33,9 @@ export class BookingPaymentHelper {
       if (!settings.walkInPaymentRequired) return;
     }
     if (resolvedPrice <= 0) return; // Free service — no payment needed
-    const vatAmount = Math.round(resolvedPrice * VAT_RATE_DEFAULT / 100);
+    const { amount, vatAmount, totalAmount } = applyVat(resolvedPrice);
     await this.prisma.payment.create({
-      data: { bookingId, amount: resolvedPrice, vatAmount, totalAmount: resolvedPrice + vatAmount, method: 'moyasar', status: 'awaiting' },
+      data: { bookingId, amount, vatAmount, totalAmount, method: 'moyasar', status: 'awaiting' },
     });
   }
 }

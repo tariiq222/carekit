@@ -18,6 +18,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { UploadReceiptDto } from './dto/upload-receipt.dto.js';
 import { paymentInclude, bookingWithPriceInclude, calculateAmounts } from './payments.helpers.js';
 import { correlationStorage } from '../../common/middleware/correlation-id.middleware.js';
+import { NOTIF } from '../../common/constants/notification-messages.js';
 
 const MINIO_BUCKET = 'carekit';
 
@@ -241,9 +242,11 @@ export class BankTransferService {
     patientId: string | null | undefined,
     reason?: string,
   ): Promise<void> {
-    // Delete the rejected payment so patient can retry with a new receipt
-    await this.prisma.payment.deleteMany({
+    // M9: Mark payment as 'rejected' instead of deleting — preserves audit trail
+    // and prevents the same receipt from being re-uploaded and accepted fraudulently.
+    await this.prisma.payment.updateMany({
       where: { bookingId, status: { in: ['pending', 'failed'] } },
+      data: { status: 'rejected' },
     });
 
     if (!patientId) return;
@@ -251,8 +254,7 @@ export class BankTransferService {
     const reasonText = reason ? ` (${reason})` : '';
     await this.notificationsService.createNotification({
       userId: patientId,
-      titleAr: 'تم رفض إيصال التحويل البنكي',
-      titleEn: 'Bank Transfer Receipt Rejected',
+      ...NOTIF.RECEIPT_REJECTED,
       bodyAr: `تم رفض إيصال التحويل البنكي${reasonText}. يمكنك رفع إيصال جديد أو اختيار طريقة دفع أخرى`,
       bodyEn: `Your bank transfer receipt was rejected${reasonText}. You can upload a new receipt or choose another payment method`,
       type: 'receipt_rejected',

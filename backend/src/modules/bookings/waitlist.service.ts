@@ -9,6 +9,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
 import { JoinWaitlistDto } from './dto/join-waitlist.dto.js';
+import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class WaitlistService {
@@ -194,8 +195,7 @@ export class WaitlistService {
 
       await this.notificationsService.createNotification({
         userId: entry.patientId,
-        titleAr: 'موعد متاح!',
-        titleEn: 'Slot Available!',
+        ...NOTIF.WAITLIST_SLOT_AVAILABLE,
         bodyAr: `تحرّر موعد مع د. ${docName} بتاريخ ${dateStr}. احجز الآن!`,
         bodyEn: `A slot opened with Dr. ${docName} on ${dateStr}. Book now!`,
         type: 'waitlist_slot_available',

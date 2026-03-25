@@ -96,6 +96,49 @@ function welcomeBody(context: Record<string, unknown>): string {
   ].join('\n');
 }
 
+function practitionerWelcomeBody(context: Record<string, unknown>): string {
+  const firstName = context['firstName'] ? String(context['firstName']) : '';
+  const otpCode = String(context['otpCode'] ?? '');
+  const greeting = firstName ? `Hi ${firstName},` : 'Hi,';
+  const greetingAr = firstName ? `${firstName} ,مرحبا` : ',مرحبا';
+
+  return [
+    greeting,
+    '',
+    'You have been added as a practitioner on CareKit.',
+    '',
+    'To activate your account and set your password, use the following one-time code:',
+    '',
+    `  Activation Code: ${otpCode}`,
+    '',
+    'This code is valid for 10 minutes. Steps to get started:',
+    '  1. Open the CareKit app or dashboard.',
+    '  2. Go to "Forgot Password" and enter your email address.',
+    '  3. Enter the code above when prompted.',
+    '  4. Set a new password for your account.',
+    '',
+    'If you did not expect this email, please contact your clinic administrator.',
+    SEPARATOR,
+    greetingAr,
+    '',
+    '.لقد تمت إضافتك كممارس صحي في منصة كيركت',
+    '',
+    ':لتفعيل حسابك وتعيين كلمة المرور، استخدم الرمز التالي',
+    '',
+    `  ${otpCode} :رمز التفعيل`,
+    '',
+    ':صالح لمدة 10 دقائق. خطوات البدء',
+    '.افتح تطبيق كيركت أو لوحة التحكم .1',
+    '.اذهب إلى "نسيت كلمة المرور" وأدخل بريدك الإلكتروني .2',
+    '.أدخل الرمز أعلاه عند الطلب .3',
+    '.عيّن كلمة مرور جديدة لحسابك .4',
+    '',
+    '.إذا لم تكن تتوقع هذا البريد، يرجى التواصل مع مدير العيادة',
+    '',
+    '— CareKit',
+  ].join('\n');
+}
+
 function bookingConfirmationBody(context: Record<string, unknown>): string {
   const firstName = context['firstName'] ? String(context['firstName']) : '';
   const date = String(context['date'] ?? '');
@@ -138,6 +181,7 @@ const TEMPLATE_BUILDERS: Record<string, (ctx: Record<string, unknown>) => string
   'otp-reset': otpResetBody,
   'otp-verify': otpVerifyBody,
   'welcome': welcomeBody,
+  'practitioner-welcome': practitionerWelcomeBody,
   'booking-confirmation': bookingConfirmationBody,
 };
 

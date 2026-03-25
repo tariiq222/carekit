@@ -15,6 +15,14 @@ import { ChatbotStreamLoopService } from './chatbot-stream-loop.service.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { ServicesModule } from '../services/services.module.js';
 import { PractitionersModule } from '../practitioners/practitioners.module.js';
+import { BookingsService } from '../bookings/bookings.service.js';
+import { ServicesService } from '../services/services.service.js';
+import { PractitionersService } from '../practitioners/practitioners.service.js';
+import {
+  CHATBOT_BOOKING_PORT,
+  CHATBOT_SERVICE_PORT,
+  CHATBOT_PRACTITIONER_PORT,
+} from './interfaces/chatbot-domain.interface.js';
 
 @Module({
   imports: [BookingsModule, ServicesModule, PractitionersModule],
@@ -30,6 +38,10 @@ import { PractitionersModule } from '../practitioners/practitioners.module.js';
     ChatbotFileService,
     ChatbotStreamService,
     ChatbotStreamLoopService,
+    // L1: Port bindings — concrete services registered as interface tokens
+    { provide: CHATBOT_BOOKING_PORT, useExisting: BookingsService },
+    { provide: CHATBOT_SERVICE_PORT, useExisting: ServicesService },
+    { provide: CHATBOT_PRACTITIONER_PORT, useExisting: PractitionersService },
   ],
   exports: [ChatbotService, ChatbotConfigService],
 })
