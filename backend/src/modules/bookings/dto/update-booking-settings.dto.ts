@@ -209,4 +209,11 @@ export class UpdateBookingSettingsDto {
   @IsOptional()
   @IsBoolean()
   adminCanBookOutsideHours?: boolean;
+
+  // ── Advance booking window ────────────────────────────────────
+  @ApiPropertyOptional({ description: 'Maximum days in advance a booking can be made (0 = no limit)', minimum: 0 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  maxAdvanceBookingDays?: number;
 }

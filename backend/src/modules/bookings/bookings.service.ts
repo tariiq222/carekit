@@ -84,8 +84,8 @@ export class BookingsService {
     const duration = resolved.duration;
 
     const bookingDate = new Date(dto.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const nowRiyadh = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(new Date());
+    const today = new Date(nowRiyadh); // midnight in Riyadh
     if (bookingDate < today) throw new BadRequestException({ statusCode: 400, message: 'Cannot book in the past', error: 'VALIDATION_ERROR' });
 
     // Max advance booking window check
@@ -140,12 +140,16 @@ export class BookingsService {
     // This prevents race conditions where two concurrent requests both pass the
     // conflict check and create bookings for the same slot.
     const isWalkIn = dto.type === 'walk_in';
-    const booking = await this.prisma.$transaction(async (tx) => {
+    let booking;
+    try {
+    booking = await this.prisma.$transaction(async (tx) => {
       if (!skipChecks) {
         await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime);
       }
       try {
-        await checkDoubleBooking(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, ps.bufferBefore, ps.bufferAfter);
+        // Override chain: PractitionerService > Service > BookingSettings (global)
+        const bufferMinutes = ps.bufferMinutes || service.bufferMinutes || settings.bufferMinutes;
+        await checkDoubleBooking(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, bufferMinutes);
       } catch (err) {
         if (err instanceof ConflictException) {
           if (settings.suggestAlternativesOnConflict) {
@@ -178,11 +182,21 @@ export class BookingsService {
           bookedPrice: resolved.price,
           bookedDuration: resolved.duration,
           durationOptionId: resolved.durationOptionId ?? null,
+          recurringGroupId: dto.recurringGroupId ?? null,
           ...zoomData,
         },
         include: bookingInclude,
       });
     }, { isolationLevel: 'Serializable', timeout: 10000 });
+    } catch (err) {
+      // Clean up Zoom meeting if transaction failed after external API call
+      if (zoomData.zoomMeetingId) {
+        this.zoomService.deleteMeeting(zoomData.zoomMeetingId).catch((e) =>
+          this.logger.warn(`Failed to delete Zoom meeting after booking transaction failure: ${e.message}`),
+        );
+      }
+      throw err;
+    }
 
     // Side effects outside transaction (non-critical, fire-and-forget safe)
     await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, resolved.price);
@@ -225,8 +239,11 @@ export class BookingsService {
 
     const newStartTime = dto.startTime ?? booking.startTime;
     const newDate = dto.date ? new Date(dto.date) : booking.date;
-    const ps = await this.prisma.practitionerService.findUnique({ where: { id: booking.practitionerServiceId } });
-    const svc = await this.prisma.service.findFirst({ where: { id: booking.serviceId } });
+    const [ps, svc, settings] = await Promise.all([
+      this.prisma.practitionerService.findUnique({ where: { id: booking.practitionerServiceId } }),
+      this.prisma.service.findFirst({ where: { id: booking.serviceId } }),
+      this.bookingSettingsService.get(),
+    ]);
     const duration = booking.bookedDuration ?? ps?.customDuration ?? svc?.duration ?? 30;
     const newEndTime = calculateEndTime(newStartTime, duration);
 
@@ -237,11 +254,12 @@ export class BookingsService {
       zoomData = { zoomMeetingId: mtg.meetingId, zoomJoinUrl: mtg.joinUrl, zoomHostUrl: mtg.hostUrl };
     }
     const oldZoomId = booking.zoomMeetingId;
-    const [bufBefore, bufAfter] = [ps?.bufferBefore ?? 0, ps?.bufferAfter ?? 0];
+    // Override chain: PractitionerService > Service > BookingSettings (global)
+    const bufferMinutes = ps?.bufferMinutes || svc?.bufferMinutes || settings.bufferMinutes;
 
     const result = await this.prisma.$transaction(async (tx) => {
       await validateAvailability(tx, booking.practitionerId, newDate, newStartTime, newEndTime);
-      await checkDoubleBooking(tx, booking.practitionerId, newDate, newStartTime, newEndTime, id, bufBefore, bufAfter);
+      await checkDoubleBooking(tx, booking.practitionerId, newDate, newStartTime, newEndTime, id, bufferMinutes);
       const nb = await tx.booking.create({
         data: {
           patientId: booking.patientId, practitionerId: booking.practitionerId,
@@ -272,6 +290,10 @@ export class BookingsService {
     if (!settings.patientCanReschedule) throw new BadRequestException({ statusCode: 400, message: 'Patient self-reschedule is not enabled', error: 'RESCHEDULE_NOT_ALLOWED' });
     const booking = await this.ensureBookingExists(bookingId);
     if (booking.patientId !== patientId) throw new ForbiddenException({ statusCode: 403, message: 'You can only reschedule your own bookings', error: 'FORBIDDEN' });
+    const reschedulableStatuses = ['pending', 'confirmed', 'checked_in'];
+    if (!reschedulableStatuses.includes(booking.status)) {
+      throw new BadRequestException({ statusCode: 400, message: `Cannot reschedule a booking with status '${booking.status}'`, error: 'INVALID_STATUS_FOR_RESCHEDULE' });
+    }
     if (booking.rescheduleCount >= settings.maxReschedulesPerBooking) throw new BadRequestException({ statusCode: 400, message: `Maximum reschedule limit (${settings.maxReschedulesPerBooking}) reached`, error: 'RESCHEDULE_LIMIT_REACHED' });
     const bdt = new Date(booking.date);
     const [h, m] = booking.startTime.split(':').map(Number);
@@ -312,7 +334,9 @@ export class BookingsService {
         bookingType: dto.type,
         durationOptionId: dto.durationOptionId,
       });
-    } catch {
+    } catch (err) {
+      // Re-throw intentional business rule errors — do NOT fall back silently
+      if (err instanceof BadRequestException) throw err;
       // Fallback to legacy pricing if ServiceBookingType not configured yet
       const duration = ps.customDuration ?? service.duration;
       const priceField = dto.type === 'clinic_visit' || dto.type === 'walk_in' ? 'priceClinic' as const

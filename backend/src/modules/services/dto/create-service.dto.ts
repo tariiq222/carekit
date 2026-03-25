@@ -61,19 +61,12 @@ export class CreateServiceDto {
   calendarColor?: string;
 
   // ── Booking settings per service ───────────────────────────────
-  @ApiPropertyOptional({ minimum: 0, maximum: 120 })
+  @ApiPropertyOptional({ minimum: 0, maximum: 120, description: 'Buffer applied before and after appointment. 0 = use global setting.' })
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(120)
-  bufferBeforeMinutes?: number;
-
-  @ApiPropertyOptional({ minimum: 0, maximum: 120 })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  @Max(120)
-  bufferAfterMinutes?: number;
+  bufferMinutes?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

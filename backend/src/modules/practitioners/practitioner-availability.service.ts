@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { BookingSettingsService } from '../bookings/booking-settings.service.js';
 import { SetAvailabilityDto } from './dto/set-availability.dto.js';
 import { timeSlotsOverlap } from '../../common/helpers/booking-time.helper.js';
 import { checkOwnership } from '../../common/helpers/ownership.helper.js';
@@ -13,7 +14,10 @@ const TIME_REGEX = /^\d{2}:\d{2}$/;
 
 @Injectable()
 export class PractitionerAvailabilityService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bookingSettingsService: BookingSettingsService,
+  ) {}
 
   async getAvailability(practitionerId: string) {
     await ensurePractitionerExists(this.prisma, practitionerId);
@@ -98,8 +102,8 @@ export class PractitionerAvailabilityService {
       return { date, practitionerId, slots: [] };
     }
 
-    const settings = await this.prisma.bookingSettings.findFirst();
-    const bufferMinutes = settings?.bufferMinutes ?? 0;
+    const settings = await this.bookingSettingsService.get();
+    const bufferMinutes = settings.bufferMinutes ?? 0;
     const isToday = this.isSameLocalDate(targetDate, new Date());
 
     const allSlots = this.generateSlots(availabilities, duration, bufferMinutes, isToday);
@@ -122,7 +126,7 @@ export class PractitionerAvailabilityService {
       where: {
         practitionerId,
         date: { gte: targetDateStart, lte: targetDateEnd },
-        status: { in: ['confirmed', 'pending', 'walk_in'] },
+        status: { in: ['confirmed', 'pending', 'checked_in', 'in_progress'] },
         deletedAt: null,
       },
       select: { startTime: true, endTime: true },
@@ -176,14 +180,14 @@ export class PractitionerAvailabilityService {
       where: {
         practitionerId,
         date: { gte: targetDateStart, lte: targetDateEnd },
-        status: { in: ['confirmed', 'pending', 'walk_in'] },
+        status: { in: ['confirmed', 'pending', 'checked_in', 'in_progress'] },
         deletedAt: null,
       },
       select: { startTime: true, endTime: true },
     });
 
-    const settings = await this.prisma.bookingSettings.findFirst();
-    const bufferMinutes = settings?.bufferMinutes ?? 0;
+    const settings = await this.bookingSettingsService.get();
+    const bufferMinutes = settings.bufferMinutes ?? 0;
     const isToday = this.isSameLocalDate(targetDate, new Date());
 
     const allSlots = this.generateSlots(availabilities, duration, bufferMinutes, isToday);
@@ -244,8 +248,8 @@ export class PractitionerAvailabilityService {
     const now = new Date();
     const riyadhTime = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Riyadh',
-      hour: 'numeric',
-      minute: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
       hour12: false,
     }).format(now);
     const [h, m] = riyadhTime.split(':').map(Number);

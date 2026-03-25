@@ -218,7 +218,7 @@ export class PaymentsController {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  PATCH /payments/receipts/:receiptId/review — Review Receipt (legacy)
+  //  PATCH /payments/receipts/:receiptId/review — Review Receipt
   // ═══════════════════════════════════════════════════════════════
 
   @Patch('receipts/:receiptId/review')
@@ -228,6 +228,9 @@ export class PaymentsController {
     @Body() dto: ReviewReceiptDto,
     @CurrentUser() user: { id: string },
   ) {
-    return this.paymentsService.reviewReceipt(receiptId, user.id, dto);
+    return this.paymentsService.verifyBankTransfer(receiptId, user.id, {
+      action: dto.approved ? 'approve' : 'reject',
+      adminNotes: dto.adminNotes,
+    });
   }
 }

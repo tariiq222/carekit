@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import { UpdatePatientDto } from './dto/update-patient.dto.js';
 
 interface PatientListQuery {
   page?: number;
@@ -61,16 +62,61 @@ export class PatientsService {
     };
   }
 
+  async updatePatient(id: string, dto: UpdatePatientDto) {
+    const patient = await this.prisma.user.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true },
+    });
+    if (!patient) throw new NotFoundException('Patient not found');
+
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(dto.firstName !== undefined && { firstName: dto.firstName }),
+        ...(dto.middleName !== undefined && { middleName: dto.middleName }),
+        ...(dto.lastName !== undefined && { lastName: dto.lastName }),
+        ...(dto.gender !== undefined && { gender: dto.gender }),
+        ...(dto.dateOfBirth !== undefined && { dateOfBirth: new Date(dto.dateOfBirth) }),
+        ...(dto.nationality !== undefined && { nationality: dto.nationality }),
+        ...(dto.nationalId !== undefined && { nationalId: dto.nationalId }),
+        ...(dto.phone !== undefined && { phone: dto.phone }),
+        ...(dto.emergencyName !== undefined && { emergencyName: dto.emergencyName }),
+        ...(dto.emergencyPhone !== undefined && { emergencyPhone: dto.emergencyPhone }),
+        ...(dto.bloodType !== undefined && { bloodType: dto.bloodType }),
+        ...(dto.allergies !== undefined && { allergies: dto.allergies }),
+        ...(dto.chronicConditions !== undefined && { chronicConditions: dto.chronicConditions }),
+      },
+      select: {
+        id: true, firstName: true, middleName: true, lastName: true,
+        email: true, phone: true, gender: true, nationality: true,
+        nationalId: true, dateOfBirth: true, emergencyName: true,
+        emergencyPhone: true, bloodType: true, allergies: true,
+        chronicConditions: true, isActive: true, updatedAt: true,
+      },
+    });
+  }
+
   async findOne(id: string) {
     const patient = await this.prisma.user.findFirst({
       where: { id, deletedAt: null },
       select: {
         id: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         email: true,
         phone: true,
         gender: true,
+        nationality: true,
+        nationalId: true,
+        dateOfBirth: true,
+        emergencyName: true,
+        emergencyPhone: true,
+        bloodType: true,
+        allergies: true,
+        chronicConditions: true,
+        isActive: true,
+        updatedAt: true,
         createdAt: true,
         bookingsAsPatient: {
           where: { deletedAt: null },

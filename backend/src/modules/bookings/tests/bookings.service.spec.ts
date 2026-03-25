@@ -153,6 +153,7 @@ const mockPractitioner = {
   specialty: 'General Medicine',
   specialtyAr: 'الطب العام',
   isActive: true,
+  isAcceptingBookings: true,
   deletedAt: null,
   user: {
     id: 'user-uuid-1',
@@ -227,8 +228,7 @@ const mockPractitionerService = {
   isActive: true,
   availableTypes: ['clinic_visit', 'phone_consultation', 'video_consultation'],
   customDuration: null,
-  bufferBefore: 0,
-  bufferAfter: 0,
+  bufferMinutes: 0,
 };
 
 // ---------------------------------------------------------------------------
@@ -247,7 +247,15 @@ describe('BookingsService', () => {
         { provide: BookingCancellationService, useValue: mockCancellationService },
         { provide: BookingQueryService, useValue: mockQueryService },
         { provide: NotificationsService, useValue: mockNotificationsService },
-        { provide: BookingSettingsService, useValue: { get: jest.fn().mockResolvedValue({}) } },
+        { provide: BookingSettingsService, useValue: { get: jest.fn().mockResolvedValue({
+          maxAdvanceBookingDays: 60,
+          minBookingLeadMinutes: 0,
+          allowWalkIn: true,
+          suggestAlternativesOnConflict: false,
+          adminCanBookOutsideHours: false,
+          bufferMinutes: 0,
+          paymentTimeoutMinutes: 60,
+        }) } },
         { provide: BookingStatusService, useValue: {
           confirm: jest.fn().mockImplementation(async (id: string) => {
             const booking = await mockPrismaService.booking.findFirst({ where: { id, deletedAt: null } });

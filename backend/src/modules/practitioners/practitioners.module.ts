@@ -8,8 +8,10 @@ import { PractitionerServiceService } from './practitioner-service.service.js';
 import { PractitionerRatingsService } from './practitioner-ratings.service.js';
 import { PractitionerBreaksService } from './practitioner-breaks.service.js';
 import { FavoritePractitionersService } from './favorite-practitioners.service.js';
+import { BookingsModule } from '../bookings/bookings.module.js';
 
 @Module({
+  imports: [BookingsModule],
   controllers: [FavoritePractitionersController, PractitionersController],
   providers: [
     PractitionersService,

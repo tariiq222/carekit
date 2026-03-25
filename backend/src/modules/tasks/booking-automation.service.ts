@@ -106,23 +106,28 @@ export class BookingAutomationService {
   async autoCompleteBookings(): Promise<void> {
     const settings = await this.bookingSettingsService.get();
     const now = new Date();
-    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    // Use Riyadh date for "tomorrow" boundary to avoid UTC drift
+    const riyadhTomorrow = new Date(
+      new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(now) + 'T00:00:00+03:00',
+    );
+    riyadhTomorrow.setDate(riyadhTomorrow.getDate() + 1);
 
-    // Fetch candidate bookings: date <= today, not future
+    // Fetch candidate bookings: date <= today (Riyadh), not future
     const candidates = await this.prisma.booking.findMany({
       where: {
         status: { in: ['confirmed', 'in_progress', 'checked_in'] },
-        date: { lt: tomorrow },
+        date: { lt: riyadhTomorrow },
         deletedAt: null,
       },
       select: { id: true, patientId: true, date: true, endTime: true },
     });
-    // Filter: only complete if now > bookingEndTime + autoCompleteAfterHours
+    // Filter: only complete if now > bookingEndTime (Riyadh) + autoCompleteAfterHours
     const autoCompleteMs = settings.autoCompleteAfterHours * 60 * 60 * 1000;
     const bookings = candidates.filter((b) => {
-      const bookingEnd = new Date(b.date);
-      const [h, m] = b.endTime.split(':').map(Number);
-      bookingEnd.setHours(h, m, 0, 0);
+      // Parse date as Riyadh local date string to avoid UTC offset
+      const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })
+        .format(b.date);
+      const bookingEnd = new Date(`${dateStr}T${b.endTime}:00+03:00`);
       return now.getTime() > bookingEnd.getTime() + autoCompleteMs;
     });
 
@@ -131,6 +136,18 @@ export class BookingAutomationService {
         where: { id: booking.id },
         data: { status: 'completed', completedAt: new Date() },
       });
+
+      if (booking.patientId) {
+        await this.notificationsService.createNotification({
+          userId: booking.patientId,
+          titleAr: 'كيف كانت تجربتك؟',
+          titleEn: 'How was your experience?',
+          bodyAr: 'يسعدنا معرفة رأيك في الموعد. قيّم تجربتك الآن.',
+          bodyEn: 'We would love your feedback. Please rate your appointment.',
+          type: 'booking_completed',
+          data: { bookingId: booking.id },
+        });
+      }
     }
 
     if (bookings.length > 0) {
@@ -147,17 +164,18 @@ export class BookingAutomationService {
   async autoNoShow(): Promise<void> {
     const settings = await this.bookingSettingsService.get();
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const cutoffMinutes = settings.autoNoShowAfterMinutes;
+
+    // Compute today's start/end in Riyadh time to avoid UTC drift
+    const riyadhTodayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(now);
+    const todayStart = new Date(`${riyadhTodayStr}T00:00:00+03:00`);
+    const todayEnd = new Date(`${riyadhTodayStr}T23:59:59+03:00`);
 
     // Find today's confirmed bookings (not checked_in or in_progress)
     const bookings = await this.prisma.booking.findMany({
       where: {
         status: 'confirmed',
-        date: {
-          gte: today,
-          lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
-        },
+        date: { gte: todayStart, lte: todayEnd },
         deletedAt: null,
       },
       select: {
@@ -171,12 +189,11 @@ export class BookingAutomationService {
     });
 
     const noShowBookings = bookings.filter((b) => {
-      const [h, m] = b.startTime.split(':').map(Number);
-      const bookingStart = new Date(today);
-      bookingStart.setHours(h, m, 0, 0);
-      const noShowDeadline = new Date(
-        bookingStart.getTime() + cutoffMinutes * 60 * 1000,
-      );
+      // Parse booking start in Riyadh timezone
+      const dateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })
+        .format(b.date);
+      const bookingStart = new Date(`${dateStr}T${b.startTime}:00+03:00`);
+      const noShowDeadline = new Date(bookingStart.getTime() + cutoffMinutes * 60 * 1000);
       return now > noShowDeadline;
     });
 

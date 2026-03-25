@@ -3,10 +3,12 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Booking, BookingSettings } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
+import { resilientFetch } from '../../common/helpers/resilient-fetch.helper.js';
 
 @Injectable()
 export class BookingCancelHelpersService {
@@ -16,6 +18,7 @@ export class BookingCancelHelpersService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly zoomService: ZoomService,
+    private readonly config: ConfigService,
   ) {}
 
   // ───────────────────────────────────────────────────────────────
@@ -68,16 +71,49 @@ export class BookingCancelHelpersService {
   async processRefund(
     tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
     refundType: string,
-    payment: { id: string; status: string; totalAmount: number } | null | undefined,
+    payment: { id: string; status: string; totalAmount: number; method?: string; moyasarPaymentId?: string | null } | null | undefined,
     refundAmount?: number,
   ): Promise<void> {
     if (refundType === 'none' || !payment || payment.status !== 'paid') return;
 
     const amount = refundType === 'full' ? payment.totalAmount : refundAmount!;
+
+    // For Moyasar payments: call the actual refund API before updating DB
+    if (payment.method === 'moyasar' && payment.moyasarPaymentId) {
+      await this.executeMoyasarRefund(payment.moyasarPaymentId, amount);
+    }
+
     await tx.payment.update({
       where: { id: payment.id },
       data: { status: 'refunded', refundAmount: amount },
     });
+  }
+
+  private async executeMoyasarRefund(moyasarPaymentId: string, amount: number): Promise<void> {
+    const apiKey = this.config.get<string>('MOYASAR_API_KEY', '');
+    const credentials = Buffer.from(`${apiKey}:`).toString('base64');
+
+    const response = await resilientFetch(
+      `https://api.moyasar.com/v1/payments/${moyasarPaymentId}/refund`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount }),
+      },
+      { circuit: 'moyasar', timeoutMs: 15_000 },
+    );
+
+    if (!response.ok) {
+      const errorBody = (await response.json().catch(() => ({ message: 'Unknown error' }))) as { message?: string };
+      throw new BadRequestException({
+        statusCode: 400,
+        message: errorBody.message ?? 'Moyasar refund failed',
+        error: 'MOYASAR_REFUND_ERROR',
+      });
+    }
   }
 
   // ───────────────────────────────────────────────────────────────

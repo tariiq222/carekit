@@ -253,6 +253,7 @@ export class BookingCancellationService {
       return result;
     });
 
+    await this.helpers.notifyPatientCancelled(cancelled);
     await this.helpers.notifyPractitionerCancelled(cancelled);
     this.helpers.deleteZoomIfNeeded(booking);
     await this.waitlistService.checkAndNotify(booking.practitionerId, booking.date);

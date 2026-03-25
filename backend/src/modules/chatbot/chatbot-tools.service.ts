@@ -61,7 +61,7 @@ export class ChatbotToolsService {
   private async listServices(args: Record<string, unknown>): Promise<ToolResult> {
     const result = await this.servicesService.findAll({
       search: args.search as string | undefined,
-      perPage: 10,
+      perPage: 100,
     });
     return { success: true, data: result.items };
   }
@@ -70,7 +70,7 @@ export class ChatbotToolsService {
     const result = await this.practitionersService.findAll({
       search: args.search as string | undefined,
       specialty: args.specialty as string | undefined,
-      perPage: 10,
+      perPage: 100,
     });
     return { success: true, data: result.items };
   }
@@ -152,7 +152,9 @@ export class ChatbotToolsService {
     if (args.newDate) dto.date = args.newDate as string;
     if (args.newStartTime) dto.startTime = args.newStartTime as string;
 
-    const updated = await this.bookingsService.reschedule(bookingId, dto);
+    // Use patientReschedule (not reschedule) to enforce patient-facing policies:
+    // patientCanReschedule toggle, rescheduleBeforeHours, maxReschedulesPerBooking
+    const updated = await this.bookingsService.patientReschedule(bookingId, ctx.userId, dto);
     return { success: true, data: updated };
   }
 

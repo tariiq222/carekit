@@ -40,4 +40,10 @@ export class CreateBookingDto {
   @IsOptional()
   @IsUUID()
   durationOptionId?: string;
+
+  /**
+   * Internal: Set by BookingRecurringService to atomically link booking to its series.
+   * Not exposed in API — stripped by ValidationPipe (whitelist: true).
+   */
+  recurringGroupId?: string;
 }

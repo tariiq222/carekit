@@ -74,7 +74,6 @@ export class InvoiceCreatorService {
     const issueTime = now.toTimeString().split(' ')[0];
 
     const zatcaConfig = await this.zatcaService.loadConfig();
-    const previousHash = await this.zatcaService.getPreviousInvoiceHash();
 
     const patient = payment.booking.patient;
     const buyerName = patient
@@ -85,33 +84,45 @@ export class InvoiceCreatorService {
       payment.booking.service?.nameEn ??
       'خدمة طبية';
 
-    const zatcaData = await this.zatcaService.generateForInvoice({
-      invoiceNumber,
-      uuid: uuidv4(),
-      issueDate,
-      issueTime,
-      buyerName,
-      serviceDescription: serviceDesc,
-      baseAmount: payment.amount,
-      previousInvoiceHash: previousHash,
-      config: zatcaConfig,
-    });
+    // ZATCA hash chaining must be atomic: read previous hash + create invoice in a
+    // serializable transaction to prevent two concurrent invoices sharing the same previousHash.
+    const invoice = await this.prisma.$transaction(async (tx) => {
+      // Read the last invoice hash inside the transaction for atomic chaining
+      const lastInvoice = await tx.invoice.findFirst({
+        where: { invoiceHash: { not: null } },
+        orderBy: { createdAt: 'desc' },
+        select: { invoiceHash: true },
+      }) as { invoiceHash: string | null } | null;
+      const previousHash = lastInvoice?.invoiceHash ?? this.zatcaService.zeroHash();
 
-    const invoice = await this.prisma.invoice.create({
-      data: {
-        paymentId: dto.paymentId,
+      const zatcaData = await this.zatcaService.generateForInvoice({
         invoiceNumber,
-        pdfUrl: null,
-        vatAmount: zatcaData.vatAmount,
-        vatRate: zatcaData.vatRate,
-        invoiceHash: zatcaData.invoiceHash,
-        previousHash: zatcaData.previousHash,
-        qrCodeData: zatcaData.qrCodeData,
-        zatcaStatus: zatcaData.status,
-        xmlContent: zatcaData.xmlContent,
-      },
-      include: invoiceInclude,
-    });
+        uuid: uuidv4(),
+        issueDate,
+        issueTime,
+        buyerName,
+        serviceDescription: serviceDesc,
+        baseAmount: payment.amount,
+        previousInvoiceHash: previousHash,
+        config: zatcaConfig,
+      });
+
+      return tx.invoice.create({
+        data: {
+          paymentId: dto.paymentId,
+          invoiceNumber,
+          pdfUrl: null,
+          vatAmount: zatcaData.vatAmount,
+          vatRate: zatcaData.vatRate,
+          invoiceHash: zatcaData.invoiceHash,
+          previousHash: zatcaData.previousHash,
+          qrCodeData: zatcaData.qrCodeData,
+          zatcaStatus: zatcaData.status,
+          xmlContent: zatcaData.xmlContent,
+        },
+        include: invoiceInclude,
+      });
+    }, { isolationLevel: 'Serializable' });
 
     // Enqueue ZATCA Phase 2 auto-submit if invoice is pending
     if (this.zatcaQueue && zatcaData.status === 'pending') {

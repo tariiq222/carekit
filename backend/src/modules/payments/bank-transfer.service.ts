@@ -16,7 +16,6 @@ import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { UploadReceiptDto } from './dto/upload-receipt.dto.js';
-import { ReviewReceiptDto } from './dto/review-receipt.dto.js';
 import { paymentInclude, bookingWithPriceInclude, calculateAmounts } from './payments.helpers.js';
 import { correlationStorage } from '../../common/middleware/correlation-id.middleware.js';
 
@@ -67,63 +66,6 @@ export class BankTransferService {
     });
   }
 
-  async reviewReceipt(receiptId: string, reviewerId: string, dto: ReviewReceiptDto) {
-    const receipt = await this.prisma.bankTransferReceipt.findUnique({
-      where: { id: receiptId },
-    });
-    if (!receipt) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Receipt not found',
-        error: 'NOT_FOUND',
-      });
-    }
-
-    const newStatus = dto.approved ? 'approved' : 'rejected';
-
-    const updatedReceipt = await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.bankTransferReceipt.update({
-        where: { id: receiptId },
-        data: {
-          aiVerificationStatus: newStatus,
-          adminNotes: dto.adminNotes,
-          reviewedById: reviewerId,
-          reviewedAt: new Date(),
-        },
-      });
-
-      if (dto.approved) {
-        await tx.payment.update({
-          where: { id: receipt.paymentId },
-          data: { status: 'paid' },
-        });
-      }
-
-      return updated;
-    });
-
-    const payment = await this.prisma.payment.findUnique({
-      where: { id: receipt.paymentId },
-      include: { booking: { select: { patientId: true } } },
-    });
-
-    if (dto.approved && payment?.bookingId) {
-      try {
-        await this.bookingStatusService.confirm(payment.bookingId);
-      } catch (err) {
-        this.logger.warn(
-          `Auto-confirm skipped for booking: ${err instanceof Error ? err.message : 'unknown'}`,
-        );
-      }
-    }
-
-    if (!dto.approved && payment?.bookingId) {
-      await this.handleRejectedTransfer(payment.bookingId, payment.booking?.patientId, dto.adminNotes);
-    }
-
-    return updatedReceipt;
-  }
-
   async uploadBankTransferReceipt(
     userId: string,
     bookingId: string,
@@ -144,15 +86,17 @@ export class BankTransferService {
     const existingPayment = await this.prisma.payment.findUnique({
       where: { bookingId },
     });
-    if (existingPayment && !['failed'].includes(existingPayment.status)) {
+
+    const switchableStatuses = ['failed', 'pending', 'awaiting'];
+    if (existingPayment && !switchableStatuses.includes(existingPayment.status)) {
       throw new BadRequestException({
         statusCode: 400,
         message: 'Payment already exists for this booking',
         error: 'DUPLICATE_PAYMENT',
       });
     }
-    // Clean up failed payment to allow retry
-    if (existingPayment?.status === 'failed') {
+    // Clean up previous incomplete/failed payment to allow method switch
+    if (existingPayment) {
       await this.prisma.payment.delete({ where: { id: existingPayment.id } });
     }
 

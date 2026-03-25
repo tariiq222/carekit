@@ -92,7 +92,7 @@ export class BookingStatusService {
     });
     if (practitioner?.userId) {
       await this.notificationsService.createNotification({
-        userId: practitioner.userId, type: 'booking_confirmed',
+        userId: practitioner.userId, type: 'patient_arrived',
         titleAr: 'وصول المريض', titleEn: 'Patient Arrived',
         bodyAr: 'المريض وصل وجاهز للموعد', bodyEn: 'Patient has arrived and is ready',
         data: { bookingId: id },

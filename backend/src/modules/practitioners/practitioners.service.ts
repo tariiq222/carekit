@@ -224,6 +224,7 @@ export class PractitionersService {
         pricePhone: dto.pricePhone,
         priceVideo: dto.priceVideo,
         isActive: dto.isActive,
+        isAcceptingBookings: dto.isAcceptingBookings,
       },
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },

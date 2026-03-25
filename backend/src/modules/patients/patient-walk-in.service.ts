@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -42,6 +43,14 @@ export class PatientWalkInService {
       where: { slug: 'patient', isDefault: true },
     });
 
+    if (!patientRole) {
+      throw new InternalServerErrorException({
+        statusCode: 500,
+        message: 'Patient role not found — ensure the patient role is seeded with isDefault: true',
+        error: 'PATIENT_ROLE_NOT_FOUND',
+      });
+    }
+
     const internalEmail = `walkin_${randomUUID()}@internal.carekit`;
 
     const user = await this.prisma.$transaction(async (tx) => {
@@ -58,11 +67,9 @@ export class PatientWalkInService {
         },
       });
 
-      if (patientRole) {
-        await tx.userRole.create({
-          data: { userId: created.id, roleId: patientRole.id },
-        });
-      }
+      await tx.userRole.create({
+        data: { userId: created.id, roleId: patientRole.id },
+      });
 
       await tx.patientProfile.create({
         data: {

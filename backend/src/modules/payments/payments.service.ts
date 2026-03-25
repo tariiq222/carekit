@@ -9,7 +9,6 @@ import { BankTransferService } from './bank-transfer.service.js';
 import { CreatePaymentDto } from './dto/create-payment.dto.js';
 import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto.js';
 import { UploadReceiptDto } from './dto/upload-receipt.dto.js';
-import { ReviewReceiptDto } from './dto/review-receipt.dto.js';
 import { PaymentFilterDto } from './dto/payment-filter.dto.js';
 import { CreateMoyasarPaymentDto } from './dto/create-moyasar-payment.dto.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
@@ -209,10 +208,6 @@ export class PaymentsService {
 
   async uploadReceipt(paymentId: string, dto: UploadReceiptDto) {
     return this.bankTransferService.uploadReceipt(paymentId, dto);
-  }
-
-  async reviewReceipt(receiptId: string, reviewerId: string, dto: ReviewReceiptDto) {
-    return this.bankTransferService.reviewReceipt(receiptId, reviewerId, dto);
   }
 
   async uploadBankTransferReceipt(userId: string, bookingId: string, file: Express.Multer.File) {

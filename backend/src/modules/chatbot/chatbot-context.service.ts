@@ -67,20 +67,31 @@ export class ChatbotContextService {
 
   /**
    * Loads recent chat history for a session within the configured window size.
+   * Includes tool messages so the AI has full tool-call context on resumption.
    */
   async loadHistory(
     sessionId: string,
     windowSize: number,
   ): Promise<OpenRouterMessage[]> {
     const messages = await this.prisma.chatMessage.findMany({
-      where: { sessionId, role: { in: ['user', 'assistant'] } },
+      where: { sessionId, role: { in: ['user', 'assistant', 'tool'] } },
       orderBy: { createdAt: 'desc' },
       take: windowSize,
     });
 
-    return messages.reverse().map((m) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content,
-    }));
+    return messages.reverse().map((m) => {
+      if (m.role === 'tool') {
+        const fc = m.functionCall as { tool_call_id?: string } | null;
+        return {
+          role: 'tool' as const,
+          content: m.content,
+          tool_call_id: fc?.tool_call_id ?? 'unknown',
+        };
+      }
+      return {
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      };
+    });
   }
 }

@@ -75,8 +75,15 @@ enum NotificationType {
   booking_cancelled
   booking_rescheduled
   booking_expired
+  booking_no_show
+  booking_reminder
+  booking_reminder_urgent
+  booking_cancellation_rejected
   cancellation_rejected
   cancellation_requested
+  no_show_review
+  patient_arrived
+  receipt_rejected
   reminder
   payment_received
   new_rating
@@ -477,8 +484,7 @@ model PractitionerService {
   pricePhone     Int?          @map("price_phone") // halalat — null = use fallback
   priceVideo     Int?          @map("price_video") // halalat — null = use fallback
   customDuration Int?          @map("custom_duration") // minutes — overrides service.duration
-  bufferBefore   Int           @default(0) @map("buffer_before") // minutes before appointment
-  bufferAfter    Int           @default(0) @map("buffer_after") // minutes after appointment
+  bufferMinutes  Int           @default(0) @map("buffer_minutes") // buffer applied before and after appointment
   availableTypes BookingType[] @map("available_types") // supported booking types
   isActive       Boolean       @default(true) @map("is_active")
   createdAt      DateTime      @default(now()) @map("created_at")
@@ -530,8 +536,7 @@ model Service {
   calendarColor         String? @map("calendar_color")
 
   // Booking settings per service
-  bufferBeforeMinutes Int     @default(0) @map("buffer_before_minutes")
-  bufferAfterMinutes  Int     @default(0) @map("buffer_after_minutes")
+  bufferMinutes       Int     @default(0) @map("buffer_minutes") // override global setting; 0 = use global
   depositEnabled      Boolean @default(false) @map("deposit_enabled")
   depositPercent      Int     @default(100) @map("deposit_percent")
   allowRecurring              Boolean            @default(true) @map("allow_recurring")
@@ -794,7 +799,9 @@ model BookingSettings {
   walkInPaymentRequired Boolean @default(false) @map("walk_in_payment_required")
 
   // Recurring
-  allowRecurring Boolean @default(false) @map("allow_recurring")
+  allowRecurring           Boolean            @default(false) @map("allow_recurring")
+  maxRecurrences           Int                @default(12) @map("max_recurrences")
+  allowedRecurringPatterns RecurringPattern[] @default([weekly, biweekly]) @map("allowed_recurring_patterns")
 
   // Waitlist
   waitlistEnabled    Boolean @default(false) @map("waitlist_enabled")

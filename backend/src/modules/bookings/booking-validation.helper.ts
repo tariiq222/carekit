@@ -74,22 +74,22 @@ export async function validateAvailability(
 export async function checkDoubleBooking(
   prisma: PrismaLike,
   practitionerId: string, date: Date, startTime: string, endTime: string,
-  excludeId?: string, bufferBefore: number = 0, bufferAfter: number = 0,
+  excludeId?: string, bufferMinutes: number = 0,
 ): Promise<void> {
   const whereClause: Record<string, unknown> = {
     practitionerId, date,
-    status: { in: ['pending', 'confirmed'] },
+    status: { in: ['pending', 'confirmed', 'checked_in', 'in_progress'] },
     deletedAt: null,
   };
   if (excludeId) whereClause.id = { not: excludeId };
 
   const existingBookings = await prisma.booking.findMany({ where: whereClause });
-  // Expand slot by buffer on both new and existing bookings (symmetric)
-  const effectiveStart = shiftTime(startTime, -bufferBefore);
-  const effectiveEnd = shiftTime(endTime, bufferAfter);
+  // Expand slot by buffer symmetrically before and after
+  const effectiveStart = shiftTime(startTime, -bufferMinutes);
+  const effectiveEnd = shiftTime(endTime, bufferMinutes);
   const hasConflict = existingBookings.some((existing) => {
-    const existingEffectiveStart = shiftTime(existing.startTime, -bufferBefore);
-    const existingEffectiveEnd = shiftTime(existing.endTime, bufferAfter);
+    const existingEffectiveStart = shiftTime(existing.startTime, -bufferMinutes);
+    const existingEffectiveEnd = shiftTime(existing.endTime, bufferMinutes);
     return timeSlotsOverlap(effectiveStart, effectiveEnd, existingEffectiveStart, existingEffectiveEnd);
   });
   if (hasConflict) {

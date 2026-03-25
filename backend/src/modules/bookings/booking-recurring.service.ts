@@ -47,18 +47,20 @@ export class BookingRecurringService {
       });
     }
 
-    /* Validate pattern is allowed */
-    const allowed = ['weekly', 'biweekly'];
-    if (!allowed.includes(dto.repeatEvery)) {
+    /* Validate pattern is allowed — use DB config, not hardcoded list */
+    const allowedPatterns: string[] = settings.allowedRecurringPatterns?.length
+      ? settings.allowedRecurringPatterns
+      : ['weekly', 'biweekly']; // safe default if DB value is empty
+    if (!allowedPatterns.includes(dto.repeatEvery)) {
       throw new BadRequestException({
         statusCode: 400,
-        message: `Pattern "${dto.repeatEvery}" is not allowed. Allowed: ${allowed.join(', ')}`,
+        message: `Pattern "${dto.repeatEvery}" is not allowed. Allowed: ${allowedPatterns.join(', ')}`,
         error: 'RECURRING_PATTERN_NOT_ALLOWED',
       });
     }
 
     /* Validate count limit */
-    const maxCount = settings.maxRecurringWeeks ?? 12;
+    const maxCount = settings.maxRecurrences ?? 12;
     if (dto.repeatCount > maxCount) {
       throw new BadRequestException({
         statusCode: 400,
@@ -77,6 +79,7 @@ export class BookingRecurringService {
       const dateStr = currentDate.toISOString().split('T')[0];
 
       try {
+        // Pass recurringGroupId directly into create — atomic, no separate update needed
         const booking = await this.bookingsService.create(patientId, {
           practitionerId: dto.practitionerId,
           serviceId: dto.serviceId,
@@ -84,11 +87,7 @@ export class BookingRecurringService {
           date: dateStr,
           startTime: dto.startTime,
           notes: dto.notes,
-        });
-
-        await this.prisma.booking.update({
-          where: { id: booking.id },
-          data: { recurringGroupId },
+          recurringGroupId,
         });
 
         created.push({ id: booking.id, date: dateStr });

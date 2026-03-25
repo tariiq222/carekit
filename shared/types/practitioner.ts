@@ -29,8 +29,7 @@ export interface PractitionerServicePricing {
   pricePhone: number | null;
   priceVideo: number | null;
   customDuration: number | null;
-  bufferBefore: number;
-  bufferAfter: number;
+  bufferMinutes: number;
   availableTypes: ('clinic_visit' | 'phone_consultation' | 'video_consultation')[];
   isActive: boolean;
   service?: {

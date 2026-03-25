@@ -96,18 +96,27 @@ export class MoyasarPaymentService {
       source?: { transaction_url?: string };
     };
 
-    const payment = await this.prisma.payment.create({
-      data: {
-        bookingId: dto.bookingId,
-        amount,
-        vatAmount,
-        totalAmount,
-        method: 'moyasar',
-        status: 'pending',
-        moyasarPaymentId: moyasarResponse.id,
-      },
-      include: paymentInclude,
-    });
+    let payment;
+    try {
+      payment = await this.prisma.payment.create({
+        data: {
+          bookingId: dto.bookingId,
+          amount,
+          vatAmount,
+          totalAmount,
+          method: 'moyasar',
+          status: 'pending',
+          moyasarPaymentId: moyasarResponse.id,
+        },
+        include: paymentInclude,
+      });
+    } catch (dbErr) {
+      // DB failed after Moyasar payment was created — void it to prevent dangling charge
+      this.voidMoyasarPayment(moyasarResponse.id).catch((e) =>
+        this.logger.error(`Failed to void dangling Moyasar payment ${moyasarResponse.id}: ${e.message}`),
+      );
+      throw dbErr;
+    }
 
     return {
       payment,
@@ -301,5 +310,22 @@ export class MoyasarPaymentService {
       data: { status: 'refunded' },
       include: paymentInclude,
     });
+  }
+
+  /**
+   * Voids a Moyasar payment that was created but never recorded locally.
+   * Best-effort: called fire-and-forget when DB create fails after API succeeds.
+   */
+  private async voidMoyasarPayment(moyasarPaymentId: string): Promise<void> {
+    const apiKey = this.config.get<string>('MOYASAR_API_KEY', '');
+    const credentials = Buffer.from(`${apiKey}:`).toString('base64');
+    await resilientFetch(
+      `https://api.moyasar.com/v1/payments/${moyasarPaymentId}/void`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Basic ${credentials}`, 'Content-Type': 'application/json' },
+      },
+      { circuit: 'moyasar', timeoutMs: 15_000 },
+    );
   }
 }

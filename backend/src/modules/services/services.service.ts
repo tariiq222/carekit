@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { RecurringPattern } from '@prisma/client';
 import { CacheService } from '../../common/services/cache.service.js';
 import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
@@ -226,12 +227,11 @@ export class ServicesService {
         hidePriceOnBooking: dto.hidePriceOnBooking,
         hideDurationOnBooking: dto.hideDurationOnBooking,
         calendarColor: dto.calendarColor,
-        bufferBeforeMinutes: dto.bufferBeforeMinutes,
-        bufferAfterMinutes: dto.bufferAfterMinutes,
+        bufferMinutes: dto.bufferMinutes,
         depositEnabled: dto.depositEnabled,
         depositPercent: dto.depositPercent,
         allowRecurring: dto.allowRecurring,
-        allowedRecurringPatterns: dto.allowedRecurringPatterns,
+        allowedRecurringPatterns: dto.allowedRecurringPatterns as RecurringPattern[] | undefined,
         maxRecurrences: dto.maxRecurrences,
         maxParticipants: dto.maxParticipants,
         minLeadMinutes: dto.minLeadMinutes,

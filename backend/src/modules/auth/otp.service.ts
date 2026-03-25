@@ -61,6 +61,8 @@ export class OtpService {
     });
 
     if (!otpRecord) {
+      // Check if there's an active OTP with a different code (wrong code entered)
+      // vs no active OTP at all (expired or already used)
       const activeOtp = await this.prisma.otpCode.findFirst({
         where: {
           userId: user.id,
@@ -71,6 +73,7 @@ export class OtpService {
       });
 
       if (activeOtp) {
+        // Active OTP exists but code doesn't match → wrong code
         throw new BadRequestException({
           statusCode: 400,
           message: 'Invalid OTP',
@@ -78,9 +81,10 @@ export class OtpService {
         });
       }
 
+      // No active OTP found → it expired or was already used
       throw new BadRequestException({
         statusCode: 400,
-        message: 'OTP has expired',
+        message: 'OTP has expired or was already used',
         error: 'AUTH_OTP_EXPIRED',
       });
     }

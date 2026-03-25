@@ -93,14 +93,54 @@ export const DEMO_CATEGORIES = [
 ];
 
 export const DEMO_SERVICES = [
-  { nameAr: 'كشف عام', nameEn: 'General Checkup', categoryIdx: 0, price: 30000, duration: 30, descriptionAr: 'فحص طبي شامل', descriptionEn: 'Comprehensive medical examination' },
-  { nameAr: 'متابعة', nameEn: 'Follow-up Visit', categoryIdx: 0, price: 15000, duration: 15, descriptionAr: 'زيارة متابعة', descriptionEn: 'Follow-up consultation' },
-  { nameAr: 'تنظيف أسنان', nameEn: 'Dental Cleaning', categoryIdx: 1, price: 25000, duration: 45, descriptionAr: 'تنظيف وتلميع الأسنان', descriptionEn: 'Professional teeth cleaning and polishing' },
-  { nameAr: 'حشوة أسنان', nameEn: 'Dental Filling', categoryIdx: 1, price: 40000, duration: 60, descriptionAr: 'حشوة تجميلية', descriptionEn: 'Cosmetic dental filling' },
-  { nameAr: 'استشارة جلدية', nameEn: 'Dermatology Consultation', categoryIdx: 2, price: 40000, duration: 30, descriptionAr: 'فحص واستشارة جلدية', descriptionEn: 'Skin examination and consultation' },
-  { nameAr: 'علاج بالليزر', nameEn: 'Laser Treatment', categoryIdx: 2, price: 80000, duration: 45, descriptionAr: 'جلسة ليزر تجميلية', descriptionEn: 'Cosmetic laser session' },
-  { nameAr: 'كشف أطفال', nameEn: 'Pediatric Checkup', categoryIdx: 3, price: 25000, duration: 30, descriptionAr: 'فحص شامل للأطفال', descriptionEn: 'Comprehensive pediatric examination' },
-  { nameAr: 'تطعيمات', nameEn: 'Vaccinations', categoryIdx: 3, price: 10000, duration: 15, descriptionAr: 'تطعيمات الأطفال حسب الجدول', descriptionEn: 'Scheduled childhood vaccinations' },
+  {
+    nameAr: 'كشف عام', nameEn: 'General Checkup', categoryIdx: 0, price: 30000, duration: 30,
+    descriptionAr: 'فحص طبي شامل', descriptionEn: 'Comprehensive medical examination',
+    bufferMinutes: 5, depositEnabled: false, depositPercent: 100,
+    allowRecurring: true, maxParticipants: 1, calendarColor: '#2563EB',
+  },
+  {
+    nameAr: 'متابعة', nameEn: 'Follow-up Visit', categoryIdx: 0, price: 15000, duration: 15,
+    descriptionAr: 'زيارة متابعة', descriptionEn: 'Follow-up consultation',
+    bufferMinutes: 0, depositEnabled: false, depositPercent: 100,
+    allowRecurring: true, maxParticipants: 1, calendarColor: '#7C3AED',
+  },
+  {
+    nameAr: 'تنظيف أسنان', nameEn: 'Dental Cleaning', categoryIdx: 1, price: 25000, duration: 45,
+    descriptionAr: 'تنظيف وتلميع الأسنان', descriptionEn: 'Professional teeth cleaning and polishing',
+    bufferMinutes: 10, depositEnabled: true, depositPercent: 50,
+    allowRecurring: false, maxParticipants: 1, calendarColor: '#059669',
+  },
+  {
+    nameAr: 'حشوة أسنان', nameEn: 'Dental Filling', categoryIdx: 1, price: 40000, duration: 60,
+    descriptionAr: 'حشوة تجميلية', descriptionEn: 'Cosmetic dental filling',
+    bufferMinutes: 10, depositEnabled: true, depositPercent: 50,
+    allowRecurring: false, maxParticipants: 1, calendarColor: '#059669',
+  },
+  {
+    nameAr: 'استشارة جلدية', nameEn: 'Dermatology Consultation', categoryIdx: 2, price: 40000, duration: 30,
+    descriptionAr: 'فحص واستشارة جلدية', descriptionEn: 'Skin examination and consultation',
+    bufferMinutes: 5, depositEnabled: false, depositPercent: 100,
+    allowRecurring: true, maxParticipants: 1, calendarColor: '#DC2626',
+  },
+  {
+    nameAr: 'علاج بالليزر', nameEn: 'Laser Treatment', categoryIdx: 2, price: 80000, duration: 45,
+    descriptionAr: 'جلسة ليزر تجميلية', descriptionEn: 'Cosmetic laser session',
+    bufferMinutes: 15, depositEnabled: true, depositPercent: 30,
+    allowRecurring: true, maxParticipants: 1, calendarColor: '#DC2626',
+  },
+  {
+    nameAr: 'كشف أطفال', nameEn: 'Pediatric Checkup', categoryIdx: 3, price: 25000, duration: 30,
+    descriptionAr: 'فحص شامل للأطفال', descriptionEn: 'Comprehensive pediatric examination',
+    bufferMinutes: 5, depositEnabled: false, depositPercent: 100,
+    allowRecurring: false, maxParticipants: 1, calendarColor: '#D97706',
+  },
+  {
+    nameAr: 'تطعيمات', nameEn: 'Vaccinations', categoryIdx: 3, price: 10000, duration: 15,
+    descriptionAr: 'تطعيمات الأطفال حسب الجدول', descriptionEn: 'Scheduled childhood vaccinations',
+    bufferMinutes: 0, depositEnabled: false, depositPercent: 100,
+    allowRecurring: false, maxParticipants: 1, calendarColor: '#D97706',
+  },
 ];
 
 // ─── Branches ─────────────────────────────────
@@ -145,6 +185,21 @@ export const DEMO_HOLIDAYS = [
   { date: '2026-09-23', nameAr: 'اليوم الوطني السعودي', nameEn: 'Saudi National Day', isRecurring: true },
   { date: '2026-03-20', nameAr: 'عيد الفطر', nameEn: 'Eid Al-Fitr', isRecurring: false },
   { date: '2026-05-27', nameAr: 'عيد الأضحى', nameEn: 'Eid Al-Adha', isRecurring: false },
+];
+
+// ─── Patient Profiles (medical info) ─────────
+
+export const DEMO_PATIENT_PROFILES = [
+  { nationalId: '1234567890', nationality: 'Saudi', dateOfBirth: '1990-05-14', bloodType: 'A_POS' as const, allergies: 'بنسلين', chronicConditions: 'ضغط الدم', emergencyName: 'محمد أحمد', emergencyPhone: '+966501000101' },
+  { nationalId: '2345678901', nationality: 'Saudi', dateOfBirth: '1985-09-22', bloodType: 'O_NEG' as const, allergies: null, chronicConditions: null, emergencyName: 'علي عمر', emergencyPhone: '+966501000102' },
+  { nationalId: '3456789012', nationality: 'Saudi', dateOfBirth: '1995-03-07', bloodType: 'B_POS' as const, allergies: 'أسبرين', chronicConditions: null, emergencyName: 'عبدالله حسن', emergencyPhone: '+966501000103' },
+  { nationalId: '4567890123', nationality: 'Saudi', dateOfBirth: '1978-11-30', bloodType: 'AB_POS' as const, allergies: null, chronicConditions: 'سكري النوع الثاني', emergencyName: 'سارة إبراهيم', emergencyPhone: '+966501000104' },
+  { nationalId: '5678901234', nationality: 'Saudi', dateOfBirth: '2000-07-19', bloodType: 'O_POS' as const, allergies: null, chronicConditions: null, emergencyName: 'فاطمة علي', emergencyPhone: '+966501000105' },
+  { nationalId: '6789012345', nationality: 'Saudi', dateOfBirth: '1992-01-25', bloodType: 'A_NEG' as const, allergies: 'إيبوبروفين', chronicConditions: 'ربو', emergencyName: 'يوسف ناصر', emergencyPhone: '+966501000106' },
+  { nationalId: '7890123456', nationality: 'Saudi', dateOfBirth: '1988-06-10', bloodType: 'B_NEG' as const, allergies: null, chronicConditions: null, emergencyName: 'منى خالد', emergencyPhone: '+966501000107' },
+  { nationalId: '8901234567', nationality: 'Saudi', dateOfBirth: '1975-12-03', bloodType: 'O_POS' as const, allergies: 'سلفا', chronicConditions: 'قلب', emergencyName: 'لمى أحمد', emergencyPhone: '+966501000108' },
+  { nationalId: '9012345678', nationality: 'Saudi', dateOfBirth: '1998-04-16', bloodType: 'UNKNOWN' as const, allergies: null, chronicConditions: null, emergencyName: 'خالد تركي', emergencyPhone: '+966501000109' },
+  { nationalId: '0123456789', nationality: 'Saudi', dateOfBirth: '1983-08-27', bloodType: 'A_POS' as const, allergies: null, chronicConditions: null, emergencyName: 'نورة فيصل', emergencyPhone: '+966501000110' },
 ];
 
 // ─── Chatbot Config ───────────────────────────

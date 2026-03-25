@@ -54,7 +54,17 @@ export class ZatcaService {
   }
 
   /**
+   * Returns the base64-encoded zero hash used as previousHash for the first invoice.
+   * Exposed so callers can use it inside their own transactions for atomic hash chaining.
+   */
+  zeroHash(): string {
+    return this.hashService.toBase64(ZERO_HASH);
+  }
+
+  /**
    * Gets the hash of the last issued invoice for hash chaining.
+   * @deprecated Use zeroHash() + an inline query inside a Serializable transaction instead
+   * to avoid the race condition where two concurrent invoices get the same previousHash.
    */
   async getPreviousInvoiceHash(): Promise<string> {
     const last = await this.prisma.invoice.findFirst({
@@ -63,7 +73,7 @@ export class ZatcaService {
       select: { invoiceHash: true },
     }) as { invoiceHash: string | null } | null;
 
-    return last?.invoiceHash ?? this.hashService.toBase64(ZERO_HASH);
+    return last?.invoiceHash ?? this.zeroHash();
   }
 
   /**

@@ -61,4 +61,8 @@ export class UpdatePractitionerDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isAcceptingBookings?: boolean;
 }

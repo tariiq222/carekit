@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -15,6 +16,7 @@ import { PatientsService } from './patients.service.js';
 import { PatientWalkInService } from './patient-walk-in.service.js';
 import { CreateWalkInPatientDto } from './dto/create-walk-in-patient.dto.js';
 import { ClaimAccountDto } from './dto/claim-account.dto.js';
+import { UpdatePatientDto } from './dto/update-patient.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Patients')
@@ -50,6 +52,13 @@ export class PatientsController {
   @ApiOperation({ summary: 'Get patient by ID with recent bookings' })
   findOne(@Param('id', uuidPipe) id: string) {
     return this.patientsService.findOne(id);
+  }
+
+  @Patch(':id')
+  @CheckPermissions({ module: 'patients', action: 'edit' })
+  @ApiOperation({ summary: 'Update patient profile' })
+  update(@Param('id', uuidPipe) id: string, @Body() dto: UpdatePatientDto) {
+    return this.patientsService.updatePatient(id, dto);
   }
 
   @Get(':id/stats')

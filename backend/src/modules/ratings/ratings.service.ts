@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
@@ -46,15 +48,23 @@ export class RatingsService {
       throw new BadRequestException('Stars must be between 1 and 5');
     }
 
-    const rating = await this.prisma.rating.create({
-      data: {
-        bookingId: dto.bookingId,
-        patientId: dto.patientId,
-        practitionerId: booking.practitionerId,
-        stars: dto.stars,
-        comment: dto.comment,
-      },
-    });
+    let rating;
+    try {
+      rating = await this.prisma.rating.create({
+        data: {
+          bookingId: dto.bookingId,
+          patientId: dto.patientId,
+          practitionerId: booking.practitionerId,
+          stars: dto.stars,
+          comment: dto.comment,
+        },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new ConflictException('This booking has already been rated');
+      }
+      throw err;
+    }
 
     await this.updatePractitionerRating(booking.practitionerId);
 

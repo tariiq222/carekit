@@ -164,6 +164,7 @@ const mockPractitioner = {
   rating: 4.5,
   reviewCount: 20,
   isActive: true,
+  isAcceptingBookings: true,
   deletedAt: null,
   createdAt: new Date('2026-01-15'),
   updatedAt: new Date('2026-01-15'),

@@ -30,12 +30,7 @@ export class AssignPractitionerServiceDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  bufferBefore?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  bufferAfter?: number;
+  bufferMinutes?: number;
 
   @IsArray()
   @ArrayNotEmpty()

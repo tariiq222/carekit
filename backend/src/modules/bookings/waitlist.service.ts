@@ -161,12 +161,17 @@ export class WaitlistService {
     if (!settings.waitlistEnabled || !settings.waitlistAutoNotify) return;
 
     const dateStr = date.toISOString().split('T')[0];
+    const dayStart = new Date(`${dateStr}T00:00:00.000Z`);
+    const dayEnd = new Date(`${dateStr}T23:59:59.999Z`);
 
     const entries = await this.prisma.waitlistEntry.findMany({
       where: {
         practitionerId,
         status: 'waiting',
-        OR: [{ preferredDate: date }, { preferredDate: null }],
+        OR: [
+          { preferredDate: { gte: dayStart, lte: dayEnd } },
+          { preferredDate: null },
+        ],
       },
       include: {
         practitioner: {

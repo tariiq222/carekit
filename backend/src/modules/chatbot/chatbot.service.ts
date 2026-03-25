@@ -203,9 +203,20 @@ export class ChatbotService {
           },
         });
 
+        const toolResultContent = JSON.stringify(toolResult);
+        await this.prisma.chatMessage.create({
+          data: {
+            sessionId,
+            role: 'tool',
+            content: toolResultContent,
+            toolName: toolCall.function.name,
+            functionCall: { tool_call_id: toolCall.id },
+          },
+        });
+
         messages.push({
           role: 'tool',
-          content: JSON.stringify(toolResult),
+          content: toolResultContent,
           tool_call_id: toolCall.id,
         });
       }

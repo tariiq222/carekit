@@ -5,11 +5,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { AuthCacheService } from '../auth/auth-cache.service.js';
 import { CreateRoleDto } from './dto/create-role.dto.js';
 
 @Injectable()
 export class RolesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly authCache: AuthCacheService,
+  ) {}
 
   async findAll() {
     return this.prisma.role.findMany({
@@ -76,7 +80,17 @@ export class RolesService {
       throw new BadRequestException('Cannot delete system roles');
     }
 
+    // Find all users with this role before deleting it
+    const affected = await this.prisma.user.findMany({
+      where: { roleId: id },
+      select: { id: true },
+    });
+
     await this.prisma.role.delete({ where: { id } });
+
+    // Invalidate auth cache for all affected users
+    await Promise.all(affected.map((u) => this.authCache.invalidate(u.id)));
+
     return { deleted: true };
   }
 
@@ -84,6 +98,10 @@ export class RolesService {
     const role = await this.prisma.role.findUnique({ where: { id: roleId } });
     if (!role) {
       throw new NotFoundException('Role not found');
+    }
+
+    if (role.isSystem) {
+      throw new BadRequestException('Cannot modify permissions of system roles');
     }
 
     const permission = await this.prisma.permission.findUnique({
@@ -106,16 +124,29 @@ export class RolesService {
       return existing;
     }
 
-    return this.prisma.rolePermission.create({
+    const result = await this.prisma.rolePermission.create({
       data: {
         roleId,
         permissionId: permission.id,
       },
       include: { permission: true },
     });
+
+    await this.invalidateCacheForRole(roleId);
+
+    return result;
   }
 
   async removePermission(roleId: string, module: string, action: string) {
+    const role = await this.prisma.role.findUnique({ where: { id: roleId } });
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    if (role.isSystem) {
+      throw new BadRequestException('Cannot modify permissions of system roles');
+    }
+
     const permission = await this.prisma.permission.findUnique({
       where: { module_action: { module, action } },
     });
@@ -130,6 +161,16 @@ export class RolesService {
       },
     });
 
+    await this.invalidateCacheForRole(roleId);
+
     return { deleted: true };
+  }
+
+  private async invalidateCacheForRole(roleId: string): Promise<void> {
+    const users = await this.prisma.user.findMany({
+      where: { roleId },
+      select: { id: true },
+    });
+    await Promise.all(users.map((u) => this.authCache.invalidate(u.id)));
   }
 }
