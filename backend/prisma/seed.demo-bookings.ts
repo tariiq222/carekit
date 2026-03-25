@@ -4,6 +4,32 @@ import { PrismaClient } from '@prisma/client';
 // Bookings seed helpers — extracted for file-size compliance (≤350 lines)
 // ═══════════════════════════════════════════════
 
+// Fixed UUIDs for deterministic seed data
+const BOOKING_IDS = {
+  BK01: '11111111-0001-0000-0000-000000000001',
+  BK02: '11111111-0002-0000-0000-000000000002',
+  BK03: '11111111-0003-0000-0000-000000000003',
+  BK04: '11111111-0004-0000-0000-000000000004',
+  BK05: '11111111-0005-0000-0000-000000000005',
+  BK06: '11111111-0006-0000-0000-000000000006',
+  BK07: '11111111-0007-0000-0000-000000000007',
+  BK08: '11111111-0008-0000-0000-000000000008',
+  BK09: '11111111-0009-0000-0000-000000000009',
+  BK10: '11111111-0010-0000-0000-000000000010',
+  BK11: '11111111-0011-0000-0000-000000000011',
+  BK12: '11111111-0012-0000-0000-000000000012',
+  BK13: '11111111-0013-0000-0000-000000000013',
+  BK14: '11111111-0014-0000-0000-000000000014',
+  BK15: '11111111-0015-0000-0000-000000000015',
+  BK16: '11111111-0016-0000-0000-000000000016',
+  BK17: '11111111-0017-0000-0000-000000000017',
+  BK18: '11111111-0018-0000-0000-000000000018',
+};
+
+const NOTIF_IDS = Array.from({ length: 12 }, (_, i) =>
+  `22222222-${String(i).padStart(4, '0')}-0000-0000-${String(i).padStart(12, '0')}`,
+);
+
 export async function seedBookings(
   prisma: PrismaClient,
   patientIds: string[], practitionerIds: string[],
@@ -34,7 +60,7 @@ export async function seedBookings(
           totalAmount: Math.round((bookingData.bookedPrice ?? 30000) * 1.15),
           method: _payMethod ?? 'moyasar',
           status: payStatus,
-          moyasarPaymentId: _payMethod === 'moyasar' ? `moy_${booking.id.slice(0, 8)}` : null,
+          moyasarPaymentId: _payMethod === 'moyasar' ? `moy_demo_${booking.id.replace(/-/g, '').slice(0, 16)}` : null,
         } as any,
       });
 
@@ -102,50 +128,50 @@ function buildBookingDefs(
 
   return [
     // ── Pending
-    { id: 'bk-01', patientId: patientIds[0], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'clinic_visit' as const, date: d(1), startTime: '09:00', endTime: '09:30', status: 'pending' as const, bookedPrice: 30000, bookedDuration: 30 },
-    { id: 'bk-02', patientId: patientIds[1], practitionerId: practitionerIds[1], serviceId: serviceIds[4], practitionerServiceId: psIds[2], type: 'video_consultation' as const, date: d(2), startTime: '10:00', endTime: '10:30', status: 'pending' as const, bookedPrice: 40000, bookedDuration: 30 },
+    { id: BOOKING_IDS.BK01, patientId: patientIds[0], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'clinic_visit' as const, date: d(1), startTime: '09:00', endTime: '09:30', status: 'pending' as const, bookedPrice: 30000, bookedDuration: 30 },
+    { id: BOOKING_IDS.BK02, patientId: patientIds[1], practitionerId: practitionerIds[1], serviceId: serviceIds[4], practitionerServiceId: psIds[2], type: 'video_consultation' as const, date: d(2), startTime: '10:00', endTime: '10:30', status: 'pending' as const, bookedPrice: 40000, bookedDuration: 30 },
 
     // ── Confirmed
-    { id: 'bk-03', patientId: patientIds[2], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'clinic_visit' as const, date: d(0), startTime: '11:00', endTime: '11:30', status: 'confirmed' as const, bookedPrice: 30000, bookedDuration: 30, confirmedAt: d(0), _payMethod: 'moyasar' as const },
-    { id: 'bk-04', patientId: patientIds[3], practitionerId: practitionerIds[2], serviceId: serviceIds[2], practitionerServiceId: psIds[4], type: 'clinic_visit' as const, date: d(0), startTime: '14:00', endTime: '14:45', status: 'confirmed' as const, bookedPrice: 25000, bookedDuration: 45, confirmedAt: d(0), _payMethod: 'bank_transfer' as const, _receiptStatus: 'matched' as const },
+    { id: BOOKING_IDS.BK03, patientId: patientIds[2], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'clinic_visit' as const, date: d(0), startTime: '11:00', endTime: '11:30', status: 'confirmed' as const, bookedPrice: 30000, bookedDuration: 30, confirmedAt: d(0), _payMethod: 'moyasar' as const },
+    { id: BOOKING_IDS.BK04, patientId: patientIds[3], practitionerId: practitionerIds[2], serviceId: serviceIds[2], practitionerServiceId: psIds[4], type: 'clinic_visit' as const, date: d(0), startTime: '14:00', endTime: '14:45', status: 'confirmed' as const, bookedPrice: 25000, bookedDuration: 45, confirmedAt: d(0), _payMethod: 'bank_transfer' as const, _receiptStatus: 'matched' as const },
 
     // ── Completed (with ratings)
-    { id: 'bk-05', patientId: patientIds[4], practitionerId: practitionerIds[0], serviceId: serviceIds[1], practitionerServiceId: psIds[1], type: 'clinic_visit' as const, date: d(-3), startTime: '09:00', endTime: '09:15', status: 'completed' as const, bookedPrice: 15000, bookedDuration: 15, completedAt: d(-3), _payMethod: 'moyasar' as const, _rating: { stars: 5, comment: 'ممتاز! دكتور محترف جداً' } },
-    { id: 'bk-06', patientId: patientIds[5], practitionerId: practitionerIds[1], serviceId: serviceIds[5], practitionerServiceId: psIds[3], type: 'clinic_visit' as const, date: d(-5), startTime: '10:00', endTime: '10:45', status: 'completed' as const, bookedPrice: 80000, bookedDuration: 45, completedAt: d(-5), _payMethod: 'moyasar' as const, _rating: { stars: 4, comment: 'Very good laser session' } },
-    { id: 'bk-07', patientId: patientIds[6], practitionerId: practitionerIds[3], serviceId: serviceIds[6], practitionerServiceId: psIds[6], type: 'clinic_visit' as const, date: d(-7), startTime: '11:00', endTime: '11:30', status: 'completed' as const, bookedPrice: 25000, bookedDuration: 30, completedAt: d(-7), _payMethod: 'bank_transfer' as const, _receiptStatus: 'approved' as const, _rating: { stars: 3, comment: 'جيد لكن وقت الانتظار طويل' } },
+    { id: BOOKING_IDS.BK05, patientId: patientIds[4], practitionerId: practitionerIds[0], serviceId: serviceIds[1], practitionerServiceId: psIds[1], type: 'clinic_visit' as const, date: d(-3), startTime: '09:00', endTime: '09:15', status: 'completed' as const, bookedPrice: 15000, bookedDuration: 15, completedAt: d(-3), _payMethod: 'moyasar' as const, _rating: { stars: 5, comment: 'ممتاز! دكتور محترف جداً' } },
+    { id: BOOKING_IDS.BK06, patientId: patientIds[5], practitionerId: practitionerIds[1], serviceId: serviceIds[5], practitionerServiceId: psIds[3], type: 'clinic_visit' as const, date: d(-5), startTime: '10:00', endTime: '10:45', status: 'completed' as const, bookedPrice: 80000, bookedDuration: 45, completedAt: d(-5), _payMethod: 'moyasar' as const, _rating: { stars: 4, comment: 'Very good laser session' } },
+    { id: BOOKING_IDS.BK07, patientId: patientIds[6], practitionerId: practitionerIds[3], serviceId: serviceIds[6], practitionerServiceId: psIds[6], type: 'clinic_visit' as const, date: d(-7), startTime: '11:00', endTime: '11:30', status: 'completed' as const, bookedPrice: 25000, bookedDuration: 30, completedAt: d(-7), _payMethod: 'bank_transfer' as const, _receiptStatus: 'approved' as const, _rating: { stars: 3, comment: 'جيد لكن وقت الانتظار طويل' } },
 
     // ── Completed with problem report
-    { id: 'bk-08', patientId: patientIds[7], practitionerId: practitionerIds[2], serviceId: serviceIds[3], practitionerServiceId: psIds[5], type: 'clinic_visit' as const, date: d(-2), startTime: '15:00', endTime: '16:00', status: 'completed' as const, bookedPrice: 40000, bookedDuration: 60, completedAt: d(-2), _payMethod: 'moyasar' as const, _rating: { stars: 2, comment: 'انتظرت طويلاً' }, _problemReport: { type: 'wait_time', description: 'انتظرت أكثر من 45 دقيقة', status: 'in_review' } },
+    { id: BOOKING_IDS.BK08, patientId: patientIds[7], practitionerId: practitionerIds[2], serviceId: serviceIds[3], practitionerServiceId: psIds[5], type: 'clinic_visit' as const, date: d(-2), startTime: '15:00', endTime: '16:00', status: 'completed' as const, bookedPrice: 40000, bookedDuration: 60, completedAt: d(-2), _payMethod: 'moyasar' as const, _rating: { stars: 2, comment: 'انتظرت طويلاً' }, _problemReport: { type: 'wait_time', description: 'انتظرت أكثر من 45 دقيقة', status: 'in_review' } },
 
     // ── Cancelled
-    { id: 'bk-09', patientId: patientIds[8], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'phone_consultation' as const, date: d(-1), startTime: '13:00', endTime: '13:30', status: 'cancelled' as const, bookedPrice: 15000, bookedDuration: 30, cancelledAt: d(-1), cancellationReason: 'ظرف طارئ', cancelledBy: 'patient', _payMethod: 'moyasar' as const },
+    { id: BOOKING_IDS.BK09, patientId: patientIds[8], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'phone_consultation' as const, date: d(-1), startTime: '13:00', endTime: '13:30', status: 'cancelled' as const, bookedPrice: 15000, bookedDuration: 30, cancelledAt: d(-1), cancellationReason: 'ظرف طارئ', cancelledBy: 'patient', _payMethod: 'moyasar' as const },
 
     // ── Pending Cancellation
-    { id: 'bk-10', patientId: patientIds[9], practitionerId: practitionerIds[1], serviceId: serviceIds[4], practitionerServiceId: psIds[2], type: 'clinic_visit' as const, date: d(3), startTime: '09:00', endTime: '09:30', status: 'pending_cancellation' as const, bookedPrice: 40000, bookedDuration: 30, cancellationReason: 'لا أستطيع الحضور', _payMethod: 'moyasar' as const },
+    { id: BOOKING_IDS.BK10, patientId: patientIds[9], practitionerId: practitionerIds[1], serviceId: serviceIds[4], practitionerServiceId: psIds[2], type: 'clinic_visit' as const, date: d(3), startTime: '09:00', endTime: '09:30', status: 'pending_cancellation' as const, bookedPrice: 40000, bookedDuration: 30, cancellationReason: 'لا أستطيع الحضور', _payMethod: 'moyasar' as const },
 
     // ── No-Show
-    { id: 'bk-11', patientId: patientIds[0], practitionerId: practitionerIds[3], serviceId: serviceIds[7], practitionerServiceId: psIds[7], type: 'clinic_visit' as const, date: d(-4), startTime: '16:00', endTime: '16:15', status: 'no_show' as const, bookedPrice: 10000, bookedDuration: 15, noShowAt: d(-4), _payMethod: 'moyasar' as const },
+    { id: BOOKING_IDS.BK11, patientId: patientIds[0], practitionerId: practitionerIds[3], serviceId: serviceIds[7], practitionerServiceId: psIds[7], type: 'clinic_visit' as const, date: d(-4), startTime: '16:00', endTime: '16:15', status: 'no_show' as const, bookedPrice: 10000, bookedDuration: 15, noShowAt: d(-4), _payMethod: 'moyasar' as const },
 
     // ── Expired
-    { id: 'bk-12', patientId: patientIds[1], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'clinic_visit' as const, date: d(-10), startTime: '10:00', endTime: '10:30', status: 'expired' as const, bookedPrice: 30000, bookedDuration: 30 },
+    { id: BOOKING_IDS.BK12, patientId: patientIds[1], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'clinic_visit' as const, date: d(-10), startTime: '10:00', endTime: '10:30', status: 'expired' as const, bookedPrice: 30000, bookedDuration: 30 },
 
     // ── Checked-in (today)
-    { id: 'bk-13', patientId: patientIds[2], practitionerId: practitionerIds[2], serviceId: serviceIds[2], practitionerServiceId: psIds[4], type: 'clinic_visit' as const, date: d(0), startTime: '09:30', endTime: '10:15', status: 'checked_in' as const, bookedPrice: 25000, bookedDuration: 45, checkedInAt: d(0), _payMethod: 'moyasar' as const },
+    { id: BOOKING_IDS.BK13, patientId: patientIds[2], practitionerId: practitionerIds[2], serviceId: serviceIds[2], practitionerServiceId: psIds[4], type: 'clinic_visit' as const, date: d(0), startTime: '09:30', endTime: '10:15', status: 'checked_in' as const, bookedPrice: 25000, bookedDuration: 45, checkedInAt: d(0), _payMethod: 'moyasar' as const },
 
     // ── In-Progress (today)
-    { id: 'bk-14', patientId: patientIds[3], practitionerId: practitionerIds[3], serviceId: serviceIds[6], practitionerServiceId: psIds[6], type: 'clinic_visit' as const, date: d(0), startTime: '10:00', endTime: '10:30', status: 'in_progress' as const, bookedPrice: 25000, bookedDuration: 30, checkedInAt: d(0), inProgressAt: d(0), _payMethod: 'moyasar' as const },
+    { id: BOOKING_IDS.BK14, patientId: patientIds[3], practitionerId: practitionerIds[3], serviceId: serviceIds[6], practitionerServiceId: psIds[6], type: 'clinic_visit' as const, date: d(0), startTime: '10:00', endTime: '10:30', status: 'in_progress' as const, bookedPrice: 25000, bookedDuration: 30, checkedInAt: d(0), inProgressAt: d(0), _payMethod: 'moyasar' as const },
 
     // ── Walk-in
-    { id: 'bk-15', patientId: patientIds[4], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'walk_in' as const, date: d(0), startTime: '15:00', endTime: '15:30', status: 'confirmed' as const, bookedPrice: 30000, bookedDuration: 30, isWalkIn: true, confirmedAt: d(0), _payMethod: 'moyasar' as const },
+    { id: BOOKING_IDS.BK15, patientId: patientIds[4], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'walk_in' as const, date: d(0), startTime: '15:00', endTime: '15:30', status: 'confirmed' as const, bookedPrice: 30000, bookedDuration: 30, isWalkIn: true, confirmedAt: d(0), _payMethod: 'moyasar' as const },
 
     // ── Video consultation with Zoom
-    { id: 'bk-16', patientId: patientIds[5], practitionerId: practitionerIds[1], serviceId: serviceIds[4], practitionerServiceId: psIds[2], type: 'video_consultation' as const, date: d(4), startTime: '11:00', endTime: '11:30', status: 'confirmed' as const, bookedPrice: 40000, bookedDuration: 30, confirmedAt: d(0), zoomMeetingId: 'zoom-demo-123', zoomJoinUrl: 'https://zoom.us/j/demo123', zoomHostUrl: 'https://zoom.us/s/demo123', _payMethod: 'moyasar' as const },
+    { id: BOOKING_IDS.BK16, patientId: patientIds[5], practitionerId: practitionerIds[1], serviceId: serviceIds[4], practitionerServiceId: psIds[2], type: 'video_consultation' as const, date: d(4), startTime: '11:00', endTime: '11:30', status: 'confirmed' as const, bookedPrice: 40000, bookedDuration: 30, confirmedAt: d(0), zoomMeetingId: 'zoom-demo-123', zoomJoinUrl: 'https://zoom.us/j/demo123', zoomHostUrl: 'https://zoom.us/s/demo123', _payMethod: 'moyasar' as const },
 
     // ── Phone consultation
-    { id: 'bk-17', patientId: patientIds[6], practitionerId: practitionerIds[0], serviceId: serviceIds[1], practitionerServiceId: psIds[1], type: 'phone_consultation' as const, date: d(5), startTime: '14:00', endTime: '14:15', status: 'pending' as const, bookedPrice: 15000, bookedDuration: 15 },
+    { id: BOOKING_IDS.BK17, patientId: patientIds[6], practitionerId: practitionerIds[0], serviceId: serviceIds[1], practitionerServiceId: psIds[1], type: 'phone_consultation' as const, date: d(5), startTime: '14:00', endTime: '14:15', status: 'pending' as const, bookedPrice: 15000, bookedDuration: 15 },
 
     // ── Bank transfer pending review
-    { id: 'bk-18', patientId: patientIds[7], practitionerId: practitionerIds[2], serviceId: serviceIds[3], practitionerServiceId: psIds[5], type: 'clinic_visit' as const, date: d(6), startTime: '10:00', endTime: '11:00', status: 'confirmed' as const, bookedPrice: 40000, bookedDuration: 60, confirmedAt: d(0), _payMethod: 'bank_transfer' as const, _receiptStatus: 'pending' as const },
+    { id: BOOKING_IDS.BK18, patientId: patientIds[7], practitionerId: practitionerIds[2], serviceId: serviceIds[3], practitionerServiceId: psIds[5], type: 'clinic_visit' as const, date: d(6), startTime: '10:00', endTime: '11:00', status: 'confirmed' as const, bookedPrice: 40000, bookedDuration: 60, confirmedAt: d(0), _payMethod: 'bank_transfer' as const, _receiptStatus: 'pending' as const },
   ];
 }
 
@@ -171,9 +197,9 @@ export async function seedNotifications(
   for (let i = 0; i < notifs.length; i++) {
     const n = notifs[i];
     await prisma.notification.upsert({
-      where: { id: `notif-${i}` },
+      where: { id: NOTIF_IDS[i] },
       update: {},
-      create: { id: `notif-${i}`, ...n },
+      create: { id: NOTIF_IDS[i], ...n },
     });
   }
 }

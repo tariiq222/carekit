@@ -4,40 +4,56 @@ import { CreateIntakeFormDto } from './dto/create-intake-form.dto.js';
 import { UpdateIntakeFormDto } from './dto/update-intake-form.dto.js';
 import { SetFieldsDto } from './dto/set-fields.dto.js';
 import { SubmitResponseDto } from './dto/submit-response.dto.js';
+import { ListIntakeFormsDto } from './dto/list-intake-forms.dto.js';
 
 @Injectable()
 export class IntakeFormsService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ═══════════════════════════════════════════════════════════════
-  //  FORMS
+  //  LIST & GET
   // ═══════════════════════════════════════════════════════════════
 
-  async getFormsByService(serviceId: string) {
+  async listForms(query: ListIntakeFormsDto) {
     return this.prisma.intakeForm.findMany({
-      where: { serviceId, isActive: true },
+      where: {
+        ...(query.scope && { scope: query.scope }),
+        ...(query.type && { type: query.type }),
+        ...(query.serviceId && { serviceId: query.serviceId }),
+        ...(query.practitionerId && { practitionerId: query.practitionerId }),
+        ...(query.branchId && { branchId: query.branchId }),
+        ...(query.isActive !== undefined && { isActive: query.isActive }),
+      },
       include: { fields: { orderBy: { sortOrder: 'asc' } } },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  async getAllFormsByService(serviceId: string) {
-    return this.prisma.intakeForm.findMany({
-      where: { serviceId },
+  async getForm(formId: string) {
+    const form = await this.prisma.intakeForm.findUnique({
+      where: { id: formId },
       include: { fields: { orderBy: { sortOrder: 'asc' } } },
-      orderBy: { createdAt: 'asc' },
     });
+    if (!form) throw this.notFound('Intake form not found');
+    return form;
   }
 
-  async createForm(serviceId: string, dto: CreateIntakeFormDto) {
-    await this.ensureServiceExists(serviceId);
+  // ═══════════════════════════════════════════════════════════════
+  //  CREATE / UPDATE / DELETE
+  // ═══════════════════════════════════════════════════════════════
+
+  async createForm(dto: CreateIntakeFormDto) {
+    await this.validateScopeTarget(dto);
 
     return this.prisma.intakeForm.create({
       data: {
-        serviceId,
-        titleAr: dto.titleAr,
-        titleEn: dto.titleEn,
-        isRequired: dto.isRequired ?? false,
+        nameAr: dto.nameAr,
+        nameEn: dto.nameEn,
+        type: dto.type,
+        scope: dto.scope,
+        serviceId: dto.serviceId ?? undefined,
+        practitionerId: dto.practitionerId ?? undefined,
+        branchId: dto.branchId ?? undefined,
         isActive: dto.isActive ?? true,
       },
       include: { fields: true },
@@ -50,10 +66,9 @@ export class IntakeFormsService {
     return this.prisma.intakeForm.update({
       where: { id: formId },
       data: {
-        titleAr: dto.titleAr,
-        titleEn: dto.titleEn,
-        isRequired: dto.isRequired,
-        isActive: dto.isActive,
+        ...(dto.nameAr !== undefined && { nameAr: dto.nameAr }),
+        ...(dto.nameEn !== undefined && { nameEn: dto.nameEn }),
+        ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       },
       include: { fields: { orderBy: { sortOrder: 'asc' } } },
     });
@@ -84,9 +99,15 @@ export class IntakeFormsService {
           labelEn: f.labelEn,
           fieldType: f.fieldType,
           options: f.options ?? undefined,
+          condition: f.condition ? (f.condition as object) : undefined,
           isRequired: f.isRequired ?? false,
           sortOrder: f.sortOrder ?? i,
         })),
+      });
+
+      await tx.intakeForm.update({
+        where: { id: formId },
+        data: { updatedAt: new Date() },
       });
 
       return tx.intakeField.findMany({
@@ -103,14 +124,22 @@ export class IntakeFormsService {
   async submitResponse(patientId: string, dto: SubmitResponseDto) {
     await this.ensureFormExists(dto.formId);
 
-    return this.prisma.intakeResponse.create({
-      data: {
-        formId: dto.formId,
-        bookingId: dto.bookingId,
-        patientId,
-        answers: dto.answers,
-      },
-    });
+    const [response] = await this.prisma.$transaction([
+      this.prisma.intakeResponse.create({
+        data: {
+          formId: dto.formId,
+          bookingId: dto.bookingId,
+          patientId,
+          answers: dto.answers,
+        },
+      }),
+      this.prisma.intakeForm.update({
+        where: { id: dto.formId },
+        data: { submissionsCount: { increment: 1 } },
+      }),
+    ]);
+
+    return response;
   }
 
   async getResponseByBooking(bookingId: string) {
@@ -128,31 +157,38 @@ export class IntakeFormsService {
   //  PRIVATE HELPERS
   // ═══════════════════════════════════════════════════════════════
 
-  private async ensureServiceExists(serviceId: string) {
-    const service = await this.prisma.service.findFirst({
-      where: { id: serviceId, deletedAt: null },
-    });
-    if (!service) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Service not found',
-        error: 'NOT_FOUND',
+  private async validateScopeTarget(dto: CreateIntakeFormDto) {
+    if (dto.scope === 'service' && dto.serviceId) {
+      const exists = await this.prisma.service.findFirst({
+        where: { id: dto.serviceId, deletedAt: null },
       });
+      if (!exists) throw this.notFound('Service not found');
     }
-    return service;
+
+    if (dto.scope === 'practitioner' && dto.practitionerId) {
+      const exists = await this.prisma.practitioner.findFirst({
+        where: { id: dto.practitionerId, deletedAt: null },
+      });
+      if (!exists) throw this.notFound('Practitioner not found');
+    }
+
+    if (dto.scope === 'branch' && dto.branchId) {
+      const exists = await this.prisma.branch.findFirst({
+        where: { id: dto.branchId, deletedAt: null },
+      });
+      if (!exists) throw this.notFound('Branch not found');
+    }
   }
 
   private async ensureFormExists(formId: string) {
     const form = await this.prisma.intakeForm.findUnique({
       where: { id: formId },
     });
-    if (!form) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Intake form not found',
-        error: 'NOT_FOUND',
-      });
-    }
+    if (!form) throw this.notFound('Intake form not found');
     return form;
+  }
+
+  private notFound(message: string) {
+    return new NotFoundException({ statusCode: 404, message, error: 'NOT_FOUND' });
   }
 }

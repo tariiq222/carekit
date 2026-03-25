@@ -7,8 +7,11 @@ import {
 import { Booking, Payment, Practitioner } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 
-/** Statuses that cannot be cancelled by anyone */
-export const NON_CANCELLABLE: string[] = ['completed', 'cancelled', 'expired', 'no_show'];
+/** Statuses that cannot be cancelled by anyone (including admin) */
+export const NON_CANCELLABLE: string[] = ['in_progress', 'completed', 'cancelled', 'expired', 'no_show'];
+
+/** Statuses from which admin can directly cancel */
+export const ADMIN_CANCELLABLE_STATUSES: string[] = ['pending', 'confirmed', 'checked_in', 'pending_cancellation'];
 
 export type BookingWithPayment = Booking & { payment: Payment | null };
 export type BookingWithPractitioner = Booking & { practitioner: Practitioner & { userId: string } | null };

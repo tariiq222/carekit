@@ -1,0 +1,154 @@
+// ──────────────────────────────────────────────
+// Auth & Users
+// ──────────────────────────────────────────────
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  passwordHash  String?     @map("password_hash")
+  firstName     String      @map("first_name")
+  middleName    String?     @map("middle_name")
+  lastName      String      @map("last_name")
+  phone         String?     @unique
+  gender        UserGender?
+  avatarUrl     String?     @map("avatar_url")
+  accountType   AccountType @default(FULL) @map("account_type")
+  claimedAt     DateTime?   @map("claimed_at")
+  isActive      Boolean     @default(true) @map("is_active")
+  emailVerified Boolean     @default(false) @map("email_verified")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  deletedAt     DateTime?   @map("deleted_at")
+
+  // Relations
+  otpCodes              OtpCode[]
+  refreshTokens         RefreshToken[]
+  userRoles             UserRole[]
+  practitioner          Practitioner?
+  bookingsAsPatient     Booking[]              @relation("PatientBookings")
+  ratingsAsPatient      Rating[]               @relation("PatientRatings")
+  problemReports        ProblemReport[]        @relation("PatientProblemReports")
+  resolvedReports       ProblemReport[]        @relation("ResolvedByUser")
+  reviewedReceipts      BankTransferReceipt[]  @relation("ReviewedByUser")
+  chatSessions          ChatSession[]
+  notifications         Notification[]
+  fcmTokens             FcmToken[]
+  activityLogs          ActivityLog[]
+  kbFiles               KnowledgeBaseFile[]
+  waitlistEntries       WaitlistEntry[]        @relation("WaitlistPatient")
+  favoritePractitioners FavoritePractitioner[]
+  patientProfile        PatientProfile?
+
+  @@map("users")
+}
+
+model PatientProfile {
+  id                String     @id @default(uuid())
+  userId            String     @unique @map("user_id")
+  // Identity
+  nationalId        String?    @map("national_id")
+  nationality       String?
+  dateOfBirth       DateTime?  @map("date_of_birth")
+  // Emergency contact
+  emergencyName     String?    @map("emergency_name")
+  emergencyPhone    String?    @map("emergency_phone")
+  // Medical basics
+  bloodType         BloodType? @map("blood_type")
+  allergies         String?    // نص حر — أدوية وأغذية
+  chronicConditions String?    @map("chronic_conditions")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("patient_profiles")
+}
+
+model OtpCode {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  code      String
+  type      OtpType
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // H9: Composite index for atomic OTP verification (userId + type + usedAt)
+  @@index([userId, type, usedAt])
+  @@map("otp_codes")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt]) // For scheduled cleanup of expired tokens
+  @@map("refresh_tokens")
+}
+
+// ──────────────────────────────────────────────
+// RBAC
+// ──────────────────────────────────────────────
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  isDefault   Boolean  @default(false) @map("is_default")
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id            String   @id @default(uuid())
+  module        String
+  action        String
+  description   String?
+  descriptionAr String?  @map("description_ar")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  rolePermissions RolePermission[]
+
+  @@unique([module, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  roleId String @map("role_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}

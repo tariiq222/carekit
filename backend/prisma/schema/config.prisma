@@ -1,0 +1,89 @@
+// ──────────────────────────────────────────────
+// Configuration — White Label, Email, Notifications, Audit
+// ──────────────────────────────────────────────
+
+model WhiteLabelConfig {
+  id          String          @id @default(uuid())
+  key         String          @unique
+  value       String
+  type        ConfigValueType @default(string)
+  description String?
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@map("white_label_config")
+}
+
+model EmailTemplate {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  nameAr    String   @map("name_ar")
+  nameEn    String   @map("name_en")
+  subjectAr String   @map("subject_ar")
+  subjectEn String   @map("subject_en")
+  bodyAr    String   @map("body_ar") @db.Text
+  bodyEn    String   @map("body_en") @db.Text
+  variables Json     @default("[]")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("email_templates")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  titleAr   String           @map("title_ar")
+  titleEn   String           @map("title_en")
+  bodyAr    String           @map("body_ar")
+  bodyEn    String           @map("body_en")
+  type      NotificationType
+  isRead    Boolean          @default(false) @map("is_read")
+  readAt    DateTime?        @map("read_at")
+  data      Json?
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model FcmToken {
+  id        String         @id @default(uuid())
+  userId    String         @map("user_id")
+  token     String
+  platform  DevicePlatform
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@index([userId])
+  @@map("fcm_tokens")
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  action      String // created | updated | deleted | login | logout | approved | rejected
+  module      String // bookings | users | practitioners | payments | whitelabel | roles | ...
+  resourceId  String?  @map("resource_id")
+  description String?
+  oldValues   Json?    @map("old_values")
+  newValues   Json?    @map("new_values")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([module])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
+}

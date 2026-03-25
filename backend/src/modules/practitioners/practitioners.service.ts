@@ -213,6 +213,8 @@ export class PractitionersService {
     return this.prisma.practitioner.update({
       where: { id: practitioner.id },
       data: {
+        title: dto.title,
+        nameAr: dto.nameAr,
         specialty: dto.specialty,
         specialtyAr: dto.specialtyAr,
         bio: dto.bio,

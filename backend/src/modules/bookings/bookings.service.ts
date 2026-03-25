@@ -144,6 +144,8 @@ export class BookingsService {
     // This prevents race conditions where two concurrent requests both pass the
     // conflict check and create bookings for the same slot.
     const isWalkIn = dto.type === 'walk_in';
+    // TODO: enforce that only admin/staff roles can set payAtClinic === true
+    const isPayAtClinic = dto.payAtClinic === true;
     let booking;
     try {
     booking = await this.prisma.$transaction(async (tx) => {
@@ -179,8 +181,8 @@ export class BookingsService {
           date: bookingDate,
           startTime: dto.startTime,
           endTime,
-          status: isWalkIn ? 'confirmed' : 'pending',
-          confirmedAt: isWalkIn ? new Date() : undefined,
+          status: isWalkIn || isPayAtClinic ? 'confirmed' : 'pending',
+          confirmedAt: isWalkIn || isPayAtClinic ? new Date() : undefined,
           isWalkIn,
           notes: dto.notes,
           bookedPrice: resolved.price,
@@ -205,7 +207,7 @@ export class BookingsService {
     // H5: Payment creation is critical — if it fails, cancel the booking to avoid
     // orphaned bookings stuck in 'pending' with no payment record.
     try {
-      await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, resolved.price);
+      await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, resolved.price, isPayAtClinic);
     } catch (paymentErr) {
       this.logger.error(
         `Payment creation failed for booking ${booking.id} — cancelling booking to prevent orphan`,

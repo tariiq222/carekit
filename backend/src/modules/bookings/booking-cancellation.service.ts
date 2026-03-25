@@ -10,7 +10,7 @@ import { AdminCancelDto } from './dto/admin-cancel.dto.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
 import { BookingCancelHelpersService } from './booking-cancel-helpers.service.js';
-import { BookingLookupHelper } from './booking-lookup.helper.js';
+import { BookingLookupHelper, ADMIN_CANCELLABLE_STATUSES } from './booking-lookup.helper.js';
 import { WaitlistService } from './waitlist.service.js';
 import { bookingInclude } from './booking.constants.js';
 import { NOTIF } from '../../common/constants/notification-messages.js';
@@ -35,13 +35,22 @@ export class BookingCancellationService {
 
     this.lookup.assertPatientOwnership(booking, patientId);
 
+    const PATIENT_CANCELLABLE_STATUSES = ['pending', 'confirmed', 'checked_in'];
+    if (!PATIENT_CANCELLABLE_STATUSES.includes(booking.status)) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: `Cannot request cancellation for booking with status '${booking.status}' — allowed: ${PATIENT_CANCELLABLE_STATUSES.join(', ')}`,
+        error: 'INVALID_STATUS_FOR_CANCELLATION',
+      });
+    }
+
     const settings = await this.bookingSettingsService.get();
 
     if (booking.status === 'pending') {
       return this.handlePendingCancel(booking, settings, reason);
     }
 
-    if (booking.status === 'confirmed') {
+    if (booking.status === 'confirmed' || booking.status === 'checked_in') {
       return this.handleConfirmedCancelRequest(booking, settings, reason);
     }
 
@@ -58,6 +67,13 @@ export class BookingCancellationService {
 
   async adminDirectCancel(bookingId: string, adminUserId: string, dto: AdminCancelDto) {
     const booking = await this.lookup.findWithPayment(bookingId);
+    if (!ADMIN_CANCELLABLE_STATUSES.includes(booking.status)) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: `Cannot cancel booking with status '${booking.status}' — allowed: ${ADMIN_CANCELLABLE_STATUSES.join(', ')}`,
+        error: 'INVALID_STATUS_FOR_ADMIN_CANCEL',
+      });
+    }
     this.lookup.assertCancellable(booking);
     this.helpers.validatePartialRefund(dto, booking.payment);
 

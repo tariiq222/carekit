@@ -11,15 +11,20 @@ import {
 } from 'class-validator';
 
 export class OnboardPractitionerDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  firstName!: string;
+  @MaxLength(100)
+  title?: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  lastName!: string;
+  nameEn!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  nameAr!: string;
 
   @IsEmail()
   email!: string;

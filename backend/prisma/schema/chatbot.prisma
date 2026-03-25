@@ -1,0 +1,88 @@
+// ──────────────────────────────────────────────
+// Chatbot & Knowledge Base
+// ──────────────────────────────────────────────
+
+model ChatSession {
+  id          String           @id @default(uuid())
+  userId      String           @map("user_id")
+  startedAt   DateTime         @default(now()) @map("started_at")
+  endedAt     DateTime?        @map("ended_at")
+  handedOff   Boolean          @default(false) @map("handed_off")
+  handoffType HandoffType?     @map("handoff_type")
+  language    SessionLanguage? // detected from first message
+  metadata    Json? // bot version, model used, etc.
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id           String   @id @default(uuid())
+  sessionId    String   @map("session_id")
+  role         ChatRole
+  content      String
+  functionCall Json?    @map("function_call")
+  intent       String? // book | modify | cancel | query | handoff | greeting
+  toolName     String?  @map("tool_name")
+  tokenCount   Int?     @map("token_count")
+  staffId      String?  @map("staff_id") // staff user who sent this message (role=staff only)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("chat_messages")
+}
+
+model KnowledgeBase {
+  id         String                       @id @default(uuid())
+  title      String
+  content    String
+  embedding  Unsupported("vector(1536)")?
+  category   String?
+  source     String? // manual | auto_sync | file_upload
+  fileId     String?                      @map("file_id")
+  chunkIndex Int?                         @map("chunk_index")
+  isActive   Boolean                      @default(true) @map("is_active")
+  createdAt  DateTime                     @default(now()) @map("created_at")
+  updatedAt  DateTime                     @updatedAt @map("updated_at")
+
+  @@index([source])
+  @@index([fileId])
+  @@map("knowledge_base")
+}
+
+model ChatbotConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  category  String // personality | rules | handoff | quick_replies | sync | ai_model
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("chatbot_config")
+}
+
+model KnowledgeBaseFile {
+  id          String       @id @default(uuid())
+  fileName    String       @map("file_name")
+  fileUrl     String       @map("file_url")
+  fileType    String       @map("file_type") // pdf | docx | txt
+  fileSize    Int          @map("file_size") // bytes
+  chunksCount Int          @default(0) @map("chunks_count")
+  status      KbFileStatus @default(pending)
+  error       String?
+  uploadedBy  String       @map("uploaded_by")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  user User @relation(fields: [uploadedBy], references: [id])
+
+  @@map("knowledge_base_files")
+}

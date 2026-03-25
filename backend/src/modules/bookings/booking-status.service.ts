@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -169,6 +170,13 @@ export class BookingStatusService {
         error: 'CONFLICT',
       });
     }
+    if (booking.status === 'checked_in') {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'يجب بدء الجلسة أولاً قبل إتمام الحجز — استخدم startSession أولاً',
+        error: 'SESSION_NOT_STARTED',
+      });
+    }
     const completed = await this.prisma.booking.update({
       where: { id },
       data: { status: 'completed', completedAt: new Date(), completionNotes: dto?.completionNotes },
@@ -201,11 +209,11 @@ export class BookingStatusService {
 
   async markNoShow(id: string) {
     const booking = await this.ensureBookingExists(id);
-    if (!['confirmed', 'in_progress'].includes(booking.status)) {
+    if (booking.status !== 'confirmed') {
       throw new ConflictException({
         statusCode: 409,
-        message: `Cannot mark no-show for booking with status '${booking.status}'`,
-        error: 'CONFLICT',
+        message: `Cannot mark no-show for booking with status '${booking.status}' — only 'confirmed' bookings can be marked as no-show`,
+        error: 'INVALID_STATUS_FOR_NO_SHOW',
       });
     }
     const updated = await this.prisma.booking.update({

@@ -27,7 +27,18 @@ export class BookingPaymentHelper {
     bookingId: string,
     type: string,
     resolvedPrice: number,
+    payAtClinic?: boolean,
   ): Promise<void> {
+    // TODO: enforce admin/staff role check for payAtClinic before reaching this point
+    if (payAtClinic === true) {
+      // Skip online payment — create a cash payment record marked as paid
+      const { amount, vatAmount, totalAmount } = applyVat(resolvedPrice);
+      await this.prisma.payment.create({
+        data: { bookingId, amount, vatAmount, totalAmount, method: 'cash', status: 'paid' },
+      });
+      return;
+    }
+
     if (type === 'walk_in') {
       const settings = await this.bookingSettingsService.get();
       if (!settings.walkInPaymentRequired) return;

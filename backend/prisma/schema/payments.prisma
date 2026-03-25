@@ -1,0 +1,149 @@
+// ──────────────────────────────────────────────
+// Payments, Invoices & Promotions
+// ──────────────────────────────────────────────
+
+model Payment {
+  id               String        @id @default(uuid())
+  bookingId        String        @unique @map("booking_id")
+  amount           Int // halalat
+  vatAmount        Int           @default(0) @map("vat_amount") // halalat
+  totalAmount      Int           @default(0) @map("total_amount") // halalat
+  refundAmount     Int?          @map("refund_amount") // halalat — null = no refund
+  method           PaymentMethod
+  status           PaymentStatus @default(pending)
+  moyasarPaymentId String?       @unique @map("moyasar_payment_id")
+  transactionRef   String?       @map("transaction_ref")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  deletedAt        DateTime?     @map("deleted_at")
+
+  booking Booking              @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  receipt BankTransferReceipt?
+  invoice Invoice?
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+model BankTransferReceipt {
+  id                   String                     @id @default(uuid())
+  paymentId            String                     @unique @map("payment_id")
+  receiptUrl           String                     @map("receipt_url")
+  aiVerificationStatus TransferVerificationStatus @default(pending) @map("ai_verification_status")
+  aiConfidence         Float?                     @map("ai_confidence")
+  aiNotes              String?                    @map("ai_notes")
+  extractedAmount      Int?                       @map("extracted_amount") // halalat
+  extractedDate        DateTime?                  @map("extracted_date")
+  reviewedById         String?                    @map("reviewed_by_id")
+  reviewedAt           DateTime?                  @map("reviewed_at")
+  adminNotes           String?                    @map("admin_notes")
+  createdAt            DateTime                   @default(now()) @map("created_at")
+  updatedAt            DateTime                   @updatedAt @map("updated_at")
+  deletedAt            DateTime?                  @map("deleted_at")
+
+  payment    Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  reviewedBy User?   @relation("ReviewedByUser", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@map("bank_transfer_receipts")
+}
+
+model Invoice {
+  id            String      @id @default(uuid())
+  paymentId     String      @unique @map("payment_id")
+  invoiceNumber String      @unique @map("invoice_number")
+  pdfUrl        String?     @map("pdf_url")
+  sentAt        DateTime?   @map("sent_at")
+  vatAmount     Int         @default(0) @map("vat_amount")
+  vatRate       Int         @default(0) @map("vat_rate")
+  invoiceHash   String?     @map("invoice_hash")
+  previousHash  String?     @map("previous_hash")
+  qrCodeData    String?     @map("qr_code_data")
+  zatcaStatus   ZatcaStatus @default(not_applicable) @map("zatca_status")
+  zatcaResponse Json?       @map("zatca_response")
+  xmlContent    String?     @map("xml_content")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  deletedAt     DateTime?   @map("deleted_at")
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("invoices")
+}
+
+model ProcessedWebhook {
+  id          String   @id @default(uuid())
+  eventId     String   @unique @map("event_id")
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@index([processedAt])
+  @@map("processed_webhooks")
+}
+
+model Coupon {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  descriptionAr  String?   @map("description_ar")
+  descriptionEn  String?   @map("description_en")
+  discountType   String    @map("discount_type")
+  discountValue  Int       @map("discount_value")
+  minAmount      Int       @default(0) @map("min_amount")
+  maxUses        Int?      @map("max_uses")
+  usedCount      Int       @default(0) @map("used_count")
+  maxUsesPerUser Int?      @map("max_uses_per_user")
+  serviceIds     String[]  @map("service_ids")
+  expiresAt      DateTime? @map("expires_at")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  redemptions CouponRedemption[]
+
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id        String   @id @default(uuid())
+  couponId  String   @map("coupon_id")
+  userId    String   @map("user_id")
+  bookingId String?  @map("booking_id")
+  amount    Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@map("coupon_redemptions")
+}
+
+model GiftCard {
+  id            String    @id @default(uuid())
+  code          String    @unique
+  initialAmount Int       @map("initial_amount")
+  balance       Int
+  purchasedBy   String?   @map("purchased_by")
+  redeemedBy    String?   @map("redeemed_by")
+  expiresAt     DateTime? @map("expires_at")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  transactions GiftCardTransaction[]
+
+  @@map("gift_cards")
+}
+
+model GiftCardTransaction {
+  id         String   @id @default(uuid())
+  giftCardId String   @map("gift_card_id")
+  amount     Int // positive = credit, negative = debit
+  bookingId  String?  @map("booking_id")
+  note       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  giftCard GiftCard @relation(fields: [giftCardId], references: [id], onDelete: Cascade)
+
+  @@index([giftCardId])
+  @@map("gift_card_transactions")
+}

@@ -48,13 +48,18 @@ export class PractitionerOnboardingService {
     let createdUserId: string;
     let createdPractitioner: object;
 
+    // Split nameEn into firstName / lastName
+    const nameParts = dto.nameEn.trim().split(/\s+/);
+    const firstName = nameParts[0] ?? dto.nameEn;
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
     try {
       const result = await this.prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: {
             email: normalizedEmail,
-            firstName: dto.firstName,
-            lastName: dto.lastName,
+            firstName,
+            lastName,
             passwordHash: null,
             isActive: false,
             avatarUrl: dto.avatarUrl ?? null,
@@ -64,6 +69,8 @@ export class PractitionerOnboardingService {
         const practitioner = await tx.practitioner.create({
           data: {
             userId: user.id,
+            title: dto.title ?? null,
+            nameAr: dto.nameAr,
             specialty: dto.specialty,
             specialtyAr: dto.specialtyAr ?? '',
             bio: dto.bio ?? null,
@@ -102,7 +109,7 @@ export class PractitionerOnboardingService {
     }
 
     const otpCode = await this.otpService.generateOtp(createdUserId, OtpType.RESET_PASSWORD);
-    await this.emailService.sendPractitionerWelcome(normalizedEmail, dto.firstName, otpCode);
+    await this.emailService.sendPractitionerWelcome(normalizedEmail, firstName, otpCode);
 
     return {
       success: true,

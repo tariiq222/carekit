@@ -1,0 +1,235 @@
+// ──────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────
+
+enum BookingType {
+  clinic_visit
+  phone_consultation
+  video_consultation
+  walk_in
+
+  @@map("booking_type")
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  checked_in
+  in_progress
+  completed
+  cancelled
+  pending_cancellation
+  no_show
+  expired
+
+  @@map("booking_status")
+}
+
+enum PaymentMethod {
+  moyasar
+  bank_transfer
+
+  @@map("payment_method")
+}
+
+enum PaymentStatus {
+  pending
+  awaiting
+  paid
+  refunded
+  failed
+  rejected // Bank transfer receipt rejected by admin — audit trail preserved
+
+  @@map("payment_status")
+}
+
+enum TransferVerificationStatus {
+  pending
+  matched
+  amount_differs
+  suspicious
+  old_date
+  unreadable
+  approved
+  rejected
+
+  @@map("transfer_verification_status")
+}
+
+enum NotificationType {
+  booking_confirmed
+  booking_completed
+  booking_cancelled
+  booking_rescheduled
+  booking_expired
+  booking_no_show
+  booking_reminder
+  booking_reminder_urgent
+  booking_cancellation_rejected
+  cancellation_rejected
+  cancellation_requested
+  no_show_review
+  patient_arrived
+  receipt_rejected
+  reminder
+  payment_received
+  new_rating
+  problem_report
+  waitlist_slot_available
+  system_alert
+
+  @@map("notification_type")
+}
+
+enum WaitlistStatus {
+  waiting
+  notified
+  booked
+  expired
+  cancelled
+
+  @@map("waitlist_status")
+}
+
+enum ProblemReportType {
+  wait_time
+  staff_behavior
+  cleanliness
+  billing
+  no_call
+  late
+  technical
+  other
+
+  @@map("problem_report_type")
+}
+
+enum ProblemReportStatus {
+  open
+  in_review
+  resolved
+  dismissed
+
+  @@map("problem_report_status")
+}
+
+enum ChatRole {
+  user
+  assistant
+  system
+  staff
+
+  @@map("chat_role")
+}
+
+enum HandoffType {
+  live_chat
+  contact_number
+
+  @@map("handoff_type")
+}
+
+enum ConfigValueType {
+  string
+  json
+  file
+
+  @@map("config_value_type")
+}
+
+enum UserGender {
+  male
+  female
+
+  @@map("user_gender")
+}
+
+enum ZatcaStatus {
+  not_applicable
+  pending
+  reported
+  failed
+
+  @@map("zatca_status")
+}
+
+enum OtpType {
+  login
+  reset_password
+  verify_email
+
+  @@map("otp_type")
+}
+
+enum KbFileStatus {
+  pending
+  processing
+  completed
+  failed
+
+  @@map("kb_file_status")
+}
+
+enum DevicePlatform {
+  ios
+  android
+
+  @@map("device_platform")
+}
+
+enum RecurringPattern {
+  daily
+  every_2_days
+  every_3_days
+  weekly
+  biweekly
+  monthly
+
+  @@map("recurring_pattern")
+}
+
+enum SessionLanguage {
+  ar
+  en
+
+  @@map("session_language")
+}
+
+enum AccountType {
+  FULL
+  WALK_IN
+
+  @@map("account_type")
+}
+
+enum BloodType {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
+  UNKNOWN
+
+  @@map("blood_type")
+}
+
+enum FormScope {
+  global
+  service
+  practitioner
+  branch
+
+  @@map("form_scope")
+}
+
+enum FormType {
+  pre_booking
+  pre_session
+  post_session
+  registration
+
+  @@map("form_type")
+}

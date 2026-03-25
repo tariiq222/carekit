@@ -12,6 +12,17 @@ export class WhitelabelService {
     private readonly cache: CacheService,
   ) {}
 
+  // Keys whose values must NEVER be sent to the frontend (masked with ***)
+  private static readonly SENSITIVE_KEYS = [
+    'moyasar_secret_key',
+    'bank_iban',
+    'bank_account_holder',
+  ];
+
+  private static maskSensitive(key: string, value: string): string {
+    return WhitelabelService.SENSITIVE_KEYS.includes(key) ? '***' : value;
+  }
+
   // ═══════════════════════════════════════════════════════════════
   //  GET ALL — Return all configs ordered by key
   // ═══════════════════════════════════════════════════════════════
@@ -60,7 +71,11 @@ export class WhitelabelService {
       configs,
       CACHE_TTL.WHITELABEL_CONFIG,
     );
-    return configs;
+    // Mask sensitive values before returning to callers
+    return configs.map((c) => ({
+      ...c,
+      value: WhitelabelService.maskSensitive(c.key, c.value),
+    }));
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -71,7 +86,7 @@ export class WhitelabelService {
     const configs = await this.getConfig();
 
     return configs.reduce<Record<string, string>>((acc, config) => {
-      acc[config.key] = config.value;
+      acc[config.key] = config.value; // already masked by getConfig()
       return acc;
     }, {});
   }
@@ -81,8 +96,11 @@ export class WhitelabelService {
   // ═══════════════════════════════════════════════════════════════
 
   async updateConfig(dto: UpdateConfigDto): Promise<WhiteLabelConfig[]> {
-    await Promise.all(
-      dto.configs.map((item) =>
+    // Skip items where the frontend echoed back the masked placeholder
+    const items = dto.configs.filter((item) => item.value !== '***');
+
+    await this.prisma.$transaction(
+      items.map((item) =>
         this.prisma.whiteLabelConfig.upsert({
           where: { key: item.key },
           create: {
@@ -101,7 +119,7 @@ export class WhitelabelService {
     );
 
     await this.invalidateCache();
-    return this.getConfig();
+    return this.getConfig(); // returns masked values
   }
 
   // ═══════════════════════════════════════════════════════════════

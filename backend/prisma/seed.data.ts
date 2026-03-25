@@ -19,6 +19,7 @@ export const MODULES = [
   'patients',
   'ratings',
   'coupons',
+  'branches',
 ] as const;
 
 export const ACTIONS = ['view', 'create', 'edit', 'delete'] as const;

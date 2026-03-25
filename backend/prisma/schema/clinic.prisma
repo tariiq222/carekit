@@ -1,0 +1,148 @@
+// ──────────────────────────────────────────────
+// Clinic — Practitioners & Schedule
+// ──────────────────────────────────────────────
+
+model Practitioner {
+  id                  String    @id @default(uuid())
+  userId              String    @unique @map("user_id")
+  title               String?   @map("title")
+  nameAr              String?   @map("name_ar")
+  specialty           String    @default("") @map("specialty")
+  specialtyAr         String    @default("") @map("specialty_ar")
+  bio                 String?
+  bioAr               String?   @map("bio_ar")
+  experience          Int       @default(0)
+  education           String?
+  educationAr         String?   @map("education_ar")
+  priceClinic         Int       @default(0) @map("price_clinic") // halalat
+  pricePhone          Int       @default(0) @map("price_phone") // halalat
+  priceVideo          Int       @default(0) @map("price_video") // halalat
+  rating              Float     @default(0)
+  reviewCount         Int       @default(0) @map("review_count")
+  isActive            Boolean   @default(true) @map("is_active")
+  isAcceptingBookings Boolean   @default(true) @map("is_accepting_bookings")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
+
+  user                 User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availabilities       PractitionerAvailability[]
+  vacations            PractitionerVacation[]
+  breaks               PractitionerBreak[]
+  bookings             Booking[]
+  ratings              Rating[]
+  practitionerServices PractitionerService[]
+  waitlistEntries      WaitlistEntry[]
+  favoritedBy          FavoritePractitioner[]
+  branches             PractitionerBranch[]
+  intakeForms          IntakeForm[]
+
+  @@index([isActive, deletedAt])
+  @@map("practitioners")
+}
+
+model PractitionerAvailability {
+  id             String   @id @default(uuid())
+  practitionerId String   @map("practitioner_id")
+  dayOfWeek      Int      @map("day_of_week") // 0 = Sunday, 6 = Saturday
+  startTime      String   @map("start_time") // "HH:mm"
+  endTime        String   @map("end_time") // "HH:mm"
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  // H10: Add isActive to composite index to avoid filtering in-memory after index lookup
+  @@index([practitionerId, dayOfWeek, isActive])
+  @@map("practitioner_availabilities")
+}
+
+model PractitionerVacation {
+  id             String   @id @default(uuid())
+  practitionerId String   @map("practitioner_id")
+  startDate      DateTime @map("start_date")
+  endDate        DateTime @map("end_date")
+  reason         String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerId])
+  @@map("practitioner_vacations")
+}
+
+model PractitionerBreak {
+  id             String   @id @default(uuid())
+  practitionerId String   @map("practitioner_id")
+  dayOfWeek      Int      @map("day_of_week") // 0 = Sunday, 6 = Saturday
+  startTime      String   @map("start_time") // "HH:mm"
+  endTime        String   @map("end_time") // "HH:mm"
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerId, dayOfWeek])
+  @@map("practitioner_breaks")
+}
+
+model ClinicWorkingHours {
+  id        String   @id @default(uuid())
+  dayOfWeek Int      @map("day_of_week")
+  startTime String   @map("start_time")
+  endTime   String   @map("end_time")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([dayOfWeek])
+  @@map("clinic_working_hours")
+}
+
+model ClinicHoliday {
+  id          String   @id @default(uuid())
+  date        DateTime
+  nameAr      String   @map("name_ar")
+  nameEn      String   @map("name_en")
+  isRecurring Boolean  @default(false) @map("is_recurring")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([date])
+  @@map("clinic_holidays")
+}
+
+model Branch {
+  id        String    @id @default(uuid())
+  nameAr    String    @map("name_ar")
+  nameEn    String    @map("name_en")
+  address   String?
+  phone     String?
+  email     String?
+  isMain    Boolean   @default(false) @map("is_main")
+  isActive  Boolean   @default(true) @map("is_active")
+  timezone  String    @default("Asia/Riyadh")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  practitioners PractitionerBranch[]
+  intakeForms   IntakeForm[]
+
+  @@map("branches")
+}
+
+model PractitionerBranch {
+  id             String   @id @default(uuid())
+  practitionerId String   @map("practitioner_id")
+  branchId       String   @map("branch_id")
+  isPrimary      Boolean  @default(false) @map("is_primary")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+  branch       Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([practitionerId, branchId])
+  @@index([branchId])
+  @@map("practitioner_branches")
+}

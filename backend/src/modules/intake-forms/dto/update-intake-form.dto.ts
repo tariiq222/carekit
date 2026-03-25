@@ -1,23 +1,23 @@
 import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateIntakeFormDto {
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
-  titleAr?: string;
+  nameAr?: string;
 
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
-  titleEn?: string;
+  nameEn?: string;
 
-  @IsOptional()
-  @IsBoolean()
-  isRequired?: boolean;
-
+  @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

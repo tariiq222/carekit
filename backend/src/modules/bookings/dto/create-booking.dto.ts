@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBookingDto {
@@ -40,6 +40,11 @@ export class CreateBookingDto {
   @IsOptional()
   @IsUUID()
   durationOptionId?: string;
+
+  @ApiPropertyOptional({ description: 'Skip payment — pay at clinic (cash/POS). Admin only.' })
+  @IsOptional()
+  @IsBoolean()
+  payAtClinic?: boolean;
 
   /**
    * Internal: Set by BookingRecurringService to atomically link booking to its series.

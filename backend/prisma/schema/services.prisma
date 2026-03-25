@@ -1,0 +1,152 @@
+// ──────────────────────────────────────────────
+// Services & Pricing
+// ──────────────────────────────────────────────
+
+model ServiceCategory {
+  id        String   @id @default(uuid())
+  nameAr    String   @map("name_ar")
+  nameEn    String   @map("name_en")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  services Service[]
+
+  @@map("service_categories")
+}
+
+model Service {
+  id                       String             @id @default(uuid())
+  nameAr                   String             @map("name_ar")
+  nameEn                   String             @map("name_en")
+  descriptionAr            String?            @map("description_ar")
+  descriptionEn            String?            @map("description_en")
+  categoryId               String             @map("category_id")
+  price                    Int                @default(0) // halalat
+  duration                 Int                @default(30) // minutes
+  isActive                 Boolean            @default(true) @map("is_active")
+  isHidden                 Boolean            @default(false) @map("is_hidden")
+  hidePriceOnBooking       Boolean            @default(false) @map("hide_price_on_booking")
+  hideDurationOnBooking    Boolean            @default(false) @map("hide_duration_on_booking")
+  calendarColor            String?            @map("calendar_color")
+  bufferMinutes            Int                @default(0) @map("buffer_minutes")
+  depositEnabled           Boolean            @default(false) @map("deposit_enabled")
+  depositPercent           Int                @default(100) @map("deposit_percent")
+  allowRecurring           Boolean            @default(true) @map("allow_recurring")
+  allowedRecurringPatterns RecurringPattern[] @default([]) @map("allowed_recurring_patterns")
+  maxRecurrences           Int                @default(12) @map("max_recurrences")
+  maxParticipants          Int                @default(1) @map("max_participants")
+  minLeadMinutes           Int?               @map("min_lead_minutes")
+  maxAdvanceDays           Int?               @map("max_advance_days")
+  createdAt                DateTime           @default(now()) @map("created_at")
+  updatedAt                DateTime           @updatedAt @map("updated_at")
+  deletedAt                DateTime?          @map("deleted_at")
+
+  category             ServiceCategory         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  bookings             Booking[]
+  practitionerServices PractitionerService[]
+  waitlistEntries      WaitlistEntry[]
+  durationOptions      ServiceDurationOption[]
+  intakeForms          IntakeForm[]
+  bookingTypes         ServiceBookingType[]
+
+  @@index([categoryId])
+  @@map("services")
+}
+
+model ServiceBookingType {
+  id          String      @id @default(uuid())
+  serviceId   String      @map("service_id")
+  bookingType BookingType @map("booking_type")
+  price       Int // halalat
+  duration    Int // minutes
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  service         Service                 @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  durationOptions ServiceDurationOption[]
+
+  @@unique([serviceId, bookingType])
+  @@index([serviceId])
+  @@map("service_booking_types")
+}
+
+model ServiceDurationOption {
+  id                   String  @id @default(uuid())
+  serviceId            String  @map("service_id")
+  serviceBookingTypeId String? @map("service_booking_type_id")
+  label                String
+  labelAr              String? @map("label_ar")
+  durationMinutes      Int     @map("duration_minutes")
+  price                Int // halalat
+  isDefault            Boolean @default(false) @map("is_default")
+  sortOrder            Int     @default(0) @map("sort_order")
+
+  service            Service             @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceBookingType ServiceBookingType? @relation(fields: [serviceBookingTypeId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+  @@index([serviceBookingTypeId])
+  @@map("service_duration_options")
+}
+
+model PractitionerService {
+  id             String        @id @default(uuid())
+  practitionerId String        @map("practitioner_id")
+  serviceId      String        @map("service_id")
+  priceClinic    Int?          @map("price_clinic") // halalat — null = use fallback
+  pricePhone     Int?          @map("price_phone") // halalat — null = use fallback
+  priceVideo     Int?          @map("price_video") // halalat — null = use fallback
+  customDuration Int?          @map("custom_duration") // minutes — overrides service.duration
+  bufferMinutes  Int           @default(0) @map("buffer_minutes")
+  availableTypes BookingType[] @map("available_types")
+  isActive       Boolean       @default(true) @map("is_active")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  practitioner Practitioner              @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+  service      Service                   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+  serviceTypes PractitionerServiceType[]
+
+  @@unique([practitionerId, serviceId])
+  @@index([serviceId])
+  @@map("practitioner_services")
+}
+
+model PractitionerServiceType {
+  id                    String      @id @default(uuid())
+  practitionerServiceId String      @map("practitioner_service_id")
+  bookingType           BookingType @map("booking_type")
+  price                 Int? // null = use ServiceBookingType.price
+  duration              Int? // null = use ServiceBookingType.duration
+  useCustomOptions      Boolean     @default(false) @map("use_custom_options")
+  isActive              Boolean     @default(true) @map("is_active")
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+
+  practitionerService PractitionerService          @relation(fields: [practitionerServiceId], references: [id], onDelete: Cascade)
+  durationOptions     PractitionerDurationOption[]
+
+  @@unique([practitionerServiceId, bookingType])
+  @@index([practitionerServiceId])
+  @@map("practitioner_service_types")
+}
+
+model PractitionerDurationOption {
+  id                        String  @id @default(uuid())
+  practitionerServiceTypeId String  @map("practitioner_service_type_id")
+  label                     String
+  labelAr                   String? @map("label_ar")
+  durationMinutes           Int     @map("duration_minutes")
+  price                     Int // halalat
+  isDefault                 Boolean @default(false) @map("is_default")
+  sortOrder                 Int     @default(0) @map("sort_order")
+
+  practitionerServiceType PractitionerServiceType @relation(fields: [practitionerServiceTypeId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerServiceTypeId])
+  @@map("practitioner_duration_options")
+}

@@ -1,0 +1,13 @@
+// CareKit — Prisma Base Config
+// Single source of truth for database structure
+// Changes require Schema Change Protocol approval from maestro
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [pgvector(map: "vector")]
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}

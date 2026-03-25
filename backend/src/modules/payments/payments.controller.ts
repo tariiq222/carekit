@@ -23,8 +23,6 @@ import { Public } from '../../common/decorators/public.decorator.js';
 import { PaymentsService } from './payments.service.js';
 import { CreatePaymentDto } from './dto/create-payment.dto.js';
 import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto.js';
-import { UploadReceiptDto } from './dto/upload-receipt.dto.js';
-import { ReviewReceiptDto } from './dto/review-receipt.dto.js';
 import { PaymentFilterDto } from './dto/payment-filter.dto.js';
 import { CreateMoyasarPaymentDto } from './dto/create-moyasar-payment.dto.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
@@ -204,33 +202,4 @@ export class PaymentsController {
     return this.paymentsService.updateStatus(id, dto);
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  POST /payments/:id/receipt — Upload Bank Transfer Receipt (legacy)
-  // ═══════════════════════════════════════════════════════════════
-
-  @Post(':id/receipt')
-  @CheckPermissions({ module: 'payments', action: 'edit' })
-  async uploadReceipt(
-    @Param('id', uuidPipe) id: string,
-    @Body() dto: UploadReceiptDto,
-  ) {
-    return this.paymentsService.uploadReceipt(id, dto);
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  PATCH /payments/receipts/:receiptId/review — Review Receipt
-  // ═══════════════════════════════════════════════════════════════
-
-  @Patch('receipts/:receiptId/review')
-  @CheckPermissions({ module: 'payments', action: 'edit' })
-  async reviewReceipt(
-    @Param('receiptId', uuidPipe) receiptId: string,
-    @Body() dto: ReviewReceiptDto,
-    @CurrentUser() user: { id: string },
-  ) {
-    return this.paymentsService.verifyBankTransfer(receiptId, user.id, {
-      action: dto.approved ? 'approve' : 'reject',
-      adminNotes: dto.adminNotes,
-    });
-  }
 }
