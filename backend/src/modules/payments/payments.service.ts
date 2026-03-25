@@ -50,7 +50,7 @@ export class PaymentsService {
     ]);
 
     return {
-      data: items,
+      items,
       meta: buildPaginationMeta(total, page, perPage),
     };
   }
@@ -186,7 +186,7 @@ export class PaymentsService {
     ]);
 
     return {
-      data: items,
+      items,
       meta: buildPaginationMeta(total, page, perPage),
     };
   }

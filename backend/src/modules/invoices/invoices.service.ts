@@ -21,6 +21,25 @@ export class InvoicesService {
       where.zatcaStatus = query.zatcaStatus;
     }
 
+    if (query.search) {
+      const term = query.search.trim();
+      where.OR = [
+        { invoiceNumber: { contains: term, mode: 'insensitive' } },
+        {
+          payment: {
+            booking: {
+              patient: {
+                OR: [
+                  { firstName: { contains: term, mode: 'insensitive' } },
+                  { lastName: { contains: term, mode: 'insensitive' } },
+                ],
+              },
+            },
+          },
+        },
+      ];
+    }
+
     const [items, total] = await Promise.all([
       this.prisma.invoice.findMany({
         where,

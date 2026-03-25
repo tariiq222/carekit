@@ -52,6 +52,21 @@ export class TasksBootstrapService implements OnModuleInit {
       removeOnComplete: true,
     });
 
-    this.logger.log('Registered 7 repeatable task jobs');
+    await this.tasksQueue.add('expire-pending-cancellations', {}, {
+      repeat: { pattern: '0 * * * *' }, // Every hour
+      removeOnComplete: true,
+    });
+
+    await this.tasksQueue.add('reminder-2h', {}, {
+      repeat: { pattern: '*/15 * * * *' }, // Every 15 minutes
+      removeOnComplete: true,
+    });
+
+    await this.tasksQueue.add('reminder-15min', {}, {
+      repeat: { pattern: '*/5 * * * *' }, // Every 5 minutes
+      removeOnComplete: true,
+    });
+
+    this.logger.log('Registered 10 repeatable task jobs');
   }
 }

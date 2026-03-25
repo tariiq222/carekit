@@ -15,7 +15,6 @@ export const paymentInclude = {
       practitioner: {
         include: {
           user: { select: { id: true, firstName: true, lastName: true } },
-          specialty: { select: { nameEn: true, nameAr: true } },
         },
       },
     },

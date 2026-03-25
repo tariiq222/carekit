@@ -6,6 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { AccountType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { SALT_ROUNDS } from '../../config/constants.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -16,6 +17,7 @@ import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';
 import { EmailService } from '../email/email.service.js';
 import { AuthCacheService } from './auth-cache.service.js';
+import { PatientWalkInService } from '../patients/patient-walk-in.service.js';
 
 @Injectable()
 export class AuthService {
@@ -27,18 +29,46 @@ export class AuthService {
     private readonly otpService: OtpService,
     private readonly emailService: EmailService,
     private readonly authCache: AuthCacheService,
+    private readonly walkInService: PatientWalkInService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
     const email = dto.email.toLowerCase();
 
-    const existing = await this.prisma.user.findUnique({ where: { email } });
-    if (existing) {
+    // فحص الايميل أولاً
+    const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
+    if (existingByEmail) {
       throw new ConflictException({
         statusCode: 409,
         message: 'A user with this email already exists',
         error: 'USER_EMAIL_EXISTS',
       });
+    }
+
+    // إذا أرسل المريض جواله، نتحقق هل يوجد حساب WALK_IN بهذا الجوال
+    if (dto.phone) {
+      const walkInUser = await this.walkInService.findWalkInByPhone(dto.phone);
+      if (walkInUser) {
+        if (walkInUser.accountType === AccountType.WALK_IN) {
+          // auto-claim: نحوّل الحساب الموجود لحساب كامل
+          const claimed = await this.walkInService.claimAccount({
+            phone: dto.phone,
+            email,
+            password: dto.password,
+          });
+          const tokens = await this.tokenService.generateTokens(claimed.id, claimed.email);
+          await this.tokenService.storeRefreshToken(claimed.id, tokens.refreshToken);
+          await this.emailService.sendWelcome(claimed.email, claimed.firstName);
+          const fullUser = await this.tokenService.buildUserPayloadFromId(claimed.id);
+          return { user: fullUser, ...tokens };
+        }
+        // حساب FULL بنفس الجوال — خطأ
+        throw new ConflictException({
+          statusCode: 409,
+          message: 'A patient with this phone number already has an account',
+          error: 'PATIENT_PHONE_EXISTS',
+        });
+      }
     }
 
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);

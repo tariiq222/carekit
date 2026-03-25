@@ -283,4 +283,34 @@ export class ChatbotService {
     };
   }
 
+  // ═══════════════════════════════════════════════════════════
+  //  Staff Live Chat — send message as staff member
+  // ═══════════════════════════════════════════════════════════
+
+  async sendStaffMessage(sessionId: string, staffId: string, content: string) {
+    const session = await this.prisma.chatSession.findUnique({
+      where: { id: sessionId },
+    });
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+    if (!session.handedOff || session.handoffType !== 'live_chat') {
+      throw new BadRequestException('Session is not handed off to live chat');
+    }
+    if (session.endedAt) {
+      throw new BadRequestException('Session has already ended');
+    }
+
+    const message = await this.prisma.chatMessage.create({
+      data: {
+        sessionId,
+        role: 'staff',
+        content,
+        staffId,
+      },
+    });
+
+    return message;
+  }
+
 }

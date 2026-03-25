@@ -35,6 +35,9 @@ import { BookingSettingsService } from '../booking-settings.service.js';
 import { BookingStatusService } from '../booking-status.service.js';
 import { ActivityLogService } from '../../activity-log/activity-log.service.js';
 import { BookingPaymentHelper } from '../booking-payment.helper.js';
+import { PriceResolverService } from '../price-resolver.service.js';
+import { ClinicHoursService } from '../../clinic/clinic-hours.service.js';
+import { ClinicHolidaysService } from '../../clinic/clinic-holidays.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -147,17 +150,14 @@ const mockNotificationsService = {
 const mockPractitioner = {
   id: 'practitioner-uuid-1',
   userId: 'user-uuid-1',
-  specialtyId: 'specialty-uuid-1',
+  specialty: 'General Medicine',
+  specialtyAr: 'الطب العام',
   isActive: true,
   deletedAt: null,
   user: {
     id: 'user-uuid-1',
     firstName: 'خالد',
     lastName: 'الفهد',
-  },
-  specialty: {
-    nameEn: 'Cardiology',
-    nameAr: 'أمراض القلب',
   },
 };
 
@@ -269,6 +269,23 @@ describe('BookingsService', () => {
         } },
         { provide: ActivityLogService, useValue: { log: jest.fn().mockResolvedValue(undefined) } },
         { provide: BookingPaymentHelper, useValue: { resolvePatientId: jest.fn().mockImplementation((_caller: string, patientId?: string) => Promise.resolve(patientId ?? _caller)), createPaymentIfNeeded: jest.fn().mockResolvedValue(undefined) } },
+        { provide: PriceResolverService, useValue: { resolve: jest.fn().mockRejectedValue(new Error('ServiceBookingType not configured')) } },
+        {
+          provide: ClinicHoursService,
+          useValue: {
+            getAll: jest.fn().mockResolvedValue(
+              [0, 1, 2, 3, 4, 5, 6].map((d) => ({ dayOfWeek: d, startTime: '08:00', endTime: '20:00', isActive: true })),
+            ),
+            getForDay: jest.fn().mockResolvedValue([{ dayOfWeek: 1, startTime: '08:00', endTime: '20:00', isActive: true }]),
+          },
+        },
+        {
+          provide: ClinicHolidaysService,
+          useValue: {
+            findAll: jest.fn().mockResolvedValue([]),
+            isHoliday: jest.fn().mockResolvedValue(false),
+          },
+        },
       ],
     }).compile();
 

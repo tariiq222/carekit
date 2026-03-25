@@ -62,6 +62,15 @@ export class TasksProcessor extends WorkerHost implements OnModuleInit {
       case 'auto-no-show':
         await this.bookingAutomationService.autoNoShow();
         break;
+      case 'expire-pending-cancellations':
+        await this.bookingAutomationService.autoExpirePendingCancellations();
+        break;
+      case 'reminder-2h':
+        await this.reminderService.sendTwoHourReminders();
+        break;
+      case 'reminder-15min':
+        await this.reminderService.sendUrgentReminders();
+        break;
       default:
         this.logger.warn(`Unknown task job: ${job.name}`);
     }

@@ -1,9 +1,11 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { ThrottlerModule, ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ThrottlerRedisStorage } from './common/services/throttler-redis-storage.js';
 import { THROTTLE_TTL, THROTTLE_LIMIT, DEFAULT_JOB_OPTIONS } from './config/constants.js';
+import { REDIS_CLIENT } from './common/redis/redis.constants.js';
+import Redis from 'ioredis';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { RedisModule } from './common/redis/redis.module.js';
 import { DatabaseModule } from './database/database.module.js';
@@ -30,7 +32,6 @@ import { WhitelabelModule } from './modules/whitelabel/whitelabel.module.js';
 import { ChatbotModule } from './modules/chatbot/chatbot.module.js';
 import { RatingsModule } from './modules/ratings/ratings.module.js';
 import { PatientsModule } from './modules/patients/patients.module.js';
-import { SpecialtiesModule } from './modules/specialties/specialties.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { AiModule } from './modules/ai/ai.module.js';
 import { ZatcaModule } from './modules/zatca/zatca.module.js';
@@ -39,6 +40,12 @@ import { EmailModule } from './modules/email/email.module.js';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module.js';
 import { ProblemReportsModule } from './modules/problem-reports/problem-reports.module.js';
 import { TasksModule } from './modules/tasks/tasks.module.js';
+import { ClinicModule } from './modules/clinic/clinic.module.js';
+import { CouponsModule } from './modules/coupons/coupons.module.js';
+import { IntakeFormsModule } from './modules/intake-forms/intake-forms.module.js';
+import { GiftCardsModule } from './modules/gift-cards/gift-cards.module.js';
+import { BranchesModule } from './modules/branches/branches.module.js';
+import { EmailTemplatesModule } from './modules/email-templates/email-templates.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
 import { MetricsModule } from './common/metrics/metrics.module.js';
 import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
@@ -60,11 +67,11 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
       inject: [ConfigService],
     }),
     ThrottlerModule.forRootAsync({
-      useFactory: (storage: ThrottlerStorage) => ({
+      useFactory: (redis: Redis) => ({
         throttlers: [{ ttl: THROTTLE_TTL, limit: THROTTLE_LIMIT }],
-        storage,
+        storage: new ThrottlerRedisStorage(redis),
       }),
-      inject: [ThrottlerStorage],
+      inject: [REDIS_CLIENT],
     }),
     DatabaseModule,
     StorageModule,
@@ -87,7 +94,6 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     ChatbotModule,
     RatingsModule,
     PatientsModule,
-    SpecialtiesModule,
     NotificationsModule,
     AiModule,
     ZatcaModule,
@@ -95,14 +101,16 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     MetricsModule,
     ProblemReportsModule,
     TasksModule,
+    ClinicModule,
+    CouponsModule,
+    IntakeFormsModule,
+    GiftCardsModule,
+    BranchesModule,
+    EmailTemplatesModule,
   ],
   controllers: [],
   providers: [
     StructuredLogger,
-    {
-      provide: ThrottlerStorage,
-      useClass: ThrottlerRedisStorage,
-    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

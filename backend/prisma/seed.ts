@@ -6,9 +6,10 @@ import {
   MODULES,
   ACTIONS,
   ROLES,
-  SPECIALTIES,
   WHITE_LABEL_DEFAULTS,
+  EMAIL_TEMPLATES,
 } from './seed.data';
+import { seedDemoData } from './seed.demo';
 
 const connectionString = process.env['DATABASE_URL'];
 if (!connectionString) {
@@ -73,18 +74,7 @@ async function main(): Promise<void> {
     console.log(`  Role "${roleDef.name}" created with ${permCount} permissions`);
   }
 
-  // 3. Create specialties
-  console.log('Creating specialties...');
-  for (const spec of SPECIALTIES) {
-    await prisma.specialty.upsert({
-      where: { nameEn: spec.nameEn },
-      update: { nameAr: spec.nameAr, sortOrder: spec.sortOrder },
-      create: { nameAr: spec.nameAr, nameEn: spec.nameEn, sortOrder: spec.sortOrder },
-    });
-  }
-  console.log(`  Created ${SPECIALTIES.length} specialties`);
-
-  // 4. Create WhiteLabel config defaults (includes ZATCA keys)
+  // 3. Create WhiteLabel config defaults (includes ZATCA keys)
   console.log('Creating WhiteLabel config...');
   for (const config of WHITE_LABEL_DEFAULTS) {
     await prisma.whiteLabelConfig.upsert({
@@ -100,7 +90,27 @@ async function main(): Promise<void> {
   }
   console.log(`  Created ${WHITE_LABEL_DEFAULTS.length} config entries`);
 
-  // 5. Create super_admin user
+  // 5. Create email templates
+  console.log('Creating email templates...');
+  for (const tpl of EMAIL_TEMPLATES) {
+    await prisma.emailTemplate.upsert({
+      where: { slug: tpl.slug },
+      update: {},
+      create: {
+        slug: tpl.slug,
+        nameAr: tpl.nameAr,
+        nameEn: tpl.nameEn,
+        subjectAr: tpl.subjectAr,
+        subjectEn: tpl.subjectEn,
+        bodyAr: tpl.bodyAr,
+        bodyEn: tpl.bodyEn,
+        variables: tpl.variables,
+      },
+    });
+  }
+  console.log(`  Created ${EMAIL_TEMPLATES.length} email templates`);
+
+  // 6. Create super_admin user
   console.log('Creating super_admin user...');
   const adminEmail = 'admin@carekit-test.com';
   const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
@@ -132,7 +142,12 @@ async function main(): Promise<void> {
     console.log(`  super_admin user already exists: ${adminEmail}`);
   }
 
-  console.log('Seeding complete!');
+  console.log('Base seeding complete!');
+
+  // 7. Seed demo/fake data for all models
+  await seedDemoData(prisma);
+
+  console.log('All seeding complete!');
 }
 
 main()

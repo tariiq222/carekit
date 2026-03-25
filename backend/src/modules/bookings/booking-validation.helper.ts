@@ -96,3 +96,85 @@ export async function checkDoubleBooking(
     throw new ConflictException({ statusCode: 409, message: 'Practitioner already has a booking at this time', error: 'BOOKING_CONFLICT' });
   }
 }
+
+// --- Clinic-level availability types ---
+
+interface ClinicHoursData {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  isActive: boolean;
+}
+
+interface ClinicHolidayData {
+  date: Date;
+  isRecurring: boolean;
+}
+
+/**
+ * Validates that the booking date/time falls within clinic working hours
+ * and does not land on a clinic holiday.
+ */
+export function validateClinicAvailability(
+  clinicHours: ClinicHoursData[],
+  holidays: ClinicHolidayData[],
+  date: Date,
+  startTime: string,
+  endTime: string,
+): void {
+  // Check holiday
+  const normalizedDate = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
+
+  const isHoliday = holidays.some((h) => {
+    const hDate = new Date(h.date);
+    if (h.isRecurring) {
+      return (
+        hDate.getUTCMonth() === normalizedDate.getUTCMonth() &&
+        hDate.getUTCDate() === normalizedDate.getUTCDate()
+      );
+    }
+    const hNorm = new Date(
+      Date.UTC(hDate.getFullYear(), hDate.getMonth(), hDate.getDate()),
+    );
+    return hNorm.getTime() === normalizedDate.getTime();
+  });
+
+  if (isHoliday) {
+    throw new BadRequestException({
+      statusCode: 400,
+      message: 'Clinic is closed on this holiday',
+      error: 'CLINIC_HOLIDAY',
+    });
+  }
+
+  // Check clinic hours
+  const dayOfWeek = date.getDay();
+  const dayHours = clinicHours.filter(
+    (h) => h.dayOfWeek === dayOfWeek && h.isActive,
+  );
+
+  if (dayHours.length === 0) {
+    throw new BadRequestException({
+      statusCode: 400,
+      message: 'Clinic is closed on this day',
+      error: 'CLINIC_CLOSED',
+    });
+  }
+
+  const startMin = toMinutes(startTime);
+  const endMin = toMinutes(endTime);
+
+  const fitsClinic = dayHours.some(
+    (h) => toMinutes(h.startTime) <= startMin && toMinutes(h.endTime) >= endMin,
+  );
+
+  if (!fitsClinic) {
+    throw new BadRequestException({
+      statusCode: 400,
+      message: 'Requested time is outside clinic working hours',
+      error: 'OUTSIDE_CLINIC_HOURS',
+    });
+  }
+}

@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareKit — الإعدادات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #354FD8;
+    --primary-light: #5B72E8;
+    --primary-ultra-light: rgba(53, 79, 216, 0.08);
+    --accent: #82CC17;
+    --accent-light: #A3E54A;
+    --accent-ultra-light: rgba(130, 204, 23, 0.10);
+    --bg: #F2F4F8;
+    --surface: rgba(255, 255, 255, 0.72);
+    --surface-solid: #FFFFFF;
+    --surface-muted: #F7F9FC;
+    --foreground: #1B2026;
+    --muted: #6B7280;
+    --border: rgba(0, 0, 0, 0.06);
+    --success: #16A34A;
+    --warning: #D97706;
+    --error: #DC2626;
+    --info: #2563EB;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-lg: 22px;
+    --radius-xl: 28px;
+    --blur: 24px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-md: 0 8px 24px rgba(0,0,0,0.06);
+    --shadow-lg: 0 20px 60px rgba(0,0,0,0.08);
+    --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--foreground);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ========== iOS FROSTED BACKGROUND ========== */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -120px;
+    left: -120px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(53, 79, 216, 0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+    animation: float1 20s ease-in-out infinite;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -100px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(130, 204, 23, 0.10) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+    animation: float2 25s ease-in-out infinite;
+  }
+
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(80px, 60px); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-60px, -80px); }
+  }
+
+  /* ========== LAYOUT ========== */
+  .layout {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ========== SIDEBAR ========== */
+  .sidebar {
+    width: 260px;
+    background: var(--surface);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+    border-left: 1px solid var(--border);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    z-index: 10;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    margin-bottom: 32px;
+  }
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .nav-section {
+    margin-bottom: 24px;
+  }
+  .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    padding: 0 12px;
+    margin-bottom: 8px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+  }
+  .nav-item:hover {
+    background: var(--primary-ultra-light);
+    color: var(--primary);
+  }
+  .nav-item.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(53, 79, 216, 0.25);
+  }
+  .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .nav-badge {
+    margin-right: auto;
+    margin-left: 0;
+    background: var(--error);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .user-name { font-size: 14px; font-weight: 600; }
+  .user-role { font-size: 12px; color: var(--muted); }
+
+  /* ========== MAIN CONTENT ========== */
+  .main {
+    flex: 1;
+    margin-right: 260px;
+    padding: 28px 32px;
+    padding-bottom: 100px;
+  }
+
+  /* ========== HEADER ========== */
+  .page-header {
+    margin-bottom: 28px;
+    animation: fadeInUp 0.5s ease-out 0.1s both;
+  }
+  .page-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .page-header p {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* ========== SETTINGS LAYOUT ========== */
+  .settings-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    animation: fadeInUp 0.5s ease-out 0.2s both;
+  }
+
+  /* ========== SETTINGS NAV (SIDE TABS) ========== */
+  .settings-nav {
+    background: var(--surface);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    height: fit-content;
+    position: sticky;
+    top: 28px;
+  }
+
+  .settings-tab {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: right;
+    font-family: inherit;
+  }
+  .settings-tab:hover {
+    background: var(--primary-ultra-light);
+    color: var(--primary);
+  }
+  .settings-tab.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(53, 79, 216, 0.25);
+  }
+  .settings-tab svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  /* ========== SETTINGS CONTENT ========== */
+  .settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ========== GLASS CARD ========== */
+  .glass-card {
+    background: var(--surface);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: var(--transition);
+  }
+  .glass-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title svg { width: 20px; height: 20px; color: var(--primary); }
+
+  /* ========== FORM ELEMENTS ========== */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .form-grid .full-width {
+    grid-column: 1 / -1;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+
+  .form-input {
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--foreground);
+    transition: var(--transition);
+    outline: none;
+    width: 100%;
+    text-align: right;
+  }
+  .form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(53, 79, 216, 0.1);
+  }
+  .form-input::placeholder {
+    color: var(--muted);
+  }
+
+  .form-select {
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--foreground);
+    transition: var(--transition);
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 16px center;
+    padding-left: 40px;
+  }
+  .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(53, 79, 216, 0.1);
+  }
+
+  .form-textarea {
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--foreground);
+    transition: var(--transition);
+    outline: none;
+    width: 100%;
+    resize: vertical;
+    min-height: 100px;
+    text-align: right;
+  }
+  .form-textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(53, 79, 216, 0.1);
+  }
+  .form-textarea::placeholder {
+    color: var(--muted);
+  }
+
+  /* ========== PASSWORD INPUT ========== */
+  .password-wrapper {
+    position: relative;
+  }
+  .password-wrapper .form-input {
+    padding-left: 48px;
+  }
+  .password-toggle {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    transition: var(--transition);
+  }
+  .password-toggle:hover { color: var(--primary); }
+  .password-toggle svg { width: 18px; height: 18px; }
+
+  /* ========== TOGGLE SWITCH ========== */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .toggle-row:last-child {
+    border-bottom: none;
+  }
+  .toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+  .toggle-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #D1D5DB;
+    border-radius: 24px;
+    transition: var(--transition);
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    right: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--transition);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .toggle-switch input:checked + .toggle-slider {
+    background: var(--success);
+  }
+  .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(-20px);
+  }
+  .toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+  }
+
+  /* ========== WORKING HOURS TABLE ========== */
+  .hours-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .hours-table th {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hours-table td {
+    padding: 12px 0;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .hours-table tr:last-child td { border-bottom: none; }
+
+  .hours-table .day-name {
+    font-weight: 600;
+    min-width: 80px;
+  }
+  .hours-table .closed-label {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .time-select {
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--foreground);
+    transition: var(--transition);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 10px center;
+    padding-left: 30px;
+    min-width: 110px;
+  }
+  .time-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(53, 79, 216, 0.1);
+  }
+  .time-select:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ========== BANK INFO SUB-SECTION ========== */
+  .sub-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .sub-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 16px;
+  }
+
+  /* ========== BUTTONS ========== */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(53, 79, 216, 0.25);
+  }
+  .btn-primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(53, 79, 216, 0.3);
+  }
+  .btn-primary svg { width: 18px; height: 18px; }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-solid);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .btn-secondary:hover {
+    background: var(--surface-muted);
+    color: var(--foreground);
+    border-color: rgba(0,0,0,0.1);
+  }
+
+  .card-save-btn {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ========== BOTTOM SAVE BAR ========== */
+  .save-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 260px;
+    z-index: 20;
+    background: var(--surface);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+    border-top: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.04);
+    animation: slideUp 0.4s ease-out both;
+  }
+  .save-bar-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--warning);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .save-bar-text svg { width: 18px; height: 18px; }
+  .save-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* ========== ANIMATIONS ========== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .settings-content .glass-card:nth-child(1) { animation: fadeInUp 0.5s ease-out 0.3s both; }
+  .settings-content .glass-card:nth-child(2) { animation: fadeInUp 0.5s ease-out 0.4s both; }
+  .settings-content .glass-card:nth-child(3) { animation: fadeInUp 0.5s ease-out 0.5s both; }
+  .settings-content .glass-card:nth-child(4) { animation: fadeInUp 0.5s ease-out 0.6s both; }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 1280px) {
+    .settings-layout {
+      grid-template-columns: 1fr;
+    }
+    .settings-nav {
+      position: static;
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+      overflow-x: auto;
+      padding: 8px;
+    }
+    .settings-tab {
+      white-space: nowrap;
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-right: 0; padding: 16px; padding-bottom: 100px; }
+    .save-bar { right: 0; padding: 14px 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .settings-nav {
+      position: static;
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+      overflow-x: auto;
+      padding: 8px;
+    }
+    .settings-tab {
+      white-space: nowrap;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">C</div>
+      <div>
+        <div class="logo-text">CareKit</div>
+        <div class="logo-sub">إدارة العيادات الذكية</div>
+      </div>
+    </div>
+
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">الرئيسية</div>
+        <a class="nav-item" href="dashboard-v1-frosted.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          لوحة التحكم
+        </a>
+        <a class="nav-item" href="bookings-page-frosted.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          الحجوزات
+          <span class="nav-badge">5</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          المرضى
+        </a>
+        <a class="nav-item" href="practitioners-page-frosted.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          الممارسين
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">المالية</div>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          المدفوعات
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          الفواتير
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">النظام</div>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          التقارير
+        </a>
+        <a class="nav-item active" href="settings-page-frosted.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          الإعدادات
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar">ط</div>
+      <div>
+        <div class="user-name">طارق أحمد</div>
+        <div class="user-role">مدير النظام</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>الإعدادات</h1>
+      <p>إدارة إعدادات العيادة والنظام</p>
+    </div>
+
+    <!-- Settings Layout -->
+    <div class="settings-layout">
+      <!-- Settings Navigation (Side Tabs) -->
+      <div class="settings-nav">
+        <button class="settings-tab active">
+          <!-- Building icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+          معلومات العيادة
+        </button>
+        <button class="settings-tab">
+          <!-- Clock icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          ساعات العمل
+        </button>
+        <button class="settings-tab">
+          <!-- Calendar icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          الحجوزات
+        </button>
+        <button class="settings-tab">
+          <!-- Credit card icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          المدفوعات
+        </button>
+        <button class="settings-tab">
+          <!-- Bell icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          الإشعارات
+        </button>
+        <button class="settings-tab">
+          <!-- Shield icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          الأمان
+        </button>
+        <button class="settings-tab">
+          <!-- Palette icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="19" cy="13.5" r="2.5"/><circle cx="6.5" cy="8.5" r="2.5"/><circle cx="8" cy="16" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.65 1.5-1.5 0-.39-.16-.74-.47-1.01A1.42 1.42 0 0 1 12.5 18c0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.5-4.5-8.5-10-8.5z"/></svg>
+          العلامة التجارية
+        </button>
+      </div>
+
+      <!-- Settings Content Area -->
+      <div class="settings-content">
+
+        <!-- 1. Clinic Info Form -->
+        <div class="glass-card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+            معلومات العيادة الأساسية
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>اسم العيادة</label>
+              <input type="text" class="form-input" value="عيادة الرعاية الطبية" />
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" class="form-input" value="info@carekit-clinic.com" dir="ltr" style="text-align:left;" />
+            </div>
+            <div class="form-group">
+              <label>رقم الهاتف</label>
+              <input type="tel" class="form-input" value="+966 50 123 4567" dir="ltr" style="text-align:left;" />
+            </div>
+            <div class="form-group">
+              <label>العنوان</label>
+              <input type="text" class="form-input" value="الرياض، حي العليا، شارع التحلية" />
+            </div>
+            <div class="form-group">
+              <label>المدينة</label>
+              <select class="form-select">
+                <option value="riyadh" selected>الرياض</option>
+                <option value="jeddah">جدة</option>
+                <option value="dammam">الدمام</option>
+                <option value="makkah">مكة المكرمة</option>
+                <option value="madinah">المدينة المنورة</option>
+                <option value="abha">أبها</option>
+                <option value="tabuk">تبوك</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الرقم الضريبي</label>
+              <input type="text" class="form-input" value="300000000000003" dir="ltr" style="text-align:left;" />
+            </div>
+          </div>
+          <div class="card-save-btn">
+            <button class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              حفظ المعلومات
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Working Hours -->
+        <div class="glass-card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ساعات العمل
+          </div>
+          <table class="hours-table">
+            <thead>
+              <tr>
+                <th>اليوم</th>
+                <th>وقت البدء</th>
+                <th>وقت الانتهاء</th>
+                <th style="text-align: center;">الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- الأحد -->
+              <tr>
+                <td class="day-name">الأحد</td>
+                <td>
+                  <select class="time-select">
+                    <option value="07:00">07:00</option>
+                    <option value="08:00" selected>08:00</option>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="time-select">
+                    <option value="15:00">15:00</option>
+                    <option value="16:00" selected>16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                  </select>
+                </td>
+                <td style="text-align: center;">
+                  <label class="toggle-switch">
+                    <input type="checkbox" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+              </tr>
+              <!-- الإثنين -->
+              <tr>
+                <td class="day-name">الإثنين</td>
+                <td>
+                  <select class="time-select">
+                    <option value="07:00">07:00</option>
+                    <option value="08:00" selected>08:00</option>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="time-select">
+                    <option value="15:00">15:00</option>
+                    <option value="16:00" selected>16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                  </select>
+                </td>
+                <td style="text-align: center;">
+                  <label class="toggle-switch">
+                    <input type="checkbox" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+              </tr>
+              <!-- الثلاثاء -->
+              <tr>
+                <td class="day-name">الثلاثاء</td>
+                <td>
+                  <select class="time-select">
+                    <option value="07:00">07:00</option>
+                    <option value="08:00" selected>08:00</option>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="time-select">
+                    <option value="15:00">15:00</option>
+                    <option value="16:00" selected>16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                  </select>
+                </td>
+                <td style="text-align: center;">
+                  <label class="toggle-switch">
+                    <input type="checkbox" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+              </tr>
+              <!-- الأربعاء -->
+              <tr>
+                <td class="day-name">الأربعاء</td>
+                <td>
+                  <select class="time-select">
+                    <option value="07:00">07:00</option>
+                    <option value="08:00" selected>08:00</option>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="time-select">
+                    <option value="15:00">15:00</option>
+                    <option value="16:00" selected>16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                  </select>
+                </td>
+                <td style="text-align: center;">
+                  <label class="toggle-switch">
+                    <input type="checkbox" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+              </tr>
+              <!-- الخميس -->
+              <tr>
+                <td class="day-name">الخميس</td>
+                <td>
+                  <select class="time-select">
+                    <option value="07:00">07:00</option>
+                    <option value="08:00" selected>08:00</option>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="time-select">
+                    <option value="15:00">15:00</option>
+                    <option value="16:00" selected>16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                  </select>
+                </td>
+                <td style="text-align: center;">
+                  <label class="toggle-switch">
+                    <input type="checkbox" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+              </tr>
+              <!-- الجمعة -->
+              <tr>
+                <td class="day-name">الجمعة</td>
+                <td><span class="closed-label">مغلق</span></td>
+                <td><span class="closed-label">--</span></td>
+                <td style="text-align: center;">
+                  <label class="toggle-switch">
+                    <input type="checkbox" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+              </tr>
+              <!-- السبت -->
+              <tr>
+                <td class="day-name">السبت</td>
+                <td><span class="closed-label">مغلق</span></td>
+                <td><span class="closed-label">--</span></td>
+                <td style="text-align: center;">
+                  <label class="toggle-switch">
+                    <input type="checkbox" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 3. Booking Settings -->
+        <div class="glass-card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            إعدادات الحجوزات
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>مدة الحجز الافتراضية</label>
+              <select class="form-select">
+                <option value="15">15 دقيقة</option>
+                <option value="30" selected>30 دقيقة</option>
+                <option value="45">45 دقيقة</option>
+                <option value="60">60 دقيقة</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الفترة بين الحجوزات</label>
+              <select class="form-select">
+                <option value="5">5 دقائق</option>
+                <option value="10" selected>10 دقائق</option>
+                <option value="15">15 دقيقة</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الحد الأقصى للحجوزات اليومية لكل ممارس</label>
+              <input type="number" class="form-input" value="20" min="1" max="100" />
+            </div>
+            <div class="form-group full-width">
+              <label>سياسة الإلغاء</label>
+              <textarea class="form-textarea" placeholder="أدخل نص سياسة الإلغاء..."></textarea>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">السماح بالحجز عبر الإنترنت</div>
+                <div class="toggle-desc">يمكن للمرضى حجز المواعيد من التطبيق أو الموقع</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">السماح باستشارات الفيديو</div>
+                <div class="toggle-desc">تفعيل خيار الاستشارات عبر مكالمات الفيديو</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">السماح بالاستشارات الهاتفية</div>
+                <div class="toggle-desc">تفعيل خيار الاستشارات عبر الهاتف</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Payment Settings -->
+        <div class="glass-card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            إعدادات المدفوعات
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>مزود الدفع</label>
+              <select class="form-select">
+                <option value="moyasar" selected>Moyasar</option>
+                <option value="tap">Tap Payments</option>
+                <option value="hyperpay">HyperPay</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>مفتاح API</label>
+              <div class="password-wrapper">
+                <input type="password" class="form-input" value="sk_live_xxxxxxxxxxxxx" dir="ltr" style="text-align:left;" id="apiKey" />
+                <button class="password-toggle" id="toggleBtn" type="button" aria-label="إظهار/إخفاء المفتاح">
+                  <!-- Eye open icon (visible state) -->
+                  <svg id="eyeOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <!-- Eye closed icon (hidden by default) -->
+                  <svg id="eyeClosed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>العملة</label>
+              <select class="form-select">
+                <option value="SAR" selected>ريال سعودي (SAR)</option>
+                <option value="AED">درهم إماراتي (AED)</option>
+                <option value="KWD">دينار كويتي (KWD)</option>
+                <option value="BHD">دينار بحريني (BHD)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">تفعيل الدفع الإلكتروني</div>
+                <div class="toggle-desc">قبول الدفع عبر مدى، Apple Pay، Visa/Mastercard</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">تفعيل التحويل البنكي</div>
+                <div class="toggle-desc">السماح للمرضى بالدفع عبر التحويل البنكي</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Bank Info Sub-section -->
+          <div class="sub-section">
+            <div class="sub-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-left:6px;color:var(--primary)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              معلومات الحساب البنكي
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>اسم البنك</label>
+                <input type="text" class="form-input" placeholder="مثال: البنك الأهلي السعودي" />
+              </div>
+              <div class="form-group">
+                <label>رقم الآيبان</label>
+                <input type="text" class="form-input" placeholder="SA00 0000 0000 0000 0000 0000" dir="ltr" style="text-align:left;" />
+              </div>
+              <div class="form-group">
+                <label>اسم صاحب الحساب</label>
+                <input type="text" class="form-input" placeholder="الاسم كما يظهر في الحساب البنكي" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Save Bar -->
+  <div class="save-bar">
+    <div class="save-bar-text">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      تم تعديل الإعدادات
+    </div>
+    <div class="save-bar-actions">
+      <button class="btn-secondary">إلغاء التغييرات</button>
+      <button class="btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        حفظ الإعدادات
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Password toggle using safe DOM methods (no innerHTML)
+  document.getElementById('toggleBtn').addEventListener('click', function() {
+    var input = document.getElementById('apiKey');
+    var eyeOpen = document.getElementById('eyeOpen');
+    var eyeClosed = document.getElementById('eyeClosed');
+    if (input.type === 'password') {
+      input.type = 'text';
+      eyeOpen.style.display = 'none';
+      eyeClosed.style.display = 'block';
+    } else {
+      input.type = 'password';
+      eyeOpen.style.display = 'block';
+      eyeClosed.style.display = 'none';
+    }
+  });
+</script>
+</body>
+</html>

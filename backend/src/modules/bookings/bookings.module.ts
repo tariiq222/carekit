@@ -9,14 +9,17 @@ import { BookingQueryService } from './booking-query.service.js';
 import { BookingRecurringService } from './booking-recurring.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
 import { BookingStatusService } from './booking-status.service.js';
+import { BookingStatusLogService } from './booking-status-log.service.js';
 import { BookingPaymentHelper } from './booking-payment.helper.js';
 import { BookingLookupHelper } from './booking-lookup.helper.js';
+import { PriceResolverService } from './price-resolver.service.js';
 import { WaitlistService } from './waitlist.service.js';
 import { ZoomModule } from '../integrations/zoom/zoom.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
+import { ClinicModule } from '../clinic/clinic.module.js';
 
 @Module({
-  imports: [NotificationsModule, ZoomModule],
+  imports: [NotificationsModule, ZoomModule, ClinicModule],
   controllers: [WaitlistController, BookingsController, BookingSettingsController],
   providers: [
     BookingsService,
@@ -26,10 +29,12 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
     BookingRecurringService,
     BookingSettingsService,
     BookingStatusService,
+    BookingStatusLogService,
     BookingPaymentHelper,
     BookingLookupHelper,
+    PriceResolverService,
     WaitlistService,
   ],
-  exports: [BookingsService, BookingSettingsService, BookingStatusService, WaitlistService],
+  exports: [BookingsService, BookingSettingsService, BookingStatusService, BookingStatusLogService, PriceResolverService, WaitlistService],
 })
 export class BookingsModule {}

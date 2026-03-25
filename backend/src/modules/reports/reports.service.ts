@@ -162,7 +162,6 @@ export class ReportsService {
       where: { id: practitionerId, deletedAt: null },
       include: {
         user: { select: { firstName: true, lastName: true } },
-        specialty: { select: { nameEn: true, nameAr: true } },
       },
     });
 
@@ -210,7 +209,7 @@ export class ReportsService {
       id: practitioner.id,
       name: `${practitioner.user.firstName} ${practitioner.user.lastName}`,
       specialty:
-        practitioner.specialty.nameAr || practitioner.specialty.nameEn,
+        practitioner.specialtyAr || practitioner.specialty,
       rating: practitioner.rating,
       reviewCount: practitioner.reviewCount,
       totalBookings,

@@ -6,6 +6,7 @@ import { PractitionerAvailabilityService } from './practitioner-availability.ser
 import { PractitionerVacationService } from './practitioner-vacation.service.js';
 import { PractitionerServiceService } from './practitioner-service.service.js';
 import { PractitionerRatingsService } from './practitioner-ratings.service.js';
+import { PractitionerBreaksService } from './practitioner-breaks.service.js';
 import { FavoritePractitionersService } from './favorite-practitioners.service.js';
 
 @Module({
@@ -14,6 +15,7 @@ import { FavoritePractitionersService } from './favorite-practitioners.service.j
     PractitionersService,
     PractitionerAvailabilityService,
     PractitionerVacationService,
+    PractitionerBreaksService,
     PractitionerServiceService,
     PractitionerRatingsService,
     FavoritePractitionersService,

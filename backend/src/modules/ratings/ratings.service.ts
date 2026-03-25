@@ -78,7 +78,7 @@ export class RatingsService {
     ]);
 
     return {
-      data: ratings,
+      items: ratings,
       meta: buildPaginationMeta(total, page, perPage),
     };
   }

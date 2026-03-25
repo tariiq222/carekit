@@ -78,7 +78,6 @@ export class FavoritePractitionersService {
                 avatarUrl: true,
               },
             },
-            specialty: { select: { nameAr: true, nameEn: true } },
           },
         },
       },

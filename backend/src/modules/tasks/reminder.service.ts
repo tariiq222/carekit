@@ -118,4 +118,130 @@ export class ReminderService {
       this.logger.log(`Sent ${bookings.length} hour-before reminders`);
     }
   }
+
+  /** Check for bookings ~2h away and notify both patient and practitioner */
+  async sendTwoHourReminders() {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        status: 'confirmed',
+        date: today,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        date: true,
+        startTime: true,
+        patientId: true,
+        practitioner: {
+          select: { userId: true },
+        },
+      },
+    });
+
+    const matched = bookings.filter((booking) => {
+      const bookingDt = this.combineDateAndTime(booking.date, booking.startTime);
+      const diffMin = (bookingDt.getTime() - now.getTime()) / 60_000;
+      return diffMin >= 90 && diffMin <= 150; // 1.5h–2.5h window
+    });
+
+    await Promise.all(
+      matched.flatMap((booking) => {
+        const notifications: Promise<unknown>[] = [];
+
+        if (booking.patientId) {
+          notifications.push(
+            this.notificationsService.createNotification({
+              userId: booking.patientId,
+              titleAr: 'موعدك بعد ساعتين',
+              titleEn: 'Appointment in 2 Hours',
+              bodyAr: `تذكير: موعدك بعد ساعتين الساعة ${booking.startTime}`,
+              bodyEn: `Reminder: Your appointment is in 2 hours at ${booking.startTime}`,
+              type: 'booking_reminder',
+              data: { bookingId: booking.id },
+            }),
+          );
+        }
+
+        if (booking.practitioner?.userId) {
+          notifications.push(
+            this.notificationsService.createNotification({
+              userId: booking.practitioner.userId,
+              titleAr: 'موعدك بعد ساعتين',
+              titleEn: 'Appointment in 2 Hours',
+              bodyAr: `تذكير: لديك موعد بعد ساعتين الساعة ${booking.startTime}`,
+              bodyEn: `Reminder: You have an appointment in 2 hours at ${booking.startTime}`,
+              type: 'booking_reminder',
+              data: { bookingId: booking.id },
+            }),
+          );
+        }
+
+        return notifications;
+      }),
+    );
+
+    if (matched.length > 0) {
+      this.logger.log(`Sent ${matched.length} two-hour reminders`);
+    }
+  }
+
+  /** Check for bookings ~15min away and notify the patient only */
+  async sendUrgentReminders() {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        status: 'confirmed',
+        date: today,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        date: true,
+        startTime: true,
+        patientId: true,
+        practitioner: {
+          select: { userId: true },
+        },
+      },
+    });
+
+    const matched = bookings.filter((booking) => {
+      const bookingDt = this.combineDateAndTime(booking.date, booking.startTime);
+      const diffMin = (bookingDt.getTime() - now.getTime()) / 60_000;
+      return diffMin >= 10 && diffMin <= 20; // 10–20min window
+    });
+
+    await Promise.all(
+      matched
+        .filter((booking) => booking.patientId)
+        .map((booking) =>
+          this.notificationsService.createNotification({
+            userId: booking.patientId!,
+            titleAr: 'موعدك بعد 15 دقيقة!',
+            titleEn: 'Appointment in 15 Minutes!',
+            bodyAr: `تذكير عاجل: موعدك بعد 15 دقيقة الساعة ${booking.startTime}`,
+            bodyEn: `Urgent: Your appointment is in 15 minutes at ${booking.startTime}`,
+            type: 'booking_reminder_urgent',
+            data: { bookingId: booking.id },
+          }),
+        ),
+    );
+
+    if (matched.length > 0) {
+      this.logger.log(`Sent ${matched.length} urgent (15-min) reminders`);
+    }
+  }
+
+  /** Combine a date-only Date with an HH:mm startTime string */
+  private combineDateAndTime(date: Date, startTime: string): Date {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const combined = new Date(date);
+    combined.setHours(hours, minutes, 0, 0);
+    return combined;
+  }
 }

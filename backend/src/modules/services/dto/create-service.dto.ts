@@ -1,5 +1,6 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateServiceDto {
   @IsString()
@@ -37,4 +38,91 @@ export class CreateServiceDto {
   @IsInt()
   @Min(1)
   duration?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isHidden?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  hidePriceOnBooking?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  hideDurationOnBooking?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'calendarColor must be a valid hex color' })
+  calendarColor?: string;
+
+  // ── Booking settings per service ───────────────────────────────
+  @ApiPropertyOptional({ minimum: 0, maximum: 120 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(120)
+  bufferBeforeMinutes?: number;
+
+  @ApiPropertyOptional({ minimum: 0, maximum: 120 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(120)
+  bufferAfterMinutes?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  depositEnabled?: boolean;
+
+  @ApiPropertyOptional({ minimum: 1, maximum: 100 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  depositPercent?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  allowRecurring?: boolean;
+
+  @ApiPropertyOptional({ enum: ['daily', 'every_2_days', 'every_3_days', 'weekly', 'biweekly', 'monthly'], isArray: true })
+  @IsOptional()
+  @IsArray()
+  @IsIn(['daily', 'every_2_days', 'every_3_days', 'weekly', 'biweekly', 'monthly'], { each: true })
+  allowedRecurringPatterns?: string[];
+
+  @ApiPropertyOptional({ minimum: 1, maximum: 52 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(52)
+  maxRecurrences?: number;
+
+  @ApiPropertyOptional({ minimum: 1, maximum: 100 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  maxParticipants?: number;
+
+  @ApiPropertyOptional({ minimum: 0, maximum: 1440 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(1440)
+  minLeadMinutes?: number;
+
+  @ApiPropertyOptional({ minimum: 1, maximum: 365 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  maxAdvanceDays?: number;
 }

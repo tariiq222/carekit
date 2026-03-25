@@ -43,12 +43,15 @@ export class MoyasarPaymentService {
     const existingPayment = await this.prisma.payment.findUnique({
       where: { bookingId: dto.bookingId },
     });
-    if (existingPayment) {
+    if (existingPayment && !['failed'].includes(existingPayment.status)) {
       throw new BadRequestException({
         statusCode: 400,
         message: 'Payment already exists for this booking',
         error: 'DUPLICATE_PAYMENT',
       });
+    }
+    if (existingPayment?.status === 'failed') {
+      await this.prisma.payment.delete({ where: { id: existingPayment.id } });
     }
 
     const { amount, vatAmount, totalAmount } = calculateAmounts(booking);
@@ -211,9 +214,25 @@ export class MoyasarPaymentService {
       await this.bookingStatusService.confirm(bookingId);
       this.logger.log(`Auto-confirmed booking ${bookingId} after payment`);
     } catch (err) {
-      this.logger.warn(
-        `Auto-confirm skipped for booking of payment ${paymentId}: ${err instanceof Error ? err.message : 'unknown'}`,
-      );
+      // Race recovery: if cron expired the booking while payment was processing,
+      // revert to confirmed since money was actually paid
+      const booking = await this.prisma.booking.findUnique({
+        where: { id: bookingId },
+        select: { status: true },
+      });
+      if (booking?.status === 'expired') {
+        await this.prisma.booking.update({
+          where: { id: bookingId },
+          data: { status: 'confirmed', confirmedAt: new Date(), cancelledBy: null },
+        });
+        this.logger.warn(
+          `Recovered expired booking ${bookingId} → confirmed (payment ${paymentId} was paid)`,
+        );
+      } else {
+        this.logger.warn(
+          `Auto-confirm skipped for booking of payment ${paymentId}: ${err instanceof Error ? err.message : 'unknown'}`,
+        );
+      }
     }
   }
 

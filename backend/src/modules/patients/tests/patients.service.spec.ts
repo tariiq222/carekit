@@ -53,7 +53,7 @@ describe('PatientsService', () => {
 
       expect(result.meta.page).toBe(1);
       expect(result.meta.perPage).toBe(20);
-      expect(result.data).toEqual([mockPatient]);
+      expect(result.items).toEqual([mockPatient]);
     });
 
     it('returns correct totalPages=3 when total=50 and perPage=20', async () => {
@@ -112,7 +112,7 @@ describe('PatientsService', () => {
 
       const result = await service.findAll({});
 
-      expect(result.data).toEqual([]);
+      expect(result.items).toEqual([]);
       expect(result.meta.total).toBe(0);
     });
 

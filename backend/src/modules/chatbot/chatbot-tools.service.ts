@@ -69,7 +69,7 @@ export class ChatbotToolsService {
   private async listPractitioners(args: Record<string, unknown>): Promise<ToolResult> {
     const result = await this.practitionersService.findAll({
       search: args.search as string | undefined,
-      specialtyId: args.specialtyId as string | undefined,
+      specialty: args.specialty as string | undefined,
       perPage: 10,
     });
     return { success: true, data: result.items };

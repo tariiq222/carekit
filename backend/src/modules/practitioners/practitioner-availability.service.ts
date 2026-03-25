@@ -69,7 +69,11 @@ export class PractitionerAvailabilityService {
       });
     }
 
-    await ensurePractitionerExists(this.prisma, practitionerId);
+    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
+
+    if (!practitioner.isAcceptingBookings) {
+      return { date, practitionerId, slots: [] };
+    }
 
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
@@ -94,7 +98,20 @@ export class PractitionerAvailabilityService {
       return { date, practitionerId, slots: [] };
     }
 
-    const allSlots = this.generateSlots(availabilities, duration);
+    const settings = await this.prisma.bookingSettings.findFirst();
+    const bufferMinutes = settings?.bufferMinutes ?? 0;
+    const isToday = this.isSameLocalDate(targetDate, new Date());
+
+    const allSlots = this.generateSlots(availabilities, duration, bufferMinutes, isToday);
+
+    // Subtract breaks for this day
+    const breaks = await this.prisma.practitionerBreak.findMany({
+      where: { practitionerId, dayOfWeek },
+    });
+
+    const slotsWithoutBreaks = allSlots.filter((slot) =>
+      !breaks.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
+    );
 
     // Subtract booked slots so the public API shows real availability
     const targetDateStart = new Date(normalizedDate);
@@ -105,13 +122,13 @@ export class PractitionerAvailabilityService {
       where: {
         practitionerId,
         date: { gte: targetDateStart, lte: targetDateEnd },
-        status: { in: ['confirmed', 'pending'] },
+        status: { in: ['confirmed', 'pending', 'walk_in'] },
         deletedAt: null,
       },
       select: { startTime: true, endTime: true },
     });
 
-    const slots = allSlots.map((slot) => {
+    const slots = slotsWithoutBreaks.map((slot) => {
       const isBooked = bookings.some((b) =>
         timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime),
       );
@@ -122,7 +139,11 @@ export class PractitionerAvailabilityService {
   }
 
   async getAvailableSlots(practitionerId: string, date: string, duration: number = 30) {
-    await ensurePractitionerExists(this.prisma, practitionerId);
+    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
+
+    if (!practitioner.isAcceptingBookings) {
+      return [];
+    }
 
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
@@ -155,15 +176,28 @@ export class PractitionerAvailabilityService {
       where: {
         practitionerId,
         date: { gte: targetDateStart, lte: targetDateEnd },
-        status: { in: ['confirmed', 'pending'] },
+        status: { in: ['confirmed', 'pending', 'walk_in'] },
         deletedAt: null,
       },
       select: { startTime: true, endTime: true },
     });
 
-    const allSlots = this.generateSlots(availabilities, duration);
+    const settings = await this.prisma.bookingSettings.findFirst();
+    const bufferMinutes = settings?.bufferMinutes ?? 0;
+    const isToday = this.isSameLocalDate(targetDate, new Date());
 
-    return allSlots.filter((slot) => {
+    const allSlots = this.generateSlots(availabilities, duration, bufferMinutes, isToday);
+
+    // Subtract breaks for this day
+    const breaks = await this.prisma.practitionerBreak.findMany({
+      where: { practitionerId, dayOfWeek },
+    });
+
+    const slotsWithoutBreaks = allSlots.filter((slot) =>
+      !breaks.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
+    );
+
+    return slotsWithoutBreaks.filter((slot) => {
       const isBooked = bookings.some((b) =>
         timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime),
       );
@@ -176,8 +210,14 @@ export class PractitionerAvailabilityService {
   private generateSlots(
     availabilities: Array<{ startTime: string; endTime: string }>,
     duration: number,
+    bufferMinutes: number = 0,
+    isToday: boolean = false,
   ) {
     const slots: Array<{ startTime: string; endTime: string; available: boolean }> = [];
+    const step = duration + bufferMinutes;
+
+    // Current time in Asia/Riyadh for today filtering
+    const nowMinutes = isToday ? this.getNowMinutesRiyadh() : -1;
 
     for (const avail of availabilities) {
       const [startH, startM] = avail.startTime.split(':').map(Number);
@@ -185,14 +225,38 @@ export class PractitionerAvailabilityService {
       const startMinutes = startH * 60 + startM;
       const endMinutes = endH * 60 + endM;
 
-      for (let m = startMinutes; m + duration <= endMinutes; m += duration) {
+      for (let m = startMinutes; m + duration <= endMinutes; m += step) {
+        const slotEndMinutes = m + duration;
+        // Skip past slots when viewing today
+        if (isToday && slotEndMinutes <= nowMinutes) continue;
+
         const slotStart = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-        const slotEnd = `${String(Math.floor((m + duration) / 60)).padStart(2, '0')}:${String((m + duration) % 60).padStart(2, '0')}`;
+        const slotEnd = `${String(Math.floor(slotEndMinutes / 60)).padStart(2, '0')}:${String(slotEndMinutes % 60).padStart(2, '0')}`;
         slots.push({ startTime: slotStart, endTime: slotEnd, available: true });
       }
     }
 
     return slots;
+  }
+
+  /** Returns current time as minutes-since-midnight in Asia/Riyadh timezone */
+  private getNowMinutesRiyadh(): number {
+    const now = new Date();
+    const riyadhTime = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Riyadh',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    }).format(now);
+    const [h, m] = riyadhTime.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  /** Compares two dates by local calendar day in Asia/Riyadh timezone */
+  private isSameLocalDate(a: Date, b: Date): boolean {
+    const fmt = (d: Date) =>
+      new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(d);
+    return fmt(a) === fmt(b);
   }
 
   private validateScheduleSlots(schedule: Array<{ dayOfWeek: number; startTime: string; endTime: string }>) {

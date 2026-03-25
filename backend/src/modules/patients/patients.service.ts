@@ -56,7 +56,7 @@ export class PatientsService {
     ]);
 
     return {
-      data: patients,
+      items: patients,
       meta: buildPaginationMeta(total, page, perPage),
     };
   }

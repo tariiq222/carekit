@@ -3,15 +3,20 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
   Min,
 } from 'class-validator';
 
 export class UpdatePractitionerDto {
   @IsOptional()
-  @IsUUID()
-  specialtyId?: string;
+  @IsString()
+  @MaxLength(200)
+  specialty?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  specialtyAr?: string;
 
   @IsOptional()
   @IsString()

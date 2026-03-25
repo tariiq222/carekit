@@ -1,4 +1,5 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBookingDto {
   @IsUUID()
@@ -34,4 +35,9 @@ export class CreateBookingDto {
   @IsOptional()
   @IsUUID()
   patientId?: string;
+
+  @ApiPropertyOptional({ description: 'Duration option ID if selecting a specific duration/price option' })
+  @IsOptional()
+  @IsUUID()
+  durationOptionId?: string;
 }

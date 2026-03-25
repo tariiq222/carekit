@@ -81,7 +81,7 @@ describe('ChatbotToolsService', () => {
       expect(result.success).toBe(true);
       expect(mockPractitionersService.findAll).toHaveBeenCalledWith({
         search: 'Ahmed',
-        specialtyId: undefined,
+        specialty: undefined,
         perPage: 10,
       });
     });

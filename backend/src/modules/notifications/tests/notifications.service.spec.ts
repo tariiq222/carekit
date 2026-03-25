@@ -27,6 +27,7 @@ import { NotificationsService } from '../notifications.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { PushService } from '../push.service.js';
 import { SmsService } from '../sms.service.js';
+import { WhitelabelService } from '../../whitelabel/whitelabel.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -132,6 +133,10 @@ const mockSmsService: any = {
   sendSms: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockWhitelabelService: any = {
+  getConfigMap: jest.fn().mockResolvedValue({}),
+};
+
 describe('NotificationsService', () => {
   let service: NotificationsService;
 
@@ -142,6 +147,7 @@ describe('NotificationsService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: PushService, useValue: mockPushService },
         { provide: SmsService, useValue: mockSmsService },
+        { provide: WhitelabelService, useValue: mockWhitelabelService },
       ],
     }).compile();
 

@@ -18,6 +18,7 @@ export const MODULES = [
   'whitelabel',
   'patients',
   'ratings',
+  'coupons',
 ] as const;
 
 export const ACTIONS = ['view', 'create', 'edit', 'delete'] as const;
@@ -45,6 +46,16 @@ export const ROLES: RoleDefinition[] = [
     permissions: Object.fromEntries(MODULES.map((m) => [m, [...ACTIONS]])),
   },
   {
+    name: 'Admin',
+    slug: 'admin',
+    description: 'Clinic manager with full access except white-label and role management',
+    isDefault: false,
+    isSystem: true,
+    permissions: Object.fromEntries(
+      MODULES.filter((m) => m !== 'whitelabel' && m !== 'roles').map((m) => [m, [...ACTIONS]]),
+    ),
+  },
+  {
     name: 'Receptionist',
     slug: 'receptionist',
     description: 'Front desk staff managing bookings and patients',
@@ -58,6 +69,7 @@ export const ROLES: RoleDefinition[] = [
       notifications: ['view', 'create', 'edit'],
       payments: ['view'],
       invoices: ['view'],
+      coupons: ['view'],
     },
   },
   {
@@ -71,6 +83,7 @@ export const ROLES: RoleDefinition[] = [
       invoices: ['view', 'create', 'edit'],
       reports: ['view', 'create', 'edit'],
       bookings: ['view'],
+      coupons: ['view', 'create', 'edit', 'delete'],
     },
   },
   {
@@ -101,21 +114,6 @@ export const ROLES: RoleDefinition[] = [
       services: ['view'],
     },
   },
-];
-
-// ──────────────────────────────────────────────
-// Specialties
-// ──────────────────────────────────────────────
-
-export const SPECIALTIES = [
-  { nameEn: 'General Medicine', nameAr: 'الطب العام', sortOrder: 0 },
-  { nameEn: 'Dentistry', nameAr: 'طب الأسنان', sortOrder: 1 },
-  { nameEn: 'Dermatology', nameAr: 'الأمراض الجلدية', sortOrder: 2 },
-  { nameEn: 'Pediatrics', nameAr: 'طب الأطفال', sortOrder: 3 },
-  { nameEn: 'Ophthalmology', nameAr: 'طب العيون', sortOrder: 4 },
-  { nameEn: 'Cardiology', nameAr: 'أمراض القلب', sortOrder: 5 },
-  { nameEn: 'Orthopedics', nameAr: 'جراحة العظام', sortOrder: 6 },
-  { nameEn: 'ENT', nameAr: 'أنف وأذن وحنجرة', sortOrder: 7 },
 ];
 
 // ──────────────────────────────────────────────
@@ -160,9 +158,7 @@ export const WHITE_LABEL_DEFAULTS: WhiteLabelEntry[] = [
   // AI
   { key: 'openrouter_api_key', value: '', type: 'string', description: 'OpenRouter API key for AI chatbot' },
 
-  // Content (AR/EN)
-  { key: 'cancellation_policy', value: 'Default cancellation policy', type: 'string', description: 'Cancellation policy text (English)' },
-  { key: 'cancellation_policy_ar', value: 'سياسة الإلغاء الافتراضية', type: 'string', description: 'Cancellation policy text (Arabic)' },
+  // Content (AR/EN) — cancellation policy text moved to BookingSettings
   { key: 'about_ar', value: '', type: 'string', description: 'About clinic text (Arabic)' },
   { key: 'about_en', value: '', type: 'string', description: 'About clinic text (English)' },
   { key: 'privacy_policy_ar', value: '', type: 'string', description: 'Privacy policy text (Arabic)' },
@@ -184,4 +180,61 @@ export const WHITE_LABEL_DEFAULTS: WhiteLabelEntry[] = [
   { key: 'session_duration', value: '30', type: 'string', description: 'Default session duration in minutes' },
   { key: 'reminder_before_minutes', value: '60', type: 'string', description: 'Send reminder X minutes before appointment' },
   { key: 'firebase_config', value: '{}', type: 'json', description: 'Firebase FCM configuration (JSON)' },
+];
+
+// ──────────────────────────────────────────────
+// Email Templates
+// ──────────────────────────────────────────────
+
+export const EMAIL_TEMPLATES = [
+  {
+    slug: 'otp-login',
+    nameEn: 'OTP Login',
+    nameAr: 'رمز تسجيل الدخول',
+    subjectEn: 'Your Login Code',
+    subjectAr: 'رمز تسجيل الدخول',
+    bodyEn: 'Hi {{firstName}},\n\nYour login verification code is: {{code}}\n\nThis code expires in 10 minutes. If you did not request this, please ignore this email.',
+    bodyAr: '{{firstName}} ,مرحبا\n\n{{code}} :رمز التحقق لتسجيل الدخول هو\n\n.صالح لمدة 10 دقائق. إذا لم تطلب هذا الرمز، يرجى تجاهل هذا البريد',
+    variables: ['firstName', 'code'],
+  },
+  {
+    slug: 'otp-reset',
+    nameEn: 'Password Reset',
+    nameAr: 'إعادة تعيين كلمة المرور',
+    subjectEn: 'Password Reset Code',
+    subjectAr: 'رمز إعادة تعيين كلمة المرور',
+    bodyEn: 'Hi {{firstName}},\n\nYour password reset code is: {{code}}\n\nThis code expires in 10 minutes.',
+    bodyAr: '{{firstName}} ,مرحبا\n\n{{code}} :رمز إعادة تعيين كلمة المرور هو\n\n.صالح لمدة 10 دقائق',
+    variables: ['firstName', 'code'],
+  },
+  {
+    slug: 'otp-verify',
+    nameEn: 'Email Verification',
+    nameAr: 'تأكيد البريد الإلكتروني',
+    subjectEn: 'Email Verification Code',
+    subjectAr: 'رمز تأكيد البريد الإلكتروني',
+    bodyEn: 'Hi {{firstName}},\n\nYour email verification code is: {{code}}\n\nThis code expires in 10 minutes.',
+    bodyAr: '{{firstName}} ,مرحبا\n\n{{code}} :رمز تأكيد البريد الإلكتروني هو\n\n.صالح لمدة 10 دقائق',
+    variables: ['firstName', 'code'],
+  },
+  {
+    slug: 'welcome',
+    nameEn: 'Welcome',
+    nameAr: 'أهلا وسهلا',
+    subjectEn: 'Welcome to CareKit',
+    subjectAr: 'أهلا بك في كيركت',
+    bodyEn: 'Hi {{firstName}},\n\nWelcome to CareKit! Your account has been created successfully.',
+    bodyAr: '{{firstName}} ,مرحبا\n\nأهلا بك في كيركت! تم إنشاء حسابك بنجاح.',
+    variables: ['firstName'],
+  },
+  {
+    slug: 'booking-confirmation',
+    nameEn: 'Booking Confirmation',
+    nameAr: 'تأكيد الحجز',
+    subjectEn: 'Booking Confirmed',
+    subjectAr: 'تم تأكيد الحجز',
+    bodyEn: 'Hi {{firstName}},\n\nYour booking has been confirmed:\n\nService: {{service}}\nPractitioner: {{practitioner}}\nDate: {{date}}\nTime: {{time}}',
+    bodyAr: '{{firstName}} ,مرحبا\n\nتم تأكيد حجزك:\n\nالخدمة: {{service}}\nالطبيب: {{practitioner}}\nالتاريخ: {{date}}\nالوقت: {{time}}',
+    variables: ['firstName', 'service', 'practitioner', 'date', 'time'],
+  },
 ];

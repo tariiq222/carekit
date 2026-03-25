@@ -13,9 +13,15 @@ export class CreatePractitionerDto {
   @IsNotEmpty()
   userId!: string;
 
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
-  specialtyId!: string;
+  @MaxLength(200)
+  specialty!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  specialtyAr?: string;
 
   @IsOptional()
   @IsString()

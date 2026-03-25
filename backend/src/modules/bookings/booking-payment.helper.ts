@@ -22,23 +22,20 @@ export class BookingPaymentHelper {
     return targetPatientId;
   }
 
-  /** Fix 3: Create awaiting payment record based on booking type */
+  /** Create awaiting payment record using the resolved price from PriceResolver */
   async createPaymentIfNeeded(
-    bookingId: string, type: string,
-    ps: { priceClinic?: number | null; pricePhone?: number | null; priceVideo?: number | null },
-    practitioner: { priceClinic?: number | null; pricePhone?: number | null; priceVideo?: number | null },
-    service: { price: number },
+    bookingId: string,
+    type: string,
+    resolvedPrice: number,
   ): Promise<void> {
     if (type === 'walk_in') {
       const settings = await this.bookingSettingsService.get();
       if (!settings.walkInPaymentRequired) return;
     }
-    const priceField = type === 'clinic_visit' || type === 'walk_in' ? 'priceClinic' as const
-      : type === 'phone_consultation' ? 'pricePhone' as const : 'priceVideo' as const;
-    const basePrice = ps[priceField] ?? practitioner[priceField] ?? service.price ?? 0;
-    const vatAmount = Math.round(basePrice * VAT_RATE_DEFAULT / 100);
+    if (resolvedPrice <= 0) return; // Free service — no payment needed
+    const vatAmount = Math.round(resolvedPrice * VAT_RATE_DEFAULT / 100);
     await this.prisma.payment.create({
-      data: { bookingId, amount: basePrice, vatAmount, totalAmount: basePrice + vatAmount, method: 'moyasar', status: 'awaiting' },
+      data: { bookingId, amount: resolvedPrice, vatAmount, totalAmount: resolvedPrice + vatAmount, method: 'moyasar', status: 'awaiting' },
     });
   }
 }

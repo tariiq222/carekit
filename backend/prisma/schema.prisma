@@ -123,6 +123,7 @@ enum ChatRole {
   user
   assistant
   system
+  staff
 
   @@map("chat_role")
 }
@@ -182,11 +183,43 @@ enum DevicePlatform {
   @@map("device_platform")
 }
 
+enum RecurringPattern {
+  daily
+  every_2_days
+  every_3_days
+  weekly
+  biweekly
+  monthly
+
+  @@map("recurring_pattern")
+}
+
 enum SessionLanguage {
   ar
   en
 
   @@map("session_language")
+}
+
+enum AccountType {
+  FULL
+  WALK_IN
+
+  @@map("account_type")
+}
+
+enum BloodType {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
+  UNKNOWN
+
+  @@map("blood_type")
 }
 
 // ──────────────────────────────────────────────
@@ -198,10 +231,13 @@ model User {
   email         String      @unique
   passwordHash  String?     @map("password_hash")
   firstName     String      @map("first_name")
+  middleName    String?     @map("middle_name")
   lastName      String      @map("last_name")
-  phone         String?
+  phone         String?     @unique
   gender        UserGender?
   avatarUrl     String?     @map("avatar_url")
+  accountType   AccountType @default(FULL) @map("account_type")
+  claimedAt     DateTime?   @map("claimed_at")
   isActive      Boolean     @default(true) @map("is_active")
   emailVerified Boolean     @default(false) @map("email_verified")
   createdAt     DateTime    @default(now()) @map("created_at")
@@ -213,20 +249,44 @@ model User {
   refreshTokens         RefreshToken[]
   userRoles             UserRole[]
   practitioner          Practitioner?
-  bookingsAsPatient     Booking[]             @relation("PatientBookings")
-  ratingsAsPatient      Rating[]              @relation("PatientRatings")
-  problemReports        ProblemReport[]       @relation("PatientProblemReports")
-  resolvedReports       ProblemReport[]       @relation("ResolvedByUser")
-  reviewedReceipts      BankTransferReceipt[] @relation("ReviewedByUser")
+  bookingsAsPatient     Booking[]              @relation("PatientBookings")
+  ratingsAsPatient      Rating[]               @relation("PatientRatings")
+  problemReports        ProblemReport[]        @relation("PatientProblemReports")
+  resolvedReports       ProblemReport[]        @relation("ResolvedByUser")
+  reviewedReceipts      BankTransferReceipt[]  @relation("ReviewedByUser")
   chatSessions          ChatSession[]
   notifications         Notification[]
   fcmTokens             FcmToken[]
   activityLogs          ActivityLog[]
   kbFiles               KnowledgeBaseFile[]
-  waitlistEntries       WaitlistEntry[]       @relation("WaitlistPatient")
+  waitlistEntries       WaitlistEntry[]        @relation("WaitlistPatient")
   favoritePractitioners FavoritePractitioner[]
+  patientProfile        PatientProfile?
 
   @@map("users")
+}
+
+model PatientProfile {
+  id                   String     @id @default(uuid())
+  userId               String     @unique @map("user_id")
+  // Identity
+  nationalId           String?    @map("national_id")
+  nationality          String?
+  dateOfBirth          DateTime?  @map("date_of_birth")
+  // Emergency contact
+  emergencyName        String?    @map("emergency_name")
+  emergencyPhone       String?    @map("emergency_phone")
+  // Medical basics
+  bloodType            BloodType?  @map("blood_type")
+  allergies            String?     // نص حر — أدوية وأغذية
+  chronicConditions    String?     @map("chronic_conditions")
+
+  createdAt            DateTime   @default(now()) @map("created_at")
+  updatedAt            DateTime   @updatedAt @map("updated_at")
+
+  user                 User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("patient_profiles")
 }
 
 model OtpCode {
@@ -281,9 +341,9 @@ model Role {
 }
 
 model Permission {
-  id          String   @id @default(uuid())
-  module      String
-  action      String
+  id            String   @id @default(uuid())
+  module        String
+  action        String
   description   String?
   descriptionAr String?  @map("description_ar")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -328,7 +388,8 @@ model UserRole {
 model Practitioner {
   id          String    @id @default(uuid())
   userId      String    @unique @map("user_id")
-  specialtyId String    @map("specialty_id")
+  specialty   String    @default("") @map("specialty")
+  specialtyAr String    @default("") @map("specialty_ar")
   bio         String?
   bioAr       String?   @map("bio_ar")
   experience  Int       @default(0)
@@ -339,43 +400,26 @@ model Practitioner {
   priceVideo  Int       @default(0) @map("price_video") // halalat
   rating      Float     @default(0)
   reviewCount Int       @default(0) @map("review_count")
-  isActive    Boolean   @default(true) @map("is_active")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at")
+  isActive             Boolean   @default(true) @map("is_active")
+  isAcceptingBookings  Boolean   @default(true) @map("is_accepting_bookings")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  deletedAt            DateTime? @map("deleted_at")
 
   // Relations
   user                 User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  specialty            Specialty                  @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
   availabilities       PractitionerAvailability[]
   vacations            PractitionerVacation[]
+  breaks               PractitionerBreak[]
   bookings             Booking[]
   ratings              Rating[]
   practitionerServices PractitionerService[]
   waitlistEntries      WaitlistEntry[]
   favoritedBy          FavoritePractitioner[]
+  branches             PractitionerBranch[]
 
-  @@index([specialtyId])
   @@index([isActive, deletedAt])
   @@map("practitioners")
-}
-
-model Specialty {
-  id            String   @id @default(uuid())
-  nameAr        String   @map("name_ar")
-  nameEn        String   @unique @map("name_en")
-  iconUrl       String?  @map("icon_url")
-  descriptionAr String?  @map("description_ar")
-  descriptionEn String?  @map("description_en")
-  sortOrder     Int      @default(0) @map("sort_order")
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  practitioners Practitioner[]
-
-  @@map("specialties")
 }
 
 model PractitionerAvailability {
@@ -410,6 +454,21 @@ model PractitionerVacation {
   @@map("practitioner_vacations")
 }
 
+model PractitionerBreak {
+  id             String   @id @default(uuid())
+  practitionerId String   @map("practitioner_id")
+  dayOfWeek      Int      @map("day_of_week") // 0 = Sunday, 6 = Saturday
+  startTime      String   @map("start_time") // "HH:mm"
+  endTime        String   @map("end_time") // "HH:mm"
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerId, dayOfWeek])
+  @@map("practitioner_breaks")
+}
+
 model PractitionerService {
   id             String        @id @default(uuid())
   practitionerId String        @map("practitioner_id")
@@ -426,9 +485,10 @@ model PractitionerService {
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
-  service      Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  practitioner Practitioner              @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+  service      Service                   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   bookings     Booking[]
+  serviceTypes PractitionerServiceType[]
 
   @@unique([practitionerId, serviceId])
   @@index([serviceId])
@@ -455,27 +515,188 @@ model ServiceCategory {
 }
 
 model Service {
-  id            String    @id @default(uuid())
-  nameAr        String    @map("name_ar")
-  nameEn        String    @map("name_en")
-  descriptionAr String?   @map("description_ar")
-  descriptionEn String?   @map("description_en")
-  categoryId    String    @map("category_id")
-  price         Int       @default(0) // halalat
-  duration      Int       @default(30) // minutes
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  deletedAt     DateTime? @map("deleted_at")
+  id                    String  @id @default(uuid())
+  nameAr                String  @map("name_ar")
+  nameEn                String  @map("name_en")
+  descriptionAr         String? @map("description_ar")
+  descriptionEn         String? @map("description_en")
+  categoryId            String  @map("category_id")
+  price                 Int     @default(0) // halalat
+  duration              Int     @default(30) // minutes
+  isActive              Boolean @default(true) @map("is_active")
+  isHidden              Boolean @default(false) @map("is_hidden")
+  hidePriceOnBooking    Boolean @default(false) @map("hide_price_on_booking")
+  hideDurationOnBooking Boolean @default(false) @map("hide_duration_on_booking")
+  calendarColor         String? @map("calendar_color")
+
+  // Booking settings per service
+  bufferBeforeMinutes Int     @default(0) @map("buffer_before_minutes")
+  bufferAfterMinutes  Int     @default(0) @map("buffer_after_minutes")
+  depositEnabled      Boolean @default(false) @map("deposit_enabled")
+  depositPercent      Int     @default(100) @map("deposit_percent")
+  allowRecurring              Boolean            @default(true) @map("allow_recurring")
+  allowedRecurringPatterns    RecurringPattern[] @default([]) @map("allowed_recurring_patterns")
+  maxRecurrences              Int                @default(12) @map("max_recurrences")
+  maxParticipants             Int                @default(1) @map("max_participants")
+  minLeadMinutes      Int?    @map("min_lead_minutes")
+  maxAdvanceDays      Int?    @map("max_advance_days")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   // Relations
-  category             ServiceCategory      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  category             ServiceCategory         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   bookings             Booking[]
   practitionerServices PractitionerService[]
   waitlistEntries      WaitlistEntry[]
+  durationOptions      ServiceDurationOption[]
+  intakeForms          IntakeForm[]
+  bookingTypes         ServiceBookingType[]
 
   @@index([categoryId])
   @@map("services")
+}
+
+// ──────────────────────────────────────────────
+// Service Duration Options
+// ──────────────────────────────────────────────
+
+model ServiceDurationOption {
+  id                   String  @id @default(uuid())
+  serviceId            String  @map("service_id")
+  serviceBookingTypeId String? @map("service_booking_type_id")
+  label                String
+  labelAr              String? @map("label_ar")
+  durationMinutes      Int     @map("duration_minutes")
+  price                Int // halalat
+  isDefault            Boolean @default(false) @map("is_default")
+  sortOrder            Int     @default(0) @map("sort_order")
+
+  service            Service             @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceBookingType ServiceBookingType? @relation(fields: [serviceBookingTypeId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+  @@index([serviceBookingTypeId])
+  @@map("service_duration_options")
+}
+
+// ──────────────────────────────────────────────
+// Service Booking Types (per-type pricing)
+// ──────────────────────────────────────────────
+
+model ServiceBookingType {
+  id          String      @id @default(uuid())
+  serviceId   String      @map("service_id")
+  bookingType BookingType @map("booking_type")
+  price       Int // halalat
+  duration    Int // minutes
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  service         Service                 @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  durationOptions ServiceDurationOption[]
+
+  @@unique([serviceId, bookingType])
+  @@index([serviceId])
+  @@map("service_booking_types")
+}
+
+// ──────────────────────────────────────────────
+// Practitioner Service Types (per-type overrides)
+// ──────────────────────────────────────────────
+
+model PractitionerServiceType {
+  id                    String      @id @default(uuid())
+  practitionerServiceId String      @map("practitioner_service_id")
+  bookingType           BookingType @map("booking_type")
+  price                 Int? // null = use ServiceBookingType.price
+  duration              Int? // null = use ServiceBookingType.duration
+  useCustomOptions      Boolean     @default(false) @map("use_custom_options")
+  isActive              Boolean     @default(true) @map("is_active")
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+
+  practitionerService PractitionerService          @relation(fields: [practitionerServiceId], references: [id], onDelete: Cascade)
+  durationOptions     PractitionerDurationOption[]
+
+  @@unique([practitionerServiceId, bookingType])
+  @@index([practitionerServiceId])
+  @@map("practitioner_service_types")
+}
+
+// ──────────────────────────────────────────────
+// Practitioner Duration Options
+// ──────────────────────────────────────────────
+
+model PractitionerDurationOption {
+  id                        String  @id @default(uuid())
+  practitionerServiceTypeId String  @map("practitioner_service_type_id")
+  label                     String
+  labelAr                   String? @map("label_ar")
+  durationMinutes           Int     @map("duration_minutes")
+  price                     Int // halalat
+  isDefault                 Boolean @default(false) @map("is_default")
+  sortOrder                 Int     @default(0) @map("sort_order")
+
+  practitionerServiceType PractitionerServiceType @relation(fields: [practitionerServiceTypeId], references: [id], onDelete: Cascade)
+
+  @@index([practitionerServiceTypeId])
+  @@map("practitioner_duration_options")
+}
+
+// ──────────────────────────────────────────────
+// Intake Forms
+// ──────────────────────────────────────────────
+
+model IntakeForm {
+  id         String   @id @default(uuid())
+  serviceId  String   @map("service_id")
+  titleAr    String   @map("title_ar")
+  titleEn    String   @map("title_en")
+  isRequired Boolean  @default(false) @map("is_required")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  service   Service          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  fields    IntakeField[]
+  responses IntakeResponse[]
+
+  @@index([serviceId])
+  @@map("intake_forms")
+}
+
+model IntakeField {
+  id         String  @id @default(uuid())
+  formId     String  @map("form_id")
+  labelAr    String  @map("label_ar")
+  labelEn    String  @map("label_en")
+  fieldType  String  @map("field_type")
+  options    Json?
+  isRequired Boolean @default(false) @map("is_required")
+  sortOrder  Int     @default(0) @map("sort_order")
+
+  form IntakeForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@map("intake_fields")
+}
+
+model IntakeResponse {
+  id        String   @id @default(uuid())
+  formId    String   @map("form_id")
+  bookingId String   @map("booking_id")
+  patientId String   @map("patient_id")
+  answers   Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  form IntakeForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@index([bookingId])
+  @@map("intake_responses")
 }
 
 // ──────────────────────────────────────────────
@@ -508,26 +729,33 @@ model Booking {
   deletedAt             DateTime?     @map("deleted_at")
 
   // New fields — booking overhaul
-  cancelledBy           String?       @map("cancelled_by") // patient | practitioner | admin | system
-  noShowAt              DateTime?     @map("no_show_at")
-  checkedInAt           DateTime?     @map("checked_in_at")
-  inProgressAt          DateTime?     @map("in_progress_at")
-  completionNotes       String?       @map("completion_notes")
-  isWalkIn              Boolean       @default(false) @map("is_walk_in")
-  recurringGroupId      String?       @map("recurring_group_id")
-  rescheduleCount       Int           @default(0) @map("reschedule_count")
-  suggestedRefundType   String?       @map("suggested_refund_type")
+  cancelledBy         String?   @map("cancelled_by") // patient | practitioner | admin | system
+  noShowAt            DateTime? @map("no_show_at")
+  checkedInAt         DateTime? @map("checked_in_at")
+  inProgressAt        DateTime? @map("in_progress_at")
+  completionNotes     String?   @map("completion_notes")
+  isWalkIn            Boolean   @default(false) @map("is_walk_in")
+  recurringGroupId    String?           @map("recurring_group_id")
+  recurringPattern    RecurringPattern? @map("recurring_pattern")
+  rescheduleCount     Int       @default(0) @map("reschedule_count")
+  suggestedRefundType String?   @map("suggested_refund_type")
+
+  // Price/duration snapshot at booking time
+  durationOptionId String? @map("duration_option_id")
+  bookedPrice      Int?    @map("booked_price") // halalat
+  bookedDuration   Int?    @map("booked_duration") // minutes
 
   // Relations
-  patient             User?                @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
-  practitioner        Practitioner         @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
-  service             Service              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  practitionerService PractitionerService  @relation(fields: [practitionerServiceId], references: [id], onDelete: Restrict)
-  rescheduledFrom     Booking?             @relation("RescheduleChain", fields: [rescheduledFromId], references: [id], onDelete: SetNull)
-  rescheduledTo       Booking?             @relation("RescheduleChain")
+  patient             User?               @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
+  practitioner        Practitioner        @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  service             Service             @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  practitionerService PractitionerService @relation(fields: [practitionerServiceId], references: [id], onDelete: Restrict)
+  rescheduledFrom     Booking?            @relation("RescheduleChain", fields: [rescheduledFromId], references: [id], onDelete: SetNull)
+  rescheduledTo       Booking?            @relation("RescheduleChain")
   payment             Payment?
   rating              Rating?
   problemReports      ProblemReport[]
+  statusLogs          BookingStatusLog[]
 
   @@index([practitionerId, date])
   @@index([patientId, status])
@@ -543,55 +771,72 @@ model Booking {
 // ──────────────────────────────────────────────
 
 model BookingSettings {
-  id                             String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Payment timeout
-  paymentTimeoutMinutes          Int      @default(60) @map("payment_timeout_minutes")
+  paymentTimeoutMinutes Int @default(60) @map("payment_timeout_minutes")
 
   // Cancellation policy
-  freeCancelBeforeHours          Int      @default(24) @map("free_cancel_before_hours")
-  freeCancelRefundType           String   @default("full") @map("free_cancel_refund_type")
-  lateCancelRefundType           String   @default("none") @map("late_cancel_refund_type")
-  lateCancelRefundPercent        Int      @default(0) @map("late_cancel_refund_percent")
-  adminCanDirectCancel           Boolean  @default(true) @map("admin_can_direct_cancel")
-  patientCanCancelPending        Boolean  @default(true) @map("patient_can_cancel_pending")
+  freeCancelBeforeHours   Int     @default(24) @map("free_cancel_before_hours")
+  freeCancelRefundType    String  @default("full") @map("free_cancel_refund_type")
+  lateCancelRefundType    String  @default("none") @map("late_cancel_refund_type")
+  lateCancelRefundPercent Int     @default(0) @map("late_cancel_refund_percent")
+  adminCanDirectCancel    Boolean @default(true) @map("admin_can_direct_cancel")
+  patientCanCancelPending Boolean @default(true) @map("patient_can_cancel_pending")
 
   // Rescheduling policy
-  patientCanReschedule           Boolean  @default(true) @map("patient_can_reschedule")
-  rescheduleBeforeHours          Int      @default(12) @map("reschedule_before_hours")
-  maxReschedulesPerBooking       Int      @default(2) @map("max_reschedules_per_booking")
+  patientCanReschedule     Boolean @default(true) @map("patient_can_reschedule")
+  rescheduleBeforeHours    Int     @default(12) @map("reschedule_before_hours")
+  maxReschedulesPerBooking Int     @default(2) @map("max_reschedules_per_booking")
 
   // Walk-in
-  allowWalkIn                    Boolean  @default(true) @map("allow_walk_in")
-  walkInPaymentRequired          Boolean  @default(false) @map("walk_in_payment_required")
+  allowWalkIn           Boolean @default(true) @map("allow_walk_in")
+  walkInPaymentRequired Boolean @default(false) @map("walk_in_payment_required")
 
   // Recurring
-  allowRecurring                 Boolean  @default(false) @map("allow_recurring")
-  maxRecurringWeeks              Int      @default(12) @map("max_recurring_weeks")
+  allowRecurring Boolean @default(false) @map("allow_recurring")
 
   // Waitlist
-  waitlistEnabled                Boolean  @default(false) @map("waitlist_enabled")
-  waitlistMaxPerSlot             Int      @default(5) @map("waitlist_max_per_slot")
-  waitlistAutoNotify             Boolean  @default(true) @map("waitlist_auto_notify")
+  waitlistEnabled    Boolean @default(false) @map("waitlist_enabled")
+  waitlistMaxPerSlot Int     @default(5) @map("waitlist_max_per_slot")
+  waitlistAutoNotify Boolean @default(true) @map("waitlist_auto_notify")
 
   // Buffer between appointments
-  bufferMinutes                  Int      @default(0) @map("buffer_minutes")
+  bufferMinutes Int @default(0) @map("buffer_minutes")
 
   // Auto-complete / no-show
-  autoCompleteAfterHours         Int      @default(2) @map("auto_complete_after_hours")
-  autoNoShowAfterMinutes         Int      @default(30) @map("auto_no_show_after_minutes")
+  autoCompleteAfterHours Int    @default(2) @map("auto_complete_after_hours")
+  autoNoShowAfterMinutes Int    @default(30) @map("auto_no_show_after_minutes")
+  noShowPolicy           String @default("keep_full") @map("no_show_policy") // keep_full | partial_refund | admin_decides
+  noShowRefundPercent    Int    @default(0) @map("no_show_refund_percent") // used when noShowPolicy = partial_refund
+
+  // Cancellation review timeout
+  cancellationReviewTimeoutHours Int @default(48) @map("cancellation_review_timeout_hours")
+
+  // Cancellation policy text (displayed to patients)
+  cancellationPolicyEn String @default("") @map("cancellation_policy_en")
+  cancellationPolicyAr String @default("") @map("cancellation_policy_ar")
 
   // Reminders
-  reminder24hEnabled             Boolean  @default(true) @map("reminder_24h_enabled")
-  reminder1hEnabled              Boolean  @default(true) @map("reminder_1h_enabled")
-  reminderInteractive            Boolean  @default(false) @map("reminder_interactive")
+  reminder24hEnabled  Boolean @default(true) @map("reminder_24h_enabled")
+  reminder1hEnabled   Boolean @default(true) @map("reminder_1h_enabled")
+  reminderInteractive Boolean @default(false) @map("reminder_interactive")
 
   // Suggestions
-  suggestAlternativesOnConflict  Boolean  @default(true) @map("suggest_alternatives_on_conflict")
-  suggestAlternativesCount       Int      @default(3) @map("suggest_alternatives_count")
+  suggestAlternativesOnConflict Boolean @default(true) @map("suggest_alternatives_on_conflict")
+  suggestAlternativesCount      Int     @default(3) @map("suggest_alternatives_count")
 
-  createdAt                      DateTime @default(now()) @map("created_at")
-  updatedAt                      DateTime @updatedAt @map("updated_at")
+  // Lead time
+  minBookingLeadMinutes Int @default(0) @map("min_booking_lead_minutes")
+
+  // Admin override
+  adminCanBookOutsideHours Boolean @default(false) @map("admin_can_book_outside_hours")
+
+  // Max advance booking window (days from today)
+  maxAdvanceBookingDays Int @default(60) @map("max_advance_booking_days")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("booking_settings")
 }
@@ -731,14 +976,14 @@ model ProcessedWebhook {
 // ──────────────────────────────────────────────
 
 model Rating {
-  id             String   @id @default(uuid())
-  bookingId      String   @unique @map("booking_id")
-  patientId      String?  @map("patient_id")
-  practitionerId String   @map("practitioner_id")
+  id             String    @id @default(uuid())
+  bookingId      String    @unique @map("booking_id")
+  patientId      String?   @map("patient_id")
+  practitionerId String    @map("practitioner_id")
   stars          Int // 1-5
   comment        String?
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
 
   // Relations
@@ -779,16 +1024,16 @@ model ProblemReport {
 // ──────────────────────────────────────────────
 
 model ChatSession {
-  id          String       @id @default(uuid())
-  userId      String       @map("user_id")
-  startedAt   DateTime     @default(now()) @map("started_at")
-  endedAt     DateTime?    @map("ended_at")
-  handedOff   Boolean      @default(false) @map("handed_off")
-  handoffType HandoffType? @map("handoff_type")
+  id          String           @id @default(uuid())
+  userId      String           @map("user_id")
+  startedAt   DateTime         @default(now()) @map("started_at")
+  endedAt     DateTime?        @map("ended_at")
+  handedOff   Boolean          @default(false) @map("handed_off")
+  handoffType HandoffType?     @map("handoff_type")
   language    SessionLanguage? // detected from first message
   metadata    Json? // bot version, model used, etc.
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
 
   // Relations
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -807,6 +1052,7 @@ model ChatMessage {
   intent       String? // book | modify | cancel | query | handoff | greeting
   toolName     String?  @map("tool_name")
   tokenCount   Int?     @map("token_count")
+  staffId      String?  @map("staff_id") // staff user who sent this message (role=staff only)
   createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -851,17 +1097,17 @@ model ChatbotConfig {
 }
 
 model KnowledgeBaseFile {
-  id          String   @id @default(uuid())
-  fileName    String   @map("file_name")
-  fileUrl     String   @map("file_url")
-  fileType    String   @map("file_type") // pdf | docx | txt
-  fileSize    Int      @map("file_size") // bytes
-  chunksCount Int      @default(0) @map("chunks_count")
+  id          String       @id @default(uuid())
+  fileName    String       @map("file_name")
+  fileUrl     String       @map("file_url")
+  fileType    String       @map("file_type") // pdf | docx | txt
+  fileSize    Int          @map("file_size") // bytes
+  chunksCount Int          @default(0) @map("chunks_count")
   status      KbFileStatus @default(pending)
   error       String?
-  uploadedBy  String   @map("uploaded_by")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  uploadedBy  String       @map("uploaded_by")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
 
   // Relations
   user User @relation(fields: [uploadedBy], references: [id])
@@ -883,6 +1129,26 @@ model WhiteLabelConfig {
   updatedAt   DateTime        @updatedAt @map("updated_at")
 
   @@map("white_label_config")
+}
+
+// ──────────────────────────────────────────────
+// Booking Status Audit
+// ──────────────────────────────────────────────
+
+model BookingStatusLog {
+  id         String   @id @default(uuid())
+  bookingId  String   @map("booking_id")
+  fromStatus String?  @map("from_status")
+  toStatus   String   @map("to_status")
+  changedBy  String?  @map("changed_by") // user_id or 'system'
+  reason     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([createdAt])
+  @@map("booking_status_logs")
 }
 
 // ──────────────────────────────────────────────
@@ -938,12 +1204,12 @@ model Notification {
 }
 
 model FcmToken {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
+  id        String         @id @default(uuid())
+  userId    String         @map("user_id")
   token     String
   platform  DevicePlatform
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -951,4 +1217,170 @@ model FcmToken {
   @@unique([userId, token])
   @@index([userId])
   @@map("fcm_tokens")
+}
+
+// ──────────────────────────────────────────────
+// Clinic Configuration
+// ──────────────────────────────────────────────
+
+model ClinicWorkingHours {
+  id        String   @id @default(uuid())
+  dayOfWeek Int      @map("day_of_week")
+  startTime String   @map("start_time")
+  endTime   String   @map("end_time")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([dayOfWeek])
+  @@map("clinic_working_hours")
+}
+
+model ClinicHoliday {
+  id          String   @id @default(uuid())
+  date        DateTime
+  nameAr      String   @map("name_ar")
+  nameEn      String   @map("name_en")
+  isRecurring Boolean  @default(false) @map("is_recurring")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([date])
+  @@map("clinic_holidays")
+}
+
+// ──────────────────────────────────────────────
+// Coupons
+// ──────────────────────────────────────────────
+
+model Coupon {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  descriptionAr  String?   @map("description_ar")
+  descriptionEn  String?   @map("description_en")
+  discountType   String    @map("discount_type")
+  discountValue  Int       @map("discount_value")
+  minAmount      Int       @default(0) @map("min_amount")
+  maxUses        Int?      @map("max_uses")
+  usedCount      Int       @default(0) @map("used_count")
+  maxUsesPerUser Int?      @map("max_uses_per_user")
+  serviceIds     String[]  @map("service_ids")
+  expiresAt      DateTime? @map("expires_at")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  redemptions CouponRedemption[]
+
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id        String   @id @default(uuid())
+  couponId  String   @map("coupon_id")
+  userId    String   @map("user_id")
+  bookingId String?  @map("booking_id")
+  amount    Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@map("coupon_redemptions")
+}
+
+// ──────────────────────────────────────────────
+// Branches
+// ──────────────────────────────────────────────
+
+model Branch {
+  id        String    @id @default(uuid())
+  nameAr    String    @map("name_ar")
+  nameEn    String    @map("name_en")
+  address   String?
+  phone     String?
+  email     String?
+  isMain    Boolean   @default(false) @map("is_main")
+  isActive  Boolean   @default(true) @map("is_active")
+  timezone  String    @default("Asia/Riyadh")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  practitioners PractitionerBranch[]
+
+  @@map("branches")
+}
+
+model PractitionerBranch {
+  id             String   @id @default(uuid())
+  practitionerId String   @map("practitioner_id")
+  branchId       String   @map("branch_id")
+  isPrimary      Boolean  @default(false) @map("is_primary")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+  branch       Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([practitionerId, branchId])
+  @@index([branchId])
+  @@map("practitioner_branches")
+}
+
+// ──────────────────────────────────────────────
+// Gift Cards
+// ──────────────────────────────────────────────
+
+model GiftCard {
+  id            String    @id @default(uuid())
+  code          String    @unique
+  initialAmount Int       @map("initial_amount")
+  balance       Int
+  purchasedBy   String?   @map("purchased_by")
+  redeemedBy    String?   @map("redeemed_by")
+  expiresAt     DateTime? @map("expires_at")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  transactions GiftCardTransaction[]
+
+  @@map("gift_cards")
+}
+
+model GiftCardTransaction {
+  id         String   @id @default(uuid())
+  giftCardId String   @map("gift_card_id")
+  amount     Int // positive = credit, negative = debit
+  bookingId  String?  @map("booking_id")
+  note       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  giftCard GiftCard @relation(fields: [giftCardId], references: [id], onDelete: Cascade)
+
+  @@index([giftCardId])
+  @@map("gift_card_transactions")
+}
+
+
+// ──────────────────────────────────────────────
+// Email Templates
+// ──────────────────────────────────────────────
+
+model EmailTemplate {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  nameAr    String   @map("name_ar")
+  nameEn    String   @map("name_en")
+  subjectAr String   @map("subject_ar")
+  subjectEn String   @map("subject_en")
+  bodyAr    String   @map("body_ar") @db.Text
+  bodyEn    String   @map("body_en") @db.Text
+  variables Json     @default("[]")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("email_templates")
 }

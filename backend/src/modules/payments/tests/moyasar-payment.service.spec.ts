@@ -23,7 +23,7 @@ const mockPrisma: any = {
   booking: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
   payment: {
     findUnique: jest.fn(), findFirst: jest.fn(),
-    create: jest.fn(), update: jest.fn(), updateMany: jest.fn(),
+    create: jest.fn(), update: jest.fn(), updateMany: jest.fn(), delete: jest.fn(),
   },
   processedWebhook: { findUnique: jest.fn(), create: jest.fn() },
   $transaction: jest.fn().mockImplementation(async (fn) => fn(mockPrisma)),
@@ -120,10 +120,31 @@ describe('MoyasarPaymentService', () => {
       await expect(service.createMoyasarPayment(userId, createDto)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException when payment already exists', async () => {
+    it('should throw BadRequestException when payment already exists with non-failed status', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(mockBooking);
-      mockPrisma.payment.findUnique.mockResolvedValue(mockPayment);
+      mockPrisma.payment.findUnique.mockResolvedValue({ ...mockPayment, status: 'pending' });
       await expect(service.createMoyasarPayment(userId, createDto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should delete failed payment and allow retry', async () => {
+      const failedPayment = { ...mockPayment, status: 'failed' };
+      mockPrisma.booking.findFirst.mockResolvedValue(mockBooking);
+      mockPrisma.payment.findUnique.mockResolvedValue(failedPayment);
+      mockPrisma.payment.delete.mockResolvedValue(failedPayment);
+      mockPrisma.payment.create.mockResolvedValue({ ...mockPayment, status: 'pending' });
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          id: moyasarPayId, status: 'initiated',
+          source: { transaction_url: 'https://checkout.moyasar.com/pay/retry' },
+        }),
+      });
+
+      const result = await service.createMoyasarPayment(userId, createDto);
+
+      expect(mockPrisma.payment.delete).toHaveBeenCalledWith({ where: { id: failedPayment.id } });
+      expect(result.redirectUrl).toBe('https://checkout.moyasar.com/pay/retry');
+      expect(result.payment).toBeDefined();
     });
 
     it('should throw BadRequestException when Moyasar API returns error', async () => {

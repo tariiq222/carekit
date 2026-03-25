@@ -40,6 +40,15 @@ export function logMissingOptionalKeys(
   }
   logger.warn('These features will fail at runtime until configured.');
   logger.warn('===============================================');
+
+  // In production, if Moyasar payments are enabled but webhook secret is missing,
+  // all webhooks will fail silently — block startup to prevent money loss
+  if (config['NODE_ENV'] === 'production' && config['MOYASAR_API_KEY'] && !config['MOYASAR_WEBHOOK_SECRET']) {
+    throw new Error(
+      'FATAL: MOYASAR_API_KEY is set but MOYASAR_WEBHOOK_SECRET is missing. '
+      + 'All payment webhooks will be rejected. Set the webhook secret or remove the API key.',
+    );
+  }
 }
 
 export class EnvironmentVariables {

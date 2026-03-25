@@ -23,6 +23,7 @@ import { PractitionerAvailabilityService } from '../practitioner-availability.se
 import { PractitionerVacationService } from '../practitioner-vacation.service.js';
 import { PractitionerServiceService } from '../practitioner-service.service.js';
 import { PractitionerRatingsService } from '../practitioner-ratings.service.js';
+import { PractitionerBreaksService } from '../practitioner-breaks.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -30,7 +31,8 @@ import { PractitionerRatingsService } from '../practitioner-ratings.service.js';
 
 interface CreatePractitionerDto {
   userId: string;
-  specialtyId: string;
+  specialty: string;
+  specialtyAr?: string;
   bio?: string;
   bioAr?: string;
   experience?: number;
@@ -42,7 +44,8 @@ interface CreatePractitionerDto {
 }
 
 interface UpdatePractitionerDto {
-  specialtyId?: string;
+  specialty?: string;
+  specialtyAr?: string;
   bio?: string;
   bioAr?: string;
   experience?: number;
@@ -72,7 +75,7 @@ interface CreateVacationDto {
 interface PractitionerListQuery {
   page?: number;
   perPage?: number;
-  specialtyId?: string;
+  specialty?: string;
   isActive?: boolean;
   search?: string;
   sortBy?: string;
@@ -105,10 +108,10 @@ const mockPrismaService: any = {
     findMany: jest.fn(),
     delete: jest.fn(),
   },
-  user: {
-    findUnique: jest.fn(),
+  practitionerBreak: {
+    findMany: jest.fn().mockResolvedValue([]),
   },
-  specialty: {
+  user: {
     findUnique: jest.fn(),
   },
   booking: {
@@ -135,13 +138,6 @@ const mockPrismaService: any = {
 // Test data
 // ---------------------------------------------------------------------------
 
-const mockSpecialty = {
-  id: 'specialty-uuid-1',
-  nameEn: 'Cardiology',
-  nameAr: 'أمراض القلب',
-  isActive: true,
-};
-
 const mockUser = {
   id: 'user-uuid-1',
   email: 'doctor@carekit-test.com',
@@ -155,7 +151,8 @@ const mockUser = {
 const mockPractitioner = {
   id: 'practitioner-uuid-1',
   userId: mockUser.id,
-  specialtyId: mockSpecialty.id,
+  specialty: 'Cardiology',
+  specialtyAr: 'أمراض القلب',
   bio: 'Experienced cardiologist',
   bioAr: 'طبيب قلب ذو خبرة',
   experience: 10,
@@ -171,7 +168,6 @@ const mockPractitioner = {
   createdAt: new Date('2026-01-15'),
   updatedAt: new Date('2026-01-15'),
   user: mockUser,
-  specialty: mockSpecialty,
 };
 
 const mockAvailability = [
@@ -205,6 +201,13 @@ describe('PractitionersService', () => {
         PractitionerServiceService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: PractitionerRatingsService, useValue: { getRatings: jest.fn().mockResolvedValue({ items: [], meta: { page: 1, perPage: 20, total: 0, totalPages: 0 } }) } },
+        {
+          provide: PractitionerBreaksService,
+          useValue: {
+            getBreaks: jest.fn().mockResolvedValue([]),
+            setBreaks: jest.fn().mockResolvedValue([]),
+          },
+        },
       ],
     }).compile();
 
@@ -253,16 +256,18 @@ describe('PractitionersService', () => {
       );
     });
 
-    it('should filter by specialtyId', async () => {
+    it('should filter by specialty text', async () => {
       mockPrismaService.practitioner.findMany.mockResolvedValue([mockPractitioner]);
       mockPrismaService.practitioner.count.mockResolvedValue(1);
 
-      await service.findAll({ specialtyId: mockSpecialty.id });
+      await service.findAll({ specialty: 'Cardiology' });
 
       expect(mockPrismaService.practitioner.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            specialtyId: mockSpecialty.id,
+            OR: expect.arrayContaining([
+              expect.objectContaining({ specialty: expect.objectContaining({ contains: 'Cardiology' }) }),
+            ]),
           }),
         }),
       );
@@ -397,7 +402,8 @@ describe('PractitionersService', () => {
   describe('create', () => {
     const createDto: CreatePractitionerDto = {
       userId: mockUser.id,
-      specialtyId: mockSpecialty.id,
+      specialty: 'Cardiology',
+      specialtyAr: 'أمراض القلب',
       bio: 'New cardiologist',
       bioAr: 'طبيب قلب جديد',
       experience: 5,
@@ -408,8 +414,7 @@ describe('PractitionersService', () => {
 
     it('should create a practitioner record', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockPrismaService.specialty.findUnique.mockResolvedValue(mockSpecialty);
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(null); // No existing record
+      mockPrismaService.practitioner.findFirst.mockResolvedValue(null);
       mockPrismaService.practitioner.create.mockResolvedValue({
         ...mockPractitioner,
         ...createDto,
@@ -420,12 +425,11 @@ describe('PractitionersService', () => {
 
       expect(result).toBeDefined();
       expect(result.userId).toBe(createDto.userId);
-      expect(result.specialtyId).toBe(createDto.specialtyId);
       expect(mockPrismaService.practitioner.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             userId: createDto.userId,
-            specialtyId: createDto.specialtyId,
+            specialty: createDto.specialty,
           }),
         }),
       );
@@ -437,16 +441,8 @@ describe('PractitionersService', () => {
       await expect(service.create(createDto)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw NotFoundException if specialty does not exist', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockPrismaService.specialty.findUnique.mockResolvedValue(null);
-
-      await expect(service.create(createDto)).rejects.toThrow(NotFoundException);
-    });
-
     it('should throw ConflictException if user already has a practitioner record', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockPrismaService.specialty.findUnique.mockResolvedValue(mockSpecialty);
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
 
       await expect(service.create(createDto)).rejects.toThrow(ConflictException);
@@ -454,7 +450,6 @@ describe('PractitionersService', () => {
 
     it('should default prices to 0 when not provided', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      mockPrismaService.specialty.findUnique.mockResolvedValue(mockSpecialty);
       mockPrismaService.practitioner.findFirst.mockResolvedValue(null);
       mockPrismaService.practitioner.create.mockResolvedValue({
         ...mockPractitioner,
@@ -465,7 +460,7 @@ describe('PractitionersService', () => {
 
       await service.create({
         userId: mockUser.id,
-        specialtyId: mockSpecialty.id,
+        specialty: 'General',
       });
 
       expect(mockPrismaService.practitioner.create).toHaveBeenCalledWith(
@@ -519,14 +514,6 @@ describe('PractitionersService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should validate specialty exists when updating specialtyId', async () => {
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrismaService.specialty.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.update(mockPractitioner.id, { specialtyId: 'invalid-specialty' }),
-      ).rejects.toThrow(NotFoundException);
-    });
 
     it('should store prices as integers (halalat)', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);

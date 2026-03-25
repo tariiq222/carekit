@@ -175,6 +175,7 @@ export class AuthController {
     };
   }
 
+  @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(@CurrentUser('id') userId: string) {

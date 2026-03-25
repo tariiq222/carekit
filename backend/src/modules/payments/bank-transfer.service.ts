@@ -14,6 +14,7 @@ import { MinioService } from '../../common/services/minio.service.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { UploadReceiptDto } from './dto/upload-receipt.dto.js';
 import { ReviewReceiptDto } from './dto/review-receipt.dto.js';
 import { paymentInclude, bookingWithPriceInclude, calculateAmounts } from './payments.helpers.js';
@@ -31,6 +32,7 @@ export class BankTransferService {
     private readonly invoicesService: InvoiceCreatorService,
     private readonly bookingStatusService: BookingStatusService,
     private readonly activityLogService: ActivityLogService,
+    private readonly notificationsService: NotificationsService,
     @Optional()
     @InjectQueue('receipt-verification')
     private readonly receiptQueue?: Queue,
@@ -100,20 +102,23 @@ export class BankTransferService {
       return updated;
     });
 
-    // Auto-confirm booking after approved bank transfer
-    if (dto.approved) {
-      const payment = await this.prisma.payment.findUnique({
-        where: { id: receipt.paymentId },
-      });
-      if (payment?.bookingId) {
-        try {
-          await this.bookingStatusService.confirm(payment.bookingId);
-        } catch (err) {
-          this.logger.warn(
-            `Auto-confirm skipped for booking: ${err instanceof Error ? err.message : 'unknown'}`,
-          );
-        }
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: receipt.paymentId },
+      include: { booking: { select: { patientId: true } } },
+    });
+
+    if (dto.approved && payment?.bookingId) {
+      try {
+        await this.bookingStatusService.confirm(payment.bookingId);
+      } catch (err) {
+        this.logger.warn(
+          `Auto-confirm skipped for booking: ${err instanceof Error ? err.message : 'unknown'}`,
+        );
       }
+    }
+
+    if (!dto.approved && payment?.bookingId) {
+      await this.handleRejectedTransfer(payment.bookingId, payment.booking?.patientId, dto.adminNotes);
     }
 
     return updatedReceipt;
@@ -139,12 +144,16 @@ export class BankTransferService {
     const existingPayment = await this.prisma.payment.findUnique({
       where: { bookingId },
     });
-    if (existingPayment) {
+    if (existingPayment && !['failed'].includes(existingPayment.status)) {
       throw new BadRequestException({
         statusCode: 400,
         message: 'Payment already exists for this booking',
         error: 'DUPLICATE_PAYMENT',
       });
+    }
+    // Clean up failed payment to allow retry
+    if (existingPayment?.status === 'failed') {
+      await this.prisma.payment.delete({ where: { id: existingPayment.id } });
     }
 
     const { amount, vatAmount, totalAmount } = calculateAmounts(booking);
@@ -236,20 +245,23 @@ export class BankTransferService {
       }
     });
 
-    // Auto-confirm booking after approved bank transfer
-    if (dto.action === 'approve') {
-      const payment = await this.prisma.payment.findUnique({
-        where: { id: receipt.paymentId },
-      });
-      if (payment?.bookingId) {
-        try {
-          await this.bookingStatusService.confirm(payment.bookingId);
-        } catch (err) {
-          this.logger.warn(
-            `Auto-confirm skipped for booking: ${err instanceof Error ? err.message : 'unknown'}`,
-          );
-        }
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: receipt.paymentId },
+      include: { booking: { select: { patientId: true } } },
+    });
+
+    if (dto.action === 'approve' && payment?.bookingId) {
+      try {
+        await this.bookingStatusService.confirm(payment.bookingId);
+      } catch (err) {
+        this.logger.warn(
+          `Auto-confirm skipped for booking: ${err instanceof Error ? err.message : 'unknown'}`,
+        );
       }
+    }
+
+    if (dto.action === 'reject' && payment?.bookingId) {
+      await this.handleRejectedTransfer(payment.bookingId, payment.booking?.patientId, dto.adminNotes);
     }
 
     this.activityLogService.log({
@@ -273,6 +285,34 @@ export class BankTransferService {
     return this.prisma.payment.findUnique({
       where: { id: receipt.paymentId },
       include: paymentInclude,
+    });
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  //  Private: Handle rejected bank transfer
+  // ───────────────────────────────────────────────────────────────
+
+  private async handleRejectedTransfer(
+    bookingId: string,
+    patientId: string | null | undefined,
+    reason?: string,
+  ): Promise<void> {
+    // Delete the rejected payment so patient can retry with a new receipt
+    await this.prisma.payment.deleteMany({
+      where: { bookingId, status: { in: ['pending', 'failed'] } },
+    });
+
+    if (!patientId) return;
+
+    const reasonText = reason ? ` (${reason})` : '';
+    await this.notificationsService.createNotification({
+      userId: patientId,
+      titleAr: 'تم رفض إيصال التحويل البنكي',
+      titleEn: 'Bank Transfer Receipt Rejected',
+      bodyAr: `تم رفض إيصال التحويل البنكي${reasonText}. يمكنك رفع إيصال جديد أو اختيار طريقة دفع أخرى`,
+      bodyEn: `Your bank transfer receipt was rejected${reasonText}. You can upload a new receipt or choose another payment method`,
+      type: 'receipt_rejected',
+      data: { bookingId },
     });
   }
 }

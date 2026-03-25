@@ -16,6 +16,7 @@ import { MinioService } from '../../../common/services/minio.service.js';
 import { InvoiceCreatorService } from '../../invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../../bookings/booking-status.service.js';
 import { ActivityLogService } from '../../activity-log/activity-log.service.js';
+import { NotificationsService } from '../../notifications/notifications.service.js';
 
 // Mock transaction proxy
 const mockTx = {
@@ -25,7 +26,7 @@ const mockTx = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: { findFirst: jest.fn() },
-  payment: { findUnique: jest.fn(), update: jest.fn() },
+  payment: { findUnique: jest.fn(), update: jest.fn(), delete: jest.fn(), deleteMany: jest.fn() },
   bankTransferReceipt: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
   $transaction: jest.fn((cb: (tx: typeof mockTx) => Promise<unknown>) => cb(mockTx)),
 };
@@ -39,6 +40,8 @@ const mockInvoices: any = { createInvoice: jest.fn() };
 const mockBookingStatusService: any = { confirm: jest.fn() };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockActivityLog: any = { log: jest.fn().mockResolvedValue(undefined) };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockNotifications: any = { createNotification: jest.fn().mockResolvedValue(undefined) };
 
 // Test data
 const bookingId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
@@ -82,6 +85,7 @@ describe('BankTransferService', () => {
         { provide: InvoiceCreatorService, useValue: mockInvoices },
         { provide: BookingStatusService, useValue: mockBookingStatusService },
         { provide: ActivityLogService, useValue: mockActivityLog },
+        { provide: NotificationsService, useValue: mockNotifications },
       ],
     }).compile();
     service = module.get<BankTransferService>(BankTransferService);
@@ -157,7 +161,7 @@ describe('BankTransferService', () => {
       mockPrisma.bankTransferReceipt.findUnique.mockResolvedValue(mockReceipt);
       mockTx.bankTransferReceipt.update.mockResolvedValue({ ...mockReceipt, aiVerificationStatus: 'approved' });
       mockTx.payment.update.mockResolvedValue({ ...mockPayment, status: 'paid' });
-      mockPrisma.payment.findUnique.mockResolvedValue({ ...mockPayment, status: 'paid' });
+      mockPrisma.payment.findUnique.mockResolvedValue({ ...mockPayment, status: 'paid', booking: { patientId: userId } });
       mockBookingStatusService.confirm.mockResolvedValue({});
       mockInvoices.createInvoice.mockResolvedValue({});
 
@@ -185,10 +189,10 @@ describe('BankTransferService', () => {
       );
     });
 
-    it('should reject: update receipt only, no booking confirm, no invoice, log activity', async () => {
+    it('should reject: update receipt, notify patient, clean up payment, log activity', async () => {
       mockPrisma.bankTransferReceipt.findUnique.mockResolvedValue(mockReceipt);
       mockTx.bankTransferReceipt.update.mockResolvedValue({ ...mockReceipt, aiVerificationStatus: 'rejected' });
-      mockPrisma.payment.findUnique.mockResolvedValue(mockPayment);
+      mockPrisma.payment.findUnique.mockResolvedValue({ ...mockPayment, booking: { patientId: userId } });
 
       await service.verifyBankTransfer(receiptId, adminId, {
         action: 'reject', adminNotes: 'Amount mismatch',
@@ -197,6 +201,12 @@ describe('BankTransferService', () => {
       expect(mockTx.payment.update).not.toHaveBeenCalled();
       expect(mockBookingStatusService.confirm).not.toHaveBeenCalled();
       expect(mockInvoices.createInvoice).not.toHaveBeenCalled();
+      expect(mockPrisma.payment.deleteMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { bookingId, status: { in: ['pending', 'failed'] } } }),
+      );
+      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'receipt_rejected', userId }),
+      );
       expect(mockActivityLog.log).toHaveBeenCalledWith(
         expect.objectContaining({ action: 'receipt_rejected' }),
       );
@@ -213,7 +223,7 @@ describe('BankTransferService', () => {
       mockPrisma.bankTransferReceipt.findUnique.mockResolvedValue(mockReceipt);
       mockTx.bankTransferReceipt.update.mockResolvedValue({});
       mockTx.payment.update.mockResolvedValue({});
-      mockPrisma.payment.findUnique.mockResolvedValue({ ...mockPayment, status: 'paid' });
+      mockPrisma.payment.findUnique.mockResolvedValue({ ...mockPayment, status: 'paid', booking: { patientId: userId } });
       mockBookingStatusService.confirm.mockResolvedValue({});
       mockInvoices.createInvoice.mockRejectedValue(new ConflictException('exists'));
 
@@ -229,7 +239,7 @@ describe('BankTransferService', () => {
         ...mockReceipt, aiVerificationStatus: 'approved', reviewedById: adminId,
       });
       mockTx.payment.update.mockResolvedValue({ ...mockPayment, status: 'paid' });
-      mockPrisma.payment.findUnique.mockResolvedValue({ ...mockPayment, status: 'paid' });
+      mockPrisma.payment.findUnique.mockResolvedValue({ ...mockPayment, status: 'paid', booking: { patientId: userId } });
       mockBookingStatusService.confirm.mockResolvedValue({});
 
       const result = await service.reviewReceipt(receiptId, adminId, {
@@ -243,11 +253,12 @@ describe('BankTransferService', () => {
       expect(mockBookingStatusService.confirm).toHaveBeenCalledWith(bookingId);
     });
 
-    it('should reject receipt without updating payment or confirming booking', async () => {
+    it('should reject receipt, notify patient, and allow retry', async () => {
       mockPrisma.bankTransferReceipt.findUnique.mockResolvedValue(mockReceipt);
       mockTx.bankTransferReceipt.update.mockResolvedValue({
         ...mockReceipt, aiVerificationStatus: 'rejected',
       });
+      mockPrisma.payment.findUnique.mockResolvedValue({ ...mockPayment, booking: { patientId: userId } });
 
       const result = await service.reviewReceipt(receiptId, adminId, {
         approved: false, adminNotes: 'Fake receipt',
@@ -256,6 +267,10 @@ describe('BankTransferService', () => {
       expect(result.aiVerificationStatus).toBe('rejected');
       expect(mockTx.payment.update).not.toHaveBeenCalled();
       expect(mockBookingStatusService.confirm).not.toHaveBeenCalled();
+      expect(mockPrisma.payment.deleteMany).toHaveBeenCalled();
+      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'receipt_rejected' }),
+      );
     });
 
     it('should throw NotFoundException when receipt not found', async () => {

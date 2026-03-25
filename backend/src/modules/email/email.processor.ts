@@ -3,6 +3,7 @@ import { Logger, OnModuleInit } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Job } from 'bullmq';
 import { buildPlainText } from './email.helpers.js';
+import { EmailTemplatesService } from '../email-templates/email-templates.service.js';
 import { QueueFailureService } from '../../common/queue/queue-failure.service.js';
 import { JOB_ATTEMPTS, QUEUE_EMAIL } from '../../config/constants/queues.js';
 
@@ -20,6 +21,7 @@ export class EmailProcessor extends WorkerHost implements OnModuleInit {
   constructor(
     private readonly mailerService: MailerService,
     private readonly queueFailureService: QueueFailureService,
+    private readonly emailTemplatesService: EmailTemplatesService,
   ) {
     super();
   }
@@ -53,9 +55,23 @@ export class EmailProcessor extends WorkerHost implements OnModuleInit {
       `Processing email job ${job.id}: template=${template}, to=${to}`,
     );
 
-    const text = buildPlainText(template, context);
+    // Try DB template first (both languages), fallback to hardcoded
+    let text: string;
+    let finalSubject = subject;
+    try {
+      const enResult = await this.emailTemplatesService.renderTemplate(template, context, 'en');
+      const arResult = await this.emailTemplatesService.renderTemplate(template, context, 'ar');
+      if (enResult && arResult) {
+        finalSubject = `${enResult.subject} | ${arResult.subject}`;
+        text = `${enResult.body}\n\n---\n\n${arResult.body}\n\n— CareKit`;
+      } else {
+        text = buildPlainText(template, context);
+      }
+    } catch {
+      text = buildPlainText(template, context);
+    }
 
-    await this.mailerService.sendMail({ to, subject, text });
+    await this.mailerService.sendMail({ to, subject: finalSubject, text });
 
     this.logger.log(`Email sent successfully: job ${job.id} to ${to}`);
   }

@@ -8,6 +8,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { CompleteBookingDto } from './dto/complete-booking.dto.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
+import { BookingStatusLogService } from './booking-status-log.service.js';
 import { bookingInclude } from './booking.constants.js';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class BookingStatusService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly activityLogService: ActivityLogService,
+    private readonly statusLogService: BookingStatusLogService,
   ) {}
 
   async confirm(id: string) {
@@ -61,6 +63,12 @@ export class BookingStatusService {
       description: `Booking confirmed for ${confirmed.date.toISOString().split('T')[0]} at ${confirmed.startTime}`,
     }).catch(() => {});
 
+    this.statusLogService.log({
+      bookingId: id,
+      fromStatus: booking.status,
+      toStatus: 'confirmed',
+    }).catch(() => {});
+
     return confirmed;
   }
 
@@ -96,6 +104,12 @@ export class BookingStatusService {
       module: 'bookings',
       resourceId: id,
       description: 'Patient checked in for booking',
+    }).catch(() => {});
+
+    this.statusLogService.log({
+      bookingId: id,
+      fromStatus: booking.status,
+      toStatus: 'checked_in',
     }).catch(() => {});
 
     return updated;
@@ -134,6 +148,13 @@ export class BookingStatusService {
       description: 'Practitioner started session',
     }).catch(() => {});
 
+    this.statusLogService.log({
+      bookingId: id,
+      fromStatus: booking.status,
+      toStatus: 'in_progress',
+      changedBy: practitionerUserId,
+    }).catch(() => {});
+
     return updated;
   }
 
@@ -169,12 +190,18 @@ export class BookingStatusService {
       description: 'Booking completed',
     }).catch(() => {});
 
+    this.statusLogService.log({
+      bookingId: id,
+      fromStatus: booking.status,
+      toStatus: 'completed',
+    }).catch(() => {});
+
     return completed;
   }
 
   async markNoShow(id: string) {
     const booking = await this.ensureBookingExists(id);
-    if (booking.status !== 'confirmed') {
+    if (!['confirmed', 'in_progress'].includes(booking.status)) {
       throw new ConflictException({
         statusCode: 409,
         message: `Cannot mark no-show for booking with status '${booking.status}'`,
@@ -192,6 +219,12 @@ export class BookingStatusService {
       module: 'bookings',
       resourceId: id,
       description: 'Booking marked as no-show',
+    }).catch(() => {});
+
+    this.statusLogService.log({
+      bookingId: id,
+      fromStatus: booking.status,
+      toStatus: 'no_show',
     }).catch(() => {});
 
     return updated;

@@ -1,4 +1,6 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, Min, ValidateNested } from 'class-validator';
+import { PractitionerTypeConfigDto } from './practitioner-type-config.dto.js';
 
 export class UpdatePractitionerServiceDto {
   @IsOptional()
@@ -39,4 +41,10 @@ export class UpdatePractitionerServiceDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PractitionerTypeConfigDto)
+  types?: PractitionerTypeConfigDto[];
 }

@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ZatcaStatus } from '@prisma/client';
 
@@ -15,6 +15,10 @@ export class InvoiceFilterDto {
   @Min(1)
   @Max(100)
   perPage?: number = 20;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
 
   @IsOptional()
   @IsDateString()

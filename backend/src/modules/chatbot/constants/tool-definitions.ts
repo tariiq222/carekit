@@ -24,7 +24,7 @@ const TOOL_LIST_PRACTITIONERS: OpenRouterTool = {
     parameters: {
       type: 'object',
       properties: {
-        specialtyId: { type: 'string', description: 'Filter by specialty ID' },
+        specialty: { type: 'string', description: 'Filter by specialty text (e.g. "Addiction Counselor")' },
         search: { type: 'string', description: 'Search by practitioner name' },
       },
     },

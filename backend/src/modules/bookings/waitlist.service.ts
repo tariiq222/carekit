@@ -111,7 +111,6 @@ export class WaitlistService {
         practitioner: {
           include: {
             user: { select: { firstName: true, lastName: true } },
-            specialty: true,
           },
         },
         service: true,

@@ -11,12 +11,12 @@ import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
-
 interface ServiceListQuery {
   page?: number;
   perPage?: number;
   categoryId?: string;
   isActive?: boolean;
+  includeHidden?: boolean;
   search?: string;
 }
 
@@ -131,6 +131,10 @@ export class ServicesService {
         categoryId: dto.categoryId,
         price: dto.price ?? 0,
         duration: dto.duration ?? 30,
+        isHidden: dto.isHidden ?? false,
+        hidePriceOnBooking: dto.hidePriceOnBooking ?? false,
+        hideDurationOnBooking: dto.hideDurationOnBooking ?? false,
+        calendarColor: dto.calendarColor,
       },
       include: { category: true },
     });
@@ -218,6 +222,20 @@ export class ServicesService {
         price: dto.price,
         duration: dto.duration,
         isActive: dto.isActive,
+        isHidden: dto.isHidden,
+        hidePriceOnBooking: dto.hidePriceOnBooking,
+        hideDurationOnBooking: dto.hideDurationOnBooking,
+        calendarColor: dto.calendarColor,
+        bufferBeforeMinutes: dto.bufferBeforeMinutes,
+        bufferAfterMinutes: dto.bufferAfterMinutes,
+        depositEnabled: dto.depositEnabled,
+        depositPercent: dto.depositPercent,
+        allowRecurring: dto.allowRecurring,
+        allowedRecurringPatterns: dto.allowedRecurringPatterns,
+        maxRecurrences: dto.maxRecurrences,
+        maxParticipants: dto.maxParticipants,
+        minLeadMinutes: dto.minLeadMinutes,
+        maxAdvanceDays: dto.maxAdvanceDays,
       },
       include: { category: true },
     });
@@ -257,6 +275,11 @@ export class ServicesService {
       deletedAt: null,
       isActive: query.isActive ?? true,
     };
+
+    // For patient-facing (public) queries, exclude hidden services unless explicitly requested
+    if (!query.includeHidden) {
+      where.isHidden = false;
+    }
 
     if (query.categoryId) {
       where.categoryId = query.categoryId;

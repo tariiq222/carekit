@@ -33,18 +33,18 @@ export class BookingSettingsService {
   }
 
   async update(dto: UpdateBookingSettingsDto): Promise<BookingSettings> {
+    const data = { ...dto };
+
     const current = await this.prisma.bookingSettings.findFirst();
     if (!current) {
-      const created = await this.prisma.bookingSettings.create({
-        data: { ...dto },
-      });
+      const created = await this.prisma.bookingSettings.create({ data });
       await this.cacheService.del(CACHE_KEY);
       return created;
     }
 
     const updated = await this.prisma.bookingSettings.update({
       where: { id: current.id },
-      data: { ...dto },
+      data,
     });
 
     await this.cacheService.del(CACHE_KEY);

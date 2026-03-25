@@ -9,10 +9,15 @@ import { ensurePractitionerExists } from '../../common/helpers/practitioner.help
 import type { BookingType } from '@prisma/client';
 import { AssignPractitionerServiceDto } from './dto/assign-practitioner-service.dto.js';
 import { UpdatePractitionerServiceDto } from './dto/update-practitioner-service.dto.js';
+import type { PractitionerTypeConfigDto } from './dto/practitioner-type-config.dto.js';
 
 const serviceInclude = {
   service: {
     select: { id: true, nameAr: true, nameEn: true, price: true, duration: true },
+  },
+  serviceTypes: {
+    include: { durationOptions: { orderBy: { sortOrder: 'asc' as const } } },
+    orderBy: { createdAt: 'asc' as const },
   },
 };
 
@@ -42,7 +47,7 @@ export class PractitionerServiceService {
       });
     }
 
-    return this.prisma.practitionerService.create({
+    const created = await this.prisma.practitionerService.create({
       data: {
         practitionerId,
         serviceId: dto.serviceId,
@@ -55,6 +60,14 @@ export class PractitionerServiceService {
         availableTypes: dto.availableTypes as BookingType[],
         isActive: dto.isActive ?? true,
       },
+    });
+
+    if (dto.types?.length) {
+      await this.createServiceTypes(created.id, dto.types);
+    }
+
+    return this.prisma.practitionerService.findUnique({
+      where: { id: created.id },
       include: serviceInclude,
     });
   }
@@ -89,7 +102,7 @@ export class PractitionerServiceService {
       });
     }
 
-    return this.prisma.practitionerService.update({
+    await this.prisma.practitionerService.update({
       where: { id: ps.id },
       data: {
         priceClinic: dto.priceClinic,
@@ -101,6 +114,14 @@ export class PractitionerServiceService {
         availableTypes: dto.availableTypes as BookingType[] | undefined,
         isActive: dto.isActive,
       },
+    });
+
+    if (dto.types) {
+      await this.replaceServiceTypes(ps.id, dto.types);
+    }
+
+    return this.prisma.practitionerService.findUnique({
+      where: { id: ps.id },
       include: serviceInclude,
     });
   }
@@ -145,5 +166,71 @@ export class PractitionerServiceService {
       where: { practitionerId_serviceId: { practitionerId, serviceId } },
       include: serviceInclude,
     });
+  }
+
+  async getServiceTypes(practitionerId: string, serviceId: string) {
+    const ps = await this.prisma.practitionerService.findFirst({
+      where: { practitionerId, serviceId },
+    });
+    if (!ps) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Service not assigned to practitioner',
+        error: 'NOT_FOUND',
+      });
+    }
+
+    return this.prisma.practitionerServiceType.findMany({
+      where: { practitionerServiceId: ps.id },
+      include: { durationOptions: { orderBy: { sortOrder: 'asc' } } },
+    });
+  }
+
+  // ─── Private helpers ────────────────────────────────────────
+
+  private async createServiceTypes(
+    practitionerServiceId: string,
+    types: PractitionerTypeConfigDto[],
+  ) {
+    for (const typeConfig of types) {
+      await this.prisma.practitionerServiceType.create({
+        data: {
+          practitionerServiceId,
+          bookingType: typeConfig.bookingType as BookingType,
+          price: typeConfig.price ?? null,
+          duration: typeConfig.duration ?? null,
+          useCustomOptions: typeConfig.useCustomOptions ?? false,
+          isActive: typeConfig.isActive ?? true,
+          durationOptions: typeConfig.durationOptions?.length
+            ? {
+                createMany: {
+                  data: typeConfig.durationOptions.map((o, i) => ({
+                    label: o.label,
+                    labelAr: o.labelAr,
+                    durationMinutes: o.durationMinutes,
+                    price: o.price,
+                    isDefault: o.isDefault ?? false,
+                    sortOrder: o.sortOrder ?? i,
+                  })),
+                },
+              }
+            : undefined,
+        },
+      });
+    }
+  }
+
+  private async replaceServiceTypes(
+    practitionerServiceId: string,
+    types: PractitionerTypeConfigDto[],
+  ) {
+    // Delete existing types (cascade deletes duration options)
+    await this.prisma.practitionerServiceType.deleteMany({
+      where: { practitionerServiceId },
+    });
+
+    if (types.length > 0) {
+      await this.createServiceTypes(practitionerServiceId, types);
+    }
   }
 }

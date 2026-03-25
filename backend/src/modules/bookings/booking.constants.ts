@@ -4,10 +4,10 @@ export const bookingInclude = {
   practitioner: {
     include: {
       user: { select: { id: true, firstName: true, lastName: true } },
-      specialty: { select: { nameEn: true, nameAr: true } },
     },
   },
   service: true,
   practitionerService: true,
+  payment: true,
   rescheduledFrom: { select: { id: true, date: true, startTime: true } },
 };

@@ -1,7 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -10,6 +12,9 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { PatientsService } from './patients.service.js';
+import { PatientWalkInService } from './patient-walk-in.service.js';
+import { CreateWalkInPatientDto } from './dto/create-walk-in-patient.dto.js';
+import { ClaimAccountDto } from './dto/claim-account.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Patients')
@@ -17,7 +22,10 @@ import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 @Controller('patients')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class PatientsController {
-  constructor(private readonly patientsService: PatientsService) {}
+  constructor(
+    private readonly patientsService: PatientsService,
+    private readonly walkInService: PatientWalkInService,
+  ) {}
 
   @Get()
   @CheckPermissions({ module: 'patients', action: 'view' })
@@ -49,5 +57,25 @@ export class PatientsController {
   @ApiOperation({ summary: 'Get patient booking and payment statistics' })
   getStats(@Param('id', uuidPipe) id: string) {
     return this.patientsService.getPatientStats(id);
+  }
+
+  @Post('walk-in')
+  @CheckPermissions({ module: 'patients', action: 'create' })
+  @ApiOperation({
+    summary: 'Register a walk-in patient (name + phone only, no email/password)',
+    description: 'Used by receptionist to register a patient who visited the clinic without a prior account. Returns existing WALK_IN account if phone already registered.',
+  })
+  createWalkIn(@Body() dto: CreateWalkInPatientDto) {
+    return this.walkInService.createWalkIn(dto);
+  }
+
+  @Post('claim')
+  @CheckPermissions({ module: 'patients', action: 'create' })
+  @ApiOperation({
+    summary: 'Claim a walk-in account (activate with email + password)',
+    description: 'Allows staff to upgrade a WALK_IN account to a full account by linking an email and password. The patient can then log in via the mobile app.',
+  })
+  claimAccount(@Body() dto: ClaimAccountDto) {
+    return this.walkInService.claimAccount(dto);
   }
 }

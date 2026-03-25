@@ -10,15 +10,34 @@ import { CreateNotificationDto } from './dto/create-notification.dto.js';
 import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
 import { PushService } from './push.service.js';
 import { SmsService } from './sms.service.js';
+import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 /** Notification types that warrant an SMS to the user */
 const SMS_ELIGIBLE_TYPES: ReadonlySet<string> = new Set([
-  'reminder',
+  'booking_reminder',
+  'booking_reminder_urgent',
   'booking_confirmed',
   'booking_cancelled',
   'cancellation_rejected',
 ]);
+
+/** Maps notification types to WhiteLabelConfig keys */
+const TYPE_TO_CONFIG_KEY: Record<string, string> = {
+  booking_confirmed: 'notify_new_bookings',
+  booking_completed: 'notify_new_bookings',
+  booking_rescheduled: 'notify_new_bookings',
+  booking_expired: 'notify_new_bookings',
+  booking_cancelled: 'notify_cancellations',
+  cancellation_requested: 'notify_cancellations',
+  cancellation_rejected: 'notify_cancellations',
+  problem_report: 'notify_problems',
+  payment_received: 'notify_payments',
+  new_rating: 'notify_ratings',
+  booking_reminder: 'notify_reminders',
+  booking_reminder_urgent: 'notify_reminders',
+  waitlist_slot_available: 'notify_waitlist',
+};
 
 interface NotificationListQuery {
   page?: number;
@@ -33,6 +52,7 @@ export class NotificationsService {
     private readonly prisma: PrismaService,
     private readonly pushService: PushService,
     private readonly smsService: SmsService,
+    private readonly whitelabelService: WhitelabelService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -126,6 +146,7 @@ export class NotificationsService {
   // ═══════════════════════════════════════════════════════════════
 
   async createNotification(dto: CreateNotificationDto) {
+    // Always persist the notification for history/audit
     const notification = await this.prisma.notification.create({
       data: {
         userId: dto.userId,
@@ -137,6 +158,10 @@ export class NotificationsService {
         data: dto.data as Prisma.InputJsonValue | undefined,
       },
     });
+
+    // Check clinic-wide notification settings before sending push/SMS
+    const enabled = await this.isNotificationEnabled(dto.type);
+    if (!enabled) return notification;
 
     // Fire-and-forget push notification
     this.pushService
@@ -158,6 +183,26 @@ export class NotificationsService {
     }
 
     return notification;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  CLINIC-WIDE NOTIFICATION CHECK
+  // ═══════════════════════════════════════════════════════════════
+
+  private async isNotificationEnabled(type: string): Promise<boolean> {
+    const configKey = TYPE_TO_CONFIG_KEY[type];
+    // Types without a config key (reminder, system_alert, waitlist) are always enabled
+    if (!configKey) return true;
+
+    try {
+      const configMap = await this.whitelabelService.getConfigMap();
+      const value = configMap[configKey];
+      // Default to enabled if config key doesn't exist
+      return value === undefined || value === 'true';
+    } catch {
+      // On error, default to enabled to avoid silently dropping notifications
+      return true;
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════

@@ -10,12 +10,14 @@ import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';
 import { CookieService } from './cookie.service.js';
 import { EmailModule } from '../email/email.module.js';
+import { PatientsModule } from '../patients/patients.module.js';
 import { OtpThrottleRedisService } from '../../common/services/otp-throttle-redis.service.js';
 import { EmailThrottleGuard } from '../../common/guards/email-throttle.guard.js';
 
 @Module({
   imports: [
     EmailModule,
+    PatientsModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

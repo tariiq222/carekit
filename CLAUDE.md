@@ -165,6 +165,14 @@ carekit/
 
 > **Role: IMPLEMENT using the existing system only. Do NOT design. Do NOT guess UI.**
 > **اقرأ `dashboard/DESIGN-SYSTEM.md` قبل كتابة أي كود Dashboard.**
+> **حمّل `/carekit-ds` skill قبل أي عمل UI — هو الحاكم الموحد على كل قرار تصميمي.**
+
+#### 0) Design Governance (MANDATORY)
+
+- **DS Governor**: `.claude/skills/carekit-ds/SKILL.md` — يُحمّل أولاً قبل أي كود UI
+- **Architecture Agent**: `.claude/agents/frontend-architect.md` — يُستخدم لتصميم هيكل الصفحات
+- **Chain of Command**: carekit-ds (tokens + rules) → frontend-architect (blueprints) → implementation
+- **Validation**: كل PR يمر على checklist الـ DS (13 نقطة في carekit-ds)
 
 #### 1) Source of Truth (MANDATORY)
 
@@ -173,8 +181,9 @@ carekit/
 - **Components:** `components/ui/` + `components/features/` ONLY
 - **Forms:** react-hook-form + zod ONLY
 - **Styling:** Tailwind mapped to CSS variables ONLY
-- **Icons:** Lucide React ONLY (no Font Awesome, no Material Icons)
-- **DS tokens reference:** `dashboard/src/lib/ds.ts`
+- **Icons:** Hugeicons React (`@hugeicons/react`) ONLY (no Lucide, no Font Awesome, no Material Icons)
+- **DS tokens reference:** `dashboard/lib/ds.ts`
+- **Visual style:** Frosted Glass (glassmorphism) — see `dashboard/DESIGN-SYSTEM.md`
 
 #### 2) STRICT RULES
 
@@ -190,12 +199,15 @@ carekit/
 #### 3) Semantic Tokens (USE ONLY THESE)
 
 - Text: `text-foreground`, `text-muted-foreground`
-- Background: `bg-background`, `bg-card`
-- Border: `border-border`
-- Shadows: DS shadow tokens only (`shadow-subtle`, `shadow-elevated`, etc.) — no pure black shadows
-- Numbers/Dates/Amounts: always use `font-numeric` class
+- Background: `bg-background`, `bg-card` (semi-transparent glass)
+- Surfaces: `glass` class for custom panels, `glass-solid` for popovers/dropdowns
+- Border: `border-border` (semi-transparent `rgba(0,0,0,0.06)`)
+- Shadows: `shadow-sm`, `shadow-md`, `shadow-lg`, `shadow-primary` — no pure black shadows
+- Hover: `.card-lift` class for cards (translateY + shadow + border glow)
+- Numbers/Dates/Amounts: always use `tabular-nums` class
 - Spacing: 8px grid only (8, 16, 24, 32)
 - Typography: H1 = `text-xl font-semibold`, Body = `text-sm`
+- Cards MUST have `backdrop-blur` (built into Card component automatically)
 
 #### 4) Component Usage (ALWAYS PREFER)
 

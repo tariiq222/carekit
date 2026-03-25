@@ -5,6 +5,27 @@ import { BookingsService } from './bookings.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
 import { CreateRecurringBookingDto } from './dto/create-recurring-booking.dto.js';
 
+/* ─── Pattern → interval in days ─── */
+
+const PATTERN_DAYS: Record<string, number> = {
+  daily: 1,
+  every_2_days: 2,
+  every_3_days: 3,
+  weekly: 7,
+  biweekly: 14,
+  monthly: 0, // handled separately (calendar month)
+};
+
+function addInterval(date: Date, pattern: string): Date {
+  const next = new Date(date);
+  if (pattern === 'monthly') {
+    next.setMonth(next.getMonth() + 1);
+  } else {
+    next.setDate(next.getDate() + (PATTERN_DAYS[pattern] ?? 7));
+  }
+  return next;
+}
+
 @Injectable()
 export class BookingRecurringService {
   private readonly logger = new Logger(BookingRecurringService.name);
@@ -17,6 +38,7 @@ export class BookingRecurringService {
 
   async createRecurring(patientId: string, dto: CreateRecurringBookingDto) {
     const settings = await this.bookingSettingsService.get();
+
     if (!settings.allowRecurring) {
       throw new BadRequestException({
         statusCode: 400,
@@ -25,27 +47,34 @@ export class BookingRecurringService {
       });
     }
 
-    const weeksNeeded = dto.repeatEvery === 'weekly'
-      ? dto.repeatCount
-      : dto.repeatCount * 2;
-
-    if (weeksNeeded > settings.maxRecurringWeeks) {
+    /* Validate pattern is allowed */
+    const allowed = ['weekly', 'biweekly'];
+    if (!allowed.includes(dto.repeatEvery)) {
       throw new BadRequestException({
         statusCode: 400,
-        message: `Recurring period exceeds maximum of ${settings.maxRecurringWeeks} weeks`,
-        error: 'RECURRING_TOO_LONG',
+        message: `Pattern "${dto.repeatEvery}" is not allowed. Allowed: ${allowed.join(', ')}`,
+        error: 'RECURRING_PATTERN_NOT_ALLOWED',
+      });
+    }
+
+    /* Validate count limit */
+    const maxCount = settings.maxRecurringWeeks ?? 12;
+    if (dto.repeatCount > maxCount) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: `Repeat count ${dto.repeatCount} exceeds maximum of ${maxCount}`,
+        error: 'RECURRING_TOO_MANY',
       });
     }
 
     const recurringGroupId = randomUUID();
     const created: Array<{ id: string; date: string }> = [];
     const conflicts: Array<{ date: string; reason: string }> = [];
-    const intervalDays = dto.repeatEvery === 'weekly' ? 7 : 14;
+
+    let currentDate = new Date(dto.date);
 
     for (let i = 0; i < dto.repeatCount; i++) {
-      const bookingDate = new Date(dto.date);
-      bookingDate.setDate(bookingDate.getDate() + (i * intervalDays));
-      const dateStr = bookingDate.toISOString().split('T')[0];
+      const dateStr = currentDate.toISOString().split('T')[0];
 
       try {
         const booking = await this.bookingsService.create(patientId, {
@@ -68,10 +97,13 @@ export class BookingRecurringService {
         this.logger.warn(`Recurring booking conflict on ${dateStr}: ${message}`);
         conflicts.push({ date: dateStr, reason: message });
       }
+
+      currentDate = addInterval(currentDate, dto.repeatEvery);
     }
 
     return {
       recurringGroupId,
+      pattern: dto.repeatEvery,
       created,
       conflicts,
       totalRequested: dto.repeatCount,

@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-03-24T14:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram id="booking-flow" name="Booking Flow - Complete (v2)">
+    <mxGraphModel dx="3000" dy="2600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="3500" pageHeight="5200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ============================================ -->
+        <!-- TITLE -->
+        <!-- ============================================ -->
+        <mxCell id="title" value="&lt;b&gt;CareKit — Booking Flow v2 (Complete State Machine)&lt;/b&gt;&lt;br&gt;WebVue Technology Solutions — March 2026 — Post-Fixes" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="500" y="-60" width="680" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- LEGEND -->
+        <!-- ============================================ -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1550" y="-60" width="400" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="-50" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1570" y="-10" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1t" value="Start / End" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="-10" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1570" y="20" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2t" value="Booking Status (State)" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="20" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1565" y="45" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3t" value="Decision Point" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="50" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1570" y="85" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4t" value="Payment Status" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="85" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1570" y="115" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5t" value="Terminal / Error State" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="115" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6" value="" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="1570" y="145" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6t" value="Action / System Process" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="145" width="150" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg7" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="1570" y="175" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg7t" value="&lt;b&gt;⏰ Cron Job (Automated)&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontColor=#3F51B5;" vertex="1" parent="1">
+          <mxGeometry x="1600" y="175" width="170" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- SECTION 1: BOOKING CREATION -->
+        <!-- ============================================ -->
+        <mxCell id="section1-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="20" width="1400" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="section1-label" value="&lt;b&gt;1. Booking Creation&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;fontSize=13;fontColor=#1565C0;" vertex="1" parent="1">
+          <mxGeometry x="100" y="25" width="150" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Start -->
+        <mxCell id="start" value="&lt;b&gt;Patient / AI Bot&lt;br&gt;initiates booking&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="120" y="70" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="select-service" value="Select Service&lt;br&gt;&amp; Practitioner" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="80" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="start" target="select-service" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="booking-type" value="Booking&lt;br&gt;Type?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="570" y="65" width="130" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="select-service" target="booking-type" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="clinic-visit" value="&lt;b&gt;clinic_visit&lt;/b&gt;&lt;br&gt;Select date/time" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="760" y="30" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="e3a" value="Clinic" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="booking-type" target="clinic-visit" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="phone-consult" value="&lt;b&gt;phone_consultation&lt;/b&gt;&lt;br&gt;Select date/time" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="760" y="85" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="e3b" value="Phone" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="booking-type" target="phone-consult" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="video-consult" value="&lt;b&gt;video_consultation&lt;/b&gt;&lt;br&gt;Select date/time" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="760" y="140" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="e3c" value="Video" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="booking-type" target="video-consult" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="walkin" value="&lt;b&gt;walk_in&lt;/b&gt;&lt;br&gt;(Reception creates)" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="760" y="200" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="e3d" value="Walk-in" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="booking-type" target="walkin" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Availability Check -->
+        <mxCell id="avail-check" value="Availability&lt;br&gt;Check?&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Serializable Isolation&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="970" y="55" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="e4a" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="clinic-visit" target="avail-check" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4b" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="phone-consult" target="avail-check" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4c" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="video-consult" target="avail-check" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="conflict-err" value="&lt;font color=&quot;#b85450&quot;&gt;&lt;b&gt;Slot Unavailable&lt;/b&gt;&lt;br&gt;Select another time&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="30" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="e4-fail" value="&lt;font color=&quot;red&quot;&gt;Conflict&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="avail-check" target="conflict-err" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4-back" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#999;" edge="1" source="conflict-err" target="select-service" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1270" y="20" /><mxPoint x="415" y="20" /></Array></mxGeometry>
+        </mxCell>
+
+        <!-- Walk-in → CONFIRMED directly -->
+        <mxCell id="walkin-decision" value="Walk-in?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="990" y="215" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e4d" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="walkin" target="walkin-decision" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="confirmed-walkin" value="&lt;b&gt;CONFIRMED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;(Walk-in — skip payment)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="290" width="190" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e-walkin-yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="walkin-decision" target="confirmed-walkin" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- PENDING State -->
+        <mxCell id="pending" value="&lt;b&gt;PENDING&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Awaiting payment&lt;br&gt;⏰ Timeout: paymentTimeoutMinutes&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="320" y="480" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="&lt;b&gt;Available&lt;/b&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="avail-check" target="pending" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1040" y="310" /><mxPoint x="420" y="310" /></Array></mxGeometry>
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- SECTION 2: PAYMENT FLOW -->
+        <!-- ============================================ -->
+        <mxCell id="section2-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="430" width="1400" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="section2-label" value="&lt;b&gt;2. Payment Flow&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;fontSize=13;fontColor=#7B1FA2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="435" width="130" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pay-method" value="Payment&lt;br&gt;Method?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="365" y="600" width="110" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="pending" target="pay-method" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Moyasar -->
+        <mxCell id="moyasar-init" value="Moyasar&lt;br&gt;Payment Link" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="140" y="618" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e7a" value="Moyasar" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="pay-method" target="moyasar-init" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="pay-awaiting" value="&lt;b&gt;AWAITING&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Payment in progress&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="130" y="715" width="140" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="e7a2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="moyasar-init" target="pay-awaiting" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="moyasar-webhook" value="Moyasar&lt;br&gt;Webhook" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="340" y="710" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e7a3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="pay-awaiting" target="moyasar-webhook" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="pay-paid-m" value="&lt;b&gt;PAID ✓&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="350" y="625" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="pay-failed" value="&lt;b&gt;FAILED ✗&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="500" y="715" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="e7a4-ok" value="Success" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;fontColor=#2E7D32;" edge="1" source="moyasar-webhook" target="pay-paid-m" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e7a4-fail" value="&lt;font color=&quot;red&quot;&gt;Failure&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="moyasar-webhook" target="pay-failed" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Bank Transfer -->
+        <mxCell id="bank-upload" value="Patient uploads&lt;br&gt;receipt photo" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="590" y="618" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e7b" value="Bank Transfer" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="pay-method" target="bank-upload" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="ai-verify" value="&lt;b&gt;AI Vision API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;OpenRouter reads receipt&lt;/font&gt;" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="790" y="618" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e7b2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="bank-upload" target="ai-verify" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="ai-tag" value="AI Tag?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="608" width="90" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e7b3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="ai-verify" target="ai-tag" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="tag-matched" value="&lt;font color=&quot;#2E7D32&quot;&gt;&lt;b&gt;matched&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="565" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="tag-differs" value="&lt;font color=&quot;#E65100&quot;&gt;&lt;b&gt;amount_differs&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="595" width="100" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="tag-suspicious" value="&lt;font color=&quot;#b85450&quot;&gt;&lt;b&gt;suspicious&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="625" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="tag-old" value="&lt;font color=&quot;#E65100&quot;&gt;&lt;b&gt;old_date&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE0B2;strokeColor=#E65100;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="655" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="tag-unreadable" value="&lt;font color=&quot;#666&quot;&gt;&lt;b&gt;unreadable&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0E0E0;strokeColor=#9E9E9E;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="685" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="e-tag1" style="fontSize=8;" edge="1" source="ai-tag" target="tag-matched" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-tag2" style="fontSize=8;" edge="1" source="ai-tag" target="tag-differs" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-tag3" style="fontSize=8;" edge="1" source="ai-tag" target="tag-suspicious" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-tag4" style="fontSize=8;" edge="1" source="ai-tag" target="tag-old" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-tag5" style="fontSize=8;" edge="1" source="ai-tag" target="tag-unreadable" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="admin-review" value="&lt;b&gt;Admin Reviews&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Final decision always human&lt;/font&gt;" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="618" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e-tag-admin1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tag-matched" target="admin-review" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-tag-admin3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tag-suspicious" target="admin-review" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-tag-admin5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="tag-unreadable" target="admin-review" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="admin-decision-pay" value="Admin?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="710" width="70" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e-admin-dec" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="admin-review" target="admin-decision-pay" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="transfer-approved" value="&lt;b&gt;approved&lt;/b&gt;&lt;br&gt;→ PAID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="720" width="100" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="transfer-rejected" value="&lt;b&gt;rejected&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="720" width="70" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="e-approve" value="Approve" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;fontColor=#2E7D32;" edge="1" source="admin-decision-pay" target="transfer-approved" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-reject" value="&lt;font color=&quot;red&quot;&gt;Reject&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="admin-decision-pay" target="transfer-rejected" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ============================================ -->
+        <!-- SECTION 3: BOOKING LIFECYCLE -->
+        <!-- ============================================ -->
+        <mxCell id="section3-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="850" width="1400" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="section3-label" value="&lt;b&gt;3. Booking Lifecycle (After Payment)&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;fontSize=13;fontColor=#2E7D32;" vertex="1" parent="1">
+          <mxGeometry x="100" y="855" width="290" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- CONFIRMED -->
+        <mxCell id="confirmed" value="&lt;b&gt;CONFIRMED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Payment verified&lt;br&gt;Send: Push + Email + Calendar&lt;br&gt;Video: Generate Zoom link&lt;br&gt;📋 StatusLog: pending→confirmed&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="110" y="900" width="230" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e-to-confirmed1" value="Payment PAID" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;fontColor=#2E7D32;" edge="1" source="pay-paid-m" target="confirmed" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="230" y="643" /><mxPoint x="230" y="830" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e-to-confirmed2" value="Approved" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;fontColor=#2E7D32;" edge="1" source="transfer-approved" target="confirmed" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1260" y="830" /><mxPoint x="225" y="830" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e-to-confirmed3" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="confirmed-walkin" target="confirmed" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1265" y="830" /><mxPoint x="225" y="830" /></Array></mxGeometry>
+        </mxCell>
+
+        <!-- CHECKED_IN -->
+        <mxCell id="checked-in" value="&lt;b&gt;CHECKED_IN&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Patient arrived&lt;br&gt;📋 StatusLog: confirmed→checked_in&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="420" y="905" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e-checkin" value="checkIn()&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;(clinic_visit only)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="confirmed" target="checked-in" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- IN_PROGRESS -->
+        <mxCell id="in-progress" value="&lt;b&gt;IN_PROGRESS&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Session started by practitioner&lt;br&gt;Phone: Dr calls patient&lt;br&gt;Video: Zoom active&lt;br&gt;📋 StatusLog: →in_progress&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="700" y="895" width="210" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e-start1" value="startSession()" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="checked-in" target="in-progress" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-start2" value="startSession()&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;(skip check-in for remote)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;curved=1;" edge="1" source="confirmed" target="in-progress" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="225" y="1040" /><mxPoint x="805" y="1040" /></Array></mxGeometry>
+        </mxCell>
+
+        <!-- COMPLETED -->
+        <mxCell id="completed" value="&lt;b&gt;COMPLETED ✓&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Session finished&lt;br&gt;→ Trigger Rating &amp; Feedback&lt;br&gt;📋 StatusLog: →completed&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="900" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e-complete1" value="complete()" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="in-progress" target="completed" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-complete2" value="complete()&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;(direct)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;curved=1;" edge="1" source="confirmed" target="completed" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="225" y="880" /><mxPoint x="1110" y="880" /></Array></mxGeometry>
+        </mxCell>
+
+        <!-- NO_SHOW — now from confirmed AND in_progress -->
+        <mxCell id="no-show" value="&lt;b&gt;NO_SHOW&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Patient didn't appear&lt;br&gt;📋 StatusLog: →no_show&lt;br&gt;💰 noShowPolicy applied&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="490" y="1080" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e-noshow1" value="markNoShow()&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;(from confirmed)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;fontColor=#b85450;" edge="1" source="confirmed" target="no-show" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="225" y="1115" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e-noshow2" value="markNoShow()&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;(from in_progress — NEW ✅)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;fontColor=#b85450;" edge="1" source="in-progress" target="no-show" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="805" y="1060" /><mxPoint x="580" y="1060" /></Array></mxGeometry>
+        </mxCell>
+
+        <!-- EXPIRED — now with Cron Job -->
+        <mxCell id="expired" value="&lt;b&gt;EXPIRED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Payment timeout exceeded&lt;br&gt;📋 StatusLog: pending→expired&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1080" width="190" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- CRON: expirePendingBookings -->
+        <mxCell id="cron-expire" value="&lt;b&gt;⏰ Cron: expirePendingBookings&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every 5 min — checks paymentTimeoutMinutes&lt;br&gt;Race-condition safe (double-checks payments)&lt;br&gt;→ Notify patient → Check waitlist&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1170" width="230" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="e-expired" value="⏰ Auto" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;fontColor=#3F51B5;strokeColor=#3F51B5;" edge="1" source="pending" target="expired" parent="1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="420" y="800" /><mxPoint x="90" y="800" /><mxPoint x="90" y="1112" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e-cron-expire" style="dashed=1;strokeColor=#3F51B5;" edge="1" source="cron-expire" target="expired" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- CRON: autoNoShow -->
+        <mxCell id="cron-noshow" value="&lt;b&gt;⏰ Cron: autoNoShow&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every 10 min — autoNoShowAfterMinutes&lt;br&gt;💰 Applies noShowPolicy:&lt;br&gt;keep_full | partial_refund | admin_decides&lt;br&gt;→ Notify patient + practitioner → Waitlist&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="430" y="1170" width="290" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cron-noshow" style="dashed=1;strokeColor=#3F51B5;" edge="1" source="cron-noshow" target="no-show" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- CRON: autoComplete -->
+        <mxCell id="cron-complete" value="&lt;b&gt;⏰ Cron: autoCompleteBookings&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every 15 min — autoCompleteAfterHours&lt;br&gt;Auto-completes past bookings (confirmed/in_progress/checked_in)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="1020" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cron-complete" style="dashed=1;strokeColor=#3F51B5;" edge="1" source="cron-complete" target="completed" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Rating -->
+        <mxCell id="rating" value="&lt;b&gt;Rating &amp; Feedback&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Stars (1-5) + Text + Problem Report&lt;br&gt;→ Affects practitioner ranking&lt;/font&gt;" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="900" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rating" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="completed" target="rating" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="end-happy" value="&lt;b&gt;END&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="1000" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e-end" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="rating" target="end-happy" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ============================================ -->
+        <!-- SECTION 4: CANCELLATION FLOW -->
+        <!-- ============================================ -->
+        <mxCell id="section4-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1300" width="1400" height="420" as="geometry" />
+        </mxCell>
+        <mxCell id="section4-label" value="&lt;b&gt;4. Cancellation &amp; Refund Flow&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;fontSize=13;fontColor=#C62828;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1305" width="240" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Patient Cancel Pending -->
+        <mxCell id="cancel-pending-src" value="Patient cancels&lt;br&gt;&lt;b&gt;PENDING&lt;/b&gt; booking" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1350" width="150" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="cancel-pending-check" value="patientCan&lt;br&gt;CancelPending?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="325" y="1340" width="110" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cp1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="cancel-pending-src" target="cancel-pending-check" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="cancel-direct" value="&lt;b&gt;CANCELLED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Direct cancel&lt;br&gt;Pending payments deleted&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1338" width="150" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cp2" value="Yes" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="cancel-pending-check" target="cancel-direct" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Patient Cancel Confirmed -->
+        <mxCell id="cancel-confirmed-src" value="Patient cancels&lt;br&gt;&lt;b&gt;CONFIRMED&lt;/b&gt; booking" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1440" width="150" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="pending-cancel" value="&lt;b&gt;PENDING_CANCELLATION&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Awaiting admin decision&lt;br&gt;suggestedRefundType calculated&lt;br&gt;⏰ Timeout: cancellationReviewTimeoutHours&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1425" width="220" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cc1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="cancel-confirmed-src" target="pending-cancel" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="admin-cancel-decision" value="Admin&lt;br&gt;Decision?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1440" width="90" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cc2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="pending-cancel" target="admin-cancel-decision" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="approve-cancel" value="&lt;b&gt;CANCELLED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;+ Refund (full/partial/none)&lt;br&gt;cancelledBy: patient/admin&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1415" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="reject-cancel" value="Back to &lt;b&gt;CONFIRMED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Cancellation rejected&lt;br&gt;→ Notify patient&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1485" width="170" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e-approve-cancel" value="Approve" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;fontColor=#2E7D32;" edge="1" source="admin-cancel-decision" target="approve-cancel" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e-reject-cancel" value="Reject" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;fontColor=#b85450;" edge="1" source="admin-cancel-decision" target="reject-cancel" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Refund types -->
+        <mxCell id="refund-box" value="&lt;b&gt;Refund Types:&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;• full — 100% refund&lt;br&gt;• partial — custom amount (validated)&lt;br&gt;• none — no refund&lt;br&gt;suggestedRefundType pre-calculated&lt;br&gt;based on freeCancelBeforeHours&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="1395" width="210" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="e-refund-info" style="dashed=1;strokeColor=#999;" edge="1" source="approve-cancel" target="refund-box" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- CRON: autoExpirePendingCancellations -->
+        <mxCell id="cron-cancel-timeout" value="&lt;b&gt;⏰ Cron: autoExpirePendingCancellations&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every hour — cancellationReviewTimeoutHours (default 48h)&lt;br&gt;Auto-approve with full refund (clinic failed to respond)&lt;br&gt;→ Notify patient&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1540" width="320" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cron-cancel" style="dashed=1;strokeColor=#3F51B5;" edge="1" source="cron-cancel-timeout" target="pending-cancel" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Admin Direct & Practitioner Cancel -->
+        <mxCell id="admin-direct" value="&lt;b&gt;Admin Direct Cancel&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Any non-terminal → CANCELLED&lt;br&gt;Refund: full / partial / none&lt;br&gt;+ Delete Zoom + Notify + Waitlist&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4EC;strokeColor=#C62828;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1540" width="190" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="practitioner-cancel" value="&lt;b&gt;Practitioner Cancel&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Any cancellable → CANCELLED&lt;br&gt;Always FULL refund (clinic's fault)&lt;br&gt;cancelledBy: practitioner&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4EC;strokeColor=#C62828;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1630" width="190" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ai-cancel" value="&lt;b&gt;AI Chatbot Cancel Request&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Bot does NOT execute cancellation&lt;br&gt;Sends request → Admin queue&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4EC;strokeColor=#C62828;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="1630" width="210" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- SECTION 5: RESCHEDULE FLOW -->
+        <!-- ============================================ -->
+        <mxCell id="section5-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#F57F17;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1760" width="1400" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="section5-label" value="&lt;b&gt;5. Reschedule Flow&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;fontSize=13;fontColor=#F57F17;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1765" width="150" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="resched-start" value="Patient/Bot requests&lt;br&gt;reschedule" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1810" width="150" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="resched-check" value="patientCanReschedule?&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;rescheduleBeforeHours&lt;br&gt;maxReschedulesPerBooking&lt;br&gt;rescheduleCount check&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1790" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rs1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="resched-start" target="resched-check" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="resched-new-slot" value="Select new&lt;br&gt;date/time" style="shape=process;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="570" y="1810" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rs2" value="Allowed" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="resched-check" target="resched-new-slot" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="resched-avail" value="Availability&lt;br&gt;Check" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="1808" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rs3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="resched-new-slot" target="resched-avail" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="resched-done" value="&lt;b&gt;CONFIRMED&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;New time slot&lt;br&gt;rescheduleCount++&lt;br&gt;Update Zoom if video&lt;br&gt;Push + Email notifications&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="1795" width="180" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rs4" value="Available" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="resched-avail" target="resched-done" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="resched-denied" value="&lt;font color=&quot;red&quot;&gt;Not allowed&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Max reschedules or too close&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="560" y="1890" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rs-denied" value="&lt;font color=&quot;red&quot;&gt;Denied&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="resched-check" target="resched-denied" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ============================================ -->
+        <!-- SECTION 6: AUTOMATED REMINDERS -->
+        <!-- ============================================ -->
+        <mxCell id="section6-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;opacity=20;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1990" width="1400" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="section6-label" value="&lt;b&gt;6. Automated Reminders &amp; Cron Jobs (NEW ✅)&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;fontSize=13;fontColor=#3F51B5;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1995" width="380" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="cron-24h" value="&lt;b&gt;⏰ 24h Reminder&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every hour&lt;br&gt;Push + Email&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="2030" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="cron-2h" value="&lt;b&gt;⏰ 2h Reminder&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every 15 min&lt;br&gt;Push&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="2030" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="cron-1h" value="&lt;b&gt;⏰ 1h Reminder&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every 15 min&lt;br&gt;Push&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="440" y="2030" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="cron-15m" value="&lt;b&gt;⏰ 15min Reminder&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every 5 min&lt;br&gt;Push (urgent)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="2030" width="140" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="cron-expire-sum" value="&lt;b&gt;⏰ Expire Pending&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every 5 min&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="2030" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="cron-noshow-sum" value="&lt;b&gt;⏰ Auto No-Show&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every 10 min&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="930" y="2030" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="cron-autocomplete-sum" value="&lt;b&gt;⏰ Auto Complete&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every 15 min&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="2030" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="cron-cancelexpire-sum" value="&lt;b&gt;⏰ Cancel Timeout&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Every hour&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#3F51B5;dashed=1;dashPattern=5 5;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="2030" width="130" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- SECTION 7: STATE SUMMARY -->
+        <!-- ============================================ -->
+        <mxCell id="summary-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECEFF1;strokeColor=#455A64;opacity=30;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="2170" width="1400" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="summary-label" value="&lt;b&gt;State Transition Summary — All 9 States&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;fontSize=13;fontColor=#455A64;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2175" width="300" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="s-pending" value="&lt;b&gt;pending&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2215" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s-confirmed" value="&lt;b&gt;confirmed&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="240" y="2215" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s-checkedin" value="&lt;b&gt;checked_in&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="2215" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s-inprog" value="&lt;b&gt;in_progress&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="520" y="2215" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s-completed" value="&lt;b&gt;completed&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="2215" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s-pendcancel" value="&lt;b&gt;pending_&lt;br&gt;cancellation&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="800" y="2210" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="s-cancelled" value="&lt;b&gt;cancelled&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="950" y="2215" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s-noshow" value="&lt;b&gt;no_show&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="2215" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="s-expired" value="&lt;b&gt;expired&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="2215" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sa1" style="fontSize=8;" edge="1" source="s-pending" target="s-confirmed" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="sa2" style="fontSize=8;" edge="1" source="s-confirmed" target="s-checkedin" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="sa3" style="fontSize=8;" edge="1" source="s-checkedin" target="s-inprog" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="sa4" style="fontSize=8;" edge="1" source="s-inprog" target="s-completed" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

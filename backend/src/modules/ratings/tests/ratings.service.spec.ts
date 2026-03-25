@@ -153,7 +153,7 @@ describe('RatingsService', () => {
         perPage: 10,
       });
 
-      expect(result.data).toEqual([mockRating]);
+      expect(result.items).toEqual([mockRating]);
       expect(result.meta.total).toBe(25);
       expect(result.meta.page).toBe(1);
       expect(result.meta.perPage).toBe(10);

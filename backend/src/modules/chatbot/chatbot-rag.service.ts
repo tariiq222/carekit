@@ -153,7 +153,6 @@ export class ChatbotRagService {
       where: { isActive: true, deletedAt: null },
       include: {
         user: { select: { firstName: true, lastName: true } },
-        specialty: { select: { nameEn: true, nameAr: true } },
         practitionerServices: {
           where: { isActive: true },
           include: { service: { select: { nameEn: true, nameAr: true } } },
@@ -175,7 +174,7 @@ export class ChatbotRagService {
         title: name,
         content: [
           `Practitioner: ${name}`,
-          `Specialty: ${doc.specialty.nameEn} / ${doc.specialty.nameAr}`,
+          `Specialty: ${doc.specialty} / ${doc.specialtyAr}`,
           serviceLines.length > 0 ? `Services:\n${serviceLines.join('\n')}` : '',
           `Experience: ${doc.experience} years`,
           `Rating: ${doc.rating}/5 (${doc.reviewCount} reviews)`,

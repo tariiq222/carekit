@@ -26,6 +26,7 @@ import { SetAvailabilityDto } from './dto/set-availability.dto.js';
 import { CreateVacationDto } from './dto/create-vacation.dto.js';
 import { AssignPractitionerServiceDto } from './dto/assign-practitioner-service.dto.js';
 import { UpdatePractitionerServiceDto } from './dto/update-practitioner-service.dto.js';
+import { SetBreaksDto } from './dto/set-breaks.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Practitioners')
@@ -43,19 +44,26 @@ export class PractitionersController {
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: string,
     @Query('search') search?: string,
-    @Query('specialtyId') specialtyId?: string,
+    @Query('specialty') specialty?: string,
     @Query('minRating') minRating?: string,
     @Query('isActive') isActive?: string,
+    @Query('branchId') branchId?: string,
   ) {
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (branchId && !UUID_RE.test(branchId)) {
+      throw new BadRequestException('branchId must be a valid UUID');
+    }
+
     return this.practitionersService.findAll({
       page: page ? parseInt(page, 10) : undefined,
       perPage: perPage ? parseInt(perPage, 10) : undefined,
       sortBy,
       sortOrder: sortOrder as 'asc' | 'desc' | undefined,
       search,
-      specialtyId,
+      specialty,
       minRating: minRating ? parseFloat(minRating) : undefined,
       isActive: isActive !== undefined ? isActive === 'true' : undefined,
+      branchId,
     });
   }
 
@@ -115,6 +123,8 @@ export class PractitionersController {
     @Param('id', uuidPipe) id: string,
     @Query('date') date?: string,
     @Query('duration') duration?: string,
+    @Query('bookingType') bookingType?: string,
+    @Query('serviceId') serviceId?: string,
   ) {
     if (!date) {
       throw new BadRequestException({
@@ -123,15 +133,42 @@ export class PractitionersController {
         error: 'VALIDATION_ERROR',
       });
     }
-    const parsedDuration = duration ? parseInt(duration, 10) : 30;
-    if (parsedDuration < 5 || parsedDuration > 240) {
+    let resolvedDuration = duration ? parseInt(duration, 10) : 30;
+
+    // If bookingType and serviceId provided, resolve duration from pricing models
+    if (bookingType && serviceId && !duration) {
+      resolvedDuration = await this.practitionersService.resolveDurationForSlots(serviceId, bookingType);
+    }
+
+    if (resolvedDuration < 5 || resolvedDuration > 240) {
       throw new BadRequestException({
         statusCode: 400,
         message: 'duration must be between 5 and 240 minutes',
         error: 'VALIDATION_ERROR',
       });
     }
-    return this.practitionersService.getSlots(id, date, parsedDuration);
+    return this.practitionersService.getSlots(id, date, resolvedDuration);
+  }
+
+  // --- Breaks ---
+
+  @Get(':id/breaks')
+  @CheckPermissions({ module: 'practitioners', action: 'view' })
+  async getBreaks(@Param('id', uuidPipe) id: string) {
+    const data = await this.practitionersService.getBreaks(id);
+    return { success: true, data };
+  }
+
+  @Put(':id/breaks')
+  @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ module: 'practitioners', action: 'edit' })
+  async setBreaks(
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: SetBreaksDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    const data = await this.practitionersService.setBreaks(id, dto, user.id);
+    return { success: true, data, message: 'Breaks updated' };
   }
 
   // --- Vacations ---
@@ -200,6 +237,16 @@ export class PractitionersController {
     @CurrentUser() user: { id: string },
   ) {
     return this.practitionersService.removePractitionerService(id, serviceId, user.id);
+  }
+
+  @Get(':id/services/:serviceId/types')
+  @CheckPermissions({ module: 'practitioners', action: 'view' })
+  async getServiceTypes(
+    @Param('id', uuidPipe) id: string,
+    @Param('serviceId', uuidPipe) serviceId: string,
+  ) {
+    const data = await this.practitionersService.getServiceTypes(id, serviceId);
+    return { success: true, data };
   }
 
   // --- Ratings ---

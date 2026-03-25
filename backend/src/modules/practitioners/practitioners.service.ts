@@ -15,6 +15,8 @@ import { PractitionerAvailabilityService } from './practitioner-availability.ser
 import { PractitionerVacationService } from './practitioner-vacation.service.js';
 import { PractitionerServiceService } from './practitioner-service.service.js';
 import { PractitionerRatingsService } from './practitioner-ratings.service.js';
+import { PractitionerBreaksService } from './practitioner-breaks.service.js';
+import { SetBreaksDto } from './dto/set-breaks.dto.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 @Injectable()
@@ -25,22 +27,18 @@ export class PractitionersService {
     private readonly vacationService: PractitionerVacationService,
     private readonly practitionerServiceService: PractitionerServiceService,
     private readonly ratingsService: PractitionerRatingsService,
+    private readonly breaksService: PractitionerBreaksService,
   ) {}
 
-  /** Creates a practitioner profile for a new user with the first active specialty. */
+  /** Creates a practitioner profile for a new user. */
   async createForUser(userId: string): Promise<void> {
     const existing = await this.prisma.practitioner.findFirst({
       where: { userId },
     });
     if (existing) return;
 
-    const defaultSpecialty = await this.prisma.specialty.findFirst({
-      where: { isActive: true },
-    });
-    if (!defaultSpecialty) return;
-
     await this.prisma.practitioner.create({
-      data: { userId, specialtyId: defaultSpecialty.id },
+      data: { userId },
     });
   }
 
@@ -50,9 +48,10 @@ export class PractitionersService {
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
     search?: string;
-    specialtyId?: string;
+    specialty?: string;
     minRating?: number;
     isActive?: boolean;
+    branchId?: string;
   }) {
     const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage, 100);
     const allowedSortFields = ['rating', 'reviewCount', 'experience', 'createdAt'];
@@ -64,12 +63,19 @@ export class PractitionersService {
       isActive: params?.isActive ?? true,
     };
 
-    if (params?.specialtyId) {
-      where.specialtyId = params.specialtyId;
+    if (params?.specialty) {
+      where.OR = [
+        { specialty: { contains: params.specialty, mode: 'insensitive' } },
+        { specialtyAr: { contains: params.specialty, mode: 'insensitive' } },
+      ];
     }
 
     if (params?.minRating !== undefined) {
       where.rating = { gte: params.minRating };
+    }
+
+    if (params?.branchId) {
+      where.branches = { some: { branchId: params.branchId } };
     }
 
     if (params?.search) {
@@ -81,10 +87,19 @@ export class PractitionersService {
       };
     }
 
+    const include: Record<string, unknown> = {
+      user: true,
+      practitionerServices: { where: { isActive: true }, include: { service: { select: { id: true, nameAr: true, nameEn: true } } } },
+    };
+    // Only include branches when filtering by branch to avoid N+1
+    if (params?.branchId) {
+      include.branches = { include: { branch: { select: { id: true, nameAr: true, nameEn: true } } } };
+    }
+
     const [practitioners, total] = await Promise.all([
       this.prisma.practitioner.findMany({
         where,
-        include: { user: true, specialty: true, practitionerServices: { where: { isActive: true }, include: { service: { select: { id: true, nameAr: true, nameEn: true } } } } },
+        include,
         orderBy: { [sortBy]: sortOrder },
         skip,
         take: perPage,
@@ -101,7 +116,7 @@ export class PractitionersService {
   async findOne(id: string) {
     const practitioner = await this.prisma.practitioner.findFirst({
       where: { id, deletedAt: null },
-      include: { user: true, specialty: true },
+      include: { user: true },
     });
 
     if (!practitioner) {
@@ -125,15 +140,6 @@ export class PractitionersService {
       });
     }
 
-    const specialty = await this.prisma.specialty.findUnique({ where: { id: dto.specialtyId } });
-    if (!specialty) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Specialty not found',
-        error: 'SPECIALTY_NOT_FOUND',
-      });
-    }
-
     const existing = await this.prisma.practitioner.findFirst({
       where: { userId: dto.userId },
     });
@@ -143,7 +149,8 @@ export class PractitionersService {
         return this.prisma.practitioner.update({
           where: { id: existing.id },
           data: {
-            specialtyId: dto.specialtyId,
+            specialty: dto.specialty,
+            specialtyAr: dto.specialtyAr,
             bio: dto.bio,
             bioAr: dto.bioAr,
             experience: dto.experience ?? 0,
@@ -155,7 +162,6 @@ export class PractitionersService {
           },
           include: {
             user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
-            specialty: true,
           },
         });
       }
@@ -170,7 +176,8 @@ export class PractitionersService {
     return this.prisma.practitioner.create({
       data: {
         userId: dto.userId,
-        specialtyId: dto.specialtyId,
+        specialty: dto.specialty,
+        specialtyAr: dto.specialtyAr,
         bio: dto.bio,
         bioAr: dto.bioAr,
         experience: dto.experience ?? 0,
@@ -182,7 +189,6 @@ export class PractitionersService {
       },
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
-        specialty: true,
       },
     });
   }
@@ -204,21 +210,11 @@ export class PractitionersService {
       await checkOwnership(this.prisma,practitioner.userId, currentUserId);
     }
 
-    if (dto.specialtyId) {
-      const specialty = await this.prisma.specialty.findUnique({ where: { id: dto.specialtyId } });
-      if (!specialty) {
-        throw new NotFoundException({
-          statusCode: 404,
-          message: 'Specialty not found',
-          error: 'SPECIALTY_NOT_FOUND',
-        });
-      }
-    }
-
     return this.prisma.practitioner.update({
       where: { id: practitioner.id },
       data: {
-        specialtyId: dto.specialtyId,
+        specialty: dto.specialty,
+        specialtyAr: dto.specialtyAr,
         bio: dto.bio,
         bioAr: dto.bioAr,
         experience: dto.experience,
@@ -231,7 +227,6 @@ export class PractitionersService {
       },
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
-        specialty: true,
       },
     });
   }
@@ -270,6 +265,14 @@ export class PractitionersService {
     return this.availabilityService.getAvailableSlots(practitionerId, date, duration);
   }
 
+  /** Resolve duration from ServiceBookingType for slot generation. Falls back to 30 min. */
+  async resolveDurationForSlots(serviceId: string, bookingType: string): Promise<number> {
+    const sbt = await this.prisma.serviceBookingType.findUnique({
+      where: { serviceId_bookingType: { serviceId, bookingType: bookingType as never } },
+    });
+    return sbt?.duration ?? 30;
+  }
+
   // --- Delegated: Vacations ---
 
   async getVacations(practitionerId: string) {
@@ -286,6 +289,16 @@ export class PractitionersService {
 
   async deleteVacation(practitionerId: string, vacationId: string, currentUserId?: string) {
     return this.vacationService.deleteVacation(practitionerId, vacationId, currentUserId);
+  }
+
+  // --- Delegated: Breaks ---
+
+  async getBreaks(practitionerId: string) {
+    return this.breaksService.getBreaks(practitionerId);
+  }
+
+  async setBreaks(practitionerId: string, dto: SetBreaksDto, currentUserId?: string) {
+    return this.breaksService.setBreaks(practitionerId, dto, currentUserId);
   }
 
   // --- Delegated: Ratings ---
@@ -310,5 +323,9 @@ export class PractitionersService {
 
   async removePractitionerService(practitionerId: string, serviceId: string, currentUserId?: string) {
     return this.practitionerServiceService.removeService(practitionerId, serviceId, currentUserId);
+  }
+
+  async getServiceTypes(practitionerId: string, serviceId: string) {
+    return this.practitionerServiceService.getServiceTypes(practitionerId, serviceId);
   }
 }

@@ -1,9 +1,12 @@
 import {
+  IsArray,
   IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
+  IsString,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -89,13 +92,6 @@ export class UpdateBookingSettingsDto {
   @IsBoolean()
   allowRecurring?: boolean;
 
-  @ApiPropertyOptional({ minimum: 1, maximum: 52 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(52)
-  maxRecurringWeeks?: number;
-
   // ── Waitlist ─────────────────────────────────────────────────────
   @ApiPropertyOptional()
   @IsOptional()
@@ -137,6 +133,40 @@ export class UpdateBookingSettingsDto {
   @Max(120)
   autoNoShowAfterMinutes?: number;
 
+  // ── No-show policy ──────────────────────────────────────────────
+  @ApiPropertyOptional({ enum: ['keep_full', 'partial_refund', 'admin_decides'] })
+  @IsOptional()
+  @IsIn(['keep_full', 'partial_refund', 'admin_decides'])
+  noShowPolicy?: string;
+
+  @ApiPropertyOptional({ minimum: 0, maximum: 100 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  noShowRefundPercent?: number;
+
+  // ── Cancellation review timeout ────────────────────────────────
+  @ApiPropertyOptional({ minimum: 1, maximum: 168 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(168)
+  cancellationReviewTimeoutHours?: number;
+
+  // ── Cancellation policy text ─────────────────────────────────
+  @ApiPropertyOptional({ description: 'Cancellation policy text displayed to patients (English)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  cancellationPolicyEn?: string;
+
+  @ApiPropertyOptional({ description: 'Cancellation policy text displayed to patients (Arabic)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  cancellationPolicyAr?: string;
+
   // ── Reminders ────────────────────────────────────────────────────
   @ApiPropertyOptional()
   @IsOptional()
@@ -165,4 +195,18 @@ export class UpdateBookingSettingsDto {
   @Min(1)
   @Max(10)
   suggestAlternativesCount?: number;
+
+  // ── Lead time ──────────────────────────────────────────────────
+  @ApiPropertyOptional({ description: 'Minimum minutes before appointment for booking', minimum: 0, maximum: 1440 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(1440)
+  minBookingLeadMinutes?: number;
+
+  // ── Admin override ────────────────────────────────────────────
+  @ApiPropertyOptional({ description: 'Allow admin to book outside clinic working hours' })
+  @IsOptional()
+  @IsBoolean()
+  adminCanBookOutsideHours?: boolean;
 }

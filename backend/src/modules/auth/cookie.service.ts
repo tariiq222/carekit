@@ -13,8 +13,8 @@ export class CookieService {
     res.cookie(REFRESH_COOKIE_NAME, token, {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      path: '/api/v1/auth',
+      sameSite: 'lax',
+      path: '/',
       maxAge: REFRESH_TOKEN_MAX_AGE,
       domain: this.configService.get('COOKIE_DOMAIN') || undefined,
     });
@@ -24,8 +24,8 @@ export class CookieService {
     res.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      path: '/api/v1/auth',
+      sameSite: 'lax',
+      path: '/',
       domain: this.configService.get('COOKIE_DOMAIN') || undefined,
     });
   }
