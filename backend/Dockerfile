@@ -14,7 +14,7 @@ RUN npm install -w backend --ignore-scripts \
 # Build
 FROM deps AS build
 COPY backend/src ./backend/src/
-COPY backend/tsconfig.json backend/nest-cli.json ./backend/
+COPY backend/tsconfig.json backend/tsconfig.build.json backend/nest-cli.json ./backend/
 RUN cd backend && npm run build
 
 # Production
@@ -29,6 +29,6 @@ COPY --from=deps /app/backend/prisma.config.ts ./backend/
 COPY --from=deps /app/backend/package.json ./backend/
 
 WORKDIR /app/backend
-EXPOSE 3100
+EXPOSE 5100
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]

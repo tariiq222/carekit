@@ -6,7 +6,7 @@ services:
     container_name: carekit-backend
     restart: unless-stopped
     ports:
-      - "3100:3100"
+      - "5100:5100"
     environment:
       DATABASE_URL: postgresql://carekit:carekit_dev_password@postgres:5432/carekit_dev
       REDIS_URL: redis://redis:6379
@@ -19,16 +19,16 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin123
       MINIO_BUCKET: carekit
-      PORT: 3100
+      PORT: 5100
       NODE_ENV: development
-      BACKEND_URL: http://localhost:3100
+      BACKEND_URL: http://localhost:5100
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/api/v1/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5100/api/v1/health || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -39,7 +39,7 @@ services:
     container_name: carekit-postgres
     restart: unless-stopped
     ports:
-      - "5433:5432"
+      - "5999:5432"
     environment:
       POSTGRES_USER: carekit
       POSTGRES_PASSWORD: carekit_dev_password
@@ -58,7 +58,7 @@ services:
     container_name: carekit-redis
     restart: unless-stopped
     ports:
-      - "6380:6379"
+      - "5380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -72,8 +72,8 @@ services:
     container_name: carekit-minio
     restart: unless-stopped
     ports:
-      - "9002:9000"
-      - "9003:9001"
+      - "5200:9000"
+      - "5201:9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
