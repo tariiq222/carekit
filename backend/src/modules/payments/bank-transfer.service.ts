@@ -199,9 +199,22 @@ export class BankTransferService {
       try {
         await this.bookingStatusService.confirm(payment.bookingId);
       } catch (err) {
-        this.logger.warn(
-          `Auto-confirm skipped for booking: ${err instanceof Error ? err.message : 'unknown'}`,
-        );
+        // Race recovery: booking may have expired while receipt was under review.
+        // Since payment is approved, recover to confirmed.
+        // updateMany with status condition makes this idempotent under concurrent retries.
+        const recovered = await this.prisma.booking.updateMany({
+          where: { id: payment.bookingId, status: 'expired' },
+          data: { status: 'confirmed', confirmedAt: new Date(), cancelledBy: null },
+        });
+        if (recovered.count > 0) {
+          this.logger.warn(
+            `Recovered expired booking ${payment.bookingId} → confirmed (bank transfer approved)`,
+          );
+        } else {
+          this.logger.warn(
+            `Auto-confirm skipped for booking ${payment.bookingId}: ${err instanceof Error ? err.message : 'unknown'}`,
+          );
+        }
       }
     }
 
@@ -242,11 +255,18 @@ export class BankTransferService {
     patientId: string | null | undefined,
     reason?: string,
   ): Promise<void> {
-    // M9: Mark payment as 'rejected' instead of deleting — preserves audit trail
-    // and prevents the same receipt from being re-uploaded and accepted fraudulently.
-    await this.prisma.payment.updateMany({
-      where: { bookingId, status: { in: ['pending', 'failed'] } },
-      data: { status: 'rejected' },
+    // Mark payment as 'rejected' — preserves audit trail. Also cancel the booking
+    // so it doesn't stay stuck as 'pending' forever (expiry cron skips bookings with
+    // any payment row via `payment: { is: null }` filter).
+    await this.prisma.$transaction(async (tx) => {
+      await tx.payment.updateMany({
+        where: { bookingId, status: { in: ['pending', 'failed'] } },
+        data: { status: 'rejected' },
+      });
+      await tx.booking.updateMany({
+        where: { id: bookingId, status: 'pending', deletedAt: null },
+        data: { status: 'cancelled', cancelledBy: 'system', cancelledAt: new Date() },
+      });
     });
 
     if (!patientId) return;
@@ -255,8 +275,8 @@ export class BankTransferService {
     await this.notificationsService.createNotification({
       userId: patientId,
       ...NOTIF.RECEIPT_REJECTED,
-      bodyAr: `تم رفض إيصال التحويل البنكي${reasonText}. يمكنك رفع إيصال جديد أو اختيار طريقة دفع أخرى`,
-      bodyEn: `Your bank transfer receipt was rejected${reasonText}. You can upload a new receipt or choose another payment method`,
+      bodyAr: `تم رفض إيصال التحويل البنكي${reasonText}. يرجى إنشاء حجز جديد أو التواصل مع العيادة`,
+      bodyEn: `Your bank transfer receipt was rejected${reasonText}. Please create a new booking or contact the clinic`,
       type: 'receipt_rejected',
       data: { bookingId },
     });

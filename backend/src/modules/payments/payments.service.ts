@@ -16,6 +16,7 @@ import { RefundDto } from './dto/refund.dto.js';
 import { paymentInclude } from './payments.helpers.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
+import { BookingStatusService } from '../bookings/booking-status.service.js';
 
 @Injectable()
 export class PaymentsService {
@@ -23,6 +24,7 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
     private readonly moyasarService: MoyasarPaymentService,
     private readonly bankTransferService: BankTransferService,
+    private readonly bookingStatusService: BookingStatusService,
   ) {}
 
   // --- Core ---
@@ -119,7 +121,25 @@ export class PaymentsService {
       });
     }
 
-    return this.prisma.payment.update({
+    const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+      pending: ['paid', 'failed'],
+      failed: ['pending'],
+      awaiting: ['paid', 'failed'],
+      paid: ['refunded'],
+      refunded: [],
+      rejected: [],
+    };
+
+    const allowed = ALLOWED_TRANSITIONS[payment.status] ?? [];
+    if (!allowed.includes(dto.status)) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: `Cannot transition payment from '${payment.status}' to '${dto.status}'`,
+        error: 'INVALID_STATUS_TRANSITION',
+      });
+    }
+
+    const updated = await this.prisma.payment.update({
       where: { id },
       data: {
         status: dto.status,
@@ -128,6 +148,16 @@ export class PaymentsService {
       },
       include: paymentInclude,
     });
+
+    if (dto.status === 'paid' && payment.bookingId) {
+      try {
+        await this.bookingStatusService.confirm(payment.bookingId);
+      } catch {
+        // Best-effort — booking may already be confirmed
+      }
+    }
+
+    return updated;
   }
 
   async findPaymentByBooking(bookingId: string) {

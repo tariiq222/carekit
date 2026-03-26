@@ -20,7 +20,8 @@ import { NotificationsService } from '../../notifications/notifications.service.
 
 // Mock transaction proxy
 const mockTx = {
-  payment: { create: jest.fn(), update: jest.fn() },
+  payment: { create: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
+  booking: { updateMany: jest.fn() },
   bankTransferReceipt: { create: jest.fn(), update: jest.fn() },
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -201,7 +202,7 @@ describe('BankTransferService', () => {
       expect(mockTx.payment.update).not.toHaveBeenCalled();
       expect(mockBookingStatusService.confirm).not.toHaveBeenCalled();
       expect(mockInvoices.createInvoice).not.toHaveBeenCalled();
-      expect(mockPrisma.payment.updateMany).toHaveBeenCalledWith(
+      expect(mockTx.payment.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { bookingId, status: { in: ['pending', 'failed'] } } }),
       );
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
@@ -267,7 +268,7 @@ describe('BankTransferService', () => {
 
       expect(mockTx.payment.update).not.toHaveBeenCalled();
       expect(mockBookingStatusService.confirm).not.toHaveBeenCalled();
-      expect(mockPrisma.payment.updateMany).toHaveBeenCalled();
+      expect(mockTx.payment.updateMany).toHaveBeenCalled();
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'receipt_rejected' }),
       );

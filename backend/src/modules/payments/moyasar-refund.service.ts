@@ -40,16 +40,50 @@ export class MoyasarRefundService {
       });
     }
 
-    if (payment.method === 'moyasar' && payment.moyasarPaymentId) {
-      await this.callMoyasarRefund(
-        payment.moyasarPaymentId,
-        amount ?? payment.totalAmount,
-      );
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: payment.bookingId },
+      select: { status: true },
+    });
+    if (booking && !['cancelled', 'no_show'].includes(booking.status)) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Refunds can only be issued for cancelled or no-show bookings',
+        error: 'BOOKING_NOT_CANCELLED',
+      });
     }
 
-    return this.prisma.payment.update({
+    const refundAmount = amount ?? payment.totalAmount;
+
+    // Atomically claim the payment for refund before calling any external API.
+    // updateMany with status: 'paid' condition acts as a compare-and-swap —
+    // if another concurrent call already claimed it, count = 0 and we bail out.
+    const claimed = await this.prisma.payment.updateMany({
+      where: { id: paymentId, status: 'paid' },
+      data: { status: 'refunded', refundAmount, refundedAt: new Date(), refundedBy: 'system' },
+    });
+    if (claimed.count === 0) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Payment was already refunded by a concurrent request',
+        error: 'ALREADY_REFUNDED',
+      });
+    }
+
+    if (payment.method === 'moyasar' && payment.moyasarPaymentId) {
+      try {
+        await this.callMoyasarRefund(payment.moyasarPaymentId, refundAmount);
+      } catch (err) {
+        // Moyasar call failed — revert the DB status so the refund can be retried.
+        await this.prisma.payment.updateMany({
+          where: { id: paymentId, status: 'refunded' },
+          data: { status: 'paid', refundAmount: null, refundedAt: null, refundedBy: null },
+        });
+        throw err;
+      }
+    }
+
+    return this.prisma.payment.findUniqueOrThrow({
       where: { id: paymentId },
-      data: { status: 'refunded' },
       include: paymentInclude,
     });
   }

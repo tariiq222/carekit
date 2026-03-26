@@ -77,23 +77,37 @@ describe('MoyasarRefundService', () => {
       const paidBankTransfer = { ...mockPayment, status: 'paid', method: 'bank_transfer', moyasarPaymentId: null };
       const updatedPayment = { ...paidBankTransfer, status: 'refunded' };
       mockPrisma.payment.findUnique.mockResolvedValue(paidBankTransfer);
-      mockPrisma.payment.update.mockResolvedValue(updatedPayment);
+      mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.payment.findUniqueOrThrow.mockResolvedValue(updatedPayment);
 
       const result = await service.refund(mockPaymentId);
 
       expect(mockResilientFetch).not.toHaveBeenCalled();
-      expect(mockPrisma.payment.update).toHaveBeenCalledWith({
-        where: { id: mockPaymentId },
-        data: { status: 'refunded' },
-        include: {},
+      expect(mockPrisma.payment.updateMany).toHaveBeenCalledWith({
+        where: { id: mockPaymentId, status: 'paid' },
+        data: expect.objectContaining({ status: 'refunded' }),
       });
       expect(result.status).toBe('refunded');
+    });
+
+    it('should throw BadRequestException when payment already claimed by concurrent request', async () => {
+      const paidPayment = { ...mockPayment, status: 'paid', method: 'bank_transfer', moyasarPaymentId: null };
+      mockPrisma.payment.findUnique.mockResolvedValue(paidPayment);
+      mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.refund(mockPaymentId)).rejects.toMatchObject({
+        response: { statusCode: 400, error: 'ALREADY_REFUNDED' },
+      });
     });
 
     it('should call Moyasar API and update status for moyasar payment', async () => {
       const updatedPayment = { ...mockMoyasarPayment, status: 'refunded' };
       mockPrisma.payment.findUnique.mockResolvedValue(mockMoyasarPayment);
-      mockPrisma.payment.update.mockResolvedValue(updatedPayment);
+      mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.payment.findUniqueOrThrow.mockResolvedValue(updatedPayment);
       mockResilientFetch.mockResolvedValue({ ok: true } as Response);
 
       const result = await service.refund(mockPaymentId);
@@ -106,10 +120,9 @@ describe('MoyasarRefundService', () => {
         }),
         expect.any(Object),
       );
-      expect(mockPrisma.payment.update).toHaveBeenCalledWith({
-        where: { id: mockPaymentId },
-        data: { status: 'refunded' },
-        include: {},
+      expect(mockPrisma.payment.updateMany).toHaveBeenCalledWith({
+        where: { id: mockPaymentId, status: 'paid' },
+        data: expect.objectContaining({ status: 'refunded' }),
       });
       expect(result.status).toBe('refunded');
     });
@@ -117,7 +130,9 @@ describe('MoyasarRefundService', () => {
     it('should use provided amount instead of totalAmount when specified', async () => {
       const updatedPayment = { ...mockMoyasarPayment, status: 'refunded' };
       mockPrisma.payment.findUnique.mockResolvedValue(mockMoyasarPayment);
-      mockPrisma.payment.update.mockResolvedValue(updatedPayment);
+      mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.payment.findUniqueOrThrow.mockResolvedValue(updatedPayment);
       mockResilientFetch.mockResolvedValue({ ok: true } as Response);
 
       await service.refund(mockPaymentId, 5000);
@@ -134,7 +149,9 @@ describe('MoyasarRefundService', () => {
     it('should use totalAmount when no amount provided for moyasar payment', async () => {
       const updatedPayment = { ...mockMoyasarPayment, status: 'refunded' };
       mockPrisma.payment.findUnique.mockResolvedValue(mockMoyasarPayment);
-      mockPrisma.payment.update.mockResolvedValue(updatedPayment);
+      mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.payment.findUniqueOrThrow.mockResolvedValue(updatedPayment);
       mockResilientFetch.mockResolvedValue({ ok: true } as Response);
 
       await service.refund(mockPaymentId);
@@ -148,8 +165,10 @@ describe('MoyasarRefundService', () => {
       );
     });
 
-    it('should throw BadRequestException when Moyasar API returns non-ok response', async () => {
+    it('should throw BadRequestException when Moyasar API returns non-ok response and revert DB', async () => {
       mockPrisma.payment.findUnique.mockResolvedValue(mockMoyasarPayment);
+      mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
       mockResilientFetch.mockResolvedValue({
         ok: false,
         json: jest.fn().mockResolvedValue({ message: 'Insufficient balance' }),
@@ -159,11 +178,19 @@ describe('MoyasarRefundService', () => {
       await expect(service.refund(mockPaymentId)).rejects.toMatchObject({
         response: { statusCode: 400, error: 'MOYASAR_REFUND_ERROR', message: 'Insufficient balance' },
       });
-      expect(mockPrisma.payment.update).not.toHaveBeenCalled();
+      // DB should be reverted after Moyasar failure
+      expect(mockPrisma.payment.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: mockPaymentId, status: 'refunded' },
+          data: expect.objectContaining({ status: 'paid' }),
+        }),
+      );
     });
 
     it('should throw BadRequestException with fallback message when Moyasar error body has no message', async () => {
       mockPrisma.payment.findUnique.mockResolvedValue(mockMoyasarPayment);
+      mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
       mockResilientFetch.mockResolvedValue({
         ok: false,
         json: jest.fn().mockRejectedValue(new Error('parse error')),
@@ -179,15 +206,16 @@ describe('MoyasarRefundService', () => {
       const moyasarNoId = { ...mockMoyasarPayment, moyasarPaymentId: null };
       const updatedPayment = { ...moyasarNoId, status: 'refunded' };
       mockPrisma.payment.findUnique.mockResolvedValue(moyasarNoId);
-      mockPrisma.payment.update.mockResolvedValue(updatedPayment);
+      mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
+      mockPrisma.payment.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.payment.findUniqueOrThrow.mockResolvedValue(updatedPayment);
 
       const result = await service.refund(mockPaymentId);
 
       expect(mockResilientFetch).not.toHaveBeenCalled();
-      expect(mockPrisma.payment.update).toHaveBeenCalledWith({
-        where: { id: mockPaymentId },
-        data: { status: 'refunded' },
-        include: {},
+      expect(mockPrisma.payment.updateMany).toHaveBeenCalledWith({
+        where: { id: mockPaymentId, status: 'paid' },
+        data: expect.objectContaining({ status: 'refunded' }),
       });
       expect(result.status).toBe('refunded');
     });

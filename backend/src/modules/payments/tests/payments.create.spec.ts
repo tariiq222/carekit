@@ -8,6 +8,7 @@ import { PaymentsService } from '../payments.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { MoyasarPaymentService } from '../moyasar-payment.service.js';
 import { BankTransferService } from '../bank-transfer.service.js';
+import { BookingStatusService } from '../../bookings/booking-status.service.js';
 import {
   createMockPrisma,
   createMockMoyasarService,
@@ -18,6 +19,8 @@ import {
   mockBookingId,
   mockUserId,
 } from './payments.fixtures.js';
+
+const mockBookingStatusService = { confirm: jest.fn().mockResolvedValue(undefined) };
 
 async function createModule(
   mockPrisma: ReturnType<typeof createMockPrisma>,
@@ -30,6 +33,7 @@ async function createModule(
       { provide: PrismaService, useValue: mockPrisma },
       { provide: MoyasarPaymentService, useValue: mockMoyasar },
       { provide: BankTransferService, useValue: mockBankTransfer },
+      { provide: BookingStatusService, useValue: mockBookingStatusService },
     ],
   }).compile();
   return module.get<PaymentsService>(PaymentsService);

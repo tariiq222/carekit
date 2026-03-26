@@ -10,7 +10,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
-import { CancelledBy } from '@prisma/client';
+import { CancelledBy, Prisma } from '@prisma/client';
 
 @Injectable()
 export class MoyasarWebhookService {
@@ -29,11 +29,6 @@ export class MoyasarWebhookService {
     dto: MoyasarWebhookDto,
   ) {
     this.verifySignature(signature, rawBody);
-
-    const existing = await this.prisma.processedWebhook.findUnique({
-      where: { eventId: dto.id },
-    });
-    if (existing) return { success: true };
 
     const payment = await this.prisma.payment.findFirst({
       where: { moyasarPaymentId: dto.id },
@@ -88,38 +83,49 @@ export class MoyasarWebhookService {
     eventId: string,
     webhookAmount: number,
   ): Promise<void> {
-    const updated = await this.prisma.$transaction(async (tx) => {
-      // Verify the paid amount matches the stored totalAmount before confirming.
-      // Moyasar sends amounts in halalat (smallest currency unit).
-      const storedPayment = await tx.payment.findUnique({
-        where: { id: paymentId },
-        select: { totalAmount: true, status: true },
-      });
+    let updated: { count: number; amountMismatch: boolean };
+    try {
+      updated = await this.prisma.$transaction(async (tx) => {
+        // Verify the paid amount matches the stored totalAmount before confirming.
+        // Moyasar sends amounts in halalat (smallest currency unit).
+        const storedPayment = await tx.payment.findUnique({
+          where: { id: paymentId },
+          select: { totalAmount: true, status: true },
+        });
 
-      if (
-        storedPayment &&
-        storedPayment.status === 'pending' &&
-        storedPayment.totalAmount !== webhookAmount
-      ) {
-        this.logger.warn(
-          `Payment amount mismatch for payment ${paymentId}: ` +
-            `expected ${storedPayment.totalAmount} halalat, got ${webhookAmount} halalat from Moyasar`,
-        );
+        if (
+          storedPayment &&
+          storedPayment.status === 'pending' &&
+          storedPayment.totalAmount !== webhookAmount
+        ) {
+          this.logger.warn(
+            `Payment amount mismatch for payment ${paymentId}: ` +
+              `expected ${storedPayment.totalAmount} halalat, got ${webhookAmount} halalat from Moyasar`,
+          );
+          const result = await tx.payment.updateMany({
+            where: { id: paymentId, status: 'pending' },
+            data: { status: 'failed' },
+          });
+          await tx.processedWebhook.create({ data: { eventId } });
+          return { count: 0, amountMismatch: true, mismatchResult: result };
+        }
+
         const result = await tx.payment.updateMany({
           where: { id: paymentId, status: 'pending' },
-          data: { status: 'failed' },
+          data: { status: 'paid' },
         });
         await tx.processedWebhook.create({ data: { eventId } });
-        return { count: 0, amountMismatch: true, mismatchResult: result };
-      }
-
-      const result = await tx.payment.updateMany({
-        where: { id: paymentId, status: 'pending' },
-        data: { status: 'paid' },
+        return { count: result.count, amountMismatch: false };
       });
-      await tx.processedWebhook.create({ data: { eventId } });
-      return { count: result.count, amountMismatch: false };
-    });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        return; // Already processed — idempotent
+      }
+      throw err;
+    }
 
     if (updated.count === 0 || updated.amountMismatch) return;
 
@@ -131,13 +137,23 @@ export class MoyasarWebhookService {
     paymentId: string,
     eventId: string,
   ): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      await tx.payment.updateMany({
-        where: { id: paymentId, status: 'pending' },
-        data: { status: 'failed' },
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.payment.updateMany({
+          where: { id: paymentId, status: 'pending' },
+          data: { status: 'failed' },
+        });
+        await tx.processedWebhook.create({ data: { eventId } });
       });
-      await tx.processedWebhook.create({ data: { eventId } });
-    });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        return; // Already processed — idempotent
+      }
+      throw err;
+    }
   }
 
   private async confirmBookingAfterPayment(
@@ -149,20 +165,17 @@ export class MoyasarWebhookService {
       this.logger.log(`Auto-confirmed booking ${bookingId} after payment`);
     } catch (err) {
       // Race recovery: if cron expired the booking while payment was processing,
-      // revert to confirmed since money was actually paid
-      const booking = await this.prisma.booking.findUnique({
-        where: { id: bookingId },
-        select: { status: true },
+      // revert to confirmed since money was actually paid.
+      // updateMany with status condition makes this idempotent under concurrent retries.
+      const recovered = await this.prisma.booking.updateMany({
+        where: { id: bookingId, status: 'expired' },
+        data: {
+          status: 'confirmed',
+          confirmedAt: new Date(),
+          cancelledBy: null,
+        },
       });
-      if (booking?.status === 'expired') {
-        await this.prisma.booking.update({
-          where: { id: bookingId },
-          data: {
-            status: 'confirmed',
-            confirmedAt: new Date(),
-            cancelledBy: null,
-          },
-        });
+      if (recovered.count > 0) {
         this.logger.warn(
           `Recovered expired booking ${bookingId} → confirmed (payment ${paymentId} was paid)`,
         );

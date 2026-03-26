@@ -72,14 +72,16 @@ export function createMockPrisma(): any {
   const mock: any = {
     payment: {
       findUnique: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       aggregate: jest.fn(),
     },
-    booking: { findFirst: jest.fn() },
+    booking: { findFirst: jest.fn(), findUnique: jest.fn() },
     bankTransferReceipt: {
       findUnique: jest.fn(),
       create: jest.fn(),
