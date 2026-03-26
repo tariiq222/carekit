@@ -24,3 +24,25 @@ export enum WaitlistStatus {
   EXPIRED = 'expired',
   CANCELLED = 'cancelled',
 }
+
+export enum CancelledBy {
+  PATIENT = 'patient',
+  PRACTITIONER = 'practitioner',
+  ADMIN = 'admin',
+  SYSTEM = 'system',
+}
+
+export enum RecurringPattern {
+  DAILY = 'daily',
+  EVERY_2_DAYS = 'every_2_days',
+  EVERY_3_DAYS = 'every_3_days',
+  WEEKLY = 'weekly',
+  BIWEEKLY = 'biweekly',
+  MONTHLY = 'monthly',
+}
+
+export enum RefundType {
+  FULL = 'full',
+  PARTIAL = 'partial',
+  NONE = 'none',
+}

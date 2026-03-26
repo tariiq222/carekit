@@ -1,8 +1,17 @@
 /** Booking types */
-export type BookingType = 'clinic_visit' | 'phone_consultation' | 'video_consultation';
-export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'pending_cancellation';
-export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'failed';
-export type PaymentMethod = 'moyasar' | 'bank_transfer';
+export type BookingType = 'clinic_visit' | 'phone_consultation' | 'video_consultation' | 'walk_in';
+export type BookingStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'checked_in'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled'
+  | 'pending_cancellation'
+  | 'no_show'
+  | 'expired';
+export type PaymentStatus = 'pending' | 'awaiting' | 'paid' | 'refunded' | 'failed' | 'rejected';
+export type PaymentMethod = 'moyasar' | 'bank_transfer' | 'cash';
 export type TransferVerificationStatus =
   | 'pending' | 'matched' | 'amount_differs' | 'suspicious'
   | 'old_date' | 'unreadable' | 'approved' | 'rejected';
@@ -28,11 +37,11 @@ export interface Practitioner {
   bio?: string;
   bioAr?: string;
   qualifications?: string[];
-  clinicPrice: number;
-  phonePrice: number;
-  videoPrice: number;
-  averageRating: number;
-  totalRatings: number;
+  priceClinic: number;
+  pricePhone: number;
+  priceVideo: number;
+  rating: number;
+  reviewCount: number;
   isAvailableToday?: boolean;
   nextAvailableDate?: string;
 }
@@ -138,7 +147,27 @@ export interface BankTransferReceipt {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'booking_confirmed' | 'booking_cancelled' | 'reminder' | 'payment_received' | 'new_rating' | 'problem_report';
+  type:
+    | 'booking_confirmed'
+    | 'booking_completed'
+    | 'booking_cancelled'
+    | 'booking_rescheduled'
+    | 'booking_expired'
+    | 'booking_no_show'
+    | 'booking_reminder'
+    | 'booking_reminder_urgent'
+    | 'booking_cancellation_rejected'
+    | 'cancellation_rejected'
+    | 'cancellation_requested'
+    | 'no_show_review'
+    | 'patient_arrived'
+    | 'receipt_rejected'
+    | 'reminder'
+    | 'payment_received'
+    | 'new_rating'
+    | 'problem_report'
+    | 'waitlist_slot_available'
+    | 'system_alert';
   titleAr: string;
   titleEn: string;
   bodyAr: string;

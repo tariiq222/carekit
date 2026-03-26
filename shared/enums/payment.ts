@@ -1,6 +1,7 @@
 export enum PaymentMethod {
   MOYASAR = 'moyasar',
   BANK_TRANSFER = 'bank_transfer',
+  CASH = 'cash',
 }
 
 export enum PaymentStatus {
@@ -9,6 +10,7 @@ export enum PaymentStatus {
   PAID = 'paid',
   REFUNDED = 'refunded',
   FAILED = 'failed',
+  REJECTED = 'rejected',
 }
 
 export enum TransferVerificationStatus {

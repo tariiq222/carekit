@@ -24,7 +24,7 @@ export interface PaginationMeta {
   perPage: number;
   totalPages: number;
   hasNextPage: boolean;
-  hasPrevPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 /** Common query params for paginated endpoints */
