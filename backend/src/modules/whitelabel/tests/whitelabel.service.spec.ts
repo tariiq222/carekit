@@ -38,6 +38,7 @@ const mockPrismaService: any = {
     upsert: jest.fn(),
     delete: jest.fn(),
   },
+  $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
 };
 
 // ---------------------------------------------------------------------------

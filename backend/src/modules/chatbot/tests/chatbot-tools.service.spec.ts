@@ -2,9 +2,11 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChatbotToolsService } from '../chatbot-tools.service.js';
-import { BookingsService } from '../../bookings/bookings.service.js';
-import { ServicesService } from '../../services/services.service.js';
-import { PractitionersService } from '../../practitioners/practitioners.service.js';
+import {
+  CHATBOT_BOOKING_PORT,
+  CHATBOT_SERVICE_PORT,
+  CHATBOT_PRACTITIONER_PORT,
+} from '../interfaces/chatbot-domain.interface.js';
 import { ChatbotRagService } from '../chatbot-rag.service.js';
 import { ChatbotConfigService } from '../chatbot-config.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
@@ -50,9 +52,9 @@ describe('ChatbotToolsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChatbotToolsService,
-        { provide: BookingsService, useValue: mockBookingsService },
-        { provide: ServicesService, useValue: mockServicesService },
-        { provide: PractitionersService, useValue: mockPractitionersService },
+        { provide: CHATBOT_BOOKING_PORT, useValue: mockBookingsService },
+        { provide: CHATBOT_SERVICE_PORT, useValue: mockServicesService },
+        { provide: CHATBOT_PRACTITIONER_PORT, useValue: mockPractitionersService },
         { provide: ChatbotRagService, useValue: mockRagService },
         { provide: ChatbotConfigService, useValue: mockConfigService },
         { provide: PrismaService, useValue: mockPrisma },
@@ -69,7 +71,7 @@ describe('ChatbotToolsService', () => {
       const result = await service.execute('list_services', { search: 'check' }, ctx);
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockItems);
-      expect(mockServicesService.findAll).toHaveBeenCalledWith({ search: 'check', perPage: 10 });
+      expect(mockServicesService.findAll).toHaveBeenCalledWith({ search: 'check', perPage: 100 });
     });
   });
 
@@ -82,7 +84,7 @@ describe('ChatbotToolsService', () => {
       expect(mockPractitionersService.findAll).toHaveBeenCalledWith({
         search: 'Ahmed',
         specialty: undefined,
-        perPage: 10,
+        perPage: 100,
       });
     });
   });

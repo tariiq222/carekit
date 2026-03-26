@@ -33,14 +33,16 @@ const mockCreatedInvoice = {
 
 const mockPrismaService: any = {
   payment: { findUnique: jest.fn() },
-  invoice: { findUnique: jest.fn(), create: jest.fn() },
+  invoice: { findUnique: jest.fn(), findFirst: jest.fn().mockResolvedValue(null), create: jest.fn() },
   whiteLabelConfig: { findMany: jest.fn() },
+  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
 };
 
 const mockZatcaService: any = {
   loadConfig: jest.fn(),
   getPreviousInvoiceHash: jest.fn(),
   generateForInvoice: jest.fn(),
+  zeroHash: jest.fn().mockReturnValue('0000000000000000000000000000000000000000000000000000000000000000'),
 };
 
 describe('InvoiceCreatorService', () => {
@@ -125,9 +127,10 @@ describe('InvoiceCreatorService', () => {
       expect(mockZatcaService.loadConfig).toHaveBeenCalledTimes(1);
     });
 
-    it('calls zatcaService.getPreviousInvoiceHash()', async () => {
+    it('calls zatcaService.generateForInvoice with a previousHash (hash chaining)', async () => {
       await service.createInvoice({ paymentId: 'payment-1' });
-      expect(mockZatcaService.getPreviousInvoiceHash).toHaveBeenCalledTimes(1);
+      const call = mockZatcaService.generateForInvoice.mock.calls[0][0];
+      expect(call.previousInvoiceHash).toBeDefined();
     });
 
     it('calls zatcaService.generateForInvoice with correct buyerName from patient firstName+lastName', async () => {
