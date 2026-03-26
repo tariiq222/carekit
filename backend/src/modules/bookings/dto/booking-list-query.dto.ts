@@ -1,5 +1,6 @@
-import { IsInt, IsOptional, IsString, IsUUID, Matches, MaxLength, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Matches, MaxLength, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { BookingStatus, BookingType } from '@prisma/client';
 
 export class BookingListQueryDto {
   @IsOptional()
@@ -15,14 +16,12 @@ export class BookingListQueryDto {
   perPage?: number;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  status?: string;
+  @IsEnum(BookingStatus)
+  status?: BookingStatus;
 
   @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  type?: string;
+  @IsEnum(BookingType)
+  type?: BookingType;
 
   @IsOptional()
   @IsUUID()

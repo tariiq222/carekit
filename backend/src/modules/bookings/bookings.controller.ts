@@ -27,6 +27,7 @@ import { AdminCancelDto } from './dto/admin-cancel.dto.js';
 import { CompleteBookingDto } from './dto/complete-booking.dto.js';
 import { BookingListQueryDto } from './dto/booking-list-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
+import type { UserPayload } from '../../common/types/user-payload.type.js';
 
 @ApiTags('Bookings')
 @ApiBearerAuth()
@@ -47,9 +48,9 @@ export class BookingsController {
   @CheckPermissions({ module: 'bookings', action: 'create' })
   async create(
     @Body() dto: CreateBookingDto,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: UserPayload,
   ) {
-    return this.bookingsService.create(user.id, dto);
+    return this.bookingsService.create(user.id, dto, user.roles);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -108,6 +109,19 @@ export class BookingsController {
     @CurrentUser() user: { id: string },
   ) {
     return this.bookingsService.findAllScoped(query, user.id);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET /bookings/:id/payment-status — Payment status + retry eligibility
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get(':id/payment-status')
+  @CheckPermissions({ module: 'bookings', action: 'view' })
+  async getPaymentStatus(
+    @Param('id', uuidPipe) id: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.bookingsService.getPaymentStatus(id, user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════

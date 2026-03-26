@@ -31,6 +31,7 @@ import { ClinicHoursService } from '../clinic/clinic-hours.service.js';
 import { ClinicHolidaysService } from '../clinic/clinic-holidays.service.js';
 import { CLINIC_TIMEZONE } from '../../config/constants/index.js';
 import { NOTIF } from '../../common/constants/notification-messages.js';
+import { ERR } from '../../common/constants/error-messages.js';
 
 @Injectable()
 export class BookingsService {
@@ -52,32 +53,37 @@ export class BookingsService {
     private readonly clinicHolidaysService: ClinicHolidaysService,
   ) {}
 
-  async create(callerUserId: string, dto: CreateBookingDto) {
+  async create(
+    callerUserId: string,
+    dto: CreateBookingDto,
+    callerRoles?: Array<{ slug: string }>,
+  ) {
+
     // Fix 7: Admin book on behalf — resolve actual patient
     const actualPatientId = await this.paymentHelper.resolvePatientId(callerUserId, dto.patientId);
 
     // Fix 9: Walk-in validation
     const practitioner = await this.prisma.practitioner.findFirst({ where: { id: dto.practitionerId, isActive: true, deletedAt: null } });
-    if (!practitioner) throw new NotFoundException({ statusCode: 404, message: 'Practitioner not found', error: 'NOT_FOUND' });
+    if (!practitioner) throw new NotFoundException({ statusCode: 404, message: ERR.practitioner.notFound, error: 'NOT_FOUND' });
     if (!practitioner.isAcceptingBookings) {
-      throw new BadRequestException({ statusCode: 400, message: 'Practitioner is not accepting new bookings at this time', error: 'NOT_ACCEPTING_BOOKINGS' });
+      throw new BadRequestException({ statusCode: 400, message: ERR.practitioner.notAcceptingBookings, error: 'NOT_ACCEPTING_BOOKINGS' });
     }
 
     const service = await this.prisma.service.findFirst({ where: { id: dto.serviceId, isActive: true, deletedAt: null } });
-    if (!service) throw new NotFoundException({ statusCode: 404, message: 'Service not found', error: 'NOT_FOUND' });
+    if (!service) throw new NotFoundException({ statusCode: 404, message: ERR.service.notFound, error: 'NOT_FOUND' });
 
     const ps = await this.prisma.practitionerService.findUnique({
       where: { practitionerId_serviceId: { practitionerId: dto.practitionerId, serviceId: dto.serviceId } },
     });
-    if (!ps) throw new BadRequestException({ statusCode: 400, message: 'Practitioner does not offer this service', error: 'SERVICE_NOT_OFFERED' });
-    if (!ps.isActive) throw new BadRequestException({ statusCode: 400, message: 'This service is currently unavailable for this practitioner', error: 'SERVICE_INACTIVE' });
-    if (!ps.availableTypes.includes(dto.type)) throw new BadRequestException({ statusCode: 400, message: `Booking type '${dto.type}' is not available for this service`, error: 'TYPE_NOT_AVAILABLE' });
+    if (!ps) throw new BadRequestException({ statusCode: 400, message: ERR.service.notOffered, error: 'SERVICE_NOT_OFFERED' });
+    if (!ps.isActive) throw new BadRequestException({ statusCode: 400, message: ERR.service.inactive, error: 'SERVICE_INACTIVE' });
+    if (!ps.availableTypes.includes(dto.type)) throw new BadRequestException({ statusCode: 400, message: ERR.service.typeNotAvailable(dto.type), error: 'TYPE_NOT_AVAILABLE' });
 
     const branchId = await this.resolveBranchContext(dto.practitionerId, dto.branchId);
     const settings = await this.bookingSettingsService.getForBranch(branchId);
 
     if (dto.type === 'walk_in' && !settings.allowWalkIn) {
-      throw new BadRequestException({ statusCode: 400, message: 'Walk-in bookings are not allowed', error: 'WALK_IN_NOT_ALLOWED' });
+      throw new BadRequestException({ statusCode: 400, message: ERR.booking.walkInNotAllowed, error: 'WALK_IN_NOT_ALLOWED' });
     }
 
     // Resolve price and duration via the new pricing model (ServiceBookingType + PractitionerServiceType)
@@ -88,7 +94,7 @@ export class BookingsService {
     const bookingDate = new Date(dto.date);
     const nowRiyadh = new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE }).format(new Date());
     const today = new Date(nowRiyadh); // midnight in Riyadh
-    if (bookingDate < today) throw new BadRequestException({ statusCode: 400, message: 'Cannot book in the past', error: 'VALIDATION_ERROR' });
+    if (bookingDate < today) throw new BadRequestException({ statusCode: 400, message: ERR.booking.pastDate, error: 'VALIDATION_ERROR' });
 
     // Max advance booking window check
     if (settings.maxAdvanceBookingDays > 0) {
@@ -97,7 +103,7 @@ export class BookingsService {
       if (bookingDate > maxDate) {
         throw new BadRequestException({
           statusCode: 400,
-          message: `Bookings cannot be made more than ${settings.maxAdvanceBookingDays} days in advance`,
+          message: ERR.booking.tooFarInAdvance(settings.maxAdvanceBookingDays),
           error: 'BOOKING_TOO_FAR_IN_ADVANCE',
         });
       }
@@ -112,7 +118,7 @@ export class BookingsService {
       if (minutesUntil < settings.minBookingLeadMinutes) {
         throw new BadRequestException({
           statusCode: 400,
-          message: `Booking must be at least ${settings.minBookingLeadMinutes} minutes in advance`,
+          message: ERR.booking.leadTimeViolation(settings.minBookingLeadMinutes),
           error: 'BOOKING_LEAD_TIME_VIOLATION',
         });
       }
@@ -142,7 +148,6 @@ export class BookingsService {
     // This prevents race conditions where two concurrent requests both pass the
     // conflict check and create bookings for the same slot.
     const isWalkIn = dto.type === 'walk_in';
-    // TODO: enforce that only admin/staff roles can set payAtClinic === true
     const isPayAtClinic = dto.payAtClinic === true;
     let booking;
     try {
@@ -161,7 +166,7 @@ export class BookingsService {
               dto.practitionerId, bookingDate, settings.suggestAlternativesCount, branchId,
             );
             throw new ConflictException({
-              statusCode: 409, message: 'Practitioner already has a booking at this time',
+              statusCode: 409, message: ERR.booking.conflict,
               error: 'BOOKING_CONFLICT', alternatives,
             });
           }
@@ -206,7 +211,7 @@ export class BookingsService {
     // H5: Payment creation is critical — if it fails, cancel the booking to avoid
     // orphaned bookings stuck in 'pending' with no payment record.
     try {
-      await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, resolved.price, isPayAtClinic);
+      await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, resolved.price, isPayAtClinic, callerRoles);
     } catch (paymentErr) {
       this.logger.error(
         `Payment creation failed for booking ${booking.id} — cancelling booking to prevent orphan`,
@@ -249,28 +254,29 @@ export class BookingsService {
   findTodayBookingsForUser(userId: string) { return this.queryService.findTodayBookingsForUser(userId); }
   findTodayBookings(userId: string) { return this.queryService.findTodayBookings(userId); }
   getStats() { return this.queryService.getStats(); }
+  getPaymentStatus(bookingId: string, userId: string) { return this.queryService.getPaymentStatus(bookingId, userId); }
 
   async reschedule(id: string, dto: RescheduleBookingDto, adminUserId?: string) {
     if (!dto.date && !dto.startTime) {
-      throw new BadRequestException({ statusCode: 400, message: 'At least one of date or startTime must be provided', error: 'VALIDATION_ERROR' });
+      throw new BadRequestException({ statusCode: 400, message: ERR.booking.invalidRescheduleInput, error: 'VALIDATION_ERROR' });
     }
     return this.rescheduleService.reschedule(id, dto, adminUserId);
   }
 
   async patientReschedule(bookingId: string, patientId: string, dto: RescheduleBookingDto) {
     const settings = await this.bookingSettingsService.get();
-    if (!settings.patientCanReschedule) throw new BadRequestException({ statusCode: 400, message: 'Patient self-reschedule is not enabled', error: 'RESCHEDULE_NOT_ALLOWED' });
+    if (!settings.patientCanReschedule) throw new BadRequestException({ statusCode: 400, message: ERR.booking.rescheduleNotAllowed, error: 'RESCHEDULE_NOT_ALLOWED' });
     const booking = await this.ensureBookingExists(bookingId);
-    if (booking.patientId !== patientId) throw new ForbiddenException({ statusCode: 403, message: 'You can only reschedule your own bookings', error: 'FORBIDDEN' });
+    if (booking.patientId !== patientId) throw new ForbiddenException({ statusCode: 403, message: ERR.booking.rescheduleOwnership, error: 'FORBIDDEN' });
     const reschedulableStatuses = ['pending', 'confirmed', 'checked_in'];
     if (!reschedulableStatuses.includes(booking.status)) {
-      throw new BadRequestException({ statusCode: 400, message: `Cannot reschedule a booking with status '${booking.status}'`, error: 'INVALID_STATUS_FOR_RESCHEDULE' });
+      throw new BadRequestException({ statusCode: 400, message: ERR.booking.invalidStatusForReschedule(booking.status), error: 'INVALID_STATUS_FOR_RESCHEDULE' });
     }
-    if (booking.rescheduleCount >= settings.maxReschedulesPerBooking) throw new BadRequestException({ statusCode: 400, message: `Maximum reschedule limit (${settings.maxReschedulesPerBooking}) reached`, error: 'RESCHEDULE_LIMIT_REACHED' });
+    if (booking.rescheduleCount >= settings.maxReschedulesPerBooking) throw new BadRequestException({ statusCode: 400, message: ERR.booking.rescheduleLimitReached(settings.maxReschedulesPerBooking), error: 'RESCHEDULE_LIMIT_REACHED' });
     const bdt = new Date(booking.date);
     const [h, m] = booking.startTime.split(':').map(Number);
     bdt.setHours(h, m, 0, 0);
-    if ((bdt.getTime() - Date.now()) / (1000 * 60 * 60) < settings.rescheduleBeforeHours) throw new BadRequestException({ statusCode: 400, message: `Must reschedule at least ${settings.rescheduleBeforeHours} hours before the appointment`, error: 'RESCHEDULE_TOO_LATE' });
+    if ((bdt.getTime() - Date.now()) / (1000 * 60 * 60) < settings.rescheduleBeforeHours) throw new BadRequestException({ statusCode: 400, message: ERR.booking.rescheduleTooLate(settings.rescheduleBeforeHours), error: 'RESCHEDULE_TOO_LATE' });
     const result = await this.reschedule(bookingId, dto);
     await this.prisma.booking.update({ where: { id: result.id }, data: { rescheduleCount: booking.rescheduleCount + 1 } });
     this.activityLogService.log({ action: 'booking_patient_rescheduled', module: 'bookings', resourceId: result.id, description: `Patient rescheduled booking (count: ${booking.rescheduleCount + 1})` }).catch(() => {});
@@ -318,7 +324,7 @@ export class BookingsService {
 
   private async ensureBookingExists(id: string) {
     const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null } });
-    if (!booking) throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
+    if (!booking) throw new NotFoundException({ statusCode: 404, message: ERR.booking.notFound, error: 'NOT_FOUND' });
     return booking;
   }
 
@@ -330,7 +336,7 @@ export class BookingsService {
       select: { id: true },
     });
     if (!branch) {
-      throw new NotFoundException({ statusCode: 404, message: 'Branch not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({ statusCode: 404, message: ERR.branch.notFound, error: 'NOT_FOUND' });
     }
 
     const assignment = await this.prisma.practitionerBranch.findUnique({
@@ -340,7 +346,7 @@ export class BookingsService {
     if (!assignment) {
       throw new BadRequestException({
         statusCode: 400,
-        message: 'Practitioner is not assigned to this branch',
+        message: ERR.practitioner.branchMismatch,
         error: 'PRACTITIONER_BRANCH_MISMATCH',
       });
     }

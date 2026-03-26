@@ -65,13 +65,23 @@ describe('BookingPaymentHelper', () => {
   });
 
   describe('createPaymentIfNeeded', () => {
-    it('should create cash payment when payAtClinic is true', async () => {
-      await service.createPaymentIfNeeded(bookingId, 'clinic_visit', 20000, true);
+    it('should create cash payment when payAtClinic is true and caller has privilege', async () => {
+      const staffRoles = [{ slug: 'staff' }];
+      await service.createPaymentIfNeeded(bookingId, 'clinic_visit', 20000, true, staffRoles);
       expect(mockPrisma.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ method: 'cash', status: 'paid' }),
         }),
       );
+    });
+
+    it('should throw ForbiddenException when payAtClinic is true but caller lacks privilege', async () => {
+      await expect(
+        service.createPaymentIfNeeded(bookingId, 'clinic_visit', 20000, true, [{ slug: 'patient' }]),
+      ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
+      await expect(
+        service.createPaymentIfNeeded(bookingId, 'clinic_visit', 20000, true, undefined),
+      ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
     });
 
     it('should skip payment when resolvedPrice is 0 (free service)', async () => {

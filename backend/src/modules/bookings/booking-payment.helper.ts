@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
 import { applyVat } from '../payments/payments.helpers.js';
+import { ERR } from '../../common/constants/error-messages.js';
 
 @Injectable()
 export class BookingPaymentHelper {
@@ -22,15 +23,23 @@ export class BookingPaymentHelper {
     return targetPatientId;
   }
 
+  private static readonly PAY_AT_CLINIC_ROLES = ['owner', 'admin', 'staff'] as const;
+
   /** Create awaiting payment record using the resolved price from PriceResolver */
   async createPaymentIfNeeded(
     bookingId: string,
     type: string,
     resolvedPrice: number,
     payAtClinic?: boolean,
+    callerRoles?: Array<{ slug: string }>,
   ): Promise<void> {
-    // TODO: enforce admin/staff role check for payAtClinic before reaching this point
     if (payAtClinic === true) {
+      const hasPrivilege = callerRoles?.some((r) =>
+        (BookingPaymentHelper.PAY_AT_CLINIC_ROLES as readonly string[]).includes(r.slug),
+      );
+      if (!hasPrivilege) {
+        throw new ForbiddenException({ statusCode: 403, message: ERR.booking.payAtClinicForbidden, error: 'FORBIDDEN' });
+      }
       // Skip online payment — create a cash payment record marked as paid
       const { amount, vatAmount, totalAmount } = applyVat(resolvedPrice);
       await this.prisma.payment.create({

@@ -251,4 +251,49 @@ export class BookingQueryService {
       expired: map['expired'] ?? 0,
     };
   }
+
+  async getPaymentStatus(bookingId: string, userId: string) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: bookingId, deletedAt: null },
+      select: {
+        id: true,
+        patientId: true,
+        status: true,
+        payment: {
+          select: {
+            id: true,
+            method: true,
+            status: true,
+            totalAmount: true,
+            refundAmount: true,
+            refundedAt: true,
+            refundReason: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (!booking) {
+      throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
+    }
+
+    const ctx = await resolveUserRoleContext(this.prisma, userId);
+    const isOwner = booking.patientId === userId;
+    if (!isOwner && ctx.role === 'patient') {
+      throw new ForbiddenException({ statusCode: 403, message: 'Access denied', error: 'FORBIDDEN' });
+    }
+
+    const RETRYABLE_STATUSES = ['failed', 'pending', 'awaiting'];
+    const canRetry =
+      !booking.payment ||
+      RETRYABLE_STATUSES.includes(booking.payment.status);
+
+    return {
+      bookingId: booking.id,
+      bookingStatus: booking.status,
+      payment: booking.payment ?? null,
+      canRetry,
+    };
+  }
 }

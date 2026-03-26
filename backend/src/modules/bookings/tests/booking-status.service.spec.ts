@@ -40,6 +40,9 @@ const mockPrisma: any = {
     findUnique: jest.fn(),
     findFirst: jest.fn(),
   },
+  $transaction: jest.fn().mockImplementation(
+    (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma),
+  ),
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,6 +78,9 @@ describe('BookingStatusService', () => {
     jest.clearAllMocks();
     mockActivityLog.log.mockReturnValue(Promise.resolve());
     mockStatusLog.log.mockReturnValue(Promise.resolve());
+    mockPrisma.$transaction.mockImplementation(
+      (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma),
+    );
   });
 
   describe('confirm', () => {
@@ -184,6 +190,12 @@ describe('BookingStatusService', () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('pending'));
 
       await expect(service.startSession(bookingId, practitionerUserId)).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw BadRequestException when status is confirmed (checkIn required first)', async () => {
+      mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('confirmed'));
+
+      await expect(service.startSession(bookingId, practitionerUserId)).rejects.toThrow(BadRequestException);
     });
   });
 
