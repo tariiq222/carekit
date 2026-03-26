@@ -7,57 +7,69 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePractitionerDto {
+  @ApiProperty({ description: 'User ID to link as practitioner', format: 'uuid' })
   @IsUUID()
   @IsNotEmpty()
   userId!: string;
 
+  @ApiProperty({ description: 'Specialty name in English', maxLength: 200 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
   specialty!: string;
 
+  @ApiPropertyOptional({ description: 'Specialty name in Arabic', maxLength: 200 })
   @IsOptional()
   @IsString()
   @MaxLength(200)
   specialtyAr?: string;
 
+  @ApiPropertyOptional({ description: 'Practitioner bio in English', maxLength: 1000 })
   @IsOptional()
   @IsString()
   @MaxLength(1000)
   bio?: string;
 
+  @ApiPropertyOptional({ description: 'Practitioner bio in Arabic', maxLength: 1000 })
   @IsOptional()
   @IsString()
   @MaxLength(1000)
   bioAr?: string;
 
+  @ApiPropertyOptional({ description: 'Years of experience', minimum: 0 })
   @IsOptional()
   @IsInt()
   @Min(0)
   experience?: number;
 
+  @ApiPropertyOptional({ description: 'Education in English', maxLength: 500 })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   education?: string;
 
+  @ApiPropertyOptional({ description: 'Education in Arabic', maxLength: 500 })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   educationAr?: string;
 
+  @ApiPropertyOptional({ description: 'Default clinic visit price in halalat (SAR × 100)', minimum: 0 })
   @IsOptional()
   @IsInt()
   @Min(0)
   priceClinic?: number;
 
+  @ApiPropertyOptional({ description: 'Default phone consultation price in halalat (SAR × 100)', minimum: 0 })
   @IsOptional()
   @IsInt()
   @Min(0)
   pricePhone?: number;
 
+  @ApiPropertyOptional({ description: 'Default video consultation price in halalat (SAR × 100)', minimum: 0 })
   @IsOptional()
   @IsInt()
   @Min(0)

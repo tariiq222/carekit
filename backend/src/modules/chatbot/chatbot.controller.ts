@@ -49,7 +49,7 @@ export class ChatbotController {
   @Get('sessions')
   async listSessions(
     @Query() query: SessionListQueryDto,
-    @CurrentUser() user: { id: string; roles?: string[] },
+    @CurrentUser() user: { id: string; roles?: Array<{ slug: string }> },
   ) {
     const isAdmin = this.isAdmin(user);
     return this.chatbotService.listSessions({
@@ -132,9 +132,9 @@ export class ChatbotController {
 
   // ── Helper ──
 
-  private isAdmin(user: { roles?: string[] }): boolean {
+  private isAdmin(user: { roles?: Array<{ slug: string }> }): boolean {
     return (user.roles ?? []).some((r) =>
-      (ADMIN_ROLE_SLUGS as readonly string[]).includes(r),
+      (ADMIN_ROLE_SLUGS as readonly string[]).includes(r.slug),
     );
   }
 }

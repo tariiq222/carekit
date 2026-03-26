@@ -11,6 +11,7 @@ import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto.js';
 import { UserRolesService } from './user-roles.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { PractitionersService } from '../practitioners/practitioners.service.js';
+import { AuthCacheService } from '../auth/auth-cache.service.js';
 import { sanitizeUser, SanitizableUser, userRolesInclude } from './users.helpers.js';
 import { SALT_ROUNDS, ROLE_PRACTITIONER } from '../../config/constants.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
@@ -22,6 +23,7 @@ export class UsersService {
     private readonly userRolesService: UserRolesService,
     private readonly activityLogService: ActivityLogService,
     private readonly practitionersService: PractitionersService,
+    private readonly authCache: AuthCacheService,
   ) {}
 
   async findAll(params?: {
@@ -237,6 +239,9 @@ export class UsersService {
       data: { deletedAt: new Date(), isActive: false },
     });
 
+    // Invalidate cache so deleted user cannot use existing access tokens
+    await this.authCache.invalidate(id);
+
     this.activityLogService.log({
       userId: requesterId,
       action: 'user_deleted',
@@ -261,6 +266,9 @@ export class UsersService {
       data: { isActive: true },
       include: userRolesInclude,
     });
+
+    // Invalidate cache so isActive=true takes effect immediately
+    await this.authCache.invalidate(id);
 
     return sanitizeUser(updated);
   }
@@ -289,10 +297,13 @@ export class UsersService {
       include: userRolesInclude,
     });
 
+    // Invalidate cache so deactivated user is rejected on next request
+    await this.authCache.invalidate(id);
+
     return sanitizeUser(updated);
   }
 
-  async assignRole(userId: string, roleId?: string, roleSlug?: string) {
+  async assignRole(userId: string, roleId?: string, roleSlug?: string, requesterId?: string) {
     let resolvedRoleId = roleId;
 
     if (!resolvedRoleId && roleSlug) {
@@ -317,7 +328,7 @@ export class UsersService {
       });
     }
 
-    return this.userRolesService.assignRole(userId, resolvedRoleId);
+    return this.userRolesService.assignRole(userId, resolvedRoleId, requesterId);
   }
 
   async removeRole(userId: string, roleId: string) {

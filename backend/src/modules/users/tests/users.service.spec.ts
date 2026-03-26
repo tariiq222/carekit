@@ -18,6 +18,7 @@ import { PrismaService } from '../../../database/prisma.service.js';
 import { UserRolesService } from '../user-roles.service.js';
 import { ActivityLogService } from '../../activity-log/activity-log.service.js';
 import { PractitionersService } from '../../practitioners/practitioners.service.js';
+import { AuthCacheService } from '../../auth/auth-cache.service.js';
 import { CreateUserDto, UpdateUserDto } from '../dto/create-user.dto.js';
 
 // ---------------------------------------------------------------------------
@@ -67,6 +68,10 @@ const mockPractitionersService = {
   createForUser: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockAuthCacheService = {
+  invalidate: jest.fn().mockResolvedValue(undefined),
+};
+
 // ---------------------------------------------------------------------------
 // Test Suite
 // ---------------------------------------------------------------------------
@@ -84,6 +89,7 @@ describe('UsersService', () => {
         { provide: UserRolesService, useValue: mockUserRolesService },
         { provide: ActivityLogService, useValue: mockActivityLogService },
         { provide: PractitionersService, useValue: mockPractitionersService },
+        { provide: AuthCacheService, useValue: mockAuthCacheService },
       ],
     }).compile();
 
@@ -552,7 +558,7 @@ describe('UsersService', () => {
     it('should delegate to UserRolesService', async () => {
       await service.assignRole('user-id', 'role-id');
 
-      expect(mockUserRolesService.assignRole).toHaveBeenCalledWith('user-id', 'role-id');
+      expect(mockUserRolesService.assignRole).toHaveBeenCalledWith('user-id', 'role-id', undefined);
     });
 
     it('should propagate errors from UserRolesService', async () => {

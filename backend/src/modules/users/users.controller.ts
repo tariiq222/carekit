@@ -100,8 +100,12 @@ export class UsersController {
   @Post(':id/roles')
   @HttpCode(HttpStatus.OK)
   @CheckPermissions({ module: 'roles', action: 'edit' })
-  async assignRole(@Param('id', uuidPipe) id: string, @Body() dto: AssignRoleDto) {
-    await this.usersService.assignRole(id, dto.roleId, dto.roleSlug);
+  async assignRole(
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: AssignRoleDto,
+    @CurrentUser() requester: { id: string },
+  ) {
+    await this.usersService.assignRole(id, dto.roleId, dto.roleSlug, requester.id);
     return {
       success: true,
       message: 'Role assigned successfully',

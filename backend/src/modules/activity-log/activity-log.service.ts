@@ -3,6 +3,31 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 import type { Prisma } from '@prisma/client';
 
+const SENSITIVE_FIELDS = new Set([
+  'password',
+  'passwordHash',
+  'hashedPassword',
+  'refreshToken',
+  'accessToken',
+  'token',
+  'secret',
+  'apiKey',
+  'privateKey',
+  'cvv',
+  'cardNumber',
+]);
+
+function redactSensitive(
+  obj: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  if (!obj) return undefined;
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = SENSITIVE_FIELDS.has(key) ? '[REDACTED]' : value;
+  }
+  return result;
+}
+
 export interface LogActivityParams {
   userId?: string;
   action: string;
@@ -43,10 +68,10 @@ export class ActivityLogService {
           resourceId: params.resourceId,
           description: params.description,
           oldValues: params.oldValues
-            ? JSON.parse(JSON.stringify(params.oldValues))
+            ? JSON.parse(JSON.stringify(redactSensitive(params.oldValues)))
             : undefined,
           newValues: params.newValues
-            ? JSON.parse(JSON.stringify(params.newValues))
+            ? JSON.parse(JSON.stringify(redactSensitive(params.newValues)))
             : undefined,
           ipAddress: params.ipAddress,
           userAgent: params.userAgent,

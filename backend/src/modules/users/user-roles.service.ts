@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,7 +14,7 @@ export class UserRolesService {
     private readonly authCache: AuthCacheService,
   ) {}
 
-  async assignRole(userId: string, roleId: string) {
+  async assignRole(userId: string, roleId: string, requesterId?: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.deletedAt) {
       throw new NotFoundException({
@@ -30,6 +31,22 @@ export class UserRolesService {
         message: 'Role not found',
         error: 'ROLE_NOT_FOUND',
       });
+    }
+
+    // Prevent privilege escalation: only super_admin can assign the super_admin role
+    if (role.slug === 'super_admin' && requesterId) {
+      const requesterRoles = await this.prisma.userRole.findMany({
+        where: { userId: requesterId },
+        include: { role: true },
+      });
+      const isSuperAdmin = requesterRoles.some((ur) => ur.role.slug === 'super_admin');
+      if (!isSuperAdmin) {
+        throw new ForbiddenException({
+          statusCode: 403,
+          message: 'Only super admins can assign the super_admin role',
+          error: 'PRIVILEGE_ESCALATION',
+        });
+      }
     }
 
     const existing = await this.prisma.userRole.findFirst({
