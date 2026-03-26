@@ -10,12 +10,14 @@ import { TokenService } from '../token.service.js';
 import { OtpService } from '../otp.service.js';
 import { EmailService } from '../../email/email.service.js';
 import { AuthCacheService } from '../auth-cache.service.js';
+import { PatientWalkInService } from '../../patients/patient-walk-in.service.js';
 import {
   createMockPrisma,
   createMockJwt,
   createMockConfig,
   createMockEmail,
   createMockAuthCache,
+  createMockWalkIn,
 } from './auth.fixtures.js';
 
 export interface AuthTestContext {
@@ -42,6 +44,7 @@ export async function createAuthTestModule(): Promise<AuthTestContext> {
       { provide: ConfigService, useValue: createMockConfig() },
       { provide: EmailService, useValue: mockEmail },
       { provide: AuthCacheService, useValue: createMockAuthCache() },
+      { provide: PatientWalkInService, useValue: createMockWalkIn() },
     ],
   }).compile();
 

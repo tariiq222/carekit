@@ -17,7 +17,7 @@ export function createMockPrisma(): any {
       create: jest.fn(),
       findFirst: jest.fn(),
       update: jest.fn(),
-      updateMany: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     refreshToken: {
       create: jest.fn(),
@@ -36,6 +36,7 @@ export function createMockJwt() {
   return {
     sign: jest.fn().mockReturnValue('mocked-jwt-token'),
     verify: jest.fn(),
+    decode: jest.fn().mockReturnValue(null),
   };
 }
 
@@ -66,6 +67,15 @@ export function createMockAuthCache() {
     get: jest.fn().mockResolvedValue(null),
     set: jest.fn().mockResolvedValue(undefined),
     invalidate: jest.fn().mockResolvedValue(undefined),
+    acquirePopulateLock: jest.fn().mockResolvedValue(true),
+    releasePopulateLock: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
+export function createMockWalkIn() {
+  return {
+    findWalkInByPhone: jest.fn().mockResolvedValue(null),
+    claimAccount: jest.fn(),
   };
 }
 

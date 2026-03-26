@@ -132,7 +132,7 @@ describe('AuthService — resetPassword', () => {
 
   it('should throw if OTP is invalid', async () => {
     ctx.mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', email: 'user@example.com' });
-    ctx.mockPrisma.otpCode.findFirst.mockResolvedValue(null);
+    ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 0 });
 
     await expect(
       ctx.service.resetPassword('user@example.com', '000000', 'NewP@ss!'),
@@ -149,8 +149,9 @@ describe('AuthService — resetPassword', () => {
       expiresAt: futureExpiry,
       usedAt: null,
     });
-    ctx.mockPrisma.otpCode.update.mockResolvedValue({});
+    ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 1 });
     ctx.mockPrisma.user.update.mockResolvedValue({});
+    ctx.mockPrisma.refreshToken.deleteMany.mockResolvedValue({ count: 0 });
 
     await ctx.service.resetPassword('user@example.com', '123456', 'NewStr0ngP@ss!');
 
@@ -160,6 +161,6 @@ describe('AuthService — resetPassword', () => {
         data: expect.objectContaining({ passwordHash: expect.any(String) }),
       }),
     );
-    expect(ctx.mockPrisma.otpCode.update).toHaveBeenCalled();
+    expect(ctx.mockPrisma.otpCode.updateMany).toHaveBeenCalled();
   });
 });

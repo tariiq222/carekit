@@ -63,35 +63,44 @@ describe('AuthService — verifyOtp', () => {
   });
 
   it('should mark OTP as used after successful verification', async () => {
-    const futureExpiry = new Date(Date.now() + 10 * 60 * 1000);
-    ctx.mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', email: 'user@example.com' });
-    ctx.mockPrisma.otpCode.findFirst.mockResolvedValue({
-      id: 'otp-id',
-      userId: 'user-id',
-      code: '123456',
-      type: 'login',
-      expiresAt: futureExpiry,
-      usedAt: null,
-    });
-    ctx.mockPrisma.otpCode.update.mockResolvedValue({});
+    const mockUser = {
+      id: 'user-id',
+      email: 'user@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      phone: null,
+      gender: null,
+      isActive: true,
+      emailVerified: false,
+      createdAt: new Date(),
+      userRoles: [],
+    };
+    ctx.mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+    ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 1 });
+    ctx.mockPrisma.user.update.mockResolvedValue({ ...mockUser, emailVerified: true });
 
     await ctx.service.verifyOtp('user@example.com', '123456', 'login');
 
-    expect(ctx.mockPrisma.otpCode.update).toHaveBeenCalledWith(
+    expect(ctx.mockPrisma.otpCode.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'otp-id' },
+        where: expect.objectContaining({
+          userId: 'user-id',
+          code: '123456',
+          usedAt: null,
+        }),
         data: expect.objectContaining({ usedAt: expect.any(Date) }),
       }),
     );
   });
 
   it.each([
-    ['expired OTP', { expiresAt: new Date(Date.now() - 60 * 1000), usedAt: null }],
-    ['used OTP (findFirst returns null)', null],
-    ['wrong code (findFirst returns null)', null],
-  ])('should reject %s', async (_label, otpResult) => {
+    ['expired OTP'],
+    ['used OTP'],
+    ['wrong code'],
+  ])('should reject %s', async () => {
     ctx.mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', email: 'user@example.com' });
-    ctx.mockPrisma.otpCode.findFirst.mockResolvedValue(otpResult);
+    ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 0 });
+    ctx.mockPrisma.otpCode.findFirst.mockResolvedValue(null);
 
     await expect(
       ctx.service.verifyOtp('user@example.com', '123456', 'login'),
