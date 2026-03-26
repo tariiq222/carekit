@@ -7,7 +7,9 @@ import { PrismaService } from '../../../database/prisma.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { ActivityLogService } from '../../activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../../bookings/booking-settings.service.js';
+import { BookingStatusLogService } from '../../bookings/booking-status-log.service.js';
 import { WaitlistService } from '../../bookings/waitlist.service.js';
+import { MoyasarRefundService } from '../../payments/moyasar-refund.service.js';
 import { NoShowPolicy } from '@prisma/client';
 
 const defaultSettings = {
@@ -16,9 +18,11 @@ const defaultSettings = {
   noShowRefundPercent: 0,
 };
 
-const mockPrisma: Record<string, jest.Mock | Record<string, jest.Mock>> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockPrisma: any = {
   booking: {
     findMany: jest.fn(),
+    findFirst: jest.fn(),
     update: jest.fn().mockResolvedValue({}),
   },
   payment: {
@@ -28,6 +32,7 @@ const mockPrisma: Record<string, jest.Mock | Record<string, jest.Mock>> = {
   userRole: {
     findMany: jest.fn().mockResolvedValue([]),
   },
+  $transaction: jest.fn(),
 };
 
 const mockNotifications = {
@@ -46,6 +51,14 @@ const mockWaitlist = {
   checkAndNotify: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockStatusLog = {
+  log: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockMoyasarRefund = {
+  refund: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('BookingNoShowService', () => {
   let service: BookingNoShowService;
 
@@ -57,52 +70,58 @@ describe('BookingNoShowService', () => {
         { provide: NotificationsService, useValue: mockNotifications },
         { provide: ActivityLogService, useValue: mockActivityLog },
         { provide: BookingSettingsService, useValue: mockSettings },
+        { provide: BookingStatusLogService, useValue: mockStatusLog },
         { provide: WaitlistService, useValue: mockWaitlist },
+        { provide: MoyasarRefundService, useValue: mockMoyasarRefund },
       ],
     }).compile();
 
     service = module.get<BookingNoShowService>(BookingNoShowService);
     jest.clearAllMocks();
     mockSettings.get.mockResolvedValue(defaultSettings);
-    (mockPrisma.booking as Record<string, jest.Mock>).update.mockResolvedValue({});
-    (mockPrisma.payment as Record<string, jest.Mock>).findUnique.mockResolvedValue(null);
-    (mockPrisma.payment as Record<string, jest.Mock>).update.mockResolvedValue({});
-    (mockPrisma.userRole as Record<string, jest.Mock>).findMany.mockResolvedValue([]);
+    // Re-check guard: findFirst returns truthy by default (booking still confirmed)
+    mockPrisma.booking.findFirst.mockResolvedValue({ id: 'stub' });
+    mockPrisma.booking.update.mockResolvedValue({});
+    mockPrisma.payment.findUnique.mockResolvedValue(null);
+    mockPrisma.payment.update.mockResolvedValue({});
+    mockPrisma.userRole.findMany.mockResolvedValue([]);
     mockNotifications.createNotification.mockResolvedValue(undefined);
     mockActivityLog.log.mockResolvedValue(undefined);
     mockWaitlist.checkAndNotify.mockResolvedValue(undefined);
+    mockStatusLog.log.mockResolvedValue(undefined);
+    mockMoyasarRefund.refund.mockResolvedValue(undefined);
+    // Default: execute transaction callback with same mock as tx context
+    mockPrisma.$transaction.mockImplementation(
+      (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma),
+    );
   });
 
   describe('autoNoShow', () => {
     it('should do nothing when no confirmed bookings found', async () => {
-      (mockPrisma.booking as Record<string, jest.Mock>).findMany.mockResolvedValue([]);
+      mockPrisma.booking.findMany.mockResolvedValue([]);
 
       await service.autoNoShow();
 
-      expect((mockPrisma.booking as Record<string, jest.Mock>).update).not.toHaveBeenCalled();
+      expect(mockPrisma.booking.update).not.toHaveBeenCalled();
     });
 
     it('should skip bookings that are still within no-show window', async () => {
-      // Booking end time is in the future — not past the no-show deadline
-      const now = new Date();
+      // Booking is tomorrow at 09:00 — well beyond the no-show deadline
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
       const futureBooking = {
         id: 'b-1',
-        startTime: new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Asia/Riyadh',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }).format(new Date(now.getTime() + 2 * 60 * 60 * 1000)),
+        startTime: '09:00',
         patientId: 'patient-1',
         practitionerId: 'pract-1',
-        date: now,
+        date: tomorrow,
         practitioner: { userId: 'user-pract-1' },
       };
-      (mockPrisma.booking as Record<string, jest.Mock>).findMany.mockResolvedValue([futureBooking]);
+      mockPrisma.booking.findMany.mockResolvedValue([futureBooking]);
 
       await service.autoNoShow();
 
-      expect((mockPrisma.booking as Record<string, jest.Mock>).update).not.toHaveBeenCalled();
+      expect(mockPrisma.booking.update).not.toHaveBeenCalled();
     });
 
     it('should mark past bookings as no_show', async () => {
@@ -115,11 +134,11 @@ describe('BookingNoShowService', () => {
         date: pastDate,
         practitioner: { userId: 'user-pract-2' },
       };
-      (mockPrisma.booking as Record<string, jest.Mock>).findMany.mockResolvedValue([pastBooking]);
+      mockPrisma.booking.findMany.mockResolvedValue([pastBooking]);
 
       await service.autoNoShow();
 
-      expect((mockPrisma.booking as Record<string, jest.Mock>).update).toHaveBeenCalledWith(
+      expect(mockPrisma.booking.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'b-2' },
           data: expect.objectContaining({ status: 'no_show' }),
@@ -136,7 +155,7 @@ describe('BookingNoShowService', () => {
         date: new Date('2026-01-01T00:00:00+03:00'),
         practitioner: { userId: 'user-pract-3' },
       };
-      (mockPrisma.booking as Record<string, jest.Mock>).findMany.mockResolvedValue([pastBooking]);
+      mockPrisma.booking.findMany.mockResolvedValue([pastBooking]);
 
       await service.autoNoShow();
 
@@ -154,7 +173,7 @@ describe('BookingNoShowService', () => {
         date: new Date('2026-01-01T00:00:00+03:00'),
         practitioner: null,
       };
-      (mockPrisma.booking as Record<string, jest.Mock>).findMany.mockResolvedValue([pastBooking]);
+      mockPrisma.booking.findMany.mockResolvedValue([pastBooking]);
 
       await service.autoNoShow();
 
@@ -177,18 +196,19 @@ describe('BookingNoShowService', () => {
         date: new Date('2026-01-01T00:00:00+03:00'),
         practitioner: null,
       };
-      (mockPrisma.booking as Record<string, jest.Mock>).findMany.mockResolvedValue([pastBooking]);
-      (mockPrisma.payment as Record<string, jest.Mock>).findUnique.mockResolvedValue({
+      mockPrisma.booking.findMany.mockResolvedValue([pastBooking]);
+      mockPrisma.payment.findUnique.mockResolvedValue({
         id: 'pay-5',
         status: 'paid',
+        method: 'bank_transfer',
         totalAmount: 10000,
       });
 
       await service.autoNoShow();
 
-      expect((mockPrisma.payment as Record<string, jest.Mock>).update).toHaveBeenCalledWith(
+      expect(mockPrisma.payment.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { status: 'refunded', refundAmount: 5000 },
+          data: expect.objectContaining({ status: 'refunded', refundAmount: 5000 }),
         }),
       );
     });
@@ -203,11 +223,29 @@ describe('BookingNoShowService', () => {
         date: pastDate,
         practitioner: null,
       };
-      (mockPrisma.booking as Record<string, jest.Mock>).findMany.mockResolvedValue([pastBooking]);
+      mockPrisma.booking.findMany.mockResolvedValue([pastBooking]);
 
       await service.autoNoShow();
 
       expect(mockWaitlist.checkAndNotify).toHaveBeenCalledWith('pract-6', pastDate);
+    });
+
+    it('should skip already-transitioned booking when re-check returns null', async () => {
+      const pastBooking = {
+        id: 'b-7',
+        startTime: '08:00',
+        patientId: 'patient-7',
+        practitionerId: 'pract-7',
+        date: new Date('2026-01-01T00:00:00+03:00'),
+        practitioner: null,
+      };
+      mockPrisma.booking.findMany.mockResolvedValue([pastBooking]);
+      // Re-check guard: booking already checked-in or cancelled
+      mockPrisma.booking.findFirst.mockResolvedValue(null);
+
+      await service.autoNoShow();
+
+      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
     });
   });
 });
