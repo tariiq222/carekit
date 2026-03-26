@@ -111,7 +111,7 @@ export const ROLES: RoleDefinition[] = [
     isSystem: true,
     permissions: {
       bookings: ['view', 'create'],
-      payments: ['view'],
+      payments: ['view', 'create'],
       invoices: ['view'],
       ratings: ['view', 'create', 'edit'],
       practitioners: ['view'],

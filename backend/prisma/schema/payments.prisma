@@ -9,6 +9,9 @@ model Payment {
   vatAmount        Int           @default(0) @map("vat_amount") // halalat
   totalAmount      Int           @default(0) @map("total_amount") // halalat
   refundAmount     Int?          @map("refund_amount") // halalat — null = no refund
+  refundedAt       DateTime?     @map("refunded_at")
+  refundedBy       String?       @map("refunded_by") // userId or 'system'
+  refundReason     String?       @map("refund_reason")
   method           PaymentMethod
   status           PaymentStatus @default(pending)
   moyasarPaymentId String?       @unique @map("moyasar_payment_id")
