@@ -1,0 +1,177 @@
+# CareKit CODEOWNERS
+# Format: pattern  owner(s)
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ─────────────────────────────────────────────
+# DEFAULT — all files not matched below
+# ─────────────────────────────────────────────
+*                                        @tariq
+
+# ─────────────────────────────────────────────
+# GOVERNANCE & ARCHITECTURE (high sensitivity)
+# ─────────────────────────────────────────────
+CLAUDE.md                                @tariq
+ARCHITECTURE.md                          @tariq
+CONTRIBUTING.md                          @tariq
+CODEOWNERS                               @tariq
+/dashboard/DESIGN-SYSTEM.md              @tariq
+/dashboard/ARCHITECTURE.md               @tariq
+/dashboard/components-policy.md          @tariq
+
+# ─────────────────────────────────────────────
+# INFRASTRUCTURE & DOCKER
+# ─────────────────────────────────────────────
+docker/                                  @tariq
+*.dockerfile                             @tariq
+docker-compose*.yml                      @tariq
+.env.example                             @tariq
+
+# ─────────────────────────────────────────────
+# DATABASE & MIGRATIONS
+# ─────────────────────────────────────────────
+backend/prisma/schema/                   @tariq
+backend/prisma/migrations/               @tariq
+backend/prisma/seed*.ts                  @tariq
+docs/operations/migration-log.md         @tariq
+
+# ─────────────────────────────────────────────
+# SECURITY & AUTH
+# ─────────────────────────────────────────────
+backend/src/modules/auth/                @tariq
+backend/src/common/guards/               @tariq
+backend/src/common/decorators/           @tariq
+
+# ─────────────────────────────────────────────
+# PAYMENTS & FINANCIAL (high sensitivity)
+# ─────────────────────────────────────────────
+backend/src/modules/payments/            @tariq
+backend/src/modules/invoices/            @tariq
+backend/src/modules/coupons/             @tariq
+backend/src/modules/gift-cards/          @tariq
+dashboard/src/app/(dashboard)/payments/  @tariq
+dashboard/src/app/(dashboard)/invoices/  @tariq
+dashboard/src/components/features/payments/ @tariq
+dashboard/src/components/features/invoices/ @tariq
+
+# ─────────────────────────────────────────────
+# COMPLIANCE — ZATCA (regulated)
+# ─────────────────────────────────────────────
+backend/src/modules/zatca/               @tariq
+dashboard/src/app/(dashboard)/zatca/     @tariq
+dashboard/src/components/features/zatca/ @tariq
+
+# ─────────────────────────────────────────────
+# BOOKING SYSTEM (core clinical flow)
+# ─────────────────────────────────────────────
+backend/src/modules/bookings/            @tariq
+dashboard/src/app/(dashboard)/bookings/  @tariq
+dashboard/src/components/features/bookings/ @tariq
+dashboard/src/hooks/use-bookings*.ts     @tariq
+
+# ─────────────────────────────────────────────
+# PATIENT DATA (privacy sensitive)
+# ─────────────────────────────────────────────
+backend/src/modules/patients/            @tariq
+dashboard/src/app/(dashboard)/patients/  @tariq
+dashboard/src/components/features/patients/ @tariq
+
+# ─────────────────────────────────────────────
+# PRACTITIONERS & AVAILABILITY
+# ─────────────────────────────────────────────
+backend/src/modules/practitioners/       @tariq
+dashboard/src/app/(dashboard)/practitioners/ @tariq
+dashboard/src/components/features/practitioners/ @tariq
+
+# ─────────────────────────────────────────────
+# AI CHATBOT
+# ─────────────────────────────────────────────
+backend/src/modules/chatbot/             @tariq
+dashboard/src/app/(dashboard)/chatbot/   @tariq
+dashboard/src/components/features/chatbot/ @tariq
+
+# ─────────────────────────────────────────────
+# WHITE LABEL CONFIGURATION
+# ─────────────────────────────────────────────
+backend/src/modules/whitelabel/          @tariq
+dashboard/src/app/(dashboard)/white-label/ @tariq
+dashboard/src/components/features/white-label/ @tariq
+
+# ─────────────────────────────────────────────
+# ROLES & PERMISSIONS (CASL / RBAC)
+# ─────────────────────────────────────────────
+backend/src/modules/roles/               @tariq
+backend/src/modules/permissions/         @tariq
+dashboard/src/app/(dashboard)/users/     @tariq
+dashboard/src/components/features/users/ @tariq
+
+# ─────────────────────────────────────────────
+# NOTIFICATIONS & TASKS (async jobs)
+# ─────────────────────────────────────────────
+backend/src/modules/notifications/       @tariq
+backend/src/modules/tasks/               @tariq
+backend/src/common/queue/                @tariq
+dashboard/src/app/(dashboard)/notifications/ @tariq
+
+# ─────────────────────────────────────────────
+# REPORTS & ANALYTICS
+# ─────────────────────────────────────────────
+backend/src/modules/reports/             @tariq
+dashboard/src/app/(dashboard)/reports/   @tariq
+dashboard/src/components/features/reports/ @tariq
+
+# ─────────────────────────────────────────────
+# RATINGS & FEEDBACK
+# ─────────────────────────────────────────────
+backend/src/modules/ratings/             @tariq
+backend/src/modules/problem-reports/     @tariq
+dashboard/src/app/(dashboard)/ratings/   @tariq
+dashboard/src/app/(dashboard)/problem-reports/ @tariq
+
+# ─────────────────────────────────────────────
+# SERVICES & SPECIALTIES (catalog)
+# ─────────────────────────────────────────────
+backend/src/modules/services/            @tariq
+backend/src/modules/specialties/         @tariq
+dashboard/src/app/(dashboard)/services/  @tariq
+dashboard/src/components/features/services/ @tariq
+
+# ─────────────────────────────────────────────
+# BRANCHES (multi-location)
+# ─────────────────────────────────────────────
+backend/src/modules/branches/            @tariq
+dashboard/src/app/(dashboard)/branches/  @tariq
+dashboard/src/components/features/branches/ @tariq
+
+# ─────────────────────────────────────────────
+# INTAKE FORMS
+# ─────────────────────────────────────────────
+backend/src/modules/intake-forms/        @tariq
+dashboard/src/app/(dashboard)/intake-forms/ @tariq
+dashboard/src/components/features/intake-forms/ @tariq
+
+# ─────────────────────────────────────────────
+# ACTIVITY LOG (audit trail)
+# ─────────────────────────────────────────────
+backend/src/modules/activity-log/        @tariq
+dashboard/src/app/(dashboard)/activity-log/ @tariq
+dashboard/src/components/features/activity-log/ @tariq
+
+# ─────────────────────────────────────────────
+# DESIGN SYSTEM TOKENS
+# ─────────────────────────────────────────────
+dashboard/src/app/globals.css            @tariq
+dashboard/src/lib/ds.ts                  @tariq
+dashboard/tailwind.config.ts             @tariq
+
+# ─────────────────────────────────────────────
+# SHARED PRIMITIVES (shadcn — do not modify)
+# ─────────────────────────────────────────────
+dashboard/src/components/ui/             @tariq
+
+# ─────────────────────────────────────────────
+# CI/CD & PACKAGE MANAGEMENT
+# ─────────────────────────────────────────────
+.github/                                 @tariq
+turbo.json                               @tariq
+package.json                             @tariq
+package-lock.json                        @tariq
