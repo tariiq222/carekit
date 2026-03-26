@@ -35,7 +35,7 @@ describe('PractitionersService — createVacation', () => {
     const result = await ctx.service.createVacation(mockPractitioner.id, vacationDto);
 
     expect(result).toHaveProperty('id');
-    expect(ctx.mockPrismaService.practitionerVacation.create).toHaveBeenCalled();
+    expect(ctx.mockPrisma.practitionerVacation.create).toHaveBeenCalled();
   });
 
   it.each([
@@ -91,6 +91,7 @@ describe('PractitionersService — deleteVacation', () => {
   });
 
   it('should delete a vacation record', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
     ctx.mockPrisma.practitionerVacation.findUnique.mockResolvedValue(mockVacation);
     ctx.mockPrisma.practitionerVacation.delete.mockResolvedValue(mockVacation);
 

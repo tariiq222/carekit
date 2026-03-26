@@ -9,6 +9,7 @@ import { PractitionerVacationService } from '../practitioner-vacation.service.js
 import { PractitionerServiceService } from '../practitioner-service.service.js';
 import { PractitionerRatingsService } from '../practitioner-ratings.service.js';
 import { PractitionerBreaksService } from '../practitioner-breaks.service.js';
+import { BookingSettingsService } from '../../bookings/booking-settings.service.js';
 import { createMockPrisma } from './practitioners.fixtures.js';
 
 export interface PractitionersTestContext {
@@ -26,6 +27,16 @@ export async function createPractitionersTestModule(): Promise<PractitionersTest
       PractitionerVacationService,
       PractitionerServiceService,
       { provide: PrismaService, useValue: mockPrisma },
+      {
+        provide: BookingSettingsService,
+        useValue: {
+          get: jest.fn(),
+          getForBranch: jest.fn().mockResolvedValue({
+            bufferMinutes: 0,
+            minBookingLeadMinutes: 0,
+          }),
+        },
+      },
       {
         provide: PractitionerRatingsService,
         useValue: {
