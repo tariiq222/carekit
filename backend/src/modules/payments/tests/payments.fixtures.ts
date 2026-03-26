@@ -69,7 +69,7 @@ export const mockReceipt = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockPrisma(): any {
-  return {
+  const mock: any = {
     payment: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
@@ -86,6 +86,8 @@ export function createMockPrisma(): any {
       update: jest.fn(),
     },
   };
+  mock.$transaction = jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mock));
+  return mock;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

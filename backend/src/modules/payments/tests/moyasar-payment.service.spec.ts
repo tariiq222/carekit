@@ -14,6 +14,9 @@ import {
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { MoyasarPaymentService } from '../moyasar-payment.service.js';
+import { MoyasarCheckoutService } from '../moyasar-checkout.service.js';
+import { MoyasarWebhookService } from '../moyasar-webhook.service.js';
+import { MoyasarRefundService } from '../moyasar-refund.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { InvoiceCreatorService } from '../../invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../../bookings/booking-status.service.js';
@@ -72,6 +75,9 @@ describe('MoyasarPaymentService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MoyasarPaymentService,
+        MoyasarCheckoutService,
+        MoyasarWebhookService,
+        MoyasarRefundService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: InvoiceCreatorService, useValue: mockInvoicesService },
         { provide: ConfigService, useValue: mockConfigService },

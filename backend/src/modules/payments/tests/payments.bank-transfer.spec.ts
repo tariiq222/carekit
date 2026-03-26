@@ -77,7 +77,7 @@ describe('PaymentsService — uploadReceipt', () => {
   });
 });
 
-describe('PaymentsService — reviewReceipt', () => {
+describe('PaymentsService — reviewReceipt (via verifyBankTransfer)', () => {
   let service: PaymentsService;
   let mockBankTransfer: ReturnType<typeof createMockBankTransferService>;
 
@@ -88,28 +88,23 @@ describe('PaymentsService — reviewReceipt', () => {
   });
 
   it.each([
-    ['approve', { approved: true, adminNotes: 'Looks good' }, 'approved'],
-    ['reject', { approved: false, adminNotes: 'Amount mismatch' }, 'rejected'],
-  ])('should delegate %s to BankTransferService', async (action, dto, expectedStatus) => {
-    mockBankTransfer.reviewReceipt.mockResolvedValue({
-      ...mockReceipt,
-      aiVerificationStatus: expectedStatus,
-      reviewedById: mockReviewerId,
-      reviewedAt: new Date(),
-      adminNotes: dto.adminNotes,
-    });
+    ['approve', 'paid'],
+    ['reject', 'pending'],
+  ])('should delegate %s to BankTransferService', async (action, expectedStatus) => {
+    mockBankTransfer.verifyBankTransfer.mockResolvedValue({ ...mockPayment, status: expectedStatus });
 
-    const result = await service.reviewReceipt(mockReceiptId, mockReviewerId, dto);
+    const dto = { action: action as 'approve' | 'reject', adminNotes: 'Notes' };
+    const result = await service.verifyBankTransfer(mockReceiptId, mockReviewerId, dto);
 
-    expect(mockBankTransfer.reviewReceipt).toHaveBeenCalledWith(mockReceiptId, mockReviewerId, dto);
-    expect(result.aiVerificationStatus).toBe(expectedStatus);
+    expect(mockBankTransfer.verifyBankTransfer).toHaveBeenCalledWith(mockReceiptId, mockReviewerId, dto);
+    expect(result!.status).toBe(expectedStatus);
   });
 
   it('should propagate NotFoundException', async () => {
-    mockBankTransfer.reviewReceipt.mockRejectedValue(new NotFoundException('Receipt not found'));
+    mockBankTransfer.verifyBankTransfer.mockRejectedValue(new NotFoundException('Receipt not found'));
 
     await expect(
-      service.reviewReceipt('non-existent-id', mockReviewerId, { approved: true }),
+      service.verifyBankTransfer('non-existent-id', mockReviewerId, { action: 'approve' }),
     ).rejects.toThrow(NotFoundException);
   });
 });

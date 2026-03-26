@@ -45,7 +45,7 @@ describe('PaymentsService — findAll', () => {
 
     const result = await service.findAll({});
 
-    expect(result).toHaveProperty('data');
+    expect(result).toHaveProperty('items');
     expect(result).toHaveProperty('meta');
     expect(result.meta).toMatchObject({ page: 1, perPage: 20, total: 1 });
   });
