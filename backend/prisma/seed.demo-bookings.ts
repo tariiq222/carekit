@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, CancelledBy } from '@prisma/client';
 
 // ═══════════════════════════════════════════════
 // Bookings seed helpers — extracted for file-size compliance (≤350 lines)
@@ -144,7 +144,7 @@ function buildBookingDefs(
     { id: BOOKING_IDS.BK08, patientId: patientIds[7], practitionerId: practitionerIds[2], serviceId: serviceIds[3], practitionerServiceId: psIds[5], type: 'clinic_visit' as const, date: d(-2), startTime: '15:00', endTime: '16:00', status: 'completed' as const, bookedPrice: 40000, bookedDuration: 60, completedAt: d(-2), _payMethod: 'moyasar' as const, _rating: { stars: 2, comment: 'انتظرت طويلاً' }, _problemReport: { type: 'wait_time', description: 'انتظرت أكثر من 45 دقيقة', status: 'in_review' } },
 
     // ── Cancelled
-    { id: BOOKING_IDS.BK09, patientId: patientIds[8], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'phone_consultation' as const, date: d(-1), startTime: '13:00', endTime: '13:30', status: 'cancelled' as const, bookedPrice: 15000, bookedDuration: 30, cancelledAt: d(-1), cancellationReason: 'ظرف طارئ', cancelledBy: 'patient', _payMethod: 'moyasar' as const },
+    { id: BOOKING_IDS.BK09, patientId: patientIds[8], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'phone_consultation' as const, date: d(-1), startTime: '13:00', endTime: '13:30', status: 'cancelled' as const, bookedPrice: 15000, bookedDuration: 30, cancelledAt: d(-1), cancellationReason: 'ظرف طارئ', cancelledBy: CancelledBy.patient, _payMethod: 'moyasar' as const },
 
     // ── Pending Cancellation
     { id: BOOKING_IDS.BK10, patientId: patientIds[9], practitionerId: practitionerIds[1], serviceId: serviceIds[4], practitionerServiceId: psIds[2], type: 'clinic_visit' as const, date: d(3), startTime: '09:00', endTime: '09:30', status: 'pending_cancellation' as const, bookedPrice: 40000, bookedDuration: 30, cancellationReason: 'لا أستطيع الحضور', _payMethod: 'moyasar' as const },

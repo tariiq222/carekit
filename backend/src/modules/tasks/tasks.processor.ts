@@ -71,6 +71,18 @@ export class TasksProcessor extends WorkerHost implements OnModuleInit {
       case 'reminder-15min':
         await this.reminderService.sendUrgentReminders();
         break;
+      case 'cleanup-webhooks':
+        await this.cleanupService.cleanOldProcessedWebhooks();
+        break;
+      case 'archive-activity-logs':
+        await this.cleanupService.archiveOldActivityLogs();
+        break;
+      case 'repair-rating-cache':
+        await this.cleanupService.repairPractitionerRatingCache();
+        break;
+      case 'db-snapshot':
+        await this.cleanupService.logTableGrowthSnapshot();
+        break;
       default:
         this.logger.warn(`Unknown task job: ${job.name}`);
     }

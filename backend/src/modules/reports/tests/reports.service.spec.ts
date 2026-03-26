@@ -28,6 +28,7 @@ const mockRevenueQueries = {
 const DATE_FROM = '2026-01-01';
 const DATE_TO = '2026-06-30';
 const PRAC_ID = 'practitioner-uuid-1';
+const BRANCH_ID = 'branch-uuid-1';
 
 const mockTotals = { totalRevenue: 450000, totalBookings: 30, paidBookings: 25, averagePerBooking: 18000 };
 const mockByMonth = [{ month: '2026-01', bookings: 10, revenue: 150000 }];
@@ -37,7 +38,8 @@ const mockByService = [{ serviceId: 'svc-1', name: 'Consultation', bookings: 20,
 const mockPractitionerRecord = {
   id: PRAC_ID, rating: 4.5, reviewCount: 12, deletedAt: null,
   user: { firstName: 'Khalid', lastName: 'Al-Fahd' },
-  specialty: { nameEn: 'Cardiology', nameAr: 'أمراض القلب' },
+  specialty: 'Cardiology',
+  specialtyAr: 'أمراض القلب',
 };
 
 const mockRatings = [
@@ -86,16 +88,16 @@ describe('ReportsService', () => {
       const from = new Date(DATE_FROM);
       const to = new Date(DATE_TO);
       to.setHours(23, 59, 59, 999);
-      expect(mockRevenueQueries.getByMonth).toHaveBeenCalledWith(from, to, undefined);
-      expect(mockRevenueQueries.getTotals).toHaveBeenCalledWith(from, to, undefined);
+      expect(mockRevenueQueries.getByMonth).toHaveBeenCalledWith(from, to, undefined, undefined);
+      expect(mockRevenueQueries.getTotals).toHaveBeenCalledWith(from, to, undefined, undefined);
     });
 
     it('should pass practitionerId filter when provided', async () => {
-      await service.getRevenueReport(DATE_FROM, DATE_TO, PRAC_ID);
-      expect(mockRevenueQueries.getByMonth).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID);
-      expect(mockRevenueQueries.getByPractitioner).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID);
-      expect(mockRevenueQueries.getByService).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID);
-      expect(mockRevenueQueries.getTotals).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID);
+      await service.getRevenueReport(DATE_FROM, DATE_TO, PRAC_ID, BRANCH_ID);
+      expect(mockRevenueQueries.getByMonth).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID, BRANCH_ID);
+      expect(mockRevenueQueries.getByPractitioner).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID, BRANCH_ID);
+      expect(mockRevenueQueries.getByService).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID, BRANCH_ID);
+      expect(mockRevenueQueries.getTotals).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID, BRANCH_ID);
     });
 
     it('should call all four revenue queries exactly once', async () => {
@@ -163,6 +165,16 @@ describe('ReportsService', () => {
       expect(r.total).toBe(0);
       expect(r.byDay).toEqual([]);
       expect(r.byStatus.pending).toBe(0);
+    });
+
+    it('should apply branchId filter to booking totals when provided', async () => {
+      mockPrisma.$queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+
+      await service.getBookingReport(DATE_FROM, DATE_TO, BRANCH_ID);
+
+      expect(mockPrisma.booking.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({ branchId: BRANCH_ID }),
+      });
     });
   });
 

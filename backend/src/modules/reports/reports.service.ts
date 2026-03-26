@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { RevenueQueriesService } from './revenue-queries.service.js';
 import type {
@@ -39,16 +40,17 @@ export class ReportsService {
     dateFrom: string,
     dateTo: string,
     practitionerId?: string,
+    branchId?: string,
   ): Promise<RevenueReport> {
     const from = new Date(dateFrom);
     const to = new Date(dateTo);
     to.setHours(23, 59, 59, 999);
 
     const [byMonth, byPractitioner, byService, totals] = await Promise.all([
-      this.revenueQueries.getByMonth(from, to, practitionerId),
-      this.revenueQueries.getByPractitioner(from, to, practitionerId),
-      this.revenueQueries.getByService(from, to, practitionerId),
-      this.revenueQueries.getTotals(from, to, practitionerId),
+      this.revenueQueries.getByMonth(from, to, practitionerId, branchId),
+      this.revenueQueries.getByPractitioner(from, to, practitionerId, branchId),
+      this.revenueQueries.getByService(from, to, practitionerId, branchId),
+      this.revenueQueries.getTotals(from, to, practitionerId, branchId),
     ]);
 
     return { ...totals, byMonth, byPractitioner, byService };
@@ -61,18 +63,22 @@ export class ReportsService {
   async getBookingReport(
     dateFrom: string,
     dateTo: string,
+    branchId?: string,
   ): Promise<BookingReport> {
     const from = new Date(dateFrom);
     const to = new Date(dateTo);
     to.setHours(23, 59, 59, 999);
+    const bookingWhere: Prisma.BookingWhereInput = {
+      date: { gte: from, lte: to },
+      deletedAt: null,
+      ...(branchId ? { branchId } : {}),
+    };
 
     const [total, statusRows, typeRows, dayRows] = await Promise.all([
-      this.prisma.booking.count({
-        where: { date: { gte: from, lte: to }, deletedAt: null },
-      }),
-      this.getBookingsByStatus(from, to),
-      this.getBookingsByType(from, to),
-      this.getBookingsByDay(from, to),
+      this.prisma.booking.count({ where: bookingWhere }),
+      this.getBookingsByStatus(from, to, branchId),
+      this.getBookingsByType(from, to, branchId),
+      this.getBookingsByDay(from, to, branchId),
     ]);
 
     const byStatus = {
@@ -108,7 +114,19 @@ export class ReportsService {
   private async getBookingsByStatus(
     from: Date,
     to: Date,
+    branchId?: string,
   ): Promise<BookingStatusRow[]> {
+    if (branchId) {
+      return this.prisma.$queryRaw<BookingStatusRow[]>`
+        SELECT status::text, COUNT(*)::bigint AS count
+        FROM bookings
+        WHERE date >= ${from}
+          AND date <= ${to}
+          AND deleted_at IS NULL
+          AND branch_id = ${branchId}::uuid
+        GROUP BY status`;
+    }
+
     return this.prisma.$queryRaw<BookingStatusRow[]>`
       SELECT status::text, COUNT(*)::bigint AS count
       FROM bookings
@@ -121,7 +139,19 @@ export class ReportsService {
   private async getBookingsByType(
     from: Date,
     to: Date,
+    branchId?: string,
   ): Promise<BookingTypeRow[]> {
+    if (branchId) {
+      return this.prisma.$queryRaw<BookingTypeRow[]>`
+        SELECT type::text, COUNT(*)::bigint AS count
+        FROM bookings
+        WHERE date >= ${from}
+          AND date <= ${to}
+          AND deleted_at IS NULL
+          AND branch_id = ${branchId}::uuid
+        GROUP BY type`;
+    }
+
     return this.prisma.$queryRaw<BookingTypeRow[]>`
       SELECT type::text, COUNT(*)::bigint AS count
       FROM bookings
@@ -134,7 +164,20 @@ export class ReportsService {
   private async getBookingsByDay(
     from: Date,
     to: Date,
+    branchId?: string,
   ): Promise<BookingByDayRow[]> {
+    if (branchId) {
+      return this.prisma.$queryRaw<BookingByDayRow[]>`
+        SELECT date::date AS date, COUNT(*)::bigint AS count
+        FROM bookings
+        WHERE date >= ${from}
+          AND date <= ${to}
+          AND deleted_at IS NULL
+          AND branch_id = ${branchId}::uuid
+        GROUP BY date::date
+        ORDER BY date`;
+    }
+
     return this.prisma.$queryRaw<BookingByDayRow[]>`
       SELECT date::date AS date, COUNT(*)::bigint AS count
       FROM bookings

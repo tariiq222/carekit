@@ -1,19 +1,20 @@
 /**
  * Pure helper functions for the chatbot service — extracted to respect the 350-line limit.
  */
+import { ChatIntent } from '@prisma/client';
 
 const ARABIC_REGEX = /[\u0600-\u06FF]/;
 
-const INTENT_MAP: Record<string, string> = {
-  create_booking: 'book',
-  reschedule_booking: 'modify',
-  request_cancellation: 'cancel',
-  handoff_to_human: 'handoff',
-  get_my_upcoming_bookings: 'query',
-  list_services: 'query',
-  list_practitioners: 'query',
-  get_available_slots: 'query',
-  search_knowledge_base: 'query',
+const INTENT_MAP: Record<string, ChatIntent> = {
+  create_booking: ChatIntent.book,
+  reschedule_booking: ChatIntent.modify,
+  request_cancellation: ChatIntent.cancel,
+  handoff_to_human: ChatIntent.handoff,
+  get_my_upcoming_bookings: ChatIntent.query,
+  list_services: ChatIntent.query,
+  list_practitioners: ChatIntent.query,
+  get_available_slots: ChatIntent.query,
+  search_knowledge_base: ChatIntent.query,
 };
 
 const ACTION_CARD_MAP: Record<string, string> = {
@@ -30,9 +31,9 @@ export function detectLanguage(text: string): string {
   return ARABIC_REGEX.test(text) ? 'ar' : 'en';
 }
 
-export function classifyIntent(toolName?: string): string | undefined {
-  if (!toolName) return 'query';
-  return INTENT_MAP[toolName] ?? 'query';
+export function classifyIntent(toolName?: string): ChatIntent {
+  if (!toolName) return ChatIntent.query;
+  return INTENT_MAP[toolName] ?? ChatIntent.query;
 }
 
 export function buildActionCard(

@@ -33,6 +33,10 @@ export class BookingListQueryDto {
   patientId?: string;
 
   @IsOptional()
+  @IsUUID()
+  branchId?: string;
+
+  @IsOptional()
   @IsString()
   @MaxLength(255)
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'dateFrom must be in YYYY-MM-DD format' })

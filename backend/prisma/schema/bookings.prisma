@@ -1,10 +1,35 @@
 // ──────────────────────────────────────────────
 // Bookings & Settings
 // ──────────────────────────────────────────────
+//
+// BOOKING TABLE DESIGN NOTES:
+//
+// 1. STATE TIMESTAMPS (intentional — not worth a separate table)
+//    confirmedAt, checkedInAt, inProgressAt, completedAt, cancelledAt, noShowAt
+//    → Each maps to a BookingStatus transition. Kept here for fast single-row reads.
+//    → Full history is in BookingStatusLog.
+//
+// 2. PRICE & DURATION SNAPSHOT (intentional denormalization)
+//    bookedPrice, bookedDuration
+//    → Captured at booking creation from the pricing fallback chain.
+//    → Immutable after creation. Service/practitioner price changes must NOT affect past bookings.
+//    → Source of truth for invoicing and refund calculations.
+//
+// 3. ZOOM FIELDS (candidate for future extraction)
+//    zoomMeetingId, zoomJoinUrl, zoomHostUrl
+//    → Only populated for BookingType.video_consultation (nullable on all other types).
+//    → Future: extract to BookingMeeting table when multi-provider video support is needed.
+//    → Migration path: CREATE TABLE booking_meetings (booking_id FK, provider, meeting_id, join_url, host_url)
+//
+// 4. RECURRING GROUP (intentional)
+//    recurringGroupId links sibling bookings. No separate table needed — UUID group key is sufficient.
+//    recurringPattern stored per-booking to allow future divergence within a group.
+// ──────────────────────────────────────────────
 
 model Booking {
   id                    String            @id @default(uuid())
   patientId             String?           @map("patient_id") // nullable ONLY for onDelete:SetNull — always required at creation
+  branchId              String?           @map("branch_id")
   practitionerId        String            @map("practitioner_id")
   serviceId             String            @map("service_id")
   practitionerServiceId String            @map("practitioner_service_id")
@@ -14,6 +39,8 @@ model Booking {
   endTime               String            @map("end_time") // "HH:mm"
   status                BookingStatus     @default(pending)
   notes                 String?
+  // Zoom — video_consultation only. Null on clinic_visit/phone_consultation/walk_in.
+  // Future extraction candidate → BookingMeeting table (see file header note #3).
   zoomMeetingId         String?           @map("zoom_meeting_id")
   zoomJoinUrl           String?           @map("zoom_join_url")
   zoomHostUrl           String?           @map("zoom_host_url")
@@ -26,7 +53,7 @@ model Booking {
   createdAt             DateTime          @default(now()) @map("created_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")
   deletedAt             DateTime?         @map("deleted_at")
-  cancelledBy           String?           @map("cancelled_by") // patient | practitioner | admin | system
+  cancelledBy           CancelledBy?      @map("cancelled_by")
   noShowAt              DateTime?         @map("no_show_at")
   checkedInAt           DateTime?         @map("checked_in_at")
   inProgressAt          DateTime?         @map("in_progress_at")
@@ -35,12 +62,15 @@ model Booking {
   recurringGroupId      String?           @map("recurring_group_id")
   recurringPattern      RecurringPattern? @map("recurring_pattern")
   rescheduleCount       Int               @default(0) @map("reschedule_count")
-  suggestedRefundType   String?           @map("suggested_refund_type")
+  suggestedRefundType   RefundType?       @map("suggested_refund_type")
   durationOptionId      String?           @map("duration_option_id")
+  // SNAPSHOT — captured at creation, immutable. Used for invoicing and refunds.
+  // Do NOT recalculate from current service prices — those may have changed.
   bookedPrice           Int?              @map("booked_price") // halalat
   bookedDuration        Int?              @map("booked_duration") // minutes
 
   patient             User?               @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
+  branch              Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
   practitioner        Practitioner        @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
   service             Service             @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   practitionerService PractitionerService @relation(fields: [practitionerServiceId], references: [id], onDelete: Restrict)
@@ -50,29 +80,44 @@ model Booking {
   rating              Rating?
   problemReports      ProblemReport[]
   statusLogs          BookingStatusLog[]
+  intakeResponses     IntakeResponse[]
+  waitlistConversions WaitlistEntry[]     @relation("WaitlistBooking")
 
   @@index([practitionerId, date])
+  @@index([practitionerId, status])
   @@index([patientId, status])
   @@index([status])
+  @@index([status, date])
+  @@index([branchId])
+  @@index([branchId, date])
+  @@index([branchId, status])
   @@index([practitionerServiceId])
   @@index([date])
+  @@index([createdAt])
   @@index([recurringGroupId])
   @@map("bookings")
 }
 
+// MULTI-BRANCH DESIGN:
+// branchId = null  → global default row (singleton, seeded at startup)
+// branchId = <id>  → branch-specific override row (one per branch)
+// Resolution: BookingSettingsService.getForBranch(branchId) returns branch row ?? global row.
+// Two partial unique indexes in migration 20260326050000 enforce singleton-per-scope at DB level.
 model BookingSettings {
-  id String @id @default(uuid())
+  id       String  @id @default(uuid())
+  // null = global default. Non-null = branch override.
+  branchId String? @map("branch_id")
 
   // Payment timeout
   paymentTimeoutMinutes Int @default(60) @map("payment_timeout_minutes")
 
   // Cancellation policy
-  freeCancelBeforeHours   Int     @default(24) @map("free_cancel_before_hours")
-  freeCancelRefundType    String  @default("full") @map("free_cancel_refund_type")
-  lateCancelRefundType    String  @default("none") @map("late_cancel_refund_type")
-  lateCancelRefundPercent Int     @default(0) @map("late_cancel_refund_percent")
-  adminCanDirectCancel    Boolean @default(true) @map("admin_can_direct_cancel")
-  patientCanCancelPending Boolean @default(true) @map("patient_can_cancel_pending")
+  freeCancelBeforeHours   Int        @default(24) @map("free_cancel_before_hours")
+  freeCancelRefundType    RefundType @default(full) @map("free_cancel_refund_type")
+  lateCancelRefundType    RefundType @default(none) @map("late_cancel_refund_type")
+  lateCancelRefundPercent Int        @default(0) @map("late_cancel_refund_percent")
+  adminCanDirectCancel    Boolean    @default(true) @map("admin_can_direct_cancel")
+  patientCanCancelPending Boolean    @default(true) @map("patient_can_cancel_pending")
 
   // Rescheduling policy
   patientCanReschedule     Boolean @default(true) @map("patient_can_reschedule")
@@ -97,10 +142,10 @@ model BookingSettings {
   bufferMinutes Int @default(0) @map("buffer_minutes")
 
   // Auto-complete / no-show
-  autoCompleteAfterHours Int    @default(2) @map("auto_complete_after_hours")
-  autoNoShowAfterMinutes Int    @default(30) @map("auto_no_show_after_minutes")
-  noShowPolicy           String @default("keep_full") @map("no_show_policy") // keep_full | partial_refund | admin_decides
-  noShowRefundPercent    Int    @default(0) @map("no_show_refund_percent")
+  autoCompleteAfterHours Int          @default(2) @map("auto_complete_after_hours")
+  autoNoShowAfterMinutes Int          @default(30) @map("auto_no_show_after_minutes")
+  noShowPolicy           NoShowPolicy @default(keep_full) @map("no_show_policy")
+  noShowRefundPercent    Int          @default(0) @map("no_show_refund_percent")
 
   // Cancellation review
   cancellationReviewTimeoutHours Int    @default(48) @map("cancellation_review_timeout_hours")
@@ -124,31 +169,37 @@ model BookingSettings {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
   @@map("booking_settings")
 }
 
 model WaitlistEntry {
-  id             String         @id @default(uuid())
-  patientId      String         @map("patient_id")
-  practitionerId String         @map("practitioner_id")
-  serviceId      String?        @map("service_id")
-  preferredDate  DateTime?      @map("preferred_date")
-  preferredTime  String?        @map("preferred_time") // "morning" | "afternoon" | "any"
-  status         WaitlistStatus @default(waiting)
-  notifiedAt     DateTime?      @map("notified_at")
-  bookedBookingId String?       @map("booked_booking_id")
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
+  id              String         @id @default(uuid())
+  patientId       String         @map("patient_id")
+  practitionerId  String         @map("practitioner_id")
+  serviceId       String?        @map("service_id")
+  preferredDate   DateTime?      @map("preferred_date")
+  preferredTime   PreferredTime? @map("preferred_time")
+  status          WaitlistStatus @default(waiting)
+  notifiedAt      DateTime?      @map("notified_at")
+  bookedBookingId String?        @map("booked_booking_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
 
-  patient      User         @relation("WaitlistPatient", fields: [patientId], references: [id], onDelete: Cascade)
-  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
-  service      Service?     @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  patient       User         @relation("WaitlistPatient", fields: [patientId], references: [id], onDelete: Cascade)
+  practitioner  Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+  service       Service?     @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  bookedBooking Booking?     @relation("WaitlistBooking", fields: [bookedBookingId], references: [id], onDelete: SetNull)
 
   @@index([practitionerId, status])
   @@index([patientId])
   @@map("waitlist_entries")
 }
 
+// DOMAIN NOTE: FavoritePractitioner logically belongs to the Patient/Clinic domain,
+// but lives here alongside booking-related patient relations for cohesion.
+// Future extraction: move to clinic.prisma if a dedicated Patient module is created.
 model FavoritePractitioner {
   id             String   @id @default(uuid())
   patientId      String   @map("patient_id")
@@ -162,6 +213,10 @@ model FavoritePractitioner {
   @@map("favorite_practitioners")
 }
 
+// Audit trail for every status transition.
+// Complements the snapshot timestamps on Booking (confirmedAt, completedAt, etc.)
+// which exist for fast single-row reads without joining this table.
+// changedBy: user UUID or 'system' for automated transitions (expiry, no-show tasks).
 model BookingStatusLog {
   id         String   @id @default(uuid())
   bookingId  String   @map("booking_id")
@@ -178,6 +233,11 @@ model BookingStatusLog {
   @@map("booking_status_logs")
 }
 
+// DOMAIN NOTE: IntakeForm straddles two domains:
+//   - Definition (scope/fields) belongs to Services/Clinic domain
+//   - Responses (answers per booking) belong to Bookings domain
+// Kept here because IntakeResponse.bookingId anchors it to this domain.
+// The service/practitioner/branch FK on IntakeForm is acceptable cross-domain reference.
 model IntakeForm {
   id               String    @id @default(uuid())
   nameAr           String    @map("name_ar")
@@ -192,9 +252,9 @@ model IntakeForm {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  service      Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  practitioner Practitioner? @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
-  branch       Branch?       @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  service      Service?         @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  practitioner Practitioner?    @relation(fields: [practitionerId], references: [id], onDelete: SetNull)
+  branch       Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
   fields       IntakeField[]
   responses    IntakeResponse[]
 
@@ -230,7 +290,8 @@ model IntakeResponse {
   answers   Json
   createdAt DateTime @default(now()) @map("created_at")
 
-  form IntakeForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  form    IntakeForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  booking Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([formId])
   @@index([bookingId])

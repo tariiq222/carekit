@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CancelledBy } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
@@ -39,7 +40,7 @@ export class BookingCancellationTimeoutService {
         where: { id: booking.id },
         data: {
           status: 'cancelled',
-          cancelledBy: 'system',
+          cancelledBy: CancelledBy.system,
           cancelledAt: new Date(),
           adminNotes: `Auto-approved after ${settings.cancellationReviewTimeoutHours}h timeout`,
         },

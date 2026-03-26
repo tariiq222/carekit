@@ -296,7 +296,7 @@ export async function seedWaitlist(
         practitionerId: practitionerIds[w.practitionerIdx],
         serviceId: w.serviceIdx !== null ? serviceIds[w.serviceIdx] : undefined,
         preferredDate: w.preferredDate ? new Date(w.preferredDate) : undefined,
-        preferredTime: w.preferredTime,
+        preferredTime: w.preferredTime as any,
         status: w.status,
         notifiedAt: w.status === 'notified' ? new Date() : undefined,
       },
@@ -378,31 +378,31 @@ export async function seedClinicConfig(prisma: PrismaClient) {
     });
   }
 
-  await prisma.bookingSettings.upsert({
-    where: { id: 'default' },
-    update: {},
-    create: {
-      id: 'default',
-      paymentTimeoutMinutes: 60,
-      freeCancelBeforeHours: 24, freeCancelRefundType: 'full',
-      lateCancelRefundType: 'none', lateCancelRefundPercent: 0,
-      adminCanDirectCancel: true, patientCanCancelPending: true,
-      patientCanReschedule: true, rescheduleBeforeHours: 12,
-      maxReschedulesPerBooking: 2,
-      allowWalkIn: true, walkInPaymentRequired: false,
-      allowRecurring: true, maxRecurrences: 12,
-      allowedRecurringPatterns: ['weekly', 'biweekly'] as any,
-      waitlistEnabled: true, waitlistMaxPerSlot: 5, waitlistAutoNotify: true,
-      bufferMinutes: 0,
-      autoCompleteAfterHours: 2, autoNoShowAfterMinutes: 30,
-      noShowPolicy: 'keep_full', noShowRefundPercent: 0,
-      cancellationReviewTimeoutHours: 48,
-      cancellationPolicyAr: 'يمكن إلغاء الحجز مجاناً قبل 24 ساعة من الموعد. الإلغاء المتأخر يخضع لمراجعة الإدارة.',
-      cancellationPolicyEn: 'Free cancellation up to 24 hours before the appointment. Late cancellations are subject to admin review.',
-      reminder24hEnabled: true, reminder1hEnabled: true, reminderInteractive: false,
-      suggestAlternativesOnConflict: true, suggestAlternativesCount: 3,
-      minBookingLeadMinutes: 0, adminCanBookOutsideHours: false, maxAdvanceBookingDays: 60,
-    },
-  });
+  const existingSettings = await prisma.bookingSettings.findFirst({ where: { branchId: null } });
+  if (!existingSettings) {
+    await prisma.bookingSettings.create({
+      data: {
+        paymentTimeoutMinutes: 60,
+        freeCancelBeforeHours: 24, freeCancelRefundType: 'full',
+        lateCancelRefundType: 'none', lateCancelRefundPercent: 0,
+        adminCanDirectCancel: true, patientCanCancelPending: true,
+        patientCanReschedule: true, rescheduleBeforeHours: 12,
+        maxReschedulesPerBooking: 2,
+        allowWalkIn: true, walkInPaymentRequired: false,
+        allowRecurring: true, maxRecurrences: 12,
+        allowedRecurringPatterns: ['weekly', 'biweekly'] as any,
+        waitlistEnabled: true, waitlistMaxPerSlot: 5, waitlistAutoNotify: true,
+        bufferMinutes: 0,
+        autoCompleteAfterHours: 2, autoNoShowAfterMinutes: 30,
+        noShowPolicy: 'keep_full', noShowRefundPercent: 0,
+        cancellationReviewTimeoutHours: 48,
+        cancellationPolicyAr: 'يمكن إلغاء الحجز مجاناً قبل 24 ساعة من الموعد. الإلغاء المتأخر يخضع لمراجعة الإدارة.',
+        cancellationPolicyEn: 'Free cancellation up to 24 hours before the appointment. Late cancellations are subject to admin review.',
+        reminder24hEnabled: true, reminder1hEnabled: true, reminderInteractive: false,
+        suggestAlternativesOnConflict: true, suggestAlternativesCount: 3,
+        minBookingLeadMinutes: 0, adminCanBookOutsideHours: false, maxAdvanceBookingDays: 60,
+      },
+    });
+  }
   console.log('  working hours, holidays, chatbot config, knowledge base, booking settings');
 }

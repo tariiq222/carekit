@@ -48,6 +48,12 @@ model BankTransferReceipt {
   @@map("bank_transfer_receipts")
 }
 
+// ZATCA e-invoicing (Saudi Arabia Phase 2):
+// invoiceHash + previousHash → cryptographic chain (each invoice hashes the previous).
+// xmlContent → UBL 2.1 XML required by ZATCA API.
+// qrCodeData → TLV-encoded base64 QR shown on printed invoice.
+// zatcaStatus: not_applicable (non-SA), pending (queued), reported (accepted), failed (retry needed).
+// zatcaResponse: raw JSON from ZATCA clearance/reporting API — preserved for audit.
 model Invoice {
   id            String      @id @default(uuid())
   paymentId     String      @unique @map("payment_id")
@@ -68,6 +74,7 @@ model Invoice {
 
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
+  @@index([zatcaStatus])
   @@map("invoices")
 }
 
@@ -91,15 +98,37 @@ model Coupon {
   maxUses        Int?      @map("max_uses")
   usedCount      Int       @default(0) @map("used_count")
   maxUsesPerUser Int?      @map("max_uses_per_user")
-  serviceIds     String[]  @map("service_ids")
+  // Service restriction via CouponService pivot table.
+  // Empty couponServices = applies to all services.
+  // Non-empty = applies only to listed services (FK enforced, cascades on service delete).
+  // Migrated from: service_ids String[] (legacy column preserved for rollback, see migration 20260326040000).
   expiresAt      DateTime? @map("expires_at")
   isActive       Boolean   @default(true) @map("is_active")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  redemptions CouponRedemption[]
+  redemptions    CouponRedemption[]
+  couponServices CouponService[]
 
   @@map("coupons")
+}
+
+// Pivot table: Coupon ↔ Service (many-to-many with FK constraints).
+// Empty = coupon applies to all services. Non-empty = restricted to listed services.
+// Cascades on both sides: deleting a coupon or service removes the restriction row.
+model CouponService {
+  id        String   @id @default(uuid())
+  couponId  String   @map("coupon_id")
+  serviceId String   @map("service_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  coupon  Coupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, serviceId])
+  @@index([couponId])
+  @@index([serviceId])
+  @@map("coupon_services")
 }
 
 model CouponRedemption {
@@ -111,6 +140,7 @@ model CouponRedemption {
   createdAt DateTime @default(now()) @map("created_at")
 
   coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([couponId])
   @@index([userId])
@@ -129,6 +159,8 @@ model GiftCard {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
+  purchaser    User?                 @relation("GiftCardPurchaser", fields: [purchasedBy], references: [id], onDelete: SetNull)
+  redeemer     User?                 @relation("GiftCardRedeemer", fields: [redeemedBy], references: [id], onDelete: SetNull)
   transactions GiftCardTransaction[]
 
   @@map("gift_cards")

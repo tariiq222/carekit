@@ -67,6 +67,26 @@ export class TasksBootstrapService implements OnModuleInit {
       removeOnComplete: true,
     });
 
-    this.logger.log('Registered 10 repeatable task jobs');
+    await this.tasksQueue.add('cleanup-webhooks', {}, {
+      repeat: { pattern: '0 4 * * *' }, // Daily at 4:00 AM
+      removeOnComplete: true,
+    });
+
+    await this.tasksQueue.add('archive-activity-logs', {}, {
+      repeat: { pattern: '0 5 * * 0' }, // Weekly on Sunday at 5:00 AM
+      removeOnComplete: true,
+    });
+
+    await this.tasksQueue.add('repair-rating-cache', {}, {
+      repeat: { pattern: '0 6 * * 0' }, // Weekly on Sunday at 6:00 AM
+      removeOnComplete: true,
+    });
+
+    await this.tasksQueue.add('db-snapshot', {}, {
+      repeat: { pattern: '0 0 * * 0' }, // Weekly on Sunday at midnight
+      removeOnComplete: true,
+    });
+
+    this.logger.log('Registered 14 repeatable task jobs');
   }
 }

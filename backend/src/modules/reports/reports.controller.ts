@@ -37,12 +37,14 @@ export class ReportsController {
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
     @Query('practitionerId') practitionerId?: string,
+    @Query('branchId') branchId?: string,
   ) {
     this.validateDateRange(dateFrom, dateTo);
     const data = await this.reportsService.getRevenueReport(
       dateFrom,
       dateTo,
       practitionerId,
+      branchId,
     );
     return { success: true, data };
   }
@@ -58,9 +60,10 @@ export class ReportsController {
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
     @Res() res: Response,
+    @Query('branchId') branchId?: string,
   ) {
     this.validateDateRange(dateFrom, dateTo);
-    const csv = await this.exportService.exportRevenueCsv(dateFrom, dateTo);
+    const csv = await this.exportService.exportRevenueCsv(dateFrom, dateTo, branchId);
     this.sendCsv(res, csv, `revenue-${dateFrom}-to-${dateTo}.csv`);
   }
 
@@ -74,9 +77,10 @@ export class ReportsController {
   async getBookings(
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
+    @Query('branchId') branchId?: string,
   ) {
     this.validateDateRange(dateFrom, dateTo);
-    const data = await this.reportsService.getBookingReport(dateFrom, dateTo);
+    const data = await this.reportsService.getBookingReport(dateFrom, dateTo, branchId);
     return { success: true, data };
   }
 
@@ -91,9 +95,10 @@ export class ReportsController {
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
     @Res() res: Response,
+    @Query('branchId') branchId?: string,
   ) {
     this.validateDateRange(dateFrom, dateTo);
-    const csv = await this.exportService.exportBookingsCsv(dateFrom, dateTo);
+    const csv = await this.exportService.exportBookingsCsv(dateFrom, dateTo, branchId);
     this.sendCsv(res, csv, `bookings-${dateFrom}-to-${dateTo}.csv`);
   }
 

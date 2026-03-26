@@ -10,6 +10,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
+import { CancelledBy } from '@prisma/client';
 
 @Injectable()
 export class MoyasarWebhookService {

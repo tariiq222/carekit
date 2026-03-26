@@ -1,8 +1,9 @@
 import { IsEnum, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { RefundType } from '@prisma/client';
 
 export class AdminCancelDto {
-  @IsEnum(['full', 'partial', 'none'])
-  refundType!: 'full' | 'partial' | 'none';
+  @IsEnum(RefundType)
+  refundType!: RefundType;
 
   @IsOptional()
   @IsInt()

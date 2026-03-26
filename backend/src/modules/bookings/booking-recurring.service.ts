@@ -37,7 +37,7 @@ export class BookingRecurringService {
   ) {}
 
   async createRecurring(patientId: string, dto: CreateRecurringBookingDto) {
-    const settings = await this.bookingSettingsService.get();
+    const settings = await this.bookingSettingsService.getForBranch(dto.branchId);
 
     if (!settings.allowRecurring) {
       throw new BadRequestException({
@@ -83,6 +83,7 @@ export class BookingRecurringService {
         const booking = await this.bookingsService.create(patientId, {
           practitionerId: dto.practitionerId,
           serviceId: dto.serviceId,
+          branchId: dto.branchId,
           type: dto.type,
           date: dateStr,
           startTime: dto.startTime,

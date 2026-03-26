@@ -2,6 +2,11 @@
 // Configuration — White Label, Email, Notifications, Audit
 // ──────────────────────────────────────────────
 
+// EAV (Entity-Attribute-Value) pattern — intentional for white label flexibility.
+// Type safety is enforced at application layer (ConfigValueType enum + service validation).
+// Each deployment (Docker container) has its own config rows — not multi-tenant.
+// Seeded with ~156 default entries. Admin can update values from dashboard.
+// NEVER query all rows — always access by key via WhiteLabelConfigService.get(key).
 model WhiteLabelConfig {
   id          String          @id @default(uuid())
   key         String          @unique
@@ -66,6 +71,10 @@ model FcmToken {
   @@map("fcm_tokens")
 }
 
+// SCALABILITY NOTE: This table grows unbounded. Plan for:
+//   - Archiving rows older than 90 days to a cold storage table (activity_logs_archive)
+//   - Partitioning by created_at (monthly) when row count exceeds ~5M
+//   - Never used in real-time queries — always admin/audit reads with date filters
 model ActivityLog {
   id          String   @id @default(uuid())
   userId      String?  @map("user_id")

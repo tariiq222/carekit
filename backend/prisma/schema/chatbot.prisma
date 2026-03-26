@@ -22,16 +22,16 @@ model ChatSession {
 }
 
 model ChatMessage {
-  id           String   @id @default(uuid())
-  sessionId    String   @map("session_id")
+  id           String      @id @default(uuid())
+  sessionId    String      @map("session_id")
   role         ChatRole
   content      String
-  functionCall Json?    @map("function_call")
-  intent       String? // book | modify | cancel | query | handoff | greeting
-  toolName     String?  @map("tool_name")
-  tokenCount   Int?     @map("token_count")
-  staffId      String?  @map("staff_id") // staff user who sent this message (role=staff only)
-  createdAt    DateTime @default(now()) @map("created_at")
+  functionCall Json?       @map("function_call")
+  intent       ChatIntent? // book | modify | cancel | query | handoff | greeting
+  toolName     String?     @map("tool_name")
+  tokenCount   Int?        @map("token_count")
+  staffId      String?     @map("staff_id") // staff user who sent this message (role=staff only)
+  createdAt    DateTime    @default(now()) @map("created_at")
 
   session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -39,6 +39,11 @@ model ChatMessage {
   @@map("chat_messages")
 }
 
+// Vector dimensions: 1536 (OpenAI text-embedding-3-small compatible).
+// Index type: HNSW (added separately via raw migration — Prisma doesn't support HNSW syntax).
+// Similarity search: cosine distance via pgvector <=> operator.
+// Chunks: large documents are split into overlapping chunks (MAX_CHUNK_LENGTH=1500, OVERLAP=200 chars).
+// fileId links to KnowledgeBaseFile — not enforced by FK here (intentional: manual entries have null fileId).
 model KnowledgeBase {
   id         String                       @id @default(uuid())
   title      String
@@ -73,7 +78,7 @@ model KnowledgeBaseFile {
   id          String       @id @default(uuid())
   fileName    String       @map("file_name")
   fileUrl     String       @map("file_url")
-  fileType    String       @map("file_type") // pdf | docx | txt
+  fileType    KbFileType   @map("file_type")
   fileSize    Int          @map("file_size") // bytes
   chunksCount Int          @default(0) @map("chunks_count")
   status      KbFileStatus @default(pending)

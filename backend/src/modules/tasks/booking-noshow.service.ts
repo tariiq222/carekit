@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CancelledBy, NoShowPolicy } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
@@ -112,7 +113,7 @@ export class BookingNoShowService {
 
   private async processNoShowFinancials(
     bookingId: string,
-    policy: string,
+    policy: NoShowPolicy,
     refundPercent: number,
   ): Promise<void> {
     const payment = await this.prisma.payment.findUnique({
@@ -120,9 +121,9 @@ export class BookingNoShowService {
     });
     if (!payment || payment.status !== 'paid') return;
 
-    if (policy === 'keep_full') return;
+    if (policy === NoShowPolicy.keep_full) return;
 
-    if (policy === 'partial_refund') {
+    if (policy === NoShowPolicy.partial_refund) {
       const refundAmount = Math.round(
         (payment.totalAmount * refundPercent) / 100,
       );

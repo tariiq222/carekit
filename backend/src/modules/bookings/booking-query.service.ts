@@ -24,6 +24,7 @@ export class BookingQueryService {
     if (query.type) where.type = query.type;
     if (query.practitionerId) where.practitionerId = query.practitionerId;
     if (query.patientId) where.patientId = query.patientId;
+    if (query.branchId) where.branchId = query.branchId;
     const dateRange = buildDateRangeFilter(query.dateFrom, query.dateTo);
     if (dateRange) where.date = dateRange;
 
@@ -122,6 +123,7 @@ export class BookingQueryService {
     practitionerId: string,
     date: Date,
     count: number,
+    branchId?: string,
   ): Promise<Array<{ date: string; startTime: string; endTime: string }>> {
     const slots: Array<{ date: string; startTime: string; endTime: string }> = [];
     const activeStatuses: BookingStatus[] = [
@@ -146,7 +148,12 @@ export class BookingQueryService {
     // 2 bulk queries instead of up to 16 sequential ones
     const [allAvailabilities, allBookings] = await Promise.all([
       this.prisma.practitionerAvailability.findMany({
-        where: { practitionerId, dayOfWeek: { in: [...daysOfWeek] }, isActive: true },
+        where: {
+          practitionerId,
+          dayOfWeek: { in: [...daysOfWeek] },
+          isActive: true,
+          ...(branchId ? { OR: [{ branchId }, { branchId: null }] } : {}),
+        },
       }),
       this.prisma.booking.findMany({
         where: {

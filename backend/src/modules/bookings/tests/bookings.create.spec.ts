@@ -13,16 +13,22 @@ import {
   mockZoomMeeting,
   mockPractitionerService,
   mockAvailability,
+  mockBranch,
 } from './bookings.fixtures.js';
 
 describe('BookingsService — create', () => {
   let ctx: BookingsTestContext;
+  const futureDateString = (days: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date.toISOString().split('T')[0];
+  };
 
   const createDto = {
     practitionerId: mockPractitioner.id,
     serviceId: mockService.id,
     type: 'clinic_visit' as const,
-    date: '2026-06-01',
+    date: futureDateString(10),
     startTime: '09:00',
     notes: 'أول زيارة',
   };
@@ -130,6 +136,43 @@ describe('BookingsService — create', () => {
 
     await expect(
       ctx.service.create(mockPatientId, { ...createDto, date: '2024-01-01' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should persist branchId and load branch-specific settings when branchId is provided', async () => {
+    setupHappyPath();
+    ctx.mockPrisma.branch.findFirst.mockResolvedValue(mockBranch);
+    ctx.mockPrisma.practitionerBranch.findUnique.mockResolvedValue({ id: 'pb-1' });
+    ctx.mockPrisma.booking.create.mockResolvedValue({ ...mockBooking, branchId: mockBranch.id });
+
+    const result = await ctx.service.create(mockPatientId, {
+      ...createDto,
+      branchId: mockBranch.id,
+    });
+
+    expect(ctx.mockBookingSettingsService.getForBranch).toHaveBeenCalledWith(mockBranch.id);
+    expect(ctx.mockPrisma.practitionerAvailability.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [{ branchId: mockBranch.id }, { branchId: null }],
+        }),
+      }),
+    );
+    expect(ctx.mockPrisma.booking.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ branchId: mockBranch.id }),
+      }),
+    );
+    expect(result.branchId).toBe(mockBranch.id);
+  });
+
+  it('should reject branch-scoped booking when practitioner is not assigned to the branch', async () => {
+    setupHappyPath();
+    ctx.mockPrisma.branch.findFirst.mockResolvedValue(mockBranch);
+    ctx.mockPrisma.practitionerBranch.findUnique.mockResolvedValue(null);
+
+    await expect(
+      ctx.service.create(mockPatientId, { ...createDto, branchId: mockBranch.id }),
     ).rejects.toThrow(BadRequestException);
   });
 });

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 
 interface RevenueExportRow {
@@ -71,30 +72,31 @@ export class ExportService {
   //  REVENUE CSV
   // ═══════════════════════════════════════════════════════════════
 
-  async exportRevenueCsv(dateFrom: string, dateTo: string): Promise<string> {
+  async exportRevenueCsv(dateFrom: string, dateTo: string, branchId?: string): Promise<string> {
     const from = new Date(dateFrom);
     const to = new Date(dateTo);
     to.setHours(23, 59, 59, 999);
 
-    const rows = await this.prisma.$queryRaw<RevenueExportRow[]>`
-      SELECT DATE_TRUNC('month', b.date)        AS month,
-             COUNT(*)::int                       AS bookings,
-             COALESCE(SUM(p.total_amount), 0)::bigint AS revenue,
-             CONCAT(u.first_name, ' ', u.last_name)   AS practitioner_name,
-             COALESCE(s.name_ar, s.name_en)            AS service_name
-      FROM bookings b
-      JOIN payments p ON p.booking_id = b.id
-                     AND p.status = 'paid'::"payment_status"
-      JOIN practitioners pr ON pr.id = b.practitioner_id
-      JOIN users u ON u.id = pr.user_id
-      JOIN services s ON s.id = b.service_id
-      WHERE b.date >= ${from}
-        AND b.date <= ${to}
-        AND b.deleted_at IS NULL
-      GROUP BY DATE_TRUNC('month', b.date),
-               u.first_name, u.last_name,
-               s.name_ar, s.name_en
-      ORDER BY month, practitioner_name`;
+    const rows = await this.prisma.$queryRaw<RevenueExportRow[]>(
+      Prisma.sql`
+        SELECT DATE_TRUNC('month', b.date) AS month,
+               COUNT(*)::int AS bookings,
+               COALESCE(SUM(p.total_amount), 0)::bigint AS revenue,
+               CONCAT(u.first_name, ' ', u.last_name) AS practitioner_name,
+               COALESCE(s.name_ar, s.name_en) AS service_name
+        FROM bookings b
+        JOIN payments p ON p.booking_id = b.id
+                       AND p.status = 'paid'::"payment_status"
+        JOIN practitioners pr ON pr.id = b.practitioner_id
+        JOIN users u ON u.id = pr.user_id
+        JOIN services s ON s.id = b.service_id
+        ${this.buildBranchWhere(from, to, branchId)}
+        GROUP BY DATE_TRUNC('month', b.date),
+                 u.first_name, u.last_name,
+                 s.name_ar, s.name_en
+        ORDER BY month, practitioner_name
+      `,
+    );
 
     const headers = [
       'month',
@@ -119,33 +121,34 @@ export class ExportService {
   //  BOOKINGS CSV
   // ═══════════════════════════════════════════════════════════════
 
-  async exportBookingsCsv(dateFrom: string, dateTo: string): Promise<string> {
+  async exportBookingsCsv(dateFrom: string, dateTo: string, branchId?: string): Promise<string> {
     const from = new Date(dateFrom);
     const to = new Date(dateTo);
     to.setHours(23, 59, 59, 999);
 
-    const rows = await this.prisma.$queryRaw<BookingExportRow[]>`
-      SELECT b.id,
-             b.date,
-             b.start_time,
-             b.end_time,
-             b.status::text,
-             b.type::text,
-             CONCAT(pat.first_name, ' ', pat.last_name) AS patient_name,
-             CONCAT(pru.first_name, ' ', pru.last_name) AS practitioner_name,
-             COALESCE(s.name_ar, s.name_en)              AS service_name,
-             p.total_amount,
-             p.status::text                              AS payment_status
-      FROM bookings b
-      LEFT JOIN users pat ON pat.id = b.patient_id
-      JOIN practitioners pr ON pr.id = b.practitioner_id
-      JOIN users pru ON pru.id = pr.user_id
-      JOIN services s ON s.id = b.service_id
-      LEFT JOIN payments p ON p.booking_id = b.id
-      WHERE b.date >= ${from}
-        AND b.date <= ${to}
-        AND b.deleted_at IS NULL
-      ORDER BY b.date, b.start_time`;
+    const rows = await this.prisma.$queryRaw<BookingExportRow[]>(
+      Prisma.sql`
+        SELECT b.id,
+               b.date,
+               b.start_time,
+               b.end_time,
+               b.status::text,
+               b.type::text,
+               CONCAT(pat.first_name, ' ', pat.last_name) AS patient_name,
+               CONCAT(pru.first_name, ' ', pru.last_name) AS practitioner_name,
+               COALESCE(s.name_ar, s.name_en) AS service_name,
+               p.total_amount,
+               p.status::text AS payment_status
+        FROM bookings b
+        LEFT JOIN users pat ON pat.id = b.patient_id
+        JOIN practitioners pr ON pr.id = b.practitioner_id
+        JOIN users pru ON pru.id = pr.user_id
+        JOIN services s ON s.id = b.service_id
+        LEFT JOIN payments p ON p.booking_id = b.id
+        ${this.buildBranchWhere(from, to, branchId)}
+        ORDER BY b.date, b.start_time
+      `,
+    );
 
     const headers = [
       'id',
@@ -239,5 +242,19 @@ export class ExportService {
     const year = d.getUTCFullYear();
     const month = String(d.getUTCMonth() + 1).padStart(2, '0');
     return `${year}-${month}`;
+  }
+
+  private buildBranchWhere(from: Date, to: Date, branchId?: string): Prisma.Sql {
+    const filters: Prisma.Sql[] = [
+      Prisma.sql`b.date >= ${from}`,
+      Prisma.sql`b.date <= ${to}`,
+      Prisma.sql`b.deleted_at IS NULL`,
+    ];
+
+    if (branchId) {
+      filters.push(Prisma.sql`b.branch_id = ${branchId}::uuid`);
+    }
+
+    return Prisma.sql`WHERE ${Prisma.join(filters, ' AND ')}`;
   }
 }

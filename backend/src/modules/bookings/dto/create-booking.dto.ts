@@ -36,6 +36,11 @@ export class CreateBookingDto {
   @IsUUID()
   patientId?: string;
 
+  @ApiPropertyOptional({ description: 'Branch ID for branch-scoped booking settings, dashboards, and reporting' })
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
+
   @ApiPropertyOptional({ description: 'Duration option ID if selecting a specific duration/price option' })
   @IsOptional()
   @IsUUID()

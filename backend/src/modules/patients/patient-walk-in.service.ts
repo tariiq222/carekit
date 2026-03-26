@@ -28,7 +28,7 @@ export class PatientWalkInService {
     });
 
     if (existing) {
-      if (existing.accountType === AccountType.WALK_IN) {
+      if (existing.accountType === AccountType.walk_in) {
         return { ...existing, isExisting: true };
       }
       throw new ConflictException({
@@ -63,7 +63,7 @@ export class PatientWalkInService {
           lastName: dto.lastName,
           phone: dto.phone,
           gender: dto.gender,
-          accountType: AccountType.WALK_IN,
+          accountType: AccountType.walk_in,
         },
       });
 
@@ -109,7 +109,7 @@ export class PatientWalkInService {
       select: { id: true, accountType: true, email: true },
     });
 
-    if (!walkInUser || walkInUser.accountType !== AccountType.WALK_IN) {
+    if (!walkInUser || walkInUser.accountType !== AccountType.walk_in) {
       throw new NotFoundException({
         statusCode: 404,
         message: 'No walk-in account found with this phone number',
@@ -138,7 +138,7 @@ export class PatientWalkInService {
       data: {
         email: dto.email,
         passwordHash,
-        accountType: AccountType.FULL,
+        accountType: AccountType.full,
         claimedAt: new Date(),
         emailVerified: false,
       },

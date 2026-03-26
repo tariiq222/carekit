@@ -30,6 +30,10 @@ export class CreateRecurringBookingDto {
   @MaxLength(1000)
   notes?: string;
 
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
+
   @IsEnum(['daily', 'every_2_days', 'every_3_days', 'weekly', 'biweekly', 'monthly'])
   @IsNotEmpty()
   repeatEvery!: 'daily' | 'every_2_days' | 'every_3_days' | 'weekly' | 'biweekly' | 'monthly';

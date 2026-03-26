@@ -26,6 +26,10 @@ export class AvailabilitySlotDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  // Multi-branch: null = available at all branches. Non-null = branch-scoped.
+  @IsOptional()
+  branchId?: string;
 }
 
 export class SetAvailabilityDto {

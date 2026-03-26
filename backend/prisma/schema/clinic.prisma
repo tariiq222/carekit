@@ -2,11 +2,30 @@
 // Clinic — Practitioners & Schedule
 // ──────────────────────────────────────────────
 
+model Specialty {
+  id            String   @id @default(uuid())
+  nameEn        String   @unique @map("name_en")
+  nameAr        String   @map("name_ar")
+  descriptionEn String?  @map("description_en")
+  descriptionAr String?  @map("description_ar")
+  iconUrl       String?  @map("icon_url")
+  sortOrder     Int      @default(0) @map("sort_order")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  practitioners Practitioner[]
+
+  @@index([isActive, sortOrder])
+  @@map("specialties")
+}
+
 model Practitioner {
   id                  String    @id @default(uuid())
   userId              String    @unique @map("user_id")
   title               String?   @map("title")
   nameAr              String?   @map("name_ar")
+  specialtyId         String?   @map("specialty_id")
   specialty           String    @default("") @map("specialty")
   specialtyAr         String    @default("") @map("specialty_ar")
   bio                 String?
@@ -17,6 +36,9 @@ model Practitioner {
   priceClinic         Int       @default(0) @map("price_clinic") // halalat
   pricePhone          Int       @default(0) @map("price_phone") // halalat
   priceVideo          Int       @default(0) @map("price_video") // halalat
+  // INTENTIONAL DENORMALIZATION: cached aggregates — updated by application on every Rating CRUD
+  // Avoids COUNT/AVG on ratings table per request. Must stay in sync via service layer.
+  // Source of truth: ratings table. These are read-optimized projections only.
   rating              Float     @default(0)
   reviewCount         Int       @default(0) @map("review_count")
   isActive            Boolean   @default(true) @map("is_active")
@@ -26,6 +48,7 @@ model Practitioner {
   deletedAt           DateTime? @map("deleted_at")
 
   user                 User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialtyRel         Specialty?                 @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
   availabilities       PractitionerAvailability[]
   vacations            PractitionerVacation[]
   breaks               PractitionerBreak[]
@@ -48,13 +71,16 @@ model PractitionerAvailability {
   startTime      String   @map("start_time") // "HH:mm"
   endTime        String   @map("end_time") // "HH:mm"
   isActive       Boolean  @default(true) @map("is_active")
+  // Multi-branch: null = available at all branches (default, backward-compatible).
+  // Non-null = availability scoped to this branch only.
+  branchId       String?  @map("branch_id")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
+  branch       Branch?      @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
-  // H10: Add isActive to composite index to avoid filtering in-memory after index lookup
-  @@index([practitionerId, dayOfWeek, isActive])
+  @@index([practitionerId, dayOfWeek, isActive, branchId])
   @@map("practitioner_availabilities")
 }
 
@@ -69,6 +95,7 @@ model PractitionerVacation {
   practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Cascade)
 
   @@index([practitionerId])
+  @@index([startDate, endDate])
   @@map("practitioner_vacations")
 }
 
@@ -125,8 +152,11 @@ model Branch {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  practitioners PractitionerBranch[]
-  intakeForms   IntakeForm[]
+  practitioners              PractitionerBranch[]
+  intakeForms                IntakeForm[]
+  practitionerAvailabilities PractitionerAvailability[]
+  bookingSettings            BookingSettings[]
+  bookings                   Booking[]
 
   @@map("branches")
 }

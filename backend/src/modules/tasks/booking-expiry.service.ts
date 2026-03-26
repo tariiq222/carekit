@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CancelledBy } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
@@ -47,7 +48,7 @@ export class BookingExpiryService {
     for (const booking of safeToExpire) {
       await this.prisma.booking.update({
         where: { id: booking.id },
-        data: { status: 'expired', cancelledBy: 'system' },
+        data: { status: 'expired', cancelledBy: CancelledBy.system },
       });
 
       await this.prisma.payment.deleteMany({

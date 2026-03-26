@@ -1,5 +1,6 @@
 import { IsOptional, IsString, IsUUID, IsEnum, IsNotEmpty, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PreferredTime } from '@prisma/client';
 
 export class JoinWaitlistDto {
   @ApiProperty()
@@ -18,8 +19,8 @@ export class JoinWaitlistDto {
   @MaxLength(255)
   preferredDate?: string;
 
-  @ApiPropertyOptional({ enum: ['morning', 'afternoon', 'any'] })
+  @ApiPropertyOptional({ enum: PreferredTime })
   @IsOptional()
-  @IsEnum(['morning', 'afternoon', 'any'])
-  preferredTime?: 'morning' | 'afternoon' | 'any';
+  @IsEnum(PreferredTime)
+  preferredTime?: PreferredTime;
 }

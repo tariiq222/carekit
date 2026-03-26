@@ -28,6 +28,7 @@ enum BookingStatus {
 enum PaymentMethod {
   moyasar
   bank_transfer
+  cash
 
   @@map("payment_method")
 }
@@ -196,8 +197,8 @@ enum SessionLanguage {
 }
 
 enum AccountType {
-  FULL
-  WALK_IN
+  full    @map("FULL")
+  walk_in @map("WALK_IN")
 
   @@map("account_type")
 }
@@ -232,4 +233,58 @@ enum FormType {
   registration
 
   @@map("form_type")
+}
+
+enum CancelledBy {
+  patient
+  practitioner
+  admin
+  system
+
+  @@map("cancelled_by")
+}
+
+enum RefundType {
+  full
+  partial
+  none
+
+  @@map("refund_type")
+}
+
+enum NoShowPolicy {
+  keep_full
+  partial_refund
+  admin_decides
+
+  @@map("no_show_policy")
+}
+
+enum ChatIntent {
+  book
+  modify
+  cancel
+  query
+  handoff
+  greeting
+
+  @@map("chat_intent")
+}
+
+enum KbFileType {
+  pdf
+  docx
+  doc
+  txt
+
+  @@map("kb_file_type")
+}
+
+enum PreferredTime {
+  morning
+  afternoon
+  evening
+  any
+
+  @@map("preferred_time")
 }

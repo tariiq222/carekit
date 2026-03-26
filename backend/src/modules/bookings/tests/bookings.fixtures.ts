@@ -10,6 +10,7 @@
 export interface CreateBookingDto {
   practitionerId: string;
   serviceId: string;
+  branchId?: string;
   type: 'clinic_visit' | 'phone_consultation' | 'video_consultation';
   date: string;
   startTime: string;
@@ -56,10 +57,18 @@ export const mockService = {
 };
 
 export const mockPatientId = 'patient-uuid-1';
+export const mockBranch = {
+  id: 'branch-uuid-1',
+  nameAr: 'الفرع الرئيسي',
+  nameEn: 'Main Branch',
+  isActive: true,
+  deletedAt: null,
+};
 
 export const mockBooking = {
   id: 'booking-uuid-1',
   patientId: mockPatientId,
+  branchId: null,
   practitionerId: mockPractitioner.id,
   serviceId: mockService.id,
   type: 'clinic_visit' as const,
@@ -78,6 +87,7 @@ export const mockBooking = {
   deletedAt: null,
   createdAt: new Date('2026-03-20'),
   updatedAt: new Date('2026-03-20'),
+  branch: null,
   patient: { id: mockPatientId, firstName: 'أحمد', lastName: 'الراشد' },
   practitioner: mockPractitioner,
   service: mockService,
@@ -111,7 +121,7 @@ export const mockPractitionerService = {
 };
 
 export const mockAvailability = [
-  { dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true },
+  { dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true, branchId: null },
 ];
 
 export const mockBookingSettings = {
@@ -144,6 +154,8 @@ export function createMockPrisma(): any {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
     },
+    branch: { findFirst: jest.fn() },
+    practitionerBranch: { findUnique: jest.fn() },
     service: { findFirst: jest.fn() },
     practitionerService: { findUnique: jest.fn() },
     practitionerAvailability: { findMany: jest.fn() },

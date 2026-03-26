@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
@@ -27,7 +27,7 @@ export class BookingRescheduleService {
   async reschedule(id: string, dto: RescheduleBookingDto, adminUserId?: string) {
     const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null } });
     if (!booking) {
-      throw { statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' };
+      throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
     }
 
     const newStartTime = dto.startTime ?? booking.startTime;
@@ -35,7 +35,7 @@ export class BookingRescheduleService {
     const [ps, svc, settings] = await Promise.all([
       this.prisma.practitionerService.findUnique({ where: { id: booking.practitionerServiceId } }),
       this.prisma.service.findFirst({ where: { id: booking.serviceId } }),
-      this.settingsService.get(),
+      this.settingsService.getForBranch(booking.branchId ?? undefined),
     ]);
     const duration = booking.bookedDuration ?? ps?.customDuration ?? svc?.duration ?? 30;
     const newEndTime = calculateEndTime(newStartTime, duration);
@@ -50,11 +50,11 @@ export class BookingRescheduleService {
     const bufferMinutes = ps?.bufferMinutes || svc?.bufferMinutes || settings.bufferMinutes;
 
     const result = await this.prisma.$transaction(async (tx) => {
-      await validateAvailability(tx, booking.practitionerId, newDate, newStartTime, newEndTime);
+      await validateAvailability(tx, booking.practitionerId, newDate, newStartTime, newEndTime, booking.branchId ?? undefined);
       await checkDoubleBooking(tx, booking.practitionerId, newDate, newStartTime, newEndTime, id, bufferMinutes);
       const nb = await tx.booking.create({
         data: {
-          patientId: booking.patientId, practitionerId: booking.practitionerId,
+          patientId: booking.patientId, branchId: booking.branchId, practitionerId: booking.practitionerId,
           serviceId: booking.serviceId, practitionerServiceId: booking.practitionerServiceId,
           type: booking.type, date: newDate, startTime: newStartTime, endTime: newEndTime,
           status: booking.status, notes: booking.notes, ...zoomData,

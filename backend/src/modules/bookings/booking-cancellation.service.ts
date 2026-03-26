@@ -2,7 +2,7 @@ import {
   ConflictException,
   Injectable,
 } from '@nestjs/common';
-import { Booking, BookingSettings } from '@prisma/client';
+import { Booking, BookingSettings, CancelledBy, RefundType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CancelApproveDto } from './dto/cancel-approve.dto.js';
 import { CancelRejectDto } from './dto/cancel-reject.dto.js';
@@ -82,7 +82,7 @@ export class BookingCancellationService {
         where: { id: bookingId },
         data: {
           status: 'cancelled',
-          cancelledBy: 'admin',
+          cancelledBy: CancelledBy.admin,
           cancelledAt: new Date(),
           cancellationReason: dto.reason,
           adminNotes: dto.adminNotes,
@@ -123,14 +123,14 @@ export class BookingCancellationService {
         where: { id: bookingId },
         data: {
           status: 'cancelled',
-          cancelledBy: 'practitioner',
+          cancelledBy: CancelledBy.practitioner,
           cancelledAt: new Date(),
           cancellationReason: reason,
         },
         include: bookingInclude,
       });
       // Always full refund — clinic's fault
-      await this.helpers.processRefund(tx, 'full', booking.payment);
+      await this.helpers.processRefund(tx, RefundType.full, booking.payment);
       return result;
     });
 
@@ -174,7 +174,7 @@ export class BookingCancellationService {
     const cancelled = await this.prisma.$transaction(async (tx) => {
       const result = await tx.booking.update({
         where: { id },
-        data: { status: 'cancelled', cancelledBy: 'patient', cancelledAt: new Date(), adminNotes: dto.adminNotes },
+        data: { status: 'cancelled', cancelledBy: CancelledBy.patient, cancelledAt: new Date(), adminNotes: dto.adminNotes },
         include: bookingInclude,
       });
       await this.helpers.processRefund(tx, dto.refundType, booking.payment, dto.refundAmount);
@@ -245,7 +245,7 @@ export class BookingCancellationService {
         where: { id: booking.id },
         data: {
           status: 'cancelled',
-          cancelledBy: 'patient',
+          cancelledBy: CancelledBy.patient,
           cancelledAt: new Date(),
           cancellationReason: reason,
         },

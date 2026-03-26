@@ -10,6 +10,7 @@ import { ZoomService } from '../../integrations/zoom/zoom.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { BookingSettingsService } from '../booking-settings.service.js';
 import { BookingStatusService } from '../booking-status.service.js';
+import { BookingRescheduleService } from '../booking-reschedule.service.js';
 import { ActivityLogService } from '../../activity-log/activity-log.service.js';
 import { BookingPaymentHelper } from '../booking-payment.helper.js';
 import { PriceResolverService } from '../price-resolver.service.js';
@@ -34,6 +35,10 @@ export interface BookingsTestContext {
   mockCancellationService: ReturnType<typeof createMockCancellationService>;
   mockQueryService: ReturnType<typeof createMockQueryService>;
   mockNotificationsService: ReturnType<typeof createMockNotificationsService>;
+  mockBookingSettingsService: {
+    get: jest.Mock;
+    getForBranch: jest.Mock;
+  };
 }
 
 export async function createBookingsTestModule(): Promise<BookingsTestContext> {
@@ -42,6 +47,10 @@ export async function createBookingsTestModule(): Promise<BookingsTestContext> {
   const mockCancellationService = createMockCancellationService();
   const mockQueryService = createMockQueryService();
   const mockNotificationsService = createMockNotificationsService();
+  const mockBookingSettingsService = {
+    get: jest.fn().mockResolvedValue(mockBookingSettings),
+    getForBranch: jest.fn().mockResolvedValue(mockBookingSettings),
+  };
 
   mockPrisma.$transaction.mockImplementation(
     (fn: (tx: unknown) => Promise<unknown>) => fn(mockPrisma),
@@ -55,8 +64,9 @@ export async function createBookingsTestModule(): Promise<BookingsTestContext> {
       { provide: BookingCancellationService, useValue: mockCancellationService },
       { provide: BookingQueryService, useValue: mockQueryService },
       { provide: NotificationsService, useValue: mockNotificationsService },
-      { provide: BookingSettingsService, useValue: { get: jest.fn().mockResolvedValue(mockBookingSettings) } },
+      { provide: BookingSettingsService, useValue: mockBookingSettingsService },
       { provide: BookingStatusService, useValue: createMockBookingStatusService(mockPrisma) },
+      BookingRescheduleService,
       { provide: ActivityLogService, useValue: { log: jest.fn().mockResolvedValue(undefined) } },
       {
         provide: BookingPaymentHelper,
@@ -85,5 +95,6 @@ export async function createBookingsTestModule(): Promise<BookingsTestContext> {
     mockCancellationService,
     mockQueryService,
     mockNotificationsService,
+    mockBookingSettingsService,
   };
 }

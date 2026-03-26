@@ -21,6 +21,7 @@ export async function validateAvailability(
   date: Date,
   startTime: string,
   endTime: string,
+  branchId?: string,
 ): Promise<void> {
   // Normalize to UTC midnight to avoid timezone mismatches with stored vacation dates
   const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -39,8 +40,18 @@ export async function validateAvailability(
 
   // Check availability schedule
   const dayOfWeek = date.getDay();
+  const availabilityWhere: Record<string, unknown> = {
+    practitionerId,
+    dayOfWeek,
+    isActive: true,
+  };
+
+  if (branchId) {
+    availabilityWhere.OR = [{ branchId }, { branchId: null }];
+  }
+
   const availabilities = await prisma.practitionerAvailability.findMany({
-    where: { practitionerId, dayOfWeek, isActive: true },
+    where: availabilityWhere,
   });
 
   if (availabilities.length === 0) {

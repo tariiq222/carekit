@@ -56,16 +56,7 @@ export class BookingsService {
     // Fix 7: Admin book on behalf — resolve actual patient
     const actualPatientId = await this.paymentHelper.resolvePatientId(callerUserId, dto.patientId);
 
-    // Fetch settings once (used for walk-in, lead time, and conflict suggestions)
-    const settings = await this.bookingSettingsService.get();
-
     // Fix 9: Walk-in validation
-    if (dto.type === 'walk_in') {
-      if (!settings.allowWalkIn) {
-        throw new BadRequestException({ statusCode: 400, message: 'Walk-in bookings are not allowed', error: 'WALK_IN_NOT_ALLOWED' });
-      }
-    }
-
     const practitioner = await this.prisma.practitioner.findFirst({ where: { id: dto.practitionerId, isActive: true, deletedAt: null } });
     if (!practitioner) throw new NotFoundException({ statusCode: 404, message: 'Practitioner not found', error: 'NOT_FOUND' });
     if (!practitioner.isAcceptingBookings) {
@@ -81,6 +72,13 @@ export class BookingsService {
     if (!ps) throw new BadRequestException({ statusCode: 400, message: 'Practitioner does not offer this service', error: 'SERVICE_NOT_OFFERED' });
     if (!ps.isActive) throw new BadRequestException({ statusCode: 400, message: 'This service is currently unavailable for this practitioner', error: 'SERVICE_INACTIVE' });
     if (!ps.availableTypes.includes(dto.type)) throw new BadRequestException({ statusCode: 400, message: `Booking type '${dto.type}' is not available for this service`, error: 'TYPE_NOT_AVAILABLE' });
+
+    const branchId = await this.resolveBranchContext(dto.practitionerId, dto.branchId);
+    const settings = await this.bookingSettingsService.getForBranch(branchId);
+
+    if (dto.type === 'walk_in' && !settings.allowWalkIn) {
+      throw new BadRequestException({ statusCode: 400, message: 'Walk-in bookings are not allowed', error: 'WALK_IN_NOT_ALLOWED' });
+    }
 
     // Resolve price and duration via the new pricing model (ServiceBookingType + PractitionerServiceType)
     // Falls back gracefully if the new models have no data yet
@@ -150,7 +148,7 @@ export class BookingsService {
     try {
     booking = await this.prisma.$transaction(async (tx) => {
       if (!skipChecks) {
-        await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime);
+        await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, branchId);
       }
       try {
         // Override chain: PractitionerService > Service > BookingSettings (global)
@@ -160,7 +158,7 @@ export class BookingsService {
         if (err instanceof ConflictException) {
           if (settings.suggestAlternativesOnConflict) {
             const alternatives = await this.queryService.getNextAvailableSlots(
-              dto.practitionerId, bookingDate, settings.suggestAlternativesCount,
+              dto.practitionerId, bookingDate, settings.suggestAlternativesCount, branchId,
             );
             throw new ConflictException({
               statusCode: 409, message: 'Practitioner already has a booking at this time',
@@ -174,6 +172,7 @@ export class BookingsService {
       return tx.booking.create({
         data: {
           patientId: actualPatientId,
+          branchId,
           practitionerId: dto.practitionerId,
           serviceId: dto.serviceId,
           practitionerServiceId: ps.id,
@@ -321,5 +320,31 @@ export class BookingsService {
     const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null } });
     if (!booking) throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
     return booking;
+  }
+
+  private async resolveBranchContext(practitionerId: string, branchId?: string): Promise<string | undefined> {
+    if (!branchId) return undefined;
+
+    const branch = await this.prisma.branch.findFirst({
+      where: { id: branchId, deletedAt: null, isActive: true },
+      select: { id: true },
+    });
+    if (!branch) {
+      throw new NotFoundException({ statusCode: 404, message: 'Branch not found', error: 'NOT_FOUND' });
+    }
+
+    const assignment = await this.prisma.practitionerBranch.findUnique({
+      where: { practitionerId_branchId: { practitionerId, branchId } },
+      select: { id: true },
+    });
+    if (!assignment) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Practitioner is not assigned to this branch',
+        error: 'PRACTITIONER_BRANCH_MISMATCH',
+      });
+    }
+
+    return branch.id;
   }
 }

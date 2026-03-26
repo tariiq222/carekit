@@ -4,7 +4,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Booking, BookingSettings } from '@prisma/client';
+import { Booking, BookingSettings, RefundType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
@@ -26,7 +26,7 @@ export class BookingCancelHelpersService {
   //  Fix 12: Calculate suggested refund type
   // ───────────────────────────────────────────────────────────────
 
-  calculateSuggestedRefund(booking: Booking, settings: BookingSettings): string {
+  calculateSuggestedRefund(booking: Booking, settings: BookingSettings): RefundType {
     const bookingDateTime = new Date(booking.date);
     const [hours, minutes] = booking.startTime.split(':').map(Number);
     bookingDateTime.setHours(hours, minutes, 0, 0);
@@ -44,10 +44,10 @@ export class BookingCancelHelpersService {
   // ───────────────────────────────────────────────────────────────
 
   validatePartialRefund(
-    dto: { refundType: string; refundAmount?: number },
+    dto: { refundType: RefundType; refundAmount?: number },
     payment: { totalAmount: number } | null | undefined,
   ): void {
-    if (dto.refundType !== 'partial') return;
+    if (dto.refundType !== RefundType.partial) return;
 
     if (!dto.refundAmount) {
       throw new BadRequestException({
@@ -71,13 +71,13 @@ export class BookingCancelHelpersService {
 
   async processRefund(
     tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
-    refundType: string,
+    refundType: RefundType,
     payment: { id: string; status: string; totalAmount: number; method?: string; moyasarPaymentId?: string | null } | null | undefined,
     refundAmount?: number,
   ): Promise<void> {
-    if (refundType === 'none' || !payment || payment.status !== 'paid') return;
+    if (refundType === RefundType.none || !payment || payment.status !== 'paid') return;
 
-    const amount = refundType === 'full' ? payment.totalAmount : refundAmount!;
+    const amount = refundType === RefundType.full ? payment.totalAmount : refundAmount!;
 
     // For Moyasar payments: call the actual refund API before updating DB
     if (payment.method === 'moyasar' && payment.moyasarPaymentId) {

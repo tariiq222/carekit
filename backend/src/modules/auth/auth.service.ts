@@ -49,7 +49,7 @@ export class AuthService {
     if (dto.phone) {
       const walkInUser = await this.walkInService.findWalkInByPhone(dto.phone);
       if (walkInUser) {
-        if (walkInUser.accountType === AccountType.WALK_IN) {
+        if (walkInUser.accountType === AccountType.walk_in) {
           // auto-claim: نحوّل الحساب الموجود لحساب كامل
           const claimed = await this.walkInService.claimAccount({
             phone: dto.phone,

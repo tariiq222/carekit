@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { type SessionLanguage } from '@prisma/client';
+import { type SessionLanguage, ChatIntent } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotAiService } from './chatbot-ai.service.js';
 import { ChatbotToolsService } from './chatbot-tools.service.js';
@@ -46,7 +46,7 @@ export class ChatbotService {
         sessionId: session.id,
         role: 'assistant',
         content: welcomeMsg,
-        intent: 'greeting',
+        intent: ChatIntent.greeting,
       },
     });
 

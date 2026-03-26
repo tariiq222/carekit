@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
+import { KbFileType } from '@prisma/client';
 import { MinioService } from '../../common/services/minio.service.js';
 import { ChatbotRagService } from './chatbot-rag.service.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
@@ -34,7 +35,7 @@ export class ChatbotFileService {
       file.mimetype,
     );
 
-    const fileType = ext === 'docx' || ext === 'doc' ? ext : ext === 'txt' ? 'txt' : 'pdf';
+    const fileType: KbFileType = ext === 'docx' ? KbFileType.docx : ext === 'doc' ? KbFileType.doc : ext === 'txt' ? KbFileType.txt : KbFileType.pdf;
 
     const record = await this.prisma.knowledgeBaseFile.create({
       data: {
@@ -191,9 +192,9 @@ export class ChatbotFileService {
 
   private async extractText(
     buffer: Buffer,
-    fileType: string,
+    fileType: KbFileType,
   ): Promise<string> {
-    switch (fileType.toLowerCase()) {
+    switch (fileType) {
       case 'pdf': {
         const pdfParse = await loadPdfParse();
         const result = await pdfParse(buffer);

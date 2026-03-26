@@ -14,6 +14,7 @@ import { BookingSettingsService } from '../booking-settings.service.js';
 import { BookingCancelHelpersService } from '../booking-cancel-helpers.service.js';
 import { BookingLookupHelper } from '../booking-lookup.helper.js';
 import { WaitlistService } from '../waitlist.service.js';
+import { RefundType, CancelledBy } from '@prisma/client';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
@@ -28,13 +29,13 @@ const mockActivityLog = { log: jest.fn().mockResolvedValue(undefined) };
 const defaultSettings = {
   patientCanCancelPending: true,
   freeCancelBeforeHours: 24,
-  freeCancelRefundType: 'full',
-  lateCancelRefundType: 'none',
+  freeCancelRefundType: RefundType.full,
+  lateCancelRefundType: RefundType.none,
 };
 const mockBookingSettings = { get: jest.fn().mockResolvedValue(defaultSettings) };
 
 const mockHelpers = {
-  calculateSuggestedRefund: jest.fn().mockReturnValue('full'),
+  calculateSuggestedRefund: jest.fn().mockReturnValue(RefundType.full),
   validatePartialRefund: jest.fn(),
   processRefund: jest.fn().mockResolvedValue(undefined),
   notifyPatientCancelled: jest.fn().mockResolvedValue(undefined),
@@ -151,14 +152,14 @@ describe('BookingCancellationService', () => {
     });
 
     it('should save suggestedRefundType from calculateSuggestedRefund', async () => {
-      mockHelpers.calculateSuggestedRefund.mockReturnValue('none');
+      mockHelpers.calculateSuggestedRefund.mockReturnValue(RefundType.none);
       mockPrisma.booking.findFirst.mockResolvedValue(baseBooking);
       mockPrisma.booking.update.mockResolvedValue(updatedBooking);
 
       await service.requestCancellation(BOOKING_ID, PATIENT_ID, 'reason');
       expect(mockPrisma.booking.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ suggestedRefundType: 'none' }),
+          data: expect.objectContaining({ suggestedRefundType: RefundType.none }),
         }),
       );
     });
@@ -192,8 +193,8 @@ describe('BookingCancellationService', () => {
   // ── approveCancellation ──────────────────────────────────────
 
   describe('approveCancellation', () => {
-    const fullDto = { refundType: 'full' as const, adminNotes: 'OK' };
-    const noneDto = { refundType: 'none' as const };
+    const fullDto = { refundType: RefundType.full, adminNotes: 'OK' };
+    const noneDto = { refundType: RefundType.none };
 
     beforeEach(() => {
       mockPrisma.booking.findFirst.mockResolvedValue(pendingCancellationBooking);
@@ -209,14 +210,14 @@ describe('BookingCancellationService', () => {
         expect.objectContaining({ data: expect.objectContaining({ status: 'cancelled' }) }),
       );
       expect(mockHelpers.processRefund).toHaveBeenCalledWith(
-        mockPrisma, 'full', pendingCancellationBooking.payment, undefined,
+        mockPrisma, RefundType.full, pendingCancellationBooking.payment, undefined,
       );
     });
 
     it('should cancel without refund when refundType is none', async () => {
       await service.approveCancellation(BOOKING_ID, noneDto);
       expect(mockHelpers.processRefund).toHaveBeenCalledWith(
-        mockPrisma, 'none', pendingCancellationBooking.payment, undefined,
+        mockPrisma, RefundType.none, pendingCancellationBooking.payment, undefined,
       );
     });
 
@@ -290,7 +291,7 @@ describe('BookingCancellationService', () => {
   // ── adminDirectCancel ────────────────────────────────────────
 
   describe('adminDirectCancel', () => {
-    const dto = { refundType: 'full' as const, reason: 'Admin decision', adminNotes: 'Noted' };
+    const dto = { refundType: RefundType.full, reason: 'Admin decision', adminNotes: 'Noted' };
 
     it('should cancel booking and process refund', async () => {
       const bookingWithPay = { ...baseBooking, payment: { id: 'pay-1', totalAmount: 15000, status: 'paid' } };
@@ -310,7 +311,7 @@ describe('BookingCancellationService', () => {
 
       await service.adminDirectCancel(BOOKING_ID, ADMIN_ID, dto);
       expect(mockPrisma.booking.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ cancelledBy: 'admin' }) }),
+        expect.objectContaining({ data: expect.objectContaining({ cancelledBy: CancelledBy.admin }) }),
       );
     });
 
@@ -345,7 +346,7 @@ describe('BookingCancellationService', () => {
 
       const result = await service.practitionerCancel(BOOKING_ID, PRAC_USER_ID, 'Emergency');
       expect(result.status).toBe('cancelled');
-      expect(mockHelpers.processRefund).toHaveBeenCalledWith(mockPrisma, 'full', bookingWithRels.payment);
+      expect(mockHelpers.processRefund).toHaveBeenCalledWith(mockPrisma, RefundType.full, bookingWithRels.payment);
       expect(mockHelpers.notifyPatientPractitionerCancelled).toHaveBeenCalled();
       expect(mockHelpers.notifyAdmins).toHaveBeenCalled();
     });

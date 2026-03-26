@@ -1,7 +1,7 @@
 import {
   IsArray,
   IsBoolean,
-  IsIn,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -10,6 +10,7 @@ import {
   Min,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { RefundType, NoShowPolicy } from '@prisma/client';
 
 export class UpdateBookingSettingsDto {
   // ── Payment ──────────────────────────────────────────────────────
@@ -28,15 +29,15 @@ export class UpdateBookingSettingsDto {
   @Max(168)
   freeCancelBeforeHours?: number;
 
-  @ApiPropertyOptional({ enum: ['full', 'partial', 'none'] })
+  @ApiPropertyOptional({ enum: RefundType })
   @IsOptional()
-  @IsIn(['full', 'partial', 'none'])
-  freeCancelRefundType?: string;
+  @IsEnum(RefundType)
+  freeCancelRefundType?: RefundType;
 
-  @ApiPropertyOptional({ enum: ['full', 'partial', 'none'] })
+  @ApiPropertyOptional({ enum: RefundType })
   @IsOptional()
-  @IsIn(['full', 'partial', 'none'])
-  lateCancelRefundType?: string;
+  @IsEnum(RefundType)
+  lateCancelRefundType?: RefundType;
 
   @ApiPropertyOptional({ minimum: 0, maximum: 100 })
   @IsOptional()
@@ -134,10 +135,10 @@ export class UpdateBookingSettingsDto {
   autoNoShowAfterMinutes?: number;
 
   // ── No-show policy ──────────────────────────────────────────────
-  @ApiPropertyOptional({ enum: ['keep_full', 'partial_refund', 'admin_decides'] })
+  @ApiPropertyOptional({ enum: NoShowPolicy })
   @IsOptional()
-  @IsIn(['keep_full', 'partial_refund', 'admin_decides'])
-  noShowPolicy?: string;
+  @IsEnum(NoShowPolicy)
+  noShowPolicy?: NoShowPolicy;
 
   @ApiPropertyOptional({ minimum: 0, maximum: 100 })
   @IsOptional()

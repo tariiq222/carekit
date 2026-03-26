@@ -50,9 +50,7 @@ async function bootstrap(): Promise<void> {
     throw new Error('ALLOWED_ORIGINS must be set in production');
   }
   const allowedOrigins = originsEnv?.split(',').map((o) => o.trim()) ?? [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3007',
+    'http://localhost:5001',
   ];
   app.enableCors({
     origin: allowedOrigins,

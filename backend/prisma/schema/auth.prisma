@@ -12,7 +12,7 @@ model User {
   phone         String?     @unique
   gender        UserGender?
   avatarUrl     String?     @map("avatar_url")
-  accountType   AccountType @default(FULL) @map("account_type")
+  accountType   AccountType @default(full) @map("account_type")
   claimedAt     DateTime?   @map("claimed_at")
   isActive      Boolean     @default(true) @map("is_active")
   emailVerified Boolean     @default(false) @map("email_verified")
@@ -38,6 +38,9 @@ model User {
   waitlistEntries       WaitlistEntry[]        @relation("WaitlistPatient")
   favoritePractitioners FavoritePractitioner[]
   patientProfile        PatientProfile?
+  couponRedemptions     CouponRedemption[]
+  purchasedGiftCards    GiftCard[]             @relation("GiftCardPurchaser")
+  redeemedGiftCards     GiftCard[]             @relation("GiftCardRedeemer")
 
   @@map("users")
 }
@@ -54,7 +57,7 @@ model PatientProfile {
   emergencyPhone    String?    @map("emergency_phone")
   // Medical basics
   bloodType         BloodType? @map("blood_type")
-  allergies         String?    // نص حر — أدوية وأغذية
+  allergies         String? // نص حر — أدوية وأغذية
   chronicConditions String?    @map("chronic_conditions")
 
   createdAt DateTime @default(now()) @map("created_at")

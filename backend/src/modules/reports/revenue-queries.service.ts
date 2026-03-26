@@ -22,33 +22,21 @@ export class RevenueQueriesService {
     from: Date,
     to: Date,
     practitionerId?: string,
+    branchId?: string,
   ): Promise<RevenueByMonth[]> {
-    const rows = practitionerId
-      ? await this.prisma.$queryRaw<RevenueByMonthRow[]>`
-          SELECT DATE_TRUNC('month', b.date) AS month,
-                 COUNT(*)::int               AS bookings,
-                 COALESCE(SUM(p.total_amount), 0)::bigint AS revenue
-          FROM bookings b
-          JOIN payments p ON p.booking_id = b.id
-                         AND p.status = 'paid'::"payment_status"
-          WHERE b.date >= ${from}
-            AND b.date <= ${to}
-            AND b.deleted_at IS NULL
-            AND b.practitioner_id = ${practitionerId}::uuid
-          GROUP BY DATE_TRUNC('month', b.date)
-          ORDER BY month`
-      : await this.prisma.$queryRaw<RevenueByMonthRow[]>`
-          SELECT DATE_TRUNC('month', b.date) AS month,
-                 COUNT(*)::int               AS bookings,
-                 COALESCE(SUM(p.total_amount), 0)::bigint AS revenue
-          FROM bookings b
-          JOIN payments p ON p.booking_id = b.id
-                         AND p.status = 'paid'::"payment_status"
-          WHERE b.date >= ${from}
-            AND b.date <= ${to}
-            AND b.deleted_at IS NULL
-          GROUP BY DATE_TRUNC('month', b.date)
-          ORDER BY month`;
+    const rows = await this.prisma.$queryRaw<RevenueByMonthRow[]>(
+      Prisma.sql`
+        SELECT DATE_TRUNC('month', b.date) AS month,
+               COUNT(*)::int AS bookings,
+               COALESCE(SUM(p.total_amount), 0)::bigint AS revenue
+        FROM bookings b
+        JOIN payments p ON p.booking_id = b.id
+                       AND p.status = 'paid'::"payment_status"
+        ${this.buildBookingWhere(from, to, practitionerId, branchId)}
+        GROUP BY DATE_TRUNC('month', b.date)
+        ORDER BY month
+      `,
+    );
 
     return rows.map((r) => ({
       month: this.formatMonth(r.month),
@@ -65,39 +53,24 @@ export class RevenueQueriesService {
     from: Date,
     to: Date,
     practitionerId?: string,
+    branchId?: string,
   ): Promise<RevenueByPractitioner[]> {
-    const rows = practitionerId
-      ? await this.prisma.$queryRaw<RevenueByPractitionerRow[]>`
-          SELECT b.practitioner_id,
-                 u.first_name,
-                 u.last_name,
-                 COUNT(*)::int AS bookings,
-                 COALESCE(SUM(p.total_amount), 0)::bigint AS revenue
-          FROM bookings b
-          JOIN payments p ON p.booking_id = b.id
-                         AND p.status = 'paid'::"payment_status"
-          JOIN practitioners pr ON pr.id = b.practitioner_id
-          JOIN users u ON u.id = pr.user_id
-          WHERE b.date >= ${from}
-            AND b.date <= ${to}
-            AND b.deleted_at IS NULL
-            AND b.practitioner_id = ${practitionerId}::uuid
-          GROUP BY b.practitioner_id, u.first_name, u.last_name`
-      : await this.prisma.$queryRaw<RevenueByPractitionerRow[]>`
-          SELECT b.practitioner_id,
-                 u.first_name,
-                 u.last_name,
-                 COUNT(*)::int AS bookings,
-                 COALESCE(SUM(p.total_amount), 0)::bigint AS revenue
-          FROM bookings b
-          JOIN payments p ON p.booking_id = b.id
-                         AND p.status = 'paid'::"payment_status"
-          JOIN practitioners pr ON pr.id = b.practitioner_id
-          JOIN users u ON u.id = pr.user_id
-          WHERE b.date >= ${from}
-            AND b.date <= ${to}
-            AND b.deleted_at IS NULL
-          GROUP BY b.practitioner_id, u.first_name, u.last_name`;
+    const rows = await this.prisma.$queryRaw<RevenueByPractitionerRow[]>(
+      Prisma.sql`
+        SELECT b.practitioner_id,
+               u.first_name,
+               u.last_name,
+               COUNT(*)::int AS bookings,
+               COALESCE(SUM(p.total_amount), 0)::bigint AS revenue
+        FROM bookings b
+        JOIN payments p ON p.booking_id = b.id
+                       AND p.status = 'paid'::"payment_status"
+        JOIN practitioners pr ON pr.id = b.practitioner_id
+        JOIN users u ON u.id = pr.user_id
+        ${this.buildBookingWhere(from, to, practitionerId, branchId)}
+        GROUP BY b.practitioner_id, u.first_name, u.last_name
+      `,
+    );
 
     return rows.map((r) => ({
       practitionerId: r.practitioner_id,
@@ -115,37 +88,23 @@ export class RevenueQueriesService {
     from: Date,
     to: Date,
     practitionerId?: string,
+    branchId?: string,
   ): Promise<RevenueByService[]> {
-    const rows = practitionerId
-      ? await this.prisma.$queryRaw<RevenueByServiceRow[]>`
-          SELECT b.service_id,
-                 s.name_ar,
-                 s.name_en,
-                 COUNT(*)::int AS bookings,
-                 COALESCE(SUM(p.total_amount), 0)::bigint AS revenue
-          FROM bookings b
-          JOIN payments p ON p.booking_id = b.id
-                         AND p.status = 'paid'::"payment_status"
-          JOIN services s ON s.id = b.service_id
-          WHERE b.date >= ${from}
-            AND b.date <= ${to}
-            AND b.deleted_at IS NULL
-            AND b.practitioner_id = ${practitionerId}::uuid
-          GROUP BY b.service_id, s.name_ar, s.name_en`
-      : await this.prisma.$queryRaw<RevenueByServiceRow[]>`
-          SELECT b.service_id,
-                 s.name_ar,
-                 s.name_en,
-                 COUNT(*)::int AS bookings,
-                 COALESCE(SUM(p.total_amount), 0)::bigint AS revenue
-          FROM bookings b
-          JOIN payments p ON p.booking_id = b.id
-                         AND p.status = 'paid'::"payment_status"
-          JOIN services s ON s.id = b.service_id
-          WHERE b.date >= ${from}
-            AND b.date <= ${to}
-            AND b.deleted_at IS NULL
-          GROUP BY b.service_id, s.name_ar, s.name_en`;
+    const rows = await this.prisma.$queryRaw<RevenueByServiceRow[]>(
+      Prisma.sql`
+        SELECT b.service_id,
+               s.name_ar,
+               s.name_en,
+               COUNT(*)::int AS bookings,
+               COALESCE(SUM(p.total_amount), 0)::bigint AS revenue
+        FROM bookings b
+        JOIN payments p ON p.booking_id = b.id
+                       AND p.status = 'paid'::"payment_status"
+        JOIN services s ON s.id = b.service_id
+        ${this.buildBookingWhere(from, to, practitionerId, branchId)}
+        GROUP BY b.service_id, s.name_ar, s.name_en
+      `,
+    );
 
     return rows.map((r) => ({
       serviceId: r.service_id,
@@ -159,11 +118,12 @@ export class RevenueQueriesService {
   //  TOTALS — Prisma aggregate + count
   // ═══════════════════════════════════════════════════════════════
 
-  async getTotals(from: Date, to: Date, practitionerId?: string) {
+  async getTotals(from: Date, to: Date, practitionerId?: string, branchId?: string) {
     const where: Prisma.BookingWhereInput = {
       date: { gte: from, lte: to },
       deletedAt: null,
       ...(practitionerId ? { practitionerId } : {}),
+      ...(branchId ? { branchId } : {}),
     };
 
     const [totalBookings, paidAggregate] = await Promise.all([
@@ -188,5 +148,28 @@ export class RevenueQueriesService {
     const year = d.getUTCFullYear();
     const month = String(d.getUTCMonth() + 1).padStart(2, '0');
     return `${year}-${month}`;
+  }
+
+  private buildBookingWhere(
+    from: Date,
+    to: Date,
+    practitionerId?: string,
+    branchId?: string,
+  ): Prisma.Sql {
+    const filters: Prisma.Sql[] = [
+      Prisma.sql`b.date >= ${from}`,
+      Prisma.sql`b.date <= ${to}`,
+      Prisma.sql`b.deleted_at IS NULL`,
+    ];
+
+    if (practitionerId) {
+      filters.push(Prisma.sql`b.practitioner_id = ${practitionerId}::uuid`);
+    }
+
+    if (branchId) {
+      filters.push(Prisma.sql`b.branch_id = ${branchId}::uuid`);
+    }
+
+    return Prisma.sql`WHERE ${Prisma.join(filters, ' AND ')}`;
   }
 }

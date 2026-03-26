@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../../modules/notifications/notifications.service.js';
+import { MetricsService } from '../metrics/metrics.service.js';
 import { ADMIN_ROLE_SLUGS } from '../../config/constants/roles.js';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class QueueFailureService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   /**
@@ -25,6 +27,8 @@ export class QueueFailureService {
     error: Error,
   ): Promise<void> {
     try {
+      this.metricsService.jobFailuresTotal.inc({ queue: queueName, job_name: jobName });
+
       this.logger.error(
         `[DLQ] Job permanently failed — queue=${queueName} job=${jobName} id=${jobId ?? 'unknown'}`,
         {
