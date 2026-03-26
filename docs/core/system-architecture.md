@@ -1,6 +1,6 @@
 # CareKit — System Architecture Reference
 
-> **Version:** 1.0 | **Date:** March 2026 | **Author:** Architecture Team
+> **Version:** 1.1 | **Date:** 2026-03-26 | **Author:** Architecture Team
 
 ---
 
@@ -30,7 +30,7 @@ CareKit is a White Label smart clinic management platform built by WebVue Techno
 
 Each deployment runs as an independent Docker stack with 7 services: **NestJS backend** (API + BullMQ workers), **PostgreSQL 16** with pgvector (33 models), **Redis 7** (caching, rate limiting, queues), **MinIO** (S3-compatible file storage), **Nginx** (reverse proxy with TLS, rate limiting, security headers), and two backup containers (PostgreSQL daily at 2:00 AM, MinIO daily at 2:30 AM).
 
-The backend exposes a REST API at `/api/v1/` with 25 controllers, 76+ services, and 33 registered NestJS modules. The **Dashboard** is a Next.js 14 app using shadcn/ui and Tailwind CSS. The **Mobile App** is built with Expo SDK 54 (React Native) serving both patient and practitioner roles through role-based routing.
+The backend exposes a REST API at `/api/v1/` with 25 controllers, 76+ services, and 33 registered NestJS modules. The **Dashboard** is a Next.js 14 app using shadcn/ui, Tailwind CSS, and Hugeicons (`@hugeicons/react`). The **Mobile App** is built with Expo SDK 54 (React Native) serving both patient and practitioner roles through role-based routing.
 
 All branding, payment keys, chatbot knowledge base, and clinic settings are configurable per deployment through the White Label admin dashboard. The platform supports Arabic and English (RTL-first) with i18n throughout all layers.
 
@@ -66,7 +66,7 @@ All branding, payment keys, chatbot knowledge base, and clinic settings are conf
 │  → JwtAuth → Permissions → Validation → @Throttle → Controller → Transform          │
 │  → Metrics → ExceptionFilter                                                         │
 │                                                                                      │
-│  33 Modules │ 76+ Services │ 25 Controllers │ 33 DB Models                           │
+│  33 Modules │ 76+ Services │ 25 Controllers │ 35 DB Models                           │
 │  4 BullMQ Queues │ 7 Cron Jobs │ 4 Circuit Breakers                                 │
 └──────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┘
            │                  │                  │                  │
@@ -338,7 +338,7 @@ All external HTTP calls use `resilientFetch()` (`common/helpers/resilient-fetch.
 | **Chatbot** | `ChatSession`, `ChatMessage`, `KnowledgeBase`, `KnowledgeBaseFile`, `ChatbotConfig` |
 | **System** | `WhiteLabelConfig`, `ActivityLog`, `Notification` |
 
-**Key enums:** `BookingType` (4), `BookingStatus` (9), `PaymentMethod` (2), `PaymentStatus` (5), `TransferVerificationStatus` (8), `NotificationType` (13), `WaitlistStatus` (5), `ProblemReportType`.
+**Key enums:** `BookingType` (4: +walk_in), `BookingStatus` (9: +checked_in/in_progress/expired), `PaymentMethod` (2), `PaymentStatus` (5: +awaiting), `TransferVerificationStatus` (8), `NotificationType` (13), `WaitlistStatus` (5), `KbFileStatus` (4), `SessionLanguage` (2), `DevicePlatform` (3), `ProblemReportType` (7).
 
 **pgvector extension** enabled for chatbot RAG embeddings in the `KnowledgeBase` model.
 
@@ -460,7 +460,7 @@ Restore script available: `docker/scripts/restore.sh`.
 1. **Monorepo** — `backend/`, `dashboard/`, `mobile/`, `shared/`, `docker/` managed by Turborepo
 2. **API prefix** — All endpoints at `/api/v1/`, Swagger at `/api/docs` (dev only)
 3. **33 NestJS modules** — 24 domain + 9 infrastructure, registered in `app.module.ts`
-4. **33 Prisma models** — PostgreSQL 16 + pgvector, single `schema.prisma` as source of truth
+4. **35 Prisma models** — PostgreSQL 16 + pgvector, single `schema.prisma` as source of truth
 5. **4 BullMQ queues** — `email`, `receipt-verification`, `tasks`, `zatca-submit` all on Redis
 6. **7 cron jobs** — Cleanup (OTP, tokens), reminders (24h, 1h), booking automation (expire, complete, no-show)
 7. **4 circuit breakers** — `moyasar`, `zoom`, `openrouter`, `sms` via `resilientFetch()`

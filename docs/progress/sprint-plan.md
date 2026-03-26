@@ -1,8 +1,8 @@
 # CareKit — خطة المهام المتبقية
 
-> **آخر تحديث:** 2026-03-24
-> **المنجزات السابقة:** [`docs/achievements.md`](achievements.md)
-> المراحل المكتملة: Phase 1–5 + Sprint 4.5 + Sprint 4.6
+> **آخر تحديث:** 2026-03-26
+> **المنجزات السابقة:** [`docs/progress/achievements.md`](achievements.md)
+> المراحل المكتملة: Phase 1–5 + Sprint 4.5 + Sprint 4.6 + Sprint 4.7
 
 ---
 
@@ -21,7 +21,7 @@
 ## نظرة عامة — المراحل المتبقية
 
 ```
-Phase 5 — إعادة تصميم وتوحيد Dashboard          ✅ 100%  ← docs/phase5-workplan.md
+Phase 5 — إعادة تصميم وتوحيد Dashboard          ✅ 100%  ← docs/progress/achievements.md
 Phase 6 — الموقع الإلكتروني (Website)             🔲 0%
 Phase 7 — التطبيق (Mobile Polishing + Store)      🔲 0%
 Phase 8 — Production Readiness                     🔲 0%
@@ -38,73 +38,23 @@ Phase 9 — Testing & Delivery                       🔲 0%
 |---|--------|-------|----------|
 | I-01 | Zoom API integration الفعلية (بدل الـ stub الحالي) | `zoom.service.ts` | Phase 8 |
 | I-09 | تحديث Zoom link عند reschedule لحجز فيديو | `bookings.service.ts` | Phase 8 |
-| D-02 | صفحة Notifications في Dashboard (حالياً placeholder) | Dashboard | Phase 5 |
 
 ---
 
-## Phase 5 — إعادة تصميم وتوحيد Dashboard 🔲
+## Phase 5 — إعادة تصميم وتوحيد Dashboard ✅ 100%
 
-> **الهدف:** توحيد التصميم المرئي لكل صفحات الداشبورد — تجربة مستخدم متسقة واحترافية
-> **خطة العمل التفصيلية:** [`docs/phase5-workplan.md`](phase5-workplan.md)
-> **الحالة الحالية:** 5 صفحات من 12 (4 mock + 1 API) — تغطية API: 10%
-> **الهيكل:** 4 sprints فرعية (5.0 بنية تحتية → 5.1 صفحات أساسية → 5.2 صفحات ثانوية → 5.3 DS + 5.4 UX)
+> **مكتملة** — التفاصيل الكاملة في [`docs/progress/achievements.md`](achievements.md)
 
-### 5.1 — Design System & Tokens
-
-| # | المهمة | الوصف | الحالة |
-|---|--------|-------|--------|
-| 5.1.1 | تعريف Design Tokens | ألوان، spacing، typography، shadows، border-radius — متغيرات CSS موحدة | 🔲 |
-| 5.1.2 | Color Palette | ألوان رئيسية + ثانوية + neutral + semantic (success/warning/error/info) + dark mode | 🔲 |
-| 5.1.3 | Typography Scale | أحجام الخطوط + line-height + font-weight — نظام واحد | 🔲 |
-| 5.1.4 | Spacing System | نظام spacing متسق (4px base) | 🔲 |
-| 5.1.5 | RTL Audit | مراجعة كل المكونات للتأكد من دعم RTL الصحيح | 🔲 |
-
-### 5.2 — توحيد المكونات الأساسية
-
-| # | المهمة | الوصف | الحالة |
-|---|--------|-------|--------|
-| 5.2.1 | Data Tables | توحيد شكل الجداول في كل الصفحات (header, rows, pagination, search, filters) | 🔲 |
-| 5.2.2 | Forms | توحيد شكل الفورمات (labels, inputs, validation errors, buttons) | 🔲 |
-| 5.2.3 | Cards & Stats | توحيد البطاقات الإحصائية والمعلوماتية | 🔲 |
-| 5.2.4 | Modals & Sheets | توحيد الحوارات والـ side sheets | 🔲 |
-| 5.2.5 | Navigation | تحسين Sidebar + Header + Breadcrumbs | 🔲 |
-| 5.2.6 | Empty States | تصميم حالات "لا بيانات" موحدة لكل صفحة | 🔲 |
-| 5.2.7 | Loading States | Skeleton loaders موحدة | 🔲 |
-
-### 5.3 — إعادة تصميم الصفحات
-
-| # | الصفحة | المطلوب | الحالة |
-|---|--------|---------|--------|
-| 5.3.1 | Dashboard Home | إعادة تصميم الصفحة الرئيسية — stats + charts + recent activity + quick actions | 🔲 |
-| 5.3.2 | Appointments | تحسين العرض — calendar view + list view + filters | 🔲 |
-| 5.3.3 | Practitioners | تحسين القائمة + صفحة التفاصيل (profile, schedule, services, ratings) | 🔲 |
-| 5.3.4 | Patients | تحسين القائمة + صفحة التفاصيل (medical history, bookings, payments) | 🔲 |
-| 5.3.5 | Services | تحسين عرض الخدمات والفئات | 🔲 |
-| 5.3.6 | Invoices | تحسين العرض مع ZATCA status واضح | 🔲 |
-| 5.3.7 | Payments | تحسين العرض + مراجعة التحويلات البنكية | 🔲 |
-| 5.3.8 | Reports | تحسين التقارير والرسوم البيانية | 🔲 |
-| 5.3.9 | Users & Roles | توحيد إدارة المستخدمين والأدوار | 🔲 |
-| 5.3.10 | Notifications | بناء صفحة Notifications كاملة (بدل placeholder) | 🔲 |
-| 5.3.11 | Chatbot | تحسين واجهة Chatbot settings + conversations + analytics | 🔲 |
-| 5.3.12 | Settings | تحسين صفحة الإعدادات (7 tabs) | 🔲 |
-
-### 5.4 — تحسينات UX
-
-| # | المهمة | الوصف | الحالة |
-|---|--------|-------|--------|
-| 5.4.1 | Responsive Design | التأكد من عمل كل الصفحات على tablet + mobile | 🔲 |
-| 5.4.2 | Dark Mode | تطبيق dark mode متسق على كل الصفحات | 🔲 |
-| 5.4.3 | Animations | transitions ناعمة بين الصفحات والحالات | 🔲 |
-| 5.4.4 | Toast & Feedback | توحيد رسائل النجاح والخطأ | 🔲 |
-| 5.4.5 | Keyboard Shortcuts | اختصارات لوحة مفاتيح للعمليات الشائعة | 🔲 |
-
-### معيار إتمام Phase 5
-
-- كل الصفحات بتصميم موحد ومتسق
-- Dark mode يعمل على كل الصفحات
-- RTL يعمل بشكل صحيح
-- لا صفحات placeholder فاضية
-- Responsive على tablet
+**ملخص ما أُنجز:**
+- Design System كامل: Frosted Glass (glassmorphism) + design tokens في `globals.css` + `dashboard/lib/ds.ts`
+- أيقونات موحدة: `@hugeicons/react` — استبدال كامل لـ Lucide
+- 16 صفحة + Login كلها بتصميم موحد (Sidebar + PageHeader + StatCard + DataTable)
+- Dark mode + RTL على كل الصفحات
+- صفحة Notifications مكتملة (كانت placeholder)
+- صفحة Settings: 8 tabs (بُني 5 tabs جديدة: Booking, Cancellation, Features, ZATCA, Email Templates)
+- صفحتا Payments و Invoices مضافتان بالكامل
+- `dashboard/DESIGN-SYSTEM.md` — قانون التصميم الرسمي
+- Design Governance: `.claude/skills/carekit-ds/SKILL.md`
 
 ---
 
@@ -304,7 +254,7 @@ Phase 9 — Testing & Delivery                       🔲 0%
 | `react-hook-form` + `zod` | Forms |
 | `next-intl` | i18n |
 | `nuqs` | URL State |
-| `lucide-react` | Icons |
+| `@hugeicons/react` | Icons (Hugeicons — الوحيد المعتمد) |
 
 ### External Services
 
@@ -322,11 +272,11 @@ Phase 9 — Testing & Delivery                       🔲 0%
 ## Critical Path
 
 ```
-Phase 5 (Dashboard Design) → Phase 6 (Website) → Phase 7 (Mobile + Store)
-                                                          ↓
-                                              Phase 8 (Production) → Phase 9 (Testing & Go Live)
+Phase 5 ✅ → Phase 6 (Website) → Phase 7 (Mobile + Store)
+                                                   ↓
+                                       Phase 8 (Production) → Phase 9 (Testing & Go Live)
 ```
 
 ---
 
-*CareKit — WebVue Technology Solutions — آخر تحديث: 2026-03-23*
+*CareKit — WebVue Technology Solutions — آخر تحديث: 2026-03-26*
