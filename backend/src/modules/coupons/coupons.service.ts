@@ -36,7 +36,7 @@ export class CouponsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: CouponFilterDto) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.limit);
+    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
     const now = new Date();
     const where = this.buildWhereClause(query, now);
 

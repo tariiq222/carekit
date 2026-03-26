@@ -10,9 +10,10 @@ export class CookieService {
   constructor(private readonly configService: ConfigService) {}
 
   setRefreshTokenCookie(res: Response, token: string): void {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
     res.cookie(REFRESH_COOKIE_NAME, token, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'production',
+      secure: isProduction,
       sameSite: 'lax',
       path: '/',
       maxAge: REFRESH_TOKEN_MAX_AGE,
@@ -21,9 +22,10 @@ export class CookieService {
   }
 
   clearRefreshTokenCookie(res: Response): void {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
     res.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'production',
+      secure: isProduction,
       sameSite: 'lax',
       path: '/',
       domain: this.configService.get('COOKIE_DOMAIN') || undefined,

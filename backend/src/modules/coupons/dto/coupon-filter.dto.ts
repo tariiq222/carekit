@@ -22,5 +22,5 @@ export class CouponFilterDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number;
+  perPage?: number;
 }

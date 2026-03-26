@@ -139,16 +139,16 @@ export function buildInvoiceHtml(params: InvoiceHtmlParams): string {
         <tbody>
           <tr>
             <td>${booking.service?.nameAr ?? booking.service?.nameEn ?? 'خدمة طبية'}</td>
-            <td>${fmt(baseAmount)} ر.س</td>
-            <td>${fmt(vatAmount)} ر.س</td>
-            <td>${fmt(totalAmount)} ر.س</td>
+            <td>${fmt(baseAmount)} ﷼</td>
+            <td>${fmt(vatAmount)} ﷼</td>
+            <td>${fmt(totalAmount)} ﷼</td>
           </tr>
         </tbody>
       </table>
       <div class="totals">
-        <div class="trow"><span>المبلغ الأساسي</span><span>${fmt(baseAmount)} ر.س</span></div>
-        <div class="trow"><span>${vatLabel}</span><span>${fmt(vatAmount)} ر.س</span></div>
-        <div class="trow"><span>الإجمالي المستحق</span><span>${fmt(totalAmount)} ر.س</span></div>
+        <div class="trow"><span>المبلغ الأساسي</span><span>${fmt(baseAmount)} ﷼</span></div>
+        <div class="trow"><span>${vatLabel}</span><span>${fmt(vatAmount)} ﷼</span></div>
+        <div class="trow"><span>الإجمالي المستحق</span><span>${fmt(totalAmount)} ﷼</span></div>
       </div>
       <div style="margin-top:2rem;">
         <div class="sec-title">بيانات الدفع</div>

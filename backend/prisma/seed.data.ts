@@ -20,6 +20,9 @@ export const MODULES = [
   'ratings',
   'coupons',
   'branches',
+  'intake_forms',
+  'gift-cards',
+  'activity-log',
 ] as const;
 
 export const ACTIONS = ['view', 'create', 'edit', 'delete'] as const;
