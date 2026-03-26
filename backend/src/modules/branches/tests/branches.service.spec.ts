@@ -52,6 +52,80 @@ describe('BranchesService', () => {
   });
 
   // ─────────────────────────────────────────────
+  //  findAll
+  // ─────────────────────────────────────────────
+
+  describe('findAll', () => {
+    it('should return paginated items and meta', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([baseBranch]);
+      mockPrisma.branch.count.mockResolvedValue(1);
+
+      const result = await service.findAll({});
+
+      expect(result.items).toHaveLength(1);
+      expect(result.meta).toBeDefined();
+      expect(result.meta.total).toBe(1);
+    });
+
+    it('should strip deletedAt from returned items', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([baseBranch]);
+      mockPrisma.branch.count.mockResolvedValue(1);
+
+      const result = await service.findAll({});
+
+      expect(result.items[0]).not.toHaveProperty('deletedAt');
+    });
+
+    it('should apply isActive filter when provided', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([]);
+      mockPrisma.branch.count.mockResolvedValue(0);
+
+      await service.findAll({ isActive: true });
+
+      expect(mockPrisma.branch.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true }),
+        }),
+      );
+    });
+
+    it('should apply search filter when provided', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([]);
+      mockPrisma.branch.count.mockResolvedValue(0);
+
+      await service.findAll({ search: 'Riyadh' });
+
+      expect(mockPrisma.branch.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ OR: expect.any(Array) }),
+        }),
+      );
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  //  update
+  // ─────────────────────────────────────────────
+
+  describe('update', () => {
+    it('should update branch and return result without deletedAt', async () => {
+      mockPrisma.branch.findFirst.mockResolvedValue(baseBranch);
+      mockPrisma.branch.update.mockResolvedValue({ ...baseBranch, nameEn: 'Updated Branch' });
+
+      const result = await service.update('branch-1', { nameEn: 'Updated Branch' });
+
+      expect(result).not.toHaveProperty('deletedAt');
+      expect(result.nameEn).toBe('Updated Branch');
+    });
+
+    it('should throw NotFoundException when branch not found', async () => {
+      mockPrisma.branch.findFirst.mockResolvedValue(null);
+
+      await expect(service.update('missing-id', { nameEn: 'X' })).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ─────────────────────────────────────────────
   //  findById
   // ─────────────────────────────────────────────
 

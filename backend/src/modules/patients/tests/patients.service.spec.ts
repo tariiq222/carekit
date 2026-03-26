@@ -21,6 +21,10 @@ const mockPrismaService: any = {
     findMany: jest.fn(),
     count: jest.fn(),
     findFirst: jest.fn(),
+    update: jest.fn(),
+  },
+  patientProfile: {
+    upsert: jest.fn(),
   },
   booking: {
     groupBy: jest.fn(),
@@ -28,6 +32,7 @@ const mockPrismaService: any = {
   payment: {
     aggregate: jest.fn(),
   },
+  $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
 };
 
 describe('PatientsService', () => {
@@ -127,6 +132,63 @@ describe('PatientsService', () => {
           where: expect.objectContaining({ deletedAt: null }),
         }),
       );
+    });
+  });
+
+  describe('updatePatient', () => {
+    const updatedUser = {
+      id: 'patient-1',
+      firstName: 'محمد',
+      middleName: null,
+      lastName: 'الراشد',
+      email: 'ahmed@example.com',
+      phone: '+966501234567',
+      gender: 'male',
+      isActive: true,
+      updatedAt: new Date('2026-03-01'),
+    };
+
+    it('should update patient and return updated user', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+      mockPrismaService.user.update.mockResolvedValue(updatedUser);
+
+      const result = await service.updatePatient('patient-1', { firstName: 'محمد' } as never);
+
+      expect(result).toEqual(updatedUser);
+      expect(mockPrismaService.$transaction).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when patient not found', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.updatePatient('missing-id', { firstName: 'Test' } as never),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should include patientProfile upsert when profile fields provided', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+      mockPrismaService.user.update.mockResolvedValue(updatedUser);
+      mockPrismaService.patientProfile.upsert.mockResolvedValue({});
+
+      await service.updatePatient('patient-1', { nationality: 'SA' } as never);
+
+      expect(mockPrismaService.patientProfile.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: 'patient-1' },
+          update: expect.objectContaining({ nationality: 'SA' }),
+          create: expect.objectContaining({ userId: 'patient-1', nationality: 'SA' }),
+        }),
+      );
+    });
+
+    it('should not call patientProfile upsert when no profile fields provided', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+      mockPrismaService.user.update.mockResolvedValue(updatedUser);
+
+      await service.updatePatient('patient-1', { firstName: 'Test' } as never);
+
+      expect(mockPrismaService.patientProfile.upsert).not.toHaveBeenCalled();
     });
   });
 

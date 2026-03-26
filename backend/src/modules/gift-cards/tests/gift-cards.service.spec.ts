@@ -48,6 +48,100 @@ describe('GiftCardsService', () => {
   });
 
   // ─────────────────────────────────────────────────────────────
+  // findAll
+  // ─────────────────────────────────────────────────────────────
+
+  describe('findAll', () => {
+    it('should return paginated items with meta', async () => {
+      mockPrisma.giftCard.findMany.mockResolvedValue([baseCard]);
+      mockPrisma.giftCard.count.mockResolvedValue(1);
+
+      const result = await service.findAll({});
+
+      expect(result.items).toHaveLength(1);
+      expect(result.meta.total).toBe(1);
+    });
+
+    it('should filter by active status', async () => {
+      mockPrisma.giftCard.findMany.mockResolvedValue([]);
+      mockPrisma.giftCard.count.mockResolvedValue(0);
+
+      await service.findAll({ status: 'active' } as never);
+
+      expect(mockPrisma.giftCard.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true }),
+        }),
+      );
+    });
+
+    it('should filter by depleted status', async () => {
+      mockPrisma.giftCard.findMany.mockResolvedValue([]);
+      mockPrisma.giftCard.count.mockResolvedValue(0);
+
+      await service.findAll({ status: 'depleted' } as never);
+
+      expect(mockPrisma.giftCard.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ balance: 0, isActive: true }),
+        }),
+      );
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // update
+  // ─────────────────────────────────────────────────────────────
+
+  describe('update', () => {
+    it('should update gift card fields', async () => {
+      mockPrisma.giftCard.findUnique.mockResolvedValue({ ...baseCard, transactions: [] });
+      mockPrisma.giftCard.update.mockResolvedValue({ ...baseCard, isActive: false });
+
+      const result = await service.update('gc-uuid-1', { isActive: false } as never);
+
+      expect(mockPrisma.giftCard.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'gc-uuid-1' },
+          data: expect.objectContaining({ isActive: false }),
+        }),
+      );
+      expect(result).toBeDefined();
+    });
+
+    it('should throw NotFoundException when gift card not found', async () => {
+      mockPrisma.giftCard.findUnique.mockResolvedValue(null);
+
+      await expect(service.update('missing-id', {} as never)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // deactivate
+  // ─────────────────────────────────────────────────────────────
+
+  describe('deactivate', () => {
+    it('should set isActive=false and return {deactivated: true}', async () => {
+      mockPrisma.giftCard.findUnique.mockResolvedValue({ ...baseCard, transactions: [] });
+      mockPrisma.giftCard.update.mockResolvedValue({ ...baseCard, isActive: false });
+
+      const result = await service.deactivate('gc-uuid-1');
+
+      expect(mockPrisma.giftCard.update).toHaveBeenCalledWith({
+        where: { id: 'gc-uuid-1' },
+        data: { isActive: false },
+      });
+      expect(result).toEqual({ deactivated: true });
+    });
+
+    it('should throw NotFoundException when gift card not found', async () => {
+      mockPrisma.giftCard.findUnique.mockResolvedValue(null);
+
+      await expect(service.deactivate('missing-id')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
   // findById
   // ─────────────────────────────────────────────────────────────
 

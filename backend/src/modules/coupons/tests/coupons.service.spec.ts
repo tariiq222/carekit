@@ -62,6 +62,119 @@ describe('CouponsService', () => {
   });
 
   // ─────────────────────────────────────────────────────────────
+  // findAll
+  // ─────────────────────────────────────────────────────────────
+
+  describe('findAll', () => {
+    it('should return paginated items with meta', async () => {
+      mockPrisma.coupon.findMany.mockResolvedValue([baseCoupon]);
+      mockPrisma.coupon.count.mockResolvedValue(1);
+
+      const result = await service.findAll({});
+
+      expect(result.items).toHaveLength(1);
+      expect(result.meta.total).toBe(1);
+    });
+
+    it('should return serviceIds array in each item', async () => {
+      mockPrisma.coupon.findMany.mockResolvedValue([{
+        ...baseCoupon,
+        couponServices: [{ serviceId: 'svc-1' }],
+      }]);
+      mockPrisma.coupon.count.mockResolvedValue(1);
+
+      const result = await service.findAll({});
+
+      expect(result.items[0]).toHaveProperty('serviceIds', ['svc-1']);
+    });
+
+    it('should filter by active status', async () => {
+      mockPrisma.coupon.findMany.mockResolvedValue([]);
+      mockPrisma.coupon.count.mockResolvedValue(0);
+
+      await service.findAll({ status: 'active' } as never);
+
+      expect(mockPrisma.coupon.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true, OR: expect.any(Array) }),
+        }),
+      );
+    });
+
+    it('should filter by inactive status', async () => {
+      mockPrisma.coupon.findMany.mockResolvedValue([]);
+      mockPrisma.coupon.count.mockResolvedValue(0);
+
+      await service.findAll({ status: 'inactive' } as never);
+
+      expect(mockPrisma.coupon.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: false }),
+        }),
+      );
+    });
+
+    it('should filter by expired status', async () => {
+      mockPrisma.coupon.findMany.mockResolvedValue([]);
+      mockPrisma.coupon.count.mockResolvedValue(0);
+
+      await service.findAll({ status: 'expired' } as never);
+
+      expect(mockPrisma.coupon.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ expiresAt: expect.objectContaining({ lte: expect.any(Date) }) }),
+        }),
+      );
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // update
+  // ─────────────────────────────────────────────────────────────
+
+  describe('update', () => {
+    it('should update coupon and return shaped result', async () => {
+      mockPrisma.coupon.findUnique.mockResolvedValue(baseCoupon);
+      mockPrisma.coupon.update.mockResolvedValue({ ...baseCoupon, descriptionEn: 'Updated' });
+
+      const result = await service.update(baseCoupon.id, { descriptionEn: 'Updated' } as never);
+
+      expect(result).toHaveProperty('serviceIds');
+      expect(mockPrisma.coupon.update).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when coupon not found', async () => {
+      mockPrisma.coupon.findUnique.mockResolvedValue(null);
+
+      await expect(service.update('missing-id', { descriptionEn: 'X' } as never)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should replace service restrictions when serviceIds provided', async () => {
+      mockPrisma.coupon.findUnique.mockResolvedValue(baseCoupon);
+      mockPrisma.coupon.update.mockResolvedValue(baseCoupon);
+
+      await service.update(baseCoupon.id, { serviceIds: ['svc-1', 'svc-2'] } as never);
+
+      expect(mockPrisma.couponService.deleteMany).toHaveBeenCalledWith({
+        where: { couponId: baseCoupon.id },
+      });
+      expect(mockPrisma.couponService.createMany).toHaveBeenCalled();
+    });
+
+    it('should only delete (no createMany) when serviceIds is empty array', async () => {
+      mockPrisma.coupon.findUnique.mockResolvedValue(baseCoupon);
+      mockPrisma.coupon.update.mockResolvedValue(baseCoupon);
+
+      await service.update(baseCoupon.id, { serviceIds: [] } as never);
+
+      expect(mockPrisma.couponService.deleteMany).toHaveBeenCalled();
+      expect(mockPrisma.couponService.createMany).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
   // findById
   // ─────────────────────────────────────────────────────────────
 
