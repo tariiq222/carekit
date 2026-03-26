@@ -43,7 +43,7 @@ export class ProblemReportsService {
     });
 
     if (!booking) {
-      throw new NotFoundException('Booking not found');
+      throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
     }
 
     if (booking.status !== 'completed') {
@@ -134,7 +134,7 @@ export class ProblemReportsService {
     });
 
     if (!report) {
-      throw new NotFoundException('Problem report not found');
+      throw new NotFoundException({ statusCode: 404, message: 'Problem report not found', error: 'NOT_FOUND' });
     }
 
     return report;
@@ -147,7 +147,7 @@ export class ProblemReportsService {
     });
 
     if (!report) {
-      throw new NotFoundException('Problem report not found');
+      throw new NotFoundException({ statusCode: 404, message: 'Problem report not found', error: 'NOT_FOUND' });
     }
 
     if (report.status === 'resolved' || report.status === 'dismissed') {

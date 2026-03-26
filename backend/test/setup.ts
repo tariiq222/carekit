@@ -13,6 +13,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
+import Redis from 'ioredis';
 import { AppModule } from '../src/app.module';
 
 // ---------------------------------------------------------------------------
@@ -135,6 +136,19 @@ export interface TestApp {
  * as the production app.
  */
 export async function createTestApp(): Promise<TestApp> {
+  // Flush Redis throttle counters before each suite so back-to-back suites
+  // don't hit the rate limit (counters accumulate across app restarts).
+  const redisUrl = process.env['REDIS_URL'] ?? 'redis://localhost:6379';
+  const redis = new Redis(redisUrl, { lazyConnect: true });
+  try {
+    await redis.connect();
+    await redis.flushdb();
+  } catch {
+    // Non-fatal — throttle may still work or be over-counted
+  } finally {
+    await redis.quit();
+  }
+
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();

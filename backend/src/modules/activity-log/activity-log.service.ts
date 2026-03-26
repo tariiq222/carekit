@@ -119,7 +119,7 @@ export class ActivityLogService {
       },
     });
 
-    if (!log) throw new NotFoundException('Activity log not found');
+    if (!log) throw new NotFoundException({ statusCode: 404, message: 'Activity log not found', error: 'NOT_FOUND' });
 
     return { success: true, data: log };
   }

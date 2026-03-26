@@ -11,8 +11,10 @@ export const ACCESS_TOKEN_EXPIRY = 900;
 /** JWT refresh token lifetime in seconds (7 days). */
 export const REFRESH_TOKEN_EXPIRY = 604_800;
 
-/** Global rate limit: max requests per window. */
-export const THROTTLE_LIMIT = 100;
+/** Global rate limit: max requests per window. Override via THROTTLE_LIMIT env var for testing. */
+export const THROTTLE_LIMIT = process.env['THROTTLE_LIMIT']
+  ? parseInt(process.env['THROTTLE_LIMIT'], 10)
+  : 100;
 
 /** Global rate limit: window duration in milliseconds (1 minute). */
 export const THROTTLE_TTL = 60_000;

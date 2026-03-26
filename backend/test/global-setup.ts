@@ -5,6 +5,7 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import Redis from 'ioredis';
 
 export default async function globalSetup(): Promise<void> {
   const connectionString = process.env['DATABASE_URL'];
@@ -12,10 +13,35 @@ export default async function globalSetup(): Promise<void> {
     throw new Error('DATABASE_URL is required for e2e tests');
   }
 
+  // Flush Redis so throttle counters from previous runs don't block auth requests.
+  // The test Redis (port 5380) is dedicated to testing — safe to flush entirely.
+  const redisUrl = process.env['REDIS_URL'] ?? 'redis://localhost:6379';
+  const redis = new Redis(redisUrl);
+  try {
+    await redis.flushdb();
+  } finally {
+    await redis.quit();
+  }
+
   const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
 
   try {
+    // Delete test-created module data (order matters due to foreign keys)
+    await prisma.couponRedemption.deleteMany({});
+    await prisma.coupon.deleteMany({});
+    await prisma.giftCardTransaction.deleteMany({});
+    await prisma.giftCard.deleteMany({});
+    await prisma.intakeResponse.deleteMany({});
+    await prisma.intakeField.deleteMany({});
+    await prisma.intakeForm.deleteMany({});
+    await prisma.practitionerBranch.deleteMany({});
+    await prisma.branch.deleteMany({});
+    await prisma.clinicWorkingHours.deleteMany({});
+    await prisma.clinicHoliday.deleteMany({});
+    await prisma.problemReport.deleteMany({});
+    await prisma.activityLog.deleteMany({});
+
     // Delete test users (not the seeded super_admin)
     // Order matters due to foreign keys
     await prisma.notification.deleteMany({});
