@@ -105,6 +105,16 @@ describe('BookingCancellationService', () => {
               throw new ConflictException({ statusCode: 409, message: `Cannot cancel booking with status '${booking.status}'`, error: 'CONFLICT' });
             }
           }),
+          assertPatientOwnership: jest.fn().mockImplementation((booking: { patientId: string }, patientId: string) => {
+            if (booking.patientId !== patientId) {
+              throw new ForbiddenException({ statusCode: 403, message: 'Forbidden', error: 'FORBIDDEN' });
+            }
+          }),
+          assertPractitionerOwnership: jest.fn().mockImplementation((booking: { practitioner?: { userId: string } }, practitionerUserId: string) => {
+            if (booking.practitioner?.userId !== practitionerUserId) {
+              throw new ForbiddenException({ statusCode: 403, message: 'Forbidden', error: 'FORBIDDEN' });
+            }
+          }),
         } },
         { provide: WaitlistService, useValue: { checkAndNotify: jest.fn().mockResolvedValue(undefined) } },
       ],

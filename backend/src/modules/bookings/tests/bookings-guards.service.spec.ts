@@ -23,6 +23,7 @@ import { BookingPaymentHelper } from '../booking-payment.helper.js';
 import { PriceResolverService } from '../price-resolver.service.js';
 import { ClinicHoursService } from '../../clinic/clinic-hours.service.js';
 import { ClinicHolidaysService } from '../../clinic/clinic-holidays.service.js';
+import { BookingRescheduleService } from '../booking-reschedule.service.js';
 
 // ---------------------------------------------------------------------------
 // Mock setup
@@ -56,7 +57,10 @@ const defaultSettings = {
   paymentTimeoutMinutes: 60,
 };
 
-const mockSettingsService = { get: jest.fn().mockResolvedValue(defaultSettings) };
+const mockSettingsService = {
+  get: jest.fn().mockResolvedValue(defaultSettings),
+  getForBranch: jest.fn().mockImplementation(() => mockSettingsService.get()),
+};
 
 // ---------------------------------------------------------------------------
 // Test data
@@ -127,6 +131,7 @@ describe('BookingsService — Guard Tests', () => {
         { provide: PriceResolverService, useValue: { resolve: jest.fn().mockRejectedValue(new Error('ServiceBookingType not configured')) } },
         { provide: ClinicHoursService, useValue: { getAll: jest.fn().mockResolvedValue([0, 1, 2, 3, 4, 5, 6].map((d) => ({ dayOfWeek: d, startTime: '08:00', endTime: '20:00', isActive: true }))), getForDay: jest.fn() } },
         { provide: ClinicHolidaysService, useValue: { findAll: jest.fn().mockResolvedValue([]), isHoliday: jest.fn().mockResolvedValue(false) } },
+        { provide: BookingRescheduleService, useValue: { reschedule: jest.fn() } },
       ],
     }).compile();
 
