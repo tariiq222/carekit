@@ -96,6 +96,55 @@ describe('WhitelabelService', () => {
     service = module.get<WhitelabelService>(WhitelabelService);
 
     jest.clearAllMocks();
+    // Restore default cache miss so tests that skip cache setup still hit DB
+    mockCacheService.get.mockResolvedValue(null);
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // getPublicBranding — Return cached or DB public branding keys
+  // ─────────────────────────────────────────────────────────────
+
+  describe('getPublicBranding', () => {
+    it('should return cached value without hitting DB when cache is warm', async () => {
+      const cached = { clinic_name: 'CareKit', logo_url: 'https://logo.png' };
+      mockCacheService.get.mockResolvedValue(cached);
+
+      const result = await service.getPublicBranding();
+
+      expect(result).toEqual(cached);
+      expect(mockPrismaService.whiteLabelConfig.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should query DB and cache result when cache is empty', async () => {
+      mockCacheService.get.mockResolvedValue(null);
+      mockPrismaService.whiteLabelConfig.findMany.mockResolvedValue([
+        { key: 'clinic_name', value: 'CareKit Clinic' },
+        { key: 'logo_url', value: 'https://logo.png' },
+      ]);
+
+      const result = await service.getPublicBranding();
+
+      expect(result).toEqual({
+        clinic_name: 'CareKit Clinic',
+        logo_url: 'https://logo.png',
+      });
+      expect(mockPrismaService.whiteLabelConfig.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ key: { in: expect.any(Array) } }),
+          select: { key: true, value: true },
+        }),
+      );
+      expect(mockCacheService.set).toHaveBeenCalled();
+    });
+
+    it('should return empty object when DB has no matching public keys', async () => {
+      mockCacheService.get.mockResolvedValue(null);
+      mockPrismaService.whiteLabelConfig.findMany.mockResolvedValue([]);
+
+      const result = await service.getPublicBranding();
+
+      expect(result).toEqual({});
+    });
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -103,6 +152,15 @@ describe('WhitelabelService', () => {
   // ─────────────────────────────────────────────────────────────
 
   describe('getConfig', () => {
+    it('should return cached value without DB query when cache is warm', async () => {
+      mockCacheService.get.mockResolvedValue(mockConfigItems);
+
+      const result = await service.getConfig();
+
+      expect(result).toEqual(mockConfigItems);
+      expect(mockPrismaService.whiteLabelConfig.findMany).not.toHaveBeenCalled();
+    });
+
     it('should return array of all config entries', async () => {
       mockPrismaService.whiteLabelConfig.findMany.mockResolvedValue(mockConfigItems);
 
