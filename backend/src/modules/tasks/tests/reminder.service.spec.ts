@@ -66,6 +66,22 @@ const mockBookingForHourReminderNoPatient = {
   patientId: null,
 };
 
+/** Build a booking whose startTime is `offsetMinutes` from now — for time-sensitive tests */
+function buildTimedBooking(offsetMinutes: number, patientId: string | null = 'patient-timed') {
+  const now = new Date();
+  const target = new Date(now.getTime() + offsetMinutes * 60_000);
+  const hh = String(target.getHours()).padStart(2, '0');
+  const mm = String(target.getMinutes()).padStart(2, '0');
+  const today = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+  return {
+    id: `booking-timed-${offsetMinutes}`,
+    date: today,
+    startTime: `${hh}:${mm}`,
+    patientId,
+    practitioner: patientId ? { userId: `prac-user-${offsetMinutes}` } : null,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
@@ -307,6 +323,106 @@ describe('ReminderService', () => {
       expect(
         mockNotificationsService.createNotification,
       ).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // sendTwoHourReminders
+  // ─────────────────────────────────────────────────────────────
+
+  describe('sendTwoHourReminders', () => {
+    it('should not send notifications when no bookings found', async () => {
+      mockPrismaService.booking.findMany.mockResolvedValue([]);
+
+      await service.sendTwoHourReminders();
+
+      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+    });
+
+    it('should send notifications to patient and practitioner for bookings ~2h away', async () => {
+      const booking = buildTimedBooking(120); // exactly 2h from now
+      mockPrismaService.booking.findMany.mockResolvedValue([booking]);
+
+      await service.sendTwoHourReminders();
+
+      expect(mockNotificationsService.createNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: booking.patientId,
+          titleEn: 'Appointment in 2 Hours',
+          type: 'booking_reminder',
+        }),
+      );
+      expect(mockNotificationsService.createNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: booking.practitioner!.userId,
+          titleEn: 'Appointment in 2 Hours',
+        }),
+      );
+    });
+
+    it('should skip notification when booking is outside 90-150 min window', async () => {
+      const booking = buildTimedBooking(30); // only 30 min away — outside window
+      mockPrismaService.booking.findMany.mockResolvedValue([booking]);
+
+      await service.sendTwoHourReminders();
+
+      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+    });
+
+    it('should skip patient notification when patientId is null', async () => {
+      const booking = buildTimedBooking(120, null);
+      mockPrismaService.booking.findMany.mockResolvedValue([booking]);
+
+      await service.sendTwoHourReminders();
+
+      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // sendUrgentReminders
+  // ─────────────────────────────────────────────────────────────
+
+  describe('sendUrgentReminders', () => {
+    it('should not send notifications when no bookings found', async () => {
+      mockPrismaService.booking.findMany.mockResolvedValue([]);
+
+      await service.sendUrgentReminders();
+
+      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+    });
+
+    it('should notify patient for bookings ~15 min away', async () => {
+      const booking = buildTimedBooking(15); // 15 min away
+      mockPrismaService.booking.findMany.mockResolvedValue([booking]);
+
+      await service.sendUrgentReminders();
+
+      expect(mockNotificationsService.createNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: booking.patientId,
+          titleEn: 'Appointment in 15 Minutes!',
+          type: 'booking_reminder_urgent',
+        }),
+      );
+    });
+
+    it('should skip notification when booking is outside 10-20 min window', async () => {
+      const booking = buildTimedBooking(60); // 60 min away — outside window
+      mockPrismaService.booking.findMany.mockResolvedValue([booking]);
+
+      await service.sendUrgentReminders();
+
+      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+    });
+
+    it('should skip notification when patientId is null', async () => {
+      const booking = buildTimedBooking(15, null);
+      mockPrismaService.booking.findMany.mockResolvedValue([booking]);
+
+      await service.sendUrgentReminders();
+
+      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
     });
   });
 });
