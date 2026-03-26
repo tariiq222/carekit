@@ -25,6 +25,7 @@ const CRITICAL_OPTIONAL_KEYS: CriticalKey[] = [
   { key: 'FIREBASE_PRIVATE_KEY', feature: 'Push Notifications (FCM)' },
   { key: 'SMS_PROVIDER', feature: 'SMS Notifications' },
   { key: 'SMS_API_KEY', feature: 'SMS Notifications' },
+  { key: 'METRICS_TOKEN', feature: 'Prometheus Metrics Endpoint (access will be blocked without it)' },
 ];
 
 export function logMissingOptionalKeys(
@@ -47,6 +48,16 @@ export function logMissingOptionalKeys(
     throw new Error(
       'FATAL: MOYASAR_API_KEY is set but MOYASAR_WEBHOOK_SECRET is missing. '
       + 'All payment webhooks will be rejected. Set the webhook secret or remove the API key.',
+    );
+  }
+
+  // In production, missing METRICS_TOKEN means the /metrics endpoint is permanently blocked.
+  // Prometheus scraping will silently fail, alerting and monitoring will be dark.
+  if (config['NODE_ENV'] === 'production' && !config['METRICS_TOKEN']) {
+    const logger = new Logger('EnvValidation');
+    logger.error(
+      'METRICS_TOKEN is not set. The /metrics endpoint will return 401 — Prometheus cannot scrape. '
+      + 'Set METRICS_TOKEN to enable observability.',
     );
   }
 }
@@ -187,6 +198,10 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   SMS_SENDER_ID?: string;
+
+  @IsString()
+  @IsOptional()
+  METRICS_TOKEN?: string;
 }
 
 export function validate(config: Record<string, unknown>): EnvironmentVariables {

@@ -79,8 +79,9 @@ export interface ResilientFetchOptions {
 
 /**
  * Wraps native `fetch` with:
- * 1. Request timeout via AbortController
- * 2. Circuit breaker pattern to fail fast when an API is down
+ * 1. HTTPS-only URL validation (prevents SSRF to internal services)
+ * 2. Request timeout via AbortController
+ * 3. Circuit breaker pattern to fail fast when an API is down
  *
  * Usage: drop-in replacement for `fetch` with an extra options object.
  */
@@ -90,6 +91,14 @@ export async function resilientFetch(
   options: ResilientFetchOptions,
 ): Promise<Response> {
   const { circuit: circuitName, timeoutMs = 15_000 } = options;
+
+  // SSRF guard — only HTTPS targets are permitted
+  const parsed = url instanceof URL ? url : new URL(url);
+  if (parsed.protocol !== 'https:') {
+    throw new Error(
+      `resilientFetch: only HTTPS URLs are allowed, got "${parsed.protocol}" for circuit "${circuitName}"`,
+    );
+  }
 
   // Circuit breaker check
   if (!canAttempt(circuitName)) {

@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import type { Request, Response, NextFunction } from 'express';
 import { AppModule } from './app.module.js';
 import { StructuredLogger } from './common/services/structured-logger.service.js';
 import { initSentry } from './common/sentry/sentry.config.js';
@@ -13,6 +14,10 @@ initSentry();
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
+    // rawBody must be enabled so Express captures the raw buffer before
+    // the JSON body parser consumes the stream. Required for Moyasar
+    // webhook HMAC-SHA256 signature verification.
+    rawBody: true,
   });
 
   // Use the custom structured logger for all NestJS logging
@@ -20,6 +25,22 @@ async function bootstrap(): Promise<void> {
 
   // Security headers
   app.use(helmet());
+
+  // Raw body capture for webhook signature verification.
+  // Runs before cookieParser/CORS so the stream is untouched.
+  // Only captures for the Moyasar webhook path to avoid buffering all requests.
+  app.use(
+    '/api/v1/payments/moyasar/webhook',
+    (req: Request & { rawBody?: Buffer }, _res: Response, next: NextFunction) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (chunk: Buffer) => chunks.push(chunk));
+      req.on('end', () => {
+        req.rawBody = Buffer.concat(chunks);
+        next();
+      });
+      req.on('error', next);
+    },
+  );
 
   // Cookie parser — must be before CORS
   app.use(cookieParser());
