@@ -28,6 +28,16 @@ export default async function globalSetup(): Promise<void> {
 
   try {
     // Delete test-created module data (order matters due to foreign keys)
+
+    // Chatbot: messages before sessions, KB chunks before files
+    await prisma.chatMessage.deleteMany({});
+    await prisma.chatSession.deleteMany({});
+    await prisma.knowledgeBase.deleteMany({});
+    await prisma.knowledgeBaseFile.deleteMany({});
+
+    // Ratings
+    await prisma.rating.deleteMany({});
+
     await prisma.couponRedemption.deleteMany({});
     await prisma.coupon.deleteMany({});
     await prisma.giftCardTransaction.deleteMany({});
