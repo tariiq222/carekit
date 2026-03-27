@@ -37,7 +37,7 @@ export class CreateNotificationDto {
   @IsNotEmpty()
   type!: NotificationType;
 
-  @ApiPropertyOptional({ description: 'Additional data payload', type: 'object' })
+  @ApiPropertyOptional({ description: 'Additional data payload', type: 'object', additionalProperties: true })
   @IsOptional()
   @IsObject()
   data?: Record<string, unknown>;

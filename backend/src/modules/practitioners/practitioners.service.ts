@@ -7,27 +7,12 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { checkOwnership } from '../../common/helpers/ownership.helper.js';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto.js';
-import { SetAvailabilityDto } from './dto/set-availability.dto.js';
-import { CreateVacationDto } from './dto/create-vacation.dto.js';
-import { AssignPractitionerServiceDto } from './dto/assign-practitioner-service.dto.js';
-import { UpdatePractitionerServiceDto } from './dto/update-practitioner-service.dto.js';
-import { PractitionerAvailabilityService } from './practitioner-availability.service.js';
-import { PractitionerVacationService } from './practitioner-vacation.service.js';
-import { PractitionerServiceService } from './practitioner-service.service.js';
-import { PractitionerRatingsService } from './practitioner-ratings.service.js';
-import { PractitionerBreaksService } from './practitioner-breaks.service.js';
-import { SetBreaksDto } from './dto/set-breaks.dto.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 @Injectable()
 export class PractitionersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly availabilityService: PractitionerAvailabilityService,
-    private readonly vacationService: PractitionerVacationService,
-    private readonly practitionerServiceService: PractitionerServiceService,
-    private readonly ratingsService: PractitionerRatingsService,
-    private readonly breaksService: PractitionerBreaksService,
   ) {}
 
   /** Creates a practitioner profile for a new user. */
@@ -250,25 +235,6 @@ export class PractitionersService {
     });
   }
 
-  // --- Delegated: Availability ---
-
-  async getAvailability(practitionerId: string) {
-    return this.availabilityService.getAvailability(practitionerId);
-  }
-
-  async setAvailability(practitionerId: string, dto: SetAvailabilityDto, currentUserId?: string) {
-    return this.availabilityService.setAvailability(practitionerId, dto, currentUserId);
-  }
-
-  async getSlots(practitionerId: string, date: string, duration?: number) {
-    return this.availabilityService.getSlots(practitionerId, date, duration);
-  }
-
-  async getAvailableSlots(practitionerId: string, date: string, duration?: number) {
-    return this.availabilityService.getAvailableSlots(practitionerId, date, duration);
-  }
-
-  /** Resolve duration from ServiceBookingType for slot generation. Falls back to 30 min. */
   async resolveDurationForSlots(serviceId: string, bookingType: string): Promise<number> {
     const sbt = await this.prisma.serviceBookingType.findUnique({
       where: { serviceId_bookingType: { serviceId, bookingType: bookingType as never } },
@@ -276,59 +242,4 @@ export class PractitionersService {
     return sbt?.duration ?? 30;
   }
 
-  // --- Delegated: Vacations ---
-
-  async getVacations(practitionerId: string) {
-    return this.vacationService.getVacations(practitionerId);
-  }
-
-  async listVacations(practitionerId: string) {
-    return this.vacationService.listVacations(practitionerId);
-  }
-
-  async createVacation(practitionerId: string, dto: CreateVacationDto, currentUserId?: string) {
-    return this.vacationService.createVacation(practitionerId, dto, currentUserId);
-  }
-
-  async deleteVacation(practitionerId: string, vacationId: string, currentUserId?: string) {
-    return this.vacationService.deleteVacation(practitionerId, vacationId, currentUserId);
-  }
-
-  // --- Delegated: Breaks ---
-
-  async getBreaks(practitionerId: string) {
-    return this.breaksService.getBreaks(practitionerId);
-  }
-
-  async setBreaks(practitionerId: string, dto: SetBreaksDto, currentUserId?: string) {
-    return this.breaksService.setBreaks(practitionerId, dto, currentUserId);
-  }
-
-  // --- Delegated: Ratings ---
-
-  async getRatings(practitionerId: string, params?: { page?: number; perPage?: number }) {
-    return this.ratingsService.getRatings(practitionerId, params);
-  }
-
-  // --- Delegated: Practitioner Services ---
-
-  async assignService(practitionerId: string, dto: AssignPractitionerServiceDto, currentUserId?: string) {
-    return this.practitionerServiceService.assignService(practitionerId, dto, currentUserId);
-  }
-
-  async listPractitionerServices(practitionerId: string) {
-    return this.practitionerServiceService.listServices(practitionerId);
-  }
-
-  async updatePractitionerService(practitionerId: string, serviceId: string, dto: UpdatePractitionerServiceDto, currentUserId?: string) {
-    return this.practitionerServiceService.updateService(practitionerId, serviceId, dto, currentUserId);
-  }
-
-  async removePractitionerService(practitionerId: string, serviceId: string, currentUserId?: string) {
-    return this.practitionerServiceService.removeService(practitionerId, serviceId, currentUserId);
-  }
-
-  async getServiceTypes(practitionerId: string, serviceId: string) {
-    return this.practitionerServiceService.getServiceTypes(practitionerId, serviceId);
-  }
 }

@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsString, IsNotEmpty, IsOptional, validateSync } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MinLength, validateSync } from 'class-validator';
 import { Logger } from '@nestjs/common';
 
 interface CriticalKey {
@@ -54,9 +54,9 @@ export function logMissingOptionalKeys(
   // In production, missing METRICS_TOKEN means the /metrics endpoint is permanently blocked.
   // Prometheus scraping will silently fail, alerting and monitoring will be dark.
   if (config['NODE_ENV'] === 'production' && !config['METRICS_TOKEN']) {
-    const logger = new Logger('EnvValidation');
-    logger.error(
-      'METRICS_TOKEN is not set. The /metrics endpoint will return 401 — Prometheus cannot scrape. '
+    throw new Error(
+      'FATAL: METRICS_TOKEN is not set in production. '
+      + 'The /metrics endpoint will be permanently blocked and Prometheus cannot scrape. '
       + 'Set METRICS_TOKEN to enable observability.',
     );
   }
@@ -73,10 +73,12 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(32)
   JWT_SECRET!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(32)
   JWT_REFRESH_SECRET!: string;
 
   @IsString()

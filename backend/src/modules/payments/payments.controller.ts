@@ -107,8 +107,14 @@ export class PaymentsController {
     @Body() dto: MoyasarWebhookDto,
   ) {
     const signature = (req.headers['x-moyasar-signature'] as string) ?? '';
-    const rawBody = req.rawBody ?? Buffer.from(JSON.stringify(dto));
-    return this.paymentsService.handleMoyasarWebhook(signature, rawBody, dto);
+    if (!req.rawBody) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Raw request body is required for webhook signature verification',
+        error: 'RAW_BODY_MISSING',
+      });
+    }
+    return this.paymentsService.handleMoyasarWebhook(signature, req.rawBody, dto);
   }
 
   // ═══════════════════════════════════════════════════════════════

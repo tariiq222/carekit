@@ -12,6 +12,7 @@ import { ChatbotAnalyticsService } from './chatbot-analytics.service.js';
 import { ChatbotFileService } from './chatbot-file.service.js';
 import { ChatbotStreamService } from './chatbot-stream.service.js';
 import { ChatbotStreamLoopService } from './chatbot-stream-loop.service.js';
+import { ChatbotSessionService } from './chatbot-session.service.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { ServicesModule } from '../services/services.module.js';
 import { PractitionersModule } from '../practitioners/practitioners.module.js';
@@ -38,6 +39,7 @@ import {
     ChatbotFileService,
     ChatbotStreamService,
     ChatbotStreamLoopService,
+    ChatbotSessionService,
     // L1: Port bindings — concrete services registered as interface tokens
     { provide: CHATBOT_BOOKING_PORT, useExisting: BookingsService },
     { provide: CHATBOT_SERVICE_PORT, useExisting: ServicesService },

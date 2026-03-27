@@ -1,15 +1,13 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { type SessionLanguage, ChatIntent } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotAiService } from './chatbot-ai.service.js';
 import { ChatbotToolsService } from './chatbot-tools.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
 import { ChatbotContextService } from './chatbot-context.service.js';
+import { ChatbotSessionService } from './chatbot-session.service.js';
 import type { OpenRouterMessage, OpenRouterTool } from './interfaces/chatbot-tool.interface.js';
 import type { ChatbotConfigMap } from './interfaces/chatbot-config.interface.js';
 import { detectLanguage, classifyIntent, buildActionCard } from './chatbot.helpers.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
-import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
 
 export interface HandleMessageResult {
   message: string;
@@ -28,54 +26,36 @@ export class ChatbotService {
     private readonly toolsService: ChatbotToolsService,
     private readonly configService: ChatbotConfigService,
     private readonly contextService: ChatbotContextService,
+    private readonly sessionService: ChatbotSessionService,
   ) {}
 
   async createSession(userId: string, language?: string) {
-    const config = await this.configService.getConfigMap();
-
-    const session = await this.prisma.chatSession.create({
-      data: { userId, language: language as SessionLanguage | undefined },
-    });
-
-    // Send welcome message
-    const welcomeMsg =
-      language === 'en' ? config.welcome_message_en : config.welcome_message_ar;
-
-    await this.prisma.chatMessage.create({
-      data: {
-        sessionId: session.id,
-        role: 'assistant',
-        content: welcomeMsg,
-        intent: ChatIntent.greeting,
-      },
-    });
-
-    return {
-      session,
-      welcomeMessage: welcomeMsg,
-      quickReplies: config.quick_replies,
-      botConfig: {
-        bot_name: config.bot_name,
-        bot_avatar_url: config.bot_avatar_url,
-        tone: config.tone,
-      },
-    };
+    return this.sessionService.createSession(userId, language);
   }
 
   async getSession(sessionId: string, userId: string) {
-    const session = await this.prisma.chatSession.findUnique({
-      where: { id: sessionId },
-      include: {
-        messages: { orderBy: { createdAt: 'asc' } },
-        user: { select: { id: true, firstName: true, lastName: true } },
-      },
-    });
+    return this.sessionService.getSession(sessionId, userId);
+  }
 
-    if (!session || session.userId !== userId) {
-      throw new NotFoundException({ statusCode: 404, message: 'Session not found', error: 'NOT_FOUND' });
-    }
+  async endSession(sessionId: string, userId: string) {
+    return this.sessionService.endSession(sessionId, userId);
+  }
 
-    return session;
+  async listSessions(params: {
+    userId?: string;
+    page?: number;
+    perPage?: number;
+    handedOff?: boolean;
+    language?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    search?: string;
+  }) {
+    return this.sessionService.listSessions(params);
+  }
+
+  async sendStaffMessage(sessionId: string, staffId: string, content: string) {
+    return this.sessionService.sendStaffMessage(sessionId, staffId, content);
   }
 
   async handleMessage(
@@ -85,7 +65,6 @@ export class ChatbotService {
   ): Promise<HandleMessageResult> {
     const config = await this.configService.getConfigMap();
 
-    // Check session exists and belongs to user
     const session = await this.prisma.chatSession.findFirst({
       where: { id: sessionId, userId },
     });
@@ -96,7 +75,6 @@ export class ChatbotService {
       throw new BadRequestException({ statusCode: 400, message: 'Session has ended', error: 'SESSION_ENDED' });
     }
 
-    // Check max messages
     const messageCount = await this.prisma.chatMessage.count({
       where: { sessionId },
     });
@@ -108,26 +86,22 @@ export class ChatbotService {
       });
     }
 
-    // Save user message
     await this.prisma.chatMessage.create({
       data: { sessionId, role: 'user', content },
     });
 
-    // Detect language from first user message
     if (!session.language) {
-      const detectedLang = detectLanguage(content) as SessionLanguage;
+      const detectedLang = detectLanguage(content) as Parameters<typeof this.prisma.chatSession.update>[0]['data']['language'];
       await this.prisma.chatSession.update({
         where: { id: sessionId },
         data: { language: detectedLang },
       });
     }
 
-    // Build context
     const { messages, tools } = await this.contextService.buildAiContext(
       sessionId, userId, content, config,
     );
 
-    // AI loop — handle tool calls iteratively
     return this.runAiLoop(messages, tools, config, sessionId, userId);
   }
 
@@ -146,7 +120,6 @@ export class ChatbotService {
       const result = await this.aiService.chatCompletion(messages, tools, config);
       totalTokens += result.tokenCount;
 
-      // No tool calls — final text response
       if (result.toolCalls.length === 0) {
         const responseText = result.content ?? '';
 
@@ -169,7 +142,6 @@ export class ChatbotService {
         };
       }
 
-      // Process tool calls
       const assistantMsg: OpenRouterMessage = {
         role: 'assistant',
         content: result.content,
@@ -189,10 +161,8 @@ export class ChatbotService {
           { userId, sessionId },
         );
 
-        // Build action card from tool results
         lastActionCard = buildActionCard(toolCall.function.name, toolResult);
 
-        // Save tool call in message
         await this.prisma.chatMessage.create({
           data: {
             sessionId,
@@ -207,7 +177,7 @@ export class ChatbotService {
         await this.prisma.chatMessage.create({
           data: {
             sessionId,
-            role: 'tool' as any,
+            role: 'tool' as Parameters<typeof this.prisma.chatMessage.create>[0]['data']['role'],
             content: toolResultContent,
             toolName: toolCall.function.name,
             functionCall: { tool_call_id: toolCall.id },
@@ -222,7 +192,6 @@ export class ChatbotService {
       }
     }
 
-    // Max tool calls reached — get final response without tools
     const finalResult = await this.aiService.chatCompletion(messages, [], config);
     const finalText = finalResult.content ?? 'I apologize, I encountered an issue. Please try again.';
 
@@ -238,90 +207,4 @@ export class ChatbotService {
 
     return { message: finalText, intent: classifyIntent(lastToolName), actionCard: lastActionCard };
   }
-
-  async endSession(sessionId: string, userId: string) {
-    const session = await this.prisma.chatSession.findFirst({
-      where: { id: sessionId, userId },
-    });
-    if (!session) {
-      throw new NotFoundException({ statusCode: 404, message: 'Session not found', error: 'NOT_FOUND' });
-    }
-
-    return this.prisma.chatSession.update({
-      where: { id: sessionId },
-      data: { endedAt: new Date() },
-    });
-  }
-
-  async listSessions(params: {
-    userId?: string;
-    page?: number;
-    perPage?: number;
-    handedOff?: boolean;
-    language?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    search?: string;
-  }) {
-    const { page, perPage, skip } = parsePaginationParams(params.page, params.perPage);
-    const where: Record<string, unknown> = {};
-
-    if (params.userId) where.userId = params.userId;
-    if (params.handedOff !== undefined) where.handedOff = params.handedOff;
-    if (params.language) where.language = params.language;
-    const dateRange = buildDateRangeFilter(params.dateFrom, params.dateTo);
-    if (dateRange) where.createdAt = dateRange;
-
-    const include = {
-      user: { select: { id: true, firstName: true, lastName: true } },
-      _count: { select: { messages: true } },
-    };
-
-    const [items, total] = await Promise.all([
-      this.prisma.chatSession.findMany({
-        where,
-        include,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: perPage,
-      }),
-      this.prisma.chatSession.count({ where }),
-    ]);
-
-    return {
-      items,
-      meta: buildPaginationMeta(total, page, perPage),
-    };
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  //  Staff Live Chat — send message as staff member
-  // ═══════════════════════════════════════════════════════════
-
-  async sendStaffMessage(sessionId: string, staffId: string, content: string) {
-    const session = await this.prisma.chatSession.findUnique({
-      where: { id: sessionId },
-    });
-    if (!session) {
-      throw new NotFoundException('Session not found');
-    }
-    if (!session.handedOff || session.handoffType !== 'live_chat') {
-      throw new BadRequestException('Session is not handed off to live chat');
-    }
-    if (session.endedAt) {
-      throw new BadRequestException('Session has already ended');
-    }
-
-    const message = await this.prisma.chatMessage.create({
-      data: {
-        sessionId,
-        role: 'staff',
-        content,
-        staffId,
-      },
-    });
-
-    return message;
-  }
-
 }

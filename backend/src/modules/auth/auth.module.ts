@@ -11,6 +11,7 @@ import { OtpService } from './otp.service.js';
 import { CookieService } from './cookie.service.js';
 import { EmailModule } from '../email/email.module.js';
 import { PatientsModule } from '../patients/patients.module.js';
+import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 import { OtpThrottleRedisService } from '../../common/services/otp-throttle-redis.service.js';
 import { EmailThrottleGuard } from '../../common/guards/email-throttle.guard.js';
 
@@ -18,6 +19,7 @@ import { EmailThrottleGuard } from '../../common/guards/email-throttle.guard.js'
   imports: [
     EmailModule,
     PatientsModule,
+    ActivityLogModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
