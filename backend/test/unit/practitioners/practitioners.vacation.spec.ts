@@ -32,7 +32,7 @@ describe('PractitionersService — createVacation', () => {
       id: 'new-vacation-uuid',
     });
 
-    const result = await ctx.service.createVacation(mockPractitioner.id, vacationDto);
+    const result = await ctx.vacationService.createVacation(mockPractitioner.id, vacationDto);
 
     expect(result).toHaveProperty('id');
     expect(ctx.mockPrisma.practitionerVacation.create).toHaveBeenCalled();
@@ -48,7 +48,7 @@ describe('PractitionersService — createVacation', () => {
     );
 
     await expect(
-      ctx.service.createVacation(mockPractitioner.id, dto),
+      ctx.vacationService.createVacation(mockPractitioner.id, dto),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -56,7 +56,7 @@ describe('PractitionersService — createVacation', () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(null);
 
     await expect(
-      ctx.service.createVacation('non-existent-id', vacationDto),
+      ctx.vacationService.createVacation('non-existent-id', vacationDto),
     ).rejects.toThrow(NotFoundException);
   });
 });
@@ -73,7 +73,7 @@ describe('PractitionersService — listVacations', () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
     ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
 
-    const result = await ctx.service.listVacations(mockPractitioner.id);
+    const result = await ctx.vacationService.listVacations(mockPractitioner.id);
 
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(1);
@@ -95,7 +95,7 @@ describe('PractitionersService — deleteVacation', () => {
     ctx.mockPrisma.practitionerVacation.findUnique.mockResolvedValue(mockVacation);
     ctx.mockPrisma.practitionerVacation.delete.mockResolvedValue(mockVacation);
 
-    await ctx.service.deleteVacation(mockPractitioner.id, mockVacation.id);
+    await ctx.vacationService.deleteVacation(mockPractitioner.id, mockVacation.id);
 
     expect(ctx.mockPrisma.practitionerVacation.delete).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: mockVacation.id } }),
@@ -106,7 +106,7 @@ describe('PractitionersService — deleteVacation', () => {
     ctx.mockPrisma.practitionerVacation.findUnique.mockResolvedValue(null);
 
     await expect(
-      ctx.service.deleteVacation(mockPractitioner.id, 'non-existent-id'),
+      ctx.vacationService.deleteVacation(mockPractitioner.id, 'non-existent-id'),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -117,7 +117,7 @@ describe('PractitionersService — deleteVacation', () => {
     });
 
     await expect(
-      ctx.service.deleteVacation(mockPractitioner.id, mockVacation.id),
+      ctx.vacationService.deleteVacation(mockPractitioner.id, mockVacation.id),
     ).rejects.toThrow(NotFoundException);
   });
 });

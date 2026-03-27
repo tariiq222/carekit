@@ -7,6 +7,7 @@ import { ChatbotAiService } from '../../../src/modules/chatbot/chatbot-ai.servic
 import { ChatbotToolsService } from '../../../src/modules/chatbot/chatbot-tools.service.js';
 import { ChatbotConfigService } from '../../../src/modules/chatbot/chatbot-config.service.js';
 import { ChatbotContextService } from '../../../src/modules/chatbot/chatbot-context.service.js';
+import { ChatbotSessionService } from '../../../src/modules/chatbot/chatbot-session.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
 const defaultConfig = {
@@ -88,6 +89,7 @@ describe('ChatbotService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChatbotService,
+        ChatbotSessionService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ChatbotAiService, useValue: mockAiService },
         { provide: ChatbotToolsService, useValue: mockToolsService },

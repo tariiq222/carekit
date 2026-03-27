@@ -550,43 +550,4 @@ describe('UsersService', () => {
     });
   });
 
-  // =========================================================================
-  // Role management
-  // =========================================================================
-
-  describe('assignRole', () => {
-    it('should delegate to UserRolesService', async () => {
-      await service.assignRole('user-id', 'role-id');
-
-      expect(mockUserRolesService.assignRole).toHaveBeenCalledWith('user-id', 'role-id', undefined);
-    });
-
-    it('should propagate errors from UserRolesService', async () => {
-      mockUserRolesService.assignRole.mockRejectedValueOnce(
-        new NotFoundException('Role not found'),
-      );
-
-      await expect(
-        service.assignRole('user-id', 'nonexistent-role'),
-      ).rejects.toThrow(NotFoundException);
-    });
-  });
-
-  describe('removeRole', () => {
-    it('should delegate to UserRolesService', async () => {
-      await service.removeRole('user-id', 'role-id');
-
-      expect(mockUserRolesService.removeRole).toHaveBeenCalledWith('user-id', 'role-id');
-    });
-
-    it('should propagate BadRequestException from UserRolesService', async () => {
-      mockUserRolesService.removeRole.mockRejectedValueOnce(
-        new BadRequestException('Cannot remove the last role from a user'),
-      );
-
-      await expect(
-        service.removeRole('user-id', 'role-id'),
-      ).rejects.toThrow(BadRequestException);
-    });
-  });
 });

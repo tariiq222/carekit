@@ -14,6 +14,8 @@ import { createMockPrisma } from './practitioners.fixtures.js';
 
 export interface PractitionersTestContext {
   service: PractitionersService;
+  availabilityService: PractitionerAvailabilityService;
+  vacationService: PractitionerVacationService;
   mockPrisma: ReturnType<typeof createMockPrisma>;
 }
 
@@ -58,6 +60,8 @@ export async function createPractitionersTestModule(): Promise<PractitionersTest
 
   return {
     service: module.get<PractitionersService>(PractitionersService),
+    availabilityService: module.get<PractitionerAvailabilityService>(PractitionerAvailabilityService),
+    vacationService: module.get<PractitionerVacationService>(PractitionerVacationService),
     mockPrisma,
   };
 }
