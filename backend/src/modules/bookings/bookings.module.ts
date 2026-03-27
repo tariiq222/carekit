@@ -14,16 +14,19 @@ import { BookingPaymentHelper } from './booking-payment.helper.js';
 import { BookingLookupHelper } from './booking-lookup.helper.js';
 import { PriceResolverService } from './price-resolver.service.js';
 import { BookingRescheduleService } from './booking-reschedule.service.js';
+import { BookingCreationService } from './booking-creation.service.js';
 import { WaitlistService } from './waitlist.service.js';
 import { ZoomModule } from '../integrations/zoom/zoom.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { ClinicModule } from '../clinic/clinic.module.js';
+import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 
 @Module({
-  imports: [NotificationsModule, ZoomModule, ClinicModule],
+  imports: [NotificationsModule, ZoomModule, ClinicModule, ActivityLogModule],
   controllers: [WaitlistController, BookingsController, BookingSettingsController],
   providers: [
     BookingsService,
+    BookingCreationService,
     BookingQueryService,
     BookingCancellationService,
     BookingCancelHelpersService,

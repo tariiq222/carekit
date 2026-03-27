@@ -87,10 +87,32 @@ See `mobile/CLAUDE.md` for Expo Router conventions.
 | Bookings | `bookings/` | `bookings/` | Recurring, waitlist, walk-in |
 | Patients | `patients/` | `patients/` | Walk-in support |
 | Practitioners | `practitioners/` | `practitioners/` | Availability scheduler |
+| Services | `services/` | `services/` | Clinic service catalog |
+| Specialties | `specialties/` | `specialties/` | Practitioner specialties |
+| Branches | `branches/` | `branches/` | Multi-branch support |
 | Payments | `payments/` | `payments/` | Moyasar webhook, owner-only |
 | ZATCA | `zatca/` | `zatca/` | Saudi e-invoicing, regulated |
+| Invoices | `invoices/` | `invoices/` | Invoice generation + HTML |
+| Coupons | `coupons/` | `coupons/` | Discount codes |
+| Gift Cards | `gift-cards/` | `gift-cards/` | Gift card system |
 | Chatbot | `chatbot/` | `chatbot/` | RAG + streaming AI |
+| AI | `ai/` | — | pgvector embeddings, knowledge base |
 | Reports | `reports/` | `reports/` | Revenue, activity, exports |
+| Notifications | `notifications/` | `notifications/` | FCM push + in-app |
+| Ratings | `ratings/` | `ratings/` | Practitioner ratings |
+| Intake Forms | `intake-forms/` | `intake-forms/` | Pre-appointment forms |
+| Whitelabel | `whitelabel/` | `settings/` | Clinic branding config |
+| Roles | `roles/` | `settings/` | Custom roles |
+| Permissions | `permissions/` | `settings/` | CASL permission sets |
+| Clinic | `clinic/` | `settings/` | Hours, holidays |
+| Email | `email/` | — | Transactional email (SMTP) |
+| Email Templates | `email-templates/` | `settings/` | Editable email templates |
+| Integrations | `integrations/` | `settings/` | Third-party integrations |
+| Activity Log | `activity-log/` | `activity/` | Audit trail |
+| Problem Reports | `problem-reports/` | — | User-submitted bug reports |
+| Tasks | `tasks/` | — | Scheduled jobs (BullMQ cron) |
+| Users | `users/` | `users/` | Staff user management |
+| Health | `health/` | — | Healthcheck endpoint |
 
 ## Security Sensitivity Tiers
 

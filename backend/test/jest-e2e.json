@@ -1,14 +1,14 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
+  "testMatch": ["<rootDir>/test/e2e/**/*.e2e-spec.ts"],
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
-  "globalSetup": "./global-setup.ts",
-  "setupFiles": ["./jest-e2e-setup.ts"]
+  "globalSetup": "./test/e2e/setup/global-setup.ts",
+  "setupFiles": ["./test/e2e/setup/jest-e2e-setup.ts"]
 }

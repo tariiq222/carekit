@@ -60,7 +60,10 @@ export class CreateBookingDto {
 
   /**
    * Internal: Set by BookingRecurringService to atomically link booking to its series.
-   * Not exposed in API — stripped by ValidationPipe (whitelist: true).
+   * @IsOptional ensures forbidNonWhitelisted does not reject this property when
+   * present on the class instance but absent from the HTTP request body.
    */
+  @IsOptional()
+  @IsUUID()
   recurringGroupId?: string;
 }

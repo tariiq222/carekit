@@ -20,6 +20,11 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { PractitionersService } from './practitioners.service.js';
 import { PractitionerOnboardingService } from './practitioner-onboarding.service.js';
+import { PractitionerAvailabilityService } from './practitioner-availability.service.js';
+import { PractitionerVacationService } from './practitioner-vacation.service.js';
+import { PractitionerBreaksService } from './practitioner-breaks.service.js';
+import { PractitionerServiceService } from './practitioner-service.service.js';
+import { PractitionerRatingsService } from './practitioner-ratings.service.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
 import { OnboardPractitionerDto } from './dto/onboard-practitioner.dto.js';
@@ -39,6 +44,11 @@ export class PractitionersController {
   constructor(
     private readonly practitionersService: PractitionersService,
     private readonly onboardingService: PractitionerOnboardingService,
+    private readonly availabilityService: PractitionerAvailabilityService,
+    private readonly vacationService: PractitionerVacationService,
+    private readonly breaksService: PractitionerBreaksService,
+    private readonly practitionerServiceService: PractitionerServiceService,
+    private readonly ratingsService: PractitionerRatingsService,
   ) {}
 
   @Get()
@@ -112,7 +122,7 @@ export class PractitionersController {
   @Get(':id/availability')
   @Public()
   async getAvailability(@Param('id', uuidPipe) id: string) {
-    const schedule = await this.practitionersService.getAvailability(id);
+    const schedule = await this.availabilityService.getAvailability(id);
     return { schedule };
   }
 
@@ -124,7 +134,7 @@ export class PractitionersController {
     @Body() dto: SetAvailabilityDto,
     @CurrentUser() user: { id: string },
   ) {
-    const schedule = await this.practitionersService.setAvailability(id, dto, user.id);
+    const schedule = await this.availabilityService.setAvailability(id, dto, user.id);
     return { success: true, data: { schedule }, message: 'Availability updated' };
   }
 
@@ -158,7 +168,7 @@ export class PractitionersController {
         error: 'VALIDATION_ERROR',
       });
     }
-    return this.practitionersService.getSlots(id, date, resolvedDuration);
+    return this.availabilityService.getSlots(id, date, resolvedDuration);
   }
 
   // --- Breaks ---
@@ -166,7 +176,7 @@ export class PractitionersController {
   @Get(':id/breaks')
   @CheckPermissions({ module: 'practitioners', action: 'view' })
   async getBreaks(@Param('id', uuidPipe) id: string) {
-    const data = await this.practitionersService.getBreaks(id);
+    const data = await this.breaksService.getBreaks(id);
     return { success: true, data };
   }
 
@@ -178,7 +188,7 @@ export class PractitionersController {
     @Body() dto: SetBreaksDto,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.practitionersService.setBreaks(id, dto, user.id);
+    const data = await this.breaksService.setBreaks(id, dto, user.id);
     return { success: true, data, message: 'Breaks updated' };
   }
 
@@ -187,7 +197,7 @@ export class PractitionersController {
   @Get(':id/vacations')
   @CheckPermissions({ module: 'practitioners', action: 'view' })
   async getVacations(@Param('id', uuidPipe) id: string) {
-    return this.practitionersService.getVacations(id);
+    return this.vacationService.getVacations(id);
   }
 
   @Post(':id/vacations')
@@ -197,7 +207,7 @@ export class PractitionersController {
     @Body() dto: CreateVacationDto,
     @CurrentUser() user: { id: string },
   ) {
-    return this.practitionersService.createVacation(id, dto, user.id);
+    return this.vacationService.createVacation(id, dto, user.id);
   }
 
   @Delete(':id/vacations/:vacationId')
@@ -207,7 +217,7 @@ export class PractitionersController {
     @Param('vacationId', uuidPipe) vacationId: string,
     @CurrentUser() user: { id: string },
   ) {
-    await this.practitionersService.deleteVacation(id, vacationId, user.id);
+    await this.vacationService.deleteVacation(id, vacationId, user.id);
     return { success: true };
   }
 
@@ -216,7 +226,7 @@ export class PractitionersController {
   @Get(':id/services')
   @Public()
   async listServices(@Param('id', uuidPipe) id: string) {
-    return this.practitionersService.listPractitionerServices(id);
+    return this.practitionerServiceService.listServices(id);
   }
 
   @Post(':id/services')
@@ -226,7 +236,7 @@ export class PractitionersController {
     @Body() dto: AssignPractitionerServiceDto,
     @CurrentUser() user: { id: string },
   ) {
-    return this.practitionersService.assignService(id, dto, user.id);
+    return this.practitionerServiceService.assignService(id, dto, user.id);
   }
 
   @Patch(':id/services/:serviceId')
@@ -237,7 +247,7 @@ export class PractitionersController {
     @Body() dto: UpdatePractitionerServiceDto,
     @CurrentUser() user: { id: string },
   ) {
-    return this.practitionersService.updatePractitionerService(id, serviceId, dto, user.id);
+    return this.practitionerServiceService.updateService(id, serviceId, dto, user.id);
   }
 
   @Delete(':id/services/:serviceId')
@@ -247,7 +257,7 @@ export class PractitionersController {
     @Param('serviceId', uuidPipe) serviceId: string,
     @CurrentUser() user: { id: string },
   ) {
-    return this.practitionersService.removePractitionerService(id, serviceId, user.id);
+    return this.practitionerServiceService.removeService(id, serviceId, user.id);
   }
 
   @Get(':id/services/:serviceId/types')
@@ -256,7 +266,7 @@ export class PractitionersController {
     @Param('id', uuidPipe) id: string,
     @Param('serviceId', uuidPipe) serviceId: string,
   ) {
-    const data = await this.practitionersService.getServiceTypes(id, serviceId);
+    const data = await this.practitionerServiceService.getServiceTypes(id, serviceId);
     return { success: true, data };
   }
 
@@ -269,7 +279,7 @@ export class PractitionersController {
     @Query('page') page?: string,
     @Query('perPage') perPage?: string,
   ) {
-    return this.practitionersService.getRatings(id, {
+    return this.ratingsService.getRatings(id, {
       page: page ? parseInt(page, 10) : undefined,
       perPage: perPage ? parseInt(perPage, 10) : undefined,
     });

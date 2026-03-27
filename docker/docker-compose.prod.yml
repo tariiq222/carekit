@@ -3,6 +3,18 @@
 # Requires: .env.prod file with all secrets
 
 services:
+  migrate:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    command: ["sh", "-c", "npx prisma migrate deploy"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   backend:
     restart: unless-stopped
     environment:
@@ -18,7 +30,7 @@ services:
       MINIO_PORT: "9000"
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_USE_SSL: "false"
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_BUCKET: carekit
       BACKEND_URL: ${BACKEND_URL}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
@@ -36,6 +48,9 @@ services:
       ZOOM_ACCOUNT_ID: ${ZOOM_ACCOUNT_ID}
       ZOOM_CLIENT_ID: ${ZOOM_CLIENT_ID}
       ZOOM_CLIENT_SECRET: ${ZOOM_CLIENT_SECRET}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     expose:
       - "3100"
     healthcheck:
@@ -79,13 +94,15 @@ services:
 
   redis:
     restart: unless-stopped
-    command: >
-      redis-server
-      --requirepass ${REDIS_PASSWORD}
-      --maxmemory 200mb
-      --maxmemory-policy noeviction
-      --appendonly yes
-      --appendfsync everysec
+    volumes:
+      - ./redis.conf:/etc/redis/redis.conf:ro
+    # Use entrypoint to write requirepass into config to keep password out of process args
+    entrypoint: >
+      sh -c "
+        cp /etc/redis/redis.conf /tmp/redis-runtime.conf &&
+        echo 'requirepass ${REDIS_PASSWORD}' >> /tmp/redis-runtime.conf &&
+        exec redis-server /tmp/redis-runtime.conf
+      "
     ports: !override []
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
@@ -136,6 +153,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
     volumes:
       - ./scripts/backup.sh:/scripts/backup.sh:ro
       - backup_data:/backups
@@ -147,6 +165,12 @@ services:
       crond -f -l 2
       "
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep crond || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -199,6 +223,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
     volumes:
       - ./scripts/backup-minio.sh:/scripts/backup-minio.sh:ro
       - minio_backup_data:/backups
@@ -210,6 +235,12 @@ services:
       crond -f -l 2
       "
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep crond || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:

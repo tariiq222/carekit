@@ -1,15 +1,8 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { toMinutes, timeSlotsOverlap, shiftTime } from '../../common/helpers/booking-time.helper.js';
 
-/** Prisma client or transaction client — both expose the same query methods.
- *  Using 'any' for args because Prisma's generated types differ between
- *  PrismaClient and the transaction delegate, but the runtime API is identical. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type PrismaLike = {
-  practitionerVacation: { findFirst: (args: any) => Promise<any> };
-  practitionerAvailability: { findMany: (args: any) => Promise<any[]> };
-  booking: { findMany: (args: any) => Promise<any[]> };
-};
+type PrismaLike = Pick<Prisma.TransactionClient, 'practitionerVacation' | 'practitionerAvailability' | 'booking'>;
 
 /**
  * Validates that the requested time slot falls within the practitioner's

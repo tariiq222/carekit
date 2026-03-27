@@ -45,11 +45,14 @@ Use this when the migration caused data loss or corruption that cannot be fixed 
    ```
 2. **Identify the correct backup** (pre-migration snapshot):
    ```bash
-   ls -la docker/backups/
+   ls -la /backups/postgres/
+   # Backups are AES-256-CBC encrypted (.dump.enc)
+   # You need BACKUP_ENCRYPTION_KEY from your secrets vault to restore
    ```
 3. **Run the restore script:**
    ```bash
-   bash docker/scripts/restore.sh <backup-file>
+   bash docker/scripts/restore.sh <backup-file.dump.enc>
+   # The restore script decrypts using BACKUP_ENCRYPTION_KEY before passing to pg_restore
    ```
 4. **Mark the failed migration as rolled back** in the `_prisma_migrations` table:
    ```sql

@@ -10,8 +10,8 @@ services:
     environment:
       DATABASE_URL: postgresql://carekit:carekit_dev_password@postgres:5432/carekit_dev
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: dev-jwt-secret-change-in-production
-      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production
+      JWT_SECRET: dev-jwt-secret-change-in-production-32c
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production-x
       JWT_EXPIRATION: 15m
       JWT_REFRESH_EXPIRATION: 7d
       MINIO_ENDPOINT: minio
