@@ -31,4 +31,4 @@ COPY --from=deps /app/backend/package.json ./backend/
 WORKDIR /app/backend
 EXPOSE 5100
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+CMD ["node", "dist/src/main.js"]

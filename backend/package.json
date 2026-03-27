@@ -109,8 +109,11 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
+    "rootDir": ".",
+    "testMatch": [
+      "<rootDir>/test/unit/**/*.spec.ts"
+    ],
+    "maxWorkers": "50%",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
@@ -118,9 +121,9 @@
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "src/**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "coverage",
     "coverageThreshold": {
       "global": {
         "branches": 40,

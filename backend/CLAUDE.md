@@ -13,16 +13,15 @@ Each feature lives in `src/modules/[name]/` with:
 [name].service.ts         # Business logic entry point
 [name]-*.service.ts       # Sub-services when main > 250 lines
 dto/                      # Request/response DTOs (class-validator)
-tests/[name].*.spec.ts    # Unit tests (jest)
 ```
 
-## Active Modules (25+)
+## Active Modules (30)
 
-`auth`, `bookings`, `branches`, `chatbot`, `clinic`, `coupons`, `email`,
-`gift-cards`, `health`, `intake-forms`, `integrations`, `invoices`,
-`notifications`, `patients`, `payments`, `permissions`, `practitioners`,
-`problem-reports`, `ratings`, `reports`, `roles`, `services`,
-`specialties`, `tasks`, `users`, `whitelabel`, `zatca`
+`activity-log`, `ai`, `auth`, `bookings`, `branches`, `chatbot`, `clinic`,
+`coupons`, `email`, `email-templates`, `gift-cards`, `health`, `intake-forms`,
+`integrations`, `invoices`, `notifications`, `patients`, `payments`,
+`permissions`, `practitioners`, `problem-reports`, `ratings`, `reports`,
+`roles`, `services`, `specialties`, `tasks`, `users`, `whitelabel`, `zatca`
 
 ## Common Layer (`src/common/`)
 
@@ -44,6 +43,7 @@ tests/[name].*.spec.ts    # Unit tests (jest)
 - **Migrations are immutable** — `prisma migrate dev` creates new, never amends
 - Use `PrismaService` (singleton) — never instantiate PrismaClient directly
 - pgvector enabled for AI embeddings (`ai/` module)
+- **Pending migration**: `20260321232158_init` — untracked, run `npm run prisma:migrate` before dev
 
 ## DTO Rules
 
@@ -52,13 +52,28 @@ tests/[name].*.spec.ts    # Unit tests (jest)
 - Response DTOs extend from Swagger-serializable classes
 - No raw `any` — use typed generics or discriminated unions
 
+## Tasks Module (`src/modules/tasks/`)
+
+Scheduled jobs split into focused sub-services:
+
+- `booking-automation.service.ts` — recurring booking creation
+- `booking-expiry.service.ts` — expire unpaid bookings
+- `booking-noshow.service.ts` — mark no-shows after window
+- `booking-cancellation-timeout.service.ts` — timeout pending cancellations
+- `booking-autocomplete.service.ts` — auto-complete past appointments
+- `reminder.service.ts` — FCM/SMS reminder dispatch
+- `cleanup.service.ts` — stale data purge
+- `tasks-bootstrap.service.ts` — register cron jobs on app start
+
 ## Testing
 
-- `jest` with `ts-jest`, rootDir = `src/`
-- Test files: `src/modules/[name]/tests/*.spec.ts`
+- `jest` with `ts-jest`, rootDir = `.` (project root)
+- Unit tests: `test/unit/[name]/*.spec.ts` — imports resolved to `src/modules/[name]/`
+- E2E tests: `test/e2e/[name]/*.e2e-spec.ts` — runs against real DB via `test/jest-e2e.json`
+- E2E setup files: `test/e2e/setup/` (global-setup.ts, jest-e2e-setup.ts, setup.ts)
 - Mock pattern: `createTestingModule` from `@nestjs/testing`
 - Coverage thresholds: 40% branch, 50% fn/line/statement
-- Always run `npm run test` before committing
+- Always run `npm run test` before committing; `npm run test:e2e` for integration
 
 ## Security Tiers
 
