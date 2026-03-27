@@ -280,7 +280,7 @@ export class BookingQueryService {
 
     const ctx = await resolveUserRoleContext(this.prisma, userId);
     const isOwner = booking.patientId === userId;
-    if (!isOwner && ctx.role === 'patient') {
+    if (!isOwner && ctx.roles.includes('patient')) {
       throw new ForbiddenException({ statusCode: 403, message: 'Access denied', error: 'FORBIDDEN' });
     }
 

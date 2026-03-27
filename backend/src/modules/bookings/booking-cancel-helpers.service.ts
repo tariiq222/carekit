@@ -4,7 +4,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Booking, BookingSettings, RefundType } from '@prisma/client';
+import { Booking, BookingSettings, NotificationType, RefundType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
@@ -136,7 +136,7 @@ export class BookingCancelHelpersService {
       ...NOTIF.BOOKING_CANCELLED,
       bodyAr: bodyMap[trigger].ar,
       bodyEn: bodyMap[trigger].en,
-      type: 'booking_cancelled',
+      type: NotificationType.booking_cancelled,
       data: { bookingId: booking.id },
     });
   }
@@ -152,7 +152,7 @@ export class BookingCancelHelpersService {
       ...NOTIF.BOOKING_CANCELLED,
       bodyAr: `تم إلغاء الموعد بتاريخ ${d} الساعة ${booking.startTime}`,
       bodyEn: `Booking on ${d} at ${booking.startTime} has been cancelled`,
-      type: 'booking_cancelled',
+      type: NotificationType.booking_cancelled,
       data: { bookingId: booking.id },
     });
   }
@@ -168,7 +168,7 @@ export class BookingCancelHelpersService {
       ...NOTIF.BOOKING_CANCELLED_BY_PRACTITIONER,
       bodyAr: `نعتذر، تم إلغاء موعدك بتاريخ ${d}. سيتم استرداد المبلغ كاملاً`,
       bodyEn: `We apologize, your booking on ${d} has been cancelled. A full refund will be processed`,
-      type: 'booking_cancelled',
+      type: NotificationType.booking_cancelled,
       data: { bookingId: booking.id },
     });
   }
@@ -182,7 +182,7 @@ export class BookingCancelHelpersService {
       select: { userId: true },
     });
     await Promise.all(adminRoles.map(({ userId }) =>
-      this.notificationsService.createNotification({ userId, titleAr, titleEn, bodyAr, bodyEn, type, data }),
+      this.notificationsService.createNotification({ userId, titleAr, titleEn, bodyAr, bodyEn, type: type as NotificationType, data }),
     ));
   }
 
