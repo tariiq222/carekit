@@ -1,5 +1,7 @@
+import { join } from 'path';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ThrottlerRedisStorage } from './common/services/throttler-redis-storage.js';
@@ -57,6 +59,15 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     ConfigModule.forRoot({
       isGlobal: true,
       validate,
+    }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'ar',
+      loaderOptions: {
+        // Use process.cwd() + src/i18n so this works in both ESM runtime and Jest/CommonJS
+        path: join(process.cwd(), 'src', 'i18n'),
+        watch: false,
+      },
+      resolvers: [AcceptLanguageResolver],
     }),
     RedisModule,
     BullModule.forRootAsync({
