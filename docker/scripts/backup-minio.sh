@@ -1,7 +1,8 @@
 #!/bin/sh
 # CareKit MinIO Backup Script
-# Mirrors the MinIO bucket to local storage with rotation
+# Mirrors the MinIO bucket, compresses and encrypts with AES-256-CBC, rotates old backups
 # Runs in the minio/mc container
+# Requires: BACKUP_ENCRYPTION_KEY env var
 
 set -euo pipefail
 
@@ -10,11 +11,15 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
 ALIAS_NAME="carekit"
 BUCKET_NAME="carekit"
-DEST_DIR="$BACKUP_DIR/${BUCKET_NAME}_${TIMESTAMP}"
+MIRROR_DIR="$BACKUP_DIR/${BUCKET_NAME}_${TIMESTAMP}_tmp"
+ARCHIVE="$BACKUP_DIR/${BUCKET_NAME}_${TIMESTAMP}.tar.gz.enc"
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
+
+# Fail fast if encryption key is not set
+: "${BACKUP_ENCRYPTION_KEY:?BACKUP_ENCRYPTION_KEY is required for encrypted backups}"
 
 # Create backup directory
 mkdir -p "$BACKUP_DIR"
@@ -36,28 +41,38 @@ if ! mc ls "$ALIAS_NAME/$BUCKET_NAME" > /dev/null 2>&1; then
   exit 1
 fi
 
-# Mirror the bucket
-log "Mirroring bucket $BUCKET_NAME to $DEST_DIR..."
-mc mirror --quiet "$ALIAS_NAME/$BUCKET_NAME" "$DEST_DIR"
+# Mirror the bucket to a temporary directory
+log "Mirroring bucket $BUCKET_NAME to temporary directory..."
+mc mirror --quiet "$ALIAS_NAME/$BUCKET_NAME" "$MIRROR_DIR"
 
-# Count backed up files
-FILE_COUNT=$(find "$DEST_DIR" -type f | wc -l)
-log "Mirrored $FILE_COUNT files to $DEST_DIR"
+# Count mirrored files
+FILE_COUNT=$(find "$MIRROR_DIR" -type f | wc -l)
+log "Mirrored $FILE_COUNT files"
 
-# Log backup size
-BACKUP_SIZE=$(du -sh "$DEST_DIR" | cut -f1)
-log "Backup size: $BACKUP_SIZE"
+# Compress and encrypt — plaintext directory is removed after encryption
+log "Compressing and encrypting backup..."
+tar -czf - -C "$BACKUP_DIR" "$(basename "$MIRROR_DIR")" \
+  | openssl enc -aes-256-cbc -pbkdf2 -iter 100000 \
+    -pass pass:"$BACKUP_ENCRYPTION_KEY" \
+    -out "$ARCHIVE"
 
-# Clean old backups
+# Remove unencrypted mirror
+rm -rf "$MIRROR_DIR"
+
+# Log archive size
+BACKUP_SIZE=$(du -sh "$ARCHIVE" | cut -f1)
+log "Encrypted archive: $(basename "$ARCHIVE") ($BACKUP_SIZE)"
+
+# Clean old encrypted backups
 log "Cleaning backups older than $RETENTION_DAYS days..."
 CLEANED=0
-for dir in "$BACKUP_DIR"/${BUCKET_NAME}_*; do
-  if [ -d "$dir" ] && [ "$dir" != "$DEST_DIR" ]; then
-    dir_age=$(find "$dir" -maxdepth 0 -mtime +"$RETENTION_DAYS" 2>/dev/null)
-    if [ -n "$dir_age" ]; then
-      rm -rf "$dir"
+for f in "$BACKUP_DIR"/${BUCKET_NAME}_*.tar.gz.enc; do
+  if [ -f "$f" ] && [ "$f" != "$ARCHIVE" ]; then
+    file_age=$(find "$f" -maxdepth 0 -mtime +"$RETENTION_DAYS" 2>/dev/null)
+    if [ -n "$file_age" ]; then
+      rm -f "$f"
       CLEANED=$((CLEANED + 1))
-      log "Removed old backup: $(basename "$dir")"
+      log "Removed old backup: $(basename "$f")"
     fi
   fi
 done
