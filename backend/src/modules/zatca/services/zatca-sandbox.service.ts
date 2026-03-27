@@ -33,7 +33,7 @@ export class ZatcaSandboxService {
     });
 
     if (!invoice) {
-      throw new NotFoundException(`Invoice ${invoiceId} not found`);
+      throw new NotFoundException({ statusCode: 404, message: `Invoice ${invoiceId} not found`, error: 'NOT_FOUND' });
     }
 
     if (!invoice.xmlContent || !invoice.invoiceHash) {
