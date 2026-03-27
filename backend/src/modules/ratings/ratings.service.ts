@@ -31,7 +31,7 @@ export class RatingsService {
     });
 
     if (!booking) {
-      throw new NotFoundException('Booking not found');
+      throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
     }
 
     if (booking.status !== 'completed') {
