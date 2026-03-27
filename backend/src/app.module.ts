@@ -9,8 +9,8 @@ import Redis from 'ioredis';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { RedisModule } from './common/redis/redis.module.js';
 import { DatabaseModule } from './database/database.module.js';
-import { StorageModule } from './common/services/storage.module.js';
-import { AiServiceModule } from './common/services/ai.module.js';
+import { StorageModule } from './common/storage.module.js';
+import { AiServiceModule } from './common/ai-service.module.js';
 import { CacheModule } from './common/services/cache.module.js';
 import { validate } from './config/env.validation.js';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter.js';
@@ -46,6 +46,7 @@ import { IntakeFormsModule } from './modules/intake-forms/intake-forms.module.js
 import { GiftCardsModule } from './modules/gift-cards/gift-cards.module.js';
 import { BranchesModule } from './modules/branches/branches.module.js';
 import { EmailTemplatesModule } from './modules/email-templates/email-templates.module.js';
+import { IntegrationsModule } from './modules/integrations/integrations.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
 import { MetricsModule } from './common/metrics/metrics.module.js';
 import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
@@ -107,6 +108,7 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     GiftCardsModule,
     BranchesModule,
     EmailTemplatesModule,
+    IntegrationsModule,
   ],
   controllers: [],
   providers: [

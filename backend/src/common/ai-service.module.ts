@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { OpenRouterService } from './openrouter.service.js';
+import { OpenRouterService } from './services/openrouter.service.js';
 
 @Global()
 @Module({

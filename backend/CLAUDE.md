@@ -35,6 +35,8 @@ dto/                      # Request/response DTOs (class-validator)
 | `middleware/` | Request ID, CORS |
 | `metrics/` | Prometheus counters/histograms |
 | `queue/` | BullMQ producer helpers + failure handler |
+| `ai-service.module.ts` | Global `AiServiceModule` (OpenRouter) |
+| `storage.module.ts` | Global `StorageModule` (MinIO) |
 
 ## Prisma Rules
 

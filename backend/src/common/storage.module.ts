@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { MinioService } from './minio.service.js';
+import { MinioService } from './services/minio.service.js';
 
 @Global()
 @Module({
