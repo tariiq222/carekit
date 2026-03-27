@@ -15,11 +15,16 @@ export class CreatePractitionerDto {
   @IsNotEmpty()
   userId!: string;
 
-  @ApiProperty({ description: 'Specialty name in English', maxLength: 200 })
+  @ApiPropertyOptional({ description: 'Specialty ID (UUID) — populates specialty/specialtyAr from the Specialty record', format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  specialtyId?: string;
+
+  @ApiPropertyOptional({ description: 'Specialty name in English (ignored when specialtyId is provided)', maxLength: 200 })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(200)
-  specialty!: string;
+  specialty?: string;
 
   @ApiPropertyOptional({ description: 'Specialty name in Arabic', maxLength: 200 })
   @IsOptional()

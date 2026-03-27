@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { THROTTLE_LIMIT, THROTTLE_TTL } from '../../config/constants.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
@@ -44,7 +45,7 @@ export class BookingsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post()
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Throttle({ default: { limit: THROTTLE_LIMIT, ttl: THROTTLE_TTL } })
   @CheckPermissions({ module: 'bookings', action: 'create' })
   async create(
     @Body() dto: CreateBookingDto,
@@ -142,7 +143,7 @@ export class BookingsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Patch(':id')
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: THROTTLE_LIMIT, ttl: THROTTLE_TTL } })
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   async reschedule(
     @Param('id', uuidPipe) id: string,
@@ -158,9 +159,9 @@ export class BookingsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post(':id/patient-reschedule')
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: THROTTLE_LIMIT, ttl: THROTTLE_TTL } })
   @HttpCode(200)
-  @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @CheckPermissions({ module: 'bookings', action: 'create' })
   async patientReschedule(
     @Param('id', uuidPipe) id: string,
     @Body() dto: RescheduleBookingDto,
@@ -246,7 +247,7 @@ export class BookingsController {
 
   @Post(':id/cancel-request')
   @HttpCode(200)
-  @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @CheckPermissions({ module: 'bookings', action: 'create' })
   async cancelRequest(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelRequestDto,

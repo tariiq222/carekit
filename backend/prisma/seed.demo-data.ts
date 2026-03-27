@@ -39,7 +39,7 @@ export const DEMO_PRACTITIONERS = [
   {
     email: 'dr.abdulrahman@carekit-test.com',
     firstName: 'عبدالرحمن', lastName: 'المالكي',
-    phone: '+966501000004', gender: 'male' as const,
+    phone: '+966509000001', gender: 'male' as const,
     title: 'د.',
     nameAr: 'د. عبدالرحمن المالكي',
     specialtyEn: 'General Medicine', specialtyAr: 'طب عام',
@@ -53,7 +53,7 @@ export const DEMO_PRACTITIONERS = [
   {
     email: 'dr.layla@carekit-test.com',
     firstName: 'ليلى', lastName: 'القحطاني',
-    phone: '+966501000005', gender: 'female' as const,
+    phone: '+966509000002', gender: 'female' as const,
     title: 'د.',
     nameAr: 'د. ليلى القحطاني',
     specialtyEn: 'Dermatology', specialtyAr: 'أمراض جلدية',
@@ -67,7 +67,7 @@ export const DEMO_PRACTITIONERS = [
   {
     email: 'dr.fahad@carekit-test.com',
     firstName: 'فهد', lastName: 'الدوسري',
-    phone: '+966501000006', gender: 'male' as const,
+    phone: '+966509000003', gender: 'male' as const,
     title: 'د.',
     nameAr: 'د. فهد الدوسري',
     specialtyEn: 'Dentistry', specialtyAr: 'طب أسنان',
@@ -81,7 +81,7 @@ export const DEMO_PRACTITIONERS = [
   {
     email: 'dr.hanan@carekit-test.com',
     firstName: 'حنان', lastName: 'العمري',
-    phone: '+966501000007', gender: 'female' as const,
+    phone: '+966509000004', gender: 'female' as const,
     title: 'د.',
     nameAr: 'د. حنان العمري',
     specialtyEn: 'Pediatrics', specialtyAr: 'طب أطفال',

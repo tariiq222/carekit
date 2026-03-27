@@ -87,12 +87,12 @@ describe('Auth Module (e2e)', () => {
       expect(data.user).not.toHaveProperty('password');
       expect(data.user).not.toHaveProperty('passwordHash');
 
-      // Tokens
+      // Tokens — refreshToken is set in HTTP-only cookie, not in body
       expect(typeof data.accessToken).toBe('string');
       expect(data.accessToken.length).toBeGreaterThan(0);
-      expect(typeof data.refreshToken).toBe('string');
-      expect(data.refreshToken.length).toBeGreaterThan(0);
       expect(data.expiresIn).toBe(900); // 15 minutes
+      // refreshToken must NOT be exposed in response body (security: HTTP-only cookie only)
+      expect(data).not.toHaveProperty('refreshToken');
     });
 
     it('should auto-assign patient role to newly registered user', async () => {
@@ -102,6 +102,7 @@ describe('Auth Module (e2e)', () => {
         .send({
           ...validPayload,
           email: 'role-check@carekit-test.com',
+          phone: '+966502345679',
         })
         .expect(201);
 
@@ -129,6 +130,7 @@ describe('Auth Module (e2e)', () => {
         .send({
           ...validPayload,
           email: 'duplicate@carekit-test.com',
+          phone: '+966502345680',
         })
         .expect(201);
 
@@ -138,6 +140,7 @@ describe('Auth Module (e2e)', () => {
         .send({
           ...validPayload,
           email: 'duplicate@carekit-test.com',
+          phone: '+966502345681',
         })
         .expect(409);
 
@@ -210,6 +213,7 @@ describe('Auth Module (e2e)', () => {
         .send({
           ...validPayload,
           email: '  trimmed@carekit-test.com  ',
+          phone: '+966502345682',
           firstName: '  علي  ',
           lastName: '  المالكي  ',
         })
@@ -270,10 +274,10 @@ describe('Auth Module (e2e)', () => {
       expect(data.user).not.toHaveProperty('password');
       expect(data.user).not.toHaveProperty('passwordHash');
 
-      // Tokens
+      // Tokens — refreshToken is in HTTP-only cookie, not body
       expect(typeof data.accessToken).toBe('string');
-      expect(typeof data.refreshToken).toBe('string');
       expect(data.expiresIn).toBe(900);
+      expect(data).not.toHaveProperty('refreshToken');
     });
 
     it('should reject login with wrong password', async () => {
@@ -410,7 +414,7 @@ describe('Auth Module (e2e)', () => {
         .send({ email: targetEmail })
         .expect(429);
 
-      expectErrorResponse(res.body, 'RATE_LIMIT_EXCEEDED');
+      expectErrorResponse(res.body, 'OTP_RATE_LIMIT_EXCEEDED');
     });
 
     it('should reject request with missing email', async () => {
@@ -464,20 +468,19 @@ describe('Auth Module (e2e)', () => {
       }
     });
 
-    it('should reject expired OTP (>10 min)', async () => {
-      // This test expects the OTP to have a 10-minute expiry.
-      // Backend-dev should provide a way to create expired OTPs in test env,
-      // e.g., via direct DB manipulation or a test-only endpoint.
+    it('should reject wrong OTP code (AU-O5 expired OTP tested in auth-coverage.e2e-spec.ts)', async () => {
+      // Sends a code that doesn't match any OTP — must reject
       const res = await request(httpServer)
         .post(url)
         .send({
           email: 'otp-user@carekit-test.com',
-          code: '000000', // Expired OTP
-        });
+          code: '000000',
+        })
+        .expect(400);
 
-      if (res.status === 400) {
-        expectErrorResponse(res.body, 'AUTH_OTP_EXPIRED');
-      }
+      const errorCode = (res.body.error as { code: string }).code;
+      // Either INVALID (active OTP exists) or EXPIRED (no active OTP)
+      expect(['AUTH_OTP_INVALID', 'AUTH_OTP_EXPIRED']).toContain(errorCode);
     });
 
     it('should reject already-used OTP', async () => {
@@ -534,6 +537,13 @@ describe('Auth Module (e2e)', () => {
     const url = `${AUTH_URL}/refresh-token`;
     let validRefreshToken: string;
 
+    /** Extract refresh_token value from Set-Cookie header */
+    function extractRefreshTokenCookie(cookieHeader: string[]): string {
+      const entry = cookieHeader.find((c: string) => c.startsWith('refresh_token='));
+      if (!entry) throw new Error('refresh_token cookie not found in Set-Cookie header');
+      return entry.split(';')[0].replace('refresh_token=', '');
+    }
+
     beforeAll(async () => {
       const registerRes = await request(httpServer)
         .post(`${AUTH_URL}/register`)
@@ -547,7 +557,10 @@ describe('Auth Module (e2e)', () => {
         })
         .expect(201);
 
-      validRefreshToken = registerRes.body.data.refreshToken;
+      // refreshToken is in HTTP-only cookie, not body
+      validRefreshToken = extractRefreshTokenCookie(
+        registerRes.headers['set-cookie'] as string[],
+      );
     });
 
     it('should return new access + refresh token with valid refresh token', async () => {
@@ -617,8 +630,11 @@ describe('Auth Module (e2e)', () => {
         })
         .expect(201);
 
-      const accessToken = regRes.body.data.accessToken;
-      const refreshToken = regRes.body.data.refreshToken;
+      const accessToken = regRes.body.data.accessToken as string;
+      // refreshToken is in cookie, not body
+      const refreshToken = extractRefreshTokenCookie(
+        regRes.headers['set-cookie'] as string[],
+      );
 
       // Logout (revokes refresh token)
       await request(httpServer)
@@ -637,9 +653,10 @@ describe('Auth Module (e2e)', () => {
     });
 
     it('should reject request with missing refreshToken', async () => {
-      const res = await request(httpServer).post(url).send({}).expect(400);
+      // No body token and no cookie → 401 AUTH_REFRESH_TOKEN_MISSING
+      const res = await request(httpServer).post(url).send({}).expect(401);
 
-      expectErrorResponse(res.body, 'VALIDATION_ERROR');
+      expectErrorResponse(res.body, 'AUTH_REFRESH_TOKEN_MISSING');
     });
   });
 
@@ -663,7 +680,12 @@ describe('Auth Module (e2e)', () => {
         })
         .expect(201);
 
-      const { accessToken, refreshToken } = regRes.body.data;
+      const accessToken = regRes.body.data.accessToken as string;
+      // refreshToken is in HTTP-only cookie, not body
+      const refreshToken = (regRes.headers['set-cookie'] as string[])
+        .find((c: string) => c.startsWith('refresh_token='))!
+        .split(';')[0]
+        .replace('refresh_token=', '');
 
       const res = await request(httpServer)
         .post(url)
@@ -838,7 +860,7 @@ describe('Auth Module (e2e)', () => {
         .send({ email: targetEmail })
         .expect(429);
 
-      expectErrorResponse(res.body, 'RATE_LIMIT_EXCEEDED');
+      expectErrorResponse(res.body, 'OTP_RATE_LIMIT_EXCEEDED');
     });
   });
 
@@ -907,9 +929,10 @@ describe('Auth Module (e2e)', () => {
     });
 
     it('should reject reset with missing fields', async () => {
+      // Use a fresh email to avoid hitting rate limit from prior tests
       const res = await request(httpServer)
         .post(url)
-        .send({ email: 'forgot-pw@carekit-test.com' })
+        .send({ email: 'reset-missing-fields@carekit-test.com' })
         .expect(400);
 
       expectErrorResponse(res.body, 'VALIDATION_ERROR');

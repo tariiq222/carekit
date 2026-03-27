@@ -25,6 +25,11 @@ async function bootstrap(): Promise<void> {
 
   // Security headers
   app.use(helmet());
+  // Set Permissions-Policy header (not natively supported by this helmet version)
+  app.use((_req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('Permissions-Policy', '');
+    next();
+  });
 
   // Raw body capture for webhook signature verification.
   // Runs before cookieParser/CORS so the stream is untouched.

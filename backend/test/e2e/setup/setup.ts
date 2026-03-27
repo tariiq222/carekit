@@ -14,6 +14,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import Redis from 'ioredis';
+import helmet from 'helmet';
 import { AppModule } from '../../../src/app.module';
 
 // ---------------------------------------------------------------------------
@@ -25,6 +26,7 @@ export const API_PREFIX = '/api/v1';
 /** Default roles seeded in the database */
 export const DEFAULT_ROLES = [
   'super_admin',
+  'admin',
   'receptionist',
   'accountant',
   'practitioner',
@@ -33,7 +35,7 @@ export const DEFAULT_ROLES = [
 
 export type DefaultRole = (typeof DEFAULT_ROLES)[number];
 
-/** 13 permission modules x 4 actions = 52 permissions */
+/** 18 permission modules x 4 actions = 72 permissions */
 export const PERMISSION_MODULES = [
   'users',
   'roles',
@@ -48,11 +50,16 @@ export const PERMISSION_MODULES = [
   'whitelabel',
   'patients',
   'ratings',
+  'coupons',
+  'branches',
+  'intake_forms',
+  'gift-cards',
+  'activity-log',
 ] as const;
 
 export const PERMISSION_ACTIONS = ['view', 'create', 'edit', 'delete'] as const;
 
-export const TOTAL_PERMISSIONS = PERMISSION_MODULES.length * PERMISSION_ACTIONS.length; // 52
+export const TOTAL_PERMISSIONS = PERMISSION_MODULES.length * PERMISSION_ACTIONS.length; // 72
 
 // ---------------------------------------------------------------------------
 // Test user data — realistic Saudi clinic data
@@ -157,6 +164,12 @@ export async function createTestApp(): Promise<TestApp> {
   const app = moduleFixture.createNestApplication({ rawBody: true });
 
   // Match production configuration
+  app.use(helmet());
+  // Set Permissions-Policy header (not natively supported by this helmet version)
+  app.use((_req: unknown, res: import('express').Response, next: import('express').NextFunction) => {
+    res.setHeader('Permissions-Policy', '');
+    next();
+  });
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({

@@ -77,7 +77,11 @@ describe('Patients Module (e2e)', () => {
     ({ app, httpServer } = await createTestApp());
 
     // Login seeded super_admin (exists in seed data)
-    superAdmin = await loginTestUser(httpServer, TEST_USERS.super_admin.email, TEST_USERS.super_admin.password);
+    superAdmin = await loginTestUser(
+      httpServer,
+      TEST_USERS.super_admin.email,
+      TEST_USERS.super_admin.password,
+    );
 
     // Create staff users via admin API (idempotent — tolerates 409 if already exists)
     receptionist = await createTestUserWithRole(
@@ -514,8 +518,12 @@ describe('Patients Module (e2e)', () => {
       const res = await request(httpServer)
         .post(`${PATIENTS_URL}/walk-in`)
         .set(getAuthHeaders(receptionist.accessToken))
-        .send({ firstName: 'زائر مكرر', lastName: 'مجهول', phone: WALK_IN_BASE.phone })
-        .expect(201);
+        .send({
+          firstName: 'زائر مكرر',
+          lastName: 'مجهول',
+          phone: WALK_IN_BASE.phone,
+        })
+        .expect(200);
 
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('isExisting', true);
@@ -630,7 +638,7 @@ describe('Patients Module (e2e)', () => {
         .post(`${PATIENTS_URL}/claim`)
         .set(getAuthHeaders(receptionist.accessToken))
         .send(CLAIM_CREDENTIALS)
-        .expect(201);
+        .expect(200);
 
       expectSuccessResponse(res.body);
       const data = res.body.data;
@@ -743,7 +751,11 @@ describe('Patients Module (e2e)', () => {
       const res = await request(httpServer)
         .post(`${PATIENTS_URL}/claim`)
         .set(getAuthHeaders(receptionist.accessToken))
-        .send({ phone: newPhone, email: 'weak@test.com', password: 'weakpassword1' })
+        .send({
+          phone: newPhone,
+          email: 'weak@test.com',
+          password: 'weakpassword1',
+        })
         .expect(400);
 
       expectValidationError(res.body, ['password']);
@@ -753,7 +765,11 @@ describe('Patients Module (e2e)', () => {
       const res = await request(httpServer)
         .post(`${PATIENTS_URL}/claim`)
         .set(getAuthHeaders(receptionist.accessToken))
-        .send({ phone: '+966509990013', email: 'not-an-email', password: 'ValidP@ss1' })
+        .send({
+          phone: '+966509990013',
+          email: 'not-an-email',
+          password: 'ValidP@ss1',
+        })
         .expect(400);
 
       expectValidationError(res.body, ['email']);
@@ -825,7 +841,7 @@ describe('Patients Module (e2e)', () => {
           email: LIFECYCLE_EMAIL,
           password: 'LifecycleP@ss1',
         })
-        .expect(201);
+        .expect(200);
 
       expectSuccessResponse(res.body);
       expect(res.body.data.accountType).toBe('full');

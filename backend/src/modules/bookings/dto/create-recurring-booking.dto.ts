@@ -32,6 +32,10 @@ export class CreateRecurringBookingDto {
 
   @IsOptional()
   @IsUUID()
+  patientId?: string;
+
+  @IsOptional()
+  @IsUUID()
   branchId?: string;
 
   @IsEnum(['daily', 'every_2_days', 'every_3_days', 'weekly', 'biweekly', 'monthly'])

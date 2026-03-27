@@ -34,6 +34,7 @@ export class PractitionersService {
     sortOrder?: 'asc' | 'desc';
     search?: string;
     specialty?: string;
+    specialtyId?: string;
     minRating?: number;
     isActive?: boolean;
     branchId?: string;
@@ -48,7 +49,9 @@ export class PractitionersService {
       isActive: params?.isActive ?? true,
     };
 
-    if (params?.specialty) {
+    if (params?.specialtyId) {
+      where.specialtyId = params.specialtyId;
+    } else if (params?.specialty) {
       where.OR = [
         { specialty: { contains: params.specialty, mode: 'insensitive' } },
         { specialtyAr: { contains: params.specialty, mode: 'insensitive' } },
@@ -74,6 +77,7 @@ export class PractitionersService {
 
     const include: Record<string, unknown> = {
       user: true,
+      specialtyRel: { select: { id: true, nameEn: true, nameAr: true } },
       practitionerServices: { where: { isActive: true }, include: { service: { select: { id: true, nameAr: true, nameEn: true } } } },
     };
     // Only include branches when filtering by branch to avoid N+1
@@ -93,7 +97,7 @@ export class PractitionersService {
     ]);
 
     return {
-      items: practitioners,
+      items: practitioners.map(this.mapSpecialtyRelation),
       meta: buildPaginationMeta(total, page, perPage),
     };
   }
@@ -101,7 +105,10 @@ export class PractitionersService {
   async findOne(id: string) {
     const practitioner = await this.prisma.practitioner.findFirst({
       where: { id, deletedAt: null },
-      include: { user: true },
+      include: {
+        user: true,
+        specialtyRel: { select: { id: true, nameEn: true, nameAr: true } },
+      },
     });
 
     if (!practitioner) {
@@ -112,7 +119,18 @@ export class PractitionersService {
       });
     }
 
-    return practitioner;
+    return this.mapSpecialtyRelation(practitioner);
+  }
+
+  /**
+   * Renames specialtyRel → specialty in the API response so callers get
+   * { specialty: { id, nameEn, nameAr } } instead of the raw relation name.
+   */
+  private mapSpecialtyRelation<T extends { specialtyRel?: unknown; specialty?: unknown }>(
+    practitioner: T,
+  ): Omit<T, 'specialtyRel' | 'specialty'> & { specialty: unknown } {
+    const { specialtyRel, specialty: _stringSpecialty, ...rest } = practitioner;
+    return { ...rest, specialty: specialtyRel ?? null };
   }
 
   async create(dto: CreatePractitionerDto) {
@@ -125,6 +143,27 @@ export class PractitionersService {
       });
     }
 
+    // Resolve specialty names from specialtyId when provided
+    let resolvedSpecialty = dto.specialty ?? '';
+    let resolvedSpecialtyAr = dto.specialtyAr ?? '';
+    let resolvedSpecialtyId = dto.specialtyId;
+
+    if (dto.specialtyId) {
+      const specialtyRecord = await this.prisma.specialty.findUnique({
+        where: { id: dto.specialtyId },
+      });
+      if (!specialtyRecord) {
+        throw new NotFoundException({
+          statusCode: 404,
+          message: 'Specialty not found',
+          error: 'SPECIALTY_NOT_FOUND',
+        });
+      }
+      resolvedSpecialty = specialtyRecord.nameEn;
+      resolvedSpecialtyAr = specialtyRecord.nameAr;
+      resolvedSpecialtyId = specialtyRecord.id;
+    }
+
     const existing = await this.prisma.practitioner.findFirst({
       where: { userId: dto.userId },
     });
@@ -134,8 +173,9 @@ export class PractitionersService {
         return this.prisma.practitioner.update({
           where: { id: existing.id },
           data: {
-            specialty: dto.specialty,
-            specialtyAr: dto.specialtyAr,
+            specialtyId: resolvedSpecialtyId,
+            specialty: resolvedSpecialty,
+            specialtyAr: resolvedSpecialtyAr,
             bio: dto.bio,
             bioAr: dto.bioAr,
             experience: dto.experience ?? 0,
@@ -161,8 +201,9 @@ export class PractitionersService {
     return this.prisma.practitioner.create({
       data: {
         userId: dto.userId,
-        specialty: dto.specialty,
-        specialtyAr: dto.specialtyAr,
+        specialtyId: resolvedSpecialtyId,
+        specialty: resolvedSpecialty,
+        specialtyAr: resolvedSpecialtyAr,
         bio: dto.bio,
         bioAr: dto.bioAr,
         experience: dto.experience ?? 0,

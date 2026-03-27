@@ -63,10 +63,32 @@ export default async function globalSetup(): Promise<void> {
     await prisma.refreshToken.deleteMany({});
     await prisma.otpCode.deleteMany({});
 
-    // Delete non-seed users (keep the seeded admin)
-    const seedAdminEmail = 'admin@carekit-test.com';
+    // Seed emails that must be preserved (matches prisma/seed.demo-data.ts).
+    // These are demo seed users that tests depend on but don't manage themselves.
+    // NOTE: reception@carekit-test.com and accountant@carekit-test.com are intentionally
+    // excluded here because the e2e tests re-create them via createTestUserWithRole.
+    const seedEmails = [
+      'admin@carekit-test.com',
+      // Demo practitioners (linked to seeded specialties — needed for cascade-protection tests)
+      'dr.abdulrahman@carekit-test.com',
+      'dr.layla@carekit-test.com',
+      'dr.fahad@carekit-test.com',
+      'dr.hanan@carekit-test.com',
+      // Demo patients (example.com — no phone conflict with test users)
+      'sara.ahmed@example.com',
+      'omar.ali@example.com',
+      'noura.hassan@example.com',
+      'youssef.ibrahim@example.com',
+      'fatima.saeed@example.com',
+      'khaled.nasser@example.com',
+      'mona.rashid@example.com',
+      'ahmed.sultan@example.com',
+      'lama.turki@example.com',
+      'faisal.majed@example.com',
+    ];
+
     const nonSeedUsers = await prisma.user.findMany({
-      where: { email: { not: seedAdminEmail } },
+      where: { email: { notIn: seedEmails } },
       select: { id: true },
     });
 
@@ -113,11 +135,22 @@ export default async function globalSetup(): Promise<void> {
       where: { isSystem: false },
     });
 
-    // Delete test-created services (soft-deleted or otherwise)
+    // Delete test-created services (practitionerService must precede service due to FK)
+    await prisma.practitionerServiceType.deleteMany({});
+    await prisma.practitionerService.deleteMany({});
     await prisma.service.deleteMany({});
 
     // Delete test-created service categories
     await prisma.serviceCategory.deleteMany({});
+
+    // Delete test-created specialties (keep only canonical seed specialties)
+    const seedSpecialtyNames = [
+      'General Medicine', 'Dermatology', 'Pediatrics', 'Dentistry',
+      'Cardiology', 'Orthopedics', 'Ophthalmology', 'Psychiatry',
+    ];
+    await prisma.specialty.deleteMany({
+      where: { nameEn: { notIn: seedSpecialtyNames } },
+    });
 
     // Clean admin's refresh tokens too
     await prisma.refreshToken.deleteMany({});

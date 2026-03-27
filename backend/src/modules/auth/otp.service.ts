@@ -125,6 +125,9 @@ export class OtpService {
       where: { id: userId },
       data: { emailVerified: true },
     });
+
+    // Invalidate cached user payload so next /me call reflects emailVerified=true
+    await this.authCache.invalidate(userId);
   }
 
   async resetPassword(email: string, code: string, newPassword: string): Promise<void> {

@@ -49,8 +49,11 @@ export class BookingRescheduleService {
     const oldZoomId = booking.zoomMeetingId;
     const bufferMinutes = ps?.bufferMinutes || svc?.bufferMinutes || settings.bufferMinutes;
 
+    const skipAvailability = adminUserId && settings.adminCanBookOutsideHours;
     const result = await this.prisma.$transaction(async (tx) => {
-      await validateAvailability(tx, booking.practitionerId, newDate, newStartTime, newEndTime, booking.branchId ?? undefined);
+      if (!skipAvailability) {
+        await validateAvailability(tx, booking.practitionerId, newDate, newStartTime, newEndTime, booking.branchId ?? undefined);
+      }
       await checkDoubleBooking(tx, booking.practitionerId, newDate, newStartTime, newEndTime, id, bufferMinutes);
       const nb = await tx.booking.create({
         data: {

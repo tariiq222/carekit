@@ -47,6 +47,7 @@ import { GiftCardsModule } from './modules/gift-cards/gift-cards.module.js';
 import { BranchesModule } from './modules/branches/branches.module.js';
 import { EmailTemplatesModule } from './modules/email-templates/email-templates.module.js';
 import { IntegrationsModule } from './modules/integrations/integrations.module.js';
+import { SpecialtiesModule } from './modules/specialties/specialties.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
 import { MetricsModule } from './common/metrics/metrics.module.js';
 import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
@@ -109,6 +110,7 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     BranchesModule,
     EmailTemplatesModule,
     IntegrationsModule,
+    SpecialtiesModule,
   ],
   controllers: [],
   providers: [

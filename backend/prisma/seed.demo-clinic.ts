@@ -348,11 +348,17 @@ export async function seedClinicConfig(prisma: PrismaClient) {
   console.log('── Seeding clinic config ──');
 
   for (const wh of DEMO_WORKING_HOURS) {
-    await prisma.clinicWorkingHours.upsert({
-      where: { dayOfWeek: wh.dayOfWeek },
-      update: { startTime: wh.startTime, endTime: wh.endTime, isActive: wh.isActive },
-      create: wh,
+    const existing = await prisma.clinicWorkingHours.findFirst({
+      where: { dayOfWeek: wh.dayOfWeek, branchId: null },
     });
+    if (existing) {
+      await prisma.clinicWorkingHours.update({
+        where: { id: existing.id },
+        data: { startTime: wh.startTime, endTime: wh.endTime, isActive: wh.isActive },
+      });
+    } else {
+      await prisma.clinicWorkingHours.create({ data: wh });
+    }
   }
   for (const h of DEMO_HOLIDAYS) {
     await prisma.clinicHoliday.upsert({

@@ -4,9 +4,9 @@
  * Validates that the database seed script (prisma/seed.ts)
  * correctly populates all required initial data:
  *
- *   - 5 default roles with correct isSystem/isDefault flags
- *   - 52 permissions (13 modules x 4 actions)
- *   - super_admin role has ALL 52 permissions assigned
+ *   - 6 default roles with correct isSystem/isDefault flags
+ *   - 72 permissions (18 modules x 4 actions)
+ *   - super_admin role has ALL 72 permissions assigned
  *   - 8 default specialties with Arabic + English names
  *   - WhiteLabelConfig entries for essential settings
  *   - patient role marked as isDefault: true
@@ -79,12 +79,12 @@ describe('Seed Data Validation (e2e)', () => {
       roles = res.body.data.items || res.body.data;
     });
 
-    it('should have 5 default roles in database', () => {
+    it('should have 6 default roles in database', () => {
       const systemRoles = roles.filter((r) => r.isSystem === true);
-      expect(systemRoles.length).toBe(5);
+      expect(systemRoles.length).toBe(6);
     });
 
-    it('should have all 5 expected role slugs', () => {
+    it('should have all 6 expected role slugs', () => {
       const slugs = roles.map((r) => r.slug);
 
       for (const expectedSlug of DEFAULT_ROLES) {
@@ -134,11 +134,11 @@ describe('Seed Data Validation (e2e)', () => {
       permissions = res.body.data.items || res.body.data;
     });
 
-    it('should have 52 permissions (13 modules x 4 actions)', () => {
+    it('should have 72 permissions (18 modules x 4 actions)', () => {
       expect(permissions.length).toBe(TOTAL_PERMISSIONS);
     });
 
-    it('should have all 13 modules represented', () => {
+    it('should have all 18 modules represented', () => {
       const modules = [...new Set(permissions.map((p) => p.module))];
       expect(modules.length).toBe(PERMISSION_MODULES.length);
 
@@ -165,7 +165,7 @@ describe('Seed Data Validation (e2e)', () => {
   // =========================================================================
 
   describe('super_admin role permissions', () => {
-    it('should have super_admin role with ALL 52 permissions', async () => {
+    it('should have super_admin role with ALL 72 permissions', async () => {
       // Get roles with their permissions
       const res = await request(httpServer)
         .get(`${API_PREFIX}/roles`)

@@ -637,7 +637,7 @@ describe('Services Module (e2e)', () => {
       const { meta } = res.body.data;
       expect(meta).toHaveProperty('total');
       expect(meta).toHaveProperty('page', 1);
-      expect(meta).toHaveProperty('perPage', 5);
+      expect(meta).toHaveProperty('perPage', 20);
       expect(meta).toHaveProperty('totalPages');
       expect(meta).toHaveProperty('hasNextPage');
       expect(meta).toHaveProperty('hasPreviousPage');

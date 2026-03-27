@@ -36,8 +36,11 @@ export class BookingRecurringService {
     private readonly bookingSettingsService: BookingSettingsService,
   ) {}
 
-  async createRecurring(patientId: string, dto: CreateRecurringBookingDto) {
+  async createRecurring(callerUserId: string, dto: CreateRecurringBookingDto) {
     const settings = await this.bookingSettingsService.getForBranch(dto.branchId);
+
+    // Allow admin/staff to book for a specific patient; otherwise use the caller's own ID
+    const patientId = dto.patientId ?? callerUserId;
 
     if (!settings.allowRecurring) {
       throw new BadRequestException({
@@ -80,7 +83,8 @@ export class BookingRecurringService {
 
       try {
         // Pass recurringGroupId directly into create — atomic, no separate update needed
-        const booking = await this.bookingsService.create(patientId, {
+        // callerUserId is the admin/staff user; patientId in dto is the actual patient
+        const booking = await this.bookingsService.create(callerUserId, {
           practitionerId: dto.practitionerId,
           serviceId: dto.serviceId,
           branchId: dto.branchId,
@@ -89,6 +93,7 @@ export class BookingRecurringService {
           startTime: dto.startTime,
           notes: dto.notes,
           recurringGroupId,
+          patientId,
         });
 
         created.push({ id: booking.id, date: dateStr });

@@ -2,13 +2,21 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -69,20 +77,32 @@ export class PatientsController {
   }
 
   @Post('walk-in')
+  @HttpCode(200)
   @CheckPermissions({ module: 'patients', action: 'create' })
   @ApiOperation({
-    summary: 'Register a walk-in patient (name + phone only, no email/password)',
-    description: 'Used by receptionist to register a patient who visited the clinic without a prior account. Returns existing WALK_IN account if phone already registered.',
+    summary:
+      'Register a walk-in patient (name + phone only, no email/password)',
+    description:
+      'Used by receptionist to register a patient who visited the clinic without a prior account. Returns existing WALK_IN account if phone already registered.',
   })
-  createWalkIn(@Body() dto: CreateWalkInPatientDto) {
-    return this.walkInService.createWalkIn(dto);
+  async createWalkIn(
+    @Body() dto: CreateWalkInPatientDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.walkInService.createWalkIn(dto);
+    return res.status(result.isExisting ? 200 : 201).json({
+      success: true,
+      data: result,
+    });
   }
 
   @Post('claim')
+  @HttpCode(200)
   @CheckPermissions({ module: 'patients', action: 'create' })
   @ApiOperation({
     summary: 'Claim a walk-in account (activate with email + password)',
-    description: 'Allows staff to upgrade a WALK_IN account to a full account by linking an email and password. The patient can then log in via the mobile app.',
+    description:
+      'Allows staff to upgrade a WALK_IN account to a full account by linking an email and password. The patient can then log in via the mobile app.',
   })
   claimAccount(@Body() dto: ClaimAccountDto) {
     return this.walkInService.claimAccount(dto);

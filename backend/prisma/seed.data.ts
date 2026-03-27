@@ -97,7 +97,7 @@ export const ROLES: RoleDefinition[] = [
     isDefault: false,
     isSystem: true,
     permissions: {
-      bookings: ['view'],
+      bookings: ['view', 'edit'],
       patients: ['view'],
       ratings: ['view'],
       practitioners: ['view', 'edit'],
@@ -162,7 +162,9 @@ export const WHITE_LABEL_DEFAULTS: WhiteLabelEntry[] = [
   // AI
   { key: 'openrouter_api_key', value: '', type: 'string', description: 'OpenRouter API key for AI chatbot' },
 
-  // Content (AR/EN) — cancellation policy text moved to BookingSettings
+  // Content (AR/EN)
+  { key: 'cancellation_policy', value: 'Cancellations must be made at least 24 hours before the appointment.', type: 'string', description: 'Cancellation policy text (English)' },
+  { key: 'cancellation_policy_ar', value: 'يجب إلغاء الحجز قبل 24 ساعة على الأقل من موعد الزيارة.', type: 'string', description: 'Cancellation policy text (Arabic)' },
   { key: 'about_ar', value: '', type: 'string', description: 'About clinic text (Arabic)' },
   { key: 'about_en', value: '', type: 'string', description: 'About clinic text (English)' },
   { key: 'privacy_policy_ar', value: '', type: 'string', description: 'Privacy policy text (Arabic)' },
@@ -184,6 +186,33 @@ export const WHITE_LABEL_DEFAULTS: WhiteLabelEntry[] = [
   { key: 'session_duration', value: '30', type: 'string', description: 'Default session duration in minutes' },
   { key: 'reminder_before_minutes', value: '60', type: 'string', description: 'Send reminder X minutes before appointment' },
   { key: 'firebase_config', value: '{}', type: 'json', description: 'Firebase FCM configuration (JSON)' },
+];
+
+// ──────────────────────────────────────────────
+// Email Templates
+// ──────────────────────────────────────────────
+
+// ──────────────────────────────────────────────
+// Specialties
+// ──────────────────────────────────────────────
+
+export interface SpecialtyDefinition {
+  nameEn: string;
+  nameAr: string;
+  descriptionEn: string;
+  descriptionAr: string;
+  sortOrder: number;
+}
+
+export const SPECIALTIES: SpecialtyDefinition[] = [
+  { nameEn: 'General Medicine', nameAr: 'طب عام', descriptionEn: 'Primary care and general health', descriptionAr: 'الرعاية الصحية الأولية والعامة', sortOrder: 0 },
+  { nameEn: 'Dermatology', nameAr: 'أمراض جلدية', descriptionEn: 'Skin, hair and nail conditions', descriptionAr: 'أمراض الجلد والشعر والأظافر', sortOrder: 2 },
+  { nameEn: 'Pediatrics', nameAr: 'طب أطفال', descriptionEn: 'Healthcare for infants, children and adolescents', descriptionAr: 'رعاية الرضع والأطفال والمراهقين', sortOrder: 3 },
+  { nameEn: 'Dentistry', nameAr: 'طب أسنان', descriptionEn: 'Oral health and dental care', descriptionAr: 'صحة الفم والعناية بالأسنان', sortOrder: 4 },
+  { nameEn: 'Cardiology', nameAr: 'أمراض القلب', descriptionEn: 'Heart and cardiovascular system disorders', descriptionAr: 'أمراض القلب والجهاز القلبي الوعائي', sortOrder: 5 },
+  { nameEn: 'Orthopedics', nameAr: 'العظام والمفاصل', descriptionEn: 'Musculoskeletal system and sports injuries', descriptionAr: 'الجهاز العضلي الهيكلي وإصابات الملاعب', sortOrder: 6 },
+  { nameEn: 'Ophthalmology', nameAr: 'طب العيون', descriptionEn: 'Eye and vision care', descriptionAr: 'العناية بالعين والبصر', sortOrder: 7 },
+  { nameEn: 'Psychiatry', nameAr: 'الطب النفسي', descriptionEn: 'Mental health and behavioral disorders', descriptionAr: 'الصحة النفسية واضطرابات السلوك', sortOrder: 8 },
 ];
 
 // ──────────────────────────────────────────────

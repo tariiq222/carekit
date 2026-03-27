@@ -8,6 +8,7 @@ import {
   ROLES,
   WHITE_LABEL_DEFAULTS,
   EMAIL_TEMPLATES,
+  SPECIALTIES,
 } from './seed.data';
 import { seedDemoData } from './seed.demo';
 
@@ -89,6 +90,17 @@ async function main(): Promise<void> {
     });
   }
   console.log(`  Created ${WHITE_LABEL_DEFAULTS.length} config entries`);
+
+  // 4. Create specialties
+  console.log('Creating specialties...');
+  for (const spec of SPECIALTIES) {
+    await prisma.specialty.upsert({
+      where: { nameEn: spec.nameEn },
+      update: { nameAr: spec.nameAr, descriptionEn: spec.descriptionEn, descriptionAr: spec.descriptionAr, sortOrder: spec.sortOrder },
+      create: { nameEn: spec.nameEn, nameAr: spec.nameAr, descriptionEn: spec.descriptionEn, descriptionAr: spec.descriptionAr, sortOrder: spec.sortOrder, isActive: true },
+    });
+  }
+  console.log(`  Created ${SPECIALTIES.length} specialties`);
 
   // 5. Create email templates
   console.log('Creating email templates...');

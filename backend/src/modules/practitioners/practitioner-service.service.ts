@@ -75,7 +75,7 @@ export class PractitionerServiceService {
     await ensurePractitionerExists(this.prisma, practitionerId);
 
     return this.prisma.practitionerService.findMany({
-      where: { practitionerId },
+      where: { practitionerId, isActive: true },
       include: serviceInclude,
       orderBy: { createdAt: 'asc' },
     });

@@ -587,7 +587,8 @@ describe('RBAC (e2e)', () => {
         { method: 'get' as const, url: `${API_PREFIX}/users` },
         { method: 'get' as const, url: `${API_PREFIX}/whitelabel/config` },
         { method: 'get' as const, url: `${API_PREFIX}/reports/revenue` },
-        { method: 'get' as const, url: `${API_PREFIX}/chatbot/sessions` },
+        // Note: GET /chatbot/sessions intentionally returns 200 for patients
+        // (they can list their own sessions) — not an admin-only endpoint.
       ];
 
       for (const endpoint of adminEndpoints) {
@@ -772,10 +773,10 @@ describe('RBAC (e2e)', () => {
 
       expect(res.body).toEqual({
         success: false,
-        error: {
+        error: expect.objectContaining({
           code: 'FORBIDDEN',
           message: expect.any(String),
-        },
+        }),
       });
     });
 

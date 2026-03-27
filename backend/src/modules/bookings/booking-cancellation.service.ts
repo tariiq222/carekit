@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
 } from '@nestjs/common';
@@ -68,8 +69,8 @@ export class BookingCancellationService {
   async adminDirectCancel(bookingId: string, adminUserId: string, dto: AdminCancelDto) {
     const booking = await this.lookup.findWithPayment(bookingId);
     if (!ADMIN_CANCELLABLE_STATUSES.includes(booking.status)) {
-      throw new ConflictException({
-        statusCode: 409,
+      throw new BadRequestException({
+        statusCode: 400,
         message: `Cannot cancel booking with status '${booking.status}' — allowed: ${ADMIN_CANCELLABLE_STATUSES.join(', ')}`,
         error: 'INVALID_STATUS_FOR_ADMIN_CANCEL',
       });

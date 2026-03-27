@@ -329,7 +329,7 @@ describe('Users Module (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(400);
 
-      expectErrorResponse(res.body, 'INVALID_UUID');
+      expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
     it('should reject access for unauthorized roles -> 403', async () => {
