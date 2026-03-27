@@ -8,7 +8,6 @@ import {
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto.js';
-import { UserRolesService } from './user-roles.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { PractitionersService } from '../practitioners/practitioners.service.js';
 import { AuthCacheService } from '../auth/auth-cache.service.js';
@@ -20,7 +19,6 @@ import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly userRolesService: UserRolesService,
     private readonly activityLogService: ActivityLogService,
     private readonly practitionersService: PractitionersService,
     private readonly authCache: AuthCacheService,
@@ -303,35 +301,4 @@ export class UsersService {
     return sanitizeUser(updated);
   }
 
-  async assignRole(userId: string, roleId?: string, roleSlug?: string, requesterId?: string) {
-    let resolvedRoleId = roleId;
-
-    if (!resolvedRoleId && roleSlug) {
-      const role = await this.prisma.role.findUnique({
-        where: { slug: roleSlug },
-      });
-      if (!role) {
-        throw new NotFoundException({
-          statusCode: 404,
-          message: 'Role not found',
-          error: 'ROLE_NOT_FOUND',
-        });
-      }
-      resolvedRoleId = role.id;
-    }
-
-    if (!resolvedRoleId) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'roleId or roleSlug is required',
-        error: 'VALIDATION_ERROR',
-      });
-    }
-
-    return this.userRolesService.assignRole(userId, resolvedRoleId, requesterId);
-  }
-
-  async removeRole(userId: string, roleId: string) {
-    return this.userRolesService.removeRole(userId, roleId);
-  }
 }

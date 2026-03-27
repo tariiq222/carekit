@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service.js';
+import { UserRolesService } from './user-roles.service.js';
 import { CreateUserDto, UpdateUserDto, AssignRoleDto } from './dto/create-user.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
@@ -25,7 +26,10 @@ import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 @Controller('users')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userRolesService: UserRolesService,
+  ) {}
 
   @Get()
   @CheckPermissions({ module: 'users', action: 'view' })
@@ -105,7 +109,7 @@ export class UsersController {
     @Body() dto: AssignRoleDto,
     @CurrentUser() requester: { id: string },
   ) {
-    await this.usersService.assignRole(id, dto.roleId, dto.roleSlug, requester.id);
+    await this.userRolesService.assignRole(id, dto.roleId, dto.roleSlug, requester.id);
     return {
       success: true,
       message: 'Role assigned successfully',
@@ -118,7 +122,7 @@ export class UsersController {
     @Param('id', uuidPipe) id: string,
     @Param('roleId', uuidPipe) roleId: string,
   ) {
-    await this.usersService.removeRole(id, roleId);
+    await this.userRolesService.removeRole(id, roleId);
     return { removed: true };
   }
 }

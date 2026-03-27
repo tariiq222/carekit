@@ -29,6 +29,11 @@ export class CreateServiceDto {
   @IsNotEmpty()
   categoryId!: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
   @IsOptional()
   @IsInt()
   @Min(0)

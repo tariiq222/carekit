@@ -14,7 +14,29 @@ export class UserRolesService {
     private readonly authCache: AuthCacheService,
   ) {}
 
-  async assignRole(userId: string, roleId: string, requesterId?: string) {
+  async assignRole(userId: string, roleId?: string, roleSlug?: string, requesterId?: string): Promise<void> {
+    let resolvedRoleId: string;
+
+    if (roleId) {
+      resolvedRoleId = roleId;
+    } else if (roleSlug) {
+      const roleBySlug = await this.prisma.role.findUnique({ where: { slug: roleSlug } });
+      if (!roleBySlug) {
+        throw new NotFoundException({
+          statusCode: 404,
+          message: 'Role not found',
+          error: 'ROLE_NOT_FOUND',
+        });
+      }
+      resolvedRoleId = roleBySlug.id;
+    } else {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'roleId or roleSlug is required',
+        error: 'VALIDATION_ERROR',
+      });
+    }
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.deletedAt) {
       throw new NotFoundException({
@@ -24,7 +46,7 @@ export class UserRolesService {
       });
     }
 
-    const role = await this.prisma.role.findUnique({ where: { id: roleId } });
+    const role = await this.prisma.role.findUnique({ where: { id: resolvedRoleId } });
     if (!role) {
       throw new NotFoundException({
         statusCode: 404,
@@ -50,12 +72,12 @@ export class UserRolesService {
     }
 
     const existing = await this.prisma.userRole.findFirst({
-      where: { userId, roleId },
+      where: { userId, roleId: resolvedRoleId },
     });
     if (existing) return;
 
     await this.prisma.userRole.create({
-      data: { userId, roleId },
+      data: { userId, roleId: resolvedRoleId },
     });
 
     // Invalidate cached permissions so the user gets the new role immediately
