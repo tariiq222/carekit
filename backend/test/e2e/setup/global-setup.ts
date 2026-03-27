@@ -46,6 +46,9 @@ export default async function globalSetup(): Promise<void> {
     // Order matters due to foreign keys
     await prisma.notification.deleteMany({});
     await prisma.fcmToken.deleteMany({});
+    // Delete invoices before payments/bookings (invoices.payment_id has ON DELETE RESTRICT)
+    await prisma.invoice.deleteMany({});
+    await prisma.payment.deleteMany({});
     await prisma.booking.deleteMany({});
     await prisma.refreshToken.deleteMany({});
     await prisma.otpCode.deleteMany({});

@@ -153,7 +153,8 @@ export async function createTestApp(): Promise<TestApp> {
     imports: [AppModule],
   }).compile();
 
-  const app = moduleFixture.createNestApplication();
+  // Enable rawBody so webhook HMAC signature tests work (mirrors production bootstrap)
+  const app = moduleFixture.createNestApplication({ rawBody: true });
 
   // Match production configuration
   app.setGlobalPrefix('api/v1');
