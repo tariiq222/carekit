@@ -78,9 +78,28 @@ export class PractitionerAvailabilityService {
         error: 'VALIDATION_ERROR',
       });
     }
+    return this.resolveSlots(practitionerId, date, duration, branchId);
+  }
 
+  async getAvailableSlots(practitionerId: string, date: string, duration: number = 30, branchId?: string) {
+    const { slots } = await this.resolveSlots(practitionerId, date, duration, branchId);
+    return slots.filter((s) => s.available);
+  }
+
+  private async resolveSlots(
+    practitionerId: string,
+    date: string,
+    duration: number,
+    branchId?: string,
+  ): Promise<{
+    slots: Array<{ startTime: string; endTime: string; available: boolean }>;
+    date: string;
+    practitionerId: string;
+  }> {
     const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
-    if (!practitioner.isAcceptingBookings) return { date, practitionerId, slots: [] };
+    if (!practitioner.isAcceptingBookings) {
+      return { date, practitionerId, slots: [] };
+    }
 
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
@@ -90,7 +109,6 @@ export class PractitionerAvailabilityService {
       targetDate.getDate(),
     ));
 
-    // M8: Parallelize independent queries
     const [availabilities, vacation] = await Promise.all([
       this.prisma.practitionerAvailability.findMany({
         where: {
@@ -111,76 +129,6 @@ export class PractitionerAvailabilityService {
     ]);
 
     if (vacation) return { date, practitionerId, slots: [] };
-
-    // Settings and breaks are independent — run in parallel
-    const [settings, breaks] = await Promise.all([
-      this.bookingSettingsService.getForBranch(branchId),
-      this.prisma.practitionerBreak.findMany({ where: { practitionerId, dayOfWeek } }),
-    ]);
-
-    const bufferMinutes = settings.bufferMinutes ?? 0;
-    const isToday = isSameLocalDate(targetDate, new Date());
-    const allSlots = generateSlots(availabilities, duration, bufferMinutes, isToday);
-
-    const slotsWithoutBreaks = allSlots.filter(
-      (slot) => !breaks.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
-    );
-
-    const targetDateEnd = new Date(normalizedDate);
-    targetDateEnd.setUTCHours(23, 59, 59, 999);
-
-    const bookings = await this.prisma.booking.findMany({
-      where: {
-        practitionerId,
-        date: { gte: normalizedDate, lte: targetDateEnd },
-        status: { in: ['confirmed', 'pending', 'checked_in', 'in_progress'] },
-        deletedAt: null,
-      },
-      select: { startTime: true, endTime: true },
-    });
-
-    const slots = slotsWithoutBreaks.map((slot) => ({
-      ...slot,
-      available: !bookings.some((b) =>
-        timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime),
-      ),
-    }));
-
-    return { date, practitionerId, slots };
-  }
-
-  async getAvailableSlots(practitionerId: string, date: string, duration: number = 30, branchId?: string) {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
-    if (!practitioner.isAcceptingBookings) return [];
-
-    const targetDate = new Date(date);
-    const dayOfWeek = targetDate.getDay();
-    const normalizedDate = new Date(Date.UTC(
-      targetDate.getFullYear(),
-      targetDate.getMonth(),
-      targetDate.getDate(),
-    ));
-
-    const [availabilities, vacation] = await Promise.all([
-      this.prisma.practitionerAvailability.findMany({
-        where: {
-          practitionerId,
-          dayOfWeek,
-          isActive: true,
-          ...(branchId ? { OR: [{ branchId }, { branchId: null }] } : {}),
-        },
-        orderBy: { startTime: 'asc' },
-      }),
-      this.prisma.practitionerVacation.findFirst({
-        where: {
-          practitionerId,
-          startDate: { lte: normalizedDate },
-          endDate: { gte: normalizedDate },
-        },
-      }),
-    ]);
-
-    if (vacation) return [];
 
     const targetDateEnd = new Date(normalizedDate);
     targetDateEnd.setUTCHours(23, 59, 59, 999);
@@ -206,8 +154,13 @@ export class PractitionerAvailabilityService {
       (slot) => !breaks.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
     );
 
-    return slotsWithoutBreaks.filter(
-      (slot) => !bookings.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
-    );
+    const slots = slotsWithoutBreaks.map((slot) => ({
+      ...slot,
+      available: !bookings.some((b) =>
+        timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime),
+      ),
+    }));
+
+    return { date, practitionerId, slots };
   }
 }
