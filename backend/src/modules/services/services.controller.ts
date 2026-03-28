@@ -113,8 +113,7 @@ export class ServicesController {
   @Get(':id/intake-forms/all')
   @Public()
   async getIntakeForms(@Param('id', uuidPipe) id: string) {
-    const data = await this.intakeFormsService.listForms({ serviceId: id });
-    return { success: true, data };
+    return this.intakeFormsService.listForms({ serviceId: id });
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -143,8 +142,7 @@ export class ServicesController {
   @Get(':id/practitioners')
   @Public()
   async getPractitioners(@Param('id', uuidPipe) id: string) {
-    const data = await this.practitionersService.getPractitionersForService(id);
-    return { success: true, data };
+    return this.practitionersService.getPractitionersForService(id);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -154,8 +152,7 @@ export class ServicesController {
   @Get(':id/booking-types')
   @Public()
   async getBookingTypes(@Param('id', uuidPipe) id: string) {
-    const data = await this.bookingTypeService.getByService(id);
-    return { success: true, data };
+    return this.bookingTypeService.getByService(id);
   }
 
   @Put(':id/booking-types')
@@ -164,7 +161,6 @@ export class ServicesController {
     @Param('id', uuidPipe) id: string,
     @Body() dto: SetServiceBookingTypesDto,
   ) {
-    const data = await this.bookingTypeService.setBookingTypes(id, dto);
-    return { success: true, data };
+    return this.bookingTypeService.setBookingTypes(id, dto);
   }
 }
