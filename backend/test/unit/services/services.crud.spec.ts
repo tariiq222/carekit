@@ -7,6 +7,7 @@ import { NotFoundException } from '@nestjs/common';
 import { ServicesService } from '../../../src/modules/services/services.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { CacheService } from '../../../src/common/services/cache.service.js';
+import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-forms.service.js';
 import {
   createMockPrisma,
   createMockCache,
@@ -21,6 +22,7 @@ async function createModule(mockPrisma: ReturnType<typeof createMockPrisma>) {
       ServicesService,
       { provide: PrismaService, useValue: mockPrisma },
       { provide: CacheService, useValue: createMockCache() },
+      { provide: IntakeFormsService, useValue: { listForms: jest.fn() } },
     ],
   }).compile();
   return module.get<ServicesService>(ServicesService);

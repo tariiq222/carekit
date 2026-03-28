@@ -23,6 +23,8 @@ import {
 } from '@nestjs/common';
 import { ServicesService } from '../services.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { CacheService } from '../../../common/services/cache.service.js';
+import { IntakeFormsService } from '../../intake-forms/intake-forms.service.js';
 
 // ---------------------------------------------------------------------------
 // DTO interfaces (replaced by actual imports once backend-dev creates them)
@@ -147,6 +149,8 @@ describe('ServicesService', () => {
       providers: [
         ServicesService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: CacheService, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() } },
+        { provide: IntakeFormsService, useValue: { listForms: jest.fn() } },
       ],
     }).compile();
 
@@ -299,6 +303,26 @@ describe('ServicesService', () => {
       await expect(
         service.deleteCategory(mockCategory.id),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('should allow deleting a category whose services are all soft-deleted', async () => {
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      // All services are soft-deleted — count of ACTIVE services = 0
+      mockPrismaService.service.count.mockResolvedValue(0);
+      mockPrismaService.serviceCategory.delete.mockResolvedValue(mockCategory);
+
+      const result = await service.deleteCategory(mockCategory.id);
+
+      expect(result).toEqual({ deleted: true });
+      // Verify the count query excludes soft-deleted services
+      expect(mockPrismaService.service.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            categoryId: mockCategory.id,
+            deletedAt: null,
+          }),
+        }),
+      );
     });
   });
 

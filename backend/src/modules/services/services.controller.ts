@@ -19,7 +19,6 @@ import { ServicesService } from './services.service.js';
 import { DurationOptionsService } from './duration-options.service.js';
 import { ServiceBookingTypeService } from './service-booking-type.service.js';
 import { ServicePractitionersService } from './service-practitioners.service.js';
-import { IntakeFormsService } from '../intake-forms/intake-forms.service.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
@@ -39,7 +38,6 @@ export class ServicesController {
     private readonly durationOptionsService: DurationOptionsService,
     private readonly bookingTypeService: ServiceBookingTypeService,
     private readonly practitionersService: ServicePractitionersService,
-    private readonly intakeFormsService: IntakeFormsService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -113,7 +111,7 @@ export class ServicesController {
   @Get(':id/intake-forms/all')
   @Public()
   async getIntakeForms(@Param('id', uuidPipe) id: string) {
-    return this.intakeFormsService.listForms({ serviceId: id });
+    return this.servicesService.getIntakeForms(id);
   }
 
   // ═══════════════════════════════════════════════════════════════

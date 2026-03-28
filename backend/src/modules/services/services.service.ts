@@ -12,6 +12,7 @@ import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
+import { IntakeFormsService } from '../intake-forms/intake-forms.service.js';
 interface ServiceListQuery {
   page?: number;
   perPage?: number;
@@ -26,6 +27,7 @@ export class ServicesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
+    private readonly intakeForms: IntakeFormsService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -283,6 +285,10 @@ export class ServicesService {
 
     await this.invalidateServicesCache();
     return { deleted: true };
+  }
+
+  async getIntakeForms(serviceId: string) {
+    return this.intakeForms.listForms({ serviceId });
   }
 
   // ═══════════════════════════════════════════════════════════════
