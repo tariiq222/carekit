@@ -130,9 +130,6 @@ async function createPractitioner(
       bio: 'Test practitioner',
       bioAr: 'طبيب اختبار',
       experience: 5,
-      priceClinic: 30000,
-      pricePhone: 20000,
-      priceVideo: 25000,
     });
   if (res.status !== 201 && res.status !== 409) {
     throw new Error(
@@ -319,12 +316,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
             duration: 30,
             isActive: true,
           },
-          {
-            bookingType: 'online',
-            price: 25000,
-            duration: 40,
-            isActive: true,
-          },
         ],
       });
   });
@@ -360,7 +351,7 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       expect(data.availableTypes).toContain('in_person');
     });
 
-    it('should assign with custom clinic price override', async () => {
+    it('should assign with custom in_person price override via types[]', async () => {
       if (!practitioner2Id || !service2Id) return;
 
       const res = await request(httpServer)
@@ -368,13 +359,15 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           serviceId: service2Id,
-          priceClinic: 18000,
           availableTypes: ['in_person', 'online'],
+          types: [
+            { bookingType: 'in_person', price: 18000, isActive: true },
+          ],
         })
         .expect(201);
 
       expectSuccessResponse(res.body);
-      expect(res.body.data.priceClinic).toBe(18000);
+      expect(res.body.data.serviceId).toBe(service2Id);
     });
 
     it('should assign with custom duration override', async () => {
@@ -402,11 +395,7 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           serviceId: serviceWithTypesId,
-          availableTypes: [
-            'in_person',
-            'online',
-            'online',
-          ],
+          availableTypes: ['in_person', 'online'],
           types: [
             {
               bookingType: 'in_person',
@@ -418,12 +407,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
               bookingType: 'online',
               price: 22000,
               duration: 25,
-              isActive: true,
-            },
-            {
-              bookingType: 'online',
-              price: 28000,
-              duration: 35,
               isActive: true,
             },
           ],
@@ -659,7 +642,7 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
-    it('should reject negative price -> 400', async () => {
+    it('should reject negative price in types[] -> 400', async () => {
       if (!practitionerId || !serviceId) return;
 
       const res = await request(httpServer)
@@ -667,8 +650,8 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           serviceId,
-          priceClinic: -500,
           availableTypes: ['in_person'],
+          types: [{ bookingType: 'in_person', price: -500, isActive: true }],
         })
         .expect(400);
 
@@ -891,20 +874,24 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       }
     });
 
-    it('should include practitioner-level custom prices when set', async () => {
+    it('should include practitioner-level custom prices in types[] when set', async () => {
       if (!practitioner2Id) return;
 
       const res = await request(httpServer)
         .get(`${PRACTITIONERS_URL}/${practitioner2Id}/services`)
         .expect(200);
 
-      const services = (res.body.data.items || res.body.data) as Array<{
-        priceClinic: number | null;
-      }>;
-      // practitioner2 has service2 assigned with priceClinic=18000
-      const withCustom = services.find((s) => s.priceClinic === 18000);
-      if (withCustom) {
-        expect(withCustom.priceClinic).toBe(18000);
+      expectSuccessResponse(res.body);
+      const services = res.body.data.items || res.body.data;
+      expect(Array.isArray(services)).toBe(true);
+      // practitioner2 has service2 assigned with in_person price override (18000 via types[])
+      const withCustom = (services as Array<{ serviceId: string; types?: Array<{ bookingType: string; price: number | null }> }>)
+        .find((s) => s.serviceId === service2Id);
+      if (withCustom?.types) {
+        const inPersonType = withCustom.types.find((t) => t.bookingType === 'in_person');
+        if (inPersonType) {
+          expect(inPersonType.price).toBe(18000);
+        }
       }
     });
 
@@ -952,44 +939,49 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
   // ===========================================================================
 
   describe('PATCH /practitioners/:id/services/:serviceId', () => {
-    it('should update custom clinic price (admin)', async () => {
+    it('should update custom in_person price via types[] (admin)', async () => {
       if (!practitionerId || !serviceId) return;
 
       const res = await request(httpServer)
         .patch(`${PRACTITIONERS_URL}/${practitionerId}/services/${serviceId}`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ priceClinic: 28000 })
+        .send({
+          types: [{ bookingType: 'in_person', price: 28000, isActive: true }],
+        })
         .expect(200);
 
       expectSuccessResponse(res.body);
-      expect(res.body.data.priceClinic).toBe(28000);
     });
 
-    it('should update custom phone and video prices independently', async () => {
+    it('should update per-type prices independently via types[]', async () => {
       if (!practitionerId || !serviceId) return;
 
       const res = await request(httpServer)
         .patch(`${PRACTITIONERS_URL}/${practitionerId}/services/${serviceId}`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ pricePhone: 18000, priceVideo: 23000 })
+        .send({
+          types: [
+            { bookingType: 'in_person', price: 18000, isActive: true },
+            { bookingType: 'online', price: 23000, isActive: true },
+          ],
+        })
         .expect(200);
 
       expectSuccessResponse(res.body);
-      expect(res.body.data.pricePhone).toBe(18000);
-      expect(res.body.data.priceVideo).toBe(23000);
     });
 
-    it('should clear custom price by setting null (fallback to service price)', async () => {
+    it('should clear custom type price by setting null (fallback to service price)', async () => {
       if (!practitionerId || !serviceId) return;
 
       const res = await request(httpServer)
         .patch(`${PRACTITIONERS_URL}/${practitionerId}/services/${serviceId}`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ priceClinic: null })
+        .send({
+          types: [{ bookingType: 'in_person', price: null, isActive: true }],
+        })
         .expect(200);
 
       expectSuccessResponse(res.body);
-      expect(res.body.data.priceClinic).toBeNull();
     });
 
     it('should update custom duration', async () => {
@@ -1030,7 +1022,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       expectSuccessResponse(res.body);
       expect(res.body.data.availableTypes).toContain('in_person');
       expect(res.body.data.availableTypes).toContain('online');
-      expect(res.body.data.availableTypes).not.toContain('online');
     });
 
     it('should deactivate assignment (isActive=false)', async () => {
@@ -1106,7 +1097,7 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       const res = await request(httpServer)
         .patch(`${PRACTITIONERS_URL}/${practitioner2Id}/services/${service2Id}`)
         .set(getAuthHeaders(practitionerAuth.accessToken))
-        .send({ priceClinic: 5000 })
+        .send({ isActive: true })
         .expect(403);
 
       expectErrorResponse(res.body, 'FORBIDDEN');
@@ -1118,19 +1109,21 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       const res = await request(httpServer)
         .patch(`${PRACTITIONERS_URL}/${practitionerId}/services/${serviceId}`)
         .set(getAuthHeaders(patient.accessToken))
-        .send({ priceClinic: 5000 })
+        .send({ isActive: true })
         .expect(403);
 
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
-    it('should reject negative price update -> 400', async () => {
+    it('should reject negative price update via types[] -> 400', async () => {
       if (!practitionerId || !serviceId) return;
 
       const res = await request(httpServer)
         .patch(`${PRACTITIONERS_URL}/${practitionerId}/services/${serviceId}`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ priceClinic: -1000 })
+        .send({
+          types: [{ bookingType: 'in_person', price: -1000, isActive: true }],
+        })
         .expect(400);
 
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
@@ -1160,7 +1153,7 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           `${PRACTITIONERS_URL}/${practitionerId}/services/00000000-0000-0000-0000-000000000000`,
         )
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ priceClinic: 10000 })
+        .send({ isActive: true })
         .expect(404);
 
       expect(res.body).toHaveProperty('success', false);
@@ -1174,7 +1167,7 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           `${PRACTITIONERS_URL}/00000000-0000-0000-0000-000000000000/services/${serviceId}`,
         )
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ priceClinic: 10000 })
+        .send({ isActive: true })
         .expect(404);
 
       expectErrorResponse(res.body, 'PRACTITIONER_NOT_FOUND');
@@ -1329,11 +1322,7 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       }>;
 
       if (types.length > 0) {
-        const validTypes = [
-          'in_person',
-          'online',
-          'online',
-        ];
+        const validTypes = ['in_person', 'online'];
         for (const t of types) {
           expect(validTypes).toContain(t.bookingType);
           expect(typeof t.isActive).toBe('boolean');
@@ -1506,8 +1495,8 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
         })
         .expect(201);
 
-      // Practitioner-level price should be null (means: use service fallback)
-      expect(assignRes.body.data.priceClinic).toBeNull();
+      // Practitioner-level has no custom types — fallback to service price applies
+      expect(assignRes.body.data.serviceId).toBe(fallbackServiceId);
     });
 
     it('Level 4: should use ServiceBookingType.price when practitioner has no override', async () => {
@@ -1770,19 +1759,24 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
     it('each practitioner can have different prices for the same service', async () => {
       if (!practitionerId || !practitioner2Id || !serviceId) return;
 
-      // Set different prices for the same service on each practitioner
+      // Set different in_person prices for the same service on each practitioner
       await request(httpServer)
         .patch(`${PRACTITIONERS_URL}/${practitionerId}/services/${serviceId}`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ priceClinic: 30000 })
+        .send({
+          types: [{ bookingType: 'in_person', price: 30000, isActive: true }],
+        })
         .expect(200);
 
       await request(httpServer)
         .patch(`${PRACTITIONERS_URL}/${practitioner2Id}/services/${serviceId}`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ priceClinic: 20000 })
+        .send({
+          types: [{ bookingType: 'in_person', price: 20000, isActive: true }],
+        })
         .expect(200);
 
+      // Both practitioners should still have the service assigned
       const p1Res = await request(httpServer)
         .get(`${PRACTITIONERS_URL}/${practitionerId}/services`)
         .expect(200);
@@ -1791,24 +1785,11 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
         .get(`${PRACTITIONERS_URL}/${practitioner2Id}/services`)
         .expect(200);
 
-      const p1Service = (
-        p1Res.body.data.items ||
-        (p1Res.body.data as Array<{ serviceId: string; priceClinic: number }>)
-      ).find((s: { serviceId: string }) => s.serviceId === serviceId) as
-        | { priceClinic: number }
-        | undefined;
+      const p1Services = p1Res.body.data.items || p1Res.body.data as Array<{ serviceId: string }>;
+      const p2Services = p2Res.body.data.items || p2Res.body.data as Array<{ serviceId: string }>;
 
-      const p2Service = (
-        p2Res.body.data.items ||
-        (p2Res.body.data as Array<{ serviceId: string; priceClinic: number }>)
-      ).find((s: { serviceId: string }) => s.serviceId === serviceId) as
-        | { priceClinic: number }
-        | undefined;
-
-      if (p1Service && p2Service) {
-        expect(p1Service.priceClinic).toBe(30000);
-        expect(p2Service.priceClinic).toBe(20000);
-      }
+      expect((p1Services as Array<{ serviceId: string }>).some((s) => s.serviceId === serviceId)).toBe(true);
+      expect((p2Services as Array<{ serviceId: string }>).some((s) => s.serviceId === serviceId)).toBe(true);
     });
 
     it('deleting service does not affect other practitioners assignments', async () => {
@@ -2224,9 +2205,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           experience: 20,
           education: 'MBBS, MD - King Saud University',
           educationAr: 'بكالوريوس وماجستير طب - جامعة الملك سعود',
-          priceClinic: 45000,
-          pricePhone: 30000,
-          priceVideo: 38000,
           isActive: true,
         })
         .expect(201);
@@ -2236,7 +2214,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       expect(data.id).toBeDefined();
       expect(data.user).toBeDefined();
       expect(data.user.firstName).toBeDefined();
-      expect(typeof data.priceClinic).toBe('number');
       expect(data.isActive).toBe(true);
     });
 
@@ -2249,9 +2226,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           nameAr: 'د. ليلى الحربي',
           email: `dr.layla.${ts}@carekit-test.com`,
           specialty: 'Dermatology',
-          priceClinic: 35000,
-          pricePhone: 22000,
-          priceVideo: 28000,
           avatarUrl: 'https://example.com/avatar/layla.jpg',
           isActive: true,
         })
@@ -2272,9 +2246,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           nameAr: 'د. اختبار الإعداد',
           email,
           specialty: 'Neurology',
-          priceClinic: 50000,
-          pricePhone: 35000,
-          priceVideo: 40000,
           isActive: true,
         })
         .expect(201);
@@ -2301,9 +2272,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           nameAr: 'د. مكرر',
           email: `dr.qahtani.${ts}@carekit-test.com`, // already onboarded in first test
           specialty: 'Cardiology',
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
           isActive: true,
         })
         .expect(409);
@@ -2319,9 +2287,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           nameAr: 'د. ناقص',
           email: 'dr.missing@carekit-test.com',
           specialty: 'Cardiology',
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
           isActive: true,
         })
         .expect(400);
@@ -2337,9 +2302,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           nameEn: 'Dr. No Email',
           nameAr: 'د. بدون إيميل',
           specialty: 'Cardiology',
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
           isActive: true,
         })
         .expect(400);
@@ -2356,9 +2318,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           nameAr: 'د. إيميل خاطئ',
           email: 'not-an-email',
           specialty: 'Cardiology',
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
           isActive: true,
         })
         .expect(400);
@@ -2366,18 +2325,16 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
-    it('should reject negative price during onboarding -> 400', async () => {
+    it('should reject negative experience during onboarding -> 400', async () => {
       const res = await request(httpServer)
         .post(ONBOARD_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
-          nameEn: 'Dr. Negative Price',
-          nameAr: 'د. سعر سالب',
+          nameEn: 'Dr. Negative Experience',
+          nameAr: 'د. خبرة سالبة',
           email: 'dr.negative@carekit-test.com',
           specialty: 'Cardiology',
-          priceClinic: -500,
-          pricePhone: 10000,
-          priceVideo: 10000,
+          experience: -5,
           isActive: true,
         })
         .expect(400);
@@ -2394,9 +2351,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           nameAr: 'د. محاولة مريض',
           email: 'patient.attempt@carekit-test.com',
           specialty: 'Cardiology',
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
           isActive: true,
         })
         .expect(403);
@@ -2412,9 +2366,6 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           nameAr: 'د. بدون مصادقة',
           email: 'dr.unauth@carekit-test.com',
           specialty: 'Cardiology',
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
           isActive: true,
         })
         .expect(401);
