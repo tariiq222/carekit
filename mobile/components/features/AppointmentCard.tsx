@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { Building2, Phone, Video } from 'lucide-react-native';
+import { Building2, Video } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/theme/components/ThemedText';
@@ -10,15 +10,15 @@ import { useTheme } from '@/theme/useTheme';
 import type { Booking, BookingType } from '@/types/models';
 
 const TYPE_ICON = {
-  clinic_visit: Building2,
-  phone_consultation: Phone,
-  video_consultation: Video,
+  in_person: Building2,
+  online: Video,
+  walk_in: Building2,
 };
 
 const TYPE_COLOR = {
-  clinic_visit: '#1D4ED8',
-  phone_consultation: '#059669',
-  video_consultation: '#7C3AED',
+  in_person: '#1D4ED8',
+  online: '#7C3AED',
+  walk_in: '#059669',
 };
 
 interface AppointmentCardProps {

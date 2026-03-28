@@ -11,7 +11,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Building2,
-  Phone,
   Video,
   Check,
 } from 'lucide-react-native';
@@ -31,7 +30,7 @@ import type { BookingType } from '@/types/models';
  * Booking Flow — Step 1: Select Visit Type
  * Route: /(patient)/booking/[serviceId]
  *
- * 3 booking types: clinic_visit, phone_consultation, video_consultation
+ * 2 booking types: in_person, online
  * Each shown as a selectable card with icon, name, description, and price.
  */
 
@@ -56,28 +55,20 @@ export default function BookingTypeScreen() {
 
   const types: TypeOption[] = [
     {
-      type: 'clinic_visit',
+      type: 'in_person',
       icon: Building2,
       color: '#1D4ED8',
-      labelKey: 'booking.clinicVisit',
-      descKey: 'booking.clinicVisitDesc',
+      labelKey: 'booking.inPerson',
+      descKey: 'booking.inPersonDesc',
       price: 250,
     },
     {
-      type: 'phone_consultation',
-      icon: Phone,
-      color: '#059669',
-      labelKey: 'booking.phoneConsultation',
-      descKey: 'booking.phoneConsultationDesc',
-      price: 180,
-    },
-    {
-      type: 'video_consultation',
+      type: 'online',
       icon: Video,
       color: '#7C3AED',
-      labelKey: 'booking.videoConsultation',
-      descKey: 'booking.videoConsultationDesc',
-      price: 220,
+      labelKey: 'booking.online',
+      descKey: 'booking.onlineDesc',
+      price: 200,
     },
   ];
 

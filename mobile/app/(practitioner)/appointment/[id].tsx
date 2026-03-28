@@ -14,12 +14,10 @@ import {
   ChevronRight,
   ChevronLeft,
   Building2,
-  Phone,
   Video,
   Calendar,
   Clock,
   Check,
-  PhoneCall,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -34,9 +32,9 @@ import { bookingsService } from '@/services/bookings';
 import type { Booking } from '@/types/models';
 
 const TYPE_META: Record<string, { icon: React.ElementType; color: string }> = {
-  clinic_visit: { icon: Building2, color: '#1D4ED8' },
-  phone_consultation: { icon: Phone, color: '#059669' },
-  video_consultation: { icon: Video, color: '#7C3AED' },
+  in_person: { icon: Building2, color: '#1D4ED8' },
+  online: { icon: Video, color: '#7C3AED' },
+  walk_in: { icon: Building2, color: '#059669' },
 };
 
 export default function DoctorAppointmentDetailScreen() {
@@ -69,7 +67,7 @@ export default function DoctorAppointmentDetailScreen() {
 
   if (!booking) return null;
 
-  const meta = TYPE_META[booking.type] ?? TYPE_META.clinic_visit;
+  const meta = TYPE_META[booking.type] ?? TYPE_META.in_person;
   const TypeIcon = meta.icon;
   const statusLabels: Record<string, string> = {
     pending: t('appointments.pending'),
@@ -120,7 +118,7 @@ export default function DoctorAppointmentDetailScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <ThemedText variant="body" style={{ fontWeight: '500' }}>
-                {t(`booking.${booking.type === 'clinic_visit' ? 'clinicVisit' : booking.type === 'phone_consultation' ? 'phoneConsultation' : 'videoConsultation'}`)}
+                {t(`booking.${booking.type === 'in_person' ? 'inPerson' : booking.type === 'walk_in' ? 'walkIn' : 'online'}`)}
               </ThemedText>
             </View>
           </View>
@@ -153,7 +151,7 @@ export default function DoctorAppointmentDetailScreen() {
               {t('doctor.markCompleted')}
             </ThemedButton>
           )}
-          {booking.type === 'video_consultation' && booking.zoomLink && (
+          {booking.type === 'online' && booking.zoomLink && (
             <ThemedButton
               onPress={() => Linking.openURL(booking.zoomLink!)}
               variant="primary"
@@ -161,17 +159,6 @@ export default function DoctorAppointmentDetailScreen() {
               full
             >
               {t('doctor.startMeeting')}
-            </ThemedButton>
-          )}
-          {booking.type === 'phone_consultation' && (
-            <ThemedButton
-              onPress={() => Linking.openURL(`tel:${booking.patient?.phone ?? ''}`)}
-              variant="outline"
-              size="lg"
-              full
-              icon={<PhoneCall size={16} color="#1D4ED8" />}
-            >
-              {t('doctor.callPatient')}
             </ThemedButton>
           )}
         </View>

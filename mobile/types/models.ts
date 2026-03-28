@@ -1,5 +1,5 @@
 /** Booking types */
-export type BookingType = 'clinic_visit' | 'phone_consultation' | 'video_consultation' | 'walk_in';
+export type BookingType = 'in_person' | 'online' | 'walk_in';
 export type BookingStatus =
   | 'pending'
   | 'confirmed'
@@ -37,9 +37,6 @@ export interface Practitioner {
   bio?: string;
   bioAr?: string;
   qualifications?: string[];
-  priceClinic: number;
-  pricePhone: number;
-  priceVideo: number;
   rating: number;
   reviewCount: number;
   isAvailableToday?: boolean;

@@ -12,7 +12,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Building2,
-  Phone,
   Video,
   Calendar,
   Clock,
@@ -29,9 +28,9 @@ import { bookingsService } from '@/services/bookings';
 import type { BookingType } from '@/types/models';
 
 const TYPE_META: Record<string, { icon: React.ElementType; color: string }> = {
-  clinic_visit: { icon: Building2, color: '#1D4ED8' },
-  phone_consultation: { icon: Phone, color: '#059669' },
-  video_consultation: { icon: Video, color: '#7C3AED' },
+  in_person: { icon: Building2, color: '#1D4ED8' },
+  online: { icon: Video, color: '#7C3AED' },
+  walk_in: { icon: Building2, color: '#059669' },
 };
 
 export default function BookingConfirmScreen() {
@@ -50,11 +49,11 @@ export default function BookingConfirmScreen() {
   const [notes, setNotes] = useState('');
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
-  const meta = TYPE_META[params.type ?? 'clinic_visit'];
+  const meta = TYPE_META[params.type ?? 'in_person'];
   const TypeIcon = meta.icon;
 
   // Price calculation (placeholder — real prices come from API)
-  const basePrice = params.type === 'phone_consultation' ? 180 : params.type === 'video_consultation' ? 220 : 250;
+  const basePrice = params.type === 'online' ? 200 : 250;
   const vat = Math.round(basePrice * 0.15);
   const total = basePrice + vat;
 
@@ -67,14 +66,14 @@ export default function BookingConfirmScreen() {
       })
     : '';
 
-  const typeLabel = t(`booking.${params.type === 'clinic_visit' ? 'clinicVisit' : params.type === 'phone_consultation' ? 'phoneConsultation' : 'videoConsultation'}`);
+  const typeLabel = t(`booking.${params.type === 'in_person' ? 'inPerson' : params.type === 'walk_in' ? 'walkIn' : 'online'}`);
 
   const handleConfirm = useCallback(async () => {
     setLoading(true);
     try {
       const res = await bookingsService.create({
         practitionerId: params.practitionerId ?? '',
-        type: (params.type ?? 'clinic_visit') as BookingType,
+        type: (params.type ?? 'in_person') as BookingType,
         date: params.date ?? '',
         startTime: params.time ?? '',
         notes: notes || undefined,
@@ -86,7 +85,7 @@ export default function BookingConfirmScreen() {
           params: {
             bookingId: res.data?.id ?? '',
             total: String(total),
-            type: params.type ?? 'clinic_visit',
+            type: params.type ?? 'in_person',
           },
         });
       }

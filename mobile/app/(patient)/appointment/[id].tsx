@@ -14,7 +14,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Building2,
-  Phone,
   Video,
   Calendar,
   Clock,
@@ -35,9 +34,9 @@ import { bookingsService } from '@/services/bookings';
 import type { Booking } from '@/types/models';
 
 const TYPE_META: Record<string, { icon: React.ElementType; color: string }> = {
-  clinic_visit: { icon: Building2, color: '#1D4ED8' },
-  phone_consultation: { icon: Phone, color: '#059669' },
-  video_consultation: { icon: Video, color: '#7C3AED' },
+  in_person: { icon: Building2, color: '#1D4ED8' },
+  online: { icon: Video, color: '#7C3AED' },
+  walk_in: { icon: Building2, color: '#059669' },
 };
 
 export default function AppointmentDetailScreen() {
@@ -70,7 +69,7 @@ export default function AppointmentDetailScreen() {
 
   if (!booking) return null;
 
-  const meta = TYPE_META[booking.type] ?? TYPE_META.clinic_visit;
+  const meta = TYPE_META[booking.type] ?? TYPE_META.in_person;
   const TypeIcon = meta.icon;
   const practName = `${booking.practitioner.user.firstName} ${booking.practitioner.user.lastName}`;
   const statusLabels: Record<string, string> = {
@@ -135,7 +134,7 @@ export default function AppointmentDetailScreen() {
 
         {/* Details */}
         <ThemedCard style={styles.detailCard}>
-          <DetailRow icon={TypeIcon} color={meta.color} label={t('appointments.type')} value={t(`booking.${booking.type === 'clinic_visit' ? 'clinicVisit' : booking.type === 'phone_consultation' ? 'phoneConsultation' : 'videoConsultation'}`)} />
+          <DetailRow icon={TypeIcon} color={meta.color} label={t('appointments.type')} value={t(`booking.${booking.type === 'in_person' ? 'inPerson' : booking.type === 'walk_in' ? 'walkIn' : 'online'}`)} />
           <View style={[styles.divider, { backgroundColor: theme.colors.surfaceLow }]} />
           <DetailRow icon={Calendar} color="#1D4ED8" label={t('appointments.date')} value={formattedDate} />
           <View style={[styles.divider, { backgroundColor: theme.colors.surfaceLow }]} />
@@ -146,7 +145,7 @@ export default function AppointmentDetailScreen() {
 
         {/* Actions */}
         <View style={styles.actions}>
-          {booking.type === 'video_consultation' && booking.zoomLink && booking.status === 'confirmed' && (
+          {booking.type === 'online' && booking.zoomLink && booking.status === 'confirmed' && (
             <ThemedButton onPress={() => Linking.openURL(booking.zoomLink!)} variant="primary" size="lg" full>
               {t('appointments.joinZoom')}
             </ThemedButton>

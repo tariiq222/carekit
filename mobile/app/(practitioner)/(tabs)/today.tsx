@@ -10,7 +10,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Stethoscope,
   Building2,
-  Phone,
   Video,
   Clock,
   Check,
@@ -28,15 +27,15 @@ import { bookingsService } from '@/services/bookings';
 import type { Booking } from '@/types/models';
 
 const TYPE_ICON = {
-  clinic_visit: Building2,
-  phone_consultation: Phone,
-  video_consultation: Video,
+  in_person: Building2,
+  online: Video,
+  walk_in: Building2,
 };
 
 const TYPE_COLOR = {
-  clinic_visit: '#1D4ED8',
-  phone_consultation: '#059669',
-  video_consultation: '#7C3AED',
+  in_person: '#1D4ED8',
+  online: '#7C3AED',
+  walk_in: '#059669',
 };
 
 export default function TodayScreen() {
