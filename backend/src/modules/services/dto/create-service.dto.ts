@@ -68,6 +68,7 @@ export class CreateServiceDto {
 
   @ApiPropertyOptional({ description: 'HugeIcon name, e.g. StethoscopeIcon' })
   @IsOptional()
+  @ValidateIf((o: CreateServiceDto) => o.iconName !== null)
   @IsString()
   @MaxLength(100)
   iconName?: string | null;
@@ -132,17 +133,19 @@ export class CreateServiceDto {
 
   @ApiPropertyOptional({ minimum: 0, maximum: 1440 })
   @IsOptional()
+  @ValidateIf((o: CreateServiceDto) => o.minLeadMinutes !== null)
   @IsInt()
   @Min(0)
   @Max(1440)
-  minLeadMinutes?: number;
+  minLeadMinutes?: number | null;
 
   @ApiPropertyOptional({ minimum: 1, maximum: 365 })
   @IsOptional()
+  @ValidateIf((o: CreateServiceDto) => o.maxAdvanceDays !== null)
   @IsInt()
   @Min(1)
   @Max(365)
-  maxAdvanceDays?: number;
+  maxAdvanceDays?: number | null;
 
   @ApiPropertyOptional({ type: [String], description: 'Practitioner UUIDs to link atomically on create' })
   @IsOptional()
