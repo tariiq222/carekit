@@ -10,12 +10,14 @@ import {
   PERMISSIONS_KEY,
   RequiredPermission,
 } from '../decorators/check-permissions.decorator.js';
+import { PermissionCacheService } from '../permission-cache.service.js';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private prisma: PrismaService,
+    private permissionCache: PermissionCacheService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -40,9 +42,30 @@ export class PermissionsGuard implements CanActivate {
       });
     }
 
-    // Fetch user's permissions from DB
+    const userPermissions = await this.resolvePermissions(user.id);
+
+    // Check if user has ALL required permissions
+    for (const required of requiredPermissions) {
+      if (!userPermissions.has(`${required.module}:${required.action}`)) {
+        throw new ForbiddenException({
+          statusCode: 403,
+          message: 'You do not have permission to perform this action',
+          error: 'FORBIDDEN',
+        });
+      }
+    }
+
+    return true;
+  }
+
+  private async resolvePermissions(userId: string): Promise<Set<string>> {
+    // Try cache first
+    const cached = await this.permissionCache.get(userId);
+    if (cached) return cached;
+
+    // Cache miss — fetch from DB
     const dbUser = await this.prisma.user.findUnique({
-      where: { id: user.id },
+      where: { id: userId },
       include: {
         userRoles: {
           include: {
@@ -66,25 +89,15 @@ export class PermissionsGuard implements CanActivate {
       });
     }
 
-    // Build user's permission set
-    const userPermissions = new Set<string>();
+    const permissions = new Set<string>();
     for (const ur of dbUser.userRoles) {
       for (const rp of ur.role.rolePermissions) {
-        userPermissions.add(`${rp.permission.module}:${rp.permission.action}`);
+        permissions.add(`${rp.permission.module}:${rp.permission.action}`);
       }
     }
 
-    // Check if user has ALL required permissions
-    for (const required of requiredPermissions) {
-      if (!userPermissions.has(`${required.module}:${required.action}`)) {
-        throw new ForbiddenException({
-          statusCode: 403,
-          message: 'You do not have permission to perform this action',
-          error: 'FORBIDDEN',
-        });
-      }
-    }
-
-    return true;
+    // Store in cache for subsequent requests
+    await this.permissionCache.set(userId, permissions);
+    return permissions;
   }
 }

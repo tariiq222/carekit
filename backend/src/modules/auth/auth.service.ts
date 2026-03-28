@@ -17,6 +17,7 @@ import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';
 import { EmailService } from '../email/email.service.js';
 import { AuthCacheService } from './auth-cache.service.js';
+import { PermissionCacheService } from './permission-cache.service.js';
 import { PatientWalkInService } from '../patients/patient-walk-in.service.js';
 
 @Injectable()
@@ -29,6 +30,7 @@ export class AuthService {
     private readonly otpService: OtpService,
     private readonly emailService: EmailService,
     private readonly authCache: AuthCacheService,
+    private readonly permissionCache: PermissionCacheService,
     private readonly walkInService: PatientWalkInService,
   ) {}
 
@@ -192,9 +194,10 @@ export class AuthService {
       data: { passwordHash: newHash },
     });
 
-    // Invalidate all sessions: revoke refresh tokens + clear auth cache
+    // Invalidate all sessions: revoke refresh tokens + clear auth/permission caches
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
     await this.authCache.invalidate(userId);
+    await this.permissionCache.invalidate(userId);
   }
 
   async getUserProfile(userId: string): Promise<UserPayload> {

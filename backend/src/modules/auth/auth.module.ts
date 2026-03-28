@@ -14,6 +14,7 @@ import { PatientsModule } from '../patients/patients.module.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 import { OtpThrottleRedisService } from '../../common/services/otp-throttle-redis.service.js';
 import { EmailThrottleGuard } from '../../common/guards/email-throttle.guard.js';
+import { PermissionCacheService } from './permission-cache.service.js';
 
 @Module({
   imports: [
@@ -42,7 +43,8 @@ import { EmailThrottleGuard } from '../../common/guards/email-throttle.guard.js'
     JwtStrategy,
     OtpThrottleRedisService,
     EmailThrottleGuard,
+    PermissionCacheService,
   ],
-  exports: [AuthService, AuthCacheService, TokenService, OtpService, CookieService, JwtStrategy, PassportModule],
+  exports: [AuthService, AuthCacheService, TokenService, OtpService, CookieService, JwtStrategy, PassportModule, PermissionCacheService],
 })
 export class AuthModule {}
