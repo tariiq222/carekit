@@ -163,3 +163,29 @@ CareKit should feel like it belongs in a well-designed Apple environment, not a 
 4. **Speed is a feature** — optimistic updates, skeletons not spinners, instant-feeling interactions
 5. **Accessible by default** — WCAG 2.1 AAA target; contrast, focus states, keyboard nav, reduced motion are correctness not polish
 6. **Tokens, not colors** — always use CSS custom properties; the white-label system depends on it
+
+### Page Anatomy — The Law (Dashboard List Pages)
+
+Every list page follows this exact structure. No exceptions.
+
+```text
+Breadcrumbs
+PageHeader: Title + Description | [Export outline] [+ Add primary]
+ErrorBanner (only if error)
+StatsGrid: 4× StatCard (Total/primary · Active/success · Inactive/warning · New/accent)
+FilterBar (glass): [Search] [Status ▼] [Other filters ▼] [Reset]
+DataTable (no Card wrapper, no background)
+Pagination (only if meta.totalPages > 1)
+Dialogs / Sheets (at bottom)
+```
+
+**Key rules:**
+
+- Search input lives in **FilterBar**, not PageHeader
+- Export button → `variant="outline"` in PageHeader, left of Add button
+- DataTable has **no Card wrapper** — sits bare in the page flow
+- Table action buttons → **icon-only** (size-9, rounded-sm) + Tooltip, no text labels
+- No sub-header rows between FilterBar and DataTable
+- Skeleton loading: 4× `h-[100px]` for StatsGrid, 5× `h-12` for table rows
+- Dates → `toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" })`
+- Status badges → `bg-success/10 text-success border-success/30` (active) / `bg-muted text-muted-foreground` (inactive)

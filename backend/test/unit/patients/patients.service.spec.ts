@@ -12,8 +12,12 @@ const mockPatient = {
   email: 'ahmed@example.com',
   phone: '+966501234567',
   gender: 'male',
+  isActive: true,
+  avatarUrl: null,
+  accountType: 'full',
+  claimedAt: null,
   createdAt: new Date('2026-01-15'),
-  _count: { bookingsAsPatient: 5 },
+  bookingsAsPatient: [],
 };
 
 const mockPrismaService: any = {
@@ -27,7 +31,9 @@ const mockPrismaService: any = {
     upsert: jest.fn(),
   },
   booking: {
+    findMany: jest.fn(),
     groupBy: jest.fn(),
+    count: jest.fn(),
   },
   payment: {
     aggregate: jest.fn(),
@@ -49,7 +55,13 @@ describe('PatientsService', () => {
     service = module.get<PatientsService>(PatientsService);
   });
 
+  // ────────────────────────────────────────────
   describe('findAll', () => {
+    beforeEach(() => {
+      // Upcoming bookings query — empty by default
+      mockPrismaService.booking.findMany.mockResolvedValue([]);
+    });
+
     it('returns paginated data with default page=1 perPage=20', async () => {
       mockPrismaService.user.count.mockResolvedValue(3);
       mockPrismaService.user.findMany.mockResolvedValue([mockPatient]);
@@ -58,7 +70,7 @@ describe('PatientsService', () => {
 
       expect(result.meta.page).toBe(1);
       expect(result.meta.perPage).toBe(20);
-      expect(result.items).toEqual([mockPatient]);
+      expect(result.items).toHaveLength(1);
     });
 
     it('returns correct totalPages=3 when total=50 and perPage=20', async () => {
@@ -111,7 +123,7 @@ describe('PatientsService', () => {
       expect(callArgs.where).not.toHaveProperty('OR');
     });
 
-    it('returns empty array when no patients found', async () => {
+    it('returns empty items when no patients found', async () => {
       mockPrismaService.user.count.mockResolvedValue(0);
       mockPrismaService.user.findMany.mockResolvedValue([]);
 
@@ -133,8 +145,89 @@ describe('PatientsService', () => {
         }),
       );
     });
+
+    it('applies isActive filter when provided', async () => {
+      mockPrismaService.user.count.mockResolvedValue(2);
+      mockPrismaService.user.findMany.mockResolvedValue([]);
+
+      await service.findAll({ isActive: false });
+
+      expect(mockPrismaService.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: false }),
+        }),
+      );
+    });
+
+    it('does NOT include isActive filter when not provided', async () => {
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findMany.mockResolvedValue([mockPatient]);
+
+      await service.findAll({});
+
+      const callArgs = mockPrismaService.user.findMany.mock.calls[0][0];
+      expect(callArgs.where).not.toHaveProperty('isActive');
+    });
+
+    it('sets lastBooking=null when patient has no bookings', async () => {
+      const patientNoBookings = { ...mockPatient, bookingsAsPatient: [] };
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findMany.mockResolvedValue([patientNoBookings]);
+
+      const result = await service.findAll({});
+
+      expect(result.items[0].lastBooking).toBeNull();
+    });
+
+    it('maps lastBooking from bookingsAsPatient[0]', async () => {
+      const lastBooking = { id: 'booking-1', date: new Date('2026-03-01'), status: 'completed' };
+      const patientWithBooking = { ...mockPatient, bookingsAsPatient: [lastBooking] };
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findMany.mockResolvedValue([patientWithBooking]);
+
+      const result = await service.findAll({});
+
+      expect(result.items[0].lastBooking).toEqual(lastBooking);
+    });
+
+    it('maps nextBooking from upcomingBookings when available', async () => {
+      const upcomingBooking = { patientId: 'patient-1', id: 'booking-2', date: new Date('2026-04-01'), status: 'confirmed' };
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findMany.mockResolvedValue([mockPatient]);
+      mockPrismaService.booking.findMany.mockResolvedValue([upcomingBooking]);
+
+      const result = await service.findAll({});
+
+      expect(result.items[0].nextBooking).toEqual(upcomingBooking);
+    });
+
+    it('sets nextBooking=null when no upcoming bookings', async () => {
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findMany.mockResolvedValue([mockPatient]);
+      mockPrismaService.booking.findMany.mockResolvedValue([]);
+
+      const result = await service.findAll({});
+
+      expect(result.items[0].nextBooking).toBeNull();
+    });
+
+    it('filters upcoming bookings by patientId list', async () => {
+      mockPrismaService.user.count.mockResolvedValue(1);
+      mockPrismaService.user.findMany.mockResolvedValue([mockPatient]);
+
+      await service.findAll({});
+
+      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            patientId: { in: ['patient-1'] },
+          }),
+        }),
+      );
+    });
   });
 
+  // ────────────────────────────────────────────
   describe('updatePatient', () => {
     const updatedUser = {
       id: 'patient-1',
@@ -190,8 +283,36 @@ describe('PatientsService', () => {
 
       expect(mockPrismaService.patientProfile.upsert).not.toHaveBeenCalled();
     });
+
+    it('converts dateOfBirth string to Date object', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+      mockPrismaService.user.update.mockResolvedValue(updatedUser);
+      mockPrismaService.patientProfile.upsert.mockResolvedValue({});
+
+      await service.updatePatient('patient-1', { dateOfBirth: '1990-05-15' } as never);
+
+      expect(mockPrismaService.patientProfile.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ dateOfBirth: new Date('1990-05-15') }),
+        }),
+      );
+    });
+
+    it('queries with id AND deletedAt=null before updating', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+      mockPrismaService.user.update.mockResolvedValue(updatedUser);
+
+      await service.updatePatient('patient-1', { firstName: 'Test' } as never);
+
+      expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'patient-1', deletedAt: null },
+        }),
+      );
+    });
   });
 
+  // ────────────────────────────────────────────
   describe('findOne', () => {
     it('returns patient with bookingsAsPatient', async () => {
       const patientWithBookings = { ...mockPatient, bookingsAsPatient: [] };
@@ -205,9 +326,7 @@ describe('PatientsService', () => {
     it('throws NotFoundException when patient not found', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
     });
 
     it('queries with id AND deletedAt=null', async () => {
@@ -224,15 +343,79 @@ describe('PatientsService', () => {
         }),
       );
     });
+
+    it('includes patientProfile in select', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({
+        ...mockPatient,
+        patientProfile: { nationalId: '1234', nationality: 'SA', dateOfBirth: null, emergencyName: null, emergencyPhone: null, bloodType: null, allergies: null, chronicConditions: null },
+      });
+
+      const result = await service.findOne('patient-1');
+
+      expect(result).toHaveProperty('patientProfile');
+    });
   });
 
+  // ────────────────────────────────────────────
+  describe('getPatientBookings', () => {
+    it('throws NotFoundException when patient not found', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+
+      await expect(service.getPatientBookings('nonexistent')).rejects.toThrow(NotFoundException);
+    });
+
+    it('returns bookings ordered by date desc', async () => {
+      const mockBookings = [
+        { id: 'b-2', date: new Date('2026-03-20'), status: 'completed' },
+        { id: 'b-1', date: new Date('2026-03-01'), status: 'completed' },
+      ];
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+      mockPrismaService.booking.count.mockResolvedValue(2);
+      mockPrismaService.booking.findMany.mockResolvedValue(mockBookings);
+
+      const result = await service.getPatientBookings('patient-1');
+
+      expect(result.items).toEqual(mockBookings);
+      expect(result.meta.total).toBe(2);
+      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { date: 'desc' },
+        }),
+      );
+    });
+
+    it('filters deletedAt=null for bookings', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+      mockPrismaService.booking.count.mockResolvedValue(0);
+      mockPrismaService.booking.findMany.mockResolvedValue([]);
+
+      await service.getPatientBookings('patient-1');
+
+      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ patientId: 'patient-1', deletedAt: null }),
+        }),
+      );
+    });
+
+    it('returns empty array when patient has no bookings', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+      mockPrismaService.booking.count.mockResolvedValue(0);
+      mockPrismaService.booking.findMany.mockResolvedValue([]);
+
+      const result = await service.getPatientBookings('patient-1');
+
+      expect(result.items).toEqual([]);
+      expect(result.meta.total).toBe(0);
+    });
+  });
+
+  // ────────────────────────────────────────────
   describe('getPatientStats', () => {
     it('throws NotFoundException when patient not found', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
-      await expect(service.getPatientStats('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getPatientStats('nonexistent')).rejects.toThrow(NotFoundException);
     });
 
     it('returns totalBookings as sum of all group counts', async () => {
@@ -304,6 +487,48 @@ describe('PatientsService', () => {
       const result = await service.getPatientStats('patient-1');
 
       expect(result.totalPaid).toBe(0);
+    });
+
+    it('returns totalBookings=0 and empty byStatus when no bookings', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(mockPatient);
+      mockPrismaService.booking.groupBy.mockResolvedValue([]);
+      mockPrismaService.payment.aggregate.mockResolvedValue({
+        _sum: { totalAmount: null },
+        _count: { id: 0 },
+      });
+
+      const result = await service.getPatientStats('patient-1');
+
+      expect(result.totalBookings).toBe(0);
+      expect(result.byStatus).toEqual({});
+    });
+
+    it('filters bookings by patientId and deletedAt=null in groupBy', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(mockPatient);
+      mockPrismaService.booking.groupBy.mockResolvedValue([]);
+      mockPrismaService.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: null }, _count: { id: 0 } });
+
+      await service.getPatientStats('patient-1');
+
+      expect(mockPrismaService.booking.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ patientId: 'patient-1', deletedAt: null }),
+        }),
+      );
+    });
+
+    it('aggregates only paid payments', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(mockPatient);
+      mockPrismaService.booking.groupBy.mockResolvedValue([]);
+      mockPrismaService.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: null }, _count: { id: 0 } });
+
+      await service.getPatientStats('patient-1');
+
+      expect(mockPrismaService.payment.aggregate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: 'paid' }),
+        }),
+      );
     });
   });
 });

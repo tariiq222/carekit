@@ -7,16 +7,13 @@ import {
   Patch,
   Post,
   Query,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import type { Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -25,6 +22,7 @@ import { PatientWalkInService } from './patient-walk-in.service.js';
 import { CreateWalkInPatientDto } from './dto/create-walk-in-patient.dto.js';
 import { ClaimAccountDto } from './dto/claim-account.dto.js';
 import { UpdatePatientDto } from './dto/update-patient.dto.js';
+import { PatientListQueryDto } from './dto/patient-list-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Patients')
@@ -40,19 +38,15 @@ export class PatientsController {
   @Get()
   @CheckPermissions({ module: 'patients', action: 'view' })
   @ApiOperation({ summary: 'List all patients with pagination and search' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'perPage', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  findAll(
-    @Query('page') page?: string,
-    @Query('perPage') perPage?: string,
-    @Query('search') search?: string,
-  ) {
-    return this.patientsService.findAll({
-      page: page ? parseInt(page) : undefined,
-      perPage: perPage ? parseInt(perPage) : undefined,
-      search,
-    });
+  findAll(@Query() query: PatientListQueryDto) {
+    return this.patientsService.findAll(query);
+  }
+
+  @Get('list-stats')
+  @CheckPermissions({ module: 'patients', action: 'view' })
+  @ApiOperation({ summary: 'Get aggregate stats for patient list (total, active, inactive, new this month)' })
+  getListStats() {
+    return this.patientsService.getListStats();
   }
 
   @Get(':id')
@@ -76,24 +70,30 @@ export class PatientsController {
     return this.patientsService.getPatientStats(id);
   }
 
+  @Get(':id/bookings')
+  @CheckPermissions({ module: 'patients', action: 'view' })
+  @ApiOperation({ summary: 'Get paginated bookings for a patient' })
+  getBookings(
+    @Param('id', uuidPipe) id: string,
+    @Query('page') page?: string,
+    @Query('perPage') perPage?: string,
+  ) {
+    return this.patientsService.getPatientBookings(id, {
+      page: page ? parseInt(page, 10) : undefined,
+      perPage: perPage ? parseInt(perPage, 10) : undefined,
+    });
+  }
+
   @Post('walk-in')
   @HttpCode(200)
   @CheckPermissions({ module: 'patients', action: 'create' })
   @ApiOperation({
-    summary:
-      'Register a walk-in patient (name + phone only, no email/password)',
+    summary: 'Register a walk-in patient (name + phone only, no email/password)',
     description:
       'Used by receptionist to register a patient who visited the clinic without a prior account. Returns existing WALK_IN account if phone already registered.',
   })
-  async createWalkIn(
-    @Body() dto: CreateWalkInPatientDto,
-    @Res() res: Response,
-  ) {
-    const result = await this.walkInService.createWalkIn(dto);
-    return res.status(result.isExisting ? 200 : 201).json({
-      success: true,
-      data: result,
-    });
+  createWalkIn(@Body() dto: CreateWalkInPatientDto) {
+    return this.walkInService.createWalkIn(dto);
   }
 
   @Post('claim')

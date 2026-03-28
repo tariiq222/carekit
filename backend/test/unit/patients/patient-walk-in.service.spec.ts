@@ -69,13 +69,16 @@ describe('PatientWalkInService', () => {
     mockPrisma.$transaction.mockImplementation(
       (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
     );
+    mockTx.user.create.mockResolvedValue(walkInUser);
+    mockTx.userRole.create.mockResolvedValue({});
+    mockTx.patientProfile.create.mockResolvedValue({});
   });
 
+  // ────────────────────────────────────────────
   describe('createWalkIn', () => {
     it('should create a new walk-in user', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
       mockPrisma.role.findFirst.mockResolvedValue(mockRole);
-      mockTx.user.create.mockResolvedValue(walkInUser);
 
       const result = await service.createWalkIn(createDto);
 
@@ -109,7 +112,6 @@ describe('PatientWalkInService', () => {
     it('should create user, userRole, and patientProfile in transaction', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
       mockPrisma.role.findFirst.mockResolvedValue(mockRole);
-      mockTx.user.create.mockResolvedValue(walkInUser);
 
       await service.createWalkIn(createDto);
 
@@ -119,8 +121,83 @@ describe('PatientWalkInService', () => {
       );
       expect(mockTx.patientProfile.create).toHaveBeenCalled();
     });
+
+    it('creates user with accountType=walk_in and internal email format', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.role.findFirst.mockResolvedValue(mockRole);
+
+      await service.createWalkIn(createDto);
+
+      const userCreateCall = mockTx.user.create.mock.calls[0][0];
+      expect(userCreateCall.data.accountType).toBe('walk_in');
+      expect(userCreateCall.data.email).toMatch(/^walkin_.+@internal\.carekit$/);
+    });
+
+    it('creates patientProfile with optional fields when provided', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.role.findFirst.mockResolvedValue(mockRole);
+      const dtoWithProfile = {
+        ...createDto,
+        nationality: 'SA',
+        bloodType: 'A_POSITIVE',
+        allergies: 'Penicillin',
+      };
+
+      await service.createWalkIn(dtoWithProfile as never);
+
+      expect(mockTx.patientProfile.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            nationality: 'SA',
+            bloodType: 'A_POSITIVE',
+            allergies: 'Penicillin',
+          }),
+        }),
+      );
+    });
+
+    it('creates patientProfile with null dateOfBirth when not provided', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.role.findFirst.mockResolvedValue(mockRole);
+
+      await service.createWalkIn(createDto);
+
+      expect(mockTx.patientProfile.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ dateOfBirth: null }),
+        }),
+      );
+    });
+
+    it('links patientProfile to created user id', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.role.findFirst.mockResolvedValue(mockRole);
+
+      await service.createWalkIn(createDto);
+
+      expect(mockTx.patientProfile.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ userId: walkInUser.id }),
+        }),
+      );
+    });
+
+    it('ConflictException includes userId in body for existing full account', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(fullUser);
+
+      try {
+        await service.createWalkIn(createDto);
+      } catch (e: unknown) {
+        expect(e).toBeInstanceOf(ConflictException);
+        const conflict = e as ConflictException;
+        const response = conflict.getResponse() as Record<string, unknown>;
+        expect(response.userId).toBe(fullUser.id);
+        expect(response.error).toBe('PATIENT_PHONE_EXISTS');
+      }
+    });
   });
 
+  // ────────────────────────────────────────────
   describe('claimAccount', () => {
     it('should upgrade walk-in account to full', async () => {
       const updatedUser = { ...walkInUser, accountType: 'full', email: claimDto.email };
@@ -162,8 +239,66 @@ describe('PatientWalkInService', () => {
 
       await expect(service.claimAccount(claimDto)).rejects.toThrow(ConflictException);
     });
+
+    it('sets emailVerified=false on claim', async () => {
+      const updatedUser = { ...walkInUser, accountType: 'full', email: claimDto.email };
+      mockPrisma.user.findUnique
+        .mockResolvedValueOnce(walkInUser)
+        .mockResolvedValueOnce(null);
+      mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+      await service.claimAccount(claimDto);
+
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ emailVerified: false }),
+        }),
+      );
+    });
+
+    it('sets claimedAt timestamp on claim', async () => {
+      const updatedUser = { ...walkInUser, accountType: 'full', email: claimDto.email };
+      mockPrisma.user.findUnique
+        .mockResolvedValueOnce(walkInUser)
+        .mockResolvedValueOnce(null);
+      mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+      await service.claimAccount(claimDto);
+
+      const updateCall = mockPrisma.user.update.mock.calls[0][0];
+      expect(updateCall.data.claimedAt).toBeInstanceOf(Date);
+    });
+
+    it('hashes the password before storing', async () => {
+      const updatedUser = { ...walkInUser, accountType: 'full', email: claimDto.email };
+      mockPrisma.user.findUnique
+        .mockResolvedValueOnce(walkInUser)
+        .mockResolvedValueOnce(null);
+      mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+      await service.claimAccount(claimDto);
+
+      const updateCall = mockPrisma.user.update.mock.calls[0][0];
+      // Password must be hashed — not stored in plain text
+      expect(updateCall.data.passwordHash).toBeDefined();
+      expect(updateCall.data.passwordHash).not.toBe(claimDto.password);
+    });
+
+    it('NotFoundException error is WALK_IN_NOT_FOUND when phone not found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      try {
+        await service.claimAccount(claimDto);
+      } catch (e: unknown) {
+        expect(e).toBeInstanceOf(NotFoundException);
+        const err = e as NotFoundException;
+        const response = err.getResponse() as Record<string, unknown>;
+        expect(response.error).toBe('WALK_IN_NOT_FOUND');
+      }
+    });
   });
 
+  // ────────────────────────────────────────────
   describe('findWalkInByPhone', () => {
     it('should return user with id and accountType', async () => {
       const found = { id: walkInUser.id, accountType: 'walk_in' };
@@ -182,6 +317,17 @@ describe('PatientWalkInService', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
       const result = await service.findWalkInByPhone('0000000000');
       expect(result).toBeNull();
+    });
+
+    it('selects only id and accountType — no sensitive fields', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'x', accountType: 'walk_in' });
+
+      await service.findWalkInByPhone('0501234567');
+
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+        where: { phone: '0501234567' },
+        select: { id: true, accountType: true },
+      });
     });
   });
 });

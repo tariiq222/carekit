@@ -10,9 +10,7 @@ import {
 import { Transform } from 'class-transformer';
 import { BloodType, UserGender } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-const sanitize = ({ value }: { value: string }) =>
-  value?.trim().replace(/<[^>]*>/g, '');
+import { sanitize } from '../../../common/helpers/sanitize.helper.js';
 
 export class CreateWalkInPatientDto {
   // ── Personal ──

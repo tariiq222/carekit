@@ -272,7 +272,7 @@ export class ServicesService {
     };
   }
 
-  private async invalidateServicesCache(): Promise<void> {
+  async invalidateServicesCache(): Promise<void> {
     await this.cache.del(CACHE_KEYS.SERVICES_ACTIVE);
   }
 }

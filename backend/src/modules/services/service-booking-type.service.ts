@@ -24,7 +24,7 @@ export class ServiceBookingTypeService {
   async setBookingTypes(serviceId: string, dto: SetServiceBookingTypesDto) {
     await this.services.ensureExists(serviceId);
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Delete old booking types (cascades to duration options via onDelete: Cascade)
       await tx.serviceBookingType.deleteMany({ where: { serviceId } });
 
@@ -63,5 +63,8 @@ export class ServiceBookingTypeService {
         orderBy: { createdAt: 'asc' },
       });
     });
+
+    await this.services.invalidateServicesCache();
+    return result;
   }
 }

@@ -1,0 +1,75 @@
+<h2>3 مقاربات لإصلاح الألوان</h2>
+<p class="subtitle">
+  المشكلة: <code>deriveCssVars()</code> تشتق light vars فقط — الدارك mode يكسر اختيار العميل بـ hardcoded lime.<br>
+  كل مقاربة تحل المشكلة بطريقة مختلفة.
+</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>اشتقاق dark vars في <code>deriveCssVars()</code> — موصى به</h3>
+      <p>
+        نضيف dark variants مباشرة في نفس الدالة. تُحقن على <code>html.dark</code> element بدل <code>:root</code>.
+      </p>
+      <div style="margin-top:8px;padding:10px;background:rgba(53,79,216,0.06);border-radius:8px;font-size:12px;font-family:monospace;">
+        primary dark = نفس الـ hue، lightness 70% (مضمون يقرأ على خلفية داكنة)<br>
+        accent dark = نفس الـ hue، lightness 65%<br>
+        blob/ring/shadow تشتق تلقائياً من الـ dark primary
+      </div>
+      <div style="margin-top:8px;">
+        <span style="color:#16A34A;font-weight:600;">✓</span> كل شيء تلقائي، لا تغيير في globals.css<br>
+        <span style="color:#16A34A;font-weight:600;">✓</span> يعمل مع كل عميل بدون إعداد<br>
+        <span style="color:#D97706;font-weight:600;">~</span> يتطلب تحويل Hex → HSL → Hex
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>حذف الـ hardcoded dark overrides من globals.css</h3>
+      <p>
+        نحذف <code>.dark { --primary: #9ADB40 }</code> من globals.css ونترك الـ light vars تسود.
+      </p>
+      <div style="margin-top:8px;padding:10px;background:rgba(53,79,216,0.06);border-radius:8px;font-size:12px;font-family:monospace;">
+        الأزرق القوي مثل #354FD8 سيظهر على الدارك mode بنفس القيمة<br>
+        → contrast مشكلة: أزرق غامق على خلفية داكنة صعب القراءة
+      </div>
+      <div style="margin-top:8px;">
+        <span style="color:#16A34A;font-weight:600;">✓</span> أبسط تنفيذاً<br>
+        <span style="color:#DC2626;font-weight:600;">✗</span> ألوان داكنة ستختفي على dark background<br>
+        <span style="color:#DC2626;font-weight:600;">✗</span> لا يحل المشكلة الجذرية
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>CSS color-mix() — dark vars بدون JS</h3>
+      <p>
+        نستخدم CSS <code>color-mix(in oklch, var(--primary) 70%, white)</code> في globals.css مباشرة.
+      </p>
+      <div style="margin-top:8px;padding:10px;background:rgba(53,79,216,0.06);border-radius:8px;font-size:12px;font-family:monospace;">
+        .dark &#123;<br>
+        &nbsp;&nbsp;--primary: color-mix(in oklch, var(--primary-base) 60%, white);<br>
+        &#125;
+      </div>
+      <div style="margin-top:8px;">
+        <span style="color:#16A34A;font-weight:600;">✓</span> لا JS، يعمل حتى قبل hydration<br>
+        <span style="color:#D97706;font-weight:600;">~</span> يحتاج تسمية --primary-base في deriveCssVars<br>
+        <span style="color:#D97706;font-weight:600;">~</span> browser support جيد لكن ليس 100%
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:rgba(53,79,216,0.05);border-radius:12px;border:1px solid rgba(53,79,216,0.15);">
+  <p style="margin:0;font-weight:600;">توصيتي: A</p>
+  <p style="margin:4px 0 0;font-size:13px;color:#667085;">
+    نضيف HSL conversion في color-utils.ts، نشتق dark variants تلقائياً،
+    ونحقنها على <code>html</code> element كـ <code>data-theme-dark</code> style block.
+    يعمل مع كل لون، مع كل عميل، بدون أي تدخل يدوي.
+  </p>
+</div>

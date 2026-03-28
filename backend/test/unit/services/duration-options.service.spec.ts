@@ -32,6 +32,7 @@ const mockPrisma: any = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockServicesService: any = {
   ensureExists: jest.fn(),
+  invalidateServicesCache: jest.fn(),
 };
 
 describe('DurationOptionsService', () => {

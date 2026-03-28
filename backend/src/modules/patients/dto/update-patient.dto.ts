@@ -9,9 +9,7 @@ import {
 import { Transform } from 'class-transformer';
 import { BloodType, UserGender } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-
-const sanitize = ({ value }: { value: string }) =>
-  value?.trim().replace(/<[^>]*>/g, '');
+import { sanitize } from '../../../common/helpers/sanitize.helper.js';
 
 export class UpdatePatientDto {
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255) @Transform(sanitize)

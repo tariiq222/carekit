@@ -21,7 +21,7 @@ export class DurationOptionsService {
   async setDurationOptions(serviceId: string, dto: SetDurationOptionsDto) {
     await this.services.ensureExists(serviceId);
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       await tx.serviceDurationOption.deleteMany({ where: { serviceId } });
 
       if (dto.options.length === 0) return [];
@@ -43,5 +43,8 @@ export class DurationOptionsService {
         orderBy: { sortOrder: 'asc' },
       });
     });
+
+    await this.services.invalidateServicesCache();
+    return result;
   }
 }

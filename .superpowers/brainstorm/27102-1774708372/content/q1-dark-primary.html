@@ -1,0 +1,43 @@
+<h2>في الدارك mode — ما هو الدور المثالي لـ primary؟</h2>
+<p class="subtitle">
+  حالياً النظام يحوّل primary من الأزرق (light) إلى lime green (dark) — وهذا يسبب تطابقه مع accent.<br>
+  السؤال: كيف تريد primary يتصرف في الدارك mode من ناحية الدور؟
+</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>نسخة فاتحة من نفس لون العميل</h3>
+      <p>
+        primary في الدارك يكون lighter version من اللون الأساسي للعميل<br>
+        <strong>مثال:</strong> لو العميل اختار أزرق → primary dark = أزرق فاتح<br>
+        <strong>النتيجة:</strong> هوية موحدة، لكن يحتاج accent يكون مختلف كفاية
+      </p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>accent يأخذ دوراً مستقلاً (لون ثانٍ للعميل)</h3>
+      <p>
+        كل عميل يحدد لونين: primary + accent<br>
+        في الدارك، primary يبقى للـ CTA، accent للـ highlights<br>
+        <strong>النتيجة:</strong> أقوى هرمية، لكن يتطلب من العميل اختيار لونين متوافقين
+      </p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>النظام يحسب accent تلقائياً من primary</h3>
+      <p>
+        العميل يختار لون واحد فقط (primary)<br>
+        النظام يشتق accent تلقائياً (complementary أو analogous)<br>
+        <strong>النتيجة:</strong> أبسط للعميل، متسق دائماً، لكن أقل مرونة
+      </p>
+    </div>
+  </div>
+</div>

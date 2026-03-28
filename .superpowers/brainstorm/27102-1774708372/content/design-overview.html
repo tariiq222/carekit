@@ -1,0 +1,95 @@
+<h2>تصميم الحل — Color System Overhaul</h2>
+<p class="subtitle">4 محاور مترابطة — شوف كل محور وأخبرني إذا في ملاحظات</p>
+
+<div class="section">
+  <h3>المحور 1 — color-utils.ts: اشتقاق Dark Variants</h3>
+  <div style="padding:14px;background:rgba(0,0,0,0.03);border-radius:10px;font-size:13px;">
+    <p style="margin:0 0 8px;font-weight:600;">إضافة HSL conversion + darkVariant()</p>
+    <div style="font-family:monospace;font-size:12px;line-height:1.7;background:rgba(0,0,0,0.04);padding:10px;border-radius:8px;">
+      hexToHsl(hex) → { h, s, l }<br>
+      hslToHex({ h, s, l }) → hex<br>
+      <br>
+      darkVariant(color, targetL = 0.68):<br>
+      &nbsp;&nbsp;→ نفس الـ hue + saturation<br>
+      &nbsp;&nbsp;→ lightness يُرفع لـ 68% (مقروء على dark bg)<br>
+      &nbsp;&nbsp;→ إذا اللون أصلاً فاتح كفاية → يُخفَّف saturation بدل رفع lightness
+    </div>
+    <p style="margin:10px 0 0;font-size:12px;color:#667085;">
+      deriveCssVars() تُرجع الآن light vars + dark vars في نفس الـ object
+    </p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>المحور 2 — branding-provider.tsx: حقن Dark Vars</h3>
+  <div style="padding:14px;background:rgba(0,0,0,0.03);border-radius:10px;font-size:13px;">
+    <p style="margin:0 0 8px;font-weight:600;">injectVars() تنقسم لوظيفتين:</p>
+    <div style="font-family:monospace;font-size:12px;line-height:1.7;background:rgba(0,0,0,0.04);padding:10px;border-radius:8px;">
+      injectLightVars(vars) → تكتب على document.documentElement (كما هو)<br>
+      injectDarkVars(vars)  → تكتب &lt;style&gt; tag بـ .dark &#123; ... &#125;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;id="carekit-dark-theme" (لإعادة الاستخدام)
+    </div>
+    <p style="margin:10px 0 0;font-size:12px;color:#667085;">
+      clearVars() تحذف الـ style tag أيضاً — لا تراكم
+    </p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>المحور 3 — globals.css: تنظيف الـ Hardcoded Dark Overrides</h3>
+  <div style="padding:14px;background:rgba(0,0,0,0.03);border-radius:10px;font-size:13px;">
+    <p style="margin:0 0 8px;font-weight:600;">ما يُحذف من .dark &#123;&#125;:</p>
+    <div style="font-family:monospace;font-size:12px;line-height:1.7;background:rgba(0,0,0,0.04);padding:10px;border-radius:8px;">
+      ✗ --primary: #9ADB40<br>
+      ✗ --primary-foreground: #1B2026<br>
+      ✗ --primary-light: #B0EF60<br>
+      ✗ --primary-ultra-light: ...<br>
+      ✗ --accent: #9ADB40<br>
+      ✗ --accent-foreground: ...<br>
+      ✗ --accent-ultra-light: ...<br>
+      ✗ --ring, --shadow-primary-color, --shadow-primary-hover-color<br>
+      ✗ --blob-primary, --blob-accent<br>
+      ✗ --sidebar-primary, --sidebar-primary-foreground<br>
+      ✗ --sidebar-accent, --sidebar-accent-foreground, --sidebar-ring
+    </div>
+    <p style="margin:10px 0 0;font-size:12px;color:#667085;">
+      يبقى في .dark &#123;&#125; فقط: neutrals (background, surface, border...) + semantic states (success, warning, error...)
+    </p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>المحور 4 — المشاكل الأخرى (من التحليل)</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+    <div style="padding:12px;background:rgba(220,38,38,0.05);border-radius:8px;border:1px solid rgba(220,38,38,0.15);">
+      <p style="margin:0 0 6px;font-weight:600;color:#DC2626;">أيقونات ديكورية (13 موضع)</p>
+      <p style="margin:0;font-size:12px;">text-primary → text-muted-foreground<br>في section headers + labels غير تفاعلية</p>
+    </div>
+    <div style="padding:12px;background:rgba(217,119,6,0.05);border-radius:8px;border:1px solid rgba(217,119,6,0.15);">
+      <p style="margin:0 0 6px;font-weight:600;color:#D97706;">Informational Badges (8 مواضع)</p>
+      <p style="margin:0;font-size:12px;">bg-primary/10 text-primary → bg-muted text-muted-foreground<br>للـ badges غير التفاعلية</p>
+    </div>
+    <div style="padding:12px;background:rgba(37,99,235,0.05);border-radius:8px;border:1px solid rgba(37,99,235,0.15);">
+      <p style="margin:0 0 6px;font-weight:600;color:#2563EB;">Charts → chart-* tokens (4 مواضع)</p>
+      <p style="margin:0;font-size:12px;">bg-primary في bars → bg-chart-1<br>يُبقي الـ chart مستقل عن لون العميل</p>
+    </div>
+    <div style="padding:12px;background:rgba(124,58,237,0.05);border-radius:8px;border:1px solid rgba(124,58,237,0.15);">
+      <p style="margin:0 0 6px;font-weight:600;color:#7C3AED;">Hardcoded Hex (7 ملفات)</p>
+      <p style="margin:0;font-size:12px;">defaultValue: "#354FD8" →<br>قراءة --primary من getComputedStyle</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="padding:16px;background:rgba(53,79,216,0.05);border-radius:12px;border:1px solid rgba(53,79,216,0.15);">
+  <p style="margin:0 0 6px;font-weight:600;">الملفات المتأثرة</p>
+  <div style="font-size:12px;font-family:monospace;line-height:1.8;color:#354FD8;">
+    dashboard/lib/color-utils.ts — إضافة HSL + dark derivation<br>
+    dashboard/components/providers/branding-provider.tsx — dark injection<br>
+    dashboard/app/globals.css — حذف hardcoded dark overrides<br>
+    dashboard/components/features/practitioners/* — أيقونات + badges<br>
+    dashboard/components/features/settings/* — أيقونات<br>
+    dashboard/components/features/today-timeline.tsx — أيقونات<br>
+    dashboard/components/features/white-label/branding-tab.tsx — hardcoded hex<br>
+    dashboard/components/features/services/* — hardcoded hex
+  </div>
+</div>
