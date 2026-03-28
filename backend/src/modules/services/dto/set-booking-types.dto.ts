@@ -5,41 +5,12 @@ import {
   IsEnum,
   IsInt,
   IsOptional,
-  IsString,
   Max,
   Min,
-  MinLength,
   ValidateNested,
 } from 'class-validator';
 import { BookingType } from '@prisma/client';
-
-export class DurationOptionInput {
-  @IsString()
-  @MinLength(1)
-  label!: string;
-
-  @IsOptional()
-  @IsString()
-  labelAr?: string;
-
-  @IsInt()
-  @Min(5)
-  @Max(480)
-  durationMinutes!: number;
-
-  @IsInt()
-  @Min(0)
-  price!: number; // halalat
-
-  @IsOptional()
-  @IsBoolean()
-  isDefault?: boolean;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  sortOrder?: number;
-}
+import { DurationOptionDto } from './set-duration-options.dto';
 
 export class BookingTypeConfigDto {
   // walk_in is excluded: booking types on a service only cover bookable types
@@ -62,8 +33,8 @@ export class BookingTypeConfigDto {
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => DurationOptionInput)
-  durationOptions?: DurationOptionInput[];
+  @Type(() => DurationOptionDto)
+  durationOptions?: DurationOptionDto[];
 }
 
 export class SetServiceBookingTypesDto {
