@@ -26,52 +26,13 @@ import { ServiceCategoriesService } from '../service-categories.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { CacheService } from '../../../common/services/cache.service.js';
 import { IntakeFormsService } from '../../intake-forms/intake-forms.service.js';
-
-// ---------------------------------------------------------------------------
-// DTO interfaces (replaced by actual imports once backend-dev creates them)
-// ---------------------------------------------------------------------------
-
-interface CreateServiceDto {
-  nameEn: string;
-  nameAr: string;
-  descriptionEn?: string;
-  descriptionAr?: string;
-  categoryId: string;
-  price?: number;
-  duration?: number;
-}
-
-interface UpdateServiceDto {
-  nameEn?: string;
-  nameAr?: string;
-  descriptionEn?: string;
-  descriptionAr?: string;
-  categoryId?: string;
-  price?: number;
-  duration?: number;
-  isActive?: boolean;
-}
-
-interface CreateCategoryDto {
-  nameEn: string;
-  nameAr: string;
-  sortOrder?: number;
-}
-
-interface UpdateCategoryDto {
-  nameEn?: string;
-  nameAr?: string;
-  sortOrder?: number;
-  isActive?: boolean;
-}
-
-interface ServiceListQuery {
-  page?: number;
-  perPage?: number;
-  categoryId?: string;
-  isActive?: boolean;
-  search?: string;
-}
+import { CreateServiceDto } from '../dto/create-service.dto.js';
+import { UpdateServiceDto } from '../dto/update-service.dto.js';
+import { CreateCategoryDto } from '../dto/create-category.dto.js';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { UpdateCategoryDto } from '../dto/update-category.dto.js';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { ServiceListQueryDto } from '../dto/service-list-query.dto.js';
 
 // ---------------------------------------------------------------------------
 // Mock factories
@@ -427,6 +388,78 @@ describe('ServicesService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             price: 25050,
+          }),
+        }),
+      );
+    });
+
+    it('should persist depositEnabled and depositPercent to the DB', async () => {
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.service.create.mockResolvedValue({
+        ...mockService,
+        depositEnabled: true,
+        depositPercent: 50,
+      });
+
+      await service.create({
+        ...createDto,
+        depositEnabled: true,
+        depositPercent: 50,
+      });
+
+      expect(mockPrismaService.service.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            depositEnabled: true,
+            depositPercent: 50,
+          }),
+        }),
+      );
+    });
+
+    it('should persist allowRecurring and allowedRecurringPatterns to the DB', async () => {
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.service.create.mockResolvedValue({
+        ...mockService,
+        allowRecurring: true,
+        allowedRecurringPatterns: ['WEEKLY'],
+      });
+
+      await service.create({
+        ...createDto,
+        allowRecurring: true,
+        allowedRecurringPatterns: ['WEEKLY'] as CreateServiceDto['allowedRecurringPatterns'],
+      });
+
+      expect(mockPrismaService.service.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            allowRecurring: true,
+            allowedRecurringPatterns: ['WEEKLY'],
+          }),
+        }),
+      );
+    });
+
+    it('should persist minLeadMinutes and maxAdvanceDays to the DB', async () => {
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.service.create.mockResolvedValue({
+        ...mockService,
+        minLeadMinutes: 60,
+        maxAdvanceDays: 30,
+      });
+
+      await service.create({
+        ...createDto,
+        minLeadMinutes: 60,
+        maxAdvanceDays: 30,
+      });
+
+      expect(mockPrismaService.service.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            minLeadMinutes: 60,
+            maxAdvanceDays: 30,
           }),
         }),
       );
