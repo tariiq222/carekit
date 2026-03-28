@@ -155,7 +155,10 @@ export class ChatbotRagService {
         user: { select: { firstName: true, lastName: true } },
         practitionerServices: {
           where: { isActive: true },
-          include: { service: { select: { nameEn: true, nameAr: true } } },
+          include: {
+            service: { select: { nameEn: true, nameAr: true } },
+            serviceTypes: { where: { isActive: true }, select: { bookingType: true, price: true, isActive: true } },
+          },
         },
       },
     });
@@ -164,8 +167,8 @@ export class ChatbotRagService {
       const name = `${doc.user.firstName} ${doc.user.lastName}`;
       const serviceLines = doc.practitionerServices.map((ps) => {
         const prices = ps.serviceTypes
-          .filter((st: { isActive: boolean; price: number | null }) => st.isActive && st.price != null)
-          .map((st: { bookingType: string; price: number }) => `${st.bookingType}: ${st.price / 100} SAR`)
+          .filter((st) => st.isActive && st.price != null)
+          .map((st) => `${st.bookingType}: ${st.price! / 100} SAR`)
           .join(', ');
         return `  - ${ps.service.nameEn}: ${prices}`;
       });
