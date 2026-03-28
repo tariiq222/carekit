@@ -143,9 +143,10 @@ const mockService = {
 
 describe('ServicesService', () => {
   let service: ServicesService;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         ServicesService,
         { provide: PrismaService, useValue: mockPrismaService },
@@ -669,6 +670,32 @@ describe('ServicesService', () => {
 
       await expect(service.softDelete(mockService.id)).rejects.toThrow(
         NotFoundException,
+      );
+    });
+  });
+
+  describe('getIntakeForms', () => {
+    it('should call intakeForms.listForms with the serviceId', async () => {
+      const mockForms = [{ id: 'form-1', titleEn: 'Health History' }];
+      const mockIntakeFormsService = module.get(IntakeFormsService);
+      jest.spyOn(mockIntakeFormsService, 'listForms').mockResolvedValue(mockForms as never);
+
+      const result = await service.getIntakeForms('service-uuid-1');
+
+      expect(mockIntakeFormsService.listForms).toHaveBeenCalledWith({
+        serviceId: 'service-uuid-1',
+      });
+      expect(result).toBe(mockForms);
+    });
+
+    it('should propagate errors from intakeForms.listForms', async () => {
+      const mockIntakeFormsService = module.get(IntakeFormsService);
+      jest.spyOn(mockIntakeFormsService, 'listForms').mockRejectedValue(
+        new Error('intake forms error'),
+      );
+
+      await expect(service.getIntakeForms('service-uuid-1')).rejects.toThrow(
+        'intake forms error',
       );
     });
   });
