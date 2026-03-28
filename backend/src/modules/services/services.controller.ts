@@ -16,6 +16,7 @@ import { CheckPermissions } from '../../common/decorators/check-permissions.deco
 import { Public } from '../../common/decorators/public.decorator.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ServicesService } from './services.service.js';
+import { ServiceCategoriesService } from './service-categories.service.js';
 import { DurationOptionsService } from './duration-options.service.js';
 import { ServiceBookingTypeService } from './service-booking-type.service.js';
 import { ServicePractitionersService } from './service-practitioners.service.js';
@@ -34,6 +35,7 @@ import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ServicesController {
   constructor(
+    private readonly categoriesService: ServiceCategoriesService,
     private readonly servicesService: ServicesService,
     private readonly durationOptionsService: DurationOptionsService,
     private readonly bookingTypeService: ServiceBookingTypeService,
@@ -47,13 +49,13 @@ export class ServicesController {
   @Get('categories')
   @Public()
   async findAllCategories() {
-    return this.servicesService.findAllCategories();
+    return this.categoriesService.findAll();
   }
 
   @Post('categories')
   @CheckPermissions({ module: 'services', action: 'create' })
   async createCategory(@Body() dto: CreateCategoryDto) {
-    return this.servicesService.createCategory(dto);
+    return this.categoriesService.create(dto);
   }
 
   @Patch('categories/:id')
@@ -62,13 +64,13 @@ export class ServicesController {
     @Param('id', uuidPipe) id: string,
     @Body() dto: UpdateCategoryDto,
   ) {
-    return this.servicesService.updateCategory(id, dto);
+    return this.categoriesService.update(id, dto);
   }
 
   @Delete('categories/:id')
   @CheckPermissions({ module: 'services', action: 'delete' })
   async deleteCategory(@Param('id', uuidPipe) id: string) {
-    return this.servicesService.deleteCategory(id);
+    return this.categoriesService.delete(id);
   }
 
   // ═══════════════════════════════════════════════════════════════

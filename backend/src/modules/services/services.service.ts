@@ -8,8 +8,6 @@ import { Prisma, RecurringPattern } from '@prisma/client';
 import { CacheService } from '../../common/services/cache.service.js';
 import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
-import { CreateCategoryDto } from './dto/create-category.dto.js';
-import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
 import { IntakeFormsService } from '../intake-forms/intake-forms.service.js';
@@ -29,84 +27,6 @@ export class ServicesService {
     private readonly cache: CacheService,
     private readonly intakeForms: IntakeFormsService,
   ) {}
-
-  // ═══════════════════════════════════════════════════════════════
-  //  SERVICE CATEGORIES
-  // ═══════════════════════════════════════════════════════════════
-
-  async createCategory(dto: CreateCategoryDto) {
-    const category = await this.prisma.serviceCategory.create({
-      data: {
-        nameEn: dto.nameEn,
-        nameAr: dto.nameAr,
-        sortOrder: dto.sortOrder ?? 0,
-      },
-    });
-    await this.invalidateServicesCache();
-    return category;
-  }
-
-  async findAllCategories() {
-    return this.prisma.serviceCategory.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: 'asc' },
-    });
-  }
-
-  async updateCategory(id: string, dto: UpdateCategoryDto) {
-    const category = await this.prisma.serviceCategory.findUnique({
-      where: { id },
-    });
-    if (!category) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Category not found',
-        error: 'NOT_FOUND',
-      });
-    }
-
-    const updated = await this.prisma.serviceCategory.update({
-      where: { id },
-      data: {
-        nameEn: dto.nameEn,
-        nameAr: dto.nameAr,
-        sortOrder: dto.sortOrder,
-        isActive: dto.isActive,
-      },
-    });
-    await this.invalidateServicesCache();
-    return updated;
-  }
-
-  async deleteCategory(id: string) {
-    const category = await this.prisma.serviceCategory.findUnique({
-      where: { id },
-    });
-    if (!category) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Category not found',
-        error: 'NOT_FOUND',
-      });
-    }
-
-    // Cascade protection: check for ACTIVE services only (excludes soft-deleted)
-    // to allow deleting categories whose services are all soft-deleted
-    const serviceCount = await this.prisma.service.count({
-      where: { categoryId: id, deletedAt: null },
-    });
-    if (serviceCount > 0) {
-      throw new ConflictException({
-        statusCode: 409,
-        message: 'Cannot delete category with assigned services',
-        error: 'CONFLICT',
-      });
-    }
-
-    await this.prisma.serviceCategory.delete({ where: { id } });
-    await this.invalidateServicesCache();
-    return { deleted: true };
-  }
 
   // ═══════════════════════════════════════════════════════════════
   //  SERVICES

@@ -1,13 +1,12 @@
 /**
- * ServicesService — Category Tests
- * Covers: createCategory, findAllCategories, updateCategory, deleteCategory
+ * ServiceCategoriesService — Category Tests
+ * Covers: create, findAll, update, delete
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
-import { ServicesService } from '../../../src/modules/services/services.service.js';
+import { ServiceCategoriesService } from '../../../src/modules/services/service-categories.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { CacheService } from '../../../src/common/services/cache.service.js';
-import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-forms.service.js';
 import {
   createMockPrisma,
   createMockCache,
@@ -18,17 +17,16 @@ import {
 async function createModule(mockPrisma: ReturnType<typeof createMockPrisma>) {
   const module: TestingModule = await Test.createTestingModule({
     providers: [
-      ServicesService,
+      ServiceCategoriesService,
       { provide: PrismaService, useValue: mockPrisma },
       { provide: CacheService, useValue: createMockCache() },
-      { provide: IntakeFormsService, useValue: { listForms: jest.fn() } },
     ],
   }).compile();
-  return module.get<ServicesService>(ServicesService);
+  return module.get<ServiceCategoriesService>(ServiceCategoriesService);
 }
 
-describe('ServicesService — createCategory', () => {
-  let service: ServicesService;
+describe('ServiceCategoriesService — create', () => {
+  let service: ServiceCategoriesService;
   let mockPrisma: ReturnType<typeof createMockPrisma>;
 
   beforeEach(async () => {
@@ -41,7 +39,7 @@ describe('ServicesService — createCategory', () => {
     const dto = { nameEn: 'New Category', nameAr: 'فئة جديدة' };
     mockPrisma.serviceCategory.create.mockResolvedValue({ ...mockCategory, ...dto, sortOrder: 0 });
 
-    const result = await service.createCategory(dto);
+    const result = await service.create(dto);
 
     expect(result.nameEn).toBe(dto.nameEn);
     expect(mockPrisma.serviceCategory.create).toHaveBeenCalledWith(
@@ -53,7 +51,7 @@ describe('ServicesService — createCategory', () => {
     const dto = { nameEn: 'Priority Category', nameAr: 'فئة ذات أولوية', sortOrder: 5 };
     mockPrisma.serviceCategory.create.mockResolvedValue({ ...mockCategory, ...dto });
 
-    await service.createCategory(dto);
+    await service.create(dto);
 
     expect(mockPrisma.serviceCategory.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ sortOrder: 5 }) }),
@@ -61,8 +59,8 @@ describe('ServicesService — createCategory', () => {
   });
 });
 
-describe('ServicesService — findAllCategories', () => {
-  let service: ServicesService;
+describe('ServiceCategoriesService — findAll', () => {
+  let service: ServiceCategoriesService;
   let mockPrisma: ReturnType<typeof createMockPrisma>;
 
   beforeEach(async () => {
@@ -74,7 +72,7 @@ describe('ServicesService — findAllCategories', () => {
   it('should return all active categories sorted by sortOrder', async () => {
     mockPrisma.serviceCategory.findMany.mockResolvedValue([mockCategory, mockCategory2]);
 
-    const result = await service.findAllCategories();
+    const result = await service.findAll();
 
     expect(result).toHaveLength(2);
     expect(mockPrisma.serviceCategory.findMany).toHaveBeenCalledWith(
@@ -83,8 +81,8 @@ describe('ServicesService — findAllCategories', () => {
   });
 });
 
-describe('ServicesService — updateCategory', () => {
-  let service: ServicesService;
+describe('ServiceCategoriesService — update', () => {
+  let service: ServiceCategoriesService;
   let mockPrisma: ReturnType<typeof createMockPrisma>;
 
   beforeEach(async () => {
@@ -97,7 +95,7 @@ describe('ServicesService — updateCategory', () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
     mockPrisma.serviceCategory.update.mockResolvedValue({ ...mockCategory, nameEn: 'Updated Category' });
 
-    const result = await service.updateCategory(mockCategory.id, { nameEn: 'Updated Category' });
+    const result = await service.update(mockCategory.id, { nameEn: 'Updated Category' });
 
     expect(result.nameEn).toBe('Updated Category');
   });
@@ -106,7 +104,7 @@ describe('ServicesService — updateCategory', () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
     mockPrisma.serviceCategory.update.mockResolvedValue({ ...mockCategory, isActive: false });
 
-    const result = await service.updateCategory(mockCategory.id, { isActive: false });
+    const result = await service.update(mockCategory.id, { isActive: false });
 
     expect(result.isActive).toBe(false);
   });
@@ -114,12 +112,12 @@ describe('ServicesService — updateCategory', () => {
   it('should throw NotFoundException if category not found', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(null);
 
-    await expect(service.updateCategory('non-existent-id', { nameEn: 'Updated' })).rejects.toThrow(NotFoundException);
+    await expect(service.update('non-existent-id', { nameEn: 'Updated' })).rejects.toThrow(NotFoundException);
   });
 });
 
-describe('ServicesService — deleteCategory', () => {
-  let service: ServicesService;
+describe('ServiceCategoriesService — delete', () => {
+  let service: ServiceCategoriesService;
   let mockPrisma: ReturnType<typeof createMockPrisma>;
 
   beforeEach(async () => {
@@ -133,7 +131,7 @@ describe('ServicesService — deleteCategory', () => {
     mockPrisma.service.count.mockResolvedValue(0);
     mockPrisma.serviceCategory.delete.mockResolvedValue(mockCategory);
 
-    await service.deleteCategory(mockCategory.id);
+    await service.delete(mockCategory.id);
 
     expect(mockPrisma.serviceCategory.delete).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: mockCategory.id } }),
@@ -144,7 +142,7 @@ describe('ServicesService — deleteCategory', () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
     mockPrisma.service.count.mockResolvedValue(3);
 
-    await expect(service.deleteCategory(mockCategory.id)).rejects.toThrow(ConflictException);
+    await expect(service.delete(mockCategory.id)).rejects.toThrow(ConflictException);
   });
 
   it('should allow deleting a category whose services are all soft-deleted', async () => {
@@ -153,7 +151,7 @@ describe('ServicesService — deleteCategory', () => {
     mockPrisma.service.count.mockResolvedValue(0);
     mockPrisma.serviceCategory.delete.mockResolvedValue(mockCategory);
 
-    const result = await service.deleteCategory(mockCategory.id);
+    const result = await service.delete(mockCategory.id);
 
     expect(result).toEqual({ deleted: true });
     // Verify the count query excludes soft-deleted services
@@ -170,6 +168,6 @@ describe('ServicesService — deleteCategory', () => {
   it('should throw NotFoundException if category not found', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(null);
 
-    await expect(service.deleteCategory('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(service.delete('non-existent-id')).rejects.toThrow(NotFoundException);
   });
 });

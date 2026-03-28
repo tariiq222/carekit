@@ -1,9 +1,9 @@
 /**
- * CareKit — ServicesService Unit Tests (TDD RED Phase)
+ * CareKit — ServicesService + ServiceCategoriesService Unit Tests
  *
- * Tests the ServicesService business logic in isolation:
+ * Tests business logic in isolation:
  *   - Service CRUD (create, findAll, findOne, update, softDelete)
- *   - Category CRUD (create, findAll, update, delete)
+ *   - Category CRUD (create, findAll, update, delete) — via ServiceCategoriesService
  *   - Price validation (halalat integers, non-negative)
  *   - Duration validation (positive integer)
  *   - Category assignment and validation
@@ -12,16 +12,17 @@
  *   - Cascade protection (category with services cannot be deleted)
  *
  * PrismaService is mocked so tests run without a database.
- * These tests will FAIL until backend-dev implements ServicesService.
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   NotFoundException,
   ConflictException,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   BadRequestException,
 } from '@nestjs/common';
 import { ServicesService } from '../services.service.js';
+import { ServiceCategoriesService } from '../service-categories.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { CacheService } from '../../../common/services/cache.service.js';
 import { IntakeFormsService } from '../../intake-forms/intake-forms.service.js';
@@ -143,12 +144,14 @@ const mockService = {
 
 describe('ServicesService', () => {
   let service: ServicesService;
+  let categoriesService: ServiceCategoriesService;
   let module: TestingModule;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
       providers: [
         ServicesService,
+        ServiceCategoriesService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: CacheService, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() } },
         { provide: IntakeFormsService, useValue: { listForms: jest.fn() } },
@@ -156,6 +159,7 @@ describe('ServicesService', () => {
     }).compile();
 
     service = module.get<ServicesService>(ServicesService);
+    categoriesService = module.get<ServiceCategoriesService>(ServiceCategoriesService);
 
     jest.clearAllMocks();
   });
@@ -177,7 +181,7 @@ describe('ServicesService', () => {
         sortOrder: 0,
       });
 
-      const result = await service.createCategory(dto);
+      const result = await categoriesService.create(dto);
 
       expect(result).toBeDefined();
       expect(result.nameEn).toBe(dto.nameEn);
@@ -204,7 +208,7 @@ describe('ServicesService', () => {
         ...dto,
       });
 
-      const result = await service.createCategory(dto);
+      const result = await categoriesService.create(dto);
 
       expect(mockPrismaService.serviceCategory.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -223,7 +227,7 @@ describe('ServicesService', () => {
         mockCategory2,
       ]);
 
-      const result = await service.findAllCategories();
+      const result = await categoriesService.findAll();
 
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(2);
@@ -244,7 +248,7 @@ describe('ServicesService', () => {
         nameEn: 'Updated Category',
       });
 
-      const result = await service.updateCategory(mockCategory.id, {
+      const result = await categoriesService.update(mockCategory.id, {
         nameEn: 'Updated Category',
       });
 
@@ -255,7 +259,7 @@ describe('ServicesService', () => {
       mockPrismaService.serviceCategory.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.updateCategory('non-existent-id', { nameEn: 'Updated' }),
+        categoriesService.update('non-existent-id', { nameEn: 'Updated' }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -266,7 +270,7 @@ describe('ServicesService', () => {
         isActive: false,
       });
 
-      const result = await service.updateCategory(mockCategory.id, {
+      const result = await categoriesService.update(mockCategory.id, {
         isActive: false,
       });
 
@@ -280,7 +284,7 @@ describe('ServicesService', () => {
       mockPrismaService.service.count.mockResolvedValue(0);
       mockPrismaService.serviceCategory.delete.mockResolvedValue(mockCategory);
 
-      await service.deleteCategory(mockCategory.id);
+      await categoriesService.delete(mockCategory.id);
 
       expect(mockPrismaService.serviceCategory.delete).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -293,7 +297,7 @@ describe('ServicesService', () => {
       mockPrismaService.serviceCategory.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.deleteCategory('non-existent-id'),
+        categoriesService.delete('non-existent-id'),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -302,7 +306,7 @@ describe('ServicesService', () => {
       mockPrismaService.service.count.mockResolvedValue(3);
 
       await expect(
-        service.deleteCategory(mockCategory.id),
+        categoriesService.delete(mockCategory.id),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -312,7 +316,7 @@ describe('ServicesService', () => {
       mockPrismaService.service.count.mockResolvedValue(0);
       mockPrismaService.serviceCategory.delete.mockResolvedValue(mockCategory);
 
-      const result = await service.deleteCategory(mockCategory.id);
+      const result = await categoriesService.delete(mockCategory.id);
 
       expect(result).toEqual({ deleted: true });
       // Verify the count query excludes soft-deleted services
