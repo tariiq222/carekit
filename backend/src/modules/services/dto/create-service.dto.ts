@@ -1,31 +1,36 @@
 import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RecurringPattern } from '@prisma/client';
 
 export class CreateServiceDto {
+  @ApiProperty({ description: 'Service name in English', maxLength: 255 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   nameEn!: string;
 
+  @ApiProperty({ description: 'Service name in Arabic', maxLength: 255 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   nameAr!: string;
 
+  @ApiPropertyOptional({ description: 'Service description in English', maxLength: 500 })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   descriptionEn?: string;
 
+  @ApiPropertyOptional({ description: 'Service description in Arabic', maxLength: 500 })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   descriptionAr?: string;
 
+  @ApiProperty({ description: 'Category UUID' })
   @IsUUID()
   @IsNotEmpty()
   categoryId!: string;
@@ -35,11 +40,13 @@ export class CreateServiceDto {
   @IsBoolean()
   isActive?: boolean;
 
+  @ApiPropertyOptional({ minimum: 0, description: 'Price in halalat (smallest currency unit)' })
   @IsOptional()
   @IsInt()
   @Min(0)
   price?: number;
 
+  @ApiPropertyOptional({ minimum: 1, description: 'Duration in minutes', default: 30 })
   @IsOptional()
   @IsInt()
   @Min(1)
