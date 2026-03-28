@@ -37,6 +37,10 @@ export function sanitizeUser(user: SanitizableUser) {
     emailVerified: user.emailVerified ?? false,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-    roles: (user.userRoles ?? []).map((ur) => ur.role.slug),
+    roles: (user.userRoles ?? []).map((ur) => ({
+      id: ur.role.id,
+      name: ur.role.name,
+      slug: ur.role.slug,
+    })),
   };
 }

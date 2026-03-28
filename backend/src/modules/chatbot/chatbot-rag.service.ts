@@ -163,11 +163,10 @@ export class ChatbotRagService {
     for (const doc of practitioners) {
       const name = `${doc.user.firstName} ${doc.user.lastName}`;
       const serviceLines = doc.practitionerServices.map((ps) => {
-        const prices = [
-          ps.priceClinic != null ? `Clinic: ${ps.priceClinic / 100} SAR` : null,
-          ps.pricePhone != null ? `Phone: ${ps.pricePhone / 100} SAR` : null,
-          ps.priceVideo != null ? `Video: ${ps.priceVideo / 100} SAR` : null,
-        ].filter(Boolean).join(', ');
+        const prices = ps.serviceTypes
+          .filter((st: { isActive: boolean; price: number | null }) => st.isActive && st.price != null)
+          .map((st: { bookingType: string; price: number }) => `${st.bookingType}: ${st.price / 100} SAR`)
+          .join(', ');
         return `  - ${ps.service.nameEn}: ${prices}`;
       });
       entries.push({

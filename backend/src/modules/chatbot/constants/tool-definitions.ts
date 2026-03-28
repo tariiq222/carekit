@@ -60,8 +60,8 @@ const TOOL_CREATE_BOOKING: OpenRouterTool = {
         serviceId: { type: 'string', description: 'Service UUID' },
         type: {
           type: 'string',
-          enum: ['clinic_visit', 'phone_consultation', 'video_consultation'],
-          description: 'Appointment type',
+          enum: ['in_person', 'online'],
+          description: 'Appointment type (in_person = clinic visit, online = remote consultation)',
         },
         date: { type: 'string', description: 'Date in YYYY-MM-DD format' },
         startTime: { type: 'string', description: 'Time in HH:mm format' },

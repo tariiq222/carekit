@@ -14,6 +14,7 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { ReportsService } from './reports.service.js';
 import { ExportService } from './export.service.js';
+import { DashboardStatsService } from './dashboard-stats.service.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Reports')
@@ -24,6 +25,7 @@ export class ReportsController {
   constructor(
     private readonly reportsService: ReportsService,
     private readonly exportService: ExportService,
+    private readonly dashboardStatsService: DashboardStatsService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -132,6 +134,18 @@ export class ReportsController {
       dateFrom,
       dateTo,
     );
+    return { success: true, data };
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET /reports/dashboard?branchId=
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get('dashboard')
+  @CheckPermissions({ module: 'reports', action: 'view' })
+  @ApiOperation({ summary: 'Get dashboard KPI stats (cached 5 min)' })
+  async getDashboardStats(@Query('branchId') branchId?: string) {
+    const data = await this.dashboardStatsService.getStats(branchId);
     return { success: true, data };
   }
 

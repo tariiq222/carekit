@@ -47,9 +47,9 @@ export interface BookingReport {
     pending_cancellation: number;
   };
   byType: {
-    clinic_visit: number;
-    phone_consultation: number;
-    video_consultation: number;
+    in_person: number;
+    online: number;
+    walk_in: number;
   };
   byDay: BookingByDay[];
 }

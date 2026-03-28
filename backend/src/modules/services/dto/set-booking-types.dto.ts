@@ -41,7 +41,7 @@ export class DurationOptionInput {
 }
 
 export class BookingTypeConfigDto {
-  @IsEnum(['clinic_visit', 'phone_consultation', 'video_consultation'])
+  @IsEnum(['in_person', 'online'])
   bookingType!: string;
 
   @IsInt()

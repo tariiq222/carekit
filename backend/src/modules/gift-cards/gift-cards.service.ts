@@ -20,7 +20,7 @@ export class GiftCardsService {
   async findAll(query: GiftCardFilterDto) {
     const { page, perPage, skip } = parsePaginationParams(
       query.page,
-      query.limit,
+      query.perPage,
     );
     const now = new Date();
     const where = this.buildWhereClause(query, now);

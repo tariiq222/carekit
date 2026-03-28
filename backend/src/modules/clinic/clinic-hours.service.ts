@@ -52,7 +52,7 @@ export class ClinicHoursService {
   }
 
   async getForDay(dayOfWeek: number): Promise<ClinicWorkingHours | null> {
-    return this.prisma.clinicWorkingHours.findUnique({
+    return this.prisma.clinicWorkingHours.findFirst({
       where: { dayOfWeek },
     });
   }

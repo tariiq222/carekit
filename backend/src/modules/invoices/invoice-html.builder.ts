@@ -12,9 +12,8 @@ interface InvoiceHtmlParams {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  clinic_visit: 'زيارة عيادة',
-  phone_consultation: 'استشارة هاتفية',
-  video_consultation: 'استشارة مرئية',
+  in_person: 'زيارة عيادة',
+  online: 'استشارة عن بُعد',
 };
 
 const METHOD_LABELS: Record<string, string> = {

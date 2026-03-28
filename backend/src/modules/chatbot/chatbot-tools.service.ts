@@ -120,7 +120,7 @@ export class ChatbotToolsService {
     const booking = await this.bookingsPort.create(ctx.userId, {
       practitionerId: args.practitionerId as string,
       serviceId: args.serviceId as string,
-      type: args.type as 'clinic_visit' | 'phone_consultation' | 'video_consultation',
+      type: args.type as 'in_person' | 'online',
       date: args.date as string,
       startTime: args.startTime as string,
       notes: (args.notes as string) ?? 'Booked via AI chatbot',

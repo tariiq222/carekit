@@ -6,12 +6,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuthCacheService } from '../auth/auth-cache.service.js';
+import { PermissionCacheService } from '../auth/permission-cache.service.js';
 
 @Injectable()
 export class UserRolesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly authCache: AuthCacheService,
+    private readonly permissionCache: PermissionCacheService,
   ) {}
 
   async assignRole(userId: string, roleId?: string, roleSlug?: string, requesterId?: string): Promise<void> {
@@ -82,6 +84,7 @@ export class UserRolesService {
 
     // Invalidate cached permissions so the user gets the new role immediately
     await this.authCache.invalidate(userId);
+    await this.permissionCache.invalidate(userId);
   }
 
   async removeRole(userId: string, roleId: string) {
@@ -118,5 +121,6 @@ export class UserRolesService {
 
     // Invalidate cached permissions so the role removal takes effect immediately
     await this.authCache.invalidate(userId);
+    await this.permissionCache.invalidate(userId);
   }
 }

@@ -94,9 +94,9 @@ export class ReportsService {
     }
 
     const byType = {
-      clinic_visit: 0,
-      phone_consultation: 0,
-      video_consultation: 0,
+      in_person: 0,
+      online: 0,
+      walk_in: 0,
     };
     for (const row of typeRows) {
       const key = row.type as keyof typeof byType;
