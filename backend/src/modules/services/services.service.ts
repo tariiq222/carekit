@@ -206,7 +206,23 @@ export class ServicesService {
       });
     }
 
-    const ext = file.originalname.split('.').pop() ?? 'jpg';
+    // Delete old avatar from MinIO if present
+    if (service.imageUrl) {
+      try {
+        const url = new URL(service.imageUrl);
+        const objectName = url.pathname.replace(/^\/carekit\//, '');
+        await this.minio.deleteFile('carekit', objectName);
+      } catch {
+        // Non-fatal — stale object is acceptable, upload must proceed
+      }
+    }
+
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    };
+    const ext = mimeToExt[file.mimetype] ?? 'jpg';
     const objectName = `services/${id}/avatar-${Date.now()}.${ext}`;
     const imageUrl = await this.minio.uploadFile(
       'carekit',

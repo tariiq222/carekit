@@ -9,7 +9,6 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -122,12 +121,10 @@ export class ServicesController {
   }))
   async uploadAvatar(
     @Param('id', uuidPipe) id: string,
-    @Req() req: Request & { file?: Express.Multer.File },
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    if (!req.file) {
-      throw new BadRequestException('No file uploaded');
-    }
-    return this.servicesService.uploadAvatar(id, req.file);
+    if (!file) throw new BadRequestException('No file uploaded');
+    return this.servicesService.uploadAvatar(id, file);
   }
 
   @Delete(':id')

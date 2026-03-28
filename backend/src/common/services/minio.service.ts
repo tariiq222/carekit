@@ -47,6 +47,10 @@ export class MinioService {
     return `${protocol}://${this.endpoint}:${this.port}/${bucket}/${objectName}`;
   }
 
+  async deleteFile(bucket: string, objectName: string): Promise<void> {
+    await this.client.removeObject(bucket, objectName);
+  }
+
   async ensureBucket(bucket: string): Promise<void> {
     const exists = await this.client.bucketExists(bucket);
     if (!exists) {
