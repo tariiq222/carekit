@@ -17,7 +17,7 @@
 //
 // 3. ZOOM FIELDS (candidate for future extraction)
 //    zoomMeetingId, zoomJoinUrl, zoomHostUrl
-//    → Only populated for BookingType.video_consultation (nullable on all other types).
+//    → Only populated for online bookings when video is chosen at session time (nullable on all other types).
 //    → Future: extract to BookingMeeting table when multi-provider video support is needed.
 //    → Migration path: CREATE TABLE booking_meetings (booking_id FK, provider, meeting_id, join_url, host_url)
 //
@@ -39,7 +39,7 @@ model Booking {
   endTime               String            @map("end_time") // "HH:mm"
   status                BookingStatus     @default(pending)
   notes                 String?
-  // Zoom — video_consultation only. Null on clinic_visit/phone_consultation/walk_in.
+  // Zoom — online bookings only, populated when video is chosen at session time. Null on in_person/walk_in.
   // Future extraction candidate → BookingMeeting table (see file header note #3).
   zoomMeetingId         String?           @map("zoom_meeting_id")
   zoomJoinUrl           String?           @map("zoom_join_url")

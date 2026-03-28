@@ -3,10 +3,9 @@
 // ──────────────────────────────────────────────
 
 enum BookingType {
-  clinic_visit
-  phone_consultation
-  video_consultation
-  walk_in
+  in_person  // Clinic visit booked by patient
+  online     // Remote consultation (phone or video — channel decided at session time)
+  walk_in    // Admin-registered walk-in, not available in patient app
 
   @@map("booking_type")
 }
@@ -66,7 +65,9 @@ enum NotificationType {
   booking_no_show
   booking_reminder
   booking_reminder_urgent
+  booking_cancellation_requested
   booking_cancellation_rejected
+  booking_practitioner_cancelled
   cancellation_rejected
   cancellation_requested
   no_show_review

@@ -33,9 +33,6 @@ model Practitioner {
   experience          Int       @default(0)
   education           String?
   educationAr         String?   @map("education_ar")
-  priceClinic         Int       @default(0) @map("price_clinic") // halalat
-  pricePhone          Int       @default(0) @map("price_phone") // halalat
-  priceVideo          Int       @default(0) @map("price_video") // halalat
   // INTENTIONAL DENORMALIZATION: cached aggregates — updated by application on every Rating CRUD
   // Avoids COUNT/AVG on ratings table per request. Must stay in sync via service layer.
   // Source of truth: ratings table. These are read-optimized projections only.

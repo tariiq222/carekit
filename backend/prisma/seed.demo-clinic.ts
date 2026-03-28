@@ -95,11 +95,11 @@ export async function seedServices(prisma: PrismaClient) {
   // ServiceBookingType — per-type pricing for select services
   // [svcIdx, type, price, duration]
   const sbtDefs: [number, string, number, number][] = [
-    [0, 'clinic_visit',        30000, 30], [0, 'phone_consultation', 15000, 20], [0, 'video_consultation', 20000, 25],
-    [1, 'clinic_visit',        15000, 15], [1, 'phone_consultation', 10000, 10], [1, 'video_consultation', 12000, 15],
-    [4, 'clinic_visit',        40000, 30], [4, 'video_consultation', 30000, 25],
-    [5, 'clinic_visit',        80000, 45], [5, 'video_consultation', 50000, 30],
-    [6, 'clinic_visit',        25000, 30], [6, 'video_consultation', 18000, 20],
+    [0, 'in_person', 30000, 30], [0, 'online', 15000, 20],
+    [1, 'in_person', 15000, 15], [1, 'online', 10000, 10],
+    [4, 'in_person', 40000, 30], [4, 'online', 30000, 25],
+    [5, 'in_person', 80000, 45], [5, 'online', 50000, 30],
+    [6, 'in_person', 25000, 30], [6, 'online', 18000, 20],
   ];
   for (const [sIdx, type, price, duration] of sbtDefs) {
     await prisma.serviceBookingType.upsert({
@@ -155,7 +155,7 @@ export async function seedPractitionerServices(
           id: psId,
           practitionerId: practitionerIds[pIdx],
           serviceId: serviceIds[sIdx],
-          availableTypes: ['clinic_visit', 'phone_consultation', 'video_consultation'],
+          availableTypes: ['in_person', 'online'],
           bufferMinutes: sIdx < 2 ? 5 : 10,
         },
       });
@@ -163,8 +163,8 @@ export async function seedPractitionerServices(
 
       // PractitionerServiceType — covers per-practitioner type override
       const types = sIdx < 2
-        ? [['clinic_visit', null, null], ['phone_consultation', null, null], ['video_consultation', null, null]]
-        : [['clinic_visit', null, null]];
+        ? [['in_person', null, null], ['online', null, null]]
+        : [['in_person', null, null]];
       for (const [type, price, duration] of types as [string, number | null, number | null][]) {
         await prisma.practitionerServiceType.upsert({
           where: { practitionerServiceId_bookingType: { practitionerServiceId: psId, bookingType: type as any } },
@@ -181,7 +181,7 @@ export async function seedPractitionerServices(
   // PractitionerDurationOption — covers custom duration options for a practitioner
   const ps0Id = psIds[0]; // dr. abdulrahman → general checkup
   const pstResult = await prisma.practitionerServiceType.findFirst({
-    where: { practitionerServiceId: ps0Id, bookingType: 'clinic_visit' },
+    where: { practitionerServiceId: ps0Id, bookingType: 'in_person' },
   });
   if (pstResult) {
     const practDurationOptions = [

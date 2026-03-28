@@ -118,9 +118,6 @@ model PractitionerService {
   id             String        @id @default(uuid())
   practitionerId String        @map("practitioner_id")
   serviceId      String        @map("service_id")
-  priceClinic    Int?          @map("price_clinic") // halalat — null = use fallback
-  pricePhone     Int?          @map("price_phone") // halalat — null = use fallback
-  priceVideo     Int?          @map("price_video") // halalat — null = use fallback
   customDuration Int?          @map("custom_duration") // minutes — overrides service.duration
   bufferMinutes  Int           @default(0) @map("buffer_minutes")
   availableTypes BookingType[] @map("available_types")
