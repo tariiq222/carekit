@@ -1014,4 +1014,296 @@ describe('Services Module (e2e)', () => {
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════
+  //  ADVANCED SERVICE CREATION SCENARIOS
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('POST /services — Advanced Scenarios', () => {
+    // Scenario 3: Service with deposit
+    it('should create service with deposit required (50%)', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Premium Therapy',
+          nameAr: 'العلاج المميز',
+          categoryId,
+          price: 50000,
+          duration: 60,
+          depositEnabled: true,
+          depositPercent: 50,
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('depositEnabled', true);
+      expect(res.body.data).toHaveProperty('depositPercent', 50);
+    });
+
+    // Scenario 4: Service with restricted recurring patterns
+    it('should create service with restricted recurring patterns', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Weekly Wellness',
+          nameAr: 'العافية الأسبوعية',
+          categoryId,
+          price: 20000,
+          duration: 45,
+          allowRecurring: true,
+          allowedRecurringPatterns: ['weekly', 'biweekly'],
+          maxRecurrences: 24,
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('allowRecurring', true);
+      expect(res.body.data).toHaveProperty('maxRecurrences', 24);
+      expect(res.body.data.allowedRecurringPatterns).toEqual(
+        expect.arrayContaining(['weekly', 'biweekly']),
+      );
+    });
+
+    // Scenario 5: Hidden service (admin-only)
+    it('should create hidden service (isHidden: true)', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Internal Assessment',
+          nameAr: 'التقييم الداخلي',
+          categoryId,
+          isHidden: true,
+          hidePriceOnBooking: true,
+          hideDurationOnBooking: true,
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('isHidden', true);
+      expect(res.body.data).toHaveProperty('hidePriceOnBooking', true);
+      expect(res.body.data).toHaveProperty('hideDurationOnBooking', true);
+    });
+
+    // Scenario 6: Group service with max participants
+    it('should create group service with maxParticipants: 10', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Group Workshop',
+          nameAr: 'ورشة عمل جماعية',
+          categoryId,
+          price: 30000,
+          duration: 90,
+          maxParticipants: 10,
+          minLeadMinutes: 1440,
+          maxAdvanceDays: 30,
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('maxParticipants', 10);
+      expect(res.body.data).toHaveProperty('minLeadMinutes', 1440);
+      expect(res.body.data).toHaveProperty('maxAdvanceDays', 30);
+    });
+
+    // Scenario 7: Service with custom buffer
+    it('should create service with custom buffer (60 minutes)', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Extended Consultation',
+          nameAr: 'استشارة مطولة',
+          categoryId,
+          price: 80000,
+          duration: 120,
+          bufferMinutes: 60,
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('bufferMinutes', 60);
+    });
+
+    // Scenario 8: Inactive service
+    it('should create inactive service (isActive: false)', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Seasonal Service',
+          nameAr: 'الخدمة الموسمية',
+          categoryId,
+          isActive: false,
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('isActive', false);
+    });
+
+    // Scenario 9: Service with calendar color
+    it('should create service with calendar color', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Priority Treatment',
+          nameAr: 'العلاج الأولوي',
+          categoryId,
+          price: 100000,
+          calendarColor: '#FF1744',
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('calendarColor', '#FF1744');
+    });
+
+    // Scenario 10: Full complex service
+    it('should create fully configured service (all fields)', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Premium Surgical Consultation',
+          nameAr: 'استشارة جراحية متقدمة',
+          descriptionEn: 'Comprehensive surgical assessment',
+          descriptionAr: 'تقييم جراحي شامل',
+          categoryId,
+          price: 100000,
+          duration: 60,
+          isActive: true,
+          isHidden: false,
+          bufferMinutes: 30,
+          depositEnabled: true,
+          depositPercent: 25,
+          allowRecurring: true,
+          allowedRecurringPatterns: ['weekly', 'monthly'],
+          maxRecurrences: 12,
+          maxParticipants: 1,
+          minLeadMinutes: 1440,
+          maxAdvanceDays: 60,
+          calendarColor: '#4CAF50',
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      const d = res.body.data as Record<string, unknown>;
+      expect(d['price']).toBe(100000);
+      expect(d['duration']).toBe(60);
+      expect(d['bufferMinutes']).toBe(30);
+      expect(d['depositEnabled']).toBe(true);
+      expect(d['depositPercent']).toBe(25);
+      expect(d['allowRecurring']).toBe(true);
+      expect(d['maxRecurrences']).toBe(12);
+      expect(d['maxParticipants']).toBe(1);
+      expect(d['minLeadMinutes']).toBe(1440);
+      expect(d['maxAdvanceDays']).toBe(60);
+      expect(d['calendarColor']).toBe('#4CAF50');
+    });
+
+    // Validation: invalid recurring pattern
+    it('should reject invalid recurring pattern value', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Invalid Pattern Service',
+          nameAr: 'خدمة نمط غير صالح',
+          categoryId,
+          allowedRecurringPatterns: ['yearly'],
+        })
+        .expect(400);
+
+      expectErrorResponse(res.body, 'VALIDATION_ERROR');
+    });
+
+    // Validation: depositPercent > 100
+    it('should reject depositPercent > 100', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Over Deposit Service',
+          nameAr: 'خدمة عربون زائد',
+          categoryId,
+          depositEnabled: true,
+          depositPercent: 101,
+        })
+        .expect(400);
+
+      expectErrorResponse(res.body, 'VALIDATION_ERROR');
+    });
+
+    // Validation: bufferMinutes > 120
+    it('should reject bufferMinutes > 120', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Big Buffer Service',
+          nameAr: 'خدمة وقت تنظيف طويل',
+          categoryId,
+          bufferMinutes: 121,
+        })
+        .expect(400);
+
+      expectErrorResponse(res.body, 'VALIDATION_ERROR');
+    });
+
+    // Validation: invalid calendar color format
+    it('should reject invalid calendarColor format', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Bad Color Service',
+          nameAr: 'خدمة لون خاطئ',
+          categoryId,
+          calendarColor: 'notacolor',
+        })
+        .expect(400);
+
+      expectErrorResponse(res.body, 'VALIDATION_ERROR');
+    });
+
+    // Validation: maxParticipants > 100
+    it('should reject maxParticipants > 100', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Too Many Participants',
+          nameAr: 'خدمة مشاركون كثيرون',
+          categoryId,
+          maxParticipants: 101,
+        })
+        .expect(400);
+
+      expectErrorResponse(res.body, 'VALIDATION_ERROR');
+    });
+
+    // Free service (price: 0)
+    it('should create free service (price: 0)', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Free Consultation',
+          nameAr: 'استشارة مجانية',
+          categoryId,
+          price: 0,
+          duration: 20,
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('price', 0);
+    });
+  });
 });
