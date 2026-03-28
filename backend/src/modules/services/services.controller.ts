@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,8 +9,12 @@ import {
   Post,
   Put,
   Query,
+  Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -102,6 +107,27 @@ export class ServicesController {
     @Body() dto: UpdateServiceDto,
   ) {
     return this.servicesService.update(id, dto);
+  }
+
+  @Post(':id/avatar')
+  @CheckPermissions({ module: 'services', action: 'edit' })
+  @UseInterceptors(FileInterceptor('image', {
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+        return cb(new BadRequestException('Only jpeg, png, webp allowed'), false);
+      }
+      cb(null, true);
+    },
+  }))
+  async uploadAvatar(
+    @Param('id', uuidPipe) id: string,
+    @Req() req: Request & { file?: Express.Multer.File },
+  ) {
+    if (!req.file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    return this.servicesService.uploadAvatar(id, req.file);
   }
 
   @Delete(':id')

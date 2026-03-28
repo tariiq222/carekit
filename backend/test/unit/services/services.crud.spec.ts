@@ -8,6 +8,7 @@ import { ServicesService } from '../../../src/modules/services/services.service.
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { CacheService } from '../../../src/common/services/cache.service.js';
 import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-forms.service.js';
+import { MinioService } from '../../../src/common/services/minio.service.js';
 import {
   createMockPrisma,
   createMockCache,
@@ -23,6 +24,7 @@ async function createModule(mockPrisma: ReturnType<typeof createMockPrisma>) {
       { provide: PrismaService, useValue: mockPrisma },
       { provide: CacheService, useValue: createMockCache() },
       { provide: IntakeFormsService, useValue: { listForms: jest.fn() } },
+      { provide: MinioService, useValue: { uploadFile: jest.fn() } },
     ],
   }).compile();
   return module.get<ServicesService>(ServicesService);
