@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { RecurringPattern } from '@prisma/client';
@@ -65,6 +65,23 @@ export class CreateServiceDto {
   @IsString()
   @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'calendarColor must be a valid hex color' })
   calendarColor?: string;
+
+  @ApiPropertyOptional({ description: 'HugeIcon name, e.g. StethoscopeIcon' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  iconName?: string | null;
+
+  @ApiPropertyOptional({ description: 'Background color for icon, e.g. #354FD8' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'iconBgColor must be a valid hex color' })
+  iconBgColor?: string | null;
+
+  @ApiPropertyOptional({ description: 'MinIO image URL — takes priority over icon' })
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string | null;
 
   // ── Booking settings per service ───────────────────────────────
   @ApiPropertyOptional({ minimum: 0, maximum: 120, description: 'Buffer applied before and after appointment. 0 = use global setting.' })
