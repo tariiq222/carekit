@@ -8,7 +8,7 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 
 const serviceId = 'svc-uuid';
 const practitionerServiceId = 'ps-uuid';
-const bookingType = 'clinic_visit' as const;
+const bookingType = 'in_person' as const;
 
 const durationOption = { id: 'opt-1', price: 15000, durationMinutes: 30, isDefault: true, sortOrder: 0 };
 

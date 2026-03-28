@@ -11,7 +11,7 @@ export interface CreateBookingDto {
   practitionerId: string;
   serviceId: string;
   branchId?: string;
-  type: 'clinic_visit' | 'phone_consultation' | 'video_consultation';
+  type: 'in_person' | 'online';
   date: string;
   startTime: string;
   notes?: string;
@@ -71,7 +71,7 @@ export const mockBooking = {
   branchId: null,
   practitionerId: mockPractitioner.id,
   serviceId: mockService.id,
-  type: 'clinic_visit' as const,
+  type: 'in_person' as const,
   date: new Date('2026-06-01'),
   startTime: '09:00',
   endTime: '09:30',
@@ -96,7 +96,7 @@ export const mockBooking = {
 export const mockVideoBooking = {
   ...mockBooking,
   id: 'booking-uuid-2',
-  type: 'video_consultation' as const,
+  type: 'online' as const,
   startTime: '14:00',
   endTime: '14:30',
   zoomMeetingId: 'zoom-123456',
@@ -115,7 +115,7 @@ export const mockPractitionerService = {
   practitionerId: mockPractitioner.id,
   serviceId: mockService.id,
   isActive: true,
-  availableTypes: ['clinic_visit', 'phone_consultation', 'video_consultation'],
+  availableTypes: ['in_person', 'online'],
   customDuration: null,
   bufferMinutes: 0,
 };

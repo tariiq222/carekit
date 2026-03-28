@@ -12,7 +12,7 @@ const mockService = { id: serviceId, deletedAt: null };
 const mockBookingType = {
   id: 'bt-uuid-1',
   serviceId,
-  bookingType: 'clinic_visit',
+  bookingType: 'in_person',
   price: 20000,
   duration: 30,
   isActive: true,
@@ -92,7 +92,7 @@ describe('ServiceBookingTypeService', () => {
 
       const dto = {
         types: [
-          { bookingType: 'clinic_visit', price: 20000, duration: 30 },
+          { bookingType: 'in_person', price: 20000, duration: 30 },
         ],
       };
 
@@ -110,7 +110,7 @@ describe('ServiceBookingTypeService', () => {
       mockTx.serviceBookingType.findMany.mockResolvedValue([mockBookingType]);
 
       await service.setBookingTypes(serviceId, {
-        types: [{ bookingType: 'clinic_visit', price: 20000, duration: 30 }],
+        types: [{ bookingType: 'in_person', price: 20000, duration: 30 }],
       });
 
       const createCall = mockTx.serviceBookingType.create.mock.calls[0][0];
@@ -140,7 +140,7 @@ describe('ServiceBookingTypeService', () => {
       await service.setBookingTypes(serviceId, {
         types: [
           {
-            bookingType: 'clinic_visit',
+            bookingType: 'in_person',
             price: 20000,
             duration: 30,
             durationOptions: [

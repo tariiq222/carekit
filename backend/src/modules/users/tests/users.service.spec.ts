@@ -167,6 +167,8 @@ describe('UsersService', () => {
         userRoles: [
           {
             role: {
+              id: 'role-id',
+              name: 'Receptionist',
               slug: 'receptionist',
               rolePermissions: [
                 { permission: { module: 'bookings', action: 'view' } },
@@ -180,7 +182,7 @@ describe('UsersService', () => {
 
       expect(result.id).toBe('user-id');
       expect(result.email).toBe('user@test.com');
-      expect(result.roles).toContain('receptionist');
+      expect(result.roles).toContainEqual({ id: 'role-id', name: 'Receptionist', slug: 'receptionist' });
     });
 
     it('should throw NotFoundException for non-existent user', async () => {

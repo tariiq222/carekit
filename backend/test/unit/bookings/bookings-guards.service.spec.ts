@@ -88,7 +88,7 @@ const mockPractitionerService = {
   practitionerId: mockPractitioner.id,
   serviceId: mockService.id,
   isActive: true,
-  availableTypes: ['clinic_visit', 'phone_consultation', 'video_consultation'],
+  availableTypes: ['in_person', 'online'],
   customDuration: null,
   bufferMinutes: 0,
 };
@@ -105,7 +105,7 @@ function futureDateString(daysAhead: number): string {
 const baseDto = {
   practitionerId: mockPractitioner.id,
   serviceId: mockService.id,
-  type: 'clinic_visit' as const,
+  type: 'in_person' as const,
   startTime: '09:00',
 };
 
@@ -130,7 +130,7 @@ describe('BookingsService — Guard Tests', () => {
         { provide: BookingStatusService, useValue: { confirm: jest.fn(), complete: jest.fn(), checkIn: jest.fn(), startSession: jest.fn(), markNoShow: jest.fn() } },
         { provide: ActivityLogService, useValue: mockActivityLogService },
         { provide: BookingPaymentHelper, useValue: { resolvePatientId: jest.fn().mockImplementation((_caller: string, patientId?: string) => Promise.resolve(patientId ?? _caller)), createPaymentIfNeeded: jest.fn().mockResolvedValue(undefined) } },
-        { provide: PriceResolverService, useValue: { resolve: jest.fn().mockRejectedValue(new Error('ServiceBookingType not configured')) } },
+        { provide: PriceResolverService, useValue: { resolve: jest.fn().mockResolvedValue({ price: 20000, duration: 30, source: 'service_type' }) } },
         { provide: ClinicHoursService, useValue: { getAll: jest.fn().mockResolvedValue([0, 1, 2, 3, 4, 5, 6].map((d) => ({ dayOfWeek: d, startTime: '08:00', endTime: '20:00', isActive: true }))), getForDay: jest.fn() } },
         { provide: ClinicHolidaysService, useValue: { findAll: jest.fn().mockResolvedValue([]), isHoliday: jest.fn().mockResolvedValue(false) } },
         { provide: BookingRescheduleService, useValue: { reschedule: jest.fn() } },

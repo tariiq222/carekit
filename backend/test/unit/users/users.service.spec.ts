@@ -207,7 +207,7 @@ describe('UsersService', () => {
 
       expect(result.id).toBe('user-id');
       expect(result.email).toBe('user@test.com');
-      expect(result.roles).toContain('receptionist');
+      expect(result.roles).toEqual(expect.arrayContaining([expect.objectContaining({ slug: 'receptionist' })]));
     });
 
     it('should throw NotFoundException for non-existent user', async () => {

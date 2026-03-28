@@ -130,7 +130,7 @@ describe('ChatbotToolsService', () => {
         {
           practitionerId: 'p-1',
           serviceId: 's-1',
-          type: 'clinic_visit',
+          type: 'in_person',
           date: '2026-04-01',
           startTime: '10:00',
         },
@@ -149,7 +149,7 @@ describe('ChatbotToolsService', () => {
 
       const result = await service.execute(
         'create_booking',
-        { practitionerId: 'p-1', serviceId: 's-1', type: 'clinic_visit', date: '2026-04-01', startTime: '10:00' },
+        { practitionerId: 'p-1', serviceId: 's-1', type: 'in_person', date: '2026-04-01', startTime: '10:00' },
         ctx,
       );
 

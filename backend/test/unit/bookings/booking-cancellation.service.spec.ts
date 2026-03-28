@@ -53,7 +53,7 @@ const PRAC_USER_ID = 'prac-user-1';
 
 const baseBooking = {
   id: BOOKING_ID, patientId: PATIENT_ID, practitionerId: 'practitioner-uuid-1',
-  serviceId: 'service-uuid-1', type: 'clinic_visit' as const,
+  serviceId: 'service-uuid-1', type: 'in_person' as const,
   date: new Date('2026-06-01'), startTime: '09:00', status: 'confirmed' as const,
   cancellationReason: null, zoomMeetingId: null, deletedAt: null,
 };
@@ -249,7 +249,7 @@ describe('BookingCancellationService', () => {
 
     it('should delete Zoom meeting via helpers', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue({
-        ...pendingCancellationBooking, type: 'video_consultation', zoomMeetingId: 'zm-123',
+        ...pendingCancellationBooking, type: 'online', zoomMeetingId: 'zm-123',
       });
       await service.approveCancellation(BOOKING_ID, fullDto);
       expect(mockHelpers.deleteZoomIfNeeded).toHaveBeenCalled();
@@ -327,7 +327,7 @@ describe('BookingCancellationService', () => {
 
     it('should throw ConflictException for completed booking', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue({ ...baseBooking, status: 'completed', payment: null });
-      await expect(service.adminDirectCancel(BOOKING_ID, ADMIN_ID, dto)).rejects.toThrow(ConflictException);
+      await expect(service.adminDirectCancel(BOOKING_ID, ADMIN_ID, dto)).rejects.toThrow(BadRequestException);
     });
 
     it('should log activity with admin userId', async () => {

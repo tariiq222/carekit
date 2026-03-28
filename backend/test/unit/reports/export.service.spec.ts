@@ -108,7 +108,7 @@ describe('ExportService', () => {
           start_time: '10:00',
           end_time: '10:30',
           status: 'confirmed',
-          type: 'clinic_visit',
+          type: 'in_person',
           patient_name: 'Sara Al-Ahmad',
           practitioner_name: 'Dr. Khalid',
           service_name: 'Checkup',

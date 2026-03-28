@@ -138,9 +138,6 @@ describe('PractitionersService — create', () => {
     bio: 'New cardiologist',
     bioAr: 'طبيب قلب جديد',
     experience: 5,
-    priceClinic: 15000,
-    pricePhone: 10000,
-    priceVideo: 12000,
   };
 
   beforeEach(async () => {
@@ -167,21 +164,16 @@ describe('PractitionersService — create', () => {
     );
   });
 
-  it('should default prices to 0 when not provided', async () => {
+  it('should create practitioner without price fields (pricing is per service)', async () => {
     ctx.mockPrisma.user.findUnique.mockResolvedValue(mockUser);
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(null);
-    ctx.mockPrisma.practitioner.create.mockResolvedValue({
-      ...mockPractitioner,
-      priceClinic: 0,
-      pricePhone: 0,
-      priceVideo: 0,
-    });
+    ctx.mockPrisma.practitioner.create.mockResolvedValue(mockPractitioner);
 
     await ctx.service.create({ userId: mockUser.id, specialty: 'General' });
 
     expect(ctx.mockPrisma.practitioner.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ priceClinic: 0, pricePhone: 0, priceVideo: 0 }),
+        data: expect.objectContaining({ userId: mockUser.id, specialty: 'General' }),
       }),
     );
   });
@@ -207,7 +199,6 @@ describe('PractitionersService — update', () => {
     bio: 'Updated bio text',
     bioAr: 'نص سيرة محدث',
     experience: 12,
-    priceClinic: 25000,
   };
 
   beforeEach(async () => {
@@ -231,27 +222,6 @@ describe('PractitionersService — update', () => {
     );
   });
 
-  it('should store prices as integers (halalat)', async () => {
-    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitioner.update.mockResolvedValue({
-      ...mockPractitioner,
-      priceClinic: 25000,
-      pricePhone: 20000,
-      priceVideo: 22000,
-    });
-
-    await ctx.service.update(mockPractitioner.id, {
-      priceClinic: 25000,
-      pricePhone: 20000,
-      priceVideo: 22000,
-    });
-
-    expect(ctx.mockPrisma.practitioner.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ priceClinic: 25000, pricePhone: 20000, priceVideo: 22000 }),
-      }),
-    );
-  });
 
   it('should throw NotFoundException if practitioner not found', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(null);

@@ -22,7 +22,7 @@ const recurringDto = {
   practitionerId: 'pract-uuid',
   serviceId: 'svc-uuid',
   branchId: 'branch-uuid',
-  type: 'clinic_visit' as const,
+  type: 'in_person' as const,
   date: '2026-04-01',
   startTime: '09:00',
   repeatEvery: 'weekly',

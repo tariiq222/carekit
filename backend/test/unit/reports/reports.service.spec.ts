@@ -117,7 +117,7 @@ describe('ReportsService', () => {
     it('should return total from prisma count', async () => {
       mockPrisma.$queryRaw
         .mockResolvedValueOnce([{ status: 'confirmed', count: BigInt(20) }])
-        .mockResolvedValueOnce([{ type: 'clinic_visit', count: BigInt(30) }])
+        .mockResolvedValueOnce([{ type: 'in_person', count: BigInt(30) }])
         .mockResolvedValueOnce([{ date: new Date('2026-03-01'), count: BigInt(5) }]);
       const r = await service.getBookingReport(DATE_FROM, DATE_TO);
       expect(r.total).toBe(50);
@@ -139,12 +139,12 @@ describe('ReportsService', () => {
       mockPrisma.$queryRaw
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([
-          { type: 'clinic_visit', count: BigInt(25) },
-          { type: 'video_consultation', count: BigInt(10) },
+          { type: 'in_person', count: BigInt(25) },
+          { type: 'online', count: BigInt(10) },
         ])
         .mockResolvedValueOnce([]);
       const r = await service.getBookingReport(DATE_FROM, DATE_TO);
-      expect(r.byType).toEqual({ clinic_visit: 25, phone_consultation: 0, video_consultation: 10 });
+      expect(r.byType).toEqual({ in_person: 25, online: 10, walk_in: 0 });
     });
 
     it('should format byDay date strings from raw query', async () => {

@@ -43,7 +43,7 @@ describe('BookingsService — findAll', () => {
 
   it.each([
     [{ status: 'pending' }],
-    [{ type: 'video_consultation' }],
+    [{ type: 'online' }],
     [{ practitionerId: mockPractitioner.id }],
     [{ patientId: mockPatientId }],
     [{ dateFrom: '2026-06-01', dateTo: '2026-06-30' }],

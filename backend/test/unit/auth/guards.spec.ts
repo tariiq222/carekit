@@ -50,6 +50,14 @@ function buildPrisma(dbUser: unknown) {
   };
 }
 
+function buildPermissionCache(cached: Set<string> | null = null) {
+  return {
+    get: jest.fn().mockResolvedValue(cached),
+    set: jest.fn().mockResolvedValue(undefined),
+    invalidate: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // JwtAuthGuard
 // ---------------------------------------------------------------------------
@@ -145,12 +153,14 @@ describe('PermissionsGuard', () => {
     permissions: unknown[] | undefined,
     dbUser: unknown,
     reqUser?: { id: string; email: string } | null,
+    cachedPermissions: Set<string> | null = null,
   ) {
     const reflector = buildReflector({ permissions });
     const prisma = buildPrisma(dbUser);
-    const guard = new PermissionsGuard(reflector as Reflector, prisma as never);
+    const permCache = buildPermissionCache(cachedPermissions);
+    const guard = new PermissionsGuard(reflector as Reflector, prisma as never, permCache as never);
     const ctx = buildContext({ user: reqUser ?? { id: 'u1', email: 'x@y.com' } });
-    return { guard, ctx, prisma };
+    return { guard, ctx, prisma, permCache };
   }
 
   it('returns true when no permissions are required (pass-through)', async () => {
@@ -311,7 +321,8 @@ describe('PermissionsGuard', () => {
 
     const reflector = buildReflector({ permissions: [{ module: 'reports', action: 'view' }] });
     const prisma = buildPrisma(dbUser);
-    const guard = new PermissionsGuard(reflector as Reflector, prisma as never);
+    const permCache = buildPermissionCache(null); // cache miss
+    const guard = new PermissionsGuard(reflector as Reflector, prisma as never, permCache as never);
     const ctx = buildContext({ user: { id: 'specific-user-id', email: 'x@y.com' } });
 
     await guard.canActivate(ctx);
@@ -319,5 +330,53 @@ describe('PermissionsGuard', () => {
     expect(prisma.user.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'specific-user-id' } }),
     );
+  });
+
+  // ── Cache behaviour ───────────────────────────────────────────────────────
+
+  it('cache HIT: skips DB query and grants access from cache', async () => {
+    const { guard, ctx, prisma, permCache } = makeGuard(
+      [{ module: 'users', action: 'view' }],
+      null, // DB would return null — but should never be called
+      undefined,
+      new Set(['users:view']), // cache has the permission
+    );
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    expect(permCache.get).toHaveBeenCalledWith('u1');
+  });
+
+  it('cache HIT: throws ForbiddenException when cached perms are insufficient', async () => {
+    const { guard, ctx } = makeGuard(
+      [{ module: 'users', action: 'delete' }],
+      null,
+      undefined,
+      new Set(['users:view']), // cache lacks users:delete
+    );
+
+    await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
+  });
+
+  it('cache MISS: populates cache after DB query', async () => {
+    const dbUser = {
+      userRoles: [{
+        role: {
+          rolePermissions: [
+            { permission: { module: 'users', action: 'view' } },
+          ],
+        },
+      }],
+    };
+    const { guard, ctx, permCache } = makeGuard(
+      [{ module: 'users', action: 'view' }],
+      dbUser,
+      undefined,
+      null, // cache miss
+    );
+
+    await guard.canActivate(ctx);
+
+    expect(permCache.set).toHaveBeenCalledWith('u1', new Set(['users:view']));
   });
 });

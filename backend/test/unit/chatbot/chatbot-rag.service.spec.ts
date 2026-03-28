@@ -145,10 +145,11 @@ describe('ChatbotRagService', () => {
           specialty: { nameEn: 'Dermatology', nameAr: 'جلدية' },
           practitionerServices: [
             {
-              priceClinic: 20000,
-              pricePhone: 15000,
-              priceVideo: 15000,
               service: { nameEn: 'Skin Checkup', nameAr: 'فحص جلدي' },
+              serviceTypes: [
+                { bookingType: 'in_person', price: 20000, isActive: true },
+                { bookingType: 'online', price: 15000, isActive: true },
+              ],
             },
           ],
           experience: 10,

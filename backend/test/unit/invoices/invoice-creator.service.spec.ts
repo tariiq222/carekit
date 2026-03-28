@@ -221,7 +221,7 @@ describe('InvoiceCreatorService', () => {
         status: 'paid',
         transactionRef: null,
         booking: {
-          type: 'clinic_visit',
+          type: 'in_person',
           date: new Date('2026-03-22'),
           startTime: '10:00',
           patient: { firstName: 'أحمد', lastName: 'الراشد', email: null, phone: null },

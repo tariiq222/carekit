@@ -75,7 +75,7 @@ describe('PractitionerOnboardingService', () => {
       const result = await service.onboard(onboardDto);
 
       expect(result.success).toBe(true);
-      expect(result.practitioner).toBeDefined();
+      expect(result.data).toBeDefined();
       expect(mockEmailService.sendPractitionerWelcome).toHaveBeenCalledWith(
         'ali@example.com',
         'Ali',

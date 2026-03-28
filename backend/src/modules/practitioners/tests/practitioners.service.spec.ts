@@ -32,9 +32,6 @@ interface CreatePractitionerDto {
   experience?: number;
   education?: string;
   educationAr?: string;
-  priceClinic?: number;
-  pricePhone?: number;
-  priceVideo?: number;
 }
 
 interface UpdatePractitionerDto {
@@ -44,9 +41,6 @@ interface UpdatePractitionerDto {
   experience?: number;
   education?: string;
   educationAr?: string;
-  priceClinic?: number;
-  pricePhone?: number;
-  priceVideo?: number;
   isActive?: boolean;
 }
 
@@ -142,9 +136,6 @@ const mockPractitioner = {
   experience: 10,
   education: 'MD, Fellowship in Cardiology',
   educationAr: 'دكتوراه في الطب، زمالة أمراض القلب',
-  priceClinic: 20000, // 200 SAR in halalat
-  pricePhone: 15000,
-  priceVideo: 18000,
   rating: 4.5,
   reviewCount: 20,
   isActive: true,
@@ -378,9 +369,6 @@ describe('PractitionersService', () => {
       bio: 'New cardiologist',
       bioAr: 'طبيب قلب جديد',
       experience: 5,
-      priceClinic: 15000,
-      pricePhone: 10000,
-      priceVideo: 12000,
     };
 
     it('should create a practitioner record', async () => {
@@ -435,9 +423,6 @@ describe('PractitionersService', () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(null);
       mockPrismaService.practitioner.create.mockResolvedValue({
         ...mockPractitioner,
-        priceClinic: 0,
-        pricePhone: 0,
-        priceVideo: 0,
       });
 
       await service.create({
@@ -448,9 +433,7 @@ describe('PractitionersService', () => {
       expect(mockPrismaService.practitioner.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            priceClinic: 0,
-            pricePhone: 0,
-            priceVideo: 0,
+            userId: mockUser.id,
           }),
         }),
       );
@@ -466,7 +449,6 @@ describe('PractitionersService', () => {
       bio: 'Updated bio text',
       bioAr: 'نص سيرة محدث',
       experience: 12,
-      priceClinic: 25000,
     };
 
     it('should update practitioner fields', async () => {
@@ -505,31 +487,6 @@ describe('PractitionersService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should store prices as integers (halalat)', async () => {
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrismaService.practitioner.update.mockResolvedValue({
-        ...mockPractitioner,
-        priceClinic: 25000,
-        pricePhone: 20000,
-        priceVideo: 22000,
-      });
-
-      await service.update(mockPractitioner.id, {
-        priceClinic: 25000,
-        pricePhone: 20000,
-        priceVideo: 22000,
-      });
-
-      expect(mockPrismaService.practitioner.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            priceClinic: 25000,
-            pricePhone: 20000,
-            priceVideo: 22000,
-          }),
-        }),
-      );
-    });
   });
 
   // ─────────────────────────────────────────────────────────────

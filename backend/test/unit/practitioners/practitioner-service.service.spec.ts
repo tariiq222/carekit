@@ -118,7 +118,7 @@ describe('PractitionerServiceService', () => {
 
       expect(result).toHaveLength(1);
       expect(mockPrisma.practitionerService.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { practitionerId } }),
+        expect.objectContaining({ where: { practitionerId, isActive: true } }),
       );
     });
 

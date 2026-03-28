@@ -55,11 +55,11 @@ const userId = 'e5f6a7b8-c9d0-1234-efab-234567890124';
 const moyasarPayId = 'moyasar-pay-id-001';
 
 const mockBooking = {
-  id: bookingId, type: 'clinic_visit', deletedAt: null,
-  practitioner: { priceClinic: 20000, pricePhone: 15000, priceVideo: 18000 },
+  id: bookingId, type: 'in_person', deletedAt: null,
+  bookedPrice: 20000,
   service: { price: 10000 }, practitionerService: null,
 };
-// clinic_visit -> priceClinic=20000, VAT 15%=3000, total=23000
+// bookedPrice=20000, VAT 15%=3000, total=23000
 const mockPayment = {
   id: paymentId, bookingId, amount: 20000, vatAmount: 3000, totalAmount: 23000,
   method: 'moyasar' as const, status: 'pending' as const, moyasarPaymentId: moyasarPayId,

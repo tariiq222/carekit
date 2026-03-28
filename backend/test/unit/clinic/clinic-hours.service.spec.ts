@@ -10,6 +10,7 @@ const mockPrisma = {
   clinicWorkingHours: {
     findMany: jest.fn(),
     findUnique: jest.fn(),
+    findFirst: jest.fn(),
     deleteMany: jest.fn(),
     createMany: jest.fn(),
   },
@@ -139,11 +140,11 @@ describe('ClinicHoursService', () => {
 
   describe('getForDay', () => {
     it('should return hours for a specific day when record exists', async () => {
-      mockPrisma.clinicWorkingHours.findUnique.mockResolvedValue(sampleHours[1]);
+      mockPrisma.clinicWorkingHours.findFirst.mockResolvedValue(sampleHours[1]);
 
       const result = await service.getForDay(1);
 
-      expect(mockPrisma.clinicWorkingHours.findUnique).toHaveBeenCalledWith({
+      expect(mockPrisma.clinicWorkingHours.findFirst).toHaveBeenCalledWith({
         where: { dayOfWeek: 1 },
       });
       expect(result).toEqual(sampleHours[1]);

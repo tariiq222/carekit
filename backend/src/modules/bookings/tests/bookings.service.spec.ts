@@ -35,7 +35,7 @@ import { PrismaService } from '../../../database/prisma.service.js';
 interface CreateBookingDto {
   practitionerId: string;
   serviceId: string;
-  type: 'clinic_visit' | 'phone_consultation' | 'video_consultation';
+  type: 'in_person' | 'online';
   date: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   notes?: string;
@@ -138,7 +138,7 @@ const mockBooking = {
   patientId: mockPatientId,
   practitionerId: mockPractitioner.id,
   serviceId: mockService.id,
-  type: 'clinic_visit' as const,
+  type: 'in_person' as const,
   date: new Date('2026-06-01'),
   startTime: '09:00',
   endTime: '09:30',
@@ -166,7 +166,7 @@ const mockBooking = {
 const mockVideoBooking = {
   ...mockBooking,
   id: 'booking-uuid-2',
-  type: 'video_consultation' as const,
+  type: 'online' as const,
   startTime: '14:00',
   endTime: '14:30',
   zoomMeetingId: 'zoom-123456',
@@ -209,13 +209,13 @@ describe('BookingsService', () => {
     const createDto: CreateBookingDto = {
       practitionerId: mockPractitioner.id,
       serviceId: mockService.id,
-      type: 'clinic_visit',
+      type: 'in_person',
       date: '2026-06-01',
       startTime: '09:00',
       notes: 'أول زيارة',
     };
 
-    it('should create a clinic_visit booking', async () => {
+    it('should create an in_person booking', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
       mockPrismaService.booking.findMany.mockResolvedValue([]); // no conflicts
@@ -232,7 +232,7 @@ describe('BookingsService', () => {
             patientId: mockPatientId,
             practitionerId: createDto.practitionerId,
             serviceId: createDto.serviceId,
-            type: 'clinic_visit',
+            type: 'in_person',
             startTime: '09:00',
           }),
         }),
@@ -257,7 +257,7 @@ describe('BookingsService', () => {
       );
     });
 
-    it('should generate Zoom links for video_consultation', async () => {
+    it('should generate Zoom links for online booking', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
@@ -266,7 +266,7 @@ describe('BookingsService', () => {
 
       const result = await service.create(mockPatientId, {
         ...createDto,
-        type: 'video_consultation',
+        type: 'online',
         startTime: '14:00',
       });
 
@@ -275,7 +275,7 @@ describe('BookingsService', () => {
       expect(result.zoomHostUrl).toBeDefined();
     });
 
-    it('should NOT generate Zoom links for clinic_visit', async () => {
+    it('should NOT generate Zoom links for in_person booking', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
@@ -286,22 +286,6 @@ describe('BookingsService', () => {
       expect(mockZoomService.createMeeting).not.toHaveBeenCalled();
     });
 
-    it('should NOT generate Zoom links for phone_consultation', async () => {
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrismaService.service.findFirst.mockResolvedValue(mockService);
-      mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.create.mockResolvedValue({
-        ...mockBooking,
-        type: 'phone_consultation',
-      });
-
-      await service.create(mockPatientId, {
-        ...createDto,
-        type: 'phone_consultation',
-      });
-
-      expect(mockZoomService.createMeeting).not.toHaveBeenCalled();
-    });
 
     it('should throw ConflictException for double-booking', async () => {
       mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
@@ -409,12 +393,12 @@ describe('BookingsService', () => {
       mockPrismaService.booking.findMany.mockResolvedValue([]);
       mockPrismaService.booking.count.mockResolvedValue(0);
 
-      await service.findAll({ type: 'video_consultation' });
+      await service.findAll({ type: 'online' });
 
       expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            type: 'video_consultation',
+            type: 'online',
           }),
         }),
       );

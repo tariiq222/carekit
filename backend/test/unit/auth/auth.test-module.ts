@@ -10,6 +10,7 @@ import { TokenService } from '../../../src/modules/auth/token.service.js';
 import { OtpService } from '../../../src/modules/auth/otp.service.js';
 import { EmailService } from '../../../src/modules/email/email.service.js';
 import { AuthCacheService } from '../../../src/modules/auth/auth-cache.service.js';
+import { PermissionCacheService } from '../../../src/modules/auth/permission-cache.service.js';
 import { PatientWalkInService } from '../../../src/modules/patients/patient-walk-in.service.js';
 import {
   createMockPrisma,
@@ -44,6 +45,7 @@ export async function createAuthTestModule(): Promise<AuthTestContext> {
       { provide: ConfigService, useValue: createMockConfig() },
       { provide: EmailService, useValue: mockEmail },
       { provide: AuthCacheService, useValue: createMockAuthCache() },
+      { provide: PermissionCacheService, useValue: { invalidate: jest.fn().mockResolvedValue(undefined) } },
       { provide: PatientWalkInService, useValue: createMockWalkIn() },
     ],
   }).compile();

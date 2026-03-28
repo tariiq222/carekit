@@ -27,7 +27,7 @@ describe('BookingsService — create', () => {
   const createDto = {
     practitionerId: mockPractitioner.id,
     serviceId: mockService.id,
-    type: 'clinic_visit' as const,
+    type: 'in_person' as const,
     date: futureDateString(10),
     startTime: '09:00',
     notes: 'أول زيارة',
@@ -48,7 +48,7 @@ describe('BookingsService — create', () => {
     jest.clearAllMocks();
   });
 
-  it('should create a clinic_visit booking with status pending', async () => {
+  it('should create an in_person booking with status pending', async () => {
     setupHappyPath();
     ctx.mockPrisma.booking.create.mockResolvedValue(mockBooking);
 
@@ -61,7 +61,7 @@ describe('BookingsService — create', () => {
         data: expect.objectContaining({
           patientId: mockPatientId,
           practitionerId: createDto.practitionerId,
-          type: 'clinic_visit',
+          type: 'in_person',
           startTime: '09:00',
         }),
       }),
@@ -81,26 +81,24 @@ describe('BookingsService — create', () => {
     );
   });
 
-  it('should generate Zoom links for video_consultation', async () => {
+  it('should NOT generate Zoom links at booking creation (channel decided at session time)', async () => {
     setupHappyPath();
-    ctx.mockZoom.createMeeting.mockResolvedValue(mockZoomMeeting);
     ctx.mockPrisma.booking.create.mockResolvedValue(mockVideoBooking);
 
-    const result = await ctx.service.create(mockPatientId, {
+    await ctx.service.create(mockPatientId, {
       ...createDto,
-      type: 'video_consultation',
+      type: 'online',
       startTime: '14:00',
     });
 
-    expect(ctx.mockZoom.createMeeting).toHaveBeenCalled();
-    expect(result.zoomJoinUrl).toBeDefined();
-    expect(result.zoomHostUrl).toBeDefined();
+    // Zoom is triggered at session time via a separate endpoint, not at booking creation
+    expect(ctx.mockZoom.createMeeting).not.toHaveBeenCalled();
   });
 
   it.each([
-    ['clinic_visit' as const],
-    ['phone_consultation' as const],
-  ])('should NOT generate Zoom links for %s', async (type) => {
+    ['in_person' as const],
+    ['online' as const],
+  ])('should NOT generate Zoom links for %s at creation', async (type) => {
     setupHappyPath();
     ctx.mockPrisma.booking.create.mockResolvedValue({ ...mockBooking, type });
 

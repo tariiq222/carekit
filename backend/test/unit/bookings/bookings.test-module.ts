@@ -64,7 +64,7 @@ export async function createBookingsTestModule(): Promise<BookingsTestContext> {
     createPaymentIfNeeded: jest.fn().mockResolvedValue(undefined),
   };
   const mockPriceResolver = {
-    resolve: jest.fn().mockRejectedValue(new Error('ServiceBookingType not configured')),
+    resolve: jest.fn().mockResolvedValue({ price: 20000, duration: 30, source: 'service_type' }),
   };
   const mockActivityLog = { log: jest.fn().mockResolvedValue(undefined) };
 

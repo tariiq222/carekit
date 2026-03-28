@@ -2,7 +2,7 @@
  * FavoritePractitionersService Unit Tests
  */
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { FavoritePractitionersService } from '../../../src/modules/practitioners/favorite-practitioners.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
@@ -64,13 +64,11 @@ describe('FavoritePractitionersService', () => {
       });
     });
 
-    it('should return existing favorite without creating duplicate', async () => {
+    it('should throw ConflictException when practitioner already in favorites', async () => {
       mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrisma.favoritePractitioner.findUnique.mockResolvedValue(mockFavorite);
 
-      const result = await service.addFavorite(patientId, practitionerId);
-
-      expect(result).toEqual(mockFavorite);
+      await expect(service.addFavorite(patientId, practitionerId)).rejects.toThrow(ConflictException);
       expect(mockPrisma.favoritePractitioner.create).not.toHaveBeenCalled();
     });
 

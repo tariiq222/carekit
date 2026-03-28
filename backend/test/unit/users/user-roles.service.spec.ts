@@ -6,6 +6,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UserRolesService } from '../../../src/modules/users/user-roles.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { AuthCacheService } from '../../../src/modules/auth/auth-cache.service.js';
+import { PermissionCacheService } from '../../../src/modules/auth/permission-cache.service.js';
 
 const userId = 'user-uuid-1';
 const roleId = 'role-uuid-1';
@@ -30,6 +31,11 @@ const mockAuthCache: any = {
   invalidate: jest.fn().mockResolvedValue(undefined),
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockPermissionCache: any = {
+  invalidate: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('UserRolesService', () => {
   let service: UserRolesService;
 
@@ -39,6 +45,7 @@ describe('UserRolesService', () => {
         UserRolesService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: AuthCacheService, useValue: mockAuthCache },
+        { provide: PermissionCacheService, useValue: mockPermissionCache },
       ],
     }).compile();
 

@@ -98,7 +98,7 @@ describe('BookingExpiryService', () => {
         patientId: 'patient-1',
         practitionerId: 'pract-1',
         date: new Date(),
-        type: 'clinic_visit',
+        type: 'in_person',
         zoomMeetingId: null,
       };
       mockPrisma.booking.findMany.mockResolvedValue([booking]);
@@ -122,7 +122,7 @@ describe('BookingExpiryService', () => {
         patientId: null,
         practitionerId: 'pract-1',
         date: new Date(),
-        type: 'clinic_visit',
+        type: 'in_person',
         zoomMeetingId: null,
       };
       mockPrisma.booking.findMany.mockResolvedValue([booking]);
@@ -139,7 +139,7 @@ describe('BookingExpiryService', () => {
         patientId: 'patient-1',
         practitionerId: 'pract-1',
         date: new Date(),
-        type: 'clinic_visit',
+        type: 'in_person',
         zoomMeetingId: null,
       };
       mockPrisma.booking.findMany.mockResolvedValue([booking]);
@@ -157,7 +157,7 @@ describe('BookingExpiryService', () => {
         patientId: 'patient-1',
         practitionerId: 'pract-1',
         date: new Date('2026-05-01'),
-        type: 'clinic_visit',
+        type: 'in_person',
         zoomMeetingId: null,
       };
       mockPrisma.booking.findMany.mockResolvedValue([booking]);
@@ -173,7 +173,7 @@ describe('BookingExpiryService', () => {
         patientId: 'patient-5',
         practitionerId: 'pract-5',
         date: new Date(),
-        type: 'clinic_visit',
+        type: 'in_person',
         zoomMeetingId: null,
       };
       mockPrisma.booking.findMany.mockResolvedValue([booking]);

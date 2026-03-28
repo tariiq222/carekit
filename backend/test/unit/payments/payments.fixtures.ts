@@ -13,7 +13,7 @@ export const mockBooking = {
   patientId: mockUserId,
   practitionerId: 'practitioner-uuid-1',
   serviceId: 'service-uuid-1',
-  type: 'clinic_visit',
+  type: 'in_person',
   status: 'confirmed',
   deletedAt: null,
   practitioner: { priceClinic: 20000, pricePhone: 15000, priceVideo: 18000 },

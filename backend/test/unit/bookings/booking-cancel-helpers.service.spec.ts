@@ -225,18 +225,18 @@ describe('BookingCancelHelpersService', () => {
   });
 
   describe('deleteZoomIfNeeded', () => {
-    it('should delete Zoom meeting for video_consultation type', () => {
-      service.deleteZoomIfNeeded({ type: 'video_consultation', zoomMeetingId: 'zoom-123' });
+    it('should delete Zoom meeting for online type', () => {
+      service.deleteZoomIfNeeded({ type: 'online', zoomMeetingId: 'zoom-123' });
       expect(mockZoom.deleteMeeting).toHaveBeenCalledWith('zoom-123');
     });
 
-    it('should skip when not video_consultation', () => {
-      service.deleteZoomIfNeeded({ type: 'clinic_visit', zoomMeetingId: 'zoom-123' });
+    it('should skip when not online', () => {
+      service.deleteZoomIfNeeded({ type: 'in_person', zoomMeetingId: 'zoom-123' });
       expect(mockZoom.deleteMeeting).not.toHaveBeenCalled();
     });
 
     it('should skip when zoomMeetingId is null', () => {
-      service.deleteZoomIfNeeded({ type: 'video_consultation', zoomMeetingId: null });
+      service.deleteZoomIfNeeded({ type: 'online', zoomMeetingId: null });
       expect(mockZoom.deleteMeeting).not.toHaveBeenCalled();
     });
   });

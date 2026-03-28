@@ -67,7 +67,7 @@ describe('BookingPaymentHelper', () => {
   describe('createPaymentIfNeeded', () => {
     it('should create cash payment when payAtClinic is true and caller has privilege', async () => {
       const staffRoles = [{ slug: 'staff' }];
-      await service.createPaymentIfNeeded(bookingId, 'clinic_visit', 20000, true, staffRoles);
+      await service.createPaymentIfNeeded(bookingId, 'in_person', 20000, true, staffRoles);
       expect(mockPrisma.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ method: 'cash', status: 'paid' }),
@@ -77,20 +77,20 @@ describe('BookingPaymentHelper', () => {
 
     it('should throw ForbiddenException when payAtClinic is true but caller lacks privilege', async () => {
       await expect(
-        service.createPaymentIfNeeded(bookingId, 'clinic_visit', 20000, true, [{ slug: 'patient' }]),
+        service.createPaymentIfNeeded(bookingId, 'in_person', 20000, true, [{ slug: 'patient' }]),
       ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
       await expect(
-        service.createPaymentIfNeeded(bookingId, 'clinic_visit', 20000, true, undefined),
+        service.createPaymentIfNeeded(bookingId, 'in_person', 20000, true, undefined),
       ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
     });
 
     it('should skip payment when resolvedPrice is 0 (free service)', async () => {
-      await service.createPaymentIfNeeded(bookingId, 'clinic_visit', 0);
+      await service.createPaymentIfNeeded(bookingId, 'in_person', 0);
       expect(mockPrisma.payment.create).not.toHaveBeenCalled();
     });
 
     it('should create moyasar payment for normal bookings', async () => {
-      await service.createPaymentIfNeeded(bookingId, 'clinic_visit', 20000);
+      await service.createPaymentIfNeeded(bookingId, 'in_person', 20000);
       expect(mockPrisma.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ method: 'moyasar', status: 'awaiting' }),
@@ -111,7 +111,7 @@ describe('BookingPaymentHelper', () => {
     });
 
     it('should calculate VAT (15%) on top of resolvedPrice', async () => {
-      await service.createPaymentIfNeeded(bookingId, 'clinic_visit', 20000);
+      await service.createPaymentIfNeeded(bookingId, 'in_person', 20000);
       const createCall = mockPrisma.payment.create.mock.calls[0][0];
       expect(createCall.data.amount).toBe(20000);
       expect(createCall.data.vatAmount).toBe(3000);
