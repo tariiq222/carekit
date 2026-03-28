@@ -111,6 +111,7 @@ describe('ServiceBookingTypeService', () => {
       expect(mockTx.serviceBookingType.deleteMany).toHaveBeenCalledWith({ where: { serviceId } });
       expect(mockTx.serviceBookingType.create).toHaveBeenCalledTimes(1);
       expect(result).toHaveLength(1);
+      expect(mockServicesService.invalidateServicesCache).toHaveBeenCalled();
     });
 
     it('should set isActive to true by default when not provided', async () => {
@@ -125,6 +126,7 @@ describe('ServiceBookingTypeService', () => {
 
       const createCall = mockTx.serviceBookingType.create.mock.calls[0][0];
       expect(createCall.data.isActive).toBe(true);
+      expect(mockServicesService.invalidateServicesCache).toHaveBeenCalled();
     });
 
     it('should create booking type without durationOptions when none provided', async () => {
@@ -139,6 +141,7 @@ describe('ServiceBookingTypeService', () => {
 
       const createCall = mockTx.serviceBookingType.create.mock.calls[0][0];
       expect(createCall.data.durationOptions).toBeUndefined();
+      expect(mockServicesService.invalidateServicesCache).toHaveBeenCalled();
     });
 
     it('should create booking type with durationOptions when provided', async () => {
@@ -163,6 +166,7 @@ describe('ServiceBookingTypeService', () => {
       const createCall = mockTx.serviceBookingType.create.mock.calls[0][0];
       expect(createCall.data.durationOptions).toBeDefined();
       expect(createCall.data.durationOptions.createMany.data).toHaveLength(1);
+      expect(mockServicesService.invalidateServicesCache).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if service not found', async () => {

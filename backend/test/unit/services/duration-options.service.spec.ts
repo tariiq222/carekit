@@ -96,6 +96,7 @@ describe('DurationOptionsService', () => {
       expect(mockTx.serviceDurationOption.deleteMany).toHaveBeenCalledWith({ where: { serviceId } });
       expect(mockTx.serviceDurationOption.createMany).toHaveBeenCalled();
       expect(result).toHaveLength(2);
+      expect(mockServicesService.invalidateServicesCache).toHaveBeenCalled();
     });
 
     it('should return empty array when options list is empty', async () => {
@@ -106,6 +107,7 @@ describe('DurationOptionsService', () => {
 
       expect(result).toEqual([]);
       expect(mockTx.serviceDurationOption.createMany).not.toHaveBeenCalled();
+      expect(mockServicesService.invalidateServicesCache).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if service not found', async () => {
@@ -130,6 +132,7 @@ describe('DurationOptionsService', () => {
       const createCall = mockTx.serviceDurationOption.createMany.mock.calls[0][0];
       expect(createCall.data[0].sortOrder).toBe(0);
       expect(createCall.data[0].isDefault).toBe(false);
+      expect(mockServicesService.invalidateServicesCache).toHaveBeenCalled();
     });
   });
 });
