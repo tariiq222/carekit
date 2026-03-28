@@ -59,21 +59,6 @@ export class OnboardPractitionerDto {
   educationAr?: string;
 
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  priceClinic?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  pricePhone?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  priceVideo?: number;
-
-  @IsOptional()
   @IsUrl()
   avatarUrl?: string;
 

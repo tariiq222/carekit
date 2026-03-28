@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -29,7 +30,13 @@ export class FavoritePractitionersService {
         patientId_practitionerId: { patientId, practitionerId },
       },
     });
-    if (existing) return existing;
+    if (existing) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: 'Practitioner is already in favorites',
+        error: 'ALREADY_FAVORITED',
+      });
+    }
 
     return this.prisma.favoritePractitioner.create({
       data: { patientId, practitionerId },
@@ -65,7 +72,7 @@ export class FavoritePractitionersService {
   // ───────────────────────────────────────────────────────────────
 
   async getFavorites(patientId: string) {
-    return this.prisma.favoritePractitioner.findMany({
+    const rows = await this.prisma.favoritePractitioner.findMany({
       where: { patientId },
       include: {
         practitioner: {
@@ -83,5 +90,12 @@ export class FavoritePractitionersService {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Flatten: return practitioner records with a favoriteId field
+    return rows.map(({ practitioner, id: favoriteId, createdAt }) => ({
+      ...practitioner,
+      favoriteId,
+      favoritedAt: createdAt,
+    }));
   }
 }

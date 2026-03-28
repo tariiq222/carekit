@@ -54,21 +54,6 @@ export class UpdatePractitionerDto {
   educationAr?: string;
 
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  priceClinic?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  pricePhone?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  priceVideo?: number;
-
-  @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 

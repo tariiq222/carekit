@@ -41,7 +41,7 @@ export class PractitionerDurationOptionInput {
 }
 
 export class PractitionerTypeConfigDto {
-  @IsEnum(['clinic_visit', 'phone_consultation', 'video_consultation'])
+  @IsEnum(['in_person', 'online'])
   bookingType!: string;
 
   @IsOptional()

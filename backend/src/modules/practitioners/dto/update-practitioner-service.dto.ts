@@ -5,21 +5,6 @@ import { PractitionerTypeConfigDto } from './practitioner-type-config.dto.js';
 export class UpdatePractitionerServiceDto {
   @IsOptional()
   @IsInt()
-  @Min(0)
-  priceClinic?: number | null;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  pricePhone?: number | null;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  priceVideo?: number | null;
-
-  @IsOptional()
-  @IsInt()
   @Min(1)
   customDuration?: number | null;
 
@@ -30,7 +15,7 @@ export class UpdatePractitionerServiceDto {
 
   @IsOptional()
   @IsArray()
-  @IsEnum(['clinic_visit', 'phone_consultation', 'video_consultation'], { each: true })
+  @IsEnum(['in_person', 'online'], { each: true })
   availableTypes?: string[];
 
   @IsOptional()

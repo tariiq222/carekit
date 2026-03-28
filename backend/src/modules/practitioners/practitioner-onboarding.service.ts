@@ -18,7 +18,7 @@ export class PractitionerOnboardingService {
     private readonly emailService: EmailService,
   ) {}
 
-  async onboard(dto: OnboardPractitionerDto): Promise<{ success: boolean; message: string; practitioner: object }> {
+  async onboard(dto: OnboardPractitionerDto): Promise<{ success: boolean; message: string; data: object }> {
     const normalizedEmail = dto.email.toLowerCase();
 
     const existingUser = await this.prisma.user.findUnique({
@@ -47,6 +47,7 @@ export class PractitionerOnboardingService {
 
     let createdUserId: string;
     let createdPractitioner: object;
+    let createdUser: object;
 
     // Split nameEn into firstName / lastName
     const nameParts = dto.nameEn.trim().split(/\s+/);
@@ -78,9 +79,6 @@ export class PractitionerOnboardingService {
             experience: dto.experience ?? 0,
             education: dto.education ?? null,
             educationAr: dto.educationAr ?? null,
-            priceClinic: dto.priceClinic ?? 0,
-            pricePhone: dto.pricePhone ?? 0,
-            priceVideo: dto.priceVideo ?? 0,
             isActive: dto.isActive ?? true,
           },
         });
@@ -97,6 +95,7 @@ export class PractitionerOnboardingService {
 
       createdUserId = result.user.id;
       createdPractitioner = result.practitioner;
+      createdUser = result.user;
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictException({
@@ -114,7 +113,7 @@ export class PractitionerOnboardingService {
     return {
       success: true,
       message: 'Practitioner onboarded successfully. Welcome email sent.',
-      practitioner: createdPractitioner,
+      data: { ...createdPractitioner as Record<string, unknown>, user: createdUser },
     };
   }
 }

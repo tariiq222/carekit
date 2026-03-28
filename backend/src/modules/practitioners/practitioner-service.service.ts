@@ -51,9 +51,6 @@ export class PractitionerServiceService {
       data: {
         practitionerId,
         serviceId: dto.serviceId,
-        priceClinic: dto.priceClinic,
-        pricePhone: dto.pricePhone,
-        priceVideo: dto.priceVideo,
         customDuration: dto.customDuration,
         bufferMinutes: dto.bufferMinutes ?? 0,
         availableTypes: dto.availableTypes as BookingType[],
@@ -104,9 +101,6 @@ export class PractitionerServiceService {
     await this.prisma.practitionerService.update({
       where: { id: ps.id },
       data: {
-        priceClinic: dto.priceClinic,
-        pricePhone: dto.pricePhone,
-        priceVideo: dto.priceVideo,
         customDuration: dto.customDuration,
         bufferMinutes: dto.bufferMinutes,
         availableTypes: dto.availableTypes as BookingType[] | undefined,
@@ -167,6 +161,7 @@ export class PractitionerServiceService {
   }
 
   async getServiceTypes(practitionerId: string, serviceId: string) {
+    await ensurePractitionerExists(this.prisma, practitionerId);
     const ps = await this.prisma.practitionerService.findFirst({
       where: { practitionerId, serviceId },
     });

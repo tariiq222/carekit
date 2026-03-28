@@ -62,21 +62,4 @@ export class CreatePractitionerDto {
   @MaxLength(500)
   educationAr?: string;
 
-  @ApiPropertyOptional({ description: 'Default clinic visit price in halalat (SAR × 100)', minimum: 0 })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  priceClinic?: number;
-
-  @ApiPropertyOptional({ description: 'Default phone consultation price in halalat (SAR × 100)', minimum: 0 })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  pricePhone?: number;
-
-  @ApiPropertyOptional({ description: 'Default video consultation price in halalat (SAR × 100)', minimum: 0 })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  priceVideo?: number;
 }

@@ -159,6 +159,14 @@ export class PractitionersController {
     let resolvedDuration = duration ? parseInt(duration, 10) : 30;
 
     // If bookingType and serviceId provided, resolve duration from pricing models
+    const VALID_BOOKING_TYPES = ['in_person', 'online'];
+    if (bookingType && !VALID_BOOKING_TYPES.includes(bookingType)) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: `bookingType must be one of: ${VALID_BOOKING_TYPES.join(', ')}`,
+        error: 'VALIDATION_ERROR',
+      });
+    }
     if (bookingType && serviceId && !duration) {
       resolvedDuration = await this.practitionersService.resolveDurationForSlots(serviceId, bookingType);
     }
@@ -263,7 +271,7 @@ export class PractitionersController {
   }
 
   @Get(':id/services/:serviceId/types')
-  @CheckPermissions({ module: 'practitioners', action: 'view' })
+  @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async getServiceTypes(
     @Param('id', uuidPipe) id: string,
     @Param('serviceId', uuidPipe) serviceId: string,
