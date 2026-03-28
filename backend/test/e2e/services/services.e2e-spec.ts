@@ -1193,18 +1193,18 @@ describe('Services Module (e2e)', () => {
         .expect(201);
 
       expectSuccessResponse(res.body);
-      const d = res.body.data as Record<string, unknown>;
-      expect(d['price']).toBe(100000);
-      expect(d['duration']).toBe(60);
-      expect(d['bufferMinutes']).toBe(30);
-      expect(d['depositEnabled']).toBe(true);
-      expect(d['depositPercent']).toBe(25);
-      expect(d['allowRecurring']).toBe(true);
-      expect(d['maxRecurrences']).toBe(12);
-      expect(d['maxParticipants']).toBe(1);
-      expect(d['minLeadMinutes']).toBe(1440);
-      expect(d['maxAdvanceDays']).toBe(60);
-      expect(d['calendarColor']).toBe('#4CAF50');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(res.body.data.price).toBe(100000);
+      expect(res.body.data.duration).toBe(60);
+      expect(res.body.data.bufferMinutes).toBe(30);
+      expect(res.body.data.depositEnabled).toBe(true);
+      expect(res.body.data.depositPercent).toBe(25);
+      expect(res.body.data.allowRecurring).toBe(true);
+      expect(res.body.data.maxRecurrences).toBe(12);
+      expect(res.body.data.maxParticipants).toBe(1);
+      expect(res.body.data.minLeadMinutes).toBe(1440);
+      expect(res.body.data.maxAdvanceDays).toBe(60);
+      expect(res.body.data.calendarColor).toBe('#4CAF50');
     });
 
     // Validation: invalid recurring pattern
