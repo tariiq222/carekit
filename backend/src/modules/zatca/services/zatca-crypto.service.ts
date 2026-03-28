@@ -131,13 +131,13 @@ export class ZatcaCryptoService {
     // OIDs: SN=serialNumber, UID=userId/VAT, T=title/businessCategory
     const csr = await Pkcs10CertificateRequestGenerator.create({
       name: [
-        { CN: params.commonName },
-        { OU: params.organizationUnit },
-        { O: params.organization },
-        { C: params.country },
-        { SN: params.serialNumber },       // 2.5.4.5 — ZATCA serial number
-        { '2.5.4.45': params.vatNumber },  // UID OID (UniqueIdentifier/VAT)
-        { T: params.businessCategory },    // 2.5.4.12 — title/business category
+        { CN: [params.commonName] },
+        { OU: [params.organizationUnit] },
+        { O: [params.organization] },
+        { C: [params.country] },
+        { SN: [params.serialNumber] },       // 2.5.4.5 — ZATCA serial number
+        { '2.5.4.45': [params.vatNumber] },  // UID OID (UniqueIdentifier/VAT)
+        { T: [params.businessCategory] },    // 2.5.4.12 — title/business category
       ],
       keys: { privateKey, publicKey },
       signingAlgorithm: { name: 'ECDSA', hash: 'SHA-256' },
