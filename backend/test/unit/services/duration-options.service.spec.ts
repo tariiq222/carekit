@@ -4,11 +4,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { DurationOptionsService } from '../../../src/modules/services/duration-options.service.js';
+import { ServicesService } from '../../../src/modules/services/services.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
 const serviceId = 'service-uuid-1';
-
-const mockService = { id: serviceId, deletedAt: null };
 
 const mockOptions = [
   { id: 'opt-1', serviceId, label: '30 min', labelAr: '٣٠ دقيقة', durationMinutes: 30, price: 10000, isDefault: true, sortOrder: 0 },
@@ -26,9 +25,13 @@ const mockTx: any = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
-  service: { findFirst: jest.fn() },
   serviceDurationOption: { findMany: jest.fn() },
   $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockServicesService: any = {
+  ensureExists: jest.fn(),
 };
 
 describe('DurationOptionsService', () => {
@@ -39,6 +42,7 @@ describe('DurationOptionsService', () => {
       providers: [
         DurationOptionsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: ServicesService, useValue: mockServicesService },
       ],
     }).compile();
 
@@ -51,12 +55,13 @@ describe('DurationOptionsService', () => {
 
   describe('getDurationOptions', () => {
     it('should return options ordered by sortOrder asc', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockPrisma.serviceDurationOption.findMany.mockResolvedValue(mockOptions);
 
       const result = await service.getDurationOptions(serviceId);
 
       expect(result).toHaveLength(2);
+      expect(mockServicesService.ensureExists).toHaveBeenCalledWith(serviceId);
       expect(mockPrisma.serviceDurationOption.findMany).toHaveBeenCalledWith({
         where: { serviceId },
         orderBy: { sortOrder: 'asc' },
@@ -64,14 +69,16 @@ describe('DurationOptionsService', () => {
     });
 
     it('should throw NotFoundException if service not found', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(null);
+      mockServicesService.ensureExists.mockRejectedValue(
+        new NotFoundException({ statusCode: 404, message: 'Service not found', error: 'NOT_FOUND' }),
+      );
       await expect(service.getDurationOptions(serviceId)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('setDurationOptions', () => {
     it('should delete existing and create new options', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockTx.serviceDurationOption.deleteMany.mockResolvedValue({ count: 1 });
       mockTx.serviceDurationOption.createMany.mockResolvedValue({ count: 2 });
       mockTx.serviceDurationOption.findMany.mockResolvedValue(mockOptions);
@@ -91,7 +98,7 @@ describe('DurationOptionsService', () => {
     });
 
     it('should return empty array when options list is empty', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockTx.serviceDurationOption.deleteMany.mockResolvedValue({ count: 0 });
 
       const result = await service.setDurationOptions(serviceId, { options: [] });
@@ -101,14 +108,16 @@ describe('DurationOptionsService', () => {
     });
 
     it('should throw NotFoundException if service not found', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(null);
+      mockServicesService.ensureExists.mockRejectedValue(
+        new NotFoundException({ statusCode: 404, message: 'Service not found', error: 'NOT_FOUND' }),
+      );
       await expect(
         service.setDurationOptions(serviceId, { options: [] }),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should use index as sortOrder when not provided', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockTx.serviceDurationOption.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.serviceDurationOption.createMany.mockResolvedValue({ count: 1 });
       mockTx.serviceDurationOption.findMany.mockResolvedValue([mockOptions[0]]);

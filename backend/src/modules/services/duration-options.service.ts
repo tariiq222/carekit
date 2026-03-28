@@ -1,13 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { ServicesService } from './services.service.js';
 import { SetDurationOptionsDto } from './dto/set-duration-options.dto.js';
 
 @Injectable()
 export class DurationOptionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly services: ServicesService,
+  ) {}
 
   async getDurationOptions(serviceId: string) {
-    await this.ensureServiceExists(serviceId);
+    await this.services.ensureExists(serviceId);
     return this.prisma.serviceDurationOption.findMany({
       where: { serviceId },
       orderBy: { sortOrder: 'asc' },
@@ -15,7 +19,7 @@ export class DurationOptionsService {
   }
 
   async setDurationOptions(serviceId: string, dto: SetDurationOptionsDto) {
-    await this.ensureServiceExists(serviceId);
+    await this.services.ensureExists(serviceId);
 
     return this.prisma.$transaction(async (tx) => {
       await tx.serviceDurationOption.deleteMany({ where: { serviceId } });
@@ -39,19 +43,5 @@ export class DurationOptionsService {
         orderBy: { sortOrder: 'asc' },
       });
     });
-  }
-
-  private async ensureServiceExists(id: string) {
-    const service = await this.prisma.service.findFirst({
-      where: { id, deletedAt: null },
-    });
-    if (!service) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Service not found',
-        error: 'NOT_FOUND',
-      });
-    }
-    return service;
   }
 }

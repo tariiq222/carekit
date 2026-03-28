@@ -1,21 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { ServicesService } from './services.service.js';
 
 @Injectable()
 export class ServicePractitionersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly services: ServicesService,
+  ) {}
 
   async getPractitionersForService(serviceId: string) {
-    const service = await this.prisma.service.findFirst({
-      where: { id: serviceId, deletedAt: null },
-    });
-    if (!service) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Service not found',
-        error: 'NOT_FOUND',
-      });
-    }
+    await this.services.ensureExists(serviceId);
 
     return this.prisma.practitionerService.findMany({
       where: { serviceId },

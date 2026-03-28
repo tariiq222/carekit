@@ -211,6 +211,20 @@ export class ServicesService {
     return this.intakeForms.listForms({ serviceId });
   }
 
+  async ensureExists(id: string) {
+    const service = await this.prisma.service.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!service) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Service not found',
+        error: 'NOT_FOUND',
+      });
+    }
+    return service;
+  }
+
   // ═══════════════════════════════════════════════════════════════
   //  PRIVATE HELPERS
   // ═══════════════════════════════════════════════════════════════

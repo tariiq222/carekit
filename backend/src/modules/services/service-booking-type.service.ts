@@ -1,14 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
+import { ServicesService } from './services.service.js';
 import type { BookingType } from '@prisma/client';
 import { SetServiceBookingTypesDto } from './dto/set-booking-types.dto.js';
 
 @Injectable()
 export class ServiceBookingTypeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly services: ServicesService,
+  ) {}
 
   async getByService(serviceId: string) {
-    await this.ensureServiceExists(serviceId);
+    await this.services.ensureExists(serviceId);
 
     return this.prisma.serviceBookingType.findMany({
       where: { serviceId },
@@ -18,7 +22,7 @@ export class ServiceBookingTypeService {
   }
 
   async setBookingTypes(serviceId: string, dto: SetServiceBookingTypesDto) {
-    await this.ensureServiceExists(serviceId);
+    await this.services.ensureExists(serviceId);
 
     return this.prisma.$transaction(async (tx) => {
       // Delete old booking types (cascades to duration options via onDelete: Cascade)
@@ -59,19 +63,5 @@ export class ServiceBookingTypeService {
         orderBy: { createdAt: 'asc' },
       });
     });
-  }
-
-  private async ensureServiceExists(id: string) {
-    const service = await this.prisma.service.findFirst({
-      where: { id, deletedAt: null },
-    });
-    if (!service) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Service not found',
-        error: 'NOT_FOUND',
-      });
-    }
-    return service;
   }
 }

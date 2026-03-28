@@ -5,10 +5,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { BookingType } from '@prisma/client';
 import { ServiceBookingTypeService } from '../../../src/modules/services/service-booking-type.service.js';
+import { ServicesService } from '../../../src/modules/services/services.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
 const serviceId = 'service-uuid-1';
-const mockService = { id: serviceId, deletedAt: null };
 
 const mockBookingType = {
   id: 'bt-uuid-1',
@@ -32,9 +32,13 @@ const mockTx: any = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
-  service: { findFirst: jest.fn() },
   serviceBookingType: { findMany: jest.fn() },
   $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockServicesService: any = {
+  ensureExists: jest.fn(),
 };
 
 describe('ServiceBookingTypeService', () => {
@@ -45,6 +49,7 @@ describe('ServiceBookingTypeService', () => {
       providers: [
         ServiceBookingTypeService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: ServicesService, useValue: mockServicesService },
       ],
     }).compile();
 
@@ -57,12 +62,13 @@ describe('ServiceBookingTypeService', () => {
 
   describe('getByService', () => {
     it('should return booking types with durationOptions', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockPrisma.serviceBookingType.findMany.mockResolvedValue([mockBookingType]);
 
       const result = await service.getByService(serviceId);
 
       expect(result).toHaveLength(1);
+      expect(mockServicesService.ensureExists).toHaveBeenCalledWith(serviceId);
       expect(mockPrisma.serviceBookingType.findMany).toHaveBeenCalledWith({
         where: { serviceId },
         include: { durationOptions: { orderBy: { sortOrder: 'asc' } } },
@@ -71,12 +77,14 @@ describe('ServiceBookingTypeService', () => {
     });
 
     it('should throw NotFoundException if service not found', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(null);
+      mockServicesService.ensureExists.mockRejectedValue(
+        new NotFoundException({ statusCode: 404, message: 'Service not found', error: 'NOT_FOUND' }),
+      );
       await expect(service.getByService(serviceId)).rejects.toThrow(NotFoundException);
     });
 
     it('should return empty array when no booking types exist', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockPrisma.serviceBookingType.findMany.mockResolvedValue([]);
 
       const result = await service.getByService(serviceId);
@@ -86,7 +94,7 @@ describe('ServiceBookingTypeService', () => {
 
   describe('setBookingTypes', () => {
     it('should delete old and create new booking types', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockTx.serviceBookingType.deleteMany.mockResolvedValue({ count: 1 });
       mockTx.serviceBookingType.create.mockResolvedValue(mockBookingType);
       mockTx.serviceBookingType.findMany.mockResolvedValue([mockBookingType]);
@@ -105,7 +113,7 @@ describe('ServiceBookingTypeService', () => {
     });
 
     it('should set isActive to true by default when not provided', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockTx.serviceBookingType.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.serviceBookingType.create.mockResolvedValue(mockBookingType);
       mockTx.serviceBookingType.findMany.mockResolvedValue([mockBookingType]);
@@ -119,7 +127,7 @@ describe('ServiceBookingTypeService', () => {
     });
 
     it('should create booking type without durationOptions when none provided', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockTx.serviceBookingType.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.serviceBookingType.create.mockResolvedValue(mockBookingType);
       mockTx.serviceBookingType.findMany.mockResolvedValue([mockBookingType]);
@@ -133,7 +141,7 @@ describe('ServiceBookingTypeService', () => {
     });
 
     it('should create booking type with durationOptions when provided', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(mockService);
+      mockServicesService.ensureExists.mockResolvedValue({ id: serviceId, deletedAt: null });
       mockTx.serviceBookingType.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.serviceBookingType.create.mockResolvedValue(mockBookingType);
       mockTx.serviceBookingType.findMany.mockResolvedValue([mockBookingType]);
@@ -157,7 +165,9 @@ describe('ServiceBookingTypeService', () => {
     });
 
     it('should throw NotFoundException if service not found', async () => {
-      mockPrisma.service.findFirst.mockResolvedValue(null);
+      mockServicesService.ensureExists.mockRejectedValue(
+        new NotFoundException({ statusCode: 404, message: 'Service not found', error: 'NOT_FOUND' }),
+      );
       await expect(
         service.setBookingTypes(serviceId, { types: [] }),
       ).rejects.toThrow(NotFoundException);
