@@ -3,6 +3,7 @@
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { BookingType } from '@prisma/client';
 import { ServiceBookingTypeService } from '../../../src/modules/services/service-booking-type.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
@@ -92,7 +93,7 @@ describe('ServiceBookingTypeService', () => {
 
       const dto = {
         types: [
-          { bookingType: 'in_person', price: 20000, duration: 30 },
+          { bookingType: BookingType.in_person, price: 20000, duration: 30 },
         ],
       };
 
@@ -110,7 +111,7 @@ describe('ServiceBookingTypeService', () => {
       mockTx.serviceBookingType.findMany.mockResolvedValue([mockBookingType]);
 
       await service.setBookingTypes(serviceId, {
-        types: [{ bookingType: 'in_person', price: 20000, duration: 30 }],
+        types: [{ bookingType: BookingType.in_person, price: 20000, duration: 30 }],
       });
 
       const createCall = mockTx.serviceBookingType.create.mock.calls[0][0];
@@ -124,7 +125,7 @@ describe('ServiceBookingTypeService', () => {
       mockTx.serviceBookingType.findMany.mockResolvedValue([mockBookingType]);
 
       await service.setBookingTypes(serviceId, {
-        types: [{ bookingType: 'phone', price: 15000, duration: 20 }],
+        types: [{ bookingType: BookingType.online, price: 15000, duration: 20 }],
       });
 
       const createCall = mockTx.serviceBookingType.create.mock.calls[0][0];
