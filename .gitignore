@@ -68,3 +68,4 @@ docs/screenshots/
 # Root-level build artifacts
 /.next/
 /.expo/
+.worktrees/
