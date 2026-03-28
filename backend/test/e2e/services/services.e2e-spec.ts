@@ -1305,5 +1305,21 @@ describe('Services Module (e2e)', () => {
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('price', 0);
     });
+
+    // Validation: minLeadMinutes > 1440
+    it('should reject minLeadMinutes > 1440', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Too Long Lead Service',
+          nameAr: 'خدمة وقت انتظار طويل',
+          categoryId,
+          minLeadMinutes: 1441,
+        })
+        .expect(400);
+
+      expectErrorResponse(res.body, 'VALIDATION_ERROR');
+    });
   });
 });
