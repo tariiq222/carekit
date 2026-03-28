@@ -18,6 +18,8 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ServicesService } from './services.service.js';
 import { DurationOptionsService } from './duration-options.service.js';
 import { ServiceBookingTypeService } from './service-booking-type.service.js';
+import { ServicePractitionersService } from './service-practitioners.service.js';
+import { IntakeFormsService } from '../intake-forms/intake-forms.service.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
@@ -36,6 +38,8 @@ export class ServicesController {
     private readonly servicesService: ServicesService,
     private readonly durationOptionsService: DurationOptionsService,
     private readonly bookingTypeService: ServiceBookingTypeService,
+    private readonly practitionersService: ServicePractitionersService,
+    private readonly intakeFormsService: IntakeFormsService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -106,6 +110,13 @@ export class ServicesController {
     return this.servicesService.softDelete(id);
   }
 
+  @Get(':id/intake-forms/all')
+  @Public()
+  async getIntakeForms(@Param('id', uuidPipe) id: string) {
+    const data = await this.intakeFormsService.listForms({ serviceId: id });
+    return { success: true, data };
+  }
+
   // ═══════════════════════════════════════════════════════════════
   //  DURATION OPTIONS
   // ═══════════════════════════════════════════════════════════════
@@ -123,6 +134,17 @@ export class ServicesController {
     @Body() dto: SetDurationOptionsDto,
   ) {
     return this.durationOptionsService.setDurationOptions(id, dto);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  PRACTITIONERS
+  // ═══════════════════════════════════════════════════════════════
+
+  @Get(':id/practitioners')
+  @Public()
+  async getPractitioners(@Param('id', uuidPipe) id: string) {
+    const data = await this.practitionersService.getPractitionersForService(id);
+    return { success: true, data };
   }
 
   // ═══════════════════════════════════════════════════════════════

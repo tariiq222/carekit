@@ -1,6 +1,7 @@
 import { IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { RecurringPattern } from '@prisma/client';
 
 export class UpdateServiceDto {
   @IsOptional()
@@ -89,11 +90,11 @@ export class UpdateServiceDto {
   @IsBoolean()
   allowRecurring?: boolean;
 
-  @ApiPropertyOptional({ enum: ['daily', 'every_2_days', 'every_3_days', 'weekly', 'biweekly', 'monthly'], isArray: true })
+  @ApiPropertyOptional({ enum: RecurringPattern, isArray: true })
   @IsOptional()
   @IsArray()
-  @IsIn(['daily', 'every_2_days', 'every_3_days', 'weekly', 'biweekly', 'monthly'], { each: true })
-  allowedRecurringPatterns?: string[];
+  @IsIn(Object.values(RecurringPattern), { each: true })
+  allowedRecurringPatterns?: RecurringPattern[];
 
   @ApiPropertyOptional({ minimum: 1, maximum: 52 })
   @IsOptional()

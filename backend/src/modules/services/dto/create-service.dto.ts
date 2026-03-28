@@ -124,4 +124,10 @@ export class CreateServiceDto {
   @Min(1)
   @Max(365)
   maxAdvanceDays?: number;
+
+  @ApiPropertyOptional({ type: [String], description: 'Practitioner UUIDs to link atomically on create' })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
+  practitionerIds?: string[];
 }

@@ -123,32 +123,56 @@ export class ServicesService {
       });
     }
 
-    const service = await this.prisma.service.create({
-      data: {
-        nameEn: dto.nameEn,
-        nameAr: dto.nameAr,
-        descriptionEn: dto.descriptionEn,
-        descriptionAr: dto.descriptionAr,
-        categoryId: dto.categoryId,
-        price: dto.price ?? 0,
-        duration: dto.duration ?? 30,
-        isActive: dto.isActive ?? true,
-        isHidden: dto.isHidden ?? false,
-        hidePriceOnBooking: dto.hidePriceOnBooking ?? false,
-        hideDurationOnBooking: dto.hideDurationOnBooking ?? false,
-        calendarColor: dto.calendarColor,
-        bufferMinutes: dto.bufferMinutes ?? 0,
-        depositEnabled: dto.depositEnabled ?? false,
-        depositPercent: dto.depositPercent,
-        allowRecurring: dto.allowRecurring,
-        allowedRecurringPatterns: dto.allowedRecurringPatterns,
-        maxRecurrences: dto.maxRecurrences,
-        maxParticipants: dto.maxParticipants ?? 1,
-        minLeadMinutes: dto.minLeadMinutes,
-        maxAdvanceDays: dto.maxAdvanceDays,
-      },
-      include: { category: true },
-    });
+    const serviceData = {
+      nameEn: dto.nameEn,
+      nameAr: dto.nameAr,
+      descriptionEn: dto.descriptionEn,
+      descriptionAr: dto.descriptionAr,
+      categoryId: dto.categoryId,
+      price: dto.price ?? 0,
+      duration: dto.duration ?? 30,
+      isActive: dto.isActive ?? true,
+      isHidden: dto.isHidden ?? false,
+      hidePriceOnBooking: dto.hidePriceOnBooking ?? false,
+      hideDurationOnBooking: dto.hideDurationOnBooking ?? false,
+      calendarColor: dto.calendarColor,
+      bufferMinutes: dto.bufferMinutes ?? 0,
+      depositEnabled: dto.depositEnabled ?? false,
+      depositPercent: dto.depositPercent,
+      allowRecurring: dto.allowRecurring,
+      allowedRecurringPatterns: dto.allowedRecurringPatterns as RecurringPattern[] | undefined,
+      maxRecurrences: dto.maxRecurrences,
+      maxParticipants: dto.maxParticipants ?? 1,
+      minLeadMinutes: dto.minLeadMinutes,
+      maxAdvanceDays: dto.maxAdvanceDays,
+    };
+
+    let service: Awaited<ReturnType<typeof this.prisma.service.create>>;
+
+    if (dto.practitionerIds && dto.practitionerIds.length > 0) {
+      const [created] = await this.prisma.$transaction([
+        this.prisma.service.create({
+          data: {
+            ...serviceData,
+            practitioners: {
+              create: dto.practitionerIds.map((practitionerId) => ({
+                practitionerId,
+                availableTypes: ['in_person', 'online'],
+                isActive: true,
+              })),
+            },
+          },
+          include: { category: true },
+        }),
+      ]);
+      service = created;
+    } else {
+      service = await this.prisma.service.create({
+        data: serviceData,
+        include: { category: true },
+      });
+    }
+
     await this.invalidateServicesCache();
     return service;
   }
