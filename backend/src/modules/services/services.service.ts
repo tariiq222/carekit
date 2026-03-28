@@ -88,10 +88,10 @@ export class ServicesService {
       });
     }
 
-    // Cascade protection: check for ALL services (including soft-deleted)
-    // to avoid FK constraint violation on hard delete
+    // Cascade protection: check for ACTIVE services only (excludes soft-deleted)
+    // to allow deleting categories whose services are all soft-deleted
     const serviceCount = await this.prisma.service.count({
-      where: { categoryId: id },
+      where: { categoryId: id, deletedAt: null },
     });
     if (serviceCount > 0) {
       throw new ConflictException({

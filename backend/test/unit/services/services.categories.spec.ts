@@ -145,6 +145,26 @@ describe('ServicesService — deleteCategory', () => {
     await expect(service.deleteCategory(mockCategory.id)).rejects.toThrow(ConflictException);
   });
 
+  it('should allow deleting a category whose services are all soft-deleted', async () => {
+    mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+    // All services are soft-deleted — count of ACTIVE services = 0
+    mockPrisma.service.count.mockResolvedValue(0);
+    mockPrisma.serviceCategory.delete.mockResolvedValue(mockCategory);
+
+    const result = await service.deleteCategory(mockCategory.id);
+
+    expect(result).toEqual({ deleted: true });
+    // Verify the count query excludes soft-deleted services
+    expect(mockPrisma.service.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          categoryId: mockCategory.id,
+          deletedAt: null,
+        }),
+      }),
+    );
+  });
+
   it('should throw NotFoundException if category not found', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(null);
 
