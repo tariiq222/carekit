@@ -1,7 +1,6 @@
 export enum BookingType {
-  CLINIC_VISIT = 'clinic_visit',
-  PHONE_CONSULTATION = 'phone_consultation',
-  VIDEO_CONSULTATION = 'video_consultation',
+  IN_PERSON = 'in_person',
+  ONLINE = 'online',
   WALK_IN = 'walk_in',
 }
 

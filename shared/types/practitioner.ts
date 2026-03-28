@@ -7,12 +7,6 @@ export interface Practitioner {
   experience: number;
   education: string | null;
   educationAr: string | null;
-  /** @deprecated Use PractitionerServicePricing per service instead */
-  priceClinic: number;
-  /** @deprecated Use PractitionerServicePricing per service instead */
-  pricePhone: number;
-  /** @deprecated Use PractitionerServicePricing per service instead */
-  priceVideo: number;
   rating: number;
   reviewCount: number;
   isActive: boolean;
@@ -25,12 +19,9 @@ export interface PractitionerServicePricing {
   id: string;
   practitionerId: string;
   serviceId: string;
-  priceClinic: number | null;
-  pricePhone: number | null;
-  priceVideo: number | null;
   customDuration: number | null;
   bufferMinutes: number;
-  availableTypes: ('clinic_visit' | 'phone_consultation' | 'video_consultation')[];
+  availableTypes: ('in_person' | 'online' | 'walk_in')[];
   isActive: boolean;
   service?: {
     id: string;
