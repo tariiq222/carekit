@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import type { User, Practitioner } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { OtpService } from '../auth/otp.service.js';
 import { EmailService } from '../email/email.service.js';
@@ -18,7 +19,7 @@ export class PractitionerOnboardingService {
     private readonly emailService: EmailService,
   ) {}
 
-  async onboard(dto: OnboardPractitionerDto): Promise<{ success: boolean; message: string; data: object }> {
+  async onboard(dto: OnboardPractitionerDto): Promise<{ success: boolean; message: string; data: Practitioner & { user: User } }> {
     const normalizedEmail = dto.email.toLowerCase();
 
     const existingUser = await this.prisma.user.findUnique({
@@ -46,8 +47,8 @@ export class PractitionerOnboardingService {
     }
 
     let createdUserId: string;
-    let createdPractitioner: object;
-    let createdUser: object;
+    let createdPractitioner!: Practitioner;
+    let createdUser!: User;
 
     // Split nameEn into firstName / lastName
     const nameParts = dto.nameEn.trim().split(/\s+/);
@@ -113,7 +114,7 @@ export class PractitionerOnboardingService {
     return {
       success: true,
       message: 'Practitioner onboarded successfully. Welcome email sent.',
-      data: { ...createdPractitioner as Record<string, unknown>, user: createdUser },
+      data: { ...createdPractitioner, user: createdUser },
     };
   }
 }

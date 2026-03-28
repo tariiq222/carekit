@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { BookingType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { checkOwnership } from '../../common/helpers/ownership.helper.js';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
@@ -269,7 +270,7 @@ export class PractitionersService {
 
   async resolveDurationForSlots(serviceId: string, bookingType: string): Promise<number> {
     const sbt = await this.prisma.serviceBookingType.findUnique({
-      where: { serviceId_bookingType: { serviceId, bookingType: bookingType as never } },
+      where: { serviceId_bookingType: { serviceId, bookingType: bookingType as BookingType } },
     });
     return sbt?.duration ?? 30;
   }
