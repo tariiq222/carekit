@@ -159,7 +159,8 @@ export class ServicesService {
       !query.categoryId &&
       !query.search &&
       (query.isActive === undefined || query.isActive === true) &&
-      (query.page === undefined || query.page === 1);
+      (query.page === undefined || query.page === 1) &&
+      query.perPage === undefined;
 
     if (isDefaultQuery) {
       const cached = await this.cache.get<ReturnType<typeof this.buildFindAllResult>>(

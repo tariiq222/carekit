@@ -637,7 +637,7 @@ describe('Services Module (e2e)', () => {
       const { meta } = res.body.data;
       expect(meta).toHaveProperty('total');
       expect(meta).toHaveProperty('page', 1);
-      expect(meta).toHaveProperty('perPage', 20);
+      expect(meta).toHaveProperty('perPage', 5);
       expect(meta).toHaveProperty('totalPages');
       expect(meta).toHaveProperty('hasNextPage');
       expect(meta).toHaveProperty('hasPreviousPage');
@@ -721,6 +721,30 @@ describe('Services Module (e2e)', () => {
       for (const item of items) {
         expect(item.deletedAt).toBeUndefined(); // deletedAt should not be exposed
       }
+    });
+
+    it('should exclude isHidden services from public listing', async () => {
+      // Create a hidden service
+      const hiddenRes = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Hidden From Public Service',
+          nameAr: 'خدمة مخفية عن الجمهور',
+          categoryId,
+          isHidden: true,
+        })
+        .expect(201);
+
+      const hiddenId = hiddenRes.body.data.id as string;
+
+      // Public (unauthenticated) GET should not return it
+      const res = await request(httpServer)
+        .get(SERVICES_URL)
+        .expect(200);
+
+      const ids = (res.body.data.items as Array<{ id: string }>).map((i) => i.id);
+      expect(ids).not.toContain(hiddenId);
     });
   });
 
@@ -906,6 +930,27 @@ describe('Services Module (e2e)', () => {
         .expect(404);
 
       expectErrorResponse(res.body, 'NOT_FOUND');
+    });
+
+    it('should update advanced fields (depositEnabled, bufferMinutes, allowRecurring)', async () => {
+      const res = await request(httpServer)
+        .patch(`${SERVICES_URL}/${serviceId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          depositEnabled: true,
+          depositPercent: 30,
+          bufferMinutes: 15,
+          allowRecurring: false,
+          maxParticipants: 5,
+        })
+        .expect(200);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('depositEnabled', true);
+      expect(res.body.data).toHaveProperty('depositPercent', 30);
+      expect(res.body.data).toHaveProperty('bufferMinutes', 15);
+      expect(res.body.data).toHaveProperty('allowRecurring', false);
+      expect(res.body.data).toHaveProperty('maxParticipants', 5);
     });
   });
 
@@ -1316,6 +1361,40 @@ describe('Services Module (e2e)', () => {
           nameAr: 'خدمة وقت انتظار طويل',
           categoryId,
           minLeadMinutes: 1441,
+        })
+        .expect(400);
+
+      expectErrorResponse(res.body, 'VALIDATION_ERROR');
+    });
+
+    // Validation: depositPercent: 0 (below @Min(1))
+    it('should reject depositPercent: 0', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Zero Deposit Service',
+          nameAr: 'خدمة عربون صفر',
+          categoryId,
+          depositEnabled: true,
+          depositPercent: 0,
+        })
+        .expect(400);
+
+      expectErrorResponse(res.body, 'VALIDATION_ERROR');
+    });
+
+    // Validation: maxRecurrences: 0 (below @Min(1))
+    it('should reject maxRecurrences: 0', async () => {
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Zero Recurrences Service',
+          nameAr: 'خدمة تكرار صفر',
+          categoryId,
+          allowRecurring: true,
+          maxRecurrences: 0,
         })
         .expect(400);
 
