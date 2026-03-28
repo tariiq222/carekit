@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUrl, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsInt, IsNull, IsOptional, IsString, IsUrl, IsUUID, Matches, Max, MaxLength, Min, ValidateIf } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { RecurringPattern } from '@prisma/client';
@@ -73,12 +73,14 @@ export class UpdateServiceDto {
 
   @ApiPropertyOptional({ description: 'Background color for icon, e.g. #354FD8' })
   @IsOptional()
+  @ValidateIf((o: UpdateServiceDto) => o.iconBgColor !== null)
   @IsString()
   @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'iconBgColor must be a valid hex color' })
   iconBgColor?: string | null;
 
   @ApiPropertyOptional({ description: 'MinIO image URL — takes priority over icon' })
   @IsOptional()
+  @ValidateIf((o: UpdateServiceDto) => o.imageUrl !== null)
   @IsUrl()
   imageUrl?: string | null;
 
