@@ -201,7 +201,7 @@ export class BookingCancelHelpersService {
   // ───────────────────────────────────────────────────────────────
 
   deleteZoomIfNeeded(booking: { type: string; zoomMeetingId: string | null }): void {
-    if (booking.type === 'video_consultation' && booking.zoomMeetingId) {
+    if (booking.type === 'online' && booking.zoomMeetingId) {
       this.zoomService.deleteMeeting(booking.zoomMeetingId).catch((err) =>
         this.logger.warn(`Failed to delete Zoom meeting on cancellation: ${err.message}`),
       );

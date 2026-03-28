@@ -117,11 +117,8 @@ export class BookingCreationService {
     }
 
     let zoomData: { zoomMeetingId?: string; zoomJoinUrl?: string; zoomHostUrl?: string } = {};
-    if (dto.type === 'video_consultation') {
-      const isoStart = `${dto.date}T${dto.startTime}:00`;
-      const meeting = await this.zoomService.createMeeting('CareKit Video Consultation', isoStart, duration);
-      zoomData = { zoomMeetingId: meeting.meetingId, zoomJoinUrl: meeting.joinUrl, zoomHostUrl: meeting.hostUrl };
-    }
+    // Zoom is triggered for online bookings on-demand (at session time), not at booking creation.
+    // zoomData remains empty here; a separate endpoint will create the meeting when needed.
 
     const isWalkIn = dto.type === 'walk_in';
     const isPayAtClinic = dto.payAtClinic === true;
@@ -219,24 +216,15 @@ export class BookingCreationService {
 
   private async resolvePriceOrFallback(
     dto: CreateBookingDto,
-    ps: { id: string; customDuration: number | null; priceClinic?: number | null; pricePhone?: number | null; priceVideo?: number | null },
+    ps: { id: string; customDuration: number | null },
     service: { id: string; price: number; duration: number },
   ): Promise<{ price: number; duration: number; source: string; durationOptionId?: string }> {
-    try {
-      return await this.priceResolver.resolve({
-        serviceId: dto.serviceId,
-        practitionerServiceId: ps.id,
-        bookingType: dto.type,
-        durationOptionId: dto.durationOptionId,
-      });
-    } catch (err) {
-      if (err instanceof BadRequestException) throw err;
-      const duration = ps.customDuration ?? service.duration;
-      const priceField = dto.type === 'clinic_visit' || dto.type === 'walk_in' ? 'priceClinic' as const
-        : dto.type === 'phone_consultation' ? 'pricePhone' as const : 'priceVideo' as const;
-      const price = (ps as Record<string, unknown>)[priceField] as number ?? service.price ?? 0;
-      return { price, duration, source: 'legacy_fallback' };
-    }
+    return await this.priceResolver.resolve({
+      serviceId: dto.serviceId,
+      practitionerServiceId: ps.id,
+      bookingType: dto.type,
+      durationOptionId: dto.durationOptionId,
+    });
   }
 
   private async ensureBookingExists(id: string) {

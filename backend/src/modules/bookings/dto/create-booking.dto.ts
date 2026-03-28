@@ -13,7 +13,7 @@ export class CreateBookingDto {
   @IsNotEmpty()
   serviceId!: string;
 
-  @ApiProperty({ enum: BookingType, description: 'Booking type (clinic_visit, phone_consultation, video_consultation, walk_in)' })
+  @ApiProperty({ enum: BookingType, description: 'Booking type (in_person, online, walk_in)' })
   @IsEnum(BookingType)
   @IsNotEmpty()
   type!: BookingType;

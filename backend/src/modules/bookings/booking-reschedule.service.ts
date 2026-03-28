@@ -41,7 +41,7 @@ export class BookingRescheduleService {
     const newEndTime = calculateEndTime(newStartTime, duration);
 
     let zoomData: { zoomMeetingId?: string; zoomJoinUrl?: string; zoomHostUrl?: string } = {};
-    if (booking.type === 'video_consultation') {
+    if (booking.type === 'online') {
       const isoStart = `${newDate.toISOString().split('T')[0]}T${newStartTime}:00`;
       const mtg = await this.zoomService.createMeeting('CareKit Video Consultation', isoStart, duration);
       zoomData = { zoomMeetingId: mtg.meetingId, zoomJoinUrl: mtg.joinUrl, zoomHostUrl: mtg.hostUrl };
@@ -72,7 +72,7 @@ export class BookingRescheduleService {
       return nb;
     }, { isolationLevel: 'Serializable', timeout: 10000 });
 
-    if (booking.type === 'video_consultation' && oldZoomId) {
+    if (booking.type === 'online' && oldZoomId) {
       this.zoomService.deleteMeeting(oldZoomId).catch((e) => this.logger.warn(`Failed to delete old Zoom meeting: ${e.message}`));
     }
     await this.notifyReschedule(booking, result, newDate, newStartTime);

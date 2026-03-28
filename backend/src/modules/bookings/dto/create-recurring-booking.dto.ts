@@ -9,9 +9,9 @@ export class CreateRecurringBookingDto {
   @IsNotEmpty()
   serviceId!: string;
 
-  @IsEnum(['clinic_visit', 'phone_consultation', 'video_consultation'])
+  @IsEnum(['in_person', 'online'])
   @IsNotEmpty()
-  type!: 'clinic_visit' | 'phone_consultation' | 'video_consultation';
+  type!: 'in_person' | 'online';
 
   @IsString()
   @IsNotEmpty()
