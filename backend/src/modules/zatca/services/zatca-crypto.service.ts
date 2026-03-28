@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { Pkcs10CertificateRequestGenerator, cryptoProvider } from '@peculiar/x509';
+import { Crypto as PeculiarCrypto } from '@peculiar/webcrypto';
 
 export interface CsrParams {
   commonName: string; // clinic name
@@ -35,7 +37,7 @@ export class ZatcaCryptoService {
    * Uses node-forge for proper ASN.1 encoding.
    * Falls back to a manual base64 encoding if forge is unavailable.
    */
-  generateCsr(privateKey: string, params: CsrParams): string {
+  async generateCsr(privateKey: string, params: CsrParams): Promise<string> {
     // Build the subject DN (Distinguished Name)
     const subjectFields = this.buildSubjectDn(params);
 
@@ -44,8 +46,6 @@ export class ZatcaCryptoService {
       .map(([key, val]) => `${key}=${val}`)
       .join(', ');
 
-    // Build CSR using the private key and subject
-    // The CSR is Base64-encoded for the ZATCA API
     return this.buildCsrBase64(privateKey, subjectString, params);
   }
 
@@ -102,36 +102,48 @@ export class ZatcaCryptoService {
   }
 
   /**
-   * Builds a Base64-encoded CSR.
-   *
-   * Note: For full ZATCA compliance in production, this should use
-   * a proper X.509 CSR library (e.g. node-forge or @peculiar/x509).
-   * The current implementation creates a DER-compatible structure
-   * that ZATCA's sandbox accepts.
+   * Builds a proper DER-encoded X.509 CSR using @peculiar/x509.
+   * ZATCA API requires a real PKCS#10 CSR — not a JSON payload.
    */
-  private buildCsrBase64(
-    privateKey: string,
-    subject: string,
+  private async buildCsrBase64(
+    privateKeyPem: string,
+    _subject: string,
     params: CsrParams,
-  ): string {
-    // Create a sign object to prove possession of private key
-    const sign = crypto.createSign('SHA256');
-    const csrData = [
-      subject,
-      `VAT:${params.vatNumber}`,
-      `SN:${params.serialNumber}`,
-    ].join('\n');
+  ): Promise<string> {
+    // Use @peculiar/webcrypto for Node.js WebCrypto compatibility
+    const webcrypto = new PeculiarCrypto();
+    cryptoProvider.set(webcrypto);
 
-    sign.update(csrData);
-    const signature = sign.sign(privateKey, 'base64');
+    // Convert PEM private key to CryptoKey pair via JWK round-trip
+    const nodePrivKey = crypto.createPrivateKey(privateKeyPem);
+    const nodePubKey = crypto.createPublicKey(privateKeyPem);
 
-    // Combine subject + signature into CSR payload
-    const csrPayload = JSON.stringify({
-      subject: csrData,
-      signature,
-      algorithm: 'EC-secp256k1-SHA256',
+    const privateJwk = nodePrivKey.export({ format: 'jwk' }) as JsonWebKey;
+    const publicJwk = nodePubKey.export({ format: 'jwk' }) as JsonWebKey;
+
+    const alg = { name: 'ECDSA', namedCurve: 'K-256' };
+    const [privateKey, publicKey] = await Promise.all([
+      webcrypto.subtle.importKey('jwk', privateJwk, alg, false, ['sign']),
+      webcrypto.subtle.importKey('jwk', publicJwk, alg, true, ['verify']),
+    ]);
+
+    // Build the CSR with ZATCA-required subject fields
+    // OIDs: SN=serialNumber, UID=userId/VAT, T=title/businessCategory
+    const csr = await Pkcs10CertificateRequestGenerator.create({
+      name: [
+        { CN: params.commonName },
+        { OU: params.organizationUnit },
+        { O: params.organization },
+        { C: params.country },
+        { SN: params.serialNumber },       // 2.5.4.5 — ZATCA serial number
+        { '2.5.4.45': params.vatNumber },  // UID OID (UniqueIdentifier/VAT)
+        { T: params.businessCategory },    // 2.5.4.12 — title/business category
+      ],
+      keys: { privateKey, publicKey },
+      signingAlgorithm: { name: 'ECDSA', hash: 'SHA-256' },
     });
 
-    return Buffer.from(csrPayload).toString('base64');
+    // Return DER bytes encoded as Base64 (ZATCA API format)
+    return Buffer.from(csr.rawData).toString('base64');
   }
 }

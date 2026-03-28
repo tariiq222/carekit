@@ -50,7 +50,7 @@ export class ZatcaOnboardingService {
 
     // Generate key pair + CSR
     const { privateKey } = this.cryptoService.generateKeyPair();
-    const csr = this.buildCsr(zatcaConfig, privateKey);
+    const csr = await this.buildCsr(zatcaConfig, privateKey);
 
     // Request Compliance CSID
     this.logger.log('Requesting compliance CSID...');
@@ -143,7 +143,7 @@ export class ZatcaOnboardingService {
     }
   }
 
-  private buildCsr(config: ZatcaConfig, privateKey: string): string {
+  private async buildCsr(config: ZatcaConfig, privateKey: string): Promise<string> {
     return this.cryptoService.generateCsr(privateKey, {
       commonName: config.sellerName,
       organizationUnit: 'CareKit',
