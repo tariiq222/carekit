@@ -104,7 +104,6 @@ export async function seedPractitioners(prisma: PrismaClient) {
         bio: doc.bio, bioAr: doc.bioAr,
         experience: doc.experience,
         education: doc.education, educationAr: doc.educationAr,
-        priceClinic: doc.priceClinic, pricePhone: doc.pricePhone, priceVideo: doc.priceVideo,
         rating: 0, reviewCount: 0,
         isActive: true, isAcceptingBookings: true,
       },
