@@ -26,7 +26,6 @@ export class ServicePractitionersService {
             nameAr: true,
             title: true,
             isActive: true,
-            avatarUrl: true,
             user: {
               select: {
                 firstName: true,

@@ -154,12 +154,8 @@ export class ServicesService {
         this.prisma.service.create({
           data: {
             ...serviceData,
-            practitioners: {
-              create: dto.practitionerIds.map((practitionerId) => ({
-                practitionerId,
-                availableTypes: ['in_person', 'online'],
-                isActive: true,
-              })),
+            practitionerServices: {
+              create: dto.practitionerIds.map((practitionerId) => ({ practitionerId })),
             },
           },
           include: { category: true },

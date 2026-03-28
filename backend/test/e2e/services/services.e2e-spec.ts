@@ -1351,6 +1351,75 @@ describe('Services Module (e2e)', () => {
       expect(res.body.data).toHaveProperty('price', 0);
     });
 
+    // Scenario 11: Create service with practitioner linked atomically
+    it('should create service with practitionerIds and link practitioners atomically', async () => {
+      // Step 1: Get an existing specialty
+      const specRes = await request(httpServer).get(`${API_PREFIX}/specialties`).expect(200);
+      const specialties = (specRes.body.data?.items ?? specRes.body.data) as Array<{ id: string }>;
+      if (!Array.isArray(specialties) || specialties.length === 0) return; // skip if no specialties seeded
+      const specialtyId = specialties[0].id;
+
+      // Step 2: Create a practitioner profile for the test practitioner user
+      const practUserId = (practitionerAuth.user as { id: string }).id;
+      const practRes = await request(httpServer)
+        .post(`${API_PREFIX}/practitioners`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          userId: practUserId,
+          specialtyId,
+          bio: 'Test practitioner for service link',
+          bioAr: 'طبيب اختبار لربط الخدمة',
+          experience: 3,
+        });
+      expect([201, 409]).toContain(practRes.status);
+      let practitionerId: string;
+      if (practRes.status === 201) {
+        practitionerId = practRes.body.data.id as string;
+      } else {
+        const listRes = await request(httpServer).get(`${API_PREFIX}/practitioners`).expect(200);
+        const found = (listRes.body.data.items as Array<{ id: string; user: { id: string } }>).find(
+          (p) => p.user.id === practUserId,
+        );
+        expect(found).toBeDefined();
+        practitionerId = found!.id;
+      }
+
+      // Step 3: Create a category for this test (categoryId outer var may be unset in isolated runs)
+      const catRes = await request(httpServer)
+        .post(CATEGORIES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({ nameEn: 'Practitioner Link Test', nameAr: 'ربط الطبيب', sortOrder: 99 })
+        .expect(201);
+      const testCategoryId = catRes.body.data.id as string;
+
+      // Step 4: Create service with practitionerIds
+      const res = await request(httpServer)
+        .post(SERVICES_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameEn: 'Service With Practitioner',
+          nameAr: 'خدمة مع طبيب',
+          categoryId: testCategoryId,
+          price: 15000,
+          duration: 45,
+          practitionerIds: [practitionerId],
+        })
+        .expect(201);
+
+      expectSuccessResponse(res.body);
+      const createdServiceId = res.body.data.id as string;
+
+      // Step 5: Verify practitioner is linked via GET /services/:id/practitioners
+      const linkRes = await request(httpServer)
+        .get(`${SERVICES_URL}/${createdServiceId}/practitioners`)
+        .expect(200);
+
+      expectSuccessResponse(linkRes.body);
+      const linked = linkRes.body.data as Array<{ practitionerId: string; practitioner: { id: string } }>;
+      expect(Array.isArray(linked)).toBe(true);
+      expect(linked.some((p) => p.practitioner.id === practitionerId)).toBe(true);
+    });
+
     // Validation: minLeadMinutes > 1440
     it('should reject minLeadMinutes > 1440', async () => {
       const res = await request(httpServer)
