@@ -8,6 +8,7 @@ import { ServicesService } from '../../../src/modules/services/services.service.
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { CacheService } from '../../../src/common/services/cache.service.js';
 import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-forms.service.js';
+import { CreateServiceDto } from '../../../src/modules/services/dto/create-service.dto.js';
 import {
   createMockPrisma,
   createMockCache,
@@ -86,6 +87,64 @@ describe('ServicesService — create', () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(null);
 
     await expect(service.create(createDto)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should persist depositEnabled and depositPercent to the DB', async () => {
+    mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+    mockPrisma.service.create.mockResolvedValue({
+      ...mockClinicService,
+      depositEnabled: true,
+      depositPercent: 50,
+    });
+
+    await service.create({ ...createDto, depositEnabled: true, depositPercent: 50 });
+
+    expect(mockPrisma.service.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ depositEnabled: true, depositPercent: 50 }),
+      }),
+    );
+  });
+
+  it('should persist allowRecurring and allowedRecurringPatterns to the DB', async () => {
+    mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+    mockPrisma.service.create.mockResolvedValue({
+      ...mockClinicService,
+      allowRecurring: true,
+      allowedRecurringPatterns: ['WEEKLY'],
+    });
+
+    await service.create({
+      ...createDto,
+      allowRecurring: true,
+      allowedRecurringPatterns: ['WEEKLY'] as CreateServiceDto['allowedRecurringPatterns'],
+    });
+
+    expect(mockPrisma.service.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          allowRecurring: true,
+          allowedRecurringPatterns: ['WEEKLY'],
+        }),
+      }),
+    );
+  });
+
+  it('should persist minLeadMinutes and maxAdvanceDays to the DB', async () => {
+    mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+    mockPrisma.service.create.mockResolvedValue({
+      ...mockClinicService,
+      minLeadMinutes: 60,
+      maxAdvanceDays: 30,
+    });
+
+    await service.create({ ...createDto, minLeadMinutes: 60, maxAdvanceDays: 30 });
+
+    expect(mockPrisma.service.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ minLeadMinutes: 60, maxAdvanceDays: 30 }),
+      }),
+    );
   });
 });
 
