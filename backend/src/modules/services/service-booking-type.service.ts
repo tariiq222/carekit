@@ -24,35 +24,33 @@ export class ServiceBookingTypeService {
       // Delete old booking types (cascades to duration options via onDelete: Cascade)
       await tx.serviceBookingType.deleteMany({ where: { serviceId } });
 
-      // Create new booking types with their duration options (parallel within transaction)
-      await Promise.all(
-        dto.types.map((typeConfig) =>
-          tx.serviceBookingType.create({
-            data: {
-              serviceId,
-              bookingType: typeConfig.bookingType as BookingType,
-              price: typeConfig.price,
-              duration: typeConfig.duration,
-              isActive: typeConfig.isActive ?? true,
-              durationOptions: typeConfig.durationOptions?.length
-                ? {
-                    createMany: {
-                      data: typeConfig.durationOptions.map((o, i) => ({
-                        serviceId,
-                        label: o.label,
-                        labelAr: o.labelAr,
-                        durationMinutes: o.durationMinutes,
-                        price: o.price,
-                        isDefault: o.isDefault ?? false,
-                        sortOrder: o.sortOrder ?? i,
-                      })),
-                    },
-                  }
-                : undefined,
-            },
-          }),
-        ),
-      );
+      // Create new booking types with their duration options (sequential within transaction)
+      for (const typeConfig of dto.types) {
+        await tx.serviceBookingType.create({
+          data: {
+            serviceId,
+            bookingType: typeConfig.bookingType as BookingType,
+            price: typeConfig.price,
+            duration: typeConfig.duration,
+            isActive: typeConfig.isActive ?? true,
+            durationOptions: typeConfig.durationOptions?.length
+              ? {
+                  createMany: {
+                    data: typeConfig.durationOptions.map((o, i) => ({
+                      serviceId,
+                      label: o.label,
+                      labelAr: o.labelAr,
+                      durationMinutes: o.durationMinutes,
+                      price: o.price,
+                      isDefault: o.isDefault ?? false,
+                      sortOrder: o.sortOrder ?? i,
+                    })),
+                  },
+                }
+              : undefined,
+          },
+        });
+      }
 
       // Return the new state
       return tx.serviceBookingType.findMany({
