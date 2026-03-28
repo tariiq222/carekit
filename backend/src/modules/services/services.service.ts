@@ -147,27 +147,17 @@ export class ServicesService {
       maxAdvanceDays: dto.maxAdvanceDays,
     };
 
-    let service: Awaited<ReturnType<typeof this.prisma.service.create>>;
-
-    if (dto.practitionerIds && dto.practitionerIds.length > 0) {
-      const [created] = await this.prisma.$transaction([
-        this.prisma.service.create({
-          data: {
-            ...serviceData,
-            practitionerServices: {
-              create: dto.practitionerIds.map((practitionerId) => ({ practitionerId })),
-            },
+    const service = await this.prisma.service.create({
+      data: {
+        ...serviceData,
+        ...(dto.practitionerIds?.length && {
+          practitionerServices: {
+            create: dto.practitionerIds.map((practitionerId) => ({ practitionerId })),
           },
-          include: { category: true },
         }),
-      ]);
-      service = created;
-    } else {
-      service = await this.prisma.service.create({
-        data: serviceData,
-        include: { category: true },
-      });
-    }
+      },
+      include: { category: true },
+    });
 
     await this.invalidateServicesCache();
     return service;
