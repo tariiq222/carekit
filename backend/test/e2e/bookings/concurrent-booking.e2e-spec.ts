@@ -141,7 +141,7 @@ beforeAll(async () => {
   await request(httpServer)
     .put(`${SERVICES_URL}/${serviceId}/booking-types`)
     .set(getAuthHeaders(superAdmin.accessToken))
-    .send({ types: [{ bookingType: 'clinic_visit', price: 10000, duration: 30 }] });
+    .send({ types: [{ bookingType: 'in_person', price: 10000, duration: 30 }] });
 
   // Practitioner profile
   const pracUserId = await createPractitionerUser(
@@ -180,7 +180,7 @@ beforeAll(async () => {
   await request(httpServer)
     .post(`${PRACTITIONERS_URL}/${practitionerId}/services`)
     .set(getAuthHeaders(superAdmin.accessToken))
-    .send({ serviceId, availableTypes: ['clinic_visit'], isActive: true });
+    .send({ serviceId, availableTypes: ['in_person'], isActive: true });
 
   // Availability: all 7 days 08:00–20:00
   const schedule = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
@@ -212,7 +212,7 @@ describe('Concurrent Booking — Conflict Detection', () => {
     const body = {
       practitionerId,
       serviceId,
-      type: 'clinic_visit',
+      type: 'in_person',
       date,
       startTime: '09:00',
     };
@@ -254,7 +254,7 @@ describe('Concurrent Booking — Conflict Detection', () => {
       .send({
         practitionerId,
         serviceId,
-        type: 'clinic_visit',
+        type: 'in_person',
         date,
         startTime: '09:00',
         patientId: patient1.user['id'],
@@ -266,7 +266,7 @@ describe('Concurrent Booking — Conflict Detection', () => {
       .send({
         practitionerId,
         serviceId,
-        type: 'clinic_visit',
+        type: 'in_person',
         date,
         startTime: '10:00',
         patientId: patient2.user['id'],
@@ -281,7 +281,7 @@ describe('Concurrent Booking — Conflict Detection', () => {
     const body = {
       practitionerId,
       serviceId,
-      type: 'clinic_visit',
+      type: 'in_person',
       date,
       startTime: '09:00',
       patientId: patient1.user['id'],
@@ -310,7 +310,7 @@ describe('Concurrent Booking — Conflict Detection', () => {
       .send({
         practitionerId,
         serviceId,
-        type: 'clinic_visit',
+        type: 'in_person',
         date,
         startTime: '09:00',
         patientId: patient1.user['id'],

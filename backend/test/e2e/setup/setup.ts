@@ -15,6 +15,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import Redis from 'ioredis';
 import helmet from 'helmet';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { AppModule } from '../../../src/app.module';
 
 // ---------------------------------------------------------------------------
@@ -154,6 +156,22 @@ export async function createTestApp(): Promise<TestApp> {
     // Non-fatal — throttle may still work or be over-counted
   } finally {
     await redis.quit();
+  }
+
+  // Clean booking-related records between suites to prevent time-slot conflicts.
+  // Multiple suites create bookings for the same practitioner at the same time slot.
+  const connectionString = process.env['DATABASE_URL'];
+  if (connectionString) {
+    const adapter = new PrismaPg({ connectionString });
+    const prisma = new PrismaClient({ adapter });
+    try {
+      await prisma.invoice.deleteMany({});
+      await prisma.payment.deleteMany({});
+      await prisma.booking.deleteMany({});
+      await prisma.notification.deleteMany({});
+    } finally {
+      await prisma.$disconnect();
+    }
   }
 
   const moduleFixture: TestingModule = await Test.createTestingModule({

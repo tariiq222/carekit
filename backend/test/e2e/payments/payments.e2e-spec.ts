@@ -72,7 +72,7 @@ async function createTestBooking(
       patientId,
       serviceId,
       practitionerId,
-      type: 'clinic_visit',
+      type: 'in_person',
       date,
       startTime,
     });
@@ -233,12 +233,12 @@ describe('Payments Module (e2e)', () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .send({ adminCanBookOutsideHours: true });
 
-    // Set service booking types so clinic_visit is available
+    // Set service booking types so in_person is available
     const sbtRes = await request(httpServer)
       .put(`${SERVICES_URL}/${serviceId}/booking-types`)
       .set(getAuthHeaders(superAdmin.accessToken))
       .send({
-        types: [{ bookingType: 'clinic_visit', price: 20000, duration: 30 }],
+        types: [{ bookingType: 'in_person', price: 20000, duration: 30 }],
       });
     if (sbtRes.status !== 200 && sbtRes.status !== 201) {
       throw new Error(`Failed to set service booking types: ${sbtRes.status} ${JSON.stringify(sbtRes.body)}`);
@@ -250,7 +250,7 @@ describe('Payments Module (e2e)', () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .send({
         serviceId,
-        availableTypes: ['clinic_visit'],
+        availableTypes: ['in_person'],
         isActive: true,
       });
     if (assignRes.status !== 201 && assignRes.status !== 200 && assignRes.status !== 409) {

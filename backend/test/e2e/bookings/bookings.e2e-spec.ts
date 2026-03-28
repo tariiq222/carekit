@@ -94,7 +94,7 @@ async function createBooking(
     .send({
       practitionerId,
       serviceId,
-      type: opts.type ?? 'clinic_visit',
+      type: opts.type ?? 'in_person',
       date: opts.date ?? getTomorrow(),
       startTime: opts.startTime ?? '10:00',
       ...(opts.patientId ? { patientId: opts.patientId } : {}),
@@ -239,13 +239,13 @@ describe('Bookings Module (e2e)', () => {
     await request(httpServer)
       .put(`${SERVICES_URL}/${serviceId}/booking-types`)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .send({ types: [{ bookingType: 'clinic_visit', price: 15000, duration: 30 }] });
+      .send({ types: [{ bookingType: 'in_person', price: 15000, duration: 30 }] });
 
     // Assign service to practitioner
     const assignRes = await request(httpServer)
       .post(`${PRACTITIONERS_URL}/${practitionerId}/services`)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .send({ serviceId, availableTypes: ['clinic_visit'], isActive: true });
+      .send({ serviceId, availableTypes: ['in_person'], isActive: true });
     if (![201, 200, 409].includes(assignRes.status)) {
       throw new Error(`Service assignment failed: ${JSON.stringify(assignRes.body)}`);
     }
@@ -301,14 +301,14 @@ describe('Bookings Module (e2e)', () => {
   // =========================================================================
 
   describe('POST /bookings', () => {
-    it('receptionist can create a clinic_visit booking', async () => {
+    it('receptionist can create an in_person booking', async () => {
       const res = await request(httpServer)
         .post(BOOKINGS_URL)
         .set(getAuthHeaders(receptionist.accessToken))
         .send({
           practitionerId,
           serviceId,
-          type: 'clinic_visit',
+          type: 'in_person',
           date: getDaysFromNow(2),
           startTime: '09:00',
           patientId: patient.user['id'] as string,
@@ -317,7 +317,7 @@ describe('Bookings Module (e2e)', () => {
 
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('id');
-      expect(res.body.data).toHaveProperty('type', 'clinic_visit');
+      expect(res.body.data).toHaveProperty('type', 'in_person');
       expect(res.body.data).toHaveProperty('status', 'pending');
       expect(res.body.data).toHaveProperty('startTime', '09:00');
     });
@@ -329,7 +329,7 @@ describe('Bookings Module (e2e)', () => {
         .send({
           practitionerId,
           serviceId,
-          type: 'clinic_visit',
+          type: 'in_person',
           date: getDaysFromNow(3),
           startTime: '13:00',
           patientId: patient2.user['id'] as string,
@@ -347,7 +347,7 @@ describe('Bookings Module (e2e)', () => {
         .send({
           practitionerId,
           serviceId,
-          type: 'clinic_visit',
+          type: 'in_person',
           date: getTomorrow(),
           startTime: '10:00',
           patientId: patient2.user['id'] as string,
@@ -361,7 +361,7 @@ describe('Bookings Module (e2e)', () => {
       const res = await request(httpServer)
         .post(BOOKINGS_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ serviceId, type: 'clinic_visit', date: getTomorrow(), startTime: '15:00' })
+        .send({ serviceId, type: 'in_person', date: getTomorrow(), startTime: '15:00' })
         .expect(400);
 
       expect(res.body.success).toBe(false);
@@ -371,7 +371,7 @@ describe('Bookings Module (e2e)', () => {
       const res = await request(httpServer)
         .post(BOOKINGS_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ practitionerId, serviceId, type: 'clinic_visit', date: '01/01/2027', startTime: '09:00' })
+        .send({ practitionerId, serviceId, type: 'in_person', date: '01/01/2027', startTime: '09:00' })
         .expect(400);
 
       expect(res.body.success).toBe(false);
@@ -391,7 +391,7 @@ describe('Bookings Module (e2e)', () => {
       const res = await request(httpServer)
         .post(BOOKINGS_URL)
         .set(getAuthHeaders(accountant.accessToken))
-        .send({ practitionerId, serviceId, type: 'clinic_visit', date: getDaysFromNow(4), startTime: '09:00' })
+        .send({ practitionerId, serviceId, type: 'in_person', date: getDaysFromNow(4), startTime: '09:00' })
         .expect(403);
 
       expectErrorResponse(res.body, 'FORBIDDEN');
@@ -400,7 +400,7 @@ describe('Bookings Module (e2e)', () => {
     it('unauthenticated → 401', async () => {
       await request(httpServer)
         .post(BOOKINGS_URL)
-        .send({ practitionerId, serviceId, type: 'clinic_visit', date: getTomorrow(), startTime: '09:00' })
+        .send({ practitionerId, serviceId, type: 'in_person', date: getTomorrow(), startTime: '09:00' })
         .expect(401);
     });
   });
@@ -451,15 +451,15 @@ describe('Bookings Module (e2e)', () => {
       items.forEach((b) => expect(b.status).toBe('pending'));
     });
 
-    it('filter by type=clinic_visit returns only clinic_visit bookings', async () => {
+    it('filter by type=in_person returns only in_person bookings', async () => {
       const res = await request(httpServer)
-        .get(`${BOOKINGS_URL}?type=clinic_visit`)
+        .get(`${BOOKINGS_URL}?type=in_person`)
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(200);
 
       expectSuccessResponse(res.body);
       const items: Array<{ type: string }> = res.body.data.items;
-      items.forEach((b) => expect(b.type).toBe('clinic_visit'));
+      items.forEach((b) => expect(b.type).toBe('in_person'));
     });
 
     it('filter by practitionerId scopes results', async () => {
@@ -1220,7 +1220,7 @@ describe('Bookings Module (e2e)', () => {
         .send({
           practitionerId,
           serviceId,
-          type: 'clinic_visit',
+          type: 'in_person',
           date: getDaysFromNow(40),
           startTime: '15:00',
           repeatEvery: 'weekly',
@@ -1243,7 +1243,7 @@ describe('Bookings Module (e2e)', () => {
         .send({
           practitionerId,
           serviceId,
-          type: 'clinic_visit',
+          type: 'in_person',
           date: getDaysFromNow(25),
           startTime: '09:00',
           repeatEvery: 'weekly',
@@ -1280,7 +1280,7 @@ describe('Bookings Module (e2e)', () => {
         .send({
           practitionerId,
           serviceId,
-          type: 'clinic_visit',
+          type: 'in_person',
           date: getDaysFromNow(30),
           startTime: '09:00',
           repeatEvery: 'weekly',
@@ -1294,7 +1294,7 @@ describe('Bookings Module (e2e)', () => {
     it('unauthenticated → 401', async () => {
       await request(httpServer)
         .post(`${BOOKINGS_URL}/recurring`)
-        .send({ practitionerId, serviceId, type: 'clinic_visit', date: getDaysFromNow(30), startTime: '09:00', repeatEvery: 'weekly', repeatCount: 2 })
+        .send({ practitionerId, serviceId, type: 'in_person', date: getDaysFromNow(30), startTime: '09:00', repeatEvery: 'weekly', repeatCount: 2 })
         .expect(401);
     });
   });

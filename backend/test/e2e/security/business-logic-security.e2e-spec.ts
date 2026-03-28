@@ -224,7 +224,7 @@ describe('Business Logic Security — Function Level Auth', () => {
       { method: 'get', path: `${API}/patients` },
       { method: 'get', path: `${API}/bookings` },
       { method: 'get', path: `${API}/payments` },
-      { method: 'get', path: `${API}/reports/dashboard` },
+      { method: 'get', path: `${API}/reports/revenue` },
     ];
 
     for (const { method, path } of endpoints) {

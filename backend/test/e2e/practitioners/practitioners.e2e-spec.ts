@@ -230,12 +230,14 @@ describe('Practitioners Module (e2e)', () => {
         .expect(200);
 
       const items = res.body.data.items as Array<{
-        specialty: { nameAr: string; nameEn: string };
+        specialty: { nameAr: string; nameEn: string } | null;
       }>;
-      if (items.length > 0) {
-        expect(items[0].specialty).toBeDefined();
-        expect(items[0].specialty.nameAr).toBeDefined();
-        expect(items[0].specialty.nameEn).toBeDefined();
+      // Find a practitioner with a linked specialty (some may have null specialty)
+      const withSpecialty = items.find((p) => p.specialty !== null);
+      if (withSpecialty) {
+        expect(withSpecialty.specialty).toBeDefined();
+        expect(withSpecialty.specialty!.nameAr).toBeDefined();
+        expect(withSpecialty.specialty!.nameEn).toBeDefined();
       }
     });
 

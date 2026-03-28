@@ -207,7 +207,7 @@ describe('RBAC (e2e)', () => {
           patientId: patient.user.id,
           practitionerId: practitioner.user.id,
           serviceId: 'placeholder-service-id',
-          type: 'clinic_visit',
+          type: 'in_person',
           date: '2026-05-01',
           startTime: '09:00',
         });
@@ -329,7 +329,7 @@ describe('RBAC (e2e)', () => {
           patientId: patient.user.id,
           practitionerId: practitioner.user.id,
           serviceId: 'some-service-id',
-          type: 'clinic_visit',
+          type: 'in_person',
           date: '2026-05-01',
           startTime: '09:00',
         })
@@ -473,7 +473,7 @@ describe('RBAC (e2e)', () => {
         .send({
           patientId: patient.user.id,
           serviceId: 'some-service-id',
-          type: 'clinic_visit',
+          type: 'in_person',
           date: '2026-05-01',
           startTime: '09:00',
         })
@@ -512,7 +512,7 @@ describe('RBAC (e2e)', () => {
         .send({
           practitionerId: practitioner.user.id,
           serviceId: 'placeholder-service-id',
-          type: 'clinic_visit',
+          type: 'in_person',
           date: '2026-05-01',
           startTime: '09:00',
         });
@@ -806,7 +806,7 @@ describe('RBAC (e2e)', () => {
           patientId: patient2.user.id,
           practitionerId: practitioner.user.id,
           serviceId: 'placeholder-service-id',
-          type: 'clinic_visit',
+          type: 'in_person',
           date: '2026-06-01',
           startTime: '10:00',
         });
@@ -848,7 +848,7 @@ describe('RBAC (e2e)', () => {
           patientId: patient.user.id,
           practitionerId: otherDoc.user.id,
           serviceId: 'placeholder-service-id',
-          type: 'clinic_visit',
+          type: 'in_person',
           date: '2026-06-02',
           startTime: '11:00',
         });

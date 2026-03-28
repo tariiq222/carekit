@@ -214,13 +214,17 @@ describe('Notifications Module (e2e)', () => {
     });
 
     it('should include notification type from enum (booking_confirmed, etc.)', async () => {
+      // All valid NotificationType enum values
       const validTypes = [
-        'booking_confirmed',
-        'booking_cancelled',
-        'reminder',
-        'payment_received',
-        'new_rating',
-        'problem_report',
+        'booking_confirmed', 'booking_completed', 'booking_cancelled',
+        'booking_rescheduled', 'booking_expired', 'booking_no_show',
+        'booking_reminder', 'booking_reminder_urgent',
+        'booking_cancellation_requested', 'booking_cancellation_rejected',
+        'booking_practitioner_cancelled',
+        'cancellation_rejected', 'cancellation_requested',
+        'no_show_review', 'patient_arrived', 'receipt_rejected',
+        'reminder', 'payment_received', 'new_rating', 'problem_report',
+        'waitlist_slot_available', 'system_alert',
       ];
 
       const res = await request(httpServer)

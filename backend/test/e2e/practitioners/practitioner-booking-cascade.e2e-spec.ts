@@ -85,7 +85,7 @@ async function restorePractitioner(): Promise<void> {
   await request(httpServer)
     .post(`${PRACTITIONERS_URL}/${deletedPractitionerId}/services`)
     .set(getAuthHeaders(superAdmin.accessToken))
-    .send({ serviceId, availableTypes: ['clinic_visit'], isActive: true });
+    .send({ serviceId, availableTypes: ['in_person'], isActive: true });
 
   const schedule = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
     dayOfWeek: day,
@@ -105,7 +105,7 @@ async function createBooking(date: string, startTime: string): Promise<string> {
     .send({
       practitionerId: deletedPractitionerId,
       serviceId,
-      type: 'clinic_visit',
+      type: 'in_person',
       date,
       startTime,
       patientId: patient.user['id'],
@@ -167,7 +167,7 @@ beforeAll(async () => {
   await request(httpServer)
     .put(`${SERVICES_URL}/${serviceId}/booking-types`)
     .set(getAuthHeaders(superAdmin.accessToken))
-    .send({ types: [{ bookingType: 'clinic_visit', price: 10000, duration: 30 }] });
+    .send({ types: [{ bookingType: 'in_person', price: 10000, duration: 30 }] });
 
   // Practitioner user
   const userRes = await request(httpServer)
@@ -221,7 +221,7 @@ beforeAll(async () => {
   await request(httpServer)
     .post(`${PRACTITIONERS_URL}/${deletedPractitionerId}/services`)
     .set(getAuthHeaders(superAdmin.accessToken))
-    .send({ serviceId, availableTypes: ['clinic_visit'], isActive: true });
+    .send({ serviceId, availableTypes: ['in_person'], isActive: true });
   const schedule = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
     dayOfWeek: day, startTime: '08:00', endTime: '20:00',
   }));
@@ -290,7 +290,7 @@ describe('Practitioner Soft-Delete — Booking Cascade Behaviour', () => {
       .send({
         practitionerId: deletedPractitionerId,
         serviceId,
-        type: 'clinic_visit',
+        type: 'in_person',
         date: getDateOffset(7),
         startTime: '09:00',
         patientId: patient.user['id'],
