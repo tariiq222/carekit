@@ -1,0 +1,8 @@
+{
+  "created": "Booking created successfully",
+  "cancelled": "Booking cancelled",
+  "not_found": "Booking not found",
+  "conflict": "This time slot is already booked",
+  "expired": "Booking has expired",
+  "waitlist_added": "You have been added to the waitlist"
+}

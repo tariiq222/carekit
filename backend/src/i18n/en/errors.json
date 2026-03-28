@@ -1,0 +1,9 @@
+{
+  "forbidden": "You do not have permission to perform this action",
+  "access_denied": "Access denied",
+  "not_found": "The requested resource was not found",
+  "validation": "Request data is invalid",
+  "conflict": "Data conflict detected",
+  "server_error": "An internal error occurred, please try again later",
+  "too_many_requests": "Too many requests, please wait before retrying"
+}

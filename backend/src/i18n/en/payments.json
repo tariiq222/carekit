@@ -1,0 +1,7 @@
+{
+  "processed": "Payment processed successfully",
+  "failed": "Payment failed",
+  "refunded": "Amount refunded successfully",
+  "not_found": "Payment not found",
+  "already_paid": "Already paid"
+}
