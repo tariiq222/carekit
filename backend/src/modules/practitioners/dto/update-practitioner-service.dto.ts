@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, Min, ValidateNested } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsEnum, IsInt, IsOptional, Min, ValidateNested } from 'class-validator';
 import { PractitionerTypeConfigDto } from './practitioner-type-config.dto.js';
 
 export class UpdatePractitionerServiceDto {
@@ -15,6 +15,7 @@ export class UpdatePractitionerServiceDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayNotEmpty()
   @IsEnum(['in_person', 'online'], { each: true })
   availableTypes?: string[];
 
