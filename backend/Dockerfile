@@ -24,6 +24,7 @@ ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/backend/node_modules ./backend/node_modules
 COPY --from=build /app/backend/dist ./backend/dist
+COPY --from=build /app/backend/src/i18n ./backend/src/i18n
 COPY --from=deps /app/backend/prisma ./backend/prisma
 COPY --from=deps /app/backend/prisma.config.ts ./backend/
 COPY --from=deps /app/backend/package.json ./backend/
