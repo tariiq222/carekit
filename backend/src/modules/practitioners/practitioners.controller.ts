@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -34,6 +33,8 @@ import { CreateVacationDto } from './dto/create-vacation.dto.js';
 import { AssignPractitionerServiceDto } from './dto/assign-practitioner-service.dto.js';
 import { UpdatePractitionerServiceDto } from './dto/update-practitioner-service.dto.js';
 import { SetBreaksDto } from './dto/set-breaks.dto.js';
+import { GetPractitionersQueryDto } from './dto/get-practitioners-query.dto.js';
+import { GetSlotsQueryDto } from './dto/get-slots-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Practitioners')
@@ -53,35 +54,8 @@ export class PractitionersController {
 
   @Get()
   @Public()
-  async findAll(
-    @Query('page') page?: string,
-    @Query('perPage') perPage?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: string,
-    @Query('search') search?: string,
-    @Query('specialty') specialty?: string,
-    @Query('specialtyId') specialtyId?: string,
-    @Query('minRating') minRating?: string,
-    @Query('isActive') isActive?: string,
-    @Query('branchId') branchId?: string,
-  ) {
-    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (branchId && !UUID_RE.test(branchId)) {
-      throw new BadRequestException('branchId must be a valid UUID');
-    }
-
-    return this.practitionersService.findAll({
-      page: page ? parseInt(page, 10) : undefined,
-      perPage: perPage ? parseInt(perPage, 10) : undefined,
-      sortBy,
-      sortOrder: sortOrder as 'asc' | 'desc' | undefined,
-      search,
-      specialty,
-      specialtyId,
-      minRating: minRating ? parseFloat(minRating) : undefined,
-      isActive: isActive !== undefined ? isActive === 'true' : undefined,
-      branchId,
-    });
+  async findAll(@Query() query: GetPractitionersQueryDto) {
+    return this.practitionersService.findAll(query);
   }
 
   @Get(':id')
@@ -144,41 +118,16 @@ export class PractitionersController {
   @Public()
   async getSlots(
     @Param('id', uuidPipe) id: string,
-    @Query('date') date?: string,
-    @Query('duration') duration?: string,
-    @Query('bookingType') bookingType?: string,
-    @Query('serviceId') serviceId?: string,
+    @Query() query: GetSlotsQueryDto,
   ) {
-    if (!date) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'date query parameter is required',
-        error: 'VALIDATION_ERROR',
-      });
-    }
-    let resolvedDuration = duration ? parseInt(duration, 10) : 30;
+    let resolvedDuration = query.duration ?? 30;
 
     // If bookingType and serviceId provided, resolve duration from pricing models
-    const VALID_BOOKING_TYPES = ['in_person', 'online'];
-    if (bookingType && !VALID_BOOKING_TYPES.includes(bookingType)) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: `bookingType must be one of: ${VALID_BOOKING_TYPES.join(', ')}`,
-        error: 'VALIDATION_ERROR',
-      });
-    }
-    if (bookingType && serviceId && !duration) {
-      resolvedDuration = await this.practitionersService.resolveDurationForSlots(serviceId, bookingType);
+    if (query.bookingType && query.serviceId && !query.duration) {
+      resolvedDuration = await this.practitionersService.resolveDurationForSlots(query.serviceId, query.bookingType);
     }
 
-    if (resolvedDuration < 5 || resolvedDuration > 240) {
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'duration must be between 5 and 240 minutes',
-        error: 'VALIDATION_ERROR',
-      });
-    }
-    return this.availabilityService.getSlots(id, date, resolvedDuration);
+    return this.availabilityService.getSlots(id, query.date, resolvedDuration);
   }
 
   // --- Breaks ---
