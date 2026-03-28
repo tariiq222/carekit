@@ -11,6 +11,7 @@ import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
 import { IntakeFormsService } from '../intake-forms/intake-forms.service.js';
+import { MinioService } from '../../common/services/minio.service.js';
 interface ServiceListQuery {
   page?: number;
   perPage?: number;
@@ -26,6 +27,7 @@ export class ServicesService {
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
     private readonly intakeForms: IntakeFormsService,
+    private readonly minio: MinioService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -58,6 +60,9 @@ export class ServicesService {
       hidePriceOnBooking: dto.hidePriceOnBooking ?? false,
       hideDurationOnBooking: dto.hideDurationOnBooking ?? false,
       calendarColor: dto.calendarColor,
+      iconName: dto.iconName ?? null,
+      iconBgColor: dto.iconBgColor ?? null,
+      imageUrl: dto.imageUrl ?? null,
       bufferMinutes: dto.bufferMinutes ?? 0,
       depositEnabled: dto.depositEnabled ?? false,
       depositPercent: dto.depositPercent,
@@ -170,6 +175,9 @@ export class ServicesService {
         hidePriceOnBooking: dto.hidePriceOnBooking,
         hideDurationOnBooking: dto.hideDurationOnBooking,
         calendarColor: dto.calendarColor,
+        ...(dto.iconName !== undefined && { iconName: dto.iconName }),
+        ...(dto.iconBgColor !== undefined && { iconBgColor: dto.iconBgColor }),
+        ...(dto.imageUrl !== undefined && { imageUrl: dto.imageUrl }),
         bufferMinutes: dto.bufferMinutes,
         depositEnabled: dto.depositEnabled,
         depositPercent: dto.depositPercent,
@@ -182,6 +190,53 @@ export class ServicesService {
       },
       include: { category: true },
     });
+    await this.invalidateServicesCache();
+    return updated;
+  }
+
+  async uploadAvatar(id: string, file: Express.Multer.File) {
+    const service = await this.prisma.service.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!service) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Service not found',
+        error: 'NOT_FOUND',
+      });
+    }
+
+    // Delete old avatar from MinIO if present
+    if (service.imageUrl) {
+      try {
+        const url = new URL(service.imageUrl);
+        const objectName = url.pathname.replace(/^\/carekit\//, '');
+        await this.minio.deleteFile('carekit', objectName);
+      } catch {
+        // Non-fatal — stale object is acceptable, upload must proceed
+      }
+    }
+
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    };
+    const ext = mimeToExt[file.mimetype] ?? 'jpg';
+    const objectName = `services/${id}/avatar-${Date.now()}.${ext}`;
+    const imageUrl = await this.minio.uploadFile(
+      'carekit',
+      objectName,
+      file.buffer,
+      file.mimetype,
+    );
+
+    const updated = await this.prisma.service.update({
+      where: { id },
+      data: { imageUrl, iconName: null, iconBgColor: null },
+      include: { category: true },
+    });
+
     await this.invalidateServicesCache();
     return updated;
   }
@@ -209,20 +264,6 @@ export class ServicesService {
 
   async getIntakeForms(serviceId: string) {
     return this.intakeForms.listForms({ serviceId });
-  }
-
-  async ensureExists(id: string) {
-    const service = await this.prisma.service.findFirst({
-      where: { id, deletedAt: null },
-    });
-    if (!service) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Service not found',
-        error: 'NOT_FOUND',
-      });
-    }
-    return service;
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -272,7 +313,7 @@ export class ServicesService {
     };
   }
 
-  async invalidateServicesCache(): Promise<void> {
+  private async invalidateServicesCache(): Promise<void> {
     await this.cache.del(CACHE_KEYS.SERVICES_ACTIVE);
   }
 }

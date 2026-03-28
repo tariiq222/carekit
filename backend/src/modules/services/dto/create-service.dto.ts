@@ -1,36 +1,31 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { RecurringPattern } from '@prisma/client';
 
 export class CreateServiceDto {
-  @ApiProperty({ description: 'Service name in English', maxLength: 255 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   nameEn!: string;
 
-  @ApiProperty({ description: 'Service name in Arabic', maxLength: 255 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   nameAr!: string;
 
-  @ApiPropertyOptional({ description: 'Service description in English', maxLength: 500 })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   descriptionEn?: string;
 
-  @ApiPropertyOptional({ description: 'Service description in Arabic', maxLength: 500 })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   descriptionAr?: string;
 
-  @ApiProperty({ description: 'Category UUID' })
   @IsUUID()
   @IsNotEmpty()
   categoryId!: string;
@@ -40,13 +35,11 @@ export class CreateServiceDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({ minimum: 0, description: 'Price in halalat (smallest currency unit)' })
   @IsOptional()
   @IsInt()
   @Min(0)
   price?: number;
 
-  @ApiPropertyOptional({ minimum: 1, description: 'Duration in minutes', default: 30 })
   @IsOptional()
   @IsInt()
   @Min(1)
@@ -72,6 +65,23 @@ export class CreateServiceDto {
   @IsString()
   @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'calendarColor must be a valid hex color' })
   calendarColor?: string;
+
+  @ApiPropertyOptional({ description: 'HugeIcon name, e.g. StethoscopeIcon' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  iconName?: string | null;
+
+  @ApiPropertyOptional({ description: 'Background color for icon, e.g. #354FD8' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'iconBgColor must be a valid hex color' })
+  iconBgColor?: string | null;
+
+  @ApiPropertyOptional({ description: 'MinIO image URL — takes priority over icon' })
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string | null;
 
   // ── Booking settings per service ───────────────────────────────
   @ApiPropertyOptional({ minimum: 0, maximum: 120, description: 'Buffer applied before and after appointment. 0 = use global setting.' })
