@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
-import { RecurringPattern } from '@prisma/client';
+import { Prisma, RecurringPattern } from '@prisma/client';
 import { CacheService } from '../../common/services/cache.service.js';
 import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
@@ -302,26 +302,18 @@ export class ServicesService {
   private async queryServices(query: ServiceListQuery) {
     const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
 
-    const where: Record<string, unknown> = {
+    const where: Prisma.ServiceWhereInput = {
       deletedAt: null,
       isActive: query.isActive ?? true,
+      ...(!query.includeHidden && { isHidden: false }),
+      ...(query.categoryId && { categoryId: query.categoryId }),
+      ...(query.search && {
+        OR: [
+          { nameEn: { contains: query.search, mode: 'insensitive' } },
+          { nameAr: { contains: query.search, mode: 'insensitive' } },
+        ],
+      }),
     };
-
-    // For patient-facing (public) queries, exclude hidden services unless explicitly requested
-    if (!query.includeHidden) {
-      where.isHidden = false;
-    }
-
-    if (query.categoryId) {
-      where.categoryId = query.categoryId;
-    }
-
-    if (query.search) {
-      where.OR = [
-        { nameEn: { contains: query.search, mode: 'insensitive' } },
-        { nameAr: { contains: query.search, mode: 'insensitive' } },
-      ];
-    }
 
     const [rawItems, total] = await Promise.all([
       this.prisma.service.findMany({
@@ -338,7 +330,7 @@ export class ServicesService {
   }
 
   private buildFindAllResult(
-    rawItems: Array<Record<string, unknown>>,
+    rawItems: Awaited<ReturnType<typeof this.prisma.service.findMany>>,
     total: number,
     page: number,
     perPage: number,
