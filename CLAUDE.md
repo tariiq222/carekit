@@ -118,3 +118,48 @@ See `mobile/CLAUDE.md` for Expo Router conventions.
 
 - **Owner-only** (`@tariq`): payments, ZATCA, auth, migrations, schema, CODEOWNERS
 - **Standard review**: all other modules
+
+## Design Context
+
+### Users
+
+**Primary**: Receptionists (daily, all-day use) and clinic admins/owners (oversight and configuration). Context: busy clinic environment — phone ringing, patients waiting, multiple tabs open. Speed and clarity are survival requirements.
+
+**Job to be done**: Complete operational tasks fast, without friction. The UI gets out of the way.
+
+### Brand Personality
+
+**Three words**: Modern. Elegant. Efficient.
+
+CareKit should feel like it belongs in a well-designed Apple environment, not a hospital IT department. Clinic owners should feel proud to show it to patients and partners.
+
+**Emotional goals** (priority order):
+
+1. Confidence and control — "I own the situation"
+2. Speed and efficiency — "I finish in minimal steps"
+3. Elegance and professionalism — "This reflects well on my clinic"
+4. Ease and simplicity — "Nothing here stresses me out"
+
+### Aesthetic Direction
+
+**Reference**: Apple Health / iOS apps — clean hierarchy, generous whitespace, glassmorphism with restraint, information that surfaces exactly when needed.
+
+**White-label note**: CareKit's own brand colors are Royal Blue `#354FD8` + Lime Green `#82CC17`. All color tokens are CSS custom properties — each client deployment overrides them via the white-label config. Never hardcode CareKit's colors as if they were universal; always use semantic tokens (`--primary`, `--accent`, etc.).
+
+**Visual signature**: Frosted glass surfaces, animated gradient blobs, IBM Plex Sans Arabic, 8px grid, iOS-grade border radii, whisper-soft shadows.
+
+**Anti-references** (never look like):
+
+- Legacy clinic/HIS software (cluttered, gray, dated)
+- ERP / SAP (complex, soul-crushing)
+- Generic Bootstrap (unstyled, impersonal)
+- Rigid Material Design (wrong cultural register for Arabic healthcare)
+
+### Design Principles
+
+1. **Surface the signal, hide the noise** — show exactly what the user needs now; secondary actions in menus
+2. **Arabic-first** — RTL is not an afterthought; spatial logic and typography serve the Arabic speaker first
+3. **Glass, not plastic** — semi-transparent layered surfaces; never flat white or opaque gray
+4. **Speed is a feature** — optimistic updates, skeletons not spinners, instant-feeling interactions
+5. **Accessible by default** — WCAG 2.1 AAA target; contrast, focus states, keyboard nav, reduced motion are correctness not polish
+6. **Tokens, not colors** — always use CSS custom properties; the white-label system depends on it
