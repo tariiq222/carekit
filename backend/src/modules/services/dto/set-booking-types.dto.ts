@@ -11,6 +11,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import { BookingType } from '@prisma/client';
 
 export class DurationOptionInput {
   @IsString()
@@ -41,8 +42,9 @@ export class DurationOptionInput {
 }
 
 export class BookingTypeConfigDto {
-  @IsEnum(['in_person', 'online'])
-  bookingType!: string;
+  // walk_in is excluded: booking types on a service only cover bookable types
+  @IsEnum(BookingType)
+  bookingType!: BookingType;
 
   @IsInt()
   @Min(0)
