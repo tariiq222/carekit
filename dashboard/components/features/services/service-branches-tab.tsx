@@ -6,6 +6,10 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Button } from "@/components/ui/button"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Add01Icon, Building04Icon } from "@hugeicons/core-free-icons"
+import { useRouter } from "next/navigation"
 
 import { useBranches } from "@/hooks/use-branches"
 import { useSetServiceBranches, useClearServiceBranches } from "@/hooks/use-services"
@@ -22,6 +26,7 @@ interface ServiceBranchesTabProps {
 
 export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranchesTabProps) {
   const { t, locale } = useLocale()
+  const router = useRouter()
   const { branches, isLoading: branchesLoading } = useBranches()
   const setMut = useSetServiceBranches(serviceId ?? "")
   const clearMut = useClearServiceBranches(serviceId ?? "")
@@ -48,6 +53,40 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
       <div className="rounded-lg border border-border bg-surface-muted p-6 flex flex-col gap-3">
         <p className="text-sm font-semibold text-foreground">{t("services.branches.title")}</p>
         <p className="text-sm text-muted-foreground">{t("services.branches.createHint")}</p>
+      </div>
+    )
+  }
+
+  // Loading branches
+  if (branchesLoading) {
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+    )
+  }
+
+  // No branches in the system yet
+  if (branches.length === 0) {
+    return (
+      <div className="rounded-lg border border-border bg-surface-muted p-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <HugeiconsIcon icon={Building04Icon} strokeWidth={1.5} className="size-5 text-muted-foreground" />
+          </div>
+          <p className="text-sm text-muted-foreground">{t("services.branches.noBranchesHint")}</p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="shrink-0 gap-1.5 text-xs"
+          onClick={() => router.push("/branches/new")}
+        >
+          <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-3.5" />
+          {t("services.branches.addBranch")}
+        </Button>
       </div>
     )
   }
@@ -115,14 +154,7 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
       {/* Branch checklist */}
       {selectedMode === "specific" && (
         <div className="rounded-lg border border-border p-4 flex flex-col gap-3">
-          {branchesLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full rounded" />
-            ))
-          ) : branches.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("services.branches.noBranches")}</p>
-          ) : (
-            branches.map((branch) => (
+          {branches.map((branch) => (
               <div key={branch.id} className="flex items-center gap-3">
                 <Checkbox
                   id={`branch-${branch.id}`}

@@ -283,4 +283,6 @@ export const arServices: Record<string, string> = {
   "services.branches.saveSuccess": "تم حفظ الفروع",
   "services.branches.saveError": "فشل حفظ الفروع",
   "services.branches.noBranches": "لا توجد فروع",
+  "services.branches.noBranchesHint": "لم يتم إضافة أي فروع بعد، أضف فرعاً لتتمكن من تقييد الخدمة",
+  "services.branches.addBranch": "إضافة فرع",
 }

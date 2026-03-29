@@ -283,4 +283,6 @@ export const enServices: Record<string, string> = {
   "services.branches.saveSuccess": "Branch restrictions saved",
   "services.branches.saveError": "Failed to save branch restrictions",
   "services.branches.noBranches": "No branches found",
+  "services.branches.noBranchesHint": "No branches have been added yet. Add a branch to restrict this service.",
+  "services.branches.addBranch": "Add branch",
 }
