@@ -1192,7 +1192,7 @@ describe('Services Module (e2e)', () => {
     });
 
     // Scenario 9: Service with calendar color
-    it('should create service with calendar color', async () => {
+    it('should create service with icon background color', async () => {
       const res = await request(httpServer)
         .post(SERVICES_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
@@ -1201,12 +1201,12 @@ describe('Services Module (e2e)', () => {
           nameAr: 'العلاج الأولوي',
           categoryId,
           price: 100000,
-          calendarColor: '#FF1744',
+          iconBgColor: '#FF1744',
         })
         .expect(201);
 
       expectSuccessResponse(res.body);
-      expect(res.body.data).toHaveProperty('calendarColor', '#FF1744');
+      expect(res.body.data).toHaveProperty('iconBgColor', '#FF1744');
     });
 
     // Scenario 10: Full complex service
@@ -1233,7 +1233,7 @@ describe('Services Module (e2e)', () => {
           maxParticipants: 1,
           minLeadMinutes: 1440,
           maxAdvanceDays: 60,
-          calendarColor: '#4CAF50',
+          iconBgColor: '#4CAF50',
         })
         .expect(201);
 
@@ -1249,7 +1249,7 @@ describe('Services Module (e2e)', () => {
       expect(res.body.data.maxParticipants).toBe(1);
       expect(res.body.data.minLeadMinutes).toBe(1440);
       expect(res.body.data.maxAdvanceDays).toBe(60);
-      expect(res.body.data.calendarColor).toBe('#4CAF50');
+      expect(res.body.data.iconBgColor).toBe('#4CAF50');
     });
 
     // Validation: invalid recurring pattern
@@ -1301,8 +1301,8 @@ describe('Services Module (e2e)', () => {
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
-    // Validation: invalid calendar color format
-    it('should reject invalid calendarColor format', async () => {
+    // Validation: invalid iconBgColor format
+    it('should reject invalid iconBgColor format', async () => {
       const res = await request(httpServer)
         .post(SERVICES_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
@@ -1310,7 +1310,7 @@ describe('Services Module (e2e)', () => {
           nameEn: 'Bad Color Service',
           nameAr: 'خدمة لون خاطئ',
           categoryId,
-          calendarColor: 'notacolor',
+          iconBgColor: 'notacolor',
         })
         .expect(400);
 

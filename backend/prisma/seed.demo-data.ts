@@ -105,7 +105,7 @@ export const DEMO_CATEGORIES = [
 
 // ─── Services ─────────────────────────────────
 // Covers: price, duration, buffer, deposit, recurring, maxParticipants,
-//         calendarColor, minLeadMinutes, maxAdvanceDays, hidePriceOnBooking
+//         iconBgColor, minLeadMinutes, maxAdvanceDays, hidePriceOnBooking
 
 export const DEMO_SERVICES = [
   {
@@ -116,7 +116,7 @@ export const DEMO_SERVICES = [
     depositEnabled: false, depositPercent: 100,
     allowRecurring: true, allowedRecurringPatterns: ['weekly', 'biweekly', 'monthly'],
     maxRecurrences: 12, maxParticipants: 1,
-    calendarColor: '#2563EB',
+    iconBgColor: '#2563EB',
     minLeadMinutes: 60, maxAdvanceDays: 60,
     hidePriceOnBooking: false, hideDurationOnBooking: false,
   },
@@ -128,7 +128,7 @@ export const DEMO_SERVICES = [
     depositEnabled: false, depositPercent: 100,
     allowRecurring: true, allowedRecurringPatterns: ['weekly', 'biweekly'],
     maxRecurrences: 6, maxParticipants: 1,
-    calendarColor: '#7C3AED',
+    iconBgColor: '#7C3AED',
     minLeadMinutes: 30, maxAdvanceDays: 30,
     hidePriceOnBooking: false, hideDurationOnBooking: false,
   },
@@ -140,7 +140,7 @@ export const DEMO_SERVICES = [
     depositEnabled: true, depositPercent: 50,
     allowRecurring: false, allowedRecurringPatterns: [],
     maxRecurrences: 12, maxParticipants: 1,
-    calendarColor: '#059669',
+    iconBgColor: '#059669',
     minLeadMinutes: 120, maxAdvanceDays: 90,
     hidePriceOnBooking: false, hideDurationOnBooking: false,
   },
@@ -152,7 +152,7 @@ export const DEMO_SERVICES = [
     depositEnabled: true, depositPercent: 50,
     allowRecurring: false, allowedRecurringPatterns: [],
     maxRecurrences: 12, maxParticipants: 1,
-    calendarColor: '#059669',
+    iconBgColor: '#059669',
     minLeadMinutes: 120, maxAdvanceDays: 90,
     hidePriceOnBooking: false, hideDurationOnBooking: false,
   },
@@ -164,7 +164,7 @@ export const DEMO_SERVICES = [
     depositEnabled: false, depositPercent: 100,
     allowRecurring: true, allowedRecurringPatterns: ['weekly', 'biweekly'],
     maxRecurrences: 8, maxParticipants: 1,
-    calendarColor: '#DC2626',
+    iconBgColor: '#DC2626',
     minLeadMinutes: 60, maxAdvanceDays: 60,
     hidePriceOnBooking: false, hideDurationOnBooking: false,
   },
@@ -176,7 +176,7 @@ export const DEMO_SERVICES = [
     depositEnabled: true, depositPercent: 30,
     allowRecurring: true, allowedRecurringPatterns: ['every_2_days', 'weekly'],
     maxRecurrences: 6, maxParticipants: 1,
-    calendarColor: '#DC2626',
+    iconBgColor: '#DC2626',
     minLeadMinutes: 1440, maxAdvanceDays: 60,
     hidePriceOnBooking: false, hideDurationOnBooking: false,
   },
@@ -188,7 +188,7 @@ export const DEMO_SERVICES = [
     depositEnabled: false, depositPercent: 100,
     allowRecurring: false, allowedRecurringPatterns: [],
     maxRecurrences: 12, maxParticipants: 1,
-    calendarColor: '#D97706',
+    iconBgColor: '#D97706',
     minLeadMinutes: 60, maxAdvanceDays: 60,
     hidePriceOnBooking: false, hideDurationOnBooking: false,
   },
@@ -200,7 +200,7 @@ export const DEMO_SERVICES = [
     depositEnabled: false, depositPercent: 100,
     allowRecurring: false, allowedRecurringPatterns: [],
     maxRecurrences: 12, maxParticipants: 1,
-    calendarColor: '#D97706',
+    iconBgColor: '#D97706',
     minLeadMinutes: 0, maxAdvanceDays: 90,
     hidePriceOnBooking: false, hideDurationOnBooking: false,
   },

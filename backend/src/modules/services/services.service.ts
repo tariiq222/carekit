@@ -54,7 +54,6 @@ export class ServicesService {
       isHidden: dto.isHidden ?? false,
       hidePriceOnBooking: dto.hidePriceOnBooking ?? false,
       hideDurationOnBooking: dto.hideDurationOnBooking ?? false,
-      calendarColor: dto.calendarColor,
       iconName: dto.iconName ?? null,
       iconBgColor: dto.iconBgColor ?? null,
       imageUrl: dto.imageUrl ?? null,
@@ -173,7 +172,6 @@ export class ServicesService {
         isHidden: dto.isHidden,
         hidePriceOnBooking: dto.hidePriceOnBooking,
         hideDurationOnBooking: dto.hideDurationOnBooking,
-        calendarColor: dto.calendarColor,
         ...(dto.iconName !== undefined && { iconName: dto.iconName }),
         ...(dto.iconBgColor !== undefined && { iconBgColor: dto.iconBgColor }),
         ...(dto.imageUrl !== undefined && { imageUrl: dto.imageUrl }),
@@ -190,6 +188,9 @@ export class ServicesService {
       include: { category: true },
     });
     await this.invalidateServicesCache();
+    if (dto.categoryId) {
+      await this.cache.del(CACHE_KEYS.CATEGORIES_ACTIVE);
+    }
     return updated;
   }
 

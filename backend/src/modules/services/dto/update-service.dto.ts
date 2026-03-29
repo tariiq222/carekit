@@ -59,12 +59,6 @@ export class UpdateServiceDto {
   @IsBoolean()
   hideDurationOnBooking?: boolean;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'calendarColor must be a valid hex color' })
-  calendarColor?: string;
-
   @ApiPropertyOptional({ description: 'HugeIcon name, e.g. StethoscopeIcon' })
   @IsOptional()
   @ValidateIf((o: UpdateServiceDto) => o.iconName !== null && o.iconName !== undefined)
