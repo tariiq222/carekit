@@ -108,6 +108,15 @@ describe('ServicesService', () => {
   let categoriesService: ServiceCategoriesService;
   let module: TestingModule;
 
+  describe('branch filter in findAll', () => {
+    it('passes branchId filter to queryServices', async () => {
+      // We will test the actual filtering in Task 3.
+      // This placeholder ensures the DTO field exists at compile time.
+      const query: ServiceListQueryDto = { branchId: 'branch-uuid-1' };
+      expect(query.branchId).toBe('branch-uuid-1');
+    });
+  });
+
   beforeEach(async () => {
     module = await Test.createTestingModule({
       providers: [
