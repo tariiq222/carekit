@@ -31,6 +31,7 @@ import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
 import { SetDurationOptionsDto } from './dto/set-duration-options.dto.js';
 import { SetServiceBookingTypesDto } from './dto/set-booking-types.dto.js';
+import { SetServiceBranchesDto } from './dto/set-service-branches.dto.js';
 import { ServiceListQueryDto } from './dto/service-list-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
@@ -127,6 +128,23 @@ export class ServicesController {
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
     return this.avatarService.uploadAvatar(id, file);
+  }
+
+  @Put(':id/branches')
+  @CheckPermissions({ module: 'services', action: 'edit' })
+  async setBranches(
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: SetServiceBranchesDto,
+  ) {
+    await this.servicesService.setBranches(id, dto.branchIds);
+    return { updated: true };
+  }
+
+  @Delete(':id/branches')
+  @CheckPermissions({ module: 'services', action: 'edit' })
+  async clearBranches(@Param('id', uuidPipe) id: string) {
+    await this.servicesService.clearBranches(id);
+    return { cleared: true };
   }
 
   @Delete(':id')
