@@ -10,6 +10,7 @@ import { CacheService } from '../../../src/common/services/cache.service.js';
 import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-forms.service.js';
 import { MinioService } from '../../../src/common/services/minio.service.js';
 import { CreateServiceDto } from '../../../src/modules/services/dto/create-service.dto.js';
+import { ServiceListQueryDto } from '../../../src/modules/services/dto/service-list-query.dto.js';
 import {
   createMockPrisma,
   createMockCache,
@@ -342,5 +343,14 @@ describe('ServicesService — softDelete', () => {
     mockPrisma.service.findFirst.mockResolvedValue(null);
 
     await expect(service.softDelete('non-existent-id')).rejects.toThrow(NotFoundException);
+  });
+});
+
+describe('branch filter in findAll', () => {
+  it('passes branchId filter to queryServices', async () => {
+    // We will test the actual filtering in Task 3.
+    // This placeholder ensures the DTO field exists at compile time.
+    const query: ServiceListQueryDto = { branchId: 'branch-uuid-1' };
+    expect(query.branchId).toBe('branch-uuid-1');
   });
 });

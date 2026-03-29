@@ -40,4 +40,8 @@ export class ServiceListQueryDto {
   @IsString()
   @MaxLength(255)
   search?: string;
+
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
 }
