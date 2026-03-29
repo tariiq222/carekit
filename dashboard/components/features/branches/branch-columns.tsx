@@ -1,0 +1,138 @@
+"use client"
+
+import type { ColumnDef } from "@tanstack/react-table"
+import { HugeiconsIcon } from "@hugeicons/react"
+import {
+  MoreHorizontalIcon,
+  PencilEdit01Icon,
+  Delete02Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import type { Branch } from "@/lib/types/branch"
+
+type TFn = (key: string) => string
+
+export function getBranchColumns(
+  locale: "en" | "ar" = "en",
+  onEdit?: (b: Branch) => void,
+  onDelete?: (b: Branch) => void,
+  t?: TFn,
+  onManagePractitioners?: (b: Branch) => void,
+): ColumnDef<Branch>[] {
+  const label = (key: string, fallback: string) => t?.(key) ?? fallback
+
+  return [
+    {
+      id: "name",
+      header: label("branches.col.name", "Name"),
+      enableSorting: false,
+      cell: ({ row }) => {
+        const b = row.original
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium text-foreground">
+              {locale === "ar" ? b.nameAr : b.nameEn}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {locale === "ar" ? b.nameEn : b.nameAr}
+            </span>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "address",
+      header: label("branches.col.address", "Address"),
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.original.address || "—"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "phone",
+      header: label("branches.col.phone", "Phone"),
+      cell: ({ row }) => (
+        <span className="text-sm tabular-nums text-muted-foreground" dir="ltr">
+          {row.original.phone || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "main",
+      header: label("branches.col.main", "Main"),
+      cell: ({ row }) => {
+        if (!row.original.isMain) return null
+        return (
+          <Badge
+            variant="outline"
+            className="border-primary/30 bg-primary/10 text-primary"
+          >
+            {label("branches.status.main", "Main")}
+          </Badge>
+        )
+      },
+    },
+    {
+      id: "status",
+      header: label("branches.col.status", "Status"),
+      cell: ({ row }) => (
+        <Badge
+          variant="outline"
+          className={
+            row.original.isActive
+              ? "border-success/30 bg-success/10 text-success"
+              : "border-muted-foreground/30 bg-muted text-muted-foreground"
+          }
+        >
+          {row.original.isActive
+            ? label("branches.status.active", "Active")
+            : label("branches.status.inactive", "Inactive")}
+        </Badge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const b = row.original
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm">
+                <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
+                <span className="sr-only">Actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="glass-solid">
+              <DropdownMenuItem onClick={() => onManagePractitioners?.(b)}>
+                <HugeiconsIcon icon={UserGroupIcon} size={14} />
+                {label("branches.action.practitioners", "Practitioners")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit?.(b)}>
+                <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
+                {label("branches.action.edit", "Edit")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onDelete?.(b)}
+                className="text-destructive focus:text-destructive"
+              >
+                <HugeiconsIcon icon={Delete02Icon} size={14} />
+                {label("branches.action.delete", "Delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
+}

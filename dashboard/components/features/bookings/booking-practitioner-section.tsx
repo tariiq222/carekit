@@ -1,0 +1,167 @@
+"use client"
+
+import { Controller } from "react-hook-form"
+import { HugeiconsIcon } from "@hugeicons/react"
+import {
+  Stethoscope02Icon,
+  MedicineBottle01Icon,
+  Timer02Icon,
+} from "@hugeicons/core-free-icons"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useLocale } from "@/components/locale-provider"
+import type { UseFormReturn } from "react-hook-form"
+import type { BookingCreateFormData } from "@/lib/schemas/booking.schema"
+import type { Practitioner, PractitionerDurationOption, PractitionerService } from "@/lib/types/practitioner"
+import type { ProgressiveVisibility } from "@/components/features/bookings/use-progressive-disclosure"
+import { ProgressiveField } from "@/components/features/bookings/progressive-field"
+
+/* ── FormField wrapper (local copy for this file) ── */
+
+function FormField({
+  label,
+  error,
+  children,
+  icon,
+  className,
+}: {
+  label: string
+  error?: string
+  children: React.ReactNode
+  icon?: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={`flex flex-col gap-1.5${className ? ` ${className}` : ""}`}>
+      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        {icon}
+        {label}
+      </label>
+      {children}
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  )
+}
+
+interface BookingPractitionerSectionProps {
+  form: UseFormReturn<BookingCreateFormData>
+  practitioners: Practitioner[]
+  practitionerServices: PractitionerService[]
+  practitionersLoading: boolean
+  practitionerServicesLoading: boolean
+  availableTypes: string[]
+  canFetchServiceTypes: boolean
+  serviceTypesLoading: boolean
+  hasDurationOptions: boolean
+  durationOptions: PractitionerDurationOption[]
+  visibility: ProgressiveVisibility
+}
+
+export function BookingPractitionerSection({
+  form,
+  practitioners,
+  practitionerServices,
+  practitionersLoading,
+  practitionerServicesLoading,
+  availableTypes,
+  canFetchServiceTypes,
+  serviceTypesLoading,
+  hasDurationOptions,
+  durationOptions,
+  visibility,
+}: BookingPractitionerSectionProps) {
+  const { t } = useLocale()
+
+  return (
+    <div className="px-4 py-4 flex flex-col gap-3">
+      {/* Practitioner — always visible */}
+      <FormField
+        label={t("bookings.form.label.practitioner")}
+        icon={<HugeiconsIcon icon={Stethoscope02Icon} size={13} className="shrink-0" />}
+        error={form.formState.errors.practitionerId?.message}
+      >
+        <Controller control={form.control} name="practitionerId" render={({ field }) => (
+          <Select value={field.value} onValueChange={field.onChange}>
+            <SelectTrigger className="bg-surface-muted border-border">
+              <SelectValue placeholder={practitionersLoading ? t("bookings.form.placeholder.loading") : t("bookings.form.placeholder.selectPractitioner")} />
+            </SelectTrigger>
+            <SelectContent>
+              {practitioners.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  د. {p.user.firstName} {p.user.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )} />
+      </FormField>
+
+      {/* Service */}
+      <ProgressiveField show={visibility.showService}>
+        <FormField
+          label={t("bookings.form.label.service")}
+          icon={<HugeiconsIcon icon={MedicineBottle01Icon} size={13} className="shrink-0" />}
+          error={form.formState.errors.serviceId?.message}
+        >
+          <Controller control={form.control} name="serviceId" render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="bg-surface-muted border-border">
+                <SelectValue placeholder={practitionerServicesLoading ? t("bookings.form.placeholder.loading") : t("bookings.form.placeholder.selectService")} />
+              </SelectTrigger>
+              <SelectContent>
+                {practitionerServices.map((ps) => (
+                  <SelectItem key={ps.serviceId} value={ps.serviceId}>{ps.service.nameAr}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )} />
+        </FormField>
+      </ProgressiveField>
+
+      {/* Booking Type — filtered to what this practitioner+service supports */}
+      <ProgressiveField show={visibility.showType}>
+        <FormField label={t("bookings.form.label.bookingType")}>
+          <Controller control={form.control} name="type" render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="bg-surface-muted border-border"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(!availableTypes.length || availableTypes.includes("in_person")) && (
+                  <SelectItem value="in_person">{t("bookings.form.type.inPerson")}</SelectItem>
+                )}
+                {(!availableTypes.length || availableTypes.includes("online")) && (
+                  <SelectItem value="online">{t("bookings.form.type.online")}</SelectItem>
+                )}
+                {(!availableTypes.length || availableTypes.includes("walk_in")) && (
+                  <SelectItem value="walk_in">{t("bookings.form.type.walkIn")}</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          )} />
+        </FormField>
+      </ProgressiveField>
+
+      {/* Duration — conditional on service types */}
+      <ProgressiveField show={visibility.showDuration && canFetchServiceTypes && !serviceTypesLoading}>
+        <FormField label={t("bookings.form.label.sessionDuration")} icon={<HugeiconsIcon icon={Timer02Icon} size={13} className="shrink-0" />}>
+          <Controller control={form.control} name="durationOptionId" render={({ field }) => (
+            <Select value={field.value ?? ""} onValueChange={field.onChange}>
+              <SelectTrigger className="bg-surface-muted border-border"><SelectValue placeholder={t("bookings.form.placeholder.selectDuration")} /></SelectTrigger>
+              <SelectContent>
+                {durationOptions.sort((a, b) => a.sortOrder - b.sortOrder).map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id} className="font-numeric">
+                    {opt.labelAr || opt.label} ({opt.durationMinutes} د)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )} />
+        </FormField>
+      </ProgressiveField>
+    </div>
+  )
+}
