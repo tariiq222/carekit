@@ -57,7 +57,16 @@ export function createMockPrisma(): any {
       delete: jest.fn(),
       count: jest.fn(),
     },
-    $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(createMockPrisma())),
+    serviceBranch: {
+      deleteMany: jest.fn(),
+      createMany: jest.fn(),
+    },
+    $transaction: jest.fn((fnOrOps: unknown) => {
+      if (typeof fnOrOps === 'function') {
+        return (fnOrOps as (tx: unknown) => Promise<unknown>)(createMockPrisma());
+      }
+      return Promise.resolve([]);
+    }),
   };
 }
 

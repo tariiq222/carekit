@@ -20,6 +20,7 @@ import { CheckPermissions } from '../../common/decorators/check-permissions.deco
 import { Public } from '../../common/decorators/public.decorator.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ServicesService } from './services.service.js';
+import { ServicesAvatarService } from './services-avatar.service.js';
 import { ServiceCategoriesService } from './service-categories.service.js';
 import { DurationOptionsService } from './duration-options.service.js';
 import { ServiceBookingTypeService } from './service-booking-type.service.js';
@@ -41,6 +42,7 @@ export class ServicesController {
   constructor(
     private readonly categoriesService: ServiceCategoriesService,
     private readonly servicesService: ServicesService,
+    private readonly avatarService: ServicesAvatarService,
     private readonly durationOptionsService: DurationOptionsService,
     private readonly bookingTypeService: ServiceBookingTypeService,
     private readonly practitionersService: ServicePractitionersService,
@@ -124,7 +126,7 @@ export class ServicesController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
-    return this.servicesService.uploadAvatar(id, file);
+    return this.avatarService.uploadAvatar(id, file);
   }
 
   @Delete(':id')

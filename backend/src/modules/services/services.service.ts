@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { Prisma, RecurringPattern } from '@prisma/client';
 import { CacheService } from '../../common/services/cache.service.js';
@@ -11,7 +7,6 @@ import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
 import { IntakeFormsService } from '../intake-forms/intake-forms.service.js';
-import { MinioService } from '../../common/services/minio.service.js';
 interface ServiceListQuery {
   page?: number;
   perPage?: number;
@@ -19,6 +14,7 @@ interface ServiceListQuery {
   isActive?: boolean;
   includeHidden?: boolean;
   search?: string;
+  branchId?: string;
 }
 
 @Injectable()
@@ -27,7 +23,6 @@ export class ServicesService {
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
     private readonly intakeForms: IntakeFormsService,
-    private readonly minio: MinioService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -95,6 +90,7 @@ export class ServicesService {
     const isDefaultQuery =
       !query.categoryId &&
       !query.search &&
+      !query.branchId &&
       (query.isActive === undefined || query.isActive === true) &&
       (query.page === undefined || query.page === 1) &&
       query.perPage === undefined;
@@ -194,53 +190,6 @@ export class ServicesService {
     return updated;
   }
 
-  async uploadAvatar(id: string, file: Express.Multer.File) {
-    const service = await this.prisma.service.findFirst({
-      where: { id, deletedAt: null },
-    });
-    if (!service) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: 'Service not found',
-        error: 'NOT_FOUND',
-      });
-    }
-
-    // Delete old avatar from MinIO if present
-    if (service.imageUrl) {
-      try {
-        const url = new URL(service.imageUrl);
-        const objectName = url.pathname.replace(/^\/carekit\//, '');
-        await this.minio.deleteFile('carekit', objectName);
-      } catch {
-        // Non-fatal — stale object is acceptable, upload must proceed
-      }
-    }
-
-    const mimeToExt: Record<string, string> = {
-      'image/jpeg': 'jpg',
-      'image/png': 'png',
-      'image/webp': 'webp',
-    };
-    const ext = mimeToExt[file.mimetype] ?? 'jpg';
-    const objectName = `services/${id}/avatar-${Date.now()}.${ext}`;
-    const imageUrl = await this.minio.uploadFile(
-      'carekit',
-      objectName,
-      file.buffer,
-      file.mimetype,
-    );
-
-    const updated = await this.prisma.service.update({
-      where: { id },
-      data: { imageUrl, iconName: null, iconBgColor: null },
-      include: { category: true },
-    });
-
-    await this.invalidateServicesCache();
-    return updated;
-  }
-
   async softDelete(id: string) {
     const service = await this.prisma.service.findFirst({
       where: { id, deletedAt: null },
@@ -260,6 +209,47 @@ export class ServicesService {
 
     await this.invalidateServicesCache();
     return { deleted: true };
+  }
+
+  async setBranches(id: string, branchIds: string[]): Promise<void> {
+    const service = await this.prisma.service.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true },
+    });
+    if (!service) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Service not found',
+        error: 'NOT_FOUND',
+      });
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.serviceBranch.deleteMany({ where: { serviceId: id } }),
+      this.prisma.serviceBranch.createMany({
+        data: branchIds.map((branchId) => ({ serviceId: id, branchId })),
+        skipDuplicates: true,
+      }),
+    ]);
+
+    await this.invalidateServicesCache();
+  }
+
+  async clearBranches(id: string): Promise<void> {
+    const service = await this.prisma.service.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true },
+    });
+    if (!service) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Service not found',
+        error: 'NOT_FOUND',
+      });
+    }
+
+    await this.prisma.serviceBranch.deleteMany({ where: { serviceId: id } });
+    await this.invalidateServicesCache();
   }
 
   async getIntakeForms(serviceId: string) {
@@ -282,6 +272,12 @@ export class ServicesService {
         OR: [
           { nameEn: { contains: query.search, mode: 'insensitive' } },
           { nameAr: { contains: query.search, mode: 'insensitive' } },
+        ],
+      }),
+      ...(query.branchId && {
+        OR: [
+          { branches: { none: {} } },
+          { branches: { some: { branchId: query.branchId } } },
         ],
       }),
     };

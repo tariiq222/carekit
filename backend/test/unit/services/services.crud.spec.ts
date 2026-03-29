@@ -10,7 +10,6 @@ import { CacheService } from '../../../src/common/services/cache.service.js';
 import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-forms.service.js';
 import { MinioService } from '../../../src/common/services/minio.service.js';
 import { CreateServiceDto } from '../../../src/modules/services/dto/create-service.dto.js';
-import { ServiceListQueryDto } from '../../../src/modules/services/dto/service-list-query.dto.js';
 import {
   createMockPrisma,
   createMockCache,
@@ -346,11 +345,68 @@ describe('ServicesService — softDelete', () => {
   });
 });
 
-describe('branch filter in findAll', () => {
-  it('passes branchId filter to queryServices', async () => {
-    // We will test the actual filtering in Task 3.
-    // This placeholder ensures the DTO field exists at compile time.
-    const query: ServiceListQueryDto = { branchId: 'branch-uuid-1' };
-    expect(query.branchId).toBe('branch-uuid-1');
+describe('branch filtering', () => {
+  let service: ServicesService;
+  let mockPrisma: ReturnType<typeof createMockPrisma>;
+
+  beforeEach(async () => {
+    mockPrisma = createMockPrisma();
+    service = await createModule(mockPrisma);
+    jest.clearAllMocks();
+  });
+
+  it('findAll with branchId filters to matching services', async () => {
+    mockPrisma.service.findMany.mockResolvedValue([]);
+    mockPrisma.service.count.mockResolvedValue(0);
+
+    await service.findAll({ branchId: 'branch-uuid-1' });
+
+    const whereArg = mockPrisma.service.findMany.mock.calls[0][0].where;
+    expect(whereArg.OR).toEqual([
+      { branches: { none: {} } },
+      { branches: { some: { branchId: 'branch-uuid-1' } } },
+    ]);
+  });
+
+  it('findAll without branchId has no branch filter', async () => {
+    mockPrisma.service.findMany.mockResolvedValue([]);
+    mockPrisma.service.count.mockResolvedValue(0);
+
+    await service.findAll({});
+
+    const whereArg = mockPrisma.service.findMany.mock.calls[0][0].where;
+    expect(whereArg.OR).toBeUndefined();
+  });
+
+  it('setBranches replaces all branch records for a service', async () => {
+    mockPrisma.service.findFirst.mockResolvedValue({ id: 'svc-uuid-1', deletedAt: null });
+    mockPrisma.$transaction.mockResolvedValue([]);
+
+    await service.setBranches('svc-uuid-1', ['branch-uuid-1', 'branch-uuid-2']);
+
+    expect(mockPrisma.$transaction).toHaveBeenCalled();
+  });
+
+  it('clearBranches deletes all ServiceBranch records for a service', async () => {
+    mockPrisma.service.findFirst.mockResolvedValue({ id: 'svc-uuid-1', deletedAt: null });
+    mockPrisma.serviceBranch.deleteMany.mockResolvedValue({ count: 2 });
+
+    await service.clearBranches('svc-uuid-1');
+
+    expect(mockPrisma.serviceBranch.deleteMany).toHaveBeenCalledWith({
+      where: { serviceId: 'svc-uuid-1' },
+    });
+  });
+
+  it('setBranches throws NotFoundException for non-existent service', async () => {
+    mockPrisma.service.findFirst.mockResolvedValue(null);
+
+    await expect(service.setBranches('bad-id', ['branch-uuid-1'])).rejects.toThrow(NotFoundException);
+  });
+
+  it('clearBranches throws NotFoundException for non-existent service', async () => {
+    mockPrisma.service.findFirst.mockResolvedValue(null);
+
+    await expect(service.clearBranches('bad-id')).rejects.toThrow(NotFoundException);
   });
 });
