@@ -38,6 +38,7 @@ const mockPrismaService: any = {
   practitionerService: { findUnique: jest.fn() },
   practitionerAvailability: { findMany: jest.fn() },
   practitionerVacation: { findMany: jest.fn(), findFirst: jest.fn() },
+  serviceBranch: { count: jest.fn().mockResolvedValue(0), findUnique: jest.fn() },
   payment: { findFirst: jest.fn(), updateMany: jest.fn() },
   $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
 };

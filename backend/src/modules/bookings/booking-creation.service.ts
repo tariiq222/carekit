@@ -63,7 +63,25 @@ export class BookingCreationService {
     if (!ps.isActive) throw new BadRequestException({ statusCode: 400, message: ERR.service.inactive, error: 'SERVICE_INACTIVE' });
     if (!ps.availableTypes.includes(dto.type)) throw new BadRequestException({ statusCode: 400, message: ERR.service.typeNotAvailable(dto.type), error: 'TYPE_NOT_AVAILABLE' });
 
+    // Validate service is available at the booking's branch
     const branchId = await this.resolveBranchContext(dto.practitionerId, dto.branchId);
+    const serviceBranchCount = await this.prisma.serviceBranch.count({
+      where: { serviceId: dto.serviceId },
+    });
+    if (serviceBranchCount > 0 && branchId) {
+      const allowed = await this.prisma.serviceBranch.findUnique({
+        where: { serviceId_branchId: { serviceId: dto.serviceId, branchId } },
+        select: { id: true },
+      });
+      if (!allowed) {
+        throw new BadRequestException({
+          statusCode: 422,
+          message: 'Service is not available at the selected branch',
+          error: 'SERVICE_NOT_AVAILABLE_AT_BRANCH',
+        });
+      }
+    }
+
     const settings = await this.bookingSettingsService.getForBranch(branchId);
 
     if (dto.type === 'walk_in' && !settings.allowWalkIn) {
