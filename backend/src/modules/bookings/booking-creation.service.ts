@@ -75,7 +75,7 @@ export class BookingCreationService {
       });
       if (!allowed) {
         throw new BadRequestException({
-          statusCode: 422,
+          statusCode: 400,
           message: 'Service is not available at the selected branch',
           error: 'SERVICE_NOT_AVAILABLE_AT_BRANCH',
         });
