@@ -155,19 +155,18 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
       {selectedMode === "specific" && (
         <div className="rounded-lg border border-border p-4 flex flex-col gap-3">
           {branches.map((branch) => (
-              <div key={branch.id} className="flex items-center gap-3">
-                <Checkbox
-                  id={`branch-${branch.id}`}
-                  checked={selectedIds.includes(branch.id)}
-                  onCheckedChange={(checked) => handleBranchToggle(branch.id, !!checked)}
-                  disabled={isMutating}
-                />
-                <Label htmlFor={`branch-${branch.id}`} className="cursor-pointer text-sm">
-                  {locale === "ar" ? branch.nameAr : branch.nameEn}
-                </Label>
-              </div>
-            ))
-          )}
+            <div key={branch.id} className="flex items-center gap-3">
+              <Checkbox
+                id={`branch-${branch.id}`}
+                checked={selectedIds.includes(branch.id)}
+                onCheckedChange={(checked) => handleBranchToggle(branch.id, !!checked)}
+                disabled={isMutating}
+              />
+              <Label htmlFor={`branch-${branch.id}`} className="cursor-pointer text-sm">
+                {locale === "ar" ? branch.nameAr : branch.nameEn}
+              </Label>
+            </div>
+          ))}
         </div>
       )}
     </div>
