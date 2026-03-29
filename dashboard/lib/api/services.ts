@@ -12,6 +12,10 @@ import type {
   ServiceListQuery,
   IntakeForm,
   IntakeResponse,
+  ServicePractitioner,
+  SetServiceBranchesPayload,
+} from "@/lib/types/service"
+import type {
   CreateCategoryPayload,
   UpdateCategoryPayload,
   CreateServicePayload,
@@ -21,9 +25,7 @@ import type {
   CreateIntakeFormPayload,
   UpdateIntakeFormPayload,
   SetFieldsPayload,
-  ServicePractitioner,
-  SetServiceBranchesPayload,
-} from "@/lib/types/service"
+} from "@/lib/types/service-payloads"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100/api/v1"
 

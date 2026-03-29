@@ -21,7 +21,6 @@ export interface Service {
   isHidden: boolean;
   hidePriceOnBooking: boolean;
   hideDurationOnBooking: boolean;
-  calendarColor: string | null;
   bufferMinutes: number;
   depositEnabled: boolean;
   depositPercent: number | null;
@@ -53,7 +52,7 @@ export interface ServiceDurationOption {
 export interface ServiceBookingType {
   id: string;
   serviceId: string;
-  bookingType: 'in_person' | 'online' | 'walk_in';
+  bookingType: 'in_person' | 'online';
   price: number; // halalat
   duration: number; // minutes
   isActive: boolean;

@@ -29,13 +29,15 @@ import { assignService } from "@/lib/api/practitioners"
 import type { AssignServicePayload } from "@/lib/types/practitioner"
 import type {
   ServiceListQuery,
+  SetServiceBranchesPayload,
+} from "@/lib/types/service"
+import type {
   SetDurationOptionsPayload,
   SetServiceBookingTypesPayload,
   CreateIntakeFormPayload,
   UpdateIntakeFormPayload,
   SetFieldsPayload,
-  SetServiceBranchesPayload,
-} from "@/lib/types/service"
+} from "@/lib/types/service-payloads"
 
 /* ─── Services List ─── */
 
