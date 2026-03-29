@@ -23,6 +23,7 @@ import {
 import { useCategories } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 import { ServiceAvatarPicker } from "@/components/features/services/service-avatar-picker"
+import { ServiceBranchesTab } from "@/components/features/services/service-branches-tab"
 import type { UseFormReturn } from "react-hook-form"
 import type { CreateServiceFormData } from "./form-schema"
 
@@ -31,11 +32,13 @@ import type { CreateServiceFormData } from "./form-schema"
 interface BasicInfoTabProps {
   form: UseFormReturn<CreateServiceFormData>
   onImageSelect?: (file: File) => void
+  serviceId?: string
+  serviceBranches?: { branchId: string }[]
 }
 
 /* ─── Component ─── */
 
-export function BasicInfoTab({ form, onImageSelect }: BasicInfoTabProps) {
+export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }: BasicInfoTabProps) {
   const { t, locale } = useLocale()
   const { data: categories, isLoading: loadingCategories } = useCategories()
 
@@ -61,34 +64,39 @@ export function BasicInfoTab({ form, onImageSelect }: BasicInfoTabProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Avatar */}
-        <div className="flex items-center gap-4 pb-4 mb-2 border-b border-border">
-          <ServiceAvatarPicker
-            iconName={iconName}
-            iconBgColor={iconBgColor}
-            imageUrl={imageUrl}
-            serviceName={form.watch("nameAr") || form.watch("nameEn")}
-            onIconChange={(name, color) => {
-              form.setValue("iconName", name)
-              form.setValue("iconBgColor", color)
-              form.setValue("imageUrl", null)
-            }}
-            onImageChange={(file) => {
-              const url = URL.createObjectURL(file)
-              form.setValue("imageUrl", url)
-              form.setValue("iconName", null)
-              form.setValue("iconBgColor", null)
-              onImageSelect?.(file)
-            }}
-            onClear={() => {
-              form.setValue("iconName", null)
-              form.setValue("iconBgColor", null)
-              form.setValue("imageUrl", null)
-            }}
-          />
-          <p className="text-sm text-muted-foreground">
-            {t("services.create.avatarHint") || "اختر أيقونة أو ارفع صورة للخدمة"}
-          </p>
+        {/* Avatar + Branch Restrictions — same row */}
+        <div className="flex flex-col gap-4 pb-4 mb-2 border-b border-border sm:flex-row sm:items-start">
+          <div className="flex items-center gap-4 shrink-0">
+            <ServiceAvatarPicker
+              iconName={iconName}
+              iconBgColor={iconBgColor}
+              imageUrl={imageUrl}
+              serviceName={form.watch("nameAr") || form.watch("nameEn")}
+              onIconChange={(name, color) => {
+                form.setValue("iconName", name)
+                form.setValue("iconBgColor", color)
+                form.setValue("imageUrl", null)
+              }}
+              onImageChange={(file) => {
+                const url = URL.createObjectURL(file)
+                form.setValue("imageUrl", url)
+                form.setValue("iconName", null)
+                form.setValue("iconBgColor", null)
+                onImageSelect?.(file)
+              }}
+              onClear={() => {
+                form.setValue("iconName", null)
+                form.setValue("iconBgColor", null)
+                form.setValue("imageUrl", null)
+              }}
+            />
+            <p className="text-sm text-muted-foreground sm:hidden">
+              {t("services.create.avatarHint") || "اختر أيقونة أو ارفع صورة للخدمة"}
+            </p>
+          </div>
+          <div className="flex-1">
+            <ServiceBranchesTab serviceId={serviceId} serviceBranches={serviceBranches} />
+          </div>
         </div>
 
         {/* Name — primary locale field appears first (start side) */}
