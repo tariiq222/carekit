@@ -184,8 +184,11 @@ export class ServicesController {
 
   @Get(':id/practitioners')
   @Public()
-  async getPractitioners(@Param('id', uuidPipe) id: string) {
-    return this.practitionersService.getPractitionersForService(id);
+  async getPractitioners(
+    @Param('id', uuidPipe) id: string,
+    @Query('branchId') branchId?: string,
+  ) {
+    return this.practitionersService.getPractitionersForService(id, branchId);
   }
 
   // ═══════════════════════════════════════════════════════════════

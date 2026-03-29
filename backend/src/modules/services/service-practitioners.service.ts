@@ -9,11 +9,18 @@ export class ServicePractitionersService {
     private readonly services: ServicesService,
   ) {}
 
-  async getPractitionersForService(serviceId: string) {
+  async getPractitionersForService(serviceId: string, branchId?: string) {
     await this.services.ensureExists(serviceId);
 
     return this.prisma.practitionerService.findMany({
-      where: { serviceId },
+      where: {
+        serviceId,
+        ...(branchId && {
+          practitioner: {
+            branches: { some: { branchId } },
+          },
+        }),
+      },
       include: {
         practitioner: {
           select: {
