@@ -275,5 +275,24 @@ describe('Branches Module (e2e)', () => {
         .delete(`${URL}/${FAKE_ID}`).set(getAuthHeaders(superAdmin.accessToken)).expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
+
+    it('should make deleted branch invisible in GET list and return 404 on GET by id', async () => {
+      const createRes = await request(httpServer)
+        .post(URL).set(getAuthHeaders(superAdmin.accessToken))
+        .send({ nameAr: 'فرع مؤقت للحذف', nameEn: 'Temp Delete Branch' })
+        .expect(201);
+      const tempId = (createRes.body.data as { id: string }).id;
+
+      await request(httpServer)
+        .delete(`${URL}/${tempId}`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+
+      await request(httpServer)
+        .get(`${URL}/${tempId}`).set(getAuthHeaders(superAdmin.accessToken)).expect(404);
+
+      const listRes = await request(httpServer)
+        .get(URL).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+      const items = (listRes.body.data?.items ?? listRes.body.data) as Array<{ id: string }>;
+      expect(items.every((b) => b.id !== tempId)).toBe(true);
+    });
   });
 });
