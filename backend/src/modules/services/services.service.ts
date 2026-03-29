@@ -313,7 +313,21 @@ export class ServicesService {
     };
   }
 
-  private async invalidateServicesCache(): Promise<void> {
+  async ensureExists(id: string): Promise<void> {
+    const service = await this.prisma.service.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true },
+    });
+    if (!service) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Service not found',
+        error: 'NOT_FOUND',
+      });
+    }
+  }
+
+  async invalidateServicesCache(): Promise<void> {
     await this.cache.del(CACHE_KEYS.SERVICES_ACTIVE);
   }
 }
