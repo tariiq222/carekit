@@ -101,6 +101,97 @@ describe('BranchesService', () => {
         }),
       );
     });
+
+    it('should pass search term as case-insensitive OR filter on nameAr, nameEn, address', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([baseBranch]);
+      mockPrisma.branch.count.mockResolvedValue(1);
+
+      await service.findAll({ search: 'رياض', page: 1, perPage: 10 });
+
+      expect(mockPrisma.branch.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            deletedAt: null,
+            OR: expect.arrayContaining([
+              { nameAr: { contains: 'رياض', mode: 'insensitive' } },
+              { nameEn: { contains: 'رياض', mode: 'insensitive' } },
+              { address: { contains: 'رياض', mode: 'insensitive' } },
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('should not include OR filter when search is undefined', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([baseBranch]);
+      mockPrisma.branch.count.mockResolvedValue(1);
+
+      await service.findAll({ page: 1, perPage: 10 });
+
+      const call = mockPrisma.branch.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).not.toHaveProperty('OR');
+    });
+
+    it('should compute skip correctly for page 2 perPage 5', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([]);
+      mockPrisma.branch.count.mockResolvedValue(12);
+
+      await service.findAll({ page: 2, perPage: 5 });
+
+      expect(mockPrisma.branch.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 5, take: 5 }),
+      );
+    });
+
+    it('should return correct meta for page 2 of 12 items with perPage 5', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([baseBranch]);
+      mockPrisma.branch.count.mockResolvedValue(12);
+
+      const result = await service.findAll({ page: 2, perPage: 5 });
+
+      expect(result.meta).toMatchObject({
+        total: 12,
+        page: 2,
+        perPage: 5,
+        totalPages: 3,
+      });
+    });
+
+    it('should filter by isActive=true when provided', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([baseBranch]);
+      mockPrisma.branch.count.mockResolvedValue(1);
+
+      await service.findAll({ isActive: true, page: 1, perPage: 10 });
+
+      expect(mockPrisma.branch.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true, deletedAt: null }),
+        }),
+      );
+    });
+
+    it('should filter by isActive=false when provided', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([]);
+      mockPrisma.branch.count.mockResolvedValue(0);
+
+      await service.findAll({ isActive: false, page: 1, perPage: 10 });
+
+      expect(mockPrisma.branch.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: false, deletedAt: null }),
+        }),
+      );
+    });
+
+    it('should not include isActive in where when not provided', async () => {
+      mockPrisma.branch.findMany.mockResolvedValue([]);
+      mockPrisma.branch.count.mockResolvedValue(0);
+
+      await service.findAll({ page: 1, perPage: 10 });
+
+      const call = mockPrisma.branch.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).not.toHaveProperty('isActive');
+    });
   });
 
   // ─────────────────────────────────────────────
@@ -220,6 +311,19 @@ describe('BranchesService', () => {
         NotFoundException,
       );
       expect(mockPrisma.branch.update).not.toHaveBeenCalled();
+    });
+
+    it('should make branch invisible to findById after soft-delete', async () => {
+      // First call: branch exists (ensureExists inside delete passes)
+      // Second call: branch returns null (simulating deletedAt is set)
+      mockPrisma.branch.findFirst
+        .mockResolvedValueOnce({ ...baseBranch })
+        .mockResolvedValueOnce(null);
+      mockPrisma.branch.update.mockResolvedValue({ ...baseBranch, deletedAt: new Date() });
+
+      await service.delete(baseBranch.id);
+
+      await expect(service.findById(baseBranch.id)).rejects.toThrow(NotFoundException);
     });
   });
 
