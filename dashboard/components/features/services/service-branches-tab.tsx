@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 import { useBranches } from "@/hooks/use-branches"
 import { useSetServiceBranches, useClearServiceBranches } from "@/hooks/use-services"
@@ -86,46 +87,29 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
 
   const isMutating = setMut.isPending || clearMut.isPending
 
-  const radioClass =
-    "h-4 w-4 rounded-full border border-border accent-primary cursor-pointer disabled:cursor-not-allowed"
-
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm font-semibold text-foreground">{t("services.branches.title")}</p>
 
       {/* Mode selection */}
-      <div className="flex flex-col gap-3" role="radiogroup">
+      <RadioGroup
+        value={selectedMode}
+        onValueChange={(value) => handleModeChange(value as "all" | "specific")}
+        disabled={isMutating}
+      >
         <div className="flex items-center gap-3">
-          <input
-            type="radio"
-            id="branches-all"
-            name="branch-mode"
-            value="all"
-            checked={selectedMode === "all"}
-            onChange={() => handleModeChange("all")}
-            disabled={isMutating}
-            className={radioClass}
-          />
+          <RadioGroupItem value="all" id="branches-all" />
           <Label htmlFor="branches-all" className="cursor-pointer text-sm">
             {t("services.branches.allBranchesLabel")}
           </Label>
         </div>
         <div className="flex items-center gap-3">
-          <input
-            type="radio"
-            id="branches-specific"
-            name="branch-mode"
-            value="specific"
-            checked={selectedMode === "specific"}
-            onChange={() => handleModeChange("specific")}
-            disabled={isMutating}
-            className={radioClass}
-          />
+          <RadioGroupItem value="specific" id="branches-specific" />
           <Label htmlFor="branches-specific" className="cursor-pointer text-sm">
             {t("services.branches.specificLabel")}
           </Label>
         </div>
-      </div>
+      </RadioGroup>
 
       {/* Branch checklist */}
       {selectedMode === "specific" && (
