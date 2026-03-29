@@ -221,3 +221,58 @@ describe('PATCH /booking-settings', () => {
     expect((res.body as Record<string, unknown>).success).toBe(false);
   });
 });
+
+// =============================================================================
+// Branch override fallback
+// =============================================================================
+
+describe('PATCH /booking-settings — branch override', () => {
+  let settingsBranchId: string;
+
+  beforeAll(async () => {
+    const bRes = await request(httpServer)
+      .post(`${API_PREFIX}/branches`)
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .send({ nameAr: 'فرع إعدادات الحجز', nameEn: 'Settings Test Branch', isActive: true })
+      .expect(201);
+    settingsBranchId = (bRes.body.data as { id: string }).id;
+  });
+
+  it('should create branch-specific settings override via PATCH with branchId', async () => {
+    const res = await request(httpServer)
+      .patch(BOOKING_SETTINGS_URL)
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .send({ branchId: settingsBranchId, paymentTimeoutMinutes: 99 })
+      .expect(200);
+
+    expectSuccessResponse(res.body as Record<string, unknown>);
+    const data = (res.body as Record<string, Record<string, unknown>>).data;
+    expect(data.paymentTimeoutMinutes).toBe(99);
+  });
+
+  it('should not affect global settings when branch override is created', async () => {
+    const globalRes = await request(httpServer)
+      .get(BOOKING_SETTINGS_URL)
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .expect(200);
+
+    const globalData = (globalRes.body as Record<string, Record<string, unknown>>).data;
+    expect(globalData.paymentTimeoutMinutes).not.toBe(99);
+  });
+
+  it('should update existing branch override without touching global', async () => {
+    await request(httpServer)
+      .patch(BOOKING_SETTINGS_URL)
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .send({ branchId: settingsBranchId, paymentTimeoutMinutes: 77 })
+      .expect(200);
+
+    const globalRes = await request(httpServer)
+      .get(BOOKING_SETTINGS_URL)
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .expect(200);
+
+    const globalData = (globalRes.body as Record<string, Record<string, unknown>>).data;
+    expect(globalData.paymentTimeoutMinutes).not.toBe(77);
+  });
+});
