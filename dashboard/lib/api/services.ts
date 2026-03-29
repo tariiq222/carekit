@@ -3,6 +3,27 @@
  */
 
 import { api, getAccessToken } from "@/lib/api"
+import type { PaginatedResponse } from "@/lib/types/common"
+import type {
+  Service,
+  ServiceCategory,
+  ServiceBookingType,
+  ServiceDurationOption,
+  ServiceListQuery,
+  IntakeForm,
+  IntakeResponse,
+  CreateCategoryPayload,
+  UpdateCategoryPayload,
+  CreateServicePayload,
+  UpdateServicePayload,
+  SetDurationOptionsPayload,
+  SetServiceBookingTypesPayload,
+  CreateIntakeFormPayload,
+  UpdateIntakeFormPayload,
+  SetFieldsPayload,
+  ServicePractitioner,
+  SetServiceBranchesPayload,
+} from "@/lib/types/service"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100/api/v1"
 
@@ -29,27 +50,6 @@ export function exportServicesCsv() {
 export function exportServicesExcel() {
   downloadFile("/services/export?format=xlsx", "services.xlsx")
 }
-import type { PaginatedResponse } from "@/lib/types/common"
-import type {
-  Service,
-  ServiceCategory,
-  ServiceBookingType,
-  ServiceDurationOption,
-  ServiceListQuery,
-  IntakeForm,
-  IntakeResponse,
-  CreateCategoryPayload,
-  UpdateCategoryPayload,
-  CreateServicePayload,
-  UpdateServicePayload,
-  SetDurationOptionsPayload,
-  SetServiceBookingTypesPayload,
-  CreateIntakeFormPayload,
-  UpdateIntakeFormPayload,
-  SetFieldsPayload,
-  ServicePractitioner,
-  SetServiceBranchesPayload,
-} from "@/lib/types/service"
 
 /* ─── Categories ─── */
 

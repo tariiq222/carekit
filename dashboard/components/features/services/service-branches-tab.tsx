@@ -68,7 +68,10 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
     }
   }
 
+  const isMutating = setMut.isPending || clearMut.isPending
+
   const handleBranchToggle = async (branchId: string, checked: boolean) => {
+    if (isMutating) return
     const prev = selectedIds
     const next = checked
       ? [...selectedIds, branchId]
@@ -84,8 +87,6 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
       setSelectedIds(prev) // revert
     }
   }
-
-  const isMutating = setMut.isPending || clearMut.isPending
 
   return (
     <div className="flex flex-col gap-6">
