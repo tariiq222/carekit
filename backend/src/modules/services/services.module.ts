@@ -21,7 +21,6 @@ import { IntakeFormsModule } from '../intake-forms/intake-forms.module.js';
   ],
   exports: [
     ServicesService,
-    ServicesAvatarService,
     ServiceCategoriesService,
     DurationOptionsService,
     ServiceBookingTypeService,
