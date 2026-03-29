@@ -272,4 +272,15 @@ export const arServices: Record<string, string> = {
   "services.export": "تصدير",
   "services.exportCsv": "تصدير CSV",
   "services.exportExcel": "تصدير Excel",
+
+  /* ── Branch Scoping ── */
+  "services.filters.allBranches": "جميع الفروع",
+  "services.tabs.branches": "الفروع",
+  "services.branches.title": "تقييد الفروع",
+  "services.branches.allBranchesLabel": "متاحة لجميع الفروع",
+  "services.branches.specificLabel": "فروع محددة فقط",
+  "services.branches.createHint": "يمكنك تحديد الفروع بعد حفظ الخدمة",
+  "services.branches.saveSuccess": "تم حفظ الفروع",
+  "services.branches.saveError": "فشل حفظ الفروع",
+  "services.branches.noBranches": "لا توجد فروع",
 }

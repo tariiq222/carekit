@@ -22,6 +22,7 @@ import { getServiceColumns } from "./service-columns"
 import { ServiceDetailSheet } from "./service-detail-sheet"
 
 import { useServices, useCategories, useServiceMutations } from "@/hooks/use-services"
+import { useBranches } from "@/hooks/use-branches"
 import { useLocale } from "@/components/locale-provider"
 import type { Service } from "@/lib/types/service"
 
@@ -33,10 +34,12 @@ export function ServicesTabContent() {
     search, setSearch,
     categoryId, setCategoryId,
     isActive, setIsActive,
+    branchId, setBranchId,
     page, setPage,
     resetFilters,
   } = useServices()
   const { data: categories } = useCategories()
+  const { branches } = useBranches()
   const { deleteMut } = useServiceMutations()
 
   const [detailTarget, setDetailTarget] = useState<Service | null>(null)
@@ -54,7 +57,7 @@ export function ServicesTabContent() {
 
   const columns = getServiceColumns(locale, handleEdit, handleDelete, handleRowClick, t)
 
-  const hasFilters = search.length > 0 || !!categoryId || isActive !== undefined
+  const hasFilters = search.length > 0 || !!categoryId || isActive !== undefined || !!branchId
 
   const statusOptions = [
     { value: "all",      label: t("services.filters.allStatuses") },
@@ -125,6 +128,19 @@ export function ServicesTabContent() {
             placeholder: t("services.filters.allCategories"),
             options: categoryOptions,
             onValueChange: (v) => setCategoryId(v === "all" ? undefined : v),
+          },
+          {
+            key: "branch",
+            value: branchId ?? "all",
+            placeholder: t("services.filters.allBranches"),
+            options: [
+              { value: "all", label: t("services.filters.allBranches") },
+              ...branches.map((b) => ({
+                value: b.id,
+                label: locale === "ar" ? b.nameAr : b.nameEn,
+              })),
+            ],
+            onValueChange: (v) => setBranchId(v === "all" ? undefined : v),
           },
         ]}
         hasFilters={hasFilters}

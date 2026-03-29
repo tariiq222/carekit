@@ -18,6 +18,7 @@ import { PricingTab } from "@/components/features/services/create/pricing-tab"
 import { BookingSettingsTab } from "@/components/features/services/create/booking-settings-tab"
 import { IntakeFormsTab } from "@/components/features/services/intake-forms-tab"
 import { ServicePractitionersTab } from "@/components/features/services/service-practitioners-tab"
+import { ServiceBranchesTab } from "@/components/features/services/service-branches-tab"
 import {
   createServiceSchema,
   createServiceDefaults,
@@ -258,6 +259,9 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
               <TabsTrigger value="practitioners" className="text-xs sm:text-sm">
                 {t("services.tabs.practitioners")}
               </TabsTrigger>
+              <TabsTrigger value="branches" className="text-xs sm:text-sm">
+                {t("services.tabs.branches")}
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -302,6 +306,13 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
               isCreate={!isEdit}
               pendingIds={pendingPractitionerIds}
               onPendingChange={setPendingPractitionerIds}
+            />
+          </TabsContent>
+
+          <TabsContent value="branches" className="pt-4">
+            <ServiceBranchesTab
+              serviceId={serviceId}
+              serviceBranches={service?.branches}
             />
           </TabsContent>
         </Tabs>

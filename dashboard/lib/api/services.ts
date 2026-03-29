@@ -48,6 +48,7 @@ import type {
   UpdateIntakeFormPayload,
   SetFieldsPayload,
   ServicePractitioner,
+  SetServiceBranchesPayload,
 } from "@/lib/types/service"
 
 /* ─── Categories ─── */
@@ -91,6 +92,7 @@ export async function fetchServices(
     isActive: query.isActive,
     includeHidden: query.includeHidden,
     search: query.search,
+    branchId: query.branchId,
   })
 }
 
@@ -234,4 +236,19 @@ export async function fetchServicePractitioners(
   serviceId: string,
 ): Promise<ServicePractitioner[]> {
   return api.get<ServicePractitioner[]>(`/services/${serviceId}/practitioners`)
+}
+
+/* ─── Service Branches ─── */
+
+export async function setServiceBranches(
+  serviceId: string,
+  payload: SetServiceBranchesPayload,
+): Promise<{ updated: boolean }> {
+  return api.put<{ updated: boolean }>(`/services/${serviceId}/branches`, payload)
+}
+
+export async function clearServiceBranches(
+  serviceId: string,
+): Promise<{ cleared: boolean }> {
+  return api.delete<{ cleared: boolean }>(`/services/${serviceId}/branches`)
 }

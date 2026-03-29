@@ -118,7 +118,10 @@ export class ServicesService {
   async findOne(id: string) {
     const service = await this.prisma.service.findFirst({
       where: { id, deletedAt: null },
-      include: { category: true },
+      include: {
+        category: true,
+        branches: { select: { branchId: true } },
+      },
     });
     if (!service) {
       throw new NotFoundException({

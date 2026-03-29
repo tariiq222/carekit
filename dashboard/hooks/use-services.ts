@@ -22,6 +22,8 @@ import {
   deleteIntakeForm,
   setIntakeFields,
   fetchServicePractitioners,
+  setServiceBranches,
+  clearServiceBranches,
 } from "@/lib/api/services"
 import { assignService } from "@/lib/api/practitioners"
 import type { AssignServicePayload } from "@/lib/types/practitioner"
@@ -32,6 +34,7 @@ import type {
   CreateIntakeFormPayload,
   UpdateIntakeFormPayload,
   SetFieldsPayload,
+  SetServiceBranchesPayload,
 } from "@/lib/types/service"
 
 /* ─── Services List ─── */
@@ -41,6 +44,7 @@ export function useServices() {
   const [search, setSearch] = useState("")
   const [categoryId, setCategoryId] = useState<string | undefined>()
   const [isActive, setIsActive] = useState<boolean | undefined>()
+  const [branchId, setBranchId] = useState<string | undefined>()
 
   const query: ServiceListQuery = {
     page,
@@ -49,6 +53,7 @@ export function useServices() {
     categoryId,
     isActive,
     includeHidden: true, // Admin dashboard shows all services
+    branchId,
   }
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -61,6 +66,7 @@ export function useServices() {
     setSearch("")
     setCategoryId(undefined)
     setIsActive(undefined)
+    setBranchId(undefined)
     setPage(1)
   }, [])
 
@@ -77,6 +83,8 @@ export function useServices() {
     setCategoryId: (id: string | undefined) => { setCategoryId(id); setPage(1) },
     isActive,
     setIsActive: (v: boolean | undefined) => { setIsActive(v); setPage(1) },
+    branchId,
+    setBranchId: (id: string | undefined) => { setBranchId(id); setPage(1) },
     resetFilters,
     refetch,
   }
@@ -261,6 +269,31 @@ export function useAssignPractitionersToService(serviceId: string) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.services.practitioners(serviceId),
       })
+    },
+  })
+}
+
+/* ─── Service Branch Mutations ─── */
+
+export function useSetServiceBranches(serviceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: SetServiceBranchesPayload) =>
+      setServiceBranches(serviceId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.services.detail(serviceId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.services.all })
+    },
+  })
+}
+
+export function useClearServiceBranches(serviceId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => clearServiceBranches(serviceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.services.detail(serviceId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.services.all })
     },
   })
 }

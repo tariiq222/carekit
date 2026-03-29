@@ -272,4 +272,15 @@ export const enServices: Record<string, string> = {
   "services.export": "Export",
   "services.exportCsv": "Export CSV",
   "services.exportExcel": "Export Excel",
+
+  /* ── Branch Scoping ── */
+  "services.filters.allBranches": "All branches",
+  "services.tabs.branches": "Branches",
+  "services.branches.title": "Branch Restrictions",
+  "services.branches.allBranchesLabel": "Available at all branches",
+  "services.branches.specificLabel": "Specific branches only",
+  "services.branches.createHint": "Branch restrictions can be set after saving the service",
+  "services.branches.saveSuccess": "Branch restrictions saved",
+  "services.branches.saveError": "Failed to save branch restrictions",
+  "services.branches.noBranches": "No branches found",
 }

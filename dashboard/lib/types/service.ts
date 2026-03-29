@@ -48,6 +48,7 @@ export interface Service {
   bookingTypes?: ServiceBookingType[]
   durationOptions?: ServiceDurationOption[]
   intakeForms?: IntakeForm[]
+  branches?: { branchId: string }[]
 }
 
 export interface ServiceBookingType {
@@ -125,6 +126,11 @@ export interface ServiceListQuery extends PaginatedQuery {
   isActive?: boolean
   includeHidden?: boolean
   search?: string
+  branchId?: string
+}
+
+export interface SetServiceBranchesPayload {
+  branchIds: string[]
 }
 
 /* ─── DTOs ─── */
