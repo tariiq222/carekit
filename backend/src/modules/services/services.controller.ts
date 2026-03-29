@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Put,
@@ -186,7 +187,7 @@ export class ServicesController {
   @Public()
   async getPractitioners(
     @Param('id', uuidPipe) id: string,
-    @Query('branchId') branchId?: string,
+    @Query('branchId', new ParseUUIDPipe({ optional: true })) branchId?: string,
   ) {
     return this.practitionersService.getPractitionersForService(id, branchId);
   }
