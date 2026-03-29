@@ -156,6 +156,7 @@ model Branch {
   practitionerAvailabilities PractitionerAvailability[]
   bookingSettings            BookingSettings[]
   bookings                   Booking[]
+  services                   ServiceBranch[]
 
   @@map("branches")
 }
