@@ -17,7 +17,6 @@ import { BasicInfoTab } from "@/components/features/services/create/basic-info-t
 import { PricingTab } from "@/components/features/services/create/pricing-tab"
 import { BookingSettingsTab } from "@/components/features/services/create/booking-settings-tab"
 import { IntakeFormsTab } from "@/components/features/services/intake-forms-tab"
-import { ServicePractitionersTab } from "@/components/features/services/service-practitioners-tab"
 import {
   createServiceSchema,
   createServiceDefaults,
@@ -255,9 +254,6 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
               <TabsTrigger value="intake" className="text-xs sm:text-sm">
                 {t("services.tabs.intake")}
               </TabsTrigger>
-              <TabsTrigger value="practitioners" className="text-xs sm:text-sm">
-                {t("services.tabs.practitioners")}
-              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -267,6 +263,9 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
               onImageSelect={(file) => { pendingAvatarFile.current = file }}
               serviceId={serviceId}
               serviceBranches={service?.branches}
+              isCreate={!isEdit}
+              pendingPractitionerIds={pendingPractitionerIds}
+              onPendingPractitionerChange={setPendingPractitionerIds}
             />
           </TabsContent>
 
@@ -296,15 +295,6 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
                 </p>
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="practitioners" className="pt-4">
-            <ServicePractitionersTab
-              serviceId={serviceId}
-              isCreate={!isEdit}
-              pendingIds={pendingPractitionerIds}
-              onPendingChange={setPendingPractitionerIds}
-            />
           </TabsContent>
 
         </Tabs>

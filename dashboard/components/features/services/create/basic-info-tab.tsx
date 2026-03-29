@@ -24,6 +24,7 @@ import { useCategories } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 import { ServiceAvatarPicker } from "@/components/features/services/service-avatar-picker"
 import { ServiceBranchesTab } from "@/components/features/services/service-branches-tab"
+import { ServicePractitionersTab } from "@/components/features/services/service-practitioners-tab"
 import type { UseFormReturn } from "react-hook-form"
 import type { CreateServiceFormData } from "./form-schema"
 
@@ -34,11 +35,14 @@ interface BasicInfoTabProps {
   onImageSelect?: (file: File) => void
   serviceId?: string
   serviceBranches?: { branchId: string }[]
+  isCreate?: boolean
+  pendingPractitionerIds?: string[]
+  onPendingPractitionerChange?: (ids: string[]) => void
 }
 
 /* ─── Component ─── */
 
-export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }: BasicInfoTabProps) {
+export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches, isCreate, pendingPractitionerIds, onPendingPractitionerChange }: BasicInfoTabProps) {
   const { t, locale } = useLocale()
   const { data: categories, isLoading: loadingCategories } = useCategories()
 
@@ -219,6 +223,21 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }
             </div>
           </div>
         </div>
+      </CardContent>
+    </Card>
+
+    {/* Practitioners — separate card */}
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("services.tabs.practitioners")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ServicePractitionersTab
+          serviceId={serviceId}
+          isCreate={isCreate}
+          pendingIds={pendingPractitionerIds}
+          onPendingChange={onPendingPractitionerChange}
+        />
       </CardContent>
     </Card>
 
