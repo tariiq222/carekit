@@ -12,7 +12,6 @@ export const createServiceSchema = z.object({
   isHidden: z.boolean().optional(),
   hidePriceOnBooking: z.boolean().optional(),
   hideDurationOnBooking: z.boolean().optional(),
-  calendarColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
   iconName: z.string().max(100).nullable().optional(),
   iconBgColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
   imageUrl: z.string().nullable().optional(),
@@ -25,6 +24,7 @@ export const createServiceSchema = z.object({
   maxParticipants: z.coerce.number().int().min(1).max(100).optional(),
   minLeadMinutes: z.coerce.number().int().min(0).max(1440).nullable().optional(),
   maxAdvanceDays: z.coerce.number().int().min(1).max(365).nullable().optional(),
+  branchIds: z.array(z.string().uuid()).optional(),
 })
 
 export type CreateServiceFormData = z.infer<typeof createServiceSchema>
@@ -41,7 +41,6 @@ export const createServiceDefaults: CreateServiceFormData = {
   isHidden: false,
   hidePriceOnBooking: false,
   hideDurationOnBooking: false,
-  calendarColor: null,
   iconName: null,
   iconBgColor: null,
   imageUrl: null,
@@ -54,4 +53,5 @@ export const createServiceDefaults: CreateServiceFormData = {
   maxParticipants: 1,
   minLeadMinutes: null,
   maxAdvanceDays: null,
+  branchIds: [],
 }

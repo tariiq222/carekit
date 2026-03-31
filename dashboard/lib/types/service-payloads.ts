@@ -44,6 +44,7 @@ export interface CreateServicePayload {
   minLeadMinutes?: number | null
   maxAdvanceDays?: number | null
   practitionerIds?: string[]
+  branchIds?: string[]
 }
 
 export interface UpdateServicePayload {
