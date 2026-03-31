@@ -38,12 +38,14 @@ function buildWidgetUrl(params: {
   service?: string
   locale: string
   origin: string
+  flow?: "service_first" | "practitioner_first"
 }) {
   const url = new URL(`${DASHBOARD_ORIGIN}/booking`)
   if (params.practitioner) url.searchParams.set("practitioner", params.practitioner)
   if (params.service) url.searchParams.set("service", params.service)
   url.searchParams.set("locale", params.locale)
   if (params.origin) url.searchParams.set("origin", params.origin)
+  if (params.flow) url.searchParams.set("flow", params.flow)
   return url.toString()
 }
 
@@ -124,12 +126,14 @@ export function WidgetTab({ t }: Props) {
   const [practitioner, setPractitioner] = useState("")
   const [service, setService] = useState("")
   const [embedOrigin, setEmbedOrigin] = useState("")
+  const [flow, setFlow] = useState<"service_first" | "practitioner_first" | undefined>(undefined)
 
   const widgetUrl = buildWidgetUrl({
     practitioner: practitioner || undefined,
     service: service || undefined,
     locale,
     origin: embedOrigin,
+    flow: flow || undefined,
   })
 
   const snippet = buildIframeSnippet(widgetUrl)
@@ -221,6 +225,33 @@ export function WidgetTab({ t }: Props) {
               />
             </div>
           </div>
+
+          {/* Flow Order */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium">{t("settings.widget.flowOrder")}</Label>
+            <div className="flex gap-2">
+              {([undefined, "service_first", "practitioner_first"] as const).map((f) => (
+                <button
+                  key={f ?? "default"}
+                  type="button"
+                  onClick={() => setFlow(f)}
+                  className={cn(
+                    "flex-1 rounded-md border px-2 py-1.5 text-xs transition-colors",
+                    flow === f
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border text-muted-foreground hover:bg-surface-muted",
+                  )}
+                >
+                  {f === undefined
+                    ? t("settings.widget.flowDefault")
+                    : f === "service_first"
+                    ? t("settings.widget.flowServiceFirst")
+                    : t("settings.widget.flowPractitionerFirst")}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("settings.widget.flowHint")}</p>
+          </div>
         </CardContent>
       </Card>
 
@@ -309,6 +340,11 @@ export function WidgetTab({ t }: Props) {
             name="service"
             description={t("settings.widget.param.service")}
             example="uuid"
+          />
+          <ParamRow
+            name="flow"
+            description={t("settings.widget.param.flow")}
+            example="service_first | practitioner_first"
           />
         </CardContent>
       </Card>
