@@ -23,4 +23,9 @@ export const patientsService = {
     });
     return response.data;
   },
+
+  async getAll(params?: { search?: string; page?: number; limit?: number }) {
+    const response = await api.get<PaginatedResponse<PatientRecord>>('/patients', { params });
+    return response.data;
+  },
 };

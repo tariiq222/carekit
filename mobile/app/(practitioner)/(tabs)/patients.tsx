@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   FlatList,
   Pressable,
   TextInput,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Search, Users as UsersIcon } from 'lucide-react-native';
@@ -14,13 +15,13 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
+import { patientsService } from '@/services/patients';
 
 interface PatientItem {
   id: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   avatarUrl: string | null;
-  lastVisit: string;
+  lastVisit: string | null;
   visitCount: number;
 }
 
@@ -31,13 +32,40 @@ export default function PatientsScreen() {
 
   const [search, setSearch] = useState('');
   const [patients, setPatients] = useState<PatientItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fontFamily = isRTL ? 'IBM Plex Sans Arabic' : 'Inter';
 
-  const filtered = patients.filter((p) => {
-    const name = `${p.firstName} ${p.lastName}`.toLowerCase();
-    return name.includes(search.toLowerCase());
-  });
+  const fetchPatients = useCallback(async (searchTerm: string) => {
+    setLoading(true);
+    try {
+      const res = await patientsService.getAll({ search: searchTerm || undefined, limit: 50 });
+      if (res.success) {
+        setPatients(
+          (res.data.items ?? []).map((p) => ({
+            id: p.id,
+            name: `${p.firstName} ${p.lastName}`,
+            avatarUrl: p.avatarUrl,
+            lastVisit: null,
+            visitCount: 0,
+          }))
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPatients('');
+  }, [fetchPatients]);
+
+  const handleSearch = (text: string) => {
+    setSearch(text);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => fetchPatients(text), 400);
+  };
 
   return (
     <View
@@ -55,7 +83,7 @@ export default function PatientsScreen() {
         <Search size={18} strokeWidth={1.5} color={theme.colors.textSecondary} />
         <TextInput
           value={search}
-          onChangeText={setSearch}
+          onChangeText={handleSearch}
           placeholder={t('doctor.searchPatients')}
           placeholderTextColor={theme.colors.textMuted}
           textAlign={isRTL ? 'right' : 'left'}
@@ -63,48 +91,56 @@ export default function PatientsScreen() {
         />
       </View>
 
+      {loading && patients.length === 0 && (
+        <ActivityIndicator style={{ marginTop: 40 }} size="large" />
+      )}
+
       {/* List */}
       <FlatList
-        data={filtered}
+        data={patients}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-        renderItem={({ item }) => {
-          const name = `${item.firstName} ${item.lastName}`;
-          return (
-            <Pressable style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
-              <ThemedCard style={styles.patientCard}>
-                <View style={styles.patientRow}>
-                  <Avatar size={44} name={name} imageUrl={item.avatarUrl} />
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <ThemedText variant="subheading" numberOfLines={1}>
-                      {name}
-                    </ThemedText>
+        renderItem={({ item }) => (
+          <Pressable style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
+            <ThemedCard style={styles.patientCard}>
+              <View style={styles.patientRow}>
+                <Avatar size={44} name={item.name} imageUrl={item.avatarUrl} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <ThemedText variant="subheading" numberOfLines={1}>
+                    {item.name}
+                  </ThemedText>
+                  {item.lastVisit !== null && (
                     <ThemedText variant="caption" color={theme.colors.textSecondary}>
-                      {t('doctor.lastVisit')}: {new Date(item.lastVisit).toLocaleDateString(
+                      {t('doctor.lastVisit')}:{' '}
+                      {new Date(item.lastVisit).toLocaleDateString(
                         isRTL ? 'ar-SA' : 'en-US',
                         { month: 'short', day: 'numeric' },
                       )}
                     </ThemedText>
-                  </View>
+                  )}
+                </View>
+                {item.visitCount > 0 && (
                   <View style={[styles.visitBadge, { backgroundColor: '#1D4ED81A' }]}>
                     <ThemedText variant="caption" color="#1D4ED8" style={{ fontWeight: '600' }}>
                       {item.visitCount} {t('doctor.visits')}
                     </ThemedText>
                   </View>
-                </View>
-              </ThemedCard>
-            </Pressable>
-          );
-        }}
+                )}
+              </View>
+            </ThemedCard>
+          </Pressable>
+        )}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <UsersIcon size={48} strokeWidth={1} color={theme.colors.textMuted} />
-            <ThemedText variant="body" color={theme.colors.textMuted} align="center">
-              {t('doctor.noPatients')}
-            </ThemedText>
-          </View>
+          !loading ? (
+            <View style={styles.empty}>
+              <UsersIcon size={48} strokeWidth={1} color={theme.colors.textMuted} />
+              <ThemedText variant="body" color={theme.colors.textMuted} align="center">
+                {t('doctor.noPatients')}
+              </ThemedText>
+            </View>
+          ) : null
         }
       />
     </View>
