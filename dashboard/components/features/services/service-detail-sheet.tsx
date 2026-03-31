@@ -106,12 +106,6 @@ export function ServiceDetailSheet({
               size="md"
             />
             <div className="flex flex-col gap-1 min-w-0">
-              {service.calendarColor && (
-                <span
-                  className="shrink-0 size-3 rounded-full ring-2 ring-border"
-                  style={{ backgroundColor: service.calendarColor }}
-                />
-              )}
               <DialogTitle className="leading-snug">
                 {isAr ? service.nameAr : service.nameEn}
               </DialogTitle>

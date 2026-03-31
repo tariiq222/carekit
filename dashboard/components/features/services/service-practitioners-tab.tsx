@@ -69,21 +69,6 @@ export function ServicePractitionersTab({ serviceId, isCreate, pendingIds = [], 
   if (isCreate) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            {t("services.practitioners.createHint")}
-          </p>
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 gap-1.5 text-xs"
-            onClick={() => setDialogOpen(true)}
-          >
-            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-3.5" />
-            {t("services.practitioners.add")}
-          </Button>
-        </div>
-
         {pendingPractitioners.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
             <div className="flex size-12 items-center justify-center rounded-full bg-muted">
@@ -92,9 +77,15 @@ export function ServicePractitionersTab({ serviceId, isCreate, pendingIds = [], 
             <p className="text-sm font-medium text-foreground">
               {t("services.practitioners.emptyTitle")}
             </p>
-            <p className="text-xs text-muted-foreground">
-              {t("services.practitioners.emptyDesc")}
-            </p>
+            <Button
+              type="button"
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => setDialogOpen(true)}
+            >
+              <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-3.5" />
+              {t("services.practitioners.add")}
+            </Button>
           </div>
         ) : (
           <div className="space-y-3">

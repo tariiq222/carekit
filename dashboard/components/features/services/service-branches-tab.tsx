@@ -7,8 +7,18 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon, Building04Icon } from "@hugeicons/core-free-icons"
+import { Add01Icon, Building04Icon, Loading03Icon } from "@hugeicons/core-free-icons"
 import { useRouter } from "next/navigation"
 
 import { useBranches } from "@/hooks/use-branches"
@@ -37,6 +47,7 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
     restrictedIds.length === 0 ? "all" : "specific",
   )
   const [selectedIds, setSelectedIds] = useState<string[]>(restrictedIds)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   // Sync when service data loads
   useEffect(() => {
@@ -91,19 +102,26 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
     )
   }
 
-  const handleModeChange = async (value: "all" | "specific") => {
-    const prev = selectedMode
+  const handleModeChange = (value: "all" | "specific") => {
+    if (value === "all" && selectedIds.length > 0) {
+      // Has active restrictions — require confirmation before wiping
+      setShowClearConfirm(true)
+      return
+    }
     setSelectedMode(value)
+  }
 
-    if (value === "all") {
-      try {
-        await clearMut.mutateAsync()
-        setSelectedIds([])
-        toast.success(t("services.branches.saveSuccess"))
-      } catch {
-        toast.error(t("services.branches.saveError"))
-        setSelectedMode(prev) // revert
-      }
+  const confirmClearBranches = async () => {
+    const prev = selectedMode
+    setShowClearConfirm(false)
+    setSelectedMode("all")
+    try {
+      await clearMut.mutateAsync()
+      setSelectedIds([])
+      toast.success(t("services.branches.saveSuccess"))
+    } catch {
+      toast.error(t("services.branches.saveError"))
+      setSelectedMode(prev)
     }
   }
 
@@ -128,47 +146,75 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-sm font-semibold text-foreground">{t("services.branches.title")}</p>
-
-      {/* Mode selection */}
-      <RadioGroup
-        value={selectedMode}
-        onValueChange={(value) => handleModeChange(value as "all" | "specific")}
-        disabled={isMutating}
-      >
-        <div className="flex items-center gap-3">
-          <RadioGroupItem value="all" id="branches-all" />
-          <Label htmlFor="branches-all" className="cursor-pointer text-sm">
-            {t("services.branches.allBranchesLabel")}
-          </Label>
-        </div>
-        <div className="flex items-center gap-3">
-          <RadioGroupItem value="specific" id="branches-specific" />
-          <Label htmlFor="branches-specific" className="cursor-pointer text-sm">
-            {t("services.branches.specificLabel")}
-          </Label>
-        </div>
-      </RadioGroup>
-
-      {/* Branch checklist */}
-      {selectedMode === "specific" && (
-        <div className="rounded-lg border border-border p-4 flex flex-col gap-3">
-          {branches.map((branch) => (
-            <div key={branch.id} className="flex items-center gap-3">
-              <Checkbox
-                id={`branch-${branch.id}`}
-                checked={selectedIds.includes(branch.id)}
-                onCheckedChange={(checked) => handleBranchToggle(branch.id, !!checked)}
-                disabled={isMutating}
-              />
-              <Label htmlFor={`branch-${branch.id}`} className="cursor-pointer text-sm">
-                {locale === "ar" ? branch.nameAr : branch.nameEn}
+    <>
+      <div className="flex flex-col gap-4">
+        {/* Mode selection + saving indicator */}
+        <div className="flex items-center justify-between gap-2">
+          <RadioGroup
+            value={selectedMode}
+            onValueChange={(value) => handleModeChange(value as "all" | "specific")}
+            disabled={isMutating}
+            dir={locale === "ar" ? "rtl" : "ltr"}
+          >
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="all" id="branches-all" />
+              <Label htmlFor="branches-all" className="cursor-pointer text-sm">
+                {t("services.branches.allBranchesLabel")}
               </Label>
             </div>
-          ))}
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="specific" id="branches-specific" />
+              <Label htmlFor="branches-specific" className="cursor-pointer text-sm">
+                {t("services.branches.specificLabel")}
+              </Label>
+            </div>
+          </RadioGroup>
+
+          {isMutating && (
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+              <HugeiconsIcon icon={Loading03Icon} className="size-3.5 animate-spin" strokeWidth={2} />
+              {t("services.branches.saving")}
+            </span>
+          )}
         </div>
-      )}
-    </div>
+
+        {/* Branch checklist */}
+        {selectedMode === "specific" && (
+          <div className="rounded-lg border border-border p-4 flex flex-col gap-3" dir={locale === "ar" ? "rtl" : "ltr"}>
+            {branches.map((branch) => (
+              <div key={branch.id} className="flex items-center gap-2">
+                <Checkbox
+                  id={`branch-${branch.id}`}
+                  checked={selectedIds.includes(branch.id)}
+                  onCheckedChange={(checked) => handleBranchToggle(branch.id, !!checked)}
+                  disabled={isMutating}
+                />
+                <Label htmlFor={`branch-${branch.id}`} className="cursor-pointer text-sm">
+                  {locale === "ar" ? branch.nameAr : branch.nameEn}
+                </Label>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Confirmation before clearing all branch restrictions */}
+      <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("services.branches.clearConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("services.branches.clearConfirmDesc")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("services.create.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClearBranches}>
+              {t("services.branches.clearConfirmAction")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

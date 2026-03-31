@@ -75,14 +75,14 @@ export function BookingSettingsTab({ form }: BookingSettingsTabProps) {
             id="create-buffer"
             label={t("services.booking.buffer.label")}
             description={t("services.booking.buffer.desc")}
-            value={bufferMinutes}
+            value={(bufferMinutes ?? 0) > 0 ? bufferMinutes : null}
             defaultValue={globalBuffer}
             unit="min"
             globalHint={t("services.booking.globalPrefix") + globalBuffer + t("services.booking.minUnit")}
             min={0}
             max={120}
-            onEnable={() => form.setValue("bufferMinutes", globalBuffer)}
-            onDisable={() => form.setValue("bufferMinutes", undefined)}
+            onEnable={() => form.setValue("bufferMinutes", globalBuffer > 0 ? globalBuffer : 15)}
+            onDisable={() => form.setValue("bufferMinutes", 0)}
             onChange={(v) => form.setValue("bufferMinutes", v ?? undefined)}
           />
           <OverrideField
@@ -96,8 +96,8 @@ export function BookingSettingsTab({ form }: BookingSettingsTabProps) {
             min={0}
             max={1440}
             onEnable={() => form.setValue("minLeadMinutes", 60)}
-            onDisable={() => form.setValue("minLeadMinutes", undefined)}
-            onChange={(v) => form.setValue("minLeadMinutes", v ?? undefined)}
+            onDisable={() => form.setValue("minLeadMinutes", null)}
+            onChange={(v) => form.setValue("minLeadMinutes", v ?? null)}
           />
         </div>
 
@@ -114,8 +114,8 @@ export function BookingSettingsTab({ form }: BookingSettingsTabProps) {
             min={1}
             max={365}
             onEnable={() => form.setValue("maxAdvanceDays", 30)}
-            onDisable={() => form.setValue("maxAdvanceDays", undefined)}
-            onChange={(v) => form.setValue("maxAdvanceDays", v ?? undefined)}
+            onDisable={() => form.setValue("maxAdvanceDays", null)}
+            onChange={(v) => form.setValue("maxAdvanceDays", v ?? null)}
           />
           <OverrideField
             id="create-deposit"

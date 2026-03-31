@@ -38,13 +38,12 @@ const createServiceSchema = z.object({
   nameAr: z.string().min(1, "Required"),
   descriptionEn: z.string().optional(),
   descriptionAr: z.string().optional(),
-  categoryId: z.string().uuid("Please select a category"),
+  categoryId: z.string().uuid("services.create.categoryRequired"),
   price: z.coerce.number().min(0).optional(),
   duration: z.coerce.number().int().min(1).optional(),
   isHidden: z.boolean().optional(),
   hidePriceOnBooking: z.boolean().optional(),
   hideDurationOnBooking: z.boolean().optional(),
-  calendarColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
   bufferBeforeMinutes: z.coerce.number().int().min(0).max(120).optional(),
   bufferAfterMinutes: z.coerce.number().int().min(0).max(120).optional(),
   depositEnabled: z.boolean().optional(),
@@ -87,7 +86,6 @@ export function CreateServiceDialog({
       isHidden: false,
       hidePriceOnBooking: false,
       hideDurationOnBooking: false,
-      calendarColor: null,
       bufferBeforeMinutes: 0,
       bufferAfterMinutes: 0,
       depositEnabled: false,
@@ -112,7 +110,6 @@ export function CreateServiceDialog({
         isHidden: data.isHidden,
         hidePriceOnBooking: data.hidePriceOnBooking,
         hideDurationOnBooking: data.hideDurationOnBooking,
-        calendarColor: data.calendarColor || undefined,
         bufferBeforeMinutes: data.bufferBeforeMinutes,
         bufferAfterMinutes: data.bufferAfterMinutes,
         depositEnabled: data.depositEnabled,
@@ -196,7 +193,7 @@ export function CreateServiceDialog({
               </Select>
               {form.formState.errors.categoryId && (
                 <p className="text-xs text-destructive">
-                  {form.formState.errors.categoryId.message}
+                  {t(form.formState.errors.categoryId.message ?? "services.create.categoryRequired")}
                 </p>
               )}
             </div>
@@ -230,7 +227,7 @@ export function CreateServiceDialog({
               {locale === "ar" ? "إعدادات العرض" : "Display Settings"}
             </p>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <Label htmlFor="create-service-hidden" className="cursor-pointer text-xs">
                   {locale === "ar" ? "إخفاء الخدمة" : "Hide Service"}
@@ -262,35 +259,6 @@ export function CreateServiceDialog({
                   checked={form.watch("hideDurationOnBooking")}
                   onCheckedChange={(v) => form.setValue("hideDurationOnBooking", v)}
                 />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="create-service-calendar-color">
-                {locale === "ar" ? "لون التقويم" : "Calendar Color"}
-              </Label>
-              <div className="flex items-center gap-3">
-                <input
-                  id="create-service-calendar-color"
-                  type="color"
-                  value={form.watch("calendarColor") ?? "#354FD8"}
-                  onChange={(e) => form.setValue("calendarColor", e.target.value)}
-                  className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent p-0.5"
-                />
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {form.watch("calendarColor") ?? "—"}
-                </span>
-                {form.watch("calendarColor") && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => form.setValue("calendarColor", null)}
-                  >
-                    {locale === "ar" ? "إزالة" : "Clear"}
-                  </Button>
-                )}
               </div>
             </div>
 

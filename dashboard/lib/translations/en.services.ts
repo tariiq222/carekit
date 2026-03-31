@@ -54,6 +54,7 @@ export const enServices: Record<string, string> = {
   "services.create.pageTitle": "Create New Service",
   "services.create.pageDescription": "Add a new service to the catalog with pricing and booking types",
   "services.create.isActive": "Active",
+  "services.create.avatarHint": "Choose an icon or upload a service image",
   "services.create.tabs.basic": "Basic Info",
   "services.create.tabs.basicDesc": "Name, description, category, and status",
   "services.create.tabs.display": "Display Settings",
@@ -244,7 +245,6 @@ export const enServices: Record<string, string> = {
   "services.display.hideService": "Hide Service",
   "services.display.hidePrice": "Hide Price",
   "services.display.hideDuration": "Hide Duration",
-  "services.display.calendarColor": "Calendar Color",
   "services.display.clear": "Clear",
 
   /* ── Practitioners Tab ── */
@@ -277,6 +277,7 @@ export const enServices: Record<string, string> = {
   "services.filters.allBranches": "All branches",
   "services.tabs.branches": "Branches",
   "services.branches.title": "Branch Restrictions",
+  "services.branches.cardDesc": "Select which branches this service is available for booking",
   "services.branches.allBranchesLabel": "Available at all branches",
   "services.branches.specificLabel": "Specific branches only",
   "services.branches.createHint": "Branch restrictions can be set after saving the service",
@@ -285,4 +286,8 @@ export const enServices: Record<string, string> = {
   "services.branches.noBranches": "No branches found",
   "services.branches.noBranchesHint": "No branches have been added yet. Add a branch to restrict this service.",
   "services.branches.addBranch": "Add branch",
+  "services.branches.clearConfirmTitle": "Make available everywhere?",
+  "services.branches.clearConfirmDesc": "This will remove all branch restrictions and make the service available at every branch. This cannot be undone.",
+  "services.branches.clearConfirmAction": "Yes, make available everywhere",
+  "services.branches.saving": "Saving...",
 }

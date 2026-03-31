@@ -7,7 +7,6 @@ import { z } from "zod"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { ColorSwatchInput } from "@/components/features/shared/color-swatch-input"
 import {
   Sheet,
   SheetContent,
@@ -48,7 +47,6 @@ const editServiceSchema = z.object({
   isHidden: z.boolean().optional(),
   hidePriceOnBooking: z.boolean().optional(),
   hideDurationOnBooking: z.boolean().optional(),
-  calendarColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
   bufferMinutes: z.coerce.number().int().min(0).max(120).optional(),
   depositEnabled: z.boolean().optional(),
   depositPercent: z.coerce.number().int().min(1).max(100).optional(),
@@ -96,7 +94,6 @@ export function EditServiceDialog({
         isHidden: service.isHidden,
         hidePriceOnBooking: service.hidePriceOnBooking,
         hideDurationOnBooking: service.hideDurationOnBooking,
-        calendarColor: service.calendarColor,
         bufferMinutes: service.bufferMinutes,
         depositEnabled: service.depositEnabled,
         depositPercent: service.depositPercent,
@@ -122,7 +119,6 @@ export function EditServiceDialog({
         isHidden: data.isHidden,
         hidePriceOnBooking: data.hidePriceOnBooking,
         hideDurationOnBooking: data.hideDurationOnBooking,
-        calendarColor: data.calendarColor || undefined,
         bufferMinutes: data.bufferMinutes,
         depositEnabled: data.depositEnabled,
         depositPercent: data.depositPercent,
@@ -228,7 +224,7 @@ export function EditServiceDialog({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <Label htmlFor="edit-service-hidden" className="cursor-pointer text-xs">
                     {locale === "ar" ? "إخفاء الخدمة" : "Hide Service"}
@@ -261,18 +257,6 @@ export function EditServiceDialog({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="edit-service-calendar-color">
-                  {locale === "ar" ? "لون التقويم" : "Calendar Color"}
-                </Label>
-                <ColorSwatchInput
-                  id="edit-service-calendar-color"
-                  value={form.watch("calendarColor")}
-                  onChange={(v) => form.setValue("calendarColor", v)}
-                  onClear={() => form.setValue("calendarColor", null)}
-                  showHex
-                />
-              </div>
             </div>
 
             {/* Service Booking Settings */}

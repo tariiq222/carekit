@@ -13,7 +13,6 @@ export function buildPayload(data: CreateServiceFormData) {
     isHidden: data.isHidden,
     hidePriceOnBooking: data.hidePriceOnBooking,
     hideDurationOnBooking: data.hideDurationOnBooking,
-    calendarColor: data.calendarColor || undefined,
     iconName: data.iconName ?? null,
     iconBgColor: data.iconBgColor ?? null,
     imageUrl: data.imageUrl?.startsWith("blob:") ? undefined : (data.imageUrl ?? null),

@@ -54,6 +54,7 @@ export const arServices: Record<string, string> = {
   "services.create.pageTitle": "إنشاء خدمة جديدة",
   "services.create.pageDescription": "أضف خدمة جديدة للكتالوج مع تحديد التسعير وأنواع الحجز",
   "services.create.isActive": "نشطة",
+  "services.create.avatarHint": "اختر أيقونة أو ارفع صورة للخدمة",
   "services.create.tabs.basic": "المعلومات الأساسية",
   "services.create.tabs.basicDesc": "الاسم والوصف والفئة والحالة",
   "services.create.tabs.display": "إعدادات العرض",
@@ -244,7 +245,6 @@ export const arServices: Record<string, string> = {
   "services.display.hideService": "إخفاء الخدمة",
   "services.display.hidePrice": "إخفاء السعر عند الحجز",
   "services.display.hideDuration": "إخفاء المدة عند الحجز",
-  "services.display.calendarColor": "لون التقويم",
   "services.display.clear": "إزالة",
 
   /* ── Practitioners Tab ── */
@@ -277,6 +277,7 @@ export const arServices: Record<string, string> = {
   "services.filters.allBranches": "جميع الفروع",
   "services.tabs.branches": "الفروع",
   "services.branches.title": "تقييد الفروع",
+  "services.branches.cardDesc": "حدد الفروع التي تُتاح فيها هذه الخدمة للحجز",
   "services.branches.allBranchesLabel": "متاحة لجميع الفروع",
   "services.branches.specificLabel": "فروع محددة فقط",
   "services.branches.createHint": "يمكنك تحديد الفروع بعد حفظ الخدمة",
@@ -285,4 +286,8 @@ export const arServices: Record<string, string> = {
   "services.branches.noBranches": "لا توجد فروع",
   "services.branches.noBranchesHint": "لم يتم إضافة أي فروع بعد، أضف فرعاً لتتمكن من تقييد الخدمة",
   "services.branches.addBranch": "إضافة فرع",
+  "services.branches.clearConfirmTitle": "إتاحة للجميع؟",
+  "services.branches.clearConfirmDesc": "سيتم حذف القيود الحالية وإتاحة الخدمة في جميع الفروع. لا يمكن التراجع عن هذا الإجراء.",
+  "services.branches.clearConfirmAction": "نعم، أتح للجميع",
+  "services.branches.saving": "جارٍ الحفظ...",
 }
