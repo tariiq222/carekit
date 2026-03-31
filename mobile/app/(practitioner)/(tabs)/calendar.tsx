@@ -53,12 +53,12 @@ export default function CalendarScreen() {
           markedDates={{
             [selectedDate]: {
               selected: true,
-              selectedColor: '#1D4ED8',
+              selectedColor: theme.colors.primary,
             },
           }}
           theme={{
-            todayTextColor: '#1D4ED8',
-            arrowColor: '#1D4ED8',
+            todayTextColor: theme.colors.primary,
+            arrowColor: theme.colors.primary,
             textDayFontFamily: isRTL ? 'IBM Plex Sans Arabic' : 'Inter',
             textMonthFontFamily: isRTL ? 'IBM Plex Sans Arabic' : 'Inter',
             textDayHeaderFontFamily: isRTL ? 'IBM Plex Sans Arabic' : 'Inter',

@@ -35,7 +35,7 @@ export const practitionersService = {
 
   async getAvailability(id: string, date: string) {
     const response = await api.get<ApiResponse<{ slots: string[] }>>(
-      `/practitioners/${id}/availability`,
+      `/practitioners/${id}/slots`,
       { params: { date } },
     );
     return response.data;
