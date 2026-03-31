@@ -56,14 +56,14 @@ export default function BookingTypeScreen() {
     {
       type: 'in_person',
       icon: Building2,
-      color: '#1D4ED8',
+      color: theme.colors.primary[500],
       labelKey: 'booking.inPerson',
       descKey: 'booking.inPersonDesc',
     },
     {
       type: 'online',
       icon: Video,
-      color: '#7C3AED',
+      color: theme.colors.purple,
       labelKey: 'booking.online',
       descKey: 'booking.onlineDesc',
     },
@@ -75,11 +75,13 @@ export default function BookingTypeScreen() {
     if (!selected) return;
     if (!requireEmailVerification(user, t)) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const resolvedPractitionerId =
-      serviceId === 'select' ? (practitionerId ?? '') : serviceId;
     router.push({
       pathname: '/(patient)/booking/schedule',
-      params: { practitionerId: resolvedPractitionerId, type: selected },
+      params: {
+        serviceId,
+        practitionerId: practitionerId ?? '',
+        type: selected,
+      },
     });
   };
 
@@ -107,7 +109,7 @@ export default function BookingTypeScreen() {
           </ThemedText>
           <View style={[styles.progressTrack, { backgroundColor: theme.colors.surfaceHigh }]}>
             <LinearGradient
-              colors={['#0037B0', '#1D4ED8']}
+              colors={[theme.colors.primary[700], theme.colors.primary[500]]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={[styles.progressFill, { width: '33%' }]}

@@ -63,7 +63,7 @@ export default function PractitionerDetailScreen() {
   if (loading) {
     return (
       <View style={[styles.loader, { backgroundColor: theme.colors.surface }]}>
-        <ActivityIndicator size="large" color="#1D4ED8" />
+        <ActivityIndicator size="large" color={theme.colors.primary[500]} />
       </View>
     );
   }
@@ -76,9 +76,9 @@ export default function PractitionerDetailScreen() {
     : practitioner.specialty?.nameEn;
 
   const prices = [
-    { icon: Building2, label: t('home.clinicVisit'), price: practitioner.clinicPrice, color: '#1D4ED8' },
-    { icon: Phone, label: t('home.phoneConsult'), price: practitioner.phonePrice, color: '#059669' },
-    { icon: Video, label: t('home.videoConsult'), price: practitioner.videoPrice, color: '#7C3AED' },
+    { icon: Building2, label: t('home.clinicVisit'), price: practitioner.clinicPrice, color: theme.colors.primary[500] },
+    { icon: Phone, label: t('home.phoneConsult'), price: practitioner.phonePrice, color: theme.colors.success },
+    { icon: Video, label: t('home.videoConsult'), price: practitioner.videoPrice, color: theme.colors.purple },
   ];
 
   return (
@@ -139,7 +139,7 @@ export default function PractitionerDetailScreen() {
                 <ThemedText variant="caption" color={theme.colors.textSecondary}>
                   {p.label}
                 </ThemedText>
-                <ThemedText variant="subheading" color="#1D4ED8">
+                <ThemedText variant="subheading" color={theme.colors.primary[500]}>
                   {p.price} {t('home.sar')}
                 </ThemedText>
               </ThemedCard>
@@ -153,7 +153,7 @@ export default function PractitionerDetailScreen() {
             <View style={styles.sectionHead}>
               <ThemedText variant="subheading">{t('practitioner.reviews')}</ThemedText>
               <Pressable>
-                <ThemedText variant="bodySm" color="#1D4ED8" style={{ fontWeight: '600' }}>
+                <ThemedText variant="bodySm" color={theme.colors.primary[500]} style={{ fontWeight: '600' }}>
                   {t('practitioner.allReviews')}
                 </ThemedText>
               </Pressable>
