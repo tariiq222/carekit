@@ -13,6 +13,7 @@ export const queryKeys = {
       ["bookings", "list", filters] as const,
     detail: (id: string) => ["bookings", "detail", id] as const,
     stats: () => ["bookings", "stats"] as const,
+    statusLog: (id: string) => ["bookings", "status-log", id] as const,
   },
 
   /* ─── Patients ─── */
@@ -232,6 +233,11 @@ export const queryKeys = {
   bookingSettings: {
     all: ["booking-settings"] as const,
     detail: () => ["booking-settings", "detail"] as const,
+  },
+
+  /* ─── Clinic Settings ─── */
+  clinicSettings: {
+    bookingFlowOrder: () => ["clinic-settings", "booking-flow-order"] as const,
   },
 
 } as const
