@@ -184,7 +184,13 @@ export default function PractitionerDetailScreen() {
       {/* Fixed CTA */}
       <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 12, backgroundColor: theme.colors.surface }]}>
         <ThemedButton
-          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push({
+              pathname: '/(patient)/booking/[serviceId]',
+              params: { serviceId: 'select', practitionerId: practitioner.id },
+            });
+          }}
           variant="primary"
           size="lg"
           full

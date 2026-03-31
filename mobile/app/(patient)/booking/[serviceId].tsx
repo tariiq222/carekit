@@ -43,7 +43,7 @@ interface TypeOption {
 }
 
 export default function BookingTypeScreen() {
-  const { serviceId } = useLocalSearchParams<{ serviceId: string }>();
+  const { serviceId, practitionerId } = useLocalSearchParams<{ serviceId: string; practitionerId?: string }>();
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -75,9 +75,11 @@ export default function BookingTypeScreen() {
     if (!selected) return;
     if (!requireEmailVerification(user, t)) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const resolvedPractitionerId =
+      serviceId === 'select' ? (practitionerId ?? '') : serviceId;
     router.push({
       pathname: '/(patient)/booking/schedule',
-      params: { practitionerId: serviceId, type: selected },
+      params: { practitionerId: resolvedPractitionerId, type: selected },
     });
   };
 
