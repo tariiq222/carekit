@@ -146,4 +146,10 @@ export class CreateServiceDto {
   @IsArray()
   @IsUUID('all', { each: true })
   practitionerIds?: string[];
+
+  @ApiPropertyOptional({ type: [String], description: 'Branch UUIDs to restrict this service atomically on create' })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
+  branchIds?: string[];
 }
