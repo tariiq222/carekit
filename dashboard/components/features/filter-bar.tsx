@@ -86,35 +86,29 @@ export function FilterBar({
 
   return (
     <div className={cn("glass rounded-xl p-4", className)}>
-      <div className="flex flex-col gap-3">
-        {/* Row 1: Time period tabs + trailing */}
-        {(tabs || trailing) && (
-          <div className="flex items-center justify-between gap-3">
-            {tabs && (
-              <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-muted p-1">
-                {tabs.items.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => tabs.onTabChange(tab.key)}
-                    className={cn(
-                      "rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-all duration-200",
-                      tabs.activeKey === tab.key
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-border/60"
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            {trailing && <div className="flex items-center">{trailing}</div>}
+      {/* Single row: tabs + attribute filters + trailing */}
+      <div className="flex flex-wrap items-center gap-2">
+        {tabs && (
+          <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-muted p-1 me-1">
+            {tabs.items.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => tabs.onTabChange(tab.key)}
+                className={cn(
+                  "rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-all duration-200",
+                  tabs.activeKey === tab.key
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-border/60"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         )}
 
-        {/* Row 2: Attribute filters (search + selects + date range + reset) */}
         {hasAttributeFilters && (
-          <div className="flex flex-wrap items-center gap-2">
+          <>
             {search && (
               <div className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 min-w-[200px] transition-all duration-200 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/50">
                 <HugeiconsIcon icon={Search01Icon} size={14} className="shrink-0 text-muted-foreground" />
@@ -187,8 +181,9 @@ export function FilterBar({
                 {resultCount}
               </span>
             )}
-          </div>
+          </>
         )}
+        {trailing && <div className="flex items-center ms-auto">{trailing}</div>}
       </div>
     </div>
   )

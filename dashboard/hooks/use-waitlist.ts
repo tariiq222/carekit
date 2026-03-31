@@ -20,6 +20,7 @@ export function useWaitlist() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.waitlist.list(query),
     queryFn: () => fetchWaitlist(query),
+    staleTime: 30_000,
   })
 
   const resetFilters = useCallback(() => {
