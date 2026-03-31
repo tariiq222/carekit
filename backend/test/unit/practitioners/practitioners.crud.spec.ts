@@ -88,7 +88,7 @@ describe('PractitionersService — findAll', () => {
   });
 
   it('should filter practitioners by serviceId', async () => {
-    const mockServiceId = 'service-uuid-123';
+    const mockServiceId = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
     ctx.mockPrisma.practitioner.findMany.mockResolvedValue([]);
     ctx.mockPrisma.practitioner.count.mockResolvedValue(0);
 
