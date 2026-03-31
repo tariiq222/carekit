@@ -10,6 +10,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -27,6 +28,7 @@ const uuidPipe = new ParseUUIDPipe({
     }),
 });
 
+@ApiTags('specialties')
 @Controller('specialties')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class SpecialtiesController {
