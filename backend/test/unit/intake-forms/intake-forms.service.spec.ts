@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-forms.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
@@ -12,6 +12,7 @@ const mockPrisma = {
   intakeForm: { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
   intakeField: { deleteMany: jest.fn(), createMany: jest.fn(), findMany: jest.fn() },
   intakeResponse: { create: jest.fn(), findMany: jest.fn() },
+  booking: { findUnique: jest.fn() },
   service: { findFirst: jest.fn() },
   practitioner: { findFirst: jest.fn() },
   branch: { findFirst: jest.fn() },
@@ -181,9 +182,9 @@ describe('IntakeFormsService', () => {
 
   describe('submitResponse', () => {
     it('should create response and increment submissionsCount', async () => {
-      const existing = { id: 'form-1' };
       const mockResponse = { id: 'resp-1', formId: 'form-1', patientId: 'patient-1', answers: {} };
-      mockPrisma.intakeForm.findUnique.mockResolvedValue(existing);
+      mockPrisma.intakeForm.findUnique.mockResolvedValue({ id: 'form-1' });
+      mockPrisma.booking.findUnique.mockResolvedValue({ patientId: 'patient-1' });
       mockPrisma.$transaction.mockResolvedValue([mockResponse, {}]);
 
       const result = await service.submitResponse('patient-1', { formId: 'form-1', bookingId: 'booking-1', answers: {} });
@@ -200,6 +201,26 @@ describe('IntakeFormsService', () => {
       ).rejects.toThrow(NotFoundException);
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
+
+    it('should throw NotFoundException when booking not found', async () => {
+      mockPrisma.intakeForm.findUnique.mockResolvedValue({ id: 'form-1' });
+      mockPrisma.booking.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.submitResponse('patient-1', { formId: 'form-1', bookingId: 'missing-booking', answers: {} }),
+      ).rejects.toThrow(NotFoundException);
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenException when booking belongs to another patient', async () => {
+      mockPrisma.intakeForm.findUnique.mockResolvedValue({ id: 'form-1' });
+      mockPrisma.booking.findUnique.mockResolvedValue({ patientId: 'other-patient' });
+
+      await expect(
+        service.submitResponse('patient-1', { formId: 'form-1', bookingId: 'booking-1', answers: {} }),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
   });
 
   describe('getResponseByBooking', () => {
@@ -214,6 +235,14 @@ describe('IntakeFormsService', () => {
         where: { bookingId: 'booking-1' },
         include: { form: { include: { fields: { orderBy: { sortOrder: 'asc' } } } } },
       });
+    });
+
+    it('should return empty array when no responses for booking', async () => {
+      mockPrisma.intakeResponse.findMany.mockResolvedValue([]);
+
+      const result = await service.getResponseByBooking('booking-no-responses');
+
+      expect(result).toEqual([]);
     });
   });
 });

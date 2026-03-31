@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CreateIntakeFormDto } from './dto/create-intake-form.dto.js';
 import { UpdateIntakeFormDto } from './dto/update-intake-form.dto.js';
@@ -123,6 +123,7 @@ export class IntakeFormsService {
 
   async submitResponse(patientId: string, dto: SubmitResponseDto) {
     await this.ensureFormExists(dto.formId);
+    await this.ensureBookingOwnership(dto.bookingId, patientId);
 
     const [response] = await this.prisma.$transaction([
       this.prisma.intakeResponse.create({
@@ -158,25 +159,30 @@ export class IntakeFormsService {
   // ═══════════════════════════════════════════════════════════════
 
   private async validateScopeTarget(dto: CreateIntakeFormDto) {
-    if (dto.scope === 'service' && dto.serviceId) {
-      const exists = await this.prisma.service.findFirst({
-        where: { id: dto.serviceId, deletedAt: null },
-      });
-      if (!exists) throw this.notFound('Service not found');
-    }
+    try {
+      if (dto.scope === 'service' && dto.serviceId) {
+        const exists = await this.prisma.service.findFirst({
+          where: { id: dto.serviceId, deletedAt: null },
+        });
+        if (!exists) throw this.notFound('Service not found');
+      }
 
-    if (dto.scope === 'practitioner' && dto.practitionerId) {
-      const exists = await this.prisma.practitioner.findFirst({
-        where: { id: dto.practitionerId, deletedAt: null },
-      });
-      if (!exists) throw this.notFound('Practitioner not found');
-    }
+      if (dto.scope === 'practitioner' && dto.practitionerId) {
+        const exists = await this.prisma.practitioner.findFirst({
+          where: { id: dto.practitionerId, deletedAt: null },
+        });
+        if (!exists) throw this.notFound('Practitioner not found');
+      }
 
-    if (dto.scope === 'branch' && dto.branchId) {
-      const exists = await this.prisma.branch.findFirst({
-        where: { id: dto.branchId, deletedAt: null },
-      });
-      if (!exists) throw this.notFound('Branch not found');
+      if (dto.scope === 'branch' && dto.branchId) {
+        const exists = await this.prisma.branch.findFirst({
+          where: { id: dto.branchId, deletedAt: null },
+        });
+        if (!exists) throw this.notFound('Branch not found');
+      }
+    } catch (err) {
+      if (err instanceof NotFoundException) throw err;
+      throw this.notFound('Referenced entity not found');
     }
   }
 
@@ -186,6 +192,17 @@ export class IntakeFormsService {
     });
     if (!form) throw this.notFound('Intake form not found');
     return form;
+  }
+
+  private async ensureBookingOwnership(bookingId: string, patientId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { patientId: true },
+    });
+    if (!booking) throw this.notFound('Booking not found');
+    if (booking.patientId !== patientId) {
+      throw new ForbiddenException({ statusCode: 403, message: 'Booking does not belong to you', error: 'FORBIDDEN' });
+    }
   }
 
   private notFound(message: string) {

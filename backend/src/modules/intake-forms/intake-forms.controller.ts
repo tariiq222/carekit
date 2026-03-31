@@ -94,8 +94,7 @@ export class IntakeFormsController {
     @CurrentUser('id') patientId: string,
     @Body() dto: SubmitResponseDto,
   ) {
-    dto.formId = formId;
-    return this.intakeFormsService.submitResponse(patientId, dto);
+    return this.intakeFormsService.submitResponse(patientId, { ...dto, formId });
   }
 
   @Get('responses/:bookingId')

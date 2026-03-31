@@ -1,9 +1,9 @@
-import { IsNotEmpty, IsObject, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsObject, IsOptional, IsUUID } from 'class-validator';
 
 export class SubmitResponseDto {
+  @IsOptional()
   @IsUUID()
-  @IsNotEmpty()
-  formId!: string;
+  formId?: string;
 
   @IsUUID()
   @IsNotEmpty()
