@@ -194,6 +194,7 @@ export const arSettings: Record<string, string> = {
   "settings.widget.flowPractitionerFirst": "معالج أولاً",
   "settings.widget.flowHint": "يتجاوز الإعداد المحفوظ في الحساب",
   "settings.widget.param.flow": "ترتيب خطوات الويدجت — يتجاوز إعداد الحساب",
+  "settings.widget.required": "مطلوب",
   "settings.booking.flowOrder.title": "ترتيب خطوات الحجز",
   "settings.booking.flowOrder.serviceFirst": "الخدمة أولاً",
   "settings.booking.flowOrder.serviceFirstDesc": "يختار المريض الخدمة ثم يرى المعالجين المتاحين لها",

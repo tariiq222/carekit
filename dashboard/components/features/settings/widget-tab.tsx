@@ -11,16 +11,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  Copy01Icon,
-  CheckmarkCircle01Icon,
   LinkSquare01Icon,
   CodeSquareIcon,
   InformationCircleIcon,
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
+import { CopyButton, ParamRow } from "./widget-tab-helpers"
 
 /* ─── Types ─── */
 
@@ -58,65 +56,6 @@ function buildIframeSnippet(widgetUrl: string) {
   allow="clipboard-write"
   style="border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.12);"
 ></iframe>`
-}
-
-/* ─── Copy button ─── */
-
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleCopy}
-      className="shrink-0 gap-1.5"
-    >
-      <HugeiconsIcon
-        icon={copied ? CheckmarkCircle01Icon : Copy01Icon}
-        size={14}
-        className={cn(copied ? "text-success" : "text-muted-foreground")}
-      />
-      {copied ? label.replace(/^.*/, "✓") : label}
-    </Button>
-  )
-}
-
-/* ─── URL param row ─── */
-
-function ParamRow({
-  name,
-  description,
-  required,
-  example,
-}: {
-  name: string
-  description: string
-  required?: boolean
-  example: string
-}) {
-  return (
-    <div className="grid grid-cols-[140px_1fr_auto] gap-3 items-start py-3 border-b border-border last:border-0">
-      <div className="flex items-center gap-2">
-        <code className="text-xs bg-surface-muted px-1.5 py-0.5 rounded-sm font-mono text-foreground">
-          {name}
-        </code>
-        {required && (
-          <Badge variant="outline" className="text-[10px] px-1 py-0 text-error border-error/30">
-            مطلوب
-          </Badge>
-        )}
-      </div>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      <code className="text-xs text-muted-foreground font-mono">{example}</code>
-    </div>
-  )
 }
 
 /* ─── Main component ─── */
@@ -324,6 +263,7 @@ export function WidgetTab({ t }: Props) {
             name="origin"
             description={t("settings.widget.param.origin")}
             required
+            requiredLabel={t("settings.widget.required")}
             example="https://yourclinic.com"
           />
           <ParamRow

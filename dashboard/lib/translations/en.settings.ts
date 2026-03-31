@@ -194,6 +194,7 @@ export const enSettings: Record<string, string> = {
   "settings.widget.flowPractitionerFirst": "Practitioner First",
   "settings.widget.flowHint": "Overrides the account-level setting",
   "settings.widget.param.flow": "Widget flow order — overrides account setting",
+  "settings.widget.required": "Required",
   "settings.booking.flowOrder.title": "Booking Flow Order",
   "settings.booking.flowOrder.serviceFirst": "Service First",
   "settings.booking.flowOrder.serviceFirstDesc": "Patient picks a service, then sees available practitioners",
