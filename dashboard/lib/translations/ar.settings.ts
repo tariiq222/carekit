@@ -188,4 +188,9 @@ export const arSettings: Record<string, string> = {
   "settings.widget.param.locale": "لغة الواجهة: ar (عربي) أو en (إنجليزي)",
   "settings.widget.param.practitioner": "تحديد معالج مسبقاً بواسطة معرّفه",
   "settings.widget.param.service": "تحديد خدمة مسبقاً بواسطة معرّفها",
+  "settings.booking.flowOrder.title": "ترتيب خطوات الحجز",
+  "settings.booking.flowOrder.serviceFirst": "الخدمة أولاً",
+  "settings.booking.flowOrder.serviceFirstDesc": "يختار المريض الخدمة ثم يرى المعالجين المتاحين لها",
+  "settings.booking.flowOrder.practitionerFirst": "المعالج أولاً",
+  "settings.booking.flowOrder.practitionerFirstDesc": "يختار المريض المعالج ثم يرى خدماته المتاحة",
 }

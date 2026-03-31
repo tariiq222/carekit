@@ -188,4 +188,9 @@ export const enSettings: Record<string, string> = {
   "settings.widget.param.locale": "Interface language: ar (Arabic) or en (English)",
   "settings.widget.param.practitioner": "Pre-select a practitioner by their ID",
   "settings.widget.param.service": "Pre-select a service by its ID",
+  "settings.booking.flowOrder.title": "Booking Flow Order",
+  "settings.booking.flowOrder.serviceFirst": "Service First",
+  "settings.booking.flowOrder.serviceFirstDesc": "Patient picks a service, then sees available practitioners",
+  "settings.booking.flowOrder.practitionerFirst": "Practitioner First",
+  "settings.booking.flowOrder.practitionerFirstDesc": "Patient picks a practitioner, then sees their services",
 }

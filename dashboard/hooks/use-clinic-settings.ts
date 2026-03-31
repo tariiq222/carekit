@@ -12,6 +12,12 @@ import {
   fetchBookingSettings,
   updateBookingSettings,
 } from "@/lib/api/booking-settings"
+import {
+  fetchBookingFlowOrder,
+  updateBookingFlowOrder,
+  type BookingFlowOrder,
+} from "@/lib/api/clinic-settings"
+import { queryKeys } from "@/lib/query-keys"
 
 /* ─── Query Keys ─── */
 
@@ -85,6 +91,26 @@ export function useBookingSettingsMutation() {
     mutationFn: updateBookingSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BOOKING_SETTINGS_KEY })
+    },
+  })
+}
+
+/* ─── Booking Flow Order ─── */
+
+export function useBookingFlowOrder() {
+  return useQuery({
+    queryKey: queryKeys.clinicSettings.bookingFlowOrder(),
+    queryFn: fetchBookingFlowOrder,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useBookingFlowOrderMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (order: BookingFlowOrder) => updateBookingFlowOrder(order),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.clinicSettings.bookingFlowOrder() })
     },
   })
 }

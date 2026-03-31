@@ -9,15 +9,78 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { type BookingSettings } from "@/lib/api/booking-settings"
+import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
 import type { WhiteLabelConfigMap } from "@/lib/types/whitelabel"
-import { useBookingSettings, useBookingSettingsMutation } from "@/hooks/use-clinic-settings"
+import { useBookingSettings, useBookingSettingsMutation, useBookingFlowOrder, useBookingFlowOrderMutation } from "@/hooks/use-clinic-settings"
 import { ReschedulingCard } from "./rescheduling-card"
 import { NoShowCard } from "./noshow-card"
 import { RemindersCard } from "./reminders-card"
 import { WalkInCard } from "./walk-in-card"
 import { WaitlistCard } from "./waitlist-card"
 import { RecurringCard } from "./recurring-card"
+
+/* ─── Flow Order Card ─── */
+
+function FlowOrderCard({ t }: { t: (key: string) => string }) {
+  const { data: flowOrder, isLoading } = useBookingFlowOrder()
+  const mutation = useBookingFlowOrderMutation()
+
+  const [selected, setSelected] = useState<BookingFlowOrder>("service_first")
+
+  useEffect(() => {
+    if (flowOrder) setSelected(flowOrder)
+  }, [flowOrder])
+
+  function handleSave() {
+    mutation.mutate(selected, {
+      onSuccess: () => toast.success(t("settings.saved")),
+      onError: (err: Error) => toast.error(err.message),
+    })
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{t("settings.booking.flowOrder.title")}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <Skeleton className="h-20 w-full" />
+        ) : (
+          <RadioGroup
+            value={selected}
+            onValueChange={(v) => setSelected(v as BookingFlowOrder)}
+            className="space-y-3"
+          >
+            <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-border/60 p-3 hover:bg-surface-muted transition-colors">
+              <RadioGroupItem value="service_first" className="mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">{t("settings.booking.flowOrder.serviceFirst")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.booking.flowOrder.serviceFirstDesc")}</p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-border/60 p-3 hover:bg-surface-muted transition-colors">
+              <RadioGroupItem value="practitioner_first" className="mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">{t("settings.booking.flowOrder.practitionerFirst")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.booking.flowOrder.practitionerFirstDesc")}</p>
+              </div>
+            </label>
+          </RadioGroup>
+        )}
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={mutation.isPending || isLoading}
+        >
+          {t("settings.save")}
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
 
 interface Props {
   configMap: WhiteLabelConfigMap
@@ -44,6 +107,7 @@ export function BookingTab({ configMap, onSave, isPending, t }: Props) {
           <WalkInCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
           <WaitlistCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
           <RecurringCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
+          <FlowOrderCard t={t} />
           <ReschedulingCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
           <NoShowCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
           <RemindersCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
