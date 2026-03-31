@@ -42,6 +42,7 @@ interface BookingWizardProps {
   initialLocale?: "ar" | "en"
   /** The origin of the parent page embedding this widget. Defaults to "*" (insecure fallback). */
   parentOrigin?: string
+  initialFlowOrder?: "service_first" | "practitioner_first"
 }
 
 export function BookingWizard({
@@ -49,8 +50,9 @@ export function BookingWizard({
   initialServiceId,
   initialLocale = "ar",
   parentOrigin = "*",
+  initialFlowOrder = "service_first",
 }: BookingWizardProps) {
-  const booking = useWidgetBooking(initialPractitionerId, initialServiceId)
+  const booking = useWidgetBooking(initialPractitionerId, initialServiceId, initialFlowOrder)
   const { state } = booking
 
   /* ─── Notify host of resize on step change ─── */
@@ -99,6 +101,7 @@ export function BookingWizard({
           <WidgetServiceStep
             locale={initialLocale}
             booking={booking}
+            flowOrder={initialFlowOrder}
           />
         )}
 

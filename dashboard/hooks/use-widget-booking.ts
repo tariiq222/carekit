@@ -3,6 +3,10 @@
  *
  * Manages the multi-step booking wizard state machine.
  * Steps: service → datetime → auth → confirm → success
+ *
+ * flowOrder controls which entity is selected first:
+ * - "practitioner_first": pick practitioner → see their services (original)
+ * - "service_first": pick service → see practitioners offering it
  */
 
 "use client"
@@ -14,6 +18,7 @@ import {
   fetchWidgetPractitionerServices,
   fetchWidgetSlots,
   fetchWidgetServiceTypes,
+  fetchWidgetServices,
   widgetCreateBooking,
 } from "@/lib/api/widget"
 import { queryKeys } from "@/lib/query-keys"
@@ -24,6 +29,7 @@ import type { BookingType, Booking } from "@/lib/types/booking"
 /* ─── Types ─── */
 
 export type WizardStep = "service" | "datetime" | "auth" | "confirm" | "success"
+export type BookingFlowOrder = "service_first" | "practitioner_first"
 
 export interface WizardState {
   step: WizardStep
@@ -41,6 +47,7 @@ export interface WizardState {
 export function useWidgetBooking(
   initialPractitionerId?: string,
   initialServiceId?: string,
+  flowOrder: BookingFlowOrder = "service_first",
 ) {
   const [state, setState] = useState<WizardState>({
     step: "service",
@@ -53,18 +60,35 @@ export function useWidgetBooking(
     booking: null,
   })
 
-  /* ─── Fetch practitioners list ─── */
+  /* ─── practitioner_first: fetch all practitioners upfront ─── */
   const { data: practitionersData, isLoading: practitionersLoading } = useQuery({
     queryKey: queryKeys.practitioners.list({ isActive: true }),
     queryFn: () => fetchWidgetPractitioners({ perPage: 20 }),
+    enabled: flowOrder === "practitioner_first",
     staleTime: 5 * 60 * 1000,
   })
 
-  /* ─── Fetch services for selected practitioner ─── */
+  /* ─── practitioner_first: fetch services for selected practitioner ─── */
   const { data: services = [], isLoading: servicesLoading } = useQuery({
     queryKey: queryKeys.practitioners.services(state.practitioner?.id ?? ""),
     queryFn: () => fetchWidgetPractitionerServices(state.practitioner!.id),
-    enabled: !!state.practitioner,
+    enabled: flowOrder === "practitioner_first" && !!state.practitioner,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  /* ─── service_first: fetch all services upfront ─── */
+  const { data: servicesData, isLoading: allServicesLoading } = useQuery({
+    queryKey: ["widget-services-all"],
+    queryFn: fetchWidgetServices,
+    enabled: flowOrder === "service_first",
+    staleTime: 5 * 60 * 1000,
+  })
+
+  /* ─── service_first: fetch practitioners filtered by selected service ─── */
+  const { data: filteredPractitionersData, isLoading: filteredPractitionersLoading } = useQuery({
+    queryKey: queryKeys.practitioners.list({ isActive: true, serviceId: state.service?.id }),
+    queryFn: () => fetchWidgetPractitioners({ perPage: 20, serviceId: state.service!.id }),
+    enabled: flowOrder === "service_first" && !!state.service,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -114,12 +138,12 @@ export function useWidgetBooking(
     setState((s) => ({
       ...s,
       practitioner: p,
-      service: null,
+      service: flowOrder === "practitioner_first" ? null : s.service,
       bookingType: null,
       durationOption: null,
       slot: null,
     }))
-  }, [])
+  }, [flowOrder])
 
   const selectService = useCallback((svc: Service, type: BookingType) => {
     setState((s) => ({
@@ -129,6 +153,17 @@ export function useWidgetBooking(
       durationOption: null,
       slot: null,
       step: "datetime",
+    }))
+  }, [])
+
+  const selectServiceOnly = useCallback((svc: Service) => {
+    setState((s) => ({
+      ...s,
+      service: svc,
+      practitioner: null,
+      bookingType: null,
+      durationOption: null,
+      slot: null,
     }))
   }, [])
 
@@ -168,10 +203,18 @@ export function useWidgetBooking(
   return {
     state,
     setState,
+    flowOrder,
+    // practitioner_first data
     practitionersData,
     practitionersLoading,
     services,
     servicesLoading,
+    // service_first data
+    allServices: servicesData?.items ?? [],
+    allServicesLoading,
+    filteredPractitionersData,
+    filteredPractitionersLoading,
+    // shared
     serviceTypes,
     durationOptions,
     slots,
@@ -179,6 +222,7 @@ export function useWidgetBooking(
     canFetchSlots,
     selectPractitioner,
     selectService,
+    selectServiceOnly,
     selectDateTime,
     onAuthComplete,
     confirmBooking,

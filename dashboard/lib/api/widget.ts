@@ -38,6 +38,7 @@ export interface WidgetPractitionersQuery {
   specialty?: string
   page?: number
   perPage?: number
+  serviceId?: string
 }
 
 export async function fetchWidgetPractitioners(
@@ -48,6 +49,7 @@ export async function fetchWidgetPractitioners(
     perPage: query.perPage ?? 20,
     search: query.search,
     specialty: query.specialty,
+    serviceId: query.serviceId,
     isActive: true,
   })
   return { items: res.items.map(mapPractitioner), meta: res.meta }
