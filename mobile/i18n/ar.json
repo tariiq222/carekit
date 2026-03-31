@@ -154,6 +154,7 @@
     "available": "متاح",
     "dayOff": "يوم إجازة",
     "noPatients": "لا يوجد مرضى بعد",
+    "patientNotFound": "مريض غير موجود",
     "appVersion": "الإصدار"
   },
   "profile": {

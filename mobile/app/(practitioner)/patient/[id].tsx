@@ -50,7 +50,7 @@ export default function DoctorPatientRecordScreen() {
       if (patientResult.status === 'fulfilled' && patientResult.value.success && patientResult.value.data) {
         setPatient(patientResult.value.data);
       } else {
-        setError('تعذّر تحميل بيانات المريض');
+        setError(t('common.error'));
       }
       if (bookingsResult.status === 'fulfilled' && bookingsResult.value.success) {
         setVisits(bookingsResult.value.data.items ?? []);
@@ -70,7 +70,7 @@ export default function DoctorPatientRecordScreen() {
   if (error || !patient) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.colors.surface }]}>
-        <ThemedText>{error ?? 'مريض غير موجود'}</ThemedText>
+        <ThemedText>{error ?? t('doctor.patientNotFound')}</ThemedText>
       </View>
     );
   }
@@ -101,16 +101,16 @@ export default function DoctorPatientRecordScreen() {
                 onPress={() => Linking.openURL(`tel:${patient.phone}`)}
                 style={styles.contactRow}
               >
-                <Phone size={14} strokeWidth={1.5} color="#1D4ED8" />
-                <ThemedText variant="bodySm" color="#1D4ED8">{patient.phone}</ThemedText>
+                <Phone size={14} strokeWidth={1.5} color={theme.colors.primary[500]} />
+                <ThemedText variant="bodySm" color={theme.colors.primary[500]}>{patient.phone}</ThemedText>
               </Pressable>
             )}
             <Pressable
               onPress={() => Linking.openURL(`mailto:${patient.email}`)}
               style={styles.contactRow}
             >
-              <Mail size={14} strokeWidth={1.5} color="#1D4ED8" />
-              <ThemedText variant="bodySm" color="#1D4ED8">{patient.email}</ThemedText>
+              <Mail size={14} strokeWidth={1.5} color={theme.colors.primary[500]} />
+              <ThemedText variant="bodySm" color={theme.colors.primary[500]}>{patient.email}</ThemedText>
             </Pressable>
           </View>
         </ThemedCard>

@@ -154,6 +154,7 @@
     "available": "Available",
     "dayOff": "Day Off",
     "noPatients": "No patients yet",
+    "patientNotFound": "Patient not found",
     "appVersion": "Version"
   },
   "profile": {
