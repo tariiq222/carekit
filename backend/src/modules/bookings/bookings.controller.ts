@@ -73,15 +73,15 @@ export class BookingsController {
   async findTodayBookings(@CurrentUser() user: { id: string }) {
     return this.bookingsService.findTodayBookingsForUser(user.id);
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  GET /bookings/stats — Booking Statistics
-  // ═══════════════════════════════════════════════════════════════
-
+  // GET /bookings/stats — Booking Statistics
   @Get('stats')
   @CheckPermissions({ module: 'bookings', action: 'view' })
-  async getStats() {
-    const data = await this.bookingsService.getStats();
+  async getStats(
+    @CurrentUser() user: { id: string },
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    const data = await this.bookingsService.getStats(user.id, dateFrom, dateTo);
     return { success: true, data };
   }
 
@@ -225,8 +225,9 @@ export class BookingsController {
   async complete(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CompleteBookingDto,
+    @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingsService.complete(id, dto);
+    const data = await this.bookingsService.complete(id, dto, user.id);
     return { success: true, data };
   }
 
@@ -237,8 +238,12 @@ export class BookingsController {
   @Post(':id/no-show')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
-  async markNoShow(@Param('id', uuidPipe) id: string) {
-    return this.bookingsService.markNoShow(id);
+  async markNoShow(
+    @Param('id', uuidPipe) id: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    const data = await this.bookingsService.markNoShow(id, user.id);
+    return { success: true, data };
   }
 
   // ═══════════════════════════════════════════════════════════════

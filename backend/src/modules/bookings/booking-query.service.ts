@@ -229,10 +229,30 @@ export class BookingQueryService {
     return slots;
   }
 
-  async getStats() {
+  async getStats(userId?: string, dateFrom?: string, dateTo?: string) {
+    const where: Record<string, unknown> = { deletedAt: null };
+
+    if (userId) {
+      const ctx = await resolveUserRoleContext(this.prisma, userId);
+      if (!ctx.isAdmin) {
+        if (ctx.isPractitioner && ctx.practitionerId) {
+          where.practitionerId = ctx.practitionerId;
+        } else {
+          where.patientId = userId;
+        }
+      }
+    }
+
+    // Apply date range filter — default to last 30 days when no range provided
+    const effectiveDateFrom = dateFrom
+      ? new Date(dateFrom)
+      : (() => { const d = new Date(); d.setDate(d.getDate() - 30); return d; })();
+    const effectiveDateTo = dateTo ? new Date(dateTo) : new Date();
+    where.date = { gte: effectiveDateFrom, lte: effectiveDateTo };
+
     const counts = await this.prisma.booking.groupBy({
       by: ['status'],
-      where: { deletedAt: null },
+      where,
       _count: { _all: true },
     });
 

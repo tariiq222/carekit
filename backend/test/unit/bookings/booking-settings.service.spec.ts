@@ -68,7 +68,7 @@ describe('BookingSettingsService', () => {
       expect(mockCache.set).toHaveBeenCalledWith(
         'booking:settings:global',
         mockSettings,
-        300,
+        3600,
       );
     });
 
@@ -114,7 +114,7 @@ describe('BookingSettingsService', () => {
       expect(mockCache.set).toHaveBeenCalledWith(
         'booking:settings:branch:branch-1',
         branchSettings,
-        300,
+        3600,
       );
     });
 

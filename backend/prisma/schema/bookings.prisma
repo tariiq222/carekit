@@ -166,6 +166,9 @@ model BookingSettings {
   adminCanBookOutsideHours Boolean @default(false) @map("admin_can_book_outside_hours")
   maxAdvanceBookingDays    Int     @default(60) @map("max_advance_booking_days")
 
+  // Booking wizard flow
+  bookingFlowOrder String @default("service_first") @map("booking_flow_order")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

@@ -29,6 +29,7 @@ export class WaitlistController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get('my')
+  @CheckPermissions({ module: 'bookings', action: 'view' })
   async findMyEntries(@CurrentUser() user: { id: string }) {
     const data = await this.waitlistService.findMyEntries(user.id);
     return { success: true, data };
@@ -56,6 +57,7 @@ export class WaitlistController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post()
+  @CheckPermissions({ module: 'bookings', action: 'create' })
   async join(
     @Body() dto: JoinWaitlistDto,
     @CurrentUser() user: { id: string },
@@ -69,6 +71,7 @@ export class WaitlistController {
   // ═══════════════════════════════════════════════════════════════
 
   @Delete(':id')
+  @CheckPermissions({ module: 'bookings', action: 'create' })
   async leave(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },

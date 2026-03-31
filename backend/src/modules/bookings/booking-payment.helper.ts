@@ -11,9 +11,24 @@ export class BookingPaymentHelper {
     private readonly bookingSettingsService: BookingSettingsService,
   ) {}
 
-  /** Fix 7: Resolve actual patient — admin can book on behalf */
-  async resolvePatientId(callerUserId: string, targetPatientId?: string): Promise<string> {
+  /** Resolve actual patient — only privileged roles can book on behalf of others */
+  async resolvePatientId(
+    callerUserId: string,
+    targetPatientId?: string,
+    callerRoles?: Array<{ slug: string }>,
+  ): Promise<string> {
     if (!targetPatientId || targetPatientId === callerUserId) return callerUserId;
+
+    const PRIVILEGED_ROLES = ['super_admin', 'receptionist', 'owner'];
+    const hasPrivilege = callerRoles?.some((r) => PRIVILEGED_ROLES.includes(r.slug));
+    if (!hasPrivilege) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: 'Only admins and receptionists can book on behalf of other patients',
+        error: 'FORBIDDEN',
+      });
+    }
+
     const patient = await this.prisma.user.findFirst({
       where: { id: targetPatientId, isActive: true, deletedAt: null },
     });

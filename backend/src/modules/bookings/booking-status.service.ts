@@ -183,7 +183,7 @@ export class BookingStatusService {
     return updated;
   }
 
-  async complete(id: string, dto?: CompleteBookingDto) {
+  async complete(id: string, dto?: CompleteBookingDto, performedByUserId?: string) {
     const completed = await this.prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findFirst({ where: { id, deletedAt: null } });
       if (!booking) {
@@ -229,6 +229,7 @@ export class BookingStatusService {
       action: 'booking_completed',
       module: 'bookings',
       resourceId: id,
+      userId: performedByUserId,
       description: 'Booking completed',
     }).catch(() => {});
 
@@ -236,12 +237,13 @@ export class BookingStatusService {
       bookingId: id,
       fromStatus: 'in_progress',
       toStatus: 'completed',
+      changedBy: performedByUserId,
     }).catch(() => {});
 
     return completed;
   }
 
-  async markNoShow(id: string) {
+  async markNoShow(id: string, performedByUserId?: string) {
     const updated = await this.prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findFirst({ where: { id, deletedAt: null } });
       if (!booking) {
@@ -265,6 +267,7 @@ export class BookingStatusService {
       action: 'booking_no_show',
       module: 'bookings',
       resourceId: id,
+      userId: performedByUserId,
       description: 'Booking marked as no-show',
     }).catch(() => {});
 
@@ -272,6 +275,7 @@ export class BookingStatusService {
       bookingId: id,
       fromStatus: 'confirmed',
       toStatus: 'no_show',
+      changedBy: performedByUserId,
     }).catch(() => {});
 
     return updated;

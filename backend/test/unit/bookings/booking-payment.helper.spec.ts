@@ -2,7 +2,7 @@
  * BookingPaymentHelper Unit Tests
  */
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { BookingPaymentHelper } from '../../../src/modules/bookings/booking-payment.helper.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
@@ -50,17 +50,29 @@ describe('BookingPaymentHelper', () => {
       expect(result).toBe(callerUserId);
     });
 
-    it('should return targetPatientId when patient exists', async () => {
+    it('should return targetPatientId when patient exists and caller is privileged', async () => {
       mockPrisma.user.findFirst.mockResolvedValue({ id: targetPatientId });
-      const result = await service.resolvePatientId(callerUserId, targetPatientId);
+      const result = await service.resolvePatientId(callerUserId, targetPatientId, [{ slug: 'receptionist' }]);
       expect(result).toBe(targetPatientId);
     });
 
     it('should throw NotFoundException when target patient not found', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
       await expect(
-        service.resolvePatientId(callerUserId, 'non-existent'),
+        service.resolvePatientId(callerUserId, 'non-existent', [{ slug: 'super_admin' }]),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException when caller is not privileged and tries to book for another patient', async () => {
+      await expect(
+        service.resolvePatientId(callerUserId, targetPatientId, [{ slug: 'patient' }]),
+      ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
+    });
+
+    it('should throw ForbiddenException when no roles provided and target differs from caller', async () => {
+      await expect(
+        service.resolvePatientId(callerUserId, targetPatientId, undefined),
+      ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
     });
   });
 

@@ -45,7 +45,7 @@ export class BookingCreationService {
     dto: CreateBookingDto,
     callerRoles?: Array<{ slug: string }>,
   ) {
-    const actualPatientId = await this.paymentHelper.resolvePatientId(callerUserId, dto.patientId);
+    const actualPatientId = await this.paymentHelper.resolvePatientId(callerUserId, dto.patientId, callerRoles);
 
     const practitioner = await this.prisma.practitioner.findFirst({ where: { id: dto.practitionerId, isActive: true, deletedAt: null } });
     if (!practitioner) throw new NotFoundException({ statusCode: 404, message: ERR.practitioner.notFound, error: 'NOT_FOUND' });
@@ -140,61 +140,86 @@ export class BookingCreationService {
 
     const isWalkIn = dto.type === 'walk_in';
     const isPayAtClinic = dto.payAtClinic === true;
+    const MAX_RETRIES = 3;
     let booking;
-    try {
-      booking = await this.prisma.$transaction(async (tx) => {
-        if (!skipChecks) {
-          await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, branchId);
-        }
-        try {
-          const bufferMinutes = ps.bufferMinutes || service.bufferMinutes || settings.bufferMinutes;
-          await checkDoubleBooking(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, bufferMinutes);
-        } catch (err) {
-          if (err instanceof ConflictException) {
-            if (settings.suggestAlternativesOnConflict) {
-              const alternatives = await this.queryService.getNextAvailableSlots(
-                dto.practitionerId, bookingDate, settings.suggestAlternativesCount, branchId,
-              );
-              throw new ConflictException({
-                statusCode: 409, message: ERR.booking.conflict,
-                error: 'BOOKING_CONFLICT', alternatives,
-              });
-            }
+    let lastErr: unknown;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        booking = await this.prisma.$transaction(async (tx) => {
+          if (!skipChecks) {
+            await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, branchId);
           }
-          throw err;
+          try {
+            const bufferMinutes = ps.bufferMinutes || service.bufferMinutes || settings.bufferMinutes;
+            await checkDoubleBooking(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, bufferMinutes);
+          } catch (err) {
+            if (err instanceof ConflictException) {
+              if (settings.suggestAlternativesOnConflict) {
+                const alternatives = await this.queryService.getNextAvailableSlots(
+                  dto.practitionerId, bookingDate, settings.suggestAlternativesCount, branchId,
+                );
+                throw new ConflictException({
+                  statusCode: 409, message: ERR.booking.conflict,
+                  error: 'BOOKING_CONFLICT', alternatives,
+                });
+              }
+            }
+            throw err;
+          }
+
+          return tx.booking.create({
+            data: {
+              patientId: actualPatientId,
+              branchId,
+              practitionerId: dto.practitionerId,
+              serviceId: dto.serviceId,
+              practitionerServiceId: ps.id,
+              type: dto.type,
+              date: bookingDate,
+              startTime: dto.startTime,
+              endTime,
+              status: isWalkIn || isPayAtClinic ? 'confirmed' : 'pending',
+              confirmedAt: isWalkIn || isPayAtClinic ? new Date() : undefined,
+              isWalkIn,
+              notes: dto.notes,
+              bookedPrice: resolved.price,
+              bookedDuration: resolved.duration,
+              durationOptionId: resolved.durationOptionId ?? null,
+              recurringGroupId: dto.recurringGroupId ?? null,
+              ...zoomData,
+            },
+            include: bookingInclude,
+          });
+        }, { isolationLevel: 'Serializable', timeout: 10000 });
+        break; // success — exit retry loop
+      } catch (err) {
+        const isSerializationFailure =
+          (err as { code?: string })?.code === 'P2034' ||
+          String((err as { message?: string })?.message).includes('40001');
+
+        if (isSerializationFailure && attempt < MAX_RETRIES) {
+          this.logger.warn(`Booking creation serialization failure (attempt ${attempt}/${MAX_RETRIES}), retrying...`);
+          await new Promise((resolve) => setTimeout(resolve, 50 * attempt));
+          lastErr = err;
+          continue;
         }
 
-        return tx.booking.create({
-          data: {
-            patientId: actualPatientId,
-            branchId,
-            practitionerId: dto.practitionerId,
-            serviceId: dto.serviceId,
-            practitionerServiceId: ps.id,
-            type: dto.type,
-            date: bookingDate,
-            startTime: dto.startTime,
-            endTime,
-            status: isWalkIn || isPayAtClinic ? 'confirmed' : 'pending',
-            confirmedAt: isWalkIn || isPayAtClinic ? new Date() : undefined,
-            isWalkIn,
-            notes: dto.notes,
-            bookedPrice: resolved.price,
-            bookedDuration: resolved.duration,
-            durationOptionId: resolved.durationOptionId ?? null,
-            recurringGroupId: dto.recurringGroupId ?? null,
-            ...zoomData,
-          },
-          include: bookingInclude,
-        });
-      }, { isolationLevel: 'Serializable', timeout: 10000 });
-    } catch (err) {
+        if (zoomData.zoomMeetingId) {
+          this.zoomService.deleteMeeting(zoomData.zoomMeetingId).catch((e) =>
+            this.logger.warn(`Failed to delete Zoom meeting after booking transaction failure: ${e.message}`),
+          );
+        }
+        throw err;
+      }
+    }
+
+    if (!booking) {
       if (zoomData.zoomMeetingId) {
         this.zoomService.deleteMeeting(zoomData.zoomMeetingId).catch((e) =>
           this.logger.warn(`Failed to delete Zoom meeting after booking transaction failure: ${e.message}`),
         );
       }
-      throw err;
+      throw lastErr;
     }
 
     try {

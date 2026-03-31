@@ -6,7 +6,7 @@ import { UpdateBookingSettingsDto } from './dto/update-booking-settings.dto.js';
 
 const GLOBAL_CACHE_KEY = 'booking:settings:global';
 const BRANCH_CACHE_KEY = (branchId: string) => `booking:settings:branch:${branchId}`;
-const CACHE_TTL_SECONDS = 300; // 5 minutes
+const CACHE_TTL_SECONDS = 3600; // 1 hour — settings rarely change; explicit invalidation on update
 
 @Injectable()
 export class BookingSettingsService {

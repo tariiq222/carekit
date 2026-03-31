@@ -46,7 +46,7 @@ export class BookingsService {
   findMyBookings(patientId: string) { return this.queryService.findMyBookings(patientId); }
   findTodayBookingsForUser(userId: string) { return this.queryService.findTodayBookingsForUser(userId); }
   findTodayBookings(userId: string) { return this.queryService.findTodayBookings(userId); }
-  getStats() { return this.queryService.getStats(); }
+  getStats(userId?: string, dateFrom?: string, dateTo?: string) { return this.queryService.getStats(userId, dateFrom, dateTo); }
   getPaymentStatus(bookingId: string, userId: string) { return this.queryService.getPaymentStatus(bookingId, userId); }
 
   async reschedule(id: string, dto: RescheduleBookingDto, adminUserId?: string) {
@@ -80,8 +80,8 @@ export class BookingsService {
   confirm(id: string, userId?: string) { return this.statusService.confirm(id, userId); }
   checkIn(id: string, userId?: string) { return this.statusService.checkIn(id, userId); }
   startSession(id: string, userId: string) { return this.statusService.startSession(id, userId); }
-  complete(id: string, dto?: CompleteBookingDto) { return this.statusService.complete(id, dto); }
-  markNoShow(id: string) { return this.statusService.markNoShow(id); }
+  complete(id: string, dto?: CompleteBookingDto, userId?: string) { return this.statusService.complete(id, dto, userId); }
+  markNoShow(id: string, userId?: string) { return this.statusService.markNoShow(id, userId); }
 
   // --- Delegated: Cancellation ---
   requestCancellation(id: string, patientId: string, reason?: string) { return this.cancellationService.requestCancellation(id, patientId, reason); }

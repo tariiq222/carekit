@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BookingsController } from './bookings.controller.js';
 import { BookingSettingsController } from './booking-settings.controller.js';
 import { WaitlistController } from './waitlist.controller.js';
+import { BookingStatusLogController } from './booking-status-log.controller.js';
 import { BookingsService } from './bookings.service.js';
 import { BookingCancellationService } from './booking-cancellation.service.js';
 import { BookingCancelHelpersService } from './booking-cancel-helpers.service.js';
@@ -23,7 +24,7 @@ import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 
 @Module({
   imports: [NotificationsModule, ZoomModule, ClinicModule, ActivityLogModule],
-  controllers: [WaitlistController, BookingsController, BookingSettingsController],
+  controllers: [WaitlistController, BookingsController, BookingSettingsController, BookingStatusLogController],
   providers: [
     BookingsService,
     BookingCreationService,
