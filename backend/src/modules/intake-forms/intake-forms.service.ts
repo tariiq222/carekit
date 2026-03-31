@@ -122,20 +122,21 @@ export class IntakeFormsService {
   // ═══════════════════════════════════════════════════════════════
 
   async submitResponse(patientId: string, dto: SubmitResponseDto) {
-    await this.ensureFormExists(dto.formId);
+    const formId = dto.formId!;
+    await this.ensureFormExists(formId);
     await this.ensureBookingOwnership(dto.bookingId, patientId);
 
     const [response] = await this.prisma.$transaction([
       this.prisma.intakeResponse.create({
         data: {
-          formId: dto.formId,
+          formId,
           bookingId: dto.bookingId,
           patientId,
           answers: dto.answers,
         },
       }),
       this.prisma.intakeForm.update({
-        where: { id: dto.formId },
+        where: { id: formId },
         data: { submissionsCount: { increment: 1 } },
       }),
     ]);
