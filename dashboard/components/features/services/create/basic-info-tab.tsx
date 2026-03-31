@@ -1,7 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { ColorSwatchInput } from "@/components/features/shared/color-swatch-input"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -24,7 +22,7 @@ import { useCategories } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 import { ServiceAvatarPicker } from "@/components/features/services/service-avatar-picker"
 import { ServiceBranchesTab } from "@/components/features/services/service-branches-tab"
-import { ServicePractitionersTab } from "@/components/features/services/service-practitioners-tab"
+import { ServiceBranchesPicker } from "@/components/features/services/service-branches-picker"
 import type { UseFormReturn } from "react-hook-form"
 import type { CreateServiceFormData } from "./form-schema"
 
@@ -35,14 +33,11 @@ interface BasicInfoTabProps {
   onImageSelect?: (file: File) => void
   serviceId?: string
   serviceBranches?: { branchId: string }[]
-  isCreate?: boolean
-  pendingPractitionerIds?: string[]
-  onPendingPractitionerChange?: (ids: string[]) => void
 }
 
 /* ─── Component ─── */
 
-export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches, isCreate, pendingPractitionerIds, onPendingPractitionerChange }: BasicInfoTabProps) {
+export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }: BasicInfoTabProps) {
   const { t, locale } = useLocale()
   const { data: categories, isLoading: loadingCategories } = useCategories()
 
@@ -51,148 +46,98 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches, 
     isHidden,
     hidePriceOnBooking,
     hideDurationOnBooking,
-    calendarColor,
     categoryId: watchedCategoryId,
     iconName,
     iconBgColor,
     imageUrl,
+    branchIds,
   } = form.watch()
 
+  /* ─── Locale-ordered field pairs ─── */
+  const primaryName    = locale === "ar" ? "nameAr"        : "nameEn"
+  const secondaryName  = locale === "ar" ? "nameEn"        : "nameAr"
+  const primaryDesc    = locale === "ar" ? "descriptionAr" : "descriptionEn"
+  const secondaryDesc  = locale === "ar" ? "descriptionEn" : "descriptionAr"
+  const primaryNameLabel   = locale === "ar" ? t("services.create.nameAr")  : t("services.create.nameEn")
+  const secondaryNameLabel = locale === "ar" ? t("services.create.nameEn")  : t("services.create.nameAr")
+  const primaryDescLabel   = locale === "ar" ? t("services.create.descAr")  : t("services.create.descEn")
+  const secondaryDescLabel = locale === "ar" ? t("services.create.descEn")  : t("services.create.descAr")
+  const primaryDir   = locale === "ar" ? "rtl" : "ltr"
+  const secondaryDir = locale === "ar" ? "ltr" : "rtl"
+
   return (
-    <>
-      <Card>
+    <Card className="border-s-2 border-s-primary/40">
       <CardHeader>
-        <CardTitle>{t("services.create.tabs.basic")}</CardTitle>
-        <CardDescription>
-          {t("services.create.tabs.basicDesc")}
-        </CardDescription>
+        {/* Avatar sits beside the card title — profile-style header */}
+        <div className="flex items-center gap-4">
+          <ServiceAvatarPicker
+            iconName={iconName}
+            iconBgColor={iconBgColor}
+            imageUrl={imageUrl}
+            serviceName={form.watch("nameAr") || form.watch("nameEn")}
+            onIconChange={(name, color) => {
+              form.setValue("iconName", name)
+              form.setValue("iconBgColor", color)
+              form.setValue("imageUrl", null)
+            }}
+            onImageChange={(file) => {
+              const url = URL.createObjectURL(file)
+              form.setValue("imageUrl", url)
+              form.setValue("iconName", null)
+              form.setValue("iconBgColor", null)
+              onImageSelect?.(file)
+            }}
+            onClear={() => {
+              form.setValue("iconName", null)
+              form.setValue("iconBgColor", null)
+              form.setValue("imageUrl", null)
+            }}
+          />
+          <div className="flex flex-col gap-1">
+            <CardTitle>{t("services.create.tabs.basic")}</CardTitle>
+            <CardDescription>
+              {t("services.create.tabs.basicDesc")} &mdash;{" "}
+              <span className="text-destructive">*</span>{" "}
+              {locale === "ar" ? "حقول إلزامية" : "required fields"}
+            </CardDescription>
+            <p className="text-xs text-muted-foreground">{t("services.create.avatarHint")}</p>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-5">
-        {/* Avatar + Branch Restrictions — same row */}
-        <div className="flex flex-col gap-4 pb-4 mb-2 border-b border-border sm:flex-row sm:items-start">
-          <div className="flex items-center gap-4 shrink-0">
-            <ServiceAvatarPicker
-              iconName={iconName}
-              iconBgColor={iconBgColor}
-              imageUrl={imageUrl}
-              serviceName={form.watch("nameAr") || form.watch("nameEn")}
-              onIconChange={(name, color) => {
-                form.setValue("iconName", name)
-                form.setValue("iconBgColor", color)
-                form.setValue("imageUrl", null)
-              }}
-              onImageChange={(file) => {
-                const url = URL.createObjectURL(file)
-                form.setValue("imageUrl", url)
-                form.setValue("iconName", null)
-                form.setValue("iconBgColor", null)
-                onImageSelect?.(file)
-              }}
-              onClear={() => {
-                form.setValue("iconName", null)
-                form.setValue("iconBgColor", null)
-                form.setValue("imageUrl", null)
-              }}
-            />
-            <p className="text-sm text-muted-foreground sm:hidden">
-              {t("services.create.avatarHint") || "اختر أيقونة أو ارفع صورة للخدمة"}
-            </p>
+
+      <CardContent className="space-y-6">
+
+        {/* ── Row 1: Name AR + Name EN + Category + Active — single row ── */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_1fr_1fr_auto]">
+          {/* Primary name */}
+          <div className="flex flex-col gap-1.5">
+            <Label>{primaryNameLabel} *</Label>
+            <Input {...form.register(primaryName)} dir={primaryDir} />
+            {form.formState.errors[primaryName] && (
+              <p className="text-xs text-destructive">{form.formState.errors[primaryName]?.message}</p>
+            )}
           </div>
-          <div className="flex-1">
-            <ServiceBranchesTab serviceId={serviceId} serviceBranches={serviceBranches} />
+
+          {/* Secondary name */}
+          <div className="flex flex-col gap-1.5">
+            <Label>{secondaryNameLabel} *</Label>
+            <Input {...form.register(secondaryName)} dir={secondaryDir} />
+            {form.formState.errors[secondaryName] && (
+              <p className="text-xs text-destructive">{form.formState.errors[secondaryName]?.message}</p>
+            )}
           </div>
-        </div>
 
-        {/* Name — primary locale field appears first (start side) */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {locale === "ar" ? (
-            <>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("services.create.nameAr")} *</Label>
-                <Input {...form.register("nameAr")} dir="rtl" />
-                {form.formState.errors.nameAr && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.nameAr.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("services.create.nameEn")} *</Label>
-                <Input {...form.register("nameEn")} dir="ltr" />
-                {form.formState.errors.nameEn && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.nameEn.message}
-                  </p>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("services.create.nameEn")} *</Label>
-                <Input {...form.register("nameEn")} />
-                {form.formState.errors.nameEn && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.nameEn.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("services.create.nameAr")} *</Label>
-                <Input {...form.register("nameAr")} dir="rtl" />
-                {form.formState.errors.nameAr && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.nameAr.message}
-                  </p>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Description — primary locale field appears first (start side) */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {locale === "ar" ? (
-            <>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("services.create.descAr")}</Label>
-                <Textarea {...form.register("descriptionAr")} rows={3} dir="rtl" />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("services.create.descEn")}</Label>
-                <Textarea {...form.register("descriptionEn")} rows={3} dir="ltr" />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("services.create.descEn")}</Label>
-                <Textarea {...form.register("descriptionEn")} rows={3} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("services.create.descAr")}</Label>
-                <Textarea {...form.register("descriptionAr")} rows={3} dir="rtl" />
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Category + Active Toggle — same row */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Category */}
           <div className="flex flex-col gap-1.5">
             <Label>{t("services.create.category")} *</Label>
             <Select
               key={categories ? watchedCategoryId || "empty" : "loading"}
-              value={watchedCategoryId || undefined}
-              onValueChange={(v) =>
-                form.setValue("categoryId", v, { shouldValidate: true })
-              }
+              value={watchedCategoryId || ""}
+              onValueChange={(v) => form.setValue("categoryId", v, { shouldValidate: true })}
               disabled={loadingCategories}
             >
               <SelectTrigger className="w-full">
-                <SelectValue
-                  placeholder={t("services.create.categoryPlaceholder")}
-                />
+                <SelectValue placeholder={t("services.create.categoryPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 {categories?.map((c) => (
@@ -209,94 +154,103 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches, 
             )}
           </div>
 
+          {/* Active */}
           <div className="flex flex-col gap-1.5">
             <Label>&nbsp;</Label>
-            <div className="flex h-9 items-center justify-between rounded-lg border border-border px-3">
-              <Label htmlFor="create-service-active" className="cursor-pointer text-sm">
-                {t("services.create.isActive")}
-              </Label>
+            <div className="flex h-9 items-center gap-2 rounded-lg border border-border px-3 whitespace-nowrap">
               <Switch
                 id="create-service-active"
                 checked={isActive}
                 onCheckedChange={(v) => form.setValue("isActive", v)}
               />
+              <Label htmlFor="create-service-active" className="cursor-pointer text-sm">
+                {t("services.create.isActive")}
+              </Label>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
 
-    {/* Practitioners — separate card */}
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("services.tabs.practitioners")}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ServicePractitionersTab
-          serviceId={serviceId}
-          isCreate={isCreate}
-          pendingIds={pendingPractitionerIds}
-          onPendingChange={onPendingPractitionerChange}
-        />
-      </CardContent>
-    </Card>
-
-    {/* Display Settings — separate card */}
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("services.create.tabs.display")}</CardTitle>
-        <CardDescription>
-          {t("services.create.tabs.displayDesc")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <Label htmlFor="create-hidden" className="cursor-pointer text-xs">
-              {t("services.display.hideService")}
-            </Label>
-            <Switch
-              id="create-hidden"
-              checked={isHidden}
-              onCheckedChange={(v) => form.setValue("isHidden", v)}
-            />
+        {/* ── Row 2: Descriptions — 2 equal columns ── */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label>{primaryDescLabel}</Label>
+            <Textarea {...form.register(primaryDesc)} rows={3} dir={primaryDir} />
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <Label htmlFor="create-hide-price" className="cursor-pointer text-xs">
-              {t("services.display.hidePrice")}
-            </Label>
-            <Switch
-              id="create-hide-price"
-              checked={hidePriceOnBooking}
-              onCheckedChange={(v) => form.setValue("hidePriceOnBooking", v)}
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <Label htmlFor="create-hide-duration" className="cursor-pointer text-xs">
-              {t("services.display.hideDuration")}
-            </Label>
-            <Switch
-              id="create-hide-duration"
-              checked={hideDurationOnBooking}
-              onCheckedChange={(v) => form.setValue("hideDurationOnBooking", v)}
-            />
+          <div className="flex flex-col gap-1.5">
+            <Label>{secondaryDescLabel}</Label>
+            <Textarea {...form.register(secondaryDesc)} rows={3} dir={secondaryDir} />
           </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="create-calendar-color">
-            {t("services.display.calendarColor")}
-          </Label>
-          <ColorSwatchInput
-            id="create-calendar-color"
-            value={calendarColor}
-            onChange={(v) => form.setValue("calendarColor", v)}
-            onClear={() => form.setValue("calendarColor", null)}
-            showHex
-          />
+        {/* ── Row 3: Branch Restrictions + Display Settings ── */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-lg border border-border bg-surface-muted px-4 py-3 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-foreground">{t("services.branches.title")}</p>
+              {serviceId && serviceBranches !== undefined && (
+                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${
+                  serviceBranches.length > 0
+                    ? "border-warning/30 bg-warning/10 text-warning"
+                    : "border-success/30 bg-success/10 text-success"
+                }`}>
+                  {serviceBranches.length > 0
+                    ? (locale === "ar" ? `${serviceBranches.length} فروع` : `${serviceBranches.length} branches`)
+                    : (locale === "ar" ? "جميع الفروع" : "All branches")}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("services.branches.cardDesc")}</p>
+            {serviceId ? (
+              <ServiceBranchesTab serviceId={serviceId} serviceBranches={serviceBranches} />
+            ) : (
+              <ServiceBranchesPicker
+                value={branchIds ?? []}
+                onChange={(ids) => form.setValue("branchIds", ids)}
+              />
+            )}
+          </div>
+
+          {/* Display Settings */}
+          <div className="rounded-lg border border-border bg-surface-muted px-4 py-3 flex flex-col gap-3">
+            <p className="text-sm font-medium text-foreground">
+              {t("services.create.tabs.display")}
+            </p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between rounded-lg border border-border bg-surface p-3">
+                <Label htmlFor="create-hidden" className="cursor-pointer text-xs">
+                  {t("services.display.hideService")}
+                </Label>
+                <Switch
+                  id="create-hidden"
+                  checked={isHidden}
+                  onCheckedChange={(v) => form.setValue("isHidden", v)}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-border bg-surface p-3">
+                <Label htmlFor="create-hide-price" className="cursor-pointer text-xs">
+                  {t("services.display.hidePrice")}
+                </Label>
+                <Switch
+                  id="create-hide-price"
+                  checked={hidePriceOnBooking}
+                  onCheckedChange={(v) => form.setValue("hidePriceOnBooking", v)}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-border bg-surface p-3">
+                <Label htmlFor="create-hide-duration" className="cursor-pointer text-xs">
+                  {t("services.display.hideDuration")}
+                </Label>
+                <Switch
+                  id="create-hide-duration"
+                  checked={hideDurationOnBooking}
+                  onCheckedChange={(v) => form.setValue("hideDurationOnBooking", v)}
+                />
+              </div>
+            </div>
+          </div>
         </div>
+
       </CardContent>
     </Card>
-    </>
   )
 }
