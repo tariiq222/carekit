@@ -42,7 +42,7 @@ function MenuItem({ icon: Icon, label, value, danger, onPress }: MenuItemProps) 
       onPress={onPress}
       style={({ pressed }) => [
         styles.menuItem,
-        { backgroundColor: theme.colors.white, opacity: pressed ? 0.7 : 1 },
+        { backgroundColor: theme.colors.card, opacity: pressed ? 0.7 : 1 },
       ]}
     >
       <View style={styles.menuLeft}>
@@ -111,7 +111,7 @@ export default function PatientProfileScreen() {
         </ThemedText>
 
         {/* Profile Header */}
-        <View style={[styles.profileCard, { backgroundColor: theme.colors.white }]}>
+        <View style={[styles.profileCard, { backgroundColor: theme.colors.card }]}>
           <Avatar size={64} name={fullName} imageUrl={user?.avatarUrl} />
           <View style={{ flex: 1, gap: 2 }}>
             <ThemedText variant="heading">{fullName}</ThemedText>
