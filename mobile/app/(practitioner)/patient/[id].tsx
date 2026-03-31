@@ -57,7 +57,7 @@ export default function DoctorPatientRecordScreen() {
       }
       setLoading(false);
     });
-  }, [id]);
+  }, [id, t]);
 
   if (loading) {
     return (
@@ -138,7 +138,7 @@ export default function DoctorPatientRecordScreen() {
                   <View style={styles.visitRow}>
                     <View style={{ flex: 1, gap: 2 }}>
                       <ThemedText variant="body" style={{ fontWeight: '500' }}>
-                        {v.type}
+                        {t(`bookings.type.${v.type}`)}
                       </ThemedText>
                       <ThemedText variant="caption" color={theme.colors.textSecondary}>
                         {new Date(v.date).toLocaleDateString('ar-SA', {
