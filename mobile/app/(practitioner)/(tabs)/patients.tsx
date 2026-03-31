@@ -79,7 +79,7 @@ export default function PatientsScreen() {
       </ThemedText>
 
       {/* Search */}
-      <View style={[styles.searchBar, { backgroundColor: theme.colors.white }]}>
+      <View style={[styles.searchBar, theme.shadows.md, { backgroundColor: theme.colors.white }]}>
         <Search size={18} strokeWidth={1.5} color={theme.colors.textSecondary} />
         <TextInput
           value={search}
@@ -122,8 +122,8 @@ export default function PatientsScreen() {
                   )}
                 </View>
                 {item.visitCount > 0 && (
-                  <View style={[styles.visitBadge, { backgroundColor: '#1D4ED81A' }]}>
-                    <ThemedText variant="caption" color="#1D4ED8" style={{ fontWeight: '600' }}>
+                  <View style={[styles.visitBadge, { backgroundColor: theme.colors.primary + '1A' }]}>
+                    <ThemedText variant="caption" color={theme.colors.primary} style={{ fontWeight: '600' }}>
                       {item.visitCount} {t('doctor.visits')}
                     </ThemedText>
                   </View>
@@ -158,11 +158,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 16,
-    shadowColor: '#001551',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 2,
   },
   searchInput: { flex: 1, fontSize: 14, padding: 0 },
   list: { paddingBottom: 100 },
