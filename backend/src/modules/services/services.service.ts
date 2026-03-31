@@ -76,6 +76,11 @@ export class ServicesService {
             create: dto.practitionerIds.map((practitionerId) => ({ practitionerId })),
           },
         }),
+        ...(dto.branchIds?.length && {
+          serviceBranches: {
+            create: dto.branchIds.map((branchId) => ({ branchId })),
+          },
+        }),
       },
       include: { category: true },
     });
