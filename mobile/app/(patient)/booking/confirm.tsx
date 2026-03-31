@@ -39,6 +39,8 @@ export default function BookingConfirmScreen() {
     type: string;
     date: string;
     time: string;
+    price?: string;
+    total?: string;
   }>();
   const { t } = useTranslation();
   const router = useRouter();
@@ -52,10 +54,10 @@ export default function BookingConfirmScreen() {
   const meta = TYPE_META[params.type ?? 'in_person'];
   const TypeIcon = meta.icon;
 
-  // Price calculation (placeholder — real prices come from API)
-  const basePrice = params.type === 'online' ? 200 : 250;
-  const vat = Math.round(basePrice * 0.15);
-  const total = basePrice + vat;
+  // Price from route params (set by schedule screen or service selection)
+  const basePrice = Number(params.price) || 0;
+  const vat = Number(params.total) ? Number(params.total) - Number(params.price) : Math.round(basePrice * 0.15);
+  const total = Number(params.total) || basePrice + vat;
 
   const formattedDate = params.date
     ? new Date(params.date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {

@@ -36,15 +36,15 @@ export const bookingsService = {
   },
 
   async requestCancellation(id: string, reason: string) {
-    const response = await api.patch<ApiResponse<Booking>>(
-      `/bookings/${id}/cancel`,
+    const response = await api.post<ApiResponse<Booking>>(
+      `/bookings/${id}/cancel-request`,
       { reason },
     );
     return response.data;
   },
 
   async markCompleted(id: string) {
-    const response = await api.patch<ApiResponse<Booking>>(
+    const response = await api.post<ApiResponse<Booking>>(
       `/bookings/${id}/complete`,
     );
     return response.data;
@@ -54,6 +54,28 @@ export const bookingsService = {
     const response = await api.get<ApiResponse<Booking[]>>('/bookings', {
       params: { status: ['pending', 'confirmed'], limit: 1 },
     });
+    return response.data;
+  },
+
+  async startSession(id: string) {
+    const response = await api.post<ApiResponse<Booking>>(
+      `/bookings/${id}/start`,
+    );
+    return response.data;
+  },
+
+  async practitionerCancel(id: string, reason?: string) {
+    const response = await api.post<ApiResponse<Booking>>(
+      `/bookings/${id}/practitioner-cancel`,
+      { reason },
+    );
+    return response.data;
+  },
+
+  async getTodayBookings() {
+    const response = await api.get<ApiResponse<{ items: Booking[]; meta: unknown }>>(
+      '/bookings/today',
+    );
     return response.data;
   },
 };

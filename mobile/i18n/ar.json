@@ -108,7 +108,11 @@
     "confirmed": "مؤكد",
     "completed": "مكتمل",
     "cancelledStatus": "ملغي",
-    "pendingCancellation": "قيد الإلغاء"
+    "pendingCancellation": "قيد الإلغاء",
+    "checkedIn": "وصل",
+    "inProgress": "جارٍ",
+    "noShow": "لم يحضر",
+    "expired": "منتهي"
   },
   "practitioner": {
     "today": "مواعيد اليوم",
@@ -134,6 +138,9 @@
     "startMeeting": "بدء الاجتماع",
     "callPatient": "اتصل بالمريض",
     "markCompleted": "إنهاء الزيارة",
+    "startSession": "بدء الجلسة",
+    "cancelBooking": "إلغاء الحجز",
+    "cancelConfirm": "هل أنت متأكد من إلغاء هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.",
     "patientRecord": "سجل المريض",
     "visitHistory": "سجل الزيارات",
     "visits": "زيارات",

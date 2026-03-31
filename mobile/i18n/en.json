@@ -108,7 +108,11 @@
     "confirmed": "Confirmed",
     "completed": "Completed",
     "cancelledStatus": "Cancelled",
-    "pendingCancellation": "Pending Cancellation"
+    "pendingCancellation": "Pending Cancellation",
+    "checkedIn": "Checked In",
+    "inProgress": "In Progress",
+    "noShow": "No Show",
+    "expired": "Expired"
   },
   "practitioner": {
     "today": "Today's Schedule",
@@ -134,6 +138,9 @@
     "startMeeting": "Start Meeting",
     "callPatient": "Call Patient",
     "markCompleted": "Mark Completed",
+    "startSession": "Start Session",
+    "cancelBooking": "Cancel Booking",
+    "cancelConfirm": "Are you sure you want to cancel this booking? This action cannot be undone.",
     "patientRecord": "Patient Record",
     "visitHistory": "Visit History",
     "visits": "visits",

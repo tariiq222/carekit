@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -25,10 +25,7 @@ import { ThemedButton } from '@/theme/components/ThemedButton';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
 import { paymentsService } from '@/services/payments';
-
-const BANK_NAME = 'Al Rajhi Bank';
-const BANK_IBAN = 'SA0000000000000000000000';
-const ACCOUNT_HOLDER = 'CareKit Clinic';
+import { clinicService } from '@/services/clinic';
 
 interface BankDetailRowProps {
   label: string;
@@ -59,8 +56,24 @@ export default function BankTransferScreen() {
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [bankName, setBankName] = useState('');
+  const [bankIban, setBankIban] = useState('');
+  const [accountHolder, setAccountHolder] = useState('');
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
+
+  useEffect(() => {
+    clinicService.getSettings().then((res) => {
+      if (res.data) {
+        setBankName(res.data.bankName ?? '');
+        setBankIban(res.data.bankIban ?? '');
+        setAccountHolder(res.data.accountHolder ?? '');
+      }
+    }).catch(() => {
+      // Bank details unavailable — user will see empty fields
+    });
+  }, []);
+
   const totalAmount = Number(params.total) || 0;
 
   const handleTakePhoto = useCallback(async () => {
@@ -155,7 +168,7 @@ export default function BankTransferScreen() {
           </ThemedText>
           <BankDetailRow
             label={t('payment.bankName')}
-            value={BANK_NAME}
+            value={bankName}
             textSecondary={theme.colors.textSecondary}
           />
           <View
@@ -166,7 +179,7 @@ export default function BankTransferScreen() {
           />
           <BankDetailRow
             label={t('payment.iban')}
-            value={BANK_IBAN}
+            value={bankIban}
             textSecondary={theme.colors.textSecondary}
           />
           <View
@@ -177,7 +190,7 @@ export default function BankTransferScreen() {
           />
           <BankDetailRow
             label={t('payment.accountHolder')}
-            value={ACCOUNT_HOLDER}
+            value={accountHolder}
             textSecondary={theme.colors.textSecondary}
           />
         </ThemedCard>

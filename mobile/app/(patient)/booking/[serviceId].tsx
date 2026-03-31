@@ -31,7 +31,7 @@ import type { BookingType } from '@/types/models';
  * Route: /(patient)/booking/[serviceId]
  *
  * 2 booking types: in_person, online
- * Each shown as a selectable card with icon, name, description, and price.
+ * Each shown as a selectable card with icon, name, and description.
  */
 
 interface TypeOption {
@@ -40,7 +40,6 @@ interface TypeOption {
   color: string;
   labelKey: string;
   descKey: string;
-  price: number;
 }
 
 export default function BookingTypeScreen() {
@@ -60,7 +59,6 @@ export default function BookingTypeScreen() {
       color: '#1D4ED8',
       labelKey: 'booking.inPerson',
       descKey: 'booking.inPersonDesc',
-      price: 250,
     },
     {
       type: 'online',
@@ -68,7 +66,6 @@ export default function BookingTypeScreen() {
       color: '#7C3AED',
       labelKey: 'booking.online',
       descKey: 'booking.onlineDesc',
-      price: 200,
     },
   ];
 
@@ -145,9 +142,6 @@ export default function BookingTypeScreen() {
                       {t(item.descKey)}
                     </ThemedText>
                   </View>
-                  <ThemedText variant="subheading" color="#1D4ED8">
-                    {item.price} {t('home.sar')}
-                  </ThemedText>
                 </View>
               </ThemedCard>
             );

@@ -70,10 +70,15 @@ export default function DoctorAppointmentDetailScreen() {
   const meta = TYPE_META[booking.type] ?? TYPE_META.in_person;
   const TypeIcon = meta.icon;
   const statusLabels: Record<string, string> = {
-    pending: t('appointments.pending'),
-    confirmed: t('appointments.confirmed'),
-    completed: t('appointments.completed'),
-    cancelled: t('appointments.cancelledStatus'),
+    pending:              t('appointments.pending'),
+    confirmed:            t('appointments.confirmed'),
+    checked_in:           t('appointments.checkedIn'),
+    in_progress:          t('appointments.inProgress'),
+    completed:            t('appointments.completed'),
+    cancelled:            t('appointments.cancelledStatus'),
+    no_show:              t('appointments.noShow'),
+    expired:              t('appointments.expired'),
+    pending_cancellation: t('appointments.pendingCancellation'),
   };
 
   const handleMarkComplete = () => {
@@ -84,6 +89,48 @@ export default function DoctorAppointmentDetailScreen() {
         onPress: async () => {
           try {
             await bookingsService.markCompleted(booking.id);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            router.back();
+          } catch {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Alert.alert(t('common.error'), t('common.error'));
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleStartSession = () => {
+    Alert.alert(t('doctor.startSession'), '', [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.confirm'),
+        onPress: async () => {
+          try {
+            await bookingsService.startSession(booking.id);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            // Reload booking
+            bookingsService.getById(booking.id).then((res) => {
+              if (res.data) setBooking(res.data);
+            });
+          } catch {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Alert.alert(t('common.error'), t('common.error'));
+          }
+        },
+      },
+    ]);
+  };
+
+  const handlePractitionerCancel = () => {
+    Alert.alert(t('doctor.cancelBooking'), t('doctor.cancelConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.confirm'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await bookingsService.practitionerCancel(booking.id);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             router.back();
           } catch {
@@ -140,7 +187,18 @@ export default function DoctorAppointmentDetailScreen() {
 
         {/* Actions */}
         <View style={styles.actions}>
-          {booking.status === 'confirmed' && (
+          {booking.status === 'checked_in' && (
+            <ThemedButton
+              onPress={handleStartSession}
+              variant="primary"
+              size="lg"
+              full
+              icon={<Check size={16} color="#FFF" />}
+            >
+              {t('doctor.startSession')}
+            </ThemedButton>
+          )}
+          {booking.status === 'in_progress' && (
             <ThemedButton
               onPress={handleMarkComplete}
               variant="secondary"
@@ -149,6 +207,16 @@ export default function DoctorAppointmentDetailScreen() {
               icon={<Check size={16} color="#FFF" />}
             >
               {t('doctor.markCompleted')}
+            </ThemedButton>
+          )}
+          {(booking.status === 'confirmed' || booking.status === 'checked_in') && (
+            <ThemedButton
+              onPress={handlePractitionerCancel}
+              variant="ghost"
+              size="lg"
+              full
+            >
+              {t('doctor.cancelBooking')}
             </ThemedButton>
           )}
           {booking.type === 'online' && booking.zoomLink && (

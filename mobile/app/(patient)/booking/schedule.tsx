@@ -19,11 +19,6 @@ import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
 import { practitionersService } from '@/services/practitioners';
 
-const SAMPLE_SLOTS = [
-  '09:00', '09:30', '10:00', '10:30', '11:00',
-  '11:30', '02:00', '02:30', '03:00', '03:30', '04:00',
-];
-
 export default function BookingScheduleScreen() {
   const { practitionerId, type } = useLocalSearchParams<{
     practitionerId: string;
@@ -36,7 +31,7 @@ export default function BookingScheduleScreen() {
 
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
-  const [slots, setSlots] = useState<string[]>(SAMPLE_SLOTS);
+  const [slots, setSlots] = useState<string[]>([]);
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
   const today = new Date().toISOString().split('T')[0];
@@ -48,7 +43,7 @@ export default function BookingScheduleScreen() {
         .then((res) => {
           if (res.data?.slots?.length) setSlots(res.data.slots);
         })
-        .catch(() => setSlots(SAMPLE_SLOTS));
+        .catch(() => setSlots([]));
     }
   }, [selectedDate, practitionerId]);
 

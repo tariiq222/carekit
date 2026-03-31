@@ -6,6 +6,7 @@ import {
   RefreshControl,
   StyleSheet,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
   Stethoscope,
@@ -43,13 +44,14 @@ export default function TodayScreen() {
   const insets = useSafeAreaInsets();
   const { theme, isRTL } = useTheme();
   const user = useAppSelector((s) => s.auth.user);
+  const router = useRouter();
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
-      const res = await bookingsService.getAll({ status: ['pending', 'confirmed', 'completed'] });
+      const res = await bookingsService.getTodayBookings();
       if (res.data) setBookings(res.data.items);
     } catch {
       setBookings([]);
@@ -131,7 +133,10 @@ export default function TodayScreen() {
             ? `${item.patient.firstName} ${item.patient.lastName}`
             : t('doctor.patientRecord');
           return (
-            <Pressable style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
+            <Pressable
+              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+              onPress={() => router.push(`/(practitioner)/appointment/${item.id}`)}
+            >
               <ThemedCard style={styles.timelineCard}>
                 <View style={styles.timelineRow}>
                   <View style={[styles.timelineDot, { backgroundColor: `${color}14` }]}>
