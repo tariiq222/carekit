@@ -126,17 +126,17 @@ export default function PatientProfileScreen() {
           <MenuItem
             icon={User}
             label={t('profile.personalInfo')}
-            onPress={() => {}}
+            onPress={() => router.push('/(patient)/settings')}
           />
           <MenuItem
             icon={CreditCard}
             label={t('profile.payments')}
-            onPress={() => {}}
+            onPress={() => Alert.alert(t('common.comingSoon'), t('profile.paymentsComingSoon'))}
           />
           <MenuItem
             icon={Bell}
             label={t('profile.notifications')}
-            onPress={() => {}}
+            onPress={() => Alert.alert(t('common.comingSoon'), t('profile.notificationsComingSoon'))}
           />
           <MenuItem
             icon={Settings}
@@ -147,7 +147,7 @@ export default function PatientProfileScreen() {
             icon={Globe}
             label={t('profile.language')}
             value={t('profile.arabic')}
-            onPress={() => {}}
+            onPress={() => Alert.alert(t('common.comingSoon'), t('profile.languageComingSoon'))}
           />
         </View>
 
@@ -155,22 +155,22 @@ export default function PatientProfileScreen() {
           <MenuItem
             icon={Info}
             label={t('profile.about')}
-            onPress={() => {}}
+            onPress={() => Alert.alert(t('common.comingSoon'), t('profile.aboutComingSoon'))}
           />
           <MenuItem
             icon={HelpCircle}
             label={t('profile.faq')}
-            onPress={() => {}}
+            onPress={() => Alert.alert(t('common.comingSoon'), t('profile.faqComingSoon'))}
           />
           <MenuItem
             icon={Shield}
             label={t('profile.privacy')}
-            onPress={() => {}}
+            onPress={() => Alert.alert(t('common.comingSoon'), t('profile.privacyComingSoon'))}
           />
           <MenuItem
             icon={FileText}
             label={t('profile.terms')}
-            onPress={() => {}}
+            onPress={() => Alert.alert(t('common.comingSoon'), t('profile.termsComingSoon'))}
           />
         </View>
 
