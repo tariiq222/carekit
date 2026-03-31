@@ -39,6 +39,7 @@ export class PractitionersService {
     minRating?: number;
     isActive?: boolean;
     branchId?: string;
+    serviceId?: string;
   }) {
     const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage, 100);
     const allowedSortFields = ['rating', 'reviewCount', 'experience', 'createdAt'];
@@ -65,6 +66,10 @@ export class PractitionersService {
 
     if (params?.branchId) {
       where.branches = { some: { branchId: params.branchId } };
+    }
+
+    if (params?.serviceId) {
+      where.services = { some: { serviceId: params.serviceId } };
     }
 
     if (params?.search) {

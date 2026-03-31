@@ -67,4 +67,9 @@ export class GetPractitionersQueryDto {
   @IsOptional()
   @IsUUID()
   branchId?: string;
+
+  @ApiPropertyOptional({ format: 'uuid', description: 'Filter practitioners who offer this service' })
+  @IsOptional()
+  @IsUUID()
+  serviceId?: string;
 }
