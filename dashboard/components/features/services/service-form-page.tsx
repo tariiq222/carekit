@@ -17,6 +17,7 @@ import { BasicInfoTab } from "@/components/features/services/create/basic-info-t
 import { PricingTab } from "@/components/features/services/create/pricing-tab"
 import { BookingSettingsTab } from "@/components/features/services/create/booking-settings-tab"
 import { IntakeFormsTab } from "@/components/features/services/intake-forms-tab"
+import { ServicePractitionersTab } from "@/components/features/services/service-practitioners-tab"
 import {
   createServiceSchema,
   createServiceDefaults,
@@ -105,7 +106,6 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
       isHidden: service.isHidden,
       hidePriceOnBooking: service.hidePriceOnBooking,
       hideDurationOnBooking: service.hideDurationOnBooking,
-      calendarColor: service.calendarColor ?? null,
       iconName: service.iconName ?? null,
       iconBgColor: service.iconBgColor ?? null,
       imageUrl: service.imageUrl ?? null,
@@ -159,6 +159,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
         const created = await createMut.mutateAsync({
           ...buildPayload(data),
           practitionerIds: pendingPractitionerIds.length > 0 ? pendingPractitionerIds : undefined,
+          branchIds: data.branchIds?.length ? data.branchIds : undefined,
         })
 
         if (pendingAvatarFile.current) {
@@ -251,6 +252,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
               <TabsTrigger value="basic" className="text-xs sm:text-sm">{t("services.create.tabs.basic")}</TabsTrigger>
               <TabsTrigger value="pricing" className="text-xs sm:text-sm">{t("services.create.tabs.pricing")}</TabsTrigger>
               <TabsTrigger value="booking" className="text-xs sm:text-sm">{t("services.create.tabs.booking")}</TabsTrigger>
+              <TabsTrigger value="practitioners" className="text-xs sm:text-sm">{t("services.tabs.practitioners")}</TabsTrigger>
               <TabsTrigger value="intake" className="text-xs sm:text-sm">
                 {t("services.tabs.intake")}
               </TabsTrigger>
@@ -263,9 +265,6 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
               onImageSelect={(file) => { pendingAvatarFile.current = file }}
               serviceId={serviceId}
               serviceBranches={service?.branches}
-              isCreate={!isEdit}
-              pendingPractitionerIds={pendingPractitionerIds}
-              onPendingPractitionerChange={setPendingPractitionerIds}
             />
           </TabsContent>
 
@@ -280,11 +279,20 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
             <BookingSettingsTab form={form} />
           </TabsContent>
 
+          <TabsContent value="practitioners" className="pt-4">
+            <ServicePractitionersTab
+              serviceId={serviceId}
+              isCreate={!isEdit}
+              pendingIds={pendingPractitionerIds}
+              onPendingChange={setPendingPractitionerIds}
+            />
+          </TabsContent>
+
           <TabsContent value="intake" className="pt-4">
             {isEdit && serviceId ? (
               <IntakeFormsTab serviceId={serviceId} />
             ) : (
-              <div className="rounded-lg border border-border bg-surface-muted p-6 flex flex-col gap-3">
+              <div className="rounded-lg border border-border bg-surface-muted p-6 flex flex-col gap-4">
                 <p className="text-sm font-semibold text-foreground">{t("services.intake.createHint.title")}</p>
                 <p className="text-sm text-muted-foreground">
                   {t("services.intake.createHint.desc")}{" "}
@@ -293,13 +301,20 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
                   </span>{" "}
                   {t("services.intake.createHint.descSuffix")}
                 </p>
+                <div className="border-t border-border pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    {locale === "ar"
+                      ? "بعد إنشاء الخدمة، ستجد خيار ربط النماذج في صفحة تعديل الخدمة."
+                      : "After creating the service, you can link forms from the service edit page."}
+                  </p>
+                </div>
               </div>
             )}
           </TabsContent>
 
         </Tabs>
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <div className="sticky bottom-0 z-10 -mx-4 sm:-mx-6 border-t border-border bg-background/80 backdrop-blur-sm px-4 sm:px-6 py-3 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={() => router.push("/services")}>
             {t(isEdit ? "services.edit.cancel" : "services.create.cancel")}
           </Button>
