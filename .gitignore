@@ -69,3 +69,6 @@ docs/screenshots/
 /.next/
 /.expo/
 .worktrees/
+
+# Maestro System
+.opencode/maestro-memory.db

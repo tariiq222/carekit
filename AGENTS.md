@@ -1,70 +1,28 @@
-# CareKit — Agent Team Configuration
+# CareKit — Project Rules
 
-## Default Workflow
+## Project Info
+- **Type:** White-label clinic management platform
+- **Stack:** React Native (Expo SDK 55) + Next.js Dashboard + NestJS Backend
+- **Database:** PostgreSQL + Prisma
+- **Design System:** Indigo #354FD8, Apple Green #82CC17, IBM Plex Sans Arabic
+- **Language:** Bilingual AR/EN, RTL-first
 
-Agent Team is **mandatory** for any task touching 2+ files.
-3 teammates maximum per team. Lead coordinates only — does not write code.
+## Code Conventions
+- Backend: NestJS modules in src/modules/{module-name}/
+- Frontend Mobile: Expo components in src/components/
+- Frontend Dashboard: Next.js pages in src/app/
+- State: Redux Toolkit + RTK Query
+- Styling: NativeWind v4 (mobile), Tailwind (dashboard)
+- Auth: JWT with refresh tokens
+- Validation: class-validator + class-transformer
 
----
+## Testing
+- Unit: Jest
+- E2E: Supertest (backend), Detox (mobile)
+- Coverage target: 85%+
 
-## Standard 3-Teammate Split
-
-```
-maestro (Lead)
-  Coordinates, reviews quality, enforces 350-line rule, approves deliveries
-  ├── backend-dev
-  │   Owns: backend/**
-  │   Tools: NestJS modules, Prisma queries, DTOs, guards, BullMQ jobs
-  │   Rules: No any, migrations immutable, tests before commit
-  ├── dashboard-dev
-  │   Owns: dashboard/**
-  │   Tools: Next.js App Router, TanStack Query, shadcn/ui, Tailwind 4
-  │   Rules: Layer rules (app→components→hooks→lib), DS compliance, RTL
-  └── mobile-dev
-      Owns: mobile/**
-      Tools: Expo Router, Redux Toolkit, React Native components
-      Rules: Patient/Practitioner split, i18n via i18next
-```
-
-## When to use 2-teammate variant
-
-If the task is backend-only or dashboard-only, use:
-```
-maestro (Lead)
-  ├── backend-dev OR dashboard-dev OR mobile-dev   (primary implementer)
-  └── qa-engineer                                   (tests + validation)
-```
-
-## Special-purpose agents
-
-| Agent | Use when |
-|-------|----------|
-| `ai-engineer` | Chatbot, RAG pipeline, knowledge base, streaming |
-| `frontend-architect` | Designing new page structure or component hierarchy |
-| `feature-dev:code-explorer` | Tracing unfamiliar code paths before implementing |
-| `feature-dev:code-reviewer` | Pre-commit review for sensitive modules |
-
-## File Ownership (hard boundaries)
-
-| Path | Owner | Cross-boundary? |
-|------|-------|-----------------|
-| `backend/prisma/schema/**` | backend-dev | maestro approval required |
-| `backend/prisma/migrations/**` | backend-dev | maestro approval, immutable |
-| `backend/src/modules/auth/**` | backend-dev | owner (@tariq) review |
-| `backend/src/modules/payments/**` | backend-dev | owner (@tariq) review |
-| `backend/src/modules/zatca/**` | backend-dev | owner (@tariq) review |
-| `dashboard/app/**` | dashboard-dev | orchestration only |
-| `dashboard/components/ui/**` | dashboard-dev | shadcn — do not modify |
-| `dashboard/lib/**` | dashboard-dev | no UI imports allowed |
-| `mobile/**` | mobile-dev | — |
-| `shared/**` | maestro | all teammates read, maestro writes |
-
-## Delivery Checklist (per teammate)
-
-Before handing off to Lead for review:
-- [ ] `npm run test` passes (or `npm run test:cov` for backend)
-- [ ] No `any` types introduced
-- [ ] No file exceeds 350 lines
-- [ ] Imports follow layer rules (dashboard) or module boundaries (backend)
-- [ ] New migrations are forward-only (no modifications to existing)
-- [ ] Sensitive modules flagged for owner review
+## Important Rules
+- Every API endpoint must have Swagger documentation
+- Every new module needs: controller, service, dto, entity, spec
+- RBAC via CASL — check permissions before every operation
+- Arabic content: IBM Plex Sans Arabic, RTL alignment
