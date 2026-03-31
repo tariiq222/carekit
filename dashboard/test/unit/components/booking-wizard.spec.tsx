@@ -34,10 +34,11 @@ vi.mock("@/lib/api/widget", () => ({
   fetchWidgetPractitionerServices: vi.fn().mockResolvedValue([]),
   fetchWidgetServiceTypes: vi.fn().mockResolvedValue([]),
   fetchWidgetSlots: vi.fn().mockResolvedValue([]),
+  fetchWidgetServices: vi.fn().mockResolvedValue({ items: [], meta: { total: 0 } }),
   widgetCreateBooking: vi.fn(),
 }))
 
-import { BookingWizard, postToHost } from "@/components/features/bookinging-wizard"
+import { BookingWizard, postToHost } from "@/components/features/widget/booking-wizard"
 
 function Wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -56,11 +57,11 @@ function renderWizard(props: { parentOrigin?: string } = {}) {
 
 describe("postToHost", () => {
   let postMessageSpy: ReturnType<typeof vi.fn>
-  let originalParent: typeof window
+  let originalParent: Window & typeof globalThis
 
   beforeEach(() => {
     postMessageSpy = vi.fn()
-    originalParent = window.parent
+    originalParent = window.parent as Window & typeof globalThis
     // Simulate being inside an iframe: window.parent !== window
     Object.defineProperty(window, "parent", {
       value: { postMessage: postMessageSpy },

@@ -1,11 +1,6 @@
 "use client"
 
-/**
- * Widget Service Step — Select practitioner+service+booking type
- * Supports two flow orders:
- *   practitioner_first: practitioners → services → booking type
- *   service_first:      services → practitioners → booking type
- */
+// Widget Service Step — supports practitioner_first and service_first flows
 
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -76,14 +71,12 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     .filter((st) => st.isActive && st.bookingType !== "walk_in")
     .map((st) => st.bookingType as Exclude<BookingType, "walk_in">)
 
-  function handleServiceSelect(svc: Service) {
-    if (!selectedType) return
-    selectService(svc, selectedType as BookingType)
+  function handleServiceSelect(svc: Service | null) {
+    if (!selectedType || !svc) return
+    selectService(svc, selectedType)
   }
 
-  /* ══════════════════════════════════════════════
-     PRACTITIONER FIRST flow (original behavior)
-  ══════════════════════════════════════════════ */
+  /* ─── practitioner_first flow ─── */
 
   if (flowOrder === "practitioner_first") {
     /* Step 1: Select Practitioner */
@@ -171,9 +164,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     }
   }
 
-  /* ══════════════════════════════════════════════
-     SERVICE FIRST flow (new behavior)
-  ══════════════════════════════════════════════ */
+  /* ─── service_first flow ─── */
 
   if (flowOrder === "service_first") {
     /* Step 1: Select Service */
@@ -261,9 +252,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     }
   }
 
-  /* ══════════════════════════════════════════════
-     SHARED: Select Booking Type (both flows)
-  ══════════════════════════════════════════════ */
+  /* ─── Shared: booking type selection (both flows) ─── */
 
   return (
     <div className="space-y-3">
@@ -300,7 +289,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
       <Button
         className="w-full"
         disabled={!selectedType}
-        onClick={() => handleServiceSelect(state.service!)}
+        onClick={() => handleServiceSelect(state.service)}
       >
         {isRtl ? "التالي" : "Next"}
       </Button>

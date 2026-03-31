@@ -12,16 +12,9 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { useQuery, useMutation } from "@tanstack/react-query"
-import {
-  fetchWidgetPractitioners,
-  fetchWidgetPractitionerServices,
-  fetchWidgetSlots,
-  fetchWidgetServiceTypes,
-  fetchWidgetServices,
-  widgetCreateBooking,
-} from "@/lib/api/widget"
-import { queryKeys } from "@/lib/query-keys"
+import { useMutation } from "@tanstack/react-query"
+import { widgetCreateBooking } from "@/lib/api/widget"
+import { useWidgetBookingQueries, useWidgetSlotsQuery } from "./use-widget-booking-queries"
 import type { Practitioner, PractitionerDurationOption, TimeSlot } from "@/lib/types/practitioner"
 import type { Service } from "@/lib/types/service"
 import type { BookingType, Booking } from "@/lib/types/booking"
@@ -60,69 +53,22 @@ export function useWidgetBooking(
     booking: null,
   })
 
-  /* ─── practitioner_first: fetch all practitioners upfront ─── */
-  const { data: practitionersData, isLoading: practitionersLoading } = useQuery({
-    queryKey: queryKeys.practitioners.list({ isActive: true }),
-    queryFn: () => fetchWidgetPractitioners({ perPage: 20 }),
-    enabled: flowOrder === "practitioner_first",
-    staleTime: 5 * 60 * 1000,
-  })
+  const queries = useWidgetBookingQueries(state, flowOrder)
 
-  /* ─── practitioner_first: fetch services for selected practitioner ─── */
-  const { data: services = [], isLoading: servicesLoading } = useQuery({
-    queryKey: queryKeys.practitioners.services(state.practitioner?.id ?? ""),
-    queryFn: () => fetchWidgetPractitionerServices(state.practitioner!.id),
-    enabled: flowOrder === "practitioner_first" && !!state.practitioner,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  /* ─── service_first: fetch all services upfront ─── */
-  const { data: servicesData, isLoading: allServicesLoading } = useQuery({
-    queryKey: ["widget-services-all"],
-    queryFn: fetchWidgetServices,
-    enabled: flowOrder === "service_first",
-    staleTime: 5 * 60 * 1000,
-  })
-
-  /* ─── service_first: fetch practitioners filtered by selected service ─── */
-  const { data: filteredPractitionersData, isLoading: filteredPractitionersLoading } = useQuery({
-    queryKey: queryKeys.practitioners.list({ isActive: true, serviceId: state.service?.id }),
-    queryFn: () => fetchWidgetPractitioners({ perPage: 20, serviceId: state.service!.id }),
-    enabled: flowOrder === "service_first" && !!state.service,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  /* ─── Fetch service types (for booking type selection) ─── */
-  const { data: serviceTypes = [] } = useQuery({
-    queryKey: queryKeys.practitioners.serviceTypes(
-      state.practitioner?.id ?? "",
-      state.service?.id ?? "",
-    ),
-    queryFn: () =>
-      fetchWidgetServiceTypes(state.practitioner!.id, state.service!.id),
-    enabled: !!state.practitioner && !!state.service,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  /* ─── Duration options for selected type ─── */
+  const { serviceTypes } = queries
   const activeServiceType = serviceTypes.find(
     (st) => st.bookingType === state.bookingType && st.isActive,
   )
   const durationOptions: PractitionerDurationOption[] =
     activeServiceType?.durationOptions ?? []
 
-  /* ─── Fetch slots ─── */
   const canFetchSlots =
     !!state.practitioner && !!state.date &&
     (!durationOptions.length || !!state.durationOption)
 
   const resolvedDuration = state.durationOption?.durationMinutes ?? undefined
 
-  const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: [...queryKeys.practitioners.slots(state.practitioner?.id ?? "", state.date), resolvedDuration],
-    queryFn: () => fetchWidgetSlots(state.practitioner!.id, state.date, resolvedDuration),
-    enabled: canFetchSlots,
-  })
+  const { slots, slotsLoading } = useWidgetSlotsQuery(state, canFetchSlots, resolvedDuration)
 
   /* ─── Create booking mutation ─── */
   const createMut = useMutation({
@@ -204,18 +150,7 @@ export function useWidgetBooking(
     state,
     setState,
     flowOrder,
-    // practitioner_first data
-    practitionersData,
-    practitionersLoading,
-    services,
-    servicesLoading,
-    // service_first data
-    allServices: servicesData?.items ?? [],
-    allServicesLoading,
-    filteredPractitionersData,
-    filteredPractitionersLoading,
-    // shared
-    serviceTypes,
+    ...queries,
     durationOptions,
     slots,
     slotsLoading,
