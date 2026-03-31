@@ -27,13 +27,13 @@ export function WizardCard({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'group relative w-full rounded-xl border border-border bg-surface',
-        'px-4 py-3 text-right transition-all duration-150',
-        'hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm',
-        'active:scale-[0.98]',
+        'group relative w-full rounded-2xl border border-border bg-surface',
+        'px-5 py-4 text-right transition-all duration-150',
+        'hover:border-primary/60 hover:bg-primary/5 hover:shadow-md',
+        'active:scale-[0.97]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-40',
-        selected && 'border-primary bg-primary/8 ring-1 ring-primary/30',
+        selected && 'border-primary bg-primary/10 ring-2 ring-primary/20 shadow-sm',
         className,
       )}
     >

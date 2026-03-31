@@ -67,7 +67,7 @@ export function StepDatetime({
     <div className="flex flex-col gap-6">
       {/* Day strip */}
       <div>
-        <p className="mb-3 text-sm font-medium text-muted-foreground">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {t('bookings.wizard.step.datetime.dayTitle')}
         </p>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -82,15 +82,15 @@ export function StepDatetime({
                 type="button"
                 onClick={() => onSelectDate(iso)}
                 className={cn(
-                  'flex min-w-[64px] flex-col items-center gap-1 rounded-xl border border-border bg-surface px-3 py-2',
+                  'flex min-w-[72px] flex-col items-center gap-1 rounded-2xl border border-border bg-surface px-4 py-3',
                   'text-center transition-all duration-150',
-                  'hover:border-primary/40 hover:bg-primary/5',
+                  'hover:border-primary/60 hover:bg-primary/5',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-                  isSelected && 'border-primary bg-primary/8 ring-1 ring-primary/30',
+                  isSelected && 'border-primary bg-primary/10 ring-2 ring-primary/20 shadow-sm',
                 )}
               >
                 <span className="text-xs text-muted-foreground">{weekday}</span>
-                <span className={cn('text-sm font-semibold', isSelected && 'text-primary')}>
+                <span className={cn('text-base font-bold', isSelected && 'text-primary')}>
                   {dayMonth}
                 </span>
               </button>
@@ -102,7 +102,7 @@ export function StepDatetime({
       {/* Time slots */}
       {selectedDate && (
         <div>
-          <p className="mb-3 text-sm font-medium text-muted-foreground">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {t('bookings.wizard.step.datetime.timeTitle')}
           </p>
 
@@ -123,7 +123,7 @@ export function StepDatetime({
                   key={slot.startTime}
                   onClick={() => onSelectTime(slot.startTime)}
                   selected={slot.startTime === selectedTime}
-                  className="flex items-center justify-center py-2 text-sm font-medium"
+                  className="flex items-center justify-center py-3 text-base font-semibold"
                 >
                   {slot.startTime}
                 </WizardCard>

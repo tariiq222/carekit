@@ -51,7 +51,7 @@ export function BookingFilters({
 
   return (
     <div className="glass rounded-lg p-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Tab Pills — V1 style */}
         <div className="flex items-center gap-1 rounded-md bg-muted p-1">
           {timeTabs.map((tab) => (
@@ -70,7 +70,7 @@ export function BookingFilters({
         </div>
 
         {/* Filter Chips */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <Select
             value={type}
             onValueChange={(v) => onTypeChange(v as BookingType | "all")}

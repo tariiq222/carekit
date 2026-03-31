@@ -79,18 +79,18 @@ function TypeCard({
   const label = getTypeLabel(type, t)
 
   return (
-    <WizardCard onClick={onSelect} selected={selected} className="py-4">
+    <WizardCard onClick={onSelect} selected={selected} className="py-6">
       <div className="flex flex-col items-center gap-2">
-        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+        <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10">
           {meta ? (
             <HugeiconsIcon
               icon={meta.icon}
-              size={20}
+              size={26}
               className="text-primary"
             />
           ) : null}
         </div>
-        <span className="text-xs font-medium text-foreground leading-tight text-center">
+        <span className="text-sm font-bold text-foreground leading-tight text-center">
           {label}
         </span>
       </div>
@@ -117,16 +117,16 @@ function DurationCard({
   const price = Math.floor(option.price / 100)
 
   return (
-    <WizardCard onClick={onSelect} selected={selected} className="py-4">
+    <WizardCard onClick={onSelect} selected={selected} className="py-5">
       <div className="flex flex-col items-center gap-1">
-        <span className="text-sm font-semibold text-foreground">
+        <span className="text-base font-bold text-foreground">
           {label}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           {option.durationMinutes} {t("bookings.wizard.step.typeDuration.minutes")}
         </span>
         {option.price > 0 && (
-          <span className="text-xs text-primary font-medium">
+          <span className="text-sm text-primary font-semibold">
             {price} {t("bookings.wizard.step.service.currency")}
           </span>
         )}
@@ -193,7 +193,7 @@ export function StepTypeDuration({
     <div className="flex flex-col gap-5">
       {/* Type section */}
       <div className="flex flex-col gap-3">
-        <p className="text-sm font-semibold text-foreground">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
           {t("bookings.wizard.step.typeDuration.typeTitle")}
         </p>
         <div className="grid grid-cols-3 gap-2">
@@ -212,7 +212,7 @@ export function StepTypeDuration({
       {/* Duration section — only after type selected and options exist */}
       {selectedType && durationOptions.length > 0 && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
             {t("bookings.wizard.step.typeDuration.durationTitle")}
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

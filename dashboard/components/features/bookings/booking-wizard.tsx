@@ -39,10 +39,10 @@ function StepDots({ current, total }: { current: number; total: number }) {
           className={cn(
             "block rounded-full transition-all duration-200",
             i + 1 === current
-              ? "h-2 w-6 bg-primary"
+              ? "h-2.5 w-8 bg-primary"
               : i + 1 < current
-              ? "h-2 w-2 bg-primary/40"
-              : "h-2 w-2 bg-border",
+              ? "h-2.5 w-2.5 bg-primary/50"
+              : "h-2.5 w-2.5 bg-border",
           )}
         />
       ))}
@@ -73,9 +73,11 @@ function useStepTitle(step: WizardStep, flowOrder: BookingFlowOrder, t: (k: stri
 function WizardInner({
   flowOrder,
   onSuccess,
+  onClose,
 }: {
   flowOrder: BookingFlowOrder
   onSuccess: () => void
+  onClose: () => void
 }) {
   const { t } = useLocale()
   const wizard = useWizardState(flowOrder)
@@ -114,28 +116,28 @@ function WizardInner({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Header row: back + title + change patient */}
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col">
+      {/* ── Sticky header ── */}
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+        {/* Left: back button or close */}
         {state.step > 1 ? (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            type="button"
-            onClick={wizard.goBack}
-            className="shrink-0"
-          >
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
+          <Button variant="ghost" size="icon-sm" type="button" onClick={wizard.goBack} className="shrink-0">
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
             <span className="sr-only">{t("bookings.wizard.back")}</span>
           </Button>
         ) : (
-          <div className="size-8" />
+          <Button variant="ghost" size="icon-sm" type="button" onClick={onClose} className="shrink-0">
+            <span className="text-base leading-none">✕</span>
+            <span className="sr-only">{t("bookings.wizard.close")}</span>
+          </Button>
         )}
 
-        <p className="flex-1 text-center text-sm font-semibold text-foreground">
+        {/* Center: step title */}
+        <p className="flex-1 text-center text-base font-bold text-foreground">
           {stepTitle}
         </p>
 
+        {/* Right: change patient or spacer */}
         {state.step > 1 ? (
           <Button
             variant="ghost"
@@ -148,15 +150,17 @@ function WizardInner({
             {t("bookings.wizard.changePatient")}
           </Button>
         ) : (
-          <div className="w-[80px]" />
+          <div className="w-[88px]" />
         )}
       </div>
 
-      {/* Step dots */}
-      <StepDots current={state.step} total={6} />
+      {/* ── Step dots ── */}
+      <div className="px-5 pt-5 pb-1">
+        <StepDots current={state.step} total={6} />
+      </div>
 
-      {/* Step content */}
-      <div className="min-h-[200px]">
+      {/* ── Step content ── */}
+      <div className="px-5 pt-4 pb-6 min-h-[280px] overflow-y-auto max-h-[calc(90vh-140px)]">
         {state.step === 1 && (
           <PatientStep onSelect={wizard.selectPatient} />
         )}
@@ -224,7 +228,7 @@ function WizardInner({
 
 /* ─── Outer wrapper — fetches flow order ─── */
 
-export function BookingWizard({ onSuccess, onClose: _onClose }: BookingWizardProps) {
+export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
   const { data: flowOrder = "service_first", isLoading } = useQuery({
     queryKey: queryKeys.clinicSettings.bookingFlowOrder(),
     queryFn: fetchBookingFlowOrder,
@@ -247,5 +251,5 @@ export function BookingWizard({ onSuccess, onClose: _onClose }: BookingWizardPro
     )
   }
 
-  return <WizardInner flowOrder={flowOrder} onSuccess={onSuccess} />
+  return <WizardInner flowOrder={flowOrder} onSuccess={onSuccess} onClose={onClose} />
 }

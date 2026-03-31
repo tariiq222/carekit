@@ -4,6 +4,12 @@
  * Matches the backend Prisma schema + API response shapes.
  */
 
+/**
+ * Source of truth: shared/enums/booking.ts (TypeScript enums, UPPER_CASE)
+ * Dashboard uses string union types (snake_case) for direct JSON compatibility.
+ * Keep these in sync with the Prisma schema and shared/enums/booking.ts.
+ */
+
 /* ─── Enums ─── */
 
 export type BookingType =
@@ -24,7 +30,7 @@ export type BookingStatus =
 
 export type RefundType = "full" | "partial" | "none"
 
-export type CancelledBy = "patient" | "admin" | "system"
+export type CancelledBy = "patient" | "practitioner" | "admin" | "system"
 
 /* ─── Entities ─── */
 
@@ -55,7 +61,7 @@ export interface BookingService {
 export interface BookingPayment {
   id: string
   amount: number
-  method: "mada" | "apple_pay" | "card" | "bank_transfer" | "cash"
+  method: "moyasar" | "bank_transfer" | "cash"
   status: "pending" | "awaiting" | "paid" | "failed" | "refunded" | "rejected"
   totalAmount: number
 }
@@ -179,4 +185,8 @@ export interface BookingStats {
   completed: number
   cancelled: number
   pendingCancellation: number
+  checkedIn: number
+  inProgress: number
+  noShow: number
+  expired: number
 }

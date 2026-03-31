@@ -149,3 +149,21 @@ export async function patientReschedule(
     payload,
   )
 }
+
+/* ─── Status Log ─── */
+
+export interface BookingStatusLogEntry {
+  id: string
+  bookingId: string
+  fromStatus: string | null
+  toStatus: string
+  changedBy: string | null
+  reason: string | null
+  createdAt: string
+}
+
+export async function fetchBookingStatusLog(
+  bookingId: string,
+): Promise<BookingStatusLogEntry[]> {
+  return api.get<BookingStatusLogEntry[]>(`/bookings/${bookingId}/status-log`)
+}

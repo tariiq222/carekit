@@ -23,9 +23,10 @@ import type { Booking, CancelledBy } from "@/lib/types/booking"
 /* ── CancelledByBadge ── */
 
 const cancelledByStyles: Record<CancelledBy, string> = {
-  patient: "border-warning/30 bg-warning/10 text-warning",
-  admin:   "border-primary/30 bg-primary/10 text-primary",
-  system:  "border-border bg-surface-muted text-muted-foreground",
+  patient:      "border-warning/30 bg-warning/10 text-warning",
+  practitioner: "border-success/30 bg-success/10 text-success",
+  admin:        "border-primary/30 bg-primary/10 text-primary",
+  system:       "border-border bg-surface-muted text-muted-foreground",
 }
 
 export function CancelledByBadge({ cancelledBy, t }: { cancelledBy: CancelledBy; t: (key: string) => string }) {

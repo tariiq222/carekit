@@ -26,16 +26,16 @@ function PatientRow({ patient, onSelect }: { patient: Patient; onSelect: () => v
     <button
       type="button"
       onClick={onSelect}
-      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start transition-colors hover:bg-surface-muted group"
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-start transition-colors hover:bg-primary/5 group"
     >
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
         {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">
+        <p className="text-sm font-semibold text-foreground truncate">
           {patient.firstName} {patient.lastName}
         </p>
-        <p className="text-xs font-numeric text-muted-foreground mt-0.5">{patient.phone}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{patient.phone}</p>
       </div>
       <HugeiconsIcon
         icon={CheckmarkCircle01Icon}
@@ -62,10 +62,10 @@ export function PatientStep({ onSelect }: PatientStepProps) {
   return (
     <Tabs value={mode} onValueChange={(v) => setMode(v as "search" | "create")} className="flex flex-col gap-3">
 
-      <div className="flex justify-start">
-        <TabsList className="h-8 p-0.5">
-          <TabsTrigger value="search" className="h-7 px-3 text-xs">{t("bookings.patient.tab.search")}</TabsTrigger>
-          <TabsTrigger value="create" className="h-7 px-3 text-xs">{t("bookings.patient.tab.create")}</TabsTrigger>
+      <div className="flex justify-center">
+        <TabsList className="h-10 p-1 w-full">
+          <TabsTrigger value="search" className="flex-1 h-8 text-sm font-medium">{t("bookings.patient.tab.search")}</TabsTrigger>
+          <TabsTrigger value="create" className="flex-1 h-8 text-sm font-medium">{t("bookings.patient.tab.create")}</TabsTrigger>
         </TabsList>
       </div>
 

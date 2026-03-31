@@ -28,10 +28,10 @@ interface SummaryRowProps {
 
 function SummaryRow({ label, value, onEdit }: SummaryRowProps) {
   return (
-    <div className="flex items-center justify-between gap-3 py-3">
+    <div className="flex items-center justify-between gap-3 py-4">
       <span className="text-sm text-muted-foreground">{label}</span>
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-foreground text-end">{value}</span>
+        <span className="text-sm font-semibold text-foreground text-end">{value}</span>
         <Button
           variant="ghost"
           size="icon-sm"
@@ -61,7 +61,7 @@ function PayAtClinicOption({ selected, label, description, onSelect }: PayAtClin
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center gap-3 rounded-xl border p-4 text-start transition-all",
+        "flex w-full items-center gap-3 rounded-xl border p-5 text-start transition-all",
         selected
           ? "border-primary/40 bg-primary/5"
           : "border-border bg-surface hover:bg-muted/50",
@@ -70,18 +70,18 @@ function PayAtClinicOption({ selected, label, description, onSelect }: PayAtClin
       {/* Radio indicator */}
       <div
         className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
+          "flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-all",
           selected ? "border-primary" : "border-muted-foreground/40",
         )}
       >
         {selected && (
-          <div className="size-2.5 rounded-full bg-primary" />
+          <div className="size-3 rounded-full bg-primary" />
         )}
       </div>
 
       <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-semibold text-foreground">{label}</span>
-        <span className="text-xs text-muted-foreground">{description}</span>
+        <span className="text-base font-semibold text-foreground">{label}</span>
+        <span className="text-sm text-muted-foreground">{description}</span>
       </div>
     </button>
   )
@@ -132,7 +132,10 @@ export function StepConfirm({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Summary card */}
+      {/* Summary section */}
+      <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        {t("bookings.wizard.step.confirm.summaryHeader")}
+      </p>
       <div className="rounded-xl border border-border bg-surface px-4">
         <SummaryRow
           label={t("bookings.wizard.step.confirm.patient")}
@@ -165,7 +168,10 @@ export function StepConfirm({
         />
       </div>
 
-      {/* Pay at clinic toggle */}
+      {/* Payment section */}
+      <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        {t("bookings.wizard.step.confirm.paymentHeader")}
+      </p>
       <PayAtClinicOption
         selected={state.payAtClinic}
         label={t("bookings.wizard.step.confirm.payAtClinic")}

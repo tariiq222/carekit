@@ -237,6 +237,9 @@ export const arBookings: Record<string, string> = {
   "bookings.wizard.step.confirm.submit": "إنشاء الحجز",
   "bookings.wizard.step.confirm.payAtClinic": "الدفع في العيادة",
   "bookings.wizard.step.confirm.payAtClinicDescription": "ادفع عند الزيارة",
+  "bookings.wizard.step.confirm.summaryHeader": "ملخص الحجز",
+  "bookings.wizard.step.confirm.paymentHeader": "طريقة الدفع",
   "bookings.wizard.back": "رجوع",
+  "bookings.wizard.close": "إغلاق",
   "bookings.wizard.changePatient": "تغيير المستفيد",
 }

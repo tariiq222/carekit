@@ -40,21 +40,21 @@ interface PractitionerAvatarProps {
 function PractitionerAvatar({ avatarUrl, name }: PractitionerAvatarProps) {
   if (avatarUrl) {
     return (
-      <div className="relative size-10 shrink-0 overflow-hidden rounded-full">
+      <div className="relative size-12 shrink-0 overflow-hidden rounded-full">
         <Image
           src={avatarUrl}
           alt={name}
           fill
           className="object-cover"
-          sizes="40px"
+          sizes="48px"
         />
       </div>
     )
   }
 
   return (
-    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-      <HugeiconsIcon icon={UserIcon} size={18} className="text-primary" />
+    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
+      <HugeiconsIcon icon={UserIcon} size={22} className="text-primary" />
     </div>
   )
 }
@@ -89,16 +89,17 @@ export function StepPractitioner({ serviceId, onSelect }: StepPractitionerProps)
           <WizardCard
             key={p.id}
             onClick={() => onSelect(p.practitioner.id, name)}
+            className="py-3 px-5"
           >
             <div className="flex items-center gap-3">
               <PractitionerAvatar avatarUrl={p.practitioner.avatarUrl} name={name} />
 
               <div className="flex flex-col items-start gap-0.5 min-w-0">
-                <span className="text-sm font-semibold text-foreground leading-tight truncate w-full">
+                <span className="text-base font-semibold text-foreground leading-tight truncate w-full">
                   {name}
                 </span>
                 {title && (
-                  <span className="text-xs text-muted-foreground truncate w-full">
+                  <span className="text-sm text-muted-foreground truncate w-full">
                     {title}
                   </span>
                 )}

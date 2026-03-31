@@ -17,6 +17,7 @@ import type { Booking } from "@/lib/types/booking"
 import { BookingActions } from "./booking-actions"
 import { DetailsBody } from "./booking-details-body"
 import { BookingRescheduleTab } from "./booking-reschedule-tab"
+import { BookingStatusLog } from "./booking-status-log"
 
 /* ── Props ── */
 
@@ -87,7 +88,7 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
                 </TabsList>
               </div>
 
-              <TabsContent value="details" className="px-6 pt-4 pb-6">
+              <TabsContent value="details" className="px-6 pt-4 pb-6 flex flex-col gap-6">
                 <DetailsBody
                   booking={booking}
                   patientName={patientName}
@@ -96,6 +97,12 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
                   appointmentDate={appointmentDate}
                   t={t}
                 />
+                <div className="flex flex-col gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("bookings.statusLog.title")}
+                  </p>
+                  <BookingStatusLog bookingId={booking.id} />
+                </div>
               </TabsContent>
 
               <TabsContent value="reschedule" className="px-6 pt-4 pb-6">
@@ -106,7 +113,7 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
               </TabsContent>
             </Tabs>
           ) : (
-            <div className="px-6 pt-4 pb-6">
+            <div className="px-6 pt-4 pb-6 flex flex-col gap-6">
               <DetailsBody
                 booking={booking}
                 patientName={patientName}
@@ -115,6 +122,12 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
                 appointmentDate={appointmentDate}
                 t={t}
               />
+              <div className="flex flex-col gap-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("bookings.statusLog.title")}
+                </p>
+                <BookingStatusLog bookingId={booking.id} />
+              </div>
             </div>
           )}
         </div>

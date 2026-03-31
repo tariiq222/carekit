@@ -237,6 +237,9 @@ export const enBookings: Record<string, string> = {
   "bookings.wizard.step.confirm.submit": "Create Booking",
   "bookings.wizard.step.confirm.payAtClinic": "Pay at Clinic",
   "bookings.wizard.step.confirm.payAtClinicDescription": "Pay when you visit",
+  "bookings.wizard.step.confirm.summaryHeader": "Booking Summary",
+  "bookings.wizard.step.confirm.paymentHeader": "Payment Method",
   "bookings.wizard.back": "Back",
+  "bookings.wizard.close": "Close",
   "bookings.wizard.changePatient": "Change Patient",
 }

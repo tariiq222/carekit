@@ -24,8 +24,8 @@ export function BookingCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden" showCloseButton={false}>
+        <DialogHeader className="sr-only">
           <DialogTitle>{t("bookings.create.dialogTitle")}</DialogTitle>
         </DialogHeader>
         <BookingWizard
