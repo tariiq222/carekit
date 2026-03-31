@@ -2,6 +2,13 @@ import api from './api';
 import type { ApiResponse, PaginatedResponse } from '@/types/api';
 import type { Practitioner, Rating } from '@/types/models';
 
+export type PractitionerAvailability = {
+  dayOfWeek: number;
+  isWorking: boolean;
+  startTime: string;
+  endTime: string;
+};
+
 interface GetPractitionersParams {
   specialtyId?: string;
   search?: string;
@@ -46,6 +53,21 @@ export const practitionersService = {
     const response = await api.get<ApiResponse<Practitioner[]>>(
       '/practitioners',
       { params: { sort: 'rating', limit: 5 } },
+    );
+    return response.data;
+  },
+
+  async getAvailabilitySchedule(id: string) {
+    const response = await api.get<ApiResponse<PractitionerAvailability[]>>(
+      `/practitioners/${id}/availability`,
+    );
+    return response.data;
+  },
+
+  async updateAvailabilitySchedule(id: string, schedule: PractitionerAvailability[]) {
+    const response = await api.put<ApiResponse<PractitionerAvailability[]>>(
+      `/practitioners/${id}/availability`,
+      { schedule },
     );
     return response.data;
   },

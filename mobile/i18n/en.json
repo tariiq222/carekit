@@ -285,7 +285,8 @@
     "noResults": "No results found",
     "appName": "CareKit",
     "viewAll": "View All",
-    "comingSoon": "Coming Soon"
+    "comingSoon": "Coming Soon",
+    "saved": "Saved"
   },
   "chatbot": {
     "title": "AI Assistant",
@@ -297,5 +298,20 @@
     "maxMessages": "You have reached the maximum number of messages for this session.",
     "bookingConfirmed": "Appointment booked successfully!",
     "cancellationSubmitted": "Cancellation request submitted for admin review."
+  },
+  "availability": {
+    "title": "Manage Availability",
+    "save": "Save Schedule",
+    "saveSuccess": "Your schedule has been updated",
+    "saveError": "Failed to save schedule"
+  },
+  "days": {
+    "0": "Sunday",
+    "1": "Monday",
+    "2": "Tuesday",
+    "3": "Wednesday",
+    "4": "Thursday",
+    "5": "Friday",
+    "6": "Saturday"
   }
 }

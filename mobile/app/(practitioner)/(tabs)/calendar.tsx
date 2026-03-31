@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Calendar as CalendarIcon, Clock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar as RNCalendar } from 'react-native-calendars';
+import { router } from 'expo-router';
 
 import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedButton } from '@/theme/components/ThemedButton';
@@ -107,7 +108,7 @@ export default function CalendarScreen() {
       />
 
       <View style={styles.ctaWrap}>
-        <ThemedButton onPress={() => {}} variant="outline" size="md" full>
+        <ThemedButton onPress={() => router.push('/(practitioner)/availability')} variant="outline" size="md" full>
           {t('doctor.manageAvailability')}
         </ThemedButton>
       </View>
