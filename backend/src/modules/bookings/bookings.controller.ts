@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { THROTTLE_LIMIT, THROTTLE_TTL } from '../../config/constants.js';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -27,6 +27,7 @@ import { CancelRejectDto } from './dto/cancel-reject.dto.js';
 import { AdminCancelDto } from './dto/admin-cancel.dto.js';
 import { CompleteBookingDto } from './dto/complete-booking.dto.js';
 import { BookingListQueryDto } from './dto/booking-list-query.dto.js';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 import type { UserPayload } from '../../common/types/user-payload.type.js';
 
@@ -47,6 +48,7 @@ export class BookingsController {
   @Post()
   @Throttle({ default: { limit: THROTTLE_LIMIT, ttl: THROTTLE_TTL } })
   @CheckPermissions({ module: 'bookings', action: 'create' })
+  @ApiOperation({ summary: 'Create a new booking' })
   async create(
     @Body() dto: CreateBookingDto,
     @CurrentUser() user: UserPayload,
@@ -60,8 +62,12 @@ export class BookingsController {
 
   @Get('my')
   @CheckPermissions({ module: 'bookings', action: 'view' })
-  async findMyBookings(@CurrentUser() user: { id: string }) {
-    return this.bookingsService.findMyBookings(user.id);
+  @ApiOperation({ summary: "Get current patient's own bookings with pagination" })
+  async findMyBookings(
+    @CurrentUser() user: { id: string },
+    @Query() pagination: PaginationQueryDto,
+  ) {
+    return this.bookingsService.findMyBookings(user.id, pagination.page, pagination.perPage);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -70,19 +76,20 @@ export class BookingsController {
 
   @Get('today')
   @CheckPermissions({ module: 'bookings', action: 'view' })
+  @ApiOperation({ summary: "Get practitioner's bookings for today" })
   async findTodayBookings(@CurrentUser() user: { id: string }) {
     return this.bookingsService.findTodayBookingsForUser(user.id);
   }
   // GET /bookings/stats — Booking Statistics
   @Get('stats')
   @CheckPermissions({ module: 'bookings', action: 'view' })
+  @ApiOperation({ summary: 'Get booking statistics with optional date range' })
   async getStats(
     @CurrentUser() user: { id: string },
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
-    const data = await this.bookingsService.getStats(user.id, dateFrom, dateTo);
-    return { success: true, data };
+    return this.bookingsService.getStats(user.id, dateFrom, dateTo);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -91,12 +98,12 @@ export class BookingsController {
 
   @Post('recurring')
   @CheckPermissions({ module: 'bookings', action: 'create' })
+  @ApiOperation({ summary: 'Create recurring booking series' })
   async createRecurring(
     @Body() dto: CreateRecurringBookingDto,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingRecurringService.createRecurring(user.id, dto);
-    return { success: true, data };
+    return this.bookingRecurringService.createRecurring(user.id, dto);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -105,6 +112,7 @@ export class BookingsController {
 
   @Get()
   @CheckPermissions({ module: 'bookings', action: 'view' })
+  @ApiOperation({ summary: 'List bookings with filters and pagination' })
   async findAll(
     @Query() query: BookingListQueryDto,
     @CurrentUser() user: { id: string },
@@ -118,6 +126,7 @@ export class BookingsController {
 
   @Get(':id/payment-status')
   @CheckPermissions({ module: 'bookings', action: 'view' })
+  @ApiOperation({ summary: 'Get booking payment status and retry eligibility' })
   async getPaymentStatus(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -131,6 +140,7 @@ export class BookingsController {
 
   @Get(':id')
   @CheckPermissions({ module: 'bookings', action: 'view' })
+  @ApiOperation({ summary: 'Get booking details by ID' })
   async findOne(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -145,6 +155,7 @@ export class BookingsController {
   @Patch(':id')
   @Throttle({ default: { limit: THROTTLE_LIMIT, ttl: THROTTLE_TTL } })
   @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @ApiOperation({ summary: 'Reschedule a booking' })
   async reschedule(
     @Param('id', uuidPipe) id: string,
     @Body() dto: RescheduleBookingDto,
@@ -162,13 +173,13 @@ export class BookingsController {
   @Throttle({ default: { limit: THROTTLE_LIMIT, ttl: THROTTLE_TTL } })
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'create' })
+  @ApiOperation({ summary: 'Patient self-reschedule a booking' })
   async patientReschedule(
     @Param('id', uuidPipe) id: string,
     @Body() dto: RescheduleBookingDto,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingsService.patientReschedule(id, user.id, dto);
-    return { success: true, data };
+    return this.bookingsService.patientReschedule(id, user.id, dto);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -178,6 +189,7 @@ export class BookingsController {
   @Post(':id/confirm')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @ApiOperation({ summary: 'Confirm a pending booking' })
   async confirm(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -192,12 +204,12 @@ export class BookingsController {
   @Post(':id/check-in')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @ApiOperation({ summary: 'Check in a confirmed booking' })
   async checkIn(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingsService.checkIn(id, user.id);
-    return { success: true, data };
+    return this.bookingsService.checkIn(id, user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -207,12 +219,12 @@ export class BookingsController {
   @Post(':id/start')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @ApiOperation({ summary: 'Start session for a booking (practitioner only)' })
   async startSession(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingsService.startSession(id, user.id);
-    return { success: true, data };
+    return this.bookingsService.startSession(id, user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -222,13 +234,13 @@ export class BookingsController {
   @Post(':id/complete')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @ApiOperation({ summary: 'Mark booking as completed' })
   async complete(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CompleteBookingDto,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingsService.complete(id, dto, user.id);
-    return { success: true, data };
+    return this.bookingsService.complete(id, dto, user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -238,12 +250,12 @@ export class BookingsController {
   @Post(':id/no-show')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @ApiOperation({ summary: 'Mark booking as no-show' })
   async markNoShow(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingsService.markNoShow(id, user.id);
-    return { success: true, data };
+    return this.bookingsService.markNoShow(id, user.id);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -253,21 +265,17 @@ export class BookingsController {
   @Post(':id/cancel-request')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'create' })
+  @ApiOperation({ summary: 'Request booking cancellation (patient)' })
   async cancelRequest(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelRequestDto,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingsService.requestCancellation(
+    return this.bookingsService.requestCancellation(
       id,
       user.id,
       dto.reason,
     );
-    return {
-      success: true,
-      data,
-      message: 'Cancellation request submitted successfully',
-    };
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -277,16 +285,12 @@ export class BookingsController {
   @Post(':id/cancel/approve')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @ApiOperation({ summary: 'Approve a pending cancellation request' })
   async cancelApprove(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelApproveDto,
   ) {
-    const data = await this.bookingsService.approveCancellation(id, dto);
-    return {
-      success: true,
-      data,
-      message: 'Cancellation approved successfully',
-    };
+    return this.bookingsService.approveCancellation(id, dto);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -296,16 +300,12 @@ export class BookingsController {
   @Post(':id/cancel/reject')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @ApiOperation({ summary: 'Reject a pending cancellation request' })
   async cancelReject(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelRejectDto,
   ) {
-    const data = await this.bookingsService.rejectCancellation(id, dto);
-    return {
-      success: true,
-      data,
-      message: 'Cancellation rejected successfully',
-    };
+    return this.bookingsService.rejectCancellation(id, dto);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -315,17 +315,13 @@ export class BookingsController {
   @Post(':id/admin-cancel')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'delete' })
+  @ApiOperation({ summary: 'Admin direct cancel a booking' })
   async adminCancel(
     @Param('id', uuidPipe) id: string,
     @Body() dto: AdminCancelDto,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingsService.adminDirectCancel(id, user.id, dto);
-    return {
-      success: true,
-      data,
-      message: 'Booking cancelled by admin successfully',
-    };
+    return this.bookingsService.adminDirectCancel(id, user.id, dto);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -335,16 +331,12 @@ export class BookingsController {
   @Post(':id/practitioner-cancel')
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'delete' })
+  @ApiOperation({ summary: 'Cancel a booking (practitioner)' })
   async practitionerCancel(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelRequestDto,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.bookingsService.practitionerCancel(id, user.id, dto.reason);
-    return {
-      success: true,
-      data,
-      message: 'Booking cancelled by practitioner successfully',
-    };
+    return this.bookingsService.practitionerCancel(id, user.id, dto.reason);
   }
 }

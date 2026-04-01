@@ -9,8 +9,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { AuthCacheService } from './auth-cache.service.js';
 import { UserPayload } from '../../common/types/user-payload.type.js';
 import { TokenPair } from './types/auth-response.type.js';
-
-const ACCESS_TOKEN_EXPIRY_SECONDS = 900; // 15 minutes
+import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY } from '../../config/constants.js';
 
 @Injectable()
 export class TokenService {
@@ -27,15 +26,15 @@ export class TokenService {
 
     const accessToken = this.jwtService.sign(accessPayload, {
       secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: 900,
+      expiresIn: ACCESS_TOKEN_EXPIRY,
     });
 
     const refreshToken = this.jwtService.sign(refreshPayload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: 604800, // 7 days
+      expiresIn: REFRESH_TOKEN_EXPIRY,
     });
 
-    return { accessToken, refreshToken, expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS };
+    return { accessToken, refreshToken, expiresIn: ACCESS_TOKEN_EXPIRY };
   }
 
   private hashToken(token: string): string {
@@ -43,7 +42,7 @@ export class TokenService {
   }
 
   async storeRefreshToken(userId: string, token: string): Promise<void> {
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY * 1000);
 
     await this.prisma.refreshToken.create({
       data: { userId, token: this.hashToken(token), expiresAt },
@@ -107,7 +106,7 @@ export class TokenService {
       const tokens = await this.generateTokens(user.id, user.email);
 
       // Store new refresh token within the same transaction
-      const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY * 1000);
       await tx.refreshToken.create({
         data: { userId: user.id, token: this.hashToken(tokens.refreshToken), expiresAt: newExpiresAt },
       });

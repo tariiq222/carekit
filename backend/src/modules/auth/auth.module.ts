@@ -15,6 +15,7 @@ import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 import { OtpThrottleRedisService } from '../../common/services/otp-throttle-redis.service.js';
 import { EmailThrottleGuard } from '../../common/guards/email-throttle.guard.js';
 import { PermissionCacheService } from './permission-cache.service.js';
+import { ACCESS_TOKEN_EXPIRY } from '../../config/constants.js';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { PermissionCacheService } from './permission-cache.service.js';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: 900,
+          expiresIn: ACCESS_TOKEN_EXPIRY,
         },
       }),
     }),

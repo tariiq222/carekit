@@ -43,7 +43,7 @@ export class BookingsService {
   findOne(id: string) { return this.queryService.findOne(id); }
   findAllScoped(query: BookingListQueryDto, userId: string) { return this.queryService.findAllScoped(query, userId); }
   findOneScoped(bookingId: string, userId: string) { return this.queryService.findOneScoped(bookingId, userId); }
-  findMyBookings(patientId: string) { return this.queryService.findMyBookings(patientId); }
+  findMyBookings(patientId: string, page?: number, perPage?: number) { return this.queryService.findMyBookings(patientId, page, perPage); }
   findTodayBookingsForUser(userId: string) { return this.queryService.findTodayBookingsForUser(userId); }
   findTodayBookings(userId: string) { return this.queryService.findTodayBookings(userId); }
   getStats(userId?: string, dateFrom?: string, dateTo?: string) { return this.queryService.getStats(userId, dateFrom, dateTo); }
