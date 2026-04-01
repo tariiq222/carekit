@@ -296,6 +296,22 @@ describe('PractitionersService', () => {
       );
     });
 
+    it('should filter practitioners by serviceId', async () => {
+      const mockServiceId = 'service-uuid-123';
+      mockPrismaService.practitioner.findMany.mockResolvedValue([]);
+      mockPrismaService.practitioner.count.mockResolvedValue(0);
+
+      await service.findAll({ serviceId: mockServiceId });
+
+      expect(mockPrismaService.practitioner.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            practitionerServices: { some: { serviceId: mockServiceId } },
+          }),
+        }),
+      );
+    });
+
     it('should sort by rating descending by default', async () => {
       mockPrismaService.practitioner.findMany.mockResolvedValue([]);
       mockPrismaService.practitioner.count.mockResolvedValue(0);
