@@ -27,7 +27,7 @@ export type WidgetMessage =
   | { type: "carekit:widget:resize"; height: number }
 
 export function postToHost(msg: WidgetMessage, targetOrigin: string) {
-  if (typeof window !== "undefined" && window.parent !== window) {
+  if (typeof window !== "undefined" && window.parent !== window && targetOrigin) {
     window.parent.postMessage(msg, targetOrigin)
   }
 }
@@ -40,7 +40,7 @@ interface BookingWizardProps {
   initialPractitionerId?: string
   initialServiceId?: string
   initialLocale?: "ar" | "en"
-  /** The origin of the parent page embedding this widget. Defaults to "*" (insecure fallback). */
+  /** The origin of the parent page embedding this widget (e.g. "https://example.com"). Required for postMessage; messages are silently skipped when empty. */
   parentOrigin?: string
   initialFlowOrder?: "service_first" | "practitioner_first"
 }
@@ -49,7 +49,7 @@ export function BookingWizard({
   initialPractitionerId,
   initialServiceId,
   initialLocale = "ar",
-  parentOrigin = "*",
+  parentOrigin = "",
   initialFlowOrder = "service_first",
 }: BookingWizardProps) {
   const booking = useWidgetBooking(initialPractitionerId, initialServiceId, initialFlowOrder)
