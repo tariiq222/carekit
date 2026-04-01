@@ -169,6 +169,10 @@ model BookingSettings {
   // Booking wizard flow
   bookingFlowOrder String @default("service_first") @map("booking_flow_order")
 
+  // Payment method availability
+  paymentMoyasarEnabled  Boolean @default(false) @map("payment_moyasar_enabled")
+  paymentAtClinicEnabled Boolean @default(true)  @map("payment_at_clinic_enabled")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
