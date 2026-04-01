@@ -11,6 +11,7 @@ import {
   HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { type Request, type Response } from 'express';
 import { AuthService } from './auth.service.js';
 import { CookieService } from './cookie.service.js';
@@ -29,6 +30,7 @@ import { EmailThrottleGuard } from '../../common/guards/email-throttle.guard.js'
 import { OtpThrottle } from '../../common/decorators/otp-throttle.decorator.js';
 import { SkipThrottle } from '@nestjs/throttler';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -38,6 +40,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @ApiOperation({ summary: 'Register a new user account' })
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
@@ -45,11 +48,7 @@ export class AuthController {
     const result = await this.authService.register(dto);
     this.cookieService.setRefreshTokenCookie(res, result.refreshToken);
     const { refreshToken: _rt, ...responseData } = result;
-    return {
-      success: true,
-      message: 'Registration successful',
-      data: responseData,
-    };
+    return responseData;
   }
 
   @Public()
@@ -58,6 +57,7 @@ export class AuthController {
   @SkipThrottle()
   @OtpThrottle('login', 5)
   @UseGuards(EmailThrottleGuard)
+  @ApiOperation({ summary: 'Login with email and password' })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -73,10 +73,7 @@ export class AuthController {
     const result = await this.authService.login(user);
     this.cookieService.setRefreshTokenCookie(res, result.refreshToken);
     const { refreshToken: _rt, ...responseData } = result;
-    return {
-      success: true,
-      data: responseData,
-    };
+    return responseData;
   }
 
   @Public()
@@ -85,6 +82,7 @@ export class AuthController {
   @SkipThrottle()
   @OtpThrottle('otp_send', 3)
   @UseGuards(EmailThrottleGuard)
+  @ApiOperation({ summary: 'Send OTP code to email for login' })
   async sendLoginOtp(@Body() dto: SendOtpDto) {
     // Always return success for security (don't reveal if email exists)
     const user = await this.authService.findUserByEmail(dto.email);
@@ -104,6 +102,7 @@ export class AuthController {
   @SkipThrottle()
   @OtpThrottle('otp_verify', 5)
   @UseGuards(EmailThrottleGuard)
+  @ApiOperation({ summary: 'Verify OTP and login' })
   async verifyLoginOtp(
     @Body() dto: VerifyOtpDto,
     @Res({ passthrough: true }) res: Response,
@@ -116,15 +115,13 @@ export class AuthController {
     const result = await this.authService.login(userPayload);
     this.cookieService.setRefreshTokenCookie(res, result.refreshToken);
     const { refreshToken: _rt, ...responseData } = result;
-    return {
-      success: true,
-      data: responseData,
-    };
+    return responseData;
   }
 
   @Public()
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token using refresh token' })
   async refreshToken(
     @Body() dto: RefreshTokenDto,
     @Req() req: Request,
@@ -150,15 +147,13 @@ export class AuthController {
       ? tokens
       : { accessToken: tokens.accessToken, expiresIn: tokens.expiresIn };
 
-    return {
-      success: true,
-      data: responseData,
-    };
+    return responseData;
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout and invalidate refresh token' })
   async logout(
     @Body() dto: RefreshTokenDto,
     @Req() req: Request,
@@ -178,6 +173,7 @@ export class AuthController {
   @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @Get('me')
+  @ApiOperation({ summary: 'Get current authenticated user profile' })
   async getProfile(@CurrentUser('id') userId: string) {
     const profile = await this.authService.getUserProfile(userId);
     return profile;
@@ -189,6 +185,7 @@ export class AuthController {
   @SkipThrottle()
   @OtpThrottle('pw_forgot', 3)
   @UseGuards(EmailThrottleGuard)
+  @ApiOperation({ summary: 'Request password reset OTP' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     // Always return success for security
     const user = await this.authService.findUserByEmail(dto.email);
@@ -208,6 +205,7 @@ export class AuthController {
   @SkipThrottle()
   @OtpThrottle('pw_reset', 3)
   @UseGuards(EmailThrottleGuard)
+  @ApiOperation({ summary: 'Reset password using OTP code' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto.email, dto.code, dto.newPassword);
     return {
@@ -218,6 +216,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('password/change')
+  @ApiOperation({ summary: 'Change password for authenticated user' })
   async changePassword(
     @CurrentUser('id') userId: string,
     @Body() dto: ChangePasswordDto,
@@ -236,6 +235,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('email/verify/send')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send email verification OTP' })
   async sendEmailVerification(
     @CurrentUser('id') userId: string,
     @CurrentUser('email') email: string,
@@ -253,6 +253,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, EmailThrottleGuard)
   @Post('email/verify')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify email using OTP code' })
   async verifyEmail(
     @CurrentUser('id') userId: string,
     @Body() dto: VerifyEmailDto,

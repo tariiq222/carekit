@@ -2,10 +2,11 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { REDIS_CLIENT } from '../../common/redis/redis.constants.js';
 import type { UserPayload } from '../../common/types/user-payload.type.js';
+import { ACCESS_TOKEN_EXPIRY } from '../../config/constants.js';
 
 const AUTH_CACHE_PREFIX = 'auth:user:';
 const AUTH_CACHE_LOCK_PREFIX = 'auth:user:lock:';
-const AUTH_CACHE_TTL = 900; // 15 minutes — matches access token lifetime
+const AUTH_CACHE_TTL = ACCESS_TOKEN_EXPIRY; // matches access token lifetime
 const AUTH_CACHE_LOCK_TTL = 5; // seconds — short lock to prevent stampede
 
 @Injectable()

@@ -14,7 +14,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -45,6 +45,7 @@ export class PaymentsController {
 
   @Get('stats')
   @CheckPermissions({ module: 'payments', action: 'view' })
+  @ApiOperation({ summary: 'Get payment statistics overview' })
   async getPaymentStats() {
     return this.paymentsService.getPaymentStats();
   }
@@ -54,6 +55,7 @@ export class PaymentsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get('my')
+  @ApiOperation({ summary: "Get current patient's own payments" })
   async getMyPayments(
     @CurrentUser() user: { id: string },
     @Query() query: PaymentFilterDto,
@@ -67,6 +69,7 @@ export class PaymentsController {
 
   @Get('booking/:bookingId')
   @CheckPermissions({ module: 'payments', action: 'view' })
+  @ApiOperation({ summary: 'Get payment by booking ID' })
   async findPaymentByBooking(
     @Param('bookingId', uuidPipe) bookingId: string,
   ) {
@@ -79,6 +82,7 @@ export class PaymentsController {
 
   @Get()
   @CheckPermissions({ module: 'payments', action: 'view' })
+  @ApiOperation({ summary: 'List payments with filters and pagination' })
   async findAll(@Query() query: PaymentFilterDto) {
     return this.paymentsService.findAll(query);
   }
@@ -89,6 +93,7 @@ export class PaymentsController {
 
   @Post('moyasar')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({ summary: 'Create a Moyasar payment' })
   async createMoyasarPayment(
     @CurrentUser() user: { id: string },
     @Body() dto: CreateMoyasarPaymentDto,
@@ -102,6 +107,7 @@ export class PaymentsController {
 
   @Post('moyasar/webhook')
   @Public()
+  @ApiOperation({ summary: 'Handle Moyasar payment webhook' })
   async handleMoyasarWebhook(
     @Req() req: Request & { rawBody?: Buffer },
     @Body() dto: MoyasarWebhookDto,
@@ -123,6 +129,7 @@ export class PaymentsController {
 
   @Post('bank-transfer')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({ summary: 'Upload bank transfer receipt' })
   @UseInterceptors(FileInterceptor('receipt', {
     limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (_req: unknown, file: { mimetype: string }, cb: (err: Error | null, accept: boolean) => void) => {
@@ -164,6 +171,7 @@ export class PaymentsController {
 
   @Post('bank-transfer/:id/verify')
   @CheckPermissions({ module: 'payments', action: 'edit' })
+  @ApiOperation({ summary: 'Verify a bank transfer receipt' })
   async verifyBankTransfer(
     @Param('id', uuidPipe) receiptId: string,
     @CurrentUser() user: { id: string },
@@ -178,6 +186,7 @@ export class PaymentsController {
 
   @Post(':id/refund')
   @CheckPermissions({ module: 'payments', action: 'edit' })
+  @ApiOperation({ summary: 'Refund a payment' })
   async refund(
     @Param('id', uuidPipe) id: string,
     @Body() dto: RefundDto,
@@ -191,6 +200,7 @@ export class PaymentsController {
 
   @Get(':id')
   @CheckPermissions({ module: 'payments', action: 'view' })
+  @ApiOperation({ summary: 'Get payment details by ID' })
   async findOne(@Param('id', uuidPipe) id: string) {
     return this.paymentsService.findOne(id);
   }
@@ -201,6 +211,7 @@ export class PaymentsController {
 
   @Patch(':id/status')
   @CheckPermissions({ module: 'payments', action: 'edit' })
+  @ApiOperation({ summary: 'Update payment status' })
   async updateStatus(
     @Param('id', uuidPipe) id: string,
     @Body() dto: UpdatePaymentStatusDto,
