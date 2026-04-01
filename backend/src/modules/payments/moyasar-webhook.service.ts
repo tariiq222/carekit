@@ -44,9 +44,10 @@ export class MoyasarWebhookService {
         payment.bookingId,
         dto.id,
         dto.amount,
+        dto.status,
       );
     } else if (dto.status === 'failed') {
-      await this.processFailedWebhook(payment.id, dto.id);
+      await this.processFailedWebhook(payment.id, dto.id, dto.status);
     }
 
     return { success: true };
@@ -82,6 +83,7 @@ export class MoyasarWebhookService {
     bookingId: string,
     eventId: string,
     webhookAmount: number,
+    status: string,
   ): Promise<void> {
     let updated: { count: number; amountMismatch: boolean };
     try {
@@ -106,7 +108,7 @@ export class MoyasarWebhookService {
             where: { id: paymentId, status: 'pending' },
             data: { status: 'failed' },
           });
-          await tx.processedWebhook.create({ data: { eventId } });
+          await tx.processedWebhook.create({ data: { eventId: `${eventId}_${status}` } });
           return { count: 0, amountMismatch: true, mismatchResult: result };
         }
 
@@ -114,7 +116,7 @@ export class MoyasarWebhookService {
           where: { id: paymentId, status: 'pending' },
           data: { status: 'paid' },
         });
-        await tx.processedWebhook.create({ data: { eventId } });
+        await tx.processedWebhook.create({ data: { eventId: `${eventId}_${status}` } });
         return { count: result.count, amountMismatch: false };
       });
     } catch (err) {
@@ -136,6 +138,7 @@ export class MoyasarWebhookService {
   private async processFailedWebhook(
     paymentId: string,
     eventId: string,
+    status: string,
   ): Promise<void> {
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -143,7 +146,7 @@ export class MoyasarWebhookService {
           where: { id: paymentId, status: 'pending' },
           data: { status: 'failed' },
         });
-        await tx.processedWebhook.create({ data: { eventId } });
+        await tx.processedWebhook.create({ data: { eventId: `${eventId}_${status}` } });
       });
     } catch (err) {
       if (

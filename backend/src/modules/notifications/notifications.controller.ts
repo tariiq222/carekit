@@ -13,6 +13,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { NotificationsService } from './notifications.service.js';
 import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
@@ -34,6 +35,7 @@ export class NotificationsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get()
+  @CheckPermissions({ module: 'notifications', action: 'view' })
   async findAll(
     @Query() query: NotificationListQueryDto,
     @CurrentUser() user: { id: string },
@@ -46,6 +48,7 @@ export class NotificationsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get('unread-count')
+  @CheckPermissions({ module: 'notifications', action: 'view' })
   async getUnreadCount(@CurrentUser() user: { id: string }) {
     const count = await this.notificationsService.getUnreadCount(user.id);
     return { count };
@@ -57,6 +60,7 @@ export class NotificationsController {
 
   @Patch('read-all')
   @HttpCode(200)
+  @CheckPermissions({ module: 'notifications', action: 'edit' })
   async markAllAsRead(@CurrentUser() user: { id: string }) {
     await this.notificationsService.markAllAsRead(user.id);
     return { updated: true };
@@ -68,6 +72,7 @@ export class NotificationsController {
 
   @Patch(':id/read')
   @HttpCode(200)
+  @CheckPermissions({ module: 'notifications', action: 'edit' })
   async markAsRead(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -80,6 +85,7 @@ export class NotificationsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post('fcm-token')
+  @CheckPermissions({ module: 'notifications', action: 'edit' })
   async registerFcmToken(
     @Body() dto: RegisterFcmTokenDto,
     @CurrentUser() user: { id: string },
@@ -93,6 +99,7 @@ export class NotificationsController {
 
   @Delete('fcm-token')
   @HttpCode(200)
+  @CheckPermissions({ module: 'notifications', action: 'edit' })
   async unregisterFcmToken(
     @Body() dto: UnregisterFcmTokenDto,
     @CurrentUser() user: { id: string },
