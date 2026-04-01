@@ -31,6 +31,7 @@ export interface Role {
   name: string
   slug: string
   description: string | null
+  isDefault: boolean
   isSystem: boolean
   createdAt: string
   permissions: Permission[]

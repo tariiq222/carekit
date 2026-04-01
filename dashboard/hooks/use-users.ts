@@ -102,6 +102,7 @@ export function useRoles() {
   return useQuery({
     queryKey: queryKeys.roles.list(),
     queryFn: fetchRoles,
+    staleTime: 5 * 60 * 1000, // permissions rarely change
   })
 }
 
@@ -134,5 +135,6 @@ export function usePermissions() {
   return useQuery({
     queryKey: queryKeys.permissions.list(),
     queryFn: fetchPermissions,
+    staleTime: 10 * 60 * 1000, // permissions list is static — changes only via migration
   })
 }
