@@ -66,4 +66,16 @@ export class CreateBookingDto {
   @IsOptional()
   @IsUUID()
   recurringGroupId?: string;
+
+  @ApiPropertyOptional({ description: 'Coupon code to apply discount' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  couponCode?: string;
+
+  @ApiPropertyOptional({ description: 'Gift card code to apply discount' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  giftCardCode?: string;
 }

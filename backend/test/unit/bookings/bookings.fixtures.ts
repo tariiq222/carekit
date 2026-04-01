@@ -162,6 +162,8 @@ export function createMockPrisma(): any {
     practitionerVacation: { findMany: jest.fn(), findFirst: jest.fn() },
     serviceBranch: { count: jest.fn().mockResolvedValue(0), findUnique: jest.fn() },
     payment: { findFirst: jest.fn(), updateMany: jest.fn() },
+    intakeForm: { findFirst: jest.fn().mockResolvedValue(null) },
+    intakeResponse: { findFirst: jest.fn().mockResolvedValue(null) },
     $transaction: jest.fn(),
   };
 }

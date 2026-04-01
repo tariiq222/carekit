@@ -254,7 +254,26 @@ export class BookingCreationService {
       description: `Booking created for ${dto.date} at ${dto.startTime}`,
     }).catch(() => {});
 
-    return booking;
+    // Resolve intake form info for the widget popup
+    const intakeForm = await this.prisma.intakeForm.findFirst({
+      where: { serviceId: dto.serviceId, isActive: true },
+      select: { id: true },
+    });
+
+    let intakeFormAlreadySubmitted = false;
+    if (intakeForm && actualPatientId) {
+      const existing = await this.prisma.intakeResponse.findFirst({
+        where: { formId: intakeForm.id, patientId: actualPatientId },
+        select: { id: true },
+      });
+      intakeFormAlreadySubmitted = !!existing;
+    }
+
+    return {
+      ...booking,
+      intakeFormId: intakeForm?.id ?? null,
+      intakeFormAlreadySubmitted,
+    };
   }
 
   private async resolvePriceOrFallback(
