@@ -41,7 +41,7 @@ export function useWidgetBookingQueries(state: WizardState, flowOrder: BookingFl
     staleTime: STALE_5M,
   })
 
-  const { data: filteredPractitionersData, isLoading: filteredPractitionersLoading } = useQuery({
+  const { data: filteredPractitionersData, isLoading: filteredPractitionersLoading, isFetching: filteredPractitionersFetching } = useQuery({
     queryKey: queryKeys.practitioners.list({ isActive: true, serviceId: state.service?.id }),
     queryFn: () => fetchWidgetPractitioners({ perPage: 20, serviceId: state.service!.id }),
     enabled: flowOrder === "service_first" && !!state.service,
@@ -66,7 +66,7 @@ export function useWidgetBookingQueries(state: WizardState, flowOrder: BookingFl
     allServices: servicesData?.items ?? [],
     allServicesLoading,
     filteredPractitionersData,
-    filteredPractitionersLoading,
+    filteredPractitionersLoading: filteredPractitionersLoading || filteredPractitionersFetching,
     serviceTypes,
   }
 }

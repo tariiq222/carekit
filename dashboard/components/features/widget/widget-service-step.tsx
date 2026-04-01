@@ -19,6 +19,7 @@ import type { BookingFlowOrder } from "@/hooks/use-widget-booking"
 import type { Practitioner } from "@/lib/types/practitioner"
 import type { Service } from "@/lib/types/service"
 import type { BookingType } from "@/lib/types/booking"
+import { WidgetBackButton } from "./widget-back-button"
 
 /* ─── Booking type config ─── */
 
@@ -61,6 +62,9 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     selectPractitioner,
     selectService,
     selectServiceOnly,
+    clearPractitioner,
+    clearService,
+    clearServiceOnly,
   } = booking
 
   const [selectedType, setSelectedType] = useState<BookingType | null>(null)
@@ -76,6 +80,26 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     selectService(svc, selectedType)
   }
 
+  function renderPractitionerList(practitioners: Practitioner[], loading: boolean) {
+    if (loading) return <div className="flex justify-center py-8"><HugeiconsIcon icon={Loading03Icon} size={24} className="text-primary" /></div>
+    return (
+      <div className="space-y-2">
+        {practitioners.map((p) => (
+          <button key={p.id} onClick={() => selectPractitioner(p)} className={cn("w-full flex items-center gap-3 p-3 rounded-xl border border-border/60", "hover:border-primary/60 hover:bg-primary/5 transition-all text-start")}>
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              {p.avatarUrl ? <img src={p.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" /> : <span className="text-primary font-semibold text-sm">{p.user.firstName?.[0] ?? "?"}</span>}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm truncate">{isRtl && p.nameAr ? p.nameAr : `${p.user.firstName} ${p.user.lastName}`}</p>
+              <p className="text-xs text-muted-foreground truncate">{isRtl && p.specialtyAr ? p.specialtyAr : p.specialty}</p>
+            </div>
+            <HugeiconsIcon icon={chevronIcon} size={16} className="text-muted-foreground flex-shrink-0" />
+          </button>
+        ))}
+      </div>
+    )
+  }
+
   /* ─── practitioner_first flow ─── */
 
   if (flowOrder === "practitioner_first") {
@@ -83,47 +107,8 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     if (!state.practitioner) {
       return (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            {isRtl ? "اختر الطبيب أو المعالج" : "Choose a practitioner"}
-          </p>
-          {practitionersLoading ? (
-            <div className="flex justify-center py-8">
-              <HugeiconsIcon icon={Loading03Icon} size={24} className="text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {(practitionersData?.items ?? []).map((p: Practitioner) => (
-                <button
-                  key={p.id}
-                  onClick={() => selectPractitioner(p)}
-                  className={cn(
-                    "w-full flex items-center gap-3 p-3 rounded-xl border border-border/60",
-                    "hover:border-primary/60 hover:bg-primary/5 transition-all text-start",
-                  )}
-                >
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    {p.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
-                    ) : (
-                      <span className="text-primary font-semibold text-sm">
-                        {p.user.firstName?.[0] ?? "?"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {isRtl && p.nameAr ? p.nameAr : `${p.user.firstName} ${p.user.lastName}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {isRtl && p.specialtyAr ? p.specialtyAr : p.specialty}
-                    </p>
-                  </div>
-                  <HugeiconsIcon icon={chevronIcon} size={16} className="text-muted-foreground flex-shrink-0" />
-                </button>
-              ))}
-            </div>
-          )}
+          <p className="text-sm text-muted-foreground">{isRtl ? "اختر الطبيب أو المعالج" : "Choose a practitioner"}</p>
+          {renderPractitionerList(practitionersData?.items ?? [], practitionersLoading)}
         </div>
       )
     }
@@ -132,6 +117,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     if (!state.service) {
       return (
         <div className="space-y-3">
+          <WidgetBackButton isRtl={isRtl} onClick={clearPractitioner} />
           <p className="text-sm text-muted-foreground">
             {isRtl ? "اختر الخدمة" : "Choose a service"}
           </p>
@@ -206,47 +192,9 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     if (!state.practitioner) {
       return (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            {isRtl ? "اختر الطبيب أو المعالج" : "Choose a practitioner"}
-          </p>
-          {filteredPractitionersLoading ? (
-            <div className="flex justify-center py-8">
-              <HugeiconsIcon icon={Loading03Icon} size={24} className="text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {(filteredPractitionersData?.items ?? []).map((p: Practitioner) => (
-                <button
-                  key={p.id}
-                  onClick={() => selectPractitioner(p)}
-                  className={cn(
-                    "w-full flex items-center gap-3 p-3 rounded-xl border border-border/60",
-                    "hover:border-primary/60 hover:bg-primary/5 transition-all text-start",
-                  )}
-                >
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    {p.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
-                    ) : (
-                      <span className="text-primary font-semibold text-sm">
-                        {p.user.firstName?.[0] ?? "?"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {isRtl && p.nameAr ? p.nameAr : `${p.user.firstName} ${p.user.lastName}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {isRtl && p.specialtyAr ? p.specialtyAr : p.specialty}
-                    </p>
-                  </div>
-                  <HugeiconsIcon icon={chevronIcon} size={16} className="text-muted-foreground flex-shrink-0" />
-                </button>
-              ))}
-            </div>
-          )}
+          <WidgetBackButton isRtl={isRtl} onClick={clearService} />
+          <p className="text-sm text-muted-foreground">{isRtl ? "اختر الطبيب أو المعالج" : "Choose a practitioner"}</p>
+          {renderPractitionerList(filteredPractitionersData?.items ?? [], filteredPractitionersLoading)}
         </div>
       )
     }
@@ -254,8 +202,11 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
 
   /* ─── Shared: booking type selection (both flows) ─── */
 
+  const handleBookingTypeBack = flowOrder === "service_first" ? clearPractitioner : clearServiceOnly
+
   return (
     <div className="space-y-3">
+      <WidgetBackButton isRtl={isRtl} onClick={handleBookingTypeBack} />
       <p className="text-sm text-muted-foreground">
         {isRtl ? "اختر نوع الزيارة" : "Choose visit type"}
       </p>

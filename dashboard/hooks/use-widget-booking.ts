@@ -146,6 +146,21 @@ export function useWidgetBooking(
     })
   }, [])
 
+  // Sub-step back helpers (used inside "service" step)
+  const clearPractitioner = useCallback(() => {
+    setState((s) => ({ ...s, practitioner: null, bookingType: null, durationOption: null, slot: null }))
+  }, [])
+
+  // Clears service + practitioner (go back to first sub-step)
+  const clearService = useCallback(() => {
+    setState((s) => ({ ...s, service: null, practitioner: null, bookingType: null, durationOption: null, slot: null }))
+  }, [])
+
+  // Clears service only — keeps practitioner (practitioner_first: go back from booking-type to service list)
+  const clearServiceOnly = useCallback(() => {
+    setState((s) => ({ ...s, service: null, bookingType: null, durationOption: null, slot: null }))
+  }, [])
+
   return {
     state,
     setState,
@@ -166,5 +181,8 @@ export function useWidgetBooking(
     confirmError: createMut.error,
     initialPractitionerId,
     initialServiceId,
+    clearPractitioner,
+    clearService,
+    clearServiceOnly,
   }
 }
