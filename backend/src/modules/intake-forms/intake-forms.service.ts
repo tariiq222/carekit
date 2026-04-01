@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CreateIntakeFormDto } from './dto/create-intake-form.dto.js';
 import { UpdateIntakeFormDto } from './dto/update-intake-form.dto.js';
@@ -122,7 +122,10 @@ export class IntakeFormsService {
   // ═══════════════════════════════════════════════════════════════
 
   async submitResponse(patientId: string, dto: SubmitResponseDto) {
-    const formId = dto.formId!;
+    if (!dto.formId) {
+      throw new BadRequestException({ statusCode: 400, message: 'formId is required', error: 'FORM_ID_REQUIRED' });
+    }
+    const formId = dto.formId;
     await this.ensureFormExists(formId);
     await this.ensureBookingOwnership(dto.bookingId, patientId);
 
