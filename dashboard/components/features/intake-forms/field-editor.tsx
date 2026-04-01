@@ -6,7 +6,17 @@ import {
   Add01Icon,
   ArrowUp01Icon,
   ArrowDown01Icon,
+  InputShortTextIcon,
+  InputLongTextIcon,
+  RightToLeftListNumberIcon,
+  RadioButtonIcon,
+  CheckListIcon,
+  Select01Icon,
+  Calendar01Icon,
+  StarIcon,
+  FileUploadIcon,
 } from "@hugeicons/core-free-icons"
+import type { IconSvgElement } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,6 +36,18 @@ import { FieldConditionEditor } from "@/components/features/intake-forms/field-c
 const FIELD_TYPES: FieldType[] = [
   "text", "textarea", "radio", "checkbox", "select", "number", "date", "rating", "file",
 ]
+
+const FIELD_TYPE_ICONS: Record<FieldType, IconSvgElement> = {
+  text: InputShortTextIcon,
+  textarea: InputLongTextIcon,
+  number: RightToLeftListNumberIcon,
+  radio: RadioButtonIcon,
+  checkbox: CheckListIcon,
+  select: Select01Icon,
+  date: Calendar01Icon,
+  rating: StarIcon,
+  file: FileUploadIcon,
+}
 
 const OPTIONS_FIELD_TYPES: FieldType[] = ["radio", "checkbox", "select"]
 
@@ -149,12 +171,20 @@ export function FieldEditor({
             }
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue>
+                <span className="flex items-center gap-2">
+                  <HugeiconsIcon icon={FIELD_TYPE_ICONS[field.type]} size={15} className="shrink-0 text-muted-foreground" />
+                  {isAr ? FIELD_TYPE_LABELS[field.type].ar : FIELD_TYPE_LABELS[field.type].en}
+                </span>
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {FIELD_TYPES.map((ft) => (
                 <SelectItem key={ft} value={ft}>
-                  {isAr ? FIELD_TYPE_LABELS[ft].ar : FIELD_TYPE_LABELS[ft].en}
+                  <span className="flex items-center gap-2">
+                    <HugeiconsIcon icon={FIELD_TYPE_ICONS[ft]} size={15} className="shrink-0 text-muted-foreground" />
+                    {isAr ? FIELD_TYPE_LABELS[ft].ar : FIELD_TYPE_LABELS[ft].en}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
