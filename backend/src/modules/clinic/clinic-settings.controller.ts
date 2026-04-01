@@ -34,4 +34,24 @@ export class ClinicSettingsController {
     const order = await this.clinicSettingsService.updateBookingFlowOrder(dto.order);
     return { success: true, data: { bookingFlowOrder: order } };
   }
+
+  @Get('payment')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @CheckPermissions({ module: 'whitelabel', action: 'view' })
+  async getPaymentSettings() {
+    const data = await this.clinicSettingsService.getPaymentSettings();
+    return { success: true, data };
+  }
+
+  @Patch('payment')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @CheckPermissions({ module: 'whitelabel', action: 'edit' })
+  async updatePaymentSettings(
+    @Body() dto: { paymentMoyasarEnabled?: boolean; paymentAtClinicEnabled?: boolean },
+  ) {
+    const data = await this.clinicSettingsService.updatePaymentSettings(dto);
+    return { success: true, data };
+  }
 }

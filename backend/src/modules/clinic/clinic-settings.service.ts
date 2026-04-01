@@ -55,4 +55,44 @@ export class ClinicSettingsService {
 
     return updated.bookingFlowOrder as BookingFlowOrder;
   }
+
+  async getPaymentSettings(): Promise<{
+    paymentMoyasarEnabled: boolean;
+    paymentAtClinicEnabled: boolean;
+  }> {
+    const settings = await this.prisma.bookingSettings.findFirst({
+      where: { branchId: null },
+      select: { paymentMoyasarEnabled: true, paymentAtClinicEnabled: true },
+    });
+    return {
+      paymentMoyasarEnabled: settings?.paymentMoyasarEnabled ?? false,
+      paymentAtClinicEnabled: settings?.paymentAtClinicEnabled ?? true,
+    };
+  }
+
+  async updatePaymentSettings(data: {
+    paymentMoyasarEnabled?: boolean;
+    paymentAtClinicEnabled?: boolean;
+  }): Promise<{ paymentMoyasarEnabled: boolean; paymentAtClinicEnabled: boolean }> {
+    const current = await this.prisma.bookingSettings.findFirst({
+      where: { branchId: null },
+    });
+
+    const updated = current
+      ? await this.prisma.bookingSettings.update({
+          where: { id: current.id },
+          data,
+          select: { paymentMoyasarEnabled: true, paymentAtClinicEnabled: true },
+        })
+      : await this.prisma.bookingSettings.create({
+          data: {
+            branchId: null,
+            paymentMoyasarEnabled: data.paymentMoyasarEnabled ?? false,
+            paymentAtClinicEnabled: data.paymentAtClinicEnabled ?? true,
+          },
+          select: { paymentMoyasarEnabled: true, paymentAtClinicEnabled: true },
+        });
+
+    return updated;
+  }
 }
