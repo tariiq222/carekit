@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
@@ -53,8 +53,9 @@ export class GetPractitionersQueryDto {
   @ApiPropertyOptional({ minimum: 0, maximum: 5 })
   @IsOptional()
   @Transform(({ value }: { value: string }) => parseFloat(value))
-  @IsInt()
+  @IsNumber()
   @Min(0)
+  @Max(5)
   minRating?: number;
 
   @ApiPropertyOptional()

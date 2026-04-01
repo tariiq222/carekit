@@ -97,7 +97,7 @@ describe('PractitionersService — findAll', () => {
     expect(ctx.mockPrisma.practitioner.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          services: { some: { serviceId: mockServiceId } },
+          practitionerServices: { some: { serviceId: mockServiceId } },
         }),
       }),
     );
