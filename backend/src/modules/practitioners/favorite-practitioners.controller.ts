@@ -9,6 +9,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { FavoritePractitionersService } from './favorite-practitioners.service.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
@@ -28,6 +29,7 @@ export class FavoritePractitionersController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get('favorites')
+  @CheckPermissions({ module: 'practitioners', action: 'view' })
   async getFavorites(@CurrentUser() user: { id: string }) {
     const data = await this.favoritesService.getFavorites(user.id);
     return { success: true, data };
@@ -38,6 +40,7 @@ export class FavoritePractitionersController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post(':id/favorite')
+  @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async addFavorite(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -51,6 +54,7 @@ export class FavoritePractitionersController {
   // ═══════════════════════════════════════════════════════════════
 
   @Delete(':id/favorite')
+  @CheckPermissions({ module: 'practitioners', action: 'edit' })
   async removeFavorite(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },

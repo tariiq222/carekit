@@ -23,6 +23,10 @@ export class OtpService {
     private readonly authCache: AuthCacheService,
   ) {}
 
+  private hashOtp(otp: string): string {
+    return crypto.createHash('sha256').update(otp).digest('hex');
+  }
+
   async generateOtp(userId: string, type: OtpType | string): Promise<string> {
     const code = this.generateOtpCode();
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
@@ -33,8 +37,9 @@ export class OtpService {
       data: { usedAt: new Date() },
     });
 
+    // Store hashed OTP — plain code is returned to caller only
     await this.prisma.otpCode.create({
-      data: { userId, code, type: type as PrismaOtpType, expiresAt },
+      data: { userId, code: this.hashOtp(code), type: type as PrismaOtpType, expiresAt },
     });
 
     return code;
@@ -59,11 +64,12 @@ export class OtpService {
     // count > 0 only if the record existed AND was not yet used AND not expired.
     // This prevents two concurrent requests from both verifying the same OTP code.
     const now = new Date();
+    const hashedCode = this.hashOtp(code);
     const claimed = await this.prisma.otpCode.updateMany({
       where: {
         userId: user.id,
         type: type as PrismaOtpType,
-        code,
+        code: hashedCode,
         usedAt: null,
         expiresAt: { gt: now },
       },
@@ -108,8 +114,9 @@ export class OtpService {
 
   async verifyEmail(userId: string, code: string): Promise<void> {
     const now = new Date();
+    const hashedCode = this.hashOtp(code);
     const claimed = await this.prisma.otpCode.updateMany({
-      where: { userId, type: OtpType.VERIFY_EMAIL as PrismaOtpType, code, usedAt: null, expiresAt: { gt: now } },
+      where: { userId, type: OtpType.VERIFY_EMAIL as PrismaOtpType, code: hashedCode, usedAt: null, expiresAt: { gt: now } },
       data: { usedAt: now },
     });
 
@@ -146,8 +153,9 @@ export class OtpService {
     }
 
     const now = new Date();
+    const hashedCode = this.hashOtp(code);
     const claimed = await this.prisma.otpCode.updateMany({
-      where: { userId: user.id, type: OtpType.RESET_PASSWORD as PrismaOtpType, code, usedAt: null, expiresAt: { gt: now } },
+      where: { userId: user.id, type: OtpType.RESET_PASSWORD as PrismaOtpType, code: hashedCode, usedAt: null, expiresAt: { gt: now } },
       data: { usedAt: now },
     });
 

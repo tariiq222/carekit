@@ -15,6 +15,7 @@ import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ChatbotService, type HandleMessageResult } from './chatbot.service.js';
 import { ChatbotStreamService } from './chatbot-stream.service.js';
@@ -39,6 +40,7 @@ export class ChatbotController {
 
   @Post('sessions')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @CheckPermissions({ module: 'chatbot', action: 'create' })
   async createSession(
     @Body() dto: CreateSessionDto,
     @CurrentUser() user: { id: string },
@@ -47,6 +49,7 @@ export class ChatbotController {
   }
 
   @Get('sessions')
+  @CheckPermissions({ module: 'chatbot', action: 'view' })
   async listSessions(
     @Query() query: SessionListQueryDto,
     @CurrentUser() user: { id: string; roles?: Array<{ slug: string }> },
@@ -64,6 +67,7 @@ export class ChatbotController {
   }
 
   @Get('sessions/:id')
+  @CheckPermissions({ module: 'chatbot', action: 'view' })
   async getSession(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -73,6 +77,7 @@ export class ChatbotController {
 
   @Post('sessions/:id/messages')
   @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @CheckPermissions({ module: 'chatbot', action: 'create' })
   async sendMessage(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SendMessageDto,
@@ -88,6 +93,7 @@ export class ChatbotController {
    */
   @Post('sessions/:id/messages/stream')
   @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @CheckPermissions({ module: 'chatbot', action: 'create' })
   async streamMessage(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SendMessageDto,
@@ -123,6 +129,7 @@ export class ChatbotController {
 
   @Post('sessions/:id/end')
   @HttpCode(200)
+  @CheckPermissions({ module: 'chatbot', action: 'edit' })
   async endSession(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: { id: string },

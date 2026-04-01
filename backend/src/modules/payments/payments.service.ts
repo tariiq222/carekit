@@ -176,15 +176,16 @@ export class PaymentsService {
   }
 
   async getPaymentStats() {
+    const baseWhere = { deletedAt: null } as const;
     const [total, paid, pending, failed, refunded, revenueAgg] = await Promise.all([
-      this.prisma.payment.count(),
-      this.prisma.payment.count({ where: { status: 'paid' } }),
-      this.prisma.payment.count({ where: { status: 'pending' } }),
-      this.prisma.payment.count({ where: { status: 'failed' } }),
-      this.prisma.payment.count({ where: { status: 'refunded' } }),
+      this.prisma.payment.count({ where: baseWhere }),
+      this.prisma.payment.count({ where: { ...baseWhere, status: 'paid' } }),
+      this.prisma.payment.count({ where: { ...baseWhere, status: 'pending' } }),
+      this.prisma.payment.count({ where: { ...baseWhere, status: 'failed' } }),
+      this.prisma.payment.count({ where: { ...baseWhere, status: 'refunded' } }),
       this.prisma.payment.aggregate({
         _sum: { totalAmount: true },
-        where: { status: 'paid' },
+        where: { ...baseWhere, status: 'paid' },
       }),
     ]);
 
