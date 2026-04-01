@@ -3,9 +3,7 @@
 /**
  * Booking Wizard — CareKit Embeddable Widget
  *
- * Orchestrates the 4-step booking flow:
- * service → datetime → auth → confirm → success
- *
+ * Two-column layout: steps sidebar (left) + content area (right)
  * Communicates with the host page via postMessage.
  */
 
@@ -15,7 +13,10 @@ import { WidgetServiceStep } from "./widget-service-step"
 import { WidgetDatetimeStep } from "./widget-datetime-step"
 import { WidgetAuthStep } from "./widget-auth-step"
 import { WidgetConfirmStep } from "./widget-confirm-step"
+import { WidgetBranchStep } from "./widget-branch-step"
 import { WidgetHeader } from "./widget-header"
+import { WidgetStepsSidebar } from "./widget-steps-sidebar"
+import type { StepDef } from "./widget-steps-sidebar"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
@@ -32,15 +33,12 @@ export function postToHost(msg: WidgetMessage, targetOrigin: string) {
   }
 }
 
-/* ─── Step labels for progress indicator ─── */
-
-const STEP_ORDER = ["service", "datetime", "auth", "confirm", "success"] as const
 
 interface BookingWizardProps {
   initialPractitionerId?: string
   initialServiceId?: string
   initialLocale?: "ar" | "en"
-  /** The origin of the parent page embedding this widget (e.g. "https://example.com"). Required for postMessage; messages are silently skipped when empty. */
+  /** The origin of the parent page embedding this widget. Required for postMessage; silently skipped when empty. */
   parentOrigin?: string
   initialFlowOrder?: "service_first" | "practitioner_first"
 }
@@ -53,7 +51,16 @@ export function BookingWizard({
   initialFlowOrder = "service_first",
 }: BookingWizardProps) {
   const booking = useWidgetBooking(initialPractitionerId, initialServiceId, initialFlowOrder)
-  const { state } = booking
+  const { state, hasBranches } = booking
+  const isRtl = initialLocale === "ar"
+
+  const VISIBLE_STEPS: StepDef[] = [
+    ...(hasBranches ? [{ key: "branch" as const, labelAr: "الفرع", labelEn: "Branch" }] : []),
+    { key: "service" as const, labelAr: "الخدمة", labelEn: "Service" },
+    { key: "datetime" as const, labelAr: "الموعد", labelEn: "Date & Time" },
+    { key: "auth" as const, labelAr: "تسجيل", labelEn: "Information" },
+    { key: "confirm" as const, labelAr: "التأكيد", labelEn: "Confirmation" },
+  ]
 
   /* ─── Notify host of resize on step change ─── */
   useEffect(() => {
@@ -83,48 +90,73 @@ export function BookingWizard({
     return () => window.removeEventListener("message", handleMessage)
   }, [parentOrigin])
 
-  const stepIndex = STEP_ORDER.indexOf(state.step)
+  const isSuccess = state.step === "success"
 
   return (
-    <Card className="glass-solid overflow-hidden shadow-xl border-border/50">
+    <Card
+      className={cn(
+        "glass-solid overflow-hidden shadow-xl border-border/50",
+        "flex flex-col w-full min-h-[680px]",
+      )}
+      dir={isRtl ? "rtl" : "ltr"}
+    >
+      {/* Top header: clinic branding + close */}
       <WidgetHeader
         locale={initialLocale}
-        step={state.step}
-        stepIndex={stepIndex}
-        totalSteps={4}
-        onBack={state.step !== "service" && state.step !== "success" ? booking.goBack : undefined}
         onClose={() => postToHost({ type: "carekit:widget:close" }, parentOrigin)}
       />
 
-      <div className={cn("p-5", state.step === "success" && "pb-8")}>
-        {state.step === "service" && (
-          <WidgetServiceStep
+      {/* Body: sidebar + content */}
+      <div className="flex flex-1 min-h-0">
+        {/* Steps sidebar */}
+        {!isSuccess && (
+          <WidgetStepsSidebar
             locale={initialLocale}
-            booking={booking}
-            flowOrder={initialFlowOrder}
+            step={state.step}
+            steps={VISIBLE_STEPS}
           />
         )}
 
-        {state.step === "datetime" && (
-          <WidgetDatetimeStep
-            locale={initialLocale}
-            booking={booking}
-          />
-        )}
+        {/* Content area */}
+        <div className={cn("flex flex-col flex-1 min-w-0 overflow-hidden", isSuccess && "w-full")}>
+          <div className={cn("flex-1 p-6 overflow-y-auto", isSuccess && "pb-8")}>
+            {state.step === "branch" && (
+              <WidgetBranchStep
+                locale={initialLocale}
+                booking={booking}
+              />
+            )}
 
-        {state.step === "auth" && (
-          <WidgetAuthStep
-            locale={initialLocale}
-            onAuthComplete={booking.onAuthComplete}
-          />
-        )}
+            {state.step === "service" && (
+              <WidgetServiceStep
+                locale={initialLocale}
+                booking={booking}
+                flowOrder={initialFlowOrder}
+              />
+            )}
 
-        {(state.step === "confirm" || state.step === "success") && (
-          <WidgetConfirmStep
-            locale={initialLocale}
-            booking={booking}
-          />
-        )}
+            {state.step === "datetime" && (
+              <WidgetDatetimeStep
+                locale={initialLocale}
+                booking={booking}
+              />
+            )}
+
+            {state.step === "auth" && (
+              <WidgetAuthStep
+                locale={initialLocale}
+                onAuthComplete={booking.onAuthComplete}
+              />
+            )}
+
+            {(state.step === "confirm" || state.step === "success") && (
+              <WidgetConfirmStep
+                locale={initialLocale}
+                booking={booking}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </Card>
   )
