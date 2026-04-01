@@ -19,6 +19,7 @@ import { CreateBranchDto } from './dto/create-branch.dto.js';
 import { UpdateBranchDto } from './dto/update-branch.dto.js';
 import { BranchFilterDto } from './dto/branch-filter.dto.js';
 import { AssignPractitionersDto } from './dto/assign-practitioners.dto.js';
+import { Public } from '../../common/decorators/public.decorator.js';
 
 @ApiTags('Branches')
 @ApiBearerAuth()
@@ -26,6 +27,12 @@ import { AssignPractitionersDto } from './dto/assign-practitioners.dto.js';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class BranchesController {
   constructor(private readonly branchesService: BranchesService) {}
+
+  @Get('public')
+  @Public()
+  async getPublicBranches() {
+    return this.branchesService.getPublicBranches();
+  }
 
   @Get()
   @CheckPermissions({ module: 'branches', action: 'view' })

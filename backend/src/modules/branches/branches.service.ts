@@ -13,6 +13,24 @@ export class BranchesService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ═══════════════════════════════════════════════════════════════
+  //  PUBLIC LIST (no auth — widget use)
+  // ═══════════════════════════════════════════════════════════════
+
+  async getPublicBranches(): Promise<Array<{
+    id: string;
+    nameAr: string;
+    nameEn: string;
+    address: string | null;
+    phone: string | null;
+  }>> {
+    return this.prisma.branch.findMany({
+      where: { isActive: true, deletedAt: null },
+      select: { id: true, nameAr: true, nameEn: true, address: true, phone: true },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   //  LIST (paginated, search, filter)
   // ═══════════════════════════════════════════════════════════════
 
