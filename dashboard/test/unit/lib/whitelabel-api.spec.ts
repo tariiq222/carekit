@@ -43,7 +43,7 @@ describe("whitelabel api", () => {
 
   it("updateConfig puts to /whitelabel/config", async () => {
     putMock.mockResolvedValueOnce([])
-    await updateConfig({ updates: [] } as Parameters<typeof updateConfig>[0])
+    await updateConfig({ configs: [] } as Parameters<typeof updateConfig>[0])
     expect(putMock).toHaveBeenCalledWith("/whitelabel/config", expect.anything())
   })
 

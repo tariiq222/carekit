@@ -43,7 +43,7 @@ export function TodayTimeline({ bookings }: TodayTimelineProps) {
   function handleCancel(id: string) {
     setLoadingId(id)
     adminCancelMut.mutate(
-      { id, reason: "receptionist_cancel" },
+      { id, reason: "receptionist_cancel", refundType: "none" },
       {
         onSettled: () => setLoadingId(null),
         onSuccess: () => toast.success(t("bookings.actions.toast.cancelled")),

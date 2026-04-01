@@ -10,13 +10,14 @@
  */
 
 import { test, expect } from '../setup/fixtures';
+import type { Page } from '@playwright/test';
 
 const WHITELABEL_ROUTES = ['/white-label', '/settings/whitelabel', '/settings/white-label'];
 
 type GotoFn = (path: string) => Promise<void>;
 
 async function gotoWhitelabel(
-  adminPage: Parameters<Parameters<typeof test>[1]>[0]['adminPage'],
+  adminPage: Page,
   goto: GotoFn,
 ) {
   for (const route of WHITELABEL_ROUTES) {

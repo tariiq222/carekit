@@ -70,7 +70,7 @@ describe("practitioners api", () => {
       const result = await fetchPractitioners()
 
       expect(result.items[0].averageRating).toBe(4.5)
-      expect(result.items[0]._count.ratings).toBe(12)
+      expect(result.items[0]._count!.ratings).toBe(12)
     })
 
     it("prefers averageRating over rating when both present", async () => {
@@ -92,7 +92,7 @@ describe("practitioners api", () => {
 
       const result = await fetchPractitioners()
 
-      expect(result.items[0]._count.bookings).toBe(0)
+      expect(result.items[0]!._count!.bookings).toBe(0)
     })
 
     it("passes through existing _count from backend", async () => {
@@ -122,7 +122,7 @@ describe("practitioners api", () => {
       const result = await fetchPractitioner("p-1")
 
       expect(result.averageRating).toBe(4.2)
-      expect(result._count.ratings).toBe(8)
+      expect(result._count!.ratings).toBe(8)
     })
   })
 
@@ -131,6 +131,8 @@ describe("practitioners api", () => {
       postMock.mockResolvedValueOnce({ id: "p-2" })
 
       await createPractitioner({
+        userId: "u-1",
+        specialty: "General",
         firstName: "فاطمة",
         lastName: "الزهراني",
         email: "fatima@clinic.com",

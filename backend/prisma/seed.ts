@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import {
   MODULES,
   ACTIONS,
+  EXTRA_PERMISSIONS,
   ROLES,
   WHITE_LABEL_DEFAULTS,
   EMAIL_TEMPLATES,
@@ -23,7 +24,7 @@ const prisma = new PrismaClient({ adapter });
 async function main(): Promise<void> {
   console.log('Seeding database...');
 
-  // 1. Create all permissions (13 modules x 4 actions = 52)
+  // 1. Create all standard permissions (MODULES × ACTIONS matrix)
   console.log('Creating permissions...');
   const permissionMap = new Map<string, string>();
 
@@ -32,11 +33,34 @@ async function main(): Promise<void> {
       const permission = await prisma.permission.upsert({
         where: { module_action: { module, action } },
         update: {},
-        create: { module, action, description: `${action} ${module}` },
+        create: {
+          module,
+          action,
+          description: `${action} ${module}`,
+        },
       });
       permissionMap.set(`${module}:${action}`, permission.id);
     }
   }
+
+  // 1b. Create extra/granular permissions
+  for (const extra of EXTRA_PERMISSIONS) {
+    const permission = await prisma.permission.upsert({
+      where: { module_action: { module: extra.module, action: extra.action } },
+      update: {
+        description: extra.description,
+        descriptionAr: extra.descriptionAr,
+      },
+      create: {
+        module: extra.module,
+        action: extra.action,
+        description: extra.description,
+        descriptionAr: extra.descriptionAr,
+      },
+    });
+    permissionMap.set(`${extra.module}:${extra.action}`, permission.id);
+  }
+
   console.log(`  Created ${permissionMap.size} permissions`);
 
   // 2. Create roles and assign permissions

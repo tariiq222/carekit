@@ -86,6 +86,136 @@ export class PractitionerAvailabilityService {
     return slots.filter((s) => s.available);
   }
 
+  /**
+   * Returns a Set of date strings (YYYY-MM-DD) that have at least one available slot
+   * for the given practitioner within the specified month.
+   * Uses bulk DB queries to avoid N+1 per day.
+   */
+  async getAvailableDates(
+    practitionerId: string,
+    month: string,
+    duration: number = 30,
+    branchId?: string,
+  ): Promise<{ availableDates: string[] }> {
+    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
+    if (!practitioner.isAcceptingBookings) {
+      return { availableDates: [] };
+    }
+
+    // Parse month → first and last day
+    const [year, mon] = month.split('-').map(Number);
+    const firstDay = new Date(Date.UTC(year, mon - 1, 1));
+    const lastDay = new Date(Date.UTC(year, mon, 0)); // last day of month
+
+    // Today (start of day UTC) — skip past days
+    const todayUTC = new Date(Date.UTC(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      new Date().getDate(),
+    ));
+
+    // Bulk fetch: all availability records for this practitioner
+    const [allAvailabilities, vacations, breaks, bookings, settings] = await Promise.all([
+      this.prisma.practitionerAvailability.findMany({
+        where: {
+          practitionerId,
+          isActive: true,
+          ...(branchId ? { OR: [{ branchId }, { branchId: null }] } : {}),
+        },
+      }),
+      this.prisma.practitionerVacation.findMany({
+        where: {
+          practitionerId,
+          startDate: { lte: lastDay },
+          endDate: { gte: firstDay },
+        },
+      }),
+      this.prisma.practitionerBreak.findMany({ where: { practitionerId } }),
+      this.prisma.booking.findMany({
+        where: {
+          practitionerId,
+          date: { gte: firstDay, lte: new Date(lastDay.getTime() + 86399999) },
+          status: { in: ['confirmed', 'pending', 'checked_in', 'in_progress'] },
+          deletedAt: null,
+        },
+        select: { startTime: true, endTime: true, date: true },
+      }),
+      this.bookingSettingsService.getForBranch(branchId),
+    ]);
+
+    const bufferMinutes = settings.bufferMinutes ?? 0;
+    const availableDates: string[] = [];
+
+    // Group bookings by date string for fast lookup
+    const bookingsByDate = new Map<string, Array<{ startTime: string; endTime: string }>>();
+    for (const b of bookings) {
+      const key = b.date.toISOString().slice(0, 10);
+      const arr = bookingsByDate.get(key) ?? [];
+      arr.push({ startTime: b.startTime, endTime: b.endTime });
+      bookingsByDate.set(key, arr);
+    }
+
+    // Iterate each day of the month
+    const cursor = new Date(firstDay);
+    while (cursor <= lastDay) {
+      const dateStr = cursor.toISOString().slice(0, 10);
+      const dayOfWeek = cursor.getDay();
+
+      // Skip past days
+      if (cursor < todayUTC) {
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+        continue;
+      }
+
+      // Skip vacation days
+      const onVacation = vacations.some(
+        (v) => cursor >= v.startDate && cursor <= v.endDate,
+      );
+      if (onVacation) {
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+        continue;
+      }
+
+      // Get availability for this day-of-week
+      const dayAvailabilities = allAvailabilities.filter((a) => a.dayOfWeek === dayOfWeek);
+      if (dayAvailabilities.length === 0) {
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+        continue;
+      }
+
+      // Get breaks for this day-of-week
+      const dayBreaks = breaks.filter((b) => b.dayOfWeek === dayOfWeek);
+
+      // Generate slots
+      const isToday = isSameLocalDate(cursor, new Date());
+      const allSlots = generateSlots(dayAvailabilities, duration, bufferMinutes, isToday);
+
+      // Filter out break-overlapping slots
+      const slotsAfterBreaks = allSlots.filter(
+        (slot) => !dayBreaks.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
+      );
+
+      if (slotsAfterBreaks.length === 0) {
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+        continue;
+      }
+
+      // Check if at least one slot is not booked
+      const dayBookings = bookingsByDate.get(dateStr) ?? [];
+      const hasAvailable = slotsAfterBreaks.some(
+        (slot) => !dayBookings.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
+      );
+
+      if (hasAvailable) {
+        availableDates.push(dateStr);
+      }
+
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    return { availableDates };
+  }
+
   private async resolveSlots(
     practitionerId: string,
     date: string,

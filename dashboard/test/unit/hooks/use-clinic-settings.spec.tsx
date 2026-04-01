@@ -47,9 +47,9 @@ import {
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
+  return function TestWrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  }
 }
 
 describe("useClinicHours", () => {
@@ -109,12 +109,12 @@ describe("useCreateHoliday", () => {
     const { result } = renderHook(() => useCreateHoliday(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.mutate({ name: "Eid", date: "2026-03-30", isRecurring: false })
+      result.current.mutate({ nameAr: "عيد", nameEn: "Eid", date: "2026-03-30", isRecurring: false })
     })
 
     await waitFor(() =>
       expect(createClinicHoliday).toHaveBeenCalledWith(
-        expect.objectContaining({ name: "Eid" }),
+        expect.objectContaining({ nameAr: "عيد" }),
         expect.anything(),
       ),
     )

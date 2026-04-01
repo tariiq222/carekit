@@ -28,8 +28,8 @@ describe("gift-cards api", () => {
 
   it("fetchGiftCards calls /gift-cards with filters", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
-    await fetchGiftCards({ page: 1, status: "ACTIVE" })
-    expect(getMock).toHaveBeenCalledWith("/gift-cards", expect.objectContaining({ status: "ACTIVE" }))
+    await fetchGiftCards({ page: 1, status: "active" })
+    expect(getMock).toHaveBeenCalledWith("/gift-cards", expect.objectContaining({ status: "active" }))
   })
 
   it("fetchGiftCard calls /gift-cards/:id", async () => {
@@ -40,8 +40,8 @@ describe("gift-cards api", () => {
 
   it("createGiftCard posts to /gift-cards", async () => {
     postMock.mockResolvedValueOnce({ id: "gc-1" })
-    await createGiftCard({ amount: 100 } as Parameters<typeof createGiftCard>[0])
-    expect(postMock).toHaveBeenCalledWith("/gift-cards", expect.objectContaining({ amount: 100 }))
+    await createGiftCard({ initialAmount: 100 } as Parameters<typeof createGiftCard>[0])
+    expect(postMock).toHaveBeenCalledWith("/gift-cards", expect.objectContaining({ initialAmount: 100 }))
   })
 
   it("updateGiftCard patches /gift-cards/:id", async () => {

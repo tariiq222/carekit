@@ -48,7 +48,7 @@ describe("users api", () => {
 
   it("creates a user via POST /users", async () => {
     postMock.mockResolvedValueOnce({ id: "u-2" })
-    await createUser({ firstName: "سارة", lastName: "المطيري", email: "sara@clinic.com", phone: "+966500000001", roleId: "r-1" })
+    await createUser({ firstName: "سارة", lastName: "المطيري", email: "sara@clinic.com", phone: "+966500000001", password: "Pass123!", roleSlug: "receptionist" })
     expect(postMock).toHaveBeenCalledWith("/users", expect.objectContaining({ email: "sara@clinic.com" }))
   })
 
@@ -108,14 +108,14 @@ describe("users api", () => {
 
   it("assigns permission to role via POST /roles/:id/permissions", async () => {
     postMock.mockResolvedValueOnce(undefined)
-    await assignPermission("r-1", { permissionId: "p-1" })
-    expect(postMock).toHaveBeenCalledWith("/roles/r-1/permissions", { permissionId: "p-1" })
+    await assignPermission("r-1", { module: "patients", action: "read" })
+    expect(postMock).toHaveBeenCalledWith("/roles/r-1/permissions", { module: "patients", action: "read" })
   })
 
   it("removes permission from role via DELETE /roles/:id/permissions", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
-    await removePermission("r-1", { permissionId: "p-1" })
-    expect(deleteMock).toHaveBeenCalledWith("/roles/r-1/permissions", { data: { permissionId: "p-1" } })
+    await removePermission("r-1", { module: "patients", action: "read" })
+    expect(deleteMock).toHaveBeenCalledWith("/roles/r-1/permissions", { data: { module: "patients", action: "read" } })
   })
 
   it("fetches all permissions via GET /permissions", async () => {

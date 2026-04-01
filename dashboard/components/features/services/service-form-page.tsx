@@ -158,6 +158,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
       } else {
         const created = await createMut.mutateAsync({
           ...buildPayload(data),
+          categoryId: data.categoryId ?? "",
           practitionerIds: pendingPractitionerIds.length > 0 ? pendingPractitionerIds : undefined,
           branchIds: data.branchIds?.length ? data.branchIds : undefined,
         })

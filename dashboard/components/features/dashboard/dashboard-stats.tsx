@@ -34,7 +34,6 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
   return (
     <StatsGrid>
       <StatCard
-        index={0}
         title={locale === "ar" ? "حجوزات اليوم" : "Today's Bookings"}
         value={todayBookings}
         icon={Calendar03Icon}
@@ -42,7 +41,6 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
         trend={{ value: "+12%", positive: true }}
       />
       <StatCard
-        index={1}
         title={locale === "ar" ? "مرضى جدد" : "New Patients"}
         value={newPatients}
         icon={UserMultiple02Icon}
@@ -50,7 +48,6 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
         trend={{ value: "+8%", positive: true }}
       />
       <StatCard
-        index={2}
         title={locale === "ar" ? "بانتظار الموافقة" : "Awaiting Approval"}
         value={pendingCount}
         icon={Clock01Icon}
@@ -58,7 +55,6 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
         trend={{ value: "-3%", positive: false }}
       />
       <StatCard
-        index={3}
         title={locale === "ar" ? "إيرادات اليوم" : "Today's Revenue"}
         value="—"
         icon={MoneyReceiveSquareIcon}

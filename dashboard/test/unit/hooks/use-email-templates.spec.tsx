@@ -19,9 +19,9 @@ import { useEmailTemplates, useEmailTemplateMutations } from "@/hooks/use-email-
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
+  return function TestWrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  }
 }
 
 describe("useEmailTemplates", () => {
@@ -101,6 +101,8 @@ describe("useEmailTemplateMutations", () => {
       result.current.previewMut.mutate({
         slug: "welcome",
         variables: {},
+        context: {},
+        lang: "ar",
       } as Parameters<typeof result.current.previewMut.mutate>[0])
     })
 

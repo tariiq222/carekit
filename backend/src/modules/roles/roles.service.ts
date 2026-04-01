@@ -44,9 +44,7 @@ export class RolesService {
   async create(dto: CreateRoleDto) {
     const slug = dto.slug ?? dto.name.toLowerCase().replace(/\s+/g, '_');
 
-    const existing = await this.prisma.role.findUnique({
-      where: { slug },
-    });
+    const existing = await this.prisma.role.findUnique({ where: { slug } });
     if (existing) {
       throw new ConflictException({ statusCode: 409, message: 'Role with this name already exists', error: 'CONFLICT' });
     }
@@ -68,16 +66,19 @@ export class RolesService {
   }
 
   async delete(id: string) {
-    const role = await this.prisma.role.findUnique({
-      where: { id },
-    });
+    const role = await this.prisma.role.findUnique({ where: { id } });
 
     if (!role) {
       throw new NotFoundException({ statusCode: 404, message: 'Role not found', error: 'NOT_FOUND' });
     }
 
+    // System roles cannot be deleted — only their permissions can be modified
     if (role.isSystem) {
-      throw new BadRequestException({ statusCode: 400, message: 'Cannot delete system roles', error: 'SYSTEM_ROLE' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Cannot delete system roles. You can modify their permissions from the dashboard.',
+        error: 'SYSTEM_ROLE',
+      });
     }
 
     // Find all users with this role before deleting it
@@ -94,14 +95,17 @@ export class RolesService {
     return { deleted: true };
   }
 
+  /**
+   * Assign a permission to a role.
+   *
+   * @note System roles CAN have their permissions modified from the dashboard.
+   * Only deletion and renaming of system roles is restricted.
+   * This allows admins to customize which permissions each role has.
+   */
   async assignPermission(roleId: string, module: string, action: string) {
     const role = await this.prisma.role.findUnique({ where: { id: roleId } });
     if (!role) {
       throw new NotFoundException({ statusCode: 404, message: 'Role not found', error: 'NOT_FOUND' });
-    }
-
-    if (role.isSystem) {
-      throw new BadRequestException({ statusCode: 400, message: 'Cannot modify permissions of system roles', error: 'SYSTEM_ROLE' });
     }
 
     const permission = await this.prisma.permission.findUnique({
@@ -113,22 +117,14 @@ export class RolesService {
 
     // Check if already assigned
     const existing = await this.prisma.rolePermission.findUnique({
-      where: {
-        roleId_permissionId: {
-          roleId,
-          permissionId: permission.id,
-        },
-      },
+      where: { roleId_permissionId: { roleId, permissionId: permission.id } },
     });
     if (existing) {
       return existing;
     }
 
     const result = await this.prisma.rolePermission.create({
-      data: {
-        roleId,
-        permissionId: permission.id,
-      },
+      data: { roleId, permissionId: permission.id },
       include: { permission: true },
     });
 
@@ -137,14 +133,16 @@ export class RolesService {
     return result;
   }
 
+  /**
+   * Remove a permission from a role.
+   *
+   * @note System roles CAN have permissions removed from the dashboard.
+   * Only deletion and renaming of system roles is restricted.
+   */
   async removePermission(roleId: string, module: string, action: string) {
     const role = await this.prisma.role.findUnique({ where: { id: roleId } });
     if (!role) {
       throw new NotFoundException({ statusCode: 404, message: 'Role not found', error: 'NOT_FOUND' });
-    }
-
-    if (role.isSystem) {
-      throw new BadRequestException({ statusCode: 400, message: 'Cannot modify permissions of system roles', error: 'SYSTEM_ROLE' });
     }
 
     const permission = await this.prisma.permission.findUnique({
@@ -155,10 +153,7 @@ export class RolesService {
     }
 
     await this.prisma.rolePermission.deleteMany({
-      where: {
-        roleId,
-        permissionId: permission.id,
-      },
+      where: { roleId, permissionId: permission.id },
     });
 
     await this.invalidateCacheForRole(roleId);

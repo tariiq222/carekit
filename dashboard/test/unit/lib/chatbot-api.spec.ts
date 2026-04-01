@@ -97,7 +97,7 @@ describe("chatbot api — config", () => {
 
   it("updateChatbotConfig puts to /chatbot/config", async () => {
     putMock.mockResolvedValueOnce([])
-    await updateChatbotConfig({ entries: [] } as Parameters<typeof updateChatbotConfig>[0])
+    await updateChatbotConfig({ configs: [] } as Parameters<typeof updateChatbotConfig>[0])
     expect(putMock).toHaveBeenCalledWith("/chatbot/config", expect.anything())
   })
 
@@ -139,7 +139,7 @@ describe("chatbot-kb api — knowledge base", () => {
 
   it("createKnowledgeEntry posts to /chatbot/knowledge-base", async () => {
     postMock.mockResolvedValueOnce({ id: "kb-1" })
-    await createKnowledgeEntry({ question: "Q?" } as Parameters<typeof createKnowledgeEntry>[0])
+    await createKnowledgeEntry({ title: "Q?", content: "Answer here" } as Parameters<typeof createKnowledgeEntry>[0])
     expect(postMock).toHaveBeenCalledWith("/chatbot/knowledge-base", expect.anything())
   })
 

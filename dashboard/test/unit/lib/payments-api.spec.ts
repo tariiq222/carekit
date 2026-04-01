@@ -28,8 +28,8 @@ describe("payments api", () => {
 
   it("fetches payment list with filter params", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
-    await fetchPayments({ page: 1, status: "PAID", method: "CARD" })
-    expect(getMock).toHaveBeenCalledWith("/payments", expect.objectContaining({ page: 1, status: "PAID", method: "CARD" }))
+    await fetchPayments({ page: 1, status: "paid", method: "bank_transfer" })
+    expect(getMock).toHaveBeenCalledWith("/payments", expect.objectContaining({ page: 1, status: "paid", method: "bank_transfer" }))
   })
 
   it("fetches single payment by id", async () => {
@@ -58,8 +58,8 @@ describe("payments api", () => {
 
   it("updates payment status via PATCH /payments/:id/status", async () => {
     patchMock.mockResolvedValueOnce({ id: "pay-1", status: "PAID" })
-    await updatePaymentStatus("pay-1", { status: "PAID" })
-    expect(patchMock).toHaveBeenCalledWith("/payments/pay-1/status", { status: "PAID" })
+    await updatePaymentStatus("pay-1", { status: "paid" })
+    expect(patchMock).toHaveBeenCalledWith("/payments/pay-1/status", { status: "paid" })
   })
 
   it("verifies bank transfer via POST /payments/bank-transfer/:id/verify", async () => {

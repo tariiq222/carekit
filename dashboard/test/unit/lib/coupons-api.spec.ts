@@ -26,8 +26,8 @@ describe("coupons api", () => {
 
   it("fetchCoupons calls /coupons with filters", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
-    await fetchCoupons({ page: 1, status: "ACTIVE" })
-    expect(getMock).toHaveBeenCalledWith("/coupons", expect.objectContaining({ status: "ACTIVE" }))
+    await fetchCoupons({ page: 1, status: "active" })
+    expect(getMock).toHaveBeenCalledWith("/coupons", expect.objectContaining({ status: "active" }))
   })
 
   it("fetchCoupon calls /coupons/:id", async () => {

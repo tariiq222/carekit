@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFeatureFlags, useFeatureFlagMutation } from "@/hooks/use-feature-flags"
+import type { FeatureFlag } from "@/lib/types/feature-flag"
 import { useLocale } from "@/components/locale-provider"
 import { toast } from "sonner"
 
@@ -68,7 +69,7 @@ export function FeaturesTab() {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {flags.map((flag, index) => (
+        {flags.map((flag: FeatureFlag, index: number) => (
           <div key={flag.id}>
             {index > 0 && <Separator className="mb-4" />}
             <div className="flex items-center justify-between">

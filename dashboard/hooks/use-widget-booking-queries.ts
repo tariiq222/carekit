@@ -13,6 +13,7 @@ import {
   fetchWidgetServiceTypes,
   fetchWidgetServices,
   fetchPublicBranches,
+  fetchWidgetAvailableDates,
 } from "@/lib/api/widget"
 import type { PublicBranch } from "@/lib/api/widget"
 import { queryKeys } from "@/lib/query-keys"
@@ -96,3 +97,19 @@ export function useWidgetSlotsQuery(
   })
   return { slots, slotsLoading }
 }
+
+export function useWidgetAvailableDatesQuery(
+  practitionerId: string | undefined,
+  month: string,
+  duration: number | undefined,
+  branchId?: string,
+) {
+  const { data: availableDates = [], isLoading: availableDatesLoading } = useQuery({
+    queryKey: ["widget", "available-dates", practitionerId, month, duration, branchId],
+    queryFn: () => fetchWidgetAvailableDates(practitionerId!, month, duration, branchId),
+    enabled: !!practitionerId && !!month,
+    staleTime: STALE_1M,
+  })
+  return { availableDates, availableDatesLoading }
+}
+

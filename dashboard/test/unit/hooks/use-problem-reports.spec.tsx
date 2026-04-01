@@ -125,11 +125,11 @@ describe("useResolveProblemReport", () => {
     })
 
     await act(async () => {
-      await result.current.mutateAsync({ id: "pr-1", resolution: "Fixed." })
+      await result.current.mutateAsync({ id: "pr-1", status: "resolved" })
     })
 
     expect(resolveProblemReport).toHaveBeenCalledWith("pr-1", {
-      resolution: "Fixed.",
+      status: "resolved",
     })
   })
 
@@ -148,7 +148,7 @@ describe("useResolveProblemReport", () => {
     const { result } = renderHook(() => useResolveProblemReport(), { wrapper })
 
     await act(async () => {
-      await result.current.mutateAsync({ id: "pr-1", resolution: "Done." })
+      await result.current.mutateAsync({ id: "pr-1", status: "resolved" })
     })
 
     expect(invalidateSpy).toHaveBeenCalledWith(

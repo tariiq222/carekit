@@ -258,8 +258,8 @@ describe('API Client (lib/api.ts)', () => {
     await Promise.all([api.get('/patients/1'), api.get('/patients/2')])
 
     // Only one refresh call (the deduplicated one)
-    const refreshCalls = fetchMock.mock.calls.filter(([url]: [string]) =>
-      url.includes('/auth/refresh-token'),
+    const refreshCalls = fetchMock.mock.calls.filter((call: string[]) =>
+      call[0].includes('/auth/refresh-token'),
     )
     expect(refreshCalls.length).toBe(1)
   })

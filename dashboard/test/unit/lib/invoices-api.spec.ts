@@ -27,8 +27,8 @@ describe("invoices api", () => {
 
   it("fetchInvoices calls /invoices with filters", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
-    await fetchInvoices({ page: 1, zatcaStatus: "PENDING" })
-    expect(getMock).toHaveBeenCalledWith("/invoices", expect.objectContaining({ zatcaStatus: "PENDING" }))
+    await fetchInvoices({ page: 1, zatcaStatus: "pending" })
+    expect(getMock).toHaveBeenCalledWith("/invoices", expect.objectContaining({ zatcaStatus: "pending" }))
   })
 
   it("fetchInvoice calls /invoices/:id", async () => {
@@ -51,8 +51,8 @@ describe("invoices api", () => {
 
   it("createInvoice posts to /invoices", async () => {
     postMock.mockResolvedValueOnce({ id: "inv-1" })
-    await createInvoice({ bookingId: "bk-1" } as Parameters<typeof createInvoice>[0])
-    expect(postMock).toHaveBeenCalledWith("/invoices", expect.objectContaining({ bookingId: "bk-1" }))
+    await createInvoice({ paymentId: "pay-1" } as Parameters<typeof createInvoice>[0])
+    expect(postMock).toHaveBeenCalledWith("/invoices", expect.objectContaining({ paymentId: "pay-1" }))
   })
 
   it("markInvoiceAsSent patches /invoices/:id/send", async () => {

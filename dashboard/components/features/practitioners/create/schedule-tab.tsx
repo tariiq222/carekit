@@ -91,7 +91,7 @@ export function ScheduleTab({
       <Card
         className={vacation.enabled ? "opacity-40 pointer-events-none" : ""}
         aria-disabled={vacation.enabled || undefined}
-        {...(vacation.enabled ? { inert: "" } : {})}
+        {...(vacation.enabled ? { inert: true } : {})}
       >
         <CardHeader>
           <CardTitle>{t("practitioners.create.scheduleSection")}</CardTitle>

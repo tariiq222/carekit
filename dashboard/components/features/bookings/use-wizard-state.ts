@@ -32,7 +32,7 @@ const INITIAL_STATE: WizardState = {
   durationLabel: null,
   date: null,
   startTime: null,
-  payAtClinic: true,
+  payAtClinic: false,
 }
 
 export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {

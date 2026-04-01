@@ -62,9 +62,9 @@ import { useBookings, useBookingStats, useTodayBookings } from "@/hooks/use-book
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
+  return function TestWrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  }
 }
 
 describe("useBookings", () => {
@@ -104,11 +104,11 @@ describe("useBookings", () => {
     const { result } = renderHook(() => useBookings(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    act(() => { result.current.setFilters({ status: "CONFIRMED" }) })
+    act(() => { result.current.setFilters({ status: "confirmed" }) })
 
     await waitFor(() =>
       expect(fetchBookings).toHaveBeenCalledWith(
-        expect.objectContaining({ status: "CONFIRMED", page: 1 }),
+        expect.objectContaining({ status: "confirmed", page: 1 }),
       ),
     )
   })
@@ -120,7 +120,7 @@ describe("useBookings", () => {
     const { result } = renderHook(() => useBookings(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    act(() => { result.current.setFilters({ status: "CONFIRMED", practitionerId: "p-1" }) })
+    act(() => { result.current.setFilters({ status: "confirmed", practitionerId: "p-1" }) })
     act(() => { result.current.resetFilters() })
 
     await waitFor(() => {

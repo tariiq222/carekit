@@ -22,8 +22,8 @@ const STATUS_HEX: Record<BookingStatus, string> = {
   checked_in: "hsl(var(--info))", in_progress: "hsl(var(--primary))", expired: "hsl(var(--muted))",
 }
 const TYPE_HEX: Record<BookingType, string> = {
-  clinic_visit: "hsl(var(--primary))", phone_consultation: "hsl(var(--success))",
-  video_consultation: "hsl(var(--info))", walk_in: "hsl(var(--accent))",
+  in_person: "hsl(var(--primary))", online: "hsl(var(--info))",
+  walk_in: "hsl(var(--accent))",
 }
 const STATUS_LABEL: Record<BookingStatus, { ar: string; en: string }> = {
   completed: { ar: "مكتملة", en: "Completed" }, confirmed: { ar: "مؤكدة", en: "Confirmed" },
@@ -33,11 +33,12 @@ const STATUS_LABEL: Record<BookingStatus, { ar: string; en: string }> = {
   expired: { ar: "منتهية", en: "Expired" },
 }
 const TYPE_LABEL: Record<BookingType, { ar: string; en: string }> = {
-  clinic_visit: { ar: "عيادة", en: "Clinic" }, phone_consultation: { ar: "هاتف", en: "Phone" },
-  video_consultation: { ar: "فيديو", en: "Video" }, walk_in: { ar: "مباشر", en: "Walk-in" },
+  in_person: { ar: "عيادة", en: "In-Person" },
+  online: { ar: "عن بُعد", en: "Online" },
+  walk_in: { ar: "مباشر", en: "Walk-in" },
 }
 const STATUSES: BookingStatus[] = ["completed", "confirmed", "pending", "cancelled", "no_show", "pending_cancellation"]
-const TYPES: BookingType[] = ["clinic_visit", "phone_consultation", "video_consultation", "walk_in"]
+const TYPES: BookingType[] = ["in_person", "online", "walk_in"]
 
 /* ─── Helpers ─── */
 

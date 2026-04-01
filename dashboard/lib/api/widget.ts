@@ -125,6 +125,21 @@ export async function fetchWidgetSlots(
   return Array.isArray(res) ? res : (res.slots ?? [])
 }
 
+export async function fetchWidgetAvailableDates(
+  practitionerId: string,
+  month: string,
+  duration?: number,
+  branchId?: string,
+): Promise<string[]> {
+  const res = await api.get<{ availableDates: string[] }>(
+    `/practitioners/${practitionerId}/available-dates`,
+    { month, duration, branchId },
+  )
+  return res.availableDates
+}
+
+
+
 /* ─── Services ─── */
 
 export async function fetchWidgetServices(): Promise<PaginatedResponse<Service>> {

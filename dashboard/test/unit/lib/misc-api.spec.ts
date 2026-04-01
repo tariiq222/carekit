@@ -47,7 +47,7 @@ describe("zatca api", () => {
 
   it("onboardZatca posts to /zatca/onboard", async () => {
     postMock.mockResolvedValueOnce({})
-    await onboardZatca({ vatNumber: "123" } as Parameters<typeof onboardZatca>[0])
+    await onboardZatca({ otp: "123456", vatNumber: "123" } as Parameters<typeof onboardZatca>[0])
     expect(postMock).toHaveBeenCalledWith("/zatca/onboard", expect.anything())
   })
 

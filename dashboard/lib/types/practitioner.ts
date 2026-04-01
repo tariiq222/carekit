@@ -19,6 +19,10 @@ export interface Practitioner {
   education: string | null
   educationAr: string | null
   isActive: boolean
+  isAcceptingBookings?: boolean
+  priceClinic?: number | null
+  pricePhone?: number | null
+  priceVideo?: number | null
   avatarUrl?: string | null
   createdAt: string
   updatedAt: string
@@ -58,6 +62,9 @@ export interface PractitionerService {
   bufferMinutes: number
   availableTypes: string[]
   isActive: boolean
+  priceClinic?: number | null
+  pricePhone?: number | null
+  priceVideo?: number | null
   service: {
     id: string
     nameAr: string

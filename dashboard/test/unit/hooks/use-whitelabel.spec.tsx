@@ -67,7 +67,7 @@ describe("useUpdateConfig", () => {
   beforeEach(() => vi.clearAllMocks())
 
   it("calls updateConfig with the provided payload", async () => {
-    const payload = { key: "clinicName", value: "My Clinic" }
+    const payload = { configs: [{ key: "clinicName", value: "My Clinic" }] }
     updateConfig.mockResolvedValueOnce([{ key: "clinicName", value: "My Clinic" }])
 
     const wrapper = makeWrapper()
@@ -104,7 +104,7 @@ describe("useUpdateConfig", () => {
     const { result } = renderHook(() => useUpdateConfig(), { wrapper })
 
     await act(async () => {
-      await result.current.mutateAsync({ key: "x", value: "y" })
+      await result.current.mutateAsync({ configs: [{ key: "x", value: "y" }] })
     })
 
     expect(invalidateSpy).toHaveBeenCalledWith(

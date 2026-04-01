@@ -125,13 +125,13 @@ describe("services api", () => {
 
   it("createIntakeForm posts to /services/:id/intake-forms", async () => {
     postMock.mockResolvedValueOnce({ id: "form-1" })
-    await createIntakeForm("svc-1", { title: "Form" } as Parameters<typeof createIntakeForm>[1])
+    await createIntakeForm("svc-1", { titleAr: "نموذج", titleEn: "Form" } as Parameters<typeof createIntakeForm>[1])
     expect(postMock).toHaveBeenCalledWith("/services/svc-1/intake-forms", expect.anything())
   })
 
   it("updateIntakeForm patches /intake-forms/:id", async () => {
     patchMock.mockResolvedValueOnce({ id: "form-1" })
-    await updateIntakeForm("form-1", { title: "Updated" })
+    await updateIntakeForm("form-1", { titleAr: "محدث" })
     expect(patchMock).toHaveBeenCalledWith("/intake-forms/form-1", expect.anything())
   })
 

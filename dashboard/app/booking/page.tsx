@@ -31,20 +31,24 @@ export default async function WidgetBookPage({ searchParams }: PageProps) {
   }
 
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-64">
-          <HugeiconsIcon icon={Loading03Icon} size={32} className="text-primary" />
-        </div>
-      }
-    >
-      <BookingWizard
-        initialPractitionerId={params.practitioner}
-        initialServiceId={params.service}
-        initialLocale={(params.locale as "ar" | "en") ?? "ar"}
-        parentOrigin={params.origin}
-        initialFlowOrder={flowOrder}
-      />
-    </Suspense>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-4xl">
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-64">
+              <HugeiconsIcon icon={Loading03Icon} size={32} className="text-primary" />
+            </div>
+          }
+        >
+          <BookingWizard
+            initialPractitionerId={params.practitioner}
+            initialServiceId={params.service}
+            initialLocale={(params.locale as "ar" | "en") ?? "ar"}
+            parentOrigin={params.origin}
+            initialFlowOrder={flowOrder}
+          />
+        </Suspense>
+      </div>
+    </div>
   )
 }

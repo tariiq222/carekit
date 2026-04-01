@@ -28,6 +28,48 @@ export const MODULES = [
 export const ACTIONS = ['view', 'create', 'edit', 'delete'] as const;
 
 // ──────────────────────────────────────────────
+// Extra permissions beyond the standard MODULES × ACTIONS matrix
+// These are granular permissions for specific features
+// ──────────────────────────────────────────────
+
+export interface ExtraPermission {
+  module: string;
+  action: string;
+  description: string;
+  descriptionAr: string;
+}
+
+export const EXTRA_PERMISSIONS: ExtraPermission[] = [
+  // notifications — update (mark as read / dismiss)
+  {
+    module: 'notifications',
+    action: 'update',
+    description: 'Mark notifications as read or update their state',
+    descriptionAr: 'تحديث حالة الإشعارات (قراءة / إخفاء)',
+  },
+  // chatbot — use (send messages, start sessions)
+  {
+    module: 'chatbot',
+    action: 'use',
+    description: 'Use the chatbot — send messages and start sessions',
+    descriptionAr: 'استخدام الشات بوت — إرسال رسائل وبدء جلسات',
+  },
+  // practitioners — favorites
+  {
+    module: 'practitioners',
+    action: 'favorites:view',
+    description: 'View favorite practitioners list',
+    descriptionAr: 'عرض قائمة الأطباء المفضلين',
+  },
+  {
+    module: 'practitioners',
+    action: 'favorites:edit',
+    description: 'Add or remove practitioners from favorites',
+    descriptionAr: 'إضافة أو إزالة الأطباء من المفضلة',
+  },
+];
+
+// ──────────────────────────────────────────────
 // Role Definitions
 // ──────────────────────────────────────────────
 
@@ -47,7 +89,13 @@ export const ROLES: RoleDefinition[] = [
     description: 'Full system access with all permissions',
     isDefault: false,
     isSystem: true,
-    permissions: Object.fromEntries(MODULES.map((m) => [m, [...ACTIONS]])),
+    permissions: {
+      ...Object.fromEntries(MODULES.map((m) => [m, [...ACTIONS]])),
+      // Extra permissions
+      notifications: ['view', 'create', 'edit', 'delete', 'update'],
+      chatbot: ['view', 'create', 'edit', 'delete', 'use'],
+      practitioners: ['view', 'create', 'edit', 'delete', 'favorites:view', 'favorites:edit'],
+    },
   },
   {
     name: 'Admin',
@@ -55,9 +103,15 @@ export const ROLES: RoleDefinition[] = [
     description: 'Clinic manager with full access except white-label and role management',
     isDefault: false,
     isSystem: true,
-    permissions: Object.fromEntries(
-      MODULES.filter((m) => m !== 'whitelabel' && m !== 'roles').map((m) => [m, [...ACTIONS]]),
-    ),
+    permissions: {
+      ...Object.fromEntries(
+        MODULES.filter((m) => m !== 'whitelabel' && m !== 'roles').map((m) => [m, [...ACTIONS]]),
+      ),
+      // Extra permissions
+      notifications: ['view', 'create', 'edit', 'delete', 'update'],
+      chatbot: ['view', 'create', 'edit', 'delete', 'use'],
+      practitioners: ['view', 'create', 'edit', 'delete', 'favorites:view', 'favorites:edit'],
+    },
   },
   {
     name: 'Receptionist',
@@ -70,10 +124,11 @@ export const ROLES: RoleDefinition[] = [
       patients: ['view', 'create', 'edit'],
       practitioners: ['view', 'create', 'edit'],
       services: ['view', 'create', 'edit'],
-      notifications: ['view', 'create', 'edit'],
+      notifications: ['view', 'create', 'edit', 'update'],
       payments: ['view'],
       invoices: ['view'],
       coupons: ['view'],
+      chatbot: ['use'],
     },
   },
   {
@@ -88,6 +143,8 @@ export const ROLES: RoleDefinition[] = [
       reports: ['view', 'create', 'edit'],
       bookings: ['view'],
       coupons: ['view', 'create', 'edit', 'delete'],
+      notifications: ['view', 'update'],
+      chatbot: ['use'],
     },
   },
   {
@@ -101,6 +158,8 @@ export const ROLES: RoleDefinition[] = [
       patients: ['view'],
       ratings: ['view'],
       practitioners: ['view', 'edit'],
+      notifications: ['view', 'update'],
+      chatbot: ['use'],
     },
   },
   {
@@ -114,8 +173,10 @@ export const ROLES: RoleDefinition[] = [
       payments: ['view', 'create'],
       invoices: ['view'],
       ratings: ['view', 'create', 'edit'],
-      practitioners: ['view'],
+      practitioners: ['view', 'favorites:view', 'favorites:edit'],
       services: ['view'],
+      notifications: ['view', 'update'],
+      chatbot: ['use'],
     },
   },
 ];

@@ -35,7 +35,7 @@ describe("problem-reports api", () => {
 
   it("resolveProblemReport patches /problem-reports/:id/resolve", async () => {
     patchMock.mockResolvedValueOnce({})
-    await resolveProblemReport("pr-1", { resolution: "Fixed" } as Parameters<typeof resolveProblemReport>[1])
+    await resolveProblemReport("pr-1", { status: "resolved" } as Parameters<typeof resolveProblemReport>[1])
     expect(patchMock).toHaveBeenCalledWith("/problem-reports/pr-1/resolve", expect.anything())
   })
 })

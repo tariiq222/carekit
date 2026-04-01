@@ -163,7 +163,7 @@ describe('AuthGate', () => {
 
   it('DA-S3: should show LoginForm after logout (protected content disappears)', async () => {
     // Start authenticated
-    let authState = { user: mockUser, loading: false, login: vi.fn(), logout: vi.fn() }
+    let authState: { user: typeof mockUser | null; loading: boolean; login: ReturnType<typeof vi.fn>; logout: ReturnType<typeof vi.fn> } = { user: mockUser, loading: false, login: vi.fn(), logout: vi.fn() }
     mockUseAuth.mockImplementation(() => authState)
 
     const { rerender } = render(
@@ -187,7 +187,7 @@ describe('AuthGate', () => {
   })
 
   it('DA-S4: should keep protected content inaccessible after logout', async () => {
-    let authState = { user: mockUser, loading: false, login: vi.fn(), logout: vi.fn() }
+    let authState: { user: typeof mockUser | null; loading: boolean; login: ReturnType<typeof vi.fn>; logout: ReturnType<typeof vi.fn> } = { user: mockUser, loading: false, login: vi.fn(), logout: vi.fn() }
     mockUseAuth.mockImplementation(() => authState)
 
     const { rerender } = render(

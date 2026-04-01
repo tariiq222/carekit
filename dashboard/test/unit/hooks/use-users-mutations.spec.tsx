@@ -174,11 +174,11 @@ describe("useRoleMutations", () => {
     const { result } = renderHook(() => useRoleMutations(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.assignPermMut.mutate({ roleId: "r-1", permissionId: "perm-1" } as Parameters<typeof result.current.assignPermMut.mutate>[0])
+      result.current.assignPermMut.mutate({ roleId: "r-1", permissionId: "perm-1", module: "patients", action: "read" } as Parameters<typeof result.current.assignPermMut.mutate>[0])
     })
 
     await waitFor(() =>
-      expect(assignPermission).toHaveBeenCalledWith("r-1", expect.objectContaining({ permissionId: "perm-1" })),
+      expect(assignPermission).toHaveBeenCalledWith("r-1", expect.objectContaining({ module: "patients", action: "read" })),
     )
   })
 
@@ -188,11 +188,11 @@ describe("useRoleMutations", () => {
     const { result } = renderHook(() => useRoleMutations(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.removePermMut.mutate({ roleId: "r-1", permissionId: "perm-1" } as Parameters<typeof result.current.removePermMut.mutate>[0])
+      result.current.removePermMut.mutate({ roleId: "r-1", permissionId: "perm-1", module: "patients", action: "read" } as Parameters<typeof result.current.removePermMut.mutate>[0])
     })
 
     await waitFor(() =>
-      expect(removePermission).toHaveBeenCalledWith("r-1", expect.objectContaining({ permissionId: "perm-1" })),
+      expect(removePermission).toHaveBeenCalledWith("r-1", expect.objectContaining({ module: "patients", action: "read" })),
     )
   })
 })

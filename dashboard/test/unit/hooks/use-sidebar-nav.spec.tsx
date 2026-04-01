@@ -13,12 +13,12 @@ const { usePathname, useRouter } = vi.hoisted(() => ({
 }))
 
 const { useAuth } = vi.hoisted(() => ({
-  useAuth: vi.fn(() => ({
+  useAuth: vi.fn<() => { user: { firstName: string; lastName: string; role: string; permissions: string[] } | null }>(() => ({
     user: {
       firstName: "Ali",
       lastName: "Hassan",
       role: "ADMIN",
-      permissions: [],
+      permissions: [] as string[],
     },
   })),
 }))
@@ -64,7 +64,7 @@ describe("useSidebarNav", () => {
         firstName: "Ali",
         lastName: "Hassan",
         role: "ADMIN",
-        permissions: [],
+        permissions: [] as string[],
       },
     })
   })
@@ -87,7 +87,7 @@ describe("useSidebarNav", () => {
         firstName: "Ali",
         lastName: "Hassan",
         role: "ADMIN",
-        permissions: ["patients:read"],
+        permissions: ["patients:read"] as string[],
       },
     })
     fetchBookingStats.mockResolvedValue({ pending: 0, pendingCancellation: 0 })

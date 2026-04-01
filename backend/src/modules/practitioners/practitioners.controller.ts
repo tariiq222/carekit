@@ -24,7 +24,7 @@ import { PractitionerVacationService } from './practitioner-vacation.service.js'
 import { PractitionerBreaksService } from './practitioner-breaks.service.js';
 import { PractitionerServiceService } from './practitioner-service.service.js';
 import { PractitionerRatingsService } from './practitioner-ratings.service.js';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
 import { OnboardPractitionerDto } from './dto/onboard-practitioner.dto.js';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto.js';
@@ -35,6 +35,7 @@ import { UpdatePractitionerServiceDto } from './dto/update-practitioner-service.
 import { SetBreaksDto } from './dto/set-breaks.dto.js';
 import { GetPractitionersQueryDto } from './dto/get-practitioners-query.dto.js';
 import { GetSlotsQueryDto } from './dto/get-slots-query.dto.js';
+import { GetAvailableDatesQueryDto } from './dto/get-available-dates-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 
 @ApiTags('Practitioners')
@@ -54,35 +55,30 @@ export class PractitionersController {
 
   @Get()
   @Public()
-  @ApiOperation({ summary: 'List all practitioners with optional filters' })
   async findAll(@Query() query: GetPractitionersQueryDto) {
     return this.practitionersService.findAll(query);
   }
 
   @Get(':id')
   @Public()
-  @ApiOperation({ summary: 'Get practitioner details by ID' })
   async findOne(@Param('id', uuidPipe) id: string) {
     return this.practitionersService.findOne(id);
   }
 
   @Post()
   @CheckPermissions({ module: 'practitioners', action: 'create' })
-  @ApiOperation({ summary: 'Create a new practitioner' })
   async create(@Body() dto: CreatePractitionerDto) {
     return this.practitionersService.create(dto);
   }
 
   @Post('onboard')
   @CheckPermissions({ module: 'practitioners', action: 'create' })
-  @ApiOperation({ summary: 'Onboard a new practitioner with full setup' })
   async onboard(@Body() dto: OnboardPractitionerDto) {
     return this.onboardingService.onboard(dto);
   }
 
   @Patch(':id')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
-  @ApiOperation({ summary: 'Update practitioner profile' })
   async update(
     @Param('id', uuidPipe) id: string,
     @Body() dto: UpdatePractitionerDto,
@@ -93,7 +89,6 @@ export class PractitionersController {
 
   @Delete(':id')
   @CheckPermissions({ module: 'practitioners', action: 'delete' })
-  @ApiOperation({ summary: 'Soft delete a practitioner' })
   async delete(@Param('id', uuidPipe) id: string) {
     await this.practitionersService.delete(id);
     return { success: true };
@@ -103,7 +98,6 @@ export class PractitionersController {
 
   @Get(':id/availability')
   @Public()
-  @ApiOperation({ summary: 'Get practitioner weekly availability schedule' })
   async getAvailability(@Param('id', uuidPipe) id: string) {
     const schedule = await this.availabilityService.getAvailability(id);
     return { schedule };
@@ -112,7 +106,6 @@ export class PractitionersController {
   @Put(':id/availability')
   @HttpCode(HttpStatus.OK)
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
-  @ApiOperation({ summary: 'Set practitioner weekly availability schedule' })
   async setAvailability(
     @Param('id', uuidPipe) id: string,
     @Body() dto: SetAvailabilityDto,
@@ -124,7 +117,6 @@ export class PractitionersController {
 
   @Get(':id/slots')
   @Public()
-  @ApiOperation({ summary: 'Get available time slots for a practitioner on a date' })
   async getSlots(
     @Param('id', uuidPipe) id: string,
     @Query() query: GetSlotsQueryDto,
@@ -139,11 +131,21 @@ export class PractitionersController {
     return this.availabilityService.getSlots(id, query.date, resolvedDuration);
   }
 
+  @Get(':id/available-dates')
+  @Public()
+  async getAvailableDates(
+    @Param('id', uuidPipe) id: string,
+    @Query() query: GetAvailableDatesQueryDto,
+  ) {
+    const duration = query.duration ?? 30;
+    const result = await this.availabilityService.getAvailableDates(id, query.month, duration, query.branchId);
+    return { success: true, data: result };
+  }
+
   // --- Breaks ---
 
   @Get(':id/breaks')
   @CheckPermissions({ module: 'practitioners', action: 'view' })
-  @ApiOperation({ summary: 'Get practitioner break schedule' })
   async getBreaks(@Param('id', uuidPipe) id: string) {
     const data = await this.breaksService.getBreaks(id);
     return { success: true, data };
@@ -152,7 +154,6 @@ export class PractitionersController {
   @Put(':id/breaks')
   @HttpCode(HttpStatus.OK)
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
-  @ApiOperation({ summary: 'Set practitioner break schedule' })
   async setBreaks(
     @Param('id', uuidPipe) id: string,
     @Body() dto: SetBreaksDto,
@@ -166,14 +167,12 @@ export class PractitionersController {
 
   @Get(':id/vacations')
   @CheckPermissions({ module: 'practitioners', action: 'view' })
-  @ApiOperation({ summary: 'Get practitioner vacation periods' })
   async getVacations(@Param('id', uuidPipe) id: string) {
     return this.vacationService.getVacations(id);
   }
 
   @Post(':id/vacations')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
-  @ApiOperation({ summary: 'Create a vacation period for practitioner' })
   async createVacation(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CreateVacationDto,
@@ -184,7 +183,6 @@ export class PractitionersController {
 
   @Delete(':id/vacations/:vacationId')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
-  @ApiOperation({ summary: 'Delete a practitioner vacation period' })
   async deleteVacation(
     @Param('id', uuidPipe) id: string,
     @Param('vacationId', uuidPipe) vacationId: string,
@@ -198,14 +196,12 @@ export class PractitionersController {
 
   @Get(':id/services')
   @Public()
-  @ApiOperation({ summary: 'List practitioner services and pricing' })
   async listServices(@Param('id', uuidPipe) id: string) {
     return this.practitionerServiceService.listServices(id);
   }
 
   @Post(':id/services')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
-  @ApiOperation({ summary: 'Assign a service to a practitioner' })
   async assignService(
     @Param('id', uuidPipe) id: string,
     @Body() dto: AssignPractitionerServiceDto,
@@ -216,7 +212,6 @@ export class PractitionersController {
 
   @Patch(':id/services/:serviceId')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
-  @ApiOperation({ summary: 'Update a practitioner service pricing and settings' })
   async updateService(
     @Param('id', uuidPipe) id: string,
     @Param('serviceId', uuidPipe) serviceId: string,
@@ -228,7 +223,6 @@ export class PractitionersController {
 
   @Delete(':id/services/:serviceId')
   @CheckPermissions({ module: 'practitioners', action: 'edit' })
-  @ApiOperation({ summary: 'Remove a service from a practitioner' })
   async removeService(
     @Param('id', uuidPipe) id: string,
     @Param('serviceId', uuidPipe) serviceId: string,
@@ -238,8 +232,7 @@ export class PractitionersController {
   }
 
   @Get(':id/services/:serviceId/types')
-  @CheckPermissions({ module: 'practitioners', action: 'edit' })
-  @ApiOperation({ summary: 'Get booking types for a practitioner service' })
+  @Public()
   async getServiceTypes(
     @Param('id', uuidPipe) id: string,
     @Param('serviceId', uuidPipe) serviceId: string,
@@ -252,7 +245,6 @@ export class PractitionersController {
 
   @Get(':id/ratings')
   @Public()
-  @ApiOperation({ summary: 'Get practitioner ratings with pagination' })
   async getRatings(
     @Param('id', uuidPipe) id: string,
     @Query('page') page?: string,

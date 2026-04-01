@@ -131,15 +131,13 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
                 <div key={svc.id} className="rounded-xl border border-border/60 overflow-hidden">
                   <button
                     onClick={() => booking.setState((s) => ({ ...s, service: svc }))}
-                    className="w-full flex items-center justify-between p-3 hover:bg-primary/5 transition-all text-start"
+                    className="w-full flex items-center justify-between gap-4 px-4 py-3 hover:bg-primary/5 transition-all text-start"
                   >
-                    <div>
-                      <p className="font-medium text-sm">{isRtl ? svc.nameAr : svc.nameEn}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {svc.duration} {isRtl ? "دقيقة" : "min"} · {svc.price} {isRtl ? "ر.س" : "SAR"}
-                      </p>
-                    </div>
-                    <HugeiconsIcon icon={chevronIcon} size={16} className="text-muted-foreground" />
+                    <p className="font-medium text-sm flex-1 min-w-0 truncate">{isRtl ? svc.nameAr : svc.nameEn}</p>
+                    <p className="text-xs text-muted-foreground shrink-0 font-numeric">
+                      {svc.duration} {isRtl ? "دقيقة" : "min"} · {svc.price} {isRtl ? "ر.س" : "SAR"}
+                    </p>
+                    <HugeiconsIcon icon={chevronIcon} size={16} className="text-muted-foreground shrink-0" />
                   </button>
                 </div>
               ))}
@@ -170,15 +168,13 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
                 <div key={svc.id} className="rounded-xl border border-border/60 overflow-hidden">
                   <button
                     onClick={() => selectServiceOnly(svc)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-primary/5 transition-all text-start"
+                    className="w-full flex items-center justify-between gap-4 px-4 py-3 hover:bg-primary/5 transition-all text-start"
                   >
-                    <div>
-                      <p className="font-medium text-sm">{isRtl ? svc.nameAr : svc.nameEn}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {svc.duration} {isRtl ? "دقيقة" : "min"} · {svc.price} {isRtl ? "ر.س" : "SAR"}
-                      </p>
-                    </div>
-                    <HugeiconsIcon icon={chevronIcon} size={16} className="text-muted-foreground" />
+                    <p className="font-medium text-sm flex-1 min-w-0 truncate">{isRtl ? svc.nameAr : svc.nameEn}</p>
+                    <p className="text-xs text-muted-foreground shrink-0 font-numeric">
+                      {svc.duration} {isRtl ? "دقيقة" : "min"} · {svc.price} {isRtl ? "ر.س" : "SAR"}
+                    </p>
+                    <HugeiconsIcon icon={chevronIcon} size={16} className="text-muted-foreground shrink-0" />
                   </button>
                 </div>
               ))}
