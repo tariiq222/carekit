@@ -11,7 +11,7 @@
 
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { widgetCreateBooking } from "@/lib/api/widget"
 import { useWidgetBookingQueries, useWidgetSlotsQuery } from "./use-widget-booking-queries"
@@ -158,18 +158,20 @@ export function useWidgetBooking(
 
   const hasBranches = (queries.branches?.length ?? 0) > 1
 
-  useEffect(() => {
-    if (hasBranches) {
-      setState((s) => s.step === "service" && !s.branch ? { ...s, step: "branch" } : s)
-    }
-  }, [hasBranches])
+  // When branches load and there are multiple, redirect "service" → "branch" automatically.
+  // Use a derived value instead of setState-in-effect to avoid cascading renders.
+  const effectiveStep: WizardStep =
+    hasBranches && state.step === "service" && !state.branch ? "branch" : state.step
 
   const goBack = useCallback(() => {
     setState((s) => {
       const steps: WizardStep[] = hasBranches
         ? ["branch", "service", "datetime", "auth", "confirm"]
         : ["service", "datetime", "auth", "confirm"]
-      const idx = steps.indexOf(s.step)
+      // Use effectiveStep for back navigation so the branch redirect is respected
+      const currentStep: WizardStep =
+        hasBranches && s.step === "service" && !s.branch ? "branch" : s.step
+      const idx = steps.indexOf(currentStep)
       if (idx <= 0) return s
       return { ...s, step: steps[idx - 1] }
     })
@@ -228,7 +230,7 @@ export function useWidgetBooking(
   }, [])
 
   return {
-    state,
+    state: { ...state, step: effectiveStep },
     setState,
     flowOrder,
     ...queries,
