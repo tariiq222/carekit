@@ -201,12 +201,8 @@ export class BankTransferService {
       } catch (err) {
         // Race recovery: booking may have expired while receipt was under review.
         // Since payment is approved, recover to confirmed.
-        // updateMany with status condition makes this idempotent under concurrent retries.
-        const recovered = await this.prisma.booking.updateMany({
-          where: { id: payment.bookingId, status: 'expired' },
-          data: { status: 'confirmed', confirmedAt: new Date(), cancelledBy: null },
-        });
-        if (recovered.count > 0) {
+        const recovered = await this.bookingStatusService.recoverExpiredBooking(payment.bookingId);
+        if (recovered) {
           this.logger.warn(
             `Recovered expired booking ${payment.bookingId} → confirmed (bank transfer approved)`,
           );
@@ -228,7 +224,7 @@ export class BankTransferService {
       module: 'payments',
       resourceId: receiptId,
       description: `Bank transfer receipt ${dto.action}d by admin`,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     if (dto.action === 'approve') {
       try {

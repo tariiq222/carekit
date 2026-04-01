@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
@@ -23,6 +24,8 @@ import { ERR } from '../../common/constants/error-messages.js';
 
 @Injectable()
 export class BookingsService {
+  private readonly logger = new Logger(BookingsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly creationService: BookingCreationService,
@@ -72,7 +75,7 @@ export class BookingsService {
     if ((bdt.getTime() - Date.now()) / (1000 * 60 * 60) < settings.rescheduleBeforeHours) throw new BadRequestException({ statusCode: 400, message: ERR.booking.rescheduleTooLate(settings.rescheduleBeforeHours), error: 'RESCHEDULE_TOO_LATE' });
     const result = await this.reschedule(bookingId, dto);
     await this.prisma.booking.update({ where: { id: result.id }, data: { rescheduleCount: booking.rescheduleCount + 1 } });
-    this.activityLogService.log({ action: 'booking_patient_rescheduled', module: 'bookings', resourceId: result.id, description: `Patient rescheduled booking (count: ${booking.rescheduleCount + 1})` }).catch(() => {});
+    this.activityLogService.log({ action: 'booking_patient_rescheduled', module: 'bookings', resourceId: result.id, description: `Patient rescheduled booking (count: ${booking.rescheduleCount + 1})` }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
     return { ...result, rescheduleCount: booking.rescheduleCount + 1 };
   }
 

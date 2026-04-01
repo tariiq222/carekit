@@ -11,6 +11,11 @@ import {
 } from '../decorators/check-permissions.decorator.js';
 import type { UserPayload } from '../types/user-payload.type.js';
 
+/**
+ * @note Uses string-based permission matching: `${module}:${action}`
+ * CASL factory (casl-ability.factory.ts) is available for future
+ * field-level authorization if needed.
+ */
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(private reflector: Reflector) {}

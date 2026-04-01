@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -17,6 +18,8 @@ import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly activityLogService: ActivityLogService,
@@ -165,7 +168,7 @@ export class UsersService {
       module: 'users',
       resourceId: user.id,
       description: `User created with role ${dto.roleSlug}`,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     return {
       ...sanitizeUser({
@@ -246,7 +249,7 @@ export class UsersService {
       module: 'users',
       resourceId: id,
       description: 'User soft-deleted',
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
   }
 
   async activate(id: string) {

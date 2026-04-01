@@ -78,7 +78,7 @@ export class BookingAutocompleteService {
           toStatus: 'completed',
           changedBy: 'system',
           reason: `Auto-completed after ${settings.autoCompleteAfterHours}h post-end-time`,
-        }).catch(() => {});
+        }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
 
         if (booking.patientId) {
           await this.notificationsService.createNotification({
@@ -104,7 +104,7 @@ export class BookingAutocompleteService {
           module: 'bookings',
           description: `Auto-completed ${bookings.length} bookings`,
         })
-        .catch(() => {});
+        .catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
     }
   }
 }

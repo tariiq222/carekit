@@ -169,16 +169,8 @@ export class MoyasarWebhookService {
     } catch (err) {
       // Race recovery: if cron expired the booking while payment was processing,
       // revert to confirmed since money was actually paid.
-      // updateMany with status condition makes this idempotent under concurrent retries.
-      const recovered = await this.prisma.booking.updateMany({
-        where: { id: bookingId, status: 'expired' },
-        data: {
-          status: 'confirmed',
-          confirmedAt: new Date(),
-          cancelledBy: null,
-        },
-      });
-      if (recovered.count > 0) {
+      const recovered = await this.bookingStatusService.recoverExpiredBooking(bookingId);
+      if (recovered) {
         this.logger.warn(
           `Recovered expired booking ${bookingId} → confirmed (payment ${paymentId} was paid)`,
         );

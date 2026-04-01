@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { Booking, BookingSettings, CancelledBy, RefundType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
@@ -18,6 +19,8 @@ import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class BookingCancellationService {
+  private readonly logger = new Logger(BookingCancellationService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly activityLogService: ActivityLogService,
@@ -102,7 +105,7 @@ export class BookingCancellationService {
       module: 'bookings',
       resourceId: bookingId,
       description: `Admin cancelled booking. Refund: ${dto.refundType}`,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     this.helpers.deleteZoomIfNeeded(booking);
     await this.waitlistService.checkAndNotify(booking.practitionerId, booking.date);
@@ -148,7 +151,7 @@ export class BookingCancellationService {
       module: 'bookings',
       resourceId: bookingId,
       description: 'Practitioner cancelled booking. Full refund applied',
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     this.helpers.deleteZoomIfNeeded(booking);
     await this.waitlistService.checkAndNotify(booking.practitionerId, booking.date);
@@ -187,7 +190,7 @@ export class BookingCancellationService {
       module: 'bookings',
       resourceId: id,
       description: `Booking cancellation approved. Refund type: ${dto.refundType}`,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     await this.helpers.notifyPatientCancelled(cancelled, 'approved');
     await this.helpers.notifyPractitionerCancelled(cancelled);
@@ -218,7 +221,7 @@ export class BookingCancellationService {
       module: 'bookings',
       resourceId: id,
       description: 'Booking cancellation request rejected',
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     // Fix 4: Notify patient that cancellation was rejected
     if (updated.patientId) {
@@ -268,7 +271,7 @@ export class BookingCancellationService {
       module: 'bookings',
       resourceId: booking.id,
       description: 'Patient cancelled pending booking directly',
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     return cancelled;
   }
@@ -296,7 +299,7 @@ export class BookingCancellationService {
       module: 'bookings',
       resourceId: booking.id,
       description: `Patient requested cancellation for booking on ${d}`,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     return updated;
   }
