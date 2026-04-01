@@ -103,6 +103,8 @@ export interface Booking {
   practitionerService: { id: string } | null
   rescheduledFrom: RescheduledFrom | null
   payment: BookingPayment | null
+  intakeFormId: string | null
+  intakeFormAlreadySubmitted: boolean
 }
 
 /* ─── Query / Request DTOs ─── */
@@ -128,6 +130,9 @@ export interface CreateBookingPayload {
   startTime: string
   notes?: string
   payAtClinic?: boolean
+  branchId?: string
+  couponCode?: string
+  giftCardCode?: string
 }
 
 export interface ReschedulePayload {

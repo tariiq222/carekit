@@ -25,10 +25,49 @@ export interface WidgetBranding {
   contact_email: string | null
   app_name: string | null
   app_name_en: string | null
+  payment_moyasar_enabled: string | null
+  payment_at_clinic_enabled: string | null
 }
 
 export async function fetchWidgetBranding(): Promise<WidgetBranding> {
   return api.get<WidgetBranding>("/whitelabel/public")
+}
+
+/* ─── Branches ─── */
+
+export interface PublicBranch {
+  id: string
+  nameAr: string
+  nameEn: string
+  address: string | null
+  phone: string | null
+}
+
+export async function fetchPublicBranches(): Promise<PublicBranch[]> {
+  return api.get<PublicBranch[]>("/branches/public")
+}
+
+/* ─── Coupon / Gift Card Validation ─── */
+
+export interface ValidateCodePayload {
+  code: string
+  serviceId: string
+  amount: number
+}
+
+export interface ValidateCodeResult {
+  valid: boolean
+  discountAmount: number
+  type: "coupon" | "gift_card"
+  couponId?: string
+  giftCardId?: string
+}
+
+export async function validateWidgetCode(
+  payload: ValidateCodePayload,
+): Promise<ValidateCodeResult> {
+  const res = await api.post<{ data: ValidateCodeResult }>("/coupons/validate", payload)
+  return res.data
 }
 
 /* ─── Practitioners ─── */
