@@ -12,7 +12,9 @@ import {
   fetchWidgetSlots,
   fetchWidgetServiceTypes,
   fetchWidgetServices,
+  fetchPublicBranches,
 } from "@/lib/api/widget"
+import type { PublicBranch } from "@/lib/api/widget"
 import { queryKeys } from "@/lib/query-keys"
 import type { BookingFlowOrder, WizardState } from "./use-widget-booking"
 
@@ -48,6 +50,12 @@ export function useWidgetBookingQueries(state: WizardState, flowOrder: BookingFl
     staleTime: STALE_5M,
   })
 
+  const { data: branches = [], isLoading: branchesLoading } = useQuery({
+    queryKey: ["widget", "branches"],
+    queryFn: fetchPublicBranches,
+    staleTime: STALE_5M,
+  })
+
   const { data: serviceTypes = [] } = useQuery({
     queryKey: queryKeys.practitioners.serviceTypes(
       state.practitioner?.id ?? "",
@@ -68,8 +76,12 @@ export function useWidgetBookingQueries(state: WizardState, flowOrder: BookingFl
     filteredPractitionersData,
     filteredPractitionersLoading: filteredPractitionersLoading || filteredPractitionersFetching,
     serviceTypes,
+    branches,
+    branchesLoading,
   }
 }
+
+export type { PublicBranch }
 
 export function useWidgetSlotsQuery(
   state: WizardState,
