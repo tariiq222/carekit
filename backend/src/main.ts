@@ -36,7 +36,11 @@ async function bootstrap(): Promise<void> {
   // Only captures for the Moyasar webhook path to avoid buffering all requests.
   app.use(
     '/api/v1/payments/moyasar/webhook',
-    (req: Request & { rawBody?: Buffer }, _res: Response, next: NextFunction) => {
+    (
+      req: Request & { rawBody?: Buffer },
+      _res: Response,
+      next: NextFunction,
+    ) => {
       const chunks: Buffer[] = [];
       req.on('data', (chunk: Buffer) => chunks.push(chunk));
       req.on('end', () => {
@@ -54,14 +58,15 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api/v1');
 
   // Global validation pipe (class-validator)
+  // NOTE: enableImplicitConversion is intentionally DISABLED to prevent
+  // unexpected type coercions (e.g. string "0" → number 0, "true" → boolean).
+  // All DTOs must use explicit @Type(() => Number) or @Transform() decorators
+  // for query parameters that arrive as strings.
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
     }),
   );
 
@@ -84,8 +89,14 @@ async function bootstrap(): Promise<void> {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
-  // Swagger — disabled in production
-  if (!isProduction) {
+  // Swagger — only enabled when ENABLE_SWAGGER=true (explicit opt-in).
+  // In development (NODE_ENV !== 'production'), defaults to enabled for convenience.
+  // In staging/production, Swagger is disabled unless explicitly enabled.
+  const enableSwagger =
+    process.env['ENABLE_SWAGGER'] === 'true' ||
+    (!isProduction && process.env['ENABLE_SWAGGER'] !== 'false');
+
+  if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('CareKit API')
       .setDescription('CareKit Clinic Management Platform API')

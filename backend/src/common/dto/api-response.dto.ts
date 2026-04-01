@@ -1,3 +1,8 @@
+import {
+  buildPaginationMeta,
+  type PaginationMeta,
+} from '../helpers/pagination.helper.js';
+
 export class ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -10,30 +15,17 @@ export class ApiResponse<T> {
   }
 }
 
-export class PaginationMeta {
-  total: number;
-  page: number;
-  perPage: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-
-  constructor(total: number, page: number, perPage: number) {
-    this.total = total;
-    this.page = page;
-    this.perPage = perPage;
-    this.totalPages = Math.ceil(total / perPage);
-    this.hasNextPage = page < this.totalPages;
-    this.hasPreviousPage = page > 1;
-  }
-}
-
+/**
+ * Generic paginated response wrapper.
+ * Uses the single PaginationMeta definition from pagination.helper.ts
+ * to avoid duplicate type definitions.
+ */
 export class PaginatedResponse<T> {
   items: T[];
   meta: PaginationMeta;
 
   constructor(items: T[], total: number, page: number, perPage: number) {
     this.items = items;
-    this.meta = new PaginationMeta(total, page, perPage);
+    this.meta = buildPaginationMeta(total, page, perPage);
   }
 }

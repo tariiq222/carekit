@@ -1,6 +1,6 @@
 export interface ZatcaConfig {
   phase: 'phase1' | 'phase2';
-  vatRate: number;              // 0 or 15
+  vatRate: number; // 0 or 15
   vatRegistrationNumber: string;
   businessRegistration: string;
   sellerName: string;
@@ -15,8 +15,13 @@ export interface GenerateZatcaDataInput {
   issueTime: string;
   buyerName: string;
   serviceDescription: string;
-  baseAmount: number;     // halalat (before VAT)
-  previousInvoiceHash: string | null;
+  baseAmount: number; // halalat (before VAT)
+  /**
+   * Hash of the previous invoice in the chain.
+   * MUST be read inside a Serializable transaction to prevent race conditions.
+   * Use `zatcaService.zeroHash()` for the first invoice.
+   */
+  previousInvoiceHash: string;
   config: ZatcaConfig;
 }
 

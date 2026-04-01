@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import { PrismaService } from '../../database/prisma.service.js';
 import { InvoiceHashService } from './services/invoice-hash.service.js';
 import { QrGeneratorService } from './services/qr-generator.service.js';
 import { XmlBuilderService } from './services/xml-builder.service.js';
+import { PrismaService } from '../../database/prisma.service.js';
 import {
   ZatcaConfig,
   GenerateZatcaDataInput,
@@ -55,40 +55,32 @@ export class ZatcaService {
 
   /**
    * Returns the base64-encoded zero hash used as previousHash for the first invoice.
-   * Exposed so callers can use it inside their own transactions for atomic hash chaining.
+   * Callers MUST use this inside a Serializable transaction together with the
+   * inline query that reads the last invoice hash — this is the only safe way
+   * to guarantee atomic hash chaining.
    */
   zeroHash(): string {
     return this.hashService.toBase64(ZERO_HASH);
   }
 
   /**
-   * Gets the hash of the last issued invoice for hash chaining.
-   * @deprecated Use zeroHash() + an inline query inside a Serializable transaction instead
-   * to avoid the race condition where two concurrent invoices get the same previousHash.
-   */
-  async getPreviousInvoiceHash(): Promise<string> {
-    const last = await this.prisma.invoice.findFirst({
-      where: { invoiceHash: { not: null } },
-      orderBy: { createdAt: 'desc' },
-      select: { invoiceHash: true },
-    }) as { invoiceHash: string | null } | null;
-
-    return last?.invoiceHash ?? this.zeroHash();
-  }
-
-  /**
    * Main entry point: generates all ZATCA data for an invoice.
    * Phase 1: QR Code only, no API call.
    * Phase 2: XML + QR Code + hash (API call done separately after DB save).
+   *
+   * IMPORTANT: `previousInvoiceHash` is required. Callers must read the last
+   * invoice hash inside a Serializable transaction and pass it here.
+   * This prevents the race condition where two concurrent invoices
+   * get the same previousHash.
    */
-  async generateForInvoice(input: GenerateZatcaDataInput): Promise<ZatcaInvoiceData> {
-    const { config, baseAmount } = input;
+  generateForInvoice(input: GenerateZatcaDataInput): ZatcaInvoiceData {
+    const { config, baseAmount, previousInvoiceHash } = input;
 
     const vatAmount = Math.round((baseAmount * config.vatRate) / 100);
     const totalAmount = baseAmount + vatAmount;
-    const previousHash = input.previousInvoiceHash ?? await this.getPreviousInvoiceHash();
 
-    const vatNumberOrCr = config.vatRegistrationNumber || config.businessRegistration;
+    const vatNumberOrCr =
+      config.vatRegistrationNumber || config.businessRegistration;
     const qrCodeData = this.qrService.buildTlvBase64({
       sellerName: config.sellerName,
       vatNumber: vatNumberOrCr,
@@ -114,7 +106,7 @@ export class ZatcaService {
         vatRate: config.vatRate,
         totalAmount,
         invoiceHash,
-        previousHash,
+        previousHash: previousInvoiceHash,
         qrCodeData,
         xmlContent: null,
         status: 'not_applicable',
@@ -127,7 +119,7 @@ export class ZatcaService {
       uuid: input.uuid ?? uuidv4(),
       issueDate: input.issueDate,
       issueTime: input.issueTime,
-      invoiceHash: previousHash,
+      invoiceHash: previousInvoiceHash,
       seller: {
         name: config.sellerName,
         vatNumber: vatNumberOrCr,
@@ -150,14 +142,16 @@ export class ZatcaService {
       totalIncludingVat: totalAmount,
     });
 
-    const invoiceHash = this.hashService.toBase64(this.hashService.hashXml(xmlContent));
+    const invoiceHash = this.hashService.toBase64(
+      this.hashService.hashXml(xmlContent),
+    );
 
     return {
       vatAmount,
       vatRate: config.vatRate,
       totalAmount,
       invoiceHash,
-      previousHash,
+      previousHash: previousInvoiceHash,
       qrCodeData,
       xmlContent,
       status: 'pending',
