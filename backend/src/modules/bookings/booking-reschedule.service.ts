@@ -79,7 +79,7 @@ export class BookingRescheduleService {
     this.activityLogService.log({
       action: 'booking_rescheduled', module: 'bookings', resourceId: result.id, userId: adminUserId,
       description: `Booking rescheduled to ${newDate.toISOString().split('T')[0]} at ${newStartTime}`,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
     return result;
   }
 

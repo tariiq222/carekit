@@ -76,7 +76,7 @@ export class BookingExpiryService {
           toStatus: 'expired',
           changedBy: 'system',
           reason: 'Auto-expired: payment timeout exceeded',
-        }).catch(() => {});
+        }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
 
         if (booking.patientId) {
           await this.notificationsService.createNotification({
@@ -92,7 +92,7 @@ export class BookingExpiryService {
 
         await this.waitlistService
           .checkAndNotify(booking.practitionerId, booking.date)
-          .catch(() => {});
+          .catch((err) => this.logger.warn('Waitlist notify failed', { error: err?.message }));
       } catch (err) {
         this.logger.warn(`Failed to expire booking ${booking.id}: ${(err as Error).message}`);
       }
@@ -106,7 +106,7 @@ export class BookingExpiryService {
           module: 'bookings',
           description: `Auto-expired ${safeToExpire.length} pending bookings`,
         })
-        .catch(() => {});
+        .catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
     }
   }
 

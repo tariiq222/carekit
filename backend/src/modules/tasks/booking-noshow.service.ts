@@ -107,7 +107,7 @@ export class BookingNoShowService {
               await this.prisma.payment.update({
                 where: { id: payment.id },
                 data: { refundReason: `partial_refund_failed: ${msg}` },
-              }).catch(() => {});
+              }).catch((err) => this.logger.warn('Payment update failed', { error: err?.message }));
               // Notify admins for manual resolution
               this.prisma.userRole.findMany({
                 where: { role: { slug: { in: ['super_admin', 'receptionist'] } } },
@@ -126,7 +126,7 @@ export class BookingNoShowService {
                     }),
                   ),
                 ),
-              ).catch(() => {});
+              ).catch((err) => this.logger.warn('Admin notification failed', { error: err?.message }));
             }
           }
         }
@@ -137,7 +137,7 @@ export class BookingNoShowService {
           toStatus: 'no_show',
           changedBy: 'system',
           reason: `Auto no-show after ${settings.autoNoShowAfterMinutes} minutes`,
-        }).catch(() => {});
+        }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
 
         if (booking.practitioner?.userId) {
           await this.notificationsService.createNotification({
@@ -165,7 +165,7 @@ export class BookingNoShowService {
 
         await this.waitlistService
           .checkAndNotify(booking.practitionerId, booking.date)
-          .catch(() => {});
+          .catch((err) => this.logger.warn('Waitlist notify failed', { error: err?.message }));
       } catch (err) {
         this.logger.warn(`Failed to mark booking ${booking.id} as no-show: ${(err as Error).message}`);
       }
@@ -179,7 +179,7 @@ export class BookingNoShowService {
           module: 'bookings',
           description: `Auto-marked ${noShowBookings.length} bookings as no-show`,
         })
-        .catch(() => {});
+        .catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
     }
   }
 
@@ -233,6 +233,6 @@ export class BookingNoShowService {
           }),
         ),
       ),
-    ).catch(() => {});
+    ).catch((err) => this.logger.warn('Admin notification failed', { error: err?.message }));
   }
 }

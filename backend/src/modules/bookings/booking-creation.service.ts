@@ -252,7 +252,7 @@ export class BookingCreationService {
       module: 'bookings',
       resourceId: booking.id,
       description: `Booking created for ${dto.date} at ${dto.startTime}`,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     // Resolve intake form info for the widget popup
     const intakeForm = await this.prisma.intakeForm.findFirst({

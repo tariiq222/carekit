@@ -65,3 +65,25 @@ export function paginate<T>(
 ): PaginatedResult<T> {
   return { data, meta: buildPaginationMeta(total, page, perPage) };
 }
+
+/**
+ * Generic paginated query helper for Prisma models.
+ * Runs findMany + count in parallel for optimal performance.
+ *
+ * @example
+ * const result = await paginatedQuery(prisma.user, { where: { isActive: true }, orderBy: { createdAt: 'desc' } }, page, perPage);
+ * // result = { items: [...], meta: { total, page, perPage, totalPages, hasNextPage, hasPreviousPage } }
+ */
+export async function paginatedQuery<T>(
+  model: { findMany: (args: any) => Promise<T[]>; count: (args: any) => Promise<number> },
+  args: { where?: any; include?: any; orderBy?: any },
+  page: number,
+  perPage: number,
+): Promise<{ items: T[]; meta: PaginationMeta }> {
+  const skip = (page - 1) * perPage;
+  const [items, total] = await Promise.all([
+    model.findMany({ ...args, skip, take: perPage }),
+    model.count({ where: args.where }),
+  ]);
+  return { items, meta: buildPaginationMeta(total, page, perPage) };
+}

@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
@@ -15,6 +16,8 @@ import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class BookingStatusService {
+  private readonly logger = new Logger(BookingStatusService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
@@ -67,14 +70,14 @@ export class BookingStatusService {
       resourceId: id,
       userId: performedByUserId,
       description: `Booking confirmed for ${confirmed.date.toISOString().split('T')[0]} at ${confirmed.startTime}`,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     this.statusLogService.log({
       bookingId: id,
       fromStatus: 'pending',
       toStatus: 'confirmed',
       changedBy: performedByUserId,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
 
     return confirmed;
   }
@@ -116,14 +119,14 @@ export class BookingStatusService {
       resourceId: id,
       userId: performedByUserId,
       description: 'Patient checked in for booking',
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     this.statusLogService.log({
       bookingId: id,
       fromStatus: 'confirmed',
       toStatus: 'checked_in',
       changedBy: performedByUserId,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
 
     return updated;
   }
@@ -171,14 +174,14 @@ export class BookingStatusService {
       resourceId: id,
       userId: practitionerUserId,
       description: 'Practitioner started session',
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     this.statusLogService.log({
       bookingId: id,
       fromStatus: 'checked_in',
       toStatus: 'in_progress',
       changedBy: practitionerUserId,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
 
     return updated;
   }
@@ -231,16 +234,29 @@ export class BookingStatusService {
       resourceId: id,
       userId: performedByUserId,
       description: 'Booking completed',
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     this.statusLogService.log({
       bookingId: id,
       fromStatus: 'in_progress',
       toStatus: 'completed',
       changedBy: performedByUserId,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
 
     return completed;
+  }
+
+  /**
+   * Recover an expired booking back to confirmed.
+   * Used when a payment succeeds after the booking was expired by the cron job.
+   * updateMany with status condition makes this idempotent under concurrent retries.
+   */
+  async recoverExpiredBooking(bookingId: string): Promise<boolean> {
+    const result = await this.prisma.booking.updateMany({
+      where: { id: bookingId, status: 'expired' },
+      data: { status: 'confirmed', confirmedAt: new Date(), cancelledBy: null, cancelledAt: null },
+    });
+    return result.count > 0;
   }
 
   async markNoShow(id: string, performedByUserId?: string) {
@@ -269,14 +285,14 @@ export class BookingStatusService {
       resourceId: id,
       userId: performedByUserId,
       description: 'Booking marked as no-show',
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
 
     this.statusLogService.log({
       bookingId: id,
       fromStatus: 'confirmed',
       toStatus: 'no_show',
       changedBy: performedByUserId,
-    }).catch(() => {});
+    }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
 
     return updated;
   }

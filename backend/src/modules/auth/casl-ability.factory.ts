@@ -1,6 +1,13 @@
 import { AbilityBuilder, PureAbility } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 
+/**
+ * @note This factory is defined but not yet integrated with PermissionsGuard.
+ * Current RBAC uses string-based permission matching in PermissionsGuard.
+ * Future: integrate CASL for field-level and condition-based authorization.
+ * See: https://casl.js.org/v6/en/guide/intro
+ */
+
 type Action = 'view' | 'create' | 'edit' | 'delete';
 type AppAbility = PureAbility<[Action, string]>;
 

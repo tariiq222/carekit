@@ -175,7 +175,7 @@ export class NotificationsService {
           ...(dto.data ? { payload: JSON.stringify(dto.data) } : {}),
         },
       })
-      .catch(() => {}); // Never fail the main operation
+      .catch((err) => this.logger.warn('Push notification send failed', { error: err?.message })); // Never fail the main operation
 
     // Fire-and-forget SMS for critical notification types
     if (SMS_ELIGIBLE_TYPES.has(dto.type)) {

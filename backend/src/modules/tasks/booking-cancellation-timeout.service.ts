@@ -86,7 +86,7 @@ export class BookingCancellationTimeoutService {
           toStatus: 'cancelled',
           changedBy: 'system',
           reason: `Auto-approved after ${settings.cancellationReviewTimeoutHours}h timeout`,
-        }).catch(() => {});
+        }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
 
         // Moyasar refund must be called outside the transaction (external API)
         if (payment && payment.status === 'paid' && payment.method === 'moyasar' && payment.moyasarPaymentId) {
@@ -124,7 +124,7 @@ export class BookingCancellationTimeoutService {
 
         await this.waitlistService
           .checkAndNotify(booking.practitionerId, booking.date)
-          .catch(() => {});
+          .catch((err) => this.logger.warn('Waitlist notify failed', { error: err?.message }));
       } catch (err) {
         this.logger.warn(`Failed to auto-approve cancellation for booking ${booking.id}: ${(err as Error).message}`);
       }
@@ -140,7 +140,7 @@ export class BookingCancellationTimeoutService {
           module: 'bookings',
           description: `Auto-approved ${staleBookings.length} stale pending_cancellation requests`,
         })
-        .catch(() => {});
+        .catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
     }
   }
 }
