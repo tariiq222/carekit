@@ -50,7 +50,6 @@ export async function fetchWidgetPractitioners(
     search: query.search,
     specialty: query.specialty,
     serviceId: query.serviceId,
-    isActive: true,
   })
   return { items: res.items.map(mapPractitioner), meta: res.meta }
 }
