@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { type BookingSettings } from "@/lib/api/booking-settings"
 import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
 import type { WhiteLabelConfigMap } from "@/lib/types/whitelabel"
-import { useBookingSettings, useBookingSettingsMutation, useBookingFlowOrder, useBookingFlowOrderMutation } from "@/hooks/use-clinic-settings"
+import { useBookingSettings, useBookingSettingsMutation, useBookingFlowOrder, useBookingFlowOrderMutation, usePaymentSettings, usePaymentSettingsMutation } from "@/hooks/use-clinic-settings"
 import { ReschedulingCard } from "./rescheduling-card"
 import { NoShowCard } from "./noshow-card"
 import { RemindersCard } from "./reminders-card"
@@ -22,7 +22,6 @@ import { WaitlistCard } from "./waitlist-card"
 import { RecurringCard } from "./recurring-card"
 
 /* ─── Flow Order Card ─── */
-
 function FlowOrderCard({ t }: { t: (key: string) => string }) {
   const { data: flowOrder, isLoading } = useBookingFlowOrder()
   const mutation = useBookingFlowOrderMutation()
@@ -82,6 +81,47 @@ function FlowOrderCard({ t }: { t: (key: string) => string }) {
   )
 }
 
+/* ─── Payment Methods Card ─── */
+
+type PaymentKey = "paymentMoyasarEnabled" | "paymentAtClinicEnabled"
+
+function PaymentMethodsCard({ t }: { t: (key: string) => string }) {
+  const { data, isLoading } = usePaymentSettings()
+  const mutation = usePaymentSettingsMutation()
+  const toggle = (key: PaymentKey, value: boolean) =>
+    mutation.mutate({ [key]: value }, {
+      onSuccess: () => toast.success(t("settings.saved")),
+      onError: (err: Error) => toast.error(err.message),
+    })
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{t("settings.booking.paymentMethods.title")}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? <Skeleton className="h-20 w-full" /> : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
+              <div>
+                <p className="text-sm font-medium">{t("settings.booking.paymentMethods.moyasar")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.booking.paymentMethods.moyasarDesc")}</p>
+              </div>
+              <Switch checked={data?.paymentMoyasarEnabled ?? false} onCheckedChange={(v) => toggle("paymentMoyasarEnabled", v)} disabled={mutation.isPending} />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
+              <div>
+                <p className="text-sm font-medium">{t("settings.booking.paymentMethods.atClinic")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.booking.paymentMethods.atClinicDesc")}</p>
+              </div>
+              <Switch checked={data?.paymentAtClinicEnabled ?? true} onCheckedChange={(v) => toggle("paymentAtClinicEnabled", v)} disabled={mutation.isPending} />
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 interface Props {
   configMap: WhiteLabelConfigMap
   onSave: (configs: { key: string; value: string; type?: string }[]) => void
@@ -108,6 +148,7 @@ export function BookingTab({ configMap, onSave, isPending, t }: Props) {
           <WaitlistCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
           <RecurringCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
           <FlowOrderCard t={t} />
+          <PaymentMethodsCard t={t} />
           <ReschedulingCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
           <NoShowCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
           <RemindersCard settings={settings} onSave={handleSettingsSave} isPending={settingsMut.isPending} t={t} />
@@ -189,7 +230,6 @@ function WhiteLabelBookingCard({ configMap, onSave, isPending, t }: Props) {
 }
 
 /* ─── Booking Policies Card (BookingSettings API) ─── */
-
 function BookingPoliciesCard({ settings, isLoading, onSave, isPending: isSaving, t }: {
   settings: BookingSettings | undefined
   isLoading: boolean
@@ -272,7 +312,6 @@ function BookingPoliciesCard({ settings, isLoading, onSave, isPending: isSaving,
 }
 
 /* ─── Shared sub-components ─── */
-
 function SwitchRow({ title, desc, checked, onChange }: {
   title: string; desc: string; checked: boolean; onChange: (v: boolean) => void
 }) {

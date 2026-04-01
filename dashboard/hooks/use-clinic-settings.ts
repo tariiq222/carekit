@@ -15,6 +15,8 @@ import {
 import {
   fetchBookingFlowOrder,
   updateBookingFlowOrder,
+  fetchPaymentSettings,
+  updatePaymentSettings,
   type BookingFlowOrder,
 } from "@/lib/api/clinic-settings"
 import { queryKeys } from "@/lib/query-keys"
@@ -111,6 +113,26 @@ export function useBookingFlowOrderMutation() {
     mutationFn: (order: BookingFlowOrder) => updateBookingFlowOrder(order),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clinicSettings.bookingFlowOrder() })
+    },
+  })
+}
+
+/* ─── Payment Settings ─── */
+
+export function usePaymentSettings() {
+  return useQuery({
+    queryKey: ["clinic-settings", "payment"],
+    queryFn: fetchPaymentSettings,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function usePaymentSettingsMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: updatePaymentSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinic-settings", "payment"] })
     },
   })
 }
