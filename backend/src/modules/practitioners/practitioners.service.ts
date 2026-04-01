@@ -69,7 +69,7 @@ export class PractitionersService {
     }
 
     if (params?.serviceId) {
-      where.services = { some: { serviceId: params.serviceId } };
+      where.practitionerServices = { some: { serviceId: params.serviceId } };
     }
 
     if (params?.search) {

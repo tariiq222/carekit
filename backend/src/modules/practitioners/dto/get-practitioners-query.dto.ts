@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
@@ -47,7 +47,7 @@ export class GetPractitionersQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   specialtyId?: string;
 
   @ApiPropertyOptional({ minimum: 0, maximum: 5 })
@@ -65,11 +65,11 @@ export class GetPractitionersQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   branchId?: string;
 
   @ApiPropertyOptional({ format: 'uuid', description: 'Filter practitioners who offer this service' })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   serviceId?: string;
 }
