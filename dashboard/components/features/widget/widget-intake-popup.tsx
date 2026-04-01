@@ -147,7 +147,7 @@ export function WidgetIntakePopup({ locale, formId, bookingId, onDismiss }: Prop
     submit: isRtl ? "إرسال" : "Submit",
     skip: isRtl ? "تخطي" : "Skip",
     skipWarning: isRtl
-      ? "سيتم إغلاق النموذج. يمكنك ملؤه لاحقاً."
+      ? "يُفضل تعبئة النموذج قبل موعدك"
       : "Form will close. You can fill it later.",
     successMsg: isRtl ? "تم الإرسال بنجاح!" : "Submitted successfully!",
     loading: isRtl ? "جاري التحميل..." : "Loading...",
