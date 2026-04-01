@@ -4,12 +4,14 @@ import { CacheService } from '../../common/services/cache.service.js';
 import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
 import { UpdateConfigDto } from './dto/update-config.dto.js';
 import { WhiteLabelConfig } from '@prisma/client';
+import { ClinicSettingsService } from '../clinic/clinic-settings.service.js';
 
 @Injectable()
 export class WhitelabelService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
+    private readonly clinicSettingsService: ClinicSettingsService,
   ) {}
 
   // Keys whose values must NEVER be sent to the frontend (masked with ***)
@@ -48,12 +50,19 @@ export class WhitelabelService {
       return acc;
     }, {});
 
+    const paymentSettings = await this.clinicSettingsService.getPaymentSettings();
+    const fullResult: Record<string, string> = {
+      ...result,
+      payment_moyasar_enabled: String(paymentSettings.paymentMoyasarEnabled),
+      payment_at_clinic_enabled: String(paymentSettings.paymentAtClinicEnabled),
+    };
+
     await this.cache.set(
       CACHE_KEYS.WHITELABEL_BRANDING,
-      result,
+      fullResult,
       CACHE_TTL.WHITELABEL_CONFIG,
     );
-    return result;
+    return fullResult;
   }
 
   async getConfig(): Promise<WhiteLabelConfig[]> {

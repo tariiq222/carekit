@@ -16,6 +16,7 @@ import { NotFoundException } from '@nestjs/common';
 import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { CacheService } from '../../../src/common/services/cache.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic/clinic-settings.service.js';
 import { ConfigValueType } from '@prisma/client';
 
 // ---------------------------------------------------------------------------
@@ -29,6 +30,13 @@ const mockCacheService: any = {
   set: jest.fn().mockResolvedValue(undefined),
   del: jest.fn().mockResolvedValue(undefined),
   delPattern: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockClinicSettingsService: any = {
+  getPaymentSettings: jest.fn().mockResolvedValue({
+    paymentMoyasarEnabled: false,
+    paymentAtClinicEnabled: true,
+  }),
 };
 
 const mockPrismaService: any = {
@@ -90,6 +98,7 @@ describe('WhitelabelService', () => {
         WhitelabelService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: CacheService, useValue: mockCacheService },
+        { provide: ClinicSettingsService, useValue: mockClinicSettingsService },
       ],
     }).compile();
 
@@ -98,6 +107,10 @@ describe('WhitelabelService', () => {
     jest.clearAllMocks();
     // Restore default cache miss so tests that skip cache setup still hit DB
     mockCacheService.get.mockResolvedValue(null);
+    mockClinicSettingsService.getPaymentSettings.mockResolvedValue({
+      paymentMoyasarEnabled: false,
+      paymentAtClinicEnabled: true,
+    });
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -127,6 +140,8 @@ describe('WhitelabelService', () => {
       expect(result).toEqual({
         clinic_name: 'CareKit Clinic',
         logo_url: 'https://logo.png',
+        payment_moyasar_enabled: 'false',
+        payment_at_clinic_enabled: 'true',
       });
       expect(mockPrismaService.whiteLabelConfig.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -143,7 +158,10 @@ describe('WhitelabelService', () => {
 
       const result = await service.getPublicBranding();
 
-      expect(result).toEqual({});
+      expect(result).toEqual({
+        payment_moyasar_enabled: 'false',
+        payment_at_clinic_enabled: 'true',
+      });
     });
   });
 
