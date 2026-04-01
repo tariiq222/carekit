@@ -16,6 +16,7 @@ import { WidgetConfirmStep } from "./widget-confirm-step"
 import { WidgetBranchStep } from "./widget-branch-step"
 import { WidgetHeader } from "./widget-header"
 import { WidgetStepsSidebar } from "./widget-steps-sidebar"
+import { WidgetIntakePopup } from "./widget-intake-popup"
 import type { StepDef } from "./widget-steps-sidebar"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -93,6 +94,7 @@ export function BookingWizard({
   const isSuccess = state.step === "success"
 
   return (
+    <>
     <Card
       className={cn(
         "glass-solid overflow-hidden shadow-xl border-border/50",
@@ -159,5 +161,16 @@ export function BookingWizard({
         </div>
       </div>
     </Card>
+
+    {/* Post-booking intake form popup */}
+    {state.showIntakePopup && state.booking?.intakeFormId && (
+      <WidgetIntakePopup
+        locale={initialLocale}
+        formId={state.booking.intakeFormId}
+        bookingId={state.booking.id}
+        onDismiss={booking.dismissIntakePopup}
+      />
+    )}
+    </>
   )
 }
