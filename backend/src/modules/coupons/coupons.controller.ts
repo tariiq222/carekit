@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -19,6 +20,7 @@ import { CouponsService } from './coupons.service.js';
 import { CreateCouponDto } from './dto/create-coupon.dto.js';
 import { UpdateCouponDto } from './dto/update-coupon.dto.js';
 import { ApplyCouponDto } from './dto/apply-coupon.dto.js';
+import { ValidateCouponDto } from './dto/validate-coupon.dto.js';
 import { CouponFilterDto } from './dto/coupon-filter.dto.js';
 
 @ApiTags('Coupons')
@@ -69,6 +71,16 @@ export class CouponsController {
   @Post('apply')
   async applyCoupon(@Body() dto: ApplyCouponDto, @Req() req: { user: { id: string } }) {
     const data = await this.couponsService.applyCoupon(dto, req.user.id);
+    return { success: true, data };
+  }
+
+  @Post('validate')
+  @HttpCode(200)
+  async validateCode(
+    @Body() dto: ValidateCouponDto,
+    @Req() req: { user: { id: string } },
+  ) {
+    const data = await this.couponsService.validateCode(dto, req.user.id);
     return { success: true, data };
   }
 }
