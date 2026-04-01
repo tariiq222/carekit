@@ -9,8 +9,6 @@ import { useLocale } from "@/components/locale-provider"
 import { toast } from "sonner"
 import type { Role, Permission } from "@/lib/types/user"
 
-const ACTIONS = ["view", "create", "edit", "delete"] as const
-
 interface Props {
   role: Role
   allPermissions: Permission[]
@@ -20,10 +18,28 @@ export function PermissionMatrix({ role, allPermissions }: Props) {
   const { t } = useLocale()
   const { assignPermMut, removePermMut } = useRoleMutations()
 
-  // Extract unique modules from all permissions
-  const modules = Array.from(
-    new Set(allPermissions.map((p) => p.module)),
-  ).sort()
+  // Group permissions by module — dynamic, driven by what the DB returns
+  const moduleMap = new Map<string, string[]>()
+  for (const p of allPermissions) {
+    if (!moduleMap.has(p.module)) moduleMap.set(p.module, [])
+    moduleMap.get(p.module)!.push(p.action)
+  }
+
+  // Collect all unique actions across all modules for column headers
+  const allActions = Array.from(
+    new Set(allPermissions.map((p) => p.action)),
+  ).sort((a, b) => {
+    // Standard actions first, then extras
+    const order = ["view", "create", "edit", "delete", "update", "use"]
+    const ai = order.indexOf(a)
+    const bi = order.indexOf(b)
+    if (ai !== -1 && bi !== -1) return ai - bi
+    if (ai !== -1) return -1
+    if (bi !== -1) return 1
+    return a.localeCompare(b)
+  })
+
+  const modules = Array.from(moduleMap.keys()).sort()
 
   // Build a set of "module:action" for quick lookup
   const rolePerms = new Set(
@@ -44,6 +60,20 @@ export function PermissionMatrix({ role, allPermissions }: Props) {
         { onError: () => toast.error(t("users.roles.permError")) },
       )
     }
+  }
+
+  // Translate action label — fallback to the raw action string
+  const actionLabel = (action: string) => {
+    const key = `users.roles.action.${action}`
+    const translated = t(key as Parameters<typeof t>[0])
+    return translated === key ? action : translated
+  }
+
+  // Translate module label — fallback to the raw module string
+  const moduleLabel = (mod: string) => {
+    const key = `users.roles.modules.${mod}`
+    const translated = t(key as Parameters<typeof t>[0])
+    return translated === key ? mod : translated
   }
 
   return (
@@ -74,52 +104,53 @@ export function PermissionMatrix({ role, allPermissions }: Props) {
                 <th className="text-start pe-4 pb-2 text-xs font-medium text-muted-foreground">
                   {t("users.roles.module")}
                 </th>
-                {ACTIONS.map((action) => (
+                {allActions.map((action) => (
                   <th
                     key={action}
-                    className="pb-2 text-center text-xs font-medium text-muted-foreground w-16"
+                    className="pb-2 text-center text-xs font-medium text-muted-foreground w-16 whitespace-nowrap px-1"
                   >
-                    {t(`users.roles.action.${action}`)}
+                    {actionLabel(action)}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {modules.map((mod) => (
-                <tr key={mod} className="border-b border-border/50 last:border-0">
-                  <td className="py-2.5 pe-4 text-sm font-medium text-foreground">
-                    {t(`users.roles.modules.${mod}`)}
-                  </td>
-                  {ACTIONS.map((action) => {
-                    const key = `${mod}:${action}`
-                    const exists = allPermissions.some(
-                      (p) => p.module === mod && p.action === action,
-                    )
-                    const checked = rolePerms.has(key)
+              {modules.map((mod) => {
+                const moduleActions = moduleMap.get(mod) ?? []
+                return (
+                  <tr key={mod} className="border-b border-border/50 last:border-0">
+                    <td className="py-2.5 pe-4 text-sm font-medium text-foreground">
+                      {moduleLabel(mod)}
+                    </td>
+                    {allActions.map((action) => {
+                      const exists = moduleActions.includes(action)
+                      const key = `${mod}:${action}`
+                      const checked = rolePerms.has(key)
 
-                    if (!exists) {
+                      if (!exists) {
+                        return (
+                          <td key={action} className="py-2.5 text-center px-1">
+                            <span className="text-muted-foreground/30">—</span>
+                          </td>
+                        )
+                      }
+
                       return (
-                        <td key={action} className="py-2.5 text-center">
-                          <span className="text-muted-foreground/30">—</span>
+                        <td key={action} className="py-2.5 text-center px-1">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) =>
+                              handleToggle(mod, action, v === true)
+                            }
+                            disabled={isPending}
+                            className="mx-auto"
+                          />
                         </td>
                       )
-                    }
-
-                    return (
-                      <td key={action} className="py-2.5 text-center">
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(v) =>
-                            handleToggle(mod, action, v === true)
-                          }
-                          disabled={isPending}
-                          className="mx-auto"
-                        />
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
+                    })}
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
