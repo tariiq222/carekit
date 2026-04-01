@@ -12,17 +12,19 @@ describe('AuthService — generateOtp', () => {
     jest.clearAllMocks();
   });
 
-  it('should create 6-digit numeric code', async () => {
+  it('should create 6-digit numeric code and store it hashed', async () => {
     ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 0 });
     ctx.mockPrisma.otpCode.create.mockImplementation(
       ({ data }: { data: { code: string } }) => {
-        expect(data.code).toMatch(/^\d{6}$/);
+        // Stored code is SHA-256 hashed (64 hex chars), not plain 6-digit
+        expect(data.code).toMatch(/^[a-f0-9]{64}$/);
         return Promise.resolve({ id: 'otp-id', ...data });
       },
     );
 
     const code = await ctx.service.generateOtp('user-id', 'login');
 
+    // Returned code to caller is still plain 6-digit
     expect(code).toMatch(/^\d{6}$/);
   });
 
@@ -81,11 +83,16 @@ describe('AuthService — verifyOtp', () => {
 
     await ctx.service.verifyOtp('user@example.com', '123456', 'login');
 
+    // verifyOtp hashes the input code before DB lookup
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const crypto = require('crypto');
+    const hashedCode = crypto.createHash('sha256').update('123456').digest('hex');
     expect(ctx.mockPrisma.otpCode.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           userId: 'user-id',
-          code: '123456',
+          code: hashedCode,
           usedAt: null,
         }),
         data: expect.objectContaining({ usedAt: expect.any(Date) }),

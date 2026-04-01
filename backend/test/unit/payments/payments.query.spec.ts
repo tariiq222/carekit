@@ -204,7 +204,7 @@ describe('PaymentsService — getPaymentStats', () => {
     await service.getPaymentStats();
 
     expect(mockPrisma.payment.aggregate).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { status: 'paid' }, _sum: { totalAmount: true } }),
+      expect.objectContaining({ where: { status: 'paid', deletedAt: null }, _sum: { totalAmount: true } }),
     );
   });
 });

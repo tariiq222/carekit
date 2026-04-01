@@ -202,7 +202,7 @@ describe('MoyasarPaymentService', () => {
         }),
       );
       expect(mockPrisma.processedWebhook.create).toHaveBeenCalledWith({
-        data: { eventId: moyasarPayId },
+        data: { eventId: `${moyasarPayId}_paid` },
       });
       expect(mockBookingStatusService.confirm).toHaveBeenCalledWith(bookingId);
       expect(mockInvoicesService.createInvoice).toHaveBeenCalledWith({ paymentId: mockPayment.id });
@@ -290,7 +290,7 @@ describe('MoyasarPaymentService', () => {
         }),
       );
       expect(mockPrisma.processedWebhook.create).toHaveBeenCalledWith({
-        data: { eventId: moyasarPayId },
+        data: { eventId: `${moyasarPayId}_failed` },
       });
       expect(mockInvoicesService.createInvoice).not.toHaveBeenCalled();
     });
