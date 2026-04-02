@@ -136,6 +136,13 @@ export class WhitelabelService {
   // ═══════════════════════════════════════════════════════════════
 
   async getConfigByKey(key: string): Promise<WhiteLabelConfig> {
+    const cacheKey = `${CACHE_KEYS.WHITELABEL_KEY_PREFIX}${key}`;
+
+    // Try cache first
+    const cached = await this.cache.get<WhiteLabelConfig>(cacheKey);
+    if (cached) return cached;
+
+    // Cache miss — fetch from DB
     const config = await this.prisma.whiteLabelConfig.findUnique({
       where: { key },
     });
@@ -147,6 +154,9 @@ export class WhitelabelService {
         error: 'NOT_FOUND',
       });
     }
+
+    // Cache for TTL (config rarely changes)
+    await this.cache.set(cacheKey, config, CACHE_TTL.WHITELABEL_CONFIG);
 
     return config;
   }
@@ -180,10 +190,19 @@ export class WhitelabelService {
   //  CACHE INVALIDATION
   // ═══════════════════════════════════════════════════════════════
 
-  private async invalidateCache(): Promise<void> {
-    await Promise.all([
-      this.cache.del(CACHE_KEYS.WHITELABEL_CONFIG),
-      this.cache.del(CACHE_KEYS.WHITELABEL_BRANDING),
-    ]);
+  /**
+   * Invalidate all whitelabel-related caches (bulk + per-key).
+   * Uses SCAN-based pattern delete to avoid blocking Redis.
+   */
+  async invalidateAll(): Promise<void> {
+    await this.cache.delPattern(CACHE_KEYS.WHITELABEL_ALL_PATTERN);
+  }
+
+  /**
+   * Internal invalidation — clears every whitelabel cache entry.
+   * Called after any write operation (update, delete).
+   */
+  private invalidateCache(): Promise<void> {
+    return this.invalidateAll();
   }
 }
