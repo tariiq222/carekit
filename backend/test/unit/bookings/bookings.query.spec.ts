@@ -98,7 +98,7 @@ describe('BookingsService — findMyBookings', () => {
 
     const result = await ctx.service.findMyBookings(mockPatientId);
 
-    expect(ctx.mockQueryService.findMyBookings).toHaveBeenCalledWith(mockPatientId);
+    expect(ctx.mockQueryService.findMyBookings).toHaveBeenCalledWith(mockPatientId, undefined, undefined);
     expect(result.items).toHaveLength(1);
   });
 
