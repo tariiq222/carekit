@@ -28,7 +28,7 @@ interface DraftOption {
 
 interface Props {
   serviceId: string
-  locale: string
+  // locale: string
 }
 
 let keyCounter = 0

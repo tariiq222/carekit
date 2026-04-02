@@ -68,11 +68,11 @@ export function AssignPractitionersDialog({
     staleTime: 5 * 60 * 1000,
     enabled: open,
   })
-  const practitioners = data?.items ?? []
   const assignMut = useAssignPractitionersToService(serviceId)
 
   // Filter: exclude already-assigned, apply search
   const available = useMemo(() => {
+    const practitioners = data?.items ?? []
     return practitioners.filter((p) => {
       if (excludeIds.includes(p.id)) return false
       if (!search) return true
@@ -81,7 +81,7 @@ export function AssignPractitionersDialog({
       const q = search.toLowerCase()
       return fullName.includes(q) || nameAr.includes(q)
     })
-  }, [practitioners, excludeIds, search])
+  }, [data, excludeIds, search])
 
   const toggle = (id: string) => {
     setSelected((prev) =>

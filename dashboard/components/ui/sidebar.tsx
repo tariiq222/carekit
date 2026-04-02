@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sheet"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { SidebarLeftIcon } from "@hugeicons/core-free-icons"
-import { SIDEBAR_WIDTH, SIDEBAR_WIDTH_MOBILE, useSidebar } from "./sidebar-context"
+import { SIDEBAR_WIDTH_MOBILE, useSidebar } from "./sidebar-context"
 
 // Re-export everything from sub-modules
 export {

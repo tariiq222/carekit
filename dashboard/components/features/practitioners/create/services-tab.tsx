@@ -49,10 +49,12 @@ export function ServicesTab({
   const [typeConfigs, setTypeConfigs] = useState<PractitionerTypeConfigPayload[]>([])
 
   /* Filter out already-added services */
-  const addedServiceIds = new Set(draftServices.map((ds) => ds.serviceId))
   const availableServices = useMemo(
-    () => (services ?? []).filter((s) => !addedServiceIds.has(s.id)),
-    [services, addedServiceIds],
+    () => {
+      const addedServiceIds = new Set(draftServices.map((ds) => ds.serviceId))
+      return (services ?? []).filter((s) => !addedServiceIds.has(s.id))
+    },
+    [services, draftServices],
   )
 
   const form = useForm<AddServiceFormData>({

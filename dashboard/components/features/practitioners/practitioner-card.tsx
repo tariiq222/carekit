@@ -22,7 +22,7 @@ interface PractitionerCardProps {
 }
 
 
-function StarRating({ rating }: { rating: number }) {
+function _StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex gap-0.5">

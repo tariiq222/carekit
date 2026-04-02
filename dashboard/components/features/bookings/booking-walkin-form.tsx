@@ -24,13 +24,6 @@ import { Label } from "@/components/ui/label"
 import { PhoneInput } from "@/components/ui/phone-input"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 import { createWalkInPatient } from "@/lib/api/patients"
 import { cn } from "@/lib/utils"

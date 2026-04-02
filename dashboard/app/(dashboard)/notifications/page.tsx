@@ -33,7 +33,7 @@ export default function NotificationsPage() {
   }
 
   const totalCount = notifications.length
-  const readCount = totalCount - (unreadCount ?? 0)
+  const _readCount = totalCount - (unreadCount ?? 0)
 
   return (
     <ListPageShell>

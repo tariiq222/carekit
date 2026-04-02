@@ -10,7 +10,6 @@ import {
 } from "react"
 import {
   deriveCssVars,
-  buildStyleFromVars,
   isValidHex,
   type BrandingColors,
   type CSSVarMap,
@@ -63,7 +62,7 @@ function injectDarkVars(vars: CSSVarMap) {
   el.textContent = css
 }
 
-function clearAllVars(lightVars: CSSVarMap) {
+function _clearAllVars(lightVars: CSSVarMap) {
   const root = document.documentElement
   for (const key of Object.keys(lightVars)) {
     root.style.removeProperty(key)

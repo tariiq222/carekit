@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -168,8 +168,10 @@ export function StepTypeDuration({
     ? activeTypes.find((st) => st.bookingType === selectedType)
     : undefined
 
-  const durationOptions: PractitionerDurationOption[] =
-    selectedServiceType?.durationOptions ?? []
+  const durationOptions: PractitionerDurationOption[] = useMemo(
+    () => selectedServiceType?.durationOptions ?? [],
+    [selectedServiceType]
+  )
 
   // Auto-select when no duration options → skip
   useEffect(() => {

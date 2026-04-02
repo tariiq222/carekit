@@ -172,6 +172,7 @@ function InvoiceDetailContent({ invoice }: { invoice: Invoice }) {
           <Separator />
           <DetailSection title={t("invoices.detail.qrCode")}>
             <div className="flex justify-center rounded-lg border bg-card p-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={invoice.qrCode}
                 alt={t("invoices.detail.qrCode")}

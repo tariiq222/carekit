@@ -25,7 +25,7 @@ type TFn = (key: string) => string
 
 /* ── Actions cell ── */
 function ServiceActionsCell({
-  service,
+  service: _service,
   onView,
   onEdit,
   onDelete,

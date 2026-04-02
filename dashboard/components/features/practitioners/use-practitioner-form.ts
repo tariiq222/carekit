@@ -20,7 +20,7 @@ import { useLocale } from "@/components/locale-provider"
 import { z } from "zod"
 import { createPractitionerSchema } from "@/components/features/practitioners/create/form-schema"
 
-const editPractitionerSchema = createPractitionerSchema.partial().extend({
+const _editPractitionerSchema = createPractitionerSchema.partial().extend({
   isActive: z.boolean(),
 })
 type EditPractitionerFormData = z.infer<typeof editPractitionerSchema>

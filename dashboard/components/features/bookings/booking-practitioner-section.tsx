@@ -71,7 +71,7 @@ export function BookingPractitionerSection({
   availableTypes,
   canFetchServiceTypes,
   serviceTypesLoading,
-  hasDurationOptions,
+  hasDurationOptions: _hasDurationOptions,
   durationOptions,
   visibility,
 }: BookingPractitionerSectionProps) {

@@ -87,7 +87,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
         {practitioners.map((p) => (
           <button key={p.id} onClick={() => selectPractitioner(p)} className={cn("w-full flex items-center gap-3 p-3 rounded-xl border border-border/60", "hover:border-primary/60 hover:bg-primary/5 transition-all text-start")}>
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              {p.avatarUrl ? <img src={p.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" /> : <span className="text-primary font-semibold text-sm">{p.user.firstName?.[0] ?? "?"}</span>}
+              {p.avatarUrl ? <>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={p.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" /></> : <span className="text-primary font-semibold text-sm">{p.user.firstName?.[0] ?? "?"}</span>}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm truncate">{isRtl && p.nameAr ? p.nameAr : `${p.user.firstName} ${p.user.lastName}`}</p>

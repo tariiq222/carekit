@@ -33,7 +33,7 @@ export function PractitionerServiceTypesEditor({
   value,
   onChange,
   t,
-  locale,
+  // locale,
 }: PractitionerServiceTypesEditorProps) {
   const serviceTypeMap = new Map<string, ServiceBookingType>(
     serviceBookingTypes.map((st) => [st.bookingType, st]),

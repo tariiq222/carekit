@@ -16,7 +16,7 @@ import type { UseFormReturn } from "react-hook-form"
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: UseFormReturn<any>
-  locale: string
+  // locale: string
 }
 
 export function ServiceBookingSettings({ form, locale }: Props) {

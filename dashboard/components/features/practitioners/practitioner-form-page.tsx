@@ -74,8 +74,7 @@ export function PractitionerFormPage(props: Props) {
   const [vacation, setVacation] = useState<LocalVacation>({ enabled: false, startDate: "", endDate: "", reason: "" })
 
   const form = useForm<CreatePractitionerFormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(isEdit ? (editPractitionerSchema as unknown as typeof createPractitionerSchema) : createPractitionerSchema) as never,
+      resolver: zodResolver(isEdit ? (editPractitionerSchema as unknown as typeof createPractitionerSchema) : createPractitionerSchema) as never,
     defaultValues: isEdit ? undefined : createPractitionerDefaults,
   })
 

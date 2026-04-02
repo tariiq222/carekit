@@ -18,7 +18,6 @@ import {
   Moon02Icon,
   Sun03Icon,
   Notification03Icon,
-  Search01Icon,
   Settings02Icon,
   UserCircle02Icon,
   Logout03Icon,

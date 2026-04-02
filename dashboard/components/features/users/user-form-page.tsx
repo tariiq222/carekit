@@ -21,7 +21,6 @@ import {
   userCreateSchema,
   userEditSchema,
   type UserCreateFormData,
-  type UserEditFormData,
 } from "@/lib/schemas/user.schema"
 
 /* ─── Types ─── */

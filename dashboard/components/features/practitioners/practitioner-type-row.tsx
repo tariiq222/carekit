@@ -12,11 +12,6 @@ import type { PractitionerTypeConfigPayload } from "@/lib/types/practitioner"
 
 /* ─── Key counter ─── */
 
-let optKey = 0
-function nextKey() {
-  return `popt-${++optKey}`
-}
-
 /* ─── Props ─── */
 
 interface PractitionerTypeRowProps {

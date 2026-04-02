@@ -9,7 +9,7 @@ import type { FeatureFlag } from "@/lib/types/feature-flag"
 import { useLocale } from "@/components/locale-provider"
 import { toast } from "sonner"
 
-const FEATURE_ICONS: Record<string, string> = {
+const _FEATURE_ICONS: Record<string, string> = {
   waitlist: "clock",
   coupons: "ticket",
   gift_cards: "gift",

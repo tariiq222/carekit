@@ -1,12 +1,11 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import type { Booking } from "@/lib/types/booking"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
-import { DeleteConfirmDialog, ActionsCell, StatusCell } from "@/components/features/bookings/booking-column-cells"
+import { ActionsCell, StatusCell } from "@/components/features/bookings/booking-column-cells"
 
 function getInitials(first: string, last: string): string {
   return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()

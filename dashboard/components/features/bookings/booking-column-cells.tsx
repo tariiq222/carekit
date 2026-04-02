@@ -71,7 +71,7 @@ export function DeleteConfirmDialog({
 
 /* ── Actions cell (icon buttons + delete dialog) ── */
 export function ActionsCell({
-  booking,
+  booking: _booking,
   onView,
   onEdit,
   onDelete,

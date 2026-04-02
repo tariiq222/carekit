@@ -77,7 +77,7 @@ export function SwitchField({ id, label, description, checked, onCheckedChange }
 
 /* ─── Override Field — uses global default or custom value ─── */
 
-export function OverrideField({ id, label, description, value, defaultValue, unit, globalHint, min, max, onEnable, onDisable, onChange }: {
+export function OverrideField({ id, label, description, value, defaultValue: _defaultValue, unit, globalHint, min, max, onEnable, onDisable, onChange }: {
   id: string
   label: string
   description?: string

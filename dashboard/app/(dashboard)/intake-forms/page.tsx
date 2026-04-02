@@ -61,7 +61,7 @@ export default function IntakeFormsPage() {
   const [previewForm, setPreviewForm] = useState<IntakeForm | null>(null)
 
   const { forms: rawForms, isLoading } = useIntakeForms()
-  const { update, updateLoading, delete: deleteFn, deleteLoading } = useIntakeFormMutations()
+  const { update, updateLoading: _updateLoading, delete: deleteFn, deleteLoading: _deleteLoading } = useIntakeFormMutations()
 
   const forms = rawForms.map(mapApiForm)
 
