@@ -19,7 +19,6 @@ import {
   usePractitionerBreaks,
   useSetBreaks,
 } from "@/hooks/use-practitioners"
-import type { BreakSlot } from "@/lib/types/practitioner"
 
 /* ─── Constants ─── */
 
