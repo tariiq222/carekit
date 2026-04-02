@@ -1,4 +1,5 @@
 "use client"
+/* eslint-disable no-restricted-syntax */
 
 /**
  * DateTimeInput — مكون موحد لحقول التاريخ والوقت معاً (datetime-local)

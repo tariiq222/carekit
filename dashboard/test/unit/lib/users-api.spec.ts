@@ -112,10 +112,10 @@ describe("users api", () => {
     expect(postMock).toHaveBeenCalledWith("/roles/r-1/permissions", { module: "patients", action: "read" })
   })
 
-  it("removes permission from role via DELETE /roles/:id/permissions", async () => {
-    deleteMock.mockResolvedValueOnce(undefined)
+  it("removes permission from role via POST /roles/:id/permissions/remove", async () => {
+    postMock.mockResolvedValueOnce(undefined)
     await removePermission("r-1", { module: "patients", action: "read" })
-    expect(deleteMock).toHaveBeenCalledWith("/roles/r-1/permissions", { data: { module: "patients", action: "read" } })
+    expect(postMock).toHaveBeenCalledWith("/roles/r-1/permissions/remove", { module: "patients", action: "read" })
   })
 
   it("fetches all permissions via GET /permissions", async () => {

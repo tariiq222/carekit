@@ -67,6 +67,7 @@ function CancellationPolicyCard({ settings, onSave, isPending, t }: CardProps) {
   const [autoRefund, setAutoRefund] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPolicyEn(settings.cancellationPolicyEn ?? "")
     setPolicyAr(settings.cancellationPolicyAr ?? "")
     setCancelHours(String(settings.freeCancelBeforeHours))

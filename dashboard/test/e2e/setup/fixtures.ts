@@ -131,6 +131,7 @@ async function installRefreshInterceptor(context: BrowserContext): Promise<void>
 
 export const test = base.extend<Fixtures>({
   adminPage: async ({ page }, use) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(page);
   },
 
@@ -146,6 +147,7 @@ export const test = base.extend<Fixtures>({
       // meaning the auth flow is done and the dashboard content is ready.
       await adminPage.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
     };
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(navigate);
   },
 });

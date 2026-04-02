@@ -29,6 +29,7 @@ function FlowOrderCard({ t }: { t: (key: string) => string }) {
   const [selected, setSelected] = useState<BookingFlowOrder>("service_first")
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (flowOrder) setSelected(flowOrder)
   }, [flowOrder])
 
@@ -167,6 +168,7 @@ function WhiteLabelBookingCard({ configMap, onSave, isPending, t }: Props) {
   const [slotDuration, setSlotDuration] = useState("")
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPrepayment(configMap.prepayment_required === "true")
     setAutoConfirm(configMap.auto_confirm_bookings === "true")
     setMaxAdvanceDays(configMap.max_advance_booking_days ?? "30")
@@ -243,6 +245,7 @@ function BookingPoliciesCard({ settings, isLoading, onSave, isPending: isSaving,
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLeadMinutes(String(settings.minBookingLeadMinutes ?? 0))
       setPaymentTimeout(String(settings.paymentTimeoutMinutes ?? 60))
       setBufferMin(String(settings.bufferMinutes ?? 0))

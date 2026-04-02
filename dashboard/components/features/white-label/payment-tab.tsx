@@ -25,6 +25,7 @@ export function PaymentTab({ configMap, onSave, isPending, t }: Props) {
   const [bankHolder, setBankHolder] = useState("")
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMoyasarKey(configMap.moyasar_publishable_key ?? "")
     setMoyasarSecret(configMap.moyasar_secret_key ?? "")
     setMoyasarEnabled(configMap.moyasar_enabled !== "false")

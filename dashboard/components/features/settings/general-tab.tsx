@@ -67,6 +67,7 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
   const [clinicTimezone, setClinicTimezone] = useState("Asia/Riyadh")
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setClinicName(configMap.clinic_name ?? "")
     setClinicEmail(configMap.clinic_email ?? "")
     setClinicPhone(configMap.clinic_phone ?? "")

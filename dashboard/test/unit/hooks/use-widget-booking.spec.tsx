@@ -9,6 +9,7 @@ const {
   fetchWidgetSlots,
   fetchWidgetServiceTypes,
   fetchWidgetServices,
+  fetchPublicBranches,
   widgetCreateBooking,
 } = vi.hoisted(() => ({
   fetchWidgetPractitioners: vi.fn(),
@@ -16,6 +17,7 @@ const {
   fetchWidgetSlots: vi.fn(),
   fetchWidgetServiceTypes: vi.fn(),
   fetchWidgetServices: vi.fn(),
+  fetchPublicBranches: vi.fn(),
   widgetCreateBooking: vi.fn(),
 }))
 
@@ -25,6 +27,7 @@ vi.mock("@/lib/api/widget", () => ({
   fetchWidgetSlots,
   fetchWidgetServiceTypes,
   fetchWidgetServices,
+  fetchPublicBranches,
   widgetCreateBooking,
 }))
 
@@ -33,9 +36,11 @@ import type { WizardState } from "@/hooks/use-widget-booking"
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
+  function TestWrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  }
+  TestWrapper.displayName = "TestWrapper"
+  return TestWrapper
 }
 
 // Minimal valid-shape mocks (cast to avoid requiring every field)
@@ -51,6 +56,7 @@ describe("useWidgetBooking", () => {
     fetchWidgetServiceTypes.mockResolvedValue([])
     fetchWidgetSlots.mockResolvedValue([])
     fetchWidgetServices.mockResolvedValue({ items: [], meta: { total: 0 } })
+    fetchPublicBranches.mockResolvedValue([])
   })
 
   it('initial state has step = "service"', () => {

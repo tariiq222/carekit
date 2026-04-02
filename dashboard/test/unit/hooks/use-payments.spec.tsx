@@ -36,9 +36,11 @@ import {
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return function TestWrapper({ children }: { children: ReactNode }) {
+  function TestWrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   }
+  TestWrapper.displayName = "TestWrapper"
+  return TestWrapper
 }
 
 describe("usePayments", () => {
@@ -181,7 +183,7 @@ describe("usePaymentMutations", () => {
       result.current.verifyMut.mutate({ id: "pay-1", verified: true, action: "approve" } as Parameters<typeof result.current.verifyMut.mutate>[0])
     })
 
-    await waitFor(() => expect(verifyBankTransfer).toHaveBeenCalledWith("pay-1", { verified: true }))
+    await waitFor(() => expect(verifyBankTransfer).toHaveBeenCalledWith("pay-1", { verified: true, action: "approve" }))
   })
 
   it("reviewMut calls reviewReceipt", async () => {

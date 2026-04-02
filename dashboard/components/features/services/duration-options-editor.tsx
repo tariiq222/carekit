@@ -47,6 +47,7 @@ export function DurationOptionsEditor({ serviceId, locale }: Props) {
   /* Sync server data into local state */
   useEffect(() => {
     if (existing && !dirty) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOptions(
         existing.map((o) => ({
           key: o.id,

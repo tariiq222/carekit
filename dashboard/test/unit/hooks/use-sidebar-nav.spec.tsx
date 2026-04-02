@@ -49,9 +49,11 @@ import { useSidebarNav } from "@/hooks/use-sidebar-nav"
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
+  function TestWrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  }
+  TestWrapper.displayName = "TestWrapper"
+  return TestWrapper
 }
 
 describe("useSidebarNav", () => {

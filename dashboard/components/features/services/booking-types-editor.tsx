@@ -67,6 +67,7 @@ export function BookingTypesEditor({ serviceId }: BookingTypesEditorProps) {
   /* Sync server data into local state */
   useEffect(() => {
     if (!existing || dirty) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTypes(mergeDraftsFromServer(existing))
   }, [existing, dirty])
 

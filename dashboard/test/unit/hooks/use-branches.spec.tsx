@@ -40,9 +40,11 @@ import {
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return function TestWrapper({ children }: { children: ReactNode }) {
+  function TestWrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   }
+  TestWrapper.displayName = "TestWrapper"
+  return TestWrapper
 }
 
 describe("useBranches", () => {

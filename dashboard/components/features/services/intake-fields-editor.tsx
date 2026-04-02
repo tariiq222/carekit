@@ -61,6 +61,7 @@ export function IntakeFieldsEditor({ formId, serviceId, initialFields, locale }:
   const { setFieldsMut } = useIntakeFormMutations(serviceId)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFields(
       initialFields.map((f) => ({
         key: f.id,

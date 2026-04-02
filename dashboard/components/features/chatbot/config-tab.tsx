@@ -45,6 +45,7 @@ function ConfigCategoryCard({
   }, [entries])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     initValues()
   }, [initValues])
 

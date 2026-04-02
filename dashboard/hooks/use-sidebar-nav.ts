@@ -46,11 +46,11 @@ export function useSidebarNav() {
   /* ── user display info ── */
   const userInitials = useMemo(
     () => (user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : "??"),
-    [user?.firstName, user?.lastName]
+    [user]
   )
   const userName = useMemo(
     () => (user ? `${user.firstName} ${user.lastName}` : "—"),
-    [user?.firstName, user?.lastName]
+    [user]
   )
 
   /* ── active route check ── */

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-claude-auth"],
+  "instructions": ["AGENTS.md"],
+  "mcp": {
+    "postgres": {
+      "type": "local",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://carekit:carekit_dev_password@localhost:5999/carekit_dev"
+      ]
+    },
+    "redis": {
+      "type": "local",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-redis",
+        "--url",
+        "redis://localhost:5380"
+      ]
+    },
+    "docker": {
+      "type": "local",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-docker"
+      ]
+    },
+    "playwright": {
+      "type": "local",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
+    "fetch": {
+      "type": "local",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-fetch"
+      ]
+    },
+    "github": {
+      "type": "local",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_TOKEN"
+      }
+    }
+  }
+}

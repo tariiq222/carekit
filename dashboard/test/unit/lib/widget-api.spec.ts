@@ -43,7 +43,7 @@ describe("widget api", () => {
   it("fetchWidgetPractitioners calls /practitioners", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: {} })
     await fetchWidgetPractitioners()
-    expect(getMock).toHaveBeenCalledWith("/practitioners", expect.objectContaining({ isActive: true }))
+    expect(getMock).toHaveBeenCalledWith("/practitioners", expect.objectContaining({ perPage: 20 }))
   })
 
   it("fetchWidgetPractitioner calls /practitioners/:id", async () => {

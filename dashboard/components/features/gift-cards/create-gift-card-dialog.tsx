@@ -16,6 +16,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
+import { DateTimeInput } from "@/components/ui/date-time-input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
@@ -126,10 +127,10 @@ export function CreateGiftCardDialog({
             {/* Expiry */}
             <div className="flex flex-col gap-1.5">
               <Label>{t("giftCards.create.expiresAt")}</Label>
-              <Input
-                type="datetime-local"
-                {...form.register("expiresAt")}
-              />
+              <DateTimeInput
+              value={form.watch("expiresAt") ?? ""}
+              onChange={(v) => form.setValue("expiresAt", v)}
+            />
             </div>
 
             <Separator />

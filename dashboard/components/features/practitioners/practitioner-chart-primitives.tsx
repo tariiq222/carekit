@@ -74,24 +74,22 @@ export function DonutChart({
     )
   }
 
-  let offset = 0
   return (
     <div className="flex flex-col items-center gap-3">
       <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="-rotate-90">
-        {segments.filter((s) => s.value > 0).map((s, i) => {
+        {segments.filter((s) => s.value > 0).reduce<{ els: React.ReactElement[]; acc: number }>((state, s, i) => {
           const dash = (s.value / total) * C
           const gap = C - dash
           const el = (
             <circle key={i} cx={cx} cy={cy} r={R} fill="none"
               stroke={s.color} strokeWidth={14}
               strokeDasharray={`${dash} ${gap}`}
-              strokeDashoffset={-offset}
+              strokeDashoffset={-state.acc}
               strokeLinecap="butt"
             />
           )
-          offset += dash
-          return el
-        })}
+          return { els: [...state.els, el], acc: state.acc + dash }
+        }, { els: [], acc: 0 }).els}
         <text
           x={cx} y={cy + 5} textAnchor="middle" fontSize="16" fontWeight="700"
           fill="var(--color-foreground)"

@@ -29,6 +29,7 @@ export function BrandingTab({ configMap, onSave, isPending, t }: Props) {
   const { preview, clearPreview, apply } = useBranding()
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAppName(configMap.app_name ?? "")
     setPrimaryColor(configMap.primary_color ?? "")
     setAccentColor(configMap.secondary_color ?? "")

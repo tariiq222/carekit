@@ -20,7 +20,7 @@ export interface Rating {
 
 /* ─── Query ─── */
 
-export interface RatingListQuery extends PaginatedQuery {}
+export type RatingListQuery = PaginatedQuery
 
 /* ─── DTOs ─── */
 

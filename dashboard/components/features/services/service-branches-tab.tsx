@@ -53,6 +53,7 @@ export function ServiceBranchesTab({ serviceId, serviceBranches }: ServiceBranch
   useEffect(() => {
     if (serviceBranches !== undefined) {
       const ids = serviceBranches.map((b) => b.branchId)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedMode(ids.length === 0 ? "all" : "specific")
       setSelectedIds(ids)
     }

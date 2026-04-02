@@ -68,6 +68,7 @@ export function BreaksEditor({
   /* Populate from server data */
   useEffect(() => {
     if (!serverBreaks) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalBreaks(
       serverBreaks.map((b) => ({
         key: nextKey(),

@@ -26,6 +26,7 @@ export function IntegrationsTab({ configMap, onSave, isPending, t }: Props) {
   const [emailFrom, setEmailFrom] = useState("")
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setZoomClientId(configMap.zoom_client_id ?? "")
     setZoomClientSecret(configMap.zoom_client_secret ?? "")
     setZoomAccountId(configMap.zoom_account_id ?? "")

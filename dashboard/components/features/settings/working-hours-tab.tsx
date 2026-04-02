@@ -74,6 +74,7 @@ function WorkingHoursCard({ t }: Props) {
       )
       return match ?? { ...def, isActive: false }
     })
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHours(merged)
   }, [serverHours])
 
@@ -209,6 +210,7 @@ function AdminOverrideCard({ t }: Props) {
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEnabled(settings.adminCanBookOutsideHours === true)
     }
   }, [settings])

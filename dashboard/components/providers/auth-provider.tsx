@@ -40,6 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([])
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const scheduleRefreshRef = useRef<((expiresIn: number) => void) | null>(null)
+
   const scheduleRefresh = useCallback((expiresIn: number) => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
     const delay = Math.max((expiresIn - 120) * 1000, 10_000)
@@ -47,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const data = await refreshToken()
         setAccessToken(data.accessToken)
-        scheduleRefresh(data.expiresIn)
+        scheduleRefreshRef.current?.(data.expiresIn)
       } catch {
         setUser(null)
         setPermissions([])
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // and the actual expiresIn, then fetch the user profile.
   // If either fails, the session is truly expired — clear local state.
   useEffect(() => {
+    scheduleRefreshRef.current = scheduleRefresh
     refreshToken()
       .then((res) => {
         scheduleRefresh(res.expiresIn)

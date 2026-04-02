@@ -21,7 +21,7 @@ export interface Notification {
 
 /* ─── Query ─── */
 
-export interface NotificationListQuery extends PaginatedQuery {}
+export type NotificationListQuery = PaginatedQuery
 
 /* ─── Response ─── */
 

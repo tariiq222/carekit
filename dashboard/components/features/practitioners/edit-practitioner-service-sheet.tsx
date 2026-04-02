@@ -81,6 +81,7 @@ export function EditPractitionerServiceSheet({
   /* Populate type configs from existing practitioner service types */
   useEffect(() => {
     if (!existingTypes || !open) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTypeConfigs(
       existingTypes.map((et) => ({
         bookingType: et.bookingType,
@@ -104,6 +105,7 @@ export function EditPractitionerServiceSheet({
   useEffect(() => {
     if (existingTypes && existingTypes.length > 0) return
     if (!ps || !serviceBookingTypes || !open) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTypeConfigs(
       ps.availableTypes.map((bt) => ({
         bookingType: bt,

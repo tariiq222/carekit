@@ -35,6 +35,7 @@ vi.mock("@/lib/api/widget", () => ({
   fetchWidgetServiceTypes: vi.fn().mockResolvedValue([]),
   fetchWidgetSlots: vi.fn().mockResolvedValue([]),
   fetchWidgetServices: vi.fn().mockResolvedValue({ items: [], meta: { total: 0 } }),
+  fetchPublicBranches: vi.fn().mockResolvedValue([]),
   widgetCreateBooking: vi.fn(),
 }))
 
