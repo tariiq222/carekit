@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RolesService } from './roles.service.js';
 import { CreateRoleDto, AssignPermissionDto } from './dto/create-role.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
@@ -24,9 +24,9 @@ export class RolesController {
 
   @Get()
   @CheckPermissions({ module: 'roles', action: 'view' })
+  @ApiOperation({ summary: 'Get all roles with their permissions' })
   async findAll() {
     const roles = await this.rolesService.findAll();
-    // Transform to include permissions array
     return roles.map((role) => ({
       id: role.id,
       name: role.name,
@@ -46,6 +46,7 @@ export class RolesController {
 
   @Post()
   @CheckPermissions({ module: 'roles', action: 'create' })
+  @ApiOperation({ summary: 'Create a new custom role' })
   async create(@Body() dto: CreateRoleDto) {
     const role = await this.rolesService.create(dto);
     return {
@@ -66,12 +67,14 @@ export class RolesController {
 
   @Delete(':id')
   @CheckPermissions({ module: 'roles', action: 'delete' })
+  @ApiOperation({ summary: 'Delete a custom role (system roles cannot be deleted)' })
   async delete(@Param('id', uuidPipe) id: string) {
     return this.rolesService.delete(id);
   }
 
   @Post(':id/permissions')
   @CheckPermissions({ module: 'roles', action: 'edit' })
+  @ApiOperation({ summary: 'Assign a permission to a role' })
   async assignPermission(
     @Param('id', uuidPipe) id: string,
     @Body() dto: AssignPermissionDto,
@@ -79,8 +82,28 @@ export class RolesController {
     return this.rolesService.assignPermission(id, dto.module, dto.action);
   }
 
+  /**
+   * POST :id/permissions/remove — proxy-safe alternative to DELETE :id/permissions
+   * Some proxies/CDNs strip the body from DELETE requests.
+   * Both endpoints do the same thing — use POST from the frontend.
+   */
+  @Post(':id/permissions/remove')
+  @CheckPermissions({ module: 'roles', action: 'edit' })
+  @ApiOperation({ summary: 'Remove a permission from a role (proxy-safe POST variant)' })
+  async removePermissionPost(
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: AssignPermissionDto,
+  ) {
+    return this.rolesService.removePermission(id, dto.module, dto.action);
+  }
+
+  /**
+   * @deprecated Use POST :id/permissions/remove instead.
+   * Kept for backward compatibility — some HTTP clients handle DELETE+body correctly.
+   */
   @Delete(':id/permissions')
   @CheckPermissions({ module: 'roles', action: 'edit' })
+  @ApiOperation({ summary: 'Remove a permission from a role (deprecated — use POST /remove)' })
   async removePermission(
     @Param('id', uuidPipe) id: string,
     @Body() dto: AssignPermissionDto,

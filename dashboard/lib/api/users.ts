@@ -98,7 +98,7 @@ export async function removePermission(
   roleId: string,
   payload: AssignPermissionPayload,
 ): Promise<void> {
-  await api.delete(`/roles/${roleId}/permissions`, { data: payload })
+  await api.post(`/roles/${roleId}/permissions/remove`, payload)
 }
 
 /* ─── Permissions ─── */
