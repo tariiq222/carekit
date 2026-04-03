@@ -19,9 +19,9 @@ import { BookingPaymentHelper } from './booking-payment.helper.js';
 import { PriceResolverService } from './price-resolver.service.js';
 import { ClinicHoursService } from '../clinic/clinic-hours.service.js';
 import { ClinicHolidaysService } from '../clinic/clinic-holidays.service.js';
-import { CLINIC_TIMEZONE } from '../../config/constants/index.js';
 import { NOTIF } from '../../common/constants/notification-messages.js';
 import { ERR } from '../../common/constants/error-messages.js';
+import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
 
 @Injectable()
 export class BookingCreationService {
@@ -38,6 +38,7 @@ export class BookingCreationService {
     private readonly priceResolver: PriceResolverService,
     private readonly clinicHoursService: ClinicHoursService,
     private readonly clinicHolidaysService: ClinicHolidaysService,
+    private readonly whitelabelService: WhitelabelService,
   ) {}
 
   async execute(
@@ -92,7 +93,8 @@ export class BookingCreationService {
     const duration = resolved.duration;
 
     const bookingDate = new Date(dto.date);
-    const nowRiyadh = new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE }).format(new Date());
+    const clinicTz = await this.whitelabelService.getTimezone();
+    const nowRiyadh = new Intl.DateTimeFormat('en-CA', { timeZone: clinicTz }).format(new Date());
     const today = new Date(nowRiyadh);
     if (bookingDate < today) throw new BadRequestException({ statusCode: 400, message: ERR.booking.pastDate, error: 'VALIDATION_ERROR' });
 
@@ -150,7 +152,7 @@ export class BookingCreationService {
             await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, branchId);
           }
           try {
-            const bufferMinutes = ps.bufferMinutes || service.bufferMinutes || settings.bufferMinutes;
+            const bufferMinutes = ps.bufferMinutes ?? service.bufferMinutes ?? settings.bufferMinutes;
             await checkDoubleBooking(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, bufferMinutes);
           } catch (err) {
             if (err instanceof ConflictException) {

@@ -4,7 +4,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../bookings/booking-status-log.service.js';
-import { CLINIC_TIMEZONE } from '../../config/constants/index.js';
+import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
 
 @Injectable()
 export class BookingAutocompleteService {
@@ -16,15 +16,17 @@ export class BookingAutocompleteService {
     private readonly activityLogService: ActivityLogService,
     private readonly bookingSettingsService: BookingSettingsService,
     private readonly statusLogService: BookingStatusLogService,
+    private readonly whitelabelService: WhitelabelService,
   ) {}
 
   /** Auto-complete bookings that are past the auto-complete window */
   async autoCompleteBookings(): Promise<void> {
     const settings = await this.bookingSettingsService.get();
+    const clinicTz = await this.whitelabelService.getTimezone();
     const now = new Date();
 
     const riyadhTomorrow = new Date(
-      new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE }).format(
+      new Intl.DateTimeFormat('en-CA', { timeZone: clinicTz }).format(
         now,
       ) + 'T00:00:00+03:00',
     );
@@ -42,7 +44,7 @@ export class BookingAutocompleteService {
     const autoCompleteMs = settings.autoCompleteAfterHours * 60 * 60 * 1000;
     const bookings = candidates.filter((b) => {
       const dateStr = new Intl.DateTimeFormat('en-CA', {
-        timeZone: CLINIC_TIMEZONE,
+        timeZone: clinicTz,
       }).format(b.date);
       const bookingEnd = new Date(`${dateStr}T${b.endTime}:00+03:00`);
       return now.getTime() > bookingEnd.getTime() + autoCompleteMs;

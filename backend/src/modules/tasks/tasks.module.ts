@@ -14,6 +14,7 @@ import { BookingsModule } from '../bookings/bookings.module.js';
 import { PaymentsModule } from '../payments/payments.module.js';
 import { MetricsModule } from '../../common/metrics/metrics.module.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
+import { WhitelabelModule } from '../whitelabel/whitelabel.module.js';
 import { DEFAULT_JOB_OPTIONS, QUEUE_TASKS } from '../../config/constants/queues.js';
 
 @Module({
@@ -24,6 +25,7 @@ import { DEFAULT_JOB_OPTIONS, QUEUE_TASKS } from '../../config/constants/queues.
     PaymentsModule,
     MetricsModule,
     ActivityLogModule,
+    WhitelabelModule,
   ],
   providers: [
     CleanupService,

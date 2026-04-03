@@ -7,7 +7,7 @@ export interface PublicClinicSettings {
   accountHolder: string | null;
 }
 
-export type BookingFlowOrder = 'service_first' | 'practitioner_first';
+export type BookingFlowOrder = 'service_first' | 'practitioner_first' | 'both';
 
 @Injectable()
 export class ClinicSettingsService {

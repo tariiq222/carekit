@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
 
 @Injectable()
 export class ReminderService {
@@ -9,6 +10,7 @@ export class ReminderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly whitelabelService: WhitelabelService,
   ) {}
 
   /** Check for bookings ~24h away and notify both patient and practitioner */
@@ -37,8 +39,9 @@ export class ReminderService {
     });
 
     await Promise.all(
-      bookings.flatMap((booking) => {
+      bookings.flatMap(async (booking) => {
         const dateStr = booking.date.toISOString().split('T')[0];
+        const timeStr = await this.formatTimeForNotification(booking.startTime);
         const notifications: Promise<unknown>[] = [];
 
         if (booking.patientId) {
@@ -47,8 +50,8 @@ export class ReminderService {
               userId: booking.patientId,
               titleAr: 'تذكير بموعدك غداً',
               titleEn: 'Appointment Reminder — Tomorrow',
-              bodyAr: `لديك موعد غداً ${dateStr} الساعة ${booking.startTime}`,
-              bodyEn: `You have an appointment tomorrow ${dateStr} at ${booking.startTime}`,
+              bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
+              bodyEn: `You have an appointment tomorrow ${dateStr} at ${timeStr}`,
               type: 'booking_reminder',
               data: { bookingId: booking.id },
             }),
@@ -61,8 +64,8 @@ export class ReminderService {
               userId: booking.practitioner.userId,
               titleAr: 'تذكير بموعد غداً',
               titleEn: 'Appointment Reminder — Tomorrow',
-              bodyAr: `لديك موعد غداً ${dateStr} الساعة ${booking.startTime}`,
-              bodyEn: `You have an appointment tomorrow ${dateStr} at ${booking.startTime}`,
+              bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
+              bodyEn: `You have an appointment tomorrow ${dateStr} at ${timeStr}`,
               type: 'booking_reminder',
               data: { bookingId: booking.id },
             }),
@@ -101,17 +104,18 @@ export class ReminderService {
     await Promise.all(
       bookings
         .filter((booking) => booking.patientId)
-        .map((booking) =>
-          this.notificationsService.createNotification({
+        .map(async (booking) => {
+          const timeStr = await this.formatTimeForNotification(booking.startTime);
+          return this.notificationsService.createNotification({
             userId: booking.patientId!,
             titleAr: 'موعدك بعد ساعة',
             titleEn: 'Appointment in 1 Hour',
-            bodyAr: `تذكير: موعدك بعد ساعة الساعة ${booking.startTime}`,
-            bodyEn: `Reminder: Your appointment is in 1 hour at ${booking.startTime}`,
+            bodyAr: `تذكير: موعدك بعد ساعة الساعة ${timeStr}`,
+            bodyEn: `Reminder: Your appointment is in 1 hour at ${timeStr}`,
             type: 'booking_reminder',
             data: { bookingId: booking.id },
-          }),
-        ),
+          });
+        }),
     );
 
     if (bookings.length > 0) {
@@ -148,7 +152,8 @@ export class ReminderService {
     });
 
     await Promise.all(
-      matched.flatMap((booking) => {
+      matched.flatMap(async (booking) => {
+        const timeStr = await this.formatTimeForNotification(booking.startTime);
         const notifications: Promise<unknown>[] = [];
 
         if (booking.patientId) {
@@ -157,8 +162,8 @@ export class ReminderService {
               userId: booking.patientId,
               titleAr: 'موعدك بعد ساعتين',
               titleEn: 'Appointment in 2 Hours',
-              bodyAr: `تذكير: موعدك بعد ساعتين الساعة ${booking.startTime}`,
-              bodyEn: `Reminder: Your appointment is in 2 hours at ${booking.startTime}`,
+              bodyAr: `تذكير: موعدك بعد ساعتين الساعة ${timeStr}`,
+              bodyEn: `Reminder: Your appointment is in 2 hours at ${timeStr}`,
               type: 'booking_reminder',
               data: { bookingId: booking.id },
             }),
@@ -171,8 +176,8 @@ export class ReminderService {
               userId: booking.practitioner.userId,
               titleAr: 'موعدك بعد ساعتين',
               titleEn: 'Appointment in 2 Hours',
-              bodyAr: `تذكير: لديك موعد بعد ساعتين الساعة ${booking.startTime}`,
-              bodyEn: `Reminder: You have an appointment in 2 hours at ${booking.startTime}`,
+              bodyAr: `تذكير: لديك موعد بعد ساعتين الساعة ${timeStr}`,
+              bodyEn: `Reminder: You have an appointment in 2 hours at ${timeStr}`,
               type: 'booking_reminder',
               data: { bookingId: booking.id },
             }),
@@ -219,22 +224,38 @@ export class ReminderService {
     await Promise.all(
       matched
         .filter((booking) => booking.patientId)
-        .map((booking) =>
-          this.notificationsService.createNotification({
+        .map(async (booking) => {
+          const timeStr = await this.formatTimeForNotification(booking.startTime);
+          return this.notificationsService.createNotification({
             userId: booking.patientId!,
             titleAr: 'موعدك بعد 15 دقيقة!',
             titleEn: 'Appointment in 15 Minutes!',
-            bodyAr: `تذكير عاجل: موعدك بعد 15 دقيقة الساعة ${booking.startTime}`,
-            bodyEn: `Urgent: Your appointment is in 15 minutes at ${booking.startTime}`,
+            bodyAr: `تذكير عاجل: موعدك بعد 15 دقيقة الساعة ${timeStr}`,
+            bodyEn: `Urgent: Your appointment is in 15 minutes at ${timeStr}`,
             type: 'booking_reminder_urgent',
             data: { bookingId: booking.id },
-          }),
-        ),
+          });
+        }),
     );
 
     if (matched.length > 0) {
       this.logger.log(`Sent ${matched.length} urgent (15-min) reminders`);
     }
+  }
+
+  /** Format a time string according to clinic's time_format config */
+  private async formatTimeForNotification(time: string): Promise<string> {
+    const format = await this.whitelabelService.getTimeFormat();
+    if (format === '12h') {
+      const [hourStr, minuteStr] = time.split(':');
+      const hour = parseInt(hourStr, 10);
+      const minute = minuteStr?.padStart(2, '0') ?? '00';
+      if (isNaN(hour)) return time;
+      const period = hour >= 12 ? 'م' : 'ص';
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${minute} ${period}`;
+    }
+    return time; // 24h — return as-is
   }
 
   /** Combine a date-only Date with an HH:mm startTime string */

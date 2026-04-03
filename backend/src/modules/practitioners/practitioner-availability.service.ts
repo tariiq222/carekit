@@ -14,12 +14,14 @@ import {
   validateScheduleSlots,
   checkOverlappingSlots,
 } from './availability-helpers.js';
+import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
 
 @Injectable()
 export class PractitionerAvailabilityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bookingSettingsService: BookingSettingsService,
+    private readonly whitelabelService: WhitelabelService,
   ) {}
 
   async getAvailability(practitionerId: string, branchId?: string) {
@@ -143,7 +145,16 @@ export class PractitionerAvailabilityService {
       this.bookingSettingsService.getForBranch(branchId),
     ]);
 
-    const bufferMinutes = settings.bufferMinutes ?? 0;
+    // Use the most conservative buffer: max of global setting and practitioner's own buffer
+    // (service-level buffer not available here without serviceId)
+    const practitionerBuffer = await this.prisma.practitionerService.aggregate({
+      where: { practitionerId },
+      _max: { bufferMinutes: true },
+    });
+    const bufferMinutes = Math.max(
+      settings.bufferMinutes ?? 0,
+      practitionerBuffer._max.bufferMinutes ?? 0,
+    );
     const availableDates: string[] = [];
 
     // Group bookings by date string for fast lookup
@@ -187,7 +198,8 @@ export class PractitionerAvailabilityService {
       const dayBreaks = breaks.filter((b) => b.dayOfWeek === dayOfWeek);
 
       // Generate slots
-      const isToday = isSameLocalDate(cursor, new Date());
+      const clinicTz = await this.whitelabelService.getTimezone();
+      const isToday = isSameLocalDate(cursor, new Date(), clinicTz);
       const allSlots = generateSlots(dayAvailabilities, duration, bufferMinutes, isToday);
 
       // Filter out break-overlapping slots
@@ -277,8 +289,20 @@ export class PractitionerAvailabilityService {
       }),
     ]);
 
-    const isToday = isSameLocalDate(targetDate, new Date());
-    const allSlots = generateSlots(availabilities, duration, settings.bufferMinutes ?? 0, isToday);
+    // Use the most conservative buffer: max of global setting and practitioner's own buffer
+    // (service-level buffer not available here without serviceId)
+    const practitionerBuffer = await this.prisma.practitionerService.aggregate({
+      where: { practitionerId },
+      _max: { bufferMinutes: true },
+    });
+    const bufferMinutes = Math.max(
+      settings.bufferMinutes ?? 0,
+      practitionerBuffer._max.bufferMinutes ?? 0,
+    );
+
+    const clinicTz = await this.whitelabelService.getTimezone();
+    const isToday = isSameLocalDate(targetDate, new Date(), clinicTz);
+    const allSlots = generateSlots(availabilities, duration, bufferMinutes, isToday);
 
     const slotsWithoutBreaks = allSlots.filter(
       (slot) => !breaks.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),

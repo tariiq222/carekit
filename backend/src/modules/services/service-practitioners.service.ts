@@ -12,7 +12,7 @@ export class ServicePractitionersService {
   async getPractitionersForService(serviceId: string, branchId?: string) {
     await this.services.ensureExists(serviceId);
 
-    return this.prisma.practitionerService.findMany({
+    const rows = await this.prisma.practitionerService.findMany({
       where: {
         serviceId,
         ...(branchId && {
@@ -32,6 +32,7 @@ export class ServicePractitionersService {
               select: {
                 firstName: true,
                 lastName: true,
+                avatarUrl: true,
               },
             },
           },
@@ -49,5 +50,14 @@ export class ServicePractitionersService {
       },
       orderBy: { createdAt: 'asc' },
     });
+
+    // Map user.avatarUrl → practitioner.avatarUrl for frontend compatibility
+    return rows.map((row) => ({
+      ...row,
+      practitioner: {
+        ...row.practitioner,
+        avatarUrl: row.practitioner.user.avatarUrl ?? null,
+      },
+    }));
   }
 }

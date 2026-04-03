@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
@@ -47,9 +47,24 @@ export class BookingRescheduleService {
       zoomData = { zoomMeetingId: mtg.meetingId, zoomJoinUrl: mtg.joinUrl, zoomHostUrl: mtg.hostUrl };
     }
     const oldZoomId = booking.zoomMeetingId;
-    const bufferMinutes = ps?.bufferMinutes || svc?.bufferMinutes || settings.bufferMinutes;
-
     const skipAvailability = adminUserId && settings.adminCanBookOutsideHours;
+    const bufferMinutes = ps?.bufferMinutes ?? svc?.bufferMinutes ?? settings.bufferMinutes;
+
+    // Enforce minimum lead time (skip for admins with override permission)
+    if (!skipAvailability && settings.minBookingLeadMinutes > 0) {
+      const bookingDateTime = new Date(newDate);
+      const [leadH, leadM] = newStartTime.split(':').map(Number);
+      bookingDateTime.setHours(leadH, leadM, 0, 0);
+      const minutesUntil = (bookingDateTime.getTime() - Date.now()) / (1000 * 60);
+      if (minutesUntil < settings.minBookingLeadMinutes) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: `Booking must be made at least ${settings.minBookingLeadMinutes} minutes in advance`,
+          error: 'BOOKING_LEAD_TIME_VIOLATION',
+        });
+      }
+    }
+
     const result = await this.prisma.$transaction(async (tx) => {
       if (!skipAvailability) {
         await validateAvailability(tx, booking.practitionerId, newDate, newStartTime, newEndTime, booking.branchId ?? undefined);

@@ -22,9 +22,10 @@ import { ZoomModule } from '../integrations/zoom/zoom.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { ClinicModule } from '../clinic/clinic.module.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
+import { WhitelabelModule } from '../whitelabel/whitelabel.module.js';
 
 @Module({
-  imports: [NotificationsModule, ZoomModule, ClinicModule, ActivityLogModule],
+  imports: [NotificationsModule, ZoomModule, ClinicModule, ActivityLogModule, WhitelabelModule],
   controllers: [WaitlistController, BookingsController, BookingActionsController, BookingSettingsController, BookingStatusLogController],
   providers: [
     BookingsService,

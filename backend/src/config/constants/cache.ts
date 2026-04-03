@@ -12,6 +12,7 @@ export const CACHE_TTL = {
 export const CACHE_KEYS = {
   WHITELABEL_CONFIG: 'cache:whitelabel:config',
   WHITELABEL_BRANDING: 'cache:whitelabel:branding',
+  WHITELABEL_TIMEZONE: 'cache:whitelabel:timezone',
   /** Pattern: cache:whitelabel:key:{key} — per-key cache for getConfigByKey() */
   WHITELABEL_KEY_PREFIX: 'cache:whitelabel:key:',
   /** Glob pattern to invalidate all whitelabel caches at once */
