@@ -14,6 +14,7 @@
 import { useState, useCallback } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { widgetCreateBooking } from "@/lib/api/widget"
+import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
 import { useWidgetBookingQueries, useWidgetSlotsQuery } from "./use-widget-booking-queries"
 import type { Practitioner, PractitionerDurationOption, TimeSlot } from "@/lib/types/practitioner"
 import type { Service } from "@/lib/types/service"
@@ -23,7 +24,6 @@ import type { PublicBranch } from "@/lib/api/widget"
 /* ─── Types ─── */
 
 export type WizardStep = "branch" | "service" | "datetime" | "auth" | "confirm" | "success"
-export type BookingFlowOrder = "service_first" | "practitioner_first"
 
 export interface WizardState {
   step: WizardStep
@@ -39,7 +39,7 @@ export interface WizardState {
   couponId: string | null
   giftCardId: string | null
   discountAmount: number
-  paymentMethod: "moyasar" | "at_clinic" | null
+  paymentMethod: "moyasar" | "at_clinic" | "bank_transfer" | null
   showIntakePopup: boolean
 }
 
@@ -49,6 +49,7 @@ export function useWidgetBooking(
   initialPractitionerId?: string,
   initialServiceId?: string,
   flowOrder: BookingFlowOrder = "service_first",
+  anyPractitioner = false,
 ) {
   const [state, setState] = useState<WizardState>({
     step: "service",
@@ -177,6 +178,41 @@ export function useWidgetBooking(
     })
   }, [hasBranches])
 
+  /* ─── Universal back — handles all sub-states ─── */
+  const universalBack = useCallback(() => {
+    setState((s) => {
+      // Inside service step — handle sub-states first
+      if ((s.step as string) === "service") {
+        if (flowOrder === "service_first") {
+          // booking type shown → go back to practitioner list
+          if (s.practitioner && s.service) return { ...s, practitioner: null, bookingType: null, durationOption: null, slot: null }
+          // practitioner list shown → go back to service list
+          if (s.service && !s.practitioner) return { ...s, service: null, practitioner: null, bookingType: null, durationOption: null, slot: null }
+        }
+        if (flowOrder === "practitioner_first") {
+          // booking type shown → go back to service list
+          if (s.practitioner && s.service) return { ...s, service: null, bookingType: null, durationOption: null, slot: null }
+          // service list shown → go back to practitioner list
+          if (s.practitioner && !s.service) return { ...s, practitioner: null, bookingType: null, durationOption: null, slot: null }
+        }
+      }
+      // Going back from confirm → skip auth (user is already authenticated, auth useEffect
+      // would immediately fire onAuthComplete and jump back to confirm) → go to datetime
+      if (s.step === "confirm") {
+        return { ...s, step: "datetime" }
+      }
+      // Between main steps
+      const steps: WizardStep[] = hasBranches
+        ? ["branch", "service", "datetime", "auth", "confirm"]
+        : ["service", "datetime", "auth", "confirm"]
+      const currentStep: WizardStep =
+        hasBranches && s.step === "service" && !s.branch ? "branch" : s.step
+      const idx = steps.indexOf(currentStep)
+      if (idx <= 0) return s
+      return { ...s, step: steps[idx - 1] }
+    })
+  }, [hasBranches, flowOrder])
+
   // Sub-step back helpers (used inside "service" step)
   const clearPractitioner = useCallback(() => {
     setState((s) => ({ ...s, practitioner: null, bookingType: null, durationOption: null, slot: null }))
@@ -221,7 +257,7 @@ export function useWidgetBooking(
     }))
   }, [])
 
-  const selectPaymentMethod = useCallback((method: "moyasar" | "at_clinic") => {
+  const selectPaymentMethod = useCallback((method: "moyasar" | "at_clinic" | "bank_transfer") => {
     setState((s) => ({ ...s, paymentMethod: method }))
   }, [])
 
@@ -245,6 +281,7 @@ export function useWidgetBooking(
     onAuthComplete,
     confirmBooking,
     goBack,
+    universalBack,
     isConfirming: createMut.isPending,
     confirmError: createMut.error,
     initialPractitionerId,
@@ -260,5 +297,6 @@ export function useWidgetBooking(
     clearDiscount,
     selectPaymentMethod,
     dismissIntakePopup,
+    anyPractitioner,
   }
 }
