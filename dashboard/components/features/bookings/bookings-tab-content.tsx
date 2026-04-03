@@ -16,6 +16,7 @@ import { usePractitioners } from "@/hooks/use-practitioners"
 import { useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
+import { useClinicConfig } from "@/hooks/use-clinic-config"
 import type { Booking, RefundType } from "@/lib/types/booking"
 
 interface BookingsTabContentProps {
@@ -25,6 +26,7 @@ interface BookingsTabContentProps {
 
 export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabContentProps) {
   const { t } = useLocale()
+  const { weekStartDayNumber } = useClinicConfig()
   const queryClient = useQueryClient()
   const { bookings, stats, meta, loading, statsLoading, error, filters, setFilters, resetFilters, hasFilters, setPage } = useBookings()
   const { confirmMut, noShowMut, adminCancelMut } = useBookingMutations()
@@ -58,7 +60,7 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
       setFilters({ dateFrom: fmt(today), dateTo: fmt(today) })
     } else if (key === "week") {
       const start = new Date(today)
-      start.setDate(today.getDate() - today.getDay())
+      start.setDate(today.getDate() - ((today.getDay() - weekStartDayNumber + 7) % 7))
       const end = new Date(start)
       end.setDate(start.getDate() + 6)
       setFilters({ dateFrom: fmt(start), dateTo: fmt(end) })
