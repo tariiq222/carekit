@@ -289,3 +289,11 @@ enum PreferredTime {
 
   @@map("preferred_time")
 }
+
+enum BookingFlowOrder {
+  service_first
+  practitioner_first
+  both
+
+  @@map("booking_flow_order")
+}
