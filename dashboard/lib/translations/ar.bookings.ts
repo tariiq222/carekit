@@ -210,6 +210,12 @@ export const arBookings: Record<string, string> = {
   "bookings.wizard.stepLabel.typeDuration": "النوع والمدة",
   "bookings.wizard.stepLabel.datetime": "الموعد",
   "bookings.wizard.stepLabel.confirm": "التأكيد",
+  "bookings.wizard.stepLabel.choosePath": "طريقة الحجز",
+  "bookings.wizard.step.choosePath.title": "كيف تريد البدء؟",
+  "bookings.wizard.step.choosePath.byService": "ابدأ بالخدمة",
+  "bookings.wizard.step.choosePath.byServiceDesc": "اختر الخدمة أولاً ثم الممارس المتاح",
+  "bookings.wizard.step.choosePath.byPractitioner": "ابدأ بالممارس",
+  "bookings.wizard.step.choosePath.byPractitionerDesc": "اختر الممارس أولاً ثم الخدمة المناسبة",
   "bookings.wizard.step.service.title": "اختر الخدمة",
   "bookings.wizard.step.service.search": "ابحث عن خدمة...",
   "bookings.wizard.step.service.priceFrom": "يبدأ من",
@@ -242,4 +248,5 @@ export const arBookings: Record<string, string> = {
   "bookings.wizard.back": "رجوع",
   "bookings.wizard.close": "إغلاق",
   "bookings.wizard.changePatient": "تغيير المستفيد",
+  "bookings.wizard.noPractitioners": "لا يوجد ممارسون متاحون",
 }

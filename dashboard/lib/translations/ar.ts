@@ -17,6 +17,7 @@ import { arSettings } from "./ar.settings"
 import { arMisc } from "./ar.misc"
 import { arWidget } from "./ar.widget"
 import { arIntakeForms } from "./ar.intake-forms"
+import { arWhiteLabel } from "./ar.whitelabel"
 
 export const ar: Record<string, string> = {
   ...arNav,
@@ -31,4 +32,5 @@ export const ar: Record<string, string> = {
   ...arMisc,
   ...arWidget,
   ...arIntakeForms,
+  ...arWhiteLabel,
 }

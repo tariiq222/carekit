@@ -16,7 +16,13 @@ export interface WhiteLabelConfig {
   updatedAt: string
 }
 
-export type WhiteLabelConfigMap = Record<string, string>
+export interface WhiteLabelConfigMap {
+  [key: string]: string | undefined
+  date_format?: string
+  time_format?: string
+  week_start_day?: string
+  timezone?: string
+}
 
 /* ─── DTOs ─── */
 

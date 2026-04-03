@@ -29,7 +29,7 @@ export const enNav: Record<string, string> = {
   "nav.zatca": "ZATCA",
   "nav.activityLog": "Activity Log",
   "nav.problemReports": "Problem Reports",
-  "nav.whiteLabel": "White Label",
+  "nav.whiteLabel": "System Setup",
   "nav.intakeForms": "Intake Forms",
   "nav.create": "Create",
   "nav.edit": "Edit",

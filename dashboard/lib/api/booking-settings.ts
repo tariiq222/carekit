@@ -53,7 +53,12 @@ export interface BookingSettings {
   suggestAlternativesOnConflict: boolean
   suggestAlternativesCount: number
   minBookingLeadMinutes: number
+  maxAdvanceBookingDays: number
   adminCanBookOutsideHours: boolean
+  // Widget settings
+  widgetShowPrice: boolean
+  widgetAnyPractitioner: boolean
+  widgetRedirectUrl: string | null
   createdAt: string
   updatedAt: string
 }

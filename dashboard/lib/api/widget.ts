@@ -12,25 +12,70 @@ import type { Service, ServiceBookingType } from "@/lib/types/service"
 import type { Booking, CreateBookingPayload } from "@/lib/types/booking"
 import type { AuthUser } from "@/lib/api/auth"
 
-/* ─── Whitelabel ─── */
+/* ─── Whitelabel / Branding ─── */
+
+/* ─── Bank account shape (mirrors BankAccount in bank-account-card.tsx) ─── */
+export interface WidgetBankAccount {
+  id: string
+  bankId: string
+  iban: string
+  holderName: string
+}
 
 export interface WidgetBranding {
-  clinic_name: string
-  clinic_name_en: string
+  // System identity
+  system_name: string
+  system_name_ar: string
   logo_url: string | null
   favicon_url: string | null
   primary_color: string | null
   secondary_color: string | null
   contact_phone: string | null
   contact_email: string | null
-  app_name: string | null
-  app_name_en: string | null
+  // Payment flags (string "true"/"false" for backward compat)
   payment_moyasar_enabled: string | null
   payment_at_clinic_enabled: string | null
+  // Bank transfer
+  bank_transfer_enabled: boolean
+  bank_accounts: WidgetBankAccount[]
+  // Widget behaviour settings
+  widget_show_price: boolean
+  widget_any_practitioner: boolean
+  widget_redirect_url: string | null
+  widget_max_advance_days: number
+}
+
+function parseBankAccounts(raw: unknown): WidgetBankAccount[] {
+  if (typeof raw !== "string" || !raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed as WidgetBankAccount[]
+  } catch { /* ignore */ }
+  return []
 }
 
 export async function fetchWidgetBranding(): Promise<WidgetBranding> {
-  return api.get<WidgetBranding>("/whitelabel/public")
+  const raw = await api.get<Record<string, unknown>>("/whitelabel/public")
+  return {
+    system_name:               String(raw.system_name ?? ""),
+    system_name_ar:            String(raw.system_name_ar ?? ""),
+    logo_url:                  raw.logo_url ? String(raw.logo_url) : null,
+    favicon_url:               raw.favicon_url ? String(raw.favicon_url) : null,
+    primary_color:             raw.primary_color ? String(raw.primary_color) : null,
+    secondary_color:           raw.secondary_color ? String(raw.secondary_color) : null,
+    contact_phone:             raw.contact_phone ? String(raw.contact_phone) : null,
+    contact_email:             raw.contact_email ? String(raw.contact_email) : null,
+    payment_moyasar_enabled:   raw.payment_moyasar_enabled ? String(raw.payment_moyasar_enabled) : null,
+    payment_at_clinic_enabled: raw.payment_at_clinic_enabled ? String(raw.payment_at_clinic_enabled) : null,
+    bank_transfer_enabled:     raw.bank_transfer_enabled === "true" || raw.bank_transfer_enabled === true,
+    bank_accounts:             parseBankAccounts(raw.bank_accounts),
+    widget_show_price:          raw.widget_show_price !== false,
+    widget_any_practitioner:    raw.widget_any_practitioner === true,
+    widget_redirect_url:        raw.widget_redirect_url ? String(raw.widget_redirect_url) : null,
+    widget_max_advance_days:    typeof raw.widget_max_advance_days === "number"
+      ? raw.widget_max_advance_days
+      : Number(raw.widget_max_advance_days ?? 0),
+  }
 }
 
 /* ─── Branches ─── */
@@ -137,8 +182,6 @@ export async function fetchWidgetAvailableDates(
   )
   return res.availableDates
 }
-
-
 
 /* ─── Services ─── */
 

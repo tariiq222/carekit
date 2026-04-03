@@ -7,18 +7,22 @@
 
 import { api } from "@/lib/api"
 
-export type BookingFlowOrder = "service_first" | "practitioner_first"
+export type BookingFlowOrder = "service_first" | "practitioner_first" | "both"
 
 export async function fetchBookingFlowOrder(): Promise<BookingFlowOrder> {
-  return api.get<BookingFlowOrder>("/clinic/settings/booking-flow")
+  // Backend returns { bookingFlowOrder: "..." } after api.ts unwraps the envelope
+  const res = await api.get<{ bookingFlowOrder: BookingFlowOrder }>("/clinic/settings/booking-flow")
+  return res.bookingFlowOrder ?? "service_first"
 }
 
 export async function updateBookingFlowOrder(
   order: BookingFlowOrder,
 ): Promise<BookingFlowOrder> {
-  return api.patch<BookingFlowOrder>("/clinic/settings/booking-flow", {
+  // Backend returns { bookingFlowOrder: "..." } after api.ts unwraps the envelope
+  const res = await api.patch<{ bookingFlowOrder: BookingFlowOrder }>("/clinic/settings/booking-flow", {
     order,
   })
+  return res.bookingFlowOrder ?? "service_first"
 }
 
 /* ─── Payment Settings ─── */
@@ -29,13 +33,11 @@ export interface PaymentSettings {
 }
 
 export async function fetchPaymentSettings(): Promise<PaymentSettings> {
-  const res = await api.get<{ data: PaymentSettings }>("/clinic/settings/payment")
-  return res.data
+  return api.get<PaymentSettings>("/clinic/settings/payment")
 }
 
 export async function updatePaymentSettings(
   settings: Partial<PaymentSettings>,
 ): Promise<PaymentSettings> {
-  const res = await api.patch<{ data: PaymentSettings }>("/clinic/settings/payment", settings)
-  return res.data
+  return api.patch<PaymentSettings>("/clinic/settings/payment", settings)
 }

@@ -210,6 +210,12 @@ export const enBookings: Record<string, string> = {
   "bookings.wizard.stepLabel.typeDuration": "Type & Duration",
   "bookings.wizard.stepLabel.datetime": "Appointment",
   "bookings.wizard.stepLabel.confirm": "Confirm",
+  "bookings.wizard.stepLabel.choosePath": "Booking Method",
+  "bookings.wizard.step.choosePath.title": "How would you like to start?",
+  "bookings.wizard.step.choosePath.byService": "Browse by Service",
+  "bookings.wizard.step.choosePath.byServiceDesc": "Choose a service first, then pick an available practitioner",
+  "bookings.wizard.step.choosePath.byPractitioner": "Browse by Practitioner",
+  "bookings.wizard.step.choosePath.byPractitionerDesc": "Choose a practitioner first, then select the service",
   "bookings.wizard.step.service.title": "Choose a Service",
   "bookings.wizard.step.service.search": "Search services...",
   "bookings.wizard.step.service.priceFrom": "From",
@@ -242,4 +248,5 @@ export const enBookings: Record<string, string> = {
   "bookings.wizard.back": "Back",
   "bookings.wizard.close": "Close",
   "bookings.wizard.changePatient": "Change Patient",
+  "bookings.wizard.noPractitioners": "No practitioners available",
 }
