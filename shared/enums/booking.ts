@@ -45,3 +45,9 @@ export enum RefundType {
   PARTIAL = 'partial',
   NONE = 'none',
 }
+
+export enum BookingFlowOrder {
+  SERVICE_FIRST = 'service_first',
+  PRACTITIONER_FIRST = 'practitioner_first',
+  BOTH = 'both',
+}
