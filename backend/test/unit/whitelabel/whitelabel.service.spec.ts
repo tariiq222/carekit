@@ -46,6 +46,9 @@ const mockPrismaService: any = {
     upsert: jest.fn(),
     delete: jest.fn(),
   },
+  bookingSettings: {
+    findFirst: jest.fn(),
+  },
   $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
 };
 
@@ -107,9 +110,13 @@ describe('WhitelabelService', () => {
     jest.clearAllMocks();
     // Restore default cache miss so tests that skip cache setup still hit DB
     mockCacheService.get.mockResolvedValue(null);
-    mockClinicSettingsService.getPaymentSettings.mockResolvedValue({
+    mockPrismaService.bookingSettings.findFirst.mockResolvedValue({
       paymentMoyasarEnabled: false,
       paymentAtClinicEnabled: true,
+      widgetShowPrice: true,
+      widgetAnyPractitioner: false,
+      widgetRedirectUrl: null,
+      maxAdvanceBookingDays: 60,
     });
   });
 
@@ -142,6 +149,10 @@ describe('WhitelabelService', () => {
         logo_url: 'https://logo.png',
         payment_moyasar_enabled: 'false',
         payment_at_clinic_enabled: 'true',
+        widget_show_price: true,
+        widget_any_practitioner: false,
+        widget_redirect_url: null,
+        widget_max_advance_days: 60,
       });
       expect(mockPrismaService.whiteLabelConfig.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -161,6 +172,10 @@ describe('WhitelabelService', () => {
       expect(result).toEqual({
         payment_moyasar_enabled: 'false',
         payment_at_clinic_enabled: 'true',
+        widget_show_price: true,
+        widget_any_practitioner: false,
+        widget_redirect_url: null,
+        widget_max_advance_days: 60,
       });
     });
   });
