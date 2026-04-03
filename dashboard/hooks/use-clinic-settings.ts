@@ -136,3 +136,36 @@ export function usePaymentSettingsMutation() {
     },
   })
 }
+
+/* ─── Widget Settings ─── */
+
+export interface WidgetSettings {
+  widgetShowPrice: boolean
+  widgetAnyPractitioner: boolean
+  widgetRedirectUrl: string | null
+}
+
+export function useWidgetSettings() {
+  return useQuery({
+    queryKey: ["clinic-settings", "widget"],
+    queryFn: () => fetchBookingSettings().then((s) => ({
+      widgetShowPrice:          s.widgetShowPrice ?? true,
+      widgetAnyPractitioner:    s.widgetAnyPractitioner ?? false,
+      widgetRedirectUrl:        s.widgetRedirectUrl ?? null,
+    })),
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useWidgetSettingsMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Partial<WidgetSettings>) => updateBookingSettings(data as Record<string, unknown>),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinic-settings", "widget"] })
+      queryClient.invalidateQueries({ queryKey: BOOKING_SETTINGS_KEY })
+      // Invalidate widget branding cache so the widget picks up new settings
+      queryClient.invalidateQueries({ queryKey: ["widget", "branding"] })
+    },
+  })
+}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Clock01Icon } from "@hugeicons/core-free-icons"
@@ -20,10 +20,11 @@ import {
   useBookingSettingsMutation,
 } from "@/hooks/use-clinic-settings"
 import { HolidaysSection } from "./holidays-section"
+import { useClinicConfig } from "@/hooks/use-clinic-config"
 
 /* ─── Constants ─── */
 
-const DAYS = [
+const DAYS_BASE = [
   { value: 0, en: "Sunday", ar: "الأحد" },
   { value: 1, en: "Monday", ar: "الاثنين" },
   { value: 2, en: "Tuesday", ar: "الثلاثاء" },
@@ -33,12 +34,21 @@ const DAYS = [
   { value: 6, en: "Saturday", ar: "السبت" },
 ]
 
-const DEFAULT_HOURS: ClinicHour[] = DAYS.map((d) => ({
-  dayOfWeek: d.value,
-  startTime: "09:00",
-  endTime: "17:00",
-  isActive: d.value >= 0 && d.value <= 4,
-}))
+/** Reorder days so the week starts on the configured day. */
+function getOrderedDays(weekStart: 0 | 1) {
+  if (weekStart === 1) return [...DAYS_BASE.slice(1), DAYS_BASE[0]]
+  return DAYS_BASE
+}
+
+/** Build default clinic hours respecting the given day order. */
+function buildDefaultHours(days: typeof DAYS_BASE): ClinicHour[] {
+  return days.map((d) => ({
+    dayOfWeek: d.value,
+    startTime: "09:00",
+    endTime: "17:00",
+    isActive: d.value >= 0 && d.value <= 4,
+  }))
+}
 
 /* ─── Props ─── */
 
@@ -61,14 +71,20 @@ export function WorkingHoursTab({ t }: Props) {
 /* ─── Working Hours Card ─── */
 
 function WorkingHoursCard({ t }: Props) {
-  const [hours, setHours] = useState<ClinicHour[]>(DEFAULT_HOURS)
+  const { weekStartDayNumber } = useClinicConfig()
+  const orderedDays = useMemo(() => getOrderedDays(weekStartDayNumber), [weekStartDayNumber])
+  const [hours, setHours] = useState<ClinicHour[]>(() => buildDefaultHours(orderedDays))
 
   const { data: serverHours, isLoading } = useClinicHours()
   const mutation = useClinicHoursMutation()
 
   useEffect(() => {
-    if (!serverHours || serverHours.length === 0) return
-    const merged = DEFAULT_HOURS.map((def) => {
+    const defaults = buildDefaultHours(orderedDays)
+    if (!serverHours || serverHours.length === 0) {
+      setHours(defaults)
+      return
+    }
+    const merged = defaults.map((def) => {
       const match = serverHours.find(
         (s: ClinicHour) => s.dayOfWeek === def.dayOfWeek,
       )
@@ -76,7 +92,7 @@ function WorkingHoursCard({ t }: Props) {
     })
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHours(merged)
-  }, [serverHours])
+  }, [serverHours, orderedDays])
 
   const updateDay = (index: number, patch: Partial<ClinicHour>) => {
     setHours((prev) =>
@@ -129,7 +145,7 @@ function WorkingHoursCard({ t }: Props) {
         {hours.map((hour, index) => (
           <DayRow
             key={hour.dayOfWeek}
-            day={DAYS[index]}
+            day={orderedDays[index]}
             hour={hour}
             onChange={(patch) => updateDay(index, patch)}
           />

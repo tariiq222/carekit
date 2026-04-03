@@ -1,11 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import type { WhiteLabelConfigMap } from "@/lib/types/whitelabel"
+import { useBookingSettings, useBookingSettingsMutation } from "@/hooks/use-clinic-settings"
+import { RemindersCard } from "./reminders-card"
 
 interface Props {
   configMap: WhiteLabelConfigMap
@@ -15,6 +18,13 @@ interface Props {
 }
 
 export function NotificationsTab({ configMap, onSave, isPending, t }: Props) {
+  const { data: settings } = useBookingSettings()
+  const settingsMut = useBookingSettingsMutation()
+  const handleSettingsSave = (data: Record<string, unknown>) =>
+    settingsMut.mutate(data, {
+      onSuccess: () => toast.success(t("settings.saved")),
+      onError: (err: Error) => toast.error(err.message),
+    })
   const [notifyBookings, setNotifyBookings] = useState(true)
   const [notifyCancellations, setNotifyCancellations] = useState(true)
   const [notifyProblems, setNotifyProblems] = useState(true)
@@ -45,86 +55,98 @@ export function NotificationsTab({ configMap, onSave, isPending, t }: Props) {
     ])
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm">{t("settings.tabs.notifications")}</CardTitle>
-        <p className="text-xs text-muted-foreground">{t("settings.notificationsHint")}</p>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* ── Bookings ── */}
-        <CategorySection title={t("settings.notifyCategory.bookings")}>
-          <Row
-            title={t("settings.notifyBookings")}
-            desc={t("settings.notifyBookingsDesc")}
-            checked={notifyBookings}
-            onChange={setNotifyBookings}
-          />
-          <Separator />
-          <Row
-            title={t("settings.notifyCancellations")}
-            desc={t("settings.notifyCancellationsDesc")}
-            checked={notifyCancellations}
-            onChange={setNotifyCancellations}
-          />
-          <Separator />
-          <Row
-            title={t("settings.notifyReminders")}
-            desc={t("settings.notifyRemindersDesc")}
-            checked={notifyReminders}
-            onChange={setNotifyReminders}
-          />
-        </CategorySection>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">{t("settings.tabs.notifications")}</CardTitle>
+          <p className="text-xs text-muted-foreground">{t("settings.notificationsHint")}</p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* ── Bookings ── */}
+          <CategorySection title={t("settings.notifyCategory.bookings")}>
+            <Row
+              title={t("settings.notifyBookings")}
+              desc={t("settings.notifyBookingsDesc")}
+              checked={notifyBookings}
+              onChange={setNotifyBookings}
+            />
+            <Separator />
+            <Row
+              title={t("settings.notifyCancellations")}
+              desc={t("settings.notifyCancellationsDesc")}
+              checked={notifyCancellations}
+              onChange={setNotifyCancellations}
+            />
+            <Separator />
+            <Row
+              title={t("settings.notifyReminders")}
+              desc={t("settings.notifyRemindersDesc")}
+              checked={notifyReminders}
+              onChange={setNotifyReminders}
+            />
+          </CategorySection>
 
-        <Separator className="my-2" />
+          <Separator className="my-2" />
 
-        {/* ── Financial ── */}
-        <CategorySection title={t("settings.notifyCategory.financial")}>
-          <Row
-            title={t("settings.notifyPayments")}
-            desc={t("settings.notifyPaymentsDesc")}
-            checked={notifyPayments}
-            onChange={setNotifyPayments}
-          />
-        </CategorySection>
+          {/* ── Financial ── */}
+          <CategorySection title={t("settings.notifyCategory.financial")}>
+            <Row
+              title={t("settings.notifyPayments")}
+              desc={t("settings.notifyPaymentsDesc")}
+              checked={notifyPayments}
+              onChange={setNotifyPayments}
+            />
+          </CategorySection>
 
-        <Separator className="my-2" />
+          <Separator className="my-2" />
 
-        {/* ── Ratings & Reports ── */}
-        <CategorySection title={t("settings.notifyCategory.ratings")}>
-          <Row
-            title={t("settings.notifyRatings")}
-            desc={t("settings.notifyRatingsDesc")}
-            checked={notifyRatings}
-            onChange={setNotifyRatings}
-          />
-          <Separator />
-          <Row
-            title={t("settings.notifyProblems")}
-            desc={t("settings.notifyProblemsDesc")}
-            checked={notifyProblems}
-            onChange={setNotifyProblems}
-          />
-        </CategorySection>
+          {/* ── Ratings & Reports ── */}
+          <CategorySection title={t("settings.notifyCategory.ratings")}>
+            <Row
+              title={t("settings.notifyRatings")}
+              desc={t("settings.notifyRatingsDesc")}
+              checked={notifyRatings}
+              onChange={setNotifyRatings}
+            />
+            <Separator />
+            <Row
+              title={t("settings.notifyProblems")}
+              desc={t("settings.notifyProblemsDesc")}
+              checked={notifyProblems}
+              onChange={setNotifyProblems}
+            />
+          </CategorySection>
 
-        <Separator className="my-2" />
+          <Separator className="my-2" />
 
-        {/* ── Other ── */}
-        <CategorySection title={t("settings.notifyCategory.other")}>
-          <Row
-            title={t("settings.notifyWaitlist")}
-            desc={t("settings.notifyWaitlistDesc")}
-            checked={notifyWaitlist}
-            onChange={setNotifyWaitlist}
-          />
-        </CategorySection>
+          {/* ── Other ── */}
+          <CategorySection title={t("settings.notifyCategory.other")}>
+            <Row
+              title={t("settings.notifyWaitlist")}
+              desc={t("settings.notifyWaitlistDesc")}
+              checked={notifyWaitlist}
+              onChange={setNotifyWaitlist}
+            />
+          </CategorySection>
 
-        <div className="flex justify-end pt-2">
-          <Button size="sm" disabled={isPending} onClick={handleSave}>
-            {t("settings.save")}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex justify-end pt-2">
+            <Button size="sm" disabled={isPending} onClick={handleSave}>
+              {t("settings.save")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Reminders Card ── */}
+      {settings && (
+        <RemindersCard
+          settings={settings}
+          onSave={handleSettingsSave}
+          isPending={settingsMut.isPending}
+          t={t}
+        />
+      )}
+    </div>
   )
 }
 

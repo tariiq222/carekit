@@ -1,7 +1,6 @@
 "use client"
 
 import { toast } from "sonner"
-
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -15,16 +14,17 @@ import { BookingTab } from "@/components/features/settings/booking-tab"
 import { CancellationTab } from "@/components/features/settings/cancellation-tab"
 import { NotificationsTab } from "@/components/features/settings/notifications-tab"
 import { WorkingHoursTab } from "@/components/features/settings/working-hours-tab"
+import { SettingsPaymentTab } from "@/components/features/settings/settings-payment-tab"
+import { SettingsIntegrationsTab } from "@/components/features/settings/settings-integrations-tab"
 import { ZatcaTab } from "@/components/features/invoices/zatca-tab"
 import { EmailTemplatesTab } from "@/components/features/settings/email-templates-tab"
 import { WidgetTab } from "@/components/features/settings/widget-tab"
 
 export default function SettingsPage() {
   const { t } = useLocale()
-
   const { data: configMap, isLoading } = useConfigMap()
-
   const mutation = useUpdateConfig()
+
   const onMutationSuccess = () => toast.success(t("settings.saved"))
   const onMutationError = () => toast.error(t("settings.error") ?? "Failed to save settings")
 
@@ -61,7 +61,6 @@ export default function SettingsPage() {
   return (
     <ListPageShell>
       <Breadcrumbs />
-
       <PageHeader title={t("settings.title")} description={t("settings.description")} />
 
       <Tabs defaultValue="general">
@@ -72,6 +71,8 @@ export default function SettingsPage() {
             <TabsTrigger value="cancellation">{t("settings.tabs.cancellation")}</TabsTrigger>
             <TabsTrigger value="notifications">{t("settings.tabs.notifications")}</TabsTrigger>
             <TabsTrigger value="hours">{t("settings.tabs.hours")}</TabsTrigger>
+            <TabsTrigger value="payment">{t("settings.tabs.payment")}</TabsTrigger>
+            <TabsTrigger value="integrations">{t("settings.tabs.integrations")}</TabsTrigger>
             <TabsTrigger value="zatca">{t("invoices.tabs.zatca")}</TabsTrigger>
             <TabsTrigger value="email-templates">{t("settings.tabs.emailTemplates")}</TabsTrigger>
             <TabsTrigger value="widget">{t("settings.tabs.widget")}</TabsTrigger>
@@ -82,7 +83,7 @@ export default function SettingsPage() {
           <GeneralTab configMap={cfg} onSave={handleSave} isPending={mutation.isPending} t={t} />
         </TabsContent>
         <TabsContent value="booking" className="mt-4">
-          <BookingTab configMap={cfg} onSave={handleSave} isPending={mutation.isPending} t={t} />
+          <BookingTab t={t} />
         </TabsContent>
         <TabsContent value="cancellation" className="mt-4">
           <CancellationTab t={t} />
@@ -92,6 +93,12 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="hours" className="mt-4">
           <WorkingHoursTab t={t} />
+        </TabsContent>
+        <TabsContent value="payment" className="mt-4">
+          <SettingsPaymentTab />
+        </TabsContent>
+        <TabsContent value="integrations" className="mt-4">
+          <SettingsIntegrationsTab />
         </TabsContent>
         <TabsContent value="zatca" className="mt-4">
           <ZatcaTab />

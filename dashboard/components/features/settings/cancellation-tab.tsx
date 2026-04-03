@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useBookingSettings, useBookingSettingsMutation } from "@/hooks/use-clinic-settings"
+import { ReschedulingCard } from "./rescheduling-card"
+import { NoShowCard } from "./noshow-card"
 
 interface Props {
   t: (key: string) => string
@@ -37,6 +39,8 @@ export function CancellationTab({ t }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card><CardHeader><Skeleton className="h-4 w-48" /></CardHeader><CardContent><Skeleton className="h-60 w-full" /></CardContent></Card>
         <Card><CardHeader><Skeleton className="h-4 w-48" /></CardHeader><CardContent><Skeleton className="h-60 w-full" /></CardContent></Card>
+        <Card><CardHeader><Skeleton className="h-4 w-48" /></CardHeader><CardContent><Skeleton className="h-60 w-full" /></CardContent></Card>
+        <Card><CardHeader><Skeleton className="h-4 w-48" /></CardHeader><CardContent><Skeleton className="h-60 w-full" /></CardContent></Card>
       </div>
     )
   }
@@ -45,6 +49,8 @@ export function CancellationTab({ t }: Props) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {settings && <CancellationPolicyCard settings={settings} onSave={handleSave} isPending={mutation.isPending} t={t} />}
       {settings && <AdvancedCancellationCard settings={settings} onSave={handleSave} isPending={mutation.isPending} t={t} />}
+      {settings && <ReschedulingCard settings={settings} onSave={handleSave} isPending={mutation.isPending} t={t} />}
+      {settings && <NoShowCard settings={settings} onSave={handleSave} isPending={mutation.isPending} t={t} />}
     </div>
   )
 }
