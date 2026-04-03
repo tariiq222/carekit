@@ -169,6 +169,31 @@ const iconLibraryRules = {
   },
 }
 
+/** Suppress React Compiler memoization warnings for form.watch() and useReactTable()
+ * These are false positives — form.watch() is the correct RHF API for controlled selects.
+ * React Compiler will skip memoizing these components, which is acceptable behavior.
+ */
+const reactCompilerRule = {
+  rules: {
+    'react-hooks/incompatible-library': 'off',
+  },
+}
+
+/** Allow `_`-prefixed vars/args to be intentionally unused */
+const unusedVarsRule = {
+  rules: {
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      {
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_',
+      },
+    ],
+  },
+}
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -179,6 +204,8 @@ const eslintConfig = defineConfig([
   hooksLayerRules,
   iconLibraryRules,
   nativeDateInputRules,
+  unusedVarsRule,
+  reactCompilerRule,
 
   // Override default ignores of eslint-config-next.
   globalIgnores([

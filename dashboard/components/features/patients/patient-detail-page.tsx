@@ -29,6 +29,7 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLocale } from "@/components/locale-provider"
+import { useClinicConfig } from "@/hooks/use-clinic-config"
 import { usePatient, usePatientStats, usePatientBookings } from "@/hooks/use-patients"
 
 /* ─── Props ─── */
@@ -42,6 +43,7 @@ interface Props {
 export function PatientDetailPage({ patientId }: Props) {
   const router = useRouter()
   const { locale, t } = useLocale()
+  const { formatDate } = useClinicConfig()
 
   const { data: patient, isLoading, error } = usePatient(patientId)
   const { data: stats, isLoading: statsLoading } = usePatientStats(patientId)
@@ -136,7 +138,7 @@ export function PatientDetailPage({ patientId }: Props) {
                   <DetailRow
                     label={t("patients.detail.dateOfBirth")}
                     value={patient.dateOfBirth
-                      ? new Date(patient.dateOfBirth).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")
+                      ? formatDate(patient.dateOfBirth)
                       : "—"}
                     numeric
                   />
@@ -175,12 +177,12 @@ export function PatientDetailPage({ patientId }: Props) {
                 <DetailSection title={t("patients.detail.accountInfo")}>
                   <DetailRow
                     label={t("patients.detail.registeredDate")}
-                    value={new Date(patient.createdAt).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+                    value={formatDate(patient.createdAt)}
                     numeric
                   />
                   <DetailRow
                     label={t("patients.detail.lastUpdated")}
-                    value={new Date(patient.updatedAt).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")}
+                    value={formatDate(patient.updatedAt)}
                     numeric
                   />
                   {patient.accountType === "walk_in" && (
@@ -196,7 +198,7 @@ export function PatientDetailPage({ patientId }: Props) {
                       <DetailRow
                         label={t("patients.detail.claimedAt")}
                         value={patient.claimedAt
-                          ? new Date(patient.claimedAt).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US")
+                          ? formatDate(patient.claimedAt)
                           : t("patients.detail.notClaimed")}
                         numeric={!!patient.claimedAt}
                       />

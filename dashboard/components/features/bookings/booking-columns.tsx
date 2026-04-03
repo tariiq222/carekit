@@ -2,7 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { cn } from "@/lib/utils"
+import { cn, formatClinicDate, formatClinicTime } from "@/lib/utils"
+import type { DateFormat, TimeFormat } from "@/lib/utils"
 import type { Booking } from "@/lib/types/booking"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 import { ActionsCell, StatusCell } from "@/components/features/bookings/booking-column-cells"
@@ -110,16 +111,13 @@ export function getBookingColumns(
     {
       id: "datetime",
       header: "التاريخ والوقت",
+      // TODO: pass dateFormat/timeFormat from parent when columns accept config
       cell: ({ row }) => (
         <div className="font-numeric">
           <p className="text-sm font-medium text-foreground">
-            {new Date(row.original.date).toLocaleDateString("ar-SA", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+            {formatClinicDate(row.original.date)}
           </p>
-          <p className="text-xs text-muted-foreground">{row.original.startTime}</p>
+          <p className="text-xs text-muted-foreground">{formatClinicTime(row.original.startTime)}</p>
         </div>
       ),
     },

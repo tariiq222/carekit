@@ -37,7 +37,7 @@ describe("bookingCreateSchema", () => {
   })
 
   it("rejects missing practitionerId", () => {
-    const { practitionerId: _, ...rest } = valid
+    const rest = (({ practitionerId: _p, ...r }) => r)(valid)
     const result = bookingCreateSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -48,7 +48,7 @@ describe("bookingCreateSchema", () => {
   })
 
   it("rejects missing serviceId", () => {
-    const { serviceId: _, ...rest } = valid
+    const rest = (({ serviceId: _s, ...r }) => r)(valid)
     const result = bookingCreateSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -59,7 +59,7 @@ describe("bookingCreateSchema", () => {
   })
 
   it("rejects missing date", () => {
-    const { date: _, ...rest } = valid
+    const { date: _d, ...rest } = valid; void _d
     const result = bookingCreateSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -70,7 +70,7 @@ describe("bookingCreateSchema", () => {
   })
 
   it("rejects missing startTime", () => {
-    const { startTime: _, ...rest } = valid
+    const { startTime: _s, ...rest } = valid; void _s
     const result = bookingCreateSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })

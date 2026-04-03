@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons"
 import { fetchBookingSettings } from "@/lib/api/booking-settings"
-import { fetchConfigMap } from "@/lib/api/whitelabel"
+
 import { OverrideField, SwitchField } from "./booking-settings-fields"
 import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import { useLocale } from "@/components/locale-provider"
@@ -16,10 +16,10 @@ import type { UseFormReturn } from "react-hook-form"
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: UseFormReturn<any>
-  // locale: string
+  locale?: string
 }
 
-export function ServiceBookingSettings({ form, locale }: Props) {
+export function ServiceBookingSettings({ form, locale: _locale }: Props) {
   const [open, setOpen] = useState(false)
   const { t } = useLocale()
   const { isEnabled } = useFeatureFlagMap()
@@ -30,15 +30,9 @@ export function ServiceBookingSettings({ form, locale }: Props) {
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: configMap } = useQuery({
-    queryKey: ["whitelabel-config-map"],
-    queryFn: fetchConfigMap,
-    staleTime: 5 * 60 * 1000,
-  })
-
   const globalMinLead = globalSettings?.minBookingLeadMinutes ?? 0
   const globalBuffer = globalSettings?.bufferMinutes ?? 0
-  const globalMaxAdvanceDays = Number(configMap?.max_advance_booking_days ?? 30)
+  const globalMaxAdvanceDays = globalSettings?.maxAdvanceBookingDays ?? 60
 
   return (
     <div className="space-y-3">

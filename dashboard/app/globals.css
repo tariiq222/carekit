@@ -373,3 +373,13 @@
     box-shadow: var(--shadow-primary);
 }
 
+
+/* ─── Force English (Latin) Numerals ─── */
+/* Applied to all numeric displays: prices, counts, IDs, times, dates */
+/* Overrides Arabic-Indic digits that browsers may render in ar locale */
+/* Uses font-feature-settings to force lining numerals without breaking RTL layout */
+@utility font-numeric {
+    font-variant-numeric: lining-nums tabular-nums;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    font-family: "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+}

@@ -102,7 +102,7 @@ export function getIntakeFormsColumns({
       header: t("intakeForms.col.submissions"),
       cell: ({ row }) => (
         <span className="tabular-nums text-sm font-medium text-foreground">
-          {row.original.submissionsCount.toLocaleString()}
+          {row.original.submissionsCount.toLocaleString("en-US")}
         </span>
       ),
     },

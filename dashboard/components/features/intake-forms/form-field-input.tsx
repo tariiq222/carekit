@@ -21,7 +21,7 @@ import type { FieldType } from "@/lib/types/intake-form"
 
 export function FieldPreview({
   field,
-  isAr: _isAr,
+  isAr,
   value,
   onChange,
   onToggleCheckbox,

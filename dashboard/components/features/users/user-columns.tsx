@@ -2,7 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { getInitials } from "@/lib/utils"
+import { getInitials, formatClinicDate } from "@/lib/utils"
+import type { DateFormat } from "@/lib/utils"
 import {
   MoreHorizontalIcon,
   PencilEdit02Icon,
@@ -97,9 +98,10 @@ export function getUserColumns(
     {
       accessorKey: "createdAt",
       header: t("users.col.joined"),
+      // TODO: pass dateFormat from parent when columns accept config
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {new Date(row.original.createdAt).toLocaleDateString()}
+          {formatClinicDate(row.original.createdAt)}
         </span>
       ),
     },

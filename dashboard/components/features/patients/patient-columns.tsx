@@ -2,7 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { getInitials } from "@/lib/utils"
+import { getInitials, formatClinicDate } from "@/lib/utils"
+import type { DateFormat } from "@/lib/utils"
 import {
   ViewIcon,
   PencilEdit01Icon,
@@ -32,7 +33,6 @@ export function getPatientColumns({
   t,
   locale = "ar",
 }: PatientColumnOptions): ColumnDef<Patient>[] {
-  const dateLocale = locale === "ar" ? "ar-SA" : "en-US"
   return [
     {
       id: "patient",
@@ -100,13 +100,10 @@ export function getPatientColumns({
       accessorKey: "createdAt",
       header: t("patients.col.joined"),
       enableSorting: true,
+      // TODO: pass dateFormat from parent when columns accept config
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {new Date(row.original.createdAt).toLocaleDateString(dateLocale, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
+          {formatClinicDate(row.original.createdAt)}
         </span>
       ),
     },
@@ -125,11 +122,7 @@ export function getPatientColumns({
         if (!b) return <span className="text-sm text-muted-foreground">—</span>
         return (
           <span className="tabular-nums text-sm text-muted-foreground">
-            {new Date(b.date).toLocaleDateString("ar-SA", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })}
+            {formatClinicDate(b.date)}
           </span>
         )
       },
@@ -149,11 +142,7 @@ export function getPatientColumns({
         if (!b) return <span className="text-sm text-muted-foreground">—</span>
         return (
           <span className="tabular-nums text-sm text-muted-foreground">
-            {new Date(b.date).toLocaleDateString("ar-SA", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })}
+            {formatClinicDate(b.date)}
           </span>
         )
       },

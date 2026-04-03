@@ -23,7 +23,7 @@ import { createPractitionerSchema } from "@/components/features/practitioners/cr
 const _editPractitionerSchema = createPractitionerSchema.partial().extend({
   isActive: z.boolean(),
 })
-type EditPractitionerFormData = z.infer<typeof editPractitionerSchema>
+type EditPractitionerFormData = z.infer<typeof _editPractitionerSchema>
 
 const defaultSchedule: AvailabilitySlot[] = Array.from({ length: 7 }, (_, i) => ({
   dayOfWeek: i, startTime: "09:00", endTime: "17:00", isActive: i <= 4,

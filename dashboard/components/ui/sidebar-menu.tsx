@@ -56,7 +56,6 @@ function SidebarMenuButton({
   isActive = false,
   variant = "default",
   size = "default",
-  tooltip: _tooltip,
   className,
   ...props
 }: React.ComponentProps<"button"> & {

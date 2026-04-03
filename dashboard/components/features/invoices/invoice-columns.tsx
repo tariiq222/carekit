@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { Invoice } from "@/lib/types/invoice"
+import { formatClinicDate } from "@/lib/utils"
+import type { DateFormat } from "@/lib/utils"
 
 const zatcaStyles: Record<string, string> = {
   pending: "border-warning/30 bg-warning/10 text-warning",
@@ -99,9 +101,10 @@ export function getInvoiceColumns(
     {
       accessorKey: "createdAt",
       header: t("invoices.col.date"),
+      // TODO: pass dateFormat from parent when columns accept config
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {new Date(row.original.createdAt).toLocaleDateString()}
+          {formatClinicDate(row.original.createdAt)}
         </span>
       ),
     },
