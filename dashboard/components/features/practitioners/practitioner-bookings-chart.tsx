@@ -61,14 +61,19 @@ function groupByDay(bookings: Booking[]): { date: string; count: number; revenue
   return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([date, v]) => ({ date, ...v }))
 }
 
+/**
+ * Chart axis label formatter — uses locale-aware abbreviated month names.
+ * This is intentionally kept as toLocaleDateString because chart labels
+ * need short month names (e.g. "Jan", "يناير"), not the clinic's configured date format.
+ */
 function fmtDate(dateStr: string, locale: string, period: Period): string {
   const opts: Intl.DateTimeFormatOptions = period === "6m"
     ? { month: "short" } : { day: "numeric", month: "short" }
-  return new Date(dateStr).toLocaleDateString(locale === "ar" ? "ar-SA" : "en-US", opts)
+  return new Date(dateStr).toLocaleDateString(locale === "ar" ? "ar-SA-u-nu-latn" : "en-US", opts)
 }
 
 function fmtRevenue(halalat: number, locale: string): string {
-  return (halalat / 100).toLocaleString(locale === "ar" ? "ar-SA" : "en-US", { maximumFractionDigits: 0 })
+  return (halalat / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })
 }
 
 /* ─── Main ─── */

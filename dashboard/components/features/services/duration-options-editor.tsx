@@ -28,7 +28,7 @@ interface DraftOption {
 
 interface Props {
   serviceId: string
-  // locale: string
+  locale?: string
 }
 
 let keyCounter = 0
@@ -36,7 +36,7 @@ function nextKey() {
   return `draft-${++keyCounter}`
 }
 
-export function DurationOptionsEditor({ serviceId, locale }: Props) {
+export function DurationOptionsEditor({ serviceId, locale: _locale }: Props) {
   const { t } = useLocale()
   const [options, setOptions] = useState<DraftOption[]>([])
   const [dirty, setDirty] = useState(false)

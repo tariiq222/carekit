@@ -4,27 +4,27 @@
  */
 
 import { BadRequestException } from '@nestjs/common';
-import { CLINIC_TIMEZONE } from '../../config/constants/index.js';
+import { CLINIC_TIMEZONE_DEFAULT } from '../../config/constants/index.js';
 
 const TIME_REGEX = /^\d{2}:\d{2}$/;
 
-/** Returns current time as minutes-since-midnight in Asia/Riyadh timezone */
-export function getNowMinutesRiyadh(): number {
+/** Returns current time as minutes-since-midnight in the given clinic timezone */
+export function getNowMinutesInTz(timezone: string = CLINIC_TIMEZONE_DEFAULT): number {
   const now = new Date();
-  const riyadhTime = new Intl.DateTimeFormat('en-US', {
-    timeZone: CLINIC_TIMEZONE,
+  const formattedTime = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone as Intl.DateTimeFormatOptions['timeZone'],
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   }).format(now);
-  const [h, m] = riyadhTime.split(':').map(Number);
+  const [h, m] = formattedTime.split(':').map(Number);
   return h * 60 + m;
 }
 
-/** Compares two dates by local calendar day in Asia/Riyadh timezone */
-export function isSameLocalDate(a: Date, b: Date): boolean {
+/** Compares two dates by local calendar day in the given clinic timezone */
+export function isSameLocalDate(a: Date, b: Date, timezone: string = CLINIC_TIMEZONE_DEFAULT): boolean {
   const fmt = (d: Date) =>
-    new Intl.DateTimeFormat('en-CA', { timeZone: CLINIC_TIMEZONE }).format(d);
+    new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(d);
   return fmt(a) === fmt(b);
 }
 
@@ -36,7 +36,7 @@ export function generateSlots(
 ): Array<{ startTime: string; endTime: string; available: boolean }> {
   const slots: Array<{ startTime: string; endTime: string; available: boolean }> = [];
   const step = duration + bufferMinutes;
-  const nowMinutes = isToday ? getNowMinutesRiyadh() : -1;
+  const nowMinutes = isToday ? getNowMinutesInTz() : -1;
 
   for (const avail of availabilities) {
     const [startH, startM] = avail.startTime.split(':').map(Number);

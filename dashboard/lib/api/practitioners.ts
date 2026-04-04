@@ -43,6 +43,7 @@ type RawPractitioner = Omit<Practitioner, "averageRating" | "_count" | "specialt
   reviewCount?: number
   _count?: Practitioner["_count"]
   averageRating?: number
+  user: Practitioner["user"] & { avatarUrl?: string | null }
 }
 
 function mapPractitioner(raw: RawPractitioner): Practitioner {
@@ -62,6 +63,7 @@ function mapPractitioner(raw: RawPractitioner): Practitioner {
     ...raw,
     specialty,
     specialtyAr,
+    avatarUrl: raw.user?.avatarUrl ?? raw.avatarUrl ?? null,
     averageRating: raw.averageRating ?? raw.rating ?? undefined,
     _count: raw._count ?? {
       bookings: 0,

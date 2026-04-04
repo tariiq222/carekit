@@ -12,9 +12,10 @@ import { PractitionerOnboardingService } from './practitioner-onboarding.service
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { EmailModule } from '../email/email.module.js';
+import { WhitelabelModule } from '../whitelabel/whitelabel.module.js';
 
 @Module({
-  imports: [BookingsModule, AuthModule, EmailModule],
+  imports: [BookingsModule, AuthModule, EmailModule, WhitelabelModule],
   controllers: [FavoritePractitionersController, PractitionersController],
   providers: [
     PractitionersService,

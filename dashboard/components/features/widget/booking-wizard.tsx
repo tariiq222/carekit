@@ -5,20 +5,27 @@
  *
  * Two-column layout: steps sidebar (left) + content area (right)
  * Communicates with the host page via postMessage.
+ *
+ * Branding: fetches primary_color + secondary_color from /whitelabel/public
+ * and injects them as CSS variables so the widget matches the clinic's brand.
  */
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useWidgetBooking } from "@/hooks/use-widget-booking"
 import { WidgetServiceStep } from "./widget-service-step"
 import { WidgetDatetimeStep } from "./widget-datetime-step"
 import { WidgetAuthStep } from "./widget-auth-step"
 import { WidgetConfirmStep } from "./widget-confirm-step"
 import { WidgetBranchStep } from "./widget-branch-step"
-import { WidgetHeader } from "./widget-header"
 import { WidgetStepsSidebar } from "./widget-steps-sidebar"
 import { WidgetIntakePopup } from "./widget-intake-popup"
 import type { StepDef } from "./widget-steps-sidebar"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
+import { fetchWidgetBranding } from "@/lib/api/widget"
+import { deriveCssVars, buildStyleFromVars, isValidHex } from "@/lib/color-utils"
 import { cn } from "@/lib/utils"
 
 /* ─── postMessage protocol ─── */
@@ -34,14 +41,15 @@ export function postToHost(msg: WidgetMessage, targetOrigin: string) {
   }
 }
 
+/* ─── Props ─── */
 
 interface BookingWizardProps {
   initialPractitionerId?: string
   initialServiceId?: string
   initialLocale?: "ar" | "en"
-  /** The origin of the parent page embedding this widget. Required for postMessage; silently skipped when empty. */
+  /** The origin of the parent page embedding this widget. Required for postMessage. */
   parentOrigin?: string
-  initialFlowOrder?: "service_first" | "practitioner_first"
+  initialFlowOrder?: BookingFlowOrder
 }
 
 export function BookingWizard({
@@ -51,8 +59,41 @@ export function BookingWizard({
   parentOrigin = "",
   initialFlowOrder = "service_first",
 }: BookingWizardProps) {
-  const booking = useWidgetBooking(initialPractitionerId, initialServiceId, initialFlowOrder)
-  const { state, hasBranches } = booking
+  /* ─── Branding ─── */
+  const { data: branding } = useQuery({
+    queryKey: ["widget", "branding"],
+    queryFn: fetchWidgetBranding,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  /* ─── Derive CSS vars from clinic colors ─── */
+  const brandingStyle = useMemo(() => {
+    const primary = branding?.primary_color
+    const accent = branding?.secondary_color
+    if (!primary || !isValidHex(primary)) return {}
+    const derived = deriveCssVars({
+      primary,
+      accent: accent && isValidHex(accent) ? accent : primary,
+    })
+    return buildStyleFromVars(derived.light)
+  }, [branding])
+
+  /* ─── Widget settings from branding ─── */
+  const widgetShowPrice         = branding?.widget_show_price ?? true
+  const widgetAnyPractitioner   = branding?.widget_any_practitioner ?? false
+  const widgetRedirectUrl       = branding?.widget_redirect_url ?? null
+  const widgetMaxAdvanceDays    = typeof branding?.widget_max_advance_days === 'number'
+    ? branding.widget_max_advance_days
+    : Number(branding?.widget_max_advance_days ?? 0)
+
+  /* ─── Booking state machine ─── */
+  const booking = useWidgetBooking(
+    initialPractitionerId,
+    initialServiceId,
+    initialFlowOrder,
+    widgetAnyPractitioner,
+  )
+  const { state, hasBranches, universalBack } = booking
   const isRtl = initialLocale === "ar"
 
   const VISIBLE_STEPS: StepDef[] = [
@@ -91,7 +132,46 @@ export function BookingWizard({
     return () => window.removeEventListener("message", handleMessage)
   }, [parentOrigin])
 
+  /* ─── Redirect after success (respects intake popup) ─── */
+  function handleIntakeDismiss() {
+    booking.dismissIntakePopup()
+    if (widgetRedirectUrl) {
+      setTimeout(() => { window.location.href = widgetRedirectUrl }, 300)
+    }
+  }
+
+  /* ─── Redirect after success when no intake popup ─── */
+  useEffect(() => {
+    if (
+      state.step === "success" &&
+      !state.showIntakePopup &&
+      widgetRedirectUrl
+    ) {
+      const timer = setTimeout(() => { window.location.href = widgetRedirectUrl }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [state.step, state.showIntakePopup, widgetRedirectUrl])
+
   const isSuccess = state.step === "success"
+
+  /* ─── Step title per step ─── */
+  const STEP_TITLES: Record<string, { ar: string; en: string }> = {
+    branch:   { ar: "اختر الفرع",           en: "Select Branch" },
+    service:  { ar: "اختر الخدمة",          en: "Select Service" },
+    datetime: { ar: "اختر التاريخ والوقت",  en: "Select Date & Time" },
+    auth:     { ar: "بياناتك",              en: "Your Details" },
+    confirm:  { ar: "تأكيد الحجز",          en: "Confirm Booking" },
+    success:  { ar: "تم الحجز",             en: "Booking Confirmed" },
+  }
+  const stepTitle = STEP_TITLES[state.step]
+
+  /* ─── Show back button logic ─── */
+  const canGoBack = !isSuccess && !(
+    // First real step with no sub-state
+    (state.step === "branch") ||
+    (state.step === "service" && !state.practitioner && !state.service && !hasBranches) ||
+    (state.step === "service" && !state.service && !state.practitioner && hasBranches && !state.branch)
+  )
 
   return (
     <>
@@ -101,26 +181,29 @@ export function BookingWizard({
         "flex flex-col w-full min-h-[680px]",
       )}
       dir={isRtl ? "rtl" : "ltr"}
+      style={brandingStyle}
     >
-      {/* Top header: clinic branding + close */}
-      <WidgetHeader
-        locale={initialLocale}
-        onClose={() => postToHost({ type: "carekit:widget:close" }, parentOrigin)}
-      />
+{/* Steps bar — horizontal, below header */}
+      {!isSuccess && (
+        <WidgetStepsSidebar
+          locale={initialLocale}
+          step={state.step}
+          steps={VISIBLE_STEPS}
+        />
+      )}
 
-      {/* Body: sidebar + content */}
+      {/* Body: content only */}
       <div className="flex flex-1 min-h-0">
-        {/* Steps sidebar */}
-        {!isSuccess && (
-          <WidgetStepsSidebar
-            locale={initialLocale}
-            step={state.step}
-            steps={VISIBLE_STEPS}
-          />
-        )}
-
         {/* Content area */}
-        <div className={cn("flex flex-col flex-1 min-w-0 overflow-hidden", isSuccess && "w-full")}>
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden w-full">
+          {/* Step title */}
+          {stepTitle && !isSuccess && (
+            <div className="px-6 pt-5 pb-0">
+              <h2 className="text-base font-semibold text-foreground">
+                {isRtl ? stepTitle.ar : stepTitle.en}
+              </h2>
+            </div>
+          )}
           <div className={cn("flex-1 p-6 overflow-y-auto", isSuccess && "pb-8")}>
             {state.step === "branch" && (
               <WidgetBranchStep
@@ -134,6 +217,7 @@ export function BookingWizard({
                 locale={initialLocale}
                 booking={booking}
                 flowOrder={initialFlowOrder}
+                anyPractitioner={widgetAnyPractitioner}
               />
             )}
 
@@ -141,6 +225,7 @@ export function BookingWizard({
               <WidgetDatetimeStep
                 locale={initialLocale}
                 booking={booking}
+                maxAdvanceDays={widgetMaxAdvanceDays}
               />
             )}
 
@@ -155,9 +240,43 @@ export function BookingWizard({
               <WidgetConfirmStep
                 locale={initialLocale}
                 booking={booking}
+                showPrice={widgetShowPrice}
+                redirectUrl={widgetRedirectUrl}
               />
             )}
           </div>
+
+          {/* Unified footer — back + next for all steps except datetime (has its own next) and success */}
+          {/* RTL: back is first in DOM → right side; next is second in DOM → left side */}
+          {!isSuccess && state.step !== "datetime" && (
+            <div className="flex items-center justify-between px-6 pb-5 pt-3 border-t border-border/50">
+              {/* Back button — first in DOM = right in RTL */}
+              {canGoBack ? (
+                <Button variant="outline" onClick={universalBack} className="min-w-24">
+                  {isRtl ? "رجوع" : "Back"}
+                </Button>
+              ) : (
+                <div />
+              )}
+
+              {/* Next button — second in DOM = left in RTL; only on service booking-type sub-state */}
+              {state.step === "service" && state.practitioner && state.service ? (
+                <Button
+                  onClick={() => {
+                    if (state.bookingType && state.service) {
+                      booking.selectService(state.service, state.bookingType)
+                    }
+                  }}
+                  disabled={!state.bookingType}
+                  className="min-w-28"
+                >
+                  {isRtl ? "التالي" : "Next"}
+                </Button>
+              ) : (
+                <div />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Card>
@@ -168,7 +287,7 @@ export function BookingWizard({
         locale={initialLocale}
         formId={state.booking.intakeFormId}
         bookingId={state.booking.id}
-        onDismiss={booking.dismissIntakePopup}
+        onDismiss={handleIntakeDismiss}
       />
     )}
     </>

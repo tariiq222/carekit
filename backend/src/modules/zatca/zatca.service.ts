@@ -30,7 +30,7 @@ export class ZatcaService {
       'vat_rate',
       'vat_registration_number',
       'business_registration',
-      'clinic_name',
+      'system_name',
       'seller_address',
       'clinic_city',
     ];
@@ -47,7 +47,7 @@ export class ZatcaService {
       vatRate: parseInt(map['vat_rate'] ?? '0', 10),
       vatRegistrationNumber: map['vat_registration_number'] ?? '',
       businessRegistration: map['business_registration'] ?? '',
-      sellerName: map['clinic_name'] ?? '',
+      sellerName: map['system_name'] ?? '',
       sellerAddress: map['seller_address'] ?? '',
       city: map['clinic_city'] ?? '',
     };

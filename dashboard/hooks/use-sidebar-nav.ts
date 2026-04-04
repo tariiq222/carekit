@@ -5,10 +5,22 @@ import { usePathname, useRouter } from "next/navigation"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers/auth-provider"
 import { fetchBookingStats } from "@/lib/api/bookings"
+import { fetchFeatureFlagMap } from "@/lib/api/feature-flags"
 import { queryKeys } from "@/lib/query-keys"
 import { navGroups } from "@/components/sidebar-config"
 import { prefetchRouteData } from "@/lib/route-prefetch"
 import type { NavItem } from "@/components/sidebar-config"
+
+/** Maps nav href → feature flag key */
+const FEATURE_FLAG_MAP: Record<string, string> = {
+  "/coupons": "coupons",
+  "/gift-cards": "gift_cards",
+  "/intake-forms": "intake_forms",
+  "/chatbot": "chatbot",
+  "/ratings": "ratings",
+  "/branches": "multi_branch",
+  "/reports": "reports",
+}
 
 export interface NavGroupFiltered {
   labelKey: string
@@ -31,16 +43,30 @@ export function useSidebarNav() {
     ? (bookingStats.pending ?? 0) + (bookingStats.pendingCancellation ?? 0)
     : undefined
 
-  /* ── permission-filtered nav groups ── */
+  /* ── feature flags ── */
+  const { data: featureFlagMap } = useQuery({
+    queryKey: ["feature-flag-map"],
+    queryFn: fetchFeatureFlagMap,
+    staleTime: 5 * 60_000,
+  })
+
+  /* ── permission + feature-flag filtered nav groups ── */
   const filteredGroups = useMemo<NavGroupFiltered[]>(
     () =>
       navGroups.map((group) => ({
         labelKey: group.labelKey,
-        items: group.items.filter(
-          (item) => !item.permission || user?.permissions.includes(item.permission)
-        ),
+        items: group.items.filter((item) => {
+          // Permission check
+          if (item.permission && !user?.permissions.includes(item.permission)) return false
+          // Feature flag check
+          const flagKey = FEATURE_FLAG_MAP[item.href]
+          if (flagKey && featureFlagMap) {
+            return featureFlagMap[flagKey] !== false
+          }
+          return true
+        }),
       })),
-    [user?.permissions]
+    [user?.permissions, featureFlagMap]
   )
 
   /* ── user display info ── */

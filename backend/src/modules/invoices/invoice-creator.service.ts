@@ -177,11 +177,11 @@ export class InvoiceCreatorService {
     }
 
     const configs = await this.prisma.whiteLabelConfig.findMany({
-      where: { key: { in: ['clinic_name', 'contact_phone'] } },
+      where: { key: { in: ['system_name', 'contact_phone'] } },
       select: { key: true, value: true },
     });
     const configMap = Object.fromEntries(configs.map((c) => [c.key, c.value]));
-    const clinicName = configMap['clinic_name'] ?? 'CareKit Clinic';
+    const clinicName = configMap['system_name'] ?? 'CareKit Clinic';
     const clinicPhone = configMap['contact_phone'] ?? '';
 
     return buildInvoiceHtml({ invoice, clinicName, clinicPhone, qrCodeData: invoice.qrCodeData });

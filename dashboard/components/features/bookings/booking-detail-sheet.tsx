@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { StatusBadge, BookingTypeBadge } from "@/components/features/status-badge"
 import { useLocale } from "@/components/locale-provider"
+import { useClinicConfig } from "@/hooks/use-clinic-config"
 import type { Booking } from "@/lib/types/booking"
 import { BookingActions } from "./booking-actions"
 import { DetailsBody } from "./booking-details-body"
@@ -33,6 +34,7 @@ interface BookingDetailSheetProps {
 
 export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defaultTab = "details" }: BookingDetailSheetProps) {
   const { locale, t } = useLocale()
+  const { formatDate } = useClinicConfig()
 
   if (!booking) return null
 
@@ -48,10 +50,7 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
     ? booking.practitioner?.specialtyAr
     : booking.practitioner?.specialty) || "—"
 
-  const appointmentDate = new Date(booking.date).toLocaleDateString(
-    locale === "ar" ? "ar-SA" : "en-US",
-    { weekday: "short", year: "numeric", month: "short", day: "numeric" }
-  )
+  const appointmentDate = formatDate(booking.date)
 
   const canReschedule = !["completed", "cancelled", "no_show", "pending_cancellation", "in_progress", "expired"].includes(booking.status)
 

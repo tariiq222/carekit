@@ -11,7 +11,7 @@
 import { test, expect } from '../setup/fixtures';
 
 test.describe('Settings — default tab', () => {
-  test.beforeEach(async ({ adminPage, goto }) => {
+  test.beforeEach(async ({ goto }) => {
     await goto('/settings');
   });
 
@@ -26,7 +26,7 @@ test.describe('Settings — default tab', () => {
 });
 
 test.describe('Settings — tab navigation', () => {
-  test.beforeEach(async ({ adminPage, goto }) => {
+  test.beforeEach(async ({ goto }) => {
     await goto('/settings');
   });
 

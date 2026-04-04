@@ -15,6 +15,8 @@ import type { WizardStep } from "./use-wizard-state"
 import { PatientStep } from "./booking-patient-step"
 import { StepService } from "./wizard-steps/step-service"
 import { StepPractitioner } from "./wizard-steps/step-practitioner"
+import { StepChoosePath } from "./wizard-steps/step-choose-path"
+import type { BookingPath } from "./wizard-steps/step-choose-path"
 import { StepTypeDuration } from "./wizard-steps/step-type-duration"
 import { StepDatetime } from "./wizard-steps/step-datetime"
 import { StepConfirm } from "./wizard-steps/step-confirm"
@@ -52,13 +54,34 @@ function StepDots({ current, total }: { current: number; total: number }) {
 
 /* ─── Step title map ─── */
 
-function useStepTitle(step: WizardStep, flowOrder: BookingFlowOrder, t: (k: string) => string): string {
+function useStepTitle(
+  step: WizardStep,
+  flowOrder: BookingFlowOrder,
+  chosenPath: BookingPath | null,
+  t: (k: string) => string,
+): string {
+  // In "both" mode with no path chosen yet → show chooser title
+  if (flowOrder === "both" && chosenPath === null) {
+    const map: Record<WizardStep, string> = {
+      1: t("bookings.wizard.stepLabel.patient"),
+      2: t("bookings.wizard.stepLabel.choosePath"),
+      3: "",
+      4: t("bookings.wizard.stepLabel.typeDuration"),
+      5: t("bookings.wizard.stepLabel.datetime"),
+      6: t("bookings.wizard.stepLabel.confirm"),
+    }
+    return map[step]
+  }
+
+  // Resolve effective flow for title purposes
+  const effective = flowOrder === "both" && chosenPath ? chosenPath : flowOrder === "both" ? "service_first" : flowOrder
+
   const map: Record<WizardStep, string> = {
     1: t("bookings.wizard.stepLabel.patient"),
-    2: flowOrder === "service_first"
+    2: effective === "service_first"
       ? t("bookings.wizard.stepLabel.service")
       : t("bookings.wizard.stepLabel.practitioner"),
-    3: flowOrder === "service_first"
+    3: effective === "service_first"
       ? t("bookings.wizard.stepLabel.practitioner")
       : t("bookings.wizard.stepLabel.service"),
     4: t("bookings.wizard.stepLabel.typeDuration"),
@@ -81,10 +104,10 @@ function WizardInner({
 }) {
   const { t } = useLocale()
   const wizard = useWizardState(flowOrder)
-  const { state } = wizard
+  const { state, effectiveFlow } = wizard
   const { createMut } = useBookingMutations()
 
-  const stepTitle = useStepTitle(state.step, flowOrder, t)
+  const stepTitle = useStepTitle(state.step, flowOrder, state.chosenPath, t)
 
   const handleSubmit = async () => {
     if (
@@ -99,7 +122,7 @@ function WizardInner({
 
     try {
       await createMut.mutateAsync({
-        patientId: state.patientId,
+        patientId: state.patientId ?? undefined,
         practitionerId: state.practitionerId,
         serviceId: state.serviceId,
         type: state.type,
@@ -114,6 +137,10 @@ function WizardInner({
       toast.error(t("bookings.wizard.submitError"))
     }
   }
+
+  // Determine if we're in "both" mode path-chooser phase
+  const isBothMode = flowOrder === "both"
+  const showPathChooser = isBothMode && state.chosenPath === null && state.step === 2
 
   return (
     <div className="flex flex-col">
@@ -165,25 +192,30 @@ function WizardInner({
           <PatientStep onSelect={wizard.selectPatient} />
         )}
 
-        {state.step === 2 && flowOrder === "service_first" && (
+        {/* Step 2: path chooser (both mode) OR first selection step */}
+        {state.step === 2 && showPathChooser && (
+          <StepChoosePath onSelect={(path: BookingPath) => wizard.choosePath(path)} />
+        )}
+
+        {state.step === 2 && !showPathChooser && effectiveFlow === "service_first" && (
           <StepService onSelect={wizard.selectService} />
         )}
 
-        {state.step === 2 && flowOrder === "practitioner_first" && (
+        {state.step === 2 && !showPathChooser && effectiveFlow === "practitioner_first" && (
           <StepPractitioner
             serviceId={state.serviceId ?? ""}
             onSelect={wizard.selectPractitioner}
           />
         )}
 
-        {state.step === 3 && flowOrder === "service_first" && (
+        {state.step === 3 && effectiveFlow === "service_first" && (
           <StepPractitioner
             serviceId={state.serviceId!}
             onSelect={wizard.selectPractitioner}
           />
         )}
 
-        {state.step === 3 && flowOrder === "practitioner_first" && (
+        {state.step === 3 && effectiveFlow === "practitioner_first" && (
           <StepService onSelect={wizard.selectService} />
         )}
 
@@ -232,7 +264,7 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
   const { data: flowOrder = "service_first", isLoading } = useQuery({
     queryKey: queryKeys.clinicSettings.bookingFlowOrder(),
     queryFn: fetchBookingFlowOrder,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60_000,
   })
 
   if (isLoading) {

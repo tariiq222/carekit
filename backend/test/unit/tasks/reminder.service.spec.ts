@@ -16,6 +16,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ReminderService } from '../../../src/modules/tasks/reminder.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
 
 // ---------------------------------------------------------------------------
 // Mock factories
@@ -30,6 +31,11 @@ const mockPrismaService: any = {
 
 const mockNotificationsService = {
   createNotification: jest.fn().mockResolvedValue({ id: 'notif-1' }),
+};
+
+const mockWhitelabelService = {
+  getTimeFormat: jest.fn().mockResolvedValue('24h'),
+  getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh'),
 };
 
 // ---------------------------------------------------------------------------
@@ -98,12 +104,18 @@ describe('ReminderService', () => {
           provide: NotificationsService,
           useValue: mockNotificationsService,
         },
+        {
+          provide: WhitelabelService,
+          useValue: mockWhitelabelService,
+        },
       ],
     }).compile();
 
     service = module.get<ReminderService>(ReminderService);
 
     jest.clearAllMocks();
+    mockWhitelabelService.getTimeFormat.mockResolvedValue('24h');
+    mockWhitelabelService.getTimezone.mockResolvedValue('Asia/Riyadh');
   });
 
   // ─────────────────────────────────────────────────────────────

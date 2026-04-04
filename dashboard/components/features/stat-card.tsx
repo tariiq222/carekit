@@ -6,7 +6,7 @@ import type { IconSvgElement } from "@hugeicons/react"
 
 function StatValue({ value }: { value: ReactNode }) {
   if (typeof value === "number") {
-    return <span className="tabular-nums">{value.toLocaleString()}</span>
+    return <span className="font-numeric">{value.toLocaleString("en-US")}</span>
   }
   return <>{value}</>
 }

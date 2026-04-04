@@ -37,6 +37,17 @@ vi.mock("@/lib/api/widget", () => ({
   fetchWidgetServices: vi.fn().mockResolvedValue({ items: [], meta: { total: 0 } }),
   fetchPublicBranches: vi.fn().mockResolvedValue([]),
   widgetCreateBooking: vi.fn(),
+  fetchWidgetBranding: vi.fn().mockResolvedValue({
+    primary_color: '#354FD8',
+    secondary_color: '#82CC17',
+    payment_moyasar_enabled: 'false',
+    payment_at_clinic_enabled: 'true',
+    widget_show_price: true,
+    widget_any_practitioner: false,
+    widget_redirect_url: null,
+    widget_max_advance_days: 0,
+  }),
+  validateWidgetCode: vi.fn(),
 }))
 
 import { BookingWizard, postToHost } from "@/components/features/widget/booking-wizard"

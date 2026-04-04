@@ -10,6 +10,7 @@ import {
   WHITE_LABEL_DEFAULTS,
   EMAIL_TEMPLATES,
   SPECIALTIES,
+  FEATURE_FLAGS,
 } from './seed.data';
 import { seedDemoData } from './seed.demo';
 
@@ -146,7 +147,30 @@ async function main(): Promise<void> {
   }
   console.log(`  Created ${EMAIL_TEMPLATES.length} email templates`);
 
-  // 6. Create super_admin user
+  // 6. Create feature flags
+  console.log('Creating feature flags...');
+  for (const flag of FEATURE_FLAGS) {
+    await prisma.featureFlag.upsert({
+      where: { key: flag.key },
+      update: {
+        nameAr: flag.nameAr,
+        nameEn: flag.nameEn,
+        descriptionAr: flag.descriptionAr,
+        descriptionEn: flag.descriptionEn,
+      },
+      create: {
+        key: flag.key,
+        nameAr: flag.nameAr,
+        nameEn: flag.nameEn,
+        descriptionAr: flag.descriptionAr,
+        descriptionEn: flag.descriptionEn,
+        enabled: flag.enabled,
+      },
+    });
+  }
+  console.log(`  Created ${FEATURE_FLAGS.length} feature flags`);
+
+  // 7. Create super_admin user
   console.log('Creating super_admin user...');
   const adminEmail = 'admin@carekit-test.com';
   const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
@@ -180,7 +204,7 @@ async function main(): Promise<void> {
 
   console.log('Base seeding complete!');
 
-  // 7. Seed demo/fake data for all models
+  // 8. Seed demo/fake data for all models
   await seedDemoData(prisma);
 
   console.log('All seeding complete!');

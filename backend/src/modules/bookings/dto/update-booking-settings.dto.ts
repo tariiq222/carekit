@@ -10,7 +10,7 @@ import {
   Min,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { RefundType, NoShowPolicy } from '@prisma/client';
+import { RefundType, NoShowPolicy, BookingFlowOrder } from '@prisma/client';
 
 export class UpdateBookingSettingsDto {
   // ── Payment ──────────────────────────────────────────────────────
@@ -217,4 +217,30 @@ export class UpdateBookingSettingsDto {
   @IsInt()
   @Min(0)
   maxAdvanceBookingDays?: number;
+
+  // ── Widget settings ──────────────────────────────────────────────
+  @ApiPropertyOptional({ description: 'Show price in booking widget' })
+  @IsOptional()
+  @IsBoolean()
+  widgetShowPrice?: boolean;
+
+  @ApiPropertyOptional({ description: 'Allow patient to book with any available practitioner' })
+  @IsOptional()
+  @IsBoolean()
+  widgetAnyPractitioner?: boolean;
+
+  @ApiPropertyOptional({ description: 'URL to redirect patient after booking is confirmed' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  widgetRedirectUrl?: string;
+
+  // ── Booking flow order ────────────────────────────────────────────
+  @ApiPropertyOptional({
+    enum: BookingFlowOrder,
+    description: 'Controls whether booking starts with service or practitioner selection',
+  })
+  @IsOptional()
+  @IsEnum(BookingFlowOrder)
+  bookingFlowOrder?: BookingFlowOrder;
 }

@@ -1,15 +1,19 @@
 /**
  * CareKit Booking Widget — Embed Script
  *
- * Usage:
- *   <script src="/widget/embed.js"
- *     data-practitioner="UUID"
- *     data-service="UUID"
- *     data-locale="ar">
- *   </script>
+ * Usage (auto locale detection):
+ *   <script src="/widget/embed.js" data-auto-open></script>
  *
- * Or programmatically:
- *   CareKitWidget.open({ practitioner: 'UUID', locale: 'en' })
+ * Override locale manually:
+ *   <script src="/widget/embed.js" data-locale="en" data-auto-open></script>
+ *
+ * Programmatically:
+ *   CareKitWidget.open()
+ *   CareKitWidget.open({ locale: 'en' })
+ *
+ * Events:
+ *   CareKitWidget.on('carekit:booking:complete', fn)
+ *   CareKitWidget.on('carekit:widget:close', fn)
  */
 
 ;(function () {
@@ -20,12 +24,37 @@
   })()
 
   var currentFrame = null
+  var currentOrigin = window.location.origin
+
+  /**
+   * Detect the host page locale.
+   * Priority:
+   *   1. data-locale on the script tag  (explicit override)
+   *   2. <html lang="...">              (standard HTML attribute)
+   *   3. navigator.language             (browser preference)
+   *   4. 'ar'                           (fallback)
+   *
+   * Only 'ar' and 'en' are supported — anything else falls back to 'ar'.
+   */
+  function detectLocale(scriptEl) {
+    var explicit = scriptEl && scriptEl.getAttribute('data-locale')
+    if (explicit === 'ar' || explicit === 'en') return explicit
+
+    var htmlLang = (document.documentElement.lang || '').toLowerCase()
+    if (htmlLang.startsWith('en')) return 'en'
+    if (htmlLang.startsWith('ar')) return 'ar'
+
+    var navLang = (navigator.language || '').toLowerCase()
+    if (navLang.startsWith('en')) return 'en'
+
+    return 'ar'
+  }
 
   function buildUrl(opts) {
     var params = new URLSearchParams()
-    if (opts.practitioner) params.set('practitioner', opts.practitioner)
-    if (opts.service) params.set('service', opts.service)
     if (opts.locale) params.set('locale', opts.locale)
+    if (opts.flow)   params.set('flow', opts.flow)
+    params.set('origin', currentOrigin)
     return WIDGET_BASE + '/booking?' + params.toString()
   }
 
@@ -61,6 +90,8 @@
   }
 
   function handleMessage(event) {
+    if (event.origin !== WIDGET_BASE && WIDGET_BASE !== '') return
+
     var data = event.data
     if (!data || typeof data.type !== 'string') return
     if (!data.type.startsWith('carekit:')) return
@@ -86,14 +117,17 @@
   window.CareKitWidget = {
     open: function (opts) {
       opts = opts || {}
-      if (!opts.practitioner) {
-        var s = document.currentScript || document.querySelector('script[data-practitioner]')
-        if (s) {
-          opts.practitioner = s.getAttribute('data-practitioner') || undefined
-          opts.service = s.getAttribute('data-service') || undefined
-          opts.locale = s.getAttribute('data-locale') || 'ar'
-        }
+      var s = document.currentScript || document.querySelector('script[src*="embed.js"]')
+
+      // Auto-detect locale unless caller passed it explicitly
+      if (!opts.locale) {
+        opts.locale = detectLocale(s)
       }
+
+      if (s && !opts.flow) {
+        opts.flow = s.getAttribute('data-flow') || undefined
+      }
+
       if (document.getElementById('carekit-widget-overlay')) return
       createFrame(opts)
     },

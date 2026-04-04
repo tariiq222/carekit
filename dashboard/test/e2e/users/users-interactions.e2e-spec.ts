@@ -1,7 +1,7 @@
 import { test, expect } from '../setup/fixtures';
 
 test.describe('Users — add user navigation', () => {
-  test.beforeEach(async ({ adminPage, goto }) => {
+  test.beforeEach(async ({ goto }) => {
     await goto('/users');
   });
 
@@ -22,7 +22,7 @@ test.describe('Users — add user navigation', () => {
 });
 
 test.describe('Users — search interaction', () => {
-  test.beforeEach(async ({ adminPage, goto }) => {
+  test.beforeEach(async ({ goto }) => {
     await goto('/users');
   });
 

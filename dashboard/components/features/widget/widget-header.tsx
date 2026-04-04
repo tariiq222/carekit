@@ -13,9 +13,10 @@ import { fetchWidgetBranding } from "@/lib/api/widget"
 interface Props {
   locale: "ar" | "en"
   onClose: () => void
+  hasParent?: boolean
 }
 
-export function WidgetHeader({ locale, onClose }: Props) {
+export function WidgetHeader({ locale, onClose, hasParent = false }: Props) {
   const isRtl = locale === "ar"
 
   const { data: branding } = useQuery({
@@ -25,8 +26,8 @@ export function WidgetHeader({ locale, onClose }: Props) {
   })
 
   const clinicName = isRtl
-    ? (branding?.clinic_name ?? branding?.app_name ?? "")
-    : (branding?.clinic_name_en ?? branding?.app_name_en ?? "")
+    ? (branding?.system_name_ar ?? branding?.system_name ?? "")
+    : (branding?.system_name ?? "")
 
   return (
     <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/50 bg-surface">
@@ -44,14 +45,16 @@ export function WidgetHeader({ locale, onClose }: Props) {
         )}
       </div>
 
-      {/* Close */}
-      <button
-        onClick={onClose}
-        className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground"
-        aria-label={isRtl ? "إغلاق" : "Close"}
-      >
-        <HugeiconsIcon icon={Cancel01Icon} size={16} />
-      </button>
+      {/* Close — only shown when embedded in iframe */}
+      {hasParent && (
+        <button
+          onClick={onClose}
+          className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground"
+          aria-label={isRtl ? "إغلاق" : "Close"}
+        >
+          <HugeiconsIcon icon={Cancel01Icon} size={16} />
+        </button>
+      )}
     </div>
   )
 }

@@ -15,11 +15,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { useWidgetBooking } from "@/hooks/use-widget-booking"
-import type { BookingFlowOrder } from "@/hooks/use-widget-booking"
+import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
 import type { Practitioner } from "@/lib/types/practitioner"
 import type { Service } from "@/lib/types/service"
 import type { BookingType } from "@/lib/types/booking"
-import { WidgetBackButton } from "./widget-back-button"
 
 /* ─── Booking type config ─── */
 
@@ -45,9 +44,11 @@ interface Props {
   locale: "ar" | "en"
   booking: ReturnType<typeof useWidgetBooking>
   flowOrder: BookingFlowOrder
+  anyPractitioner?: boolean
+  onNext?: (type: BookingType) => void
 }
 
-export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
+export function WidgetServiceStep({ locale, booking, flowOrder, anyPractitioner = false, onNext }: Props) {
   const {
     practitionersData,
     practitionersLoading,
@@ -87,7 +88,12 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
         {practitioners.map((p) => (
           <button key={p.id} onClick={() => selectPractitioner(p)} className={cn("w-full flex items-center gap-3 p-3 rounded-xl border border-border/60", "hover:border-primary/60 hover:bg-primary/5 transition-all text-start")}>
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              {p.avatarUrl ? <>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={p.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" /></> : <span className="text-primary font-semibold text-sm">{p.user.firstName?.[0] ?? "?"}</span>}
+              {p.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+              ) : (
+                <span className="text-primary font-semibold text-sm">{p.user.firstName?.[0] ?? "?"}</span>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm truncate">{isRtl && p.nameAr ? p.nameAr : `${p.user.firstName} ${p.user.lastName}`}</p>
@@ -107,8 +113,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     if (!state.practitioner) {
       return (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">{isRtl ? "اختر الطبيب أو المعالج" : "Choose a practitioner"}</p>
-          {renderPractitionerList(practitionersData?.items ?? [], practitionersLoading)}
+{renderPractitionerList(practitionersData?.items ?? [], practitionersLoading)}
         </div>
       )
     }
@@ -117,11 +122,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     if (!state.service) {
       return (
         <div className="space-y-3">
-          <WidgetBackButton isRtl={isRtl} onClick={clearPractitioner} />
-          <p className="text-sm text-muted-foreground">
-            {isRtl ? "اختر الخدمة" : "Choose a service"}
-          </p>
-          {servicesLoading ? (
+{servicesLoading ? (
             <div className="flex justify-center py-8">
               <HugeiconsIcon icon={Loading03Icon} size={24} className="text-primary" />
             </div>
@@ -130,7 +131,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
               {services.map((svc: Service) => (
                 <div key={svc.id} className="rounded-xl border border-border/60 overflow-hidden">
                   <button
-                    onClick={() => booking.setState((s) => ({ ...s, service: svc }))}
+                    onClick={() => selectServiceOnly(svc)}
                     className="w-full flex items-center justify-between gap-4 px-4 py-3 hover:bg-primary/5 transition-all text-start"
                   >
                     <p className="font-medium text-sm flex-1 min-w-0 truncate">{isRtl ? svc.nameAr : svc.nameEn}</p>
@@ -155,10 +156,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     if (!state.service) {
       return (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            {isRtl ? "اختر الخدمة" : "Choose a service"}
-          </p>
-          {allServicesLoading ? (
+{allServicesLoading ? (
             <div className="flex justify-center py-8">
               <HugeiconsIcon icon={Loading03Icon} size={24} className="text-primary" />
             </div>
@@ -188,8 +186,20 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
     if (!state.practitioner) {
       return (
         <div className="space-y-3">
-          <WidgetBackButton isRtl={isRtl} onClick={clearService} />
-          <p className="text-sm text-muted-foreground">{isRtl ? "اختر الطبيب أو المعالج" : "Choose a practitioner"}</p>
+{anyPractitioner && (
+            <button
+              onClick={() => selectPractitioner({ id: "any", user: { firstName: isRtl ? "أي" : "Any", lastName: isRtl ? "معالج" : "Practitioner" } } as Parameters<typeof selectPractitioner>[0])}
+              className="w-full flex items-center gap-3 p-3 rounded-xl border border-primary/40 bg-primary/5 hover:bg-primary/10 transition-all text-start"
+            >
+              <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
+                <span className="text-primary font-bold text-lg">✦</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-primary">{isRtl ? "أي معالج متاح" : "Any available practitioner"}</p>
+                <p className="text-xs text-muted-foreground">{isRtl ? "أقرب موعد متاح" : "Earliest available slot"}</p>
+              </div>
+            </button>
+          )}
           {renderPractitionerList(filteredPractitionersData?.items ?? [], filteredPractitionersLoading)}
         </div>
       )
@@ -202,17 +212,18 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
 
   return (
     <div className="space-y-3">
-      <WidgetBackButton isRtl={isRtl} onClick={handleBookingTypeBack} />
-      <p className="text-sm text-muted-foreground">
-        {isRtl ? "اختر نوع الزيارة" : "Choose visit type"}
-      </p>
-      <div className="space-y-2">
+<div className="space-y-2">
         {availableTypes.map((type) => {
           const config = BOOKING_TYPE_CONFIG[type]
           return (
             <button
               key={type}
-              onClick={() => setSelectedType(type)}
+              onClick={() => {
+                setSelectedType(type)
+                if (state.service) {
+                  selectService(state.service, type)
+                }
+              }}
               className={cn(
                 "w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-start",
                 selectedType === type
@@ -233,13 +244,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
           )
         })}
       </div>
-      <Button
-        className="w-full"
-        disabled={!selectedType}
-        onClick={() => handleServiceSelect(state.service)}
-      >
-        {isRtl ? "التالي" : "Next"}
-      </Button>
+      {/* Next handled by parent wizard footer */}
     </div>
   )
 }

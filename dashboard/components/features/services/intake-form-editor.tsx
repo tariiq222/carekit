@@ -213,7 +213,7 @@ function FormCard({
 /* ─── Create Form Inline ─── */
 
 function CreateFormInline({
-  isAr,
+  isAr: _isAr,
   t,
   isPending,
   onSave,

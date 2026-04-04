@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -15,7 +14,6 @@ import {
   Book02Icon,
   UserCircle02Icon,
   LockPasswordIcon,
-  PaintBrush01Icon,
 } from "@hugeicons/core-free-icons"
 
 import {
@@ -62,7 +60,6 @@ import { useSidebarNav } from "@/hooks/use-sidebar-nav"
 /* ─── Component ─── */
 
 export function AppSidebar() {
-  const pathname = usePathname()
   const { t, dir, locale, toggleLocale } = useLocale()
   const { resolvedTheme, setTheme } = useTheme()
   const { logout, user } = useAuth()
@@ -178,26 +175,6 @@ export function AppSidebar() {
               {locale === "en" ? "العربية" : "English"}
             </TooltipContent>
           </Tooltip>
-
-          {(!user?.permissions || user.permissions.includes("whitelabel:view")) && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href="/white-label"
-                  aria-label={t("nav.whiteLabel")}
-                  className={cn(
-                    "toolbar-icon flex size-9 items-center justify-center rounded-full",
-                    pathname.startsWith("/white-label")
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-primary"
-                  )}
-                >
-                  <HugeiconsIcon icon={PaintBrush01Icon} size={16} />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="top">{t("nav.whiteLabel")}</TooltipContent>
-            </Tooltip>
-          )}
 
           <Tooltip>
             <TooltipTrigger asChild>

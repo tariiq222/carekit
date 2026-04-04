@@ -60,7 +60,7 @@ export default function IntakeFormsPage() {
   const [search, setSearch] = useState("")
   const [previewForm, setPreviewForm] = useState<IntakeForm | null>(null)
 
-  const { forms: rawForms, isLoading } = useIntakeForms()
+  const { forms: rawForms } = useIntakeForms()
   const { update, updateLoading: _updateLoading, delete: deleteFn, deleteLoading: _deleteLoading } = useIntakeFormMutations()
 
   const forms = rawForms.map(mapApiForm)
@@ -144,7 +144,7 @@ export default function IntakeFormsPage() {
         />
         <StatCard
           title={t("intakeForms.stats.submissions")}
-          value={totalSubmissions.toLocaleString()}
+          value={totalSubmissions.toLocaleString("en-US")}
           icon={FileEditIcon}
           iconColor="accent"
         />

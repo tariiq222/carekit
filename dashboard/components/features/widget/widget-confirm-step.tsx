@@ -19,12 +19,12 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { cn } from "@/lib/utils"
 import { validateWidgetCode, fetchWidgetBranding } from "@/lib/api/widget"
+import type { WidgetBankAccount } from "@/lib/api/widget"
+import { SAUDI_BANKS } from "@/components/features/settings/bank-account-card"
 import type { useWidgetBooking } from "@/hooks/use-widget-booking"
 import type { BookingType } from "@/lib/types/booking"
 
@@ -50,11 +50,12 @@ function getPrice(booking: ReturnType<typeof useWidgetBooking>): number {
 interface Props {
   locale: "ar" | "en"
   booking: ReturnType<typeof useWidgetBooking>
+  showPrice?: boolean
+  redirectUrl?: string | null
 }
 
-export function WidgetConfirmStep({ locale, booking }: Props) {
+export function WidgetConfirmStep({ locale, booking, showPrice = true, redirectUrl }: Props) {
   const { state, confirmBooking, isConfirming, confirmError, applyDiscount, clearDiscount, selectPaymentMethod } = booking
-  const [notes, setNotes] = useState("")
   const [codeInput, setCodeInput] = useState("")
   const [codeError, setCodeError] = useState<string | null>(null)
   const [isValidating, setIsValidating] = useState(false)
@@ -65,7 +66,7 @@ export function WidgetConfirmStep({ locale, booking }: Props) {
   const discount = state.discountAmount ?? 0
   const discountedPrice = Math.max(0, price - discount)
   const vat = Math.round(discountedPrice * 0.15 * 100) / 100
-  const total = discountedPrice + vat
+  const total = Math.round((discountedPrice + vat) * 100) / 100
 
   /* ─── Branding (payment flags) ─── */
   const { data: branding } = useQuery({
@@ -79,14 +80,17 @@ export function WidgetConfirmStep({ locale, booking }: Props) {
     branding?.payment_at_clinic_enabled === "true" ||
     branding?.payment_at_clinic_enabled === null ||
     branding?.payment_at_clinic_enabled === undefined
+  const bankTransferEnabled = branding?.bank_transfer_enabled === true
+  const bankAccounts = branding?.bank_accounts ?? []
 
   useEffect(() => {
-    if (moyasarEnabled && !atClinicEnabled && !paymentMethod) {
-      selectPaymentMethod("moyasar")
-    } else if (!moyasarEnabled && atClinicEnabled && !paymentMethod) {
-      selectPaymentMethod("at_clinic")
-    }
-  }, [moyasarEnabled, atClinicEnabled, paymentMethod, selectPaymentMethod])
+    const onlyMoyasar = moyasarEnabled && !atClinicEnabled && !bankTransferEnabled
+    const onlyAtClinic = !moyasarEnabled && atClinicEnabled && !bankTransferEnabled
+    const onlyBank = !moyasarEnabled && !atClinicEnabled && bankTransferEnabled
+    if (onlyMoyasar && !paymentMethod) selectPaymentMethod("moyasar")
+    else if (onlyAtClinic && !paymentMethod) selectPaymentMethod("at_clinic")
+    else if (onlyBank && !paymentMethod) selectPaymentMethod("bank_transfer")
+  }, [moyasarEnabled, atClinicEnabled, bankTransferEnabled, paymentMethod, selectPaymentMethod])
 
   /* ─── Coupon handler ─── */
   async function handleApplyCode() {
@@ -112,7 +116,7 @@ export function WidgetConfirmStep({ locale, booking }: Props) {
   }
 
   /* ─── Confirm eligibility ─── */
-  const paymentRequired = moyasarEnabled || atClinicEnabled
+  const paymentRequired = moyasarEnabled || atClinicEnabled || bankTransferEnabled
   const canConfirm = !paymentRequired || !!paymentMethod
 
   /* ─── Success view ─── */
@@ -136,6 +140,11 @@ export function WidgetConfirmStep({ locale, booking }: Props) {
             <span>{isRtl ? "رقم الحجز" : "Booking ID"}</span>
             <span className="text-xs font-mono text-muted-foreground">{state.booking.id.slice(0, 8).toUpperCase()}</span>
           </div>
+        {redirectUrl && (
+          <p className="text-xs text-muted-foreground animate-pulse mt-1">
+            {isRtl ? "جاري التحويل..." : "Redirecting..."}
+          </p>
+        )}
         </div>
       </div>
     )
@@ -146,9 +155,32 @@ export function WidgetConfirmStep({ locale, booking }: Props) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        {isRtl ? "مراجعة تفاصيل الحجز" : "Review booking details"}
-      </p>
+{/* Summary card */}
+      <div className="bg-muted/30 rounded-xl p-4 space-y-3 text-sm">
+        {practitioner && (
+          <SummaryRow
+            label={isRtl ? "الطبيب" : "Practitioner"}
+            value={isRtl && practitioner.nameAr ? practitioner.nameAr : `${practitioner.user.firstName} ${practitioner.user.lastName}`}
+          />
+        )}
+        {service && <SummaryRow label={isRtl ? "الخدمة" : "Service"} value={isRtl ? service.nameAr : service.nameEn} />}
+        {typeConfig && <SummaryRow icon={typeConfig.icon} label={isRtl ? "نوع الزيارة" : "Visit Type"} value={isRtl ? typeConfig.ar : typeConfig.en} />}
+        <Separator />
+        <SummaryRow icon={<HugeiconsIcon icon={Calendar03Icon} size={14} />} label={isRtl ? "التاريخ" : "Date"} value={date} />
+        {slot && <SummaryRow icon={<HugeiconsIcon icon={Clock01Icon} size={14} />} label={isRtl ? "الوقت" : "Time"} value={`${slot.startTime} — ${slot.endTime}`} />}
+        <Separator />
+        {showPrice && (
+          <>
+        <SummaryRow label={isRtl ? "السعر" : "Price"} value={`${price} ${isRtl ? "ر.س" : "SAR"}`} />
+        {discount > 0 && <SummaryRow label={isRtl ? "الخصم" : "Discount"} value={`-${discount} ${isRtl ? "ر.س" : "SAR"}`} />}
+        <SummaryRow label={isRtl ? "ضريبة القيمة المضافة (15%)" : "VAT (15%)"} value={`${vat} ${isRtl ? "ر.س" : "SAR"}`} />
+        <div className={cn("flex justify-between font-semibold text-primary")}>
+          <span>{isRtl ? "الإجمالي" : "Total"}</span>
+          <span>{total} {isRtl ? "ر.س" : "SAR"}</span>
+        </div>
+          </>
+        )}  
+      </div>
 
       {/* Discount code */}
       {!state.couponCode ? (
@@ -198,78 +230,63 @@ export function WidgetConfirmStep({ locale, booking }: Props) {
         </div>
       )}
 
-      {/* Summary card */}
-      <div className="bg-muted/30 rounded-xl p-4 space-y-3 text-sm">
-        {practitioner && (
-          <SummaryRow
-            label={isRtl ? "الطبيب" : "Practitioner"}
-            value={isRtl && practitioner.nameAr ? practitioner.nameAr : `${practitioner.user.firstName} ${practitioner.user.lastName}`}
-          />
-        )}
-        {service && <SummaryRow label={isRtl ? "الخدمة" : "Service"} value={isRtl ? service.nameAr : service.nameEn} />}
-        {typeConfig && <SummaryRow icon={typeConfig.icon} label={isRtl ? "نوع الزيارة" : "Visit Type"} value={isRtl ? typeConfig.ar : typeConfig.en} />}
-        <Separator />
-        <SummaryRow icon={<HugeiconsIcon icon={Calendar03Icon} size={14} />} label={isRtl ? "التاريخ" : "Date"} value={date} />
-        {slot && <SummaryRow icon={<HugeiconsIcon icon={Clock01Icon} size={14} />} label={isRtl ? "الوقت" : "Time"} value={`${slot.startTime} — ${slot.endTime}`} />}
-        <Separator />
-        <SummaryRow label={isRtl ? "السعر" : "Price"} value={`${price} ${isRtl ? "ر.س" : "SAR"}`} />
-        {discount > 0 && <SummaryRow label={isRtl ? "الخصم" : "Discount"} value={`-${discount} ${isRtl ? "ر.س" : "SAR"}`} />}
-        <SummaryRow label={isRtl ? "ضريبة القيمة المضافة (15%)" : "VAT (15%)"} value={`${vat} ${isRtl ? "ر.س" : "SAR"}`} />
-        <div className={cn("flex justify-between font-semibold text-primary")}>
-          <span>{isRtl ? "الإجمالي" : "Total"}</span>
-          <span>{total} {isRtl ? "ر.س" : "SAR"}</span>
-        </div>
-      </div>
-
-      {/* Notes */}
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">
-          {isRtl ? "ملاحظات (اختياري)" : "Notes (optional)"}
-        </Label>
-        <Textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={2}
-          maxLength={500}
-          className="text-sm resize-none"
-          placeholder={isRtl ? "أي ملاحظات للطبيب..." : "Any notes for the practitioner..."}
-        />
-      </div>
-
-      {/* Payment method */}
-      {moyasarEnabled && atClinicEnabled && (
+      {/* Payment method — show when more than one option is available */}
+      {(moyasarEnabled || atClinicEnabled || bankTransferEnabled) && (
         <div className="space-y-2">
-          <p className="text-sm font-medium">
-            {isRtl ? "طريقة الدفع" : "Payment Method"}
-          </p>
+          {(Number(moyasarEnabled) + Number(atClinicEnabled) + Number(bankTransferEnabled)) > 1 && (
+            <p className="text-sm font-medium">
+              {isRtl ? "طريقة الدفع" : "Payment Method"}
+            </p>
+          )}
           <RadioGroup
             value={paymentMethod ?? ""}
-            onValueChange={(v) => selectPaymentMethod(v as "moyasar" | "at_clinic")}
+            onValueChange={(v) => selectPaymentMethod(v as "moyasar" | "at_clinic" | "bank_transfer")}
             className="space-y-2"
           >
-            <label className={cn(
-              "flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-all",
-              paymentMethod === "moyasar"
-                ? "border-primary/60 bg-primary/5"
-                : "border-border/60",
-            )}>
-              <RadioGroupItem value="moyasar" />
-              <span className="text-sm">{isRtl ? "دفع إلكتروني" : "Online Payment"}</span>
-            </label>
-            <label className={cn(
-              "flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-all",
-              paymentMethod === "at_clinic"
-                ? "border-primary/60 bg-primary/5"
-                : "border-border/60",
-            )}>
-              <RadioGroupItem value="at_clinic" />
-              <span className="text-sm">{isRtl ? "الدفع في العيادة" : "Pay at Clinic"}</span>
-            </label>
+            {moyasarEnabled && (
+              <label className={cn(
+                "flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-all",
+                paymentMethod === "moyasar" ? "border-primary/60 bg-primary/5" : "border-border/60",
+              )}>
+                <RadioGroupItem value="moyasar" />
+                <span className="text-sm">{isRtl ? "دفع إلكتروني" : "Online Payment"}</span>
+              </label>
+            )}
+            {atClinicEnabled && (
+              <label className={cn(
+                "flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-all",
+                paymentMethod === "at_clinic" ? "border-primary/60 bg-primary/5" : "border-border/60",
+              )}>
+                <RadioGroupItem value="at_clinic" />
+                <span className="text-sm">{isRtl ? "الدفع في العيادة" : "Pay at Clinic"}</span>
+              </label>
+            )}
+            {bankTransferEnabled && (
+              <label className={cn(
+                "flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-all",
+                paymentMethod === "bank_transfer" ? "border-primary/60 bg-primary/5" : "border-border/60",
+              )}>
+                <RadioGroupItem value="bank_transfer" />
+                <span className="text-sm">{isRtl ? "تحويل بنكي" : "Bank Transfer"}</span>
+              </label>
+            )}
           </RadioGroup>
+
+          {/* Bank accounts details — shown when bank transfer is selected */}
+          {paymentMethod === "bank_transfer" && bankAccounts.length > 0 && (
+            <div className="space-y-2 pt-1">
+              <p className="text-xs text-muted-foreground">
+                {isRtl ? "حوّل المبلغ لأحد الحسابات التالية وأرفق الإيصال بعد الحجز" : "Transfer to one of the accounts below and attach the receipt after booking"}
+              </p>
+              {bankAccounts.map((acc) => (
+                <BankAccountDetails key={acc.id} account={acc} isRtl={isRtl} />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {!moyasarEnabled && !atClinicEnabled && (
+      {!moyasarEnabled && !atClinicEnabled && !bankTransferEnabled && (
         <p className="text-xs text-muted-foreground bg-muted/30 rounded-lg px-3 py-2">
           {isRtl
             ? "سيتم التواصل معك لتأكيد الموعد والدفع"
@@ -286,11 +303,44 @@ export function WidgetConfirmStep({ locale, booking }: Props) {
       <Button
         className="w-full"
         disabled={isConfirming || !canConfirm}
-        onClick={() => confirmBooking(notes || undefined)}
+        onClick={() => confirmBooking(undefined)}
       >
         {isConfirming && <HugeiconsIcon icon={Loading03Icon} size={16} className="me-2" />}
-        {isRtl ? "تأكيد الحجز" : "Confirm Booking"}
+        {paymentMethod === "moyasar"
+          ? (isRtl ? "متابعة للدفع" : "Proceed to Payment")
+          : (isRtl ? "تأكيد الحجز" : "Confirm Booking")
+        }
       </Button>
+    </div>
+  )
+}
+
+/* ─── Bank account details (shown in widget after selecting bank transfer) ─── */
+
+function BankAccountDetails({ account, isRtl }: { account: WidgetBankAccount; isRtl: boolean }) {
+  const bank = SAUDI_BANKS.find((b) => b.id === account.bankId)
+  const bankName = bank ? (isRtl ? bank.nameAr : bank.nameEn) : account.bankId
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1.5 text-xs">
+      {bankName && (
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{isRtl ? "البنك" : "Bank"}</span>
+          <span className="font-medium">{bankName}</span>
+        </div>
+      )}
+      {account.iban && (
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{isRtl ? "رقم الآيبان" : "IBAN"}</span>
+          <span className="font-numeric font-medium tracking-wider" dir="ltr">{account.iban}</span>
+        </div>
+      )}
+      {account.holderName && (
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">{isRtl ? "اسم صاحب الحساب" : "Account Holder"}</span>
+          <span className="font-medium">{account.holderName}</span>
+        </div>
+      )}
     </div>
   )
 }

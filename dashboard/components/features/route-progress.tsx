@@ -49,7 +49,6 @@ export function RouteProgress() {
 
   /* ── source 2: programmatic router.push() via emitNavStart() ── */
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return onNavStart((_href) => startProgress())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

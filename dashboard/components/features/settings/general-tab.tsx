@@ -54,13 +54,9 @@ const TIMEZONE_OPTIONS = [
 ]
 
 export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
-  const [clinicName, setClinicName] = useState("")
   const [clinicEmail, setClinicEmail] = useState("")
   const [clinicPhone, setClinicPhone] = useState("")
-  const [clinicDomain, setClinicDomain] = useState("")
   const [clinicAddress, setClinicAddress] = useState("")
-  const [clinicCr, setClinicCr] = useState("")
-  const [clinicVat, setClinicVat] = useState("")
   const [weekStartDay, setWeekStartDay] = useState("sunday")
   const [dateFormat, setDateFormat] = useState("Y-m-d")
   const [timeFormat, setTimeFormat] = useState("24h")
@@ -68,17 +64,13 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setClinicName(configMap.clinic_name ?? "")
-    setClinicEmail(configMap.clinic_email ?? "")
-    setClinicPhone(configMap.clinic_phone ?? "")
-    setClinicDomain(configMap.clinic_domain ?? "")
-    setClinicAddress(configMap.clinic_address ?? "")
-    setClinicCr(configMap.clinic_cr_number ?? "")
-    setClinicVat(configMap.clinic_vat_number ?? "")
+    setClinicEmail(configMap.contact_email ?? "")
+    setClinicPhone(configMap.contact_phone ?? "")
+    setClinicAddress(configMap.address ?? "")
     setWeekStartDay(configMap.week_start_day ?? "sunday")
     setDateFormat(configMap.date_format ?? "Y-m-d")
     setTimeFormat(configMap.time_format ?? "24h")
-    setClinicTimezone(configMap.clinic_timezone ?? "Asia/Riyadh")
+    setClinicTimezone(configMap.timezone ?? "Asia/Riyadh")
   }, [configMap])
 
   return (
@@ -88,13 +80,9 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={t("settings.clinicName")} value={clinicName} onChange={setClinicName} />
           <Field label={t("settings.clinicEmail")} value={clinicEmail} onChange={setClinicEmail} type="email" />
           <Field label={t("settings.clinicPhone")} value={clinicPhone} onChange={setClinicPhone} />
-          <Field label={t("settings.clinicDomain")} value={clinicDomain} onChange={setClinicDomain} />
           <Field label={t("settings.clinicAddress")} value={clinicAddress} onChange={setClinicAddress} />
-          <Field label={t("settings.clinicCr")} value={clinicCr} onChange={setClinicCr} />
-          <Field label={t("settings.clinicVat")} value={clinicVat} onChange={setClinicVat} />
         </div>
 
         <Separator />
@@ -139,17 +127,13 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
             disabled={isPending}
             onClick={() =>
               onSave([
-                { key: "clinic_name", value: clinicName },
-                { key: "clinic_email", value: clinicEmail },
-                { key: "clinic_phone", value: clinicPhone },
-                { key: "clinic_domain", value: clinicDomain },
-                { key: "clinic_address", value: clinicAddress },
-                { key: "clinic_cr_number", value: clinicCr },
-                { key: "clinic_vat_number", value: clinicVat },
+                { key: "contact_email", value: clinicEmail },
+                { key: "contact_phone", value: clinicPhone },
+                { key: "address", value: clinicAddress },
                 { key: "week_start_day", value: weekStartDay },
                 { key: "date_format", value: dateFormat },
                 { key: "time_format", value: timeFormat },
-                { key: "clinic_timezone", value: clinicTimezone },
+                { key: "timezone", value: clinicTimezone },
               ])
             }
           >

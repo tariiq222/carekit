@@ -7,7 +7,7 @@ import { BookingSettingsService } from '../bookings/booking-settings.service.js'
 import { BookingStatusLogService } from '../bookings/booking-status-log.service.js';
 import { WaitlistService } from '../bookings/waitlist.service.js';
 import { MoyasarRefundService } from '../payments/moyasar-refund.service.js';
-import { CLINIC_TIMEZONE } from '../../config/constants/index.js';
+import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
 
 @Injectable()
 export class BookingNoShowService {
@@ -21,15 +21,17 @@ export class BookingNoShowService {
     private readonly statusLogService: BookingStatusLogService,
     private readonly waitlistService: WaitlistService,
     private readonly moyasarRefundService: MoyasarRefundService,
+    private readonly whitelabelService: WhitelabelService,
   ) {}
 
   /** Mark today's confirmed bookings as no-show if past the deadline */
   async autoNoShow(): Promise<void> {
     const settings = await this.bookingSettingsService.get();
+    const clinicTz = await this.whitelabelService.getTimezone();
     const now = new Date();
 
     const riyadhTodayStr = new Intl.DateTimeFormat('en-CA', {
-      timeZone: CLINIC_TIMEZONE,
+      timeZone: clinicTz,
     }).format(now);
     const todayStart = new Date(`${riyadhTodayStr}T00:00:00+03:00`);
     const todayEnd = new Date(`${riyadhTodayStr}T23:59:59+03:00`);
@@ -53,7 +55,7 @@ export class BookingNoShowService {
 
     const noShowBookings = bookings.filter((b) => {
       const dateStr = new Intl.DateTimeFormat('en-CA', {
-        timeZone: CLINIC_TIMEZONE,
+        timeZone: clinicTz,
       }).format(b.date);
       const bookingStart = new Date(`${dateStr}T${b.startTime}:00+03:00`);
       const noShowDeadline = new Date(

@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { Payment } from "@/lib/types/payment"
+import { formatClinicDate } from "@/lib/utils"
+import type { DateFormat } from "@/lib/utils"
 
 const statusStyles: Record<string, string> = {
   pending: "border-warning/30 bg-warning/10 text-warning",
@@ -105,9 +107,10 @@ export function getPaymentColumns(
     {
       accessorKey: "createdAt",
       header: t("payments.col.date"),
+      // TODO: pass dateFormat from parent when columns accept config
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {new Date(row.original.createdAt).toLocaleDateString()}
+          {formatClinicDate(row.original.createdAt)}
         </span>
       ),
     },

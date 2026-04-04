@@ -74,3 +74,60 @@ export function getInitials(
   const l = lastName?.trim()?.[0] ?? ""
   return (f + l).toUpperCase() || "?"
 }
+
+// ─── Clinic Date/Time Formatting ───────────────────────────────────────────
+
+export type DateFormat = "Y-m-d" | "d/m/Y" | "m/d/Y"
+export type TimeFormat = "24h" | "12h"
+
+/**
+ * Format a date according to the clinic's configured date format.
+ * @param date - Date object or ISO string
+ * @param format - Clinic date format from WhiteLabelConfig
+ * @returns Formatted date string
+ */
+export function formatClinicDate(date: Date | string, format: DateFormat = "Y-m-d"): string {
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return ""
+
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+
+  switch (format) {
+    case "d/m/Y": return `${day}/${month}/${year}`
+    case "m/d/Y": return `${month}/${day}/${year}`
+    case "Y-m-d":
+    default:      return `${year}-${month}-${day}`
+  }
+}
+
+/**
+ * Format a time string (HH:mm or HH:mm:ss) according to the clinic's configured time format.
+ * @param time - Time string in 24h format (e.g. "14:30" or "14:30:00")
+ * @param format - Clinic time format from WhiteLabelConfig
+ * @returns Formatted time string
+ */
+export function formatClinicTime(time: string, format: TimeFormat = "24h"): string {
+  if (!time) return ""
+  const [hourStr, minuteStr] = time.split(":")
+  const hour = parseInt(hourStr, 10)
+  const minute = minuteStr?.padStart(2, "0") ?? "00"
+
+  if (isNaN(hour)) return time
+
+  if (format === "12h") {
+    const period = hour >= 12 ? "م" : "ص"
+    const hour12 = hour % 12 || 12
+    return `${hour12}:${minute} ${period}`
+  }
+
+  return `${String(hour).padStart(2, "0")}:${minute}`
+}
+
+/**
+ * Get the week start day as a number (0 = Sunday, 1 = Monday).
+ */
+export function getWeekStartDay(weekStartDay: "sunday" | "monday" = "sunday"): 0 | 1 {
+  return weekStartDay === "monday" ? 1 : 0
+}

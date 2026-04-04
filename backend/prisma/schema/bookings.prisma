@@ -167,7 +167,12 @@ model BookingSettings {
   maxAdvanceBookingDays    Int     @default(60) @map("max_advance_booking_days")
 
   // Booking wizard flow
-  bookingFlowOrder String @default("service_first") @map("booking_flow_order")
+  bookingFlowOrder BookingFlowOrder @default(service_first) @map("booking_flow_order")
+
+  // Widget settings
+  widgetShowPrice           Boolean  @default(true)      @map("widget_show_price")
+  widgetAnyPractitioner     Boolean  @default(false)     @map("widget_any_practitioner")
+  widgetRedirectUrl         String?                      @map("widget_redirect_url")
 
   // Payment method availability
   paymentMoyasarEnabled  Boolean @default(false) @map("payment_moyasar_enabled")

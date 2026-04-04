@@ -29,11 +29,7 @@ export function WidgetBranchStep({ locale, booking }: Props) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        {isRtl ? "اختر الفرع الذي تريد الحجز فيه" : "Select the branch you'd like to book at"}
-      </p>
-
-      <div className="grid gap-3">
+<div className="grid gap-3">
         {branches.map((branch: PublicBranch) => {
           const isSelected = state.branch?.id === branch.id
           const name = isRtl ? branch.nameAr : branch.nameEn

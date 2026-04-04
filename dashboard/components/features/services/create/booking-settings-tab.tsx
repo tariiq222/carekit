@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card"
 import { useLocale } from "@/components/locale-provider"
 import { fetchBookingSettings, RECURRING_PATTERNS } from "@/lib/api/booking-settings"
-import { fetchConfigMap } from "@/lib/api/whitelabel"
+
 import { queryKeys } from "@/lib/query-keys"
 import { OverrideField } from "../booking-settings-fields"
 import { cn } from "@/lib/utils"
@@ -50,15 +50,9 @@ export function BookingSettingsTab({ form }: BookingSettingsTabProps) {
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: configMap } = useQuery({
-    queryKey: queryKeys.whitelabel.configMap(),
-    queryFn: fetchConfigMap,
-    staleTime: 5 * 60 * 1000,
-  })
-
   const globalMinLead = globalSettings?.minBookingLeadMinutes ?? 0
   const globalBuffer = globalSettings?.bufferMinutes ?? 0
-  const globalMaxAdvanceDays = Number(configMap?.max_advance_booking_days ?? 30)
+  const globalMaxAdvanceDays = globalSettings?.maxAdvanceBookingDays ?? 60
 
   return (
     <Card>

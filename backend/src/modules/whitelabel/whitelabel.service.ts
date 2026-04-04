@@ -5,6 +5,7 @@ import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
 import { UpdateConfigDto } from './dto/update-config.dto.js';
 import { WhiteLabelConfig } from '@prisma/client';
 import { ClinicSettingsService } from '../clinic/clinic-settings.service.js';
+import { CLINIC_TIMEZONE_DEFAULT } from '../../config/constants/timezone.js';
 
 @Injectable()
 export class WhitelabelService {
@@ -26,35 +27,54 @@ export class WhitelabelService {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  GET ALL — Return all configs ordered by key
+  //  PUBLIC BRANDING — No auth required (widget + mobile pre-login)
+  //  Returns branding colors + payment flags + widget settings
   // ═══════════════════════════════════════════════════════════════
 
   private static readonly PUBLIC_KEYS = [
-    'clinic_name', 'clinic_name_en', 'logo_url', 'favicon_url',
+    'system_name', 'system_name_ar', 'logo_url', 'favicon_url',
     'primary_color', 'secondary_color', 'contact_phone', 'contact_email',
-    'app_name', 'app_name_en',
   ];
 
-  async getPublicBranding(): Promise<Record<string, string>> {
-    const cached = await this.cache.get<Record<string, string>>(
+  async getPublicBranding(): Promise<Record<string, string | boolean | number | null>> {
+    const cached = await this.cache.get<Record<string, string | boolean | number | null>>(
       CACHE_KEYS.WHITELABEL_BRANDING,
     );
     if (cached) return cached;
 
+    // Fetch branding keys
     const configs = await this.prisma.whiteLabelConfig.findMany({
       where: { key: { in: WhitelabelService.PUBLIC_KEYS } },
       select: { key: true, value: true },
     });
-    const result = configs.reduce<Record<string, string>>((acc, c) => {
+    const brandingMap = configs.reduce<Record<string, string>>((acc, c) => {
       acc[c.key] = c.value;
       return acc;
     }, {});
 
-    const paymentSettings = await this.clinicSettingsService.getPaymentSettings();
-    const fullResult: Record<string, string> = {
-      ...result,
-      payment_moyasar_enabled: String(paymentSettings.paymentMoyasarEnabled),
-      payment_at_clinic_enabled: String(paymentSettings.paymentAtClinicEnabled),
+    // Fetch payment + widget settings from BookingSettings (global row)
+    const bookingSettings = await this.prisma.bookingSettings.findFirst({
+      where: { branchId: null },
+      select: {
+        paymentMoyasarEnabled: true,
+        paymentAtClinicEnabled: true,
+        widgetShowPrice: true,
+        widgetAnyPractitioner: true,
+        widgetRedirectUrl: true,
+        maxAdvanceBookingDays: true,
+      },
+    });
+
+    const fullResult: Record<string, string | boolean | number | null> = {
+      ...brandingMap,
+      // Payment flags (kept as strings for backward compat with existing widget code)
+      payment_moyasar_enabled: String(bookingSettings?.paymentMoyasarEnabled ?? false),
+      payment_at_clinic_enabled: String(bookingSettings?.paymentAtClinicEnabled ?? true),
+      // Widget settings (typed booleans — widget reads them directly)
+      widget_show_price: bookingSettings?.widgetShowPrice ?? true,
+      widget_any_practitioner: bookingSettings?.widgetAnyPractitioner ?? false,
+      widget_redirect_url: bookingSettings?.widgetRedirectUrl ?? null,
+      widget_max_advance_days: bookingSettings?.maxAdvanceBookingDays ?? 0,
     };
 
     await this.cache.set(
@@ -64,6 +84,10 @@ export class WhitelabelService {
     );
     return fullResult;
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET ALL — Return all configs ordered by key
+  // ═══════════════════════════════════════════════════════════════
 
   async getConfig(): Promise<WhiteLabelConfig[]> {
     const cached = await this.cache.get<WhiteLabelConfig[]>(
@@ -98,6 +122,36 @@ export class WhitelabelService {
       acc[config.key] = config.value; // already masked by getConfig()
       return acc;
     }, {});
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET TIMEZONE — Returns clinic timezone from config, with fallback
+  // ═══════════════════════════════════════════════════════════════
+
+  async getTimezone(): Promise<string> {
+    const cached = await this.cache.get<string>(CACHE_KEYS.WHITELABEL_TIMEZONE);
+    if (cached) return cached;
+
+    const config = await this.prisma.whiteLabelConfig.findUnique({
+      where: { key: 'timezone' },
+      select: { value: true },
+    });
+
+    const tz = config?.value || CLINIC_TIMEZONE_DEFAULT;
+    await this.cache.set(CACHE_KEYS.WHITELABEL_TIMEZONE, tz, CACHE_TTL.WHITELABEL_CONFIG);
+    return tz;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GET TIME FORMAT — Returns clinic time format (24h/12h)
+  // ═══════════════════════════════════════════════════════════════
+
+  async getTimeFormat(): Promise<'24h' | '12h'> {
+    const config = await this.prisma.whiteLabelConfig.findUnique({
+      where: { key: 'time_format' },
+      select: { value: true },
+    });
+    return (config?.value === '12h' ? '12h' : '24h');
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -138,11 +192,9 @@ export class WhitelabelService {
   async getConfigByKey(key: string): Promise<WhiteLabelConfig> {
     const cacheKey = `${CACHE_KEYS.WHITELABEL_KEY_PREFIX}${key}`;
 
-    // Try cache first
     const cached = await this.cache.get<WhiteLabelConfig>(cacheKey);
     if (cached) return cached;
 
-    // Cache miss — fetch from DB
     const config = await this.prisma.whiteLabelConfig.findUnique({
       where: { key },
     });
@@ -155,9 +207,7 @@ export class WhitelabelService {
       });
     }
 
-    // Cache for TTL (config rarely changes)
     await this.cache.set(cacheKey, config, CACHE_TTL.WHITELABEL_CONFIG);
-
     return config;
   }
 
@@ -190,18 +240,10 @@ export class WhitelabelService {
   //  CACHE INVALIDATION
   // ═══════════════════════════════════════════════════════════════
 
-  /**
-   * Invalidate all whitelabel-related caches (bulk + per-key).
-   * Uses SCAN-based pattern delete to avoid blocking Redis.
-   */
   async invalidateAll(): Promise<void> {
     await this.cache.delPattern(CACHE_KEYS.WHITELABEL_ALL_PATTERN);
   }
 
-  /**
-   * Internal invalidation — clears every whitelabel cache entry.
-   * Called after any write operation (update, delete).
-   */
   private invalidateCache(): Promise<void> {
     return this.invalidateAll();
   }

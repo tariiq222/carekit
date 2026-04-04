@@ -17,6 +17,7 @@ import { DetailSection, DetailRow } from "@/components/features/detail-sheet-par
 import { fetchPayment } from "@/lib/api/payments"
 import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
+import { useClinicConfig } from "@/hooks/use-clinic-config"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 import type { Payment } from "@/lib/types/payment"
 import { PaymentActions } from "./payment-actions"
@@ -109,6 +110,7 @@ function PaymentDetailBody({
   payment: Payment
   onAction: () => void
 }) {
+  const { formatDate } = useClinicConfig()
   const { locale, t } = useLocale()
 
   const patientName = payment.booking?.patient
@@ -163,7 +165,7 @@ function PaymentDetailBody({
               label={t("detail.date")}
               value={
                 payment.booking?.date
-                  ? new Date(payment.booking.date).toLocaleDateString()
+                  ? formatDate(payment.booking.date)
                   : "\u2014"
               }
               numeric
@@ -190,7 +192,7 @@ function PaymentDetailBody({
                         {receipt.aiVerificationStatus}
                       </Badge>
                       <span className="tabular-nums text-xs text-muted-foreground">
-                        {new Date(receipt.createdAt).toLocaleDateString()}
+                        {formatDate(receipt.createdAt)}
                       </span>
                     </div>
 

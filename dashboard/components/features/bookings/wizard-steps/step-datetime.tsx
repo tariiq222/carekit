@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale } from '@/components/locale-provider'
 import { useQuery } from '@tanstack/react-query'
 import { fetchSlots } from '@/lib/api/practitioners-schedule'
 import { queryKeys } from '@/lib/query-keys'
@@ -42,7 +42,7 @@ export function StepDatetime({
   onSelectDate,
   onSelectTime,
 }: StepDatetimeProps) {
-  const t = useTranslations()
+  const { t } = useLocale()
 
   const days = useMemo(() => build14Days(), [])
 

@@ -194,13 +194,12 @@ export interface WhiteLabelEntry {
 
 export const WHITE_LABEL_DEFAULTS: WhiteLabelEntry[] = [
   // Branding
-  { key: 'clinic_name', value: 'CareKit Clinic', type: 'string', description: 'Clinic display name (English)' },
-  { key: 'clinic_name_ar', value: 'عيادة كيركت', type: 'string', description: 'Clinic display name (Arabic)' },
+  { key: 'system_name', value: 'CareKit Clinic', type: 'string', description: 'System/clinic display name (English)' },
+  { key: 'system_name_ar', value: 'عيادة كيركت', type: 'string', description: 'System/clinic display name (Arabic)' },
   { key: 'logo', value: '', type: 'file', description: 'Clinic logo URL' },
   { key: 'primary_color', value: '#2563EB', type: 'string', description: 'Primary brand color (hex)' },
   { key: 'secondary_color', value: '#1E40AF', type: 'string', description: 'Secondary brand color (hex)' },
   { key: 'font', value: 'Inter', type: 'string', description: 'Primary font family' },
-  { key: 'app_name', value: 'CareKit', type: 'string', description: 'Application display name' },
   { key: 'domain', value: 'localhost', type: 'string', description: 'Client domain' },
 
   // Contact
@@ -244,9 +243,43 @@ export const WHITE_LABEL_DEFAULTS: WhiteLabelEntry[] = [
   // Settings
   { key: 'default_language', value: 'ar', type: 'string', description: 'Default language (ar/en)' },
   { key: 'timezone', value: 'Asia/Riyadh', type: 'string', description: 'Clinic timezone' },
+  { key: 'week_start_day', value: 'sunday', type: 'string', description: 'First day of the week (sunday/monday)' },
+  { key: 'date_format', value: 'Y-m-d', type: 'string', description: 'Date display format (Y-m-d / d/m/Y / m/d/Y)' },
+  { key: 'time_format', value: '24h', type: 'string', description: 'Time display format (24h / 12h)' },
   { key: 'session_duration', value: '30', type: 'string', description: 'Default session duration in minutes' },
   { key: 'reminder_before_minutes', value: '60', type: 'string', description: 'Send reminder X minutes before appointment' },
   { key: 'firebase_config', value: '{}', type: 'json', description: 'Firebase FCM configuration (JSON)' },
+];
+
+// ──────────────────────────────────────────────
+// Feature Flags
+// ──────────────────────────────────────────────
+
+export interface FeatureFlagDefinition {
+  key: string;
+  nameEn: string;
+  nameAr: string;
+  descriptionEn: string;
+  descriptionAr: string;
+  enabled: boolean;
+}
+
+export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
+  // Modules
+  { key: 'coupons', nameEn: 'Coupons', nameAr: 'الكوبونات', descriptionEn: 'Enable coupon creation and redemption', descriptionAr: 'تفعيل إنشاء واستخدام الكوبونات', enabled: true },
+  { key: 'gift_cards', nameEn: 'Gift Cards', nameAr: 'بطاقات الهدايا', descriptionEn: 'Enable gift card purchase and redemption', descriptionAr: 'تفعيل شراء واستخدام بطاقات الهدايا', enabled: true },
+  { key: 'intake_forms', nameEn: 'Intake Forms', nameAr: 'نماذج المعلومات', descriptionEn: 'Enable patient intake forms before appointments', descriptionAr: 'تفعيل نماذج المعلومات قبل المواعيد', enabled: true },
+  { key: 'chatbot', nameEn: 'AI Chatbot', nameAr: 'الشات بوت', descriptionEn: 'Enable AI-powered patient assistant', descriptionAr: 'تفعيل المساعد الذكي للمرضى', enabled: true },
+  { key: 'ratings', nameEn: 'Ratings & Reviews', nameAr: 'التقييمات', descriptionEn: 'Enable patient ratings and reviews', descriptionAr: 'تفعيل تقييمات المرضى', enabled: true },
+  { key: 'multi_branch', nameEn: 'Multi-Branch', nameAr: 'تعدد الفروع', descriptionEn: 'Enable multiple clinic branches', descriptionAr: 'تفعيل إدارة فروع متعددة', enabled: true },
+  { key: 'reports', nameEn: 'Reports', nameAr: 'التقارير', descriptionEn: 'Enable analytics and reports dashboard', descriptionAr: 'تفعيل لوحة التقارير والتحليلات', enabled: true },
+  // Booking features
+  { key: 'recurring', nameEn: 'Recurring Bookings', nameAr: 'الحجز المتكرر', descriptionEn: 'Allow patients to book recurring appointments', descriptionAr: 'السماح للمرضى بحجز مواعيد متكررة', enabled: true },
+  { key: 'walk_in', nameEn: 'Walk-in', nameAr: 'الحضور بدون موعد', descriptionEn: 'Allow staff to register walk-in patients', descriptionAr: 'السماح للموظفين بتسجيل المرضى الحاضرين بدون موعد', enabled: true },
+  { key: 'waitlist', nameEn: 'Waitlist', nameAr: 'قائمة الانتظار', descriptionEn: 'Allow patients to join a waitlist when slots are full', descriptionAr: 'السماح للمرضى بالانضمام لقائمة انتظار عند امتلاء المواعيد', enabled: true },
+  { key: 'zoom', nameEn: 'Zoom Video Calls', nameAr: 'مكالمات Zoom', descriptionEn: 'Auto-generate Zoom links for video consultations', descriptionAr: 'إنشاء روابط Zoom تلقائياً للاستشارات المرئية', enabled: false },
+  // Compliance
+  { key: 'zatca', nameEn: 'ZATCA / Fatoora', nameAr: 'ZATCA / فاتورة', descriptionEn: 'Enable Saudi e-invoicing compliance (ZATCA)', descriptionAr: 'تفعيل الامتثال للفوترة الإلكترونية السعودية', enabled: true },
 ];
 
 // ──────────────────────────────────────────────

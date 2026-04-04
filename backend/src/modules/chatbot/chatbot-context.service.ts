@@ -40,7 +40,7 @@ export class ChatbotContextService {
       : 'Patient';
 
     const clinicConfig = await this.prisma.whiteLabelConfig.findFirst({
-      where: { key: 'clinic_name' },
+      where: { key: 'system_name' },
     });
     const clinicName = clinicConfig?.value ?? 'CareKit Clinic';
 
