@@ -8,6 +8,7 @@ import {
   Max,
   MaxLength,
   Min,
+  ValidateIf,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { RefundType, NoShowPolicy, BookingFlowOrder } from '@prisma/client';
@@ -92,6 +93,19 @@ export class UpdateBookingSettingsDto {
   @IsOptional()
   @IsBoolean()
   allowRecurring?: boolean;
+
+  @ApiPropertyOptional({ minimum: 1, maximum: 52 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(52)
+  maxRecurrences?: number;
+
+  @ApiPropertyOptional({ enum: ['daily','every_2_days','every_3_days','weekly','biweekly','monthly'], isArray: true })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(['daily','every_2_days','every_3_days','weekly','biweekly','monthly'], { each: true })
+  allowedRecurringPatterns?: string[];
 
   // ── Waitlist ─────────────────────────────────────────────────────
   @ApiPropertyOptional()
@@ -231,9 +245,10 @@ export class UpdateBookingSettingsDto {
 
   @ApiPropertyOptional({ description: 'URL to redirect patient after booking is confirmed' })
   @IsOptional()
+  @ValidateIf((o) => o.widgetRedirectUrl !== null)
   @IsString()
   @MaxLength(500)
-  widgetRedirectUrl?: string;
+  widgetRedirectUrl?: string | null;
 
   // ── Booking flow order ────────────────────────────────────────────
   @ApiPropertyOptional({
