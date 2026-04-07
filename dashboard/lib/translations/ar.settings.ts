@@ -143,7 +143,7 @@ export const arSettings: Record<string, string> = {
   "settings.patientCancelPending": "إلغاء الحجز المعلّق",
   "settings.patientCancelPendingDesc": "لو مفعّل، المستفيد يقدر يلغي حجوزاته اللي لسه 'معلّقة' (ما تأكدت) بدون موافقة الأدمن.",
   "settings.reviewTimeout": "مهلة مراجعة الإلغاء",
-  "settings.reviewTimeoutDesc": "لو المستفيد طلب إلغاء وما راجعه الأدمن خلال هالوقت، الطلب ينتهي تلقائياً. مثلاً: 48 = يومين.",
+  "settings.reviewTimeoutDesc": "لو المستفيد طلب إلغاء وما راجعه الأدمن خلال هالوقت، يُلغى الحجز تلقائياً ويُصدر استرداد كامل. مثلاً: 48 = يومين.",
   "settings.paymentTimeout": "مهلة الدفع",
   "settings.paymentTimeoutDesc": "الوقت المتاح للمستفيد لإتمام الدفع بعد إنشاء الحجز. لو ما دفع خلالها، الحجز يُلغى تلقائياً. مثلاً: 60 = ساعة.",
   "settings.workingHours": "ساعات العمل",

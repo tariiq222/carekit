@@ -140,22 +140,17 @@ export function SettingsIntegrationsTab() {
                 className={cn(
                   "w-full flex items-center justify-between gap-3 rounded-lg px-3 py-3 cursor-pointer select-none transition-colors",
                   activeTab === tab.id
-                    ? "bg-background border border-border shadow-sm"
-                    : "hover:bg-background/60",
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-background/70 hover:text-foreground",
                 )}
               >
                 {/* Label */}
                 <div className="min-w-0 flex-1">
-                  <p
-                    className={cn(
-                      "text-sm font-medium truncate leading-tight",
-                      activeTab === tab.id ? "text-foreground" : "text-muted-foreground",
-                    )}
-                  >
+                  <p className="text-sm font-medium truncate leading-tight">
                     {tab.label}
                   </p>
                   {activeTab === tab.id && (
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-tight">
+                    <p className="text-xs mt-0.5 line-clamp-2 leading-tight opacity-80">
                       {tab.desc}
                     </p>
                   )}

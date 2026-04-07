@@ -135,7 +135,7 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3">
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SelectRow label={t("settings.freeRefundType")} desc={t("settings.freeRefundTypeDesc")} value={freeRefund}
             onChange={(v) => { setFreeRefund(v); saveNow() }} options={[
               { value: "full", label: t("settings.refundFull") },
@@ -143,7 +143,7 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
               { value: "none", label: t("settings.refundNone") },
             ]} />
         </CardContent></Card>
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SelectRow label={t("settings.lateRefundType")} desc={t("settings.lateRefundTypeDesc")} value={lateRefund}
             onChange={(v) => { setLateRefund(v); saveNow() }} options={[
               { value: "full", label: t("settings.refundFull") },
@@ -154,24 +154,24 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
       </div>
       {lateRefund === "partial" && (
         <div className="grid grid-cols-2 gap-3">
-          <Card><CardContent className="pt-2 pb-2">
+          <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
             <NumRow label={t("settings.lateRefundPercent")} desc={t("settings.lateRefundPercentDesc")} value={latePercent}
               onChange={(v) => { setLatePercent(v); scheduleSave() }} unit="%" />
           </CardContent></Card>
         </div>
       )}
       <div className="grid grid-cols-2 gap-3">
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SwitchRow label={t("settings.adminDirectCancel")} desc={t("settings.adminDirectCancelDesc")} checked={adminDirect}
             onChange={(v) => { setAdminDirect(v); saveNow() }} />
         </CardContent></Card>
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SwitchRow label={t("settings.patientCancelPending")} desc={t("settings.patientCancelPendingDesc")} checked={patientPending}
             onChange={(v) => { setPatientPending(v); saveNow() }} />
         </CardContent></Card>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <NumRow label={t("settings.reviewTimeout")} desc={t("settings.reviewTimeoutDesc")} value={reviewTimeout}
             onChange={(v) => { setReviewTimeout(v); scheduleSave() }} unit="h" />
         </CardContent></Card>
@@ -215,17 +215,17 @@ export function ReschedulingPanel({ settings, onSave, isPending, t }: {
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3">
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SwitchRow label={t("settings.patientCanReschedule")} desc={t("settings.patientCanRescheduleDesc")} checked={canReschedule}
             onChange={(v) => { setCanReschedule(v); saveNow() }} />
         </CardContent></Card>
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <NumRow label={t("settings.rescheduleBeforeHours")} desc={t("settings.rescheduleBeforeHoursDesc")} value={beforeHours}
             onChange={(v) => { setBeforeHours(v); scheduleSave() }} unit="h" />
         </CardContent></Card>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <NumRow label={t("settings.maxReschedules")} desc={t("settings.maxReschedulesDesc")} value={maxCount}
             onChange={(v) => { setMaxCount(v); scheduleSave() }} unit="x" />
         </CardContent></Card>
@@ -273,17 +273,17 @@ export function NoShowPanel({ settings, onSave, isPending, t }: {
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3">
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <NumRow label={t("settings.autoCompleteAfter")} desc={t("settings.autoCompleteAfterDesc")} value={autoComplete}
             onChange={(v) => { setAutoComplete(v); scheduleSave() }} unit="h" />
         </CardContent></Card>
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <NumRow label={t("settings.autoNoShowAfter")} desc={t("settings.autoNoShowAfterDesc")} value={autoNoShow}
             onChange={(v) => { setAutoNoShow(v); scheduleSave() }} unit="min" />
         </CardContent></Card>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SelectRow label={t("settings.noShowPolicy")} desc={t("settings.noShowPolicyDesc")} value={policy}
             onChange={(v) => { setPolicy(v); saveNow() }} options={[
               { value: "keep_full", label: t("settings.noShowKeepFull") },
@@ -292,7 +292,7 @@ export function NoShowPanel({ settings, onSave, isPending, t }: {
             ]} />
         </CardContent></Card>
         {policy === "partial_refund" && (
-          <Card><CardContent className="pt-2 pb-2">
+          <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
             <NumRow label={t("settings.noShowRefundPercent")} desc={t("settings.noShowRefundPercentDesc")} value={refundPercent}
               onChange={(v) => { setRefundPercent(v); scheduleSave() }} unit="%" />
           </CardContent></Card>

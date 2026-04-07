@@ -143,7 +143,7 @@ export const enSettings: Record<string, string> = {
   "settings.patientCancelPending": "Patient Cancel Pending",
   "settings.patientCancelPendingDesc": "If enabled, patients can cancel bookings that are still 'Pending' (not yet confirmed) without needing admin approval.",
   "settings.reviewTimeout": "Review Timeout",
-  "settings.reviewTimeoutDesc": "If a patient requests cancellation and no admin reviews it within this time, the request expires automatically. Example: 48 = 2 days.",
+  "settings.reviewTimeoutDesc": "If a patient requests cancellation and no admin reviews it within this time, the booking is automatically cancelled and a full refund is issued. Example: 48 = 2 days.",
   "settings.paymentTimeout": "Payment Timeout",
   "settings.paymentTimeoutDesc": "Time the patient has to complete payment after creating a booking. If they don't pay in time, the booking is automatically cancelled. Example: 60 = 1 hour.",
   "settings.workingHours": "Working Hours",

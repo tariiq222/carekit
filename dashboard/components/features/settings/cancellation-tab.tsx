@@ -52,18 +52,18 @@ function CancellationPolicyPanel({ settings, onSave, isPending, t }: {
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3">
-        <Card><CardContent className="pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <NumRow label={t("settings.cancelHours")} desc={t("settings.cancelHoursDesc")} value={cancelHours}
             onChange={(v) => { setCancelHours(v); scheduleSave() }} unit="h" />
         </CardContent></Card>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Card><CardContent className="space-y-2 pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="space-y-2 pt-3 pb-2">
           <Label>{t("settings.policyTextEn")}</Label>
           <Textarea value={policyEn} rows={3} placeholder="Cancellation policy displayed to patients..."
             onChange={(e) => { setPolicyEn(e.target.value); scheduleSave() }} />
         </CardContent></Card>
-        <Card><CardContent className="space-y-2 pt-2 pb-2">
+        <Card className="shadow-sm bg-surface"><CardContent className="space-y-2 pt-3 pb-2">
           <Label>{t("settings.policyTextAr")}</Label>
           <Textarea value={policyAr} rows={3} dir="rtl" placeholder="سياسة الإلغاء المعروضة للمرضى..."
             onChange={(e) => { setPolicyAr(e.target.value); scheduleSave() }} />
@@ -117,12 +117,12 @@ export function CancellationTab({ t }: Props) {
       <div className="flex min-h-[420px]">
         {/* ── Sidebar ── */}
         <div className="w-64 shrink-0 border-e border-border bg-surface-muted flex flex-col">
-          <div className="p-3 border-b border-border">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               {t("settings.cancellationPolicy")}
             </p>
           </div>
-          <div className="flex-1 p-2 space-y-1">
+          <div className="flex-1 p-3 space-y-1.5">
             {tabs.map((tab) => (
               <div
                 key={tab.id}
@@ -132,20 +132,17 @@ export function CancellationTab({ t }: Props) {
                 onClick={() => setActiveTab(tab.id)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActiveTab(tab.id) }}
                 className={cn(
-                  "w-full rounded-lg px-3 py-3 cursor-pointer select-none transition-colors",
+                  "w-full rounded-lg px-3 py-2.5 cursor-pointer select-none transition-all",
                   activeTab === tab.id
-                    ? "bg-background border border-border shadow-sm"
-                    : "hover:bg-background/60"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-background/70 hover:text-foreground"
                 )}
               >
-                <p className={cn(
-                  "text-sm font-medium truncate leading-tight",
-                  activeTab === tab.id ? "text-foreground" : "text-muted-foreground"
-                )}>
+                <p className="text-sm font-medium truncate leading-tight">
                   {tab.label}
                 </p>
                 {activeTab === tab.id && (
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-tight">
+                  <p className="text-xs mt-0.5 line-clamp-2 leading-tight opacity-80">
                     {tab.desc}
                   </p>
                 )}
@@ -155,7 +152,7 @@ export function CancellationTab({ t }: Props) {
         </div>
 
         {/* ── Content ── */}
-        <div className="flex-1 p-6 overflow-y-auto bg-surface-muted/40 flex flex-col">
+        <div className="flex-1 p-5 overflow-y-auto bg-surface-muted/50 flex flex-col">
           {settings && activeTab === "policy" && (
             <CancellationPolicyPanel settings={settings} onSave={handleSave} isPending={mutation.isPending} t={t} />
           )}

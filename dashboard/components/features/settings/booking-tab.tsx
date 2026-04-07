@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -158,18 +157,15 @@ export function BookingTab({ t }: Props) {
                 className={cn(
                   "w-full rounded-lg px-3 py-3 cursor-pointer select-none transition-colors",
                   activeTab === tab.id
-                    ? "bg-background border border-border shadow-sm"
-                    : "hover:bg-background/60"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-background/70 hover:text-foreground"
                 )}
               >
-                <p className={cn(
-                  "text-sm font-medium truncate leading-tight",
-                  activeTab === tab.id ? "text-foreground" : "text-muted-foreground"
-                )}>
+                <p className="text-sm font-medium truncate leading-tight">
                   {tab.label}
                 </p>
                 {activeTab === tab.id && (
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-tight">
+                  <p className="text-xs mt-0.5 line-clamp-2 leading-tight opacity-80">
                     {tab.desc}
                   </p>
                 )}
@@ -179,21 +175,32 @@ export function BookingTab({ t }: Props) {
         </div>
 
         {/* ── Content Panel ── */}
-        <div role="tabpanel" className="flex-1 p-6">
+        <div role="tabpanel" className="flex-1 p-5 overflow-y-auto bg-surface-muted/50 flex flex-col">
+
           {activeTab === "policies" && (
-            <div className="space-y-0 max-w-lg">
-              <NumberRow label={t("settings.minBookingLead")} desc={t("settings.minBookingLeadDesc")} value={leadMinutes} onChange={setLeadMinutes} unit="min" />
-              <Separator />
-              <NumberRow label={t("settings.paymentTimeout")} desc={t("settings.paymentTimeoutDesc")} value={paymentTimeout} onChange={setPaymentTimeout} unit="min" />
-              <Separator />
-              <NumberRow label={t("settings.bufferMinutes")} desc={t("settings.bufferMinutesDesc")} value={bufferMin} onChange={setBufferMin} unit="min" />
-              <Separator />
-              <NumberRow label={t("settings.maxAdvanceDays")} desc={t("settings.maxAdvanceDaysDesc")} value={maxAdvanceDays} onChange={setMaxAdvanceDays} unit="days" />
-              <Separator />
-              <div className="py-4">
-                <SwitchRow label={t("settings.adminCanBookOutsideHours")} desc={t("settings.adminCanBookOutsideHoursDesc")} checked={adminCanBookOutsideHours} onChange={setAdminCanBookOutsideHours} />
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                  <NumberRow label={t("settings.minBookingLead")} desc={t("settings.minBookingLeadDesc")} value={leadMinutes} onChange={setLeadMinutes} unit="min" />
+                </CardContent></Card>
+                <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                  <NumberRow label={t("settings.paymentTimeout")} desc={t("settings.paymentTimeoutDesc")} value={paymentTimeout} onChange={setPaymentTimeout} unit="min" />
+                </CardContent></Card>
               </div>
-              <div className="flex justify-end pt-5">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                  <NumberRow label={t("settings.bufferMinutes")} desc={t("settings.bufferMinutesDesc")} value={bufferMin} onChange={setBufferMin} unit="min" />
+                </CardContent></Card>
+                <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                  <NumberRow label={t("settings.maxAdvanceDays")} desc={t("settings.maxAdvanceDaysDesc")} value={maxAdvanceDays} onChange={setMaxAdvanceDays} unit="days" />
+                </CardContent></Card>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                  <SwitchRow label={t("settings.adminCanBookOutsideHours")} desc={t("settings.adminCanBookOutsideHoursDesc")} checked={adminCanBookOutsideHours} onChange={setAdminCanBookOutsideHours} />
+                </CardContent></Card>
+              </div>
+              <div className="flex justify-end mt-auto pt-2">
                 <Button size="sm" disabled={isSaving} onClick={() => handleSettingsSave({
                   minBookingLeadMinutes: Number(leadMinutes) || 0,
                   paymentTimeoutMinutes: Math.max(5, Number(paymentTimeout) || 60),
@@ -208,16 +215,18 @@ export function BookingTab({ t }: Props) {
           )}
 
           {activeTab === "walkin" && (
-            <div className="space-y-4 max-w-lg">
-              <SwitchRow label={t("settings.allowWalkIn")} desc={t("settings.allowWalkInDesc")} checked={allowWalkIn} onChange={setAllowWalkIn} />
-              {allowWalkIn && (
-                <>
-                  <Separator />
-                  <SwitchRow label={t("settings.walkInPaymentRequired")} desc={t("settings.walkInPaymentRequiredDesc")} checked={walkInPaymentRequired} onChange={setWalkInPaymentRequired} />
-                </>
-              )}
-              <Separator />
-              <div className="flex justify-end">
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                  <SwitchRow label={t("settings.allowWalkIn")} desc={t("settings.allowWalkInDesc")} checked={allowWalkIn} onChange={setAllowWalkIn} />
+                </CardContent></Card>
+                {allowWalkIn && (
+                  <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                    <SwitchRow label={t("settings.walkInPaymentRequired")} desc={t("settings.walkInPaymentRequiredDesc")} checked={walkInPaymentRequired} onChange={setWalkInPaymentRequired} />
+                  </CardContent></Card>
+                )}
+              </div>
+              <div className="flex justify-end mt-auto pt-2">
                 <Button size="sm" disabled={isSaving} onClick={() => handleSettingsSave({ allowWalkIn, walkInPaymentRequired })}>
                   {t("settings.save")}
                 </Button>
@@ -226,26 +235,31 @@ export function BookingTab({ t }: Props) {
           )}
 
           {activeTab === "waitlist" && (
-            <div className="space-y-4 max-w-lg">
-              <SwitchRow label={t("settings.waitlistEnabled")} desc={t("settings.waitlistEnabledDesc")} checked={waitlistEnabled} onChange={setWaitlistEnabled} />
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                  <SwitchRow label={t("settings.waitlistEnabled")} desc={t("settings.waitlistEnabledDesc")} checked={waitlistEnabled} onChange={setWaitlistEnabled} />
+                </CardContent></Card>
+                {waitlistEnabled && (
+                  <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                    <div className="flex items-center justify-between gap-4 py-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">{t("settings.waitlistMaxPerSlot")}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{t("settings.waitlistMaxPerSlotDesc")}</p>
+                      </div>
+                      <Input type="number" value={waitlistMaxPerSlot} onChange={(e) => setWaitlistMaxPerSlot(e.target.value)} className="w-20 tabular-nums shrink-0" min={1} max={50} />
+                    </div>
+                  </CardContent></Card>
+                )}
+              </div>
               {waitlistEnabled && (
-                <>
-                  <Separator />
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">{t("settings.waitlistMaxPerSlot")}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t("settings.waitlistMaxPerSlotDesc")}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Input type="number" value={waitlistMaxPerSlot} onChange={(e) => setWaitlistMaxPerSlot(e.target.value)} className="w-20 tabular-nums" min={1} max={50} />
-                    </div>
-                  </div>
-                  <Separator />
-                  <SwitchRow label={t("settings.waitlistAutoNotify")} desc={t("settings.waitlistAutoNotifyDesc")} checked={waitlistAutoNotify} onChange={setWaitlistAutoNotify} />
-                </>
+                <div className="grid grid-cols-2 gap-3">
+                  <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                    <SwitchRow label={t("settings.waitlistAutoNotify")} desc={t("settings.waitlistAutoNotifyDesc")} checked={waitlistAutoNotify} onChange={setWaitlistAutoNotify} />
+                  </CardContent></Card>
+                </div>
               )}
-              <Separator />
-              <div className="flex justify-end">
+              <div className="flex justify-end mt-auto pt-2">
                 <Button size="sm" disabled={isSaving} onClick={() => handleSettingsSave({
                   waitlistEnabled, waitlistMaxPerSlot: Number(waitlistMaxPerSlot) || 5, waitlistAutoNotify,
                 })}>
@@ -256,14 +270,20 @@ export function BookingTab({ t }: Props) {
           )}
 
           {activeTab === "recurring" && (
-            <div className="space-y-4 max-w-lg">
-              <SwitchRow label={t("settings.allowRecurring")} desc={t("settings.allowRecurringDesc")} checked={allowRecurring} onChange={setAllowRecurring} />
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                  <SwitchRow label={t("settings.allowRecurring")} desc={t("settings.allowRecurringDesc")} checked={allowRecurring} onChange={setAllowRecurring} />
+                </CardContent></Card>
+                {allowRecurring && (
+                  <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
+                    <NumberRow label={t("settings.maxRecurrences")} desc={t("settings.maxRecurrencesDesc")} value={maxRecurrences} onChange={setMaxRecurrences} unit="x" min={1} />
+                  </CardContent></Card>
+                )}
+              </div>
               {allowRecurring && (
-                <>
-                  <Separator />
-                  <NumberRow label={t("settings.maxRecurrences")} desc={t("settings.maxRecurrencesDesc")} value={maxRecurrences} onChange={setMaxRecurrences} unit="x" min={1} />
-                  <Separator />
-                  <div className="py-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <Card className="shadow-sm bg-surface col-span-2"><CardContent className="pt-3 pb-3">
                     <p className="text-sm font-medium text-foreground mb-1">{t("settings.allowedRecurringPatterns")}</p>
                     <p className="text-xs text-muted-foreground mb-3">{t("settings.allowedRecurringPatternsDesc")}</p>
                     <div className="grid grid-cols-2 gap-2">
@@ -273,9 +293,7 @@ export function BookingTab({ t }: Props) {
                             checked={allowedPatterns.includes(p.value)}
                             onCheckedChange={(checked) => {
                               setAllowedPatterns(prev =>
-                                checked
-                                  ? [...prev, p.value]
-                                  : prev.filter(v => v !== p.value)
+                                checked ? [...prev, p.value] : prev.filter(v => v !== p.value)
                               )
                             }}
                           />
@@ -283,11 +301,10 @@ export function BookingTab({ t }: Props) {
                         </label>
                       ))}
                     </div>
-                  </div>
-                </>
+                  </CardContent></Card>
+                </div>
               )}
-              <Separator />
-              <div className="flex justify-end">
+              <div className="flex justify-end mt-auto pt-2">
                 <Button size="sm" disabled={isSaving} onClick={() => handleSettingsSave({
                   allowRecurring,
                   maxRecurrences: Number(maxRecurrences) || 12,
@@ -300,23 +317,26 @@ export function BookingTab({ t }: Props) {
           )}
 
           {activeTab === "floworder" && (
-            <div className="space-y-4 max-w-lg">
-              <div>
-                <p className="text-sm font-semibold">{t("settings.booking.flowOrder.title")}</p>
-              </div>
-              <Separator />
-              <RadioGroup value={flowOrderVal} onValueChange={(v) => setFlowOrderVal(v as BookingFlowOrder)} className="space-y-3">
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
                 {(["service_first", "practitioner_first", "both"] as const).map((val) => (
-                  <label key={val} className="flex items-start gap-3 cursor-pointer rounded-lg border border-border/60 p-3 hover:bg-surface-muted transition-colors">
-                    <RadioGroupItem value={val} className="mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">{t(`settings.booking.flowOrder.${val === "service_first" ? "serviceFirst" : val === "practitioner_first" ? "practitionerFirst" : "both"}`)}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t(`settings.booking.flowOrder.${val === "service_first" ? "serviceFirstDesc" : val === "practitioner_first" ? "practitionerFirstDesc" : "bothDesc"}`)}</p>
-                    </div>
-                  </label>
+                  <Card key={val} className={cn("shadow-sm cursor-pointer transition-all", flowOrderVal === val ? "ring-2 ring-primary bg-primary/5" : "bg-surface hover:bg-surface-muted")}
+                    onClick={() => setFlowOrderVal(val)}>
+                    <CardContent className="pt-2 pb-2">
+                      <div className="flex items-start gap-3 py-2">
+                        <RadioGroup value={flowOrderVal} onValueChange={(v) => setFlowOrderVal(v as BookingFlowOrder)}>
+                          <RadioGroupItem value={val} />
+                        </RadioGroup>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{t(`settings.booking.flowOrder.${val === "service_first" ? "serviceFirst" : val === "practitioner_first" ? "practitionerFirst" : "both"}`)}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t(`settings.booking.flowOrder.${val === "service_first" ? "serviceFirstDesc" : val === "practitioner_first" ? "practitionerFirstDesc" : "bothDesc"}`)}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
-              </RadioGroup>
-              <div className="flex justify-end pt-2">
+              </div>
+              <div className="flex justify-end mt-auto pt-2">
                 <Button size="sm" disabled={isSaving} onClick={() => flowMut.mutate(flowOrderVal, {
                   onSuccess: () => toast.success(t("settings.saved")),
                   onError: (err: Error) => toast.error(err.message),
