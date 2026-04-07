@@ -99,11 +99,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         `Unhandled exception: ${exception.message} [${CORRELATION_HEADER}=${correlationId}]`,
         exception.stack,
       );
-      // Only report truly unexpected errors to Sentry — skip Prisma known errors
-      // (P2025 = not found, P2002 = unique constraint, P2003 = FK constraint)
-      const isPrismaKnown = exception.constructor?.name === 'PrismaClientKnownRequestError'
-        || exception.constructor?.name === 'PrismaClientValidationError';
-      if (!isPrismaKnown) {
+      // Skip expected/safe Prisma errors from Sentry:
+      // P2025 = record not found, P2002 = unique constraint, P2003 = FK constraint
+      const EXPECTED_PRISMA_CODES = new Set(['P2025', 'P2002', 'P2003']);
+
+      const isPrismaValidation = exception.constructor?.name === 'PrismaClientValidationError';
+      const isPrismaKnown = exception.constructor?.name === 'PrismaClientKnownRequestError';
+      const isExpectedPrismaCode = isPrismaKnown && EXPECTED_PRISMA_CODES.has((exception as { code?: string }).code ?? '');
+
+      if (!isPrismaValidation && !isExpectedPrismaCode) {
         Sentry.captureException(exception);
       }
     } else {

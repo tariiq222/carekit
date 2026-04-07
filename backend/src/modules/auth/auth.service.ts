@@ -79,26 +79,42 @@ export class AuthService {
       where: { slug: 'patient', isDefault: true },
     });
 
-    const user = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.user.create({
-        data: {
-          email,
-          passwordHash,
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          phone: dto.phone,
-          gender: dto.gender,
-        },
-      });
+    let user: Awaited<ReturnType<typeof this.prisma.user.create>>;
+    try {
+      user = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.user.create({
+          data: {
+            email,
+            passwordHash,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            phone: dto.phone,
+            gender: dto.gender,
+          },
+        });
 
-      if (patientRole) {
-        await tx.userRole.create({
-          data: { userId: created.id, roleId: patientRole.id },
+        if (patientRole) {
+          await tx.userRole.create({
+            data: { userId: created.id, roleId: patientRole.id },
+          });
+        }
+
+        return created;
+      });
+    } catch (err) {
+      const prismaErr = err as { code?: string; constructor?: { name?: string } };
+      if (
+        prismaErr.constructor?.name === 'PrismaClientKnownRequestError' &&
+        prismaErr.code === 'P2002'
+      ) {
+        throw new ConflictException({
+          statusCode: 409,
+          message: 'A user with this email already exists',
+          error: 'USER_EMAIL_EXISTS',
         });
       }
-
-      return created;
-    });
+      throw err;
+    }
 
     const tokens = await this.tokenService.generateTokens(user.id, user.email);
     await this.tokenService.storeRefreshToken(user.id, tokens.refreshToken);

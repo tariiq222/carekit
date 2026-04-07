@@ -23,6 +23,7 @@ const mockPrisma: any = {
   },
   payment: {
     findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
     deleteMany: jest.fn().mockResolvedValue({}),
   },
   $transaction: jest.fn(),
@@ -70,6 +71,7 @@ describe('BookingExpiryService', () => {
     // Re-check guard: findFirst returns truthy by default (booking still pending)
     mockPrisma.booking.findFirst.mockResolvedValue({ id: 'stub' });
     mockPrisma.payment.findFirst.mockResolvedValue(null);
+    mockPrisma.payment.findMany.mockResolvedValue([]);
     mockPrisma.payment.deleteMany.mockResolvedValue({});
     mockPrisma.booking.update.mockResolvedValue({});
     mockNotifications.createNotification.mockResolvedValue(undefined);
@@ -80,6 +82,34 @@ describe('BookingExpiryService', () => {
     mockPrisma.$transaction.mockImplementation(
       (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma),
     );
+  });
+
+  describe('filterSafeToExpire', () => {
+    it('should use a single batched query instead of one per booking', async () => {
+      const bookings = [{ id: 'booking-1' }, { id: 'booking-2' }, { id: 'booking-3' }];
+
+      mockPrisma.payment.findMany.mockResolvedValue([
+        { bookingId: 'booking-2' },
+      ]);
+
+      const result = await (service as any).filterSafeToExpire(bookings);
+
+      expect(mockPrisma.payment.findMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.payment.findMany).toHaveBeenCalledWith({
+        where: {
+          bookingId: { in: ['booking-1', 'booking-2', 'booking-3'] },
+          status: { in: ['paid', 'pending'] },
+        },
+        select: { bookingId: true },
+      });
+      expect(result.map((b: { id: string }) => b.id)).toEqual(['booking-1', 'booking-3']);
+    });
+
+    it('should return empty array if input is empty without querying DB', async () => {
+      const result = await (service as any).filterSafeToExpire([]);
+      expect(result).toEqual([]);
+      expect(mockPrisma.payment.findMany).not.toHaveBeenCalled();
+    });
   });
 
   describe('expirePendingBookings', () => {
@@ -143,8 +173,8 @@ describe('BookingExpiryService', () => {
         zoomMeetingId: null,
       };
       mockPrisma.booking.findMany.mockResolvedValue([booking]);
-      // Active payment found in filterSafeToExpire
-      mockPrisma.payment.findFirst.mockResolvedValue({ id: 'pay-1' });
+      // Active payment found in filterSafeToExpire (batched query)
+      mockPrisma.payment.findMany.mockResolvedValue([{ bookingId: 'b-3' }]);
 
       await service.expirePendingBookings();
 

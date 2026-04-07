@@ -65,6 +65,7 @@ describe('UserRolesService', () => {
         data: { userId, roleId },
       });
       expect(mockAuthCache.invalidate).toHaveBeenCalledWith(userId);
+      expect(mockPermissionCache.invalidate).toHaveBeenCalledWith(userId);
     });
 
     it('should return early if role already assigned (idempotent)', async () => {
@@ -108,6 +109,7 @@ describe('UserRolesService', () => {
 
       expect(mockPrisma.userRole.delete).toHaveBeenCalledWith({ where: { id: mockUserRole.id } });
       expect(mockAuthCache.invalidate).toHaveBeenCalledWith(userId);
+      expect(mockPermissionCache.invalidate).toHaveBeenCalledWith(userId);
     });
 
     it('should throw NotFoundException when user not found', async () => {
@@ -121,6 +123,17 @@ describe('UserRolesService', () => {
       mockPrisma.userRole.findFirst.mockResolvedValue(null);
 
       await expect(service.removeRole(userId, roleId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should invalidate auth and permission cache after role assignment change', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockPrisma.userRole.findFirst.mockResolvedValue(mockUserRole);
+      mockPrisma.userRole.count.mockResolvedValue(2);
+
+      await service.removeRole(userId, roleId);
+
+      expect(mockAuthCache.invalidate).toHaveBeenCalledWith(userId);
+      expect(mockPermissionCache.invalidate).toHaveBeenCalledWith(userId);
     });
 
     it('should throw BadRequestException when removing last role', async () => {

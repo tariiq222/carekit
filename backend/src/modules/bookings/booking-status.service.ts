@@ -256,6 +256,17 @@ export class BookingStatusService {
       where: { id: bookingId, status: 'expired' },
       data: { status: 'confirmed', confirmedAt: new Date(), cancelledBy: null, cancelledAt: null },
     });
+
+    if (result.count > 0) {
+      this.statusLogService.log({
+        bookingId,
+        fromStatus: 'expired',
+        toStatus: 'confirmed',
+        changedBy: 'system',
+        reason: 'Payment received after expiry — booking recovered',
+      }).catch((err) => this.logger.warn('Status log failed on recovery', { error: (err as Error)?.message }));
+    }
+
     return result.count > 0;
   }
 

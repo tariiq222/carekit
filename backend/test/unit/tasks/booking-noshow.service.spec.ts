@@ -10,6 +10,7 @@ import { BookingSettingsService } from '../../../src/modules/bookings/booking-se
 import { BookingStatusLogService } from '../../../src/modules/bookings/booking-status-log.service.js';
 import { WaitlistService } from '../../../src/modules/bookings/waitlist.service.js';
 import { MoyasarRefundService } from '../../../src/modules/payments/moyasar-refund.service.js';
+import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
 import { NoShowPolicy } from '@prisma/client';
 
 const defaultSettings = {
@@ -59,6 +60,10 @@ const mockMoyasarRefund = {
   refund: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockWhitelabelService = {
+  getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh'),
+};
+
 describe('BookingNoShowService', () => {
   let service: BookingNoShowService;
 
@@ -73,6 +78,7 @@ describe('BookingNoShowService', () => {
         { provide: BookingStatusLogService, useValue: mockStatusLog },
         { provide: WaitlistService, useValue: mockWaitlist },
         { provide: MoyasarRefundService, useValue: mockMoyasarRefund },
+        { provide: WhitelabelService, useValue: mockWhitelabelService },
       ],
     }).compile();
 
@@ -90,6 +96,7 @@ describe('BookingNoShowService', () => {
     mockWaitlist.checkAndNotify.mockResolvedValue(undefined);
     mockStatusLog.log.mockResolvedValue(undefined);
     mockMoyasarRefund.refund.mockResolvedValue(undefined);
+    mockWhitelabelService.getTimezone.mockResolvedValue('Asia/Riyadh');
     // Default: execute transaction callback with same mock as tx context
     mockPrisma.$transaction.mockImplementation(
       (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma),
@@ -228,6 +235,25 @@ describe('BookingNoShowService', () => {
       await service.autoNoShow();
 
       expect(mockWaitlist.checkAndNotify).toHaveBeenCalledWith('pract-6', pastDate);
+    });
+
+    it('should build date boundaries using dynamic timezone, not hardcoded +03:00', async () => {
+      mockWhitelabelService.getTimezone.mockResolvedValue('Asia/Karachi');
+      mockSettings.get.mockResolvedValue({
+        autoNoShowAfterMinutes: 15,
+        noShowPolicy: NoShowPolicy.keep_full,
+        noShowRefundPercent: 0,
+      });
+      mockPrisma.booking.findMany.mockResolvedValue([]);
+
+      await service.autoNoShow();
+
+      expect(mockPrisma.booking.findMany).toHaveBeenCalledTimes(1);
+      const callArgs = mockPrisma.booking.findMany.mock.calls[0][0];
+      const gte: Date = callArgs.where.date.gte;
+      expect(gte).toBeInstanceOf(Date);
+      // For Asia/Karachi (UTC+5), midnight local = 19:00 UTC previous day
+      expect(gte.getUTCHours()).toBe(19);
     });
 
     it('should skip already-transitioned booking when re-check returns null', async () => {

@@ -73,3 +73,54 @@ jobs:
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: ci-test-secret-32chars-minimum!!
           JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
+
+  dashboard-check:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: dashboard
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test
+
+  mobile-check:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test

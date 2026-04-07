@@ -113,18 +113,25 @@ export class BookingExpiryService {
   private async filterSafeToExpire<T extends { id: string }>(
     bookings: T[],
   ): Promise<T[]> {
+    if (bookings.length === 0) return [];
+
+    const bookingIds = bookings.map((b) => b.id);
+    const activePayments = await this.prisma.payment.findMany({
+      where: {
+        bookingId: { in: bookingIds },
+        status: { in: ['paid', 'pending'] },
+      },
+      select: { bookingId: true },
+    });
+
+    const withActivePayment = new Set(activePayments.map((p) => p.bookingId));
+
     const safe: T[] = [];
     for (const booking of bookings) {
-      const paidPayment = await this.prisma.payment.findFirst({
-        where: { bookingId: booking.id, status: { in: ['paid', 'pending'] } },
-        select: { id: true },
-      });
-      if (!paidPayment) {
-        safe.push(booking);
+      if (withActivePayment.has(booking.id)) {
+        this.logger.warn(`Skipping expire for booking ${booking.id} — payment still active`);
       } else {
-        this.logger.warn(
-          `Skipping expire for booking ${booking.id} — payment still active`,
-        );
+        safe.push(booking);
       }
     }
     return safe;

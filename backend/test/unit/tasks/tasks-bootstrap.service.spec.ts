@@ -49,19 +49,17 @@ describe('TasksBootstrapService', () => {
       expect(mockQueue.add).toHaveBeenCalledTimes(14);
     });
 
-    it('should remove old repeatable jobs before registering new ones', async () => {
+    it('should remove stale jobs (not in desired set) and keep known jobs', async () => {
       const oldJobs = [
-        { key: 'old-job-1', id: '1', name: 'cleanup-otps' },
-        { key: 'old-job-2', id: '2', name: 'cleanup-tokens' },
+        { key: 'stale-job:::* * * * *', id: '1', name: 'stale-job' },
       ];
       mockQueue.getRepeatableJobs.mockResolvedValue(oldJobs);
 
       await service.onModuleInit();
 
       expect(mockQueue.getRepeatableJobs).toHaveBeenCalled();
-      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledTimes(2);
-      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledWith('old-job-1');
-      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledWith('old-job-2');
+      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledTimes(1);
+      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledWith('stale-job:::* * * * *');
     });
 
     it('should register cleanup-otps with daily 3AM schedule', async () => {
@@ -244,6 +242,42 @@ describe('TasksBootstrapService', () => {
           removeOnComplete: true,
         }),
       );
+    });
+
+    it('should NOT remove jobs that are already registered with the desired name', async () => {
+      mockQueue.getRepeatableJobs.mockResolvedValue([
+        { key: 'expire-pending-bookings:::*/5 * * * *', name: 'expire-pending-bookings', pattern: '*/5 * * * *' },
+      ]);
+
+      await service.onModuleInit();
+
+      expect(mockQueue.removeRepeatableByKey).not.toHaveBeenCalled();
+    });
+
+    it('should remove stale jobs that are no longer in the desired set', async () => {
+      mockQueue.getRepeatableJobs.mockResolvedValue([
+        { key: 'old-job:::* * * * *', name: 'old-job', pattern: '* * * * *' },
+      ]);
+
+      await service.onModuleInit();
+
+      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledWith('old-job:::* * * * *');
+    });
+
+    it('should not add jobs that already exist', async () => {
+      const allJobNames = [
+        'cleanup-otps', 'cleanup-tokens', 'reminder-24h', 'reminder-1h',
+        'expire-pending-bookings', 'auto-complete-bookings', 'auto-no-show',
+        'expire-pending-cancellations', 'reminder-2h', 'reminder-15min',
+        'cleanup-webhooks', 'archive-activity-logs', 'repair-rating-cache', 'db-snapshot',
+      ];
+      mockQueue.getRepeatableJobs.mockResolvedValue(
+        allJobNames.map(name => ({ key: `${name}:::* * * * *`, name, pattern: '* * * * *' })),
+      );
+
+      await service.onModuleInit();
+
+      expect(mockQueue.add).not.toHaveBeenCalled();
     });
 
     it('should handle errors during job registration gracefully', async () => {
