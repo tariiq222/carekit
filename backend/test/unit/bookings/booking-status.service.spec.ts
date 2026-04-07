@@ -34,6 +34,7 @@ const mockPrisma: any = {
   booking: {
     findFirst: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
   },
   payment: { findFirst: jest.fn() },
   practitioner: {
@@ -243,6 +244,35 @@ describe('BookingStatusService', () => {
     it('should throw NotFoundException when booking not found', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(null);
       await expect(service.markNoShow('bad-id')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('recoverExpiredBooking', () => {
+    it('should log a status change from expired to confirmed when booking is recovered', async () => {
+      mockPrisma.booking.updateMany.mockResolvedValue({ count: 1 });
+      mockStatusLog.log = jest.fn().mockResolvedValue(undefined);
+
+      const recovered = await service.recoverExpiredBooking('booking-123');
+
+      expect(recovered).toBe(true);
+      expect(mockStatusLog.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bookingId: 'booking-123',
+          fromStatus: 'expired',
+          toStatus: 'confirmed',
+          changedBy: 'system',
+        }),
+      );
+    });
+
+    it('should NOT log if no booking was recovered (count = 0)', async () => {
+      mockPrisma.booking.updateMany.mockResolvedValue({ count: 0 });
+      mockStatusLog.log = jest.fn();
+
+      const recovered = await service.recoverExpiredBooking('booking-999');
+
+      expect(recovered).toBe(false);
+      expect(mockStatusLog.log).not.toHaveBeenCalled();
     });
   });
 });
