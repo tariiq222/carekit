@@ -238,6 +238,7 @@ export const queryKeys = {
   /* ─── Clinic Settings ─── */
   clinicSettings: {
     bookingFlowOrder: () => ["clinic-settings", "booking-flow-order"] as const,
+    payment: () => ["clinic-settings", "payment"] as const,
   },
 
   /* ─── Widget ─── */

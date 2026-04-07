@@ -124,7 +124,7 @@ export function useBookingFlowOrderMutation() {
 
 export function usePaymentSettings() {
   return useQuery({
-    queryKey: ["clinic-settings", "payment"],
+    queryKey: queryKeys.clinicSettings.payment(),
     queryFn: fetchPaymentSettings,
     staleTime: 5 * 60 * 1000,
   })
@@ -135,7 +135,7 @@ export function usePaymentSettingsMutation() {
   return useMutation({
     mutationFn: updatePaymentSettings,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clinic-settings", "payment"] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.clinicSettings.payment() })
     },
   })
 }
@@ -163,7 +163,7 @@ export function useWidgetSettings() {
 export function useWidgetSettingsMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: Partial<WidgetSettings>) => updateBookingSettings(data as Record<string, unknown>),
+    mutationFn: (data: Partial<WidgetSettings>) => updateBookingSettings({ ...data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.bookingSettings.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.widget.branding() })
