@@ -29,8 +29,7 @@ interface BookingSettingsTabProps {
 /* ─── Component ─── */
 
 export function BookingSettingsTab({ form }: BookingSettingsTabProps) {
-  const { t, locale } = useLocale()
-  const isAr = locale === "ar"
+  const { t } = useLocale()
 
   const {
     bufferMinutes,
@@ -197,7 +196,7 @@ export function BookingSettingsTab({ form }: BookingSettingsTabProps) {
                               : "bg-muted/60 text-muted-foreground hover:bg-muted cursor-pointer",
                           )}
                         >
-                          {isAr ? p.labelAr : p.labelEn}
+                          {t(p.labelKey)}
                         </button>
                       )
                     })}

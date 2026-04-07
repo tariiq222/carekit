@@ -12,13 +12,13 @@ export type RecurringPattern =
   | "biweekly"
   | "monthly"
 
-export const RECURRING_PATTERNS: { value: RecurringPattern; labelAr: string; labelEn: string }[] = [
-  { value: "daily", labelAr: "يومياً", labelEn: "Daily" },
-  { value: "every_2_days", labelAr: "كل يومين", labelEn: "Every 2 days" },
-  { value: "every_3_days", labelAr: "كل 3 أيام", labelEn: "Every 3 days" },
-  { value: "weekly", labelAr: "أسبوعياً", labelEn: "Weekly" },
-  { value: "biweekly", labelAr: "كل أسبوعين", labelEn: "Biweekly" },
-  { value: "monthly", labelAr: "شهرياً", labelEn: "Monthly" },
+export const RECURRING_PATTERNS: { value: RecurringPattern; labelKey: string }[] = [
+  { value: "daily", labelKey: "settings.recurringPattern.daily" },
+  { value: "every_2_days", labelKey: "settings.recurringPattern.every_2_days" },
+  { value: "every_3_days", labelKey: "settings.recurringPattern.every_3_days" },
+  { value: "weekly", labelKey: "settings.recurringPattern.weekly" },
+  { value: "biweekly", labelKey: "settings.recurringPattern.biweekly" },
+  { value: "monthly", labelKey: "settings.recurringPattern.monthly" },
 ]
 
 export interface BookingSettings {
@@ -36,6 +36,8 @@ export interface BookingSettings {
   allowWalkIn: boolean
   walkInPaymentRequired: boolean
   allowRecurring: boolean
+  maxRecurrences: number
+  allowedRecurringPatterns: string[]
   waitlistEnabled: boolean
   waitlistMaxPerSlot: number
   waitlistAutoNotify: boolean

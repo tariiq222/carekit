@@ -9,15 +9,17 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
 import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
+import { RECURRING_PATTERNS } from "@/lib/api/booking-settings"
 import { useBookingSettings, useBookingSettingsMutation, useBookingFlowOrder, useBookingFlowOrderMutation } from "@/hooks/use-clinic-settings"
 
 type TabId = "policies" | "walkin" | "waitlist" | "recurring" | "floworder"
 
 /* ─── Sub-components ─── */
-function NumberRow({ label, desc, value, onChange, unit }: {
-  label: string; desc: string; value: string; onChange: (v: string) => void; unit: string
+function NumberRow({ label, desc, value, onChange, unit, min = 0 }: {
+  label: string; desc: string; value: string; onChange: (v: string) => void; unit: string; min?: number
 }) {
   return (
     <div className="flex items-center justify-between py-4 gap-4">
@@ -26,7 +28,7 @@ function NumberRow({ label, desc, value, onChange, unit }: {
         <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <Input type="number" value={value} onChange={(e) => onChange(e.target.value)} className="w-20 tabular-nums" min={0} />
+        <Input type="number" value={value} onChange={(e) => onChange(e.target.value)} className="w-20 tabular-nums" min={min} />
         <span className="text-xs text-muted-foreground w-6">{unit}</span>
       </div>
     </div>
@@ -75,6 +77,9 @@ export function BookingTab({ t }: Props) {
 
   // Recurring
   const [allowRecurring, setAllowRecurring] = useState(false)
+  const [maxRecurrences, setMaxRecurrences] = useState("12")
+  const [allowedPatterns, setAllowedPatterns] = useState<string[]>(["weekly", "biweekly"])
+  const [adminCanBookOutsideHours, setAdminCanBookOutsideHours] = useState(false)
 
   // Flow order
   const [flowOrderVal, setFlowOrderVal] = useState<BookingFlowOrder>("service_first")
@@ -92,6 +97,9 @@ export function BookingTab({ t }: Props) {
       setWaitlistMaxPerSlot(String(settings.waitlistMaxPerSlot))
       setWaitlistAutoNotify(settings.waitlistAutoNotify)
       setAllowRecurring(settings.allowRecurring)
+      setMaxRecurrences(String(settings.maxRecurrences ?? 12))
+      setAllowedPatterns(settings.allowedRecurringPatterns ?? ["weekly", "biweekly"])
+      setAdminCanBookOutsideHours(settings.adminCanBookOutsideHours ?? false)
     }
   }, [settings])
 
@@ -138,7 +146,7 @@ export function BookingTab({ t }: Props) {
               {t("settings.bookingPolicies")}
             </p>
           </div>
-          <div className="flex-1 p-2 space-y-1">
+          <div role="tablist" className="flex-1 p-2 space-y-1">
             {tabs.map((tab) => (
               <div
                 key={tab.id}
@@ -171,7 +179,7 @@ export function BookingTab({ t }: Props) {
         </div>
 
         {/* ── Content Panel ── */}
-        <div className="flex-1 p-6">
+        <div role="tabpanel" className="flex-1 p-6">
           {activeTab === "policies" && (
             <div className="space-y-0 max-w-lg">
               <NumberRow label={t("settings.minBookingLead")} desc={t("settings.minBookingLeadDesc")} value={leadMinutes} onChange={setLeadMinutes} unit="min" />
@@ -181,12 +189,17 @@ export function BookingTab({ t }: Props) {
               <NumberRow label={t("settings.bufferMinutes")} desc={t("settings.bufferMinutesDesc")} value={bufferMin} onChange={setBufferMin} unit="min" />
               <Separator />
               <NumberRow label={t("settings.maxAdvanceDays")} desc={t("settings.maxAdvanceDaysDesc")} value={maxAdvanceDays} onChange={setMaxAdvanceDays} unit="days" />
+              <Separator />
+              <div className="py-4">
+                <SwitchRow label={t("settings.adminCanBookOutsideHours")} desc={t("settings.adminCanBookOutsideHoursDesc")} checked={adminCanBookOutsideHours} onChange={setAdminCanBookOutsideHours} />
+              </div>
               <div className="flex justify-end pt-5">
                 <Button size="sm" disabled={isSaving} onClick={() => handleSettingsSave({
                   minBookingLeadMinutes: Number(leadMinutes) || 0,
-                  paymentTimeoutMinutes: Number(paymentTimeout) || 60,
+                  paymentTimeoutMinutes: Math.max(5, Number(paymentTimeout) || 60),
                   bufferMinutes: Number(bufferMin) || 0,
                   maxAdvanceBookingDays: Number(maxAdvanceDays) || 60,
+                  adminCanBookOutsideHours,
                 })}>
                   {t("settings.save")}
                 </Button>
@@ -245,9 +258,41 @@ export function BookingTab({ t }: Props) {
           {activeTab === "recurring" && (
             <div className="space-y-4 max-w-lg">
               <SwitchRow label={t("settings.allowRecurring")} desc={t("settings.allowRecurringDesc")} checked={allowRecurring} onChange={setAllowRecurring} />
+              {allowRecurring && (
+                <>
+                  <Separator />
+                  <NumberRow label={t("settings.maxRecurrences")} desc={t("settings.maxRecurrencesDesc")} value={maxRecurrences} onChange={setMaxRecurrences} unit="x" min={1} />
+                  <Separator />
+                  <div className="py-2">
+                    <p className="text-sm font-medium text-foreground mb-1">{t("settings.allowedRecurringPatterns")}</p>
+                    <p className="text-xs text-muted-foreground mb-3">{t("settings.allowedRecurringPatternsDesc")}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {RECURRING_PATTERNS.map((p) => (
+                        <label key={p.value} className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={allowedPatterns.includes(p.value)}
+                            onCheckedChange={(checked) => {
+                              setAllowedPatterns(prev =>
+                                checked
+                                  ? [...prev, p.value]
+                                  : prev.filter(v => v !== p.value)
+                              )
+                            }}
+                          />
+                          <span className="text-sm">{t(p.labelKey)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
               <Separator />
               <div className="flex justify-end">
-                <Button size="sm" disabled={isSaving} onClick={() => handleSettingsSave({ allowRecurring })}>
+                <Button size="sm" disabled={isSaving} onClick={() => handleSettingsSave({
+                  allowRecurring,
+                  maxRecurrences: Number(maxRecurrences) || 12,
+                  allowedRecurringPatterns: allowedPatterns,
+                })}>
                   {t("settings.save")}
                 </Button>
               </div>
