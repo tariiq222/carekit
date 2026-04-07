@@ -104,14 +104,25 @@ export function SettingsPaymentTab() {
   const handleSaveBank = () => {
     const first = bankAccounts[0]
     const firstName = first ? (SAUDI_BANKS.find((b) => b.id === first.bankId)?.nameEn ?? "") : ""
+    // Sanitize masked values — IBAN and holder are in SENSITIVE_KEYS and return as "***"
+    const cleanedAccounts = bankAccounts.map((a) => ({
+      ...a,
+      iban: a.iban === "***" ? "" : a.iban,
+      holderName: a.holderName === "***" ? "" : a.holderName,
+    }))
+    const configs: { key: string; value: string; type?: "string" | "boolean" | "number" | "json" }[] = [
+      { key: "bank_transfer_enabled", value: String(bankEnabled), type: "boolean" },
+      { key: "bank_accounts", value: serializeBankAccounts(cleanedAccounts), type: "json" },
+      { key: "bank_name", value: firstName },
+    ]
+    if (first?.iban && first.iban !== "***") {
+      configs.push({ key: "bank_iban", value: first.iban })
+    }
+    if (first?.holderName && first.holderName !== "***") {
+      configs.push({ key: "bank_account_holder", value: first.holderName })
+    }
     updateConfig.mutate(
-      { configs: [
-        { key: "bank_transfer_enabled", value: String(bankEnabled), type: "boolean" as const },
-        { key: "bank_accounts", value: serializeBankAccounts(bankAccounts), type: "json" as const },
-        { key: "bank_name", value: firstName },
-        { key: "bank_iban", value: first?.iban ?? "" },
-        { key: "bank_account_holder", value: first?.holderName ?? "" },
-      ]},
+      { configs },
       { onSuccess: () => toast.success(t("settings.saved")), onError: () => toast.error(t("settings.error")) }
     )
   }
