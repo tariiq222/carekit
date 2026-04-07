@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { ColorSwatchInput } from "@/components/features/shared/color-swatch-input"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
+import { ColorSwatchInput } from "@/components/features/shared/color-swatch-input"
 import { useBranding } from "@/components/providers/branding-provider"
 import { isValidHex } from "@/lib/color-utils"
 import type { WhiteLabelConfigMap } from "@/lib/types/whitelabel"
@@ -18,7 +19,11 @@ interface Props {
   t: (key: string) => string
 }
 
+type TabId = "identity" | "colors"
+
 export function BrandingTab({ configMap, onSave, isPending, t }: Props) {
+  const [activeTab, setActiveTab] = useState<TabId>("identity")
+
   const [appName, setAppName] = useState("")
   const [primaryColor, setPrimaryColor] = useState("")
   const [accentColor, setAccentColor] = useState("")
@@ -38,14 +43,10 @@ export function BrandingTab({ configMap, onSave, isPending, t }: Props) {
     setFontFamily(configMap.font_family ?? "")
   }, [configMap])
 
-  /* Live preview on color change */
   const updatePreview = useCallback(
     (primary: string, accent: string) => {
       if (isValidHex(primary)) {
-        preview({
-          primary,
-          accent: isValidHex(accent) ? accent : primary,
-        })
+        preview({ primary, accent: isValidHex(accent) ? accent : primary })
       }
     },
     [preview],
@@ -61,7 +62,6 @@ export function BrandingTab({ configMap, onSave, isPending, t }: Props) {
     updatePreview(primaryColor, value)
   }
 
-  /* Revert preview on unmount */
   useEffect(() => clearPreview, [clearPreview])
 
   const handleSave = () => {
@@ -73,114 +73,152 @@ export function BrandingTab({ configMap, onSave, isPending, t }: Props) {
       { key: "favicon_url", value: faviconUrl },
       { key: "font_family", value: fontFamily },
     ])
-    /* Persist to branding provider */
     if (isValidHex(primaryColor)) {
-      apply({
-        primary: primaryColor,
-        accent: isValidHex(accentColor) ? accentColor : primaryColor,
-      })
+      apply({ primary: primaryColor, accent: isValidHex(accentColor) ? accentColor : primaryColor })
     }
   }
 
+  const tabs: { id: TabId; label: string; desc: string }[] = [
+    { id: "identity", label: t("settings.tabs.branding"), desc: t("settings.appName") },
+    { id: "colors", label: t("settings.primaryColor"), desc: t("settings.secondaryColor") },
+  ]
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("settings.tabs.branding")}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>{t("settings.appName")}</Label>
-            <Input value={appName} onChange={(e) => setAppName(e.target.value)} />
+    <Card className="overflow-hidden p-0">
+      <div className="flex min-h-[420px]">
+        {/* ── Sidebar ── */}
+        <div className="w-64 shrink-0 border-e border-border bg-surface-muted flex flex-col">
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              {t("settings.tabs.branding")}
+            </p>
           </div>
-          <div className="space-y-2">
-            <Label>{t("settings.fontFamily")}</Label>
-            <Input value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} placeholder="IBM Plex Sans Arabic" />
-          </div>
-
-          {/* Primary Color */}
-          <div className="space-y-2">
-            <Label>{t("settings.primaryColor")}</Label>
-            <div className="flex items-center gap-2">
-              <ColorSwatchInput
-                value={isValidHex(primaryColor) ? primaryColor : null}
-                onChange={handlePrimaryChange}
-                defaultColor="#354FD8"
-              />
-              <Input
-                value={primaryColor}
-                onChange={(e) => handlePrimaryChange(e.target.value)}
-                placeholder="#354FD8"
-                className="font-mono tabular-nums"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          {/* Accent Color */}
-          <div className="space-y-2">
-            <Label>{t("settings.secondaryColor")}</Label>
-            <div className="flex items-center gap-2">
-              <ColorSwatchInput
-                value={isValidHex(accentColor) ? accentColor : null}
-                onChange={handleAccentChange}
-                defaultColor="#82CC17"
-              />
-              <Input
-                value={accentColor}
-                onChange={(e) => handleAccentChange(e.target.value)}
-                placeholder="#82CC17"
-                className="font-mono tabular-nums"
-                dir="ltr"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("settings.logoUrl")}</Label>
-            <Input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." />
-          </div>
-          <div className="space-y-2">
-            <Label>{t("settings.faviconUrl")}</Label>
-            <Input value={faviconUrl} onChange={(e) => setFaviconUrl(e.target.value)} placeholder="https://..." />
+          <div role="tablist" className="flex-1 p-3 space-y-1.5">
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                tabIndex={0}
+                onClick={() => setActiveTab(tab.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActiveTab(tab.id) }}
+                className={cn(
+                  "w-full rounded-lg px-3 py-2.5 cursor-pointer select-none transition-all",
+                  activeTab === tab.id
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-background/70 hover:text-foreground"
+                )}
+              >
+                <p className="text-sm font-medium truncate leading-tight">{tab.label}</p>
+                {activeTab === tab.id && (
+                  <p className="text-xs mt-0.5 line-clamp-2 leading-tight opacity-80">{tab.desc}</p>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Live Preview Swatch */}
-        {isValidHex(primaryColor) && (
-          <>
-            <Separator />
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">
-                {t("settings.preview") ?? "Preview"}
-              </Label>
-              <div className="flex items-center gap-3">
-                <div
-                  className="size-10 rounded-lg shadow-sm"
-                  style={{ background: primaryColor }}
-                />
-                {isValidHex(accentColor) && (
-                  <div
-                    className="size-10 rounded-lg shadow-sm"
-                    style={{ background: accentColor }}
-                  />
-                )}
-                <span className="text-sm text-muted-foreground">
-                  {primaryColor}
-                  {isValidHex(accentColor) ? ` / ${accentColor}` : ""}
-                </span>
+        {/* ── Content ── */}
+        <div className="flex-1 p-5 overflow-y-auto bg-surface-muted/50 flex flex-col">
+          {activeTab === "identity" && (
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.appName")}</Label>
+                    <Input value={appName} onChange={(e) => setAppName(e.target.value)} />
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.fontFamily")}</Label>
+                    <Input value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} placeholder="IBM Plex Sans Arabic" />
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.logoUrl")}</Label>
+                    <Input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." />
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.faviconUrl")}</Label>
+                    <Input value={faviconUrl} onChange={(e) => setFaviconUrl(e.target.value)} placeholder="https://..." />
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="flex justify-end mt-auto pt-2">
+                <Button size="sm" disabled={isPending} onClick={handleSave}>
+                  {t("settings.save")}
+                </Button>
               </div>
             </div>
-          </>
-        )}
+          )}
 
-        <Separator />
-        <div className="flex justify-end">
-          <Button size="sm" disabled={isPending} onClick={handleSave}>
-            {t("settings.save")}
-          </Button>
+          {activeTab === "colors" && (
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.primaryColor")}</Label>
+                    <div className="flex items-center gap-2">
+                      <ColorSwatchInput
+                        value={isValidHex(primaryColor) ? primaryColor : null}
+                        onChange={handlePrimaryChange}
+                        defaultColor="#354FD8"
+                      />
+                      <Input value={primaryColor} onChange={(e) => handlePrimaryChange(e.target.value)}
+                        placeholder="#354FD8" className="font-mono tabular-nums" dir="ltr" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.secondaryColor")}</Label>
+                    <div className="flex items-center gap-2">
+                      <ColorSwatchInput
+                        value={isValidHex(accentColor) ? accentColor : null}
+                        onChange={handleAccentChange}
+                        defaultColor="#82CC17"
+                      />
+                      <Input value={accentColor} onChange={(e) => handleAccentChange(e.target.value)}
+                        placeholder="#82CC17" className="font-mono tabular-nums" dir="ltr" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Live Preview Swatch */}
+              {isValidHex(primaryColor) && (
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="pt-3 pb-3">
+                    <Separator className="mb-3" />
+                    <Label className="text-xs text-muted-foreground block mb-2">
+                      {t("settings.preview") ?? "Preview"}
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-lg shadow-sm" style={{ background: primaryColor }} />
+                      {isValidHex(accentColor) && (
+                        <div className="size-10 rounded-lg shadow-sm" style={{ background: accentColor }} />
+                      )}
+                      <span className="text-sm text-muted-foreground">
+                        {primaryColor}{isValidHex(accentColor) ? ` / ${accentColor}` : ""}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="flex justify-end mt-auto pt-2">
+                <Button size="sm" disabled={isPending} onClick={handleSave}>
+                  {t("settings.save")}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-      </CardContent>
+      </div>
     </Card>
   )
 }

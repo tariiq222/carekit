@@ -2,17 +2,10 @@
 
 /**
  * Widget Tab — Booking widget configuration & embed instructions
- *
- * Layout (top → bottom):
- *  1. Widget Behaviour Settings  ← DB-persisted, affects the live widget
- *  2. Embed Configurator         ← generates URL / snippet for copy-paste
- *  3. Generated URL + Preview
- *  4. Embed Snippet (script tag)
- *  5. URL Params reference
  */
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,8 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   LinkSquare01Icon,
-  CodeSquareIcon,
-  Settings01Icon,
   InformationCircleIcon,
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
@@ -37,16 +28,16 @@ interface Props {
   t: (key: string) => string
 }
 
+type TabId = "behaviour" | "embed"
+
 /* ─── URL builder ─── */
 
 const DASHBOARD_ORIGIN =
   typeof window !== "undefined" ? window.location.origin : "https://dashboard.carekit.app"
 
-function buildWidgetUrl(opts: {
-  origin: string
-}) {
+function buildWidgetUrl(opts: { origin: string }) {
   const url = new URL(`${DASHBOARD_ORIGIN}/booking`)
-  if (opts.origin)       url.searchParams.set("origin", opts.origin)
+  if (opts.origin) url.searchParams.set("origin", opts.origin)
   return url.toString()
 }
 
@@ -59,17 +50,16 @@ function buildScriptSnippet(_origin: string) {
 <button onclick="CareKitWidget.open()">احجز الآن</button>`
 }
 
-/* ─── 1. Widget Behaviour Settings ─── */
+/* ─── Behaviour Panel ─── */
 
-function WidgetBehaviourCard({ t }: { t: (key: string) => string }) {
+function BehaviourPanel({ t }: { t: (key: string) => string }) {
   const { data, isLoading } = useWidgetSettings()
   const mutation = useWidgetSettingsMutation()
 
-  const [showPrice,       setShowPrice]       = useState(() => data?.widgetShowPrice ?? true)
+  const [showPrice, setShowPrice] = useState(() => data?.widgetShowPrice ?? true)
   const [anyPractitioner, setAnyPractitioner] = useState(() => data?.widgetAnyPractitioner ?? false)
-  const [redirectUrl,     setRedirectUrl]     = useState(() => data?.widgetRedirectUrl ?? "")
+  const [redirectUrl, setRedirectUrl] = useState(() => data?.widgetRedirectUrl ?? "")
 
-  // Sync local state when server data loads for the first time
   const dataKey = data ? JSON.stringify(data) : null
   useEffect(() => {
     if (!data) return
@@ -79,189 +69,166 @@ function WidgetBehaviourCard({ t }: { t: (key: string) => string }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataKey])
 
-  function handleSave() {
-    mutation.mutate(
-      {
-        widgetShowPrice:          showPrice,
-        widgetAnyPractitioner:    anyPractitioner,
-        widgetRedirectUrl:        redirectUrl.trim() || undefined,
-      },
-      {
-        onSuccess: () => toast.success(t("settings.saved")),
-        onError:   (err: Error) => toast.error(err.message),
-      },
-    )
+  if (isLoading) {
+    return <Skeleton className="h-48 w-full" />
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <HugeiconsIcon icon={Settings01Icon} size={16} className="text-primary" />
-          {t("settings.widget.behaviourTitle")}
-        </CardTitle>
-        <CardDescription className="text-sm">
-          {t("settings.widget.behaviourDesc")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isLoading ? (
-          <Skeleton className="h-48 w-full" />
-        ) : (
-          <>
-            {/* Show Price */}
-            <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
-              <div>
-                <p className="text-sm font-medium">{t("settings.widget.showPrice")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.widget.showPriceDesc")}</p>
-              </div>
-              <Switch checked={showPrice} onCheckedChange={setShowPrice} />
+    <div className="flex flex-col gap-3 h-full">
+      <Card className="shadow-sm bg-surface">
+        <CardContent className="pt-1 pb-1 divide-y divide-border">
+          <div className="flex items-center justify-between py-3 gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground">{t("settings.widget.showPrice")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("settings.widget.showPriceDesc")}</p>
             </div>
-
-            {/* Any Practitioner */}
-            <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
-              <div>
-                <p className="text-sm font-medium">{t("settings.widget.anyPractitioner")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.widget.anyPractitionerDesc")}</p>
-              </div>
-              <Switch checked={anyPractitioner} onCheckedChange={setAnyPractitioner} />
+            <Switch checked={showPrice} onCheckedChange={setShowPrice} />
+          </div>
+          <div className="flex items-center justify-between py-3 gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground">{t("settings.widget.anyPractitioner")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("settings.widget.anyPractitionerDesc")}</p>
             </div>
-
-
-            {/* Redirect URL */}
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium">
-                {t("settings.widget.redirectUrl")}
-              </Label>
-              <Input
-                dir="ltr"
-                placeholder="https://yourclinic.com/thank-you"
-                value={redirectUrl}
-                onChange={(e) => setRedirectUrl(e.target.value)}
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("settings.widget.redirectUrlDesc")}
-              </p>
-            </div>
-
-            <div className="flex justify-end pt-1">
-              <Button size="sm" onClick={handleSave} disabled={mutation.isPending}>
-                {t("settings.save")}
-              </Button>
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+            <Switch checked={anyPractitioner} onCheckedChange={setAnyPractitioner} />
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="shadow-sm bg-surface">
+        <CardContent className="space-y-2 pt-3 pb-3">
+          <Label>{t("settings.widget.redirectUrl")}</Label>
+          <Input dir="ltr" placeholder="https://yourclinic.com/thank-you" value={redirectUrl}
+            onChange={(e) => setRedirectUrl(e.target.value)} className="font-mono text-sm" />
+          <p className="text-xs text-muted-foreground">{t("settings.widget.redirectUrlDesc")}</p>
+        </CardContent>
+      </Card>
+      <div className="flex justify-end mt-auto pt-2">
+        <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate(
+          { widgetShowPrice: showPrice, widgetAnyPractitioner: anyPractitioner, widgetRedirectUrl: redirectUrl.trim() || undefined },
+          { onSuccess: () => toast.success(t("settings.saved")), onError: (err: Error) => toast.error(err.message) }
+        )}>
+          {t("settings.save")}
+        </Button>
+      </div>
+    </div>
   )
 }
 
-/* ─── 2. Embed Card (origin + URL + snippet — unified) ─── */
+/* ─── Embed Panel ─── */
 
-function EmbedCard({ t }: { t: (key: string) => string }) {
+function EmbedPanel({ t }: { t: (key: string) => string }) {
   const [embedOrigin, setEmbedOrigin] = useState("")
-
   const widgetUrl = buildWidgetUrl({ origin: embedOrigin })
-  const snippet   = buildScriptSnippet(embedOrigin)
+  const snippet = buildScriptSnippet(embedOrigin)
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <HugeiconsIcon icon={CodeSquareIcon} size={16} className="text-primary" />
-          {t("settings.widget.embedCode")}
-        </CardTitle>
-        <CardDescription className="text-sm">
-          {t("settings.widget.embedCodeDesc")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
-
-        {/* Origin */}
-        <div className="space-y-1.5">
-          <Label className="text-sm font-medium">
+    <div className="flex flex-col gap-3 h-full">
+      <Card className="shadow-sm bg-surface">
+        <CardContent className="space-y-2 pt-3 pb-3">
+          <Label>
             {t("settings.widget.origin")}
             <span className="text-error ms-1">*</span>
           </Label>
-          <Input
-            dir="ltr"
-            placeholder="https://yourclinic.com"
-            value={embedOrigin}
-            onChange={(e) => setEmbedOrigin(e.target.value)}
-            className="font-mono text-sm"
-          />
+          <Input dir="ltr" placeholder="https://yourclinic.com" value={embedOrigin}
+            onChange={(e) => setEmbedOrigin(e.target.value)} className="font-mono text-sm" />
           <p className="text-xs text-muted-foreground">{t("settings.widget.originHint")}</p>
-        </div>
+        </CardContent>
+      </Card>
 
-        <Separator />
-
-        {/* Widget URL */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium">{t("settings.widget.widgetUrl")}</p>
-          <div className="flex items-center gap-2">
-            <code
-              dir="ltr"
-              className="flex-1 text-xs bg-surface-muted rounded-md px-3 py-2.5 font-mono text-muted-foreground overflow-x-auto whitespace-nowrap"
-            >
-              {widgetUrl}
-            </code>
-            <CopyButton text={widgetUrl} label={t("settings.widget.copy")} />
+      <Card className="shadow-sm bg-surface">
+        <CardContent className="pt-3 pb-3 space-y-3">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">{t("settings.widget.widgetUrl")}</p>
+            <div className="flex items-center gap-2">
+              <code dir="ltr" className="flex-1 text-xs bg-surface-muted rounded-md px-3 py-2.5 font-mono text-muted-foreground overflow-x-auto whitespace-nowrap">
+                {widgetUrl}
+              </code>
+              <CopyButton text={widgetUrl} label={t("settings.widget.copy")} />
+            </div>
+            <Button variant="ghost" size="sm" className="gap-1.5 text-primary px-0"
+              onClick={() => window.open(widgetUrl, "_blank")}>
+              <HugeiconsIcon icon={LinkSquare01Icon} size={14} />
+              {t("settings.widget.preview")}
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-primary px-0"
-            onClick={() => window.open(widgetUrl, "_blank")}
-          >
-            <HugeiconsIcon icon={LinkSquare01Icon} size={14} />
-            {t("settings.widget.preview")}
-          </Button>
-        </div>
 
-        <Separator />
+          <Separator />
 
-        {/* Embed Snippet */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium">{t("settings.widget.embedSnippet")}</p>
-          <div className="relative">
-            <pre
-              dir="ltr"
-              className="text-xs bg-surface-muted rounded-lg px-4 py-4 font-mono text-foreground overflow-x-auto whitespace-pre leading-relaxed"
-            >
-              {snippet}
-            </pre>
-            <div className="absolute top-2 end-2">
-              <CopyButton text={snippet} label={t("settings.widget.copy")} />
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">{t("settings.widget.embedSnippet")}</p>
+            <div className="relative">
+              <pre dir="ltr" className="text-xs bg-surface-muted rounded-lg px-4 py-4 font-mono text-foreground overflow-x-auto whitespace-pre leading-relaxed">
+                {snippet}
+              </pre>
+              <div className="absolute top-2 end-2">
+                <CopyButton text={snippet} label={t("settings.widget.copy")} />
+              </div>
             </div>
           </div>
-        </div>
-
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
 /* ─── Main ─── */
 
 export function WidgetTab({ t }: Props) {
-  return (
-    <div className="space-y-6">
+  const [activeTab, setActiveTab] = useState<TabId>("behaviour")
 
-      {/* Info banner — full width */}
+  const tabs: { id: TabId; label: string; desc: string }[] = [
+    { id: "behaviour", label: t("settings.widget.behaviourTitle"), desc: t("settings.widget.behaviourDesc") },
+    { id: "embed", label: t("settings.widget.embedCode"), desc: t("settings.widget.embedCodeDesc") },
+  ]
+
+  return (
+    <div className="space-y-4">
+      {/* Info banner */}
       <div className="flex items-start gap-3 bg-info/5 border border-info/20 rounded-lg px-4 py-3">
         <HugeiconsIcon icon={InformationCircleIcon} size={18} className="text-info mt-0.5 shrink-0" />
         <p className="text-sm text-foreground">{t("settings.widget.info")}</p>
       </div>
 
-      {/* 2-column grid — matches BookingTab layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <WidgetBehaviourCard t={t} />
-        <EmbedCard t={t} />
-      </div>
+      <Card className="overflow-hidden p-0">
+        <div className="flex min-h-[420px]">
+          {/* ── Sidebar ── */}
+          <div className="w-64 shrink-0 border-e border-border bg-surface-muted flex flex-col">
+            <div className="px-4 py-3 border-b border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {t("settings.tabs.widget")}
+              </p>
+            </div>
+            <div role="tablist" className="flex-1 p-3 space-y-1.5">
+              {tabs.map((tab) => (
+                <div
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  tabIndex={0}
+                  onClick={() => setActiveTab(tab.id)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActiveTab(tab.id) }}
+                  className={cn(
+                    "w-full rounded-lg px-3 py-2.5 cursor-pointer select-none transition-all",
+                    activeTab === tab.id
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-background/70 hover:text-foreground"
+                  )}
+                >
+                  <p className="text-sm font-medium truncate leading-tight">{tab.label}</p>
+                  {activeTab === tab.id && (
+                    <p className="text-xs mt-0.5 line-clamp-2 leading-tight opacity-80">{tab.desc}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
 
-
-
+          {/* ── Content ── */}
+          <div className="flex-1 p-5 overflow-y-auto bg-surface-muted/50 flex flex-col">
+            {activeTab === "behaviour" && <BehaviourPanel t={t} />}
+            {activeTab === "embed" && <EmbedPanel t={t} />}
+          </div>
+        </div>
+      </Card>
     </div>
   )
 }

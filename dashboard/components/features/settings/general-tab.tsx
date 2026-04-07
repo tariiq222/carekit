@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import {
   Select,
   SelectContent,
@@ -13,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 import type { WhiteLabelConfigMap } from "@/lib/types/whitelabel"
 
 interface Props {
@@ -21,6 +21,8 @@ interface Props {
   isPending: boolean
   t: (key: string) => string
 }
+
+type TabId = "contact" | "regional"
 
 const WEEK_START_OPTIONS = [
   { value: "sunday", label: "الأحد (Sunday)" },
@@ -54,6 +56,8 @@ const TIMEZONE_OPTIONS = [
 ]
 
 export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
+  const [activeTab, setActiveTab] = useState<TabId>("contact")
+
   const [clinicEmail, setClinicEmail] = useState("")
   const [clinicPhone, setClinicPhone] = useState("")
   const [clinicAddress, setClinicAddress] = useState("")
@@ -73,123 +77,144 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
     setClinicTimezone(configMap.timezone ?? "Asia/Riyadh")
   }, [configMap])
 
+  const tabs: { id: TabId; label: string; desc: string }[] = [
+    { id: "contact", label: t("settings.tabs.general"), desc: t("settings.clinicEmail") },
+    { id: "regional", label: t("settings.regionalSettings"), desc: t("settings.weekStartDay") },
+  ]
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("settings.tabs.general")}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={t("settings.clinicEmail")} value={clinicEmail} onChange={setClinicEmail} type="email" />
-          <Field label={t("settings.clinicPhone")} value={clinicPhone} onChange={setClinicPhone} />
-          <Field label={t("settings.clinicAddress")} value={clinicAddress} onChange={setClinicAddress} />
-        </div>
-
-        <Separator />
-
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-foreground">
-            {t("settings.regionalSettings")}
-          </h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField
-              label={t("settings.weekStartDay")}
-              value={weekStartDay}
-              onChange={setWeekStartDay}
-              options={WEEK_START_OPTIONS}
-            />
-            <SelectField
-              label={t("settings.dateFormat")}
-              value={dateFormat}
-              onChange={setDateFormat}
-              options={DATE_FORMAT_OPTIONS}
-            />
-            <SelectField
-              label={t("settings.timeFormat")}
-              value={timeFormat}
-              onChange={setTimeFormat}
-              options={TIME_FORMAT_OPTIONS}
-            />
-            <SelectField
-              label={t("settings.clinicTimezone")}
-              value={clinicTimezone}
-              onChange={setClinicTimezone}
-              options={TIMEZONE_OPTIONS}
-            />
+    <Card className="overflow-hidden p-0">
+      <div className="flex min-h-[420px]">
+        {/* ── Sidebar ── */}
+        <div className="w-64 shrink-0 border-e border-border bg-surface-muted flex flex-col">
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              {t("settings.tabs.general")}
+            </p>
+          </div>
+          <div role="tablist" className="flex-1 p-3 space-y-1.5">
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                tabIndex={0}
+                onClick={() => setActiveTab(tab.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActiveTab(tab.id) }}
+                className={cn(
+                  "w-full rounded-lg px-3 py-2.5 cursor-pointer select-none transition-all",
+                  activeTab === tab.id
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-background/70 hover:text-foreground"
+                )}
+              >
+                <p className="text-sm font-medium truncate leading-tight">{tab.label}</p>
+                {activeTab === tab.id && (
+                  <p className="text-xs mt-0.5 line-clamp-2 leading-tight opacity-80">{tab.desc}</p>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
-        <Separator />
+        {/* ── Content ── */}
+        <div className="flex-1 p-5 overflow-y-auto bg-surface-muted/50 flex flex-col">
+          {activeTab === "contact" && (
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.clinicEmail")}</Label>
+                    <Input type="email" value={clinicEmail} onChange={(e) => setClinicEmail(e.target.value)} />
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.clinicPhone")}</Label>
+                    <Input value={clinicPhone} onChange={(e) => setClinicPhone(e.target.value)} />
+                  </CardContent>
+                </Card>
+              </div>
+              <Card className="shadow-sm bg-surface">
+                <CardContent className="space-y-2 pt-3 pb-3">
+                  <Label>{t("settings.clinicAddress")}</Label>
+                  <Input value={clinicAddress} onChange={(e) => setClinicAddress(e.target.value)} />
+                </CardContent>
+              </Card>
+              <div className="flex justify-end mt-auto pt-2">
+                <Button size="sm" disabled={isPending} onClick={() => onSave([
+                  { key: "contact_email", value: clinicEmail },
+                  { key: "contact_phone", value: clinicPhone },
+                  { key: "address", value: clinicAddress },
+                ])}>
+                  {t("settings.save")}
+                </Button>
+              </div>
+            </div>
+          )}
 
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            disabled={isPending}
-            onClick={() =>
-              onSave([
-                { key: "contact_email", value: clinicEmail },
-                { key: "contact_phone", value: clinicPhone },
-                { key: "address", value: clinicAddress },
-                { key: "week_start_day", value: weekStartDay },
-                { key: "date_format", value: dateFormat },
-                { key: "time_format", value: timeFormat },
-                { key: "timezone", value: clinicTimezone },
-              ])
-            }
-          >
-            {t("settings.save")}
-          </Button>
+          {activeTab === "regional" && (
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.weekStartDay")}</Label>
+                    <Select value={weekStartDay} onValueChange={setWeekStartDay}>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {WEEK_START_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.dateFormat")}</Label>
+                    <Select value={dateFormat} onValueChange={setDateFormat}>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {DATE_FORMAT_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.timeFormat")}</Label>
+                    <Select value={timeFormat} onValueChange={setTimeFormat}>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {TIME_FORMAT_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.clinicTimezone")}</Label>
+                    <Select value={clinicTimezone} onValueChange={setClinicTimezone}>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {TIMEZONE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="flex justify-end mt-auto pt-2">
+                <Button size="sm" disabled={isPending} onClick={() => onSave([
+                  { key: "week_start_day", value: weekStartDay },
+                  { key: "date_format", value: dateFormat },
+                  { key: "time_format", value: timeFormat },
+                  { key: "timezone", value: clinicTimezone },
+                ])}>
+                  {t("settings.save")}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-      </CardContent>
+      </div>
     </Card>
-  )
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  type = "text",
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  type?: string
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
-    </div>
-  )
-}
-
-function SelectField({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  options: { value: string; label: string }[]
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
   )
 }
