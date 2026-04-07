@@ -60,6 +60,9 @@ export function EmailTemplateEditor({ template, onBack }: Props) {
           toast.success(t("settings.emailTemplates.saved"))
           onBack()
         },
+        onError: () => {
+          toast.error(t("settings.error"))
+        },
       },
     )
   }
@@ -69,7 +72,10 @@ export function EmailTemplateEditor({ template, onBack }: Props) {
     for (const v of variables) sampleContext[v] = `[${v}]`
     previewMut.mutate(
       { slug: template.slug, context: sampleContext, lang: locale as "ar" | "en" },
-      { onSuccess: (data) => setPreview(data) },
+      {
+        onSuccess: (data) => setPreview(data),
+        onError: () => toast.error(t("settings.error")),
+      },
     )
   }
 
