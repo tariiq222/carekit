@@ -84,7 +84,7 @@ function WidgetBehaviourCard({ t }: { t: (key: string) => string }) {
       {
         widgetShowPrice:          showPrice,
         widgetAnyPractitioner:    anyPractitioner,
-        widgetRedirectUrl:        redirectUrl.trim() || null,
+        widgetRedirectUrl:        redirectUrl.trim() || undefined,
       },
       {
         onSuccess: () => toast.success(t("settings.saved")),
