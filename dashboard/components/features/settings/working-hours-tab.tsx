@@ -16,8 +16,6 @@ import type { ClinicHour } from "@/lib/api/clinic"
 import {
   useClinicHours,
   useClinicHoursMutation,
-  useBookingSettings,
-  useBookingSettingsMutation,
 } from "@/hooks/use-clinic-settings"
 import { HolidaysSection } from "./holidays-section"
 import { useClinicConfig } from "@/hooks/use-clinic-config"
@@ -62,7 +60,6 @@ export function WorkingHoursTab({ t }: Props) {
   return (
     <div className="space-y-6">
       <WorkingHoursCard t={t} />
-      <AdminOverrideCard t={t} />
       <HolidaysSection t={t} />
     </div>
   )
@@ -216,64 +213,3 @@ function DayRow({
   )
 }
 
-/* ─── Admin Override Card ─── */
-
-function AdminOverrideCard({ t }: Props) {
-  const [enabled, setEnabled] = useState(false)
-
-  const { data: settings, isLoading } = useBookingSettings()
-  const mutation = useBookingSettingsMutation()
-
-  useEffect(() => {
-    if (settings) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEnabled(settings.adminCanBookOutsideHours === true)
-    }
-  }, [settings])
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-4 w-40" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-10 w-full" />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const handleToggle = (value: boolean) => {
-    setEnabled(value)
-    mutation.mutate(
-      { adminCanBookOutsideHours: value },
-      {
-        onSuccess: () => toast.success(t("settings.saved")),
-        onError: (err: Error) => toast.error(err.message),
-      },
-    )
-  }
-
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-foreground">
-              {t("settings.adminOutsideHours")}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {t("settings.adminOutsideHoursDesc")}
-            </p>
-          </div>
-          <Switch
-            checked={enabled}
-            onCheckedChange={handleToggle}
-            disabled={mutation.isPending}
-          />
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
