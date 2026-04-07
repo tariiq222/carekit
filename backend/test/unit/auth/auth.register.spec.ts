@@ -94,6 +94,31 @@ describe('AuthService — register', () => {
 
     await expect(ctx.service.register(registerDto)).rejects.toThrow();
   });
+
+  it('should return 409 ConflictException when DB throws P2002 on concurrent registration', async () => {
+    ctx.mockPrisma.user.findUnique.mockResolvedValue(null);
+    ctx.mockPrisma.role.findFirst.mockResolvedValue(null);
+
+    const p2002Error = new Error('Unique constraint failed on the fields: (`email`)') as Error & { code: string };
+    p2002Error.code = 'P2002';
+    Object.defineProperty(p2002Error, 'constructor', {
+      value: { name: 'PrismaClientKnownRequestError' },
+      writable: true,
+    });
+
+    ctx.mockPrisma.$transaction.mockRejectedValueOnce(p2002Error);
+
+    await expect(
+      ctx.service.register({
+        email: 'race@example.com',
+        password: 'Password1!',
+        firstName: 'Test',
+        lastName: 'User',
+      }),
+    ).rejects.toMatchObject({
+      response: { error: 'USER_EMAIL_EXISTS', statusCode: 409 },
+    });
+  });
 });
 
 describe('AuthService — validateUser', () => {
