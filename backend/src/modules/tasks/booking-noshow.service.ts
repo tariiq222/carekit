@@ -33,8 +33,9 @@ export class BookingNoShowService {
     const riyadhTodayStr = new Intl.DateTimeFormat('en-CA', {
       timeZone: clinicTz,
     }).format(now);
-    const todayStart = new Date(`${riyadhTodayStr}T00:00:00+03:00`);
-    const todayEnd = new Date(`${riyadhTodayStr}T23:59:59+03:00`);
+    const tzOffsetMs = this.getTimezoneOffsetMs(clinicTz, now);
+    const todayStart = new Date(new Date(`${riyadhTodayStr}T00:00:00Z`).getTime() - tzOffsetMs);
+    const todayEnd = new Date(new Date(`${riyadhTodayStr}T23:59:59Z`).getTime() - tzOffsetMs);
 
     // Guard: only 'confirmed' — checked_in, in_progress, and pending_cancellation are explicitly excluded
     const bookings = await this.prisma.booking.findMany({
@@ -57,7 +58,7 @@ export class BookingNoShowService {
       const dateStr = new Intl.DateTimeFormat('en-CA', {
         timeZone: clinicTz,
       }).format(b.date);
-      const bookingStart = new Date(`${dateStr}T${b.startTime}:00+03:00`);
+      const bookingStart = new Date(new Date(`${dateStr}T${b.startTime}:00Z`).getTime() - tzOffsetMs);
       const noShowDeadline = new Date(
         bookingStart.getTime() + settings.autoNoShowAfterMinutes * 60 * 1000,
       );
@@ -183,6 +184,16 @@ export class BookingNoShowService {
         })
         .catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
     }
+  }
+
+  /**
+   * Get the UTC offset in milliseconds for a given IANA timezone at a specific point in time.
+   * e.g. 'Asia/Riyadh' returns +10800000 (3 hours), 'Asia/Karachi' returns +18000000 (5 hours)
+   */
+  private getTimezoneOffsetMs(tz: string, referenceDate: Date): number {
+    const utcStr = referenceDate.toLocaleString('en-US', { timeZone: 'UTC' });
+    const tzStr = referenceDate.toLocaleString('en-US', { timeZone: tz });
+    return new Date(tzStr).getTime() - new Date(utcStr).getTime();
   }
 
   /**
