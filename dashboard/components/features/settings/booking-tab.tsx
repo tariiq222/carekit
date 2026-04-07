@@ -184,7 +184,7 @@ export function BookingTab({ t }: Props) {
                   <NumberRow label={t("settings.minBookingLead")} desc={t("settings.minBookingLeadDesc")} value={leadMinutes} onChange={setLeadMinutes} unit="min" />
                 </CardContent></Card>
                 <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
-                  <NumberRow label={t("settings.paymentTimeout")} desc={t("settings.paymentTimeoutDesc")} value={paymentTimeout} onChange={setPaymentTimeout} unit="min" />
+                  <NumberRow label={t("settings.paymentTimeout")} desc={t("settings.paymentTimeoutDesc")} value={paymentTimeout} onChange={setPaymentTimeout} unit="min" min={5} />
                 </CardContent></Card>
               </div>
               <div className="grid grid-cols-2 gap-3">

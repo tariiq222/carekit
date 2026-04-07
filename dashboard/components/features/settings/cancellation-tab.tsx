@@ -122,7 +122,7 @@ export function CancellationTab({ t }: Props) {
               {t("settings.cancellationPolicy")}
             </p>
           </div>
-          <div className="flex-1 p-3 space-y-1.5">
+          <div role="tablist" className="flex-1 p-3 space-y-1.5">
             {tabs.map((tab) => (
               <div
                 key={tab.id}
