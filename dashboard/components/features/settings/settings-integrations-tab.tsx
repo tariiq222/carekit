@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -221,39 +221,29 @@ export function SettingsIntegrationsTab() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4 max-w-md">
-                <div>
-                  <p className="text-sm font-semibold">{t("settings.zoom")}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("settings.zoomDesc")}</p>
+              <div className="flex flex-col gap-3 h-full">
+                <div className="grid grid-cols-2 gap-3">
+                  <Card className="shadow-sm bg-surface">
+                    <CardContent className="space-y-2 pt-3 pb-3">
+                      <Label>{t("settings.zoomClientId")}</Label>
+                      <Input value={zoomClientId} onChange={(e) => setZoomClientId(e.target.value)} dir="ltr" />
+                    </CardContent>
+                  </Card>
+                  <Card className="shadow-sm bg-surface">
+                    <CardContent className="space-y-2 pt-3 pb-3">
+                      <Label>{t("settings.zoomClientSecret")}</Label>
+                      <Input value={zoomClientSecret} onChange={(e) => setZoomClientSecret(e.target.value)} type="password"
+                        placeholder={zoomClientSecret === "***" ? "••••••••••••" : undefined} dir="ltr" />
+                    </CardContent>
+                  </Card>
+                  <Card className="shadow-sm bg-surface">
+                    <CardContent className="space-y-2 pt-3 pb-3">
+                      <Label>{t("settings.zoomAccountId")}</Label>
+                      <Input value={zoomAccountId} onChange={(e) => setZoomAccountId(e.target.value)} dir="ltr" />
+                    </CardContent>
+                  </Card>
                 </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>{t("settings.zoomClientId")}</Label>
-                  <Input
-                    value={zoomClientId}
-                    onChange={(e) => setZoomClientId(e.target.value)}
-                    dir="ltr"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("settings.zoomClientSecret")}</Label>
-                  <Input
-                    value={zoomClientSecret}
-                    onChange={(e) => setZoomClientSecret(e.target.value)}
-                    type="password"
-                    placeholder={zoomClientSecret === "***" ? "••••••••••••" : undefined}
-                    dir="ltr"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("settings.zoomAccountId")}</Label>
-                  <Input
-                    value={zoomAccountId}
-                    onChange={(e) => setZoomAccountId(e.target.value)}
-                    dir="ltr"
-                  />
-                </div>
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-end mt-auto pt-2">
                   <Button size="sm" disabled={updateConfig.isPending} onClick={handleSaveZoom}>
                     {t("settings.save")}
                   </Button>
@@ -264,42 +254,29 @@ export function SettingsIntegrationsTab() {
 
           {/* Email Panel */}
           {activeTab === "email" && (
-            <div className="space-y-4 max-w-md">
-              <div>
-                <p className="text-sm font-semibold">{t("settings.email")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.emailDesc")}</p>
+            <div className="flex flex-col gap-3 h-full">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.emailProvider")}</Label>
+                    <Input value={emailProvider} onChange={(e) => setEmailProvider(e.target.value)} placeholder="resend / sendgrid" dir="ltr" />
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.emailApiKey")}</Label>
+                    <Input value={emailApiKey} onChange={(e) => setEmailApiKey(e.target.value)} type="password"
+                      placeholder={emailApiKey === "***" ? "••••••••••••" : "re_..."} dir="ltr" />
+                  </CardContent>
+                </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.emailFrom")}</Label>
+                    <Input value={emailFrom} onChange={(e) => setEmailFrom(e.target.value)} placeholder="noreply@clinic.com" type="email" dir="ltr" />
+                  </CardContent>
+                </Card>
               </div>
-              <Separator />
-              <div className="space-y-2">
-                <Label>{t("settings.emailProvider")}</Label>
-                <Input
-                  value={emailProvider}
-                  onChange={(e) => setEmailProvider(e.target.value)}
-                  placeholder="resend / sendgrid"
-                  dir="ltr"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t("settings.emailApiKey")}</Label>
-                <Input
-                  value={emailApiKey}
-                  onChange={(e) => setEmailApiKey(e.target.value)}
-                  type="password"
-                  placeholder={emailApiKey === "***" ? "••••••••••••" : "re_..."}
-                  dir="ltr"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t("settings.emailFrom")}</Label>
-                <Input
-                  value={emailFrom}
-                  onChange={(e) => setEmailFrom(e.target.value)}
-                  placeholder="noreply@clinic.com"
-                  type="email"
-                  dir="ltr"
-                />
-              </div>
-              <div className="flex justify-end pt-2">
+              <div className="flex justify-end mt-auto pt-2">
                 <Button size="sm" disabled={updateConfig.isPending} onClick={handleSaveEmail}>
                   {t("settings.save")}
                 </Button>

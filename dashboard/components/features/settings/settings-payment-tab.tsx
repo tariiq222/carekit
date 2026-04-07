@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon } from "@hugeicons/core-free-icons"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -264,21 +264,22 @@ export function SettingsPaymentTab() {
           ) : (
             <>
               {activeTab === "moyasar" && (
-                <div className="space-y-4 max-w-md">
-                  <div>
-                    <p className="text-sm font-semibold">{t("settings.moyasar")}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t("settings.moyasarDesc")}</p>
+                <div className="flex flex-col gap-3 h-full">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Card className="shadow-sm bg-surface">
+                      <CardContent className="space-y-2 pt-3 pb-3">
+                        <Label>{t("settings.moyasarKey")}</Label>
+                        <Input value={moyasarKey} onChange={(e) => setMoyasarKey(e.target.value)} placeholder="pk_live_..." type="password" dir="ltr" />
+                      </CardContent>
+                    </Card>
+                    <Card className="shadow-sm bg-surface">
+                      <CardContent className="space-y-2 pt-3 pb-3">
+                        <Label>{t("settings.moyasarSecret")}</Label>
+                        <Input value={moyasarSecret} onChange={(e) => setMoyasarSecret(e.target.value)} placeholder={moyasarSecret === "***" ? "••••••••••••" : "sk_live_..."} type="password" dir="ltr" />
+                      </CardContent>
+                    </Card>
                   </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <Label>{t("settings.moyasarKey")}</Label>
-                    <Input value={moyasarKey} onChange={(e) => setMoyasarKey(e.target.value)} placeholder="pk_live_..." type="password" dir="ltr" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t("settings.moyasarSecret")}</Label>
-                    <Input value={moyasarSecret} onChange={(e) => setMoyasarSecret(e.target.value)} placeholder={moyasarSecret === "***" ? "••••••••••••" : "sk_live_..."} type="password" dir="ltr" />
-                  </div>
-                  <div className="flex justify-end pt-2">
+                  <div className="flex justify-end mt-auto pt-2">
                     <Button size="sm" disabled={updateConfig.isPending} onClick={handleSaveMoyasar}>
                       {t("settings.save")}
                     </Button>
@@ -287,33 +288,30 @@ export function SettingsPaymentTab() {
               )}
 
               {activeTab === "atclinic" && (
-                <div className="space-y-4 max-w-md">
-                  <div>
-                    <p className="text-sm font-semibold">{t("settings.booking.paymentMethods.atClinic")}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t("settings.booking.paymentMethods.atClinicDesc")}</p>
-                  </div>
-                  <Separator />
-
-                  {/* Always-on badge for staff */}
-                  <div className="rounded-lg border border-success/20 bg-success/5 p-3 flex items-start gap-3">
-                    <div className="h-2 w-2 rounded-full bg-success mt-1 shrink-0" />
-                    <div>
-                      <p className="text-xs font-medium text-success">{t("settings.payment.atClinicAlwaysOn")}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t("settings.payment.atClinicAlwaysOnDesc")}</p>
-                    </div>
-                  </div>
-
-                  {/* Toggle explanation */}
-                  <div className="rounded-lg border border-border bg-surface-muted p-3 flex items-start gap-3">
-                    <div className={`h-2 w-2 rounded-full mt-1 shrink-0 ${(paymentSettings?.paymentAtClinicEnabled ?? true) ? "bg-success" : "bg-muted-foreground"}`} />
-                    <div>
-                      <p className="text-xs font-medium text-foreground">
-                        {(paymentSettings?.paymentAtClinicEnabled ?? true)
-                          ? t("settings.payment.atClinicPatientOn")
-                          : t("settings.payment.atClinicPatientOff")}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t("settings.payment.atClinicToggleHint")}</p>
-                    </div>
+                <div className="flex flex-col gap-3 h-full">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Card className="shadow-sm bg-surface border-success/20 bg-success/5">
+                      <CardContent className="pt-3 pb-3 flex items-start gap-3">
+                        <div className="h-2 w-2 rounded-full bg-success mt-1 shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-success">{t("settings.payment.atClinicAlwaysOn")}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t("settings.payment.atClinicAlwaysOnDesc")}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="shadow-sm bg-surface">
+                      <CardContent className="pt-3 pb-3 flex items-start gap-3">
+                        <div className={`h-2 w-2 rounded-full mt-1 shrink-0 ${(paymentSettings?.paymentAtClinicEnabled ?? true) ? "bg-success" : "bg-muted-foreground"}`} />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            {(paymentSettings?.paymentAtClinicEnabled ?? true)
+                              ? t("settings.payment.atClinicPatientOn")
+                              : t("settings.payment.atClinicPatientOff")}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t("settings.payment.atClinicToggleHint")}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               )}

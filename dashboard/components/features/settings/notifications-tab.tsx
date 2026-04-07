@@ -21,17 +21,21 @@ interface Props {
 
 type TabId = "channels" | "reminders" | "suggestions"
 
-function SwitchRow({ label, desc, checked, onChange }: {
+function SwitchCard({ label, desc, checked, onChange }: {
   label: string; desc: string; checked: boolean; onChange: (v: boolean) => void
 }) {
   return (
-    <div className="flex items-center justify-between py-3 gap-4">
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
-      </div>
-      <Switch checked={checked} onCheckedChange={onChange} />
-    </div>
+    <Card className="shadow-sm bg-surface">
+      <CardContent className="pt-3 pb-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">{label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+          </div>
+          <Switch checked={checked} onCheckedChange={onChange} />
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -58,17 +62,13 @@ function ChannelsPanel({ configMap, onSave, isPending, t }: Props) {
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3">
-        <Card className="shadow-sm bg-surface col-span-2">
-          <CardContent className="pt-1 pb-1 divide-y divide-border">
-            <SwitchRow label={t("settings.notifyBookings")} desc={t("settings.notifyBookingsDesc")} checked={notifyBookings} onChange={setNotifyBookings} />
-            <SwitchRow label={t("settings.notifyCancellations")} desc={t("settings.notifyCancellationsDesc")} checked={notifyCancellations} onChange={setNotifyCancellations} />
-            <SwitchRow label={t("settings.notifyReminders")} desc={t("settings.notifyRemindersDesc")} checked={notifyReminders} onChange={setNotifyReminders} />
-            <SwitchRow label={t("settings.notifyPayments")} desc={t("settings.notifyPaymentsDesc")} checked={notifyPayments} onChange={setNotifyPayments} />
-            <SwitchRow label={t("settings.notifyRatings")} desc={t("settings.notifyRatingsDesc")} checked={notifyRatings} onChange={setNotifyRatings} />
-            <SwitchRow label={t("settings.notifyProblems")} desc={t("settings.notifyProblemsDesc")} checked={notifyProblems} onChange={setNotifyProblems} />
-            <SwitchRow label={t("settings.notifyWaitlist")} desc={t("settings.notifyWaitlistDesc")} checked={notifyWaitlist} onChange={setNotifyWaitlist} />
-          </CardContent>
-        </Card>
+        <SwitchCard label={t("settings.notifyBookings")} desc={t("settings.notifyBookingsDesc")} checked={notifyBookings} onChange={setNotifyBookings} />
+        <SwitchCard label={t("settings.notifyCancellations")} desc={t("settings.notifyCancellationsDesc")} checked={notifyCancellations} onChange={setNotifyCancellations} />
+        <SwitchCard label={t("settings.notifyReminders")} desc={t("settings.notifyRemindersDesc")} checked={notifyReminders} onChange={setNotifyReminders} />
+        <SwitchCard label={t("settings.notifyPayments")} desc={t("settings.notifyPaymentsDesc")} checked={notifyPayments} onChange={setNotifyPayments} />
+        <SwitchCard label={t("settings.notifyRatings")} desc={t("settings.notifyRatingsDesc")} checked={notifyRatings} onChange={setNotifyRatings} />
+        <SwitchCard label={t("settings.notifyProblems")} desc={t("settings.notifyProblemsDesc")} checked={notifyProblems} onChange={setNotifyProblems} />
+        <SwitchCard label={t("settings.notifyWaitlist")} desc={t("settings.notifyWaitlistDesc")} checked={notifyWaitlist} onChange={setNotifyWaitlist} />
       </div>
       <div className="flex justify-end mt-auto pt-2">
         <Button size="sm" disabled={isPending} onClick={() => onSave([
@@ -103,13 +103,11 @@ function RemindersPanel({ settings, onSave, isPending, t }: {
 
   return (
     <div className="flex flex-col gap-3 h-full">
-      <Card className="shadow-sm bg-surface">
-        <CardContent className="pt-1 pb-1 divide-y divide-border">
-          <SwitchRow label={t("settings.reminder24h")} desc={t("settings.reminder24hDesc")} checked={r24h} onChange={setR24h} />
-          <SwitchRow label={t("settings.reminder1h")} desc={t("settings.reminder1hDesc")} checked={r1h} onChange={setR1h} />
-          <SwitchRow label={t("settings.reminderInteractive")} desc={t("settings.reminderInteractiveDesc")} checked={interactive} onChange={setInteractive} />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-2 gap-3">
+        <SwitchCard label={t("settings.reminder24h")} desc={t("settings.reminder24hDesc")} checked={r24h} onChange={setR24h} />
+        <SwitchCard label={t("settings.reminder1h")} desc={t("settings.reminder1hDesc")} checked={r1h} onChange={setR1h} />
+        <SwitchCard label={t("settings.reminderInteractive")} desc={t("settings.reminderInteractiveDesc")} checked={interactive} onChange={setInteractive} />
+      </div>
       <div className="flex justify-end mt-auto pt-2">
         <Button size="sm" disabled={isPending} onClick={() => onSave({
           reminder24hEnabled: r24h,
@@ -137,20 +135,22 @@ function SuggestionsPanel({ settings, onSave, isPending, t }: {
 
   return (
     <div className="flex flex-col gap-3 h-full">
-      <Card className="shadow-sm bg-surface">
-        <CardContent className="pt-1 pb-1 divide-y divide-border">
-          <SwitchRow label={t("settings.suggestAlternatives")} desc={t("settings.suggestAlternativesDesc")} checked={suggestAlt} onChange={setSuggestAlt} />
-          {suggestAlt && (
-            <div className="flex items-center justify-between py-3 gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground">{t("settings.suggestCount")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.suggestCountDesc")}</p>
+      <div className="grid grid-cols-2 gap-3">
+        <SwitchCard label={t("settings.suggestAlternatives")} desc={t("settings.suggestAlternativesDesc")} checked={suggestAlt} onChange={setSuggestAlt} />
+        {suggestAlt && (
+          <Card className="shadow-sm bg-surface">
+            <CardContent className="pt-3 pb-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">{t("settings.suggestCount")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("settings.suggestCountDesc")}</p>
+                </div>
+                <Input type="number" value={suggestCount} onChange={(e) => setSuggestCount(e.target.value)} className="w-20 tabular-nums shrink-0" min={1} max={10} />
               </div>
-              <Input type="number" value={suggestCount} onChange={(e) => setSuggestCount(e.target.value)} className="w-20 tabular-nums shrink-0" min={1} max={10} />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
+      </div>
       <div className="flex justify-end mt-auto pt-2">
         <Button size="sm" disabled={isPending} onClick={() => onSave({
           suggestAlternativesOnConflict: suggestAlt,
