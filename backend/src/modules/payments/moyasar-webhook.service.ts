@@ -64,12 +64,22 @@ export class MoyasarWebhookService {
       });
     }
 
+    // Validate signature is a 64-char hex string before Buffer.from to avoid throwing
+    if (!/^[0-9a-f]{64}$/i.test(signature)) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        message: 'Invalid webhook signature',
+        error: 'INVALID_SIGNATURE',
+      });
+    }
+
     const expectedSig = crypto
       .createHmac('sha256', secret)
       .update(rawBody)
       .digest('hex');
 
-    if (expectedSig !== signature) {
+    // timingSafeEqual prevents timing side-channel attacks
+    if (!crypto.timingSafeEqual(Buffer.from(expectedSig, 'hex'), Buffer.from(signature, 'hex'))) {
       throw new UnauthorizedException({
         statusCode: 401,
         message: 'Invalid webhook signature',
