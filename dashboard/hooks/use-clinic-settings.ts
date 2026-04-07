@@ -164,8 +164,6 @@ export function useWidgetSettingsMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clinic-settings", "widget"] })
       queryClient.invalidateQueries({ queryKey: BOOKING_SETTINGS_KEY })
-      // Invalidate widget branding cache so the widget picks up new settings
-      queryClient.invalidateQueries({ queryKey: ["widget", "branding"] })
     },
   })
 }
