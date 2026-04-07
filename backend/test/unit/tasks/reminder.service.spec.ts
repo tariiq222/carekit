@@ -223,6 +223,29 @@ describe('ReminderService', () => {
       expect(patientCall.bodyEn).toContain('2026-04-01');
     });
 
+    it('should await all notification promises for sendDayBeforeReminders', async () => {
+      let notifCallCount = 0;
+      mockNotificationsService.createNotification.mockImplementation(() => {
+        notifCallCount++;
+        return Promise.resolve({});
+      });
+      mockWhitelabelService.getTimeFormat.mockResolvedValue('24h');
+      mockPrismaService.booking.findMany.mockResolvedValue([
+        {
+          id: 'b-1',
+          date: new Date('2026-04-08'),
+          startTime: '10:00',
+          patientId: 'patient-1',
+          practitionerId: 'pract-1',
+          practitioner: { userId: 'user-pract-1' },
+        },
+      ]);
+
+      await service.sendDayBeforeReminders();
+
+      expect(notifCallCount).toBe(2);
+    });
+
     it('should handle multiple bookings in the window', async () => {
       mockPrismaService.booking.findMany.mockResolvedValue([
         mockBookingWithBothParties,

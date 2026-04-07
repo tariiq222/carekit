@@ -39,36 +39,40 @@ export class ReminderService {
     });
 
     await Promise.all(
-      bookings.flatMap(async (booking) => {
+      bookings.flatMap((booking) => {
         const dateStr = booking.date.toISOString().split('T')[0];
-        const timeStr = await this.formatTimeForNotification(booking.startTime);
+        const timePromise = this.formatTimeForNotification(booking.startTime);
         const notifications: Promise<unknown>[] = [];
 
         if (booking.patientId) {
           notifications.push(
-            this.notificationsService.createNotification({
-              userId: booking.patientId,
-              titleAr: 'تذكير بموعدك غداً',
-              titleEn: 'Appointment Reminder — Tomorrow',
-              bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
-              bodyEn: `You have an appointment tomorrow ${dateStr} at ${timeStr}`,
-              type: 'booking_reminder',
-              data: { bookingId: booking.id },
-            }),
+            timePromise.then((timeStr) =>
+              this.notificationsService.createNotification({
+                userId: booking.patientId!,
+                titleAr: 'تذكير بموعدك غداً',
+                titleEn: 'Appointment Reminder — Tomorrow',
+                bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
+                bodyEn: `You have an appointment tomorrow ${dateStr} at ${timeStr}`,
+                type: 'booking_reminder',
+                data: { bookingId: booking.id },
+              }),
+            ),
           );
         }
 
         if (booking.practitioner?.userId) {
           notifications.push(
-            this.notificationsService.createNotification({
-              userId: booking.practitioner.userId,
-              titleAr: 'تذكير بموعد غداً',
-              titleEn: 'Appointment Reminder — Tomorrow',
-              bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
-              bodyEn: `You have an appointment tomorrow ${dateStr} at ${timeStr}`,
-              type: 'booking_reminder',
-              data: { bookingId: booking.id },
-            }),
+            timePromise.then((timeStr) =>
+              this.notificationsService.createNotification({
+                userId: booking.practitioner!.userId,
+                titleAr: 'تذكير بموعد غداً',
+                titleEn: 'Appointment Reminder — Tomorrow',
+                bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
+                bodyEn: `You have an appointment tomorrow ${dateStr} at ${timeStr}`,
+                type: 'booking_reminder',
+                data: { bookingId: booking.id },
+              }),
+            ),
           );
         }
 
@@ -152,35 +156,39 @@ export class ReminderService {
     });
 
     await Promise.all(
-      matched.flatMap(async (booking) => {
-        const timeStr = await this.formatTimeForNotification(booking.startTime);
+      matched.flatMap((booking) => {
+        const timePromise = this.formatTimeForNotification(booking.startTime);
         const notifications: Promise<unknown>[] = [];
 
         if (booking.patientId) {
           notifications.push(
-            this.notificationsService.createNotification({
-              userId: booking.patientId,
-              titleAr: 'موعدك بعد ساعتين',
-              titleEn: 'Appointment in 2 Hours',
-              bodyAr: `تذكير: موعدك بعد ساعتين الساعة ${timeStr}`,
-              bodyEn: `Reminder: Your appointment is in 2 hours at ${timeStr}`,
-              type: 'booking_reminder',
-              data: { bookingId: booking.id },
-            }),
+            timePromise.then((timeStr) =>
+              this.notificationsService.createNotification({
+                userId: booking.patientId!,
+                titleAr: 'موعدك بعد ساعتين',
+                titleEn: 'Appointment in 2 Hours',
+                bodyAr: `تذكير: موعدك بعد ساعتين الساعة ${timeStr}`,
+                bodyEn: `Reminder: Your appointment is in 2 hours at ${timeStr}`,
+                type: 'booking_reminder',
+                data: { bookingId: booking.id },
+              }),
+            ),
           );
         }
 
         if (booking.practitioner?.userId) {
           notifications.push(
-            this.notificationsService.createNotification({
-              userId: booking.practitioner.userId,
-              titleAr: 'موعدك بعد ساعتين',
-              titleEn: 'Appointment in 2 Hours',
-              bodyAr: `تذكير: لديك موعد بعد ساعتين الساعة ${timeStr}`,
-              bodyEn: `Reminder: You have an appointment in 2 hours at ${timeStr}`,
-              type: 'booking_reminder',
-              data: { bookingId: booking.id },
-            }),
+            timePromise.then((timeStr) =>
+              this.notificationsService.createNotification({
+                userId: booking.practitioner!.userId,
+                titleAr: 'موعدك بعد ساعتين',
+                titleEn: 'Appointment in 2 Hours',
+                bodyAr: `تذكير: لديك موعد بعد ساعتين الساعة ${timeStr}`,
+                bodyEn: `Reminder: You have an appointment in 2 hours at ${timeStr}`,
+                type: 'booking_reminder',
+                data: { bookingId: booking.id },
+              }),
+            ),
           );
         }
 
