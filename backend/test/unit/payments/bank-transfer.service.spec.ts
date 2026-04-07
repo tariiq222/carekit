@@ -143,6 +143,42 @@ describe('BankTransferService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('should delete MinIO file if Prisma transaction fails', async () => {
+      const mockFile: Express.Multer.File = {
+        originalname: 'receipt.jpg',
+        buffer: Buffer.from('fake-image'),
+        mimetype: 'image/jpeg',
+        fieldname: 'file',
+        encoding: '7bit',
+        size: 10,
+        stream: null as any,
+        destination: '',
+        filename: '',
+        path: '',
+      };
+
+      // Setup booking mock
+      mockPrisma.booking.findFirst.mockResolvedValue({
+        id: 'booking-1',
+        service: { price: 1000, vatPercent: 15 },
+        coupon: null,
+        giftCard: null,
+      });
+      mockPrisma.payment.findUnique.mockResolvedValue(null);
+      mockMinio.uploadFile.mockResolvedValue('https://minio/receipts/uuid.jpg');
+      mockMinio.deleteFile = jest.fn().mockResolvedValue(undefined);
+      mockPrisma.$transaction.mockRejectedValue(new Error('DB constraint error'));
+
+      await expect(
+        service.uploadBankTransferReceipt('user-1', 'booking-1', mockFile),
+      ).rejects.toThrow('DB constraint error');
+
+      expect(mockMinio.deleteFile).toHaveBeenCalledWith(
+        'carekit',
+        expect.stringMatching(/^receipts\/.+\.jpg$/),
+      );
+    });
+
     it('should calculate correct VAT (15% of base amount)', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(mockBooking);
       mockPrisma.payment.findUnique.mockResolvedValue(null);

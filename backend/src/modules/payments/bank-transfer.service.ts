@@ -115,29 +115,42 @@ export class BankTransferService {
       file.mimetype ?? 'image/jpeg',
     );
 
-    const result = await this.prisma.$transaction(async (tx) => {
-      const payment = await tx.payment.create({
-        data: {
-          bookingId,
-          amount,
-          vatAmount,
-          totalAmount,
-          method: 'bank_transfer',
-          status: 'pending',
-        },
-        include: paymentInclude,
-      });
+    let result: {
+      payment: Awaited<ReturnType<typeof this.prisma.payment.create>>;
+      receipt: Awaited<ReturnType<typeof this.prisma.bankTransferReceipt.create>>;
+    };
 
-      const receipt = await tx.bankTransferReceipt.create({
-        data: {
-          paymentId: payment.id,
-          receiptUrl,
-          aiVerificationStatus: 'pending',
-        },
-      });
+    try {
+      result = await this.prisma.$transaction(async (tx) => {
+        const payment = await tx.payment.create({
+          data: {
+            bookingId,
+            amount,
+            vatAmount,
+            totalAmount,
+            method: 'bank_transfer',
+            status: 'pending',
+          },
+          include: paymentInclude,
+        });
 
-      return { payment, receipt };
-    });
+        const receipt = await tx.bankTransferReceipt.create({
+          data: {
+            paymentId: payment.id,
+            receiptUrl,
+            aiVerificationStatus: 'pending',
+          },
+        });
+
+        return { payment, receipt };
+      });
+    } catch (err) {
+      // Transaction failed — clean up the orphaned MinIO file
+      await this.minioService.deleteFile(MINIO_BUCKET, objectName).catch((deleteErr) => {
+        this.logger.error(`Failed to clean up orphaned MinIO file ${objectName}`, deleteErr);
+      });
+      throw err;
+    }
 
     if (this.receiptQueue) {
       await this.receiptQueue.add('verify', {
