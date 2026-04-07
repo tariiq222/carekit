@@ -43,15 +43,16 @@ export function SettingsIntegrationsTab() {
   }, [configMap])
 
   const handleSaveZoom = () => {
+    const configs: { key: string; value: string; type?: "string" | "boolean" | "number" | "json" }[] = [
+      { key: "zoom_enabled", value: String(zoomEnabled), type: "boolean" },
+      { key: "zoom_client_id", value: zoomClientId },
+      { key: "zoom_account_id", value: zoomAccountId },
+    ]
+    if (zoomClientSecret && zoomClientSecret !== "***") {
+      configs.push({ key: "zoom_client_secret", value: zoomClientSecret })
+    }
     updateConfig.mutate(
-      {
-        configs: [
-          { key: "zoom_enabled", value: String(zoomEnabled), type: "boolean" as const },
-          { key: "zoom_client_id", value: zoomClientId },
-          { key: "zoom_client_secret", value: zoomClientSecret },
-          { key: "zoom_account_id", value: zoomAccountId },
-        ],
-      },
+      { configs },
       {
         onSuccess: () => toast.success(t("settings.saved")),
         onError: () => toast.error(t("settings.error")),
@@ -60,14 +61,15 @@ export function SettingsIntegrationsTab() {
   }
 
   const handleSaveEmail = () => {
+    const configs: { key: string; value: string; type?: "string" | "boolean" | "number" | "json" }[] = [
+      { key: "email_provider", value: emailProvider },
+      { key: "email_from", value: emailFrom },
+    ]
+    if (emailApiKey && emailApiKey !== "***") {
+      configs.push({ key: "email_api_key", value: emailApiKey })
+    }
     updateConfig.mutate(
-      {
-        configs: [
-          { key: "email_provider", value: emailProvider },
-          { key: "email_api_key", value: emailApiKey },
-          { key: "email_from", value: emailFrom },
-        ],
-      },
+      { configs },
       {
         onSuccess: () => toast.success(t("settings.saved")),
         onError: () => toast.error(t("settings.error")),
@@ -102,7 +104,16 @@ export function SettingsIntegrationsTab() {
       label: t("settings.zoom"),
       desc: t("settings.zoomDesc"),
       enabled: zoomEnabled,
-      onToggle: setZoomEnabled,
+      onToggle: (v: boolean) => {
+        setZoomEnabled(v)
+        updateConfig.mutate(
+          { configs: [{ key: "zoom_enabled", value: String(v), type: "boolean" as const }] },
+          {
+            onSuccess: () => toast.success(t("settings.saved")),
+            onError: () => toast.error(t("settings.error")),
+          }
+        )
+      },
     },
     {
       id: "email",
@@ -194,7 +205,16 @@ export function SettingsIntegrationsTab() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setZoomEnabled(true)}
+                  onClick={() => {
+                    setZoomEnabled(true)
+                    updateConfig.mutate(
+                      { configs: [{ key: "zoom_enabled", value: "true", type: "boolean" as const }] },
+                      {
+                        onSuccess: () => toast.success(t("settings.saved")),
+                        onError: () => toast.error(t("settings.error")),
+                      }
+                    )
+                  }}
                   disabled={updateConfig.isPending}
                 >
                   {t("settings.payment.enable")}
@@ -221,6 +241,7 @@ export function SettingsIntegrationsTab() {
                     value={zoomClientSecret}
                     onChange={(e) => setZoomClientSecret(e.target.value)}
                     type="password"
+                    placeholder={zoomClientSecret === "***" ? "••••••••••••" : undefined}
                     dir="ltr"
                   />
                 </div>
@@ -264,7 +285,7 @@ export function SettingsIntegrationsTab() {
                   value={emailApiKey}
                   onChange={(e) => setEmailApiKey(e.target.value)}
                   type="password"
-                  placeholder="re_..."
+                  placeholder={emailApiKey === "***" ? "••••••••••••" : "re_..."}
                   dir="ltr"
                 />
               </div>
