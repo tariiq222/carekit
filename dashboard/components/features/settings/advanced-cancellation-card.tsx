@@ -177,7 +177,7 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
         </CardContent></Card>
       </div>
       <div className="flex justify-end mt-auto pt-2">
-        <Button size="sm" disabled={isPending || !isDirty} onClick={() => onSave(data)}>
+        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNow}>
           {t("settings.save")}
         </Button>
       </div>
@@ -231,7 +231,7 @@ export function ReschedulingPanel({ settings, onSave, isPending, t }: {
         </CardContent></Card>
       </div>
       <div className="flex justify-end mt-auto pt-2">
-        <Button size="sm" disabled={isPending || !isDirty} onClick={() => onSave(data)}>
+        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNow}>
           {t("settings.save")}
         </Button>
       </div>
@@ -299,7 +299,7 @@ export function NoShowPanel({ settings, onSave, isPending, t }: {
         )}
       </div>
       <div className="flex justify-end mt-auto pt-2">
-        <Button size="sm" disabled={isPending || !isDirty} onClick={() => onSave(data)}>
+        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNow}>
           {t("settings.save")}
         </Button>
       </div>

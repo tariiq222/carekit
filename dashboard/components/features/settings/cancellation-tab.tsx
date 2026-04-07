@@ -47,7 +47,7 @@ function CancellationPolicyPanel({ settings, onSave, isPending, t }: {
     cancellationPolicyEn: settings.cancellationPolicyEn ?? "",
     cancellationPolicyAr: settings.cancellationPolicyAr ?? "",
   }
-  const { isDirty, scheduleSave } = useAutoSave(data, saved, onSave)
+  const { isDirty, scheduleSave, saveNow } = useAutoSave(data, saved, onSave)
 
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -70,7 +70,7 @@ function CancellationPolicyPanel({ settings, onSave, isPending, t }: {
         </CardContent></Card>
       </div>
       <div className="flex justify-end mt-auto pt-2">
-        <Button size="sm" disabled={isPending || !isDirty} onClick={() => onSave(data)}>
+        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNow}>
           {t("settings.save")}
         </Button>
       </div>
