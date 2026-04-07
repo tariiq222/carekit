@@ -20,6 +20,8 @@ export class WhitelabelService {
     'moyasar_secret_key',
     'bank_iban',
     'bank_account_holder',
+    'email_api_key',
+    'zoom_client_secret',
   ];
 
   private static maskSensitive(key: string, value: string): string {
