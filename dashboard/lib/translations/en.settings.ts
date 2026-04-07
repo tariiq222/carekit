@@ -136,8 +136,6 @@ export const enSettings: Record<string, string> = {
   "settings.suggestAlternativesDesc": "When a patient tries to book a taken slot, suggest other available times automatically instead of just showing 'unavailable'.",
   "settings.suggestCount": "Number of Suggestions",
   "settings.suggestCountDesc": "How many alternative time slots to show. Example: 3 = show 3 nearby available times.",
-  "settings.adminBookOutside": "Admin Book Outside Hours",
-  "settings.adminBookOutsideDesc": "If enabled, admins can create appointments outside the clinic's official working hours (evenings, holidays, etc).",
   "settings.adminCanBookOutsideHours": "Admin Book Outside Hours",
   "settings.adminCanBookOutsideHoursDesc": "If enabled, admins can create appointments outside the clinic's official working hours (evenings, holidays, etc).",
   "settings.advancedCancellation": "Advanced Cancellation Rules",

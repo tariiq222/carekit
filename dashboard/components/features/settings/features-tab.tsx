@@ -32,7 +32,7 @@ export function FeaturesTab() {
       { key, enabled },
       {
         onSuccess: () => toast.success(t("settings.saved")),
-        onError: () => toast.error(t("settings.error") ?? "Failed to update"),
+        onError: () => toast.error(t("settings.error")),
       },
     )
   }

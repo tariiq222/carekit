@@ -165,8 +165,6 @@ export const arSettings: Record<string, string> = {
   "settings.holidayNameAr": "الاسم (عربي)",
   "settings.holidayNameEn": "الاسم (إنجليزي)",
   "settings.holidayRecurring": "تتكرر سنوياً",
-  "settings.adminOutsideHours": "السماح للمسؤولين بالحجز خارج ساعات العمل",
-  "settings.adminOutsideHoursDesc": "يمكن للمسؤولين إنشاء حجوزات خارج ساعات عمل العيادة والمعالج",
   "settings.deleteHoliday": "حذف العطلة",
   "settings.noHolidays": "لا توجد عطلات محددة",
   "settings.features.title": "إدارة الميزات",
