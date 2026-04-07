@@ -5,6 +5,7 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { ClinicSettingsService } from './clinic-settings.service.js';
 import { UpdateBookingFlowOrderDto } from './dto/update-booking-flow-order.dto.js';
+import { UpdatePaymentSettingsDto } from './dto/update-payment-settings.dto.js';
 
 @ApiTags('Clinic')
 @Controller('clinic/settings')
@@ -49,7 +50,7 @@ export class ClinicSettingsController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @CheckPermissions({ module: 'whitelabel', action: 'edit' })
   async updatePaymentSettings(
-    @Body() dto: { paymentMoyasarEnabled?: boolean; paymentAtClinicEnabled?: boolean },
+    @Body() dto: UpdatePaymentSettingsDto,
   ) {
     const data = await this.clinicSettingsService.updatePaymentSettings(dto);
     return { success: true, data };
