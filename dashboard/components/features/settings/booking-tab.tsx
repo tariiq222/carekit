@@ -97,9 +97,8 @@ export function BookingTab({ t }: Props) {
       setWaitlistMaxPerSlot(String(settings.waitlistMaxPerSlot))
       setWaitlistAutoNotify(settings.waitlistAutoNotify)
       setAllowRecurring(settings.allowRecurring)
-      const s = settings as unknown as Record<string, unknown>
-      setMaxRecurrences(String(s.maxRecurrences ?? 12))
-      setAllowedPatterns((s.allowedRecurringPatterns as string[] | undefined) ?? ["weekly", "biweekly"])
+      setMaxRecurrences(String(settings.maxRecurrences ?? 12))
+      setAllowedPatterns(settings.allowedRecurringPatterns ?? ["weekly", "biweekly"])
       setAdminCanBookOutsideHours(settings.adminCanBookOutsideHours ?? false)
     }
   }, [settings])

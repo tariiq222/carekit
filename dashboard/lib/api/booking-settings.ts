@@ -36,6 +36,8 @@ export interface BookingSettings {
   allowWalkIn: boolean
   walkInPaymentRequired: boolean
   allowRecurring: boolean
+  maxRecurrences: number
+  allowedRecurringPatterns: string[]
   waitlistEnabled: boolean
   waitlistMaxPerSlot: number
   waitlistAutoNotify: boolean
