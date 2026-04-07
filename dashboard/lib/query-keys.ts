@@ -240,4 +240,15 @@ export const queryKeys = {
     bookingFlowOrder: () => ["clinic-settings", "booking-flow-order"] as const,
   },
 
+  /* ─── Widget ─── */
+  widget: {
+    branding: () => ["widget", "branding"] as const,
+    settings: () => ["clinic-settings", "widget"] as const,
+  },
+
+  /* ─── Clinic Public Settings ─── */
+  clinicPublic: {
+    settings: () => ["clinic-settings", "public"] as const,
+  },
+
 } as const

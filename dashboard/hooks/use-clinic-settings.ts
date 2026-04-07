@@ -92,7 +92,10 @@ export function useBookingSettingsMutation() {
   return useMutation({
     mutationFn: updateBookingSettings,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BOOKING_SETTINGS_KEY })
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookingSettings.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.widget.branding() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.widget.settings() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.clinicPublic.settings() })
     },
   })
 }
@@ -162,10 +165,10 @@ export function useWidgetSettingsMutation() {
   return useMutation({
     mutationFn: (data: Partial<WidgetSettings>) => updateBookingSettings(data as Record<string, unknown>),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clinic-settings", "widget"] })
-      queryClient.invalidateQueries({ queryKey: BOOKING_SETTINGS_KEY })
-      // Invalidate widget branding cache so the widget picks up new settings
-      queryClient.invalidateQueries({ queryKey: ["widget", "branding"] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookingSettings.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.widget.branding() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.widget.settings() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.clinicPublic.settings() })
     },
   })
 }
