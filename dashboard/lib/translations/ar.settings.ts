@@ -222,7 +222,9 @@ export const arSettings: Record<string, string> = {
   "settings.notifyCategory.financial": "المالية",
   "settings.notifyCategory.ratings": "التقييمات والبلاغات",
   "settings.notifyCategory.other": "أخرى",
+  "settings.notifyReminders": "تذكيرات المواعيد",
   "settings.notifyRemindersDesc": "إرسال تذكيرات قبل المواعيد القادمة",
+  "settings.notifyWaitlist": "قائمة الانتظار",
   "settings.notifyWaitlistDesc": "إشعار المستفيدين عند توفر موعد في قائمة الانتظار",
   // Bank Transfer — multi-account
   "settings.bankTransfer.addAccount": "إضافة حساب بنكي",

@@ -57,7 +57,7 @@ export function SettingsPaymentTab() {
     if (!configMap) return
     setMoyasarKey(configMap.moyasar_publishable_key ?? "")
     setMoyasarSecret(configMap.moyasar_secret_key ?? "")
-    setBankEnabled(configMap.bank_transfer_enabled !== "false")
+    setBankEnabled(configMap.bank_transfer_enabled === "true")
 
     const rawAccounts = configMap.bank_accounts
     if (rawAccounts) {
