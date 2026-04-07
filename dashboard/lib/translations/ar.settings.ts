@@ -169,6 +169,8 @@ export const arSettings: Record<string, string> = {
   "settings.noHolidays": "لا توجد عطلات محددة",
   "settings.features.title": "إدارة الميزات",
   "settings.features.description": "فعّل أو عطّل ميزات المنصة. الميزات المعطّلة تختفي من لوحة التحكم وتطبيق المستفيدين.",
+  "settings.features.enabled": "هذه الميزة مفعّلة حالياً.",
+  "settings.features.disabled": "هذه الميزة معطّلة حالياً.",
   "settings.tabs.widget": "ويدجت الحجز",
   "settings.widget.info": "ويدجت الحجز يمكّنك من تضمين نموذج الحجز مباشرةً في موقعك الإلكتروني. انسخ كود التضمين أدناه والصقه في صفحتك.",
   "settings.widget.configure": "إعداد الويدجت",

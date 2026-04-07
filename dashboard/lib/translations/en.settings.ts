@@ -171,6 +171,8 @@ export const enSettings: Record<string, string> = {
   "settings.noHolidays": "No holidays configured",
   "settings.features.title": "Feature Management",
   "settings.features.description": "Enable or disable platform features. Disabled features are hidden from the dashboard and patient app.",
+  "settings.features.enabled": "This feature is currently enabled.",
+  "settings.features.disabled": "This feature is currently disabled.",
   "settings.tabs.widget": "Booking Widget",
   "settings.widget.info": "The booking widget lets you embed the booking form directly on your website. Copy the embed code below and paste it into your page.",
   "settings.widget.configure": "Configure Widget",
