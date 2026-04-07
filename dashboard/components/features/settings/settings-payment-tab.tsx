@@ -89,11 +89,14 @@ export function SettingsPaymentTab() {
   )
 
   const handleSaveMoyasar = () => {
+    const configs: { key: string; value: string; type?: "string" | "boolean" | "number" | "json" }[] = [
+      { key: "moyasar_publishable_key", value: moyasarKey },
+    ]
+    if (moyasarSecret && moyasarSecret !== "***") {
+      configs.push({ key: "moyasar_secret_key", value: moyasarSecret })
+    }
     updateConfig.mutate(
-      { configs: [
-        { key: "moyasar_publishable_key", value: moyasarKey },
-        { key: "moyasar_secret_key", value: moyasarSecret },
-      ]},
+      { configs },
       { onSuccess: () => toast.success(t("settings.saved")), onError: () => toast.error(t("settings.error")) }
     )
   }
@@ -262,7 +265,7 @@ export function SettingsPaymentTab() {
                   </div>
                   <div className="space-y-2">
                     <Label>{t("settings.moyasarSecret")}</Label>
-                    <Input value={moyasarSecret} onChange={(e) => setMoyasarSecret(e.target.value)} placeholder="sk_live_..." type="password" dir="ltr" />
+                    <Input value={moyasarSecret} onChange={(e) => setMoyasarSecret(e.target.value)} placeholder={moyasarSecret === "***" ? "••••••••••••" : "sk_live_..."} type="password" dir="ltr" />
                   </div>
                   <div className="flex justify-end pt-2">
                     <Button size="sm" disabled={updateConfig.isPending} onClick={handleSaveMoyasar}>
