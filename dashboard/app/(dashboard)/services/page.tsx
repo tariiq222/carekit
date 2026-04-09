@@ -21,6 +21,7 @@ import { ServicesTabContent } from "@/components/features/services/services-tab-
 import { CategoriesTabContent } from "@/components/features/services/categories-tab-content"
 import { CreateCategoryDialog } from "@/components/features/services/create-category-dialog"
 import { DepartmentsTabContent } from "@/components/features/departments/departments-tab-content"
+import { SessionsListContent } from "@/components/features/group-sessions/sessions-list-content"
 import { useLocale } from "@/components/locale-provider"
 
 export default function ServicesPage() {
@@ -36,12 +37,14 @@ export default function ServicesPage() {
     if (activeTab === "services") router.push("/services/create")
     else if (activeTab === "categories") setCreateCategoryOpen(true)
     else if (activeTab === "departments") setCreateDepartmentOpen(true)
+    else if (activeTab === "group-sessions") router.push("/group-sessions/create")
   }
 
   const addLabel = () => {
     if (activeTab === "services") return t("services.addService")
     if (activeTab === "categories") return t("services.categories.addCategory")
-    return t("departments.addDepartment")
+    if (activeTab === "departments") return t("departments.addDepartment")
+    return t("groupSessions.addSession")
   }
 
   return (
@@ -80,9 +83,10 @@ export default function ServicesPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="services">{t("services.tabs.services")}</TabsTrigger>
-          <TabsTrigger value="categories">{t("services.tabs.categories")}</TabsTrigger>
           <TabsTrigger value="departments">{t("services.tabs.departments")}</TabsTrigger>
+          <TabsTrigger value="categories">{t("services.tabs.categories")}</TabsTrigger>
+          <TabsTrigger value="services">{t("services.tabs.services")}</TabsTrigger>
+          <TabsTrigger value="group-sessions">{t("services.tabs.groupSessions")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="services" className="flex flex-col gap-6 pt-4">
@@ -99,6 +103,10 @@ export default function ServicesPage() {
             createOpen={createDepartmentOpen}
             onCreateOpenChange={setCreateDepartmentOpen}
           />
+        </TabsContent>
+
+        <TabsContent value="group-sessions" className="flex flex-col gap-6 pt-4">
+          <SessionsListContent />
         </TabsContent>
       </Tabs>
 
