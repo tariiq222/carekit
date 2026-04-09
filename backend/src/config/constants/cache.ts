@@ -14,6 +14,8 @@ export const CACHE_TTL = {
   SERVICES_LIST: 300,
   /** Active categories list — 15 minutes */
   CATEGORIES_LIST: 900,
+  /** Departments list — 15 minutes */
+  DEPARTMENTS_LIST: 900,
 } as const;
 
 /** Cache key prefixes. */
@@ -30,4 +32,5 @@ export const CACHE_KEYS = {
   FEATURE_FLAGS_MAP: 'feature_flags:map',
   SERVICES_ACTIVE: 'cache:services:active',
   CATEGORIES_ACTIVE: 'cache:categories:active',
+  DEPARTMENTS_ACTIVE: 'cache:departments:active',
 } as const;

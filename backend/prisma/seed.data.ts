@@ -22,6 +22,7 @@ export const MODULES = [
   'intake_forms',
   'gift-cards',
   'activity-log',
+  'departments',
   'license',
   'clinic-settings',
   'clinic-integrations',
@@ -128,6 +129,7 @@ export const ROLES: RoleDefinition[] = [
       patients: ['view', 'create', 'edit'],
       practitioners: ['view', 'create', 'edit'],
       services: ['view', 'create', 'edit'],
+      departments: ['view'],
       notifications: ['view', 'create', 'edit', 'update'],
       payments: ['view'],
       invoices: ['view'],
@@ -148,6 +150,7 @@ export const ROLES: RoleDefinition[] = [
       bookings: ['view'],
       coupons: ['view', 'create', 'edit', 'delete'],
       notifications: ['view', 'update'],
+      departments: ['view'],
       chatbot: ['use'],
     },
   },
@@ -162,6 +165,7 @@ export const ROLES: RoleDefinition[] = [
       patients: ['view'],
       ratings: ['view'],
       practitioners: ['view', 'edit'],
+      departments: ['view'],
       notifications: ['view', 'update'],
       chatbot: ['use'],
     },
@@ -179,6 +183,7 @@ export const ROLES: RoleDefinition[] = [
       ratings: ['view', 'create', 'edit'],
       practitioners: ['view', 'favorites:view', 'favorites:edit'],
       services: ['view'],
+      departments: ['view'],
       notifications: ['view', 'update'],
       chatbot: ['use'],
     },
@@ -218,6 +223,7 @@ export const LICENSE_DEFAULTS = {
   hasWaitlist: true,
   hasZoom: false,
   hasZatca: true,
+  hasDepartments: true,
 };
 
 // ──────────────────────────────────────────────
@@ -318,6 +324,8 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   { key: 'zoom', nameEn: 'Zoom Video Calls', nameAr: 'مكالمات Zoom', descriptionEn: 'Auto-generate Zoom links for video consultations', descriptionAr: 'إنشاء روابط Zoom تلقائياً للاستشارات المرئية', enabled: false },
   // Compliance
   { key: 'zatca', nameEn: 'ZATCA / Fatoora', nameAr: 'ZATCA / فاتورة', descriptionEn: 'Enable Saudi e-invoicing compliance (ZATCA)', descriptionAr: 'تفعيل الامتثال للفوترة الإلكترونية السعودية', enabled: true },
+  // Organizational
+  { key: 'departments', nameEn: 'Departments', nameAr: 'الأقسام', descriptionEn: 'Enable department-based organization for services', descriptionAr: 'تفعيل تنظيم الخدمات حسب الأقسام', enabled: false },
 ];
 
 // ──────────────────────────────────────────────

@@ -18,6 +18,7 @@ const FLAG_TO_LICENSE: Record<string, keyof LicenseConfig> = {
   waitlist: 'hasWaitlist',
   zoom: 'hasZoom',
   zatca: 'hasZatca',
+  departments: 'hasDepartments',
 };
 
 @Injectable()
