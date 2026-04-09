@@ -22,6 +22,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:throttle": "jest --config ./test/jest-throttle.json",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
@@ -128,10 +129,10 @@
     "coverageDirectory": "coverage",
     "coverageThreshold": {
       "global": {
-        "branches": 55,
-        "functions": 50,
-        "lines": 55,
-        "statements": 55
+        "branches": 65,
+        "functions": 55,
+        "lines": 65,
+        "statements": 65
       }
     },
     "testEnvironment": "node"
