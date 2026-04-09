@@ -35,7 +35,8 @@ model Department {
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
 
-  categories ServiceCategory[]
+  categories    ServiceCategory[]
+  groupSessions GroupSession[]
 
   @@index([isActive, sortOrder])
   @@map("departments")

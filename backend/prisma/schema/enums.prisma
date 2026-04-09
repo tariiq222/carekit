@@ -80,6 +80,7 @@ enum NotificationType {
   waitlist_slot_available
   system_alert
   group_enrollment_created
+  group_capacity_reached
   group_session_confirmed
   group_payment_confirmed
   group_enrollment_expired
@@ -295,6 +296,13 @@ enum BookingFlowOrder {
   both
 
   @@map("booking_flow_order")
+}
+
+enum GroupSessionSchedulingMode {
+  fixed_date
+  on_capacity
+
+  @@map("group_session_scheduling_mode")
 }
 
 enum GroupSessionStatus {

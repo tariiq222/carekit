@@ -1,47 +1,49 @@
 // ──────────────────────────────────────────────
-// Group Sessions (pre-order group therapy)
+// Group Sessions v2 (single entity — pre-order group therapy)
 // ──────────────────────────────────────────────
 
-model GroupOffering {
-  id                    String    @id @default(uuid())
-  practitionerId        String    @map("practitioner_id")
-  nameAr                String    @map("name_ar")
-  nameEn                String    @map("name_en")
-  descriptionAr         String?   @map("description_ar")
-  descriptionEn         String?   @map("description_en")
-  minParticipants       Int       @map("min_participants")
-  maxParticipants       Int       @map("max_participants")
-  pricePerPersonHalalat Int       @map("price_per_person_halalat")
-  durationMin           Int       @map("duration_min")
-  paymentDeadlineHours  Int       @default(48) @map("payment_deadline_hours")
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
-  deletedAt             DateTime? @map("deleted_at")
-
-  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
-  sessions     GroupSession[]
-
-  @@index([practitionerId])
-  @@map("group_offerings")
-}
-
 model GroupSession {
-  id                   String             @id @default(uuid())
-  groupOfferingId      String             @map("group_offering_id")
-  startTime            DateTime           @map("start_time")
-  endTime              DateTime           @map("end_time")
-  status               GroupSessionStatus @default(open) @map("status")
-  currentEnrollment    Int                @default(0) @map("current_enrollment")
-  registrationDeadline DateTime           @map("registration_deadline")
-  reminderSent         Boolean            @default(false) @map("reminder_sent")
-  createdAt            DateTime           @default(now()) @map("created_at")
-  updatedAt            DateTime           @updatedAt @map("updated_at")
+  id                    String                     @id @default(uuid())
+  practitionerId        String                     @map("practitioner_id")
+  departmentId          String?                    @map("department_id")
 
-  groupOffering GroupOffering     @relation(fields: [groupOfferingId], references: [id], onDelete: Restrict)
-  enrollments   GroupEnrollment[]
+  // Definition
+  nameAr                String                     @map("name_ar")
+  nameEn                String                     @map("name_en")
+  descriptionAr         String?                    @map("description_ar")
+  descriptionEn         String?                    @map("description_en")
+  minParticipants       Int                        @map("min_participants")
+  maxParticipants       Int                        @map("max_participants")
+  pricePerPersonHalalat Int                        @map("price_per_person_halalat")
+  durationMinutes       Int                        @map("duration_minutes")
+  paymentDeadlineHours  Int                        @default(48) @map("payment_deadline_hours")
 
-  @@index([groupOfferingId, status])
-  @@index([status, registrationDeadline])
+  // Scheduling
+  schedulingMode        GroupSessionSchedulingMode @map("scheduling_mode")
+  startTime             DateTime?                  @map("start_time")
+  endTime               DateTime?                  @map("end_time")
+
+  // Status & enrollment
+  status                GroupSessionStatus         @default(open) @map("status")
+  currentEnrollment     Int                        @default(0) @map("current_enrollment")
+  reminderSent          Boolean                    @default(false) @map("reminder_sent")
+
+  // Visibility & expiry
+  isPublished           Boolean                    @default(false) @map("is_published")
+  expiresAt             DateTime?                  @map("expires_at")
+
+  // Timestamps
+  createdAt             DateTime                   @default(now()) @map("created_at")
+  updatedAt             DateTime                   @updatedAt @map("updated_at")
+  deletedAt             DateTime?                  @map("deleted_at")
+
+  // Relations
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  enrollments  GroupEnrollment[]
+
+  @@index([practitionerId, status])
+  @@index([status, expiresAt])
   @@map("group_sessions")
 }
 
