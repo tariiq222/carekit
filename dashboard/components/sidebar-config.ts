@@ -16,6 +16,7 @@ import {
   Building06Icon,
   DocumentValidationIcon,
   PaintBrush01Icon,
+  UserGroup01Icon,
 } from "@hugeicons/core-free-icons"
 
 export interface NavItem {
@@ -24,6 +25,7 @@ export interface NavItem {
   icon: typeof Home01Icon
   badge?: number
   permission?: string // "module:action" — item hidden if user lacks this permission
+  featureFlag?: string // hide if feature flag is disabled
 }
 
 export interface NavGroup {
@@ -42,6 +44,7 @@ export const clinicNav: NavItem[] = [
   { titleKey: "nav.services", href: "/services", icon: GridIcon },
   { titleKey: "nav.branches", href: "/branches", icon: Building06Icon },
   { titleKey: "nav.intakeForms", href: "/intake-forms", icon: DocumentValidationIcon },
+  { titleKey: "nav.groupSessions", href: "/group-sessions", icon: UserGroup01Icon, featureFlag: "group_sessions" },
 ]
 
 export const financeNav: NavItem[] = [
