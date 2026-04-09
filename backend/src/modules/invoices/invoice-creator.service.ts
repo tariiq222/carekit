@@ -12,6 +12,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ZatcaService } from '../zatca/zatca.service.js';
+import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 import { CreateInvoiceDto } from './dto/create-invoice.dto.js';
 import { invoiceInclude } from './invoice.constants.js';
 import { buildInvoiceHtml } from './invoice-html.builder.js';
@@ -24,6 +26,8 @@ export class InvoiceCreatorService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly zatcaService: ZatcaService,
+    private readonly whitelabelService: WhitelabelService,
+    private readonly clinicSettingsService: ClinicSettingsService,
     @Optional() @InjectQueue('zatca-submit') private readonly zatcaQueue?: Queue,
   ) {}
 
@@ -176,13 +180,12 @@ export class InvoiceCreatorService {
       });
     }
 
-    const configs = await this.prisma.whiteLabelConfig.findMany({
-      where: { key: { in: ['system_name', 'contact_phone'] } },
-      select: { key: true, value: true },
-    });
-    const configMap = Object.fromEntries(configs.map((c) => [c.key, c.value]));
-    const clinicName = configMap['system_name'] ?? 'CareKit Clinic';
-    const clinicPhone = configMap['contact_phone'] ?? '';
+    const [branding, settings] = await Promise.all([
+      this.whitelabelService.get(),
+      this.clinicSettingsService.get(),
+    ]);
+    const clinicName = branding.systemName ?? 'CareKit Clinic';
+    const clinicPhone = settings.contactPhone ?? '';
 
     return buildInvoiceHtml({ invoice, clinicName, clinicPhone, qrCodeData: invoice.qrCodeData });
   }
