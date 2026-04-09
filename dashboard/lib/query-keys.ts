@@ -241,4 +241,15 @@ export const queryKeys = {
     payment: () => ["clinic-settings", "payment"] as const,
   },
 
+  /* ─── Widget ─── */
+  widget: {
+    branding: () => ["widget", "branding"] as const,
+    settings: () => ["clinic-settings", "widget"] as const,
+  },
+
+  /* ─── Clinic Public Settings ─── */
+  clinicPublic: {
+    settings: () => ["clinic-settings", "public"] as const,
+  },
+
 } as const
