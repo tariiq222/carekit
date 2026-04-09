@@ -1,0 +1,19 @@
+model LicenseConfig {
+  id             String   @id @default(uuid())
+  hasCoupons     Boolean  @default(true) @map("has_coupons")
+  hasGiftCards   Boolean  @default(true) @map("has_gift_cards")
+  hasIntakeForms Boolean  @default(true) @map("has_intake_forms")
+  hasChatbot     Boolean  @default(true) @map("has_chatbot")
+  hasRatings     Boolean  @default(true) @map("has_ratings")
+  hasMultiBranch Boolean  @default(true) @map("has_multi_branch")
+  hasReports     Boolean  @default(true) @map("has_reports")
+  hasRecurring   Boolean  @default(true) @map("has_recurring")
+  hasWalkIn      Boolean  @default(true) @map("has_walk_in")
+  hasWaitlist    Boolean  @default(true) @map("has_waitlist")
+  hasZoom        Boolean  @default(false) @map("has_zoom")
+  hasZatca       Boolean  @default(true) @map("has_zatca")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("license_config")
+}

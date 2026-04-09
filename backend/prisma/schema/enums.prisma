@@ -131,14 +131,6 @@ enum HandoffType {
   @@map("handoff_type")
 }
 
-enum ConfigValueType {
-  string
-  json
-  file
-
-  @@map("config_value_type")
-}
-
 enum UserGender {
   male
   female
