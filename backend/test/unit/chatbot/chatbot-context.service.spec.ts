@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ChatbotContextService } from '../../../src/modules/chatbot/chatbot-context.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { ChatbotConfigService } from '../../../src/modules/chatbot/chatbot-config.service.js';
+import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
 
 const sessionId = 'session-uuid-1';
 const userId = 'user-uuid-1';
@@ -29,12 +30,14 @@ const mockConfig: any = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockWhitelabelService: any = {
+  getSystemName: jest.fn().mockResolvedValue('CareKit Clinic'),
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   user: {
     findUnique: jest.fn().mockResolvedValue({ firstName: 'Ahmad', lastName: 'Al-Rashid' }),
-  },
-  whiteLabelConfig: {
-    findFirst: jest.fn().mockResolvedValue({ key: 'clinic_name', value: 'CareKit Clinic' }),
   },
   chatMessage: {
     findMany: jest.fn().mockResolvedValue([]),
@@ -55,13 +58,14 @@ describe('ChatbotContextService', () => {
         ChatbotContextService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ChatbotConfigService, useValue: mockConfigService },
+        { provide: WhitelabelService, useValue: mockWhitelabelService },
       ],
     }).compile();
 
     service = module.get<ChatbotContextService>(ChatbotContextService);
     jest.clearAllMocks();
     mockPrisma.user.findUnique.mockResolvedValue({ firstName: 'Ahmad', lastName: 'Al-Rashid' });
-    mockPrisma.whiteLabelConfig.findFirst.mockResolvedValue({ key: 'clinic_name', value: 'CareKit Clinic' });
+    mockWhitelabelService.getSystemName.mockResolvedValue('CareKit Clinic');
     mockPrisma.chatMessage.findMany.mockResolvedValue([]);
   });
 
@@ -85,8 +89,8 @@ describe('ChatbotContextService', () => {
       expect(result.messages[0].content).toContain('Patient');
     });
 
-    it('should use default clinic name when config not found', async () => {
-      mockPrisma.whiteLabelConfig.findFirst.mockResolvedValue(null);
+    it('should use default clinic name when service returns fallback', async () => {
+      mockWhitelabelService.getSystemName.mockResolvedValue('CareKit Clinic');
 
       const result = await service.buildAiContext(sessionId, userId, 'Hi', mockConfig as Parameters<typeof service.buildAiContext>[3]);
 

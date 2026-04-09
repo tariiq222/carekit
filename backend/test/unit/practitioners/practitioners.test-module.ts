@@ -10,7 +10,7 @@ import { PractitionerServiceService } from '../../../src/modules/practitioners/p
 import { PractitionerRatingsService } from '../../../src/modules/practitioners/practitioner-ratings.service.js';
 import { PractitionerBreaksService } from '../../../src/modules/practitioners/practitioner-breaks.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
-import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 import { createMockPrisma } from './practitioners.fixtures.js';
 
 export interface PractitionersTestContext {
@@ -57,12 +57,9 @@ export async function createPractitionersTestModule(): Promise<PractitionersTest
         },
       },
       {
-        provide: WhitelabelService,
+        provide: ClinicSettingsService,
         useValue: {
-          getConfig: jest.fn().mockResolvedValue({}),
-          getConfigValue: jest.fn().mockResolvedValue(null),
           getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh'),
-          findMany: jest.fn().mockResolvedValue([]),
         },
       },
     ],

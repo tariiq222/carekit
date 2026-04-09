@@ -2,6 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { EmailProcessor } from '../../../src/modules/email/email.processor.js';
 import { EmailTemplatesService } from '../../../src/modules/email-templates/email-templates.service.js';
 import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 import { QueueFailureService } from '../../../src/common/queue/queue-failure.service.js';
 import type { Job } from 'bullmq';
 
@@ -9,21 +10,20 @@ const mockMailerService = { sendMail: jest.fn().mockResolvedValue(undefined) };
 const mockQueueFailureService = { notifyAdminsOfFailure: jest.fn().mockResolvedValue(undefined) };
 const mockEmailTemplatesService = { renderTemplate: jest.fn() };
 const mockWhitelabelService = {
-  getConfigMap: jest.fn().mockResolvedValue({
-    system_name: 'Test Clinic',
-    system_name_ar: 'عيادة تجريبية',
-    logo: '',
-    primary_color: '#2563EB',
-    email_header_show_logo: 'true',
-    email_header_show_name: 'true',
-    email_footer_phone: '',
-    email_footer_website: '',
-    email_footer_instagram: '',
-    email_footer_twitter: '',
-    email_footer_snapchat: '',
-    email_footer_tiktok: '',
-    email_footer_linkedin: '',
-    email_footer_youtube: '',
+  get: jest.fn().mockResolvedValue({
+    systemName: 'Test Clinic',
+    systemNameAr: 'عيادة تجريبية',
+    logoUrl: '',
+    primaryColor: '#2563EB',
+    emailHeaderShowLogo: true,
+    emailHeaderShowName: true,
+  }),
+};
+const mockClinicSettingsService = {
+  get: jest.fn().mockResolvedValue({
+    contactPhone: '',
+    website: '',
+    socialMedia: {},
   }),
 };
 
@@ -55,6 +55,7 @@ describe('EmailProcessor', () => {
       mockQueueFailureService as unknown as QueueFailureService,
       mockEmailTemplatesService as unknown as EmailTemplatesService,
       mockWhitelabelService as unknown as WhitelabelService,
+      mockClinicSettingsService as unknown as ClinicSettingsService,
     );
 
     // Bypass WorkerHost.worker (not available in unit tests)

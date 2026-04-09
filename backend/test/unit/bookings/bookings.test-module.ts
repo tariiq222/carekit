@@ -17,7 +17,7 @@ import { BookingPaymentHelper } from '../../../src/modules/bookings/booking-paym
 import { PriceResolverService } from '../../../src/modules/bookings/price-resolver.service.js';
 import { ClinicHoursService } from '../../../src/modules/clinic/clinic-hours.service.js';
 import { ClinicHolidaysService } from '../../../src/modules/clinic/clinic-holidays.service.js';
-import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 import {
   createMockPrisma,
   createMockZoom,
@@ -86,7 +86,7 @@ export async function createBookingsTestModule(): Promise<BookingsTestContext> {
       { provide: PriceResolverService, useValue: mockPriceResolver },
       { provide: ClinicHoursService, useValue: mockClinicHoursService },
       { provide: ClinicHolidaysService, useValue: mockClinicHolidaysService },
-      { provide: WhitelabelService, useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') } },
+      { provide: ClinicSettingsService, useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') } },
     ],
   }).compile();
 

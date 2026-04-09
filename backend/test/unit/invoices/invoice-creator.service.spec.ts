@@ -3,6 +3,8 @@ import { NotFoundException, BadRequestException, ConflictException } from '@nest
 import { InvoiceCreatorService } from '../../../src/modules/invoices/invoice-creator.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { ZatcaService } from '../../../src/modules/zatca/zatca.service.js';
+import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 
 const mockPayment = {
   id: 'payment-1', bookingId: 'booking-1', amount: 15000,
@@ -31,10 +33,26 @@ const mockCreatedInvoice = {
   zatcaStatus: 'not_applicable', vatAmount: 2250, vatRate: 15,
 };
 
+const mockWhitelabelService: Record<string, jest.Mock> = {
+  get: jest.fn().mockResolvedValue({
+    systemName: 'عيادة النور',
+    systemNameAr: 'عيادة النور',
+    logoUrl: null,
+    primaryColor: '#354FD8',
+  }),
+};
+
+const mockClinicSettingsService: Record<string, jest.Mock> = {
+  get: jest.fn().mockResolvedValue({
+    contactPhone: '+966500000000',
+    contactEmail: null,
+    address: null,
+  }),
+};
+
 const mockPrismaService: any = {
   payment: { findUnique: jest.fn() },
   invoice: { findUnique: jest.fn(), findFirst: jest.fn().mockResolvedValue(null), create: jest.fn() },
-  whiteLabelConfig: { findMany: jest.fn() },
   $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
 };
 
@@ -63,6 +81,8 @@ describe('InvoiceCreatorService', () => {
         InvoiceCreatorService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: ZatcaService, useValue: mockZatcaService },
+        { provide: WhitelabelService, useValue: mockWhitelabelService },
+        { provide: ClinicSettingsService, useValue: mockClinicSettingsService },
       ],
     }).compile();
 
@@ -235,10 +255,17 @@ describe('InvoiceCreatorService', () => {
 
     beforeEach(() => {
       mockPrismaService.invoice.findUnique.mockResolvedValue(mockFullInvoice);
-      mockPrismaService.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'system_name', value: 'عيادة النور' },
-        { key: 'contact_phone', value: '+966500000000' },
-      ]);
+      mockWhitelabelService.get.mockResolvedValue({
+        systemName: 'عيادة النور',
+        systemNameAr: 'عيادة النور',
+        logoUrl: null,
+        primaryColor: '#354FD8',
+      });
+      mockClinicSettingsService.get.mockResolvedValue({
+        contactPhone: '+966500000000',
+        contactEmail: null,
+        address: null,
+      });
     });
 
     it('throws NotFoundException when invoice not found', async () => {

@@ -7,6 +7,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { FeatureFlagsService } from '../../../src/modules/feature-flags/feature-flags.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { CacheService } from '../../../src/common/services/cache.service.js';
+import { LicenseService } from '../../../src/modules/license/license.service.js';
+
+const mockLicenseService = {
+  isFeatureLicensed: jest.fn().mockResolvedValue(true),
+  get: jest.fn().mockResolvedValue({}),
+  getFeaturesWithStatus: jest.fn().mockResolvedValue([]),
+};
 
 const mockPrisma = {
   featureFlag: {
@@ -31,6 +38,7 @@ async function createModule() {
       FeatureFlagsService,
       { provide: PrismaService, useValue: mockPrisma },
       { provide: CacheService, useValue: mockCache },
+      { provide: LicenseService, useValue: mockLicenseService },
     ],
   }).compile();
   return module.get<FeatureFlagsService>(FeatureFlagsService);
@@ -151,7 +159,7 @@ describe('FeatureFlagsService', () => {
 
       await expect(service.toggle('unknown_flag', true)).rejects.toThrow(NotFoundException);
       await expect(service.toggle('unknown_flag', true)).rejects.toMatchObject({
-        response: { statusCode: 404, error: 'NOT_FOUND' },
+        response: { statusCode: 404, error: 'Not Found' },
       });
     });
 

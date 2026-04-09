@@ -8,7 +8,7 @@ import { NotificationsService } from '../../../src/modules/notifications/notific
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../../../src/modules/bookings/booking-status-log.service.js';
-import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 
 const defaultSettings = {
   autoCompleteAfterHours: 2,
@@ -52,7 +52,7 @@ describe('BookingAutocompleteService', () => {
         { provide: ActivityLogService, useValue: mockActivityLog },
         { provide: BookingSettingsService, useValue: mockSettings },
         { provide: BookingStatusLogService, useValue: mockStatusLog },
-        { provide: WhitelabelService, useValue: { getConfig: jest.fn().mockResolvedValue({}), getConfigValue: jest.fn().mockResolvedValue(null), getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') } },
+        { provide: ClinicSettingsService, useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') } },
       ],
     }).compile();
 

@@ -7,12 +7,29 @@ import { ZatcaService } from '../../../src/modules/zatca/zatca.service.js';
 import { InvoiceHashService } from '../../../src/modules/zatca/services/invoice-hash.service.js';
 import { QrGeneratorService } from '../../../src/modules/zatca/services/qr-generator.service.js';
 import { XmlBuilderService } from '../../../src/modules/zatca/services/xml-builder.service.js';
-import { PrismaService } from '../../../src/database/prisma.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
+import { ClinicIntegrationsService } from '../../../src/modules/clinic-integrations/clinic-integrations.service.js';
 
 const ZERO_HASH = '0'.repeat(64);
 
-const mockPrisma = {
-  whiteLabelConfig: { findMany: jest.fn() },
+const mockClinicSettingsService = {
+  get: jest.fn().mockResolvedValue({
+    vatRate: 15,
+    vatRegistrationNumber: '300000000000003',
+    businessRegistration: 'CR-12345',
+    companyNameAr: 'Test Clinic',
+    sellerAddress: '123 Main St',
+    clinicCity: 'Riyadh',
+  }),
+};
+
+const mockClinicIntegrationsService = {
+  getRaw: jest.fn().mockResolvedValue({
+    zatcaPhase: 'phase1',
+    zatcaCsid: null,
+    zatcaSecret: null,
+    zatcaPrivateKey: null,
+  }),
 };
 const mockHashService = {
   hashXml: jest.fn().mockReturnValue('deadbeef'),
@@ -58,7 +75,8 @@ describe('ZatcaService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ZatcaService,
-        { provide: PrismaService, useValue: mockPrisma },
+        { provide: ClinicSettingsService, useValue: mockClinicSettingsService },
+        { provide: ClinicIntegrationsService, useValue: mockClinicIntegrationsService },
         { provide: InvoiceHashService, useValue: mockHashService },
         { provide: QrGeneratorService, useValue: mockQrService },
         { provide: XmlBuilderService, useValue: mockXmlBuilder },
@@ -70,16 +88,21 @@ describe('ZatcaService', () => {
   // ─── loadConfig ───────────────────────────────────────────────────────────
 
   describe('loadConfig', () => {
-    it('returns correct config from DB keys', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'zatca_phase', value: 'phase2' },
-        { key: 'vat_rate', value: '15' },
-        { key: 'vat_registration_number', value: '300000000000003' },
-        { key: 'business_registration', value: 'CR-12345' },
-        { key: 'system_name', value: 'Test Clinic' },
-        { key: 'seller_address', value: '123 Main St' },
-        { key: 'clinic_city', value: 'Riyadh' },
-      ]);
+    it('returns correct config from ClinicSettings + ClinicIntegrations', async () => {
+      mockClinicSettingsService.get.mockResolvedValue({
+        vatRate: 15,
+        vatRegistrationNumber: '300000000000003',
+        businessRegistration: 'CR-12345',
+        companyNameAr: 'Test Clinic',
+        sellerAddress: '123 Main St',
+        clinicCity: 'Riyadh',
+      });
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaPhase: 'phase2',
+        zatcaCsid: null,
+        zatcaSecret: null,
+        zatcaPrivateKey: null,
+      });
       const config = await service.loadConfig();
       expect(config.phase).toBe('phase2');
       expect(config.vatRate).toBe(15);
@@ -90,26 +113,39 @@ describe('ZatcaService', () => {
       expect(config.city).toBe('Riyadh');
     });
 
-    it('defaults to phase1 when zatca_phase not set', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'vat_rate', value: '15' },
-      ]);
+    it('defaults to phase1 when zatcaPhase not set', async () => {
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaPhase: null,
+        zatcaCsid: null,
+        zatcaSecret: null,
+        zatcaPrivateKey: null,
+      });
       const config = await service.loadConfig();
       expect(config.phase).toBe('phase1');
     });
 
-    it('defaults vatRate to 0 when vat_rate not set', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'zatca_phase', value: 'phase1' },
-      ]);
+    it('defaults vatRate to 0 when vatRate not set', async () => {
+      mockClinicSettingsService.get.mockResolvedValue({
+        vatRate: null,
+        vatRegistrationNumber: '',
+        businessRegistration: '',
+        companyNameAr: '',
+        sellerAddress: '',
+        clinicCity: '',
+      });
       const config = await service.loadConfig();
       expect(config.vatRate).toBe(0);
     });
 
-    it('uses empty string for missing vat_registration_number', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'zatca_phase', value: 'phase1' },
-      ]);
+    it('uses empty string for missing vatRegistrationNumber', async () => {
+      mockClinicSettingsService.get.mockResolvedValue({
+        vatRate: 15,
+        vatRegistrationNumber: null,
+        businessRegistration: '',
+        companyNameAr: '',
+        sellerAddress: '',
+        clinicCity: '',
+      });
       const config = await service.loadConfig();
       expect(config.vatRegistrationNumber).toBe('');
     });

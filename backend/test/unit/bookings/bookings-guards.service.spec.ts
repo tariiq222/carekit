@@ -25,7 +25,7 @@ import { ClinicHoursService } from '../../../src/modules/clinic/clinic-hours.ser
 import { ClinicHolidaysService } from '../../../src/modules/clinic/clinic-holidays.service.js';
 import { BookingRescheduleService } from '../../../src/modules/bookings/booking-reschedule.service.js';
 import { BookingCreationService } from '../../../src/modules/bookings/booking-creation.service.js';
-import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 
 // ---------------------------------------------------------------------------
 // Mock setup
@@ -138,7 +138,7 @@ describe('BookingsService — Guard Tests', () => {
         { provide: ClinicHoursService, useValue: { getAll: jest.fn().mockResolvedValue([0, 1, 2, 3, 4, 5, 6].map((d) => ({ dayOfWeek: d, startTime: '08:00', endTime: '20:00', isActive: true }))), getForDay: jest.fn() } },
         { provide: ClinicHolidaysService, useValue: { findAll: jest.fn().mockResolvedValue([]), isHoliday: jest.fn().mockResolvedValue(false) } },
         { provide: BookingRescheduleService, useValue: { reschedule: jest.fn() } },
-        { provide: WhitelabelService, useValue: { getConfig: jest.fn().mockResolvedValue({}), getConfigValue: jest.fn().mockResolvedValue(null), getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') } },
+        { provide: ClinicSettingsService, useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') } },
       ],
     }).compile();
 

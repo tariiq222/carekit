@@ -16,7 +16,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ReminderService } from '../../../src/modules/tasks/reminder.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
-import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 
 // ---------------------------------------------------------------------------
 // Mock factories
@@ -33,7 +33,7 @@ const mockNotificationsService = {
   createNotification: jest.fn().mockResolvedValue({ id: 'notif-1' }),
 };
 
-const mockWhitelabelService = {
+const mockClinicSettingsService = {
   getTimeFormat: jest.fn().mockResolvedValue('24h'),
   getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh'),
 };
@@ -105,8 +105,8 @@ describe('ReminderService', () => {
           useValue: mockNotificationsService,
         },
         {
-          provide: WhitelabelService,
-          useValue: mockWhitelabelService,
+          provide: ClinicSettingsService,
+          useValue: mockClinicSettingsService,
         },
       ],
     }).compile();
@@ -114,8 +114,8 @@ describe('ReminderService', () => {
     service = module.get<ReminderService>(ReminderService);
 
     jest.clearAllMocks();
-    mockWhitelabelService.getTimeFormat.mockResolvedValue('24h');
-    mockWhitelabelService.getTimezone.mockResolvedValue('Asia/Riyadh');
+    mockClinicSettingsService.getTimeFormat.mockResolvedValue('24h');
+    mockClinicSettingsService.getTimezone.mockResolvedValue('Asia/Riyadh');
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -229,7 +229,7 @@ describe('ReminderService', () => {
         notifCallCount++;
         return Promise.resolve({});
       });
-      mockWhitelabelService.getTimeFormat.mockResolvedValue('24h');
+      mockClinicSettingsService.getTimeFormat.mockResolvedValue('24h');
       mockPrismaService.booking.findMany.mockResolvedValue([
         {
           id: 'b-1',

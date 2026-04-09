@@ -6,6 +6,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UnrecoverableError } from 'bullmq';
 import { ZatcaSubmitProcessor } from '../../../src/modules/zatca/services/zatca-submit.processor.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
+import { ClinicIntegrationsService } from '../../../src/modules/clinic-integrations/clinic-integrations.service.js';
 import { ZatcaApiService } from '../../../src/modules/zatca/services/zatca-api.service.js';
 import { XmlSigningService } from '../../../src/modules/zatca/services/xml-signing.service.js';
 import { InvoiceHashService } from '../../../src/modules/zatca/services/invoice-hash.service.js';
@@ -19,9 +20,14 @@ const mockPrisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
-  whiteLabelConfig: {
-    findMany: jest.fn(),
-  },
+};
+
+const mockClinicIntegrationsService = {
+  getRaw: jest.fn().mockResolvedValue({
+    zatcaCsid: 'csid-token',
+    zatcaSecret: 'secret-value',
+    zatcaPhase: 'phase2',
+  }),
 };
 
 const mockApiService = {
@@ -67,6 +73,7 @@ describe('ZatcaSubmitProcessor', () => {
       providers: [
         ZatcaSubmitProcessor,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: ClinicIntegrationsService, useValue: mockClinicIntegrationsService },
         { provide: ZatcaApiService, useValue: mockApiService },
         { provide: XmlSigningService, useValue: mockSigningService },
         { provide: InvoiceHashService, useValue: mockHashService },
@@ -91,10 +98,11 @@ describe('ZatcaSubmitProcessor', () => {
       mockHashService.hashXml.mockReturnValue('signed-hash-hex');
       mockHashService.toBase64.mockReturnValue('c2lnbmVkLWhhc2g=');
 
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'zatca_csid', value: 'csid-token' },
-        { key: 'zatca_secret', value: 'secret-value' },
-      ]);
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaCsid: 'csid-token',
+        zatcaSecret: 'secret-value',
+        zatcaPhase: 'phase2',
+      });
 
       const successResponse: ZatcaApiResponse = {
         status: '200',
@@ -211,10 +219,11 @@ describe('ZatcaSubmitProcessor', () => {
       mockHashService.hashXml.mockReturnValue('hash-hex');
       mockHashService.toBase64.mockReturnValue('hash-b64');
 
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'zatca_csid', value: 'csid' },
-        { key: 'zatca_secret', value: 'secret' },
-      ]);
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaCsid: 'csid',
+        zatcaSecret: 'secret',
+        zatcaPhase: 'phase2',
+      });
 
       mockPrisma.invoice.update.mockResolvedValue({});
     });
@@ -263,7 +272,11 @@ describe('ZatcaSubmitProcessor', () => {
     });
 
     it('should throw when ZATCA credentials are missing (UnrecoverableError)', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([]);
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaCsid: null,
+        zatcaSecret: null,
+        zatcaPhase: 'phase2',
+      });
 
       const job = makeJob({ invoiceId: 'inv-004' });
       await expect(processor.process(job)).rejects.toThrow(UnrecoverableError);
