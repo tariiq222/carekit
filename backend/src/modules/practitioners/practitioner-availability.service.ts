@@ -300,7 +300,7 @@ export class PractitionerAvailabilityService {
       practitionerBuffer._max.bufferMinutes ?? 0,
     );
 
-    const clinicTz = await this.whitelabelService.getTimezone();
+    const clinicTz = await this.clinicSettingsService.getTimezone();
     const isToday = isSameLocalDate(targetDate, new Date(), clinicTz);
     const allSlots = generateSlots(availabilities, duration, bufferMinutes, isToday);
 

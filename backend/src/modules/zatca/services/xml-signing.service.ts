@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../../database/prisma.service.js';
+import { ClinicIntegrationsService } from '../../clinic-integrations/clinic-integrations.service.js';
 import { ZatcaCryptoService } from './zatca-crypto.service.js';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class XmlSigningService {
   private readonly logger = new Logger(XmlSigningService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly clinicIntegrationsService: ClinicIntegrationsService,
     private readonly config: ConfigService,
     private readonly cryptoService: ZatcaCryptoService,
   ) {}
@@ -114,17 +114,13 @@ export class XmlSigningService {
   }
 
   private async getStoredPrivateKey(): Promise<string | null> {
-    const config = await this.prisma.whiteLabelConfig.findUnique({
-      where: { key: 'zatca_private_key' },
-    });
-    return config?.value ?? null;
+    const integrations = await this.clinicIntegrationsService.getRaw();
+    return integrations.zatcaPrivateKey ?? null;
   }
 
   private async getStoredCsid(): Promise<string | null> {
-    const config = await this.prisma.whiteLabelConfig.findUnique({
-      where: { key: 'zatca_csid' },
-    });
-    return config?.value ?? null;
+    const integrations = await this.clinicIntegrationsService.getRaw();
+    return integrations.zatcaCsid ?? null;
   }
 
   /**
