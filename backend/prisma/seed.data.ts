@@ -22,6 +22,10 @@ export const MODULES = [
   'intake_forms',
   'gift-cards',
   'activity-log',
+  'license',
+  'clinic-settings',
+  'clinic-integrations',
+  'feature-flags',
 ] as const;
 
 export const ACTIONS = ['view', 'create', 'edit', 'delete'] as const;
@@ -104,8 +108,9 @@ export const ROLES: RoleDefinition[] = [
     isSystem: true,
     permissions: {
       ...Object.fromEntries(
-        MODULES.filter((m) => m !== 'whitelabel' && m !== 'roles').map((m) => [m, [...ACTIONS]]),
+        MODULES.filter((m) => m !== 'whitelabel' && m !== 'roles' && m !== 'license').map((m) => [m, [...ACTIONS]]),
       ),
+      license: ['view'],
       // Extra permissions
       notifications: ['view', 'create', 'edit', 'delete', 'update'],
       chatbot: ['view', 'create', 'edit', 'delete', 'use'],

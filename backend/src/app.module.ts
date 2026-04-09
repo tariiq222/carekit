@@ -51,6 +51,9 @@ import { EmailTemplatesModule } from './modules/email-templates/email-templates.
 import { IntegrationsModule } from './modules/integrations/integrations.module.js';
 import { SpecialtiesModule } from './modules/specialties/specialties.module.js';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module.js';
+import { LicenseModule } from './modules/license/license.module.js';
+import { ClinicSettingsModule } from './modules/clinic-settings/clinic-settings.module.js';
+import { ClinicIntegrationsModule } from './modules/clinic-integrations/clinic-integrations.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
 import { MetricsModule } from './common/metrics/metrics.module.js';
 import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
@@ -124,6 +127,9 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     IntegrationsModule,
     SpecialtiesModule,
     FeatureFlagsModule,
+    LicenseModule,
+    ClinicSettingsModule,
+    ClinicIntegrationsModule,
   ],
   controllers: [],
   providers: [
