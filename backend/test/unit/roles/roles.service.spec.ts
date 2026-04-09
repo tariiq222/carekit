@@ -263,12 +263,17 @@ describe('RolesService — assignPermission', () => {
     await expect(service.assignPermission('bad-id', 'bookings', 'create')).rejects.toThrow(NotFoundException);
   });
 
-  it('should throw BadRequestException when role is system role', async () => {
+  it('should allow permission assignment even for system roles (only deletion/rename is restricted)', async () => {
     mockPrisma.role.findUnique.mockResolvedValue(mockSystemRole);
+    mockPrisma.permission.findUnique.mockResolvedValue(mockPermission);
+    mockPrisma.rolePermission.findUnique.mockResolvedValue(null);
+    mockPrisma.rolePermission.create.mockResolvedValue({ ...mockPermission, roleId: mockSystemRole.id });
+    mockPrisma.userRole.findMany.mockResolvedValue([]);
 
-    await expect(service.assignPermission(mockSystemRole.id, 'bookings', 'create')).rejects.toThrow(
-      BadRequestException,
-    );
+    // System roles CAN have permissions modified — no exception expected
+    await expect(
+      service.assignPermission(mockSystemRole.id, 'bookings', 'create'),
+    ).resolves.toBeDefined();
   });
 
   it('should throw NotFoundException when permission not found', async () => {
@@ -306,12 +311,15 @@ describe('RolesService — removePermission', () => {
     expect(mockAuthCache.invalidate).toHaveBeenCalledWith(mockUserId);
   });
 
-  it('should throw BadRequestException when role is system role', async () => {
+  it('should allow permission removal even for system roles (only deletion/rename is restricted)', async () => {
     mockPrisma.role.findUnique.mockResolvedValue(mockSystemRole);
+    mockPrisma.permission.findUnique.mockResolvedValue(mockPermission);
+    mockPrisma.rolePermission.deleteMany.mockResolvedValue({ count: 1 });
+    mockPrisma.userRole.findMany.mockResolvedValue([]);
 
-    await expect(service.removePermission(mockSystemRole.id, 'bookings', 'create')).rejects.toThrow(
-      BadRequestException,
-    );
-    expect(mockPrisma.rolePermission.deleteMany).not.toHaveBeenCalled();
+    // System roles CAN have permissions removed — no exception expected
+    const result = await service.removePermission(mockSystemRole.id, 'bookings', 'create');
+    expect(result).toEqual({ deleted: true });
+    expect(mockPrisma.rolePermission.deleteMany).toHaveBeenCalled();
   });
 });

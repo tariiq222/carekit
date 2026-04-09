@@ -276,6 +276,23 @@ export const enOps: Record<string, string> = {
   "settings.emailTemplates.previewLabel": "Preview",
   "settings.emailTemplates.saved": "Email template saved successfully",
 
+  // ─── Settings — Email Layout ───
+  "settings.emailLayout.title": "Email Design",
+  "settings.emailLayout.header": "Header",
+  "settings.emailLayout.showLogo": "Show Logo",
+  "settings.emailLayout.showName": "Show Clinic Name",
+  "settings.emailLayout.footer": "Footer",
+  "settings.emailLayout.phone": "Phone Number",
+  "settings.emailLayout.website": "Website URL",
+  "settings.emailLayout.instagram": "Instagram",
+  "settings.emailLayout.twitter": "Twitter / X",
+  "settings.emailLayout.snapchat": "Snapchat",
+  "settings.emailLayout.tiktok": "TikTok",
+  "settings.emailLayout.linkedin": "LinkedIn",
+  "settings.emailLayout.youtube": "YouTube",
+  "settings.emailLayout.saved": "Email design saved successfully",
+  "settings.emailLayout.description": "Customize email appearance (header and footer)",
+
   // ─── Service Booking Types ───
   "services.bookingTypes": "Booking Types & Pricing",
   "services.bookingTypes.clinic": "Clinic",

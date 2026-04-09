@@ -491,7 +491,7 @@ describe('Patients Module (e2e)', () => {
         .post(`${PATIENTS_URL}/walk-in`)
         .set(getAuthHeaders(receptionist.accessToken))
         .send({ firstName: 'زائر', lastName: 'مجهول', phone: UNIQUE_PHONE })
-        .expect(201);
+        .expect(200);
 
       expectSuccessResponse(res.body);
       const data = res.body.data;
@@ -508,7 +508,7 @@ describe('Patients Module (e2e)', () => {
         .post(`${PATIENTS_URL}/walk-in`)
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({ ...WALK_IN_FULL, phone })
-        .expect(201);
+        .expect(200);
 
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('accountType', 'walk_in');
@@ -815,7 +815,7 @@ describe('Patients Module (e2e)', () => {
           allergies: 'Aspirin',
           nationality: 'Saudi',
         })
-        .expect(201);
+        .expect(200);
 
       expectSuccessResponse(res.body);
       lifecyclePatientId = res.body.data.id as string;

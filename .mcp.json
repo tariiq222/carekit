@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "maestro": {
+      "command": "/bin/bash",
+      "args": ["-c", "cd /Users/tariq/Documents/my_programs/maestro-mcp && ZAI_API_KEY=32167643b63240f88b09a03bd5f4f27a.96ub6isYe0PZYXnb npx tsx src/index.ts"]
+    }
+  }
+}

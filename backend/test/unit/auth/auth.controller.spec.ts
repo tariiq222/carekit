@@ -99,8 +99,8 @@ describe('AuthController', () => {
         res,
         'refresh-token',
       );
-      expect(result.success).toBe(true);
-      expect(result.data).not.toHaveProperty('refreshToken');
+      expect(result).toHaveProperty('accessToken');
+      expect(result).not.toHaveProperty('refreshToken');
     });
   });
 
@@ -124,7 +124,7 @@ describe('AuthController', () => {
       );
       expect(mockAuthService.login).toHaveBeenCalledWith(user);
       expect(mockCookieService.setRefreshTokenCookie).toHaveBeenCalled();
-      expect(result.success).toBe(true);
+      expect(result).toHaveProperty('accessToken');
     });
 
     it('should throw UnauthorizedException if user validation fails', async () => {
@@ -252,7 +252,7 @@ describe('AuthController', () => {
         OtpType.LOGIN,
       );
       expect(mockAuthService.login).toHaveBeenCalledWith(userPayload);
-      expect(result.success).toBe(true);
+      expect(result).toHaveProperty('accessToken');
     });
   });
 
@@ -277,7 +277,7 @@ describe('AuthController', () => {
       );
 
       expect(mockAuthService.refreshToken).toHaveBeenCalledWith('cookie-token');
-      expect(result.success).toBe(true);
+      expect(result).toHaveProperty('accessToken');
     });
 
     it('should use body token when no cookie token', async () => {
@@ -298,9 +298,9 @@ describe('AuthController', () => {
       );
 
       expect(mockAuthService.refreshToken).toHaveBeenCalledWith('body-token');
-      expect(result.success).toBe(true);
+      expect(result).toHaveProperty('accessToken');
       // Mobile compatibility: refreshToken included in response
-      expect((result.data as Record<string, unknown>).refreshToken).toBe(
+      expect((result as Record<string, unknown>).refreshToken).toBe(
         'new-refresh',
       );
     });

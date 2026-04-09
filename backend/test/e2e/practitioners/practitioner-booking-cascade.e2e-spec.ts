@@ -30,6 +30,7 @@ import {
   type TestApp,
   type AuthResult,
 } from '../setup/setup';
+import { PrismaService } from '../../../src/database/prisma.service.js';
 
 const PRACTITIONERS_URL = `${API_PREFIX}/practitioners`;
 const BOOKINGS_URL = `${API_PREFIX}/bookings`;
@@ -57,6 +58,7 @@ let deletedPractitionerId: string;
 let serviceId: string;
 let specialtyId: string;
 let pracUserId: string;
+let prisma: PrismaService;
 
 async function deletePractitioner(): Promise<void> {
   await request(httpServer)
@@ -75,12 +77,24 @@ async function restorePractitioner(): Promise<void> {
       bio: 'Restored cascade test practitioner',
       bioAr: 'طبيب مستعاد',
       experience: 5,
-      priceClinic: 10000,
-      pricePhone: 10000,
-      priceVideo: 10000,
     });
-  if (res.status !== 201) return;
-  deletedPractitionerId = res.body.data.id as string;
+  if (res.status === 201) {
+    deletedPractitionerId = res.body.data.id as string;
+  } else {
+    // Practitioner already exists (may be soft-deleted) — restore via Prisma
+    const prac = await prisma.practitioner.findFirst({
+      where: { userId: pracUserId },
+      select: { id: true, deletedAt: true },
+    });
+    if (!prac) return;
+    deletedPractitionerId = prac.id;
+    if (prac.deletedAt !== null) {
+      await prisma.practitioner.update({
+        where: { id: prac.id },
+        data: { deletedAt: null, isActive: true },
+      });
+    }
+  }
 
   await request(httpServer)
     .post(`${PRACTITIONERS_URL}/${deletedPractitionerId}/services`)
@@ -121,6 +135,7 @@ async function createBooking(date: string, startTime: string): Promise<string> {
 beforeAll(async () => {
   testApp = await createTestApp();
   httpServer = testApp.httpServer;
+  prisma = testApp.module.get<PrismaService>(PrismaService);
 
   superAdmin = await loginTestUser(
     httpServer,
@@ -203,9 +218,6 @@ beforeAll(async () => {
       bio: 'Cascade delete test practitioner',
       bioAr: 'طبيب اختبار الحذف',
       experience: 5,
-      priceClinic: 10000,
-      pricePhone: 10000,
-      priceVideo: 10000,
     });
 
   if (pracRes.status === 201) {

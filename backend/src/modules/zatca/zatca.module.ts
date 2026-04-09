@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
+import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
+import { ClinicIntegrationsModule } from '../clinic-integrations/clinic-integrations.module.js';
 import { ZatcaController } from './zatca.controller.js';
 import { ZatcaService } from './zatca.service.js';
 import { InvoiceHashService } from './services/invoice-hash.service.js';
@@ -18,6 +20,8 @@ import { DEFAULT_JOB_OPTIONS, QUEUE_ZATCA_SUBMIT } from '../../config/constants/
   imports: [
     BullModule.registerQueue({ name: QUEUE_ZATCA_SUBMIT, defaultJobOptions: DEFAULT_JOB_OPTIONS }),
     ConfigModule,
+    ClinicSettingsModule,
+    ClinicIntegrationsModule,
   ],
   controllers: [ZatcaController],
   providers: [

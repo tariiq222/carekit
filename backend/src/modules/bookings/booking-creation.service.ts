@@ -21,7 +21,7 @@ import { ClinicHoursService } from '../clinic/clinic-hours.service.js';
 import { ClinicHolidaysService } from '../clinic/clinic-holidays.service.js';
 import { NOTIF } from '../../common/constants/notification-messages.js';
 import { ERR } from '../../common/constants/error-messages.js';
-import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 
 @Injectable()
 export class BookingCreationService {
@@ -38,7 +38,7 @@ export class BookingCreationService {
     private readonly priceResolver: PriceResolverService,
     private readonly clinicHoursService: ClinicHoursService,
     private readonly clinicHolidaysService: ClinicHolidaysService,
-    private readonly whitelabelService: WhitelabelService,
+    private readonly clinicSettingsService: ClinicSettingsService,
   ) {}
 
   async execute(
@@ -93,7 +93,7 @@ export class BookingCreationService {
     const duration = resolved.duration;
 
     const bookingDate = new Date(dto.date);
-    const clinicTz = await this.whitelabelService.getTimezone();
+    const clinicTz = await this.clinicSettingsService.getTimezone();
     const nowRiyadh = new Intl.DateTimeFormat('en-CA', { timeZone: clinicTz }).format(new Date());
     const today = new Date(nowRiyadh);
     if (bookingDate < today) throw new BadRequestException({ statusCode: 400, message: ERR.booking.pastDate, error: 'VALIDATION_ERROR' });

@@ -4,7 +4,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../bookings/booking-status-log.service.js';
-import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 
 @Injectable()
 export class BookingAutocompleteService {
@@ -16,13 +16,13 @@ export class BookingAutocompleteService {
     private readonly activityLogService: ActivityLogService,
     private readonly bookingSettingsService: BookingSettingsService,
     private readonly statusLogService: BookingStatusLogService,
-    private readonly whitelabelService: WhitelabelService,
+    private readonly clinicSettingsService: ClinicSettingsService,
   ) {}
 
   /** Auto-complete bookings that are past the auto-complete window */
   async autoCompleteBookings(): Promise<void> {
     const settings = await this.bookingSettingsService.get();
-    const clinicTz = await this.whitelabelService.getTimezone();
+    const clinicTz = await this.clinicSettingsService.getTimezone();
     const now = new Date();
 
     const riyadhTomorrow = new Date(

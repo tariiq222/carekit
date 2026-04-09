@@ -106,16 +106,25 @@ describe('BookingRescheduleService — minBookingLeadMinutes', () => {
   });
 
   it('should ALLOW reschedule to a slot 3 hours from now when lead=120', async () => {
-    // Mock transaction to succeed (availability check passes)
+    // Build date + time that is 3 hours from now using local time (matching how service parses it)
     const future = new Date(Date.now() + 3 * 60 * 60 * 1000);
-    const date = future.toISOString().split('T')[0];
+    // Format date in local timezone (YYYY-MM-DD)
+    const localDate = new Date(future.getTime() - future.getTimezoneOffset() * 60000);
+    const date = localDate.toISOString().split('T')[0];
     const h = String(future.getHours()).padStart(2, '0');
     const mm = String(future.getMinutes()).padStart(2, '0');
     const startTime = `${h}:${mm}`;
 
-    // Mock the transaction to return a new booking (availability passes)
-    const newBooking = makeBooking({ id: 'eeeeeeee-eeee-4eee-eeee-eeeeeeeeeeee', date: future, startTime });
-    mockPrisma.$transaction.mockResolvedValueOnce(newBooking);
+    // Provide availability slot so validateAvailability passes inside transaction
+    mockPrisma.practitionerAvailability.findMany.mockResolvedValue([
+      { dayOfWeek: future.getDay(), startTime: '00:00', endTime: '23:59', isActive: true, branchId: null },
+    ]);
+    // booking.findMany needed by checkDoubleBooking
+    mockPrisma.booking.findMany = jest.fn().mockResolvedValue([]);
+    // booking.create + booking.update + payment.updateMany needed by transaction body
+    mockPrisma.booking.create = jest.fn().mockResolvedValue(makeBooking({ id: 'eeeeeeee-eeee-4eee-eeee-eeeeeeeeeeee' }));
+    mockPrisma.booking.update = jest.fn().mockResolvedValue({});
+    mockPrisma.payment = { updateMany: jest.fn().mockResolvedValue({}) };
     mockPrisma.practitioner = { findUnique: jest.fn().mockResolvedValue({ userId: null }) };
 
     // Should NOT throw BOOKING_LEAD_TIME_VIOLATION

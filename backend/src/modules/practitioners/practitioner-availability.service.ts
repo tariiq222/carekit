@@ -14,14 +14,14 @@ import {
   validateScheduleSlots,
   checkOverlappingSlots,
 } from './availability-helpers.js';
-import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 
 @Injectable()
 export class PractitionerAvailabilityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bookingSettingsService: BookingSettingsService,
-    private readonly whitelabelService: WhitelabelService,
+    private readonly clinicSettingsService: ClinicSettingsService,
   ) {}
 
   async getAvailability(practitionerId: string, branchId?: string) {
@@ -198,7 +198,7 @@ export class PractitionerAvailabilityService {
       const dayBreaks = breaks.filter((b) => b.dayOfWeek === dayOfWeek);
 
       // Generate slots
-      const clinicTz = await this.whitelabelService.getTimezone();
+      const clinicTz = await this.clinicSettingsService.getTimezone();
       const isToday = isSameLocalDate(cursor, new Date(), clinicTz);
       const allSlots = generateSlots(dayAvailabilities, duration, bufferMinutes, isToday);
 

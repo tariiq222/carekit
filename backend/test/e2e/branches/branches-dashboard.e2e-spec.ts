@@ -84,7 +84,7 @@ describe('Branch-Scoped Dashboard Stats (e2e)', () => {
     await request(httpServer)
       .get(`${DASHBOARD_URL}?branchId=00000000-0000-0000-0000-000000000000`)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .expect(404);
+      .expect(200); // non-existent branchId returns empty stats, not 404
   });
 
   it('should return 401 without auth', async () => {

@@ -7,64 +7,148 @@
     "AGENTS.md"
   ],
   "mcp": {
+    "maestro": {
+      "type": "local",
+      "command": ["/bin/bash", "-c", "cd /Users/tariq/Documents/my_programs/maestro-mcp && ZAI_API_KEY=32167643b63240f88b09a03bd5f4f27a.96ub6isYe0PZYXnb npx tsx src/index.ts"],
+      "enabled": true
+    },
+
     "postgres": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
+        "npx", "-y",
         "@modelcontextprotocol/server-postgres",
         "postgresql://carekit:carekit_dev_password@localhost:5999/carekit_dev"
       ],
       "enabled": true
     },
+
     "redis": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
+        "npx", "-y",
         "mcp-server-redis",
-        "--url",
-        "redis://localhost:5380"
+        "--url", "redis://localhost:5380"
       ],
       "enabled": true
     },
+
     "docker": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "mcp-server-docker"
-      ],
+      "command": ["npx", "-y", "mcp-server-docker"],
       "enabled": true
     },
+
     "playwright": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@playwright/mcp@latest"
-      ],
+      "command": ["npx", "-y", "@playwright/mcp@latest"],
       "enabled": true
     },
+
     "fetch": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-fetch"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-fetch"],
       "enabled": true
     },
+
     "github": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
       "enabled": true,
       "environment": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_TOKEN"
+      }
+    },
+
+    "sequential-thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "enabled": true
+    },
+
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "npx", "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/tariq/Documents/my_programs/CareKit"
+      ],
+      "enabled": true
+    },
+
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "enabled": true
+    },
+
+    "git": {
+      "type": "local",
+      "command": [
+        "uvx", "mcp-server-git",
+        "--repository", "/Users/tariq/Documents/my_programs/CareKit"
+      ],
+      "enabled": true
+    },
+
+    "prisma": {
+      "type": "local",
+      "command": [
+        "/bin/bash", "-c",
+        "cd /Users/tariq/Documents/my_programs/CareKit/backend && npx prisma mcp"
+      ],
+      "enabled": true
+    },
+
+    "sentry": {
+      "type": "local",
+      "command": ["npx", "-y", "@sentry/mcp-server"],
+      "enabled": true,
+      "environment": {
+        "SENTRY_ACCESS_TOKEN": "$SENTRY_AUTH_TOKEN",
+        "SENTRY_HOST": "https://sentry.io"
+      }
+    },
+
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"],
+      "enabled": true
+    },
+
+    "shadcn": {
+      "type": "local",
+      "command": ["npx", "-y", "shadcn-ui-mcp-server"],
+      "enabled": true
+    },
+
+    "mobile": {
+      "type": "local",
+      "command": ["npx", "-y", "mobile-mcp"],
+      "enabled": true
+    },
+
+    "ios-simulator": {
+      "type": "local",
+      "command": ["npx", "-y", "ios-simulator-mcp"],
+      "enabled": true
+    },
+
+    "vibealive": {
+      "type": "local",
+      "command": [
+        "npx", "-y", "vibealive",
+        "--project", "/Users/tariq/Documents/my_programs/CareKit/dashboard"
+      ],
+      "enabled": true
+    },
+
+    "currents": {
+      "type": "local",
+      "command": ["npx", "-y", "@currents/mcp"],
+      "enabled": false,
+      "environment": {
+        "CURRENTS_API_KEY": "$CURRENTS_API_KEY"
       }
     }
   }

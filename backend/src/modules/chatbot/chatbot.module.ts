@@ -16,6 +16,7 @@ import { ChatbotSessionService } from './chatbot-session.service.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { ServicesModule } from '../services/services.module.js';
 import { PractitionersModule } from '../practitioners/practitioners.module.js';
+import { WhitelabelModule } from '../whitelabel/whitelabel.module.js';
 import { BookingsService } from '../bookings/bookings.service.js';
 import { ServicesService } from '../services/services.service.js';
 import { PractitionersService } from '../practitioners/practitioners.service.js';
@@ -26,7 +27,7 @@ import {
 } from './interfaces/chatbot-domain.interface.js';
 
 @Module({
-  imports: [BookingsModule, ServicesModule, PractitionersModule],
+  imports: [BookingsModule, ServicesModule, PractitionersModule, WhitelabelModule],
   controllers: [ChatbotController, ChatbotKbController, ChatbotAdminController],
   providers: [
     ChatbotService,

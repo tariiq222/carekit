@@ -31,7 +31,7 @@ export class BookingSettingsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Patch()
-  @CheckPermissions({ module: 'bookings', action: 'edit' })
+  @CheckPermissions({ module: 'whitelabel', action: 'edit' })
   async update(@Body() dto: UpdateBookingSettingsDto) {
     const data = await this.bookingSettingsService.update(dto);
     return { success: true, data };

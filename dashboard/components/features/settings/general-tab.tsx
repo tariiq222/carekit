@@ -134,13 +134,14 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
                     <Input value={clinicPhone} onChange={(e) => setClinicPhone(e.target.value)} />
                   </CardContent>
                 </Card>
+                <Card className="shadow-sm bg-surface">
+                  <CardContent className="space-y-2 pt-3 pb-3">
+                    <Label>{t("settings.clinicAddress")}</Label>
+                    <Input value={clinicAddress} onChange={(e) => setClinicAddress(e.target.value)} />
+                  </CardContent>
+                </Card>
+                <div />
               </div>
-              <Card className="shadow-sm bg-surface">
-                <CardContent className="space-y-2 pt-3 pb-3">
-                  <Label>{t("settings.clinicAddress")}</Label>
-                  <Input value={clinicAddress} onChange={(e) => setClinicAddress(e.target.value)} />
-                </CardContent>
-              </Card>
               <div className="flex justify-end mt-auto pt-2">
                 <Button size="sm" disabled={isPending} onClick={() => onSave([
                   { key: "contact_email", value: clinicEmail },

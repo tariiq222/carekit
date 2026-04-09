@@ -173,13 +173,13 @@ describe('PermissionsGuard', () => {
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
-  it('throws ForbiddenException when request has no user', async () => {
+  it('throws UnauthorizedException when request has no user', async () => {
     const reflector = buildReflector({ permissions: [{ module: 'users', action: 'view' }] });
     const prisma = buildPrisma(null);
     const guard = new PermissionsGuard(reflector as Reflector, prisma as never);
     const ctx = buildContext({ user: null });
 
-    await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
   });
 
   it('throws ForbiddenException when user not found in DB', async () => {

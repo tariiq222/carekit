@@ -36,7 +36,7 @@ export class BookingRecurringService {
     private readonly bookingSettingsService: BookingSettingsService,
   ) {}
 
-  async createRecurring(callerUserId: string, dto: CreateRecurringBookingDto) {
+  async createRecurring(callerUserId: string, dto: CreateRecurringBookingDto, callerRoles?: Array<{ slug: string }>) {
     const settings = await this.bookingSettingsService.getForBranch(dto.branchId);
 
     // Allow admin/staff to book for a specific patient; otherwise use the caller's own ID
@@ -94,7 +94,7 @@ export class BookingRecurringService {
           notes: dto.notes,
           recurringGroupId,
           patientId,
-        });
+        }, callerRoles);
 
         created.push({ id: booking.id, date: dateStr });
       } catch (err) {

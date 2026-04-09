@@ -81,7 +81,7 @@ describe('Patients Scenario Audit (e2e)', () => {
         allergies: 'Dust',
         chronicConditions: 'Asthma',
       })
-      .expect(201);
+      .expect(200)  // walk-in returns 200 (HttpCode(200));
 
     seededWalkInId = seededWalkIn.body.data.id as string;
 
@@ -94,7 +94,7 @@ describe('Patients Scenario Audit (e2e)', () => {
         phone: nextPhone(),
         nationality: 'Saudi',
       })
-      .expect(201);
+      .expect(200)  // walk-in returns 200 (HttpCode(200));
 
     updatablePatientId = updatableWalkIn.body.data.id as string;
     auditedPatientId = patient.user.id as string;
@@ -293,7 +293,7 @@ describe('Patients Scenario Audit (e2e)', () => {
         lastName: 'ناجحة',
         phone: claimPhone,
       })
-      .expect(201);
+      .expect(200)  // walk-in returns 200 (HttpCode(200));
 
     const res = await request(httpServer)
       .post(`${PATIENTS_URL}/claim`)

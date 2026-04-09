@@ -236,7 +236,7 @@ describe('InvoiceCreatorService', () => {
     beforeEach(() => {
       mockPrismaService.invoice.findUnique.mockResolvedValue(mockFullInvoice);
       mockPrismaService.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'clinic_name', value: 'عيادة النور' },
+        { key: 'system_name', value: 'عيادة النور' },
         { key: 'contact_phone', value: '+966500000000' },
       ]);
     });

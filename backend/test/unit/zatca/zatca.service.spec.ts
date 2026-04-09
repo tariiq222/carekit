@@ -76,7 +76,7 @@ describe('ZatcaService', () => {
         { key: 'vat_rate', value: '15' },
         { key: 'vat_registration_number', value: '300000000000003' },
         { key: 'business_registration', value: 'CR-12345' },
-        { key: 'clinic_name', value: 'Test Clinic' },
+        { key: 'system_name', value: 'Test Clinic' },
         { key: 'seller_address', value: '123 Main St' },
         { key: 'clinic_city', value: 'Riyadh' },
       ]);

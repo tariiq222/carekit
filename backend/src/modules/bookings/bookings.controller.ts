@@ -175,8 +175,8 @@ export class BookingsController {
   @ApiOperation({ summary: 'Create recurring booking series' })
   async createRecurring(
     @Body() dto: CreateRecurringBookingDto,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: UserPayload,
   ) {
-    return this.bookingRecurringService.createRecurring(user.id, dto);
+    return this.bookingRecurringService.createRecurring(user.id, dto, user.roles);
   }
 }

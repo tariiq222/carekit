@@ -10,7 +10,6 @@ import { CreateNotificationDto } from './dto/create-notification.dto.js';
 import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
 import { PushService } from './push.service.js';
 import { SmsService } from './sms.service.js';
-import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 
 /** Notification types that warrant an SMS to the user */
@@ -21,23 +20,6 @@ const SMS_ELIGIBLE_TYPES: ReadonlySet<string> = new Set([
   'booking_cancelled',
   'cancellation_rejected',
 ]);
-
-/** Maps notification types to WhiteLabelConfig keys */
-const TYPE_TO_CONFIG_KEY: Record<string, string> = {
-  booking_confirmed: 'notify_new_bookings',
-  booking_completed: 'notify_new_bookings',
-  booking_rescheduled: 'notify_new_bookings',
-  booking_expired: 'notify_new_bookings',
-  booking_cancelled: 'notify_cancellations',
-  cancellation_requested: 'notify_cancellations',
-  cancellation_rejected: 'notify_cancellations',
-  problem_report: 'notify_problems',
-  payment_received: 'notify_payments',
-  new_rating: 'notify_ratings',
-  booking_reminder: 'notify_reminders',
-  booking_reminder_urgent: 'notify_reminders',
-  waitlist_slot_available: 'notify_waitlist',
-};
 
 interface NotificationListQuery {
   page?: number;
@@ -52,7 +34,6 @@ export class NotificationsService {
     private readonly prisma: PrismaService,
     private readonly pushService: PushService,
     private readonly smsService: SmsService,
-    private readonly whitelabelService: WhitelabelService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -189,20 +170,10 @@ export class NotificationsService {
   //  CLINIC-WIDE NOTIFICATION CHECK
   // ═══════════════════════════════════════════════════════════════
 
-  private async isNotificationEnabled(type: string): Promise<boolean> {
-    const configKey = TYPE_TO_CONFIG_KEY[type];
-    // Types without a config key (reminder, system_alert, waitlist) are always enabled
-    if (!configKey) return true;
-
-    try {
-      const configMap = await this.whitelabelService.getConfigMap();
-      const value = configMap[configKey];
-      // Default to enabled if config key doesn't exist
-      return value === undefined || value === 'true';
-    } catch {
-      // On error, default to enabled to avoid silently dropping notifications
-      return true;
-    }
+  private async isNotificationEnabled(_type: string): Promise<boolean> {
+    // Notification toggle configs were part of WhiteLabelConfig (now removed).
+    // Always enabled until notification preferences are migrated to a dedicated table.
+    return true;
   }
 
   // ═══════════════════════════════════════════════════════════════

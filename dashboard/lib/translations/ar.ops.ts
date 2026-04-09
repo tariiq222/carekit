@@ -276,6 +276,23 @@ export const arOps: Record<string, string> = {
   "settings.emailTemplates.previewLabel": "معاينة",
   "settings.emailTemplates.saved": "تم حفظ قالب البريد بنجاح",
 
+  // ─── Settings — Email Layout ───
+  "settings.emailLayout.title": "تصميم البريد",
+  "settings.emailLayout.header": "الهيدر",
+  "settings.emailLayout.showLogo": "إظهار اللوجو",
+  "settings.emailLayout.showName": "إظهار اسم العيادة",
+  "settings.emailLayout.footer": "الفوتر",
+  "settings.emailLayout.phone": "رقم التواصل",
+  "settings.emailLayout.website": "رابط الموقع",
+  "settings.emailLayout.instagram": "Instagram",
+  "settings.emailLayout.twitter": "Twitter / X",
+  "settings.emailLayout.snapchat": "Snapchat",
+  "settings.emailLayout.tiktok": "TikTok",
+  "settings.emailLayout.linkedin": "LinkedIn",
+  "settings.emailLayout.youtube": "YouTube",
+  "settings.emailLayout.saved": "تم حفظ تصميم البريد بنجاح",
+  "settings.emailLayout.description": "تخصيص شكل البريد الإلكتروني (الهيدر والفوتر)",
+
   // ─── Service Booking Types ───
   "services.bookingTypes": "أنواع الحجز والتسعير",
   "services.bookingTypes.clinic": "في العيادة",

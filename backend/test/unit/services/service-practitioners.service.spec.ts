@@ -19,6 +19,7 @@ const mockPractitionerService = {
   createdAt: new Date('2026-01-15'),
   practitioner: {
     id: 'practitioner-uuid-1',
+    avatarUrl: null,
     nameAr: 'الدكتور أحمد',
     title: 'MD',
     isActive: true,

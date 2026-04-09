@@ -264,6 +264,7 @@ describe('BookingsController', () => {
       expect(mockRecurringService.createRecurring).toHaveBeenCalledWith(
         'user-1',
         dto,
+        defaultUser.roles,
       );
       expect(result).toEqual(data);
     });

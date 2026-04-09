@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
+import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
 import { buildSystemPrompt } from './constants/system-prompts.js';
 import { buildToolDefinitions } from './constants/tool-definitions.js';
 import type {
@@ -19,6 +20,7 @@ export class ChatbotContextService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ChatbotConfigService,
+    private readonly whitelabelService: WhitelabelService,
   ) {}
 
   /**
@@ -39,10 +41,7 @@ export class ChatbotContextService {
       ? `${user.firstName} ${user.lastName}`
       : 'Patient';
 
-    const clinicConfig = await this.prisma.whiteLabelConfig.findFirst({
-      where: { key: 'system_name' },
-    });
-    const clinicName = clinicConfig?.value ?? 'CareKit Clinic';
+    const clinicName = await this.whitelabelService.getSystemName();
 
     const systemPrompt = buildSystemPrompt(config, {
       clinicName,

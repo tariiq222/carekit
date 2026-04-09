@@ -1206,11 +1206,11 @@ describe('Bookings Module (e2e)', () => {
 
   describe('POST /bookings/recurring', () => {
     it('receptionist can create recurring bookings for patient (weekly, 3 times)', async () => {
-      // First enable recurring in settings with allowed patterns
+      // Enable recurring + admin bypass of clinic hours
       await request(httpServer)
         .patch(`${API_PREFIX}/booking-settings`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ allowRecurring: true, allowedRecurringPatterns: ['weekly', 'biweekly', 'monthly'] });
+        .send({ allowRecurring: true, allowedRecurringPatterns: ['weekly', 'biweekly', 'monthly'], adminCanBookOutsideHours: true });
 
       // Use superAdmin (adminCanBookOutsideHours=true + callerUserId !== actualPatientId = skipChecks=true)
       // This bypasses clinic hours validation which has no working hours set up in test DB
