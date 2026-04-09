@@ -1,11 +1,11 @@
 "use client"
 
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { useLocale } from "@/components/locale-provider"
 import { useGroupSessionsMutations } from "@/hooks/use-group-sessions-mutations"
-import { createOfferingSchema, type CreateOfferingFormValues } from "@/lib/schemas/group-sessions.schema"
+import { createGroupSessionSchema, type CreateGroupSessionFormValues } from "@/lib/schemas/group-sessions.schema"
 import {
   Dialog,
   DialogContent,
@@ -18,18 +18,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { DateTimeInput } from "@/components/ui/date-time-input"
 
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function CreateOfferingDialog({ open, onOpenChange }: Props) {
+export function CreateSessionDialog({ open, onOpenChange }: Props) {
   const { t } = useLocale()
-  const { createOfferingMut } = useGroupSessionsMutations()
+  const { createSessionMut } = useGroupSessionsMutations()
 
-  const form = useForm<CreateOfferingFormValues>({
-    resolver: zodResolver(createOfferingSchema),
+  const form = useForm<CreateGroupSessionFormValues>({
+    resolver: zodResolver(createGroupSessionSchema),
     defaultValues: {
       nameAr: "",
       nameEn: "",
@@ -39,14 +42,18 @@ export function CreateOfferingDialog({ open, onOpenChange }: Props) {
       minParticipants: 2,
       maxParticipants: 10,
       pricePerPersonHalalat: 0,
-      durationMin: 60,
+      durationMinutes: 60,
       paymentDeadlineHours: 48,
+      schedulingMode: "fixed_date",
+      isPublished: false,
     },
   })
 
+  const schedulingMode = form.watch("schedulingMode")
+
   const onSubmit = form.handleSubmit(async (data) => {
-    await createOfferingMut.mutateAsync(data)
-    toast.success(t("groupSessions.offeringCreated"))
+    await createSessionMut.mutateAsync(data)
+    toast.success(t("groupSessions.sessionCreated"))
     form.reset()
     onOpenChange(false)
   })
@@ -55,11 +62,11 @@ export function CreateOfferingDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t("groupSessions.addOffering")}</DialogTitle>
+          <DialogTitle>{t("groupSessions.addSession")}</DialogTitle>
         </DialogHeader>
 
         <DialogBody>
-          <form id="create-offering-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+          <form id="create-session-form" onSubmit={onSubmit} className="flex flex-col gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>{t("groupSessions.nameAr")}</Label>
@@ -114,7 +121,7 @@ export function CreateOfferingDialog({ open, onOpenChange }: Props) {
               </div>
               <div className="space-y-2">
                 <Label>{t("groupSessions.duration")}</Label>
-                <Input type="number" {...form.register("durationMin", { valueAsNumber: true })} />
+                <Input type="number" {...form.register("durationMinutes", { valueAsNumber: true })} />
               </div>
             </div>
 
@@ -123,6 +130,64 @@ export function CreateOfferingDialog({ open, onOpenChange }: Props) {
               <Input type="number" {...form.register("paymentDeadlineHours", { valueAsNumber: true })} />
               <p className="text-xs text-muted-foreground">{t("groupSessions.paymentDeadlineHint")}</p>
             </div>
+
+            {/* Scheduling mode */}
+            <div className="space-y-3 rounded-lg border border-border/40 p-4">
+              <Label className="font-semibold">{t("groupSessions.scheduling")}</Label>
+              <RadioGroup
+                value={schedulingMode}
+                onValueChange={(v) => form.setValue("schedulingMode", v as "fixed_date" | "on_capacity")}
+                className="flex flex-col gap-3"
+              >
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <RadioGroupItem value="fixed_date" />
+                  <span className="text-sm">{t("groupSessions.fixedDate")}</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <RadioGroupItem value="on_capacity" />
+                  <span className="text-sm">{t("groupSessions.onCapacity")}</span>
+                </label>
+              </RadioGroup>
+
+              {schedulingMode === "fixed_date" && (
+                <div className="space-y-2 pt-2">
+                  <Label>{t("groupSessions.startTime")}</Label>
+                  <Controller
+                    name="startTime"
+                    control={form.control}
+                    render={({ field }) => (
+                      <DateTimeInput value={field.value ?? ""} onChange={field.onChange} />
+                    )}
+                  />
+                  {form.formState.errors.startTime && (
+                    <p className="text-xs text-destructive">{form.formState.errors.startTime.message}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Visibility & expiry */}
+            <div className="space-y-3 rounded-lg border border-border/40 p-4">
+              <div className="flex items-center justify-between">
+                <Label>{t("groupSessions.publishForClients")}</Label>
+                <Switch
+                  checked={form.watch("isPublished")}
+                  onCheckedChange={(v) => form.setValue("isPublished", v)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t("groupSessions.expiresAt")}</Label>
+                <Controller
+                  name="expiresAt"
+                  control={form.control}
+                  render={({ field }) => (
+                    <DateTimeInput value={field.value ?? ""} onChange={field.onChange} />
+                  )}
+                />
+                <p className="text-xs text-muted-foreground">{t("groupSessions.expiresAtHint")}</p>
+              </div>
+            </div>
           </form>
         </DialogBody>
 
@@ -130,10 +195,10 @@ export function CreateOfferingDialog({ open, onOpenChange }: Props) {
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button
             type="submit"
-            form="create-offering-form"
-            disabled={createOfferingMut.isPending}
+            form="create-session-form"
+            disabled={createSessionMut.isPending}
           >
-            {createOfferingMut.isPending ? t("common.saving") : t("common.save")}
+            {createSessionMut.isPending ? t("common.saving") : t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

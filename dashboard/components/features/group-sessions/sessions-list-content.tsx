@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Skeleton } from "@/components/ui/skeleton"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Cancel01Icon, ViewIcon } from "@hugeicons/core-free-icons"
+import { Cancel01Icon, ViewIcon, Delete02Icon } from "@hugeicons/core-free-icons"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { GroupSession, GroupSessionStatus } from "@/lib/types/group-sessions"
 
@@ -32,41 +32,55 @@ const statusLabels: Record<GroupSessionStatus, { ar: string; en: string }> = {
   cancelled: { ar: "ملغي", en: "Cancelled" },
 }
 
-export function SessionsTabContent() {
+export function SessionsListContent() {
   const { t, locale } = useLocale()
   const router = useRouter()
   const {
     sessions, meta, isLoading, error,
+    search, setSearch,
     status, setStatus,
+    visibility, setVisibility,
     resetFilters,
   } = useGroupSessions()
-  const { cancelSessionMut } = useGroupSessionsMutations()
+  const { cancelSessionMut, deleteSessionMut } = useGroupSessionsMutations()
 
   const columns: ColumnDef<GroupSession>[] = [
     {
-      accessorKey: "groupOffering",
-      header: t("groupSessions.offering"),
+      accessorKey: "name",
+      header: t("groupSessions.name"),
+      cell: ({ row }) => locale === "ar" ? row.original.nameAr : row.original.nameEn,
+    },
+    {
+      accessorKey: "practitioner",
+      header: t("groupSessions.practitioner"),
+      cell: ({ row }) => row.original.practitioner?.nameAr ?? "—",
+    },
+    {
+      accessorKey: "schedulingMode",
+      header: t("groupSessions.type"),
       cell: ({ row }) => {
-        const offering = row.original.groupOffering
-        return locale === "ar" ? offering?.nameAr : offering?.nameEn
+        const mode = row.original.schedulingMode
+        return mode === "fixed_date"
+          ? (locale === "ar" ? "تاريخ محدد" : "Fixed Date")
+          : (locale === "ar" ? "عند الاكتمال" : "On Capacity")
       },
     },
     {
       accessorKey: "startTime",
       header: t("groupSessions.date"),
-      cell: ({ row }) =>
-        new Date(row.original.startTime).toLocaleDateString(
+      cell: ({ row }) => {
+        const st = row.original.startTime
+        if (!st) return locale === "ar" ? "بانتظار التاريخ" : "Pending"
+        return new Date(st).toLocaleDateString(
           locale === "ar" ? "ar-SA" : "en-US",
           { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" },
-        ),
+        )
+      },
     },
     {
       accessorKey: "currentEnrollment",
       header: t("groupSessions.enrolled"),
-      cell: ({ row }) => {
-        const max = row.original.groupOffering?.maxParticipants ?? 0
-        return `${row.original.currentEnrollment}/${max}`
-      },
+      cell: ({ row }) => `${row.original.currentEnrollment}/${row.original.maxParticipants}`,
     },
     {
       accessorKey: "status",
@@ -78,40 +92,67 @@ export function SessionsTabContent() {
       },
     },
     {
+      accessorKey: "isPublished",
+      header: t("groupSessions.published"),
+      cell: ({ row }) => (
+        <Badge variant={row.original.isPublished ? "default" : "secondary"}>
+          {row.original.isPublished
+            ? (locale === "ar" ? "منشورة" : "Published")
+            : (locale === "ar" ? "مسودة" : "Draft")}
+        </Badge>
+      ),
+    },
+    {
       id: "actions",
       header: "",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-9 rounded-sm"
-                onClick={() => router.push(`/group-sessions/${row.original.id}`)}
-              >
-                <HugeiconsIcon icon={ViewIcon} size={16} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("common.view")}</TooltipContent>
-          </Tooltip>
-          {row.original.status !== "completed" && row.original.status !== "cancelled" && (
+      cell: ({ row }) => {
+        const canAct = row.original.status !== "completed" && row.original.status !== "cancelled"
+        return (
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 rounded-sm"
+                  onClick={() => router.push(`/group-sessions/${row.original.id}`)}
+                >
+                  <HugeiconsIcon icon={ViewIcon} size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("common.view")}</TooltipContent>
+            </Tooltip>
+            {canAct && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-9 rounded-sm text-destructive"
+                    onClick={() => cancelSessionMut.mutate(row.original.id)}
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("groupSessions.cancelSession")}</TooltipContent>
+              </Tooltip>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="size-9 rounded-sm text-destructive"
-                  onClick={() => cancelSessionMut.mutate(row.original.id)}
+                  onClick={() => deleteSessionMut.mutate(row.original.id)}
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={16} />
+                  <HugeiconsIcon icon={Delete02Icon} size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{t("groupSessions.cancelSession")}</TooltipContent>
+              <TooltipContent>{t("common.delete")}</TooltipContent>
             </Tooltip>
-          )}
-        </div>
-      ),
+          </div>
+        )
+      },
     },
   ]
 
@@ -132,9 +173,19 @@ export function SessionsTabContent() {
     label: locale === "ar" ? label.ar : label.en,
   }))
 
+  const visibilityOptions = [
+    { value: "published", label: locale === "ar" ? "منشورة" : "Published" },
+    { value: "draft", label: locale === "ar" ? "مسودة" : "Draft" },
+  ]
+
   return (
     <>
       <FilterBar
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: t("groupSessions.searchPlaceholder"),
+        }}
         selects={[
           {
             key: "status",
@@ -143,8 +194,15 @@ export function SessionsTabContent() {
             options: statusOptions,
             placeholder: t("groupSessions.filterByStatus"),
           },
+          {
+            key: "visibility",
+            value: visibility ?? "",
+            onValueChange: (v: string) => setVisibility((v || undefined) as "published" | "draft" | undefined),
+            options: visibilityOptions,
+            placeholder: t("groupSessions.filterByVisibility"),
+          },
         ]}
-        hasFilters={!!status}
+        hasFilters={!!status || !!visibility || !!search}
         onReset={resetFilters}
         resultCount={meta?.total}
       />

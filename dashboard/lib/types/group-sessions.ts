@@ -1,45 +1,32 @@
+export type GroupSessionSchedulingMode = "fixed_date" | "on_capacity"
 export type GroupSessionStatus = "open" | "confirmed" | "full" | "completed" | "cancelled"
 export type GroupEnrollmentStatus = "registered" | "confirmed" | "attended" | "expired" | "cancelled"
 
-export interface GroupOffering {
+export interface GroupSession {
   id: string
+  practitionerId: string
+  departmentId: string | null
   nameAr: string
   nameEn: string
   descriptionAr: string | null
   descriptionEn: string | null
-  practitionerId: string
   minParticipants: number
   maxParticipants: number
   pricePerPersonHalalat: number
-  durationMin: number
+  durationMinutes: number
   paymentDeadlineHours: number
-  createdAt: string
-  updatedAt: string
-  practitioner?: { id: string; nameAr: string | null }
-  _count?: { sessions: number }
-}
-
-export interface GroupSession {
-  id: string
-  groupOfferingId: string
-  startTime: string
-  endTime: string
+  schedulingMode: GroupSessionSchedulingMode
+  startTime: string | null
+  endTime: string | null
   status: GroupSessionStatus
   currentEnrollment: number
-  registrationDeadline: string
   reminderSent: boolean
+  isPublished: boolean
+  expiresAt: string | null
   createdAt: string
   updatedAt: string
-  groupOffering?: {
-    nameAr: string
-    nameEn: string
-    minParticipants: number
-    maxParticipants: number
-    pricePerPersonHalalat: number
-    durationMin: number
-    paymentDeadlineHours: number
-    practitioner?: { id: string; nameAr: string | null }
-  }
+  deletedAt: string | null
+  practitioner?: { id: string; nameAr: string | null }
   enrollments?: GroupEnrollment[]
 }
 
@@ -57,39 +44,34 @@ export interface GroupEnrollment {
   payment?: { id: string; status: string } | null
 }
 
-export interface OfferingListQuery {
+export interface GroupSessionListQuery {
   page?: number
   perPage?: number
   search?: string
   practitionerId?: string
-}
-
-export interface SessionListQuery {
-  page?: number
-  perPage?: number
-  groupOfferingId?: string
   status?: GroupSessionStatus
+  visibility?: "published" | "draft"
 }
 
-export interface CreateOfferingPayload {
+export interface CreateGroupSessionPayload {
   nameAr: string
   nameEn: string
   descriptionAr?: string
   descriptionEn?: string
   practitionerId: string
+  departmentId?: string
   minParticipants: number
   maxParticipants: number
   pricePerPersonHalalat: number
-  durationMin: number
+  durationMinutes: number
   paymentDeadlineHours?: number
+  schedulingMode: GroupSessionSchedulingMode
+  startTime?: string
+  isPublished?: boolean
+  expiresAt?: string
 }
 
-export type UpdateOfferingPayload = Partial<CreateOfferingPayload>
-
-export interface CreateSessionPayload {
-  startTime: string
-  registrationDeadline: string
-}
+export type UpdateGroupSessionPayload = Partial<CreateGroupSessionPayload>
 
 export interface MarkAttendancePayload {
   attendedPatientIds: string[]

@@ -3,16 +3,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import {
-  createOffering,
-  updateOffering,
-  deleteOffering,
-  createSession,
-  cancelSession,
-  completeSession,
+  createGroupSession,
+  updateGroupSession,
+  deleteGroupSession,
+  cancelGroupSession,
+  completeGroupSession,
   enrollPatient,
   removeEnrollment,
 } from "@/lib/api/group-sessions"
-import type { UpdateOfferingPayload, CreateSessionPayload, MarkAttendancePayload } from "@/lib/types/group-sessions"
+import type { UpdateGroupSessionPayload, MarkAttendancePayload } from "@/lib/types/group-sessions"
 
 export function useGroupSessionsMutations() {
   const queryClient = useQueryClient()
@@ -20,36 +19,30 @@ export function useGroupSessionsMutations() {
   const invalidateAll = () =>
     queryClient.invalidateQueries({ queryKey: queryKeys.groupSessions.all })
 
-  const createOfferingMut = useMutation({
-    mutationFn: createOffering,
-    onSuccess: invalidateAll,
-  })
-
-  const updateOfferingMut = useMutation({
-    mutationFn: ({ id, ...payload }: { id: string } & UpdateOfferingPayload) =>
-      updateOffering(id, payload),
-    onSuccess: invalidateAll,
-  })
-
-  const deleteOfferingMut = useMutation({
-    mutationFn: deleteOffering,
-    onSuccess: invalidateAll,
-  })
-
   const createSessionMut = useMutation({
-    mutationFn: ({ offeringId, ...payload }: { offeringId: string } & CreateSessionPayload) =>
-      createSession(offeringId, payload),
+    mutationFn: createGroupSession,
+    onSuccess: invalidateAll,
+  })
+
+  const updateSessionMut = useMutation({
+    mutationFn: ({ id, ...payload }: { id: string } & UpdateGroupSessionPayload) =>
+      updateGroupSession(id, payload),
+    onSuccess: invalidateAll,
+  })
+
+  const deleteSessionMut = useMutation({
+    mutationFn: deleteGroupSession,
     onSuccess: invalidateAll,
   })
 
   const cancelSessionMut = useMutation({
-    mutationFn: cancelSession,
+    mutationFn: cancelGroupSession,
     onSuccess: invalidateAll,
   })
 
   const completeSessionMut = useMutation({
     mutationFn: ({ id, ...payload }: { id: string } & MarkAttendancePayload) =>
-      completeSession(id, payload),
+      completeGroupSession(id, payload),
     onSuccess: invalidateAll,
   })
 
@@ -66,10 +59,9 @@ export function useGroupSessionsMutations() {
   })
 
   return {
-    createOfferingMut,
-    updateOfferingMut,
-    deleteOfferingMut,
     createSessionMut,
+    updateSessionMut,
+    deleteSessionMut,
     cancelSessionMut,
     completeSessionMut,
     enrollPatientMut,
