@@ -89,7 +89,7 @@ export class TasksProcessor extends WorkerHost implements OnModuleInit {
         await this.groupSessionAutomation.expireUnpaidEnrollments();
         break;
       case 'group-session-cancellation':
-        await this.groupSessionAutomation.cancelIncompleteSessions();
+        await this.groupSessionAutomation.cancelExpiredSessions();
         break;
       case 'group-session-reminder':
         await this.groupSessionAutomation.sendSessionReminders();

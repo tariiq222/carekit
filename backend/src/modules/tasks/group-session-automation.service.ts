@@ -27,9 +27,8 @@ export class GroupSessionAutomationService {
             id: true,
             currentEnrollment: true,
             status: true,
-            groupOffering: {
-              select: { minParticipants: true, maxParticipants: true },
-            },
+            minParticipants: true,
+            maxParticipants: true,
           },
         },
       },
@@ -52,9 +51,9 @@ export class GroupSessionAutomationService {
           const newCount = session.currentEnrollment - 1;
           let newStatus = session.status;
 
-          if (newCount < session.groupOffering.minParticipants && newStatus !== 'open') {
+          if (newCount < session.minParticipants && newStatus !== 'open') {
             newStatus = 'open';
-          } else if (newCount < session.groupOffering.maxParticipants && newStatus === 'full') {
+          } else if (newCount < session.maxParticipants && newStatus === 'full') {
             newStatus = 'confirmed';
           }
 
@@ -83,14 +82,13 @@ export class GroupSessionAutomationService {
     }
   }
 
-  async cancelIncompleteSessions(): Promise<void> {
+  async cancelExpiredSessions(): Promise<void> {
     const sessions = await this.prisma.groupSession.findMany({
       where: {
         status: 'open',
-        registrationDeadline: { lt: new Date() },
+        expiresAt: { not: null, lt: new Date() },
       },
       include: {
-        groupOffering: { select: { nameAr: true, nameEn: true } },
         enrollments: {
           where: { status: 'registered' },
           select: { id: true, patientId: true },
@@ -117,8 +115,8 @@ export class GroupSessionAutomationService {
             userId: enrollment.patientId,
             titleAr: 'تم إلغاء الجلسة',
             titleEn: 'Session Cancelled',
-            bodyAr: `تم إلغاء جلسة "${session.groupOffering.nameAr}" لعدم اكتمال العدد`,
-            bodyEn: `"${session.groupOffering.nameEn}" cancelled due to insufficient enrollment`,
+            bodyAr: `تم إلغاء جلسة "${session.nameAr}" لعدم اكتمال العدد`,
+            bodyEn: `"${session.nameEn}" cancelled due to insufficient enrollment`,
             type: NotificationType.group_session_cancelled,
             data: { groupSessionId: session.id },
           }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
@@ -129,7 +127,7 @@ export class GroupSessionAutomationService {
     }
 
     if (sessions.length > 0) {
-      this.logger.log(`Cancelled ${sessions.length} incomplete group sessions`);
+      this.logger.log(`Cancelled ${sessions.length} expired group sessions`);
     }
   }
 
@@ -140,11 +138,10 @@ export class GroupSessionAutomationService {
     const sessions = await this.prisma.groupSession.findMany({
       where: {
         status: { in: ['confirmed', 'full'] },
-        startTime: { gt: now, lte: in24h },
+        startTime: { not: null, gt: now, lte: in24h },
         reminderSent: false,
       },
       include: {
-        groupOffering: { select: { nameAr: true, nameEn: true } },
         enrollments: {
           where: { status: 'confirmed' },
           select: { patientId: true },
@@ -158,8 +155,8 @@ export class GroupSessionAutomationService {
           userId: enrollment.patientId,
           titleAr: 'تذكير: جلسة غداً',
           titleEn: 'Reminder: Session Tomorrow',
-          bodyAr: `جلسة "${session.groupOffering.nameAr}" غداً`,
-          bodyEn: `"${session.groupOffering.nameEn}" session is tomorrow`,
+          bodyAr: `جلسة "${session.nameAr}" غداً`,
+          bodyEn: `"${session.nameEn}" session is tomorrow`,
           type: NotificationType.group_session_reminder,
           data: { groupSessionId: session.id },
         }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
