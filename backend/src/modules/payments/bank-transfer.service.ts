@@ -116,8 +116,8 @@ export class BankTransferService {
     );
 
     let result: {
-      payment: Awaited<ReturnType<typeof this.prisma.payment.create>>;
-      receipt: Awaited<ReturnType<typeof this.prisma.bankTransferReceipt.create>>;
+      payment: Awaited<ReturnType<PrismaService['payment']['create']>>;
+      receipt: Awaited<ReturnType<PrismaService['bankTransferReceipt']['create']>>;
     };
 
     try {
