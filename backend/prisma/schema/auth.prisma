@@ -41,6 +41,7 @@ model User {
   couponRedemptions     CouponRedemption[]
   purchasedGiftCards    GiftCard[]             @relation("GiftCardPurchaser")
   redeemedGiftCards     GiftCard[]             @relation("GiftCardRedeemer")
+  groupEnrollments      GroupEnrollment[]      @relation("PatientGroupEnrollments")
 
   @@map("users")
 }

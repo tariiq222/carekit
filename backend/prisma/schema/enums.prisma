@@ -79,6 +79,13 @@ enum NotificationType {
   problem_report
   waitlist_slot_available
   system_alert
+  group_enrollment_created
+  group_session_confirmed
+  group_payment_confirmed
+  group_enrollment_expired
+  group_session_cancelled
+  group_session_cancelled_admin
+  group_session_reminder
 
   @@map("notification_type")
 }
@@ -296,4 +303,24 @@ enum BookingFlowOrder {
   both
 
   @@map("booking_flow_order")
+}
+
+enum GroupSessionStatus {
+  open
+  confirmed
+  full
+  completed
+  cancelled
+
+  @@map("group_session_status")
+}
+
+enum GroupEnrollmentStatus {
+  registered
+  confirmed
+  attended
+  expired
+  cancelled
+
+  @@map("group_enrollment_status")
 }

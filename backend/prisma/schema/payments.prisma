@@ -20,9 +20,10 @@ model Payment {
   updatedAt        DateTime      @updatedAt @map("updated_at")
   deletedAt        DateTime?     @map("deleted_at")
 
-  booking Booking              @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  receipt BankTransferReceipt?
-  invoice Invoice?
+  booking         Booking              @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  receipt         BankTransferReceipt?
+  invoice         Invoice?
+  groupEnrollment GroupEnrollment?
 
   @@index([status])
   @@index([createdAt])
