@@ -200,6 +200,21 @@ export const queryKeys = {
       ["branches", "practitioners", id] as const,
   },
 
+  /* ─── Group Sessions ─── */
+  groupSessions: {
+    all: ["group-sessions"] as const,
+    offerings: {
+      all: ["group-sessions", "offerings"] as const,
+      list: (filters?: object) => ["group-sessions", "offerings", "list", filters] as const,
+      detail: (id: string) => ["group-sessions", "offerings", "detail", id] as const,
+    },
+    sessions: {
+      all: ["group-sessions", "sessions"] as const,
+      list: (filters?: object) => ["group-sessions", "sessions", "list", filters] as const,
+      detail: (id: string) => ["group-sessions", "sessions", "detail", id] as const,
+    },
+  },
+
   /* ─── Email Templates ─── */
   emailTemplates: {
     all: ["email-templates"] as const,
