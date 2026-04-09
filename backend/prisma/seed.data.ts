@@ -280,6 +280,8 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   { key: 'zoom', nameEn: 'Zoom Video Calls', nameAr: 'مكالمات Zoom', descriptionEn: 'Auto-generate Zoom links for video consultations', descriptionAr: 'إنشاء روابط Zoom تلقائياً للاستشارات المرئية', enabled: false },
   // Compliance
   { key: 'zatca', nameEn: 'ZATCA / Fatoora', nameAr: 'ZATCA / فاتورة', descriptionEn: 'Enable Saudi e-invoicing compliance (ZATCA)', descriptionAr: 'تفعيل الامتثال للفوترة الإلكترونية السعودية', enabled: true },
+  // Group features
+  { key: 'group_sessions', nameEn: 'Group Sessions', nameAr: 'الجلسات الجماعية', descriptionEn: 'Pre-order group therapy sessions', descriptionAr: 'جلسات علاجية جماعية بنظام الطلب المسبق', enabled: false },
 ];
 
 // ──────────────────────────────────────────────
