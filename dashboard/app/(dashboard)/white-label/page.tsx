@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { useLocale } from "@/components/locale-provider"
 import { useWhitelabel, useUpdateWhitelabel } from "@/hooks/use-whitelabel"
+import { useAuth } from "@/components/providers/auth-provider"
 
 import { BrandingTab } from "@/components/features/white-label/branding-tab"
 import { WlFeaturesTab } from "@/components/features/white-label/wl-features-tab"
@@ -15,8 +16,20 @@ import type { UpdateWhitelabelPayload } from "@/lib/types/whitelabel"
 
 export default function WhiteLabelPage() {
   const { t } = useLocale()
+  const { canDo } = useAuth()
   const { data: whitelabel, isLoading } = useWhitelabel()
   const mutation = useUpdateWhitelabel()
+
+  if (!canDo("whitelabel", "edit")) {
+    return (
+      <ListPageShell>
+        <Breadcrumbs />
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <p className="text-lg font-medium text-muted-foreground">{t("common.noPermission") ?? "ليس لديك صلاحية للوصول لهذه الصفحة"}</p>
+        </div>
+      </ListPageShell>
+    )
+  }
 
   const handleSave = (data: UpdateWhitelabelPayload) => {
     mutation.mutate(data, {
