@@ -41,6 +41,7 @@ export const clinicNav: NavItem[] = [
   { titleKey: "nav.practitioners", href: "/practitioners", icon: Stethoscope02Icon },
   { titleKey: "nav.services", href: "/services", icon: GridIcon },
   { titleKey: "nav.branches", href: "/branches", icon: Building06Icon },
+  { titleKey: "nav.departments", href: "/departments", icon: Building06Icon, permission: "departments:view" },
   { titleKey: "nav.intakeForms", href: "/intake-forms", icon: DocumentValidationIcon },
 ]
 

@@ -19,6 +19,7 @@ const FEATURE_FLAG_MAP: Record<string, string> = {
   "/chatbot": "chatbot",
   "/ratings": "ratings",
   "/branches": "multi_branch",
+  "/departments": "departments",
   "/reports": "reports",
 }
 
