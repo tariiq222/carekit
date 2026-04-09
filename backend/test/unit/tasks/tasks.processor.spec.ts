@@ -40,6 +40,7 @@ describe('TasksProcessor', () => {
       mockCleanup as any,
       mockReminder as any,
       mockAutomation as any,
+      { expireUnpaidEnrollments: jest.fn(), cancelIncompleteSessions: jest.fn(), sendSessionReminders: jest.fn() } as any,
       mockQueueFailure as any,
     );
 

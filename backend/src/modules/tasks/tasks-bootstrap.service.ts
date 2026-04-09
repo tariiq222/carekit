@@ -23,6 +23,9 @@ const DESIRED_JOBS: JobDefinition[] = [
   { name: 'archive-activity-logs',         pattern: '0 5 * * 0'    },
   { name: 'repair-rating-cache',           pattern: '0 6 * * 0'    },
   { name: 'db-snapshot',                   pattern: '0 0 * * 0'    },
+  { name: 'group-enrollment-expiry',       pattern: '*/30 * * * *' },
+  { name: 'group-session-cancellation',    pattern: '0 * * * *'    },
+  { name: 'group-session-reminder',        pattern: '0 * * * *'    },
 ];
 
 @Injectable()
