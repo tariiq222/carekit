@@ -16,15 +16,11 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { RequireFeature } from '../../common/decorators/require-feature.decorator.js';
-import { Public } from '../../common/decorators/public.decorator.js';
 import { GroupSessionsService } from './group-sessions.service.js';
-import { GroupSessionsSessionsService } from './group-sessions-sessions.service.js';
 import { GroupSessionsEnrollmentsService } from './group-sessions-enrollments.service.js';
-import { CreateOfferingDto } from './dto/create-offering.dto.js';
-import { UpdateOfferingDto } from './dto/update-offering.dto.js';
-import { OfferingListQueryDto } from './dto/offering-list-query.dto.js';
-import { CreateSessionDto } from './dto/create-session.dto.js';
-import { SessionListQueryDto } from './dto/session-list-query.dto.js';
+import { CreateGroupSessionDto } from './dto/create-group-session.dto.js';
+import { UpdateGroupSessionDto } from './dto/update-group-session.dto.js';
+import { GroupSessionQueryDto } from './dto/group-session-query.dto.js';
 import { EnrollPatientDto } from './dto/enroll-patient.dto.js';
 import { MarkAttendanceDto } from './dto/mark-attendance.dto.js';
 
@@ -35,120 +31,74 @@ import { MarkAttendanceDto } from './dto/mark-attendance.dto.js';
 @RequireFeature('group_sessions')
 export class GroupSessionsController {
   constructor(
-    private readonly offeringsService: GroupSessionsService,
-    private readonly sessionsService: GroupSessionsSessionsService,
+    private readonly sessionsService: GroupSessionsService,
     private readonly enrollmentsService: GroupSessionsEnrollmentsService,
   ) {}
 
-  // ─── Offerings ───
-
-  @Get('offerings')
-  @Public()
-  @ApiOperation({ summary: 'List group offerings' })
-  findAllOfferings(@Query() query: OfferingListQueryDto) {
-    return this.offeringsService.findAllOfferings(query);
-  }
-
-  @Get('offerings/:id')
-  @Public()
-  @ApiOperation({ summary: 'Get group offering by ID' })
-  findOneOffering(@Param('id', ParseUUIDPipe) id: string) {
-    return this.offeringsService.findOneOffering(id);
-  }
-
-  @Post('offerings')
-  @ApiOperation({ summary: 'Create group offering' })
-  @CheckPermissions({ module: 'group_sessions', action: 'create' })
-  createOffering(@Body() dto: CreateOfferingDto) {
-    return this.offeringsService.createOffering(dto);
-  }
-
-  @Patch('offerings/:id')
-  @ApiOperation({ summary: 'Update group offering' })
-  @CheckPermissions({ module: 'group_sessions', action: 'edit' })
-  updateOffering(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateOfferingDto,
-  ) {
-    return this.offeringsService.updateOffering(id, dto);
-  }
-
-  @Delete('offerings/:id')
-  @ApiOperation({ summary: 'Soft delete group offering' })
-  @CheckPermissions({ module: 'group_sessions', action: 'delete' })
-  removeOffering(@Param('id', ParseUUIDPipe) id: string) {
-    return this.offeringsService.removeOffering(id);
-  }
-
   // ─── Sessions ───
 
-  @Post('offerings/:id/sessions')
-  @ApiOperation({ summary: 'Schedule a session for an offering' })
+  @Post()
+  @ApiOperation({ summary: 'Create group session' })
   @CheckPermissions({ module: 'group_sessions', action: 'create' })
-  createSession(
-    @Param('id', ParseUUIDPipe) offeringId: string,
-    @Body() dto: CreateSessionDto,
-  ) {
-    return this.sessionsService.createSession(offeringId, dto);
+  create(@Body() dto: CreateGroupSessionDto) {
+    return this.sessionsService.create(dto);
   }
 
-  @Get('sessions')
-  @Public()
-  @ApiOperation({ summary: 'List all group sessions' })
-  findAllSessions(@Query() query: SessionListQueryDto) {
-    return this.sessionsService.findAllSessions(query);
+  @Get()
+  @ApiOperation({ summary: 'List group sessions' })
+  @CheckPermissions({ module: 'group_sessions', action: 'read' })
+  findAll(@Query() query: GroupSessionQueryDto) {
+    return this.sessionsService.findAll(query);
   }
 
-  @Get('sessions/:id')
-  @Public()
-  @ApiOperation({ summary: 'Get session detail with enrollments' })
-  findOneSession(@Param('id', ParseUUIDPipe) id: string) {
-    return this.sessionsService.findOneSession(id);
+  @Get(':id')
+  @ApiOperation({ summary: 'Get group session detail' })
+  @CheckPermissions({ module: 'group_sessions', action: 'read' })
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.sessionsService.findOne(id);
   }
 
-  @Patch('sessions/:id/cancel')
-  @ApiOperation({ summary: 'Cancel a group session (admin)' })
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update group session' })
   @CheckPermissions({ module: 'group_sessions', action: 'edit' })
-  cancelSession(@Param('id', ParseUUIDPipe) id: string) {
-    return this.sessionsService.cancelSession(id);
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateGroupSessionDto) {
+    return this.sessionsService.update(id, dto);
   }
 
-  @Post('sessions/:id/attendance')
-  @ApiOperation({ summary: 'Mark attendance and complete session' })
+  @Delete(':id')
+  @ApiOperation({ summary: 'Soft delete group session' })
+  @CheckPermissions({ module: 'group_sessions', action: 'delete' })
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.sessionsService.remove(id);
+  }
+
+  @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Cancel group session' })
   @CheckPermissions({ module: 'group_sessions', action: 'edit' })
-  completeSession(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: MarkAttendanceDto,
-  ) {
-    return this.sessionsService.completeSession(id, dto.attendedPatientIds);
+  cancel(@Param('id', ParseUUIDPipe) id: string) {
+    return this.sessionsService.cancel(id);
+  }
+
+  @Patch(':id/complete')
+  @ApiOperation({ summary: 'Complete session + mark attendance' })
+  @CheckPermissions({ module: 'group_sessions', action: 'edit' })
+  complete(@Param('id', ParseUUIDPipe) id: string, @Body() dto: MarkAttendanceDto) {
+    return this.sessionsService.complete(id, dto.attendedPatientIds);
   }
 
   // ─── Enrollments ───
 
-  @Post('sessions/:id/enroll')
-  @ApiOperation({ summary: 'Enroll a patient in a session' })
-  enrollPatient(
-    @Param('id', ParseUUIDPipe) sessionId: string,
-    @Body() dto: EnrollPatientDto,
-  ) {
+  @Post(':id/enroll')
+  @ApiOperation({ summary: 'Enroll a patient' })
+  @CheckPermissions({ module: 'group_sessions', action: 'edit' })
+  enroll(@Param('id', ParseUUIDPipe) sessionId: string, @Body() dto: EnrollPatientDto) {
     return this.enrollmentsService.enroll(sessionId, dto.patientId);
   }
 
-  @Patch('sessions/:sessionId/enrollments/:enrollmentId/cancel')
-  @ApiOperation({ summary: 'Patient cancels own enrollment (pre-payment only)' })
-  cancelEnrollment(
-    @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
-    @Body() dto: EnrollPatientDto,
-  ) {
-    return this.enrollmentsService.cancelEnrollment(enrollmentId, dto.patientId);
-  }
-
-  @Delete('sessions/:sessionId/enrollments/:enrollmentId')
-  @ApiOperation({ summary: 'Admin removes enrollment (pre-payment only)' })
+  @Delete(':sessionId/enrollments/:enrollmentId')
+  @ApiOperation({ summary: 'Remove enrollment (admin)' })
   @CheckPermissions({ module: 'group_sessions', action: 'edit' })
-  removeEnrollment(
-    @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
-  ) {
+  removeEnrollment(@Param('enrollmentId', ParseUUIDPipe) enrollmentId: string) {
     return this.enrollmentsService.removeEnrollment(enrollmentId);
   }
 }

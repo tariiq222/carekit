@@ -1,7 +1,16 @@
-import { IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class UpdateOfferingDto {
+export class UpdateGroupSessionDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
@@ -29,6 +38,10 @@ export class UpdateOfferingDto {
   practitionerId?: string;
 
   @IsOptional()
+  @IsUUID()
+  departmentId?: string;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   minParticipants?: number;
@@ -46,10 +59,22 @@ export class UpdateOfferingDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  durationMin?: number;
+  durationMinutes?: number;
 
   @IsOptional()
   @IsInt()
   @Min(1)
   paymentDeadlineHours?: number;
+
+  @IsOptional()
+  @IsDateString()
+  startTime?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublished?: boolean;
+
+  @IsOptional()
+  @IsDateString()
+  expiresAt?: string;
 }
