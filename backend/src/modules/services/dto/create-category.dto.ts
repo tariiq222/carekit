@@ -23,8 +23,8 @@ export class CreateCategoryDto {
   @Min(0)
   sortOrder?: number;
 
-  @ApiPropertyOptional({ description: 'Department ID' })
-  @IsOptional()
+  @ApiProperty({ description: 'Department ID' })
+  @IsNotEmpty()
   @IsUUID()
-  departmentId?: string;
+  departmentId!: string;
 }

@@ -22,7 +22,7 @@ export class ServiceCategoriesService {
         nameEn: dto.nameEn,
         nameAr: dto.nameAr,
         sortOrder: dto.sortOrder ?? 0,
-        departmentId: dto.departmentId ?? null,
+        departmentId: dto.departmentId,
       },
     });
     await this.invalidateCache();

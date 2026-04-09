@@ -46,14 +46,14 @@ export class GroupSessionsController {
 
   @Get()
   @ApiOperation({ summary: 'List group sessions' })
-  @CheckPermissions({ module: 'group_sessions', action: 'read' })
+  @CheckPermissions({ module: 'group_sessions', action: 'view' })
   findAll(@Query() query: GroupSessionQueryDto) {
     return this.sessionsService.findAll(query);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get group session detail' })
-  @CheckPermissions({ module: 'group_sessions', action: 'read' })
+  @CheckPermissions({ module: 'group_sessions', action: 'view' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.sessionsService.findOne(id);
   }

@@ -521,7 +521,8 @@ describe('Full chain: Department → Category → Service', () => {
     const result = await svcService.findOne(mockServiceWithChain.id);
 
     expect(result.category.departmentId).toBe(mockDepartment.id);
-    expect(result.category.department.nameEn).toBe('Dental');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result.category as any).department.nameEn).toBe('Dental');
   });
 });
 
@@ -539,17 +540,7 @@ describe('Category-Department: departmentId edge cases', () => {
     jest.clearAllMocks();
   });
 
-  it('should create category with null departmentId (unassigned)', async () => {
-    prisma.serviceCategory.create.mockResolvedValue(mockCategory2);
-
-    await catService.create({ nameEn: 'Unassigned', nameAr: 'غير مصنف' });
-
-    expect(prisma.serviceCategory.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ departmentId: null }),
-    });
-  });
-
-  it('should create category with valid departmentId', async () => {
+  it('should create category with required departmentId', async () => {
     const catWithDept = { ...mockCategory, departmentId: 'dept-uuid-1' };
     prisma.serviceCategory.create.mockResolvedValue(catWithDept);
 
@@ -578,18 +569,18 @@ describe('Category-Department: departmentId edge cases', () => {
     expect(result.departmentId).toBe('dept-uuid-2');
   });
 
-  it('should update category to unassign from department (set null)', async () => {
+  it('should update category to move to another department', async () => {
     prisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
     prisma.serviceCategory.update.mockResolvedValue({
       ...mockCategory,
-      departmentId: null,
+      departmentId: 'dept-uuid-2',
     });
 
     const result = await catService.update(mockCategory.id, {
-      departmentId: null,
+      departmentId: 'dept-uuid-2',
     });
 
-    expect(result.departmentId).toBeNull();
+    expect(result.departmentId).toBe('dept-uuid-2');
   });
 
   it('should keep departmentId unchanged when not in update dto', async () => {
@@ -640,7 +631,7 @@ describe('Cross-entity cache isolation (chain)', () => {
 
     prisma.serviceCategory.create.mockResolvedValue(mockCategory);
 
-    await catService.create({ nameEn: 'New', nameAr: 'جديد' });
+    await catService.create({ nameEn: 'New', nameAr: 'جديد', departmentId: 'dept-uuid-1' });
 
     expect(cache.del).toHaveBeenCalledWith(CACHE_KEYS.CATEGORIES_ACTIVE);
     expect(cache.del).toHaveBeenCalledWith(CACHE_KEYS.SERVICES_ACTIVE);

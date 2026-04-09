@@ -27,6 +27,7 @@ export const MODULES = [
   'clinic-settings',
   'clinic-integrations',
   'feature-flags',
+  'group_sessions',
 ] as const;
 
 export const ACTIONS = ['view', 'create', 'edit', 'delete'] as const;
@@ -130,6 +131,7 @@ export const ROLES: RoleDefinition[] = [
       practitioners: ['view', 'create', 'edit'],
       services: ['view', 'create', 'edit'],
       departments: ['view'],
+      group_sessions: ['view', 'create', 'edit'],
       notifications: ['view', 'create', 'edit', 'update'],
       payments: ['view'],
       invoices: ['view'],
@@ -184,6 +186,7 @@ export const ROLES: RoleDefinition[] = [
       practitioners: ['view', 'favorites:view', 'favorites:edit'],
       services: ['view'],
       departments: ['view'],
+      group_sessions: ['view', 'create'],
       notifications: ['view', 'update'],
       chatbot: ['use'],
     },
@@ -327,7 +330,7 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   // Organizational
   { key: 'departments', nameEn: 'Departments', nameAr: 'الأقسام', descriptionEn: 'Enable department-based organization for services', descriptionAr: 'تفعيل تنظيم الخدمات حسب الأقسام', enabled: false },
   // Group features
-  { key: 'group_sessions', nameEn: 'Group Sessions', nameAr: 'الجلسات الجماعية', descriptionEn: 'Pre-order group therapy sessions', descriptionAr: 'جلسات علاجية جماعية بنظام الطلب المسبق', enabled: false },
+  { key: 'group_sessions', nameEn: 'Group Sessions', nameAr: 'الجلسات الجماعية', descriptionEn: 'Pre-order group therapy sessions', descriptionAr: 'جلسات علاجية جماعية بنظام الطلب المسبق', enabled: true },
 ];
 
 // ──────────────────────────────────────────────

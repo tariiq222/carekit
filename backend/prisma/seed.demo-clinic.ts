@@ -43,8 +43,22 @@ export const DEMO_BRANCH_IDS = [
 
 // ─────────────────────────────────────────────
 
+const DEMO_DEFAULT_DEPARTMENT_ID = 'e5000000-0000-0000-0000-000000000001';
+
 export async function seedServices(prisma: PrismaClient) {
   console.log('── Seeding services ──');
+
+  // Ensure a default department exists for demo categories
+  await prisma.department.upsert({
+    where: { id: DEMO_DEFAULT_DEPARTMENT_ID },
+    update: {},
+    create: {
+      id: DEMO_DEFAULT_DEPARTMENT_ID,
+      nameAr: 'عام',
+      nameEn: 'General',
+      sortOrder: 0,
+    },
+  });
 
   const categoryIds: string[] = [];
   for (let i = 0; i < DEMO_CATEGORIES.length; i++) {
@@ -52,7 +66,13 @@ export async function seedServices(prisma: PrismaClient) {
     const c = await prisma.serviceCategory.upsert({
       where: { id: DEMO_CATEGORY_IDS[i] },
       update: { nameAr: cat.nameAr, nameEn: cat.nameEn },
-      create: { id: DEMO_CATEGORY_IDS[i], nameAr: cat.nameAr, nameEn: cat.nameEn, sortOrder: cat.sortOrder },
+      create: {
+        id: DEMO_CATEGORY_IDS[i],
+        nameAr: cat.nameAr,
+        nameEn: cat.nameEn,
+        sortOrder: cat.sortOrder,
+        departmentId: DEMO_DEFAULT_DEPARTMENT_ID,
+      },
     });
     categoryIds.push(c.id);
   }

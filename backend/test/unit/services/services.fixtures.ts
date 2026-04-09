@@ -2,12 +2,33 @@
  * Shared fixtures and mock factory for ServicesService test suites.
  */
 
+export const mockDepartment = {
+  id: 'dept-uuid-1',
+  nameEn: 'Dental',
+  nameAr: 'الأسنان',
+  sortOrder: 1,
+  isActive: true,
+  createdAt: new Date('2026-01-15'),
+  updatedAt: new Date('2026-01-15'),
+};
+
+export const mockDepartment2 = {
+  id: 'dept-uuid-2',
+  nameEn: 'Dermatology',
+  nameAr: 'الجلدية',
+  sortOrder: 2,
+  isActive: true,
+  createdAt: new Date('2026-01-15'),
+  updatedAt: new Date('2026-01-15'),
+};
+
 export const mockCategory = {
   id: 'category-uuid-1',
   nameEn: 'General Medicine',
   nameAr: 'الطب العام',
   sortOrder: 1,
   isActive: true,
+  departmentId: 'dept-uuid-1',
   createdAt: new Date('2026-01-15'),
   updatedAt: new Date('2026-01-15'),
 };
@@ -18,6 +39,7 @@ export const mockCategory2 = {
   nameAr: 'الرعاية المتخصصة',
   sortOrder: 2,
   isActive: true,
+  departmentId: 'dept-uuid-1',
   createdAt: new Date('2026-01-15'),
   updatedAt: new Date('2026-01-15'),
 };
