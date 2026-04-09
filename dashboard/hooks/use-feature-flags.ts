@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import {
   fetchFeatureFlags,
   fetchFeatureFlagMap,
@@ -57,6 +58,12 @@ export function useFeatureFlagMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: FEATURE_FLAGS_KEY })
       queryClient.invalidateQueries({ queryKey: FEATURE_FLAG_MAP_KEY })
+    },
+    onError: (error: unknown) => {
+      const status = (error as { response?: { status?: number } })?.response?.status
+      if (status === 403) {
+        toast.error("هذه الميزة غير متاحة في باقتك الحالية")
+      }
     },
   })
 
