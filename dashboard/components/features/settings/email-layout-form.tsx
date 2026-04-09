@@ -8,66 +8,34 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useConfigMap, useUpdateConfig } from "@/hooks/use-whitelabel"
+import { useClinicSettings, useUpdateClinicSettings } from "@/hooks/use-clinic-settings"
 import { useLocale } from "@/components/locale-provider"
 
-const EMAIL_LAYOUT_KEYS = [
-  "email_header_show_logo",
-  "email_header_show_name",
-  "email_footer_phone",
-  "email_footer_website",
-  "email_footer_instagram",
-  "email_footer_twitter",
-  "email_footer_snapchat",
-  "email_footer_tiktok",
-  "email_footer_linkedin",
-  "email_footer_youtube",
-] as const
-
-type LayoutKey = (typeof EMAIL_LAYOUT_KEYS)[number]
-
 interface LayoutState {
-  email_header_show_logo: boolean
-  email_header_show_name: boolean
-  email_footer_phone: string
-  email_footer_website: string
-  email_footer_instagram: string
-  email_footer_twitter: string
-  email_footer_snapchat: string
-  email_footer_tiktok: string
-  email_footer_linkedin: string
-  email_footer_youtube: string
+  emailHeaderShowLogo: boolean
+  emailHeaderShowName: boolean
+  emailFooterPhone: string
+  emailFooterWebsite: string
+  emailFooterInstagram: string
+  emailFooterTwitter: string
+  emailFooterSnapchat: string
+  emailFooterTiktok: string
+  emailFooterLinkedin: string
+  emailFooterYoutube: string
 }
 
 const DEFAULTS: LayoutState = {
-  email_header_show_logo: true,
-  email_header_show_name: true,
-  email_footer_phone: "",
-  email_footer_website: "",
-  email_footer_instagram: "",
-  email_footer_twitter: "",
-  email_footer_snapchat: "",
-  email_footer_tiktok: "",
-  email_footer_linkedin: "",
-  email_footer_youtube: "",
+  emailHeaderShowLogo: true,
+  emailHeaderShowName: true,
+  emailFooterPhone: "",
+  emailFooterWebsite: "",
+  emailFooterInstagram: "",
+  emailFooterTwitter: "",
+  emailFooterSnapchat: "",
+  emailFooterTiktok: "",
+  emailFooterLinkedin: "",
+  emailFooterYoutube: "",
 }
-
-function parseConfigMap(configMap: Record<string, string | undefined>): LayoutState {
-  return {
-    email_header_show_logo: configMap.email_header_show_logo !== "false",
-    email_header_show_name: configMap.email_header_show_name !== "false",
-    email_footer_phone: configMap.email_footer_phone ?? "",
-    email_footer_website: configMap.email_footer_website ?? "",
-    email_footer_instagram: configMap.email_footer_instagram ?? "",
-    email_footer_twitter: configMap.email_footer_twitter ?? "",
-    email_footer_snapchat: configMap.email_footer_snapchat ?? "",
-    email_footer_tiktok: configMap.email_footer_tiktok ?? "",
-    email_footer_linkedin: configMap.email_footer_linkedin ?? "",
-    email_footer_youtube: configMap.email_footer_youtube ?? "",
-  }
-}
-
-/* ─── Social Field ─── */
 
 function SocialField({ label, value, onChange, placeholder }: {
   label: string
@@ -89,36 +57,50 @@ function SocialField({ label, value, onChange, placeholder }: {
   )
 }
 
-/* ─── Main Form ─── */
-
 export function EmailLayoutForm({ onCancel }: { onCancel: () => void }) {
   const { t } = useLocale()
-  const { data: configMap, isLoading } = useConfigMap()
-  const updateConfig = useUpdateConfig()
+  const { data: settings, isLoading } = useClinicSettings()
+  const updateSettings = useUpdateClinicSettings()
 
   const [state, setState] = useState<LayoutState>(DEFAULTS)
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    if (configMap && !initialized) {
-      setState(parseConfigMap(configMap))
+    if (settings && !initialized) {
+      setState({
+        emailHeaderShowLogo: settings.emailHeaderShowLogo ?? true,
+        emailHeaderShowName: settings.emailHeaderShowName ?? true,
+        emailFooterPhone: settings.emailFooterPhone ?? "",
+        emailFooterWebsite: settings.emailFooterWebsite ?? "",
+        emailFooterInstagram: settings.emailFooterInstagram ?? "",
+        emailFooterTwitter: settings.emailFooterTwitter ?? "",
+        emailFooterSnapchat: settings.emailFooterSnapchat ?? "",
+        emailFooterTiktok: settings.emailFooterTiktok ?? "",
+        emailFooterLinkedin: settings.emailFooterLinkedin ?? "",
+        emailFooterYoutube: settings.emailFooterYoutube ?? "",
+      })
       setInitialized(true)
     }
-  }, [configMap, initialized])
+  }, [settings, initialized])
 
-  const setField = <K extends LayoutKey>(key: K, value: LayoutState[K]) => {
+  const setField = <K extends keyof LayoutState>(key: K, value: LayoutState[K]) => {
     setState((prev) => ({ ...prev, [key]: value }))
   }
 
   const handleSave = () => {
-    const configs = EMAIL_LAYOUT_KEYS.map((key) => ({
-      key,
-      value: String(state[key]),
-      type: "string" as const,
-    }))
-
-    updateConfig.mutate(
-      { configs },
+    updateSettings.mutate(
+      {
+        emailHeaderShowLogo: state.emailHeaderShowLogo,
+        emailHeaderShowName: state.emailHeaderShowName,
+        emailFooterPhone: state.emailFooterPhone || null,
+        emailFooterWebsite: state.emailFooterWebsite || null,
+        emailFooterInstagram: state.emailFooterInstagram || null,
+        emailFooterTwitter: state.emailFooterTwitter || null,
+        emailFooterSnapchat: state.emailFooterSnapchat || null,
+        emailFooterTiktok: state.emailFooterTiktok || null,
+        emailFooterLinkedin: state.emailFooterLinkedin || null,
+        emailFooterYoutube: state.emailFooterYoutube || null,
+      },
       {
         onSuccess: () => toast.success(t("settings.emailLayout.saved")),
         onError: () => toast.error(t("settings.error")),
@@ -138,7 +120,6 @@ export function EmailLayoutForm({ onCancel }: { onCancel: () => void }) {
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto">
-      {/* Header */}
       <p className="text-sm font-semibold text-foreground">
         {t("settings.emailLayout.title")}
       </p>
@@ -146,7 +127,6 @@ export function EmailLayoutForm({ onCancel }: { onCancel: () => void }) {
         {t("settings.emailLayout.description")}
       </p>
 
-      {/* Header Section */}
       <Card className="shadow-sm bg-surface">
         <CardContent className="pt-4 pb-4 space-y-4">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -155,21 +135,20 @@ export function EmailLayoutForm({ onCancel }: { onCancel: () => void }) {
           <div className="flex items-center justify-between">
             <Label>{t("settings.emailLayout.showLogo")}</Label>
             <Switch
-              checked={state.email_header_show_logo}
-              onCheckedChange={(v) => setField("email_header_show_logo", v)}
+              checked={state.emailHeaderShowLogo}
+              onCheckedChange={(v) => setField("emailHeaderShowLogo", v)}
             />
           </div>
           <div className="flex items-center justify-between">
             <Label>{t("settings.emailLayout.showName")}</Label>
             <Switch
-              checked={state.email_header_show_name}
-              onCheckedChange={(v) => setField("email_header_show_name", v)}
+              checked={state.emailHeaderShowName}
+              onCheckedChange={(v) => setField("emailHeaderShowName", v)}
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Footer Section */}
       <Card className="shadow-sm bg-surface">
         <CardContent className="pt-4 pb-4 space-y-4">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -177,62 +156,61 @@ export function EmailLayoutForm({ onCancel }: { onCancel: () => void }) {
           </p>
           <SocialField
             label={t("settings.emailLayout.phone")}
-            value={state.email_footer_phone}
-            onChange={(v) => setField("email_footer_phone", v)}
+            value={state.emailFooterPhone}
+            onChange={(v) => setField("emailFooterPhone", v)}
             placeholder="+966500000000"
           />
           <SocialField
             label={t("settings.emailLayout.website")}
-            value={state.email_footer_website}
-            onChange={(v) => setField("email_footer_website", v)}
+            value={state.emailFooterWebsite}
+            onChange={(v) => setField("emailFooterWebsite", v)}
             placeholder="https://clinic.com"
           />
           <SocialField
             label={t("settings.emailLayout.instagram")}
-            value={state.email_footer_instagram}
-            onChange={(v) => setField("email_footer_instagram", v)}
+            value={state.emailFooterInstagram}
+            onChange={(v) => setField("emailFooterInstagram", v)}
             placeholder="https://instagram.com/clinic"
           />
           <SocialField
             label={t("settings.emailLayout.twitter")}
-            value={state.email_footer_twitter}
-            onChange={(v) => setField("email_footer_twitter", v)}
+            value={state.emailFooterTwitter}
+            onChange={(v) => setField("emailFooterTwitter", v)}
             placeholder="https://x.com/clinic"
           />
           <SocialField
             label={t("settings.emailLayout.snapchat")}
-            value={state.email_footer_snapchat}
-            onChange={(v) => setField("email_footer_snapchat", v)}
+            value={state.emailFooterSnapchat}
+            onChange={(v) => setField("emailFooterSnapchat", v)}
             placeholder="https://snapchat.com/add/clinic"
           />
           <SocialField
             label={t("settings.emailLayout.tiktok")}
-            value={state.email_footer_tiktok}
-            onChange={(v) => setField("email_footer_tiktok", v)}
+            value={state.emailFooterTiktok}
+            onChange={(v) => setField("emailFooterTiktok", v)}
             placeholder="https://tiktok.com/@clinic"
           />
           <SocialField
             label={t("settings.emailLayout.linkedin")}
-            value={state.email_footer_linkedin}
-            onChange={(v) => setField("email_footer_linkedin", v)}
+            value={state.emailFooterLinkedin}
+            onChange={(v) => setField("emailFooterLinkedin", v)}
             placeholder="https://linkedin.com/company/clinic"
           />
           <SocialField
             label={t("settings.emailLayout.youtube")}
-            value={state.email_footer_youtube}
-            onChange={(v) => setField("email_footer_youtube", v)}
+            value={state.emailFooterYoutube}
+            onChange={(v) => setField("emailFooterYoutube", v)}
             placeholder="https://youtube.com/@clinic"
           />
         </CardContent>
       </Card>
 
-      {/* Actions */}
       <div className="flex items-center justify-between mt-auto pt-2">
         <Button variant="outline" size="sm" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
-        <Button size="sm" onClick={handleSave} disabled={updateConfig.isPending}>
-          {updateConfig.isPending ? t("common.saving") : t("settings.save")}
+        <Button size="sm" onClick={handleSave} disabled={updateSettings.isPending}>
+          {updateSettings.isPending ? t("common.saving") : t("settings.save")}
         </Button>
       </div>
     </div>

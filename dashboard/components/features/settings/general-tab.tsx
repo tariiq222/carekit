@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -13,14 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import type { WhiteLabelConfigMap } from "@/lib/types/whitelabel"
-
-interface Props {
-  configMap: WhiteLabelConfigMap
-  onSave: (configs: { key: string; value: string; type?: string }[]) => void
-  isPending: boolean
-  t: (key: string) => string
-}
+import { useClinicSettings, useUpdateClinicSettings } from "@/hooks/use-clinic-settings"
+import { useLocale } from "@/components/locale-provider"
 
 type TabId = "contact" | "regional"
 
@@ -55,7 +51,11 @@ const TIMEZONE_OPTIONS = [
   { value: "Asia/Baghdad", label: "Asia/Baghdad (UTC+3)" },
 ]
 
-export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
+export function GeneralTab() {
+  const { t } = useLocale()
+  const { data: settings, isLoading } = useClinicSettings()
+  const updateSettings = useUpdateClinicSettings()
+
   const [activeTab, setActiveTab] = useState<TabId>("contact")
 
   const [clinicEmail, setClinicEmail] = useState("")
@@ -67,15 +67,58 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
   const [clinicTimezone, setClinicTimezone] = useState("Asia/Riyadh")
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setClinicEmail(configMap.contact_email ?? "")
-    setClinicPhone(configMap.contact_phone ?? "")
-    setClinicAddress(configMap.address ?? "")
-    setWeekStartDay(configMap.week_start_day ?? "sunday")
-    setDateFormat(configMap.date_format ?? "Y-m-d")
-    setTimeFormat(configMap.time_format ?? "24h")
-    setClinicTimezone(configMap.timezone ?? "Asia/Riyadh")
-  }, [configMap])
+    if (!settings) return
+    setClinicEmail(settings.contactEmail ?? "")
+    setClinicPhone(settings.contactPhone ?? "")
+    setClinicAddress(settings.address ?? "")
+    setWeekStartDay(settings.weekStartDay ?? "sunday")
+    setDateFormat(settings.dateFormat ?? "Y-m-d")
+    setTimeFormat(settings.timeFormat ?? "24h")
+    setClinicTimezone(settings.timezone ?? "Asia/Riyadh")
+  }, [settings])
+
+  const handleSaveContact = () => {
+    updateSettings.mutate(
+      {
+        contactEmail: clinicEmail || null,
+        contactPhone: clinicPhone || null,
+        address: clinicAddress || null,
+      },
+      {
+        onSuccess: () => toast.success(t("settings.saved")),
+        onError: () => toast.error(t("settings.error")),
+      },
+    )
+  }
+
+  const handleSaveRegional = () => {
+    updateSettings.mutate(
+      {
+        weekStartDay,
+        dateFormat,
+        timeFormat,
+        timezone: clinicTimezone,
+      },
+      {
+        onSuccess: () => toast.success(t("settings.saved")),
+        onError: () => toast.error(t("settings.error")),
+      },
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex gap-0 rounded-xl border border-border overflow-hidden">
+        <div className="w-64 border-e border-border bg-surface-muted space-y-1 p-2">
+          <Skeleton className="h-14 rounded-lg" />
+          <Skeleton className="h-14 rounded-lg" />
+        </div>
+        <div className="flex-1 p-6">
+          <Skeleton className="h-48 rounded-lg" />
+        </div>
+      </div>
+    )
+  }
 
   const tabs: { id: TabId; label: string; desc: string }[] = [
     { id: "contact", label: t("settings.tabs.general"), desc: t("settings.clinicEmail") },
@@ -85,7 +128,6 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex min-h-[420px]">
-        {/* ── Sidebar ── */}
         <div className="w-64 shrink-0 border-e border-border bg-surface-muted flex flex-col">
           <div className="px-4 py-3 border-b border-border">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -117,7 +159,6 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
           </div>
         </div>
 
-        {/* ── Content ── */}
         <div className="flex-1 p-5 overflow-y-auto bg-surface-muted/50 flex flex-col">
           {activeTab === "contact" && (
             <div className="flex flex-col gap-3 h-full">
@@ -143,11 +184,7 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
                 <div />
               </div>
               <div className="flex justify-end mt-auto pt-2">
-                <Button size="sm" disabled={isPending} onClick={() => onSave([
-                  { key: "contact_email", value: clinicEmail },
-                  { key: "contact_phone", value: clinicPhone },
-                  { key: "address", value: clinicAddress },
-                ])}>
+                <Button size="sm" disabled={updateSettings.isPending} onClick={handleSaveContact}>
                   {t("settings.save")}
                 </Button>
               </div>
@@ -203,12 +240,7 @@ export function GeneralTab({ configMap, onSave, isPending, t }: Props) {
                 </Card>
               </div>
               <div className="flex justify-end mt-auto pt-2">
-                <Button size="sm" disabled={isPending} onClick={() => onSave([
-                  { key: "week_start_day", value: weekStartDay },
-                  { key: "date_format", value: dateFormat },
-                  { key: "time_format", value: timeFormat },
-                  { key: "timezone", value: clinicTimezone },
-                ])}>
+                <Button size="sm" disabled={updateSettings.isPending} onClick={handleSaveRegional}>
                   {t("settings.save")}
                 </Button>
               </div>

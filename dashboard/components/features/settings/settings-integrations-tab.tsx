@@ -7,18 +7,17 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { useConfigMap, useUpdateConfig } from "@/hooks/use-whitelabel"
+import { useClinicIntegrations, useUpdateClinicIntegrations } from "@/hooks/use-clinic-integrations"
 import { useLocale } from "@/components/locale-provider"
 
 type TabId = "zoom" | "email"
 
 export function SettingsIntegrationsTab() {
   const { t } = useLocale()
-  const { data: configMap, isLoading } = useConfigMap()
-  const updateConfig = useUpdateConfig()
+  const { data: integrations, isLoading } = useClinicIntegrations()
+  const updateIntegrations = useUpdateClinicIntegrations()
 
   const [activeTab, setActiveTab] = useState<TabId>("zoom")
 
@@ -32,49 +31,55 @@ export function SettingsIntegrationsTab() {
   const [emailFrom, setEmailFrom] = useState("")
 
   useEffect(() => {
-    if (!configMap) return
-    setZoomEnabled(configMap.zoom_enabled === "true")
-    setZoomClientId(configMap.zoom_client_id ?? "")
-    setZoomClientSecret(configMap.zoom_client_secret ?? "")
-    setZoomAccountId(configMap.zoom_account_id ?? "")
-    setEmailProvider(configMap.email_provider ?? "")
-    setEmailApiKey(configMap.email_api_key ?? "")
-    setEmailFrom(configMap.email_from ?? "")
-  }, [configMap])
+    if (!integrations) return
+    setZoomEnabled(!!integrations.zoomClientId)
+    setZoomClientId(integrations.zoomClientId ?? "")
+    setZoomClientSecret(integrations.zoomClientSecret ?? "")
+    setZoomAccountId(integrations.zoomAccountId ?? "")
+    setEmailProvider(integrations.emailProvider ?? "")
+    setEmailApiKey(integrations.emailApiKey ?? "")
+    setEmailFrom(integrations.emailFrom ?? "")
+  }, [integrations])
 
   const handleSaveZoom = () => {
-    const configs: { key: string; value: string; type?: "string" | "boolean" | "number" | "json" }[] = [
-      { key: "zoom_enabled", value: String(zoomEnabled), type: "boolean" },
-      { key: "zoom_client_id", value: zoomClientId },
-      { key: "zoom_account_id", value: zoomAccountId },
-    ]
-    if (zoomClientSecret && zoomClientSecret !== "***") {
-      configs.push({ key: "zoom_client_secret", value: zoomClientSecret })
+    const payload: Record<string, string | null> = {
+      zoomClientId,
+      zoomAccountId,
     }
-    updateConfig.mutate(
-      { configs },
-      {
-        onSuccess: () => toast.success(t("settings.saved")),
-        onError: () => toast.error(t("settings.error")),
-      },
-    )
+    if (zoomClientSecret && zoomClientSecret !== "***") {
+      payload.zoomClientSecret = zoomClientSecret
+    }
+    updateIntegrations.mutate(payload, {
+      onSuccess: () => toast.success(t("settings.saved")),
+      onError: () => toast.error(t("settings.error")),
+    })
   }
 
   const handleSaveEmail = () => {
-    const configs: { key: string; value: string; type?: "string" | "boolean" | "number" | "json" }[] = [
-      { key: "email_provider", value: emailProvider },
-      { key: "email_from", value: emailFrom },
-    ]
-    if (emailApiKey && emailApiKey !== "***") {
-      configs.push({ key: "email_api_key", value: emailApiKey })
+    const payload: Record<string, string | null> = {
+      emailProvider,
+      emailFrom,
     }
-    updateConfig.mutate(
-      { configs },
-      {
-        onSuccess: () => toast.success(t("settings.saved")),
-        onError: () => toast.error(t("settings.error")),
-      },
-    )
+    if (emailApiKey && emailApiKey !== "***") {
+      payload.emailApiKey = emailApiKey
+    }
+    updateIntegrations.mutate(payload, {
+      onSuccess: () => toast.success(t("settings.saved")),
+      onError: () => toast.error(t("settings.error")),
+    })
+  }
+
+  const handleToggleZoom = (v: boolean) => {
+    setZoomEnabled(v)
+    if (!v) {
+      updateIntegrations.mutate(
+        { zoomClientId: null, zoomClientSecret: null, zoomAccountId: null },
+        {
+          onSuccess: () => toast.success(t("settings.saved")),
+          onError: () => toast.error(t("settings.error")),
+        },
+      )
+    }
   }
 
   if (isLoading) {
@@ -96,41 +101,14 @@ export function SettingsIntegrationsTab() {
     id: TabId
     label: string
     desc: string
-    enabled: boolean
-    onToggle: (v: boolean) => void
   }[] = [
-    {
-      id: "zoom",
-      label: t("settings.zoom"),
-      desc: t("settings.zoomDesc"),
-      enabled: zoomEnabled,
-      onToggle: (v: boolean) => {
-        setZoomEnabled(v)
-        updateConfig.mutate(
-          { configs: [{ key: "zoom_enabled", value: String(v), type: "boolean" as const }] },
-          {
-            onSuccess: () => toast.success(t("settings.saved")),
-            onError: () => toast.error(t("settings.error")),
-          }
-        )
-      },
-    },
-    {
-      id: "email",
-      label: t("settings.email"),
-      desc: t("settings.emailDesc"),
-      enabled: true,
-      onToggle: () => {},
-    },
+    { id: "zoom", label: t("settings.zoom"), desc: t("settings.zoomDesc") },
+    { id: "email", label: t("settings.email"), desc: t("settings.emailDesc") },
   ]
-
-  const activeTabDef = tabs.find((tab) => tab.id === activeTab)!
 
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex min-h-[420px]">
-
-        {/* ── Sidebar Tabs ── */}
         <div className="w-64 shrink-0 border-e border-border bg-surface-muted flex flex-col">
           <div className="p-3 border-b border-border">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -155,7 +133,6 @@ export function SettingsIntegrationsTab() {
                     : "text-muted-foreground hover:bg-background/70 hover:text-foreground",
                 )}
               >
-                {/* Label */}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate leading-tight">
                     {tab.label}
@@ -167,7 +144,6 @@ export function SettingsIntegrationsTab() {
                   )}
                 </div>
 
-                {/* Switch — only for toggleable integrations */}
                 {tab.id === "zoom" && (
                   <div
                     onClick={(e) => e.stopPropagation()}
@@ -175,9 +151,9 @@ export function SettingsIntegrationsTab() {
                     className="shrink-0"
                   >
                     <Switch
-                      checked={tab.enabled}
-                      onCheckedChange={tab.onToggle}
-                      disabled={updateConfig.isPending}
+                      checked={zoomEnabled}
+                      onCheckedChange={handleToggleZoom}
+                      disabled={updateIntegrations.isPending}
                     />
                   </div>
                 )}
@@ -186,10 +162,7 @@ export function SettingsIntegrationsTab() {
           </div>
         </div>
 
-        {/* ── Content Panel ── */}
         <div className="flex-1 p-6">
-
-          {/* Zoom Panel */}
           {activeTab === "zoom" && (
             !zoomEnabled ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center gap-3">
@@ -205,17 +178,8 @@ export function SettingsIntegrationsTab() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    setZoomEnabled(true)
-                    updateConfig.mutate(
-                      { configs: [{ key: "zoom_enabled", value: "true", type: "boolean" as const }] },
-                      {
-                        onSuccess: () => toast.success(t("settings.saved")),
-                        onError: () => toast.error(t("settings.error")),
-                      }
-                    )
-                  }}
-                  disabled={updateConfig.isPending}
+                  onClick={() => setZoomEnabled(true)}
+                  disabled={updateIntegrations.isPending}
                 >
                   {t("settings.payment.enable")}
                 </Button>
@@ -233,7 +197,7 @@ export function SettingsIntegrationsTab() {
                     <CardContent className="space-y-2 pt-3 pb-3">
                       <Label>{t("settings.zoomClientSecret")}</Label>
                       <Input value={zoomClientSecret} onChange={(e) => setZoomClientSecret(e.target.value)} type="password"
-                        placeholder={zoomClientSecret === "***" ? "••••••••••••" : undefined} dir="ltr" />
+                        placeholder={zoomClientSecret === "***" ? "............" : undefined} dir="ltr" />
                     </CardContent>
                   </Card>
                   <Card className="shadow-sm bg-surface">
@@ -244,7 +208,7 @@ export function SettingsIntegrationsTab() {
                   </Card>
                 </div>
                 <div className="flex justify-end mt-auto pt-2">
-                  <Button size="sm" disabled={updateConfig.isPending} onClick={handleSaveZoom}>
+                  <Button size="sm" disabled={updateIntegrations.isPending} onClick={handleSaveZoom}>
                     {t("settings.save")}
                   </Button>
                 </div>
@@ -252,7 +216,6 @@ export function SettingsIntegrationsTab() {
             )
           )}
 
-          {/* Email Panel */}
           {activeTab === "email" && (
             <div className="flex flex-col gap-3 h-full">
               <div className="grid grid-cols-2 gap-3">
@@ -266,7 +229,7 @@ export function SettingsIntegrationsTab() {
                   <CardContent className="space-y-2 pt-3 pb-3">
                     <Label>{t("settings.emailApiKey")}</Label>
                     <Input value={emailApiKey} onChange={(e) => setEmailApiKey(e.target.value)} type="password"
-                      placeholder={emailApiKey === "***" ? "••••••••••••" : "re_..."} dir="ltr" />
+                      placeholder={emailApiKey === "***" ? "............" : "re_..."} dir="ltr" />
                   </CardContent>
                 </Card>
                 <Card className="shadow-sm bg-surface">
@@ -277,13 +240,12 @@ export function SettingsIntegrationsTab() {
                 </Card>
               </div>
               <div className="flex justify-end mt-auto pt-2">
-                <Button size="sm" disabled={updateConfig.isPending} onClick={handleSaveEmail}>
+                <Button size="sm" disabled={updateIntegrations.isPending} onClick={handleSaveEmail}>
                   {t("settings.save")}
                 </Button>
               </div>
             </div>
           )}
-
         </div>
       </div>
     </Card>
