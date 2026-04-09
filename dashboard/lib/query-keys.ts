@@ -200,6 +200,14 @@ export const queryKeys = {
       ["branches", "practitioners", id] as const,
   },
 
+  /* ─── Departments ─── */
+  departments: {
+    all: ["departments"] as const,
+    list: (filters?: object) =>
+      ["departments", "list", filters] as const,
+    detail: (id: string) => ["departments", "detail", id] as const,
+  },
+
   /* ─── Email Templates ─── */
   emailTemplates: {
     all: ["email-templates"] as const,
