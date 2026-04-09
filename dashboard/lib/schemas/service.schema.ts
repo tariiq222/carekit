@@ -6,6 +6,7 @@ export const createCategorySchema = z.object({
   nameEn: z.string().min(1, "Required"),
   nameAr: z.string().min(1, "Required"),
   sortOrder: z.coerce.number().int().min(0).optional(),
+  departmentId: z.string().uuid().nullable().optional(),
 })
 
 export type CreateCategoryFormData = z.infer<typeof createCategorySchema>
@@ -17,6 +18,7 @@ export const editCategorySchema = z.object({
   nameAr: z.string().min(1, "Required").optional(),
   sortOrder: z.coerce.number().int().min(0).optional(),
   isActive: z.boolean().optional(),
+  departmentId: z.string().uuid().nullable().optional(),
 })
 
 export type EditCategoryFormData = z.infer<typeof editCategorySchema>

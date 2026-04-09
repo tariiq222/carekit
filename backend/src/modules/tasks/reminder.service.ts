@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
-import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 
 @Injectable()
 export class ReminderService {
@@ -10,7 +10,7 @@ export class ReminderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
-    private readonly whitelabelService: WhitelabelService,
+    private readonly clinicSettingsService: ClinicSettingsService,
   ) {}
 
   /** Check for bookings ~24h away and notify both patient and practitioner */
@@ -253,7 +253,7 @@ export class ReminderService {
 
   /** Format a time string according to clinic's time_format config */
   private async formatTimeForNotification(time: string): Promise<string> {
-    const format = await this.whitelabelService.getTimeFormat();
+    const format = await this.clinicSettingsService.getTimeFormat();
     if (format === '12h') {
       const [hourStr, minuteStr] = time.split(':');
       const hour = parseInt(hourStr, 10);

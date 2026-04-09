@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 /**
  * Shared helpers for auth E2E test suites.
  * Import from here instead of duplicating across spec files.
@@ -54,17 +55,29 @@ export async function registerFresh(
   };
 }
 
-/** Read the most recent unused OTP for a user+type directly from DB */
+/**
+ * Creates a known OTP in the DB (hashed, as OtpService does) and returns the plain code.
+ * The OTP service stores SHA256(code) in DB, so verify(plain) computes SHA256(plain) to match.
+ * This helper inserts SHA256('999999') so tests can send '999999' to verify endpoints.
+ */
 export async function getLatestOtp(
   prisma: PrismaService,
   userId: string,
   type: 'login' | 'reset_password' | 'verify_email',
 ): Promise<string> {
-  const otp = await prisma.otpCode.findFirst({
+  const plainCode = '999999';
+  const hashedCode = crypto.createHash('sha256').update(plainCode).digest('hex');
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  // Invalidate existing OTPs (mirrors OtpService.generateOtp behaviour)
+  await prisma.otpCode.updateMany({
     where: { userId, type, usedAt: null },
-    orderBy: { createdAt: 'desc' },
-    select: { code: true },
+    data: { usedAt: new Date() },
   });
-  if (!otp) throw new Error(`No active OTP found for userId=${userId} type=${type}`);
-  return otp.code;
+
+  await prisma.otpCode.create({
+    data: { userId, code: hashedCode, type, expiresAt },
+  });
+
+  return plainCode;
 }

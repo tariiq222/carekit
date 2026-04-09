@@ -25,6 +25,7 @@ export const createServiceSchema = z.object({
   minLeadMinutes: z.coerce.number().int().min(0).max(1440).nullable().optional(),
   maxAdvanceDays: z.coerce.number().int().min(1).max(365).nullable().optional(),
   branchIds: z.array(z.string().uuid()).optional(),
+  calendarColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
 })
 
 export type CreateServiceFormData = z.infer<typeof createServiceSchema>

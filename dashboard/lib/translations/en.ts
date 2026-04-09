@@ -18,6 +18,8 @@ import { enMisc } from "./en.misc"
 import { enWidget } from "./en.widget"
 import { enIntakeForms } from "./en.intake-forms"
 import { enWhiteLabel } from "./en.whitelabel"
+import { enGroupSessions } from "./en.group-sessions"
+import { enDepartments } from "./en.departments"
 
 export const en: Record<string, string> = {
   ...enNav,
@@ -33,4 +35,6 @@ export const en: Record<string, string> = {
   ...enWidget,
   ...enIntakeForms,
   ...enWhiteLabel,
+  ...enGroupSessions,
+  ...enDepartments,
 }

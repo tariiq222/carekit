@@ -15,7 +15,9 @@ import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { RequireFeature } from '../../common/decorators/require-feature.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ChatbotService, type HandleMessageResult } from './chatbot.service.js';
 import { ChatbotStreamService } from './chatbot-stream.service.js';
@@ -27,7 +29,8 @@ import { ADMIN_ROLE_SLUGS } from '../../config/constants.js';
 @ApiTags('Chatbot')
 @ApiBearerAuth()
 @Controller('chatbot')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, FeatureFlagGuard)
+@RequireFeature('chatbot')
 export class ChatbotController {
   constructor(
     private readonly chatbotService: ChatbotService,
@@ -40,7 +43,7 @@ export class ChatbotController {
 
   @Post('sessions')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  @CheckPermissions({ module: 'chatbot', action: 'create' })
+  @CheckPermissions({ module: 'chatbot', action: 'use' })
   async createSession(
     @Body() dto: CreateSessionDto,
     @CurrentUser() user: { id: string },
@@ -49,7 +52,7 @@ export class ChatbotController {
   }
 
   @Get('sessions')
-  @CheckPermissions({ module: 'chatbot', action: 'view' })
+  @CheckPermissions({ module: 'chatbot', action: 'use' })
   async listSessions(
     @Query() query: SessionListQueryDto,
     @CurrentUser() user: { id: string; roles?: Array<{ slug: string }> },
@@ -67,7 +70,7 @@ export class ChatbotController {
   }
 
   @Get('sessions/:id')
-  @CheckPermissions({ module: 'chatbot', action: 'view' })
+  @CheckPermissions({ module: 'chatbot', action: 'use' })
   async getSession(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -77,7 +80,7 @@ export class ChatbotController {
 
   @Post('sessions/:id/messages')
   @Throttle({ default: { limit: 20, ttl: 60000 } })
-  @CheckPermissions({ module: 'chatbot', action: 'create' })
+  @CheckPermissions({ module: 'chatbot', action: 'use' })
   async sendMessage(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SendMessageDto,
@@ -93,7 +96,7 @@ export class ChatbotController {
    */
   @Post('sessions/:id/messages/stream')
   @Throttle({ default: { limit: 20, ttl: 60000 } })
-  @CheckPermissions({ module: 'chatbot', action: 'create' })
+  @CheckPermissions({ module: 'chatbot', action: 'use' })
   async streamMessage(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SendMessageDto,
@@ -129,7 +132,7 @@ export class ChatbotController {
 
   @Post('sessions/:id/end')
   @HttpCode(200)
-  @CheckPermissions({ module: 'chatbot', action: 'edit' })
+  @CheckPermissions({ module: 'chatbot', action: 'use' })
   async endSession(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: { id: string },

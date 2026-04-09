@@ -1,38 +1,32 @@
 /**
  * WhiteLabel Types — CareKit Dashboard
+ * Structured singleton (no longer EAV key-value)
  */
-
-/* ─── Entities ─── */
-
-export type ConfigValueType = "string" | "number" | "boolean" | "json"
 
 export interface WhiteLabelConfig {
   id: string
-  key: string
-  value: string
-  type: ConfigValueType
-  description: string | null
+  systemName: string
+  systemNameAr: string
+  logoUrl: string | null
+  faviconUrl: string | null
+  primaryColor: string
+  secondaryColor: string
+  fontFamily: string
+  domain: string
+  clinicCanEdit: boolean
   createdAt: string
   updatedAt: string
 }
 
-export interface WhiteLabelConfigMap {
-  [key: string]: string | undefined
-  date_format?: string
-  time_format?: string
-  week_start_day?: string
-  timezone?: string
-}
+export type UpdateWhitelabelPayload = Partial<
+  Omit<WhiteLabelConfig, "id" | "createdAt" | "updatedAt">
+>
 
-/* ─── DTOs ─── */
-
-export interface UpsertConfigItem {
-  key: string
-  value: string
-  type?: ConfigValueType
-  description?: string
-}
-
-export interface UpdateConfigPayload {
-  configs: UpsertConfigItem[]
+export interface PublicBranding {
+  systemName: string
+  systemNameAr: string
+  logoUrl: string | null
+  faviconUrl: string | null
+  primaryColor: string
+  secondaryColor: string
 }

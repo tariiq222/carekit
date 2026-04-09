@@ -1,12 +1,31 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { EmailProcessor } from '../../../src/modules/email/email.processor.js';
 import { EmailTemplatesService } from '../../../src/modules/email-templates/email-templates.service.js';
+import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 import { QueueFailureService } from '../../../src/common/queue/queue-failure.service.js';
 import type { Job } from 'bullmq';
 
 const mockMailerService = { sendMail: jest.fn().mockResolvedValue(undefined) };
 const mockQueueFailureService = { notifyAdminsOfFailure: jest.fn().mockResolvedValue(undefined) };
 const mockEmailTemplatesService = { renderTemplate: jest.fn() };
+const mockWhitelabelService = {
+  get: jest.fn().mockResolvedValue({
+    systemName: 'Test Clinic',
+    systemNameAr: 'عيادة تجريبية',
+    logoUrl: '',
+    primaryColor: '#2563EB',
+    emailHeaderShowLogo: true,
+    emailHeaderShowName: true,
+  }),
+};
+const mockClinicSettingsService = {
+  get: jest.fn().mockResolvedValue({
+    contactPhone: '',
+    website: '',
+    socialMedia: {},
+  }),
+};
 
 function makeJob(overrides: Partial<Job> = {}): Job {
   return {
@@ -35,6 +54,8 @@ describe('EmailProcessor', () => {
       mockMailerService as unknown as MailerService,
       mockQueueFailureService as unknown as QueueFailureService,
       mockEmailTemplatesService as unknown as EmailTemplatesService,
+      mockWhitelabelService as unknown as WhitelabelService,
+      mockClinicSettingsService as unknown as ClinicSettingsService,
     );
 
     // Bypass WorkerHost.worker (not available in unit tests)
@@ -58,8 +79,12 @@ describe('EmailProcessor', () => {
           subject: 'EN Subject | AR Subject',
         }),
       );
-      expect(mockMailerService.sendMail.mock.calls[0][0].text).toContain('EN Body');
-      expect(mockMailerService.sendMail.mock.calls[0][0].text).toContain('AR Body');
+      const call = mockMailerService.sendMail.mock.calls[0][0];
+      expect(call.text).toContain('EN Body');
+      expect(call.text).toContain('AR Body');
+      expect(call.html).toBeDefined();
+      expect(call.html).toContain('EN Body');
+      expect(call.html).toContain('AR Body');
     });
 
     it('falls back to buildPlainText when DB template returns null', async () => {

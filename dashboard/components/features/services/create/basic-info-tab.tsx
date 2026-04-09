@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -19,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useCategories } from "@/hooks/use-services"
+import { useDepartmentOptions } from "@/hooks/use-departments"
 import { useLocale } from "@/components/locale-provider"
 import { ServiceAvatarPicker } from "@/components/features/services/service-avatar-picker"
 import { ServiceBranchesTab } from "@/components/features/services/service-branches-tab"
@@ -40,6 +42,13 @@ interface BasicInfoTabProps {
 export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }: BasicInfoTabProps) {
   const { t, locale } = useLocale()
   const { data: categories, isLoading: loadingCategories } = useCategories()
+  const { options: departments } = useDepartmentOptions()
+  const [selectedDeptId, setSelectedDeptId] = useState<string>("")
+
+  const hasDepts = departments.length > 0
+  const visibleCategories = selectedDeptId
+    ? (categories ?? []).filter((c) => c.departmentId === selectedDeptId)
+    : (categories ?? [])
 
   const {
     isActive,
@@ -107,9 +116,8 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }
 
       <CardContent className="space-y-6">
 
-        {/* ── Row 1: Name AR + Name EN + Category + Active — single row ── */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_1fr_1fr_auto]">
-          {/* Primary name */}
+        {/* ── Row 1: Names ── */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label>{primaryNameLabel} *</Label>
             <Input {...form.register(primaryName)} dir={primaryDir} />
@@ -117,8 +125,6 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }
               <p className="text-xs text-destructive">{form.formState.errors[primaryName]?.message}</p>
             )}
           </div>
-
-          {/* Secondary name */}
           <div className="flex flex-col gap-1.5">
             <Label>{secondaryNameLabel} *</Label>
             <Input {...form.register(secondaryName)} dir={secondaryDir} />
@@ -126,12 +132,45 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }
               <p className="text-xs text-destructive">{form.formState.errors[secondaryName]?.message}</p>
             )}
           </div>
+        </div>
+
+        {/* ── Row 2: Department (optional) + Category + Active ── */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_1fr_auto]">
+          {/* Department filter — only shown when departments exist */}
+          {hasDepts && (
+            <div className="flex flex-col gap-1.5">
+              <Label>{locale === "ar" ? "القسم" : "Department"}</Label>
+              <Select
+                value={selectedDeptId || "__none__"}
+                onValueChange={(v) => {
+                  const val = v === "__none__" ? "" : v
+                  setSelectedDeptId(val)
+                  const current = categories?.find((c) => c.id === watchedCategoryId)
+                  if (current && val && current.departmentId !== val) {
+                    form.setValue("categoryId", "", { shouldValidate: false })
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={locale === "ar" ? "جميع الأقسام" : "All departments"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">{locale === "ar" ? "جميع الأقسام" : "All departments"}</SelectItem>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {locale === "ar" ? d.nameAr : d.nameEn}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Category */}
-          <div className="flex flex-col gap-1.5">
+          <div className={`flex flex-col gap-1.5 ${!hasDepts ? "sm:col-span-2" : ""}`}>
             <Label>{t("services.create.category")} *</Label>
             <Select
-              key={categories ? watchedCategoryId || "empty" : "loading"}
+              key={`${selectedDeptId}-${watchedCategoryId || "empty"}`}
               value={watchedCategoryId || ""}
               onValueChange={(v) => form.setValue("categoryId", v, { shouldValidate: true })}
               disabled={loadingCategories}
@@ -140,7 +179,7 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }
                 <SelectValue placeholder={t("services.create.categoryPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                {categories?.map((c) => (
+                {visibleCategories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {locale === "ar" ? c.nameAr : c.nameEn}
                   </SelectItem>

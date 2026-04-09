@@ -7,13 +7,13 @@ import { useLocale } from "@/components/locale-provider"
 import { useGroupSessionsMutations } from "@/hooks/use-group-sessions-mutations"
 import { createOfferingSchema, type CreateOfferingFormValues } from "@/lib/schemas/group-sessions.schema"
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetBody,
-  SheetFooter,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -52,13 +52,13 @@ export function CreateOfferingDialog({ open, onOpenChange }: Props) {
   })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end" className="w-full sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{t("groupSessions.addOffering")}</SheetTitle>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("groupSessions.addOffering")}</DialogTitle>
+        </DialogHeader>
 
-        <SheetBody>
+        <DialogBody>
           <form id="create-offering-form" onSubmit={onSubmit} className="flex flex-col gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -124,9 +124,9 @@ export function CreateOfferingDialog({ open, onOpenChange }: Props) {
               <p className="text-xs text-muted-foreground">{t("groupSessions.paymentDeadlineHint")}</p>
             </div>
           </form>
-        </SheetBody>
+        </DialogBody>
 
-        <SheetFooter>
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button
             type="submit"
@@ -135,8 +135,8 @@ export function CreateOfferingDialog({ open, onOpenChange }: Props) {
           >
             {createOfferingMut.isPending ? t("common.saving") : t("common.save")}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

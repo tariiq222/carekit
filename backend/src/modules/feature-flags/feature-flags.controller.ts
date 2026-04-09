@@ -15,7 +15,7 @@ export class FeatureFlagsController {
   constructor(private readonly service: FeatureFlagsService) {}
 
   @Get()
-  @CheckPermissions({ module: 'whitelabel', action: 'view' })
+  @CheckPermissions({ module: 'feature-flags', action: 'view' })
   findAll() {
     return this.service.findAll();
   }
@@ -27,7 +27,7 @@ export class FeatureFlagsController {
   }
 
   @Patch(':key')
-  @CheckPermissions({ module: 'whitelabel', action: 'edit' })
+  @CheckPermissions({ module: 'feature-flags', action: 'edit' })
   toggle(@Param('key') key: string, @Body() dto: ToggleFeatureFlagDto) {
     return this.service.toggle(key, dto.enabled);
   }

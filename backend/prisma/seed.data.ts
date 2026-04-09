@@ -1,4 +1,3 @@
-import { ConfigValueType } from '@prisma/client';
 
 // ──────────────────────────────────────────────
 // Modules & Actions
@@ -23,6 +22,11 @@ export const MODULES = [
   'intake_forms',
   'gift-cards',
   'activity-log',
+  'departments',
+  'license',
+  'clinic-settings',
+  'clinic-integrations',
+  'feature-flags',
 ] as const;
 
 export const ACTIONS = ['view', 'create', 'edit', 'delete'] as const;
@@ -105,8 +109,9 @@ export const ROLES: RoleDefinition[] = [
     isSystem: true,
     permissions: {
       ...Object.fromEntries(
-        MODULES.filter((m) => m !== 'whitelabel' && m !== 'roles').map((m) => [m, [...ACTIONS]]),
+        MODULES.filter((m) => m !== 'whitelabel' && m !== 'roles' && m !== 'license').map((m) => [m, [...ACTIONS]]),
       ),
+      license: ['view'],
       // Extra permissions
       notifications: ['view', 'create', 'edit', 'delete', 'update'],
       chatbot: ['view', 'create', 'edit', 'delete', 'use'],
@@ -124,6 +129,7 @@ export const ROLES: RoleDefinition[] = [
       patients: ['view', 'create', 'edit'],
       practitioners: ['view', 'create', 'edit'],
       services: ['view', 'create', 'edit'],
+      departments: ['view'],
       notifications: ['view', 'create', 'edit', 'update'],
       payments: ['view'],
       invoices: ['view'],
@@ -144,6 +150,7 @@ export const ROLES: RoleDefinition[] = [
       bookings: ['view'],
       coupons: ['view', 'create', 'edit', 'delete'],
       notifications: ['view', 'update'],
+      departments: ['view'],
       chatbot: ['use'],
     },
   },
@@ -158,6 +165,7 @@ export const ROLES: RoleDefinition[] = [
       patients: ['view'],
       ratings: ['view'],
       practitioners: ['view', 'edit'],
+      departments: ['view'],
       notifications: ['view', 'update'],
       chatbot: ['use'],
     },
@@ -175,6 +183,7 @@ export const ROLES: RoleDefinition[] = [
       ratings: ['view', 'create', 'edit'],
       practitioners: ['view', 'favorites:view', 'favorites:edit'],
       services: ['view'],
+      departments: ['view'],
       notifications: ['view', 'update'],
       chatbot: ['use'],
     },
@@ -182,74 +191,109 @@ export const ROLES: RoleDefinition[] = [
 ];
 
 // ──────────────────────────────────────────────
-// WhiteLabel Config Defaults
+// WhiteLabel Config Defaults (branding — CareKit controls)
 // ──────────────────────────────────────────────
 
-export interface WhiteLabelEntry {
-  key: string;
-  value: string;
-  type: ConfigValueType;
-  description: string;
-}
+export const WHITELABEL_DEFAULTS = {
+  systemName: 'CareKit Clinic',
+  systemNameAr: 'عيادة كيركت',
+  logoUrl: null as string | null,
+  faviconUrl: null as string | null,
+  primaryColor: '#2563EB',
+  secondaryColor: '#1E40AF',
+  fontFamily: 'Inter',
+  domain: 'localhost',
+  clinicCanEdit: false,
+};
 
-export const WHITE_LABEL_DEFAULTS: WhiteLabelEntry[] = [
-  // Branding
-  { key: 'system_name', value: 'CareKit Clinic', type: 'string', description: 'System/clinic display name (English)' },
-  { key: 'system_name_ar', value: 'عيادة كيركت', type: 'string', description: 'System/clinic display name (Arabic)' },
-  { key: 'logo', value: '', type: 'file', description: 'Clinic logo URL' },
-  { key: 'primary_color', value: '#2563EB', type: 'string', description: 'Primary brand color (hex)' },
-  { key: 'secondary_color', value: '#1E40AF', type: 'string', description: 'Secondary brand color (hex)' },
-  { key: 'font', value: 'Inter', type: 'string', description: 'Primary font family' },
-  { key: 'domain', value: 'localhost', type: 'string', description: 'Client domain' },
+// ──────────────────────────────────────────────
+// License Config Defaults (feature availability — CareKit controls)
+// ──────────────────────────────────────────────
 
-  // Contact
-  { key: 'contact_phone', value: '+966500000000', type: 'string', description: 'Clinic phone number' },
-  { key: 'contact_email', value: 'info@carekit.com', type: 'string', description: 'Clinic contact email' },
-  { key: 'address', value: '', type: 'string', description: 'Clinic physical address' },
-  { key: 'social_media', value: '{}', type: 'json', description: 'Social media links (JSON object)' },
+export const LICENSE_DEFAULTS = {
+  hasCoupons: true,
+  hasGiftCards: true,
+  hasIntakeForms: true,
+  hasChatbot: true,
+  hasRatings: true,
+  hasMultiBranch: true,
+  hasReports: true,
+  hasRecurring: true,
+  hasWalkIn: true,
+  hasWaitlist: true,
+  hasZoom: false,
+  hasZatca: true,
+  hasDepartments: true,
+};
 
-  // Payment
-  { key: 'moyasar_api_key', value: '', type: 'string', description: 'Moyasar publishable API key' },
-  { key: 'moyasar_secret_key', value: '', type: 'string', description: 'Moyasar secret API key' },
-  { key: 'bank_account_name', value: '', type: 'string', description: 'Bank account holder name' },
-  { key: 'bank_account_number', value: '', type: 'string', description: 'Bank account number' },
-  { key: 'bank_account_iban', value: '', type: 'string', description: 'Bank IBAN number' },
+// ──────────────────────────────────────────────
+// Clinic Settings Defaults (clinic controls after delivery)
+// ──────────────────────────────────────────────
 
-  // Zoom
-  { key: 'zoom_api_key', value: '', type: 'string', description: 'Zoom API key' },
-  { key: 'zoom_api_secret', value: '', type: 'string', description: 'Zoom API secret' },
+export const CLINIC_SETTINGS_DEFAULTS = {
+  companyNameAr: null as string | null,
+  companyNameEn: null as string | null,
+  businessRegistration: null as string | null,
+  vatRegistrationNumber: null as string | null,
+  vatRate: 15,
+  sellerAddress: null as string | null,
+  clinicCity: 'الرياض',
+  postalCode: null as string | null,
+  contactPhone: '+966500000000',
+  contactEmail: 'info@carekit.com',
+  address: null as string | null,
+  socialMedia: {},
+  aboutAr: null as string | null,
+  aboutEn: null as string | null,
+  privacyPolicyAr: null as string | null,
+  privacyPolicyEn: null as string | null,
+  termsAr: null as string | null,
+  termsEn: null as string | null,
+  cancellationPolicyAr: 'يجب إلغاء الحجز قبل 24 ساعة على الأقل من موعد الزيارة.',
+  cancellationPolicyEn: 'Cancellations must be made at least 24 hours before the appointment.',
+  defaultLanguage: 'ar',
+  timezone: 'Asia/Riyadh',
+  weekStartDay: 'sunday',
+  dateFormat: 'Y-m-d',
+  timeFormat: '24h',
+  emailHeaderShowLogo: true,
+  emailHeaderShowName: true,
+  emailFooterPhone: null as string | null,
+  emailFooterWebsite: null as string | null,
+  emailFooterInstagram: null as string | null,
+  emailFooterTwitter: null as string | null,
+  emailFooterSnapchat: null as string | null,
+  emailFooterTiktok: null as string | null,
+  emailFooterLinkedin: null as string | null,
+  emailFooterYoutube: null as string | null,
+  sessionDuration: 30,
+  reminderBeforeMinutes: 60,
+};
 
-  // AI
-  { key: 'openrouter_api_key', value: '', type: 'string', description: 'OpenRouter API key for AI chatbot' },
+// ──────────────────────────────────────────────
+// Clinic Integrations Defaults (clinic controls — API keys)
+// ──────────────────────────────────────────────
 
-  // Content (AR/EN)
-  { key: 'cancellation_policy', value: 'Cancellations must be made at least 24 hours before the appointment.', type: 'string', description: 'Cancellation policy text (English)' },
-  { key: 'cancellation_policy_ar', value: 'يجب إلغاء الحجز قبل 24 ساعة على الأقل من موعد الزيارة.', type: 'string', description: 'Cancellation policy text (Arabic)' },
-  { key: 'about_ar', value: '', type: 'string', description: 'About clinic text (Arabic)' },
-  { key: 'about_en', value: '', type: 'string', description: 'About clinic text (English)' },
-  { key: 'privacy_policy_ar', value: '', type: 'string', description: 'Privacy policy text (Arabic)' },
-  { key: 'privacy_policy_en', value: '', type: 'string', description: 'Privacy policy text (English)' },
-  { key: 'terms_ar', value: '', type: 'string', description: 'Terms of service text (Arabic)' },
-  { key: 'terms_en', value: '', type: 'string', description: 'Terms of service text (English)' },
-
-  // ZATCA (Saudi e-Invoicing)
-  { key: 'zatca_phase', value: 'phase1', type: 'string', description: 'ZATCA phase: phase1 (QR only) | phase2 (API integration)' },
-  { key: 'vat_registration_number', value: '', type: 'string', description: 'VAT registration number (15 digits, starts and ends with 3)' },
-  { key: 'vat_rate', value: '0', type: 'string', description: 'VAT rate percentage (0 or 15)' },
-  { key: 'business_registration', value: '', type: 'string', description: 'Commercial registration number (CR)' },
-  { key: 'seller_address', value: '', type: 'string', description: 'Clinic address for invoices' },
-  { key: 'clinic_city', value: 'الرياض', type: 'string', description: 'Clinic city for invoices' },
-
-  // Settings
-  { key: 'default_language', value: 'ar', type: 'string', description: 'Default language (ar/en)' },
-  { key: 'timezone', value: 'Asia/Riyadh', type: 'string', description: 'Clinic timezone' },
-  { key: 'week_start_day', value: 'sunday', type: 'string', description: 'First day of the week (sunday/monday)' },
-  { key: 'date_format', value: 'Y-m-d', type: 'string', description: 'Date display format (Y-m-d / d/m/Y / m/d/Y)' },
-  { key: 'time_format', value: '24h', type: 'string', description: 'Time display format (24h / 12h)' },
-  { key: 'session_duration', value: '30', type: 'string', description: 'Default session duration in minutes' },
-  { key: 'reminder_before_minutes', value: '60', type: 'string', description: 'Send reminder X minutes before appointment' },
-  { key: 'firebase_config', value: '{}', type: 'json', description: 'Firebase FCM configuration (JSON)' },
-];
+export const CLINIC_INTEGRATIONS_DEFAULTS = {
+  moyasarPublishableKey: null as string | null,
+  moyasarSecretKey: null as string | null,
+  bankName: null as string | null,
+  bankIban: null as string | null,
+  bankAccountHolder: null as string | null,
+  zoomClientId: null as string | null,
+  zoomClientSecret: null as string | null,
+  zoomAccountId: null as string | null,
+  emailProvider: null as string | null,
+  emailApiKey: null as string | null,
+  emailFrom: null as string | null,
+  openrouterApiKey: null as string | null,
+  firebaseConfig: {},
+  zatcaPhase: 'phase1',
+  zatcaCsid: null as string | null,
+  zatcaSecret: null as string | null,
+  zatcaPrivateKey: null as string | null,
+  zatcaRequestId: null as string | null,
+};
 
 // ──────────────────────────────────────────────
 // Feature Flags
@@ -280,6 +324,8 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   { key: 'zoom', nameEn: 'Zoom Video Calls', nameAr: 'مكالمات Zoom', descriptionEn: 'Auto-generate Zoom links for video consultations', descriptionAr: 'إنشاء روابط Zoom تلقائياً للاستشارات المرئية', enabled: false },
   // Compliance
   { key: 'zatca', nameEn: 'ZATCA / Fatoora', nameAr: 'ZATCA / فاتورة', descriptionEn: 'Enable Saudi e-invoicing compliance (ZATCA)', descriptionAr: 'تفعيل الامتثال للفوترة الإلكترونية السعودية', enabled: true },
+  // Organizational
+  { key: 'departments', nameEn: 'Departments', nameAr: 'الأقسام', descriptionEn: 'Enable department-based organization for services', descriptionAr: 'تفعيل تنظيم الخدمات حسب الأقسام', enabled: false },
   // Group features
   { key: 'group_sessions', nameEn: 'Group Sessions', nameAr: 'الجلسات الجماعية', descriptionEn: 'Pre-order group therapy sessions', descriptionAr: 'جلسات علاجية جماعية بنظام الطلب المسبق', enabled: false },
 ];

@@ -1,8 +1,8 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { FeatureFlagsService } from '../../modules/feature-flags/feature-flags.service.js';
@@ -21,19 +21,20 @@ export class FeatureFlagGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    if (isPublic) return true;
 
-    const featureKey = this.reflector.getAllAndOverride<string>(REQUIRE_FEATURE_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const featureKey = this.reflector.getAllAndOverride<string | undefined>(
+      REQUIRE_FEATURE_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (!featureKey || isPublic) return true;
+    if (!featureKey) return true;
 
     const enabled = await this.featureFlagsService.isEnabled(featureKey);
     if (!enabled) {
       throw new ForbiddenException({
         statusCode: 403,
-        message: `Feature "${featureKey}" is not enabled`,
+        message: 'This feature is not available',
         error: 'FEATURE_NOT_ENABLED',
       });
     }

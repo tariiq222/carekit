@@ -11,7 +11,9 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { type Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { RequireFeature } from '../../common/decorators/require-feature.decorator.js';
 import { ReportsService } from './reports.service.js';
 import { ExportService } from './export.service.js';
 import { DashboardStatsService } from './dashboard-stats.service.js';
@@ -20,7 +22,8 @@ import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 @ApiTags('Reports')
 @ApiBearerAuth()
 @Controller('reports')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, FeatureFlagGuard)
+@RequireFeature('reports')
 export class ReportsController {
   constructor(
     private readonly reportsService: ReportsService,

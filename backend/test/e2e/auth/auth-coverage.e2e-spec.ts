@@ -18,6 +18,7 @@
  */
 
 import request from 'supertest';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../../src/database/prisma.service';
 import {
   API_PREFIX,
@@ -47,19 +48,18 @@ async function registerFresh(
   httpServer: unknown,
   suffix: string,
 ): Promise<{ email: string; password: string; accessToken: string; refreshToken: string; userId: string }> {
-  const email = `coverage-${suffix}@carekit-test.com`;
+  // Use timestamp to ensure unique email per test run
+  const ts = Date.now().toString(36).slice(-4);
+  const email = `coverage-${suffix}-${ts}@carekit-test.com`;
   const password = 'C0ver@geP@ss!';
+  const phone = `+9665${Date.now().toString().slice(-7)}`;
   const res = await request(httpServer as Parameters<typeof request>[0])
     .post(`${AUTH_URL}/register`)
-    .send({
-      email,
-      password,
-      firstName: 'اختبار',
-      lastName: 'التغطية',
-      phone: `+9665${Date.now().toString().slice(-8)}`,
-      gender: 'male',
-    })
-    .expect(201);
+    .send({ email, password, firstName: 'اختبار', lastName: 'التغطية', phone, gender: 'male' });
+
+  if (res.status !== 201) {
+    throw new Error(`registerFresh failed with ${res.status}: ${JSON.stringify(res.body)}`);
+  }
 
   // refreshToken is in HTTP-only cookie, not body
   const refreshToken = extractCookieToken(res.headers['set-cookie'] as string[]);
@@ -73,18 +73,31 @@ async function registerFresh(
   };
 }
 
-/** Read the most recent unused OTP for a user+type directly from DB */
+/**
+ * Creates a known OTP in the DB (hashed, as the service does) and returns the plain code.
+ * The OTP service stores SHA256(code), so we must store SHA256 here for verify to work.
+ */
 async function getLatestOtp(
   prisma: PrismaService,
   userId: string,
   type: 'login' | 'reset_password' | 'verify_email',
-): Promise<string | null> {
-  const otp = await prisma.otpCode.findFirst({
+): Promise<string> {
+  const plainCode = '888888'; // Known code we will send to verify
+  const hashedCode = crypto.createHash('sha256').update(plainCode).digest('hex');
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min from now
+
+  // Invalidate existing OTPs of same type (mirrors OtpService.generateOtp)
+  await prisma.otpCode.updateMany({
     where: { userId, type, usedAt: null },
-    orderBy: { createdAt: 'desc' },
-    select: { code: true },
+    data: { usedAt: new Date() },
   });
-  return otp?.code ?? null;
+
+  // Insert known OTP with hashed code
+  await prisma.otpCode.create({
+    data: { userId, code: hashedCode, type, expiresAt },
+  });
+
+  return plainCode; // Return plain so test can send it to verify
 }
 
 // ---------------------------------------------------------------------------

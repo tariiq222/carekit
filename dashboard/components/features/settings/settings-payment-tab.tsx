@@ -12,38 +12,23 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { useConfigMap, useUpdateConfig } from "@/hooks/use-whitelabel"
+import { useClinicIntegrations, useUpdateClinicIntegrations } from "@/hooks/use-clinic-integrations"
 import { usePaymentSettings, usePaymentSettingsMutation } from "@/hooks/use-clinic-settings"
 import { useLocale } from "@/components/locale-provider"
 import { BankAccountCard, SAUDI_BANKS } from "./bank-account-card"
 import type { BankAccount } from "./bank-account-card"
 
-/* ─── Helpers ─── */
 function generateId() {
   return Math.random().toString(36).slice(2, 9)
 }
 
-function parseBankAccounts(raw: string | undefined): BankAccount[] {
-  if (!raw) return []
-  try {
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed)) return parsed as BankAccount[]
-  } catch { /* fall through */ }
-  return []
-}
-
-function serializeBankAccounts(accounts: BankAccount[]): string {
-  return JSON.stringify(accounts)
-}
-
 type TabId = "moyasar" | "atclinic" | "bank"
 
-/* ─── Component ─── */
 export function SettingsPaymentTab() {
   const { t, locale } = useLocale()
-  const { data: configMap, isLoading: configLoading } = useConfigMap()
+  const { data: integrations, isLoading: integrationsLoading } = useClinicIntegrations()
   const { data: paymentSettings, isLoading: paymentLoading } = usePaymentSettings()
-  const updateConfig = useUpdateConfig()
+  const updateIntegrations = useUpdateClinicIntegrations()
   const paymentMut = usePaymentSettingsMutation()
 
   const [activeTab, setActiveTab] = useState<TabId>("moyasar")
@@ -54,25 +39,23 @@ export function SettingsPaymentTab() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
 
   useEffect(() => {
-    if (!configMap) return
-    setMoyasarKey(configMap.moyasar_publishable_key ?? "")
-    setMoyasarSecret(configMap.moyasar_secret_key ?? "")
-    setBankEnabled(configMap.bank_transfer_enabled === "true")
+    if (!integrations) return
+    setMoyasarKey(integrations.moyasarPublishableKey ?? "")
+    setMoyasarSecret(integrations.moyasarSecretKey ?? "")
+    setBankEnabled(!!integrations.bankName || !!integrations.bankIban)
 
-    const rawAccounts = configMap.bank_accounts
-    if (rawAccounts) {
-      const parsed = parseBankAccounts(rawAccounts)
-      if (parsed.length > 0) { setBankAccounts(parsed); return }
-    }
-
-    const legacyName = configMap.bank_name ?? ""
-    const legacyIban = configMap.bank_iban ?? ""
-    const legacyHolder = configMap.bank_account_holder ?? ""
+    const legacyName = integrations.bankName ?? ""
+    const legacyIban = integrations.bankIban ?? ""
+    const legacyHolder = integrations.bankAccountHolder ?? ""
     const legacyBank = SAUDI_BANKS.find(
       (b) => b.nameEn.toLowerCase().includes(legacyName.toLowerCase()) || b.nameAr.includes(legacyName)
     )
-    setBankAccounts([{ id: generateId(), bankId: legacyBank?.id ?? "", iban: legacyIban, holderName: legacyHolder }])
-  }, [configMap])
+    if (legacyIban || legacyHolder || legacyName) {
+      setBankAccounts([{ id: generateId(), bankId: legacyBank?.id ?? "", iban: legacyIban, holderName: legacyHolder }])
+    } else {
+      setBankAccounts([{ id: generateId(), bankId: "", iban: "", holderName: "" }])
+    }
+  }, [integrations])
 
   const handleAddAccount = useCallback(() => {
     setBankAccounts((prev) => [...prev, { id: generateId(), bankId: "", iban: "", holderName: "" }])
@@ -89,42 +72,34 @@ export function SettingsPaymentTab() {
   )
 
   const handleSaveMoyasar = () => {
-    const configs: { key: string; value: string; type?: "string" | "boolean" | "number" | "json" }[] = [
-      { key: "moyasar_publishable_key", value: moyasarKey },
-    ]
-    if (moyasarSecret && moyasarSecret !== "***") {
-      configs.push({ key: "moyasar_secret_key", value: moyasarSecret })
+    const payload: Record<string, string | null> = {
+      moyasarPublishableKey: moyasarKey,
     }
-    updateConfig.mutate(
-      { configs },
-      { onSuccess: () => toast.success(t("settings.saved")), onError: () => toast.error(t("settings.error")) }
-    )
+    if (moyasarSecret && moyasarSecret !== "***") {
+      payload.moyasarSecretKey = moyasarSecret
+    }
+    updateIntegrations.mutate(payload, {
+      onSuccess: () => toast.success(t("settings.saved")),
+      onError: () => toast.error(t("settings.error")),
+    })
   }
 
   const handleSaveBank = () => {
     const first = bankAccounts[0]
     const firstName = first ? (SAUDI_BANKS.find((b) => b.id === first.bankId)?.nameEn ?? "") : ""
-    // Sanitize masked values — IBAN and holder are in SENSITIVE_KEYS and return as "***"
-    const cleanedAccounts = bankAccounts.map((a) => ({
-      ...a,
-      iban: a.iban === "***" ? "" : a.iban,
-      holderName: a.holderName === "***" ? "" : a.holderName,
-    }))
-    const configs: { key: string; value: string; type?: "string" | "boolean" | "number" | "json" }[] = [
-      { key: "bank_transfer_enabled", value: String(bankEnabled), type: "boolean" },
-      { key: "bank_accounts", value: serializeBankAccounts(cleanedAccounts), type: "json" },
-      { key: "bank_name", value: firstName },
-    ]
+    const payload: Record<string, string | null> = {
+      bankName: firstName,
+    }
     if (first?.iban && first.iban !== "***") {
-      configs.push({ key: "bank_iban", value: first.iban })
+      payload.bankIban = first.iban
     }
     if (first?.holderName && first.holderName !== "***") {
-      configs.push({ key: "bank_account_holder", value: first.holderName })
+      payload.bankAccountHolder = first.holderName
     }
-    updateConfig.mutate(
-      { configs },
-      { onSuccess: () => toast.success(t("settings.saved")), onError: () => toast.error(t("settings.error")) }
-    )
+    updateIntegrations.mutate(payload, {
+      onSuccess: () => toast.success(t("settings.saved")),
+      onError: () => toast.error(t("settings.error")),
+    })
   }
 
   const togglePaymentMethod = (key: "paymentMoyasarEnabled" | "paymentAtClinicEnabled", value: boolean) => {
@@ -134,7 +109,7 @@ export function SettingsPaymentTab() {
     )
   }
 
-  if (configLoading || paymentLoading) {
+  if (integrationsLoading || paymentLoading) {
     return (
       <div className="flex gap-0 rounded-xl border border-border overflow-hidden">
         <div className="w-64 border-e border-border bg-surface-muted space-y-1 p-2">
@@ -151,8 +126,8 @@ export function SettingsPaymentTab() {
     desc: string
     enabled: boolean
     onToggle: (v: boolean) => void
-    alwaysAvailable?: boolean // content always shown regardless of toggle
-    toggleHint?: string       // explains what the toggle actually controls
+    alwaysAvailable?: boolean
+    toggleHint?: string
   }[] = [
     {
       id: "moyasar",
@@ -184,8 +159,6 @@ export function SettingsPaymentTab() {
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex min-h-[420px]">
-
-        {/* ── Sidebar Tabs ── */}
         <div className="w-64 shrink-0 border-e border-border bg-surface-muted flex flex-col">
           <div className="p-3 border-b border-border">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -194,7 +167,6 @@ export function SettingsPaymentTab() {
           </div>
           <div className="flex-1 p-2 space-y-1">
             {tabs.map((tab) => (
-              // ✅ div — not button — to avoid nested <button> hydration error (Switch is a button)
               <div
                 key={tab.id}
                 role="tab"
@@ -209,19 +181,12 @@ export function SettingsPaymentTab() {
                     : "text-muted-foreground hover:bg-background/70 hover:text-foreground"
                 )}
               >
-                {/* Label */}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate leading-tight">
-                    {tab.label}
-                  </p>
+                  <p className="text-sm font-medium truncate leading-tight">{tab.label}</p>
                   {activeTab === tab.id && (
-                    <p className="text-xs mt-0.5 line-clamp-2 leading-tight opacity-80">
-                      {tab.desc}
-                    </p>
+                    <p className="text-xs mt-0.5 line-clamp-2 leading-tight opacity-80">{tab.desc}</p>
                   )}
                 </div>
-
-                {/* Switch — stopPropagation so it doesn't trigger tab selection */}
                 <div
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
@@ -239,7 +204,6 @@ export function SettingsPaymentTab() {
           </div>
         </div>
 
-        {/* ── Content Panel ── */}
         <div className="flex-1 p-6">
           {(!activeTabDef.enabled && !activeTabDef.alwaysAvailable) ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center gap-3">
@@ -275,12 +239,12 @@ export function SettingsPaymentTab() {
                     <Card className="shadow-sm bg-surface">
                       <CardContent className="space-y-2 pt-3 pb-3">
                         <Label>{t("settings.moyasarSecret")}</Label>
-                        <Input value={moyasarSecret} onChange={(e) => setMoyasarSecret(e.target.value)} placeholder={moyasarSecret === "***" ? "••••••••••••" : "sk_live_..."} type="password" dir="ltr" />
+                        <Input value={moyasarSecret} onChange={(e) => setMoyasarSecret(e.target.value)} placeholder={moyasarSecret === "***" ? "............" : "sk_live_..."} type="password" dir="ltr" />
                       </CardContent>
                     </Card>
                   </div>
                   <div className="flex justify-end mt-auto pt-2">
-                    <Button size="sm" disabled={updateConfig.isPending} onClick={handleSaveMoyasar}>
+                    <Button size="sm" disabled={updateIntegrations.isPending} onClick={handleSaveMoyasar}>
                       {t("settings.save")}
                     </Button>
                   </div>
@@ -336,8 +300,6 @@ export function SettingsPaymentTab() {
                         locale={locale}
                       />
                     ))}
-
-                    {/* Add account — styled as a card to match siblings */}
                     <div
                       role="button"
                       tabIndex={0}
@@ -354,7 +316,7 @@ export function SettingsPaymentTab() {
                     </div>
                   </div>
                   <div className="flex justify-end pt-2">
-                    <Button size="sm" disabled={updateConfig.isPending} onClick={handleSaveBank}>
+                    <Button size="sm" disabled={updateIntegrations.isPending} onClick={handleSaveBank}>
                       {t("settings.save")}
                     </Button>
                   </div>

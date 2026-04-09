@@ -6,7 +6,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ZatcaOnboardingService } from '../../../src/modules/zatca/services/zatca-onboarding.service.js';
-import { PrismaService } from '../../../src/database/prisma.service.js';
+import { ClinicIntegrationsService } from '../../../src/modules/clinic-integrations/clinic-integrations.service.js';
 import { ZatcaCryptoService } from '../../../src/modules/zatca/services/zatca-crypto.service.js';
 import { ZatcaApiService } from '../../../src/modules/zatca/services/zatca-api.service.js';
 import { XmlBuilderService } from '../../../src/modules/zatca/services/xml-builder.service.js';
@@ -16,11 +16,15 @@ import type { ZatcaConfig } from '../../../src/modules/zatca/dto/zatca-config.dt
 
 // ── Mocks ────────────────────────────────────────────────────────────────
 
-const mockPrisma = {
-  whiteLabelConfig: {
-    findMany: jest.fn(),
-    upsert: jest.fn(),
-  },
+const mockClinicIntegrationsService = {
+  getRaw: jest.fn().mockResolvedValue({
+    zatcaPhase: 'phase1',
+    zatcaCsid: null,
+    zatcaSecret: null,
+    zatcaPrivateKey: null,
+    zatcaRequestId: null,
+  }),
+  update: jest.fn().mockResolvedValue({}),
 };
 
 const mockCryptoService = {
@@ -78,7 +82,7 @@ describe('ZatcaOnboardingService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ZatcaOnboardingService,
-        { provide: PrismaService, useValue: mockPrisma },
+        { provide: ClinicIntegrationsService, useValue: mockClinicIntegrationsService },
         { provide: ZatcaCryptoService, useValue: mockCryptoService },
         { provide: ZatcaApiService, useValue: mockApiService },
         { provide: ZatcaService, useValue: mockZatcaService },
@@ -133,7 +137,7 @@ describe('ZatcaOnboardingService', () => {
         return undefined;
       });
 
-      mockPrisma.whiteLabelConfig.upsert.mockResolvedValue({});
+      mockClinicIntegrationsService.update.mockResolvedValue({});
     });
 
     it('should complete full onboarding flow successfully', async () => {
@@ -193,22 +197,16 @@ describe('ZatcaOnboardingService', () => {
         expect.any(String),
         'encryption-key-32chars-long!',
       );
-      // 4 credential keys + 1 phase = 5 upserts
-      expect(mockPrisma.whiteLabelConfig.upsert).toHaveBeenCalledTimes(5);
+      // Credentials update + phase update
+      expect(mockClinicIntegrationsService.update).toHaveBeenCalled();
     });
 
     it('should update phase to phase2', async () => {
       await service.onboard('123456');
 
-      const phaseCall = mockPrisma.whiteLabelConfig.upsert.mock.calls.find(
-        (call: unknown[]) =>
-          (call as [{ where: { key: string } }])[0]?.where?.key ===
-          'zatca_phase',
+      expect(mockClinicIntegrationsService.update).toHaveBeenCalledWith(
+        expect.objectContaining({ zatcaPhase: 'phase2' }),
       );
-      expect(phaseCall).toBeDefined();
-      expect(
-        (phaseCall![0] as { create: { value: string } }).create.value,
-      ).toBe('phase2');
     });
 
     it('should throw if sellerName is missing', async () => {
@@ -257,12 +255,12 @@ describe('ZatcaOnboardingService', () => {
 
   describe('getOnboardingStatus', () => {
     it('should return phase2 status when all credentials are stored', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'zatca_phase', value: 'phase2' },
-        { key: 'zatca_csid', value: 'some-csid' },
-        { key: 'zatca_secret', value: 'some-secret' },
-        { key: 'zatca_private_key', value: 'encrypted-key' },
-      ]);
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaPhase: 'phase2',
+        zatcaCsid: 'some-csid',
+        zatcaSecret: 'some-secret',
+        zatcaPrivateKey: 'encrypted-key',
+      });
 
       const status = await service.getOnboardingStatus();
 
@@ -273,7 +271,12 @@ describe('ZatcaOnboardingService', () => {
     });
 
     it('should return phase1 (not_started) when no credentials exist', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([]);
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaPhase: null,
+        zatcaCsid: null,
+        zatcaSecret: null,
+        zatcaPrivateKey: null,
+      });
 
       const status = await service.getOnboardingStatus();
 
@@ -284,10 +287,12 @@ describe('ZatcaOnboardingService', () => {
     });
 
     it('should return in_progress when CSID exists but private key missing', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'zatca_phase', value: 'phase1' },
-        { key: 'zatca_csid', value: 'some-csid' },
-      ]);
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaPhase: 'phase1',
+        zatcaCsid: 'some-csid',
+        zatcaSecret: null,
+        zatcaPrivateKey: null,
+      });
 
       const status = await service.getOnboardingStatus();
 
@@ -298,11 +303,12 @@ describe('ZatcaOnboardingService', () => {
     });
 
     it('should detect phase2 with partial credentials', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'zatca_phase', value: 'phase2' },
-        { key: 'zatca_csid', value: 'some-csid' },
-        { key: 'zatca_secret', value: 'some-secret' },
-      ]);
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaPhase: 'phase2',
+        zatcaCsid: 'some-csid',
+        zatcaSecret: 'some-secret',
+        zatcaPrivateKey: null,
+      });
 
       const status = await service.getOnboardingStatus();
 

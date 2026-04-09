@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsUUID,
   IsBoolean,
   IsEnum,
   IsInt,
@@ -258,4 +259,10 @@ export class UpdateBookingSettingsDto {
   @IsOptional()
   @IsEnum(BookingFlowOrder)
   bookingFlowOrder?: BookingFlowOrder;
+
+  // ── Branch-specific override ──────────────────────────────────────
+  @ApiPropertyOptional({ description: 'Apply settings to a specific branch only (null = global)', format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  branchId?: string | null;
 }

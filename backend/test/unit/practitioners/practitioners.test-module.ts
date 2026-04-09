@@ -10,6 +10,7 @@ import { PractitionerServiceService } from '../../../src/modules/practitioners/p
 import { PractitionerRatingsService } from '../../../src/modules/practitioners/practitioner-ratings.service.js';
 import { PractitionerBreaksService } from '../../../src/modules/practitioners/practitioner-breaks.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 import { createMockPrisma } from './practitioners.fixtures.js';
 
 export interface PractitionersTestContext {
@@ -53,6 +54,12 @@ export async function createPractitionersTestModule(): Promise<PractitionersTest
         useValue: {
           getBreaks: jest.fn().mockResolvedValue([]),
           setBreaks: jest.fn().mockResolvedValue([]),
+        },
+      },
+      {
+        provide: ClinicSettingsService,
+        useValue: {
+          getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh'),
         },
       },
     ],

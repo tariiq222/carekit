@@ -19,6 +19,8 @@ import {
   updatePaymentSettings,
   type BookingFlowOrder,
 } from "@/lib/api/clinic-settings"
+import { fetchClinicSettings, updateClinicSettings } from "@/lib/api/clinic-settings"
+import type { UpdateClinicSettingsPayload } from "@/lib/types/clinic-settings"
 import { queryKeys } from "@/lib/query-keys"
 
 /* ─── Query Keys ─── */
@@ -169,6 +171,26 @@ export function useWidgetSettingsMutation() {
       queryClient.invalidateQueries({ queryKey: queryKeys.widget.branding() })
       queryClient.invalidateQueries({ queryKey: queryKeys.widget.settings() })
       queryClient.invalidateQueries({ queryKey: queryKeys.clinicPublic.settings() })
+    },
+  })
+}
+
+/* ─── Clinic Settings Config ─── */
+
+export function useClinicSettings() {
+  return useQuery({
+    queryKey: queryKeys.clinicSettings.config(),
+    queryFn: fetchClinicSettings,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useUpdateClinicSettings() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: UpdateClinicSettingsPayload) => updateClinicSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.clinicSettings.all })
     },
   })
 }

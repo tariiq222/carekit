@@ -1,21 +1,11 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { WhitelabelService } from './whitelabel.service.js';
-import { UpdateConfigDto } from './dto/update-config.dto.js';
+import { UpdateWhitelabelDto } from './dto/update-config.dto.js';
 
 @ApiTags('Whitelabel')
 @ApiBearerAuth()
@@ -24,64 +14,21 @@ import { UpdateConfigDto } from './dto/update-config.dto.js';
 export class WhitelabelController {
   constructor(private readonly whitelabelService: WhitelabelService) {}
 
-  // ═══════════════════════════════════════════════════════════════
-  //  GET /whitelabel/public — Public branding (no auth, for mobile pre-login)
-  // ═══════════════════════════════════════════════════════════════
-
   @Get('public')
   @Public()
-  async getPublicBranding() {
+  getPublicBranding() {
     return this.whitelabelService.getPublicBranding();
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  GET /whitelabel/config — List all config entries
-  // ═══════════════════════════════════════════════════════════════
-
-  @Get('config')
+  @Get()
   @CheckPermissions({ module: 'whitelabel', action: 'view' })
-  async getConfig() {
-    return this.whitelabelService.getConfig();
+  get() {
+    return this.whitelabelService.get();
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  //  GET /whitelabel/config/map — Return { key: value } object
-  // ═══════════════════════════════════════════════════════════════
-
-  @Get('config/map')
-  @CheckPermissions({ module: 'whitelabel', action: 'view' })
-  async getConfigMap() {
-    return this.whitelabelService.getConfigMap();
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  PUT /whitelabel/config — Upsert config entries
-  // ═══════════════════════════════════════════════════════════════
-
-  @Put('config')
+  @Put()
   @CheckPermissions({ module: 'whitelabel', action: 'edit' })
-  async updateConfig(@Body() dto: UpdateConfigDto) {
-    return this.whitelabelService.updateConfig(dto);
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  GET /whitelabel/config/:key — Get single config entry
-  // ═══════════════════════════════════════════════════════════════
-
-  @Get('config/:key')
-  @CheckPermissions({ module: 'whitelabel', action: 'view' })
-  async getConfigByKey(@Param('key') key: string) {
-    return this.whitelabelService.getConfigByKey(key);
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  //  DELETE /whitelabel/config/:key — Delete config entry
-  // ═══════════════════════════════════════════════════════════════
-
-  @Delete('config/:key')
-  @HttpCode(HttpStatus.OK)
-  @CheckPermissions({ module: 'whitelabel', action: 'edit' })
-  async deleteConfig(@Param('key') key: string) {
-    return this.whitelabelService.deleteConfig(key);
+  update(@Body() dto: UpdateWhitelabelDto) {
+    return this.whitelabelService.update(dto);
   }
 }

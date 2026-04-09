@@ -1,8 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID } from 'class-validator';
+import { IsNotEmpty, IsUUID } from 'class-validator';
 
 export class EnrollPatientDto {
-  @ApiProperty()
   @IsUUID()
+  @IsNotEmpty()
   patientId!: string;
 }

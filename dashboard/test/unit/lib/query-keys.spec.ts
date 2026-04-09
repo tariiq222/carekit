@@ -123,8 +123,8 @@ describe("queryKeys", () => {
       expect(queryKeys.whitelabel.config()).toEqual(["whitelabel", "config"])
     })
 
-    it("configMap returns stable key", () => {
-      expect(queryKeys.whitelabel.configMap()).toEqual(["whitelabel", "config-map"])
+    it("all returns base key", () => {
+      expect(queryKeys.whitelabel.all).toEqual(["whitelabel"])
     })
   })
 

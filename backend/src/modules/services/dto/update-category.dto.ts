@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -27,4 +27,9 @@ export class UpdateCategoryDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ description: 'Department ID (null to unassign)' })
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string | null;
 }

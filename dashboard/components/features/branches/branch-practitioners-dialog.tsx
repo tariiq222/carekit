@@ -7,13 +7,13 @@ import { Delete02Icon, Search01Icon } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetBody,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogBody,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
@@ -47,7 +47,6 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
   const { data: assigned, isLoading: loadingAssigned } = useBranchPractitioners(branchId)
   const { assignMut, removeMut } = useBranchPractitionerMutations()
 
-  // Fetch all practitioners for the picker
   const { data: allPractitioners, isLoading: loadingAll } = useQuery({
     queryKey: queryKeys.practitioners.list({ perPage: 200 }),
     queryFn: () => fetchPractitioners({ perPage: 200 }),
@@ -107,18 +106,18 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
   }
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
             {t("branches.practitioners.title")} — {branchName}
-          </SheetTitle>
-          <SheetDescription>
+          </DialogTitle>
+          <DialogDescription>
             {t("branches.practitioners.description")}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <SheetBody className="flex flex-col gap-6">
+        <DialogBody className="flex flex-col gap-6">
           {/* ── Assigned Practitioners ── */}
           <div>
             <h4 className="mb-3 text-sm font-medium text-foreground">
@@ -238,8 +237,8 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
               </Button>
             )}
           </div>
-        </SheetBody>
-      </SheetContent>
-    </Sheet>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   )
 }

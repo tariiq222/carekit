@@ -12,7 +12,9 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { RequireFeature } from '../../common/decorators/require-feature.decorator.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 import { GiftCardsService } from './gift-cards.service.js';
 import { CreateGiftCardDto } from './dto/create-gift-card.dto.js';
@@ -24,7 +26,8 @@ import { AddCreditDto } from './dto/add-credit.dto.js';
 @ApiTags('Gift Cards')
 @ApiBearerAuth()
 @Controller('gift-cards')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, FeatureFlagGuard)
+@RequireFeature('gift_cards')
 export class GiftCardsController {
   constructor(private readonly giftCardsService: GiftCardsService) {}
 

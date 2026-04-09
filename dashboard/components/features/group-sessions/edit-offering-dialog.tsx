@@ -8,13 +8,13 @@ import { useLocale } from "@/components/locale-provider"
 import { useGroupSessionsMutations } from "@/hooks/use-group-sessions-mutations"
 import { createOfferingSchema, type CreateOfferingFormValues } from "@/lib/schemas/group-sessions.schema"
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetBody,
-  SheetFooter,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -60,13 +60,13 @@ export function EditOfferingDialog({ offering, open, onOpenChange }: Props) {
   })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end" className="w-full sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{t("groupSessions.editOffering")}</SheetTitle>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("groupSessions.editOffering")}</DialogTitle>
+        </DialogHeader>
 
-        <SheetBody>
+        <DialogBody>
           <form id="edit-offering-form" onSubmit={onSubmit} className="flex flex-col gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -106,15 +106,15 @@ export function EditOfferingDialog({ offering, open, onOpenChange }: Props) {
               </div>
             </div>
           </form>
-        </SheetBody>
+        </DialogBody>
 
-        <SheetFooter>
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button type="submit" form="edit-offering-form" disabled={updateOfferingMut.isPending}>
             {updateOfferingMut.isPending ? t("common.saving") : t("common.save")}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

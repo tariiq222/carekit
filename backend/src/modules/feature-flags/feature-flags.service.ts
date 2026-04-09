@@ -1,33 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CacheService } from '../../common/services/cache.service.js';
-import { FeatureFlag } from '@prisma/client';
-
-const CACHE_KEY = 'feature_flags:all';
-const MAP_CACHE_KEY = 'feature_flags:map';
-const TTL = 5 * 60; // 5 minutes
+import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
+import { LicenseService } from '../license/license.service.js';
+import type { FeatureFlag } from '@prisma/client';
 
 @Injectable()
 export class FeatureFlagsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
+    private readonly licenseService: LicenseService,
   ) {}
 
   async findAll(): Promise<FeatureFlag[]> {
-    const cached = await this.cache.get<FeatureFlag[]>(CACHE_KEY);
+    const cached = await this.cache.get<FeatureFlag[]>(CACHE_KEYS.FEATURE_FLAGS_ALL);
     if (cached) return cached;
 
-    const flags = await this.prisma.featureFlag.findMany({
-      orderBy: { key: 'asc' },
-    });
-
-    await this.cache.set(CACHE_KEY, flags, TTL);
+    const flags = await this.prisma.featureFlag.findMany({ orderBy: { key: 'asc' } });
+    await this.cache.set(CACHE_KEYS.FEATURE_FLAGS_ALL, flags, CACHE_TTL.FEATURE_FLAGS);
     return flags;
   }
 
   async getMap(): Promise<Record<string, boolean>> {
-    const cached = await this.cache.get<Record<string, boolean>>(MAP_CACHE_KEY);
+    const cached = await this.cache.get<Record<string, boolean>>(CACHE_KEYS.FEATURE_FLAGS_MAP);
     if (cached) return cached;
 
     const flags = await this.prisma.featureFlag.findMany({
@@ -39,19 +35,23 @@ export class FeatureFlagsService {
       return acc;
     }, {});
 
-    await this.cache.set(MAP_CACHE_KEY, map, TTL);
+    await this.cache.set(CACHE_KEYS.FEATURE_FLAGS_MAP, map, CACHE_TTL.FEATURE_FLAGS);
     return map;
   }
 
   async toggle(key: string, enabled: boolean): Promise<FeatureFlag> {
     const flag = await this.prisma.featureFlag.findUnique({ where: { key } });
-
     if (!flag) {
-      throw new NotFoundException({
-        statusCode: 404,
-        message: `Feature flag '${key}' not found`,
-        error: 'NOT_FOUND',
-      });
+      throw new NotFoundException(`Feature flag '${key}' not found`);
+    }
+
+    if (enabled) {
+      const licensed = await this.licenseService.isFeatureLicensed(key);
+      if (!licensed) {
+        throw new ForbiddenException(
+          `Feature '${key}' is not available in your license. Contact CareKit support.`,
+        );
+      }
     }
 
     const updated = await this.prisma.featureFlag.update({
@@ -64,12 +64,15 @@ export class FeatureFlagsService {
   }
 
   async isEnabled(key: string): Promise<boolean> {
-    const map = await this.getMap();
-    return map[key] ?? false;
+    const [map, licensed] = await Promise.all([
+      this.getMap(),
+      this.licenseService.isFeatureLicensed(key),
+    ]);
+    return licensed && (map[key] ?? false);
   }
 
   private async invalidate(): Promise<void> {
-    await this.cache.del(CACHE_KEY);
-    await this.cache.del(MAP_CACHE_KEY);
+    await this.cache.del(CACHE_KEYS.FEATURE_FLAGS_ALL);
+    await this.cache.del(CACHE_KEYS.FEATURE_FLAGS_MAP);
   }
 }

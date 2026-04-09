@@ -6,14 +6,14 @@ import { z } from "zod"
 import { toast } from "sonner"
 
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetBody,
-  SheetFooter,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -63,16 +63,16 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
   })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end">
-        <SheetHeader>
-          <SheetTitle>{t("changePassword.title")}</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("changePassword.title")}</DialogTitle>
+          <DialogDescription>
             {t("changePassword.description")}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <SheetBody>
+        <DialogBody>
           <form id="change-password-form" onSubmit={onSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <Label>{t("changePassword.current")} *</Label>
@@ -104,17 +104,17 @@ export function ChangePasswordDialog({ open, onOpenChange }: Props) {
               )}
             </div>
           </form>
-        </SheetBody>
+        </DialogBody>
 
-        <SheetFooter>
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t("changePassword.cancel")}
           </Button>
           <Button type="submit" form="change-password-form" disabled={loading}>
             {loading ? t("changePassword.submitting") : t("changePassword.submit")}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

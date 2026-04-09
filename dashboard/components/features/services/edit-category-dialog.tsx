@@ -7,18 +7,26 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetBody,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useCategoryMutations } from "@/hooks/use-services"
+import { useDepartmentOptions } from "@/hooks/use-departments"
 import { useLocale } from "@/components/locale-provider"
 import type { ServiceCategory } from "@/lib/types/service"
 import {
@@ -43,6 +51,7 @@ export function EditCategoryDialog({
 }: EditCategoryDialogProps) {
   const { t } = useLocale()
   const { updateMut } = useCategoryMutations()
+  const { options: departments } = useDepartmentOptions()
 
   const form = useForm<EditCategoryFormData>({
     resolver: zodResolver(editCategorySchema),
@@ -55,6 +64,7 @@ export function EditCategoryDialog({
         nameAr: category.nameAr,
         sortOrder: category.sortOrder,
         isActive: category.isActive,
+        departmentId: category.departmentId,
       })
     }
   }, [category, form])
@@ -71,14 +81,14 @@ export function EditCategoryDialog({
   })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end">
-        <SheetHeader>
-          <SheetTitle>{t("services.categories.edit.title")}</SheetTitle>
-          <SheetDescription>{t("services.categories.edit.description")}</SheetDescription>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("services.categories.edit.title")}</DialogTitle>
+          <DialogDescription>{t("services.categories.edit.description")}</DialogDescription>
+        </DialogHeader>
 
-        <SheetBody>
+        <DialogBody>
           <form id="edit-category-form" onSubmit={onSubmit} className="flex flex-col gap-5">
             {/* Active toggle */}
             <div className="flex items-center justify-between rounded-lg border p-3">
@@ -117,10 +127,34 @@ export function EditCategoryDialog({
               <Label>{t("services.categories.create.sortOrder")}</Label>
               <Input type="number" min={0} {...form.register("sortOrder")} />
             </div>
-          </form>
-        </SheetBody>
 
-        <SheetFooter>
+            {departments.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("services.categories.edit.department")}</Label>
+                <Select
+                  value={form.watch("departmentId") ?? "__none__"}
+                  onValueChange={(v) =>
+                    form.setValue("departmentId", v === "__none__" ? null : v)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("services.categories.edit.departmentPlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">{t("services.categories.edit.departmentPlaceholder")}</SelectItem>
+                    {departments.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.nameAr} / {d.nameEn}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </form>
+        </DialogBody>
+
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t("services.categories.edit.cancel")}
           </Button>
@@ -129,8 +163,8 @@ export function EditCategoryDialog({
               ? t("services.categories.edit.submitting")
               : t("services.categories.edit.submit")}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

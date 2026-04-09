@@ -6,11 +6,8 @@ import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.j
 
 const mockService = {
   getPublicBranding: jest.fn(),
-  getConfig: jest.fn(),
-  getConfigMap: jest.fn(),
-  updateConfig: jest.fn(),
-  getConfigByKey: jest.fn(),
-  deleteConfig: jest.fn(),
+  get: jest.fn(),
+  update: jest.fn(),
 };
 
 describe('WhitelabelController', () => {
@@ -33,52 +30,27 @@ describe('WhitelabelController', () => {
 
   describe('getPublicBranding', () => {
     it('should delegate to service.getPublicBranding', async () => {
-      const branding = { logo: 'url', primaryColor: '#354FD8' };
+      const branding = { systemName: 'CareKit', primaryColor: '#354FD8' };
       mockService.getPublicBranding.mockResolvedValue(branding);
       expect(await controller.getPublicBranding()).toEqual(branding);
     });
   });
 
-  describe('getConfig', () => {
-    it('should delegate to service.getConfig', async () => {
-      const config = [{ key: 'logo', value: 'url' }];
-      mockService.getConfig.mockResolvedValue(config);
-      expect(await controller.getConfig()).toEqual(config);
+  describe('get', () => {
+    it('should delegate to service.get', async () => {
+      const config = { id: 'wl-1', systemName: 'CareKit' };
+      mockService.get.mockResolvedValue(config);
+      expect(await controller.get()).toEqual(config);
     });
   });
 
-  describe('getConfigMap', () => {
-    it('should delegate to service.getConfigMap', async () => {
-      const map = { logo: 'url', name: 'CareKit' };
-      mockService.getConfigMap.mockResolvedValue(map);
-      expect(await controller.getConfigMap()).toEqual(map);
-    });
-  });
-
-  describe('updateConfig', () => {
-    it('should delegate to service.updateConfig with dto', async () => {
-      const dto = { items: [{ key: 'logo', value: 'new-url' }] } as any;
-      const result = { updated: 1 };
-      mockService.updateConfig.mockResolvedValue(result);
-      expect(await controller.updateConfig(dto)).toEqual(result);
-      expect(mockService.updateConfig).toHaveBeenCalledWith(dto);
-    });
-  });
-
-  describe('getConfigByKey', () => {
-    it('should delegate to service.getConfigByKey', async () => {
-      const entry = { key: 'logo', value: 'url' };
-      mockService.getConfigByKey.mockResolvedValue(entry);
-      expect(await controller.getConfigByKey('logo')).toEqual(entry);
-      expect(mockService.getConfigByKey).toHaveBeenCalledWith('logo');
-    });
-  });
-
-  describe('deleteConfig', () => {
-    it('should delegate to service.deleteConfig', async () => {
-      mockService.deleteConfig.mockResolvedValue({ deleted: true });
-      expect(await controller.deleteConfig('logo')).toEqual({ deleted: true });
-      expect(mockService.deleteConfig).toHaveBeenCalledWith('logo');
+  describe('update', () => {
+    it('should delegate to service.update with dto', async () => {
+      const dto = { systemName: 'Updated' } as Parameters<typeof controller.update>[0];
+      const result = { id: 'wl-1', systemName: 'Updated' };
+      mockService.update.mockResolvedValue(result);
+      expect(await controller.update(dto)).toEqual(result);
+      expect(mockService.update).toHaveBeenCalledWith(dto);
     });
   });
 });

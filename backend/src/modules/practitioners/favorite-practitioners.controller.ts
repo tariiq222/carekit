@@ -29,7 +29,7 @@ export class FavoritePractitionersController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get('favorites')
-  @CheckPermissions({ module: 'practitioners', action: 'view' })
+  @CheckPermissions({ module: 'practitioners', action: 'favorites:view' })
   async getFavorites(@CurrentUser() user: { id: string }) {
     const data = await this.favoritesService.getFavorites(user.id);
     return { success: true, data };
@@ -40,7 +40,7 @@ export class FavoritePractitionersController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post(':id/favorite')
-  @CheckPermissions({ module: 'practitioners', action: 'edit' })
+  @CheckPermissions({ module: 'practitioners', action: 'favorites:edit' })
   async addFavorite(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -54,7 +54,7 @@ export class FavoritePractitionersController {
   // ═══════════════════════════════════════════════════════════════
 
   @Delete(':id/favorite')
-  @CheckPermissions({ module: 'practitioners', action: 'edit' })
+  @CheckPermissions({ module: 'practitioners', action: 'favorites:edit' })
   async removeFavorite(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },

@@ -22,6 +22,25 @@
 // Implementation: backend/src/modules/bookings/price-resolver.service.ts
 // ──────────────────────────────────────────────
 
+model Department {
+  id             String    @id @default(uuid())
+  nameAr         String    @map("name_ar")
+  nameEn         String    @map("name_en")
+  descriptionAr  String?   @map("description_ar")
+  descriptionEn  String?   @map("description_en")
+  icon           String?
+  sortOrder      Int       @default(0) @map("sort_order")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  categories ServiceCategory[]
+
+  @@index([isActive, sortOrder])
+  @@map("departments")
+}
+
 model ServiceCategory {
   id        String   @id @default(uuid())
   nameAr    String   @map("name_ar")
@@ -29,10 +48,13 @@ model ServiceCategory {
   sortOrder Int      @default(0) @map("sort_order")
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  departmentId String?     @map("department_id")
 
-  services Service[]
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  services     Service[]
 
+  @@index([departmentId])
   @@map("service_categories")
 }
 

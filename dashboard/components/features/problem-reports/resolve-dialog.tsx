@@ -6,13 +6,14 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -69,53 +70,55 @@ export function ResolveDialog({
   })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end" className="overflow-y-auto w-full sm:max-w-[45vw]">
-        <SheetHeader>
-          <SheetTitle>Resolve Report</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Resolve Report</DialogTitle>
+          <DialogDescription>
             Mark this problem report as resolved or dismissed.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>Resolution</Label>
-            <Select
-              value={form.watch("status")}
-              onValueChange={(v) =>
-                form.setValue("status", v as "resolved" | "dismissed")
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="resolved">Resolved</SelectItem>
-                <SelectItem value="dismissed">Dismissed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <DialogBody>
+          <form id="resolve-report-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label>Resolution</Label>
+              <Select
+                value={form.watch("status")}
+                onValueChange={(v) =>
+                  form.setValue("status", v as "resolved" | "dismissed")
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="dismissed">Dismissed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <Label>Admin Notes (optional)</Label>
-            <Textarea {...form.register("adminNotes")} rows={3} />
-          </div>
+            <div className="flex flex-col gap-2">
+              <Label>Admin Notes (optional)</Label>
+              <Textarea {...form.register("adminNotes")} rows={3} />
+            </div>
+          </form>
+        </DialogBody>
 
-          <SheetFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={resolveMutation.isPending}>
-              {resolveMutation.isPending ? "Saving..." : "Submit"}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" form="resolve-report-form" disabled={resolveMutation.isPending}>
+            {resolveMutation.isPending ? "Saving..." : "Submit"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

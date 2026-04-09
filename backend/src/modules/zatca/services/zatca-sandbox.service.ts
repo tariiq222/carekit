@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { ClinicIntegrationsService } from '../../clinic-integrations/clinic-integrations.service.js';
 import { ZatcaService } from '../zatca.service.js';
 import { ZatcaApiService } from './zatca-api.service.js';
 import { InvoiceHashService } from './invoice-hash.service.js';
@@ -11,6 +12,7 @@ export class ZatcaSandboxService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly clinicIntegrationsService: ClinicIntegrationsService,
     private readonly zatcaService: ZatcaService,
     private readonly zatcaApiService: ZatcaApiService,
     private readonly hashService: InvoiceHashService,
@@ -85,24 +87,16 @@ export class ZatcaSandboxService {
     };
   }
 
-  /**
-   * Loads CSID + secret from WhiteLabelConfig for sandbox authentication.
-   */
   private async loadCredentials(): Promise<{ csid: string; secret: string }> {
-    const configs = await this.prisma.whiteLabelConfig.findMany({
-      where: { key: { in: ['zatca_csid', 'zatca_secret'] } },
-      select: { key: true, value: true },
-    });
+    const integrations = await this.clinicIntegrationsService.getRaw();
 
-    const map = Object.fromEntries(configs.map((c) => [c.key, c.value]));
-
-    if (!map['zatca_csid'] || !map['zatca_secret']) {
+    if (!integrations.zatcaCsid || !integrations.zatcaSecret) {
       throw new BadRequestException(
-        'ZATCA CSID credentials not configured — set zatca_csid and zatca_secret in WhiteLabel settings',
+        'ZATCA CSID credentials not configured — set zatcaCsid and zatcaSecret in Clinic Integrations',
       );
     }
 
-    return { csid: map['zatca_csid'], secret: map['zatca_secret'] };
+    return { csid: integrations.zatcaCsid, secret: integrations.zatcaSecret };
   }
 
   /**

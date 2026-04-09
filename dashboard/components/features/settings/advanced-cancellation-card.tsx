@@ -74,23 +74,31 @@ export function useAutoSave(
   textDebounceMs = 1500,
 ) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Keep a ref to always have the latest data without stale closure issues
+  const dataRef = useRef(data)
+  dataRef.current = data
+
   const isDirty = JSON.stringify(data) !== JSON.stringify(savedData)
 
-  // Debounced save — used for text fields triggering this
+  // Debounced save — used for text fields
   const scheduleSave = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => onSave(data), textDebounceMs)
-  }, [data, onSave, textDebounceMs])
+    timerRef.current = setTimeout(() => onSave(dataRef.current), textDebounceMs)
+  }, [onSave, textDebounceMs])
 
   // Immediate save — used for switches/selects
-  const saveNow = useCallback(() => {
+  // Accepts optional override so callers can pass the latest value directly
+  const saveNow = useCallback((override?: Record<string, unknown>) => {
     if (timerRef.current) clearTimeout(timerRef.current)
-    onSave(data)
-  }, [data, onSave])
+    onSave(override ?? dataRef.current)
+  }, [onSave])
+
+  // Button-safe wrapper — no args, always saves current dataRef
+  const saveNowBtn = useCallback(() => saveNow(), [saveNow])
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
 
-  return { isDirty, scheduleSave, saveNow }
+  return { isDirty, scheduleSave, saveNow, saveNowBtn, dataRef }
 }
 
 /* ─── Panel: Advanced Cancellation Rules ─── */
@@ -130,14 +138,14 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
     patientCanCancelPending: settings.patientCanCancelPending,
     cancellationReviewTimeoutHours: settings.cancellationReviewTimeoutHours,
   }
-  const { isDirty, scheduleSave, saveNow } = useAutoSave(data, saved, onSave)
+  const { isDirty, scheduleSave, saveNow, saveNowBtn, dataRef } = useAutoSave(data, saved, onSave)
 
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3">
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SelectRow label={t("settings.freeRefundType")} desc={t("settings.freeRefundTypeDesc")} value={freeRefund}
-            onChange={(v) => { setFreeRefund(v); saveNow() }} options={[
+            onChange={(v) => { setFreeRefund(v); saveNow({ ...dataRef.current, freeCancelRefundType: v }) }} options={[
               { value: "full", label: t("settings.refundFull") },
               { value: "partial", label: t("settings.refundPartial") },
               { value: "none", label: t("settings.refundNone") },
@@ -145,7 +153,7 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
         </CardContent></Card>
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SelectRow label={t("settings.lateRefundType")} desc={t("settings.lateRefundTypeDesc")} value={lateRefund}
-            onChange={(v) => { setLateRefund(v); saveNow() }} options={[
+            onChange={(v) => { setLateRefund(v); saveNow({ ...dataRef.current, lateCancelRefundType: v }) }} options={[
               { value: "full", label: t("settings.refundFull") },
               { value: "partial", label: t("settings.refundPartial") },
               { value: "none", label: t("settings.refundNone") },
@@ -163,11 +171,11 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
       <div className="grid grid-cols-2 gap-3">
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SwitchRow label={t("settings.adminDirectCancel")} desc={t("settings.adminDirectCancelDesc")} checked={adminDirect}
-            onChange={(v) => { setAdminDirect(v); saveNow() }} />
+            onChange={(v) => { setAdminDirect(v); saveNow({ ...dataRef.current, adminCanDirectCancel: v }) }} />
         </CardContent></Card>
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SwitchRow label={t("settings.patientCancelPending")} desc={t("settings.patientCancelPendingDesc")} checked={patientPending}
-            onChange={(v) => { setPatientPending(v); saveNow() }} />
+            onChange={(v) => { setPatientPending(v); saveNow({ ...dataRef.current, patientCanCancelPending: v }) }} />
         </CardContent></Card>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -177,7 +185,7 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
         </CardContent></Card>
       </div>
       <div className="flex justify-end mt-auto pt-2">
-        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNow}>
+        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNowBtn}>
           {t("settings.save")}
         </Button>
       </div>
@@ -210,14 +218,14 @@ export function ReschedulingPanel({ settings, onSave, isPending, t }: {
     rescheduleBeforeHours: settings.rescheduleBeforeHours,
     maxReschedulesPerBooking: settings.maxReschedulesPerBooking,
   }
-  const { isDirty, scheduleSave, saveNow } = useAutoSave(data, saved, onSave)
+  const { isDirty, scheduleSave, saveNow, saveNowBtn, dataRef } = useAutoSave(data, saved, onSave)
 
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3">
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SwitchRow label={t("settings.patientCanReschedule")} desc={t("settings.patientCanRescheduleDesc")} checked={canReschedule}
-            onChange={(v) => { setCanReschedule(v); saveNow() }} />
+            onChange={(v) => { setCanReschedule(v); saveNow({ ...dataRef.current, patientCanReschedule: v }) }} />
         </CardContent></Card>
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <NumRow label={t("settings.rescheduleBeforeHours")} desc={t("settings.rescheduleBeforeHoursDesc")} value={beforeHours}
@@ -231,7 +239,7 @@ export function ReschedulingPanel({ settings, onSave, isPending, t }: {
         </CardContent></Card>
       </div>
       <div className="flex justify-end mt-auto pt-2">
-        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNow}>
+        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNowBtn}>
           {t("settings.save")}
         </Button>
       </div>
@@ -268,7 +276,7 @@ export function NoShowPanel({ settings, onSave, isPending, t }: {
     noShowPolicy: settings.noShowPolicy,
     noShowRefundPercent: settings.noShowRefundPercent,
   }
-  const { isDirty, scheduleSave, saveNow } = useAutoSave(data, saved, onSave)
+  const { isDirty, scheduleSave, saveNow, saveNowBtn, dataRef } = useAutoSave(data, saved, onSave)
 
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -285,7 +293,7 @@ export function NoShowPanel({ settings, onSave, isPending, t }: {
       <div className="grid grid-cols-2 gap-3">
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <SelectRow label={t("settings.noShowPolicy")} desc={t("settings.noShowPolicyDesc")} value={policy}
-            onChange={(v) => { setPolicy(v); saveNow() }} options={[
+            onChange={(v) => { setPolicy(v); saveNow({ ...dataRef.current, noShowPolicy: v }) }} options={[
               { value: "keep_full", label: t("settings.noShowKeepFull") },
               { value: "partial_refund", label: t("settings.noShowPartial") },
               { value: "admin_decides", label: t("settings.noShowAdminDecides") },
@@ -299,7 +307,7 @@ export function NoShowPanel({ settings, onSave, isPending, t }: {
         )}
       </div>
       <div className="flex justify-end mt-auto pt-2">
-        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNow}>
+        <Button size="sm" disabled={isPending || !isDirty} onClick={saveNowBtn}>
           {t("settings.save")}
         </Button>
       </div>

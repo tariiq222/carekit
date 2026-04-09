@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers/auth-provider"
 import { fetchBookingStats } from "@/lib/api/bookings"
-import { fetchFeatureFlagMap } from "@/lib/api/feature-flags"
+import { fetchLicenseFeatures } from "@/lib/api/license"
 import { queryKeys } from "@/lib/query-keys"
 import { navGroups } from "@/components/sidebar-config"
 import { prefetchRouteData } from "@/lib/route-prefetch"
@@ -43,14 +43,23 @@ export function useSidebarNav() {
     ? (bookingStats.pending ?? 0) + (bookingStats.pendingCancellation ?? 0)
     : undefined
 
-  /* ── feature flags ── */
-  const { data: featureFlagMap } = useQuery({
-    queryKey: ["feature-flag-map"],
-    queryFn: fetchFeatureFlagMap,
+  /* ── license features (controls sidebar visibility) ── */
+  const { data: licenseFeatures } = useQuery({
+    queryKey: queryKeys.license.features(),
+    queryFn: fetchLicenseFeatures,
     staleTime: 5 * 60_000,
   })
 
-  /* ── permission + feature-flag filtered nav groups ── */
+  // Build a map of { flagKey: licensed } for fast lookup
+  const licensedMap = useMemo(() => {
+    if (!licenseFeatures) return null
+    return licenseFeatures.reduce<Record<string, boolean>>((acc, f) => {
+      acc[f.key] = f.licensed
+      return acc
+    }, {})
+  }, [licenseFeatures])
+
+  /* ── permission + license filtered nav groups ── */
   const filteredGroups = useMemo<NavGroupFiltered[]>(
     () =>
       navGroups.map((group) => ({
@@ -58,15 +67,15 @@ export function useSidebarNav() {
         items: group.items.filter((item) => {
           // Permission check
           if (item.permission && !user?.permissions.includes(item.permission)) return false
-          // Feature flag check
+          // License check — hide nav item if feature is explicitly not licensed
           const flagKey = FEATURE_FLAG_MAP[item.href]
-          if (flagKey && featureFlagMap) {
-            return featureFlagMap[flagKey] !== false
+          if (flagKey && licensedMap) {
+            return licensedMap[flagKey] !== false
           }
           return true
         }),
       })),
-    [user?.permissions, featureFlagMap]
+    [user?.permissions, licensedMap]
   )
 
   /* ── user display info ── */

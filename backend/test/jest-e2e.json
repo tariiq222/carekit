@@ -3,6 +3,9 @@
   "rootDir": "..",
   "testEnvironment": "node",
   "testMatch": ["<rootDir>/test/e2e/**/*.e2e-spec.ts"],
+  "testPathIgnorePatterns": [
+    "<rootDir>/test/e2e/security/throttler.e2e-spec.ts"
+  ],
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },

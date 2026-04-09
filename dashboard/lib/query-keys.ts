@@ -200,6 +200,14 @@ export const queryKeys = {
       ["branches", "practitioners", id] as const,
   },
 
+  /* ─── Departments ─── */
+  departments: {
+    all: ["departments"] as const,
+    list: (filters?: object) =>
+      ["departments", "list", filters] as const,
+    detail: (id: string) => ["departments", "detail", id] as const,
+  },
+
   /* ─── Group Sessions ─── */
   groupSessions: {
     all: ["group-sessions"] as const,
@@ -226,7 +234,6 @@ export const queryKeys = {
   whitelabel: {
     all: ["whitelabel"] as const,
     config: () => ["whitelabel", "config"] as const,
-    configMap: () => ["whitelabel", "config-map"] as const,
   },
 
   /* ─── Waitlist ─── */
@@ -252,8 +259,24 @@ export const queryKeys = {
 
   /* ─── Clinic Settings ─── */
   clinicSettings: {
+    all: ["clinic-settings"] as const,
+    config: () => ["clinic-settings", "config"] as const,
+    public: () => ["clinic-settings", "public"] as const,
     bookingFlowOrder: () => ["clinic-settings", "booking-flow-order"] as const,
     payment: () => ["clinic-settings", "payment"] as const,
+  },
+
+  /* ─── Clinic Integrations ─── */
+  clinicIntegrations: {
+    all: ["clinic-integrations"] as const,
+    config: () => ["clinic-integrations", "config"] as const,
+  },
+
+  /* ─── License ─── */
+  license: {
+    all: ["license"] as const,
+    config: () => ["license", "config"] as const,
+    features: () => ["license", "features"] as const,
   },
 
   /* ─── Widget ─── */

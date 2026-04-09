@@ -60,7 +60,7 @@ export class NotificationsController {
 
   @Patch('read-all')
   @HttpCode(200)
-  @CheckPermissions({ module: 'notifications', action: 'edit' })
+  @CheckPermissions({ module: 'notifications', action: 'update' })
   async markAllAsRead(@CurrentUser() user: { id: string }) {
     await this.notificationsService.markAllAsRead(user.id);
     return { updated: true };
@@ -72,7 +72,7 @@ export class NotificationsController {
 
   @Patch(':id/read')
   @HttpCode(200)
-  @CheckPermissions({ module: 'notifications', action: 'edit' })
+  @CheckPermissions({ module: 'notifications', action: 'update' })
   async markAsRead(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -85,7 +85,7 @@ export class NotificationsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post('fcm-token')
-  @CheckPermissions({ module: 'notifications', action: 'edit' })
+  @CheckPermissions({ module: 'notifications', action: 'update' })
   async registerFcmToken(
     @Body() dto: RegisterFcmTokenDto,
     @CurrentUser() user: { id: string },
@@ -99,7 +99,7 @@ export class NotificationsController {
 
   @Delete('fcm-token')
   @HttpCode(200)
-  @CheckPermissions({ module: 'notifications', action: 'edit' })
+  @CheckPermissions({ module: 'notifications', action: 'update' })
   async unregisterFcmToken(
     @Body() dto: UnregisterFcmTokenDto,
     @CurrentUser() user: { id: string },

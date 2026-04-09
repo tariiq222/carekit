@@ -6,13 +6,14 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -64,62 +65,64 @@ export function CreateKbEntryDialog({
   })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end" className="overflow-y-auto w-full sm:max-w-[45vw]">
-        <SheetHeader>
-          <SheetTitle>Add Knowledge Base Entry</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Knowledge Base Entry</DialogTitle>
+          <DialogDescription>
             Create a new entry for the AI assistant knowledge base.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>Title *</Label>
-            <Input {...form.register("title")} placeholder="Entry title" />
-            {form.formState.errors.title && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.title.message}
-              </p>
-            )}
-          </div>
+        <DialogBody>
+          <form id="create-kb-entry-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label>Title *</Label>
+              <Input {...form.register("title")} placeholder="Entry title" />
+              {form.formState.errors.title && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.title.message}
+                </p>
+              )}
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <Label>Content *</Label>
-            <Textarea
-              {...form.register("content")}
-              placeholder="Knowledge base content..."
-              rows={5}
-            />
-            {form.formState.errors.content && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.content.message}
-              </p>
-            )}
-          </div>
+            <div className="flex flex-col gap-2">
+              <Label>Content *</Label>
+              <Textarea
+                {...form.register("content")}
+                placeholder="Knowledge base content..."
+                rows={5}
+              />
+              {form.formState.errors.content && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.content.message}
+                </p>
+              )}
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <Label>Category</Label>
-            <Input
-              {...form.register("category")}
-              placeholder="e.g. FAQ, Services, Policies"
-            />
-          </div>
+            <div className="flex flex-col gap-2">
+              <Label>Category</Label>
+              <Input
+                {...form.register("category")}
+                placeholder="e.g. FAQ, Services, Policies"
+              />
+            </div>
+          </form>
+        </DialogBody>
 
-          <SheetFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createKbEntryMut.isPending}>
-              {createKbEntryMut.isPending ? "Creating..." : "Create Entry"}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" form="create-kb-entry-form" disabled={createKbEntryMut.isPending}>
+            {createKbEntryMut.isPending ? "Creating..." : "Create Entry"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -1,7 +1,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import { PrismaService } from '../../../database/prisma.service.js';
+import { ClinicIntegrationsService } from '../../clinic-integrations/clinic-integrations.service.js';
 import { ZatcaCryptoService } from './zatca-crypto.service.js';
 import { ZatcaApiService } from './zatca-api.service.js';
 import { XmlBuilderService } from './xml-builder.service.js';
@@ -22,7 +22,7 @@ export class ZatcaOnboardingService {
   private readonly logger = new Logger(ZatcaOnboardingService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly clinicIntegrationsService: ClinicIntegrationsService,
     private readonly cryptoService: ZatcaCryptoService,
     private readonly apiService: ZatcaApiService,
     private readonly zatcaService: ZatcaService,
@@ -101,27 +101,13 @@ export class ZatcaOnboardingService {
    * Returns the current onboarding status.
    */
   async getOnboardingStatus(): Promise<OnboardingStatus> {
-    const keys = [
-      'zatca_phase',
-      'zatca_csid',
-      'zatca_secret',
-      'zatca_private_key',
-    ];
-
-    const configs = await this.prisma.whiteLabelConfig.findMany({
-      where: { key: { in: keys } },
-      select: { key: true, value: true },
-    });
-
-    const map = Object.fromEntries(
-      configs.map((c: { key: string; value: string }) => [c.key, c.value]),
-    );
+    const integrations = await this.clinicIntegrationsService.getRaw();
 
     return {
-      phase: (map['zatca_phase'] ?? 'phase1') as 'phase1' | 'phase2',
-      hasCredentials: !!(map['zatca_csid'] && map['zatca_secret']),
-      csidConfigured: !!map['zatca_csid'],
-      privateKeyStored: !!map['zatca_private_key'],
+      phase: (integrations.zatcaPhase ?? 'phase1') as 'phase1' | 'phase2',
+      hasCredentials: !!(integrations.zatcaCsid && integrations.zatcaSecret),
+      csidConfigured: !!integrations.zatcaCsid,
+      privateKeyStored: !!integrations.zatcaPrivateKey,
     };
   }
 
@@ -235,28 +221,16 @@ export class ZatcaOnboardingService {
     privateKey: string;
     requestId: string;
   }): Promise<void> {
-    const configs = [
-      { key: 'zatca_csid', value: data.csid },
-      { key: 'zatca_secret', value: data.secret },
-      { key: 'zatca_private_key', value: data.privateKey },
-      { key: 'zatca_request_id', value: data.requestId },
-    ];
-
-    for (const item of configs) {
-      await this.prisma.whiteLabelConfig.upsert({
-        where: { key: item.key },
-        create: { key: item.key, value: item.value, type: 'string' },
-        update: { value: item.value },
-      });
-    }
+    await this.clinicIntegrationsService.update({
+      zatcaCsid: data.csid,
+      zatcaSecret: data.secret,
+      zatcaPrivateKey: data.privateKey,
+      zatcaRequestId: data.requestId,
+    });
   }
 
   private async updatePhase(phase: string): Promise<void> {
-    await this.prisma.whiteLabelConfig.upsert({
-      where: { key: 'zatca_phase' },
-      create: { key: 'zatca_phase', value: phase, type: 'string' },
-      update: { value: phase },
-    });
+    await this.clinicIntegrationsService.update({ zatcaPhase: phase });
   }
 
   private getEncryptionKey(): string {

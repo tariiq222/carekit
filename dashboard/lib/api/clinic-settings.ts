@@ -1,16 +1,37 @@
 /**
  * Clinic Settings API — CareKit Dashboard
- *
- * Endpoints for fetching and updating clinic-level configuration,
- * including the booking flow order setting.
  */
 
 import { api } from "@/lib/api"
+import type {
+  ClinicSettings,
+  UpdateClinicSettingsPayload,
+  PublicClinicSettings,
+} from "@/lib/types/clinic-settings"
+
+/* ─── Queries ─── */
+
+export async function fetchClinicSettings(): Promise<ClinicSettings> {
+  return api.get<ClinicSettings>("/clinic-settings")
+}
+
+export async function fetchClinicSettingsPublic(): Promise<PublicClinicSettings> {
+  return api.get<PublicClinicSettings>("/clinic-settings/public")
+}
+
+/* ─── Mutations ─── */
+
+export async function updateClinicSettings(
+  data: UpdateClinicSettingsPayload,
+): Promise<ClinicSettings> {
+  return api.put<ClinicSettings>("/clinic-settings", data)
+}
+
+/* ─── Booking Flow Order (legacy clinic/ endpoints) ─── */
 
 export type BookingFlowOrder = "service_first" | "practitioner_first" | "both"
 
 export async function fetchBookingFlowOrder(): Promise<BookingFlowOrder> {
-  // Backend returns { bookingFlowOrder: "..." } after api.ts unwraps the envelope
   const res = await api.get<{ bookingFlowOrder: BookingFlowOrder }>("/clinic/settings/booking-flow")
   return res.bookingFlowOrder ?? "service_first"
 }
@@ -18,14 +39,13 @@ export async function fetchBookingFlowOrder(): Promise<BookingFlowOrder> {
 export async function updateBookingFlowOrder(
   order: BookingFlowOrder,
 ): Promise<BookingFlowOrder> {
-  // Backend returns { bookingFlowOrder: "..." } after api.ts unwraps the envelope
   const res = await api.patch<{ bookingFlowOrder: BookingFlowOrder }>("/clinic/settings/booking-flow", {
     order,
   })
   return res.bookingFlowOrder ?? "service_first"
 }
 
-/* ─── Payment Settings ─── */
+/* ─── Payment Settings (legacy clinic/ endpoints) ─── */
 
 export interface PaymentSettings {
   paymentMoyasarEnabled: boolean

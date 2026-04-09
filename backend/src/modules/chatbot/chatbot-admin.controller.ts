@@ -12,7 +12,9 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { RequireFeature } from '../../common/decorators/require-feature.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ChatbotService } from './chatbot.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
@@ -23,7 +25,8 @@ import { SendMessageDto } from './dto/send-message.dto.js';
 @ApiTags('Chatbot')
 @ApiBearerAuth()
 @Controller('chatbot')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, FeatureFlagGuard)
+@RequireFeature('chatbot')
 export class ChatbotAdminController {
   constructor(
     private readonly chatbotService: ChatbotService,

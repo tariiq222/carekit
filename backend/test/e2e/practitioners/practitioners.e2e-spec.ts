@@ -113,9 +113,6 @@ describe('Practitioners Module (e2e)', () => {
         experience: 15,
         education: 'MBBS, MD Cardiology - King Saud University',
         educationAr: 'بكالوريوس طب وجراحة، ماجستير أمراض القلب - جامعة الملك سعود',
-        priceClinic: 30000,
-        pricePhone: 20000,
-        priceVideo: 25000,
       });
 
     if (p1Res.status === 201) {
@@ -131,9 +128,6 @@ describe('Practitioners Module (e2e)', () => {
         bio: 'Pediatric specialist',
         bioAr: 'أخصائي أطفال',
         experience: 8,
-        priceClinic: 25000,
-        pricePhone: 15000,
-        priceVideo: 20000,
       });
 
     if (p2Res.status === 201) {
@@ -309,13 +303,9 @@ describe('Practitioners Module (e2e)', () => {
         .expect(200);
 
       const { data } = res.body;
-      expect(typeof data.priceClinic).toBe('number');
-      expect(typeof data.pricePhone).toBe('number');
-      expect(typeof data.priceVideo).toBe('number');
-      // Prices in halalat (integers)
-      expect(Number.isInteger(data.priceClinic)).toBe(true);
-      expect(Number.isInteger(data.pricePhone)).toBe(true);
-      expect(Number.isInteger(data.priceVideo)).toBe(true);
+      // Pricing is now managed per PractitionerService/ServiceType, not on the practitioner level
+      expect(data.id).toBeDefined();
+      expect(typeof data.rating).toBe('number');
     });
 
     it('should include average rating and review count', async () => {
@@ -362,9 +352,6 @@ describe('Practitioners Module (e2e)', () => {
           .send({
             userId: userRes.body.data.id,
             specialtyId,
-            priceClinic: 10000,
-            pricePhone: 10000,
-            priceVideo: 10000,
           });
 
         if (createRes.status === 201) {
@@ -416,9 +403,6 @@ describe('Practitioners Module (e2e)', () => {
           experience: 10,
           education: 'MBBS, Dermatology - King Faisal University',
           educationAr: 'بكالوريوس طب، تخصص جلدية - جامعة الملك فيصل',
-          priceClinic: 25000,
-          pricePhone: 18000,
-          priceVideo: 22000,
         })
         .expect(201);
 
@@ -431,9 +415,6 @@ describe('Practitioners Module (e2e)', () => {
       expect(data.bio).toBe('Dermatologist with 10 years experience');
       expect(data.bioAr).toBe('أخصائي جلدية بخبرة 10 سنوات');
       expect(data.experience).toBe(10);
-      expect(data.priceClinic).toBe(25000);
-      expect(data.pricePhone).toBe(18000);
-      expect(data.priceVideo).toBe(22000);
       expect(data.rating).toBe(0);
       expect(data.reviewCount).toBe(0);
       expect(data.isActive).toBe(true);
@@ -448,9 +429,6 @@ describe('Practitioners Module (e2e)', () => {
         .send({
           userId: practitionerAuth.user.id,
           specialtyId,
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
         })
         .expect(409);
 
@@ -464,9 +442,6 @@ describe('Practitioners Module (e2e)', () => {
         .send({
           userId: '00000000-0000-0000-0000-000000000000',
           specialtyId,
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
         })
         .expect(404);
 
@@ -494,9 +469,6 @@ describe('Practitioners Module (e2e)', () => {
           .send({
             userId: userRes.body.data.id,
             specialtyId: '00000000-0000-0000-0000-000000000000',
-            priceClinic: 10000,
-            pricePhone: 10000,
-            priceVideo: 10000,
           })
           .expect(404);
 
@@ -511,9 +483,6 @@ describe('Practitioners Module (e2e)', () => {
         .send({
           userId: '00000000-0000-0000-0000-000000000001',
           specialtyId,
-          priceClinic: -100,
-          pricePhone: 'not a number',
-          priceVideo: 25.5,
         })
         .expect(400);
 
@@ -527,9 +496,6 @@ describe('Practitioners Module (e2e)', () => {
         .send({
           userId: 'any-id',
           specialtyId,
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
         })
         .expect(403);
 
@@ -557,9 +523,6 @@ describe('Practitioners Module (e2e)', () => {
           .send({
             userId: userRes.body.data.id,
             specialtyId,
-            priceClinic: 20000,
-            pricePhone: 15000,
-            priceVideo: 18000,
           });
 
         // Receptionist has practitioners:create permission
@@ -619,13 +582,15 @@ describe('Practitioners Module (e2e)', () => {
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
-    it('should validate price fields', async () => {
+    it('should reject unknown fields (forbidNonWhitelisted)', async () => {
       if (!practitionerId) return;
 
+      // Sending a field that no longer exists in UpdatePractitionerDto
+      // The ValidationPipe with forbidNonWhitelisted should reject it
       const res = await request(httpServer)
         .patch(`${PRACTITIONERS_URL}/${practitionerId}`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ priceClinic: -500 })
+        .send({ unknownFieldXyz: 99999 })
         .expect(400);
 
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
@@ -682,9 +647,6 @@ describe('Practitioners Module (e2e)', () => {
         .send({
           userId: userRes.body.data.id,
           specialtyId,
-          priceClinic: 10000,
-          pricePhone: 10000,
-          priceVideo: 10000,
         });
 
       if (createRes.status !== 201) return;

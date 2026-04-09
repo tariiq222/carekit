@@ -72,3 +72,7 @@ docs/screenshots/
 
 # Maestro System
 .opencode/maestro-memory.db
+node_modules 2/
+*.mcp 2.json
+*.mcp 3.json
+*.mcp 4.json

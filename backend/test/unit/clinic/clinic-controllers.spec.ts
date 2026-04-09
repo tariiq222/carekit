@@ -1,22 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClinicHolidaysController } from '../../../src/modules/clinic/clinic-holidays.controller.js';
 import { ClinicHoursController } from '../../../src/modules/clinic/clinic-hours.controller.js';
-import { ClinicSettingsController } from '../../../src/modules/clinic/clinic-settings.controller.js';
 import { ClinicHolidaysService } from '../../../src/modules/clinic/clinic-holidays.service.js';
 import { ClinicHoursService } from '../../../src/modules/clinic/clinic-hours.service.js';
-import { ClinicSettingsService } from '../../../src/modules/clinic/clinic-settings.service.js';
 import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
 
 const mockHolidays = { findAll: jest.fn(), create: jest.fn(), delete: jest.fn() };
 const mockHours = { getAll: jest.fn(), setHours: jest.fn() };
-const mockSettings = {
-  getPublicSettings: jest.fn(),
-  getBookingFlowOrder: jest.fn(),
-  updateBookingFlowOrder: jest.fn(),
-  getPaymentSettings: jest.fn(),
-  updatePaymentSettings: jest.fn(),
-};
 
 const guardOverrides = (builder: any) =>
   builder
@@ -104,65 +95,3 @@ describe('ClinicHoursController', () => {
   });
 });
 
-describe('ClinicSettingsController', () => {
-  let controller: ClinicSettingsController;
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
-    const module: TestingModule = await guardOverrides(
-      Test.createTestingModule({
-        controllers: [ClinicSettingsController],
-        providers: [{ provide: ClinicSettingsService, useValue: mockSettings }],
-      }),
-    ).compile();
-    controller = module.get<ClinicSettingsController>(ClinicSettingsController);
-  });
-
-  describe('getPublicSettings', () => {
-    it('should wrap result', async () => {
-      const settings = { clinicName: 'CareKit Demo' };
-      mockSettings.getPublicSettings.mockResolvedValue(settings);
-      expect(await controller.getPublicSettings()).toEqual({ success: true, data: settings });
-    });
-  });
-
-  describe('getBookingFlowOrder', () => {
-    it('should wrap order in nested object', async () => {
-      mockSettings.getBookingFlowOrder.mockResolvedValue(['service', 'practitioner', 'time']);
-      expect(await controller.getBookingFlowOrder()).toEqual({
-        success: true,
-        data: { bookingFlowOrder: ['service', 'practitioner', 'time'] },
-      });
-    });
-  });
-
-  describe('updateBookingFlowOrder', () => {
-    it('should extract order from dto and wrap result', async () => {
-      const dto = { order: ['practitioner', 'service', 'time'] } as any;
-      mockSettings.updateBookingFlowOrder.mockResolvedValue(['practitioner', 'service', 'time']);
-      expect(await controller.updateBookingFlowOrder(dto)).toEqual({
-        success: true,
-        data: { bookingFlowOrder: ['practitioner', 'service', 'time'] },
-      });
-      expect(mockSettings.updateBookingFlowOrder).toHaveBeenCalledWith(dto.order);
-    });
-  });
-
-  describe('getPaymentSettings', () => {
-    it('should wrap result', async () => {
-      const data = { provider: 'moyasar', enabled: true };
-      mockSettings.getPaymentSettings.mockResolvedValue(data);
-      expect(await controller.getPaymentSettings()).toEqual({ success: true, data });
-    });
-  });
-
-  describe('updatePaymentSettings', () => {
-    it('should delegate with dto', async () => {
-      const dto = { enabled: false } as any;
-      const result = { provider: 'moyasar', enabled: false };
-      mockSettings.updatePaymentSettings.mockResolvedValue(result);
-      expect(await controller.updatePaymentSettings(dto)).toEqual({ success: true, data: result });
-      expect(mockSettings.updatePaymentSettings).toHaveBeenCalledWith(dto);
-    });
-  });
-});

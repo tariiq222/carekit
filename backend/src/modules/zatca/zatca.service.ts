@@ -3,7 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { InvoiceHashService } from './services/invoice-hash.service.js';
 import { QrGeneratorService } from './services/qr-generator.service.js';
 import { XmlBuilderService } from './services/xml-builder.service.js';
-import { PrismaService } from '../../database/prisma.service.js';
+import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
+import { ClinicIntegrationsService } from '../clinic-integrations/clinic-integrations.service.js';
 import {
   ZatcaConfig,
   GenerateZatcaDataInput,
@@ -15,41 +16,27 @@ const ZERO_HASH = '0'.repeat(64);
 @Injectable()
 export class ZatcaService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly hashService: InvoiceHashService,
     private readonly qrService: QrGeneratorService,
     private readonly xmlBuilder: XmlBuilderService,
+    private readonly clinicSettingsService: ClinicSettingsService,
+    private readonly clinicIntegrationsService: ClinicIntegrationsService,
   ) {}
 
-  /**
-   * Loads ZATCA config from WhiteLabelConfig table.
-   */
   async loadConfig(): Promise<ZatcaConfig> {
-    const keys = [
-      'zatca_phase',
-      'vat_rate',
-      'vat_registration_number',
-      'business_registration',
-      'system_name',
-      'seller_address',
-      'clinic_city',
-    ];
-
-    const configs = await this.prisma.whiteLabelConfig.findMany({
-      where: { key: { in: keys } },
-      select: { key: true, value: true },
-    });
-
-    const map = Object.fromEntries(configs.map((c) => [c.key, c.value]));
+    const [settings, integrations] = await Promise.all([
+      this.clinicSettingsService.get(),
+      this.clinicIntegrationsService.getRaw(),
+    ]);
 
     return {
-      phase: (map['zatca_phase'] ?? 'phase1') as 'phase1' | 'phase2',
-      vatRate: parseInt(map['vat_rate'] ?? '0', 10),
-      vatRegistrationNumber: map['vat_registration_number'] ?? '',
-      businessRegistration: map['business_registration'] ?? '',
-      sellerName: map['system_name'] ?? '',
-      sellerAddress: map['seller_address'] ?? '',
-      city: map['clinic_city'] ?? '',
+      phase: (integrations.zatcaPhase ?? 'phase1') as 'phase1' | 'phase2',
+      vatRate: Number(settings.vatRate ?? 0),
+      vatRegistrationNumber: settings.vatRegistrationNumber ?? '',
+      businessRegistration: settings.businessRegistration ?? '',
+      sellerName: settings.companyNameAr ?? '',
+      sellerAddress: settings.sellerAddress ?? '',
+      city: settings.clinicCity ?? '',
     };
   }
 

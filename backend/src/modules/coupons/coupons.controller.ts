@@ -14,7 +14,9 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { RequireFeature } from '../../common/decorators/require-feature.decorator.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 import { CouponsService } from './coupons.service.js';
 import { CreateCouponDto } from './dto/create-coupon.dto.js';
@@ -26,7 +28,8 @@ import { CouponFilterDto } from './dto/coupon-filter.dto.js';
 @ApiTags('Coupons')
 @ApiBearerAuth()
 @Controller('coupons')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, FeatureFlagGuard)
+@RequireFeature('coupons')
 export class CouponsController {
   constructor(private readonly couponsService: CouponsService) {}
 

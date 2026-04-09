@@ -2,6 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger, OnModuleInit } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 import { PrismaService } from '../../../database/prisma.service.js';
+import { ClinicIntegrationsService } from '../../clinic-integrations/clinic-integrations.service.js';
 import { ZatcaApiService } from './zatca-api.service.js';
 import { XmlSigningService } from './xml-signing.service.js';
 import { InvoiceHashService } from './invoice-hash.service.js';
@@ -18,6 +19,7 @@ export class ZatcaSubmitProcessor extends WorkerHost implements OnModuleInit {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly clinicIntegrationsService: ClinicIntegrationsService,
     private readonly apiService: ZatcaApiService,
     private readonly signingService: XmlSigningService,
     private readonly hashService: InvoiceHashService,
@@ -118,24 +120,16 @@ export class ZatcaSubmitProcessor extends WorkerHost implements OnModuleInit {
     csid: string;
     secret: string;
   }> {
-    const configs = await this.prisma.whiteLabelConfig.findMany({
-      where: { key: { in: ['zatca_csid', 'zatca_secret'] } },
-      select: { key: true, value: true },
-    });
+    const integrations = await this.clinicIntegrationsService.getRaw();
 
-    const configMap = Object.fromEntries(
-      configs.map((c) => [c.key, c.value]),
-    );
-
-    if (!configMap['zatca_csid'] || !configMap['zatca_secret']) {
+    if (!integrations.zatcaCsid || !integrations.zatcaSecret) {
       this.logger.error('ZATCA credentials not configured — cannot submit');
-      // No point retrying — credentials won't appear magically
       throw new UnrecoverableError('ZATCA credentials missing');
     }
 
     return {
-      csid: configMap['zatca_csid'],
-      secret: configMap['zatca_secret'],
+      csid: integrations.zatcaCsid,
+      secret: integrations.zatcaSecret,
     };
   }
 

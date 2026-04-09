@@ -3,13 +3,13 @@
 import { toast } from "sonner"
 
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
 import { useUserMutations } from "@/hooks/use-users"
@@ -44,18 +44,18 @@ export function DeleteUserDialog({ user, open, onOpenChange }: DeleteUserDialogP
   const userName = user ? `${user.firstName} ${user.lastName}` : ""
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end" className="overflow-y-auto w-full sm:max-w-[45vw]">
-        <SheetHeader>
-          <SheetTitle>{t("users.delete.title")}</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("users.delete.title")}</DialogTitle>
+          <DialogDescription>
             {t("users.delete.descriptionPrefix")}{" "}
             <strong>{userName}</strong>
             {t("users.delete.descriptionSuffix")}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <SheetFooter>
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("users.delete.cancel")}
           </Button>
@@ -66,8 +66,8 @@ export function DeleteUserDialog({ user, open, onOpenChange }: DeleteUserDialogP
           >
             {deleteMut.isPending ? t("users.delete.submitting") : t("users.delete.submit")}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

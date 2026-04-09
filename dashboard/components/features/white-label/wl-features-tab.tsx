@@ -4,59 +4,79 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useFeatureFlags, useFeatureFlagMutation } from "@/hooks/use-feature-flags"
+import { Badge } from "@/components/ui/badge"
+import { useLicenseFeatures, useUpdateLicense } from "@/hooks/use-license"
 import { useLocale } from "@/components/locale-provider"
 import { toast } from "sonner"
-import type { FeatureFlag } from "@/lib/types/feature-flag"
+import type { FeatureWithStatus } from "@/lib/types/license"
+import type { UpdateLicensePayload } from "@/lib/types/license"
 
 const MODULE_FLAGS = ["coupons", "gift_cards", "intake_forms", "chatbot", "ratings", "multi_branch", "reports"]
 const BOOKING_FLAGS = ["recurring", "walk_in", "waitlist", "zoom"]
 const COMPLIANCE_FLAGS = ["zatca"]
 
-function FlagRow({ flag, onToggle, isPending, locale }: {
-  flag: FeatureFlag
-  onToggle: (key: string, enabled: boolean) => void
+const LICENSE_KEY_MAP: Record<string, keyof UpdateLicensePayload> = {
+  coupons: "hasCoupons",
+  gift_cards: "hasGiftCards",
+  intake_forms: "hasIntakeForms",
+  chatbot: "hasChatbot",
+  ratings: "hasRatings",
+  multi_branch: "hasMultiBranch",
+  reports: "hasReports",
+  recurring: "hasRecurring",
+  walk_in: "hasWalkIn",
+  waitlist: "hasWaitlist",
+  zoom: "hasZoom",
+  zatca: "hasZatca",
+}
+
+function FeatureRow({ feature, onToggle, isPending, locale }: {
+  feature: FeatureWithStatus
+  onToggle: (key: string, licensed: boolean) => void
   isPending: boolean
   locale: string
 }) {
   return (
     <div className="flex items-center justify-between py-1">
       <div className="flex-1 pe-4">
-        <p className="text-sm font-medium text-foreground">
-          {locale === "ar" ? flag.nameAr : flag.nameEn}
-        </p>
-        {(locale === "ar" ? flag.descriptionAr : flag.descriptionEn) && (
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {locale === "ar" ? flag.descriptionAr : flag.descriptionEn}
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium text-foreground">
+            {locale === "ar" ? feature.nameAr : feature.nameEn}
           </p>
-        )}
+          <Badge
+            variant={feature.licensed ? "default" : "secondary"}
+            className="text-[10px] px-1.5 py-0"
+          >
+            {feature.licensed ? "مفعّل" : "معطّل"}
+          </Badge>
+        </div>
       </div>
       <Switch
-        checked={flag.enabled}
-        onCheckedChange={(checked) => onToggle(flag.key, checked)}
+        checked={feature.licensed}
+        onCheckedChange={(checked) => onToggle(feature.key, checked)}
         disabled={isPending}
       />
     </div>
   )
 }
 
-function FlagSection({ title, flags, allFlags, onToggle, isPending, locale }: {
+function FeatureSection({ title, keys, features, onToggle, isPending, locale }: {
   title: string
-  flags: string[]
-  allFlags: FeatureFlag[]
-  onToggle: (key: string, enabled: boolean) => void
+  keys: string[]
+  features: FeatureWithStatus[]
+  onToggle: (key: string, licensed: boolean) => void
   isPending: boolean
   locale: string
 }) {
-  const sectionFlags = allFlags.filter((f) => flags.includes(f.key))
-  if (sectionFlags.length === 0) return null
+  const sectionFeatures = features.filter((f) => keys.includes(f.key))
+  if (sectionFeatures.length === 0) return null
   return (
     <div className="space-y-1">
       <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h4>
-      {sectionFlags.map((flag, i) => (
-        <div key={flag.key}>
+      {sectionFeatures.map((feature, i) => (
+        <div key={feature.key}>
           {i > 0 && <Separator className="my-2" />}
-          <FlagRow flag={flag} onToggle={onToggle} isPending={isPending} locale={locale} />
+          <FeatureRow feature={feature} onToggle={onToggle} isPending={isPending} locale={locale} />
         </div>
       ))}
     </div>
@@ -65,12 +85,14 @@ function FlagSection({ title, flags, allFlags, onToggle, isPending, locale }: {
 
 export function WlFeaturesTab() {
   const { t, locale } = useLocale()
-  const { flags, isLoading } = useFeatureFlags()
-  const { toggleMut } = useFeatureFlagMutation()
+  const { data: features, isLoading } = useLicenseFeatures()
+  const updateLicense = useUpdateLicense()
 
-  const handleToggle = (key: string, enabled: boolean) => {
-    toggleMut.mutate(
-      { key, enabled },
+  const handleToggle = (key: string, licensed: boolean) => {
+    const licenseKey = LICENSE_KEY_MAP[key]
+    if (!licenseKey) return
+    updateLicense.mutate(
+      { [licenseKey]: licensed },
       {
         onSuccess: () => toast.success(t("settings.saved")),
         onError: () => toast.error(t("settings.error")),
@@ -97,22 +119,26 @@ export function WlFeaturesTab() {
     )
   }
 
+  const featureList = features ?? []
+
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
-        <p className="text-sm text-primary">{t("whiteLabel.featuresHint")}</p>
+      <div className="rounded-lg border border-warning/20 bg-warning/5 px-4 py-3">
+        <p className="text-sm text-warning-foreground">
+          {t("whiteLabel.licenseHint") ?? "تحكم في الميزات المتاحة لهذه العيادة. تعطيل الرخصة يمنع العيادة من استخدام الميزة."}
+        </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">{t("whiteLabel.moduleFlags")}</CardTitle>
+          <CardTitle className="text-sm">{t("whiteLabel.licenseManagement") ?? "إدارة الرخصة"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <FlagSection title={t("whiteLabel.flagsModules")} flags={MODULE_FLAGS} allFlags={flags} onToggle={handleToggle} isPending={toggleMut.isPending} locale={locale} />
+          <FeatureSection title={t("whiteLabel.flagsModules")} keys={MODULE_FLAGS} features={featureList} onToggle={handleToggle} isPending={updateLicense.isPending} locale={locale} />
           <Separator />
-          <FlagSection title={t("whiteLabel.flagsBooking")} flags={BOOKING_FLAGS} allFlags={flags} onToggle={handleToggle} isPending={toggleMut.isPending} locale={locale} />
+          <FeatureSection title={t("whiteLabel.flagsBooking")} keys={BOOKING_FLAGS} features={featureList} onToggle={handleToggle} isPending={updateLicense.isPending} locale={locale} />
           <Separator />
-          <FlagSection title={t("whiteLabel.flagsCompliance")} flags={COMPLIANCE_FLAGS} allFlags={flags} onToggle={handleToggle} isPending={toggleMut.isPending} locale={locale} />
+          <FeatureSection title={t("whiteLabel.flagsCompliance")} keys={COMPLIANCE_FLAGS} features={featureList} onToggle={handleToggle} isPending={updateLicense.isPending} locale={locale} />
         </CardContent>
       </Card>
     </div>

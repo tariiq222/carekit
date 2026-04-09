@@ -371,7 +371,7 @@ describe('Users Module (e2e)', () => {
       expect(data.firstName).toBe('منيرة');
       expect(data.lastName).toBe('العصيمي');
       expect(data.isActive).toBe(true);
-      expect(data.roles).toContain('receptionist');
+      expect(data.roles.some((r: { slug: string }) => r.slug === 'receptionist')).toBe(true);
       expect(data.createdAt).toBeDefined();
       expect(data).not.toHaveProperty('password');
       expect(data).not.toHaveProperty('passwordHash');
@@ -393,7 +393,7 @@ describe('Users Module (e2e)', () => {
         .expect(201);
 
       expectSuccessResponse(res.body);
-      expect(res.body.data.roles).toContain('accountant');
+      expect(res.body.data.roles.some((r: { slug: string }) => r.slug === 'accountant')).toBe(true);
     });
 
     it('should hash password before storing', async () => {

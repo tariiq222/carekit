@@ -191,4 +191,81 @@ describe('ProblemReportsService', () => {
       ).rejects.toThrow(BadRequestException);
     });
   });
+
+  // ─────────────────────────────────────────────────────────────
+  //  findAll
+  // ─────────────────────────────────────────────────────────────
+
+  describe('findAll', () => {
+    it('should return paginated problem reports with correct meta', async () => {
+      const reports = [{ id: 'report-1', status: 'open' }];
+      mockPrisma.problemReport.findMany.mockResolvedValue(reports);
+      mockPrisma.problemReport.count.mockResolvedValue(1);
+
+      const result = await service.findAll({ page: 1, perPage: 10 });
+
+      expect(result.items).toEqual(reports);
+      expect(result.meta).toMatchObject({ total: 1, page: 1, perPage: 10 });
+    });
+
+    it('should filter by status when provided', async () => {
+      mockPrisma.problemReport.findMany.mockResolvedValue([]);
+      mockPrisma.problemReport.count.mockResolvedValue(0);
+
+      await service.findAll({ status: 'resolved' });
+
+      expect(mockPrisma.problemReport.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: 'resolved' }),
+        }),
+      );
+    });
+
+    it('should filter by patientId when provided', async () => {
+      mockPrisma.problemReport.findMany.mockResolvedValue([]);
+      mockPrisma.problemReport.count.mockResolvedValue(0);
+
+      await service.findAll({ patientId: 'patient-1' });
+
+      expect(mockPrisma.problemReport.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ patientId: 'patient-1' }),
+        }),
+      );
+    });
+
+    it('should apply no filters and return all reports when query is empty', async () => {
+      mockPrisma.problemReport.findMany.mockResolvedValue([]);
+      mockPrisma.problemReport.count.mockResolvedValue(0);
+
+      await service.findAll({});
+
+      expect(mockPrisma.problemReport.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {} }),
+      );
+    });
+
+    it('should order results by createdAt desc', async () => {
+      mockPrisma.problemReport.findMany.mockResolvedValue([]);
+      mockPrisma.problemReport.count.mockResolvedValue(0);
+
+      await service.findAll({});
+
+      expect(mockPrisma.problemReport.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { createdAt: 'desc' } }),
+      );
+    });
+
+    it('should calculate correct skip for page 2 with perPage 5', async () => {
+      mockPrisma.problemReport.findMany.mockResolvedValue([]);
+      mockPrisma.problemReport.count.mockResolvedValue(12);
+
+      const result = await service.findAll({ page: 2, perPage: 5 });
+
+      expect(mockPrisma.problemReport.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 5, take: 5 }),
+      );
+      expect(result.meta).toMatchObject({ total: 12, page: 2, perPage: 5, totalPages: 3 });
+    });
+  });
 });

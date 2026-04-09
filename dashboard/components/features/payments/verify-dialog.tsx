@@ -6,13 +6,14 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -72,68 +73,67 @@ export function VerifyDialog({
   })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="end"
-        className="overflow-y-auto w-full sm:max-w-[45vw]"
-      >
-        <SheetHeader>
-          <SheetTitle>Verify Bank Transfer</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Verify Bank Transfer</DialogTitle>
+          <DialogDescription>
             Approve or reject this bank transfer payment.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>Action</Label>
-            <Select
-              value={form.watch("action") ?? ""}
-              onValueChange={(v) =>
-                form.setValue("action", v as "approve" | "reject", {
-                  shouldValidate: true,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select action" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="approve">Approve</SelectItem>
-                <SelectItem value="reject">Reject</SelectItem>
-              </SelectContent>
-            </Select>
-            {form.formState.errors.action && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.action.message}
-              </p>
-            )}
-          </div>
+        <DialogBody>
+          <form id="verify-transfer-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label>Action</Label>
+              <Select
+                value={form.watch("action") ?? ""}
+                onValueChange={(v) =>
+                  form.setValue("action", v as "approve" | "reject", {
+                    shouldValidate: true,
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select action" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="approve">Approve</SelectItem>
+                  <SelectItem value="reject">Reject</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.formState.errors.action && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.action.message}
+                </p>
+              )}
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="verify-notes">Admin Notes (optional)</Label>
-            <Textarea
-              id="verify-notes"
-              placeholder="Internal notes..."
-              rows={3}
-              {...form.register("adminNotes")}
-            />
-          </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="verify-notes">Admin Notes (optional)</Label>
+              <Textarea
+                id="verify-notes"
+                placeholder="Internal notes..."
+                rows={3}
+                {...form.register("adminNotes")}
+              />
+            </div>
+          </form>
+        </DialogBody>
 
-          <SheetFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={verifyMut.isPending}>
-              {verifyMut.isPending ? "Processing..." : "Confirm"}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" form="verify-transfer-form" disabled={verifyMut.isPending}>
+            {verifyMut.isPending ? "Processing..." : "Confirm"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

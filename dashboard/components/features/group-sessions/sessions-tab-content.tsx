@@ -135,11 +135,11 @@ export function SessionsTabContent() {
   return (
     <>
       <FilterBar
-        search=""
         selects={[
           {
+            key: "status",
             value: status ?? "",
-            onChange: (v: string) => setStatus((v || undefined) as GroupSessionStatus | undefined),
+            onValueChange: (v: string) => setStatus((v || undefined) as GroupSessionStatus | undefined),
             options: statusOptions,
             placeholder: t("groupSessions.filterByStatus"),
           },

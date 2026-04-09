@@ -67,7 +67,7 @@ describe('Auth Module (e2e)', () => {
       const res = await request(httpServer).post(url).send(validPayload).expect(201);
 
       expectSuccessResponse(res.body);
-      expect(res.body).toHaveProperty('message', 'Registration successful');
+      // register returns { success, data } — no top-level message field
 
       const { data } = res.body;
 

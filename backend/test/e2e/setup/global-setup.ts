@@ -45,8 +45,12 @@ export default async function globalSetup(): Promise<void> {
     await prisma.intakeResponse.deleteMany({});
     await prisma.intakeField.deleteMany({});
     await prisma.intakeForm.deleteMany({});
-    await prisma.practitionerBranch.deleteMany({});
-    await prisma.branch.deleteMany({});
+     await prisma.practitionerBranch.deleteMany({});
+     // Delete branch-specific booking settings before deleting branches (FK constraint)
+     await prisma.bookingSettings.deleteMany({ where: { branchId: { not: null } } });
+     // Delete branch-specific practitioner availabilities
+     await prisma.practitionerAvailability.deleteMany({ where: { branchId: { not: null } } });
+     await prisma.branch.deleteMany({ where: { isMain: false } });
     await prisma.clinicWorkingHours.deleteMany({});
     await prisma.clinicHoliday.deleteMany({});
     await prisma.problemReport.deleteMany({});

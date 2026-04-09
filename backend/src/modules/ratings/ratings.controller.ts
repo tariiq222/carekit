@@ -10,7 +10,9 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { RequireFeature } from '../../common/decorators/require-feature.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { RatingsService } from './ratings.service.js';
 import { CreateRatingDto } from './dto/create-rating.dto.js';
@@ -19,7 +21,8 @@ import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 @ApiTags('Ratings')
 @ApiBearerAuth()
 @Controller('ratings')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, FeatureFlagGuard)
+@RequireFeature('ratings')
 export class RatingsController {
   constructor(private readonly ratingsService: RatingsService) {}
 

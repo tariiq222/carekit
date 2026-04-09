@@ -62,7 +62,7 @@ export const toolsNav: NavItem[] = [
 
 export const adminNav: NavItem[] = [
   { titleKey: "nav.users", href: "/users", icon: ShieldKeyIcon },
-  { titleKey: "nav.whiteLabel", href: "/white-label", icon: PaintBrush01Icon, permission: "whitelabel:view" },
+  { titleKey: "nav.whiteLabel", href: "/white-label", icon: PaintBrush01Icon, permission: "whitelabel:edit" },
   { titleKey: "nav.settings", href: "/settings", icon: Settings02Icon },
 ]
 

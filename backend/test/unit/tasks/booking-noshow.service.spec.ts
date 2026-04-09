@@ -10,7 +10,7 @@ import { BookingSettingsService } from '../../../src/modules/bookings/booking-se
 import { BookingStatusLogService } from '../../../src/modules/bookings/booking-status-log.service.js';
 import { WaitlistService } from '../../../src/modules/bookings/waitlist.service.js';
 import { MoyasarRefundService } from '../../../src/modules/payments/moyasar-refund.service.js';
-import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 import { NoShowPolicy } from '@prisma/client';
 
 const defaultSettings = {
@@ -60,7 +60,7 @@ const mockMoyasarRefund = {
   refund: jest.fn().mockResolvedValue(undefined),
 };
 
-const mockWhitelabelService = {
+const mockClinicSettingsService = {
   getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh'),
 };
 
@@ -78,7 +78,7 @@ describe('BookingNoShowService', () => {
         { provide: BookingStatusLogService, useValue: mockStatusLog },
         { provide: WaitlistService, useValue: mockWaitlist },
         { provide: MoyasarRefundService, useValue: mockMoyasarRefund },
-        { provide: WhitelabelService, useValue: mockWhitelabelService },
+        { provide: ClinicSettingsService, useValue: mockClinicSettingsService },
       ],
     }).compile();
 
@@ -96,7 +96,7 @@ describe('BookingNoShowService', () => {
     mockWaitlist.checkAndNotify.mockResolvedValue(undefined);
     mockStatusLog.log.mockResolvedValue(undefined);
     mockMoyasarRefund.refund.mockResolvedValue(undefined);
-    mockWhitelabelService.getTimezone.mockResolvedValue('Asia/Riyadh');
+    mockClinicSettingsService.getTimezone.mockResolvedValue('Asia/Riyadh');
     // Default: execute transaction callback with same mock as tx context
     mockPrisma.$transaction.mockImplementation(
       (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma),
@@ -238,7 +238,7 @@ describe('BookingNoShowService', () => {
     });
 
     it('should build date boundaries using dynamic timezone, not hardcoded +03:00', async () => {
-      mockWhitelabelService.getTimezone.mockResolvedValue('Asia/Karachi');
+      mockClinicSettingsService.getTimezone.mockResolvedValue('Asia/Karachi');
       mockSettings.get.mockResolvedValue({
         autoNoShowAfterMinutes: 15,
         noShowPolicy: NoShowPolicy.keep_full,

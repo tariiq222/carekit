@@ -18,7 +18,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { RequireFeature } from '../../common/decorators/require-feature.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ChatbotRagService } from './chatbot-rag.service.js';
 import { ChatbotFileService } from './chatbot-file.service.js';
@@ -29,7 +31,8 @@ import { validateFileContent } from '../../common/helpers/file-validation.helper
 @ApiTags('Chatbot')
 @ApiBearerAuth()
 @Controller('chatbot')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, FeatureFlagGuard)
+@RequireFeature('chatbot')
 export class ChatbotKbController {
   constructor(
     private readonly ragService: ChatbotRagService,

@@ -1370,19 +1370,20 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       }
     });
 
-    it('should require authentication (practitioners:view) -> 401 unauthenticated', async () => {
+    it('GET /services/:serviceId/types is @Public() — returns 200 without auth', async () => {
       if (!practitionerId || !serviceWithTypesId) return;
 
+      // This endpoint is @Public() — accessible without authentication
       const res = await request(httpServer)
         .get(
           `${PRACTITIONERS_URL}/${practitionerId}/services/${serviceWithTypesId}/types`,
         )
-        .expect(401);
+        .expect(200);
 
-      expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
+      expect(res.body.success).toBe(true);
     });
 
-    it('should reject patient role -> 403', async () => {
+    it('GET /services/:serviceId/types is @Public() — returns 200 for patient too', async () => {
       if (!practitionerId || !serviceWithTypesId) return;
 
       const res = await request(httpServer)
@@ -1390,9 +1391,9 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
           `${PRACTITIONERS_URL}/${practitionerId}/services/${serviceWithTypesId}/types`,
         )
         .set(getAuthHeaders(patient.accessToken))
-        .expect(403);
+        .expect(200);
 
-      expectErrorResponse(res.body, 'FORBIDDEN');
+      expect(res.body.success).toBe(true);
     });
 
     it('should return 404 for non-existent practitioner', async () => {

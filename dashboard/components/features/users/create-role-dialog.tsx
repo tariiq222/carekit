@@ -5,13 +5,14 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -57,54 +58,56 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
   })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end" className="overflow-y-auto w-full sm:max-w-[45vw]">
-        <SheetHeader>
-          <SheetTitle>{t("users.roles.create.title")}</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("users.roles.create.title")}</DialogTitle>
+          <DialogDescription>
             {t("users.roles.create.description")}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="role-name">{t("users.roles.create.name")}</Label>
-            <Input
-              id="role-name"
-              placeholder={t("users.roles.create.namePlaceholder")}
-              {...form.register("name")}
-            />
-            {form.formState.errors.name && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.name.message}
-              </p>
-            )}
-          </div>
+        <DialogBody>
+          <form id="create-role-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="role-name">{t("users.roles.create.name")}</Label>
+              <Input
+                id="role-name"
+                placeholder={t("users.roles.create.namePlaceholder")}
+                {...form.register("name")}
+              />
+              {form.formState.errors.name && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.name.message}
+                </p>
+              )}
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="role-description">{t("users.roles.create.descriptionLabel")}</Label>
-            <Textarea
-              id="role-description"
-              placeholder={t("users.roles.create.descriptionPlaceholder")}
-              rows={3}
-              {...form.register("description")}
-            />
-          </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="role-description">{t("users.roles.create.descriptionLabel")}</Label>
+              <Textarea
+                id="role-description"
+                placeholder={t("users.roles.create.descriptionPlaceholder")}
+                rows={3}
+                {...form.register("description")}
+              />
+            </div>
+          </form>
+        </DialogBody>
 
-          <SheetFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              {t("users.roles.create.cancel")}
-            </Button>
-            <Button type="submit" disabled={createMut.isPending}>
-              {createMut.isPending ? t("users.roles.create.submitting") : t("users.roles.create.submit")}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            {t("users.roles.create.cancel")}
+          </Button>
+          <Button type="submit" form="create-role-form" disabled={createMut.isPending}>
+            {createMut.isPending ? t("users.roles.create.submitting") : t("users.roles.create.submit")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

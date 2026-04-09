@@ -6,14 +6,14 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetBody,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -68,16 +68,16 @@ export function AddCreditDialog({
   })
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="end">
-        <SheetHeader>
-          <SheetTitle>{t("giftCards.credit.title")}</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("giftCards.credit.title")}</DialogTitle>
+          <DialogDescription>
             {t("giftCards.credit.description").replace("{code}", giftCard?.code ?? "")}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <SheetBody>
+        <DialogBody>
           <form id="add-credit-form" onSubmit={onSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <Label>{t("giftCards.credit.amount")} *</Label>
@@ -104,9 +104,9 @@ export function AddCreditDialog({
               />
             </div>
           </form>
-        </SheetBody>
+        </DialogBody>
 
-        <SheetFooter>
+        <DialogFooter>
           <Button
             type="button"
             variant="outline"
@@ -117,8 +117,8 @@ export function AddCreditDialog({
           <Button type="submit" form="add-credit-form" disabled={addCreditMut.isPending}>
             {addCreditMut.isPending ? t("giftCards.credit.submitting") : t("giftCards.credit.submit")}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

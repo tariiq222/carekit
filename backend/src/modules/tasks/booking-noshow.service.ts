@@ -7,7 +7,7 @@ import { BookingSettingsService } from '../bookings/booking-settings.service.js'
 import { BookingStatusLogService } from '../bookings/booking-status-log.service.js';
 import { WaitlistService } from '../bookings/waitlist.service.js';
 import { MoyasarRefundService } from '../payments/moyasar-refund.service.js';
-import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
+import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 
 @Injectable()
 export class BookingNoShowService {
@@ -21,13 +21,13 @@ export class BookingNoShowService {
     private readonly statusLogService: BookingStatusLogService,
     private readonly waitlistService: WaitlistService,
     private readonly moyasarRefundService: MoyasarRefundService,
-    private readonly whitelabelService: WhitelabelService,
+    private readonly clinicSettingsService: ClinicSettingsService,
   ) {}
 
   /** Mark today's confirmed bookings as no-show if past the deadline */
   async autoNoShow(): Promise<void> {
     const settings = await this.bookingSettingsService.get();
-    const clinicTz = await this.whitelabelService.getTimezone();
+    const clinicTz = await this.clinicSettingsService.getTimezone();
     const now = new Date();
 
     const riyadhTodayStr = new Intl.DateTimeFormat('en-CA', {

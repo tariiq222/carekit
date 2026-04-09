@@ -12,7 +12,9 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
+import { RequireFeature } from '../../common/decorators/require-feature.decorator.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
 import { BranchesService } from './branches.service.js';
 import { CreateBranchDto } from './dto/create-branch.dto.js';
@@ -24,7 +26,8 @@ import { Public } from '../../common/decorators/public.decorator.js';
 @ApiTags('Branches')
 @ApiBearerAuth()
 @Controller('branches')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, FeatureFlagGuard)
+@RequireFeature('multi_branch')
 export class BranchesController {
   constructor(private readonly branchesService: BranchesService) {}
 

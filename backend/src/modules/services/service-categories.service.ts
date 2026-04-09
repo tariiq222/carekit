@@ -22,6 +22,7 @@ export class ServiceCategoriesService {
         nameEn: dto.nameEn,
         nameAr: dto.nameAr,
         sortOrder: dto.sortOrder ?? 0,
+        departmentId: dto.departmentId ?? null,
       },
     });
     await this.invalidateCache();
@@ -67,6 +68,7 @@ export class ServiceCategoriesService {
         nameAr: dto.nameAr,
         sortOrder: dto.sortOrder,
         isActive: dto.isActive,
+        departmentId: dto.departmentId,
       },
     });
     await this.invalidateCache();

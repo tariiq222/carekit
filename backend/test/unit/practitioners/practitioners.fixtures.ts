@@ -82,6 +82,7 @@ export function createMockPrisma(): any {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      aggregate: jest.fn().mockResolvedValue({ _max: { bufferMinutes: 0 } }),
     },
     service: { findUnique: jest.fn() },
     $transaction: jest.fn((fnOrArray: unknown) => {

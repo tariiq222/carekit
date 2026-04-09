@@ -2,24 +2,21 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchConfigMap, updateConfig } from "@/lib/api/whitelabel"
+import { fetchWhitelabel, updateWhitelabel } from "@/lib/api/whitelabel"
+import type { UpdateWhitelabelPayload } from "@/lib/types/whitelabel"
 
-/* ─── Config Map ─── */
-
-export function useConfigMap() {
+export function useWhitelabel() {
   return useQuery({
-    queryKey: queryKeys.whitelabel.configMap(),
-    queryFn: fetchConfigMap,
-    staleTime: 10 * 60 * 1000, // 10 min
+    queryKey: queryKeys.whitelabel.config(),
+    queryFn: fetchWhitelabel,
+    staleTime: 10 * 60 * 1000,
   })
 }
 
-/* ─── Update Config ─── */
-
-export function useUpdateConfig() {
+export function useUpdateWhitelabel() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: updateConfig,
+    mutationFn: (data: UpdateWhitelabelPayload) => updateWhitelabel(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.whitelabel.all })
     },

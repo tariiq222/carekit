@@ -9,9 +9,14 @@ const mockPrisma = {
     update: jest.fn(),
     groupBy: jest.fn(),
   },
-  whiteLabelConfig: {
-    findMany: jest.fn(),
-  },
+};
+
+const mockClinicIntegrationsService = {
+  getRaw: jest.fn().mockResolvedValue({
+    zatcaCsid: 'test-csid-token',
+    zatcaSecret: 'test-secret',
+    zatcaPhase: 'phase2',
+  }),
 };
 
 const mockZatcaService = {};
@@ -27,6 +32,7 @@ const mockHashService = {};
 function makeService(): ZatcaSandboxService {
   return new ZatcaSandboxService(
     mockPrisma as never,
+    mockClinicIntegrationsService as never,
     mockZatcaService as never,
     mockZatcaApiService as never,
     mockHashService as never,
@@ -45,10 +51,11 @@ const mockInvoice = {
   zatcaStatus: 'pending',
 };
 
-const mockCredentials = [
-  { key: 'zatca_csid', value: 'test-csid-token' },
-  { key: 'zatca_secret', value: 'test-secret' },
-];
+const mockCredentials = {
+  zatcaCsid: 'test-csid-token',
+  zatcaSecret: 'test-secret',
+  zatcaPhase: 'phase2',
+};
 
 const successfulApiResponse = {
   status: 'PASS',
@@ -76,7 +83,7 @@ describe('ZatcaSandboxService', () => {
 
     // Default: invoice exists and has credentials
     mockPrisma.invoice.findUnique.mockResolvedValue(mockInvoice);
-    mockPrisma.whiteLabelConfig.findMany.mockResolvedValue(mockCredentials);
+    mockClinicIntegrationsService.getRaw.mockResolvedValue(mockCredentials);
     mockPrisma.invoice.update.mockResolvedValue({ ...mockInvoice, zatcaStatus: 'reported' });
   });
 
@@ -172,7 +179,11 @@ describe('ZatcaSandboxService', () => {
     });
 
     it('throws BadRequestException when CSID credentials are not configured', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([]);
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaCsid: null,
+        zatcaSecret: null,
+        zatcaPhase: 'phase2',
+      });
 
       await expect(service.reportInvoiceToSandbox(INVOICE_ID)).rejects.toThrow(
         BadRequestException,
@@ -180,9 +191,11 @@ describe('ZatcaSandboxService', () => {
     });
 
     it('throws BadRequestException when only CSID is configured (secret missing)', async () => {
-      mockPrisma.whiteLabelConfig.findMany.mockResolvedValue([
-        { key: 'zatca_csid', value: 'test-csid' },
-      ]);
+      mockClinicIntegrationsService.getRaw.mockResolvedValue({
+        zatcaCsid: 'test-csid',
+        zatcaSecret: null,
+        zatcaPhase: 'phase2',
+      });
 
       await expect(service.reportInvoiceToSandbox(INVOICE_ID)).rejects.toThrow(
         BadRequestException,
