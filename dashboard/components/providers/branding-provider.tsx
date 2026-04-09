@@ -91,8 +91,8 @@ async function fetchBranding(): Promise<BrandingColors | null> {
     const body = await res.json()
     const data = body.data ?? body
 
-    const primary = data.primary_color
-    const accent = data.secondary_color
+    const primary = data.primaryColor ?? data.primary_color
+    const accent = data.secondaryColor ?? data.secondary_color
 
     if (!primary || !isValidHex(primary)) {
       brandingCache = { colors: null, ts: Date.now() }
