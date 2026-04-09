@@ -16,7 +16,7 @@ import {
   Building06Icon,
   DocumentValidationIcon,
   PaintBrush01Icon,
-  UserGroup01Icon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons"
 
 export interface NavItem {
@@ -44,7 +44,7 @@ export const clinicNav: NavItem[] = [
   { titleKey: "nav.services", href: "/services", icon: GridIcon },
   { titleKey: "nav.branches", href: "/branches", icon: Building06Icon },
   { titleKey: "nav.intakeForms", href: "/intake-forms", icon: DocumentValidationIcon },
-  { titleKey: "nav.groupSessions", href: "/group-sessions", icon: UserGroup01Icon, featureFlag: "group_sessions" },
+  { titleKey: "nav.groupSessions", href: "/group-sessions", icon: UserGroupIcon, featureFlag: "group_sessions" },
 ]
 
 export const financeNav: NavItem[] = [
