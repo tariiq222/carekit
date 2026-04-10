@@ -1,5 +1,21 @@
 # CareKit OpenCode Workflow — Quick Reference
 
+## Skill Auto-Dispatch
+
+> All TIER 1 skills are **enforced by pipeline YAMLs** — they load automatically
+> based on file patterns and conditions. No manual skill selection needed.
+> See `AGENTS.md` → "Skill Auto-Dispatch" for the full trigger table.
+
+| Skill | Trigger | Pipeline step |
+|-------|---------|---------------|
+| `nestjs-carekit` | `backend/src/modules/` files | `implement-plan` |
+| `prisma-carekit` | `.prisma` files | `implement-plan` |
+| `mobile-carekit` | `mobile/` files | `implement-plan` |
+| `carekit-ds` | dashboard UI impact | `implement-plan` |
+| `security-carekit` | HIGH/CRITICAL risk | `review-diff` + `qa-check` |
+| `tdd-carekit` | `*.spec.ts` files | `write-tests` |
+| `e2e-carekit` | `*.e2e-spec.ts` files | `write-tests` |
+
 ## The Pipeline
 
 ```
