@@ -9,6 +9,7 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 import { MoyasarPaymentService } from '../../../src/modules/payments/moyasar-payment.service.js';
 import { BankTransferService } from '../../../src/modules/payments/bank-transfer.service.js';
 import { BookingStatusService } from '../../../src/modules/bookings/booking-status.service.js';
+import { InvoiceCreatorService } from '../../../src/modules/invoices/invoice-creator.service.js';
 import {
   createMockPrisma,
   createMockMoyasarService,
@@ -32,6 +33,7 @@ async function createModule(
       { provide: MoyasarPaymentService, useValue: createMockMoyasarService() },
       { provide: BankTransferService, useValue: mockBankTransfer },
       { provide: BookingStatusService, useValue: { confirm: jest.fn() } },
+      { provide: InvoiceCreatorService, useValue: { createInvoice: jest.fn() } },
     ],
   }).compile();
   return module.get<PaymentsService>(PaymentsService);

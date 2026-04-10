@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -18,6 +19,7 @@ import { paymentInclude, applyVat } from './payments.helpers.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
+import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
 
 @Injectable()
 export class PaymentsService {
@@ -28,6 +30,7 @@ export class PaymentsService {
     private readonly moyasarService: MoyasarPaymentService,
     private readonly bankTransferService: BankTransferService,
     private readonly bookingStatusService: BookingStatusService,
+    private readonly invoiceCreatorService: InvoiceCreatorService,
   ) {}
 
   // --- Core ---
@@ -171,11 +174,23 @@ export class PaymentsService {
       include: paymentInclude,
     });
 
-    if (dto.status === 'paid' && payment.bookingId) {
+    if (dto.status === 'paid') {
       try {
-        await this.bookingStatusService.confirm(payment.bookingId);
-      } catch {
-        // Best-effort — booking may already be confirmed
+        await this.invoiceCreatorService.createInvoice({ paymentId: id });
+      } catch (err) {
+        if (!(err instanceof ConflictException)) {
+          this.logger.error(
+            `Invoice creation failed for manually-paid payment ${id}: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      }
+
+      if (payment.bookingId) {
+        try {
+          await this.bookingStatusService.confirm(payment.bookingId);
+        } catch {
+          // Best-effort — booking may already be confirmed
+        }
       }
     }
 
