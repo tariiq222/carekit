@@ -6,6 +6,7 @@ describe("departmentSchema", () => {
     nameAr: "قلبية",
     nameEn: "Cardiology",
     isActive: true,
+    sortOrder: 0,
   }
 
   it("accepts valid minimal payload", () => {
