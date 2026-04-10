@@ -15,6 +15,7 @@ import {
 import { Clock01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useWaitlist, useWaitlistMutations } from "@/hooks/use-waitlist"
+import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import { useLocale } from "@/components/locale-provider"
 import { toast } from "sonner"
 import { format } from "date-fns"
@@ -54,6 +55,7 @@ const timeLabels: Record<string, string> = {
 
 export function WaitlistTab() {
   const { t, locale } = useLocale()
+  const { isEnabled } = useFeatureFlagMap()
   const {
     entries,
     isLoading,
@@ -64,6 +66,8 @@ export function WaitlistTab() {
     refetch,
   } = useWaitlist()
   const { removeMut } = useWaitlistMutations()
+
+  if (!isEnabled("waitlist")) return null
 
   const handleRemove = (id: string) => {
     removeMut.mutate(id, {

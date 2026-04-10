@@ -12,6 +12,7 @@ import type { IconSvgElement } from "@hugeicons/react"
 
 import { WizardCard } from "@/components/features/bookings/wizard-card"
 import { useLocale } from "@/components/locale-provider"
+import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchPractitionerServiceTypes } from "@/lib/api/practitioners-schedule"
 import type { PractitionerServiceType, PractitionerDurationOption } from "@/lib/types/practitioner"
@@ -147,6 +148,7 @@ export function StepTypeDuration({
   onSkipDuration,
 }: StepTypeDurationProps) {
   const { t, locale } = useLocale()
+  const { isEnabled } = useFeatureFlagMap()
 
   const { data: serviceTypes = [], isLoading } = useQuery<PractitionerServiceType[]>({
     queryKey: queryKeys.practitioners.serviceTypes(practitionerId, serviceId),
@@ -155,7 +157,12 @@ export function StepTypeDuration({
     staleTime: 5 * 60 * 1000,
   })
 
-  const activeTypes = serviceTypes.filter((st) => st.isActive)
+  const activeTypes = serviceTypes.filter((st) => {
+    if (!st.isActive) return false
+    if (st.bookingType === "walk_in" && !isEnabled("walk_in")) return false
+    if (st.bookingType === "online" && !isEnabled("zoom")) return false
+    return true
+  })
 
   // Auto-select when only one type
   useEffect(() => {

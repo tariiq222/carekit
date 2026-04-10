@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
 import { useClinicConfig } from "@/hooks/use-clinic-config"
+import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import type { Booking, RefundType } from "@/lib/types/booking"
 
 interface BookingsTabContentProps {
@@ -27,6 +28,7 @@ interface BookingsTabContentProps {
 export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabContentProps) {
   const { t } = useLocale()
   const { weekStartDayNumber } = useClinicConfig()
+  const { isEnabled } = useFeatureFlagMap()
   const queryClient = useQueryClient()
   const { bookings, stats, meta, loading, statsLoading, error, filters, setFilters, resetFilters, hasFilters, setPage } = useBookings()
   const { confirmMut, noShowMut, adminCancelMut } = useBookingMutations()
@@ -127,7 +129,9 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
               { value: "all", label: t("bookings.filters.allTypes") },
               { value: "in_person", label: t("bookings.filters.inPerson") },
               { value: "online", label: t("bookings.filters.online") },
-              { value: "walk_in", label: t("bookings.filters.walkIn") },
+              ...(isEnabled("walk_in")
+                ? [{ value: "walk_in", label: t("bookings.filters.walkIn") }]
+                : []),
             ],
             onValueChange: (v) => setFilters({ type: v as typeof filters.type }),
           },
