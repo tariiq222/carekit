@@ -236,7 +236,7 @@ export class PatientsService {
 
   async getPatientBookings(id: string, pagination: { page?: number; perPage?: number } = {}) {
     const patient = await this.prisma.user.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, deletedAt: null, userRoles: { some: { role: { slug: 'patient' } } } },
       select: { id: true },
     });
     if (!patient) throw new NotFoundException('Patient not found');
@@ -267,7 +267,7 @@ export class PatientsService {
 
   async getPatientStats(id: string) {
     const patient = await this.prisma.user.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, deletedAt: null, userRoles: { some: { role: { slug: 'patient' } } } },
       select: { id: true },
     });
 
