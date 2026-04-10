@@ -9,13 +9,19 @@ import {
 } from 'class-validator';
 
 export class UpdatePractitionerDto {
-  @ApiPropertyOptional({ description: 'Title/prefix (e.g. Dr.)', maxLength: 100 })
+  @ApiPropertyOptional({
+    description: 'Title/prefix (e.g. Dr.)',
+    maxLength: 100,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(100)
   title?: string;
 
-  @ApiPropertyOptional({ description: 'Practitioner name in Arabic', maxLength: 255 })
+  @ApiPropertyOptional({
+    description: 'Practitioner name in Arabic',
+    maxLength: 255,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(255)
@@ -51,13 +57,19 @@ export class UpdatePractitionerDto {
   @Min(0)
   experience?: number;
 
-  @ApiPropertyOptional({ description: 'Education details in English', maxLength: 500 })
+  @ApiPropertyOptional({
+    description: 'Education details in English',
+    maxLength: 500,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   education?: string;
 
-  @ApiPropertyOptional({ description: 'Education details in Arabic', maxLength: 500 })
+  @ApiPropertyOptional({
+    description: 'Education details in Arabic',
+    maxLength: 500,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)
@@ -68,7 +80,9 @@ export class UpdatePractitionerDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({ description: 'Whether the practitioner is accepting new bookings' })
+  @ApiPropertyOptional({
+    description: 'Whether the practitioner is accepting new bookings',
+  })
   @IsOptional()
   @IsBoolean()
   isAcceptingBookings?: boolean;

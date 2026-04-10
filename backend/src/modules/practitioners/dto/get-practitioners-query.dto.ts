@@ -1,4 +1,13 @@
-import { IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
@@ -17,7 +26,11 @@ export class GetPractitionersQueryDto {
   @Min(1)
   page?: number;
 
-  @ApiPropertyOptional({ description: 'Items per page', minimum: 1, maximum: 100 })
+  @ApiPropertyOptional({
+    description: 'Items per page',
+    minimum: 1,
+    maximum: 100,
+  })
   @IsOptional()
   @Transform(({ value }: { value: string }) => parseInt(value, 10))
   @IsInt()
@@ -69,7 +82,10 @@ export class GetPractitionersQueryDto {
   @IsString()
   branchId?: string;
 
-  @ApiPropertyOptional({ format: 'uuid', description: 'Filter practitioners who offer this service' })
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'Filter practitioners who offer this service',
+  })
   @IsOptional()
   @IsString()
   serviceId?: string;

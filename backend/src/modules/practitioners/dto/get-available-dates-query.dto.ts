@@ -1,4 +1,13 @@
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
@@ -13,7 +22,11 @@ export class GetAvailableDatesQueryDto {
   @IsNotEmpty()
   month!: string;
 
-  @ApiPropertyOptional({ description: 'Duration in minutes (overrides service-resolved duration)', minimum: 5, maximum: 240 })
+  @ApiPropertyOptional({
+    description: 'Duration in minutes (overrides service-resolved duration)',
+    minimum: 5,
+    maximum: 240,
+  })
   @IsOptional()
   @Transform(({ value }: { value: string }) => parseInt(value, 10))
   @IsInt()
@@ -21,12 +34,20 @@ export class GetAvailableDatesQueryDto {
   @Max(240)
   duration?: number;
 
-  @ApiPropertyOptional({ format: 'uuid', description: 'Service ID — used with bookingType to resolve duration automatically' })
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description:
+      'Service ID — used with bookingType to resolve duration automatically',
+  })
   @IsOptional()
   @IsUUID()
   serviceId?: string;
 
-  @ApiPropertyOptional({ enum: BookingTypeDateParam, description: 'Booking type — used with serviceId to resolve duration automatically' })
+  @ApiPropertyOptional({
+    enum: BookingTypeDateParam,
+    description:
+      'Booking type — used with serviceId to resolve duration automatically',
+  })
   @IsOptional()
   @IsEnum(BookingTypeDateParam)
   bookingType?: string;

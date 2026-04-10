@@ -22,7 +22,8 @@ export class CreateUserDto {
   @MinLength(8)
   @MaxLength(128)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,128}$/, {
-    message: 'password must contain at least one uppercase letter, one lowercase letter, and one digit',
+    message:
+      'password must contain at least one uppercase letter, one lowercase letter, and one digit',
   })
   password!: string;
 
@@ -41,7 +42,9 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phone must be a valid international phone number' })
+  @Matches(/^\+[1-9]\d{6,14}$/, {
+    message: 'phone must be a valid international phone number',
+  })
   phone?: string;
 
   @IsOptional()
@@ -75,7 +78,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phone must be a valid international phone number' })
+  @Matches(/^\+[1-9]\d{6,14}$/, {
+    message: 'phone must be a valid international phone number',
+  })
   phone?: string;
 
   @IsOptional()
