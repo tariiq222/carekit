@@ -44,6 +44,7 @@ export class DurationOptionsService {
       await tx.serviceDurationOption.createMany({
         data: dto.options.map((o, i) => ({
           serviceId,
+          serviceBookingTypeId: o.serviceBookingTypeId,
           label: o.label,
           labelAr: o.labelAr,
           durationMinutes: o.durationMinutes,

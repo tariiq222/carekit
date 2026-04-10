@@ -86,8 +86,8 @@ describe('DurationOptionsService', () => {
 
       const dto = {
         options: [
-          { label: '30 min', labelAr: '٣٠ دقيقة', durationMinutes: 30, price: 10000, isDefault: true },
-          { label: '60 min', labelAr: '٦٠ دقيقة', durationMinutes: 60, price: 18000, isDefault: false },
+          { label: '30 min', labelAr: '٣٠ دقيقة', durationMinutes: 30, price: 10000, isDefault: true, serviceBookingTypeId: 'sbt-uuid-1' },
+          { label: '60 min', labelAr: '٦٠ دقيقة', durationMinutes: 60, price: 18000, isDefault: false, serviceBookingTypeId: 'sbt-uuid-1' },
         ],
       };
 
@@ -126,12 +126,12 @@ describe('DurationOptionsService', () => {
       mockTx.serviceDurationOption.findMany.mockResolvedValue([mockOptions[0]]);
 
       await service.setDurationOptions(serviceId, {
-        options: [{ label: '30 min', labelAr: '٣٠ دقيقة', durationMinutes: 30, price: 10000 }],
+        options: [{ label: '30 min', labelAr: '٣٠ دقيقة', durationMinutes: 30, price: 10000, serviceBookingTypeId: 'sbt-uuid-1' }],
       });
 
       const createCall = mockTx.serviceDurationOption.createMany.mock.calls[0][0];
       expect(createCall.data[0].sortOrder).toBe(0);
-      expect(createCall.data[0].isDefault).toBe(false);
+      expect(createCall.data[0].isDefault).toBe(true); // auto-assigned as first
       expect(mockServicesService.invalidateServicesCache).toHaveBeenCalled();
     });
   });
