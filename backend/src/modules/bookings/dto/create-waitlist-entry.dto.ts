@@ -29,7 +29,10 @@ export class CreateWaitlistEntryDto {
     example: '2026-04-15',
   })
   @IsOptional()
-  @IsDateString({}, { message: 'preferredDate must be a valid ISO date string' })
+  @IsDateString(
+    {},
+    { message: 'preferredDate must be a valid ISO date string' },
+  )
   preferredDate?: string;
 
   @ApiPropertyOptional({

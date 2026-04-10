@@ -102,10 +102,23 @@ export class UpdateBookingSettingsDto {
   @Max(52)
   maxRecurrences?: number;
 
-  @ApiPropertyOptional({ enum: ['daily','every_2_days','every_3_days','weekly','biweekly','monthly'], isArray: true })
+  @ApiPropertyOptional({
+    enum: [
+      'daily',
+      'every_2_days',
+      'every_3_days',
+      'weekly',
+      'biweekly',
+      'monthly',
+    ],
+    isArray: true,
+  })
   @IsOptional()
   @IsArray()
-  @IsEnum(['daily','every_2_days','every_3_days','weekly','biweekly','monthly'], { each: true })
+  @IsEnum(
+    ['daily', 'every_2_days', 'every_3_days', 'weekly', 'biweekly', 'monthly'],
+    { each: true },
+  )
   allowedRecurringPatterns?: string[];
 
   // ── Waitlist ─────────────────────────────────────────────────────
@@ -171,13 +184,17 @@ export class UpdateBookingSettingsDto {
   cancellationReviewTimeoutHours?: number;
 
   // ── Cancellation policy text ─────────────────────────────────
-  @ApiPropertyOptional({ description: 'Cancellation policy text displayed to patients (English)' })
+  @ApiPropertyOptional({
+    description: 'Cancellation policy text displayed to patients (English)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(2000)
   cancellationPolicyEn?: string;
 
-  @ApiPropertyOptional({ description: 'Cancellation policy text displayed to patients (Arabic)' })
+  @ApiPropertyOptional({
+    description: 'Cancellation policy text displayed to patients (Arabic)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(2000)
@@ -213,7 +230,11 @@ export class UpdateBookingSettingsDto {
   suggestAlternativesCount?: number;
 
   // ── Lead time ──────────────────────────────────────────────────
-  @ApiPropertyOptional({ description: 'Minimum minutes before appointment for booking', minimum: 0, maximum: 1440 })
+  @ApiPropertyOptional({
+    description: 'Minimum minutes before appointment for booking',
+    minimum: 0,
+    maximum: 1440,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -221,13 +242,18 @@ export class UpdateBookingSettingsDto {
   minBookingLeadMinutes?: number;
 
   // ── Admin override ────────────────────────────────────────────
-  @ApiPropertyOptional({ description: 'Allow admin to book outside clinic working hours' })
+  @ApiPropertyOptional({
+    description: 'Allow admin to book outside clinic working hours',
+  })
   @IsOptional()
   @IsBoolean()
   adminCanBookOutsideHours?: boolean;
 
   // ── Advance booking window ────────────────────────────────────
-  @ApiPropertyOptional({ description: 'Maximum days in advance a booking can be made (0 = no limit)', minimum: 0 })
+  @ApiPropertyOptional({
+    description: 'Maximum days in advance a booking can be made (0 = no limit)',
+    minimum: 0,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -239,12 +265,16 @@ export class UpdateBookingSettingsDto {
   @IsBoolean()
   widgetShowPrice?: boolean;
 
-  @ApiPropertyOptional({ description: 'Allow patient to book with any available practitioner' })
+  @ApiPropertyOptional({
+    description: 'Allow patient to book with any available practitioner',
+  })
   @IsOptional()
   @IsBoolean()
   widgetAnyPractitioner?: boolean;
 
-  @ApiPropertyOptional({ description: 'URL to redirect patient after booking is confirmed' })
+  @ApiPropertyOptional({
+    description: 'URL to redirect patient after booking is confirmed',
+  })
   @IsOptional()
   @ValidateIf((o) => o.widgetRedirectUrl !== null)
   @IsString()
@@ -254,14 +284,18 @@ export class UpdateBookingSettingsDto {
   // ── Booking flow order ────────────────────────────────────────────
   @ApiPropertyOptional({
     enum: BookingFlowOrder,
-    description: 'Controls whether booking starts with service or practitioner selection',
+    description:
+      'Controls whether booking starts with service or practitioner selection',
   })
   @IsOptional()
   @IsEnum(BookingFlowOrder)
   bookingFlowOrder?: BookingFlowOrder;
 
   // ── Branch-specific override ──────────────────────────────────────
-  @ApiPropertyOptional({ description: 'Apply settings to a specific branch only (null = global)', format: 'uuid' })
+  @ApiPropertyOptional({
+    description: 'Apply settings to a specific branch only (null = global)',
+    format: 'uuid',
+  })
   @IsOptional()
   @IsUUID()
   branchId?: string | null;
