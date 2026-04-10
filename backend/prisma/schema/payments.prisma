@@ -5,7 +5,7 @@
 model Payment {
   id               String        @id @default(uuid())
   bookingId        String?       @unique @map("booking_id")
-  groupEnrollmentId String?      @map("group_enrollment_id")
+  groupEnrollmentId String?      @unique @map("group_enrollment_id")
   amount           Int // halalat
   vatAmount        Int           @default(0) @map("vat_amount") // halalat
   totalAmount      Int           @default(0) @map("total_amount") // halalat
