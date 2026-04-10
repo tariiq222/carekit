@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ServicesService } from './services.service.js';
 import type { BookingType } from '@prisma/client';
@@ -24,6 +24,23 @@ export class ServiceBookingTypeService {
   async setBookingTypes(serviceId: string, dto: SetServiceBookingTypesDto) {
     await this.services.ensureExists(serviceId);
 
+    // Guard: reject if active bookings exist for this service (fix #18)
+    // setBookingTypes deletes all existing types — if bookings reference them, they become orphaned.
+    const activeBookingCount = await this.prisma.booking.count({
+      where: {
+        serviceId,
+        status: { in: ['pending', 'confirmed', 'checked_in', 'in_progress'] },
+        deletedAt: null,
+      },
+    });
+    if (activeBookingCount > 0) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: `Cannot modify booking types: ${activeBookingCount} active booking(s) exist for this service. Cancel or complete them first.`,
+        error: 'ACTIVE_BOOKINGS_EXIST',
+      });
+    }
+
     // Validate isDefault uniqueness per booking type (fix #8)
     for (const typeConfig of dto.types) {
       if (typeConfig.durationOptions?.length) {
@@ -42,8 +59,9 @@ export class ServiceBookingTypeService {
       // Delete old booking types (cascades to duration options via onDelete: Cascade)
       await tx.serviceBookingType.deleteMany({ where: { serviceId } });
 
-      // Create new booking types with their duration options (sequential within transaction)
-      for (const typeConfig of dto.types) {
+      // Create new booking types concurrently (fix #20 — was sequential, now parallel)
+      // Promise.all is safe here because each type creates independent rows with no cross-deps.
+      await Promise.all(dto.types.map(async (typeConfig) => {
         const options = typeConfig.durationOptions ?? [];
         // If options exist but none is marked default, auto-assign the first
         const hasDefault = options.some((o) => o.isDefault);
@@ -76,7 +94,7 @@ export class ServiceBookingTypeService {
               : undefined,
           },
         });
-      }
+      }));
 
       // Return the new state
       return tx.serviceBookingType.findMany({
