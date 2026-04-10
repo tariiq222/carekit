@@ -25,20 +25,22 @@ export class BookingAutocompleteService {
     const clinicTz = await this.clinicSettingsService.getTimezone();
     const now = new Date();
 
-    const riyadhTomorrow = new Date(
-      new Intl.DateTimeFormat('en-CA', { timeZone: clinicTz }).format(
-        now,
-      ) + 'T00:00:00+03:00',
-    );
-    riyadhTomorrow.setDate(riyadhTomorrow.getDate() + 1);
+    const utcStr = now.toLocaleString('en-US', { timeZone: 'UTC' });
+    const localStr = now.toLocaleString('en-US', { timeZone: clinicTz });
+    const clinicOffsetMs = new Date(localStr).getTime() - new Date(utcStr).getTime();
 
     const candidates = await this.prisma.booking.findMany({
       where: {
         status: { in: ['confirmed', 'in_progress', 'checked_in'] },
-        date: { lt: riyadhTomorrow },
         deletedAt: null,
       },
-      select: { id: true, patientId: true, date: true, endTime: true, status: true },
+      select: {
+        id: true,
+        patientId: true,
+        date: true,
+        endTime: true,
+        status: true,
+      },
     });
 
     const autoCompleteMs = settings.autoCompleteAfterHours * 60 * 60 * 1000;
@@ -46,41 +48,49 @@ export class BookingAutocompleteService {
       const dateStr = new Intl.DateTimeFormat('en-CA', {
         timeZone: clinicTz,
       }).format(b.date);
-      const bookingEnd = new Date(`${dateStr}T${b.endTime}:00+03:00`);
-      return now.getTime() > bookingEnd.getTime() + autoCompleteMs;
+      const bookingEndUtcMs =
+        new Date(`${dateStr}T${b.endTime}:00Z`).getTime() - clinicOffsetMs;
+      return now.getTime() > bookingEndUtcMs + autoCompleteMs;
     });
 
     for (const booking of bookings) {
       try {
         const fromStatus = booking.status;
-        const transitioned = await this.prisma.$transaction(async (tx) => {
-          // Re-check status inside transaction to prevent race with manual complete
-          const current = await tx.booking.findFirst({
-            where: {
-              id: booking.id,
-              status: { in: ['confirmed', 'in_progress', 'checked_in'] },
-              deletedAt: null,
-            },
-            select: { id: true },
-          });
-          if (!current) return false; // Already completed or cancelled
+        const transitioned = await this.prisma.$transaction(
+          async (tx) => {
+            // Re-check status inside transaction to prevent race with manual complete
+            const current = await tx.booking.findFirst({
+              where: {
+                id: booking.id,
+                status: { in: ['confirmed', 'in_progress', 'checked_in'] },
+                deletedAt: null,
+              },
+              select: { id: true },
+            });
+            if (!current) return false; // Already completed or cancelled
 
-          await tx.booking.update({
-            where: { id: booking.id },
-            data: { status: 'completed', completedAt: new Date() },
-          });
-          return true;
-        }, { isolationLevel: 'Serializable', timeout: 10000 });
+            await tx.booking.update({
+              where: { id: booking.id },
+              data: { status: 'completed', completedAt: new Date() },
+            });
+            return true;
+          },
+          { isolationLevel: 'Serializable', timeout: 10000 },
+        );
 
         if (!transitioned) continue;
 
-        this.statusLogService.log({
-          bookingId: booking.id,
-          fromStatus,
-          toStatus: 'completed',
-          changedBy: 'system',
-          reason: `Auto-completed after ${settings.autoCompleteAfterHours}h post-end-time`,
-        }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
+        this.statusLogService
+          .log({
+            bookingId: booking.id,
+            fromStatus,
+            toStatus: 'completed',
+            changedBy: 'system',
+            reason: `Auto-completed after ${settings.autoCompleteAfterHours}h post-end-time`,
+          })
+          .catch((err) =>
+            this.logger.warn('Status log failed', { error: err?.message }),
+          );
 
         if (booking.patientId) {
           await this.notificationsService.createNotification({
@@ -88,13 +98,16 @@ export class BookingAutocompleteService {
             titleAr: 'كيف كانت تجربتك؟',
             titleEn: 'How was your experience?',
             bodyAr: 'يسعدنا معرفة رأيك في الموعد. قيّم تجربتك الآن.',
-            bodyEn: 'We would love your feedback. Please rate your appointment.',
+            bodyEn:
+              'We would love your feedback. Please rate your appointment.',
             type: 'booking_completed',
             data: { bookingId: booking.id },
           });
         }
       } catch (err) {
-        this.logger.warn(`Failed to auto-complete booking ${booking.id}: ${(err as Error).message}`);
+        this.logger.warn(
+          `Failed to auto-complete booking ${booking.id}: ${(err as Error).message}`,
+        );
       }
     }
 
@@ -106,7 +119,9 @@ export class BookingAutocompleteService {
           module: 'bookings',
           description: `Auto-completed ${bookings.length} bookings`,
         })
-        .catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
+        .catch((err) =>
+          this.logger.warn('Activity log failed', { error: err?.message }),
+        );
     }
   }
 }
