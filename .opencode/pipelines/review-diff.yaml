@@ -13,7 +13,7 @@ steps:
       - memory:active_work.current_task_analysis
       - memory:active_work.implementation_complete
       - memory:active_work.tests_complete
-    scope: structured_summaries_only
+    scope: structured_summaries_only + risk_level + blocking_questions
 
   - id: get-diff
     type: git
@@ -22,17 +22,33 @@ steps:
     command: "git diff HEAD~1..HEAD"
     scope: diff_only
 
+  # ─── TIER 1 SKILL LOADING (CareKit Auto-Dispatch per AGENTS.md) ─────────
+
+  - id: security-carekit-review-context
+    type: skill
+    required: false
+    depends_on: get-diff
+    condition: "risk_level in ['HIGH', 'CRITICAL'] or any(blocking_questions, q: q contains 'auth' or q contains 'payment' or q contains 'ZATCA' or q contains 'jwt' or q contains 'CASL')"
+    skill: security-carekit
+    scope: security_patterns_only
+    note: "security-carekit is mandatory for HIGH/CRITICAL risk per AGENTS.md rule #2 — loaded before review"
+
+  # ─── QUICK REVIEWER ──────────────────────────────────────────────────────
+
   - id: quick-reviewer
     agent: quick-reviewer
     type: analysis
     required: true
-    depends_on: get-diff
+    depends_on:
+      - security-carekit-review-context
+      - get-diff
     prompt_file: .opencode/agents/quick-reviewer.md
     input:
       - architect_analysis: "from:memory.current_task_analysis"
       - executor_delivery: "from:memory.implementation_complete"
       - test_delivery: "from:memory.tests_complete"
       - diff: "from:get-diff"
+      - skills_loaded: "from:active_skill_contexts"
     output:
       format: structured
       fields:
@@ -58,18 +74,31 @@ steps:
     type: skill
     required: false
     depends_on: escalation-gate
-    condition: "files_changed contains 'dashboard/components/' OR files_changed contains 'dashboard/app/'"
+    condition: "any(files_changed, f: f contains 'dashboard/components/') or any(files_changed, f: f contains 'dashboard/app/')"
     skill: ui-ux-pro-max
     commands:
       - "python3 .claude/skills/ui-ux-pro-max/scripts/search.py 'accessibility' --domain ux"
       - "python3 .claude/skills/ui-ux-pro-max/scripts/search.py 'interaction' --domain ux"
     scope: ux_rules_only
 
+  - id: security-carekit-deep-context
+    type: skill
+    required: false
+    depends_on: escalation-gate
+    condition: "risk_level in ['HIGH', 'CRITICAL']"
+    skill: security-carekit
+    scope: deep_security_review_only
+    note: "security-carekit loaded for deep reviewer on escalated high/critical risk tasks"
+
+  # ─── DEEP REVIEWER ───────────────────────────────────────────────────────
+
   - id: deep-reviewer
     agent: deep-reviewer
     type: analysis
     required: false    # only runs when escalation-gate triggers
-    depends_on: escalation-gate
+    depends_on:
+      - security-carekit-deep-context
+      - escalation-gate
     prompt_file: .opencode/agents/deep-reviewer.md
     input:
       - architect_analysis: "from:memory.current_task_analysis"
@@ -77,6 +106,7 @@ steps:
       - test_delivery: "from:memory.tests_complete"
       - diff: "from:get-diff"
       - escalation_reasons: "from:quick-reviewer.escalation_reasons"
+      - skills_loaded: "from:active_skill_contexts"
     output:
       format: structured
       fields:

@@ -21,16 +21,50 @@ steps:
     files: "from:memory.implementation_complete.files_changed"
     mode: diff_only    # read diffs, not full files
 
+  # ─── TIER 1 SKILL LOADING (CareKit Auto-Dispatch per AGENTS.md) ─────────
+
+  - id: tdd-carekit-context
+    type: skill
+    required: false
+    depends_on: read-changed-files
+    condition: "any(files_changed, f: f contains '.spec.ts') or any(files_changed, f: f contains '.spec.tsx')"
+    skill: tdd-carekit
+    scope: test_patterns_only
+    note: "tdd-carekit loaded when test files are being written"
+
+  - id: e2e-carekit-context
+    type: skill
+    required: false
+    depends_on: read-changed-files
+    condition: "any(files_changed, f: f contains '.e2e-spec.ts') or any(files_changed, f: f contains 'dashboard/test/e2e/') or any(files_changed, f: f contains 'backend/test/e2e/')"
+    skill: e2e-carekit
+    also_load:
+      - tdd-carekit    # paired per AGENTS.md rule #3
+    scope: e2e_patterns_only
+    note: "e2e-carekit + tdd-carekit loaded together for E2E test files"
+
+  - id: backend-test-context
+    type: skill
+    required: false
+    depends_on: read-changed-files
+    condition: "any(files_changed, f: f contains 'backend/src/')"
+    skill: tdd-carekit
+    scope: backend_test_patterns_only
+
   - id: test-engineer
     agent: test-engineer
     type: implementation
     required: true
-    depends_on: read-changed-files
+    depends_on:
+      - tdd-carekit-context
+      - e2e-carekit-context
+      - backend-test-context
     prompt_file: .opencode/agents/test-engineer.md
     input:
       - required_tests: "from:plan.required_tests"
       - files_changed: "from:executor.files_changed"
       - diff: "from:read-changed-files"
+      - skills_loaded: "from:active_skill_contexts"
     rules:
       - bug_fix_requires_regression: true
       - feature_requires_behavior_coverage: true

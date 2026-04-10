@@ -12,7 +12,7 @@ steps:
     required: true
     sources:
       - memory:active_work.current_task_analysis
-    scope: implementation_plan + files_to_read_next + required_tests
+    scope: implementation_plan + files_to_read_next + required_tests + impact_analysis
 
   - id: read-target-files
     type: file-read
@@ -21,28 +21,89 @@ steps:
     files: "from:plan.files_to_read_next"
     scope: exact_files_only    # no extra file reading beyond the list
 
-  - id: ui-design-context
+  # ─── TIER 1 SKILL LOADING (CareKit Auto-Dispatch per AGENTS.md) ─────────
+
+  - id: nestjs-carekit-context
     type: skill
-    required: false    # only loads when task touches dashboard UI
+    required: false
     depends_on: read-target-files
+    condition: "any(files_to_read_next, f: f contains 'backend/src/modules/')"
+    skill: nestjs-carekit
+    also_load:
+      - api-design-carekit    # paired per AGENTS.md rule #3
+    scope: backend_patterns_only
+    note: "nestjs-carekit + api-design-carekit loaded together for NestJS backend modules"
+
+  - id: prisma-carekit-context
+    type: skill
+    required: false
+    depends_on: read-target-files
+    condition: "any(files_to_read_next, f: f contains '.prisma')"
+    skill: prisma-carekit
+    scope: schema_patterns_only
+    note: "prisma-carekit for schema/migration tasks"
+
+  - id: mobile-carekit-context
+    type: skill
+    required: false
+    depends_on: read-target-files
+    condition: "any(files_to_read_next, f: f contains 'mobile/')"
+    skill: mobile-carekit
+    scope: mobile_patterns_only
+    note: "mobile-carekit for Expo/React Native tasks"
+
+  - id: docker-carekit-context
+    type: skill
+    required: false
+    depends_on: read-target-files
+    condition: "any(files_to_read_next, f: f contains 'docker/') or any(files_to_read_next, f: f contains 'docker-compose')"
+    skill: docker-carekit
+    scope: docker_patterns_only
+
+  - id: carekit-ds-context
+    type: skill
+    required: false
+    depends_on: read-target-files
+    condition: "impact_analysis.dashboard != null"
+    skill: carekit-ds
+    also_load:
+      - vercel-react-best-practices    # paired per AGENTS.md rule #3
+    scope: design_tokens_and_components
+    note: "carekit-ds + vercel-react-best-practices loaded together for dashboard UI"
+
+  - id: ui-ux-design-context
+    type: skill
+    required: false
+    depends_on: carekit-ds-context
     condition: "impact_analysis.dashboard != null AND task_type in ['feature', 'refactor']"
     skill: ui-ux-pro-max
-    stack: shadcn    # CareKit dashboard uses shadcn/ui
+    stack: shadcn
+    also_load:
+      - carekit-ds    # paired per AGENTS.md rule #3
     commands:
       - "python3 .claude/skills/ui-ux-pro-max/scripts/search.py '{component_name}' --design-system -p 'CareKit'"
       - "python3 .claude/skills/ui-ux-pro-max/scripts/search.py '{component_name}' --stack shadcn"
-    scope: design_guidance_only    # do not pass to executor — use as reference for visual decisions
-    note: "carekit-ds rules always take precedence. Use ui-ux-pro-max for color/typography/accessibility lookups only."
+    scope: design_guidance_only
+    note: "ui-ux-pro-max supplements carekit-ds — carekit-ds rules always take precedence"
+
+  # ─── EXECUTION ───────────────────────────────────────────────────────────
 
   - id: execute
     agent: executor
     type: execution
     required: true
-    depends_on: read-target-files
+    depends_on:
+      - nestjs-carekit-context
+      - prisma-carekit-context
+      - mobile-carekit-context
+      - docker-carekit-context
+      - carekit-ds-context
+      - ui-ux-design-context
     prompt_file: .opencode/agents/executor.md
     input:
       - plan: "from:plan.implementation_plan"
       - files: "from:read-target-files"
+      - skills_loaded: "from:active_skill_contexts"
     rules:
       - no_unplanned_changes: true
       - max_files_per_batch: 5

@@ -12,17 +12,35 @@ steps:
     sources:
       - memory:active_work.current_task_analysis
       - memory:active_work.review_complete
-    scope: risk_level + risk_flags + reviewer_score_and_decision
+    scope: risk_level + risk_flags + reviewer_score_and_decision + blocking_questions
+
+  # ─── TIER 1 SKILL LOADING (CareKit Auto-Dispatch per AGENTS.md) ─────────
+
+  - id: security-carekit-qa-context
+    type: skill
+    required: false
+    depends_on: load-context
+    condition: |
+      risk_level in ['HIGH', 'CRITICAL'] or
+      any(blocking_questions, q: q contains 'payment' or q contains 'Moyasar' or q contains 'ZATCA' or q contains 'invoice' or q contains 'booking' or q contains 'appointment' or q contains 'auth' or q contains 'JWT' or q contains 'CASL' or q contains 'balance' or q contains 'refund')
+    skill: security-carekit
+    scope: payment_and_security_risk_only
+    note: "security-carekit for QA on payment/booking/auth/zatca — verifies webhook idempotency, invoice uniqueness, auth guard coverage"
+
+  # ─── QA VALIDATOR ───────────────────────────────────────────────────────
 
   - id: qa-validator
     agent: qa-validator
     type: analysis
     required: true
-    depends_on: load-context
+    depends_on:
+      - security-carekit-qa-context
+      - load-context
     prompt_file: .opencode/agents/qa-validator.md
     input:
       - architect_analysis: "from:memory.current_task_analysis"
       - reviewer_report: "from:memory.review_complete"
+      - skills_loaded: "from:active_skill_contexts"
     output:
       format: structured
       fields:
