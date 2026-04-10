@@ -4,6 +4,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RatingsController } from '../../../src/modules/ratings/ratings.controller.js';
 import { RatingsService } from '../../../src/modules/ratings/ratings.service.js';
+import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../../src/common/guards/feature-flag.guard.js';
 
 const mockRatingsService = { create: jest.fn(), findByPractitioner: jest.fn(), findByBooking: jest.fn() };
 const mockUser = { id: 'user-1' };
@@ -16,7 +19,14 @@ describe('RatingsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RatingsController],
       providers: [{ provide: RatingsService, useValue: mockRatingsService }],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(FeatureFlagGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
     controller = module.get(RatingsController);
   });
 

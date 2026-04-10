@@ -3,6 +3,7 @@ import { IntakeFormsController } from '../../../src/modules/intake-forms/intake-
 import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-forms.service.js';
 import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../../src/common/guards/feature-flag.guard.js';
 
 const mockService = {
   listForms: jest.fn(),
@@ -27,6 +28,8 @@ describe('IntakeFormsController', () => {
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(FeatureFlagGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

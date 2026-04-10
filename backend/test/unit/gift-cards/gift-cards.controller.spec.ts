@@ -3,6 +3,7 @@ import { GiftCardsController } from '../../../src/modules/gift-cards/gift-cards.
 import { GiftCardsService } from '../../../src/modules/gift-cards/gift-cards.service.js';
 import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../../src/common/guards/feature-flag.guard.js';
 
 const mockService = {
   findAll: jest.fn(),
@@ -26,6 +27,8 @@ describe('GiftCardsController', () => {
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(FeatureFlagGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

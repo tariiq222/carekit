@@ -6,6 +6,7 @@ import { BranchesController } from '../../../src/modules/branches/branches.contr
 import { BranchesService } from '../../../src/modules/branches/branches.service.js';
 import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../../src/common/guards/feature-flag.guard.js';
 import { uuidPipe } from '../../../src/common/pipes/uuid.pipe.js';
 
 const mockService = {
@@ -34,6 +35,7 @@ describe('BranchesController', () => {
     })
       .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
       .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
+      .overrideGuard(FeatureFlagGuard).useValue({ canActivate: () => true })
       .overridePipe(uuidPipe).useValue({ transform: (v: string) => v })
       .compile();
 

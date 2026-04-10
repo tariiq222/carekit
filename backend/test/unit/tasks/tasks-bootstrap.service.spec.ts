@@ -42,11 +42,11 @@ describe('TasksBootstrapService', () => {
   // ────────────────────────────────────────────
 
   describe('onModuleInit', () => {
-    it('should register 14 repeatable jobs on init', async () => {
+    it('should register 17 repeatable jobs on init', async () => {
       await service.onModuleInit();
 
-      // 14 jobs should be added
-      expect(mockQueue.add).toHaveBeenCalledTimes(14);
+      // 17 jobs should be added (14 core + 3 group-session jobs)
+      expect(mockQueue.add).toHaveBeenCalledTimes(17);
     });
 
     it('should remove stale jobs (not in desired set) and keep known jobs', async () => {
@@ -270,6 +270,7 @@ describe('TasksBootstrapService', () => {
         'expire-pending-bookings', 'auto-complete-bookings', 'auto-no-show',
         'expire-pending-cancellations', 'reminder-2h', 'reminder-15min',
         'cleanup-webhooks', 'archive-activity-logs', 'repair-rating-cache', 'db-snapshot',
+        'group-enrollment-expiry', 'group-session-cancellation', 'group-session-reminder',
       ];
       mockQueue.getRepeatableJobs.mockResolvedValue(
         allJobNames.map(name => ({ key: `${name}:::* * * * *`, name, pattern: '* * * * *' })),
@@ -323,6 +324,9 @@ describe('TasksBootstrapService', () => {
         'archive-activity-logs',
         'repair-rating-cache',
         'db-snapshot',
+        'group-enrollment-expiry',
+        'group-session-cancellation',
+        'group-session-reminder',
       ];
 
       expect(registeredNames).toEqual(expectedNames);

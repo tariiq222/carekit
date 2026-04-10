@@ -9,6 +9,7 @@ import { ChatbotRagService } from '../../../src/modules/chatbot/chatbot-rag.serv
 import { ChatbotFileService } from '../../../src/modules/chatbot/chatbot-file.service.js';
 import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../../src/common/guards/feature-flag.guard.js';
 
 jest.mock('../../../src/common/helpers/file-validation.helper.js', () => ({
   validateFileContent: jest.fn(),
@@ -53,6 +54,8 @@ describe('ChatbotAdminController', () => {
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(FeatureFlagGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -201,6 +204,8 @@ describe('ChatbotKbController', () => {
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(FeatureFlagGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

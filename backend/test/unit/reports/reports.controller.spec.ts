@@ -6,6 +6,9 @@ import { ReportsController } from '../../../src/modules/reports/reports.controll
 import { ReportsService } from '../../../src/modules/reports/reports.service.js';
 import { ExportService } from '../../../src/modules/reports/export.service.js';
 import { DashboardStatsService } from '../../../src/modules/reports/dashboard-stats.service.js';
+import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
+import { FeatureFlagGuard } from '../../../src/common/guards/feature-flag.guard.js';
 
 const mockReportsService = { getRevenueReport: jest.fn(), getBookingReport: jest.fn(), getPractitionerReport: jest.fn() };
 const mockExportService = { exportRevenueCsv: jest.fn(), exportBookingsCsv: jest.fn(), exportPatientsCsv: jest.fn() };
@@ -29,7 +32,14 @@ describe('ReportsController', () => {
         { provide: ExportService, useValue: mockExportService },
         { provide: DashboardStatsService, useValue: mockDashboardStatsService },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(FeatureFlagGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
     controller = module.get(ReportsController);
   });
 
