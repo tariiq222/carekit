@@ -203,6 +203,10 @@ export class BookingCreationService {
               bookedPrice: resolved.price,
               bookedDuration: resolved.duration,
               durationOptionId: resolved.durationOptionId ?? null,
+              // FK-backed field: only set when option is a ServiceDurationOption (not PractitionerDurationOption)
+              serviceDurationOptionId: (resolved.source === 'service_option' && resolved.durationOptionId)
+                ? resolved.durationOptionId
+                : null,
               recurringGroupId: dto.recurringGroupId ?? null,
               ...zoomData,
             },

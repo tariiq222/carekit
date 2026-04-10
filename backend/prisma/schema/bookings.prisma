@@ -63,17 +63,23 @@ model Booking {
   recurringPattern      RecurringPattern? @map("recurring_pattern")
   rescheduleCount       Int               @default(0) @map("reschedule_count")
   suggestedRefundType   RefundType?       @map("suggested_refund_type")
-  durationOptionId      String?           @map("duration_option_id")
+  // durationOptionId references either ServiceDurationOption or PractitionerDurationOption.
+  // FK is added for ServiceDurationOption only (onDelete: SetNull) to prevent orphan IDs
+  // when setBookingTypes() deletes and recreates service duration options.
+  // PractitionerDurationOption IDs remain without FK — acceptable as this is a snapshot field.
+  serviceDurationOptionId      String?           @map("service_duration_option_id")
+  durationOptionId             String?           @map("duration_option_id") // legacy / practitioner option ID
   // SNAPSHOT — captured at creation, immutable. Used for invoicing and refunds.
   // Do NOT recalculate from current service prices — those may have changed.
   bookedPrice           Int?              @map("booked_price") // halalat
   bookedDuration        Int?              @map("booked_duration") // minutes
 
-  patient             User?               @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
-  branch              Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  practitioner        Practitioner        @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
-  service             Service             @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  practitionerService PractitionerService @relation(fields: [practitionerServiceId], references: [id], onDelete: Restrict)
+  patient                 User?                   @relation("PatientBookings", fields: [patientId], references: [id], onDelete: SetNull)
+  branch                  Branch?                 @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  practitioner            Practitioner            @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  service                 Service                 @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  practitionerService     PractitionerService     @relation(fields: [practitionerServiceId], references: [id], onDelete: Restrict)
+  serviceDurationOption   ServiceDurationOption?  @relation(fields: [serviceDurationOptionId], references: [id], onDelete: SetNull)
   rescheduledFrom     Booking?            @relation("RescheduleChain", fields: [rescheduledFromId], references: [id], onDelete: SetNull)
   rescheduledTo       Booking?            @relation("RescheduleChain")
   payment             Payment?
