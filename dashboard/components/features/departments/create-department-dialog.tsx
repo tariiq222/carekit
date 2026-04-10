@@ -45,6 +45,7 @@ export function CreateDepartmentDialog({
       descriptionAr: "",
       descriptionEn: "",
       icon: "",
+      sortOrder: 0,
       isActive: true,
     },
   })
@@ -57,6 +58,7 @@ export function CreateDepartmentDialog({
         descriptionAr: data.descriptionAr || undefined,
         descriptionEn: data.descriptionEn || undefined,
         icon: data.icon || undefined,
+        sortOrder: data.sortOrder,
         isActive: data.isActive,
       })
       toast.success(t("departments.create.success"))
@@ -89,7 +91,7 @@ export function CreateDepartmentDialog({
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.nameAr")} *</Label>
-                <Input {...form.register("nameAr")} dir="rtl" />
+                <Input {...form.register("nameAr")} />
                 {form.formState.errors.nameAr && (
                   <p className="text-xs text-destructive">
                     {form.formState.errors.nameAr.message}
@@ -105,7 +107,26 @@ export function CreateDepartmentDialog({
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.descriptionAr")}</Label>
-                <Input {...form.register("descriptionAr")} dir="rtl" />
+                <Input {...form.register("descriptionAr")} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("departments.field.icon")}</Label>
+                <Input
+                  {...form.register("icon")}
+                  placeholder={t("departments.field.iconPlaceholder")}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("departments.field.sortOrder")}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  {...form.register("sortOrder", { valueAsNumber: true })}
+                  className="h-9 text-sm tabular-nums"
+                />
               </div>
             </div>
 

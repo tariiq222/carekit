@@ -169,8 +169,8 @@ export function GroupFormPage(props: GroupFormPageProps) {
 
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
         <Tabs defaultValue={initialTab}>
-          <div className="overflow-x-auto pb-1 -mb-1">
-            <TabsList className="min-w-max">
+          <div className="overflow-x-auto">
+            <TabsList className="w-full sm:w-auto">
               <TabsTrigger value="general" className="text-xs sm:text-sm">
                 {t("groups.create.tabs.general")}
               </TabsTrigger>
@@ -186,19 +186,16 @@ export function GroupFormPage(props: GroupFormPageProps) {
             </TabsList>
           </div>
 
-          <TabsContent value="general" className="pt-4">
+          <TabsContent value="general" className="mt-4">
             <GeneralInfoTab form={form} />
           </TabsContent>
-
-          <TabsContent value="scheduling" className="pt-4">
+          <TabsContent value="scheduling" className="mt-4">
             <SchedulingPriceTab form={form} />
           </TabsContent>
-
-          <TabsContent value="settings" className="pt-4">
+          <TabsContent value="settings" className="mt-4">
             <SettingsTab form={form} />
           </TabsContent>
-
-          <TabsContent value="practitioners" className="pt-4">
+          <TabsContent value="practitioners" className="mt-4">
             <ServicePractitionersTab
               isCreate={true}
               pendingIds={pendingPractitionerIds}
