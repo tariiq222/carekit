@@ -117,43 +117,58 @@ export class PatientWalkInService {
       });
     }
 
-    // تحقق أن الإيميل الجديد غير مستخدم
-    const emailTaken = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-      select: { id: true },
-    });
-
-    if (emailTaken) {
-      throw new ConflictException({
-        statusCode: 409,
-        message: 'A user with this email already exists',
-        error: 'USER_EMAIL_EXISTS',
-      });
-    }
-
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
 
-    const updated = await this.prisma.user.update({
-      where: { id: walkInUser.id },
-      data: {
-        email: dto.email,
-        passwordHash,
-        accountType: AccountType.full,
-        claimedAt: new Date(),
-        emailVerified: false,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        accountType: true,
-        claimedAt: true,
-      },
-    });
+    try {
+      const updated = await this.prisma.$transaction(async (tx) => {
+        // تحقق داخل الـ transaction أن الإيميل غير مستخدم (يستثني الحسابات المحذوفة والحساب الحالي)
+        const emailTaken = await tx.user.findFirst({
+          where: { email: dto.email, deletedAt: null, id: { not: walkInUser.id } },
+          select: { id: true },
+        });
 
-    return updated;
+        if (emailTaken) {
+          throw new ConflictException({
+            statusCode: 409,
+            message: 'A user with this email already exists',
+            error: 'USER_EMAIL_EXISTS',
+          });
+        }
+
+        return tx.user.update({
+          where: { id: walkInUser.id },
+          data: {
+            email: dto.email,
+            passwordHash,
+            accountType: AccountType.full,
+            claimedAt: new Date(),
+            emailVerified: false,
+          },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            accountType: true,
+            claimedAt: true,
+          },
+        });
+      });
+
+      return updated;
+    } catch (err) {
+      if (err instanceof ConflictException) throw err;
+      const prismaErr = err as { code?: string };
+      if (prismaErr.code === 'P2002') {
+        throw new ConflictException({
+          statusCode: 409,
+          message: 'A user with this email already exists',
+          error: 'USER_EMAIL_EXISTS',
+        });
+      }
+      throw err;
+    }
   }
 
   /**
