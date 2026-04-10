@@ -248,6 +248,17 @@ export const arServices: Record<string, string> = {
   "services.bookingTypes.priceSARLabel": "السعر (ر.س)",
   "services.bookingTypes.clinic": "في العيادة",
   "services.bookingTypes.online": "عن بُعد",
+  "services.bookingTypes.price": "السعر",
+  "services.bookingTypes.duration": "المدة (دقيقة)",
+  "services.bookingTypes.addOption": "إضافة خيار",
+  "services.bookingTypes.default": "افتراضي",
+  "services.bookingTypes.saved": "تم حفظ التسعير",
+  "services.bookingTypes.save": "حفظ التسعير",
+  "services.bookingTypes.noTypes": "يرجى تفعيل نوع حجز واحد على الأقل",
+  "services.bookingTypes.labelEn": "الاسم (EN)",
+  "services.bookingTypes.labelAr": "الاسم (AR)",
+  "services.bookingTypes.placeholderEn": "مثلاً: Standard",
+  "services.bookingTypes.placeholderAr": "مثلاً: عادي",
 
   /* ── Display Settings (basic-info-tab) ── */
   "services.display.hideService": "إخفاء الخدمة",

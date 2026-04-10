@@ -65,5 +65,8 @@ export const enDepartments: Record<string, string> = {
   "departments.field.nameAr": "Name (Arabic)",
   "departments.field.descriptionEn": "Description (English)",
   "departments.field.descriptionAr": "Description (Arabic)",
+  "departments.field.icon": "Icon",
+  "departments.field.iconPlaceholder": "e.g. stethoscope",
+  "departments.field.sortOrder": "Sort Order",
   "departments.field.isActive": "Active",
 }

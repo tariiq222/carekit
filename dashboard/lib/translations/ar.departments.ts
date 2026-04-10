@@ -63,7 +63,10 @@ export const arDepartments: Record<string, string> = {
   // Fields
   "departments.field.nameEn": "الاسم (إنجليزي)",
   "departments.field.nameAr": "الاسم (عربي)",
-  "departments.field.descriptionEn": "الوصف (إنجليزي)",
+  "departments.field.descriptionEn": "الوصف (إ‑نجليزي)",
   "departments.field.descriptionAr": "الوصف (عربي)",
+  "departments.field.icon": "الأيقونة",
+  "departments.field.iconPlaceholder": "مثلاً: stethoscope",
+  "departments.field.sortOrder": "ترتيب العرض",
   "departments.field.isActive": "نشط",
 }

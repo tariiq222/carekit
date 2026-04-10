@@ -248,6 +248,17 @@ export const enServices: Record<string, string> = {
   "services.bookingTypes.priceSARLabel": "Price (SAR)",
   "services.bookingTypes.clinic": "In Clinic",
   "services.bookingTypes.online": "Online",
+  "services.bookingTypes.price": "Price",
+  "services.bookingTypes.duration": "Duration (min)",
+  "services.bookingTypes.addOption": "Add Option",
+  "services.bookingTypes.default": "Default",
+  "services.bookingTypes.saved": "Pricing saved",
+  "services.bookingTypes.save": "Save Pricing",
+  "services.bookingTypes.noTypes": "Please enable at least one booking type",
+  "services.bookingTypes.labelEn": "Label (EN)",
+  "services.bookingTypes.labelAr": "Label (AR)",
+  "services.bookingTypes.placeholderEn": "e.g. Standard",
+  "services.bookingTypes.placeholderAr": "e.g. Standard",
 
   /* ── Display Settings (basic-info-tab) ── */
   "services.display.hideService": "Hide Service",
