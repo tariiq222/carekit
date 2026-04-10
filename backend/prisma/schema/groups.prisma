@@ -76,6 +76,7 @@ model GroupEnrollment {
   payment     Payment?         @relation(fields: [paymentId], references: [id], onDelete: SetNull)
   groupPayment GroupPayment?
   certificate  GroupCertificate?
+  invoice     Invoice?
 
   @@unique([groupId, patientId])
   @@index([status, paymentDeadlineAt])
@@ -86,6 +87,7 @@ model GroupPayment {
   id               String          @id @default(uuid())
   enrollmentId     String          @unique @map("enrollment_id")
   groupId          String          @map("group_id")
+  paymentId        String?         @map("payment_id")
   totalAmount      Int             @map("total_amount")
   paidAmount       Int             @map("paid_amount")
   remainingAmount  Int             @map("remaining_amount")

@@ -184,6 +184,26 @@ export class BankTransferService {
 
     const newStatus = dto.action === 'approve' ? 'approved' : 'rejected';
 
+    // For approval, create the invoice BEFORE marking payment as paid.
+    // This ensures we never have a paid payment without an invoice.
+    // If invoice creation fails, the payment stays in its current state and the
+    // error is surfaced to the admin — no orphaned paid-without-invoice state.
+    if (dto.action === 'approve') {
+      try {
+        await this.invoicesService.createInvoice({ paymentId: receipt.paymentId });
+      } catch (err) {
+        if (err instanceof ConflictException) {
+          this.logger.warn(`Invoice already exists for payment ${receipt.paymentId}`);
+        } else {
+          this.logger.error(
+            `Invoice creation failed for payment ${receipt.paymentId}. ` +
+              `Payment has NOT been marked as paid. Error: ${err instanceof Error ? err.message : String(err)}`,
+          );
+          throw err;
+        }
+      }
+    }
+
     await this.prisma.$transaction(async (tx) => {
       await tx.bankTransferReceipt.update({
         where: { id: receiptId },
@@ -212,8 +232,6 @@ export class BankTransferService {
       try {
         await this.bookingStatusService.confirm(payment.bookingId);
       } catch (err) {
-        // Race recovery: booking may have expired while receipt was under review.
-        // Since payment is approved, recover to confirmed.
         const recovered = await this.bookingStatusService.recoverExpiredBooking(payment.bookingId);
         if (recovered) {
           this.logger.warn(
@@ -238,16 +256,6 @@ export class BankTransferService {
       resourceId: receiptId,
       description: `Bank transfer receipt ${dto.action}d by admin`,
     }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
-
-    if (dto.action === 'approve') {
-      try {
-        await this.invoicesService.createInvoice({ paymentId: receipt.paymentId });
-      } catch (err) {
-        if (!(err instanceof ConflictException)) {
-          this.logger.error(`Invoice creation failed for payment ${receipt.paymentId}`, err);
-        }
-      }
-    }
 
     return this.prisma.payment.findUnique({
       where: { id: receipt.paymentId },

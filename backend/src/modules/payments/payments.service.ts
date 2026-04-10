@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
@@ -13,13 +14,15 @@ import { PaymentFilterDto } from './dto/payment-filter.dto.js';
 import { CreateMoyasarPaymentDto } from './dto/create-moyasar-payment.dto.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
 import { RefundDto } from './dto/refund.dto.js';
-import { paymentInclude } from './payments.helpers.js';
+import { paymentInclude, applyVat } from './payments.helpers.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly moyasarService: MoyasarPaymentService,
@@ -97,12 +100,13 @@ export class PaymentsService {
         });
       }
 
+      const { amount, vatAmount, totalAmount } = applyVat(dto.amount);
       return tx.payment.create({
         data: {
           bookingId: dto.bookingId,
-          amount: dto.amount,
-          vatAmount: 0,
-          totalAmount: dto.amount,
+          amount,
+          vatAmount,
+          totalAmount,
           method: dto.method,
           status: 'pending',
         },
@@ -119,6 +123,24 @@ export class PaymentsService {
         message: 'Payment not found',
         error: 'NOT_FOUND',
       });
+    }
+
+    if (dto.status === 'paid') {
+      const hasTransactionRef = !!dto.transactionRef?.trim();
+      const hasMoyasarId = !!dto.moyasarPaymentId?.trim();
+      if (!hasTransactionRef && !hasMoyasarId) {
+        throw new BadRequestException({
+          statusCode: 400,
+          message: 'Transaction reference or Moyasar payment ID is required when marking a payment as paid',
+          error: 'MISSING_TRANSACTION_REFERENCE',
+        });
+      }
+      if (hasTransactionRef && !hasMoyasarId) {
+        this.logger.warn(
+          `Manual payment override for payment ${id}: transactionRef provided without moyasarPaymentId. ` +
+            `Original status: ${payment.status}. This may indicate a manual payment recording.`,
+        );
+      }
     }
 
     const ALLOWED_TRANSITIONS: Record<string, string[]> = {

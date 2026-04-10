@@ -99,7 +99,7 @@ describe('PaymentsService — updateStatus', () => {
     mockPrisma.payment.findUnique.mockResolvedValue(mockPayment);
     mockPrisma.payment.update.mockResolvedValue({ ...mockPayment, status: 'paid' });
 
-    const result = await service.updateStatus(mockPaymentId, { status: 'paid' });
+    const result = await service.updateStatus(mockPaymentId, { status: 'paid', transactionRef: 'REF-123' });
 
     expect(result.status).toBe('paid');
   });

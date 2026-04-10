@@ -4,7 +4,8 @@
 
 model Payment {
   id               String        @id @default(uuid())
-  bookingId        String        @unique @map("booking_id")
+  bookingId        String?       @unique @map("booking_id")
+  groupEnrollmentId String?      @map("group_enrollment_id")
   amount           Int // halalat
   vatAmount        Int           @default(0) @map("vat_amount") // halalat
   totalAmount      Int           @default(0) @map("total_amount") // halalat
@@ -20,7 +21,7 @@ model Payment {
   updatedAt        DateTime      @updatedAt @map("updated_at")
   deletedAt        DateTime?     @map("deleted_at")
 
-  booking         Booking              @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking         Booking?             @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   receipt         BankTransferReceipt?
   invoice         Invoice?
   groupEnrollment GroupEnrollment?
@@ -60,7 +61,8 @@ model BankTransferReceipt {
 // zatcaResponse: raw JSON from ZATCA clearance/reporting API — preserved for audit.
 model Invoice {
   id            String      @id @default(uuid())
-  paymentId     String      @unique @map("payment_id")
+  paymentId     String?     @unique @map("payment_id")
+  groupEnrollmentId String? @unique @map("group_enrollment_id")
   invoiceNumber String      @unique @map("invoice_number")
   pdfUrl        String?     @map("pdf_url")
   sentAt        DateTime?   @map("sent_at")
@@ -76,7 +78,8 @@ model Invoice {
   updatedAt     DateTime    @updatedAt @map("updated_at")
   deletedAt     DateTime?   @map("deleted_at")
 
-  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  payment        Payment?        @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  groupEnrollment GroupEnrollment? @relation(fields: [groupEnrollmentId], references: [id], onDelete: SetNull)
 
   @@index([zatcaStatus])
   @@map("invoices")

@@ -55,6 +55,10 @@ export class MoyasarWebhookService {
     }
 
     if (dto.status === 'paid') {
+      if (!payment.bookingId) {
+        this.logger.error(`Received paid webhook for payment ${payment.id} with no bookingId — unexpected for non-group payment`);
+        return { success: true };
+      }
       await this.processPaidWebhook(
         payment.id,
         payment.bookingId,
@@ -237,7 +241,7 @@ export class MoyasarWebhookService {
       // Verify the paid amount matches the stored totalAmount before confirming.
       const storedGroupPayment = await tx.groupPayment.findUnique({
         where: { id: groupPaymentId },
-        select: { totalAmount: true, status: true },
+        select: { totalAmount: true, status: true, enrollmentId: true },
       });
 
       if (
@@ -257,21 +261,55 @@ export class MoyasarWebhookService {
         return { count: 0, amountMismatch: true };
       }
 
-      const result = await tx.groupPayment.updateMany({
-        where: { id: groupPaymentId, status: 'pending' },
-        data: { status: 'paid', paidAt: new Date() },
+      // Create Payment record for ZATCA invoice + link to GroupEnrollment
+      const vatAmount = Math.round(webhookAmount * 0.15);
+      const payment = await tx.payment.create({
+        data: {
+          groupEnrollmentId: enrollmentId,
+          amount: webhookAmount - vatAmount,
+          vatAmount,
+          totalAmount: webhookAmount,
+          method: 'moyasar',
+          status: 'paid',
+          moyasarPaymentId: eventId,
+        },
+      });
+
+      // Link GroupPayment and GroupEnrollment to the Payment record
+      await tx.groupPayment.update({
+        where: { id: groupPaymentId },
+        data: { status: 'paid', paidAt: new Date(), paymentId: payment.id },
+      });
+
+      await tx.groupEnrollment.update({
+        where: { id: enrollmentId },
+        data: { paymentId: payment.id },
       });
 
       await tx.processedWebhook.create({ data: { eventId, processedAt: new Date() } }).catch((e: unknown) => {
         if ((e as { code?: string }).code !== 'P2002') throw e;
       });
 
-      return { count: result.count, amountMismatch: false };
+      return { count: 1, amountMismatch: false };
     });
 
     if (updated.count === 0 || updated.amountMismatch) return;
 
     await this.groupsPaymentService.confirmEnrollmentAfterPayment(enrollmentId);
+    await this.createGroupInvoiceAfterPayment(enrollmentId);
+  }
+
+  private async createGroupInvoiceAfterPayment(enrollmentId: string): Promise<void> {
+    try {
+      await this.invoicesService.createGroupInvoice(enrollmentId);
+    } catch (err) {
+      if (!(err instanceof ConflictException)) {
+        this.logger.error(
+          `Group invoice creation failed for enrollment ${enrollmentId}`,
+          err,
+        );
+      }
+    }
   }
 
   private async processGroupPaymentFailed(groupPaymentId: string, eventId: string): Promise<void> {

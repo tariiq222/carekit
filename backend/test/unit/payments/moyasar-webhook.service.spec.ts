@@ -28,7 +28,8 @@ const prismaServiceMock: any = {
     create: jest.fn(),
   },
   booking: { update: jest.fn() },
-  groupEnrollment: { update: jest.fn().mockResolvedValue({}) },
+  groupEnrollment: { update: jest.fn().mockResolvedValue({}), findUnique: jest.fn() },
+  invoice: { findUnique: jest.fn(), create: jest.fn() },
   $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(prismaServiceMock)),
 };
 
@@ -38,7 +39,7 @@ const configServiceMock: any = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const invoicesServiceMock: any = { createInvoice: jest.fn() };
+const invoicesServiceMock: any = { createInvoice: jest.fn(), createGroupInvoice: jest.fn() };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const bookingStatusServiceMock: any = { confirm: jest.fn(), cancel: jest.fn() };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,10 +116,19 @@ describe('MoyasarWebhookService', () => {
       prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 1 });
       prismaServiceMock.processedWebhook.findUnique.mockResolvedValue(null);
       prismaServiceMock.processedWebhook.create.mockResolvedValue({});
+      prismaServiceMock.groupEnrollment.findUnique.mockResolvedValue({
+        id: 'e1',
+        patient: { firstName: 'Ahmed', lastName: 'Ali' },
+        group: { nameAr: 'جلسة جماعية', nameEn: 'Group Session' },
+        payment: { id: 'pmt-1', status: 'paid', amount: 1000 },
+      });
+      prismaServiceMock.invoice.findUnique.mockResolvedValue(null);
+      invoicesServiceMock.createGroupInvoice.mockResolvedValue({ id: 'inv-1' });
 
       await (service as any).processGroupPaymentSuccess('gp1', 'e1', 'evt_1', 1000);
 
       expect(groupsPaymentServiceMock.confirmEnrollmentAfterPayment).toHaveBeenCalledWith('e1');
+      expect(invoicesServiceMock.createGroupInvoice).toHaveBeenCalledWith('e1');
     });
 
     it('is idempotent — duplicate webhook does not double-confirm', async () => {
