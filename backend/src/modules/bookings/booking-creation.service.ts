@@ -98,27 +98,40 @@ export class BookingCreationService {
     const today = new Date(nowRiyadh);
     if (bookingDate < today) throw new BadRequestException({ statusCode: 400, message: ERR.booking.pastDate, error: 'VALIDATION_ERROR' });
 
-    if (settings.maxAdvanceBookingDays > 0) {
+    // Use the stricter of clinic-level and service-level constraints (HIGH fix #5).
+    // Service constraints override clinic when more restrictive — never less restrictive.
+    const effectiveMaxDays = (service.maxAdvanceDays != null && service.maxAdvanceDays > 0)
+      ? (settings.maxAdvanceBookingDays > 0
+          ? Math.min(settings.maxAdvanceBookingDays, service.maxAdvanceDays)
+          : service.maxAdvanceDays)
+      : settings.maxAdvanceBookingDays;
+
+    const effectiveLeadMinutes = Math.max(
+      settings.minBookingLeadMinutes ?? 0,
+      service.minLeadMinutes ?? 0,
+    );
+
+    if (effectiveMaxDays > 0) {
       const maxDate = new Date(today);
-      maxDate.setDate(maxDate.getDate() + settings.maxAdvanceBookingDays);
+      maxDate.setDate(maxDate.getDate() + effectiveMaxDays);
       if (bookingDate > maxDate) {
         throw new BadRequestException({
           statusCode: 400,
-          message: ERR.booking.tooFarInAdvance(settings.maxAdvanceBookingDays),
+          message: ERR.booking.tooFarInAdvance(effectiveMaxDays),
           error: 'BOOKING_TOO_FAR_IN_ADVANCE',
         });
       }
     }
 
-    if (settings.minBookingLeadMinutes > 0) {
+    if (effectiveLeadMinutes > 0) {
       const bookingDateTime = new Date(bookingDate);
       const [leadH, leadM] = dto.startTime.split(':').map(Number);
       bookingDateTime.setHours(leadH, leadM, 0, 0);
       const minutesUntil = (bookingDateTime.getTime() - Date.now()) / (1000 * 60);
-      if (minutesUntil < settings.minBookingLeadMinutes) {
+      if (minutesUntil < effectiveLeadMinutes) {
         throw new BadRequestException({
           statusCode: 400,
-          message: ERR.booking.leadTimeViolation(settings.minBookingLeadMinutes),
+          message: ERR.booking.leadTimeViolation(effectiveLeadMinutes),
           error: 'BOOKING_LEAD_TIME_VIOLATION',
         });
       }
@@ -152,7 +165,10 @@ export class BookingCreationService {
             await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, branchId);
           }
           try {
-            const bufferMinutes = ps.bufferMinutes ?? service.bufferMinutes ?? settings.bufferMinutes;
+            // Use ps.bufferMinutes as explicit override only when > 0 (Prisma @default(0) fix)
+            const bufferMinutes = ps.bufferMinutes > 0
+              ? ps.bufferMinutes
+              : (service.bufferMinutes > 0 ? service.bufferMinutes : settings.bufferMinutes);
             await checkDoubleBooking(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, bufferMinutes);
           } catch (err) {
             if (err instanceof ConflictException) {
@@ -187,6 +203,10 @@ export class BookingCreationService {
               bookedPrice: resolved.price,
               bookedDuration: resolved.duration,
               durationOptionId: resolved.durationOptionId ?? null,
+              // FK-backed field: only set when option is a ServiceDurationOption (not PractitionerDurationOption)
+              serviceDurationOptionId: (resolved.source === 'service_option' && resolved.durationOptionId)
+                ? resolved.durationOptionId
+                : null,
               recurringGroupId: dto.recurringGroupId ?? null,
               ...zoomData,
             },
@@ -225,7 +245,15 @@ export class BookingCreationService {
     }
 
     try {
-      await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, resolved.price, isPayAtClinic, callerRoles);
+      await this.paymentHelper.createPaymentIfNeeded(
+        booking.id,
+        dto.type,
+        resolved.price,
+        isPayAtClinic,
+        callerRoles,
+        service.depositEnabled,
+        service.depositPercent,
+      );
     } catch (paymentErr) {
       this.logger.error(
         `Payment creation failed for booking ${booking.id} — cancelling booking to prevent orphan`,

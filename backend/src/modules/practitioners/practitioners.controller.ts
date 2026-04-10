@@ -123,12 +123,17 @@ export class PractitionersController {
   ) {
     let resolvedDuration = query.duration ?? 30;
 
-    // If bookingType and serviceId provided, resolve duration from pricing models
+    // Resolve duration via full pricing chain (practitioner options → service options → type fallback)
+    // when bookingType + serviceId are provided and no explicit duration override given.
     if (query.bookingType && query.serviceId && !query.duration) {
-      resolvedDuration = await this.practitionersService.resolveDurationForSlots(query.serviceId, query.bookingType);
+      resolvedDuration = await this.practitionersService.resolveDurationForSlots(
+        query.serviceId,
+        query.bookingType,
+        id,
+      );
     }
 
-    return this.availabilityService.getSlots(id, query.date, resolvedDuration);
+    return this.availabilityService.getSlots(id, query.date, resolvedDuration, query.branchId);
   }
 
   @Get(':id/available-dates')
@@ -137,8 +142,18 @@ export class PractitionersController {
     @Param('id', uuidPipe) id: string,
     @Query() query: GetAvailableDatesQueryDto,
   ) {
-    const duration = query.duration ?? 30;
-    const result = await this.availabilityService.getAvailableDates(id, query.month, duration, query.branchId);
+    let resolvedDuration = query.duration ?? 30;
+
+    // Resolve duration via full pricing chain when bookingType + serviceId provided
+    if (query.bookingType && query.serviceId && !query.duration) {
+      resolvedDuration = await this.practitionersService.resolveDurationForSlots(
+        query.serviceId,
+        query.bookingType,
+        id,
+      );
+    }
+
+    const result = await this.availabilityService.getAvailableDates(id, query.month, resolvedDuration, query.branchId);
     return { success: true, data: result };
   }
 

@@ -30,4 +30,9 @@ export class GetSlotsQueryDto {
   @IsOptional()
   @IsUUID()
   serviceId?: string;
+
+  @ApiPropertyOptional({ format: 'uuid', description: 'Branch ID for branch-scoped availability' })
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
 }

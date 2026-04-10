@@ -147,6 +147,7 @@ model ServiceDurationOption {
 
   service            Service             @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   serviceBookingType ServiceBookingType? @relation(fields: [serviceBookingTypeId], references: [id], onDelete: Cascade)
+  bookings           Booking[]           @relation
 
   @@index([serviceId])
   @@index([serviceBookingTypeId])
