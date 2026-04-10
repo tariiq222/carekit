@@ -135,7 +135,7 @@ describe('LicenseService', () => {
 
       await service.update({ hasCoupons: true });
 
-      expect(mockCache.del).toHaveBeenCalledTimes(2);
+      expect(mockCache.del).toHaveBeenCalledTimes(3);
     });
   });
 

@@ -103,9 +103,9 @@ describe('FeatureFlagsService', () => {
       expect(mockPrisma.featureFlag.findMany).not.toHaveBeenCalled();
     });
 
-    it('builds key→boolean map from DB, caches it, returns map on cache miss', async () => {
+    it('builds key→boolean map via licenseService.getFeaturesWithStatus, caches it, returns map on cache miss', async () => {
       mockCache.get.mockResolvedValue(null);
-      mockPrisma.featureFlag.findMany.mockResolvedValue([
+      mockLicenseService.getFeaturesWithStatus.mockResolvedValue([
         { key: 'dark_mode', enabled: true },
         { key: 'new_dashboard', enabled: false },
       ]);
@@ -113,9 +113,8 @@ describe('FeatureFlagsService', () => {
       const result = await service.getMap();
 
       expect(result).toEqual({ dark_mode: true, new_dashboard: false });
-      expect(mockPrisma.featureFlag.findMany).toHaveBeenCalledWith({
-        select: { key: true, enabled: true },
-      });
+      expect(mockLicenseService.getFeaturesWithStatus).toHaveBeenCalled();
+      expect(mockPrisma.featureFlag.findMany).not.toHaveBeenCalled();
       expect(mockCache.set).toHaveBeenCalledWith(
         'feature_flags:map',
         { dark_mode: true, new_dashboard: false },
@@ -125,7 +124,7 @@ describe('FeatureFlagsService', () => {
 
     it('returns empty object when no flags exist', async () => {
       mockCache.get.mockResolvedValue(null);
-      mockPrisma.featureFlag.findMany.mockResolvedValue([]);
+      mockLicenseService.getFeaturesWithStatus.mockResolvedValue([]);
 
       const result = await service.getMap();
 
@@ -240,7 +239,7 @@ describe('FeatureFlagsService', () => {
 
     it('returns false when map is empty', async () => {
       mockCache.get.mockResolvedValue(null);
-      mockPrisma.featureFlag.findMany.mockResolvedValue([]);
+      mockLicenseService.getFeaturesWithStatus.mockResolvedValue([]);
 
       expect(await service.isEnabled('any_key')).toBe(false);
     });

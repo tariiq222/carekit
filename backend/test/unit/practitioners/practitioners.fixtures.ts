@@ -77,8 +77,8 @@ export function createMockPrisma(): any {
     user: { findUnique: jest.fn() },
     booking: { findMany: jest.fn() },
     practitionerService: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([]),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

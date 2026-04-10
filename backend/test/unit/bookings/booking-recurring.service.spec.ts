@@ -29,8 +29,18 @@ const recurringDto = {
   repeatCount: 3,
 };
 
+const mockServiceRecord = {
+  allowRecurring: true,
+  allowedRecurringPatterns: ['weekly', 'biweekly'],
+  maxRecurrences: 12,
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockPrisma: any = {};
+const mockPrisma: any = {
+  service: {
+    findFirst: jest.fn().mockResolvedValue(mockServiceRecord),
+  },
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockBookingsService: any = {
@@ -57,6 +67,7 @@ describe('BookingRecurringService', () => {
 
     service = module.get<BookingRecurringService>(BookingRecurringService);
     jest.clearAllMocks();
+    mockPrisma.service.findFirst.mockResolvedValue(mockServiceRecord);
     mockSettingsService.getForBranch.mockResolvedValue(defaultSettings);
   });
 
