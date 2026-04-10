@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ServicesService } from './services.service.js';
 import type { BookingType } from '@prisma/client';
@@ -24,12 +24,34 @@ export class ServiceBookingTypeService {
   async setBookingTypes(serviceId: string, dto: SetServiceBookingTypesDto) {
     await this.services.ensureExists(serviceId);
 
+    // Validate isDefault uniqueness per booking type (fix #8)
+    for (const typeConfig of dto.types) {
+      if (typeConfig.durationOptions?.length) {
+        const defaultCount = typeConfig.durationOptions.filter((o) => o.isDefault).length;
+        if (defaultCount > 1) {
+          throw new BadRequestException({
+            statusCode: 400,
+            message: `Booking type '${typeConfig.bookingType}' has ${defaultCount} duration options marked as default — only one allowed`,
+            error: 'MULTIPLE_DEFAULTS',
+          });
+        }
+      }
+    }
+
     const result = await this.prisma.$transaction(async (tx) => {
       // Delete old booking types (cascades to duration options via onDelete: Cascade)
       await tx.serviceBookingType.deleteMany({ where: { serviceId } });
 
       // Create new booking types with their duration options (sequential within transaction)
       for (const typeConfig of dto.types) {
+        const options = typeConfig.durationOptions ?? [];
+        // If options exist but none is marked default, auto-assign the first
+        const hasDefault = options.some((o) => o.isDefault);
+        const normalizedOptions = options.map((o, i) => ({
+          ...o,
+          isDefault: options.length > 0 && !hasDefault && i === 0 ? true : (o.isDefault ?? false),
+        }));
+
         await tx.serviceBookingType.create({
           data: {
             serviceId,
@@ -37,16 +59,16 @@ export class ServiceBookingTypeService {
             price: typeConfig.price,
             duration: typeConfig.duration,
             isActive: typeConfig.isActive ?? true,
-            durationOptions: typeConfig.durationOptions?.length
+            durationOptions: normalizedOptions.length
               ? {
                   createMany: {
-                    data: typeConfig.durationOptions.map((o, i) => ({
+                    data: normalizedOptions.map((o, i) => ({
                       serviceId,
                       label: o.label,
                       labelAr: o.labelAr,
                       durationMinutes: o.durationMinutes,
                       price: o.price,
-                      isDefault: o.isDefault ?? false,
+                      isDefault: o.isDefault,
                       sortOrder: o.sortOrder ?? i,
                     })),
                   },
