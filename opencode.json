@@ -16,6 +16,11 @@
     ".opencode/agents/quick-reviewer.md",
     ".opencode/agents/deep-reviewer.md",
     ".opencode/agents/qa-validator.md",
+    ".opencode/agents/ui-specialist.md",
+    ".opencode/agents/rtl-guardian.md",
+    ".opencode/agents/migration-safety.md",
+    ".opencode/agents/mobile-specialist.md",
+    ".opencode/agents/debugger.md",
     ".opencode/commands/نوقف.md",
     ".opencode/commands/نكمل.md"
   ],
@@ -71,6 +76,36 @@
     "qa-validator": {
       "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
       "description": "Production risk simulation. Used by CTO only.",
+      "mode": "subagent",
+      "hidden": true
+    },
+    "ui-specialist": {
+      "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
+      "description": "Builds dashboard UI — shadcn, Frosted Glass DS, Page Anatomy law. Replaces executor for UI tasks. Used by CTO only.",
+      "mode": "subagent",
+      "hidden": true
+    },
+    "rtl-guardian": {
+      "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
+      "description": "Audits and fixes RTL violations — logical properties, icon mirroring, no hacks. Runs after every UI change. Used by CTO only.",
+      "mode": "subagent",
+      "hidden": true
+    },
+    "migration-safety": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "description": "Audits schema/migration changes — additive only, rollback plan, FK safety. Gate before executor. Used by CTO only.",
+      "mode": "subagent",
+      "hidden": true
+    },
+    "mobile-specialist": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "description": "Implements Expo/RN features — Expo Router, Redux Toolkit, NativeWind. Replaces executor for mobile tasks. Used by CTO only.",
+      "mode": "subagent",
+      "hidden": true
+    },
+    "debugger": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "description": "Systematic debugging for HIGH/CRITICAL bugs — root cause first, never symptom relief. Replaces architect for complex bugs. Used by CTO only.",
       "mode": "subagent",
       "hidden": true
     }

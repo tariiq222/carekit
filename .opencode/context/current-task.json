@@ -1,48 +1,91 @@
 {
-  "task": "Build Run Monitor page for MultiAgent Control Panel",
-  "status": "done",
-  "current_stage": "completed",
-  "progress": "Run Monitor page implemented — WebSocket hook, live log terminal, React Flow graph, stage list, control buttons — all 11 files created in multiagent/web/",
+  "task": "تحليل ميديول services في CareKit واكتشاف 25 مشكلة وبناء خطة checklist كاملة لإصلاحها",
+  "status": "paused",
+  "current_stage": "analyze",
+  "progress": "تحليل عميق كامل لميديول services اكتمل مع توثيق 25 مشكلة مصنفة (4 CRITICAL، 7 HIGH، 9 MEDIUM، 5 LOW) — لم تُبنَ خطة الـ checklist بعد",
   "decisions": [
-    "Omit Resume button — backend has no resume endpoint (only pause + cancel)",
-    "Use agentName instead of stageName on RunStage — stageName field does not exist in shared types",
-    "Socket base URL derived by stripping /api from NEXT_PUBLIC_API_URL (NEXT_PUBLIC_WS_URL not used)",
-    "Emit 'join' with { runId } object to enter WebSocket room",
-    "Events: 'log', 'run:status', 'stage:status' (not the names in original spec)",
-    "Page.tsx is server component — no 'use client' needed"
+    "Pricing fallback chain موثقة: Level 1 (PractitionerDurationOption) → Level 2 (PractitionerServiceType) → Level 3 (ServiceDurationOption+serviceBookingTypeId) → Level 4 (ServiceBookingType) — Level 5/6 ميتان",
+    "ServiceDurationOption حالة A (serviceBookingTypeId=NULL) بيانات ميتة — تُكتب لكن لا يقرأها مسار الحجز",
+    "Service.bufferMinutes يُتجاهل في practitioner-availability.service.ts بسبب خطأ في ?? operator مع @default(0)",
+    "depositEnabled/depositPercent + allowRecurring/allowedRecurringPatterns/maxRecurrences + minLeadMinutes/maxAdvanceDays كلها حقول ميتة على مستوى الخدمة",
+    "ترتيب الإصلاح: CRITICAL أولاً ثم HIGH ثم MEDIUM ثم LOW",
+    "كل إصلاح CRITICAL يستلزم migration منفصل + regression test"
   ],
-  "files": [
-    "multiagent/web/hooks/use-run-socket.ts",
-    "multiagent/web/lib/api/runs.ts",
-    "multiagent/web/lib/types/runs.ts",
-    "multiagent/web/lib/query-keys.ts",
-    "multiagent/web/lib/utils.ts",
-    "multiagent/web/components/run-monitor/RunHeader.tsx",
-    "multiagent/web/components/run-monitor/StageList.tsx",
-    "multiagent/web/components/run-monitor/LogTerminal.tsx",
-    "multiagent/web/components/run-monitor/PipelineGraph.tsx",
-    "multiagent/web/components/run-monitor/RunMonitor.tsx",
-    "multiagent/web/app/projects/[id]/runs/[runId]/page.tsx",
-    "multiagent/web/package.json"
-  ],
+  "files": [],
   "tests_added": [],
   "next_steps": [
-    "Run npm install in multiagent/web/ to install @xyflow/react, socket.io-client, @tanstack/react-query",
-    "Add vitest or jest test framework to multiagent/web before writing tests",
-    "Consider adding connection status indicator in RunHeader (green/yellow/red dot)"
+    "بناء خطة checklist كاملة مرقمة للـ 25 مشكلة مرتبة حسب الأولوية (CRITICAL → HIGH → MEDIUM → LOW) مع تحديد الملفات المتأثرة لكل مشكلة والاختبار المطلوب",
+    "البدء بإصلاح CRITICAL #1: توحيد slot duration مع booking duration في practitioner-availability.service.ts",
+    "إصلاح CRITICAL #2: تمرير serviceId لـ availability service لحساب bufferMinutes الصحيح",
+    "إصلاح CRITICAL #3: ربط depositEnabled/depositPercent بمسار الدفع في payments module",
+    "إصلاح CRITICAL #4: قراءة Service.allowRecurring/maxRecurrences في booking-recurring.service.ts"
   ],
-  "blockers": [],
-  "qa_notes": [
-    "Memory: unbounded log accumulation — long-running pipelines may grow array indefinitely",
-    "WebSocket: NEXT_PUBLIC_WS_URL env var not set — production WS URL derived from API URL",
-    "isConnected in use-run-socket is non-reactive (ref-based) — dormant, not used in components",
-    "projectId prop in RunMonitor is unused — dead code"
+  "blockers": [
+    "هل إصلاح depositEnabled/depositPercent يستلزم تغيير في Moyasar integration أم فقط في booking-creation.service.ts؟ — يحتاج مراجعة payments module قبل التنفيذ"
   ],
   "runtime": {
-    "confidence_score": 92,
+    "confidence_score": 88,
     "escalation_recommended": false,
     "escalation_reason": "",
-    "token_risk_level": "low",
-    "context_file_count": 4
+    "token_risk_level": "high",
+    "context_file_count": 14
+  },
+  "discovered_issues": {
+    "CRITICAL": [
+      "#1: Slot duration يستخدم Service.duration (level 6) بينما الحجز يستخدم ServiceBookingType.duration (level 4) — conflict في كل حجز",
+      "#2: Service.bufferMinutes يُتجاهل في availability بسبب خطأ في ?? مع @default(0)",
+      "#3: depositEnabled/depositPercent حقول ميتة — تُكتب لكن لا تُقرأ في أي مسار دفع",
+      "#4: allowRecurring/allowedRecurringPatterns/maxRecurrences حقول ميتة — booking-recurring.service.ts يتجاهلها"
+    ],
+    "HIGH": [
+      "#5: minLeadMinutes/maxAdvanceDays حقول ميتة — booking-creation.service.ts يتجاهلها",
+      "#6: ServiceDurationOption حالة A (serviceBookingTypeId=NULL) بيانات ميتة",
+      "#7: Booking.durationOptionId بلا FK → orphan IDs بعد كل setBookingTypes",
+      "#8: isDefault بلا uniqueness constraint — يمكن عدة defaults لنفس الخدمة",
+      "#9: practitionerIds بلا existence validation — Prisma P2003 خام بدلاً من 404",
+      "#10: Buffer resolution logic خاطئة — ps.bufferMinutes @default(0) يكسر ?? operator",
+      "#11: XLSX export يُرسل CSV بـ Content-Type xlsx"
+    ],
+    "MEDIUM": [
+      "#12: ServiceListQuery interface مكررة (interface + DTO)",
+      "#13: Cache strategy شبه معطلة (شرط ضيق جداً)",
+      "#14: Cache invalidation في 3 أماكن منفصلة",
+      "#15: UpdateServiceDto بلا PartialType",
+      "#16: CSV logic في Controller (separation of concerns)",
+      "#17: Categories لا تُرجع Department data في findAll",
+      "#18: setBookingTypes بلا check على active bookings",
+      "#19: IntakeForm isActive inconsistency بين API و booking-creation",
+      "#20: Sequential loop داخل transaction في setBookingTypes"
+    ],
+    "LOW": [
+      "#21: لا @ApiOperation على أي endpoint (18 endpoints)",
+      "#22: @ApiProperty ناقصة على DTOs الأساسية",
+      "#23: Cache invalidation خارج error handling",
+      "#24: 5 services بلا اختبارات + PriceResolverService بلا tests",
+      "#25: SetServiceBranchesDto ArrayMinSize(1) — لا يمكن جعل خدمة global عبر PUT"
+    ]
+  },
+  "relevant_files": {
+    "services_module": [
+      "backend/src/modules/services/services.module.ts",
+      "backend/src/modules/services/services.controller.ts",
+      "backend/src/modules/services/services.service.ts",
+      "backend/src/modules/services/service-categories.service.ts",
+      "backend/src/modules/services/duration-options.service.ts",
+      "backend/src/modules/services/service-booking-type.service.ts",
+      "backend/src/modules/services/service-practitioners.service.ts",
+      "backend/src/modules/services/services-avatar.service.ts"
+    ],
+    "schema": [
+      "backend/prisma/schema/services.prisma",
+      "backend/prisma/schema/bookings.prisma",
+      "backend/prisma/schema/enums.prisma"
+    ],
+    "dependencies": [
+      "backend/src/modules/bookings/booking-creation.service.ts",
+      "backend/src/modules/bookings/booking-recurring.service.ts",
+      "backend/src/modules/bookings/price-resolver.service.ts",
+      "backend/src/modules/practitioners/practitioner-availability.service.ts"
+    ]
   }
 }
