@@ -18,17 +18,13 @@ export class GroupsEnrollmentsService {
   ) {}
 
   async enroll(groupId: string, patientId: string) {
-    const group = await this.prisma.group.findFirst({
+    const groupExists = await this.prisma.group.findFirst({
       where: { id: groupId, deletedAt: null },
+      select: { id: true },
     });
 
-    if (!group) {
+    if (!groupExists) {
       throw new NotFoundException('Group not found');
-    }
-
-    const blockedStatuses = ['full', 'completed', 'cancelled', 'awaiting_payment', 'confirmed'];
-    if (blockedStatuses.includes(group.status)) {
-      throw new BadRequestException(`Cannot enroll in a ${group.status} group`);
     }
 
     const existing = await this.prisma.groupEnrollment.findFirst({
@@ -39,62 +35,73 @@ export class GroupsEnrollmentsService {
       throw new BadRequestException('Patient is already enrolled in this group');
     }
 
-    const isFree = group.paymentType === 'FREE_HOLD';
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        const group = await tx.group.findFirst({
+          where: { id: groupId },
+        });
 
-    const result = await this.prisma.$transaction(async (tx) => {
-      const enrollment = await tx.groupEnrollment.create({
-        data: {
-          groupId,
-          patientId,
-          status: isFree ? 'confirmed' : 'registered',
-        },
-      });
+        if (!group) throw new NotFoundException('Group not found');
 
-      const newCount = group.currentEnrollment + 1;
-      let newStatus = group.status;
-
-      if (newCount >= group.maxParticipants) {
-        newStatus = 'full';
-      } else if (newCount >= group.minParticipants && group.status === 'open') {
-        if (group.schedulingMode === 'fixed_date') {
-          newStatus = 'confirmed';
+        const blockedStatuses = ['full', 'completed', 'cancelled', 'awaiting_payment', 'confirmed'];
+        if (blockedStatuses.includes(group.status)) {
+          throw new BadRequestException(`Cannot enroll in a ${group.status} group`);
         }
-        // on_capacity: stays open until admin sets date
-      }
 
-      await tx.group.update({
-        where: { id: groupId },
-        data: { currentEnrollment: newCount, status: newStatus },
-      });
+        const isFree = group.paymentType === 'FREE_HOLD';
 
-      return { enrollment, newStatus, newCount };
-    });
+        const enrollment = await tx.groupEnrollment.create({
+          data: {
+            groupId,
+            patientId,
+            status: isFree ? 'confirmed' : 'registered',
+          },
+        });
+
+        const newCount = group.currentEnrollment + 1;
+        let newStatus = group.status;
+
+        if (newCount >= group.maxParticipants) {
+          newStatus = 'full';
+        } else if (newCount >= group.minParticipants && group.status === 'open') {
+          if (group.schedulingMode === 'fixed_date') {
+            newStatus = 'confirmed';
+          }
+        }
+
+        await tx.group.update({
+          where: { id: groupId },
+          data: { currentEnrollment: newCount, status: newStatus },
+        });
+
+        return { enrollment, newStatus, newCount, group, isFree };
+      },
+      { isolationLevel: 'Serializable' },
+    );
 
     this.notificationsService.createNotification({
       userId: patientId,
-      titleAr: `تم تسجيلك في "${group.nameAr}"`,
-      titleEn: `You've been enrolled in "${group.nameEn}"`,
-      bodyAr: isFree ? 'تسجيلك مؤكد' : 'سنبلغك عند تأكيد الجلسة للدفع',
-      bodyEn: isFree ? 'Your enrollment is confirmed' : "We'll notify you when the session is confirmed for payment",
+      titleAr: `تم تسجيلك في "${result.group.nameAr}"`,
+      titleEn: `You've been enrolled in "${result.group.nameEn}"`,
+      bodyAr: result.isFree ? 'تسجيلك مؤكد' : 'سنبلغك عند تأكيد الجلسة للدفع',
+      bodyEn: result.isFree ? 'Your enrollment is confirmed' : "We'll notify you when the session is confirmed for payment",
       type: NotificationType.group_enrollment_created,
       data: { groupId },
     }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
 
-    // fixed_date: min reached → confirm + payment flow
-    if (result.newStatus === 'confirmed' && group.status === 'open' && !isFree) {
-      await this.notifyGroupConfirmed(groupId, group.paymentDeadlineHours);
+    if (result.newStatus === 'confirmed' && !result.isFree) {
+      await this.notifyGroupConfirmed(groupId, result.group.paymentDeadlineHours);
     }
 
-    // on_capacity: min reached → notify admin to set date
     if (
-      group.schedulingMode === 'on_capacity' &&
-      result.newCount >= group.minParticipants &&
-      group.currentEnrollment < group.minParticipants
+      result.group.schedulingMode === 'on_capacity' &&
+      result.newCount >= result.group.minParticipants &&
+      result.group.currentEnrollment < result.group.minParticipants
     ) {
       this.notificationsService.createNotification({
-        userId: group.practitionerId,
-        titleAr: `اكتمل الحد الأدنى — حدد موعد "${group.nameAr}"`,
-        titleEn: `Minimum reached — schedule "${group.nameEn}"`,
+        userId: result.group.practitionerId,
+        titleAr: `اكتمل الحد الأدنى — حدد موعد "${result.group.nameAr}"`,
+        titleEn: `Minimum reached — schedule "${result.group.nameEn}"`,
         bodyAr: `وصل عدد المسجلين ${result.newCount}. حدد موعد الجلسة`,
         bodyEn: `${result.newCount} enrolled. Set a date for this session`,
         type: NotificationType.group_capacity_reached,

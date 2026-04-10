@@ -68,29 +68,59 @@ describe('GroupsEnrollmentsService', () => {
     });
 
     it('throws 400 when enrolling in a full group', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'full' });
+      const blockedGroup = { ...baseGroup, status: 'full' };
+      mockPrisma.group.findFirst.mockResolvedValue(blockedGroup);
+      mockPrisma.groupEnrollment.findFirst.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(async (fn: any) => {
+        const result = await fn(mockPrisma);
+        return result;
+      });
       await expect(service.enroll('grp-1', 'pat-1')).rejects.toThrow(BadRequestException);
     });
 
     it('throws 400 when enrolling in a completed group', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'completed' });
+      const blockedGroup = { ...baseGroup, status: 'completed' };
+      mockPrisma.group.findFirst.mockResolvedValue(blockedGroup);
+      mockPrisma.groupEnrollment.findFirst.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(async (fn: any) => {
+        const result = await fn(mockPrisma);
+        return result;
+      });
       await expect(service.enroll('grp-1', 'pat-1')).rejects.toThrow(BadRequestException);
     });
 
     it('throws 400 when enrolling in a cancelled group', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'cancelled' });
+      const blockedGroup = { ...baseGroup, status: 'cancelled' };
+      mockPrisma.group.findFirst.mockResolvedValue(blockedGroup);
+      mockPrisma.groupEnrollment.findFirst.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(async (fn: any) => {
+        const result = await fn(mockPrisma);
+        return result;
+      });
       await expect(service.enroll('grp-1', 'pat-1')).rejects.toThrow(BadRequestException);
     });
 
     // ─── regression tests for the awaiting_payment/confirmed bug ───
 
     it('[REGRESSION] throws 400 when enrolling in awaiting_payment group', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'awaiting_payment' });
+      const blockedGroup = { ...baseGroup, status: 'awaiting_payment' };
+      mockPrisma.group.findFirst.mockResolvedValue(blockedGroup);
+      mockPrisma.groupEnrollment.findFirst.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(async (fn: any) => {
+        const result = await fn(mockPrisma);
+        return result;
+      });
       await expect(service.enroll('grp-1', 'pat-1')).rejects.toThrow(BadRequestException);
     });
 
     it('[REGRESSION] throws 400 when enrolling in confirmed group', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'confirmed' });
+      const blockedGroup = { ...baseGroup, status: 'confirmed' };
+      mockPrisma.group.findFirst.mockResolvedValue(blockedGroup);
+      mockPrisma.groupEnrollment.findFirst.mockResolvedValue(null);
+      mockPrisma.$transaction.mockImplementation(async (fn: any) => {
+        const result = await fn(mockPrisma);
+        return result;
+      });
       await expect(service.enroll('grp-1', 'pat-1')).rejects.toThrow(BadRequestException);
     });
 
@@ -143,6 +173,50 @@ describe('GroupsEnrollmentsService', () => {
       expect(mockPrisma.group.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ status: 'full', currentEnrollment: 10 }) }),
       );
+    });
+
+    it('should not allow overbooking when two enrollments race', async () => {
+      const group = {
+        id: 'group-1',
+        status: 'open' as const,
+        paymentType: 'FULL_PAYMENT' as const,
+        currentEnrollment: 9,
+        maxParticipants: 10,
+        minParticipants: 2,
+        schedulingMode: 'fixed_date' as const,
+        paymentDeadlineHours: 48,
+        nameAr: 'مجموعة',
+        nameEn: 'Group',
+        practitionerId: 'p-1',
+        deletedAt: null,
+      };
+
+      let txUpdateCallCount = 0;
+      const mockTx = {
+        groupEnrollment: {
+          create: jest.fn().mockResolvedValue({ id: 'enroll-1', groupId: 'group-1', patientId: 'patient-1', status: 'registered' }),
+          findFirst: jest.fn().mockResolvedValue(null),
+        },
+        group: {
+          findFirst: jest.fn().mockResolvedValue({ ...group, currentEnrollment: 9 }),
+          update: jest.fn().mockImplementation(({ data }: any) => {
+            txUpdateCallCount++;
+            expect(data.currentEnrollment).toBe(10);
+            return Promise.resolve({ ...group, ...data });
+          }),
+        },
+      };
+
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx));
+      mockPrisma.group.findFirst.mockResolvedValue(group);
+      mockPrisma.groupEnrollment.findFirst.mockResolvedValue(null);
+
+      await service.enroll('group-1', 'patient-1');
+
+      expect(txUpdateCallCount).toBe(1);
+      expect(mockTx.group.findFirst).toHaveBeenCalledWith({
+        where: { id: 'group-1' },
+      });
     });
   });
 
