@@ -11,6 +11,7 @@ import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { GroupsPaymentService } from '../groups/groups-payment.service.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
+import { applyVat } from './payments.helpers.js';
 import { CancelledBy, Prisma } from '@prisma/client';
 
 @Injectable()
@@ -262,13 +263,13 @@ export class MoyasarWebhookService {
       }
 
       // Create Payment record for ZATCA invoice + link to GroupEnrollment
-      const vatAmount = Math.round(webhookAmount * 0.15);
+      const { amount, vatAmount, totalAmount } = applyVat(webhookAmount);
       const payment = await tx.payment.create({
         data: {
           groupEnrollmentId: enrollmentId,
-          amount: webhookAmount - vatAmount,
+          amount,
           vatAmount,
-          totalAmount: webhookAmount,
+          totalAmount,
           method: 'moyasar',
           status: 'paid',
           moyasarPaymentId: eventId,

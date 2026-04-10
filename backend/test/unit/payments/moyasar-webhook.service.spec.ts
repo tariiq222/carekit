@@ -139,5 +139,31 @@ describe('MoyasarWebhookService', () => {
       expect(prismaServiceMock.groupPayment.updateMany).not.toHaveBeenCalled();
       expect(groupsPaymentServiceMock.confirmEnrollmentAfterPayment).not.toHaveBeenCalled();
     });
+
+    it('should store amount (base), vatAmount, and totalAmount (base+vat) correctly', async () => {
+      const baseAmount = 10000; // 100 SAR
+      const expectedVat = Math.round(baseAmount * 15 / 100); // 1500 halalat
+      const expectedTotal = baseAmount + expectedVat; // 11500
+
+      const groupPayment = { id: 'gp1', enrollmentId: 'e1', totalAmount: baseAmount, status: 'pending' };
+      prismaServiceMock.groupPayment.findUnique.mockResolvedValue(groupPayment);
+      prismaServiceMock.groupPayment.update.mockResolvedValue({});
+      prismaServiceMock.groupEnrollment.update.mockResolvedValue({});
+      prismaServiceMock.processedWebhook.findUnique.mockResolvedValue(null);
+      prismaServiceMock.processedWebhook.create.mockResolvedValue({});
+      prismaServiceMock.payment.create.mockResolvedValue({ id: 'pmt-1' });
+
+      await (service as any).processGroupPaymentSuccess('gp1', 'e1', 'evt_vat', baseAmount);
+
+      expect(prismaServiceMock.payment.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            amount: baseAmount,
+            vatAmount: expectedVat,
+            totalAmount: expectedTotal,
+          }),
+        }),
+      );
+    });
   });
 });
