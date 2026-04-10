@@ -97,7 +97,10 @@ claude-opus-4-6:    ARCHITECT (re-analysis on escalation)
 ## 🤖 Skill Auto-Dispatch (CareKit Edition)
 
 > CTO automatically loads the right skill for each agent. No manual selection needed.
-> The table below is the single source of truth — loaded before every execution phase.
+> **Pipeline Enforcement:** All TIER 1 skills are now wired into the pipeline YAML files
+> (`implement-plan.yaml`, `write-tests.yaml`, `review-diff.yaml`, `qa-check.yaml`).
+> Skills load automatically when their trigger condition is met — no manual `skill:` calls needed.
+> The table below is the single source of truth for skill-to-trigger mappings.
 
 ### TIER 1 — CareKit Custom Skills (always preferred)
 
@@ -159,6 +162,8 @@ python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack nextjs 
 4. Token savings: only load skills for agents in this task's dependency graph
 5. ui-ux-pro-max loads only when task involves: new page design, style/color/font decisions,
    accessibility audit, animation, or visual component design — NOT for logic or data changes
+6. Pipeline enforcement: all TIER 1 skills are wired into pipeline YAML files — skills
+   are NOT manually invoked, they trigger automatically based on file patterns and conditions
 ```
 
 ### MCP Auto-Routing
