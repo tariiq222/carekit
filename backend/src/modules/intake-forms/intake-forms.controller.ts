@@ -10,7 +10,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
@@ -38,12 +45,19 @@ export class IntakeFormsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Get()
+  @ApiOperation({ summary: 'List all intake forms' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'intake_forms', action: 'view' })
   async listForms(@Query() query: ListIntakeFormsDto) {
     return this.intakeFormsService.listForms(query);
   }
 
   @Get(':formId')
+  @ApiOperation({ summary: 'Get an intake form by ID' })
+  @ApiParam({ name: 'formId', description: 'UUID of the intake form' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'intake_forms', action: 'view' })
   async getForm(@Param('formId', uuidPipe) formId: string) {
     return this.intakeFormsService.getForm(formId);
@@ -54,12 +68,19 @@ export class IntakeFormsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post()
+  @ApiOperation({ summary: 'Create a new intake form' })
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'intake_forms', action: 'create' })
   async createForm(@Body() dto: CreateIntakeFormDto) {
     return this.intakeFormsService.createForm(dto);
   }
 
   @Patch(':formId')
+  @ApiOperation({ summary: 'Update an intake form' })
+  @ApiParam({ name: 'formId', description: 'UUID of the intake form' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'intake_forms', action: 'edit' })
   async updateForm(
     @Param('formId', uuidPipe) formId: string,
@@ -69,6 +90,10 @@ export class IntakeFormsController {
   }
 
   @Delete(':formId')
+  @ApiOperation({ summary: 'Delete an intake form' })
+  @ApiParam({ name: 'formId', description: 'UUID of the intake form' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'intake_forms', action: 'delete' })
   async deleteForm(@Param('formId', uuidPipe) formId: string) {
     return this.intakeFormsService.deleteForm(formId);
@@ -79,6 +104,10 @@ export class IntakeFormsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Put(':formId/fields')
+  @ApiOperation({ summary: 'Replace all fields on an intake form' })
+  @ApiParam({ name: 'formId', description: 'UUID of the intake form' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'intake_forms', action: 'edit' })
   async setFields(
     @Param('formId', uuidPipe) formId: string,
@@ -92,19 +121,27 @@ export class IntakeFormsController {
   // ═══════════════════════════════════════════════════════════════
 
   @Post(':formId/responses')
+  @ApiOperation({ summary: 'Submit a response to an intake form' })
+  @ApiParam({ name: 'formId', description: 'UUID of the intake form' })
+  @ApiResponse({ status: 201 })
   async submitResponse(
     @Param('formId', uuidPipe) formId: string,
     @CurrentUser('id') patientId: string,
     @Body() dto: SubmitResponseDto,
   ) {
-    return this.intakeFormsService.submitResponse(patientId, { ...dto, formId });
+    return this.intakeFormsService.submitResponse(patientId, {
+      ...dto,
+      formId,
+    });
   }
 
   @Get('responses/:bookingId')
+  @ApiOperation({ summary: 'Get intake form response for a booking' })
+  @ApiParam({ name: 'bookingId', description: 'UUID of the booking' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'bookings', action: 'view' })
-  async getResponseByBooking(
-    @Param('bookingId', uuidPipe) bookingId: string,
-  ) {
+  async getResponseByBooking(@Param('bookingId', uuidPipe) bookingId: string) {
     return this.intakeFormsService.getResponseByBooking(bookingId);
   }
 }

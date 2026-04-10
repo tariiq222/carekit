@@ -9,7 +9,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
@@ -32,6 +39,9 @@ export class GiftCardsController {
   constructor(private readonly giftCardsService: GiftCardsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List all gift cards' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'gift-cards', action: 'view' })
   async findAll(@Query() query: GiftCardFilterDto) {
     const data = await this.giftCardsService.findAll(query);
@@ -39,6 +49,10 @@ export class GiftCardsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a gift card by ID' })
+  @ApiParam({ name: 'id', description: 'UUID of the gift card' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'gift-cards', action: 'view' })
   async findById(@Param('id', uuidPipe) id: string) {
     const data = await this.giftCardsService.findById(id);
@@ -46,6 +60,9 @@ export class GiftCardsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a new gift card' })
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'gift-cards', action: 'create' })
   async create(@Body() dto: CreateGiftCardDto) {
     const data = await this.giftCardsService.create(dto);
@@ -53,6 +70,10 @@ export class GiftCardsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a gift card' })
+  @ApiParam({ name: 'id', description: 'UUID of the gift card' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'gift-cards', action: 'edit' })
   async update(
     @Param('id', uuidPipe) id: string,
@@ -63,6 +84,10 @@ export class GiftCardsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Deactivate a gift card' })
+  @ApiParam({ name: 'id', description: 'UUID of the gift card' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'gift-cards', action: 'delete' })
   async deactivate(@Param('id', uuidPipe) id: string) {
     const data = await this.giftCardsService.deactivate(id);
@@ -70,12 +95,19 @@ export class GiftCardsController {
   }
 
   @Post('check-balance')
+  @ApiOperation({ summary: 'Check the balance of a gift card by code' })
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   async checkBalance(@Body() dto: CheckBalanceDto) {
     const data = await this.giftCardsService.checkBalance(dto.code);
     return { success: true, data };
   }
 
   @Post(':id/credit')
+  @ApiOperation({ summary: 'Add credit to a gift card' })
+  @ApiParam({ name: 'id', description: 'UUID of the gift card' })
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'gift-cards', action: 'edit' })
   async addCredit(
     @Param('id', uuidPipe) id: string,
