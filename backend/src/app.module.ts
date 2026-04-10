@@ -19,6 +19,7 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter.js
 import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor.js';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
+import { BranchIdNormalizerMiddleware } from './common/middleware/branch-id-normalizer.middleware.js';
 import { StructuredLogger } from './common/services/structured-logger.service.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { RolesModule } from './modules/roles/roles.module.js';
@@ -163,5 +164,9 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    // Strip branchId from all requests when multi_branch feature is disabled.
+    // Applies globally so every endpoint (bookings, practitioners, reports, etc.)
+    // falls back to branch-agnostic queries automatically.
+    consumer.apply(BranchIdNormalizerMiddleware).forRoutes('*');
   }
 }

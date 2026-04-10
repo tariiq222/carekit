@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { useCategories } from "@/hooks/use-services"
 import { useDepartmentOptions } from "@/hooks/use-departments"
+import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import { useLocale } from "@/components/locale-provider"
 import { ServiceAvatarPicker } from "@/components/features/services/service-avatar-picker"
 import { ServiceBranchesTab } from "@/components/features/services/service-branches-tab"
@@ -43,6 +44,8 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }
   const { t, locale } = useLocale()
   const { data: categories, isLoading: loadingCategories } = useCategories()
   const { options: departments } = useDepartmentOptions()
+  const { isEnabled } = useFeatureFlagMap()
+  const isMultiBranch = isEnabled("multi_branch")
   const [selectedDeptId, setSelectedDeptId] = useState<string>("")
 
   const hasDepts = departments.length > 0
@@ -221,33 +224,35 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }
           </div>
         </div>
 
-        {/* ── Row 3: Branch Restrictions + Display Settings ── */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-lg border border-border bg-surface-muted px-4 py-3 flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-medium text-foreground">{t("services.branches.title")}</p>
-              {serviceId && serviceBranches !== undefined && (
-                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${
-                  serviceBranches.length > 0
-                    ? "border-warning/30 bg-warning/10 text-warning"
-                    : "border-success/30 bg-success/10 text-success"
-                }`}>
-                  {serviceBranches.length > 0
-                    ? (locale === "ar" ? `${serviceBranches.length} فروع` : `${serviceBranches.length} branches`)
-                    : (locale === "ar" ? "جميع الفروع" : "All branches")}
-                </span>
+        {/* ── Row 3: Branch Restrictions (only when multi_branch enabled) + Display Settings ── */}
+        <div className={`grid gap-4 ${isMultiBranch ? "grid-cols-2" : "grid-cols-1"}`}>
+          {isMultiBranch && (
+            <div className="rounded-lg border border-border bg-surface-muted px-4 py-3 flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-foreground">{t("services.branches.title")}</p>
+                {serviceId && serviceBranches !== undefined && (
+                  <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${
+                    serviceBranches.length > 0
+                      ? "border-warning/30 bg-warning/10 text-warning"
+                      : "border-success/30 bg-success/10 text-success"
+                  }`}>
+                    {serviceBranches.length > 0
+                      ? (locale === "ar" ? `${serviceBranches.length} فروع` : `${serviceBranches.length} branches`)
+                      : (locale === "ar" ? "جميع الفروع" : "All branches")}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">{t("services.branches.cardDesc")}</p>
+              {serviceId ? (
+                <ServiceBranchesTab serviceId={serviceId} serviceBranches={serviceBranches} />
+              ) : (
+                <ServiceBranchesPicker
+                  value={branchIds ?? []}
+                  onChange={(ids) => form.setValue("branchIds", ids)}
+                />
               )}
             </div>
-            <p className="text-xs text-muted-foreground">{t("services.branches.cardDesc")}</p>
-            {serviceId ? (
-              <ServiceBranchesTab serviceId={serviceId} serviceBranches={serviceBranches} />
-            ) : (
-              <ServiceBranchesPicker
-                value={branchIds ?? []}
-                onChange={(ids) => form.setValue("branchIds", ids)}
-              />
-            )}
-          </div>
+          )}
 
           {/* Display Settings */}
           <div className="rounded-lg border border-border bg-surface-muted px-4 py-3 flex flex-col gap-3">

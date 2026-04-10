@@ -23,6 +23,7 @@ import { ServiceDetailSheet } from "./service-detail-sheet"
 
 import { useServices, useCategories, useServiceMutations } from "@/hooks/use-services"
 import { useBranches } from "@/hooks/use-branches"
+import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import { useLocale } from "@/components/locale-provider"
 import type { Service } from "@/lib/types/service"
 
@@ -41,6 +42,8 @@ export function ServicesTabContent() {
   const { data: categories } = useCategories()
   const { branches } = useBranches()
   const { deleteMut } = useServiceMutations()
+  const { isEnabled } = useFeatureFlagMap()
+  const isMultiBranch = isEnabled("multi_branch")
 
   const [detailTarget, setDetailTarget] = useState<Service | null>(null)
 
@@ -129,7 +132,8 @@ export function ServicesTabContent() {
             options: categoryOptions,
             onValueChange: (v) => setCategoryId(v === "all" ? undefined : v),
           },
-          {
+          // Branch filter — only when multi_branch feature is enabled
+          ...(isMultiBranch ? [{
             key: "branch",
             value: branchId ?? "all",
             placeholder: t("services.filters.allBranches"),
@@ -140,8 +144,8 @@ export function ServicesTabContent() {
                 label: locale === "ar" ? b.nameAr : b.nameEn,
               })),
             ],
-            onValueChange: (v) => setBranchId(v === "all" ? undefined : v),
-          },
+            onValueChange: (v: string) => setBranchId(v === "all" ? undefined : v),
+          }] : []),
         ]}
         hasFilters={hasFilters}
         onReset={resetFilters}
