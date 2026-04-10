@@ -62,7 +62,7 @@ export function useSidebarNav() {
 
   /* ── feature flags map (runtime on/off per clinic) ── */
   const { data: featureFlagMap } = useQuery({
-    queryKey: ["feature-flag-map"],
+    queryKey: queryKeys.featureFlags.map(),
     queryFn: fetchFeatureFlagMap,
     staleTime: 5 * 60_000,
   })

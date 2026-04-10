@@ -8,11 +8,11 @@ import {
   updateFeatureFlag,
 } from "@/lib/api/feature-flags"
 import type { FeatureFlag, FeatureFlagMap } from "@/lib/types/feature-flag"
+import { queryKeys } from "@/lib/query-keys"
 
 /* ─── Query Key ─── */
 
 const FEATURE_FLAGS_KEY = ["feature-flags"] as const
-const FEATURE_FLAG_MAP_KEY = ["feature-flag-map"] as const
 
 /* ─── Full Feature Flags List (admin) ─── */
 
@@ -33,7 +33,7 @@ export function useFeatureFlags() {
 
 export function useFeatureFlagMap() {
   const { data } = useQuery({
-    queryKey: FEATURE_FLAG_MAP_KEY,
+    queryKey: queryKeys.featureFlags.map(),
     queryFn: fetchFeatureFlagMap,
     staleTime: 5 * 60 * 1000,
   })
@@ -57,7 +57,7 @@ export function useFeatureFlagMutation() {
       updateFeatureFlag(key, enabled),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: FEATURE_FLAGS_KEY })
-      queryClient.invalidateQueries({ queryKey: FEATURE_FLAG_MAP_KEY })
+      queryClient.invalidateQueries({ queryKey: queryKeys.featureFlags.map() })
     },
     onError: (error: unknown) => {
       const status = (error as { response?: { status?: number } })?.response?.status

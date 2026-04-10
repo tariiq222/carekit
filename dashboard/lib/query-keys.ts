@@ -271,6 +271,12 @@ export const queryKeys = {
     features: () => ["license", "features"] as const,
   },
 
+  /* ─── Feature Flags ─── */
+  featureFlags: {
+    all: ["feature-flags"] as const,
+    map: () => ["feature-flag-map"] as const,
+  },
+
   /* ─── Widget ─── */
   widget: {
     branding: () => ["widget", "branding"] as const,

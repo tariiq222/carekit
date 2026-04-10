@@ -31,6 +31,7 @@ export function useUpdateLicense() {
     mutationFn: (data: UpdateLicensePayload) => updateLicense(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.license.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.featureFlags.map() })
     },
   })
 }
