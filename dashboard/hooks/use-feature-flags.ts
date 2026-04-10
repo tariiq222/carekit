@@ -36,6 +36,7 @@ export function useFeatureFlagMap() {
     queryKey: queryKeys.featureFlags.map(),
     queryFn: fetchFeatureFlagMap,
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: true,
   })
 
   const map: FeatureFlagMap = data ?? {}
