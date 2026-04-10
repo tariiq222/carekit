@@ -17,6 +17,7 @@ import { ServicesService } from '../../../src/modules/services/services.service.
 const mockPrisma: any = {
   serviceBookingType: { deleteMany: jest.fn(), create: jest.fn(), findMany: jest.fn() },
   serviceDurationOption: { deleteMany: jest.fn(), createMany: jest.fn(), findMany: jest.fn() },
+  booking: { count: jest.fn().mockResolvedValue(0) },
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,8 +57,8 @@ describe('ServiceBookingTypeService — isDefault uniqueness (fix #8)', () => {
           price: 100,
           duration: 30,
           durationOptions: [
-            { label: 'Short', durationMinutes: 30, price: 100, isDefault: true },
-            { label: 'Long',  durationMinutes: 60, price: 200, isDefault: true }, // second default!
+            { label: 'Short', labelAr: 'قصير', durationMinutes: 30, price: 100, isDefault: true, serviceBookingTypeId: 'sbt-1' },
+            { label: 'Long',  labelAr: 'طويل', durationMinutes: 60, price: 200, isDefault: true, serviceBookingTypeId: 'sbt-1' }, // second default!
           ],
         }],
       }),
@@ -71,8 +72,8 @@ describe('ServiceBookingTypeService — isDefault uniqueness (fix #8)', () => {
         price: 100,
         duration: 30,
         durationOptions: [
-          { label: 'Short', durationMinutes: 30, price: 100, isDefault: false },
-          { label: 'Long',  durationMinutes: 60, price: 200, isDefault: false },
+          { label: 'Short', labelAr: 'قصير', durationMinutes: 30, price: 100, isDefault: false, serviceBookingTypeId: 'sbt-1' },
+          { label: 'Long',  labelAr: 'طويل', durationMinutes: 60, price: 200, isDefault: false, serviceBookingTypeId: 'sbt-1' },
         ],
       }],
     });
@@ -91,8 +92,8 @@ describe('ServiceBookingTypeService — isDefault uniqueness (fix #8)', () => {
           price: 100,
           duration: 30,
           durationOptions: [
-            { label: 'Short', durationMinutes: 30, price: 100, isDefault: false },
-            { label: 'Long',  durationMinutes: 60, price: 200, isDefault: true },
+            { label: 'Short', labelAr: 'قصير', durationMinutes: 30, price: 100, isDefault: false, serviceBookingTypeId: 'sbt-1' },
+            { label: 'Long',  labelAr: 'طويل', durationMinutes: 60, price: 200, isDefault: true,  serviceBookingTypeId: 'sbt-1' },
           ],
         }],
       }),
@@ -127,8 +128,8 @@ describe('DurationOptionsService — isDefault uniqueness (fix #8)', () => {
     await expect(
       service.setDurationOptions('svc-1', {
         options: [
-          { label: 'A', durationMinutes: 30, price: 100, isDefault: true },
-          { label: 'B', durationMinutes: 60, price: 200, isDefault: true },
+          { label: 'A', durationMinutes: 30, price: 100, isDefault: true,  serviceBookingTypeId: 'sbt-1' },
+          { label: 'B', durationMinutes: 60, price: 200, isDefault: true,  serviceBookingTypeId: 'sbt-1' },
         ],
       }),
     ).rejects.toMatchObject({ response: { error: 'MULTIPLE_DEFAULTS' } });
@@ -137,8 +138,8 @@ describe('DurationOptionsService — isDefault uniqueness (fix #8)', () => {
   it('auto-assigns first as default when none marked', async () => {
     await service.setDurationOptions('svc-1', {
       options: [
-        { label: 'A', durationMinutes: 30, price: 100, isDefault: false },
-        { label: 'B', durationMinutes: 60, price: 200, isDefault: false },
+        { label: 'A', durationMinutes: 30, price: 100, isDefault: false, serviceBookingTypeId: 'sbt-1' },
+        { label: 'B', durationMinutes: 60, price: 200, isDefault: false, serviceBookingTypeId: 'sbt-1' },
       ],
     });
 
