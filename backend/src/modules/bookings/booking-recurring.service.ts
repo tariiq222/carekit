@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
 import { BookingsService } from './bookings.service.js';
@@ -19,7 +24,13 @@ const PATTERN_DAYS: Record<string, number> = {
 function addInterval(date: Date, pattern: string): Date {
   const next = new Date(date);
   if (pattern === 'monthly') {
+    const intendedMonth = (next.getMonth() + 1) % 12;
     next.setMonth(next.getMonth() + 1);
+    // Clamp: if JS overflowed past the intended month (e.g. Jan 31 → Mar 3),
+    // roll back to the last day of the intended month (setDate(0) = last day of prev month)
+    if (next.getMonth() !== intendedMonth) {
+      next.setDate(0);
+    }
   } else {
     next.setDate(next.getDate() + (PATTERN_DAYS[pattern] ?? 7));
   }
@@ -36,11 +47,19 @@ export class BookingRecurringService {
     private readonly bookingSettingsService: BookingSettingsService,
   ) {}
 
-  async createRecurring(callerUserId: string, dto: CreateRecurringBookingDto, callerRoles?: Array<{ slug: string }>) {
+  async createRecurring(
+    callerUserId: string,
+    dto: CreateRecurringBookingDto,
+    callerRoles?: Array<{ slug: string }>,
+  ) {
     // Validate service exists and supports recurring bookings (CRITICAL fix #4)
     const service = await this.prisma.service.findFirst({
       where: { id: dto.serviceId, isActive: true, deletedAt: null },
-      select: { allowRecurring: true, allowedRecurringPatterns: true, maxRecurrences: true },
+      select: {
+        allowRecurring: true,
+        allowedRecurringPatterns: true,
+        maxRecurrences: true,
+      },
     });
     if (!service) {
       throw new NotFoundException({
@@ -57,7 +76,9 @@ export class BookingRecurringService {
       });
     }
 
-    const settings = await this.bookingSettingsService.getForBranch(dto.branchId);
+    const settings = await this.bookingSettingsService.getForBranch(
+      dto.branchId,
+    );
 
     // Allow admin/staff to book for a specific patient; otherwise use the caller's own ID
     const patientId = dto.patientId ?? callerUserId;
@@ -81,9 +102,10 @@ export class BookingRecurringService {
       ? settings.allowedRecurringPatterns
       : ['weekly', 'biweekly'];
     // Intersection: pattern must be allowed by both service AND clinic
-    const allowedPatterns = servicePatterns.length > 0
-      ? servicePatterns.filter((p) => clinicPatterns.includes(p))
-      : clinicPatterns;
+    const allowedPatterns =
+      servicePatterns.length > 0
+        ? servicePatterns.filter((p) => clinicPatterns.includes(p))
+        : clinicPatterns;
     if (!allowedPatterns.includes(dto.repeatEvery)) {
       throw new BadRequestException({
         statusCode: 400,
@@ -93,7 +115,8 @@ export class BookingRecurringService {
     }
 
     /* Validate count limit — use the stricter of service and clinic limits */
-    const serviceMax = service.maxRecurrences > 0 ? service.maxRecurrences : Infinity;
+    const serviceMax =
+      service.maxRecurrences > 0 ? service.maxRecurrences : Infinity;
     const clinicMax = settings.maxRecurrences ?? 12;
     const maxCount = Math.min(serviceMax, clinicMax);
     if (dto.repeatCount > maxCount) {
@@ -116,22 +139,28 @@ export class BookingRecurringService {
       try {
         // Pass recurringGroupId directly into create — atomic, no separate update needed
         // callerUserId is the admin/staff user; patientId in dto is the actual patient
-        const booking = await this.bookingsService.create(callerUserId, {
-          practitionerId: dto.practitionerId,
-          serviceId: dto.serviceId,
-          branchId: dto.branchId,
-          type: dto.type,
-          date: dateStr,
-          startTime: dto.startTime,
-          notes: dto.notes,
-          recurringGroupId,
-          patientId,
-        }, callerRoles);
+        const booking = await this.bookingsService.create(
+          callerUserId,
+          {
+            practitionerId: dto.practitionerId,
+            serviceId: dto.serviceId,
+            branchId: dto.branchId,
+            type: dto.type,
+            date: dateStr,
+            startTime: dto.startTime,
+            notes: dto.notes,
+            recurringGroupId,
+            patientId,
+          },
+          callerRoles,
+        );
 
         created.push({ id: booking.id, date: dateStr });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
-        this.logger.warn(`Recurring booking conflict on ${dateStr}: ${message}`);
+        this.logger.warn(
+          `Recurring booking conflict on ${dateStr}: ${message}`,
+        );
         conflicts.push({ date: dateStr, reason: message });
       }
 
