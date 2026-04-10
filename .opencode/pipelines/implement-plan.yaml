@@ -88,11 +88,17 @@ steps:
 
   # ─── EXECUTION ───────────────────────────────────────────────────────────
 
+  - id: executor-display
+    type: display
+    agent: executor
+    message: "▶ EXECUTOR — MiniMax M2.7-HS | Implementing approved plan | Target: {target_module}"
+
   - id: execute
     agent: executor
     type: execution
     required: true
     depends_on:
+      - executor-display
       - nestjs-carekit-context
       - prisma-carekit-context
       - mobile-carekit-context
@@ -104,6 +110,7 @@ steps:
       - plan: "from:plan.implementation_plan"
       - files: "from:read-target-files"
       - skills_loaded: "from:active_skill_contexts"
+      - target_module: "from:files_to_read_next[0]"    # first file reveals the module
     rules:
       - no_unplanned_changes: true
       - max_files_per_batch: 5

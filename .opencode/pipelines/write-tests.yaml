@@ -51,11 +51,17 @@ steps:
     skill: tdd-carekit
     scope: backend_test_patterns_only
 
+  - id: test-engineer-display
+    type: display
+    agent: test-engineer
+    message: "▶ TEST-ENGINEER — MiniMax M2.7-HS | Writing tests | Coverage gate: unit + integration + e2e"
+
   - id: test-engineer
     agent: test-engineer
     type: implementation
     required: true
     depends_on:
+      - test-engineer-display
       - tdd-carekit-context
       - e2e-carekit-context
       - backend-test-context
@@ -83,6 +89,7 @@ steps:
     type: gate
     required: true
     depends_on: test-engineer
+    display: "▶ GATE — Running test suite"
     commands:
       backend: "cd backend && npm run test -- --testPathPattern='<affected-module>'"
       dashboard: "cd dashboard && npm run test"

@@ -35,11 +35,17 @@ steps:
 
   # ─── QUICK REVIEWER ──────────────────────────────────────────────────────
 
+  - id: quick-reviewer-display
+    type: display
+    agent: quick-reviewer
+    message: "▶ QUICK-REVIEWER — MiniMax M2.7-HS | First-pass review: TS + logic + imports + tests + scope"
+
   - id: quick-reviewer
     agent: quick-reviewer
     type: analysis
     required: true
     depends_on:
+      - quick-reviewer-display
       - security-carekit-review-context
       - get-diff
     prompt_file: .opencode/agents/quick-reviewer.md
@@ -67,8 +73,10 @@ steps:
     condition: "decision == 'ESCALATE'"
     on_pass:
       action: continue_to_deep_reviewer
+      display: "⚠️ ESCALATE — routing to Deep Reviewer"
     on_fail:
       action: skip_to_output    # PASS — no deep review needed
+      display: "✅ PASS — skipping Deep Reviewer"
 
   - id: ui-ux-audit
     type: skill
@@ -92,11 +100,17 @@ steps:
 
   # ─── DEEP REVIEWER ───────────────────────────────────────────────────────
 
+  - id: deep-reviewer-display
+    type: display
+    agent: deep-reviewer
+    message: "▶ DEEP-REVIEWER — Sonnet 4.6 | Deep review: plan adherence + logic + security + tests"
+
   - id: deep-reviewer
     agent: deep-reviewer
     type: analysis
     required: false    # only runs when escalation-gate triggers
     depends_on:
+      - deep-reviewer-display
       - security-carekit-deep-context
       - escalation-gate
     prompt_file: .opencode/agents/deep-reviewer.md

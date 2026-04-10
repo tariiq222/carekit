@@ -29,11 +29,17 @@ steps:
 
   # ─── QA VALIDATOR ───────────────────────────────────────────────────────
 
+  - id: qa-validator-display
+    type: display
+    agent: qa-validator
+    message: "▶ QA-VALIDATOR — MiniMax M2.7-HS | Production risk assessment: appointment workflow + data integrity + payments"
+
   - id: qa-validator
     agent: qa-validator
     type: analysis
     required: true
     depends_on:
+      - qa-validator-display
       - security-carekit-qa-context
       - load-context
     prompt_file: .opencode/agents/qa-validator.md
