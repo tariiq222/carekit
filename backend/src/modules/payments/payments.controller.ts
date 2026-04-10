@@ -14,7 +14,8 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -46,6 +47,8 @@ export class PaymentsController {
   @Get('stats')
   @CheckPermissions({ module: 'payments', action: 'view' })
   @ApiOperation({ summary: 'Get payment statistics overview' })
+  @ApiResponse({ status: 200, description: 'Payment statistics' })
+  @ApiStandardResponses()
   async getPaymentStats() {
     return this.paymentsService.getPaymentStats();
   }
@@ -56,6 +59,8 @@ export class PaymentsController {
 
   @Get('my')
   @ApiOperation({ summary: "Get current patient's own payments" })
+  @ApiResponse({ status: 200, description: "Patient's own payments" })
+  @ApiStandardResponses()
   async getMyPayments(
     @CurrentUser() user: { id: string },
     @Query() query: PaymentFilterDto,
@@ -70,9 +75,9 @@ export class PaymentsController {
   @Get('booking/:bookingId')
   @CheckPermissions({ module: 'payments', action: 'view' })
   @ApiOperation({ summary: 'Get payment by booking ID' })
-  async findPaymentByBooking(
-    @Param('bookingId', uuidPipe) bookingId: string,
-  ) {
+  @ApiResponse({ status: 200, description: 'Payment record' })
+  @ApiStandardResponses()
+  async findPaymentByBooking(@Param('bookingId', uuidPipe) bookingId: string) {
     return this.paymentsService.findPaymentByBooking(bookingId);
   }
 
@@ -83,6 +88,8 @@ export class PaymentsController {
   @Get()
   @CheckPermissions({ module: 'payments', action: 'view' })
   @ApiOperation({ summary: 'List payments with filters and pagination' })
+  @ApiResponse({ status: 200, description: 'Paginated payments list' })
+  @ApiStandardResponses()
   async findAll(@Query() query: PaymentFilterDto) {
     return this.paymentsService.findAll(query);
   }
@@ -94,6 +101,8 @@ export class PaymentsController {
   @Post('moyasar')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Create a Moyasar payment' })
+  @ApiResponse({ status: 201, description: 'Moyasar payment created' })
+  @ApiStandardResponses()
   async createMoyasarPayment(
     @CurrentUser() user: { id: string },
     @Body() dto: CreateMoyasarPaymentDto,
@@ -108,6 +117,7 @@ export class PaymentsController {
   @Post('moyasar/webhook')
   @Public()
   @ApiOperation({ summary: 'Handle Moyasar payment webhook' })
+  @ApiResponse({ status: 201, description: 'Webhook processed' })
   async handleMoyasarWebhook(
     @Req() req: Request & { rawBody?: Buffer },
     @Body() dto: MoyasarWebhookDto,
@@ -116,11 +126,16 @@ export class PaymentsController {
     if (!req.rawBody) {
       throw new BadRequestException({
         statusCode: 400,
-        message: 'Raw request body is required for webhook signature verification',
+        message:
+          'Raw request body is required for webhook signature verification',
         error: 'RAW_BODY_MISSING',
       });
     }
-    return this.paymentsService.handleMoyasarWebhook(signature, req.rawBody, dto);
+    return this.paymentsService.handleMoyasarWebhook(
+      signature,
+      req.rawBody,
+      dto,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -130,21 +145,37 @@ export class PaymentsController {
   @Post('bank-transfer')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Upload bank transfer receipt' })
-  @UseInterceptors(FileInterceptor('receipt', {
-    limits: { fileSize: 10 * 1024 * 1024 },
-    fileFilter: (_req: unknown, file: { mimetype: string }, cb: (err: Error | null, accept: boolean) => void) => {
-      const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-      if (allowed.includes(file.mimetype)) {
-        cb(null, true);
-      } else {
-        cb(new BadRequestException({
-          statusCode: 400,
-          message: 'Only JPEG, PNG, WebP, and PDF files are allowed',
-          error: 'INVALID_FILE_TYPE',
-        }), false);
-      }
-    },
-  }))
+  @ApiResponse({ status: 201, description: 'Bank transfer receipt uploaded' })
+  @ApiStandardResponses()
+  @UseInterceptors(
+    FileInterceptor('receipt', {
+      limits: { fileSize: 10 * 1024 * 1024 },
+      fileFilter: (
+        _req: unknown,
+        file: { mimetype: string },
+        cb: (err: Error | null, accept: boolean) => void,
+      ) => {
+        const allowed = [
+          'image/jpeg',
+          'image/png',
+          'image/webp',
+          'application/pdf',
+        ];
+        if (allowed.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException({
+              statusCode: 400,
+              message: 'Only JPEG, PNG, WebP, and PDF files are allowed',
+              error: 'INVALID_FILE_TYPE',
+            }),
+            false,
+          );
+        }
+      },
+    }),
+  )
   async uploadBankTransferReceipt(
     @CurrentUser() user: { id: string },
     @Body() dto: BankTransferUploadDto,
@@ -172,6 +203,8 @@ export class PaymentsController {
   @Post('bank-transfer/:id/verify')
   @CheckPermissions({ module: 'payments', action: 'edit' })
   @ApiOperation({ summary: 'Verify a bank transfer receipt' })
+  @ApiResponse({ status: 201, description: 'Bank transfer verified' })
+  @ApiStandardResponses()
   async verifyBankTransfer(
     @Param('id', uuidPipe) receiptId: string,
     @CurrentUser() user: { id: string },
@@ -187,10 +220,9 @@ export class PaymentsController {
   @Post(':id/refund')
   @CheckPermissions({ module: 'payments', action: 'edit' })
   @ApiOperation({ summary: 'Refund a payment' })
-  async refund(
-    @Param('id', uuidPipe) id: string,
-    @Body() dto: RefundDto,
-  ) {
+  @ApiResponse({ status: 201, description: 'Payment refunded' })
+  @ApiStandardResponses()
+  async refund(@Param('id', uuidPipe) id: string, @Body() dto: RefundDto) {
     return this.paymentsService.refund(id, dto);
   }
 
@@ -201,6 +233,8 @@ export class PaymentsController {
   @Get(':id')
   @CheckPermissions({ module: 'payments', action: 'view' })
   @ApiOperation({ summary: 'Get payment details by ID' })
+  @ApiResponse({ status: 200, description: 'Payment details' })
+  @ApiStandardResponses()
   async findOne(@Param('id', uuidPipe) id: string) {
     return this.paymentsService.findOne(id);
   }
@@ -212,11 +246,12 @@ export class PaymentsController {
   @Patch(':id/status')
   @CheckPermissions({ module: 'payments', action: 'edit' })
   @ApiOperation({ summary: 'Update payment status' })
+  @ApiResponse({ status: 200, description: 'Payment status updated' })
+  @ApiStandardResponses()
   async updateStatus(
     @Param('id', uuidPipe) id: string,
     @Body() dto: UpdatePaymentStatusDto,
   ) {
     return this.paymentsService.updateStatus(id, dto);
   }
-
 }

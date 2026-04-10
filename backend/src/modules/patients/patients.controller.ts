@@ -9,11 +9,8 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -39,13 +36,20 @@ export class PatientsController {
   @Get()
   @CheckPermissions({ module: 'patients', action: 'view' })
   @ApiOperation({ summary: 'List all patients with pagination and search' })
+  @ApiResponse({ status: 200, description: 'Paginated patients list' })
+  @ApiStandardResponses()
   findAll(@Query() query: PatientListQueryDto) {
     return this.patientsService.findAll(query);
   }
 
   @Get('list-stats')
   @CheckPermissions({ module: 'patients', action: 'view' })
-  @ApiOperation({ summary: 'Get aggregate stats for patient list (total, active, inactive, new this month)' })
+  @ApiOperation({
+    summary:
+      'Get aggregate stats for patient list (total, active, inactive, new this month)',
+  })
+  @ApiResponse({ status: 200, description: 'Patient list statistics' })
+  @ApiStandardResponses()
   getListStats() {
     return this.patientsService.getListStats();
   }
@@ -53,6 +57,8 @@ export class PatientsController {
   @Get(':id')
   @CheckPermissions({ module: 'patients', action: 'view' })
   @ApiOperation({ summary: 'Get patient by ID with recent bookings' })
+  @ApiResponse({ status: 200, description: 'Patient details' })
+  @ApiStandardResponses()
   findOne(@Param('id', uuidPipe) id: string) {
     return this.patientsService.findOne(id);
   }
@@ -60,13 +66,21 @@ export class PatientsController {
   @Patch(':id')
   @CheckPermissions({ module: 'patients', action: 'edit' })
   @ApiOperation({ summary: 'Update patient profile' })
-  update(@Param('id', uuidPipe) id: string, @Body() dto: UpdatePatientDto, @CurrentUser('id') actorId: string) {
+  @ApiResponse({ status: 200, description: 'Patient updated' })
+  @ApiStandardResponses()
+  update(
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: UpdatePatientDto,
+    @CurrentUser('id') actorId: string,
+  ) {
     return this.patientsService.updatePatient(id, dto, actorId);
   }
 
   @Get(':id/stats')
   @CheckPermissions({ module: 'patients', action: 'view' })
   @ApiOperation({ summary: 'Get patient booking and payment statistics' })
+  @ApiResponse({ status: 200, description: 'Patient statistics' })
+  @ApiStandardResponses()
   getStats(@Param('id', uuidPipe) id: string) {
     return this.patientsService.getPatientStats(id);
   }
@@ -74,6 +88,8 @@ export class PatientsController {
   @Get(':id/bookings')
   @CheckPermissions({ module: 'patients', action: 'view' })
   @ApiOperation({ summary: 'Get paginated bookings for a patient' })
+  @ApiResponse({ status: 200, description: 'Patient bookings list' })
+  @ApiStandardResponses()
   getBookings(
     @Param('id', uuidPipe) id: string,
     @Query('page') page?: string,
@@ -89,10 +105,13 @@ export class PatientsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'patients', action: 'create' })
   @ApiOperation({
-    summary: 'Register a walk-in patient (name + phone only, no email/password)',
+    summary:
+      'Register a walk-in patient (name + phone only, no email/password)',
     description:
       'Used by receptionist to register a patient who visited the clinic without a prior account. Returns existing WALK_IN account if phone already registered.',
   })
+  @ApiResponse({ status: 200, description: 'Walk-in patient registered' })
+  @ApiStandardResponses()
   createWalkIn(@Body() dto: CreateWalkInPatientDto) {
     return this.walkInService.createWalkIn(dto);
   }
@@ -105,6 +124,8 @@ export class PatientsController {
     description:
       'Allows staff to upgrade a WALK_IN account to a full account by linking an email and password. The patient can then log in via the mobile app.',
   })
+  @ApiResponse({ status: 200, description: 'Account claimed successfully' })
+  @ApiStandardResponses()
   claimAccount(@Body() dto: ClaimAccountDto) {
     return this.walkInService.claimAccount(dto);
   }

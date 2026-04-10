@@ -7,7 +7,8 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { type Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
@@ -38,6 +39,8 @@ export class ReportsController {
   @Get('revenue')
   @CheckPermissions({ module: 'reports', action: 'view' })
   @ApiOperation({ summary: 'Get revenue report (SQL aggregated)' })
+  @ApiResponse({ status: 200, description: 'Revenue report data' })
+  @ApiStandardResponses()
   async getRevenue(
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
@@ -61,6 +64,8 @@ export class ReportsController {
   @Get('revenue/export')
   @CheckPermissions({ module: 'reports', action: 'view' })
   @ApiOperation({ summary: 'Export revenue report as CSV' })
+  @ApiResponse({ status: 200, description: 'Revenue CSV file' })
+  @ApiStandardResponses()
   async exportRevenue(
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
@@ -68,7 +73,11 @@ export class ReportsController {
     @Query('branchId') branchId?: string,
   ) {
     this.validateDateRange(dateFrom, dateTo);
-    const csv = await this.exportService.exportRevenueCsv(dateFrom, dateTo, branchId);
+    const csv = await this.exportService.exportRevenueCsv(
+      dateFrom,
+      dateTo,
+      branchId,
+    );
     this.sendCsv(res, csv, `revenue-${dateFrom}-to-${dateTo}.csv`);
   }
 
@@ -79,13 +88,19 @@ export class ReportsController {
   @Get('bookings')
   @CheckPermissions({ module: 'reports', action: 'view' })
   @ApiOperation({ summary: 'Get booking report (SQL aggregated)' })
+  @ApiResponse({ status: 200, description: 'Booking report data' })
+  @ApiStandardResponses()
   async getBookings(
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
     @Query('branchId') branchId?: string,
   ) {
     this.validateDateRange(dateFrom, dateTo);
-    const data = await this.reportsService.getBookingReport(dateFrom, dateTo, branchId);
+    const data = await this.reportsService.getBookingReport(
+      dateFrom,
+      dateTo,
+      branchId,
+    );
     return { success: true, data };
   }
 
@@ -96,6 +111,8 @@ export class ReportsController {
   @Get('bookings/export')
   @CheckPermissions({ module: 'reports', action: 'view' })
   @ApiOperation({ summary: 'Export bookings as CSV' })
+  @ApiResponse({ status: 200, description: 'Bookings CSV file' })
+  @ApiStandardResponses()
   async exportBookings(
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
@@ -103,7 +120,11 @@ export class ReportsController {
     @Query('branchId') branchId?: string,
   ) {
     this.validateDateRange(dateFrom, dateTo);
-    const csv = await this.exportService.exportBookingsCsv(dateFrom, dateTo, branchId);
+    const csv = await this.exportService.exportBookingsCsv(
+      dateFrom,
+      dateTo,
+      branchId,
+    );
     this.sendCsv(res, csv, `bookings-${dateFrom}-to-${dateTo}.csv`);
   }
 
@@ -114,6 +135,8 @@ export class ReportsController {
   @Get('patients/export')
   @CheckPermissions({ module: 'reports', action: 'view' })
   @ApiOperation({ summary: 'Export all patients as CSV' })
+  @ApiResponse({ status: 200, description: 'Patients CSV file' })
+  @ApiStandardResponses()
   async exportPatients(@Res() res: Response) {
     const csv = await this.exportService.exportPatientsCsv();
     this.sendCsv(res, csv, 'patients.csv');
@@ -126,6 +149,8 @@ export class ReportsController {
   @Get('practitioners/:id')
   @CheckPermissions({ module: 'reports', action: 'view' })
   @ApiOperation({ summary: 'Get practitioner performance report' })
+  @ApiResponse({ status: 200, description: 'Practitioner performance data' })
+  @ApiStandardResponses()
   async getPractitioner(
     @Param('id', uuidPipe) id: string,
     @Query('dateFrom') dateFrom: string,
@@ -147,6 +172,8 @@ export class ReportsController {
   @Get('dashboard')
   @CheckPermissions({ module: 'reports', action: 'view' })
   @ApiOperation({ summary: 'Get dashboard KPI stats (cached 5 min)' })
+  @ApiResponse({ status: 200, description: 'Dashboard KPI statistics' })
+  @ApiStandardResponses()
   async getDashboardStats(@Query('branchId') branchId?: string) {
     const data = await this.dashboardStatsService.getStats(branchId);
     return { success: true, data };
@@ -168,10 +195,7 @@ export class ReportsController {
 
   private sendCsv(res: Response, csv: string, filename: string): void {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${filename}"`,
-    );
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(csv);
   }
 }

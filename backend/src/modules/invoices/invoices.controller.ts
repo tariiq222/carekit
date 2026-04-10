@@ -10,7 +10,8 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { type Response } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
@@ -35,7 +36,11 @@ export class InvoicesController {
 
   @Get('stats')
   @CheckPermissions({ module: 'invoices', action: 'view' })
-  @ApiOperation({ summary: 'Get invoice statistics including ZATCA status breakdown' })
+  @ApiOperation({
+    summary: 'Get invoice statistics including ZATCA status breakdown',
+  })
+  @ApiResponse({ status: 200, description: 'Invoice statistics' })
+  @ApiStandardResponses()
   getStats() {
     return this.statsService.getInvoiceStats();
   }
@@ -43,6 +48,8 @@ export class InvoicesController {
   @Get('payment/:paymentId')
   @CheckPermissions({ module: 'invoices', action: 'view' })
   @ApiOperation({ summary: 'Get invoice by payment ID' })
+  @ApiResponse({ status: 200, description: 'Invoice record' })
+  @ApiStandardResponses()
   findByPayment(@Param('paymentId', uuidPipe) paymentId: string) {
     return this.invoicesService.findByPayment(paymentId);
   }
@@ -50,6 +57,8 @@ export class InvoicesController {
   @Get()
   @CheckPermissions({ module: 'invoices', action: 'view' })
   @ApiOperation({ summary: 'List invoices with optional ZATCA status filter' })
+  @ApiResponse({ status: 200, description: 'Paginated invoices list' })
+  @ApiStandardResponses()
   findAll(@Query() query: InvoiceFilterDto) {
     return this.invoicesService.findAll(query);
   }
@@ -57,20 +66,30 @@ export class InvoicesController {
   @Get(':id')
   @CheckPermissions({ module: 'invoices', action: 'view' })
   @ApiOperation({ summary: 'Get invoice by ID' })
+  @ApiResponse({ status: 200, description: 'Invoice details' })
+  @ApiStandardResponses()
   findOne(@Param('id', uuidPipe) id: string) {
     return this.invoicesService.findOne(id);
   }
 
   @Post()
   @CheckPermissions({ module: 'invoices', action: 'create' })
-  @ApiOperation({ summary: 'Create invoice (generates ZATCA QR Code automatically)' })
+  @ApiOperation({
+    summary: 'Create invoice (generates ZATCA QR Code automatically)',
+  })
+  @ApiResponse({ status: 201, description: 'Invoice created' })
+  @ApiStandardResponses()
   createInvoice(@Body() dto: CreateInvoiceDto) {
     return this.creatorService.createInvoice(dto);
   }
 
   @Get(':id/html')
   @CheckPermissions({ module: 'invoices', action: 'view' })
-  @ApiOperation({ summary: 'Get invoice as HTML (for browser print / PDF generation)' })
+  @ApiOperation({
+    summary: 'Get invoice as HTML (for browser print / PDF generation)',
+  })
+  @ApiResponse({ status: 200, description: 'Invoice HTML document' })
+  @ApiStandardResponses()
   async getInvoiceHtml(
     @Param('id', uuidPipe) id: string,
     @Res() res: Response,
@@ -84,6 +103,8 @@ export class InvoicesController {
   @HttpCode(200)
   @CheckPermissions({ module: 'invoices', action: 'edit' })
   @ApiOperation({ summary: 'Mark invoice as sent' })
+  @ApiResponse({ status: 200, description: 'Invoice marked as sent' })
+  @ApiStandardResponses()
   markAsSent(@Param('id', uuidPipe) id: string) {
     return this.invoicesService.markAsSent(id);
   }
