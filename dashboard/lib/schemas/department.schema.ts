@@ -6,6 +6,7 @@ export const departmentSchema = z.object({
   descriptionAr: z.string().max(1000).optional().or(z.literal("")),
   descriptionEn: z.string().max(1000).optional().or(z.literal("")),
   icon: z.string().max(100).optional().or(z.literal("")),
+  sortOrder: z.number().int().min(0),
   isActive: z.boolean(),
 })
 
