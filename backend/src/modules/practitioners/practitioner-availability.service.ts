@@ -159,9 +159,14 @@ export class PractitionerAvailabilityService {
       bookingsByDate.set(key, arr);
     }
 
+    // Bulk-load holidays for the month once — avoids N async calls inside the loop
+    const [clinicTz, monthHolidays] = await Promise.all([
+      this.clinicSettingsService.getTimezone(),
+      this.clinicHolidaysService.findAll(year),
+    ]);
+
     // Iterate each day of the month
     const cursor = new Date(firstDay);
-    const clinicTz = await this.clinicSettingsService.getTimezone();
     while (cursor <= lastDay) {
       const dateStr = cursor.toISOString().slice(0, 10);
       const dayOfWeek = cursor.getDay();
@@ -181,8 +186,23 @@ export class PractitionerAvailabilityService {
         continue;
       }
 
-      // Skip clinic holidays
-      const isHoliday = await this.clinicHolidaysService.isHoliday(cursor);
+      // Skip clinic holidays (inline check against pre-loaded set)
+      const normalizedCursor = new Date(
+        Date.UTC(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()),
+      );
+      const isHoliday = monthHolidays.some((h) => {
+        const hDate = new Date(h.date);
+        if (h.isRecurring) {
+          return (
+            hDate.getUTCMonth() === normalizedCursor.getUTCMonth() &&
+            hDate.getUTCDate() === normalizedCursor.getUTCDate()
+          );
+        }
+        const hNorm = new Date(
+          Date.UTC(hDate.getFullYear(), hDate.getMonth(), hDate.getDate()),
+        );
+        return hNorm.getTime() === normalizedCursor.getTime();
+      });
       if (isHoliday) {
         cursor.setUTCDate(cursor.getUTCDate() + 1);
         continue;

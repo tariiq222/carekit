@@ -28,6 +28,7 @@ const mockClinicSettingsService = {
 
 const mockClinicHolidaysService = {
   isHoliday: jest.fn(),
+  findAll: jest.fn(),
 };
 
 describe('PractitionerAvailabilityService — holiday exclusion', () => {
@@ -108,9 +109,10 @@ describe('PractitionerAvailabilityService — holiday exclusion', () => {
       mockBookingSettingsService.getForBranch.mockResolvedValue({ bufferMinutes: 0 });
       mockClinicSettingsService.getTimezone.mockResolvedValue('Asia/Riyadh');
 
-      clinicHolidaysService.isHoliday.mockImplementation(async (date: Date) => {
-        return date.toISOString().slice(0, 10) === '2026-04-13';
-      });
+      // findAll is called once before the loop; return a holiday on 2026-04-13
+      clinicHolidaysService.findAll.mockResolvedValue([
+        { date: new Date('2026-04-13'), isRecurring: false },
+      ]);
 
       const result = await service.getAvailableDates('p-1', '2026-04');
 
@@ -132,7 +134,7 @@ describe('PractitionerAvailabilityService — holiday exclusion', () => {
       mockPrisma.practitionerService.findMany.mockResolvedValue([]);
       mockBookingSettingsService.getForBranch.mockResolvedValue({ bufferMinutes: 0 });
       mockClinicSettingsService.getTimezone.mockResolvedValue('Asia/Riyadh');
-      clinicHolidaysService.isHoliday.mockResolvedValue(false);
+      clinicHolidaysService.findAll.mockResolvedValue([]);
 
       const result = await service.getAvailableDates('p-1', '2026-04');
 
