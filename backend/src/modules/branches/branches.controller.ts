@@ -9,7 +9,15 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
@@ -33,30 +41,46 @@ export class BranchesController {
 
   @Get('public')
   @Public()
+  @ApiOperation({ summary: 'List all public-facing branches' })
+  @ApiResponse({ status: 200, description: 'Public branch list returned' })
   async getPublicBranches() {
     return this.branchesService.getPublicBranches();
   }
 
   @Get()
   @CheckPermissions({ module: 'branches', action: 'view' })
+  @ApiOperation({ summary: 'List all branches with filters' })
+  @ApiResponse({ status: 200, description: 'Paginated branch list returned' })
+  @ApiStandardResponses()
   async findAll(@Query() query: BranchFilterDto) {
     return this.branchesService.findAll(query);
   }
 
   @Get(':id')
   @CheckPermissions({ module: 'branches', action: 'view' })
+  @ApiOperation({ summary: 'Get a branch by ID' })
+  @ApiParam({ name: 'id', description: 'Branch UUID' })
+  @ApiResponse({ status: 200, description: 'Branch returned' })
+  @ApiStandardResponses()
   async findById(@Param('id', uuidPipe) id: string) {
     return this.branchesService.findById(id);
   }
 
   @Post()
   @CheckPermissions({ module: 'branches', action: 'create' })
+  @ApiOperation({ summary: 'Create a new branch' })
+  @ApiResponse({ status: 201, description: 'Branch created' })
+  @ApiStandardResponses()
   async create(@Body() dto: CreateBranchDto) {
     return this.branchesService.create(dto);
   }
 
   @Patch(':id')
   @CheckPermissions({ module: 'branches', action: 'edit' })
+  @ApiOperation({ summary: 'Update a branch' })
+  @ApiParam({ name: 'id', description: 'Branch UUID' })
+  @ApiResponse({ status: 200, description: 'Branch updated' })
+  @ApiStandardResponses()
   async update(
     @Param('id', uuidPipe) id: string,
     @Body() dto: UpdateBranchDto,
@@ -66,6 +90,10 @@ export class BranchesController {
 
   @Delete(':id')
   @CheckPermissions({ module: 'branches', action: 'delete' })
+  @ApiOperation({ summary: 'Delete a branch' })
+  @ApiParam({ name: 'id', description: 'Branch UUID' })
+  @ApiResponse({ status: 200, description: 'Branch deleted' })
+  @ApiStandardResponses()
   async delete(@Param('id', uuidPipe) id: string) {
     return this.branchesService.delete(id);
   }
@@ -74,12 +102,20 @@ export class BranchesController {
 
   @Get(':id/practitioners')
   @CheckPermissions({ module: 'branches', action: 'view' })
+  @ApiOperation({ summary: 'List practitioners assigned to a branch' })
+  @ApiParam({ name: 'id', description: 'Branch UUID' })
+  @ApiResponse({ status: 200, description: 'Practitioner list returned' })
+  @ApiStandardResponses()
   async getPractitioners(@Param('id', uuidPipe) id: string) {
     return this.branchesService.getPractitioners(id);
   }
 
   @Patch(':id/practitioners')
   @CheckPermissions({ module: 'branches', action: 'edit' })
+  @ApiOperation({ summary: 'Assign practitioners to a branch' })
+  @ApiParam({ name: 'id', description: 'Branch UUID' })
+  @ApiResponse({ status: 200, description: 'Practitioners assigned' })
+  @ApiStandardResponses()
   async assignPractitioners(
     @Param('id', uuidPipe) id: string,
     @Body() dto: AssignPractitionersDto,
@@ -89,6 +125,11 @@ export class BranchesController {
 
   @Delete(':id/practitioners/:practitionerId')
   @CheckPermissions({ module: 'branches', action: 'edit' })
+  @ApiOperation({ summary: 'Remove a practitioner from a branch' })
+  @ApiParam({ name: 'id', description: 'Branch UUID' })
+  @ApiParam({ name: 'practitionerId', description: 'Practitioner UUID' })
+  @ApiResponse({ status: 200, description: 'Practitioner removed from branch' })
+  @ApiStandardResponses()
   async removePractitioner(
     @Param('id', uuidPipe) id: string,
     @Param('practitionerId', uuidPipe) practitionerId: string,
