@@ -15,6 +15,7 @@ const prismaServiceMock: any = {
     findUnique: jest.fn(),
     updateMany: jest.fn(),
     update: jest.fn(),
+    create: jest.fn().mockResolvedValue({ id: 'pmt-1' }),
   },
   groupPayment: {
     findFirst: jest.fn(),
@@ -27,6 +28,7 @@ const prismaServiceMock: any = {
     create: jest.fn(),
   },
   booking: { update: jest.fn() },
+  groupEnrollment: { update: jest.fn().mockResolvedValue({}) },
   $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(prismaServiceMock)),
 };
 
