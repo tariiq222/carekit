@@ -276,7 +276,8 @@ export class ServicesService {
   }
 
   async getIntakeForms(serviceId: string) {
-    return this.intakeForms.listForms({ serviceId });
+    // Only return active intake forms — consistent with booking-creation flow (fix #19)
+    return this.intakeForms.listForms({ serviceId, isActive: true });
   }
 
   async exportServices() {
