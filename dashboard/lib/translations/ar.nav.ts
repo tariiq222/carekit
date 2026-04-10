@@ -31,6 +31,7 @@ export const arNav: Record<string, string> = {
   "nav.problemReports": "بلاغات المشاكل",
   "nav.whiteLabel": "إعداد النظام",
   "nav.intakeForms": "نماذج المعلومات",
+  "nav.groups": "المجموعات",
   "nav.create": "إنشاء",
   "nav.edit": "تعديل",
   "notifications.viewAll": "عرض جميع الإشعارات",

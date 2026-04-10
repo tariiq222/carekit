@@ -12,17 +12,6 @@ import { navGroups } from "@/components/sidebar-config"
 import { prefetchRouteData } from "@/lib/route-prefetch"
 import type { NavItem } from "@/components/sidebar-config"
 
-/** Maps nav href → feature flag key */
-const FEATURE_FLAG_MAP: Record<string, string> = {
-  "/coupons": "coupons",
-  "/gift-cards": "gift_cards",
-  "/intake-forms": "intake_forms",
-  "/chatbot": "chatbot",
-  "/ratings": "ratings",
-  "/branches": "multi_branch",
-  "/reports": "reports",
-}
-
 export interface NavGroupFiltered {
   labelKey: string
   items: NavItem[]
@@ -75,7 +64,7 @@ export function useSidebarNav() {
         items: group.items.filter((item) => {
           // Permission check
           if (item.permission && !user?.permissions.includes(item.permission)) return false
-          const flagKey = FEATURE_FLAG_MAP[item.href]
+          const flagKey = item.featureFlag
           if (flagKey) {
             // License check — hide if not licensed
             if (licensedMap && licensedMap[flagKey] === false) return false

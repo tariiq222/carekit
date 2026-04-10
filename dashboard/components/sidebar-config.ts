@@ -17,6 +17,7 @@ import {
   DocumentValidationIcon,
   PaintBrush01Icon,
 } from "@hugeicons/core-free-icons"
+import type { FeatureFlagKey } from "@carekit/shared/constants"
 
 export interface NavItem {
   titleKey: string
@@ -24,7 +25,7 @@ export interface NavItem {
   icon: typeof Home01Icon
   badge?: number
   permission?: string // "module:action" — item hidden if user lacks this permission
-  featureFlag?: string // hide if feature flag is disabled
+  featureFlag?: FeatureFlagKey // hide if feature flag is disabled
 }
 
 export interface NavGroup {
@@ -41,20 +42,21 @@ export const clinicNav: NavItem[] = [
   { titleKey: "nav.patients", href: "/patients", icon: UserMultiple02Icon },
   { titleKey: "nav.practitioners", href: "/practitioners", icon: Stethoscope02Icon },
   { titleKey: "nav.services", href: "/services", icon: GridIcon },
-  { titleKey: "nav.branches", href: "/branches", icon: Building06Icon },
-  { titleKey: "nav.intakeForms", href: "/intake-forms", icon: DocumentValidationIcon },
+  { titleKey: "nav.branches", href: "/branches", icon: Building06Icon, featureFlag: "multi_branch" },
+  { titleKey: "nav.intakeForms", href: "/intake-forms", icon: DocumentValidationIcon, featureFlag: "intake_forms" },
+  { titleKey: "nav.groups", href: "/groups", icon: UserMultiple02Icon, featureFlag: "groups" },
 ]
 
 export const financeNav: NavItem[] = [
   { titleKey: "nav.payments", href: "/payments", icon: MoneyBag02Icon },
   { titleKey: "nav.invoices", href: "/invoices", icon: Invoice02Icon },
-  { titleKey: "nav.coupons", href: "/coupons", icon: Coupon01Icon },
-  { titleKey: "nav.giftCards", href: "/gift-cards", icon: Ticket02Icon },
-  { titleKey: "nav.reports", href: "/reports", icon: AnalyticsUpIcon },
+  { titleKey: "nav.coupons", href: "/coupons", icon: Coupon01Icon, featureFlag: "coupons" },
+  { titleKey: "nav.giftCards", href: "/gift-cards", icon: Ticket02Icon, featureFlag: "gift_cards" },
+  { titleKey: "nav.reports", href: "/reports", icon: AnalyticsUpIcon, featureFlag: "reports" },
 ]
 
 export const toolsNav: NavItem[] = [
-  { titleKey: "nav.chatbot", href: "/chatbot", icon: AiChat02Icon },
+  { titleKey: "nav.chatbot", href: "/chatbot", icon: AiChat02Icon, featureFlag: "chatbot" },
   { titleKey: "nav.notifications", href: "/notifications", icon: Notification03Icon },
 ]
 
