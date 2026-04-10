@@ -1,7 +1,8 @@
 /** CareKit — RatingsService Unit Tests */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { RatingsService } from '../../../src/modules/ratings/ratings.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
@@ -172,6 +173,30 @@ describe('RatingsService', () => {
 
       expect(mockPrismaService.rating.aggregate).toHaveBeenCalled();
       expect(mockPrismaService.practitioner.update).toHaveBeenCalled();
+    });
+
+    it('[REGRESSION] throws ConflictException when P2002 unique constraint fires (double-rating race)', async () => {
+      const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '7.0.0',
+      });
+
+      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
+      mockPrismaService.$transaction.mockRejectedValue(p2002);
+
+      await expect(
+        service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 5 }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('re-throws non-P2002 errors as-is', async () => {
+      const networkError = new Error('DB connection lost');
+      mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
+      mockPrismaService.$transaction.mockRejectedValue(networkError);
+
+      await expect(
+        service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 5 }),
+      ).rejects.toThrow('DB connection lost');
     });
 
     it('returns created rating', async () => {
