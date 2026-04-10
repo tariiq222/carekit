@@ -19,7 +19,7 @@ export const arServices: Record<string, string> = {
   "services.tabs.intake": "نماذج المعلومات",
   "services.tabs.groupSessions": "الجلسات الجماعية",
   "services.tabs.courses": "الدورات التدريبية",
-  "services.tabs.groups": "المجموعات",
+  "services.tabs.groups": "الخدمات الجماعية",
   "services.col.service": "الخدمة",
   "services.col.category": "الفئة",
   "services.col.price": "السعر (ر.س)",

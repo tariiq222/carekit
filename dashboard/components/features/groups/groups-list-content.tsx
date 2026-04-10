@@ -80,7 +80,6 @@ export function GroupsListContent({
         const modes: Record<DeliveryMode, { ar: string; en: string }> = {
           in_person: { ar: "حضوري", en: "In-Person" },
           online: { ar: "أونلاين", en: "Online" },
-          hybrid: { ar: "هجين", en: "Hybrid" },
         }
         const mode = row.original.deliveryMode
         return locale === "ar" ? modes[mode].ar : modes[mode].en
@@ -197,7 +196,6 @@ export function GroupsListContent({
   const deliveryOptions = [
     { value: "in_person", label: locale === "ar" ? "حضوري" : "In-Person" },
     { value: "online", label: locale === "ar" ? "أونلاين" : "Online" },
-    { value: "hybrid", label: locale === "ar" ? "هجين" : "Hybrid" },
   ]
 
   return (

@@ -3,9 +3,9 @@
  */
 
 export const enGroups: Record<string, string> = {
-  "nav.groups": "Groups",
+  "nav.groups": "Group Services",
 
-  "groups.title": "Groups",
+  "groups.title": "Group Services",
   "groups.description": "Manage group sessions and training courses",
   "groups.addGroup": "Add Group",
   "groups.created": "Group created successfully",
@@ -92,7 +92,7 @@ export const enGroups: Record<string, string> = {
   "groups.create.deliveryMode": "Delivery Mode",
   "groups.create.deliveryMode.in_person": "In-Person",
   "groups.create.deliveryMode.online": "Online",
-  "groups.create.deliveryMode.hybrid": "Hybrid",
+
   "groups.create.location": "Location",
   "groups.create.meetingLink": "Meeting Link",
   "groups.create.isPublished": "Publish Group",

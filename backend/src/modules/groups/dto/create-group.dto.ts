@@ -93,13 +93,13 @@ export class CreateGroupDto {
   @IsEnum(DeliveryMode)
   deliveryMode?: DeliveryMode;
 
-  @ApiPropertyOptional({ description: 'Physical location for in-person/hybrid' })
+  @ApiPropertyOptional({ description: 'Physical location for in-person sessions' })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   location?: string;
 
-  @ApiPropertyOptional({ description: 'Online meeting link for online/hybrid' })
+  @ApiPropertyOptional({ description: 'Online meeting link for online sessions' })
   @IsOptional()
   @IsString()
   @MaxLength(1000)

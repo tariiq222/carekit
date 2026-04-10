@@ -339,7 +339,6 @@ enum GroupPaymentType {
 enum DeliveryMode {
   in_person
   online
-  hybrid
 
   @@map("delivery_mode")
 }

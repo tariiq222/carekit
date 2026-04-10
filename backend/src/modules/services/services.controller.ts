@@ -21,7 +21,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ServicesService } from './services.service.js';
 import { ServicesAvatarService } from './services-avatar.service.js';
 import { ServiceCategoriesService } from './service-categories.service.js';
@@ -58,18 +58,21 @@ export class ServicesController {
 
   @Get('categories')
   @Public()
+  @ApiOperation({ summary: 'List all active service categories' })
   async findAllCategories() {
     return this.categoriesService.findAll();
   }
 
   @Post('categories')
   @CheckPermissions({ module: 'services', action: 'create' })
+  @ApiOperation({ summary: 'Create a new service category' })
   async createCategory(@Body() dto: CreateCategoryDto) {
     return this.categoriesService.create(dto);
   }
 
   @Patch('categories/:id')
   @CheckPermissions({ module: 'services', action: 'edit' })
+  @ApiOperation({ summary: 'Update an existing service category' })
   async updateCategory(
     @Param('id', uuidPipe) id: string,
     @Body() dto: UpdateCategoryDto,
@@ -79,6 +82,7 @@ export class ServicesController {
 
   @Delete('categories/:id')
   @CheckPermissions({ module: 'services', action: 'delete' })
+  @ApiOperation({ summary: 'Delete a service category (blocked if services are assigned)' })
   async deleteCategory(@Param('id', uuidPipe) id: string) {
     return this.categoriesService.delete(id);
   }
@@ -89,12 +93,14 @@ export class ServicesController {
 
   @Get()
   @Public()
+  @ApiOperation({ summary: 'List services with optional filters (category, search, active status)' })
   async findAll(@Query() query: ServiceListQueryDto) {
     return this.servicesService.findAll(query);
   }
 
   @Get('export')
   @CheckPermissions({ module: 'services', action: 'view' })
+  @ApiOperation({ summary: 'Export all services as a CSV file' })
   async exportCsv(@Res() res: Response) {
     // CSV generation logic lives in the service (fix #16 — separation of concerns)
     const csvContent = await this.servicesService.exportServicesCsv();
@@ -105,18 +111,21 @@ export class ServicesController {
 
   @Get(':id')
   @Public()
+  @ApiOperation({ summary: 'Get a single service by ID' })
   async findOne(@Param('id', uuidPipe) id: string) {
     return this.servicesService.findOne(id);
   }
 
   @Post()
   @CheckPermissions({ module: 'services', action: 'create' })
+  @ApiOperation({ summary: 'Create a new service' })
   async create(@Body() dto: CreateServiceDto) {
     return this.servicesService.create(dto);
   }
 
   @Patch(':id')
   @CheckPermissions({ module: 'services', action: 'edit' })
+  @ApiOperation({ summary: 'Update an existing service' })
   async update(
     @Param('id', uuidPipe) id: string,
     @Body() dto: UpdateServiceDto,
@@ -126,6 +135,7 @@ export class ServicesController {
 
   @Post(':id/avatar')
   @CheckPermissions({ module: 'services', action: 'edit' })
+  @ApiOperation({ summary: 'Upload or replace a service avatar image (jpeg, png, webp; max 5MB)' })
   @UseInterceptors(FileInterceptor('image', {
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
@@ -145,6 +155,7 @@ export class ServicesController {
 
   @Put(':id/branches')
   @CheckPermissions({ module: 'services', action: 'edit' })
+  @ApiOperation({ summary: 'Replace all branch assignments for a service' })
   async setBranches(
     @Param('id', uuidPipe) id: string,
     @Body() dto: SetServiceBranchesDto,
@@ -155,6 +166,7 @@ export class ServicesController {
 
   @Delete(':id/branches')
   @CheckPermissions({ module: 'services', action: 'edit' })
+  @ApiOperation({ summary: 'Remove all branch assignments for a service' })
   async clearBranches(@Param('id', uuidPipe) id: string) {
     await this.servicesService.clearBranches(id);
     return { cleared: true };
@@ -162,12 +174,14 @@ export class ServicesController {
 
   @Delete(':id')
   @CheckPermissions({ module: 'services', action: 'delete' })
+  @ApiOperation({ summary: 'Soft-delete a service (sets deletedAt, service becomes hidden)' })
   async softDelete(@Param('id', uuidPipe) id: string) {
     return this.servicesService.softDelete(id);
   }
 
   @Get(':id/intake-forms/all')
   @Public()
+  @ApiOperation({ summary: 'Get all active intake forms for a service' })
   async getIntakeForms(@Param('id', uuidPipe) id: string) {
     return this.servicesService.getIntakeForms(id);
   }
@@ -178,12 +192,14 @@ export class ServicesController {
 
   @Get(':id/duration-options')
   @Public()
+  @ApiOperation({ summary: 'Get all duration options for a service booking type' })
   async getDurationOptions(@Param('id', uuidPipe) id: string) {
     return this.durationOptionsService.getDurationOptions(id);
   }
 
   @Put(':id/duration-options')
   @CheckPermissions({ module: 'services', action: 'edit' })
+  @ApiOperation({ summary: 'Replace all duration options for a service booking type' })
   async setDurationOptions(
     @Param('id', uuidPipe) id: string,
     @Body() dto: SetDurationOptionsDto,
@@ -197,6 +213,7 @@ export class ServicesController {
 
   @Get(':id/practitioners')
   @Public()
+  @ApiOperation({ summary: 'List practitioners who offer this service, optionally filtered by branch' })
   async getPractitioners(
     @Param('id', uuidPipe) id: string,
     @Query('branchId', new ParseUUIDPipe({ optional: true })) branchId?: string,
@@ -210,12 +227,14 @@ export class ServicesController {
 
   @Get(':id/booking-types')
   @Public()
+  @ApiOperation({ summary: 'Get all booking types and their duration options for a service' })
   async getBookingTypes(@Param('id', uuidPipe) id: string) {
     return this.bookingTypeService.getByService(id);
   }
 
   @Put(':id/booking-types')
   @CheckPermissions({ module: 'services', action: 'edit' })
+  @ApiOperation({ summary: 'Replace all booking types for a service (blocked if active bookings exist)' })
   async setBookingTypes(
     @Param('id', uuidPipe) id: string,
     @Body() dto: SetServiceBookingTypesDto,

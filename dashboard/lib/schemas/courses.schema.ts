@@ -17,7 +17,7 @@ const baseCourseSchema = z.object({
   priceHalalat: z.number().int().min(0),
   isGroup: z.boolean(),
   maxParticipants: z.number().int().min(2).optional(),
-  deliveryMode: z.enum(["in_person", "online", "hybrid"]),
+  deliveryMode: z.enum(["in_person", "online"]),
   location: z.string().max(500).optional().or(z.literal("")),
 })
 
@@ -69,9 +69,9 @@ export const courseStep3Schema = baseCourseSchema
   )
   .refine(
     (data) =>
-      (data.deliveryMode !== "in_person" && data.deliveryMode !== "hybrid") ||
+      data.deliveryMode !== "in_person" ||
       (!!data.location && data.location.trim().length > 0),
-    { message: "الموقع مطلوب للدورات الحضورية أو المختلطة", path: ["location"] },
+    { message: "الموقع مطلوب للدورات الحضورية", path: ["location"] },
   )
 
 // ---------------------------------------------------------------------------
@@ -85,9 +85,9 @@ export const createCourseSchema = baseCourseSchema
   )
   .refine(
     (data) =>
-      (data.deliveryMode !== "in_person" && data.deliveryMode !== "hybrid") ||
+      data.deliveryMode !== "in_person" ||
       (!!data.location && data.location.trim().length > 0),
-    { message: "الموقع مطلوب للدورات الحضورية أو المختلطة", path: ["location"] },
+    { message: "الموقع مطلوب للدورات الحضورية", path: ["location"] },
   )
 
 // ---------------------------------------------------------------------------

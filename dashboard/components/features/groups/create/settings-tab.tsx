@@ -67,9 +67,7 @@ export function SettingsTab({ form }: SettingsTabProps) {
               <SelectItem value="online">
                 {t("groups.create.deliveryMode.online")}
               </SelectItem>
-              <SelectItem value="hybrid">
-                {t("groups.create.deliveryMode.hybrid")}
-              </SelectItem>
+
             </SelectContent>
           </Select>
         </div>

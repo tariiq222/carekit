@@ -3,9 +3,9 @@
  */
 
 export const arGroups: Record<string, string> = {
-  "nav.groups": "المجموعات",
+  "nav.groups": "الخدمات الجماعية",
 
-  "groups.title": "المجموعات",
+  "groups.title": "الخدمات الجماعية",
   "groups.description": "إدارة الجلسات الجماعية والدورات التدريبية",
   "groups.addGroup": "إضافة مجموعة",
   "groups.created": "تم إنشاء المجموعة بنجاح",
@@ -92,7 +92,7 @@ export const arGroups: Record<string, string> = {
   "groups.create.deliveryMode": "طريقة التوصيل",
   "groups.create.deliveryMode.in_person": "حضوري",
   "groups.create.deliveryMode.online": "أونلاين",
-  "groups.create.deliveryMode.hybrid": "هجين",
+
   "groups.create.location": "الموقع",
   "groups.create.meetingLink": "رابط الاجتماع",
   "groups.create.isPublished": "نشر المجموعة",
