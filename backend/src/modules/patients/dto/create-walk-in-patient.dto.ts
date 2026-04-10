@@ -63,7 +63,9 @@ export class CreateWalkInPatientDto {
   @ApiProperty({ example: '+966501234567' })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phone must be a valid international phone number' })
+  @Matches(/^\+[1-9]\d{6,14}$/, {
+    message: 'phone must be a valid international phone number',
+  })
   phone!: string;
 
   // ── Emergency ──
@@ -77,7 +79,9 @@ export class CreateWalkInPatientDto {
   @ApiPropertyOptional({ example: '+966501234567' })
   @IsOptional()
   @IsString()
-  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'emergencyPhone must be a valid international phone number' })
+  @Matches(/^\+[1-9]\d{6,14}$/, {
+    message: 'emergencyPhone must be a valid international phone number',
+  })
   emergencyPhone?: string;
 
   // ── Medical ──

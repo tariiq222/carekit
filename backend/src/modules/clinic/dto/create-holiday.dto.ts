@@ -22,7 +22,9 @@ export class CreateHolidayDto {
   @MinLength(1)
   nameEn: string;
 
-  @ApiPropertyOptional({ description: 'Whether this holiday recurs every year' })
+  @ApiPropertyOptional({
+    description: 'Whether this holiday recurs every year',
+  })
   @IsOptional()
   @IsBoolean()
   isRecurring?: boolean;

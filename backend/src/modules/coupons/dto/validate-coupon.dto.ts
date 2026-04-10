@@ -12,7 +12,9 @@ export class ValidateCouponDto {
   @IsNotEmpty()
   serviceId!: string;
 
-  @ApiProperty({ description: 'Original booking amount in SAR (before discount)' })
+  @ApiProperty({
+    description: 'Original booking amount in SAR (before discount)',
+  })
   @IsInt()
   @Min(0)
   amount!: number;

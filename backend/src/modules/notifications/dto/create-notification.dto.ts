@@ -1,4 +1,12 @@
-import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { NotificationType } from '@prisma/client';
 
@@ -37,7 +45,11 @@ export class CreateNotificationDto {
   @IsNotEmpty()
   type!: NotificationType;
 
-  @ApiPropertyOptional({ description: 'Additional data payload', type: 'object', additionalProperties: true })
+  @ApiPropertyOptional({
+    description: 'Additional data payload',
+    type: 'object',
+    additionalProperties: true,
+  })
   @IsOptional()
   @IsObject()
   data?: Record<string, unknown>;
