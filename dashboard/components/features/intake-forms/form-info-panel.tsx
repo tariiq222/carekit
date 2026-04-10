@@ -20,18 +20,21 @@ import {
 } from "@/lib/types/intake-form"
 
 const FORM_TYPES: FormType[] = ["pre_booking", "pre_session", "post_session", "registration"]
-const FORM_SCOPES: FormScope[] = ["global", "service", "practitioner", "branch"]
+const ALL_FORM_SCOPES: FormScope[] = ["global", "service", "practitioner", "branch"]
 
 interface FormInfoPanelProps {
   draft: IntakeFormDraft
   scopeOptions: { value: string; label: string }[]
+  /** Allowed scopes — defaults to all. Pass filtered list to hide branch when multi_branch is off. */
+  availableScopes?: FormScope[]
   onUpdate: (patch: Partial<IntakeFormDraft>) => void
   onScopeChange: (scope: FormScope) => void
   isAr: boolean
 }
 
-export function FormInfoPanel({ draft, scopeOptions, onUpdate, onScopeChange, isAr }: FormInfoPanelProps) {
+export function FormInfoPanel({ draft, scopeOptions, availableScopes, onUpdate, onScopeChange, isAr }: FormInfoPanelProps) {
   const { t } = useLocale()
+  const formScopes = availableScopes ?? ALL_FORM_SCOPES
 
   return (
     <Card>
@@ -90,7 +93,7 @@ export function FormInfoPanel({ draft, scopeOptions, onUpdate, onScopeChange, is
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {FORM_SCOPES.map((s) => (
+              {formScopes.map((s) => (
                 <SelectItem key={s} value={s}>
                   {isAr ? FORM_SCOPE_LABELS[s].ar : FORM_SCOPE_LABELS[s].en}
                 </SelectItem>

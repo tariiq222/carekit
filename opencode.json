@@ -28,44 +28,51 @@
     },
     "git-manager": {
       "model": "anthropic/claude-sonnet-4-6",
-      "description": "Owns commit, PR, and changelog lifecycle. Classifies changes by system, writes accurate commit messages, manages GitHub PRs, and builds session logs.",
-      "mode": "primary",
-      "color": "#10b981"
+      "description": "Owns commit, PR, and changelog lifecycle. Triggered by CTO after QA PASS — not used directly.",
+      "mode": "subagent",
+      "hidden": true
     },
     "architect": {
       "model": "anthropic/claude-sonnet-4-6",
       "description": "Analyzes tasks and produces implementation plans. Used by CTO only.",
-      "mode": "subagent"
+      "mode": "subagent",
+      "hidden": true
     },
     "architect-opus": {
       "model": "anthropic/claude-opus-4-6",
       "description": "High-complexity analysis only — escalation from architect. Used by CTO only.",
-      "mode": "subagent"
+      "mode": "subagent",
+      "hidden": true
     },
     "executor": {
       "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
       "description": "Implements approved plans with minimal scope. Used by CTO only.",
-      "mode": "subagent"
+      "mode": "subagent",
+      "hidden": true
     },
     "test-engineer": {
       "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
       "description": "Writes tests for every change. Used by CTO only.",
-      "mode": "subagent"
+      "mode": "subagent",
+      "hidden": true
     },
     "quick-reviewer": {
       "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
       "description": "Fast first-pass review — syntax, lint, TypeScript, obvious errors. Used by CTO only.",
-      "mode": "subagent"
+      "mode": "subagent",
+      "hidden": true
     },
     "deep-reviewer": {
       "model": "anthropic/claude-sonnet-4-6",
       "description": "Deep review — security, logic, plan adherence. Runs only when quick-reviewer flags issues. Used by CTO only.",
-      "mode": "subagent"
+      "mode": "subagent",
+      "hidden": true
     },
     "qa-validator": {
       "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
       "description": "Production risk simulation. Used by CTO only.",
-      "mode": "subagent"
+      "mode": "subagent",
+      "hidden": true
     }
   },
   "mcp": {

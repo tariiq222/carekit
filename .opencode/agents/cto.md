@@ -27,6 +27,7 @@ Models are locked in opencode.json — enforced automatically by OpenCode.
 | QUICK-REVIEWER | MiniMax-M2.7-highspeed |
 | DEEP-REVIEWER | claude-sonnet-4-6 (escalation only) |
 | QA VALIDATOR | MiniMax-M2.7-highspeed |
+| GIT MANAGER | claude-sonnet-4-6 |
 
 ### Model Routing — Automatic (No Manual Switches)
 
@@ -40,9 +41,11 @@ All agents are bound to their models in opencode.json. No manual model switches 
 | QUICK-REVIEWER: PASS | Skip deep-reviewer → route to `qa-validator` |
 | QUICK-REVIEWER: ESCALATE | Route to `deep-reviewer` agent |
 | DEEP-REVIEWER: PASS | Route to `qa-validator` agent |
-| DEEP-REVIEWER: FAIL | Route back to `executor` agent (max 1 retry) |
-| QA fail → back to ARCHITECT | Route back to `architect` agent |
+| DEEP-REVIEWER: FAIL | Route back to `executor` agent (max 1 retry, then continue) |
+| QA PASS | Route to `git-manager` agent |
+| QA FAIL (retry) | Route back to `architect` agent (max 1 retry, then continue) |
 | ARCHITECT escalation recommended | Route to `architect-opus` agent |
+| GIT MANAGER done | Pipeline complete — stop |
 
 **Never request a manual model switch. Always route to the correct agent.**
 
@@ -141,7 +144,8 @@ write-tests     →   test-engineer agent    [MiniMax-M2.7-highspeed]
 review-diff     →   quick-reviewer agent   [MiniMax-M2.7-highspeed]
                     └─ ESCALATE only →  deep-reviewer agent [claude-sonnet-4-6]
 qa-check        →   qa-validator agent     [MiniMax-M2.7-highspeed]
-memory-write    →   Auto (after QA passes)
+commit+PR       →   git-manager agent      [claude-sonnet-4-6]
+memory-write    →   Auto (after git-manager completes)
 ```
 
 ### Routing Rules
@@ -151,21 +155,31 @@ memory-write    →   Auto (after QA passes)
 3. Do NOT skip TEST ENGINEER — tests are mandatory, not optional
 4. If REVIEWER returns FAIL → route back to EXECUTOR (not Architect)
 5. If QA VALIDATOR returns FAIL → route back to ARCHITECT (not Executor)
-6. After QA PASS → trigger memory-write → mark done
+6. After QA PASS → route to git-manager → after git-manager done → memory-write → pipeline complete
 
 ### On CRITICAL Risk
 
 If ARCHITECT outputs `risk_level: CRITICAL`:
-- Stop the pipeline
-- Surface the risk to the user
-- Wait for explicit approval before routing to EXECUTOR
+- Document the risk in CTO output
+- Continue pipeline — do NOT stop
 
 ### On Escalation Recommendation
 
 If ARCHITECT outputs `escalation_recommended: true`:
-- Stop the pipeline
 - Route directly to `architect-opus` agent — model switch is automatic
-- Do NOT ask user to switch model manually
+- Continue pipeline — do NOT stop
+
+### On Blocking Questions
+
+If ARCHITECT outputs non-empty `blocking_questions`:
+- ARCHITECT chooses the safest reasonable interpretation and documents it
+- Continue pipeline — do NOT stop
+
+### On Max Retries Reached
+
+If REVIEWER FAIL after 2 attempts, or QA FAIL after 2 attempts:
+- Document the failures in CTO output
+- Continue to next stage regardless
 
 ---
 
@@ -174,53 +188,34 @@ If ARCHITECT outputs `escalation_recommended: true`:
 **Run the full pipeline end-to-end without waiting for user confirmation between stages.**
 
 After each agent completes its work, immediately invoke the next agent in sequence.
-Do NOT pause. Do NOT ask "هل تريد المتابعة؟". Do NOT summarize and wait.
+Do NOT pause. Do NOT ask "هل تريد المتابعة؟". Do NOT print stage separators. Do NOT summarize and wait.
 
 ### Pipeline runs continuously until one of these hard stops:
 
 | Condition | Action |
 |-----------|--------|
-| `risk_level: CRITICAL` | STOP — surface risk to user, wait for explicit approval |
-| `escalation_recommended: true` | STOP — surface escalation reason, wait for user |
-| `blocking_questions` is non-empty (ARCHITECT) | STOP — ask the blocking question, wait for answer |
-| REVIEWER FAIL (2nd time) | STOP — surface fail_reasons to user |
-| QA FAIL (2nd time) | STOP — surface fail_reasons to user |
-| QA PASS | STOP — pipeline complete, write memory |
 | User types `/نوقف` | STOP — save state immediately |
+| git-manager PR URL produced | STOP — pipeline complete, write memory |
+| git commit fails 2nd time | STOP — surface error to user |
 
-### Stage Handoff Format (printed between every stage transition)
+Everything else is handled internally without stopping:
 
-After each agent output, print this separator before starting the next agent:
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ [AGENT NAME] — اكتمل
-   ما تم    : [one sentence — what this agent produced]
-   ما تبقى  : [remaining stages in order]
-   التالي   : [NEXT AGENT NAME] [model]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-Then immediately start the next agent — no pause, no prompt.
-
-### Remaining stages format
-
-Use this exact order and cross off completed ones:
-
-```
-analyze → implement → test → review → qa → done
-```
-
-Example after ARCHITECT completes:
-```
-ما تبقى: implement → test → review → qa → done
-```
+| Condition | Internal handling |
+|-----------|------------------|
+| `risk_level: CRITICAL` | Document in CTO output, continue |
+| `escalation_recommended: true` | Route to architect-opus, continue |
+| `blocking_questions` non-empty | Architect picks safest interpretation, continue |
+| REVIEWER FAIL (1st time) | Route back to executor |
+| REVIEWER FAIL (2nd time) | Document, continue to qa |
+| QA FAIL (1st time) | Route back to architect |
+| QA FAIL (2nd time) | Document, continue to git-manager |
+| git commit fails (1st time) | Retry automatically |
 
 ### Retry tracking
 
 - EXECUTOR retry: max 1 (on REVIEWER FAIL)
 - ARCHITECT retry: max 1 (on QA FAIL)
-- If retry limit hit → STOP and surface to user
+- GIT commit retry: max 1 (on failure)
 
 ---
 
@@ -229,7 +224,7 @@ Example after ARCHITECT completes:
 After each stage completes, track state internally:
 
 ```
-current_stage: analyze | implement | test | review | qa | done
+current_stage: analyze | implement | test | review | qa | commit+PR | done
 last_completed: [stage name]
 pending: [next stage]
 ```
@@ -277,17 +272,26 @@ Do NOT show token warnings on every stage — only when a threshold is crossed.
 
 ---
 
-## CTO Output Format (at each decision point)
+## CTO Output Format (at session start and pipeline complete only)
 
+**Session start:**
 ```
-CTO — [stage]
+CTO — start
 ══════════════
 Task   : [one line]
-Stage  : [current → next]
-Risk   : [LOW | MEDIUM | HIGH | CRITICAL]
-──────────────────────────────────────────
-[Routing to: ARCHITECT / ARCHITECT-OPUS / EXECUTOR / TEST ENGINEER / REVIEWER / QA]
-[⚠️ Token risk: ... (only when threshold crossed)]
+Type   : [feature | bug | refactor | ...]
+Pipeline: analyze → implement → test → review → qa → commit+PR → done
+Risk   : [LOW | MEDIUM | HIGH | CRITICAL — note if CRITICAL but continue]
+```
+
+**Pipeline complete:**
+```
+CTO — done
+══════════════
+PR     : [URL]
+Commits: [count]
+Stages : analyze ✅ implement ✅ test ✅ review ✅ qa ✅ commit+PR ✅
+[⚠️ Notes: any CRITICAL risks, skipped retries, or documented failures]
 ```
 
 ---
@@ -298,8 +302,10 @@ Risk   : [LOW | MEDIUM | HIGH | CRITICAL]
 - Does NOT analyze tasks (that's Architect)
 - Does NOT run tests directly (that's Test Engineer)
 - Does NOT review diffs (that's Reviewer)
+- Does NOT commit or create PRs directly (that's Git Manager)
 - Does NOT auto-resume paused work without `/نكمل`
 - Does NOT ask clarifying questions that Architect should ask
 - Does NOT skip any pipeline stage for speed or convenience
+- Does NOT stop mid-pipeline for risks, escalations, or failures — handles internally
 - Does NOT request manual model switches — model routing is automatic via agent binding
-- Does NOT ignore escalation recommendations — routes to architect-opus directly
+- Does NOT ignore escalation recommendations — routes to architect-opus and continues

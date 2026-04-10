@@ -6,6 +6,7 @@ import { fetchPractitioners } from "@/lib/api/practitioners"
 import { fetchServices } from "@/lib/api/services"
 import { fetchBranches } from "@/lib/api/branches"
 import { useRouter } from "next/navigation"
+import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon, FloppyDiskIcon } from "@hugeicons/core-free-icons"
 import { ListPageShell } from "@/components/features/list-page-shell"
@@ -62,6 +63,8 @@ export function IntakeFormPage({ mode, initialDraft, onSave, isSaving, isLoading
   const { locale, t } = useLocale()
   const isAr = locale === "ar"
   const router = useRouter()
+  const { isEnabled } = useFeatureFlagMap()
+  const isMultiBranch = isEnabled("multi_branch")
 
   const [draft, setDraft] = useState<IntakeFormDraft>(() => ({
     ...createEmptyDraft(),
@@ -85,7 +88,8 @@ export function IntakeFormPage({ mode, initialDraft, onSave, isSaving, isLoading
   const { data: branchesData } = useQuery({
     queryKey: ["branches", "scope-select"],
     queryFn: () => fetchBranches({ page: 1, perPage: 100 }),
-    enabled: draft.scope === "branch",
+    // Only fetch branches when multi_branch is enabled and scope is "branch"
+    enabled: isMultiBranch && draft.scope === "branch",
   })
 
   function update(patch: Partial<IntakeFormDraft>) {
@@ -131,14 +135,14 @@ export function IntakeFormPage({ mode, initialDraft, onSave, isSaving, isLoading
         label: isAr ? s.nameAr : s.nameEn,
       }))
     }
-    if (draft.scope === "branch") {
+    if (draft.scope === "branch" && isMultiBranch) {
       return (branchesData?.items ?? []).map((b) => ({
         value: b.id,
         label: isAr ? b.nameAr : b.nameEn,
       }))
     }
     return []
-  }, [draft.scope, practitionersData, servicesData, branchesData, isAr])
+  }, [draft.scope, practitionersData, servicesData, branchesData, isAr, isMultiBranch])
 
   const isEdit = mode === "edit"
 
@@ -170,6 +174,10 @@ export function IntakeFormPage({ mode, initialDraft, onSave, isSaving, isLoading
           <FormInfoPanel
             draft={draft}
             scopeOptions={scopeOptions}
+            availableScopes={isMultiBranch
+              ? ["global", "service", "practitioner", "branch"]
+              : ["global", "service", "practitioner"]
+            }
             onUpdate={update}
             onScopeChange={handleScopeChange}
             isAr={isAr}

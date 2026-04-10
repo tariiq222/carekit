@@ -19,6 +19,7 @@ import { FormInfoTab } from "@/components/features/intake-forms/form-info-tab"
 import { useServices } from "@/hooks/use-services"
 import { usePractitioners } from "@/hooks/use-practitioners"
 import { useBranches } from "@/hooks/use-branches"
+import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import type {
   IntakeForm,
   IntakeFormDraft,
@@ -68,6 +69,8 @@ export function IntakeFormBuilder({
   const { services } = useServices()
   const { practitioners } = usePractitioners()
   const { branches } = useBranches()
+  const { isEnabled } = useFeatureFlagMap()
+  const isMultiBranch = isEnabled("multi_branch")
 
   const [draft, setDraft] = useState<IntakeFormDraft>(() =>
     editingForm
@@ -118,6 +121,11 @@ export function IntakeFormBuilder({
     onClose()
   }
 
+  // Scopes available to the user — hide "branch" when multi_branch is disabled
+  const availableScopes: FormScope[] = isMultiBranch
+    ? ["global", "service", "practitioner", "branch"]
+    : ["global", "service", "practitioner"]
+
   const scopeOptions: { value: string; label: string }[] = (() => {
     if (draft.scope === "service") {
       return services.map((s) => ({
@@ -131,7 +139,7 @@ export function IntakeFormBuilder({
         label: isAr && p.nameAr ? p.nameAr : `${p.user.firstName} ${p.user.lastName}`,
       }))
     }
-    if (draft.scope === "branch") {
+    if (draft.scope === "branch" && isMultiBranch) {
       return branches.map((b) => ({
         value: b.id,
         label: isAr ? b.nameAr : b.nameEn,
@@ -169,6 +177,7 @@ export function IntakeFormBuilder({
               <FormInfoTab
                 draft={draft}
                 scopeOptions={scopeOptions}
+                availableScopes={availableScopes}
                 onUpdate={update}
                 onScopeChange={handleScopeChange}
                 isAr={isAr}
