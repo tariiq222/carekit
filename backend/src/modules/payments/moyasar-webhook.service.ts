@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
+import { GroupsPaymentService } from '../groups/groups-payment.service.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
 import { CancelledBy, Prisma } from '@prisma/client';
 
@@ -21,6 +22,7 @@ export class MoyasarWebhookService {
     private readonly invoicesService: InvoiceCreatorService,
     private readonly config: ConfigService,
     private readonly bookingStatusService: BookingStatusService,
+    private readonly groupsPaymentService: GroupsPaymentService,
   ) {}
 
   async handleMoyasarWebhook(
@@ -34,6 +36,20 @@ export class MoyasarWebhookService {
       where: { moyasarPaymentId: dto.id },
     });
     if (!payment) {
+      // Try group payment if no booking payment found
+      const groupPayment = await this.prisma.groupPayment.findFirst({
+        where: { moyasarPaymentId: dto.id },
+      });
+
+      if (groupPayment) {
+        if (dto.status === 'paid') {
+          await this.processGroupPaymentSuccess(groupPayment.id, groupPayment.enrollmentId, dto.id, dto.amount);
+        } else if (dto.status === 'failed') {
+          await this.processGroupPaymentFailed(groupPayment.id, dto.id);
+        }
+        return { success: true };
+      }
+
       this.logger.warn(`No payment found for Moyasar event ${dto.id}`);
       return { success: true };
     }
@@ -203,5 +219,73 @@ export class MoyasarWebhookService {
         );
       }
     }
+  }
+
+  private async processGroupPaymentSuccess(
+    groupPaymentId: string,
+    enrollmentId: string,
+    eventId: string,
+    webhookAmount: number,
+  ): Promise<void> {
+    let updated: { count: number; amountMismatch: boolean };
+
+    updated = await this.prisma.$transaction(async (tx) => {
+      // Idempotency
+      const existing = await tx.processedWebhook.findUnique({ where: { eventId } });
+      if (existing) return { count: 0, amountMismatch: false };
+
+      // Verify the paid amount matches the stored totalAmount before confirming.
+      const storedGroupPayment = await tx.groupPayment.findUnique({
+        where: { id: groupPaymentId },
+        select: { totalAmount: true, status: true },
+      });
+
+      if (
+        storedGroupPayment &&
+        storedGroupPayment.status === 'pending' &&
+        storedGroupPayment.totalAmount !== webhookAmount
+      ) {
+        this.logger.warn(
+          `Group payment amount mismatch for groupPayment ${groupPaymentId}: ` +
+            `expected ${storedGroupPayment.totalAmount} halalat, got ${webhookAmount} halalat from Moyasar`,
+        );
+        await tx.groupPayment.updateMany({
+          where: { id: groupPaymentId, status: 'pending' },
+          data: { status: 'failed' },
+        });
+        await tx.processedWebhook.create({ data: { eventId } });
+        return { count: 0, amountMismatch: true };
+      }
+
+      const result = await tx.groupPayment.updateMany({
+        where: { id: groupPaymentId, status: 'pending' },
+        data: { status: 'paid', paidAt: new Date() },
+      });
+
+      await tx.processedWebhook.create({ data: { eventId, processedAt: new Date() } }).catch((e: unknown) => {
+        if ((e as { code?: string }).code !== 'P2002') throw e;
+      });
+
+      return { count: result.count, amountMismatch: false };
+    });
+
+    if (updated.count === 0 || updated.amountMismatch) return;
+
+    await this.groupsPaymentService.confirmEnrollmentAfterPayment(enrollmentId);
+  }
+
+  private async processGroupPaymentFailed(groupPaymentId: string, eventId: string): Promise<void> {
+    await this.prisma.groupPayment.updateMany({
+      where: { id: groupPaymentId, status: 'pending' },
+      data: { status: 'failed' },
+    }).catch((e: unknown) => {
+      if ((e as { code?: string }).code !== 'P2002') throw e;
+    });
+
+    await this.prisma.processedWebhook.create({
+      data: { eventId, processedAt: new Date() },
+    }).catch((e: unknown) => {
+      if ((e as { code?: string }).code !== 'P2002') throw e;
+    });
   }
 }

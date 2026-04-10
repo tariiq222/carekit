@@ -21,6 +21,10 @@ import { MoyasarRefundService } from '../../../src/modules/payments/moyasar-refu
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { InvoiceCreatorService } from '../../../src/modules/invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../../../src/modules/bookings/booking-status.service.js';
+import { GroupsPaymentService } from '../../../src/modules/groups/groups-payment.service.js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockGroupsPaymentService: any = { confirmEnrollmentAfterPayment: jest.fn() };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
@@ -29,6 +33,7 @@ const mockPrisma: any = {
     findUnique: jest.fn(), findFirst: jest.fn(),
     create: jest.fn(), update: jest.fn(), updateMany: jest.fn(), delete: jest.fn(),
   },
+  groupPayment: { findFirst: jest.fn() },
   processedWebhook: { findUnique: jest.fn(), create: jest.fn() },
   $transaction: jest.fn().mockImplementation(async (fn) => fn(mockPrisma)),
 };
@@ -83,6 +88,7 @@ describe('MoyasarPaymentService', () => {
         { provide: InvoiceCreatorService, useValue: mockInvoicesService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: BookingStatusService, useValue: mockBookingStatusService },
+        { provide: GroupsPaymentService, useValue: mockGroupsPaymentService },
       ],
     }).compile();
     service = module.get<MoyasarPaymentService>(MoyasarPaymentService);

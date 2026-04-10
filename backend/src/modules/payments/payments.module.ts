@@ -11,6 +11,7 @@ import { InvoicesModule } from '../invoices/invoices.module.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
+import { GroupsModule } from '../groups/groups.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ActivityLogModule } from '../activity-log/activity-log.module.js';
     BookingsModule,
     NotificationsModule,
     ActivityLogModule,
+    GroupsModule,
     BullModule.registerQueue({ name: 'receipt-verification' }),
   ],
   controllers: [PaymentsController],
