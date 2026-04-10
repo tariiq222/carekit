@@ -82,11 +82,6 @@ describe("SettingsTab", () => {
     expect(screen.getByText(/groups.create.location/i)).toBeInTheDocument()
   })
 
-  it("location field IS shown when deliveryMode is hybrid", () => {
-    render(<SettingsTabWrapper overrides={{ deliveryMode: "hybrid" }} />)
-    expect(screen.getByText(/groups.create.location/i)).toBeInTheDocument()
-  })
-
   it("location field is NOT shown when deliveryMode is online", () => {
     render(<SettingsTabWrapper overrides={{ deliveryMode: "online" }} />)
     expect(screen.queryByText(/groups.create.location/i)).not.toBeInTheDocument()
@@ -94,11 +89,6 @@ describe("SettingsTab", () => {
 
   it("meetingLink field IS shown when deliveryMode is online", () => {
     render(<SettingsTabWrapper overrides={{ deliveryMode: "online" }} />)
-    expect(screen.getByText(/groups.create.meetingLink/i)).toBeInTheDocument()
-  })
-
-  it("meetingLink field IS shown when deliveryMode is hybrid", () => {
-    render(<SettingsTabWrapper overrides={{ deliveryMode: "hybrid" }} />)
     expect(screen.getByText(/groups.create.meetingLink/i)).toBeInTheDocument()
   })
 

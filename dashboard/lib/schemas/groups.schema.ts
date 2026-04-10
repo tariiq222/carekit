@@ -17,7 +17,7 @@ const baseGroupSchema = z.object({
   schedulingMode: z.enum(["fixed_date", "on_capacity"]),
   startTime: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
-  deliveryMode: z.enum(["in_person", "online", "hybrid"]),
+  deliveryMode: z.enum(["in_person", "online"]),
   location: z.string().max(500).optional(),
   meetingLink: z.string().max(500).optional(),
   isPublished: z.boolean().optional(),
