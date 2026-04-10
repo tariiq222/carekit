@@ -7,7 +7,7 @@
     "mobile",
     "dashboard",
     "shared",
-    "leadboard",
+    "apps/leadboard",
     "api-client"
   ],
   "scripts": {
