@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import type { Request, Response, NextFunction } from 'express';
@@ -97,15 +96,8 @@ async function bootstrap(): Promise<void> {
     (!isProduction && process.env['ENABLE_SWAGGER'] !== 'false');
 
   if (enableSwagger) {
-    const swaggerConfig = new DocumentBuilder()
-      .setTitle('CareKit API')
-      .setDescription('CareKit Clinic Management Platform API')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
-
-    const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('api/docs', app, document);
+    const { setupSwagger } = await import('./common/swagger/swagger.config.js');
+    setupSwagger(app);
   }
 
   // Graceful shutdown — clean up connections on SIGTERM/SIGINT
