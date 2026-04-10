@@ -261,10 +261,11 @@ describe('License ↔ FeatureFlags Integration', () => {
         hasWaitlist: true,
       });
 
-      // del called exactly 2 times: LICENSE + LICENSE_FEATURES
+      // del called exactly 3 times: LICENSE + LICENSE_FEATURES + FEATURE_FLAGS_MAP
       expect(mockCache.del).toHaveBeenCalledWith('cache:license');
       expect(mockCache.del).toHaveBeenCalledWith('cache:license:features');
-      expect(mockCache.del).toHaveBeenCalledTimes(2);
+      expect(mockCache.del).toHaveBeenCalledWith('feature_flags:map');
+      expect(mockCache.del).toHaveBeenCalledTimes(3);
     });
 
     it('getFeaturesWithStatus correctly reflects bulk update', async () => {
