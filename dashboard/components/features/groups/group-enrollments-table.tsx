@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Delete02Icon, Certificate01Icon } from "@hugeicons/core-free-icons"
+import { Delete02Icon, Certificate01Icon, Mail01Icon, CheckmarkCircle01Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { GroupEnrollment, GroupEnrollmentStatus } from "@/lib/types/groups"
 
@@ -36,7 +36,7 @@ interface Props {
 
 export function GroupEnrollmentsTable({ enrollments, groupId }: Props) {
   const { t, locale } = useLocale()
-  const { removeEnrollmentMut, issueCertificateMut } = useGroupsMutations()
+  const { removeEnrollmentMut, issueCertificateMut, resendPaymentMut, confirmAttendanceMut } = useGroupsMutations()
 
   const columns: ColumnDef<GroupEnrollment>[] = [
     {
@@ -109,6 +109,44 @@ export function GroupEnrollmentsTable({ enrollments, groupId }: Props) {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{t("groups.removePatient")}</TooltipContent>
+              </Tooltip>
+            )}
+            {row.original.status === 'payment_requested' && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-9 rounded-sm text-warning"
+                    onClick={() => resendPaymentMut.mutate({ groupId, enrollmentId: row.original.id })}
+                    disabled={resendPaymentMut.isPending}
+                  >
+                    <HugeiconsIcon icon={Mail01Icon} size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("groups.resendPayment")}</TooltipContent>
+              </Tooltip>
+            )}
+            {(row.original.status === 'confirmed' || row.original.status === 'attended') && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`size-9 rounded-sm ${row.original.attended ? 'text-success' : 'text-muted-foreground'}`}
+                    onClick={() => confirmAttendanceMut.mutate({
+                      groupId,
+                      enrollmentId: row.original.id,
+                      attended: !row.original.attended,
+                    })}
+                    disabled={confirmAttendanceMut.isPending}
+                  >
+                    <HugeiconsIcon icon={row.original.attended ? Cancel01Icon : CheckmarkCircle01Icon} size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {row.original.attended ? t("groups.markAbsent") : t("groups.markAttended")}
+                </TooltipContent>
               </Tooltip>
             )}
           </div>

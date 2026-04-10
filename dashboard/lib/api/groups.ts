@@ -8,6 +8,7 @@ import type {
   UpdateGroupPayload,
   BulkAttendancePayload,
   ConfirmSchedulePayload,
+  ConfirmAttendancePayload,
 } from "@/lib/types/groups"
 import type { PaginatedResponse } from "@/lib/types/common"
 
@@ -77,4 +78,22 @@ export async function issueGroupCertificate(
   enrollmentId: string,
 ): Promise<GroupCertificate> {
   return api.post(`/groups/${groupId}/enrollments/${enrollmentId}/certificate`, {})
+}
+
+// ─── Resend Payment ───
+
+export async function resendEnrollmentPayment(
+  groupId: string,
+  enrollmentId: string,
+): Promise<void> {
+  return api.patch(`/groups/${groupId}/enrollments/${enrollmentId}/resend-payment`, {})
+}
+
+// ─── Single Attendance ───
+
+export async function confirmEnrollmentAttendance(
+  groupId: string,
+  payload: ConfirmAttendancePayload,
+): Promise<GroupEnrollment> {
+  return api.patch<GroupEnrollment>(`/groups/${groupId}/attendance`, payload)
 }

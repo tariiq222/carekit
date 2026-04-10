@@ -97,4 +97,16 @@ export const enGroups: Record<string, string> = {
   "groups.create.meetingLink": "Meeting Link",
   "groups.create.isPublished": "Publish Group",
   "groups.create.expiresAt": "Expiration Date",
+
+  "groups.resendPayment": "Resend Payment",
+  "groups.markAttended": "Mark as Attended",
+  "groups.markAbsent": "Mark as Absent",
+  "groups.triggerPayment": "Request Payment from All",
+  "groups.editGroup": "Edit Group",
+  "groups.edit.pageTitle": "Edit Group",
+  "groups.edit.pageDescription": "Update group details",
+  "groups.edit.submit": "Save Changes",
+  "groups.edit.submitting": "Saving...",
+  "groups.edit.success": "Group updated successfully",
+  "groups.edit.error": "Failed to update group",
 }

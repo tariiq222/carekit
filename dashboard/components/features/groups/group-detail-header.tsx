@@ -6,7 +6,8 @@ import { PageHeader } from "@/components/features/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon, Cancel01Icon, Calendar03Icon } from "@hugeicons/core-free-icons"
+import { Add01Icon, Cancel01Icon, Calendar03Icon, Edit02Icon, CreditCardIcon } from "@hugeicons/core-free-icons"
+import { useRouter } from "next/navigation"
 import type { Group } from "@/lib/types/groups"
 
 const statusStyles: Record<string, string> = {
@@ -35,7 +36,8 @@ interface Props {
 
 export function GroupDetailHeader({ group, onEnrollClick, onSetDateClick }: Props) {
   const { t, locale } = useLocale()
-  const { cancelGroupMut } = useGroupsMutations()
+  const router = useRouter()
+  const { cancelGroupMut, triggerPaymentMut } = useGroupsMutations()
 
   const name = locale === "ar" ? group.nameAr : group.nameEn
   const practitioner = group.practitioner?.nameAr ?? ""
@@ -68,6 +70,21 @@ export function GroupDetailHeader({ group, onEnrollClick, onSetDateClick }: Prop
             <Button variant="outline" className="gap-2 rounded-full px-5" onClick={onEnrollClick}>
               <HugeiconsIcon icon={Add01Icon} size={16} />
               {t("groups.addPatient")}
+            </Button>
+            {group.schedulingMode === 'on_capacity' && group.status === 'awaiting_payment' && (
+              <Button
+                variant="outline"
+                className="gap-2 rounded-full px-5"
+                onClick={() => triggerPaymentMut.mutate(group.id)}
+                disabled={triggerPaymentMut.isPending}
+              >
+                <HugeiconsIcon icon={CreditCardIcon} size={16} />
+                {t("groups.triggerPayment")}
+              </Button>
+            )}
+            <Button variant="outline" className="gap-2 rounded-full px-5" onClick={() => router.push(`/groups/${group.id}/edit`)}>
+              <HugeiconsIcon icon={Edit02Icon} size={16} />
+              {t("groups.editGroup")}
             </Button>
             <Button
               variant="outline"

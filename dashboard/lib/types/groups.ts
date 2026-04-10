@@ -105,3 +105,8 @@ export interface BulkAttendancePayload {
 export interface ConfirmSchedulePayload {
   startTime: string
 }
+
+export interface ConfirmAttendancePayload {
+  enrollmentId: string
+  attended: boolean
+}

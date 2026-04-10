@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Skeleton } from "@/components/ui/skeleton"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Cancel01Icon, ViewIcon, Delete02Icon } from "@hugeicons/core-free-icons"
+import { Cancel01Icon, ViewIcon, Delete02Icon, Edit02Icon } from "@hugeicons/core-free-icons"
+import { useRouter } from "next/navigation"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { Group, GroupStatus, DeliveryMode } from "@/lib/types/groups"
 
@@ -58,6 +59,7 @@ export function GroupsListContent({
   onGroupClick,
 }: GroupsListContentProps) {
   const { t, locale } = useLocale()
+  const router = useRouter()
   const { cancelGroupMut, deleteGroupMut } = useGroupsMutations()
 
   const columns: ColumnDef<Group>[] = [
@@ -117,6 +119,19 @@ export function GroupsListContent({
         const canAct = row.original.status !== "completed" && row.original.status !== "cancelled"
         return (
           <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 rounded-sm"
+                  onClick={() => router.push(`/groups/${row.original.id}/edit`)}
+                >
+                  <HugeiconsIcon icon={Edit02Icon} size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("common.edit")}</TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

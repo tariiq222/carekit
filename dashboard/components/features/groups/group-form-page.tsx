@@ -1,16 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
+import { useQuery } from "@tanstack/react-query"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
 import { GeneralInfoTab } from "@/components/features/groups/create/general-info-tab"
 import { SchedulingPriceTab } from "@/components/features/groups/create/scheduling-price-tab"
 import { SettingsTab } from "@/components/features/groups/create/settings-tab"
@@ -22,20 +24,31 @@ import {
 } from "@/lib/schemas/groups.schema"
 import { useGroupsMutations } from "@/hooks/use-groups-mutations"
 import { useLocale } from "@/components/locale-provider"
+import { fetchGroup } from "@/lib/api/groups"
+import { queryKeys } from "@/lib/query-keys"
 
 /* ─── Props ─── */
 
 interface GroupFormPageProps {
-  mode: "create"
+  mode: "create" | "edit"
+  groupId?: string
 }
 
 /* ─── Component ─── */
 
-export function GroupFormPage(_props: GroupFormPageProps) {
+export function GroupFormPage(props: GroupFormPageProps) {
   const { t } = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { createGroupMut } = useGroupsMutations()
+  const { createGroupMut, updateGroupMut } = useGroupsMutations()
+
+  const isEdit = props.mode === "edit"
+
+  const { data: group, isLoading: groupLoading } = useQuery({
+    queryKey: queryKeys.groups.detail(props.groupId ?? ""),
+    queryFn: () => fetchGroup(props.groupId!),
+    enabled: isEdit && !!props.groupId,
+  })
 
   const initialTab = searchParams.get("tab") ?? "general"
 
@@ -56,6 +69,34 @@ export function GroupFormPage(_props: GroupFormPageProps) {
     },
   })
 
+  /* ── Populate form in edit mode ── */
+  useEffect(() => {
+    if (!group || !isEdit) return
+    setPendingPractitionerIds(group.practitionerId ? [group.practitionerId] : [])
+    form.reset({
+      nameAr: group.nameAr,
+      nameEn: group.nameEn,
+      descriptionAr: group.descriptionAr ?? "",
+      descriptionEn: group.descriptionEn ?? "",
+      practitionerId: group.practitionerId,
+      minParticipants: group.minParticipants,
+      maxParticipants: group.maxParticipants,
+      pricePerPersonHalalat: group.pricePerPersonHalalat,
+      durationMinutes: group.durationMinutes,
+      paymentDeadlineHours: group.paymentDeadlineHours,
+      paymentType: group.paymentType,
+      depositAmount: group.depositAmount ?? undefined,
+      schedulingMode: group.schedulingMode,
+      startTime: group.startTime ?? undefined,
+      endDate: group.endDate ?? undefined,
+      deliveryMode: group.deliveryMode,
+      location: group.location ?? "",
+      meetingLink: group.meetingLink ?? "",
+      isPublished: group.isPublished,
+      expiresAt: group.expiresAt ?? undefined,
+    })
+  }, [group, isEdit, form])
+
   /* ── Submit ── */
   const handleSubmit = async (data: CreateGroupFormValues) => {
     const practitionerId = pendingPractitionerIds[0]
@@ -66,9 +107,15 @@ export function GroupFormPage(_props: GroupFormPageProps) {
 
     setIsSubmitting(true)
     try {
-      await createGroupMut.mutateAsync({ ...data, practitionerId })
-      toast.success(t("groups.create.success"))
-      router.push("/services?tab=groups")
+      if (isEdit && props.groupId) {
+        await updateGroupMut.mutateAsync({ id: props.groupId, ...data, practitionerId })
+        toast.success(t("groups.edit.success"))
+        router.push(`/groups/${props.groupId}`)
+      } else {
+        const created = await createGroupMut.mutateAsync({ ...data, practitionerId })
+        toast.success(t("groups.create.success"))
+        router.push(`/groups/${created.id}`)
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("groups.create.error"))
     } finally {
@@ -81,21 +128,43 @@ export function GroupFormPage(_props: GroupFormPageProps) {
   })
 
   const submitLabel = isSubmitting
-    ? t("groups.create.submitting")
-    : t("groups.create.submit")
+    ? (isEdit ? t("groups.edit.submitting") : t("groups.create.submitting"))
+    : (isEdit ? t("groups.edit.submit") : t("groups.create.submit"))
+
+  if (isEdit && groupLoading) {
+    return (
+      <ListPageShell>
+        <Breadcrumbs
+          items={[
+            { label: t("groups.title"), href: "/services?tab=groups" },
+            { label: t("groups.edit.pageTitle") },
+          ]}
+        />
+        <PageHeader
+          title={t("groups.edit.pageTitle")}
+          description={t("groups.edit.pageDescription")}
+        />
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-12" />
+          ))}
+        </div>
+      </ListPageShell>
+    )
+  }
 
   return (
     <ListPageShell>
       <Breadcrumbs
         items={[
           { label: t("groups.title"), href: "/services?tab=groups" },
-          { label: t("groups.addGroup") },
+          { label: isEdit ? t("groups.edit.pageTitle") : t("groups.addGroup") },
         ]}
       />
 
       <PageHeader
-        title={t("groups.create.pageTitle")}
-        description={t("groups.create.pageDescription")}
+        title={isEdit ? t("groups.edit.pageTitle") : t("groups.create.pageTitle")}
+        description={isEdit ? t("groups.edit.pageDescription") : t("groups.create.pageDescription")}
       />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-6">

@@ -97,4 +97,16 @@ export const arGroups: Record<string, string> = {
   "groups.create.meetingLink": "رابط الاجتماع",
   "groups.create.isPublished": "نشر المجموعة",
   "groups.create.expiresAt": "تاريخ انتهاء الصلاحية",
+
+  "groups.resendPayment": "إعادة إرسال طلب الدفع",
+  "groups.markAttended": "تسجيل حضور",
+  "groups.markAbsent": "تسجيل غياب",
+  "groups.triggerPayment": "طلب الدفع من الجميع",
+  "groups.editGroup": "تعديل المجموعة",
+  "groups.edit.pageTitle": "تعديل المجموعة",
+  "groups.edit.pageDescription": "تحديث بيانات المجموعة",
+  "groups.edit.submit": "حفظ التغييرات",
+  "groups.edit.submitting": "جاري الحفظ...",
+  "groups.edit.success": "تم تحديث المجموعة بنجاح",
+  "groups.edit.error": "فشل تحديث المجموعة",
 }

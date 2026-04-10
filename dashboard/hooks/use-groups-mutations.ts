@@ -14,8 +14,10 @@ import {
   removeGroupEnrollment,
   bulkConfirmGroupAttendance,
   issueGroupCertificate,
+  resendEnrollmentPayment,
+  confirmEnrollmentAttendance,
 } from "@/lib/api/groups"
-import type { UpdateGroupPayload, BulkAttendancePayload, ConfirmSchedulePayload } from "@/lib/types/groups"
+import type { UpdateGroupPayload, BulkAttendancePayload, ConfirmSchedulePayload, ConfirmAttendancePayload } from "@/lib/types/groups"
 
 export function useGroupsMutations() {
   const queryClient = useQueryClient()
@@ -85,6 +87,18 @@ export function useGroupsMutations() {
     onSuccess: invalidateAll,
   })
 
+  const resendPaymentMut = useMutation({
+    mutationFn: ({ groupId, enrollmentId }: { groupId: string; enrollmentId: string }) =>
+      resendEnrollmentPayment(groupId, enrollmentId),
+    onSuccess: invalidateAll,
+  })
+
+  const confirmAttendanceMut = useMutation({
+    mutationFn: ({ groupId, ...payload }: { groupId: string } & ConfirmAttendancePayload) =>
+      confirmEnrollmentAttendance(groupId, payload),
+    onSuccess: invalidateAll,
+  })
+
   return {
     createGroupMut,
     updateGroupMut,
@@ -97,5 +111,7 @@ export function useGroupsMutations() {
     removeEnrollmentMut,
     bulkAttendanceMut,
     issueCertificateMut,
+    resendPaymentMut,
+    confirmAttendanceMut,
   }
 }
