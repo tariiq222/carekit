@@ -33,10 +33,17 @@ export const practitionersService = {
     return response.data;
   },
 
-  async getAvailability(id: string, date: string) {
-    const response = await api.get<ApiResponse<{ slots: string[] }>>(
+  async getAvailability(id: string, date: string, options?: { duration?: number; serviceId?: string; bookingType?: string }) {
+    const response = await api.get<ApiResponse<{ slots: Array<{ startTime: string; endTime: string; available: boolean }> }>>(
       `/practitioners/${id}/slots`,
-      { params: { date } },
+      {
+        params: {
+          date,
+          ...(options?.duration && { duration: options.duration }),
+          ...(options?.serviceId && { serviceId: options.serviceId }),
+          ...(options?.bookingType && { bookingType: options.bookingType }),
+        },
+      },
     );
     return response.data;
   },

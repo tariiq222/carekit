@@ -20,9 +20,11 @@ import { useTheme } from '@/theme/useTheme';
 import { practitionersService } from '@/services/practitioners';
 
 export default function BookingScheduleScreen() {
-  const { practitionerId, type } = useLocalSearchParams<{
+  const { practitionerId, type, serviceId, duration } = useLocalSearchParams<{
     practitionerId: string;
     type: string;
+    serviceId?: string;
+    duration?: string;
   }>();
   const { t } = useTranslation();
   const router = useRouter();
@@ -35,17 +37,23 @@ export default function BookingScheduleScreen() {
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
   const today = new Date().toISOString().split('T')[0];
+  const gradientColors: [string, string] = [theme.colors.primaryDark ?? '#0037B0', theme.colors.primary ?? '#1D4ED8'];
 
   useEffect(() => {
     if (selectedDate && practitionerId) {
       practitionersService
-        .getAvailability(practitionerId, selectedDate)
+        .getAvailability(practitionerId, selectedDate, {
+          duration: duration ? parseInt(duration, 10) : undefined,
+          serviceId: serviceId ?? undefined,
+          bookingType: type ?? undefined,
+        })
         .then((res) => {
-          if (res.data?.slots?.length) setSlots(res.data.slots);
+          const available = res.data?.slots?.filter((s: { startTime: string; available: boolean }) => s.available).map((s: { startTime: string }) => s.startTime) ?? [];
+          setSlots(available);
         })
         .catch(() => setSlots([]));
     }
-  }, [selectedDate, practitionerId]);
+  }, [selectedDate, practitionerId, duration, serviceId, type]);
 
   const handleNext = () => {
     if (!selectedDate || !selectedSlot) return;
@@ -76,7 +84,7 @@ export default function BookingScheduleScreen() {
           </ThemedText>
           <View style={[styles.progressTrack, { backgroundColor: theme.colors.surfaceHigh }]}>
             <LinearGradient
-              colors={['#0037B0', '#1D4ED8']}
+              colors={gradientColors}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={[styles.progressFill, { width: '66%' }]}
@@ -98,11 +106,11 @@ export default function BookingScheduleScreen() {
               setSelectedSlot('');
             }}
             markedDates={{
-              [selectedDate]: { selected: true, selectedColor: '#1D4ED8' },
+              [selectedDate]: { selected: true, selectedColor: theme.colors.primary },
             }}
             theme={{
-              todayTextColor: '#1D4ED8',
-              arrowColor: '#1D4ED8',
+              todayTextColor: theme.colors.primary,
+              arrowColor: theme.colors.primary,
               textDayFontSize: 14,
               textMonthFontSize: 16,
               textMonthFontWeight: '600',
@@ -129,7 +137,7 @@ export default function BookingScheduleScreen() {
                   >
                     {isSelected ? (
                       <LinearGradient
-                        colors={['#0037B0', '#1D4ED8']}
+                        colors={gradientColors}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.slotBtn}
