@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/components/providers/auth-provider"
 import { fetchBookingStats } from "@/lib/api/bookings"
 import { fetchLicenseFeatures } from "@/lib/api/license"
+import { fetchFeatureFlagMap } from "@/lib/api/feature-flags"
 import { queryKeys } from "@/lib/query-keys"
 import { navGroups } from "@/components/sidebar-config"
 import { prefetchRouteData } from "@/lib/route-prefetch"
@@ -59,7 +60,14 @@ export function useSidebarNav() {
     }, {})
   }, [licenseFeatures])
 
-  /* ── permission + license filtered nav groups ── */
+  /* ── feature flags map (runtime on/off per clinic) ── */
+  const { data: featureFlagMap } = useQuery({
+    queryKey: ["feature-flag-map"],
+    queryFn: fetchFeatureFlagMap,
+    staleTime: 5 * 60_000,
+  })
+
+  /* ── permission + license + feature-flag filtered nav groups ── */
   const filteredGroups = useMemo<NavGroupFiltered[]>(
     () =>
       navGroups.map((group) => ({
@@ -67,15 +75,17 @@ export function useSidebarNav() {
         items: group.items.filter((item) => {
           // Permission check
           if (item.permission && !user?.permissions.includes(item.permission)) return false
-          // License check — hide nav item if feature is explicitly not licensed
           const flagKey = FEATURE_FLAG_MAP[item.href]
-          if (flagKey && licensedMap) {
-            return licensedMap[flagKey] !== false
+          if (flagKey) {
+            // License check — hide if not licensed
+            if (licensedMap && licensedMap[flagKey] === false) return false
+            // Feature flag check — hide if disabled at runtime
+            if (featureFlagMap && featureFlagMap[flagKey] === false) return false
           }
           return true
         }),
       })),
-    [user?.permissions, licensedMap]
+    [user?.permissions, licensedMap, featureFlagMap]
   )
 
   /* ── user display info ── */
