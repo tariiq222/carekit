@@ -9,7 +9,9 @@ import { CLINIC_TIMEZONE_DEFAULT } from '../../config/constants/index.js';
 const TIME_REGEX = /^\d{2}:\d{2}$/;
 
 /** Returns current time as minutes-since-midnight in the given clinic timezone */
-export function getNowMinutesInTz(timezone: string = CLINIC_TIMEZONE_DEFAULT): number {
+export function getNowMinutesInTz(
+  timezone: string = CLINIC_TIMEZONE_DEFAULT,
+): number {
   const now = new Date();
   const formattedTime = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone as Intl.DateTimeFormatOptions['timeZone'],
@@ -22,7 +24,11 @@ export function getNowMinutesInTz(timezone: string = CLINIC_TIMEZONE_DEFAULT): n
 }
 
 /** Compares two dates by local calendar day in the given clinic timezone */
-export function isSameLocalDate(a: Date, b: Date, timezone: string = CLINIC_TIMEZONE_DEFAULT): boolean {
+export function isSameLocalDate(
+  a: Date,
+  b: Date,
+  timezone: string = CLINIC_TIMEZONE_DEFAULT,
+): boolean {
   const fmt = (d: Date) =>
     new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(d);
   return fmt(a) === fmt(b);
@@ -34,7 +40,11 @@ export function generateSlots(
   bufferMinutes: number = 0,
   isToday: boolean = false,
 ): Array<{ startTime: string; endTime: string; available: boolean }> {
-  const slots: Array<{ startTime: string; endTime: string; available: boolean }> = [];
+  const slots: Array<{
+    startTime: string;
+    endTime: string;
+    available: boolean;
+  }> = [];
   const step = duration + bufferMinutes;
   const nowMinutes = isToday ? getNowMinutesInTz() : -1;
 
@@ -91,11 +101,17 @@ export function validateScheduleSlots(
 export function checkOverlappingSlots(
   schedule: Array<{ dayOfWeek: number; startTime: string; endTime: string }>,
 ): void {
-  const byDay = new Map<number, Array<{ startTime: string; endTime: string }>>();
+  const byDay = new Map<
+    number,
+    Array<{ startTime: string; endTime: string }>
+  >();
   for (const slot of schedule) {
     const daySlots = byDay.get(slot.dayOfWeek) ?? [];
     for (const existing of daySlots) {
-      if (slot.startTime < existing.endTime && slot.endTime > existing.startTime) {
+      if (
+        slot.startTime < existing.endTime &&
+        slot.endTime > existing.startTime
+      ) {
         throw new BadRequestException({
           statusCode: 400,
           message: 'Overlapping time slots on the same day',

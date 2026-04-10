@@ -7,7 +7,10 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { createBookingsTestModule, BookingsTestContext } from './bookings.test-module.js';
+import {
+  createBookingsTestModule,
+  BookingsTestContext,
+} from './bookings.test-module.js';
 import { mockBooking, mockPatientId } from './bookings.fixtures.js';
 
 describe('BookingsService — requestCancellation', () => {
@@ -34,18 +37,24 @@ describe('BookingsService — requestCancellation', () => {
 
     expect(booking.status).toBe('pending_cancellation');
     expect(booking.cancellationReason).toBe('تعارض في الجدول');
-    expect(ctx.mockCancellationService.requestCancellation).toHaveBeenCalledWith(
-      mockBooking.id,
-      mockPatientId,
-      'تعارض في الجدول',
-    );
+    expect(
+      ctx.mockCancellationService.requestCancellation,
+    ).toHaveBeenCalledWith(mockBooking.id, mockPatientId, 'تعارض في الجدول');
   });
 
   it.each([
-    ['ForbiddenException if patient is not the owner', ForbiddenException, 'different-patient-id'],
+    [
+      'ForbiddenException if patient is not the owner',
+      ForbiddenException,
+      'different-patient-id',
+    ],
   ])('should throw %s', async (_label, Exception, patientId) => {
     ctx.mockCancellationService.requestCancellation.mockRejectedValue(
-      new Exception({ statusCode: 403, message: 'Forbidden', error: 'FORBIDDEN' }),
+      new Exception({
+        statusCode: 403,
+        message: 'Forbidden',
+        error: 'FORBIDDEN',
+      }),
     );
 
     await expect(
@@ -72,7 +81,11 @@ describe('BookingsService — requestCancellation', () => {
 
   it('should throw NotFoundException if booking not found', async () => {
     ctx.mockCancellationService.requestCancellation.mockRejectedValue(
-      new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' }),
+      new NotFoundException({
+        statusCode: 404,
+        message: 'Booking not found',
+        error: 'NOT_FOUND',
+      }),
     );
 
     await expect(
@@ -84,7 +97,10 @@ describe('BookingsService — requestCancellation', () => {
 describe('BookingsService — approveCancellation', () => {
   let ctx: BookingsTestContext;
 
-  const approveDto = { refundType: 'full' as const, adminNotes: 'Approved per clinic policy' };
+  const approveDto = {
+    refundType: 'full' as const,
+    adminNotes: 'Approved per clinic policy',
+  };
 
   beforeEach(async () => {
     ctx = await createBookingsTestModule();
@@ -98,14 +114,16 @@ describe('BookingsService — approveCancellation', () => {
       cancelledAt: new Date(),
     });
 
-    const result = await ctx.service.approveCancellation(mockBooking.id, approveDto);
-
-    expect(result.status).toBe('cancelled');
-    expect(result.cancelledAt).toBeDefined();
-    expect(ctx.mockCancellationService.approveCancellation).toHaveBeenCalledWith(
+    const result = await ctx.service.approveCancellation(
       mockBooking.id,
       approveDto,
     );
+
+    expect(result.status).toBe('cancelled');
+    expect(result.cancelledAt).toBeDefined();
+    expect(
+      ctx.mockCancellationService.approveCancellation,
+    ).toHaveBeenCalledWith(mockBooking.id, approveDto);
   });
 
   it.each(['full', 'partial', 'none'] as const)(
@@ -130,7 +148,8 @@ describe('BookingsService — approveCancellation', () => {
     ctx.mockCancellationService.approveCancellation.mockRejectedValue(
       new ConflictException({
         statusCode: 409,
-        message: "Cannot approve cancellation for booking with status 'confirmed'",
+        message:
+          "Cannot approve cancellation for booking with status 'confirmed'",
         error: 'CONFLICT',
       }),
     );
@@ -142,7 +161,11 @@ describe('BookingsService — approveCancellation', () => {
 
   it('should throw NotFoundException if booking not found', async () => {
     ctx.mockCancellationService.approveCancellation.mockRejectedValue(
-      new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' }),
+      new NotFoundException({
+        statusCode: 404,
+        message: 'Booking not found',
+        error: 'NOT_FOUND',
+      }),
     );
 
     await expect(
@@ -181,7 +204,8 @@ describe('BookingsService — rejectCancellation', () => {
     ctx.mockCancellationService.rejectCancellation.mockRejectedValue(
       new ConflictException({
         statusCode: 409,
-        message: "Cannot reject cancellation for booking with status 'confirmed'",
+        message:
+          "Cannot reject cancellation for booking with status 'confirmed'",
         error: 'CONFLICT',
       }),
     );
@@ -193,7 +217,11 @@ describe('BookingsService — rejectCancellation', () => {
 
   it('should throw NotFoundException if booking not found', async () => {
     ctx.mockCancellationService.rejectCancellation.mockRejectedValue(
-      new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' }),
+      new NotFoundException({
+        statusCode: 404,
+        message: 'Booking not found',
+        error: 'NOT_FOUND',
+      }),
     );
 
     await expect(

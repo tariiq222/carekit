@@ -29,9 +29,15 @@ describe('BookingAutomationService', () => {
       providers: [
         BookingAutomationService,
         { provide: BookingExpiryService, useValue: mockExpiryService },
-        { provide: BookingAutocompleteService, useValue: mockAutocompleteService },
+        {
+          provide: BookingAutocompleteService,
+          useValue: mockAutocompleteService,
+        },
         { provide: BookingNoShowService, useValue: mockNoShowService },
-        { provide: BookingCancellationTimeoutService, useValue: mockCancellationTimeoutService },
+        {
+          provide: BookingCancellationTimeoutService,
+          useValue: mockCancellationTimeoutService,
+        },
       ],
     }).compile();
 
@@ -56,6 +62,8 @@ describe('BookingAutomationService', () => {
 
   it('should delegate autoExpirePendingCancellations to cancellationTimeoutService', async () => {
     await service.autoExpirePendingCancellations();
-    expect(mockCancellationTimeoutService.autoExpirePendingCancellations).toHaveBeenCalled();
+    expect(
+      mockCancellationTimeoutService.autoExpirePendingCancellations,
+    ).toHaveBeenCalled();
   });
 });

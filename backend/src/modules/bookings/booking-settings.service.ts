@@ -5,7 +5,8 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { UpdateBookingSettingsDto } from './dto/update-booking-settings.dto.js';
 
 const GLOBAL_CACHE_KEY = 'booking:settings:global';
-const BRANCH_CACHE_KEY = (branchId: string) => `booking:settings:branch:${branchId}`;
+const BRANCH_CACHE_KEY = (branchId: string) =>
+  `booking:settings:branch:${branchId}`;
 const CACHE_TTL_SECONDS = 3600; // 1 hour — settings rarely change; explicit invalidation on update
 
 @Injectable()
@@ -19,7 +20,8 @@ export class BookingSettingsService {
 
   /** Returns global settings (branchId = null). Creates defaults if missing. */
   async get(): Promise<BookingSettings> {
-    const cached = await this.cacheService.get<BookingSettings>(GLOBAL_CACHE_KEY);
+    const cached =
+      await this.cacheService.get<BookingSettings>(GLOBAL_CACHE_KEY);
     if (cached) return cached;
 
     const settings = await this.prisma.bookingSettings.findFirst({
@@ -64,7 +66,9 @@ export class BookingSettingsService {
   }
 
   async update(dto: UpdateBookingSettingsDto): Promise<BookingSettings> {
-    const branchId = (dto as Record<string, unknown>).branchId as string | undefined;
+    const branchId = (dto as Record<string, unknown>).branchId as
+      | string
+      | undefined;
     const { branchId: _ignored, ...data } = dto as Record<string, unknown>;
     void _ignored;
 
@@ -73,8 +77,13 @@ export class BookingSettingsService {
     });
 
     const updated = current
-      ? await this.prisma.bookingSettings.update({ where: { id: current.id }, data })
-      : await this.prisma.bookingSettings.create({ data: { ...data, branchId: branchId ?? null } });
+      ? await this.prisma.bookingSettings.update({
+          where: { id: current.id },
+          data,
+        })
+      : await this.prisma.bookingSettings.create({
+          data: { ...data, branchId: branchId ?? null },
+        });
 
     // Invalidate both global and branch cache
     await this.cacheService.del(GLOBAL_CACHE_KEY);

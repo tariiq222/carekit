@@ -102,11 +102,14 @@ beforeAll(async () => {
     'practitioner',
   );
 
-  const specRes = await request(httpServer).get(`${API_PREFIX}/specialties`).expect(200);
+  const specRes = await request(httpServer)
+    .get(`${API_PREFIX}/specialties`)
+    .expect(200);
   const specialties = specRes.body.data?.items ?? specRes.body.data ?? [];
-  const specialtyId = Array.isArray(specialties) && specialties.length > 0
-    ? (specialties[0] as { id: string }).id
-    : undefined;
+  const specialtyId =
+    Array.isArray(specialties) && specialties.length > 0
+      ? (specialties[0] as { id: string }).id
+      : undefined;
 
   const pracRes = await request(httpServer)
     .post(PRACTITIONERS_URL)
@@ -147,7 +150,9 @@ describe('GET /bookings/waitlist/my', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    expect(Array.isArray((res.body as Record<string, { data: unknown[] }>).data)).toBe(true);
+    expect(
+      Array.isArray((res.body as Record<string, { data: unknown[] }>).data),
+    ).toBe(true);
   });
 
   it('super_admin can view their own waitlist → 200', async () => {
@@ -176,7 +181,9 @@ describe('GET /bookings/waitlist (admin list)', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    expect(Array.isArray((res.body as Record<string, { data: unknown[] }>).data)).toBe(true);
+    expect(
+      Array.isArray((res.body as Record<string, { data: unknown[] }>).data),
+    ).toBe(true);
   });
 
   it('super_admin sees all waitlist entries → 200', async () => {
@@ -300,14 +307,13 @@ describe('DELETE /bookings/waitlist/:id — leave', () => {
       .send({ practitionerId });
 
     if ([200, 201].includes(res.status)) {
-      waitlistEntryId = (res.body as Record<string, { data: { id: string } }>).data?.id;
+      waitlistEntryId = (res.body as Record<string, { data: { id: string } }>)
+        .data?.id;
     }
   });
 
   it('returns 401 without auth', async () => {
-    await request(httpServer)
-      .delete(`${WAITLIST_URL}/${GHOST_ID}`)
-      .expect(401);
+    await request(httpServer).delete(`${WAITLIST_URL}/${GHOST_ID}`).expect(401);
   });
 
   it('returns 400 for malformed UUID', async () => {
@@ -328,7 +334,7 @@ describe('DELETE /bookings/waitlist/:id — leave', () => {
     expect((res.body as Record<string, unknown>).success).toBe(false);
   });
 
-  it('patient cannot leave another patient\'s waitlist entry → 403 or 404', async () => {
+  it("patient cannot leave another patient's waitlist entry → 403 or 404", async () => {
     if (!waitlistEntryId) return;
 
     const res = await request(httpServer)

@@ -31,25 +31,47 @@ import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clin
 // Mock setup
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrismaService: any = {
-  booking: { create: jest.fn(), findFirst: jest.fn(), findMany: jest.fn(), update: jest.fn(), count: jest.fn() },
+  booking: {
+    create: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    count: jest.fn(),
+  },
   practitioner: { findFirst: jest.fn(), findUnique: jest.fn() },
   service: { findFirst: jest.fn() },
   practitionerService: { findUnique: jest.fn() },
   practitionerAvailability: { findMany: jest.fn() },
   practitionerVacation: { findMany: jest.fn(), findFirst: jest.fn() },
-  serviceBranch: { count: jest.fn().mockResolvedValue(0), findUnique: jest.fn() },
+  serviceBranch: {
+    count: jest.fn().mockResolvedValue(0),
+    findUnique: jest.fn(),
+  },
   payment: { findFirst: jest.fn(), updateMany: jest.fn() },
   intakeForm: { findFirst: jest.fn().mockResolvedValue(null) },
   intakeResponse: { findFirst: jest.fn().mockResolvedValue(null) },
-  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
+  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) =>
+    fn(mockPrismaService),
+  ),
 };
 
 const mockZoomService = { createMeeting: jest.fn(), deleteMeeting: jest.fn() };
-const mockCancellationService = { requestCancellation: jest.fn(), approveCancellation: jest.fn(), rejectCancellation: jest.fn() };
-const mockQueryService = { findAll: jest.fn(), findOne: jest.fn(), findMyBookings: jest.fn(), findTodayBookings: jest.fn(), getNextAvailableSlots: jest.fn().mockResolvedValue([]) };
-const mockNotificationsService = { createNotification: jest.fn().mockResolvedValue(undefined) };
+const mockCancellationService = {
+  requestCancellation: jest.fn(),
+  approveCancellation: jest.fn(),
+  rejectCancellation: jest.fn(),
+};
+const mockQueryService = {
+  findAll: jest.fn(),
+  findOne: jest.fn(),
+  findMyBookings: jest.fn(),
+  findTodayBookings: jest.fn(),
+  getNextAvailableSlots: jest.fn().mockResolvedValue([]),
+};
+const mockNotificationsService = {
+  createNotification: jest.fn().mockResolvedValue(undefined),
+};
 const mockActivityLogService = { log: jest.fn().mockResolvedValue(undefined) };
 
 const defaultSettings = {
@@ -127,18 +149,74 @@ describe('BookingsService — Guard Tests', () => {
         BookingCreationService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: ZoomService, useValue: mockZoomService },
-        { provide: BookingCancellationService, useValue: mockCancellationService },
+        {
+          provide: BookingCancellationService,
+          useValue: mockCancellationService,
+        },
         { provide: BookingQueryService, useValue: mockQueryService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: BookingSettingsService, useValue: mockSettingsService },
-        { provide: BookingStatusService, useValue: { confirm: jest.fn(), complete: jest.fn(), checkIn: jest.fn(), startSession: jest.fn(), markNoShow: jest.fn() } },
+        {
+          provide: BookingStatusService,
+          useValue: {
+            confirm: jest.fn(),
+            complete: jest.fn(),
+            checkIn: jest.fn(),
+            startSession: jest.fn(),
+            markNoShow: jest.fn(),
+          },
+        },
         { provide: ActivityLogService, useValue: mockActivityLogService },
-        { provide: BookingPaymentHelper, useValue: { resolvePatientId: jest.fn().mockImplementation((_caller: string, patientId?: string) => Promise.resolve(patientId ?? _caller)), createPaymentIfNeeded: jest.fn().mockResolvedValue(undefined) } },
-        { provide: PriceResolverService, useValue: { resolve: jest.fn().mockResolvedValue({ price: 20000, duration: 30, source: 'service_type' }) } },
-        { provide: ClinicHoursService, useValue: { getAll: jest.fn().mockResolvedValue([0, 1, 2, 3, 4, 5, 6].map((d) => ({ dayOfWeek: d, startTime: '08:00', endTime: '20:00', isActive: true }))), getForDay: jest.fn() } },
-        { provide: ClinicHolidaysService, useValue: { findAll: jest.fn().mockResolvedValue([]), isHoliday: jest.fn().mockResolvedValue(false) } },
-        { provide: BookingRescheduleService, useValue: { reschedule: jest.fn() } },
-        { provide: ClinicSettingsService, useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') } },
+        {
+          provide: BookingPaymentHelper,
+          useValue: {
+            resolvePatientId: jest
+              .fn()
+              .mockImplementation((_caller: string, patientId?: string) =>
+                Promise.resolve(patientId ?? _caller),
+              ),
+            createPaymentIfNeeded: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: PriceResolverService,
+          useValue: {
+            resolve: jest.fn().mockResolvedValue({
+              price: 20000,
+              duration: 30,
+              source: 'service_type',
+            }),
+          },
+        },
+        {
+          provide: ClinicHoursService,
+          useValue: {
+            getAll: jest.fn().mockResolvedValue(
+              [0, 1, 2, 3, 4, 5, 6].map((d) => ({
+                dayOfWeek: d,
+                startTime: '08:00',
+                endTime: '20:00',
+                isActive: true,
+              })),
+            ),
+            getForDay: jest.fn(),
+          },
+        },
+        {
+          provide: ClinicHolidaysService,
+          useValue: {
+            findAll: jest.fn().mockResolvedValue([]),
+            isHoliday: jest.fn().mockResolvedValue(false),
+          },
+        },
+        {
+          provide: BookingRescheduleService,
+          useValue: { reschedule: jest.fn() },
+        },
+        {
+          provide: ClinicSettingsService,
+          useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') },
+        },
       ],
     }).compile();
 
@@ -160,14 +238,22 @@ describe('BookingsService — Guard Tests', () => {
         isAcceptingBookings: false,
       });
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
-      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(
+        mockPractitionerService,
+      );
 
       await expect(
-        service.create(mockPatientId, { ...baseDto, date: futureDateString(5) }),
+        service.create(mockPatientId, {
+          ...baseDto,
+          date: futureDateString(5),
+        }),
       ).rejects.toThrow(BadRequestException);
 
       await expect(
-        service.create(mockPatientId, { ...baseDto, date: futureDateString(5) }),
+        service.create(mockPatientId, {
+          ...baseDto,
+          date: futureDateString(5),
+        }),
       ).rejects.toMatchObject({
         response: expect.objectContaining({ error: 'NOT_ACCEPTING_BOOKINGS' }),
       });
@@ -179,13 +265,25 @@ describe('BookingsService — Guard Tests', () => {
         isAcceptingBookings: true,
       });
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
-      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
-      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(
+        mockPractitionerService,
+      );
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([
+        { dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true },
+      ]);
       mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.create.mockResolvedValue({ id: 'new-booking', status: 'pending', zoomJoinUrl: null, zoomHostUrl: null });
+      mockPrismaService.booking.create.mockResolvedValue({
+        id: 'new-booking',
+        status: 'pending',
+        zoomJoinUrl: null,
+        zoomHostUrl: null,
+      });
 
-      const result = await service.create(mockPatientId, { ...baseDto, date: futureDateString(5) });
+      const result = await service.create(mockPatientId, {
+        ...baseDto,
+        date: futureDateString(5),
+      });
 
       expect(result).toBeDefined();
       expect(mockPrismaService.booking.create).toHaveBeenCalled();
@@ -198,50 +296,99 @@ describe('BookingsService — Guard Tests', () => {
 
   describe('create - maxAdvanceBookingDays guard', () => {
     it('throws BOOKING_TOO_FAR_IN_ADVANCE when booking is beyond max window', async () => {
-      mockSettingsService.get.mockResolvedValue({ ...defaultSettings, maxAdvanceBookingDays: 30 });
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockSettingsService.get.mockResolvedValue({
+        ...defaultSettings,
+        maxAdvanceBookingDays: 30,
+      });
+      mockPrismaService.practitioner.findFirst.mockResolvedValue(
+        mockPractitioner,
+      );
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
-      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(
+        mockPractitionerService,
+      );
 
       await expect(
-        service.create(mockPatientId, { ...baseDto, date: futureDateString(31) }),
+        service.create(mockPatientId, {
+          ...baseDto,
+          date: futureDateString(31),
+        }),
       ).rejects.toThrow(BadRequestException);
 
       await expect(
-        service.create(mockPatientId, { ...baseDto, date: futureDateString(31) }),
+        service.create(mockPatientId, {
+          ...baseDto,
+          date: futureDateString(31),
+        }),
       ).rejects.toMatchObject({
-        response: expect.objectContaining({ error: 'BOOKING_TOO_FAR_IN_ADVANCE' }),
+        response: expect.objectContaining({
+          error: 'BOOKING_TOO_FAR_IN_ADVANCE',
+        }),
       });
     });
 
     it('allows booking exactly at max window boundary', async () => {
-      mockSettingsService.get.mockResolvedValue({ ...defaultSettings, maxAdvanceBookingDays: 30 });
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockSettingsService.get.mockResolvedValue({
+        ...defaultSettings,
+        maxAdvanceBookingDays: 30,
+      });
+      mockPrismaService.practitioner.findFirst.mockResolvedValue(
+        mockPractitioner,
+      );
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
-      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
-      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(
+        mockPractitionerService,
+      );
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([
+        { dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true },
+      ]);
       mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.create.mockResolvedValue({ id: 'new-booking', status: 'pending', zoomJoinUrl: null, zoomHostUrl: null });
+      mockPrismaService.booking.create.mockResolvedValue({
+        id: 'new-booking',
+        status: 'pending',
+        zoomJoinUrl: null,
+        zoomHostUrl: null,
+      });
 
       // Exactly 30 days ahead — should not throw
-      const result = await service.create(mockPatientId, { ...baseDto, date: futureDateString(30) });
+      const result = await service.create(mockPatientId, {
+        ...baseDto,
+        date: futureDateString(30),
+      });
 
       expect(result).toBeDefined();
     });
 
     it('does not enforce limit when maxAdvanceBookingDays is 0', async () => {
-      mockSettingsService.get.mockResolvedValue({ ...defaultSettings, maxAdvanceBookingDays: 0 });
-      mockPrismaService.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockSettingsService.get.mockResolvedValue({
+        ...defaultSettings,
+        maxAdvanceBookingDays: 0,
+      });
+      mockPrismaService.practitioner.findFirst.mockResolvedValue(
+        mockPractitioner,
+      );
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
-      mockPrismaService.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
-      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([{ dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true }]);
+      mockPrismaService.practitionerService.findUnique.mockResolvedValue(
+        mockPractitionerService,
+      );
+      mockPrismaService.practitionerAvailability.findMany.mockResolvedValue([
+        { dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true },
+      ]);
       mockPrismaService.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrismaService.booking.findMany.mockResolvedValue([]);
-      mockPrismaService.booking.create.mockResolvedValue({ id: 'new-booking', status: 'pending', zoomJoinUrl: null, zoomHostUrl: null });
+      mockPrismaService.booking.create.mockResolvedValue({
+        id: 'new-booking',
+        status: 'pending',
+        zoomJoinUrl: null,
+        zoomHostUrl: null,
+      });
 
       // 365 days ahead — should be allowed since maxAdvanceBookingDays = 0 means no limit
-      const result = await service.create(mockPatientId, { ...baseDto, date: futureDateString(365) });
+      const result = await service.create(mockPatientId, {
+        ...baseDto,
+        date: futureDateString(365),
+      });
 
       expect(result).toBeDefined();
     });

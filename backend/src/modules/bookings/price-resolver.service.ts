@@ -3,9 +3,13 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { BookingType } from '@prisma/client';
 
 export interface ResolvedPricing {
-  price: number;        // halalat
-  duration: number;     // minutes
-  source: 'practitioner_option' | 'service_option' | 'practitioner_type' | 'service_type';
+  price: number; // halalat
+  duration: number; // minutes
+  source:
+    | 'practitioner_option'
+    | 'service_option'
+    | 'practitioner_type'
+    | 'service_type';
   durationOptionId?: string;
 }
 
@@ -64,7 +68,8 @@ export class PriceResolverService {
 
     // 4. Check if practitioner has custom duration options
     if (pst?.useCustomOptions && pst.durationOptions.length > 0) {
-      const defaultOpt = pst.durationOptions.find(o => o.isDefault) || pst.durationOptions[0];
+      const defaultOpt =
+        pst.durationOptions.find((o) => o.isDefault) || pst.durationOptions[0];
       return {
         price: defaultOpt.price,
         duration: defaultOpt.durationMinutes,
@@ -75,7 +80,8 @@ export class PriceResolverService {
 
     // 5. Check service-level duration options
     if (sbt.durationOptions.length > 0) {
-      const defaultOpt = sbt.durationOptions.find(o => o.isDefault) || sbt.durationOptions[0];
+      const defaultOpt =
+        sbt.durationOptions.find((o) => o.isDefault) || sbt.durationOptions[0];
       return {
         price: defaultOpt.price,
         duration: defaultOpt.durationMinutes,
@@ -89,7 +95,10 @@ export class PriceResolverService {
       return {
         price: pst.price ?? sbt.price,
         duration: pst.duration ?? sbt.duration,
-        source: pst.price != null || pst.duration != null ? 'practitioner_type' : 'service_type',
+        source:
+          pst.price != null || pst.duration != null
+            ? 'practitioner_type'
+            : 'service_type',
       };
     }
 
@@ -103,12 +112,25 @@ export class PriceResolverService {
 
   private resolveWithOptionId(
     durationOptionId: string,
-    pst: { useCustomOptions: boolean; durationOptions: Array<{ id: string; price: number; durationMinutes: number }> } | null,
-    sbt: { durationOptions: Array<{ id: string; price: number; durationMinutes: number }> },
+    pst: {
+      useCustomOptions: boolean;
+      durationOptions: Array<{
+        id: string;
+        price: number;
+        durationMinutes: number;
+      }>;
+    } | null,
+    sbt: {
+      durationOptions: Array<{
+        id: string;
+        price: number;
+        durationMinutes: number;
+      }>;
+    },
   ): ResolvedPricing {
     // First check practitioner options
     if (pst?.useCustomOptions) {
-      const opt = pst.durationOptions.find(o => o.id === durationOptionId);
+      const opt = pst.durationOptions.find((o) => o.id === durationOptionId);
       if (opt) {
         return {
           price: opt.price,
@@ -120,7 +142,7 @@ export class PriceResolverService {
     }
 
     // Then check service options
-    const opt = sbt.durationOptions.find(o => o.id === durationOptionId);
+    const opt = sbt.durationOptions.find((o) => o.id === durationOptionId);
     if (opt) {
       return {
         price: opt.price,

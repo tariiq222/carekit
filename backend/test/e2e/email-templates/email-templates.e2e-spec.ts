@@ -86,7 +86,9 @@ describe('Email Templates Module (e2e)', () => {
       expect(item).toHaveProperty('subjectAr');
       expect(item).toHaveProperty('subjectEn');
 
-      const slugs = (res.body.data as Array<{ slug: string }>).map((t) => t.slug);
+      const slugs = (res.body.data as Array<{ slug: string }>).map(
+        (t) => t.slug,
+      );
       expect(slugs).toContain('welcome');
       expect(slugs).toContain('otp-login');
     });
@@ -137,7 +139,9 @@ describe('Email Templates Module (e2e)', () => {
     });
 
     it('should return 401 without auth', async () => {
-      const res = await request(httpServer).get(`${BASE_URL}/welcome`).expect(401);
+      const res = await request(httpServer)
+        .get(`${BASE_URL}/welcome`)
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
@@ -222,7 +226,10 @@ describe('Email Templates Module (e2e)', () => {
   // ─── POST /email-templates/:slug/preview ─────────────────────────
 
   describe('POST /email-templates/:slug/preview', () => {
-    const validBody = { context: { firstName: 'أحمد', code: '123456' }, lang: 'ar' };
+    const validBody = {
+      context: { firstName: 'أحمد', code: '123456' },
+      lang: 'ar',
+    };
 
     it('should render preview in Arabic (200)', async () => {
       const res = await request(httpServer)

@@ -3,7 +3,10 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { Prisma, RecurringPattern } from '@prisma/client';
 import { CacheService } from '../../common/services/cache.service.js';
 import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
 import { ServiceListQueryDto } from './dto/service-list-query.dto.js';
@@ -53,7 +56,7 @@ export class ServicesService {
       depositEnabled: dto.depositEnabled ?? false,
       depositPercent: dto.depositPercent,
       allowRecurring: dto.allowRecurring,
-      allowedRecurringPatterns: dto.allowedRecurringPatterns as RecurringPattern[] | undefined,
+      allowedRecurringPatterns: dto.allowedRecurringPatterns,
       maxRecurrences: dto.maxRecurrences,
       maxParticipants: dto.maxParticipants ?? 1,
       minLeadMinutes: dto.minLeadMinutes,
@@ -67,7 +70,9 @@ export class ServicesService {
         select: { id: true },
       });
       const foundIds = found.map((p) => p.id);
-      const missing = dto.practitionerIds.filter((id) => !foundIds.includes(id));
+      const missing = dto.practitionerIds.filter(
+        (id) => !foundIds.includes(id),
+      );
       if (missing.length > 0) {
         throw new NotFoundException({
           statusCode: 404,
@@ -82,7 +87,9 @@ export class ServicesService {
         ...serviceData,
         ...(dto.practitionerIds?.length && {
           practitionerServices: {
-            create: dto.practitionerIds.map((practitionerId) => ({ practitionerId })),
+            create: dto.practitionerIds.map((practitionerId) => ({
+              practitionerId,
+            })),
           },
         }),
         ...(dto.branchIds?.length && {
@@ -110,9 +117,9 @@ export class ServicesService {
 
     if (isDefaultQuery) {
       try {
-        const cached = await this.cache.get<ReturnType<typeof this.buildFindAllResult>>(
-          CACHE_KEYS.SERVICES_ACTIVE,
-        );
+        const cached = await this.cache.get<
+          ReturnType<typeof this.buildFindAllResult>
+        >(CACHE_KEYS.SERVICES_ACTIVE);
         if (cached) return cached;
       } catch {
         // Cache read failure — fall through to DB query
@@ -319,7 +326,18 @@ export class ServicesService {
    */
   async exportServicesCsv(): Promise<string> {
     const data = await this.exportServices();
-    const headers = ['ID', 'Name (AR)', 'Name (EN)', 'Category (AR)', 'Category (EN)', 'Price (SAR)', 'Duration (min)', 'Active', 'Hidden', 'Created At'];
+    const headers = [
+      'ID',
+      'Name (AR)',
+      'Name (EN)',
+      'Category (AR)',
+      'Category (EN)',
+      'Price (SAR)',
+      'Duration (min)',
+      'Active',
+      'Hidden',
+      'Created At',
+    ];
     const rows = data.map((r) => [
       r.id,
       r.nameAr,
@@ -333,7 +351,9 @@ export class ServicesService {
       r.createdAt,
     ]);
     const csvContent = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','),
+      )
       .join('\r\n');
     return '\uFEFF' + csvContent;
   }
@@ -343,7 +363,10 @@ export class ServicesService {
   // ═══════════════════════════════════════════════════════════════
 
   private async queryServices(query: ServiceListQueryDto) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      query.page,
+      query.perPage,
+    );
 
     const where: Prisma.ServiceWhereInput = {
       deletedAt: null,

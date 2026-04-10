@@ -1,0 +1,72 @@
+name: memory-write
+description: CareKit memory persistence — write decisions, bugs, lessons after QA pass
+trigger: manual
+
+preconditions:
+  - qa_complete: true    # qa-check must have passed
+
+steps:
+  - id: load-session
+    type: context
+    required: true
+    sources:
+      - memory:active_work.current_task_analysis
+      - memory:active_work.implementation_complete
+      - memory:active_work.tests_complete
+      - memory:active_work.review_complete
+      - memory:active_work.qa_complete
+    scope: full_session_summary
+
+  - id: classify-memory
+    type: analysis
+    required: true
+    depends_on: load-session
+    classify:
+      decision:
+        trigger: "new architectural choice was made"
+        format: "[DATE] DECISION: {what} | RATIONALE: {why} | ALTERNATIVES: {what else was considered}"
+        target: "opencode.md#12.1"
+      domain_rule:
+        trigger: "new business rule was discovered or confirmed"
+        format: "RULE: {rule} | DISCOVERED: {context} | APPLIES_TO: {domains}"
+        target: "opencode.md#12.2"
+      bug_lesson:
+        trigger: "bug was fixed"
+        format: "[DATE] BUG: {what} | ROOT_CAUSE: {why} | FIX: {how} | REGRESSION_TEST: {file}"
+        target: "opencode.md#12.3"
+      test_lesson:
+        trigger: "testing pattern worked or failed"
+        format: "PATTERN: {what} | OUTCOME: {worked/failed} | REASON: {why}"
+        target: "opencode.md#12.4"
+      api_contract:
+        trigger: "API shape was defined or changed"
+        format: "ENDPOINT: {path} | SHAPE: {request/response} | CONSUMERS: {who depends on this}"
+        target: "opencode.md#12.5"
+
+  - id: write-memory
+    type: file-write
+    required: true
+    depends_on: classify-memory
+    target: opencode.md
+    mode: append_to_section    # append to correct section, do not overwrite
+    conflict_resolution: preserve_existing
+
+  - id: clear-active-work
+    type: memory
+    required: false
+    depends_on: write-memory
+    action: clear
+    keys:
+      - active_work.current_task_analysis
+      - active_work.implementation_complete
+      - active_work.tests_complete
+      - active_work.review_complete
+      - active_work.qa_complete
+
+  - id: output
+    type: finalization
+    required: true
+    depends_on: write-memory
+    actions:
+      - display_memory_written
+    message: "Memory written. Ready to commit with conventional format."

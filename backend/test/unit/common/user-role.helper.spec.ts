@@ -7,7 +7,6 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 const userId = 'user-uuid-1';
 const practitionerId = 'pract-uuid-1';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   user: {
     findUnique: jest.fn(),
@@ -29,7 +28,10 @@ describe('resolveUserRoleContext', () => {
   it('should return default context when user not found', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null);
 
-    const ctx = await resolveUserRoleContext(mockPrisma as PrismaService, userId);
+    const ctx = await resolveUserRoleContext(
+      mockPrisma as PrismaService,
+      userId,
+    );
 
     expect(ctx.isAdmin).toBe(false);
     expect(ctx.isPractitioner).toBe(false);
@@ -44,7 +46,10 @@ describe('resolveUserRoleContext', () => {
       }),
     );
 
-    const ctx = await resolveUserRoleContext(mockPrisma as PrismaService, userId);
+    const ctx = await resolveUserRoleContext(
+      mockPrisma as PrismaService,
+      userId,
+    );
 
     expect(ctx.isAdmin).toBe(true);
     expect(ctx.roles).toContain('super_admin');
@@ -57,7 +62,10 @@ describe('resolveUserRoleContext', () => {
       }),
     );
 
-    const ctx = await resolveUserRoleContext(mockPrisma as PrismaService, userId);
+    const ctx = await resolveUserRoleContext(
+      mockPrisma as PrismaService,
+      userId,
+    );
 
     expect(ctx.isAdmin).toBe(true);
   });
@@ -69,7 +77,10 @@ describe('resolveUserRoleContext', () => {
       }),
     );
 
-    const ctx = await resolveUserRoleContext(mockPrisma as PrismaService, userId);
+    const ctx = await resolveUserRoleContext(
+      mockPrisma as PrismaService,
+      userId,
+    );
 
     expect(ctx.isPractitioner).toBe(true);
     expect(ctx.practitionerId).toBe(practitionerId);
@@ -82,7 +93,10 @@ describe('resolveUserRoleContext', () => {
       }),
     );
 
-    const ctx = await resolveUserRoleContext(mockPrisma as PrismaService, userId);
+    const ctx = await resolveUserRoleContext(
+      mockPrisma as PrismaService,
+      userId,
+    );
 
     expect(ctx.isPractitioner).toBe(false);
     expect(ctx.practitionerId).toBeNull();
@@ -96,7 +110,10 @@ describe('resolveUserRoleContext', () => {
       }),
     );
 
-    const ctx = await resolveUserRoleContext(mockPrisma as PrismaService, userId);
+    const ctx = await resolveUserRoleContext(
+      mockPrisma as PrismaService,
+      userId,
+    );
 
     expect(ctx.isAdmin).toBe(true);
     expect(ctx.isPractitioner).toBe(true);
@@ -109,7 +126,10 @@ describe('resolveUserRoleContext', () => {
       }),
     );
 
-    const ctx = await resolveUserRoleContext(mockPrisma as PrismaService, userId);
+    const ctx = await resolveUserRoleContext(
+      mockPrisma as PrismaService,
+      userId,
+    );
 
     expect(ctx.isAdmin).toBe(false);
     expect(ctx.isPractitioner).toBe(false);

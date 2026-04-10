@@ -8,9 +8,7 @@ const SCAN_BATCH_SIZE = 100;
 export class CacheService {
   private readonly logger = new Logger(CacheService.name);
 
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async get<T>(key: string): Promise<T | null> {
     const raw = await this.redis.get(key);

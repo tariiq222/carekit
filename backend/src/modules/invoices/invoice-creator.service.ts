@@ -28,7 +28,9 @@ export class InvoiceCreatorService {
     private readonly zatcaService: ZatcaService,
     private readonly whitelabelService: WhitelabelService,
     private readonly clinicSettingsService: ClinicSettingsService,
-    @Optional() @InjectQueue('zatca-submit') private readonly zatcaQueue?: Queue,
+    @Optional()
+    @InjectQueue('zatca-submit')
+    private readonly zatcaQueue?: Queue,
   ) {}
 
   async createInvoice(dto: CreateInvoiceDto) {
@@ -113,46 +115,52 @@ export class InvoiceCreatorService {
 
     // ZATCA hash chaining must be atomic: read previous hash + create invoice in a
     // serializable transaction to prevent two concurrent invoices sharing the same previousHash.
-    let zatcaDataOuter: Awaited<ReturnType<typeof this.zatcaService.generateForInvoice>>;
+    let zatcaDataOuter: Awaited<
+      ReturnType<typeof this.zatcaService.generateForInvoice>
+    >;
 
-    const invoice = await this.prisma.$transaction(async (tx) => {
-      // Read the last invoice hash inside the transaction for atomic chaining
-      const lastInvoice = await tx.invoice.findFirst({
-        where: { invoiceHash: { not: null } },
-        orderBy: { createdAt: 'desc' },
-        select: { invoiceHash: true },
-      }) as { invoiceHash: string | null } | null;
-      const previousHash = lastInvoice?.invoiceHash ?? this.zatcaService.zeroHash();
+    const invoice = await this.prisma.$transaction(
+      async (tx) => {
+        // Read the last invoice hash inside the transaction for atomic chaining
+        const lastInvoice = (await tx.invoice.findFirst({
+          where: { invoiceHash: { not: null } },
+          orderBy: { createdAt: 'desc' },
+          select: { invoiceHash: true },
+        })) as { invoiceHash: string | null } | null;
+        const previousHash =
+          lastInvoice?.invoiceHash ?? this.zatcaService.zeroHash();
 
-      const zatcaData = await this.zatcaService.generateForInvoice({
-        invoiceNumber,
-        uuid: uuidv4(),
-        issueDate,
-        issueTime,
-        buyerName,
-        serviceDescription: serviceDesc,
-        baseAmount: payment.amount,
-        previousInvoiceHash: previousHash,
-        config: zatcaConfig,
-      });
-      zatcaDataOuter = zatcaData;
-
-      return tx.invoice.create({
-        data: {
-          paymentId: dto.paymentId,
+        const zatcaData = await this.zatcaService.generateForInvoice({
           invoiceNumber,
-          pdfUrl: null,
-          vatAmount: zatcaData.vatAmount,
-          vatRate: zatcaData.vatRate,
-          invoiceHash: zatcaData.invoiceHash,
-          previousHash: zatcaData.previousHash,
-          qrCodeData: zatcaData.qrCodeData,
-          zatcaStatus: zatcaData.status,
-          xmlContent: zatcaData.xmlContent,
-        },
-        include: invoiceInclude,
-      });
-    }, { isolationLevel: 'Serializable' });
+          uuid: uuidv4(),
+          issueDate,
+          issueTime,
+          buyerName,
+          serviceDescription: serviceDesc,
+          baseAmount: payment.amount,
+          previousInvoiceHash: previousHash,
+          config: zatcaConfig,
+        });
+        zatcaDataOuter = zatcaData;
+
+        return tx.invoice.create({
+          data: {
+            paymentId: dto.paymentId,
+            invoiceNumber,
+            pdfUrl: null,
+            vatAmount: zatcaData.vatAmount,
+            vatRate: zatcaData.vatRate,
+            invoiceHash: zatcaData.invoiceHash,
+            previousHash: zatcaData.previousHash,
+            qrCodeData: zatcaData.qrCodeData,
+            zatcaStatus: zatcaData.status,
+            xmlContent: zatcaData.xmlContent,
+          },
+          include: invoiceInclude,
+        });
+      },
+      { isolationLevel: 'Serializable' },
+    );
 
     // Enqueue ZATCA Phase 2 auto-submit if invoice is pending
     if (this.zatcaQueue && zatcaDataOuter!.status === 'pending') {
@@ -218,61 +226,67 @@ export class InvoiceCreatorService {
     const zatcaConfig = await this.zatcaService.loadConfig();
 
     const patient = enrollment.patient;
-    const buyerName = patient ? `${patient.firstName} ${patient.lastName}` : 'مريض';
+    const buyerName = patient
+      ? `${patient.firstName} ${patient.lastName}`
+      : 'مريض';
     const serviceDesc =
-      enrollment.group?.nameAr ??
-      enrollment.group?.nameEn ??
-      'جلسة جماعية';
+      enrollment.group?.nameAr ?? enrollment.group?.nameEn ?? 'جلسة جماعية';
 
     let zatcaDataOuter: Awaited<ReturnType<ZatcaService['generateForInvoice']>>;
 
-    const invoice = await this.prisma.$transaction(async (tx) => {
-      const lastInvoice = await tx.invoice.findFirst({
-        where: { invoiceHash: { not: null } },
-        orderBy: { createdAt: 'desc' },
-        select: { invoiceHash: true },
-      }) as { invoiceHash: string | null } | null;
-      const previousHash = lastInvoice?.invoiceHash ?? this.zatcaService.zeroHash();
+    const invoice = await this.prisma.$transaction(
+      async (tx) => {
+        const lastInvoice = (await tx.invoice.findFirst({
+          where: { invoiceHash: { not: null } },
+          orderBy: { createdAt: 'desc' },
+          select: { invoiceHash: true },
+        })) as { invoiceHash: string | null } | null;
+        const previousHash =
+          lastInvoice?.invoiceHash ?? this.zatcaService.zeroHash();
 
-      const zatcaData = await this.zatcaService.generateForInvoice({
-        invoiceNumber,
-        uuid: uuidv4(),
-        issueDate,
-        issueTime,
-        buyerName,
-        serviceDescription: serviceDesc,
-        baseAmount: enrollment.payment!.amount,
-        previousInvoiceHash: previousHash,
-        config: zatcaConfig,
-      });
-      zatcaDataOuter = zatcaData;
-
-      return tx.invoice.create({
-        data: {
-          groupEnrollmentId: enrollmentId,
-          paymentId: enrollment.payment!.id,
+        const zatcaData = await this.zatcaService.generateForInvoice({
           invoiceNumber,
-          pdfUrl: null,
-          vatAmount: zatcaData.vatAmount,
-          vatRate: zatcaData.vatRate,
-          invoiceHash: zatcaData.invoiceHash,
-          previousHash: zatcaData.previousHash,
-          qrCodeData: zatcaData.qrCodeData,
-          zatcaStatus: zatcaData.status,
-          xmlContent: zatcaData.xmlContent,
-        },
-        include: invoiceInclude,
-      }).catch((e: unknown) => {
-        if ((e as { code?: string }).code === 'P2002') {
-          throw new ConflictException({
-            statusCode: 409,
-            message: 'Invoice already exists for this group enrollment',
-            error: 'CONFLICT',
+          uuid: uuidv4(),
+          issueDate,
+          issueTime,
+          buyerName,
+          serviceDescription: serviceDesc,
+          baseAmount: enrollment.payment!.amount,
+          previousInvoiceHash: previousHash,
+          config: zatcaConfig,
+        });
+        zatcaDataOuter = zatcaData;
+
+        return tx.invoice
+          .create({
+            data: {
+              groupEnrollmentId: enrollmentId,
+              paymentId: enrollment.payment!.id,
+              invoiceNumber,
+              pdfUrl: null,
+              vatAmount: zatcaData.vatAmount,
+              vatRate: zatcaData.vatRate,
+              invoiceHash: zatcaData.invoiceHash,
+              previousHash: zatcaData.previousHash,
+              qrCodeData: zatcaData.qrCodeData,
+              zatcaStatus: zatcaData.status,
+              xmlContent: zatcaData.xmlContent,
+            },
+            include: invoiceInclude,
+          })
+          .catch((e: unknown) => {
+            if ((e as { code?: string }).code === 'P2002') {
+              throw new ConflictException({
+                statusCode: 409,
+                message: 'Invoice already exists for this group enrollment',
+                error: 'CONFLICT',
+              });
+            }
+            throw e;
           });
-        }
-        throw e;
-      });
-    }, { isolationLevel: 'Serializable' });
+      },
+      { isolationLevel: 'Serializable' },
+    );
 
     if (this.zatcaQueue && zatcaDataOuter!.status === 'pending') {
       await this.zatcaQueue.add(
@@ -303,7 +317,9 @@ export class InvoiceCreatorService {
                 patient: true,
                 practitioner: {
                   include: {
-                    user: { select: { id: true, firstName: true, lastName: true } },
+                    user: {
+                      select: { id: true, firstName: true, lastName: true },
+                    },
                   },
                 },
                 service: true,
@@ -329,7 +345,12 @@ export class InvoiceCreatorService {
     const clinicName = branding.systemName ?? 'CareKit Clinic';
     const clinicPhone = settings.contactPhone ?? '';
 
-    return buildInvoiceHtml({ invoice, clinicName, clinicPhone, qrCodeData: invoice.qrCodeData });
+    return buildInvoiceHtml({
+      invoice,
+      clinicName,
+      clinicPhone,
+      qrCodeData: invoice.qrCodeData,
+    });
   }
 
   private generateInvoiceNumber(): string {
@@ -341,5 +362,4 @@ export class InvoiceCreatorService {
     const rand = String(crypto.randomInt(1000, 9999));
     return `INV-${year}${month}${day}-${ts}${rand}`;
   }
-
 }

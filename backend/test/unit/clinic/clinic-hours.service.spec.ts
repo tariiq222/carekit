@@ -98,7 +98,12 @@ describe('ClinicHoursService', () => {
 
       const dto = {
         hours: [
-          { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true },
+          {
+            dayOfWeek: 1,
+            startTime: '09:00',
+            endTime: '17:00',
+            isActive: true,
+          },
         ],
       };
       await service.setHours(dto as never);
@@ -112,7 +117,12 @@ describe('ClinicHoursService', () => {
 
       const dto = {
         hours: [
-          { dayOfWeek: 1, startTime: '08:00', endTime: '16:00', isActive: true },
+          {
+            dayOfWeek: 1,
+            startTime: '08:00',
+            endTime: '16:00',
+            isActive: true,
+          },
         ],
       };
       await service.setHours(dto as never);
@@ -123,7 +133,12 @@ describe('ClinicHoursService', () => {
     it('should throw BadRequestException when startTime >= endTime', async () => {
       const dto = {
         hours: [
-          { dayOfWeek: 1, startTime: '17:00', endTime: '09:00', isActive: true },
+          {
+            dayOfWeek: 1,
+            startTime: '17:00',
+            endTime: '09:00',
+            isActive: true,
+          },
         ],
       };
 

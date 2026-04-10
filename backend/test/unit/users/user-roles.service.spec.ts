@@ -14,7 +14,6 @@ const mockUser = { id: userId, deletedAt: null };
 const mockRole = { id: roleId, slug: 'staff' };
 const mockUserRole = { id: 'ur-uuid-1', userId, roleId };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   user: { findUnique: jest.fn() },
   role: { findUnique: jest.fn() },
@@ -26,12 +25,10 @@ const mockPrisma: any = {
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockAuthCache: any = {
   invalidate: jest.fn().mockResolvedValue(undefined),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPermissionCache: any = {
   invalidate: jest.fn().mockResolvedValue(undefined),
 };
@@ -82,20 +79,29 @@ describe('UserRolesService', () => {
     it('should throw NotFoundException when user not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.assignRole('non-existent', roleId)).rejects.toThrow(NotFoundException);
+      await expect(service.assignRole('non-existent', roleId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when user is soft-deleted', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ ...mockUser, deletedAt: new Date() });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...mockUser,
+        deletedAt: new Date(),
+      });
 
-      await expect(service.assignRole(userId, roleId)).rejects.toThrow(NotFoundException);
+      await expect(service.assignRole(userId, roleId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when role not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.role.findUnique.mockResolvedValue(null);
 
-      await expect(service.assignRole(userId, 'non-existent-role')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.assignRole(userId, 'non-existent-role'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -107,7 +113,9 @@ describe('UserRolesService', () => {
 
       await service.removeRole(userId, roleId);
 
-      expect(mockPrisma.userRole.delete).toHaveBeenCalledWith({ where: { id: mockUserRole.id } });
+      expect(mockPrisma.userRole.delete).toHaveBeenCalledWith({
+        where: { id: mockUserRole.id },
+      });
       expect(mockAuthCache.invalidate).toHaveBeenCalledWith(userId);
       expect(mockPermissionCache.invalidate).toHaveBeenCalledWith(userId);
     });
@@ -115,14 +123,18 @@ describe('UserRolesService', () => {
     it('should throw NotFoundException when user not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.removeRole('non-existent', roleId)).rejects.toThrow(NotFoundException);
+      await expect(service.removeRole('non-existent', roleId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when role assignment not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.userRole.findFirst.mockResolvedValue(null);
 
-      await expect(service.removeRole(userId, roleId)).rejects.toThrow(NotFoundException);
+      await expect(service.removeRole(userId, roleId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should invalidate auth and permission cache after role assignment change', async () => {
@@ -141,7 +153,9 @@ describe('UserRolesService', () => {
       mockPrisma.userRole.findFirst.mockResolvedValue(mockUserRole);
       mockPrisma.userRole.count.mockResolvedValue(1);
 
-      await expect(service.removeRole(userId, roleId)).rejects.toThrow(BadRequestException);
+      await expect(service.removeRole(userId, roleId)).rejects.toThrow(
+        BadRequestException,
+      );
       expect(mockPrisma.userRole.delete).not.toHaveBeenCalled();
     });
   });

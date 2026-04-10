@@ -16,7 +16,6 @@ const mockSettings = {
   updatedAt: new Date('2026-01-01'),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   bookingSettings: {
     findFirst: jest.fn(),
@@ -25,7 +24,6 @@ const mockPrisma: any = {
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockCache: any = {
   get: jest.fn().mockResolvedValue(null),
   set: jest.fn().mockResolvedValue(undefined),
@@ -79,7 +77,9 @@ describe('BookingSettingsService', () => {
       const result = await service.get();
 
       expect(result).toEqual(mockSettings);
-      expect(mockPrisma.bookingSettings.create).toHaveBeenCalledWith({ data: {} });
+      expect(mockPrisma.bookingSettings.create).toHaveBeenCalledWith({
+        data: {},
+      });
     });
   });
 
@@ -105,7 +105,11 @@ describe('BookingSettingsService', () => {
     });
 
     it('should return branch-specific settings when found', async () => {
-      const branchSettings = { ...mockSettings, id: 'bs-2', branchId: 'branch-1' };
+      const branchSettings = {
+        ...mockSettings,
+        id: 'bs-2',
+        branchId: 'branch-1',
+      };
       mockPrisma.bookingSettings.findFirst.mockResolvedValue(branchSettings);
 
       const result = await service.getForBranch('branch-1');
@@ -120,7 +124,7 @@ describe('BookingSettingsService', () => {
 
     it('should fall back to global settings when branch row not found', async () => {
       mockPrisma.bookingSettings.findFirst
-        .mockResolvedValueOnce(null)          // branch lookup
+        .mockResolvedValueOnce(null) // branch lookup
         .mockResolvedValueOnce(mockSettings); // global fallback
 
       const result = await service.getForBranch('branch-new');
@@ -159,10 +163,15 @@ describe('BookingSettingsService', () => {
       mockPrisma.bookingSettings.findFirst.mockResolvedValue(branchSettings);
       mockPrisma.bookingSettings.update.mockResolvedValue(branchSettings);
 
-      await service.update({ branchId: 'branch-1', bufferMinutes: 5 } as Parameters<typeof service.update>[0]);
+      await service.update({
+        branchId: 'branch-1',
+        bufferMinutes: 5,
+      } as Parameters<typeof service.update>[0]);
 
       expect(mockCache.del).toHaveBeenCalledWith('booking:settings:global');
-      expect(mockCache.del).toHaveBeenCalledWith('booking:settings:branch:branch-1');
+      expect(mockCache.del).toHaveBeenCalledWith(
+        'booking:settings:branch:branch-1',
+      );
     });
   });
 });

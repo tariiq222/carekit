@@ -119,7 +119,9 @@ describe('JwtStrategy', () => {
   });
 
   it('should throw AUTH_TOKEN_INVALID when sub is missing', async () => {
-    const invalidPayload = { email: 'no-sub@test.com' } as unknown as JwtPayload;
+    const invalidPayload = {
+      email: 'no-sub@test.com',
+    } as unknown as JwtPayload;
 
     try {
       await strategy.validate(invalidPayload);
@@ -192,7 +194,10 @@ describe('JwtStrategy', () => {
 
   it('should not call buildUserPayloadFromId when sub is empty string', async () => {
     // empty string is falsy but exists on payload
-    const payloadWithEmptySub = { ...validPayload, sub: '' } as unknown as JwtPayload;
+    const payloadWithEmptySub = {
+      ...validPayload,
+      sub: '',
+    } as unknown as JwtPayload;
 
     // sub is empty string — should throw for falsy sub (but '' is not null/undefined)
     // The code checks `!payload.sub` which catches empty string

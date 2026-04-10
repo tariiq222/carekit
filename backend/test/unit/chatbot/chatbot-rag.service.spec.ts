@@ -23,13 +23,16 @@ const mockPrisma: any = {
   practitioner: { findMany: jest.fn() },
   $queryRawUnsafe: jest.fn(),
   $executeRawUnsafe: jest.fn(),
-  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(mockPrisma)),
+  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) =>
+    cb(mockPrisma),
+  ),
 };
 
 const mockConfigService: any = {
   get: jest.fn((key: string) => {
     if (key === 'OPENROUTER_API_KEY') return 'test-api-key';
-    if (key === 'OPENROUTER_EMBEDDING_MODEL') return 'openai/text-embedding-3-small';
+    if (key === 'OPENROUTER_EMBEDDING_MODEL')
+      return 'openai/text-embedding-3-small';
     return null;
   }),
 };
@@ -79,7 +82,9 @@ describe('ChatbotRagService', () => {
         text: () => Promise.resolve('Rate limited'),
       });
 
-      await expect(service.generateEmbedding('test')).rejects.toThrow('Embedding API error');
+      await expect(service.generateEmbedding('test')).rejects.toThrow(
+        'Embedding API error',
+      );
     });
   });
 
@@ -92,7 +97,13 @@ describe('ChatbotRagService', () => {
       });
 
       const mockResults = [
-        { id: 'kb-1', title: 'FAQ', content: 'Answer', category: 'faq', similarity: 0.85 },
+        {
+          id: 'kb-1',
+          title: 'FAQ',
+          content: 'Answer',
+          category: 'faq',
+          similarity: 0.85,
+        },
       ];
       mockPrisma.$queryRawUnsafe.mockResolvedValue(mockResults);
 
@@ -109,7 +120,8 @@ describe('ChatbotRagService', () => {
     it('filters out low-similarity results', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: [{ embedding: Array(1536).fill(0) }] }),
+        json: () =>
+          Promise.resolve({ data: [{ embedding: Array(1536).fill(0) }] }),
       });
 
       mockPrisma.$queryRawUnsafe.mockResolvedValue([
@@ -163,7 +175,8 @@ describe('ChatbotRagService', () => {
       // Mock embedding calls for each entry
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ data: [{ embedding: Array(1536).fill(0) }] }),
+        json: () =>
+          Promise.resolve({ data: [{ embedding: Array(1536).fill(0) }] }),
       });
       mockPrisma.knowledgeBase.create.mockResolvedValue({ id: 'new-1' });
       mockPrisma.$executeRawUnsafe.mockResolvedValue(undefined);
@@ -206,7 +219,9 @@ describe('ChatbotRagService', () => {
 
       const result = await service.delete('kb-1');
       expect(result).toEqual({ deleted: true });
-      expect(mockPrisma.knowledgeBase.delete).toHaveBeenCalledWith({ where: { id: 'kb-1' } });
+      expect(mockPrisma.knowledgeBase.delete).toHaveBeenCalledWith({
+        where: { id: 'kb-1' },
+      });
     });
   });
 });

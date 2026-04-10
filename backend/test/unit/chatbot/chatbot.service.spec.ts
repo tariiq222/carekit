@@ -147,7 +147,10 @@ describe('ChatbotService', () => {
       mockPrisma.chatMessage.create.mockResolvedValue({});
       mockPrisma.chatMessage.findMany.mockResolvedValue([]);
       mockPrisma.chatSession.update.mockResolvedValue({});
-      mockPrisma.user.findUnique.mockResolvedValue({ firstName: 'Test', lastName: 'User' });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        firstName: 'Test',
+        lastName: 'User',
+      });
     });
 
     it('returns AI text response when no tool calls', async () => {
@@ -170,11 +173,13 @@ describe('ChatbotService', () => {
       mockAiService.chatCompletion
         .mockResolvedValueOnce({
           content: null,
-          toolCalls: [{
-            id: 'tc-1',
-            type: 'function',
-            function: { name: 'list_services', arguments: '{}' },
-          }],
+          toolCalls: [
+            {
+              id: 'tc-1',
+              type: 'function',
+              function: { name: 'list_services', arguments: '{}' },
+            },
+          ],
           tokenCount: 50,
         })
         // Second call: AI returns text after tool result
@@ -189,7 +194,11 @@ describe('ChatbotService', () => {
         data: [{ nameEn: 'Checkup' }],
       });
 
-      const result = await service.handleMessage(sessionId, userId, 'What services do you have?');
+      const result = await service.handleMessage(
+        sessionId,
+        userId,
+        'What services do you have?',
+      );
 
       expect(result.message).toBe('Here are our services: ...');
       expect(result.toolName).toBe('list_services');
@@ -249,8 +258,14 @@ describe('ChatbotService', () => {
 
   describe('endSession', () => {
     it('sets endedAt on the session', async () => {
-      mockPrisma.chatSession.findFirst.mockResolvedValue({ id: 'session-1', userId: 'user-1' });
-      mockPrisma.chatSession.update.mockResolvedValue({ id: 'session-1', endedAt: new Date() });
+      mockPrisma.chatSession.findFirst.mockResolvedValue({
+        id: 'session-1',
+        userId: 'user-1',
+      });
+      mockPrisma.chatSession.update.mockResolvedValue({
+        id: 'session-1',
+        endedAt: new Date(),
+      });
 
       const result = await service.endSession('session-1', 'user-1');
       expect(result.endedAt).toBeDefined();
@@ -259,16 +274,20 @@ describe('ChatbotService', () => {
     it('throws NotFoundException for invalid session', async () => {
       mockPrisma.chatSession.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.endSession('nonexistent', 'user-1'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.endSession('nonexistent', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('listSessions', () => {
     it('returns paginated sessions with user info', async () => {
       const mockSessions = [
-        { id: 's-1', user: { firstName: 'Test', lastName: 'User' }, _count: { messages: 5 } },
+        {
+          id: 's-1',
+          user: { firstName: 'Test', lastName: 'User' },
+          _count: { messages: 5 },
+        },
       ];
       mockPrisma.chatSession.findMany.mockResolvedValue(mockSessions);
       mockPrisma.chatSession.count.mockResolvedValue(1);

@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CHATBOT_CONFIG_DEFAULTS } from './constants/config-defaults.js';
-import type { ChatbotConfigMap, ChatbotConfigEntry } from './interfaces/chatbot-config.interface.js';
+import type {
+  ChatbotConfigMap,
+  ChatbotConfigEntry,
+} from './interfaces/chatbot-config.interface.js';
 
 @Injectable()
 export class ChatbotConfigService {

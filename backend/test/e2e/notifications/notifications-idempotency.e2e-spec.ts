@@ -113,8 +113,13 @@ describe('PATCH /notifications/:id/read — cross-user isolation', () => {
       .set(getAuthHeaders(patient2.accessToken))
       .expect(200);
 
-    const items = (listRes.body as Record<string, { data: { items: Array<{ id: string }> } }>)
-      .data?.items ?? [];
+    const items =
+      (
+        listRes.body as Record<
+          string,
+          { data: { items: Array<{ id: string }> } }
+        >
+      ).data?.items ?? [];
 
     if (items.length === 0) {
       // No notifications to test isolation — skip but mark test as passing

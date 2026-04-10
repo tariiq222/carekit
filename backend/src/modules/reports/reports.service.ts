@@ -251,8 +251,7 @@ export class ReportsService {
     return {
       id: practitioner.id,
       name: `${practitioner.user.firstName} ${practitioner.user.lastName}`,
-      specialty:
-        practitioner.specialtyAr || practitioner.specialty,
+      specialty: practitioner.specialtyAr || practitioner.specialty,
       rating: practitioner.rating,
       reviewCount: practitioner.reviewCount,
       totalBookings,

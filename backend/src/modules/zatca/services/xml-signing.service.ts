@@ -26,11 +26,14 @@ export class XmlSigningService {
   async signXml(xmlContent: string): Promise<string> {
     const encryptedKey = await this.getStoredPrivateKey();
     if (!encryptedKey) {
-      this.logger.warn('No ZATCA private key configured — returning unsigned XML');
+      this.logger.warn(
+        'No ZATCA private key configured — returning unsigned XML',
+      );
       return xmlContent;
     }
 
-    const encryptionKey = this.config.get<string>('JWT_SECRET') ?? 'default-key';
+    const encryptionKey =
+      this.config.get<string>('JWT_SECRET') ?? 'default-key';
     const privateKey = this.decryptKey(encryptedKey, encryptionKey);
 
     const csid = await this.getStoredCsid();
@@ -110,7 +113,9 @@ export class XmlSigningService {
   private insertSignatureIntoXml(xml: string, signatureBlock: string): string {
     // Insert right after <Invoice ...> opening tag
     const invoiceTagEnd = xml.indexOf('>') + 1;
-    return xml.slice(0, invoiceTagEnd) + signatureBlock + xml.slice(invoiceTagEnd);
+    return (
+      xml.slice(0, invoiceTagEnd) + signatureBlock + xml.slice(invoiceTagEnd)
+    );
   }
 
   private async getStoredPrivateKey(): Promise<string | null> {

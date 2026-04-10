@@ -36,9 +36,30 @@ export const mockPractitioner = {
 };
 
 export const mockAvailability = [
-  { id: 'avail-1', practitionerId: mockPractitioner.id, dayOfWeek: 0, startTime: '09:00', endTime: '12:00', isActive: true },
-  { id: 'avail-2', practitionerId: mockPractitioner.id, dayOfWeek: 0, startTime: '14:00', endTime: '17:00', isActive: true },
-  { id: 'avail-3', practitionerId: mockPractitioner.id, dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true },
+  {
+    id: 'avail-1',
+    practitionerId: mockPractitioner.id,
+    dayOfWeek: 0,
+    startTime: '09:00',
+    endTime: '12:00',
+    isActive: true,
+  },
+  {
+    id: 'avail-2',
+    practitionerId: mockPractitioner.id,
+    dayOfWeek: 0,
+    startTime: '14:00',
+    endTime: '17:00',
+    isActive: true,
+  },
+  {
+    id: 'avail-3',
+    practitionerId: mockPractitioner.id,
+    dayOfWeek: 1,
+    startTime: '09:00',
+    endTime: '17:00',
+    isActive: true,
+  },
 ];
 
 export const mockVacation = {
@@ -50,7 +71,6 @@ export const mockVacation = {
   createdAt: new Date('2026-03-01'),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockPrisma(): any {
   return {
     practitioner: {
@@ -86,7 +106,10 @@ export function createMockPrisma(): any {
     },
     service: { findUnique: jest.fn() },
     $transaction: jest.fn((fnOrArray: unknown) => {
-      if (typeof fnOrArray === 'function') return (fnOrArray as (tx: unknown) => Promise<unknown>)(createMockPrisma());
+      if (typeof fnOrArray === 'function')
+        return (fnOrArray as (tx: unknown) => Promise<unknown>)(
+          createMockPrisma(),
+        );
       return Promise.all(fnOrArray as Promise<unknown>[]);
     }),
   };

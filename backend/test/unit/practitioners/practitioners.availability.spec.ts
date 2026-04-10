@@ -7,7 +7,11 @@ import {
   createPractitionersTestModule,
   PractitionersTestContext,
 } from './practitioners.test-module.js';
-import { mockPractitioner, mockAvailability, mockVacation } from './practitioners.fixtures.js';
+import {
+  mockPractitioner,
+  mockAvailability,
+  mockVacation,
+} from './practitioners.fixtures.js';
 
 describe('PractitionersService — getAvailability', () => {
   let ctx: PractitionersTestContext;
@@ -19,9 +23,13 @@ describe('PractitionersService — getAvailability', () => {
 
   it('should return weekly availability schedule', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+    ctx.mockPrisma.practitionerAvailability.findMany.mockResolvedValue(
+      mockAvailability,
+    );
 
-    const result = await ctx.availabilityService.getAvailability(mockPractitioner.id);
+    const result = await ctx.availabilityService.getAvailability(
+      mockPractitioner.id,
+    );
 
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(3);
@@ -33,7 +41,9 @@ describe('PractitionersService — getAvailability', () => {
   it('should throw NotFoundException if practitioner not found', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(null);
 
-    await expect(ctx.availabilityService.getAvailability('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(
+      ctx.availabilityService.getAvailability('non-existent-id'),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -55,23 +65,47 @@ describe('PractitionersService — setAvailability', () => {
 
   it('should replace existing availability with new schedule', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerAvailability.deleteMany.mockResolvedValue({ count: 3 });
-    ctx.mockPrisma.practitionerAvailability.createMany.mockResolvedValue({ count: 3 });
-    ctx.mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
-
-    const result = await ctx.availabilityService.setAvailability(mockPractitioner.id, scheduleDto);
-
-    expect(ctx.mockPrisma.practitionerAvailability.deleteMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { practitionerId: mockPractitioner.id } }),
+    ctx.mockPrisma.practitionerAvailability.deleteMany.mockResolvedValue({
+      count: 3,
+    });
+    ctx.mockPrisma.practitionerAvailability.createMany.mockResolvedValue({
+      count: 3,
+    });
+    ctx.mockPrisma.practitionerAvailability.findMany.mockResolvedValue(
+      mockAvailability,
     );
-    expect(ctx.mockPrisma.practitionerAvailability.createMany).toHaveBeenCalled();
+
+    const result = await ctx.availabilityService.setAvailability(
+      mockPractitioner.id,
+      scheduleDto,
+    );
+
+    expect(
+      ctx.mockPrisma.practitionerAvailability.deleteMany,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { practitionerId: mockPractitioner.id },
+      }),
+    );
+    expect(
+      ctx.mockPrisma.practitionerAvailability.createMany,
+    ).toHaveBeenCalled();
     expect(Array.isArray(result)).toBe(true);
   });
 
   it.each([
-    ['invalid dayOfWeek (7)', [{ dayOfWeek: 7, startTime: '09:00', endTime: '12:00' }]],
-    ['invalid time format (9am)', [{ dayOfWeek: 1, startTime: '9am', endTime: '12pm' }]],
-    ['endTime before startTime', [{ dayOfWeek: 1, startTime: '14:00', endTime: '12:00' }]],
+    [
+      'invalid dayOfWeek (7)',
+      [{ dayOfWeek: 7, startTime: '09:00', endTime: '12:00' }],
+    ],
+    [
+      'invalid time format (9am)',
+      [{ dayOfWeek: 1, startTime: '9am', endTime: '12pm' }],
+    ],
+    [
+      'endTime before startTime',
+      [{ dayOfWeek: 1, startTime: '14:00', endTime: '12:00' }],
+    ],
     [
       'overlapping slots on same day',
       [
@@ -83,7 +117,9 @@ describe('PractitionersService — setAvailability', () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
 
     await expect(
-      ctx.availabilityService.setAvailability(mockPractitioner.id, { schedule }),
+      ctx.availabilityService.setAvailability(mockPractitioner.id, {
+        schedule,
+      }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -104,12 +140,21 @@ describe('PractitionersService — getAvailableSlots', () => {
     jest.clearAllMocks();
   });
 
-  function setupSlots(overrides: { vacation?: unknown; bookings?: unknown[]; availability?: unknown[] } = {}) {
+  function setupSlots(
+    overrides: {
+      vacation?: unknown;
+      bookings?: unknown[];
+      availability?: unknown[];
+    } = {},
+  ) {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
     ctx.mockPrisma.practitionerAvailability.findMany.mockResolvedValue(
-      overrides.availability ?? mockAvailability.filter((a) => a.dayOfWeek === 0),
+      overrides.availability ??
+        mockAvailability.filter((a) => a.dayOfWeek === 0),
     );
-    ctx.mockPrisma.practitionerVacation.findFirst.mockResolvedValue(overrides.vacation ?? null);
+    ctx.mockPrisma.practitionerVacation.findFirst.mockResolvedValue(
+      overrides.vacation ?? null,
+    );
     ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue(
       overrides.vacation ? [overrides.vacation] : [],
     );
@@ -119,7 +164,11 @@ describe('PractitionersService — getAvailableSlots', () => {
   it('should return available time slots for a given date', async () => {
     setupSlots();
 
-    const result = await ctx.availabilityService.getAvailableSlots(mockPractitioner.id, '2026-04-05', 30);
+    const result = await ctx.availabilityService.getAvailableSlots(
+      mockPractitioner.id,
+      '2026-04-05',
+      30,
+    );
 
     expect(Array.isArray(result)).toBe(true);
     expect(result.length).toBeGreaterThanOrEqual(12);
@@ -135,7 +184,11 @@ describe('PractitionersService — getAvailableSlots', () => {
       ],
     });
 
-    const result = await ctx.availabilityService.getAvailableSlots(mockPractitioner.id, '2026-04-05', 30);
+    const result = await ctx.availabilityService.getAvailableSlots(
+      mockPractitioner.id,
+      '2026-04-05',
+      30,
+    );
 
     const startTimes = result.map((s: { startTime: string }) => s.startTime);
     expect(startTimes).not.toContain('09:00');
@@ -145,7 +198,11 @@ describe('PractitionersService — getAvailableSlots', () => {
   it('should return empty array if date falls on vacation', async () => {
     setupSlots({ vacation: mockVacation, availability: mockAvailability });
 
-    const result = await ctx.availabilityService.getAvailableSlots(mockPractitioner.id, '2026-04-12', 30);
+    const result = await ctx.availabilityService.getAvailableSlots(
+      mockPractitioner.id,
+      '2026-04-12',
+      30,
+    );
 
     expect(result).toEqual([]);
   });
@@ -153,7 +210,11 @@ describe('PractitionersService — getAvailableSlots', () => {
   it('should return empty array if no availability on that day', async () => {
     setupSlots({ availability: [] });
 
-    const result = await ctx.availabilityService.getAvailableSlots(mockPractitioner.id, '2026-04-04', 30);
+    const result = await ctx.availabilityService.getAvailableSlots(
+      mockPractitioner.id,
+      '2026-04-04',
+      30,
+    );
 
     expect(result).toEqual([]);
   });
@@ -162,7 +223,11 @@ describe('PractitionersService — getAvailableSlots', () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(null);
 
     await expect(
-      ctx.availabilityService.getAvailableSlots('non-existent-id', '2026-04-05', 30),
+      ctx.availabilityService.getAvailableSlots(
+        'non-existent-id',
+        '2026-04-05',
+        30,
+      ),
     ).rejects.toThrow(NotFoundException);
   });
 });

@@ -4,7 +4,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockPrisma(): any {
   return {
     user: {
@@ -79,9 +78,17 @@ export function createMockWalkIn() {
   };
 }
 
-export const mockPatientRole = { id: 'patient-role-id', slug: 'patient', isDefault: true };
+export const mockPatientRole = {
+  id: 'patient-role-id',
+  slug: 'patient',
+  isDefault: true,
+};
 
-export const mockCreatedUser = (email: string, firstName: string, lastName: string) => ({
+export const mockCreatedUser = (
+  email: string,
+  firstName: string,
+  lastName: string,
+) => ({
   id: 'new-user-id',
   email,
   passwordHash: '$2b$10$hashedpassword',

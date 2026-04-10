@@ -5,7 +5,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { InvoiceStatsService } from '../../../src/modules/invoices/invoice-stats.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   invoice: {
     count: jest.fn(),
@@ -32,7 +31,7 @@ describe('InvoiceStatsService', () => {
     it('should return total, sent, pending and zatca breakdown', async () => {
       mockPrisma.invoice.count
         .mockResolvedValueOnce(10) // total
-        .mockResolvedValueOnce(7);  // sent
+        .mockResolvedValueOnce(7); // sent
       mockPrisma.invoice.groupBy.mockResolvedValue([
         { zatcaStatus: 'reported', _count: { _all: 6 } },
         { zatcaStatus: 'pending', _count: { _all: 4 } },

@@ -81,8 +81,12 @@ export async function createPractitionersTestModule(): Promise<PractitionersTest
 
   return {
     service: module.get<PractitionersService>(PractitionersService),
-    availabilityService: module.get<PractitionerAvailabilityService>(PractitionerAvailabilityService),
-    vacationService: module.get<PractitionerVacationService>(PractitionerVacationService),
+    availabilityService: module.get<PractitionerAvailabilityService>(
+      PractitionerAvailabilityService,
+    ),
+    vacationService: module.get<PractitionerVacationService>(
+      PractitionerVacationService,
+    ),
     mockPrisma,
   };
 }

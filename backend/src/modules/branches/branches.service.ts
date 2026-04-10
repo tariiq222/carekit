@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import {
   parsePaginationParams,
@@ -16,16 +20,24 @@ export class BranchesService {
   //  PUBLIC LIST (no auth — widget use)
   // ═══════════════════════════════════════════════════════════════
 
-  async getPublicBranches(): Promise<Array<{
-    id: string;
-    nameAr: string;
-    nameEn: string;
-    address: string | null;
-    phone: string | null;
-  }>> {
+  async getPublicBranches(): Promise<
+    Array<{
+      id: string;
+      nameAr: string;
+      nameEn: string;
+      address: string | null;
+      phone: string | null;
+    }>
+  > {
     return this.prisma.branch.findMany({
       where: { isActive: true, deletedAt: null },
-      select: { id: true, nameAr: true, nameEn: true, address: true, phone: true },
+      select: {
+        id: true,
+        nameAr: true,
+        nameEn: true,
+        address: true,
+        phone: true,
+      },
       orderBy: { createdAt: 'asc' },
     });
   }
@@ -163,7 +175,16 @@ export class BranchesService {
       where: { branchId },
       include: {
         practitioner: {
-          include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+          },
         },
       },
       orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],

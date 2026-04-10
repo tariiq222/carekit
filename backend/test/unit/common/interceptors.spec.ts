@@ -10,10 +10,18 @@ import { MetricsInterceptor } from '../../../src/common/metrics/metrics.intercep
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeContext(overrides: Record<string, unknown> = {}): ExecutionContext {
+function makeContext(
+  overrides: Record<string, unknown> = {},
+): ExecutionContext {
   return {
     switchToHttp: () => ({
-      getRequest: () => ({ method: 'GET', url: '/test', ip: '127.0.0.1', route: { path: '/test' }, ...overrides }),
+      getRequest: () => ({
+        method: 'GET',
+        url: '/test',
+        ip: '127.0.0.1',
+        route: { path: '/test' },
+        ...overrides,
+      }),
       getResponse: () => ({ statusCode: 200 }),
     }),
     getClass: () => ({}),
@@ -169,10 +177,12 @@ describe('MetricsInterceptor', () => {
 
     interceptor.intercept(ctx, handler).subscribe({
       next: () => {
-        expect(mockMetrics.httpRequestDuration.startTimer).toHaveBeenCalledWith({
-          method: 'GET',
-          route: '/test',
-        });
+        expect(mockMetrics.httpRequestDuration.startTimer).toHaveBeenCalledWith(
+          {
+            method: 'GET',
+            route: '/test',
+          },
+        );
         done();
       },
     });

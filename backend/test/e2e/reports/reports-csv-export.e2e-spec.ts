@@ -219,8 +219,6 @@ describe('Reports CSV Export (e2e)', () => {
   });
 
   it('GET /reports/patients/export — unauthenticated returns 401', async () => {
-    await request(httpServer)
-      .get(PATIENTS_EXPORT)
-      .expect(401);
+    await request(httpServer).get(PATIENTS_EXPORT).expect(401);
   });
 });

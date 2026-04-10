@@ -82,9 +82,7 @@ describe('Gift Cards Module (e2e)', () => {
     });
 
     it('should return 401 for unauthenticated request', async () => {
-      const res = await request(httpServer)
-        .get(GIFT_CARDS_URL)
-        .expect(401);
+      const res = await request(httpServer).get(GIFT_CARDS_URL).expect(401);
 
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
@@ -209,7 +207,9 @@ describe('Gift Cards Module (e2e)', () => {
 
   describe('PATCH /gift-cards/:id', () => {
     it('should update isActive and expiresAt as super_admin', async () => {
-      const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+      const expiresAt = new Date(
+        Date.now() + 365 * 24 * 60 * 60 * 1000,
+      ).toISOString();
 
       const res = await request(httpServer)
         .patch(`${GIFT_CARDS_URL}/${giftCardId}`)
@@ -292,7 +292,10 @@ describe('Gift Cards Module (e2e)', () => {
         .expect(201);
 
       expectSuccessResponse(res.body);
-      expect(res.body.data).toHaveProperty('balance', balanceBefore + creditAmount);
+      expect(res.body.data).toHaveProperty(
+        'balance',
+        balanceBefore + creditAmount,
+      );
     });
 
     it('should return 404 for non-existent gift card', async () => {

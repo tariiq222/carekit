@@ -71,7 +71,11 @@ beforeAll(async () => {
       refreshToken: r.body.data?.refreshToken ?? '',
     }))
     .catch(() =>
-      loginTestUser(httpServer, 'delete-cascade-patient@carekit-test.com', 'P@tientP@ss1'),
+      loginTestUser(
+        httpServer,
+        'delete-cascade-patient@carekit-test.com',
+        'P@tientP@ss1',
+      ),
     );
 
   practitionerAuth = await createTestUserWithRole(
@@ -105,9 +109,10 @@ describe('DELETE /practitioners/:id — cascade & auth', () => {
       .get(`${API_PREFIX}/specialties`)
       .expect(200);
     const specialties = specRes.body.data?.items ?? specRes.body.data ?? [];
-    const specialtyId = Array.isArray(specialties) && specialties.length > 0
-      ? (specialties[0] as { id: string }).id
-      : undefined;
+    const specialtyId =
+      Array.isArray(specialties) && specialties.length > 0
+        ? (specialties[0] as { id: string }).id
+        : undefined;
 
     const res = await request(httpServer)
       .post(PRACTITIONERS_URL)
@@ -158,7 +163,10 @@ describe('DELETE /practitioners/:id — cascade & auth', () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .expect(404);
 
-    expectErrorResponse(res.body as Record<string, unknown>, 'PRACTITIONER_NOT_FOUND');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'PRACTITIONER_NOT_FOUND',
+    );
   });
 
   it('super_admin can soft-delete a practitioner → 200', async () => {
@@ -180,7 +188,8 @@ describe('DELETE /practitioners/:id — cascade & auth', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    const items = (res.body as Record<string, { items: Array<{ id: string }> }>).data.items;
+    const items = (res.body as Record<string, { items: Array<{ id: string }> }>)
+      .data.items;
     const found = items.find((p) => p.id === practitionerProfileId);
     expect(found).toBeUndefined();
   });
@@ -192,7 +201,10 @@ describe('DELETE /practitioners/:id — cascade & auth', () => {
       .get(`${PRACTITIONERS_URL}/${practitionerProfileId}`)
       .expect(404);
 
-    expectErrorResponse(res.body as Record<string, unknown>, 'PRACTITIONER_NOT_FOUND');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'PRACTITIONER_NOT_FOUND',
+    );
   });
 
   it('double-delete (already deleted) → 404', async () => {
@@ -203,7 +215,10 @@ describe('DELETE /practitioners/:id — cascade & auth', () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .expect(404);
 
-    expectErrorResponse(res.body as Record<string, unknown>, 'PRACTITIONER_NOT_FOUND');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'PRACTITIONER_NOT_FOUND',
+    );
   });
 });
 
@@ -236,9 +251,7 @@ describe('DELETE /users/:id — soft-delete & session invalidation', () => {
   });
 
   it('returns 401 without auth token', async () => {
-    await request(httpServer)
-      .delete(`${USERS_URL}/${GHOST_ID}`)
-      .expect(401);
+    await request(httpServer).delete(`${USERS_URL}/${GHOST_ID}`).expect(401);
   });
 
   it('returns 403 for patient (no users:delete permission)', async () => {
@@ -340,9 +353,7 @@ describe('DELETE /roles/:id — system role protection', () => {
   });
 
   it('returns 401 without auth token', async () => {
-    await request(httpServer)
-      .delete(`${ROLES_URL}/${GHOST_ID}`)
-      .expect(401);
+    await request(httpServer).delete(`${ROLES_URL}/${GHOST_ID}`).expect(401);
   });
 
   it('returns 403 for patient (no roles:delete permission)', async () => {
@@ -380,8 +391,14 @@ describe('DELETE /roles/:id — system role protection', () => {
 
     // GET /roles returns raw array (no wrapper)
     const body = rolesRes.body;
-    const roles = Array.isArray(body) ? body : (body as Record<string, unknown>).data ?? body;
-    const rolesArr = roles as Array<{ id: string; slug: string; isSystem: boolean }>;
+    const roles = Array.isArray(body)
+      ? body
+      : ((body as Record<string, unknown>).data ?? body);
+    const rolesArr = roles as Array<{
+      id: string;
+      slug: string;
+      isSystem: boolean;
+    }>;
     const systemRole = rolesArr.find?.((r) => r.slug === 'super_admin');
     if (!systemRole) return;
 
@@ -400,8 +417,14 @@ describe('DELETE /roles/:id — system role protection', () => {
       .expect(200);
 
     const body = rolesRes.body;
-    const roles = Array.isArray(body) ? body : (body as Record<string, unknown>).data ?? body;
-    const rolesArr = roles as Array<{ id: string; slug: string; isSystem: boolean }>;
+    const roles = Array.isArray(body)
+      ? body
+      : ((body as Record<string, unknown>).data ?? body);
+    const rolesArr = roles as Array<{
+      id: string;
+      slug: string;
+      isSystem: boolean;
+    }>;
     const patientRole = rolesArr.find?.((r) => r.slug === 'patient');
     if (!patientRole) return;
 

@@ -17,10 +17,7 @@ import {
   getAuthHeaders,
   type TestApp,
 } from '../setup/setup.js';
-import {
-  registerFresh,
-  getLatestOtp,
-} from './auth-test-helpers.js';
+import { registerFresh, getLatestOtp } from './auth-test-helpers.js';
 
 const AUTH_URL = `${API_PREFIX}/auth`;
 
@@ -79,7 +76,10 @@ describe('Auth DB Assertions (e2e)', () => {
     });
 
     it('should not accept the old password after DB hash is changed', async () => {
-      const { email, password, userId } = await registerFresh(httpServer, 'fp3-db-old');
+      const { email, password, userId } = await registerFresh(
+        httpServer,
+        'fp3-db-old',
+      );
 
       await request(httpServer)
         .post(`${AUTH_URL}/password/forgot`)
@@ -107,8 +107,10 @@ describe('Auth DB Assertions (e2e)', () => {
 
   describe('AU-CP1-DB: all refreshToken rows deleted from DB after password change', () => {
     it('should delete ALL refreshToken rows for the user', async () => {
-      const { email, password, accessToken, userId } =
-        await registerFresh(httpServer, 'cp1-db');
+      const { email, password, accessToken, userId } = await registerFresh(
+        httpServer,
+        'cp1-db',
+      );
 
       // Create a second session by logging in again
       await request(httpServer)
@@ -117,7 +119,9 @@ describe('Auth DB Assertions (e2e)', () => {
         .expect(200);
 
       // At least 2 refresh token rows must exist before change
-      const countBefore = await prisma.refreshToken.count({ where: { userId } });
+      const countBefore = await prisma.refreshToken.count({
+        where: { userId },
+      });
       expect(countBefore).toBeGreaterThanOrEqual(2);
 
       // Change password
@@ -133,7 +137,10 @@ describe('Auth DB Assertions (e2e)', () => {
     });
 
     it('should delete ALL refreshToken rows after password reset too', async () => {
-      const { email, password, userId } = await registerFresh(httpServer, 'cp1-db-reset');
+      const { email, password, userId } = await registerFresh(
+        httpServer,
+        'cp1-db-reset',
+      );
 
       // Create two sessions
       await request(httpServer)
@@ -141,7 +148,9 @@ describe('Auth DB Assertions (e2e)', () => {
         .send({ email, password })
         .expect(200);
 
-      const countBefore = await prisma.refreshToken.count({ where: { userId } });
+      const countBefore = await prisma.refreshToken.count({
+        where: { userId },
+      });
       expect(countBefore).toBeGreaterThanOrEqual(2);
 
       // Reset password via OTP

@@ -43,7 +43,7 @@ const PRAC_PASS = 'P@racCasc0de!';
 function getDateOffset(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0]!;
+  return d.toISOString().split('T')[0];
 }
 
 // ---------------------------------------------------------------------------
@@ -125,7 +125,9 @@ async function createBooking(date: string, startTime: string): Promise<string> {
       patientId: patient.user['id'],
     });
   if (res.status !== 201) {
-    throw new Error(`createBooking failed: ${res.status} ${JSON.stringify(res.body)}`);
+    throw new Error(
+      `createBooking failed: ${res.status} ${JSON.stringify(res.body)}`,
+    );
   }
   return res.body.data.id as string;
 }
@@ -177,12 +179,15 @@ beforeAll(async () => {
       duration: 30,
     });
   serviceId = (svcRes.body.data?.id ?? '') as string;
-  if (!serviceId) throw new Error(`Service creation failed: ${JSON.stringify(svcRes.body)}`);
+  if (!serviceId)
+    throw new Error(`Service creation failed: ${JSON.stringify(svcRes.body)}`);
 
   await request(httpServer)
     .put(`${SERVICES_URL}/${serviceId}/booking-types`)
     .set(getAuthHeaders(superAdmin.accessToken))
-    .send({ types: [{ bookingType: 'in_person', price: 10000, duration: 30 }] });
+    .send({
+      types: [{ bookingType: 'in_person', price: 10000, duration: 30 }],
+    });
 
   // Practitioner user
   const userRes = await request(httpServer)
@@ -223,11 +228,18 @@ beforeAll(async () => {
   if (pracRes.status === 201) {
     deletedPractitionerId = pracRes.body.data.id as string;
   } else {
-    const listRes = await request(httpServer).get(PRACTITIONERS_URL).query({ perPage: '100' });
-    const items = (listRes.body.data?.items ?? []) as Array<{ id: string; user?: { id: string } }>;
-    deletedPractitionerId = items.find((p) => p.user?.id === pracUserId)?.id ?? '';
+    const listRes = await request(httpServer)
+      .get(PRACTITIONERS_URL)
+      .query({ perPage: '100' });
+    const items = (listRes.body.data?.items ?? []) as Array<{
+      id: string;
+      user?: { id: string };
+    }>;
+    deletedPractitionerId =
+      items.find((p) => p.user?.id === pracUserId)?.id ?? '';
   }
-  if (!deletedPractitionerId) throw new Error('deletedPractitionerId setup failed');
+  if (!deletedPractitionerId)
+    throw new Error('deletedPractitionerId setup failed');
 
   // Assign service + availability
   await request(httpServer)
@@ -235,7 +247,9 @@ beforeAll(async () => {
     .set(getAuthHeaders(superAdmin.accessToken))
     .send({ serviceId, availableTypes: ['in_person'], isActive: true });
   const schedule = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
-    dayOfWeek: day, startTime: '08:00', endTime: '20:00',
+    dayOfWeek: day,
+    startTime: '08:00',
+    endTime: '20:00',
   }));
   await request(httpServer)
     .put(`${PRACTITIONERS_URL}/${deletedPractitionerId}/availability`)

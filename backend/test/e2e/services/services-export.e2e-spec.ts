@@ -65,7 +65,7 @@ describe('Services Export (e2e)', () => {
 
       // BOM + first header row
       const body = response.text;
-      expect(body.charCodeAt(0)).toBe(0xFEFF); // UTF-8 BOM
+      expect(body.charCodeAt(0)).toBe(0xfeff); // UTF-8 BOM
       expect(body).toContain('"ID"');
       expect(body).toContain('"Name (AR)"');
       expect(body).toContain('"Name (EN)"');
@@ -77,8 +77,12 @@ describe('Services Export (e2e)', () => {
         .set('Authorization', `Bearer ${superAdmin.accessToken}`)
         .expect(200);
 
-      expect(response.headers['content-type']).toContain('application/vnd.ms-excel');
-      expect(response.headers['content-disposition']).toContain('services.xlsx');
+      expect(response.headers['content-type']).toContain(
+        'application/vnd.ms-excel',
+      );
+      expect(response.headers['content-disposition']).toContain(
+        'services.xlsx',
+      );
     });
 
     it('defaults to CSV when format param is omitted', async () => {

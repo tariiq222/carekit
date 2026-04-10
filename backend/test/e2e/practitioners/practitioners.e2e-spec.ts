@@ -112,7 +112,8 @@ describe('Practitioners Module (e2e)', () => {
         bioAr: 'طبيب قلب معتمد بخبرة 15 عاما',
         experience: 15,
         education: 'MBBS, MD Cardiology - King Saud University',
-        educationAr: 'بكالوريوس طب وجراحة، ماجستير أمراض القلب - جامعة الملك سعود',
+        educationAr:
+          'بكالوريوس طب وجراحة، ماجستير أمراض القلب - جامعة الملك سعود',
       });
 
     if (p1Res.status === 201) {
@@ -145,9 +146,7 @@ describe('Practitioners Module (e2e)', () => {
 
   describe('GET /api/v1/practitioners', () => {
     it('should list practitioners (PUBLIC — no auth required)', async () => {
-      const res = await request(httpServer)
-        .get(PRACTITIONERS_URL)
-        .expect(200);
+      const res = await request(httpServer).get(PRACTITIONERS_URL).expect(200);
 
       expectSuccessResponse(res.body);
       const items = res.body.data.items || res.body.data;
@@ -195,9 +194,7 @@ describe('Practitioners Module (e2e)', () => {
     });
 
     it('should sort by rating descending by default', async () => {
-      const res = await request(httpServer)
-        .get(PRACTITIONERS_URL)
-        .expect(200);
+      const res = await request(httpServer).get(PRACTITIONERS_URL).expect(200);
 
       const items = res.body.data.items as Array<{ rating: number }>;
       if (items.length >= 2) {
@@ -208,9 +205,7 @@ describe('Practitioners Module (e2e)', () => {
     });
 
     it('should only return active practitioners', async () => {
-      const res = await request(httpServer)
-        .get(PRACTITIONERS_URL)
-        .expect(200);
+      const res = await request(httpServer).get(PRACTITIONERS_URL).expect(200);
 
       const items = res.body.data.items as Array<{ isActive: boolean }>;
       for (const p of items) {
@@ -219,9 +214,7 @@ describe('Practitioners Module (e2e)', () => {
     });
 
     it('should include specialty name (AR+EN) in response', async () => {
-      const res = await request(httpServer)
-        .get(PRACTITIONERS_URL)
-        .expect(200);
+      const res = await request(httpServer).get(PRACTITIONERS_URL).expect(200);
 
       const items = res.body.data.items as Array<{
         specialty: { nameAr: string; nameEn: string } | null;
@@ -236,9 +229,7 @@ describe('Practitioners Module (e2e)', () => {
     });
 
     it('should include user basic info (firstName, lastName)', async () => {
-      const res = await request(httpServer)
-        .get(PRACTITIONERS_URL)
-        .expect(200);
+      const res = await request(httpServer).get(PRACTITIONERS_URL).expect(200);
 
       const items = res.body.data.items as Array<{
         user: { firstName: string; lastName: string };
@@ -710,8 +701,18 @@ describe('Practitioners Module (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           schedule: [
-            { dayOfWeek: 0, startTime: '09:00', endTime: '13:00', isActive: true },
-            { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true },
+            {
+              dayOfWeek: 0,
+              startTime: '09:00',
+              endTime: '13:00',
+              isActive: true,
+            },
+            {
+              dayOfWeek: 1,
+              startTime: '09:00',
+              endTime: '17:00',
+              isActive: true,
+            },
           ],
         });
 
@@ -743,8 +744,18 @@ describe('Practitioners Module (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           schedule: [
-            { dayOfWeek: 0, startTime: '09:00', endTime: '13:00', isActive: true },
-            { dayOfWeek: 5, startTime: '09:00', endTime: '12:00', isActive: false },
+            {
+              dayOfWeek: 0,
+              startTime: '09:00',
+              endTime: '13:00',
+              isActive: true,
+            },
+            {
+              dayOfWeek: 5,
+              startTime: '09:00',
+              endTime: '12:00',
+              isActive: false,
+            },
           ],
         });
 
@@ -762,7 +773,9 @@ describe('Practitioners Module (e2e)', () => {
 
     it('should return 404 for non-existent practitioner', async () => {
       const res = await request(httpServer)
-        .get(`${PRACTITIONERS_URL}/00000000-0000-0000-0000-000000000000/availability`)
+        .get(
+          `${PRACTITIONERS_URL}/00000000-0000-0000-0000-000000000000/availability`,
+        )
         .expect(404);
 
       expectErrorResponse(res.body, 'PRACTITIONER_NOT_FOUND');
@@ -805,7 +818,12 @@ describe('Practitioners Module (e2e)', () => {
         .set(getAuthHeaders(practitionerAuth.accessToken))
         .send({
           schedule: [
-            { dayOfWeek: 4, startTime: '10:00', endTime: '14:00', isActive: true },
+            {
+              dayOfWeek: 4,
+              startTime: '10:00',
+              endTime: '14:00',
+              isActive: true,
+            },
           ],
         })
         .expect(200);
@@ -837,7 +855,12 @@ describe('Practitioners Module (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           schedule: [
-            { dayOfWeek: 7, startTime: '09:00', endTime: '17:00', isActive: true },
+            {
+              dayOfWeek: 7,
+              startTime: '09:00',
+              endTime: '17:00',
+              isActive: true,
+            },
           ],
         })
         .expect(400);
@@ -853,8 +876,18 @@ describe('Practitioners Module (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           schedule: [
-            { dayOfWeek: 0, startTime: '09:00', endTime: '13:00', isActive: true },
-            { dayOfWeek: 0, startTime: '12:00', endTime: '16:00', isActive: true }, // overlaps
+            {
+              dayOfWeek: 0,
+              startTime: '09:00',
+              endTime: '13:00',
+              isActive: true,
+            },
+            {
+              dayOfWeek: 0,
+              startTime: '12:00',
+              endTime: '16:00',
+              isActive: true,
+            }, // overlaps
           ],
         })
         .expect(400);
@@ -870,7 +903,12 @@ describe('Practitioners Module (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           schedule: [
-            { dayOfWeek: 0, startTime: '17:00', endTime: '09:00', isActive: true },
+            {
+              dayOfWeek: 0,
+              startTime: '17:00',
+              endTime: '09:00',
+              isActive: true,
+            },
           ],
         })
         .expect(400);
@@ -918,11 +956,36 @@ describe('Practitioners Module (e2e)', () => {
         .send({
           schedule: [
             // Sunday through Thursday 09:00-17:00
-            { dayOfWeek: 0, startTime: '09:00', endTime: '17:00', isActive: true },
-            { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true },
-            { dayOfWeek: 2, startTime: '09:00', endTime: '17:00', isActive: true },
-            { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', isActive: true },
-            { dayOfWeek: 4, startTime: '09:00', endTime: '17:00', isActive: true },
+            {
+              dayOfWeek: 0,
+              startTime: '09:00',
+              endTime: '17:00',
+              isActive: true,
+            },
+            {
+              dayOfWeek: 1,
+              startTime: '09:00',
+              endTime: '17:00',
+              isActive: true,
+            },
+            {
+              dayOfWeek: 2,
+              startTime: '09:00',
+              endTime: '17:00',
+              isActive: true,
+            },
+            {
+              dayOfWeek: 3,
+              startTime: '09:00',
+              endTime: '17:00',
+              isActive: true,
+            },
+            {
+              dayOfWeek: 4,
+              startTime: '09:00',
+              endTime: '17:00',
+              isActive: true,
+            },
           ],
         });
     });
@@ -967,7 +1030,9 @@ describe('Practitioners Module (e2e)', () => {
       if (!practitionerId) return;
 
       const res = await request(httpServer)
-        .get(`${PRACTITIONERS_URL}/${practitionerId}/slots?date=2026-05-03&duration=60`)
+        .get(
+          `${PRACTITIONERS_URL}/${practitionerId}/slots?date=2026-05-03&duration=60`,
+        )
         .expect(200);
 
       expectSuccessResponse(res.body);
@@ -980,7 +1045,7 @@ describe('Practitioners Module (e2e)', () => {
         // With 60-min duration, gap between start and end should be ~60 min
         const start = slots[0].startTime.split(':').map(Number);
         const end = slots[0].endTime.split(':').map(Number);
-        const durationMin = (end[0] * 60 + end[1]) - (start[0] * 60 + start[1]);
+        const durationMin = end[0] * 60 + end[1] - (start[0] * 60 + start[1]);
         expect(durationMin).toBe(60);
       }
     });
@@ -1208,7 +1273,9 @@ describe('Practitioners Module (e2e)', () => {
       if (!practitionerId || !vacationId) return;
 
       const res = await request(httpServer)
-        .delete(`${PRACTITIONERS_URL}/${practitionerId}/vacations/${vacationId}`)
+        .delete(
+          `${PRACTITIONERS_URL}/${practitionerId}/vacations/${vacationId}`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(200);
 

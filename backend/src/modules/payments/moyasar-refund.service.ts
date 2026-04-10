@@ -59,7 +59,12 @@ export class MoyasarRefundService {
     // if another concurrent call already claimed it, count = 0 and we bail out.
     const claimed = await this.prisma.payment.updateMany({
       where: { id: paymentId, status: 'paid' },
-      data: { status: 'refunded', refundAmount, refundedAt: new Date(), refundedBy: 'system' },
+      data: {
+        status: 'refunded',
+        refundAmount,
+        refundedAt: new Date(),
+        refundedBy: 'system',
+      },
     });
     if (claimed.count === 0) {
       throw new BadRequestException({
@@ -76,7 +81,12 @@ export class MoyasarRefundService {
         // Moyasar call failed — revert the DB status so the refund can be retried.
         await this.prisma.payment.updateMany({
           where: { id: paymentId, status: 'refunded' },
-          data: { status: 'paid', refundAmount: null, refundedAt: null, refundedBy: null },
+          data: {
+            status: 'paid',
+            refundAmount: null,
+            refundedAt: null,
+            refundedBy: null,
+          },
         });
         throw err;
       }

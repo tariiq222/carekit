@@ -12,7 +12,11 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UsersService } from '../users.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { CreateUserDto, UpdateUserDto } from '../dto/create-user.dto.js';
@@ -76,8 +80,20 @@ describe('UsersService', () => {
   describe('findAll', () => {
     it('should return paginated users', async () => {
       const mockUsers = [
-        { id: 'u1', email: 'a@test.com', firstName: 'أحمد', lastName: 'أ', isActive: true },
-        { id: 'u2', email: 'b@test.com', firstName: 'سارة', lastName: 'ب', isActive: true },
+        {
+          id: 'u1',
+          email: 'a@test.com',
+          firstName: 'أحمد',
+          lastName: 'أ',
+          isActive: true,
+        },
+        {
+          id: 'u2',
+          email: 'b@test.com',
+          firstName: 'سارة',
+          lastName: 'ب',
+          isActive: true,
+        },
       ];
 
       mockPrismaService.user.findMany.mockResolvedValue(mockUsers);
@@ -182,13 +198,19 @@ describe('UsersService', () => {
 
       expect(result.id).toBe('user-id');
       expect(result.email).toBe('user@test.com');
-      expect(result.roles).toContainEqual({ id: 'role-id', name: 'Receptionist', slug: 'receptionist' });
+      expect(result.roles).toContainEqual({
+        id: 'role-id',
+        name: 'Receptionist',
+        slug: 'receptionist',
+      });
     });
 
     it('should throw NotFoundException for non-existent user', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException for soft-deleted user', async () => {
@@ -197,7 +219,9 @@ describe('UsersService', () => {
         deletedAt: new Date(),
       });
 
-      await expect(service.findOne('deleted-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('deleted-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -304,7 +328,9 @@ describe('UsersService', () => {
         email: createDto.email,
       });
 
-      await expect(service.create(createDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should normalize email to lowercase', async () => {
@@ -446,9 +472,9 @@ describe('UsersService', () => {
         deletedAt: null,
       });
 
-      await expect(
-        service.softDelete('admin-id', 'admin-id'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.softDelete('admin-id', 'admin-id')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw NotFoundException for non-existent user', async () => {
@@ -512,9 +538,9 @@ describe('UsersService', () => {
         deletedAt: null,
       });
 
-      await expect(
-        service.deactivate('admin-id', 'admin-id'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.deactivate('admin-id', 'admin-id')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -524,7 +550,10 @@ describe('UsersService', () => {
 
   describe('assignRole', () => {
     it('should create user-role association', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id', deletedAt: null });
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'user-id',
+        deletedAt: null,
+      });
       mockPrismaService.role.findUnique.mockResolvedValue({ id: 'role-id' });
       mockPrismaService.userRole.findFirst.mockResolvedValue(null); // not duplicate
       mockPrismaService.userRole.create.mockResolvedValue({});
@@ -539,7 +568,10 @@ describe('UsersService', () => {
     });
 
     it('should throw if role does not exist', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id', deletedAt: null });
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'user-id',
+        deletedAt: null,
+      });
       mockPrismaService.role.findUnique.mockResolvedValue(null);
 
       await expect(
@@ -550,7 +582,10 @@ describe('UsersService', () => {
 
   describe('removeRole', () => {
     it('should delete user-role association', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id', deletedAt: null });
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'user-id',
+        deletedAt: null,
+      });
       mockPrismaService.userRole.findFirst.mockResolvedValue({
         id: 'ur-id',
         userId: 'user-id',
@@ -565,7 +600,10 @@ describe('UsersService', () => {
     });
 
     it('should throw BadRequestException when removing last role', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id', deletedAt: null });
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'user-id',
+        deletedAt: null,
+      });
       mockPrismaService.userRole.findFirst.mockResolvedValue({
         id: 'ur-id',
         userId: 'user-id',
@@ -573,9 +611,9 @@ describe('UsersService', () => {
       });
       mockPrismaService.userRole.count.mockResolvedValue(1); // only 1 role
 
-      await expect(
-        service.removeRole('user-id', 'role-id'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.removeRole('user-id', 'role-id')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

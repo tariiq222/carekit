@@ -49,34 +49,41 @@ export class BookingExpiryService {
 
     for (const booking of safeToExpire) {
       try {
-        const transitioned = await this.prisma.$transaction(async (tx) => {
-          // Atomic: re-check status inside transaction to prevent race with manual cancel
-          const current = await tx.booking.findFirst({
-            where: { id: booking.id, status: 'pending', deletedAt: null },
-            select: { id: true },
-          });
-          if (!current) return false; // Already transitioned by another process
+        const transitioned = await this.prisma.$transaction(
+          async (tx) => {
+            // Atomic: re-check status inside transaction to prevent race with manual cancel
+            const current = await tx.booking.findFirst({
+              where: { id: booking.id, status: 'pending', deletedAt: null },
+              select: { id: true },
+            });
+            if (!current) return false; // Already transitioned by another process
 
-          await tx.booking.update({
-            where: { id: booking.id },
-            data: { status: 'expired', cancelledBy: CancelledBy.system },
-          });
+            await tx.booking.update({
+              where: { id: booking.id },
+              data: { status: 'expired', cancelledBy: CancelledBy.system },
+            });
 
-          await tx.payment.deleteMany({
-            where: { bookingId: booking.id, status: 'awaiting' },
-          });
-          return true;
-        }, { isolationLevel: 'Serializable', timeout: 10000 });
+            await tx.payment.deleteMany({
+              where: { bookingId: booking.id, status: 'awaiting' },
+            });
+            return true;
+          },
+          { isolationLevel: 'Serializable', timeout: 10000 },
+        );
 
         if (!transitioned) continue;
 
-        this.statusLogService.log({
-          bookingId: booking.id,
-          fromStatus: 'pending',
-          toStatus: 'expired',
-          changedBy: 'system',
-          reason: 'Auto-expired: payment timeout exceeded',
-        }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
+        this.statusLogService
+          .log({
+            bookingId: booking.id,
+            fromStatus: 'pending',
+            toStatus: 'expired',
+            changedBy: 'system',
+            reason: 'Auto-expired: payment timeout exceeded',
+          })
+          .catch((err) =>
+            this.logger.warn('Status log failed', { error: err?.message }),
+          );
 
         if (booking.patientId) {
           await this.notificationsService.createNotification({
@@ -92,9 +99,13 @@ export class BookingExpiryService {
 
         await this.waitlistService
           .checkAndNotify(booking.practitionerId, booking.date)
-          .catch((err) => this.logger.warn('Waitlist notify failed', { error: err?.message }));
+          .catch((err) =>
+            this.logger.warn('Waitlist notify failed', { error: err?.message }),
+          );
       } catch (err) {
-        this.logger.warn(`Failed to expire booking ${booking.id}: ${(err as Error).message}`);
+        this.logger.warn(
+          `Failed to expire booking ${booking.id}: ${(err as Error).message}`,
+        );
       }
     }
 
@@ -106,7 +117,9 @@ export class BookingExpiryService {
           module: 'bookings',
           description: `Auto-expired ${safeToExpire.length} pending bookings`,
         })
-        .catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
+        .catch((err) =>
+          this.logger.warn('Activity log failed', { error: err?.message }),
+        );
     }
   }
 
@@ -129,7 +142,9 @@ export class BookingExpiryService {
     const safe: T[] = [];
     for (const booking of bookings) {
       if (withActivePayment.has(booking.id)) {
-        this.logger.warn(`Skipping expire for booking ${booking.id} — payment still active`);
+        this.logger.warn(
+          `Skipping expire for booking ${booking.id} — payment still active`,
+        );
       } else {
         safe.push(booking);
       }

@@ -35,7 +35,7 @@ const GHOST_ID = '00000000-0000-0000-0000-000000000000';
 function getDaysFromNow(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0]!;
+  return d.toISOString().split('T')[0];
 }
 
 let testApp: TestApp;
@@ -64,9 +64,10 @@ async function createAndCompleteBooking(patientToken: string): Promise<string> {
       type: 'in_person',
       date: nextDate(),
       startTime: '10:00',
-      patientId: (patientToken === patient.accessToken
-        ? patient.user['id']
-        : patient2.user['id']),
+      patientId:
+        patientToken === patient.accessToken
+          ? patient.user['id']
+          : patient2.user['id'],
     })
     .expect(201);
 
@@ -143,11 +144,14 @@ beforeAll(async () => {
   );
 
   // Create practitioner profile with availability
-  const specRes = await request(httpServer).get(`${API_PREFIX}/specialties`).expect(200);
+  const specRes = await request(httpServer)
+    .get(`${API_PREFIX}/specialties`)
+    .expect(200);
   const specialties = specRes.body.data?.items ?? specRes.body.data ?? [];
-  const specialtyId = Array.isArray(specialties) && specialties.length > 0
-    ? (specialties[0] as { id: string }).id
-    : undefined;
+  const specialtyId =
+    Array.isArray(specialties) && specialties.length > 0
+      ? (specialties[0] as { id: string }).id
+      : undefined;
 
   const pracRes = await request(httpServer)
     .post(PRACTITIONERS_URL)
@@ -199,9 +203,7 @@ beforeAll(async () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .send({
         serviceId,
-        bookingTypes: [
-          { type: 'in_person', price: 20000, duration: 30 },
-        ],
+        bookingTypes: [{ type: 'in_person', price: 20000, duration: 30 }],
       });
   }
 });
@@ -358,7 +360,9 @@ describe('GET /ratings/booking/:bookingId — unrated booking', () => {
     expectSuccessResponse(res.body as Record<string, unknown>);
     // Rating not found → data should be null or empty, not 404
     const data = (res.body as Record<string, unknown>).data;
-    expect(data === null || data === undefined || typeof data === 'object').toBe(true);
+    expect(
+      data === null || data === undefined || typeof data === 'object',
+    ).toBe(true);
   });
 });
 
@@ -377,7 +381,8 @@ describe('GET /ratings/practitioner/:id — after rating', () => {
       .expect(200);
 
     const beforeItems = (
-      (before.body as Record<string, { data: { items: unknown[] } }>).data?.items ?? []
+      (before.body as Record<string, { data: { items: unknown[] } }>).data
+        ?.items ?? []
     ).length;
 
     // Complete a booking and submit rating
@@ -396,7 +401,8 @@ describe('GET /ratings/practitioner/:id — after rating', () => {
 
     expectSuccessResponse(after.body as Record<string, unknown>);
     const afterItems = (
-      (after.body as Record<string, { data: { items: unknown[] } }>).data?.items ?? []
+      (after.body as Record<string, { data: { items: unknown[] } }>).data
+        ?.items ?? []
     ).length;
 
     expect(afterItems).toBeGreaterThanOrEqual(beforeItems);

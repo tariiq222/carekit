@@ -1,8 +1,15 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { type SessionLanguage, ChatIntent } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
 
 @Injectable()
@@ -53,7 +60,11 @@ export class ChatbotSessionService {
     });
 
     if (!session || session.userId !== userId) {
-      throw new NotFoundException({ statusCode: 404, message: 'Session not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Session not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     return session;
@@ -64,7 +75,11 @@ export class ChatbotSessionService {
       where: { id: sessionId, userId },
     });
     if (!session) {
-      throw new NotFoundException({ statusCode: 404, message: 'Session not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Session not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     return this.prisma.chatSession.update({
@@ -83,7 +98,10 @@ export class ChatbotSessionService {
     dateTo?: string;
     search?: string;
   }) {
-    const { page, perPage, skip } = parsePaginationParams(params.page, params.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      params.page,
+      params.perPage,
+    );
     const where: Record<string, unknown> = {};
 
     if (params.userId) where.userId = params.userId;
@@ -119,7 +137,11 @@ export class ChatbotSessionService {
       where: { id: sessionId },
     });
     if (!session) {
-      throw new NotFoundException({ statusCode: 404, message: 'Session not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Session not found',
+        error: 'NOT_FOUND',
+      });
     }
     if (!session.handedOff || session.handoffType !== 'live_chat') {
       throw new BadRequestException('Session is not handed off to live chat');

@@ -6,14 +6,13 @@ import { AuthCacheService } from '../../../src/modules/auth/auth-cache.service.j
 import { REDIS_CLIENT } from '../../../src/common/redis/redis.constants.js';
 
 const userId = 'user-uuid-1';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mockPayload: any = {
   sub: userId,
   email: 'test@example.com',
   roles: ['patient'],
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockRedis: any = {
   get: jest.fn(),
   set: jest.fn().mockResolvedValue('OK'),

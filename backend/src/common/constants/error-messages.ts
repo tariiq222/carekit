@@ -21,21 +21,24 @@ export const ERR = {
     leadTimeViolation: (minutes: number) =>
       `Booking must be at least ${minutes} minutes in advance`,
     walkInNotAllowed: 'Walk-in bookings are not allowed',
-    payAtClinicForbidden: 'Only staff or admin can create pay-at-clinic bookings',
+    payAtClinicForbidden:
+      'Only staff or admin can create pay-at-clinic bookings',
     rescheduleNotAllowed: 'Patient self-reschedule is not enabled',
     rescheduleOwnership: 'You can only reschedule your own bookings',
     rescheduleLimitReached: (max: number) =>
       `Maximum reschedule limit (${max}) reached`,
     rescheduleTooLate: (hours: number) =>
       `Must reschedule at least ${hours} hours before the appointment`,
-    invalidRescheduleInput: 'At least one of date or startTime must be provided',
+    invalidRescheduleInput:
+      'At least one of date or startTime must be provided',
     invalidStatusForReschedule: (status: string) =>
       `Cannot reschedule a booking with status '${status}'`,
   },
 
   practitioner: {
     notFound: 'Practitioner not found',
-    notAcceptingBookings: 'Practitioner is not accepting new bookings at this time',
+    notAcceptingBookings:
+      'Practitioner is not accepting new bookings at this time',
     branchMismatch: 'Practitioner is not assigned to this branch',
   },
 

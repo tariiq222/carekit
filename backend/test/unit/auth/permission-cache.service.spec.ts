@@ -55,7 +55,9 @@ describe('PermissionCacheService', () => {
     });
 
     it('returns a Set of strings when key exists and JSON is valid', async () => {
-      redis.get.mockResolvedValue(JSON.stringify(['users:view', 'reports:view']));
+      redis.get.mockResolvedValue(
+        JSON.stringify(['users:view', 'reports:view']),
+      );
 
       const result = await service.get(USER_ID);
 
@@ -96,7 +98,11 @@ describe('PermissionCacheService', () => {
         900,
       );
 
-      const [, serialized] = redis.set.mock.calls[0] as [string, string, ...unknown[]];
+      const [, serialized] = redis.set.mock.calls[0] as [
+        string,
+        string,
+        ...unknown[],
+      ];
       const parsed: unknown = JSON.parse(serialized);
       expect(new Set(parsed as string[])).toEqual(permissions);
     });
@@ -104,7 +110,11 @@ describe('PermissionCacheService', () => {
     it('stores an empty JSON array for an empty Set', async () => {
       await service.set(USER_ID, new Set());
 
-      const [, serialized] = redis.set.mock.calls[0] as [string, string, ...unknown[]];
+      const [, serialized] = redis.set.mock.calls[0] as [
+        string,
+        string,
+        ...unknown[],
+      ];
       expect(JSON.parse(serialized)).toEqual([]);
     });
   });

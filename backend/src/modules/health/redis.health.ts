@@ -24,8 +24,7 @@ export class RedisHealthIndicator {
 
       return session.down({ message: `Unexpected PING response: ${response}` });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unknown error';
       this.logger.warn(`Redis health check failed: ${message}`);
       return session.down({ message });
     }

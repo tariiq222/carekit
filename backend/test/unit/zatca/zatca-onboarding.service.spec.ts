@@ -82,7 +82,10 @@ describe('ZatcaOnboardingService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ZatcaOnboardingService,
-        { provide: ClinicIntegrationsService, useValue: mockClinicIntegrationsService },
+        {
+          provide: ClinicIntegrationsService,
+          useValue: mockClinicIntegrationsService,
+        },
         { provide: ZatcaCryptoService, useValue: mockCryptoService },
         { provide: ZatcaApiService, useValue: mockApiService },
         { provide: ZatcaService, useValue: mockZatcaService },

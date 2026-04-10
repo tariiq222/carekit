@@ -25,11 +25,18 @@ export class ClinicIntegrationsService {
   ) {}
 
   async get(): Promise<ClinicIntegrations> {
-    const cached = await this.cache.get<ClinicIntegrations>(CACHE_KEYS.CLINIC_INTEGRATIONS);
+    const cached = await this.cache.get<ClinicIntegrations>(
+      CACHE_KEYS.CLINIC_INTEGRATIONS,
+    );
     if (cached) return cached;
 
-    const integrations = await this.prisma.clinicIntegrations.findFirstOrThrow();
-    await this.cache.set(CACHE_KEYS.CLINIC_INTEGRATIONS, integrations, CACHE_TTL.CLINIC_INTEGRATIONS);
+    const integrations =
+      await this.prisma.clinicIntegrations.findFirstOrThrow();
+    await this.cache.set(
+      CACHE_KEYS.CLINIC_INTEGRATIONS,
+      integrations,
+      CACHE_TTL.CLINIC_INTEGRATIONS,
+    );
     return integrations;
   }
 

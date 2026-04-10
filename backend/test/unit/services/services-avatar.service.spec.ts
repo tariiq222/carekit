@@ -8,7 +8,11 @@ import { ServicesAvatarService } from '../../../src/modules/services/services-av
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { MinioService } from '../../../src/common/services/minio.service.js';
 import { CacheService } from '../../../src/common/services/cache.service.js';
-import { createMockPrisma, createMockCache, mockClinicService } from './services.fixtures.js';
+import {
+  createMockPrisma,
+  createMockCache,
+  mockClinicService,
+} from './services.fixtures.js';
 
 function createMockMinio() {
   return {
@@ -78,13 +82,17 @@ describe('ServicesAvatarService — uploadAvatar', () => {
   it('should delete old image from MinIO when service has an existing imageUrl', async () => {
     const existingService = {
       ...mockClinicService,
-      imageUrl: 'http://minio.local/carekit/services/service-uuid-1/avatar-old.jpg',
+      imageUrl:
+        'http://minio.local/carekit/services/service-uuid-1/avatar-old.jpg',
     };
     mockPrisma.service.findFirst.mockResolvedValue(existingService);
-    mockMinio.uploadFile.mockResolvedValue('http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg');
+    mockMinio.uploadFile.mockResolvedValue(
+      'http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg',
+    );
     mockPrisma.service.update.mockResolvedValue({
       ...existingService,
-      imageUrl: 'http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg',
+      imageUrl:
+        'http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg',
     });
 
     await service.uploadAvatar(mockClinicService.id, buildFile());
@@ -98,10 +106,13 @@ describe('ServicesAvatarService — uploadAvatar', () => {
   it('should skip MinIO deletion when service has no imageUrl', async () => {
     const serviceWithoutImage = { ...mockClinicService, imageUrl: null };
     mockPrisma.service.findFirst.mockResolvedValue(serviceWithoutImage);
-    mockMinio.uploadFile.mockResolvedValue('http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg');
+    mockMinio.uploadFile.mockResolvedValue(
+      'http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg',
+    );
     mockPrisma.service.update.mockResolvedValue({
       ...serviceWithoutImage,
-      imageUrl: 'http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg',
+      imageUrl:
+        'http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg',
     });
 
     await service.uploadAvatar(mockClinicService.id, buildFile());
@@ -110,8 +121,12 @@ describe('ServicesAvatarService — uploadAvatar', () => {
   });
 
   it('should upload new file, update imageUrl, and invalidate cache on success', async () => {
-    const newImageUrl = 'http://minio.local/carekit/services/service-uuid-1/avatar-123.jpg';
-    mockPrisma.service.findFirst.mockResolvedValue({ ...mockClinicService, imageUrl: null });
+    const newImageUrl =
+      'http://minio.local/carekit/services/service-uuid-1/avatar-123.jpg';
+    mockPrisma.service.findFirst.mockResolvedValue({
+      ...mockClinicService,
+      imageUrl: null,
+    });
     mockMinio.uploadFile.mockResolvedValue(newImageUrl);
     mockPrisma.service.update.mockResolvedValue({
       ...mockClinicService,
@@ -120,7 +135,10 @@ describe('ServicesAvatarService — uploadAvatar', () => {
       iconBgColor: null,
     });
 
-    const result = await service.uploadAvatar(mockClinicService.id, buildFile('image/png'));
+    const result = await service.uploadAvatar(
+      mockClinicService.id,
+      buildFile('image/png'),
+    );
 
     expect(mockMinio.uploadFile).toHaveBeenCalledWith(
       'carekit',
@@ -145,15 +163,23 @@ describe('ServicesAvatarService — uploadAvatar', () => {
   it('should continue upload even when MinIO deletion of old image throws', async () => {
     const existingService = {
       ...mockClinicService,
-      imageUrl: 'http://minio.local/carekit/services/service-uuid-1/avatar-old.jpg',
+      imageUrl:
+        'http://minio.local/carekit/services/service-uuid-1/avatar-old.jpg',
     };
-    const newImageUrl = 'http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg';
+    const newImageUrl =
+      'http://minio.local/carekit/services/service-uuid-1/avatar-new.jpg';
     mockPrisma.service.findFirst.mockResolvedValue(existingService);
     mockMinio.deleteFile.mockRejectedValue(new Error('MinIO unavailable'));
     mockMinio.uploadFile.mockResolvedValue(newImageUrl);
-    mockPrisma.service.update.mockResolvedValue({ ...existingService, imageUrl: newImageUrl });
+    mockPrisma.service.update.mockResolvedValue({
+      ...existingService,
+      imageUrl: newImageUrl,
+    });
 
-    const result = await service.uploadAvatar(mockClinicService.id, buildFile());
+    const result = await service.uploadAvatar(
+      mockClinicService.id,
+      buildFile(),
+    );
 
     expect(mockMinio.uploadFile).toHaveBeenCalled();
     expect(result.imageUrl).toBe(newImageUrl);

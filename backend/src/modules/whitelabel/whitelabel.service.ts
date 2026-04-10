@@ -13,11 +13,17 @@ export class WhitelabelService {
   ) {}
 
   async get(): Promise<WhiteLabelConfig> {
-    const cached = await this.cache.get<WhiteLabelConfig>(CACHE_KEYS.WHITELABEL);
+    const cached = await this.cache.get<WhiteLabelConfig>(
+      CACHE_KEYS.WHITELABEL,
+    );
     if (cached) return cached;
 
     const config = await this.prisma.whiteLabelConfig.findFirstOrThrow();
-    await this.cache.set(CACHE_KEYS.WHITELABEL, config, CACHE_TTL.WHITELABEL_CONFIG);
+    await this.cache.set(
+      CACHE_KEYS.WHITELABEL,
+      config,
+      CACHE_TTL.WHITELABEL_CONFIG,
+    );
     return config;
   }
 
@@ -29,9 +35,9 @@ export class WhitelabelService {
     primaryColor: string;
     secondaryColor: string;
   }> {
-    const cached = await this.cache.get<Awaited<ReturnType<WhitelabelService['getPublicBranding']>>>(
-      CACHE_KEYS.WHITELABEL_PUBLIC,
-    );
+    const cached = await this.cache.get<
+      Awaited<ReturnType<WhitelabelService['getPublicBranding']>>
+    >(CACHE_KEYS.WHITELABEL_PUBLIC);
     if (cached) return cached;
 
     const config = await this.get();
@@ -43,7 +49,11 @@ export class WhitelabelService {
       primaryColor: config.primaryColor,
       secondaryColor: config.secondaryColor,
     };
-    await this.cache.set(CACHE_KEYS.WHITELABEL_PUBLIC, result, CACHE_TTL.WHITELABEL_CONFIG);
+    await this.cache.set(
+      CACHE_KEYS.WHITELABEL_PUBLIC,
+      result,
+      CACHE_TTL.WHITELABEL_CONFIG,
+    );
     return result;
   }
 
@@ -51,7 +61,9 @@ export class WhitelabelService {
     const current = await this.prisma.whiteLabelConfig.findFirstOrThrow();
 
     if (!current.clinicCanEdit) {
-      throw new ForbiddenException('Whitelabel config is locked. Contact CareKit support.');
+      throw new ForbiddenException(
+        'Whitelabel config is locked. Contact CareKit support.',
+      );
     }
 
     const updated = await this.prisma.whiteLabelConfig.update({

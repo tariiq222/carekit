@@ -46,8 +46,14 @@ const mockPrisma = {
 const cacheStore = new Map<string, unknown>();
 const mockCache = {
   get: jest.fn((key: string) => Promise.resolve(cacheStore.get(key) ?? null)),
-  set: jest.fn((key: string, value: unknown) => { cacheStore.set(key, value); return Promise.resolve(); }),
-  del: jest.fn((key: string) => { cacheStore.delete(key); return Promise.resolve(); }),
+  set: jest.fn((key: string, value: unknown) => {
+    cacheStore.set(key, value);
+    return Promise.resolve();
+  }),
+  del: jest.fn((key: string) => {
+    cacheStore.delete(key);
+    return Promise.resolve();
+  }),
 };
 
 async function createModule() {
@@ -82,14 +88,23 @@ describe('License ↔ FeatureFlags Integration', () => {
 
   describe('race condition — license disabled mid-toggle', () => {
     it('blocks enabling a flag when license is revoked between check moments', async () => {
-      const flag = { key: 'coupons', enabled: false, createdAt: new Date(), updatedAt: new Date() };
+      const flag = {
+        key: 'coupons',
+        enabled: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       mockPrisma.featureFlag.findUnique.mockResolvedValue(flag);
 
       // License starts enabled, then gets revoked
-      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue({ ...baseLicense, hasCoupons: false });
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue({
+        ...baseLicense,
+        hasCoupons: false,
+      });
 
-      await expect(featureFlagsService.toggle('coupons', true))
-        .rejects.toThrow(ForbiddenException);
+      await expect(featureFlagsService.toggle('coupons', true)).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(mockPrisma.featureFlag.update).not.toHaveBeenCalled();
     });
@@ -110,7 +125,9 @@ describe('License ↔ FeatureFlags Integration', () => {
       await licenseService.update({ hasCoupons: false });
 
       // Step 3: after cache invalidation, isEnabled must re-fetch and return false
-      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(revokedLicense);
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(
+        revokedLicense,
+      );
       mockPrisma.featureFlag.findMany.mockResolvedValue([
         { key: 'coupons', enabled: true },
       ]);
@@ -130,7 +147,10 @@ describe('License ↔ FeatureFlags Integration', () => {
       cacheStore.set('feature_flags:map', { chatbot: true });
 
       // License says chatbot is NOT licensed
-      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue({ ...baseLicense, hasChatbot: false });
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue({
+        ...baseLicense,
+        hasChatbot: false,
+      });
 
       // Even though flag map cache says enabled=true, license check should block
       expect(await featureFlagsService.isEnabled('chatbot')).toBe(false);
@@ -143,7 +163,10 @@ describe('License ↔ FeatureFlags Integration', () => {
       expect(cacheStore.has('cache:license')).toBe(true);
 
       // Update license → should clear cache
-      mockPrisma.licenseConfig.update.mockResolvedValue({ ...baseLicense, hasReports: true });
+      mockPrisma.licenseConfig.update.mockResolvedValue({
+        ...baseLicense,
+        hasReports: true,
+      });
       await licenseService.update({ hasReports: true });
       expect(cacheStore.has('cache:license')).toBe(false);
 
@@ -153,7 +176,9 @@ describe('License ↔ FeatureFlags Integration', () => {
       const result = await licenseService.get();
 
       expect(result.hasReports).toBe(true);
-      expect(mockPrisma.licenseConfig.findFirstOrThrow).toHaveBeenCalledTimes(3);
+      expect(mockPrisma.licenseConfig.findFirstOrThrow).toHaveBeenCalledTimes(
+        3,
+      );
     });
   });
 
@@ -170,25 +195,49 @@ describe('License ↔ FeatureFlags Integration', () => {
       mockPrisma.featureFlag.findMany.mockResolvedValue([
         { key: 'coupons', enabled: true, nameAr: 'كوبونات', nameEn: 'Coupons' },
         { key: 'ratings', enabled: true, nameAr: 'تقييمات', nameEn: 'Ratings' },
-        { key: 'recurring', enabled: true, nameAr: 'حجز متكرر', nameEn: 'Recurring' },
-        { key: 'walk_in', enabled: true, nameAr: 'حضور بدون موعد', nameEn: 'Walk-in' },
+        {
+          key: 'recurring',
+          enabled: true,
+          nameAr: 'حجز متكرر',
+          nameEn: 'Recurring',
+        },
+        {
+          key: 'walk_in',
+          enabled: true,
+          nameAr: 'حضور بدون موعد',
+          nameEn: 'Walk-in',
+        },
       ]);
 
       const result = await licenseService.getFeaturesWithStatus();
 
       // Unlicensed → enabled must be false even though flag.enabled=true
-      expect(result.find((f) => f.key === 'coupons')).toMatchObject({ licensed: false, enabled: false });
-      expect(result.find((f) => f.key === 'ratings')).toMatchObject({ licensed: false, enabled: false });
-      expect(result.find((f) => f.key === 'recurring')).toMatchObject({ licensed: false, enabled: false });
+      expect(result.find((f) => f.key === 'coupons')).toMatchObject({
+        licensed: false,
+        enabled: false,
+      });
+      expect(result.find((f) => f.key === 'ratings')).toMatchObject({
+        licensed: false,
+        enabled: false,
+      });
+      expect(result.find((f) => f.key === 'recurring')).toMatchObject({
+        licensed: false,
+        enabled: false,
+      });
 
       // Licensed + enabled → should remain true
-      expect(result.find((f) => f.key === 'walk_in')).toMatchObject({ licensed: true, enabled: true });
+      expect(result.find((f) => f.key === 'walk_in')).toMatchObject({
+        licensed: true,
+        enabled: true,
+      });
     });
 
     it('isEnabled blocks access for features whose license was just revoked', async () => {
       // Simulate: recurring was licensed, cron checks isEnabled
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense);
-      mockPrisma.featureFlag.findMany.mockResolvedValue([{ key: 'recurring', enabled: true }]);
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        { key: 'recurring', enabled: true },
+      ]);
 
       expect(await featureFlagsService.isEnabled('recurring')).toBe(true);
 
@@ -199,26 +248,36 @@ describe('License ↔ FeatureFlags Integration', () => {
       await licenseService.update({ hasRecurring: false });
 
       // Cron job checks again — must get false
-      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(revokedLicense);
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(
+        revokedLicense,
+      );
       expect(await featureFlagsService.isEnabled('recurring')).toBe(false);
     });
 
     it('re-enabling license restores feature access', async () => {
       // Start with revoked
       const revokedLicense = { ...baseLicense, hasChatbot: false };
-      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(revokedLicense);
-      mockPrisma.featureFlag.findMany.mockResolvedValue([{ key: 'chatbot', enabled: true }]);
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(
+        revokedLicense,
+      );
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        { key: 'chatbot', enabled: true },
+      ]);
 
       expect(await featureFlagsService.isEnabled('chatbot')).toBe(false);
 
       // Re-enable license
       const restoredLicense = { ...baseLicense, hasChatbot: true };
       mockPrisma.licenseConfig.update.mockResolvedValue(restoredLicense);
-      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(revokedLicense);
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(
+        revokedLicense,
+      );
       await licenseService.update({ hasChatbot: true });
 
       // Now isEnabled should return true
-      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(restoredLicense);
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(
+        restoredLicense,
+      );
       expect(await featureFlagsService.isEnabled('chatbot')).toBe(true);
     });
   });
@@ -227,7 +286,12 @@ describe('License ↔ FeatureFlags Integration', () => {
 
   describe('bulk toggle — multi-field license update', () => {
     it('updates multiple license fields in a single call without corruption', async () => {
-      const dto = { hasCoupons: false, hasGiftCards: true, hasZoom: true, hasReports: true };
+      const dto = {
+        hasCoupons: false,
+        hasGiftCards: true,
+        hasZoom: true,
+        hasReports: true,
+      };
       const updated = { ...baseLicense, ...dto };
 
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense);
@@ -273,7 +337,12 @@ describe('License ↔ FeatureFlags Integration', () => {
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(updated);
       mockPrisma.featureFlag.findMany.mockResolvedValue([
         { key: 'coupons', enabled: true, nameAr: 'كوبونات', nameEn: 'Coupons' },
-        { key: 'gift_cards', enabled: true, nameAr: 'بطاقات هدايا', nameEn: 'Gift Cards' },
+        {
+          key: 'gift_cards',
+          enabled: true,
+          nameAr: 'بطاقات هدايا',
+          nameEn: 'Gift Cards',
+        },
       ]);
 
       const features = await licenseService.getFeaturesWithStatus();
@@ -311,19 +380,37 @@ describe('License ↔ FeatureFlags Integration', () => {
       // All off
       const allOff = {
         ...baseLicense,
-        hasCoupons: false, hasGiftCards: false, hasIntakeForms: false,
-        hasChatbot: false, hasRatings: false, hasMultiBranch: false,
-        hasReports: false, hasRecurring: false, hasWalkIn: false,
-        hasWaitlist: false, hasZoom: false, hasZatca: false, hasDepartments: false,
+        hasCoupons: false,
+        hasGiftCards: false,
+        hasIntakeForms: false,
+        hasChatbot: false,
+        hasRatings: false,
+        hasMultiBranch: false,
+        hasReports: false,
+        hasRecurring: false,
+        hasWalkIn: false,
+        hasWaitlist: false,
+        hasZoom: false,
+        hasZatca: false,
+        hasDepartments: false,
       };
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense);
       mockPrisma.licenseConfig.update.mockResolvedValue(allOff);
 
       const offResult = await licenseService.update({
-        hasCoupons: false, hasGiftCards: false, hasIntakeForms: false,
-        hasChatbot: false, hasRatings: false, hasMultiBranch: false,
-        hasReports: false, hasRecurring: false, hasWalkIn: false,
-        hasWaitlist: false, hasZoom: false, hasZatca: false, hasDepartments: false,
+        hasCoupons: false,
+        hasGiftCards: false,
+        hasIntakeForms: false,
+        hasChatbot: false,
+        hasRatings: false,
+        hasMultiBranch: false,
+        hasReports: false,
+        hasRecurring: false,
+        hasWalkIn: false,
+        hasWaitlist: false,
+        hasZoom: false,
+        hasZatca: false,
+        hasDepartments: false,
       });
 
       expect(offResult.hasCoupons).toBe(false);

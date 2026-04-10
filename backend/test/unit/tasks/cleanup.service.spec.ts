@@ -22,7 +22,6 @@ import { MetricsService } from '../../../src/common/metrics/metrics.service.js';
 // Mock factories
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrismaService: any = {
   otpCode: { deleteMany: jest.fn(), count: jest.fn() },
   refreshToken: { deleteMany: jest.fn() },
@@ -38,7 +37,7 @@ const mockPrismaService: any = {
 };
 
 const mockDbTableRowsGauge = { set: jest.fn() };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mockMetricsService: any = {
   dbTableRows: mockDbTableRowsGauge,
 };
@@ -63,7 +62,7 @@ describe('CleanupService', () => {
 
     service = module.get<CleanupService>(CleanupService);
 
-    logSpy  = jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    logSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
     warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
 
     jest.clearAllMocks();
@@ -141,17 +140,23 @@ describe('CleanupService', () => {
 
   describe('cleanOldProcessedWebhooks', () => {
     it('should delete webhooks older than 30 days', async () => {
-      mockPrismaService.processedWebhook.deleteMany.mockResolvedValue({ count: 10 });
+      mockPrismaService.processedWebhook.deleteMany.mockResolvedValue({
+        count: 10,
+      });
 
       await service.cleanOldProcessedWebhooks();
 
-      expect(mockPrismaService.processedWebhook.deleteMany).toHaveBeenCalledWith({
+      expect(
+        mockPrismaService.processedWebhook.deleteMany,
+      ).toHaveBeenCalledWith({
         where: { processedAt: { lt: expect.any(Date) } },
       });
     });
 
     it('should log count when webhooks were deleted', async () => {
-      mockPrismaService.processedWebhook.deleteMany.mockResolvedValue({ count: 7 });
+      mockPrismaService.processedWebhook.deleteMany.mockResolvedValue({
+        count: 7,
+      });
       await service.cleanOldProcessedWebhooks();
       expect(logSpy).toHaveBeenCalledWith(
         expect.stringContaining('Cleaned 7 processed webhooks'),
@@ -159,7 +164,9 @@ describe('CleanupService', () => {
     });
 
     it('should not log when no webhooks were deleted', async () => {
-      mockPrismaService.processedWebhook.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.processedWebhook.deleteMany.mockResolvedValue({
+        count: 0,
+      });
       await service.cleanOldProcessedWebhooks();
       expect(logSpy).not.toHaveBeenCalled();
     });
@@ -206,7 +213,9 @@ describe('CleanupService', () => {
       const err = new Error('connection timeout');
       mockPrismaService.$executeRaw.mockRejectedValue(err);
 
-      await expect(service.archiveOldActivityLogs()).rejects.toThrow('connection timeout');
+      await expect(service.archiveOldActivityLogs()).rejects.toThrow(
+        'connection timeout',
+      );
     });
   });
 
@@ -291,12 +300,30 @@ describe('CleanupService', () => {
     it('should update Prometheus Gauge for each table', async () => {
       await service.logTableGrowthSnapshot();
 
-      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith({ table: 'bookings' }, 100);
-      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith({ table: 'payments' }, 200);
-      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith({ table: 'activity_logs' }, 5000);
-      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith({ table: 'notifications' }, 300);
-      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith({ table: 'chat_messages' }, 400);
-      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith({ table: 'otp_codes' }, 50);
+      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith(
+        { table: 'bookings' },
+        100,
+      );
+      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith(
+        { table: 'payments' },
+        200,
+      );
+      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith(
+        { table: 'activity_logs' },
+        5000,
+      );
+      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith(
+        { table: 'notifications' },
+        300,
+      );
+      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith(
+        { table: 'chat_messages' },
+        400,
+      );
+      expect(mockDbTableRowsGauge.set).toHaveBeenCalledWith(
+        { table: 'otp_codes' },
+        50,
+      );
     });
   });
 });

@@ -9,23 +9,23 @@ interface JobDefinition {
 }
 
 const DESIRED_JOBS: JobDefinition[] = [
-  { name: 'cleanup-otps',                  pattern: '0 3 * * *'    },
-  { name: 'cleanup-tokens',                pattern: '30 3 * * *'   },
-  { name: 'reminder-24h',                  pattern: '0 * * * *'    },
-  { name: 'reminder-1h',                   pattern: '*/15 * * * *' },
-  { name: 'expire-pending-bookings',       pattern: '*/5 * * * *'  },
-  { name: 'auto-complete-bookings',        pattern: '*/15 * * * *' },
-  { name: 'auto-no-show',                  pattern: '*/10 * * * *' },
-  { name: 'expire-pending-cancellations',  pattern: '0 * * * *'    },
-  { name: 'reminder-2h',                   pattern: '*/15 * * * *' },
-  { name: 'reminder-15min',                pattern: '*/5 * * * *'  },
-  { name: 'cleanup-webhooks',              pattern: '0 4 * * *'    },
-  { name: 'archive-activity-logs',         pattern: '0 5 * * 0'    },
-  { name: 'repair-rating-cache',           pattern: '0 6 * * 0'    },
-  { name: 'db-snapshot',                   pattern: '0 0 * * 0'    },
-  { name: 'group-enrollment-expiry',       pattern: '*/30 * * * *' },
-  { name: 'group-session-cancellation',    pattern: '0 * * * *'    },
-  { name: 'group-session-reminder',        pattern: '0 * * * *'    },
+  { name: 'cleanup-otps', pattern: '0 3 * * *' },
+  { name: 'cleanup-tokens', pattern: '30 3 * * *' },
+  { name: 'reminder-24h', pattern: '0 * * * *' },
+  { name: 'reminder-1h', pattern: '*/15 * * * *' },
+  { name: 'expire-pending-bookings', pattern: '*/5 * * * *' },
+  { name: 'auto-complete-bookings', pattern: '*/15 * * * *' },
+  { name: 'auto-no-show', pattern: '*/10 * * * *' },
+  { name: 'expire-pending-cancellations', pattern: '0 * * * *' },
+  { name: 'reminder-2h', pattern: '*/15 * * * *' },
+  { name: 'reminder-15min', pattern: '*/5 * * * *' },
+  { name: 'cleanup-webhooks', pattern: '0 4 * * *' },
+  { name: 'archive-activity-logs', pattern: '0 5 * * 0' },
+  { name: 'repair-rating-cache', pattern: '0 6 * * 0' },
+  { name: 'db-snapshot', pattern: '0 0 * * 0' },
+  { name: 'group-enrollment-expiry', pattern: '*/30 * * * *' },
+  { name: 'group-session-cancellation', pattern: '0 * * * *' },
+  { name: 'group-session-reminder', pattern: '0 * * * *' },
 ];
 
 @Injectable()
@@ -53,14 +53,20 @@ export class TasksBootstrapService implements OnModuleInit {
     let registered = 0;
     for (const job of DESIRED_JOBS) {
       if (!existingNames.has(job.name)) {
-        await this.tasksQueue.add(job.name, {}, {
-          repeat: { pattern: job.pattern },
-          removeOnComplete: true,
-        });
+        await this.tasksQueue.add(
+          job.name,
+          {},
+          {
+            repeat: { pattern: job.pattern },
+            removeOnComplete: true,
+          },
+        );
         registered++;
       }
     }
 
-    this.logger.log(`Tasks bootstrap: ${registered} new jobs registered, ${removed} stale removed`);
+    this.logger.log(
+      `Tasks bootstrap: ${registered} new jobs registered, ${removed} stale removed`,
+    );
   }
 }

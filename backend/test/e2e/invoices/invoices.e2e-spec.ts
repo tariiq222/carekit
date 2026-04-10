@@ -89,7 +89,10 @@ describe('GET /invoices/stats', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    const data = (res.body as Record<string, unknown>).data as Record<string, unknown>;
+    const data = (res.body as Record<string, unknown>).data as Record<
+      string,
+      unknown
+    >;
     expect(typeof data.total).toBe('number');
   });
 
@@ -105,7 +108,10 @@ describe('GET /invoices/stats', () => {
     const res = await request(httpServer)
       .get(`${INVOICES_URL}/stats`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no invoices:view)', async () => {
@@ -129,7 +135,10 @@ describe('GET /invoices', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    const data = (res.body as Record<string, unknown>).data as Record<string, unknown>;
+    const data = (res.body as Record<string, unknown>).data as Record<
+      string,
+      unknown
+    >;
     expect(Array.isArray(data.items ?? data)).toBe(true);
   });
 
@@ -147,13 +156,19 @@ describe('GET /invoices', () => {
       .set(getAuthHeaders(adminAuth.accessToken))
       .expect(200);
     expectSuccessResponse(res.body as Record<string, unknown>);
-    const data = (res.body as Record<string, unknown>).data as Record<string, unknown>;
+    const data = (res.body as Record<string, unknown>).data as Record<
+      string,
+      unknown
+    >;
     expect(data).toHaveProperty('meta');
   });
 
   it('returns 401 without token', async () => {
     const res = await request(httpServer).get(INVOICES_URL).expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no invoices permissions)', async () => {
@@ -198,7 +213,10 @@ describe('GET /invoices/:id', () => {
     const res = await request(httpServer)
       .get(`${INVOICES_URL}/${GHOST_ID}`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no invoices:view)', async () => {
@@ -235,7 +253,10 @@ describe('GET /invoices/payment/:paymentId', () => {
     const res = await request(httpServer)
       .get(`${INVOICES_URL}/payment/${GHOST_ID}`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no invoices:view)', async () => {
@@ -301,7 +322,10 @@ describe('POST /invoices', () => {
       .post(INVOICES_URL)
       .send({ paymentId: GHOST_ID })
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no invoices:create)', async () => {
@@ -339,7 +363,10 @@ describe('GET /invoices/:id/html', () => {
     const res = await request(httpServer)
       .get(`${INVOICES_URL}/${GHOST_ID}/html`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no invoices:view)', async () => {
@@ -376,7 +403,10 @@ describe('PATCH /invoices/:id/send', () => {
     const res = await request(httpServer)
       .patch(`${INVOICES_URL}/${GHOST_ID}/send`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no invoices:edit)', async () => {

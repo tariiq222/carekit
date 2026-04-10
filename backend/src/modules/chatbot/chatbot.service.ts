@@ -1,13 +1,25 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotAiService } from './chatbot-ai.service.js';
 import { ChatbotToolsService } from './chatbot-tools.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
 import { ChatbotContextService } from './chatbot-context.service.js';
 import { ChatbotSessionService } from './chatbot-session.service.js';
-import type { OpenRouterMessage, OpenRouterTool } from './interfaces/chatbot-tool.interface.js';
+import type {
+  OpenRouterMessage,
+  OpenRouterTool,
+} from './interfaces/chatbot-tool.interface.js';
 import type { ChatbotConfigMap } from './interfaces/chatbot-config.interface.js';
-import { detectLanguage, classifyIntent, buildActionCard } from './chatbot.helpers.js';
+import {
+  detectLanguage,
+  classifyIntent,
+  buildActionCard,
+} from './chatbot.helpers.js';
 
 export interface HandleMessageResult {
   message: string;
@@ -69,10 +81,18 @@ export class ChatbotService {
       where: { id: sessionId, userId },
     });
     if (!session) {
-      throw new NotFoundException({ statusCode: 404, message: 'Session not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Session not found',
+        error: 'NOT_FOUND',
+      });
     }
     if (session.endedAt) {
-      throw new BadRequestException({ statusCode: 400, message: 'Session has ended', error: 'SESSION_ENDED' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Session has ended',
+        error: 'SESSION_ENDED',
+      });
     }
 
     const messageCount = await this.prisma.chatMessage.count({
@@ -91,7 +111,9 @@ export class ChatbotService {
     });
 
     if (!session.language) {
-      const detectedLang = detectLanguage(content) as Parameters<typeof this.prisma.chatSession.update>[0]['data']['language'];
+      const detectedLang = detectLanguage(content) as Parameters<
+        typeof this.prisma.chatSession.update
+      >[0]['data']['language'];
       await this.prisma.chatSession.update({
         where: { id: sessionId },
         data: { language: detectedLang },
@@ -99,7 +121,10 @@ export class ChatbotService {
     }
 
     const { messages, tools } = await this.contextService.buildAiContext(
-      sessionId, userId, content, config,
+      sessionId,
+      userId,
+      content,
+      config,
     );
 
     return this.runAiLoop(messages, tools, config, sessionId, userId);
@@ -117,7 +142,11 @@ export class ChatbotService {
     let totalTokens = 0;
 
     for (let i = 0; i < config.max_tool_calls_per_message; i++) {
-      const result = await this.aiService.chatCompletion(messages, tools, config);
+      const result = await this.aiService.chatCompletion(
+        messages,
+        tools,
+        config,
+      );
       totalTokens += result.tokenCount;
 
       if (result.toolCalls.length === 0) {
@@ -150,7 +179,10 @@ export class ChatbotService {
       messages.push(assistantMsg);
 
       for (const toolCall of result.toolCalls) {
-        const args = JSON.parse(toolCall.function.arguments) as Record<string, unknown>;
+        const args = JSON.parse(toolCall.function.arguments) as Record<
+          string,
+          unknown
+        >;
         lastToolName = toolCall.function.name;
 
         this.logger.log(`Executing tool: ${toolCall.function.name}`);
@@ -168,7 +200,13 @@ export class ChatbotService {
             sessionId,
             role: 'assistant',
             content: `[Tool: ${toolCall.function.name}]`,
-            functionCall: JSON.parse(JSON.stringify({ name: toolCall.function.name, arguments: args, result: toolResult })),
+            functionCall: JSON.parse(
+              JSON.stringify({
+                name: toolCall.function.name,
+                arguments: args,
+                result: toolResult,
+              }),
+            ),
             toolName: toolCall.function.name,
           },
         });
@@ -177,7 +215,9 @@ export class ChatbotService {
         await this.prisma.chatMessage.create({
           data: {
             sessionId,
-            role: 'tool' as Parameters<typeof this.prisma.chatMessage.create>[0]['data']['role'],
+            role: 'tool' as Parameters<
+              typeof this.prisma.chatMessage.create
+            >[0]['data']['role'],
             content: toolResultContent,
             toolName: toolCall.function.name,
             functionCall: { tool_call_id: toolCall.id },
@@ -192,8 +232,14 @@ export class ChatbotService {
       }
     }
 
-    const finalResult = await this.aiService.chatCompletion(messages, [], config);
-    const finalText = finalResult.content ?? 'I apologize, I encountered an issue. Please try again.';
+    const finalResult = await this.aiService.chatCompletion(
+      messages,
+      [],
+      config,
+    );
+    const finalText =
+      finalResult.content ??
+      'I apologize, I encountered an issue. Please try again.';
 
     await this.prisma.chatMessage.create({
       data: {
@@ -205,6 +251,10 @@ export class ChatbotService {
       },
     });
 
-    return { message: finalText, intent: classifyIntent(lastToolName), actionCard: lastActionCard };
+    return {
+      message: finalText,
+      intent: classifyIntent(lastToolName),
+      actionCard: lastActionCard,
+    };
   }
 }

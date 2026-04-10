@@ -36,7 +36,11 @@ export class RolesService {
       },
     });
     if (!role) {
-      throw new NotFoundException({ statusCode: 404, message: 'Role not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Role not found',
+        error: 'NOT_FOUND',
+      });
     }
     return role;
   }
@@ -46,7 +50,11 @@ export class RolesService {
 
     const existing = await this.prisma.role.findUnique({ where: { slug } });
     if (existing) {
-      throw new ConflictException({ statusCode: 409, message: 'Role with this name already exists', error: 'CONFLICT' });
+      throw new ConflictException({
+        statusCode: 409,
+        message: 'Role with this name already exists',
+        error: 'CONFLICT',
+      });
     }
 
     return this.prisma.role.create({
@@ -69,14 +77,19 @@ export class RolesService {
     const role = await this.prisma.role.findUnique({ where: { id } });
 
     if (!role) {
-      throw new NotFoundException({ statusCode: 404, message: 'Role not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Role not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     // System roles cannot be deleted — only their permissions can be modified
     if (role.isSystem) {
       throw new BadRequestException({
         statusCode: 400,
-        message: 'Cannot delete system roles. You can modify their permissions from the dashboard.',
+        message:
+          'Cannot delete system roles. You can modify their permissions from the dashboard.',
         error: 'SYSTEM_ROLE',
       });
     }
@@ -105,14 +118,22 @@ export class RolesService {
   async assignPermission(roleId: string, module: string, action: string) {
     const role = await this.prisma.role.findUnique({ where: { id: roleId } });
     if (!role) {
-      throw new NotFoundException({ statusCode: 404, message: 'Role not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Role not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     const permission = await this.prisma.permission.findUnique({
       where: { module_action: { module, action } },
     });
     if (!permission) {
-      throw new NotFoundException({ statusCode: 404, message: 'Permission not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Permission not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     // Check if already assigned
@@ -142,14 +163,22 @@ export class RolesService {
   async removePermission(roleId: string, module: string, action: string) {
     const role = await this.prisma.role.findUnique({ where: { id: roleId } });
     if (!role) {
-      throw new NotFoundException({ statusCode: 404, message: 'Role not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Role not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     const permission = await this.prisma.permission.findUnique({
       where: { module_action: { module, action } },
     });
     if (!permission) {
-      throw new NotFoundException({ statusCode: 404, message: 'Permission not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Permission not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     await this.prisma.rolePermission.deleteMany({
@@ -166,6 +195,8 @@ export class RolesService {
       where: { roleId },
       select: { userId: true },
     });
-    await Promise.all(userRoles.map((u) => this.authCache.invalidate(u.userId)));
+    await Promise.all(
+      userRoles.map((u) => this.authCache.invalidate(u.userId)),
+    );
   }
 }

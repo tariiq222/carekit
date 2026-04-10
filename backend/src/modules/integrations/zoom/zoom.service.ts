@@ -50,28 +50,32 @@ export class ZoomService {
 
     const token = await this.getAccessToken();
 
-    const response = await resilientFetch('https://api.zoom.us/v2/users/me/meetings', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        topic: topic ?? 'CareKit Video Consultation',
-        type: startTime ? 2 : 1, // 2 = scheduled, 1 = instant
-        start_time: startTime,
-        duration: duration ?? 30,
-        timezone: 'Asia/Riyadh',
-        settings: {
-          host_video: true,
-          participant_video: true,
-          join_before_host: false,
-          mute_upon_entry: true,
-          waiting_room: true,
-          auto_recording: 'none',
+    const response = await resilientFetch(
+      'https://api.zoom.us/v2/users/me/meetings',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-      }),
-    }, { circuit: 'zoom', timeoutMs: 10_000 });
+        body: JSON.stringify({
+          topic: topic ?? 'CareKit Video Consultation',
+          type: startTime ? 2 : 1, // 2 = scheduled, 1 = instant
+          start_time: startTime,
+          duration: duration ?? 30,
+          timezone: 'Asia/Riyadh',
+          settings: {
+            host_video: true,
+            participant_video: true,
+            join_before_host: false,
+            mute_upon_entry: true,
+            waiting_room: true,
+            auto_recording: 'none',
+          },
+        }),
+      },
+      { circuit: 'zoom', timeoutMs: 10_000 },
+    );
 
     if (!response.ok) {
       const error = await response.text();

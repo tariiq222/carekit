@@ -7,7 +7,9 @@ import { QueueFailureService } from '../../../src/common/queue/queue-failure.ser
 import type { Job } from 'bullmq';
 
 const mockMailerService = { sendMail: jest.fn().mockResolvedValue(undefined) };
-const mockQueueFailureService = { notifyAdminsOfFailure: jest.fn().mockResolvedValue(undefined) };
+const mockQueueFailureService = {
+  notifyAdminsOfFailure: jest.fn().mockResolvedValue(undefined),
+};
 const mockEmailTemplatesService = { renderTemplate: jest.fn() };
 const mockWhitelabelService = {
   get: jest.fn().mockResolvedValue({
@@ -101,7 +103,9 @@ describe('EmailProcessor', () => {
     });
 
     it('falls back to buildPlainText when DB template throws', async () => {
-      mockEmailTemplatesService.renderTemplate.mockRejectedValue(new Error('DB error'));
+      mockEmailTemplatesService.renderTemplate.mockRejectedValue(
+        new Error('DB error'),
+      );
 
       await processor.process(makeJob());
 

@@ -22,7 +22,8 @@ const GHOST_ID = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
 type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
 type Server = ReturnType<INestApplication['getHttpServer']>;
 
-const unauthed = (s: Server, m: Method, p: string) => request(s)[m](p).expect(401);
+const unauthed = (s: Server, m: Method, p: string) =>
+  request(s)[m](p).expect(401);
 const forbidden = (s: Server, m: Method, p: string, t: string) =>
   request(s)[m](p).set(getAuthHeaders(t)).expect(403);
 
@@ -81,7 +82,10 @@ describe('Chatbot Module (e2e)', () => {
         .send({ language: 'ar' })
         .expect(201);
       expectSuccessResponse(res.body as Record<string, unknown>);
-      const data = (res.body as Record<string, unknown>).data as Record<string, unknown>;
+      const data = (res.body as Record<string, unknown>).data as Record<
+        string,
+        unknown
+      >;
       expect(data).toHaveProperty('session');
       const session = data.session as Record<string, unknown>;
       expect(session).toHaveProperty('id');
@@ -127,7 +131,11 @@ describe('Chatbot Module (e2e)', () => {
 
     // Send message — OpenRouter may be unavailable in test env
     it('POST /sessions/:id/messages 401 — no token', () =>
-      unauthed(httpServer, 'post', `${CHATBOT_URL}/sessions/${GHOST_ID}/messages`));
+      unauthed(
+        httpServer,
+        'post',
+        `${CHATBOT_URL}/sessions/${GHOST_ID}/messages`,
+      ));
 
     it('POST /sessions/:id/messages 400 — missing content', async () => {
       await request(httpServer)
@@ -155,7 +163,11 @@ describe('Chatbot Module (e2e)', () => {
 
     // SSE stream — auth only (no permission check on sessions controller)
     it('POST /sessions/:id/messages/stream 401 — no token', () =>
-      unauthed(httpServer, 'post', `${CHATBOT_URL}/sessions/${GHOST_ID}/messages/stream`));
+      unauthed(
+        httpServer,
+        'post',
+        `${CHATBOT_URL}/sessions/${GHOST_ID}/messages/stream`,
+      ));
 
     it('POST /sessions/:id/end 401 — no token', () =>
       unauthed(httpServer, 'post', `${CHATBOT_URL}/sessions/${GHOST_ID}/end`));
@@ -177,15 +189,21 @@ describe('Chatbot Module (e2e)', () => {
     });
   });
 
-
   // ═══════════════════════════════════════════════════════════
   // Config & Analytics (ChatbotAdminController)
   // Requires chatbot:view or chatbot:edit — accountant has neither.
   // ═══════════════════════════════════════════════════════════
 
   describe('Config & Analytics (ChatbotAdminController)', () => {
-    it('GET /config 401 — no token', () => unauthed(httpServer, 'get', `${CHATBOT_URL}/config`));
-    it('GET /config 403 — accountant', () => forbidden(httpServer, 'get', `${CHATBOT_URL}/config`, accountantAuth.accessToken));
+    it('GET /config 401 — no token', () =>
+      unauthed(httpServer, 'get', `${CHATBOT_URL}/config`));
+    it('GET /config 403 — accountant', () =>
+      forbidden(
+        httpServer,
+        'get',
+        `${CHATBOT_URL}/config`,
+        accountantAuth.accessToken,
+      ));
 
     it('GET /config 200 — admin', async () => {
       const res = await request(httpServer)
@@ -195,11 +213,25 @@ describe('Chatbot Module (e2e)', () => {
       expectSuccessResponse(res.body as Record<string, unknown>);
     });
 
-    it('PUT /config 401 — no token', () => unauthed(httpServer, 'put', `${CHATBOT_URL}/config`));
-    it('PUT /config 403 — accountant', () => forbidden(httpServer, 'put', `${CHATBOT_URL}/config`, accountantAuth.accessToken));
+    it('PUT /config 401 — no token', () =>
+      unauthed(httpServer, 'put', `${CHATBOT_URL}/config`));
+    it('PUT /config 403 — accountant', () =>
+      forbidden(
+        httpServer,
+        'put',
+        `${CHATBOT_URL}/config`,
+        accountantAuth.accessToken,
+      ));
 
-    it('POST /config/seed 401 — no token', () => unauthed(httpServer, 'post', `${CHATBOT_URL}/config/seed`));
-    it('POST /config/seed 403 — accountant', () => forbidden(httpServer, 'post', `${CHATBOT_URL}/config/seed`, accountantAuth.accessToken));
+    it('POST /config/seed 401 — no token', () =>
+      unauthed(httpServer, 'post', `${CHATBOT_URL}/config/seed`));
+    it('POST /config/seed 403 — accountant', () =>
+      forbidden(
+        httpServer,
+        'post',
+        `${CHATBOT_URL}/config/seed`,
+        accountantAuth.accessToken,
+      ));
 
     it('POST /config/seed 200/201 — admin', async () => {
       const res = await request(httpServer)
@@ -208,8 +240,15 @@ describe('Chatbot Module (e2e)', () => {
       expect([200, 201]).toContain(res.status);
     });
 
-    it('GET /analytics 401 — no token', () => unauthed(httpServer, 'get', `${CHATBOT_URL}/analytics`));
-    it('GET /analytics 403 — accountant', () => forbidden(httpServer, 'get', `${CHATBOT_URL}/analytics`, accountantAuth.accessToken));
+    it('GET /analytics 401 — no token', () =>
+      unauthed(httpServer, 'get', `${CHATBOT_URL}/analytics`));
+    it('GET /analytics 403 — accountant', () =>
+      forbidden(
+        httpServer,
+        'get',
+        `${CHATBOT_URL}/analytics`,
+        accountantAuth.accessToken,
+      ));
 
     it('GET /analytics 200 — admin', async () => {
       const res = await request(httpServer)
@@ -219,8 +258,15 @@ describe('Chatbot Module (e2e)', () => {
       expectSuccessResponse(res.body as Record<string, unknown>);
     });
 
-    it('GET /analytics/questions 401 — no token', () => unauthed(httpServer, 'get', `${CHATBOT_URL}/analytics/questions`));
-    it('GET /analytics/questions 403 — accountant', () => forbidden(httpServer, 'get', `${CHATBOT_URL}/analytics/questions`, accountantAuth.accessToken));
+    it('GET /analytics/questions 401 — no token', () =>
+      unauthed(httpServer, 'get', `${CHATBOT_URL}/analytics/questions`));
+    it('GET /analytics/questions 403 — accountant', () =>
+      forbidden(
+        httpServer,
+        'get',
+        `${CHATBOT_URL}/analytics/questions`,
+        accountantAuth.accessToken,
+      ));
 
     it('GET /analytics/questions 200 — admin', async () => {
       const res = await request(httpServer)
@@ -231,10 +277,19 @@ describe('Chatbot Module (e2e)', () => {
     });
 
     it('POST /sessions/:id/staff-messages 401 — no token', () =>
-      unauthed(httpServer, 'post', `${CHATBOT_URL}/sessions/${GHOST_ID}/staff-messages`));
+      unauthed(
+        httpServer,
+        'post',
+        `${CHATBOT_URL}/sessions/${GHOST_ID}/staff-messages`,
+      ));
 
     it('POST /sessions/:id/staff-messages 403 — accountant', () =>
-      forbidden(httpServer, 'post', `${CHATBOT_URL}/sessions/${GHOST_ID}/staff-messages`, accountantAuth.accessToken));
+      forbidden(
+        httpServer,
+        'post',
+        `${CHATBOT_URL}/sessions/${GHOST_ID}/staff-messages`,
+        accountantAuth.accessToken,
+      ));
 
     it('POST /sessions/:id/staff-messages 400 — missing content', async () => {
       await request(httpServer)
@@ -244,7 +299,6 @@ describe('Chatbot Module (e2e)', () => {
         .expect(400);
     });
   });
-
 
   // ═══════════════════════════════════════════════════════════
   // Knowledge Base (ChatbotKbController)
@@ -259,7 +313,12 @@ describe('Chatbot Module (e2e)', () => {
       unauthed(httpServer, 'post', `${CHATBOT_URL}/knowledge-base`));
 
     it('POST /knowledge-base 403 — accountant', () =>
-      forbidden(httpServer, 'post', `${CHATBOT_URL}/knowledge-base`, accountantAuth.accessToken));
+      forbidden(
+        httpServer,
+        'post',
+        `${CHATBOT_URL}/knowledge-base`,
+        accountantAuth.accessToken,
+      ));
 
     it('POST /knowledge-base 400 — missing required fields', async () => {
       await request(httpServer)
@@ -281,18 +340,32 @@ describe('Chatbot Module (e2e)', () => {
       const res = await request(httpServer)
         .post(`${CHATBOT_URL}/knowledge-base`)
         .set(getAuthHeaders(adminAuth.accessToken))
-        .send({ title: 'Clinic Hours', content: 'Open 9am–5pm Sunday–Thursday', category: 'general' });
+        .send({
+          title: 'Clinic Hours',
+          content: 'Open 9am–5pm Sunday–Thursday',
+          category: 'general',
+        });
       expect([201, 500]).toContain(res.status);
       if (res.status === 201) {
         expectSuccessResponse(res.body as Record<string, unknown>);
-        const data = (res.body as Record<string, unknown>).data as Record<string, unknown>;
+        const data = (res.body as Record<string, unknown>).data as Record<
+          string,
+          unknown
+        >;
         expect(data).toHaveProperty('id');
         kbEntryId = data.id as string;
       }
     });
 
-    it('GET /knowledge-base 401 — no token', () => unauthed(httpServer, 'get', `${CHATBOT_URL}/knowledge-base`));
-    it('GET /knowledge-base 403 — accountant', () => forbidden(httpServer, 'get', `${CHATBOT_URL}/knowledge-base`, accountantAuth.accessToken));
+    it('GET /knowledge-base 401 — no token', () =>
+      unauthed(httpServer, 'get', `${CHATBOT_URL}/knowledge-base`));
+    it('GET /knowledge-base 403 — accountant', () =>
+      forbidden(
+        httpServer,
+        'get',
+        `${CHATBOT_URL}/knowledge-base`,
+        accountantAuth.accessToken,
+      ));
 
     it('GET /knowledge-base 200 — admin lists entries', async () => {
       const res = await request(httpServer)
@@ -302,8 +375,15 @@ describe('Chatbot Module (e2e)', () => {
       expectSuccessResponse(res.body as Record<string, unknown>);
     });
 
-    it('GET /knowledge-base/files 401 — no token', () => unauthed(httpServer, 'get', `${CHATBOT_URL}/knowledge-base/files`));
-    it('GET /knowledge-base/files 403 — accountant', () => forbidden(httpServer, 'get', `${CHATBOT_URL}/knowledge-base/files`, accountantAuth.accessToken));
+    it('GET /knowledge-base/files 401 — no token', () =>
+      unauthed(httpServer, 'get', `${CHATBOT_URL}/knowledge-base/files`));
+    it('GET /knowledge-base/files 403 — accountant', () =>
+      forbidden(
+        httpServer,
+        'get',
+        `${CHATBOT_URL}/knowledge-base/files`,
+        accountantAuth.accessToken,
+      ));
 
     it('GET /knowledge-base/files 200 — admin', async () => {
       const res = await request(httpServer)
@@ -314,10 +394,19 @@ describe('Chatbot Module (e2e)', () => {
     });
 
     it('PATCH /knowledge-base/:id 401 — no token', () =>
-      unauthed(httpServer, 'patch', `${CHATBOT_URL}/knowledge-base/${GHOST_ID}`));
+      unauthed(
+        httpServer,
+        'patch',
+        `${CHATBOT_URL}/knowledge-base/${GHOST_ID}`,
+      ));
 
     it('PATCH /knowledge-base/:id 403 — accountant', () =>
-      forbidden(httpServer, 'patch', `${CHATBOT_URL}/knowledge-base/${GHOST_ID}`, accountantAuth.accessToken));
+      forbidden(
+        httpServer,
+        'patch',
+        `${CHATBOT_URL}/knowledge-base/${GHOST_ID}`,
+        accountantAuth.accessToken,
+      ));
 
     it('PATCH /knowledge-base/:id 200 or skip — admin updates entry (skipped if KB create failed)', async () => {
       if (!kbEntryId) return; // KB entry not created (OpenRouter absent) — skip
@@ -333,7 +422,12 @@ describe('Chatbot Module (e2e)', () => {
       unauthed(httpServer, 'post', `${CHATBOT_URL}/knowledge-base/sync`));
 
     it('POST /knowledge-base/sync 403 — accountant', () =>
-      forbidden(httpServer, 'post', `${CHATBOT_URL}/knowledge-base/sync`, accountantAuth.accessToken));
+      forbidden(
+        httpServer,
+        'post',
+        `${CHATBOT_URL}/knowledge-base/sync`,
+        accountantAuth.accessToken,
+      ));
 
     it('POST /knowledge-base/sync — reaches service (embedding may be absent)', async () => {
       const res = await request(httpServer)
@@ -343,10 +437,19 @@ describe('Chatbot Module (e2e)', () => {
     });
 
     it('DELETE /knowledge-base/:id 401 — no token', () =>
-      unauthed(httpServer, 'delete', `${CHATBOT_URL}/knowledge-base/${GHOST_ID}`));
+      unauthed(
+        httpServer,
+        'delete',
+        `${CHATBOT_URL}/knowledge-base/${GHOST_ID}`,
+      ));
 
     it('DELETE /knowledge-base/:id 403 — accountant', () =>
-      forbidden(httpServer, 'delete', `${CHATBOT_URL}/knowledge-base/${GHOST_ID}`, accountantAuth.accessToken));
+      forbidden(
+        httpServer,
+        'delete',
+        `${CHATBOT_URL}/knowledge-base/${GHOST_ID}`,
+        accountantAuth.accessToken,
+      ));
 
     it('DELETE /knowledge-base/:id 200 or skip — admin deletes entry (skipped if KB create failed)', async () => {
       if (!kbEntryId) return; // KB entry not created (OpenRouter absent) — skip

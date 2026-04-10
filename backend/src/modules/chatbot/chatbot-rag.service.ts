@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 import { resilientFetch } from '../../common/helpers/resilient-fetch.helper.js';
 
 interface KbSearchResult {
@@ -30,18 +33,24 @@ export class ChatbotRagService {
    */
   async generateEmbedding(text: string): Promise<number[]> {
     const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
-    const model = this.config.get<string>('OPENROUTER_EMBEDDING_MODEL') ?? 'openai/text-embedding-3-small';
+    const model =
+      this.config.get<string>('OPENROUTER_EMBEDDING_MODEL') ??
+      'openai/text-embedding-3-small';
 
-    const response = await resilientFetch('https://openrouter.ai/api/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'carekit',
-        'X-Title': 'CareKit',
+    const response = await resilientFetch(
+      'https://openrouter.ai/api/v1/embeddings',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'carekit',
+          'X-Title': 'CareKit',
+        },
+        body: JSON.stringify({ model, input: text }),
       },
-      body: JSON.stringify({ model, input: text }),
-    }, { circuit: 'openrouter', timeoutMs: 15_000 });
+      { circuit: 'openrouter', timeoutMs: 15_000 },
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -58,7 +67,10 @@ export class ChatbotRagService {
   async searchSimilar(query: string, limit = 5): Promise<KbSearchResult[]> {
     const embedding = await this.generateEmbedding(query);
 
-    if (!Array.isArray(embedding) || !embedding.every(v => typeof v === 'number' && isFinite(v))) {
+    if (
+      !Array.isArray(embedding) ||
+      !embedding.every((v) => typeof v === 'number' && isFinite(v))
+    ) {
       this.logger.error('Invalid embedding received from API');
       return [];
     }
@@ -127,7 +139,8 @@ export class ChatbotRagService {
    */
   async syncFromDatabase(): Promise<number> {
     // 1. Collect all entries to sync
-    const entries: Array<{ title: string; content: string; category: string }> = [];
+    const entries: Array<{ title: string; content: string; category: string }> =
+      [];
 
     const services = await this.prisma.service.findMany({
       where: { isActive: true, deletedAt: null },
@@ -144,7 +157,9 @@ export class ChatbotRagService {
           `Duration: ${svc.duration} minutes`,
           svc.descriptionEn ? `Description: ${svc.descriptionEn}` : '',
           svc.descriptionAr ? `الوصف: ${svc.descriptionAr}` : '',
-        ].filter(Boolean).join('\n'),
+        ]
+          .filter(Boolean)
+          .join('\n'),
         category: 'services',
       });
     }
@@ -157,7 +172,10 @@ export class ChatbotRagService {
           where: { isActive: true },
           include: {
             service: { select: { nameEn: true, nameAr: true } },
-            serviceTypes: { where: { isActive: true }, select: { bookingType: true, price: true, isActive: true } },
+            serviceTypes: {
+              where: { isActive: true },
+              select: { bookingType: true, price: true, isActive: true },
+            },
           },
         },
       },
@@ -177,12 +195,16 @@ export class ChatbotRagService {
         content: [
           `Practitioner: ${name}`,
           `Specialty: ${doc.specialty} / ${doc.specialtyAr}`,
-          serviceLines.length > 0 ? `Services:\n${serviceLines.join('\n')}` : '',
+          serviceLines.length > 0
+            ? `Services:\n${serviceLines.join('\n')}`
+            : '',
           `Experience: ${doc.experience} years`,
           `Rating: ${doc.rating}/5 (${doc.reviewCount} reviews)`,
           doc.bio ? `Bio: ${doc.bio}` : '',
           doc.bioAr ? `السيرة: ${doc.bioAr}` : '',
-        ].filter(Boolean).join('\n'),
+        ]
+          .filter(Boolean)
+          .join('\n'),
         category: 'practitioners',
       });
     }
@@ -225,8 +247,16 @@ export class ChatbotRagService {
 
   // ── KB CRUD ──
 
-  async findAll(params?: { source?: string; category?: string; page?: number; perPage?: number }) {
-    const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage);
+  async findAll(params?: {
+    source?: string;
+    category?: string;
+    page?: number;
+    perPage?: number;
+  }) {
+    const { page, perPage, skip } = parsePaginationParams(
+      params?.page,
+      params?.perPage,
+    );
     const where: Record<string, unknown> = {};
 
     if (params?.source) where.source = params.source;
@@ -252,7 +282,15 @@ export class ChatbotRagService {
     return this.prisma.knowledgeBase.findUnique({ where: { id } });
   }
 
-  async update(id: string, data: { title?: string; content?: string; category?: string; isActive?: boolean }) {
+  async update(
+    id: string,
+    data: {
+      title?: string;
+      content?: string;
+      category?: string;
+      isActive?: boolean;
+    },
+  ) {
     const entry = await this.prisma.knowledgeBase.update({
       where: { id },
       data,
@@ -260,7 +298,9 @@ export class ChatbotRagService {
 
     // Re-generate embedding if content changed — use the already-returned entry
     if (data.title || data.content) {
-      const embedding = await this.generateEmbedding(`${entry.title}\n${entry.content}`);
+      const embedding = await this.generateEmbedding(
+        `${entry.title}\n${entry.content}`,
+      );
       const vectorStr = `[${embedding.join(',')}]`;
       await this.prisma.$executeRawUnsafe(
         `UPDATE knowledge_base SET embedding = $1::vector WHERE id = $2`,

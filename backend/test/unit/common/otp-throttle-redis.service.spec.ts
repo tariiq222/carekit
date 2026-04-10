@@ -5,7 +5,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OtpThrottleRedisService } from '../../../src/common/services/otp-throttle-redis.service.js';
 import { REDIS_CLIENT } from '../../../src/common/redis/redis.constants.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockRedis: any = {
   pttl: jest.fn(),
   call: jest.fn(),

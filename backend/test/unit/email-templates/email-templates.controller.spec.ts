@@ -63,7 +63,11 @@ describe('EmailTemplatesController', () => {
       const html = '<p>مرحبا Ahmed</p>';
       mockService.preview.mockResolvedValue(html);
       expect(await controller.preview('welcome', dto)).toEqual(html);
-      expect(mockService.preview).toHaveBeenCalledWith('welcome', { name: 'Ahmed' }, 'ar');
+      expect(mockService.preview).toHaveBeenCalledWith(
+        'welcome',
+        { name: 'Ahmed' },
+        'ar',
+      );
     });
   });
 });

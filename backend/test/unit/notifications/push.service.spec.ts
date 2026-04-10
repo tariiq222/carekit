@@ -38,7 +38,6 @@ jest.mock('firebase-admin', () => ({
 // Mock factories
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrismaService: any = {
   fcmToken: {
     findMany: jest.fn(),

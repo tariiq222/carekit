@@ -37,7 +37,10 @@ export class CouponsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: CouponFilterDto) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      query.page,
+      query.perPage,
+    );
     const now = new Date();
     const where = this.buildWhereClause(query, now);
 
@@ -64,7 +67,11 @@ export class CouponsService {
       include: COUPON_INCLUDE,
     });
     if (!coupon) {
-      throw new NotFoundException({ statusCode: 404, message: 'Coupon not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Coupon not found',
+        error: 'NOT_FOUND',
+      });
     }
     return this.toResponseShape(coupon);
   }
@@ -107,25 +114,31 @@ export class CouponsService {
     await this.findById(id);
 
     const data: Record<string, unknown> = {};
-    if (dto.code !== undefined)           data.code = dto.code.toUpperCase();
-    if (dto.descriptionAr !== undefined)  data.descriptionAr = dto.descriptionAr;
-    if (dto.descriptionEn !== undefined)  data.descriptionEn = dto.descriptionEn;
-    if (dto.discountType !== undefined)   data.discountType = dto.discountType;
-    if (dto.discountValue !== undefined)  data.discountValue = dto.discountValue;
-    if (dto.minAmount !== undefined)      data.minAmount = dto.minAmount;
-    if (dto.maxUses !== undefined)        data.maxUses = dto.maxUses;
-    if (dto.maxUsesPerUser !== undefined) data.maxUsesPerUser = dto.maxUsesPerUser;
-    if (dto.expiresAt !== undefined)      data.expiresAt = new Date(dto.expiresAt);
-    if (dto.isActive !== undefined)       data.isActive = dto.isActive;
+    if (dto.code !== undefined) data.code = dto.code.toUpperCase();
+    if (dto.descriptionAr !== undefined) data.descriptionAr = dto.descriptionAr;
+    if (dto.descriptionEn !== undefined) data.descriptionEn = dto.descriptionEn;
+    if (dto.discountType !== undefined) data.discountType = dto.discountType;
+    if (dto.discountValue !== undefined) data.discountValue = dto.discountValue;
+    if (dto.minAmount !== undefined) data.minAmount = dto.minAmount;
+    if (dto.maxUses !== undefined) data.maxUses = dto.maxUses;
+    if (dto.maxUsesPerUser !== undefined)
+      data.maxUsesPerUser = dto.maxUsesPerUser;
+    if (dto.expiresAt !== undefined) data.expiresAt = new Date(dto.expiresAt);
+    if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
     // Atomically replace service restrictions when provided
     if (dto.serviceIds !== undefined) {
       await this.prisma.$transaction([
         this.prisma.couponService.deleteMany({ where: { couponId: id } }),
         ...(dto.serviceIds.length
-          ? [this.prisma.couponService.createMany({
-              data: dto.serviceIds.map((serviceId) => ({ couponId: id, serviceId })),
-            })]
+          ? [
+              this.prisma.couponService.createMany({
+                data: dto.serviceIds.map((serviceId) => ({
+                  couponId: id,
+                  serviceId,
+                })),
+              }),
+            ]
           : []),
       ]);
     }
@@ -168,7 +181,11 @@ export class CouponsService {
     this.validateServiceRestriction(coupon, dto.serviceId);
     this.validateMinAmount(coupon, dto.amount);
 
-    const discountAmount = this.calculateDiscount(coupon.discountType, coupon.discountValue, dto.amount);
+    const discountAmount = this.calculateDiscount(
+      coupon.discountType,
+      coupon.discountValue,
+      dto.amount,
+    );
     return { discountAmount, couponId: coupon.id };
   }
 
@@ -205,7 +222,12 @@ export class CouponsService {
         coupon.discountValue,
         dto.amount,
       );
-      return { valid: true, discountAmount, type: 'coupon', couponId: coupon.id };
+      return {
+        valid: true,
+        discountAmount,
+        type: 'coupon',
+        couponId: coupon.id,
+      };
     }
 
     // Try gift card
@@ -232,10 +254,20 @@ export class CouponsService {
     };
   }
 
-  async redeemCoupon(couponId: string, userId: string, bookingId: string, amount: number) {
+  async redeemCoupon(
+    couponId: string,
+    userId: string,
+    bookingId: string,
+    amount: number,
+  ) {
     await this.prisma.$transaction([
-      this.prisma.couponRedemption.create({ data: { couponId, userId, bookingId, amount } }),
-      this.prisma.coupon.update({ where: { id: couponId }, data: { usedCount: { increment: 1 } } }),
+      this.prisma.couponRedemption.create({
+        data: { couponId, userId, bookingId, amount },
+      }),
+      this.prisma.coupon.update({
+        where: { id: couponId },
+        data: { usedCount: { increment: 1 } },
+      }),
     ]);
   }
 
@@ -243,7 +275,12 @@ export class CouponsService {
   //  PRIVATE HELPERS
   // ═══════════════════════════════════════════════════════════════
 
-  private toResponseShape(coupon: { couponServices: Array<{ serviceId: string }> } & Record<string, unknown>) {
+  private toResponseShape(
+    coupon: { couponServices: Array<{ serviceId: string }> } & Record<
+      string,
+      unknown
+    >,
+  ) {
     const { couponServices, ...rest } = coupon;
     return {
       ...rest,
@@ -252,9 +289,13 @@ export class CouponsService {
     };
   }
 
-  private buildWhereClause(query: CouponFilterDto, now: Date): Record<string, unknown> {
+  private buildWhereClause(
+    query: CouponFilterDto,
+    now: Date,
+  ): Record<string, unknown> {
     const where: Record<string, unknown> = {};
-    if (query.search) where.code = { contains: query.search, mode: 'insensitive' };
+    if (query.search)
+      where.code = { contains: query.search, mode: 'insensitive' };
     if (query.status === 'active') {
       where.isActive = true;
       where.OR = [{ expiresAt: null }, { expiresAt: { gt: now } }];
@@ -266,42 +307,82 @@ export class CouponsService {
     return where;
   }
 
-  private validateCouponExpiry(coupon: Pick<CouponForValidation, 'expiresAt'>): void {
+  private validateCouponExpiry(
+    coupon: Pick<CouponForValidation, 'expiresAt'>,
+  ): void {
     if (coupon.expiresAt && coupon.expiresAt < new Date()) {
-      throw new BadRequestException({ statusCode: 400, message: 'Coupon has expired', error: 'COUPON_EXPIRED' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Coupon has expired',
+        error: 'COUPON_EXPIRED',
+      });
     }
   }
 
-  private validateCouponUsageLimit(coupon: Pick<CouponForValidation, 'maxUses' | 'usedCount'>): void {
+  private validateCouponUsageLimit(
+    coupon: Pick<CouponForValidation, 'maxUses' | 'usedCount'>,
+  ): void {
     if (coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
-      throw new BadRequestException({ statusCode: 400, message: 'Coupon usage limit reached', error: 'COUPON_LIMIT_REACHED' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Coupon usage limit reached',
+        error: 'COUPON_LIMIT_REACHED',
+      });
     }
   }
 
-  private async validatePerUserLimit(coupon: Pick<CouponForValidation, 'id' | 'maxUsesPerUser'>, userId: string): Promise<void> {
+  private async validatePerUserLimit(
+    coupon: Pick<CouponForValidation, 'id' | 'maxUsesPerUser'>,
+    userId: string,
+  ): Promise<void> {
     if (coupon.maxUsesPerUser === null) return;
-    const userRedemptions = await this.prisma.couponRedemption.count({ where: { couponId: coupon.id, userId } });
+    const userRedemptions = await this.prisma.couponRedemption.count({
+      where: { couponId: coupon.id, userId },
+    });
     if (userRedemptions >= coupon.maxUsesPerUser) {
-      throw new BadRequestException({ statusCode: 400, message: 'You have reached the maximum uses for this coupon', error: 'COUPON_USER_LIMIT_REACHED' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'You have reached the maximum uses for this coupon',
+        error: 'COUPON_USER_LIMIT_REACHED',
+      });
     }
   }
 
-  private validateServiceRestriction(coupon: Pick<CouponForValidation, 'couponServices'>, serviceId?: string): void {
+  private validateServiceRestriction(
+    coupon: Pick<CouponForValidation, 'couponServices'>,
+    serviceId?: string,
+  ): void {
     if (coupon.couponServices.length > 0 && serviceId) {
       if (!coupon.couponServices.some((cs) => cs.serviceId === serviceId)) {
-        throw new BadRequestException({ statusCode: 400, message: 'Coupon is not valid for this service', error: 'COUPON_SERVICE_MISMATCH' });
+        throw new BadRequestException({
+          statusCode: 400,
+          message: 'Coupon is not valid for this service',
+          error: 'COUPON_SERVICE_MISMATCH',
+        });
       }
     }
   }
 
-  private validateMinAmount(coupon: Pick<CouponForValidation, 'minAmount'>, amount: number): void {
+  private validateMinAmount(
+    coupon: Pick<CouponForValidation, 'minAmount'>,
+    amount: number,
+  ): void {
     if (amount < coupon.minAmount) {
-      throw new BadRequestException({ statusCode: 400, message: `Minimum amount required: ${coupon.minAmount}`, error: 'COUPON_MIN_AMOUNT' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: `Minimum amount required: ${coupon.minAmount}`,
+        error: 'COUPON_MIN_AMOUNT',
+      });
     }
   }
 
-  private calculateDiscount(discountType: string, discountValue: number, amount: number): number {
-    if (discountType === 'percentage') return Math.round((amount * discountValue) / 100);
+  private calculateDiscount(
+    discountType: string,
+    discountValue: number,
+    amount: number,
+  ): number {
+    if (discountType === 'percentage')
+      return Math.round((amount * discountValue) / 100);
     return Math.min(discountValue, amount);
   }
 }

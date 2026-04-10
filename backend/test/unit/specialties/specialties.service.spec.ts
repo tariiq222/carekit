@@ -406,7 +406,9 @@ describe('SpecialtiesService', () => {
         isActive: false,
       });
 
-      const result = await service.update(mockSpecialty.id, { isActive: false });
+      const result = await service.update(mockSpecialty.id, {
+        isActive: false,
+      });
 
       expect(result.isActive).toBe(false);
     });

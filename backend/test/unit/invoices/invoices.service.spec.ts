@@ -15,7 +15,6 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 // Mock factories
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrismaService: any = {
   invoice: {
     create: jest.fn(),
@@ -113,7 +112,12 @@ describe('InvoicesService', () => {
 
       expect(result).toHaveProperty('items');
       expect(result).toHaveProperty('meta');
-      expect(result.meta).toMatchObject({ page: 1, perPage: 20, total: 1, totalPages: 1 });
+      expect(result.meta).toMatchObject({
+        page: 1,
+        perPage: 20,
+        total: 1,
+        totalPages: 1,
+      });
       expect(result.items).toHaveLength(1);
       expect(result.items[0].id).toBe(mockInvoiceId);
     });
@@ -141,7 +145,10 @@ describe('InvoicesService', () => {
       expect(mockPrismaService.invoice.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            createdAt: expect.objectContaining({ gte: expect.any(Date), lte: expect.any(Date) }),
+            createdAt: expect.objectContaining({
+              gte: expect.any(Date),
+              lte: expect.any(Date),
+            }),
           }),
         }),
       );
@@ -173,7 +180,9 @@ describe('InvoicesService', () => {
     it('should throw NotFoundException for non-existent id', async () => {
       mockPrismaService.invoice.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -190,9 +199,9 @@ describe('InvoicesService', () => {
     it('should throw NotFoundException if no invoice exists for payment', async () => {
       mockPrismaService.invoice.findUnique.mockResolvedValue(null);
 
-      await expect(service.findByPayment('no-invoice-payment-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.findByPayment('no-invoice-payment-id'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -216,7 +225,9 @@ describe('InvoicesService', () => {
     it('should throw NotFoundException if invoice does not exist', async () => {
       mockPrismaService.invoice.findUnique.mockResolvedValue(null);
 
-      await expect(service.markAsSent('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.markAsSent('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

@@ -9,7 +9,10 @@ import {
 export class PractitionerRatingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getRatings(practitionerId: string, params?: { page?: number; perPage?: number }) {
+  async getRatings(
+    practitionerId: string,
+    params?: { page?: number; perPage?: number },
+  ) {
     const practitioner = await this.prisma.practitioner.findUnique({
       where: { id: practitionerId },
     });
@@ -21,7 +24,11 @@ export class PractitionerRatingsService {
       });
     }
 
-    const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage, 100);
+    const { page, perPage, skip } = parsePaginationParams(
+      params?.page,
+      params?.perPage,
+      100,
+    );
 
     const [rawRatings, total] = await Promise.all([
       this.prisma.rating.findMany({
@@ -40,7 +47,10 @@ export class PractitionerRatingsService {
     const ratings = rawRatings.map(({ patient, ...rating }) => ({
       ...rating,
       patient: patient
-        ? { firstName: patient.firstName, lastName: patient.lastName.charAt(0) + '.' }
+        ? {
+            firstName: patient.firstName,
+            lastName: patient.lastName.charAt(0) + '.',
+          }
         : null,
     }));
 

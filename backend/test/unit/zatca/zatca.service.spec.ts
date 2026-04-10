@@ -76,7 +76,10 @@ describe('ZatcaService', () => {
       providers: [
         ZatcaService,
         { provide: ClinicSettingsService, useValue: mockClinicSettingsService },
-        { provide: ClinicIntegrationsService, useValue: mockClinicIntegrationsService },
+        {
+          provide: ClinicIntegrationsService,
+          useValue: mockClinicIntegrationsService,
+        },
         { provide: InvoiceHashService, useValue: mockHashService },
         { provide: QrGeneratorService, useValue: mockQrService },
         { provide: XmlBuilderService, useValue: mockXmlBuilder },

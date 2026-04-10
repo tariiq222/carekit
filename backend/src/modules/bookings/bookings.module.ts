@@ -25,8 +25,20 @@ import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
 
 @Module({
-  imports: [NotificationsModule, ZoomModule, ClinicModule, ActivityLogModule, ClinicSettingsModule],
-  controllers: [WaitlistController, BookingsController, BookingActionsController, BookingSettingsController, BookingStatusLogController],
+  imports: [
+    NotificationsModule,
+    ZoomModule,
+    ClinicModule,
+    ActivityLogModule,
+    ClinicSettingsModule,
+  ],
+  controllers: [
+    WaitlistController,
+    BookingsController,
+    BookingActionsController,
+    BookingSettingsController,
+    BookingStatusLogController,
+  ],
   providers: [
     BookingsService,
     BookingCreationService,
@@ -43,6 +55,13 @@ import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.
     BookingRescheduleService,
     WaitlistService,
   ],
-  exports: [BookingsService, BookingSettingsService, BookingStatusService, BookingStatusLogService, PriceResolverService, WaitlistService],
+  exports: [
+    BookingsService,
+    BookingSettingsService,
+    BookingStatusService,
+    BookingStatusLogService,
+    PriceResolverService,
+    WaitlistService,
+  ],
 })
 export class BookingsModule {}

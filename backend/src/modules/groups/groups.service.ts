@@ -20,15 +20,21 @@ export class GroupsService {
 
   async create(dto: CreateGroupDto) {
     if (dto.minParticipants > dto.maxParticipants) {
-      throw new BadRequestException('minParticipants cannot exceed maxParticipants');
+      throw new BadRequestException(
+        'minParticipants cannot exceed maxParticipants',
+      );
     }
 
     if (dto.schedulingMode === 'fixed_date' && !dto.startTime) {
-      throw new BadRequestException('startTime is required for fixed_date scheduling');
+      throw new BadRequestException(
+        'startTime is required for fixed_date scheduling',
+      );
     }
 
     if (dto.paymentType === 'DEPOSIT' && dto.depositAmount === undefined) {
-      throw new BadRequestException('depositAmount is required when paymentType is DEPOSIT');
+      throw new BadRequestException(
+        'depositAmount is required when paymentType is DEPOSIT',
+      );
     }
 
     let startTime: Date | undefined;
@@ -111,7 +117,14 @@ export class GroupsService {
 
     return {
       items,
-      meta: { total, page, perPage, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
+      meta: {
+        total,
+        page,
+        perPage,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
     };
   }
 
@@ -122,7 +135,14 @@ export class GroupsService {
         practitioner: { select: { id: true, nameAr: true } },
         enrollments: {
           include: {
-            patient: { select: { id: true, firstName: true, lastName: true, phone: true } },
+            patient: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+              },
+            },
             payment: { select: { id: true, status: true } },
           },
           orderBy: { createdAt: 'asc' },
@@ -131,7 +151,11 @@ export class GroupsService {
     });
 
     if (!group) {
-      throw new NotFoundException({ statusCode: 404, message: 'Group not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Group not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     return group;
@@ -150,14 +174,25 @@ export class GroupsService {
   async update(id: string, dto: UpdateGroupDto) {
     const group = await this.findOne(id);
 
-    if (dto.minParticipants !== undefined && dto.maxParticipants !== undefined) {
+    if (
+      dto.minParticipants !== undefined &&
+      dto.maxParticipants !== undefined
+    ) {
       if (dto.minParticipants > dto.maxParticipants) {
-        throw new BadRequestException('minParticipants cannot exceed maxParticipants');
+        throw new BadRequestException(
+          'minParticipants cannot exceed maxParticipants',
+        );
       }
     }
 
-    if (dto.paymentType === 'DEPOSIT' && dto.depositAmount === undefined && !group.depositAmount) {
-      throw new BadRequestException('depositAmount is required when paymentType is DEPOSIT');
+    if (
+      dto.paymentType === 'DEPOSIT' &&
+      dto.depositAmount === undefined &&
+      !group.depositAmount
+    ) {
+      throw new BadRequestException(
+        'depositAmount is required when paymentType is DEPOSIT',
+      );
     }
 
     const isSettingDate = !!dto.startTime && !group.startTime;
@@ -203,8 +238,16 @@ export class GroupsService {
       include: { practitioner: { select: { id: true, nameAr: true } } },
     });
 
-    if (isSettingDate && group.schedulingMode === 'on_capacity' && group.currentEnrollment >= group.minParticipants) {
-      await this.lifecycleService.confirmGroupAfterDateSet(id, group.paymentDeadlineHours, group.paymentType);
+    if (
+      isSettingDate &&
+      group.schedulingMode === 'on_capacity' &&
+      group.currentEnrollment >= group.minParticipants
+    ) {
+      await this.lifecycleService.confirmGroupAfterDateSet(
+        id,
+        group.paymentDeadlineHours,
+        group.paymentType,
+      );
       const refetched = await this.findOne(id);
       return refetched;
     }
@@ -214,7 +257,10 @@ export class GroupsService {
 
   async remove(id: string) {
     await this.findOne(id);
-    await this.prisma.group.update({ where: { id }, data: { deletedAt: new Date() } });
+    await this.prisma.group.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
     return { deleted: true };
   }
 
@@ -234,7 +280,10 @@ export class GroupsService {
     return this.paymentService.resendPaymentRequest(groupId, enrollmentId);
   }
 
-  async confirmSchedule(groupId: string, dto: import('./dto/confirm-schedule.dto.js').ConfirmScheduleDto) {
+  async confirmSchedule(
+    groupId: string,
+    dto: import('./dto/confirm-schedule.dto.js').ConfirmScheduleDto,
+  ) {
     return this.lifecycleService.confirmSchedule(groupId, dto);
   }
 }

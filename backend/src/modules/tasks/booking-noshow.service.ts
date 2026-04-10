@@ -34,8 +34,12 @@ export class BookingNoShowService {
       timeZone: clinicTz,
     }).format(now);
     const tzOffsetMs = this.getTimezoneOffsetMs(clinicTz, now);
-    const todayStart = new Date(new Date(`${riyadhTodayStr}T00:00:00Z`).getTime() - tzOffsetMs);
-    const todayEnd = new Date(new Date(`${riyadhTodayStr}T23:59:59Z`).getTime() - tzOffsetMs);
+    const todayStart = new Date(
+      new Date(`${riyadhTodayStr}T00:00:00Z`).getTime() - tzOffsetMs,
+    );
+    const todayEnd = new Date(
+      new Date(`${riyadhTodayStr}T23:59:59Z`).getTime() - tzOffsetMs,
+    );
 
     // Guard: only 'confirmed' — checked_in, in_progress, and pending_cancellation are explicitly excluded
     const bookings = await this.prisma.booking.findMany({
@@ -58,7 +62,9 @@ export class BookingNoShowService {
       const dateStr = new Intl.DateTimeFormat('en-CA', {
         timeZone: clinicTz,
       }).format(b.date);
-      const bookingStart = new Date(new Date(`${dateStr}T${b.startTime}:00Z`).getTime() - tzOffsetMs);
+      const bookingStart = new Date(
+        new Date(`${dateStr}T${b.startTime}:00Z`).getTime() - tzOffsetMs,
+      );
       const noShowDeadline = new Date(
         bookingStart.getTime() + settings.autoNoShowAfterMinutes * 60 * 1000,
       );
@@ -68,36 +74,47 @@ export class BookingNoShowService {
     for (const booking of noShowBookings) {
       try {
         // Atomic: re-check status inside transaction to prevent race with check-in
-        const transitioned = await this.prisma.$transaction(async (tx) => {
-          const current = await tx.booking.findFirst({
-            where: { id: booking.id, status: 'confirmed', deletedAt: null },
-            select: { id: true },
-          });
-          if (!current) return false; // Already transitioned (checked-in or cancelled)
+        const transitioned = await this.prisma.$transaction(
+          async (tx) => {
+            const current = await tx.booking.findFirst({
+              where: { id: booking.id, status: 'confirmed', deletedAt: null },
+              select: { id: true },
+            });
+            if (!current) return false; // Already transitioned (checked-in or cancelled)
 
-          await tx.booking.update({
-            where: { id: booking.id },
-            data: { status: 'no_show', noShowAt: new Date() },
-          });
+            await tx.booking.update({
+              where: { id: booking.id },
+              data: { status: 'no_show', noShowAt: new Date() },
+            });
 
-          // Financial processing inside transaction for atomicity (non-Moyasar only)
-          await this.processNoShowFinancialsInTx(
-            tx,
-            booking.id,
-            settings.noShowPolicy,
-            settings.noShowRefundPercent,
-          );
+            // Financial processing inside transaction for atomicity (non-Moyasar only)
+            await this.processNoShowFinancialsInTx(
+              tx,
+              booking.id,
+              settings.noShowPolicy,
+              settings.noShowRefundPercent,
+            );
 
-          return true;
-        }, { isolationLevel: 'Serializable', timeout: 10000 });
+            return true;
+          },
+          { isolationLevel: 'Serializable', timeout: 10000 },
+        );
 
         if (!transitioned) continue;
 
         // Moyasar partial_refund: must be called outside the transaction (requires external API)
         if (settings.noShowPolicy === NoShowPolicy.partial_refund) {
-          const payment = await this.prisma.payment.findUnique({ where: { bookingId: booking.id } });
-          if (payment && payment.status === 'paid' && payment.method === 'moyasar') {
-            const refundAmount = Math.round((payment.totalAmount * settings.noShowRefundPercent) / 100);
+          const payment = await this.prisma.payment.findUnique({
+            where: { bookingId: booking.id },
+          });
+          if (
+            payment &&
+            payment.status === 'paid' &&
+            payment.method === 'moyasar'
+          ) {
+            const refundAmount = Math.round(
+              (payment.totalAmount * settings.noShowRefundPercent) / 100,
+            );
             try {
               await this.moyasarRefundService.refund(payment.id, refundAmount);
             } catch (err) {
@@ -107,40 +124,59 @@ export class BookingNoShowService {
               );
               // Record the failure on the payment so admins can see it requires manual action.
               // Payment status intentionally stays 'paid' — money was not refunded.
-              await this.prisma.payment.update({
-                where: { id: payment.id },
-                data: { refundReason: `partial_refund_failed: ${msg}` },
-              }).catch((err) => this.logger.warn('Payment update failed', { error: err?.message }));
+              await this.prisma.payment
+                .update({
+                  where: { id: payment.id },
+                  data: { refundReason: `partial_refund_failed: ${msg}` },
+                })
+                .catch((err) =>
+                  this.logger.warn('Payment update failed', {
+                    error: err?.message,
+                  }),
+                );
               // Notify admins for manual resolution
-              this.prisma.userRole.findMany({
-                where: { role: { slug: { in: ['super_admin', 'receptionist'] } } },
-                select: { userId: true },
-              }).then((adminRoles) =>
-                Promise.all(
-                  adminRoles.map(({ userId }) =>
-                    this.notificationsService.createNotification({
-                      userId,
-                      titleAr: 'فشل الاسترداد التلقائي — مراجعة يدوية مطلوبة',
-                      titleEn: 'Auto-Refund Failed — Manual Review Required',
-                      bodyAr: `فشل استرداد جزء من مبلغ حجز رقم ${booking.id}. يرجى المراجعة اليدوية.`,
-                      bodyEn: `Partial refund for no-show booking ${booking.id} failed. Manual action required.`,
-                      type: 'system_alert',
-                      data: { bookingId: booking.id, paymentId: payment.id },
-                    }),
+              this.prisma.userRole
+                .findMany({
+                  where: {
+                    role: { slug: { in: ['super_admin', 'receptionist'] } },
+                  },
+                  select: { userId: true },
+                })
+                .then((adminRoles) =>
+                  Promise.all(
+                    adminRoles.map(({ userId }) =>
+                      this.notificationsService.createNotification({
+                        userId,
+                        titleAr: 'فشل الاسترداد التلقائي — مراجعة يدوية مطلوبة',
+                        titleEn: 'Auto-Refund Failed — Manual Review Required',
+                        bodyAr: `فشل استرداد جزء من مبلغ حجز رقم ${booking.id}. يرجى المراجعة اليدوية.`,
+                        bodyEn: `Partial refund for no-show booking ${booking.id} failed. Manual action required.`,
+                        type: 'system_alert',
+                        data: { bookingId: booking.id, paymentId: payment.id },
+                      }),
+                    ),
                   ),
-                ),
-              ).catch((err) => this.logger.warn('Admin notification failed', { error: err?.message }));
+                )
+                .catch((err) =>
+                  this.logger.warn('Admin notification failed', {
+                    error: err?.message,
+                  }),
+                );
             }
           }
         }
 
-        this.statusLogService.log({
-          bookingId: booking.id,
-          fromStatus: 'confirmed',
-          toStatus: 'no_show',
-          changedBy: 'system',
-          reason: `Auto no-show after ${settings.autoNoShowAfterMinutes} minutes`,
-        }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
+        this.statusLogService
+          .log({
+            bookingId: booking.id,
+            fromStatus: 'confirmed',
+            toStatus: 'no_show',
+            changedBy: 'system',
+            reason: `Auto no-show after ${settings.autoNoShowAfterMinutes} minutes`,
+          })
+          .catch((err) =>
+            this.logger.warn('Status log failed', { error: err?.message }),
+          );
 
         if (booking.practitioner?.userId) {
           await this.notificationsService.createNotification({
@@ -168,9 +204,13 @@ export class BookingNoShowService {
 
         await this.waitlistService
           .checkAndNotify(booking.practitionerId, booking.date)
-          .catch((err) => this.logger.warn('Waitlist notify failed', { error: err?.message }));
+          .catch((err) =>
+            this.logger.warn('Waitlist notify failed', { error: err?.message }),
+          );
       } catch (err) {
-        this.logger.warn(`Failed to mark booking ${booking.id} as no-show: ${(err as Error).message}`);
+        this.logger.warn(
+          `Failed to mark booking ${booking.id} as no-show: ${(err as Error).message}`,
+        );
       }
     }
 
@@ -182,7 +222,9 @@ export class BookingNoShowService {
           module: 'bookings',
           description: `Auto-marked ${noShowBookings.length} bookings as no-show`,
         })
-        .catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
+        .catch((err) =>
+          this.logger.warn('Activity log failed', { error: err?.message }),
+        );
     }
   }
 
@@ -214,7 +256,9 @@ export class BookingNoShowService {
       // Moyasar refunds require an API call — skip here, handled via MoyasarRefundService post-tx
       if (payment.method === 'moyasar') return;
 
-      const refundAmount = Math.round((payment.totalAmount * refundPercent) / 100);
+      const refundAmount = Math.round(
+        (payment.totalAmount * refundPercent) / 100,
+      );
       await tx.payment.update({
         where: { id: payment.id },
         data: {
@@ -229,23 +273,28 @@ export class BookingNoShowService {
     }
 
     // admin_decides — notify admins for manual review (outside tx, non-critical)
-    this.prisma.userRole.findMany({
-      where: { role: { slug: { in: ['super_admin', 'receptionist'] } } },
-      select: { userId: true },
-    }).then((adminRoles) =>
-      Promise.all(
-        adminRoles.map(({ userId }) =>
-          this.notificationsService.createNotification({
-            userId,
-            titleAr: 'مراجعة مالية — عدم حضور',
-            titleEn: 'No-Show Financial Review',
-            bodyAr: 'مريض لم يحضر لموعده. يرجى تحديد سياسة الاسترجاع',
-            bodyEn: 'A patient no-showed. Please decide on the refund policy',
-            type: 'no_show_review',
-            data: { bookingId },
-          }),
+    this.prisma.userRole
+      .findMany({
+        where: { role: { slug: { in: ['super_admin', 'receptionist'] } } },
+        select: { userId: true },
+      })
+      .then((adminRoles) =>
+        Promise.all(
+          adminRoles.map(({ userId }) =>
+            this.notificationsService.createNotification({
+              userId,
+              titleAr: 'مراجعة مالية — عدم حضور',
+              titleEn: 'No-Show Financial Review',
+              bodyAr: 'مريض لم يحضر لموعده. يرجى تحديد سياسة الاسترجاع',
+              bodyEn: 'A patient no-showed. Please decide on the refund policy',
+              type: 'no_show_review',
+              data: { bookingId },
+            }),
+          ),
         ),
-      ),
-    ).catch((err) => this.logger.warn('Admin notification failed', { error: err?.message }));
+      )
+      .catch((err) =>
+        this.logger.warn('Admin notification failed', { error: err?.message }),
+      );
   }
 }

@@ -109,7 +109,9 @@ export class GiftCardsService {
     return { deactivated: true };
   }
 
-  async checkBalance(code: string): Promise<{ balance: number; isValid: boolean }> {
+  async checkBalance(
+    code: string,
+  ): Promise<{ balance: number; isValid: boolean }> {
     const card = await this.prisma.giftCard.findUnique({
       where: { code: code.toUpperCase() },
     });
@@ -206,10 +208,7 @@ export class GiftCardsService {
     if (query.status === 'active') {
       where.isActive = true;
       where.balance = { gt: 0 };
-      where.OR = [
-        { expiresAt: null },
-        { expiresAt: { gt: now } },
-      ];
+      where.OR = [{ expiresAt: null }, { expiresAt: { gt: now } }];
     } else if (query.status === 'inactive') {
       where.isActive = false;
     } else if (query.status === 'expired') {

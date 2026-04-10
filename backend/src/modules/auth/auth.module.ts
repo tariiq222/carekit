@@ -46,6 +46,15 @@ import { ACCESS_TOKEN_EXPIRY } from '../../config/constants.js';
     EmailThrottleGuard,
     PermissionCacheService,
   ],
-  exports: [AuthService, AuthCacheService, TokenService, OtpService, CookieService, JwtStrategy, PassportModule, PermissionCacheService],
+  exports: [
+    AuthService,
+    AuthCacheService,
+    TokenService,
+    OtpService,
+    CookieService,
+    JwtStrategy,
+    PassportModule,
+    PermissionCacheService,
+  ],
 })
 export class AuthModule {}

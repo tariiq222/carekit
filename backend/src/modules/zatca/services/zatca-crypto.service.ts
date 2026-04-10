@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { Pkcs10CertificateRequestGenerator, cryptoProvider } from '@peculiar/x509';
+import {
+  Pkcs10CertificateRequestGenerator,
+  cryptoProvider,
+} from '@peculiar/x509';
 import { Crypto as PeculiarCrypto } from '@peculiar/webcrypto';
 
 export interface CsrParams {
@@ -135,9 +138,9 @@ export class ZatcaCryptoService {
         { OU: [params.organizationUnit] },
         { O: [params.organization] },
         { C: [params.country] },
-        { SN: [params.serialNumber] },       // 2.5.4.5 — ZATCA serial number
-        { '2.5.4.45': [params.vatNumber] },  // UID OID (UniqueIdentifier/VAT)
-        { T: [params.businessCategory] },    // 2.5.4.12 — title/business category
+        { SN: [params.serialNumber] }, // 2.5.4.5 — ZATCA serial number
+        { '2.5.4.45': [params.vatNumber] }, // UID OID (UniqueIdentifier/VAT)
+        { T: [params.businessCategory] }, // 2.5.4.12 — title/business category
       ],
       keys: { privateKey, publicKey },
       signingAlgorithm: { name: 'ECDSA', hash: 'SHA-256' },

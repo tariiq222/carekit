@@ -28,12 +28,18 @@ interface SocialLink {
 
 function buildSocialLinks(config: EmailLayoutConfig): SocialLink[] {
   const links: SocialLink[] = [];
-  if (config.footerInstagram) links.push({ url: config.footerInstagram, label: 'Instagram' });
-  if (config.footerTwitter) links.push({ url: config.footerTwitter, label: 'X' });
-  if (config.footerSnapchat) links.push({ url: config.footerSnapchat, label: 'Snapchat' });
-  if (config.footerTiktok) links.push({ url: config.footerTiktok, label: 'TikTok' });
-  if (config.footerLinkedin) links.push({ url: config.footerLinkedin, label: 'LinkedIn' });
-  if (config.footerYoutube) links.push({ url: config.footerYoutube, label: 'YouTube' });
+  if (config.footerInstagram)
+    links.push({ url: config.footerInstagram, label: 'Instagram' });
+  if (config.footerTwitter)
+    links.push({ url: config.footerTwitter, label: 'X' });
+  if (config.footerSnapchat)
+    links.push({ url: config.footerSnapchat, label: 'Snapchat' });
+  if (config.footerTiktok)
+    links.push({ url: config.footerTiktok, label: 'TikTok' });
+  if (config.footerLinkedin)
+    links.push({ url: config.footerLinkedin, label: 'LinkedIn' });
+  if (config.footerYoutube)
+    links.push({ url: config.footerYoutube, label: 'YouTube' });
   return links;
 }
 
@@ -52,9 +58,10 @@ function textToHtml(text: string): string {
 function buildHeader(config: EmailLayoutConfig): string {
   if (!config.showLogo && !config.showName) return '';
 
-  const logoHtml = config.showLogo && config.logoUrl
-    ? `<img src="${escapeHtml(config.logoUrl)}" alt="${escapeHtml(config.clinicName)}" width="120" style="display:block;margin:0 auto;max-width:120px;height:auto;">`
-    : '';
+  const logoHtml =
+    config.showLogo && config.logoUrl
+      ? `<img src="${escapeHtml(config.logoUrl)}" alt="${escapeHtml(config.clinicName)}" width="120" style="display:block;margin:0 auto;max-width:120px;height:auto;">`
+      : '';
 
   const nameHtml = config.showName
     ? `<p style="margin:8px 0 0;font-size:18px;font-weight:600;color:#ffffff;">${escapeHtml(config.clinicName)}</p>`
@@ -90,7 +97,9 @@ function buildFooter(config: EmailLayoutConfig): string {
     );
   }
   if (contactParts.length > 0) {
-    parts.push(`<p style="margin:0 0 12px;font-size:12px;color:#666666;">${contactParts.join(' &nbsp;|&nbsp; ')}</p>`);
+    parts.push(
+      `<p style="margin:0 0 12px;font-size:12px;color:#666666;">${contactParts.join(' &nbsp;|&nbsp; ')}</p>`,
+    );
   }
 
   // Social links

@@ -58,9 +58,7 @@ export function validateFileContent(
       });
     }
 
-    const matches = sig.bytes.every(
-      (byte, i) => buffer[offset + i] === byte,
-    );
+    const matches = sig.bytes.every((byte, i) => buffer[offset + i] === byte);
 
     if (!matches) {
       throw new BadRequestException({

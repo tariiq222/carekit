@@ -29,15 +29,12 @@ describe('FeatureFlagGuard', () => {
       isEnabled: jest.fn(),
     };
 
-    guard = new FeatureFlagGuard(
-      reflector as any,
-      featureFlagsService as any,
-    );
+    guard = new FeatureFlagGuard(reflector as any, featureFlagsService as any);
   });
 
   it('allows access when route is marked @Public', async () => {
     reflector.getAllAndOverride
-      .mockReturnValueOnce(true)   // IS_PUBLIC_KEY → true
+      .mockReturnValueOnce(true) // IS_PUBLIC_KEY → true
       .mockReturnValueOnce(undefined);
 
     const result = await guard.canActivate(createMockContext());
@@ -48,7 +45,7 @@ describe('FeatureFlagGuard', () => {
 
   it('allows access when no @RequireFeature decorator is set', async () => {
     reflector.getAllAndOverride
-      .mockReturnValueOnce(false)     // IS_PUBLIC_KEY → false
+      .mockReturnValueOnce(false) // IS_PUBLIC_KEY → false
       .mockReturnValueOnce(undefined); // REQUIRE_FEATURE_KEY → undefined
 
     const result = await guard.canActivate(createMockContext());
@@ -59,7 +56,7 @@ describe('FeatureFlagGuard', () => {
 
   it('allows access when feature is enabled AND licensed', async () => {
     reflector.getAllAndOverride
-      .mockReturnValueOnce(false)      // not public
+      .mockReturnValueOnce(false) // not public
       .mockReturnValueOnce('coupons'); // feature key
     featureFlagsService.isEnabled.mockResolvedValue(true);
 
@@ -100,7 +97,9 @@ describe('FeatureFlagGuard', () => {
     // isEnabled checks both flag.enabled AND license — returns false if either is false
     featureFlagsService.isEnabled.mockResolvedValue(false);
 
-    await expect(guard.canActivate(createMockContext())).rejects.toThrow(ForbiddenException);
+    await expect(guard.canActivate(createMockContext())).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('checks the correct feature key from decorator metadata', async () => {
@@ -115,8 +114,7 @@ describe('FeatureFlagGuard', () => {
   });
 
   it('does not call isEnabled for public routes even if @RequireFeature is set', async () => {
-    reflector.getAllAndOverride
-      .mockReturnValueOnce(true); // IS_PUBLIC_KEY → true (short-circuits)
+    reflector.getAllAndOverride.mockReturnValueOnce(true); // IS_PUBLIC_KEY → true (short-circuits)
 
     const result = await guard.canActivate(createMockContext());
 

@@ -28,9 +28,8 @@ export async function resolveUserRoleContext(
 
   const roles = dbUser?.userRoles.map((ur) => ur.role.slug) ?? [];
   const isAdmin = roles.some((r) => ADMIN_ROLES.includes(r));
-  const activePractitioner = dbUser?.practitioner?.deletedAt === null
-    ? dbUser.practitioner
-    : null;
+  const activePractitioner =
+    dbUser?.practitioner?.deletedAt === null ? dbUser.practitioner : null;
 
   return {
     isAdmin,

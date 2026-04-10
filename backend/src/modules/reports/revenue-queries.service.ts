@@ -118,7 +118,12 @@ export class RevenueQueriesService {
   //  TOTALS — Prisma aggregate + count
   // ═══════════════════════════════════════════════════════════════
 
-  async getTotals(from: Date, to: Date, practitionerId?: string, branchId?: string) {
+  async getTotals(
+    from: Date,
+    to: Date,
+    practitionerId?: string,
+    branchId?: string,
+  ) {
     const where: Prisma.BookingWhereInput = {
       date: { gte: from, lte: to },
       deletedAt: null,

@@ -39,7 +39,11 @@ describe('ThrottlerGuard — real 429 enforcement (e2e)', () => {
   let httpServer: ReturnType<INestApplication['getHttpServer']>;
 
   // Responses captured in beforeAll and reused across tests
-  const responses: Array<{ status: number; body: unknown; headers: Record<string, string> }> = [];
+  const responses: Array<{
+    status: number;
+    body: unknown;
+    headers: Record<string, string>;
+  }> = [];
 
   beforeAll(async () => {
     // createTestApp() flushes Redis → clean counter slate

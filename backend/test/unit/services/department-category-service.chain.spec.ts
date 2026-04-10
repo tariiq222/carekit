@@ -299,7 +299,10 @@ describe('Service-Category: findAll with categoryId filter', () => {
   });
 
   it('should filter services by categoryId', async () => {
-    prisma.service.findMany.mockResolvedValue([mockClinicService, mockService2]);
+    prisma.service.findMany.mockResolvedValue([
+      mockClinicService,
+      mockService2,
+    ]);
     prisma.service.count.mockResolvedValue(2);
 
     await svcService.findAll({ categoryId: mockCategory.id });
@@ -325,7 +328,9 @@ describe('Service-Category: findAll with categoryId filter', () => {
     prisma.service.findMany.mockResolvedValue([]);
     prisma.service.count.mockResolvedValue(0);
 
-    const result = await svcService.findAll({ categoryId: 'empty-category-id' });
+    const result = await svcService.findAll({
+      categoryId: 'empty-category-id',
+    });
 
     expect(result.items).toHaveLength(0);
     expect(result.meta.total).toBe(0);
@@ -355,7 +360,9 @@ describe('Category: findAll returns only active categories', () => {
 
     expect(prisma.serviceCategory.findMany).toHaveBeenCalledWith({
       where: { isActive: true },
-      include: { department: { select: { id: true, nameEn: true, nameAr: true } } },
+      include: {
+        department: { select: { id: true, nameEn: true, nameAr: true } },
+      },
       orderBy: { sortOrder: 'asc' },
     });
   });
@@ -522,7 +529,7 @@ describe('Full chain: Department → Category → Service', () => {
     const result = await svcService.findOne(mockServiceWithChain.id);
 
     expect(result.category.departmentId).toBe(mockDepartment.id);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     expect((result.category as any).department.nameEn).toBe('Dental');
   });
 });
@@ -632,7 +639,11 @@ describe('Cross-entity cache isolation (chain)', () => {
 
     prisma.serviceCategory.create.mockResolvedValue(mockCategory);
 
-    await catService.create({ nameEn: 'New', nameAr: 'جديد', departmentId: 'dept-uuid-1' });
+    await catService.create({
+      nameEn: 'New',
+      nameAr: 'جديد',
+      departmentId: 'dept-uuid-1',
+    });
 
     expect(cache.del).toHaveBeenCalledWith(CACHE_KEYS.CATEGORIES_ACTIVE);
     expect(cache.del).toHaveBeenCalledWith(CACHE_KEYS.SERVICES_ACTIVE);

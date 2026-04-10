@@ -4,7 +4,6 @@
  */
 
 interface InvoiceHtmlParams {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   invoice: Record<string, any>;
   clinicName: string;
   clinicPhone: string;
@@ -58,9 +57,8 @@ export function buildInvoiceHtml(params: InvoiceHtmlParams): string {
   const vatRate = invoice.vatRate || 0;
   const totalAmount = payment.totalAmount || baseAmount + vatAmount;
 
-  const vatLabel = vatRate > 0
-    ? `ضريبة القيمة المضافة (${vatRate}%)`
-    : 'ضريبة القيمة المضافة';
+  const vatLabel =
+    vatRate > 0 ? `ضريبة القيمة المضافة (${vatRate}%)` : 'ضريبة القيمة المضافة';
 
   const fmt = formatHalalat;
   const fmtDate = formatDate;
@@ -158,7 +156,9 @@ export function buildInvoiceHtml(params: InvoiceHtmlParams): string {
         </div>
       </div>
     </div>
-    ${qrCodeData ? `
+    ${
+      qrCodeData
+        ? `
       <div style="padding:1.5rem 2.5rem;text-align:center;border-top:1px solid #e2e8f0;">
         <div class="sec-title" style="text-align:center;">رمز الاستجابة السريع (QR)</div>
         <canvas id="qr-canvas" style="margin-top:0.5rem;"></canvas>
@@ -189,7 +189,9 @@ export function buildInvoiceHtml(params: InvoiceHtmlParams): string {
           }
         })();
       <\/script>
-    ` : ''}
+    `
+        : ''
+    }
     <div class="footer">هذه الفاتورة صادرة إلكترونياً ولا تحتاج إلى توقيع أو ختم &nbsp;•&nbsp; ${clinicName}</div>
   </div>
 </body>

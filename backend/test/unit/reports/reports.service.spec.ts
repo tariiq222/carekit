@@ -9,7 +9,6 @@ import { ReportsService } from '../../../src/modules/reports/reports.service.js'
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { RevenueQueriesService } from '../../../src/modules/reports/revenue-queries.service.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: { count: jest.fn() },
   practitioner: { findFirst: jest.fn() },
@@ -30,21 +29,50 @@ const DATE_TO = '2026-06-30';
 const PRAC_ID = 'practitioner-uuid-1';
 const BRANCH_ID = 'branch-uuid-1';
 
-const mockTotals = { totalRevenue: 450000, totalBookings: 30, paidBookings: 25, averagePerBooking: 18000 };
+const mockTotals = {
+  totalRevenue: 450000,
+  totalBookings: 30,
+  paidBookings: 25,
+  averagePerBooking: 18000,
+};
 const mockByMonth = [{ month: '2026-01', bookings: 10, revenue: 150000 }];
-const mockByPractitioner = [{ practitionerId: PRAC_ID, name: 'Dr. Khalid', bookings: 15, revenue: 225000 }];
-const mockByService = [{ serviceId: 'svc-1', name: 'Consultation', bookings: 20, revenue: 300000 }];
+const mockByPractitioner = [
+  {
+    practitionerId: PRAC_ID,
+    name: 'Dr. Khalid',
+    bookings: 15,
+    revenue: 225000,
+  },
+];
+const mockByService = [
+  { serviceId: 'svc-1', name: 'Consultation', bookings: 20, revenue: 300000 },
+];
 
 const mockPractitionerRecord = {
-  id: PRAC_ID, rating: 4.5, reviewCount: 12, deletedAt: null,
+  id: PRAC_ID,
+  rating: 4.5,
+  reviewCount: 12,
+  deletedAt: null,
   user: { firstName: 'Khalid', lastName: 'Al-Fahd' },
   specialty: 'Cardiology',
   specialtyAr: 'أمراض القلب',
 };
 
 const mockRatings = [
-  { id: 'r1', stars: 5, comment: 'Excellent', createdAt: new Date('2026-03-15'), patient: { firstName: 'Ahmed', lastName: 'Al-Rashid' } },
-  { id: 'r2', stars: 4, comment: null, createdAt: new Date('2026-03-10'), patient: null },
+  {
+    id: 'r1',
+    stars: 5,
+    comment: 'Excellent',
+    createdAt: new Date('2026-03-15'),
+    patient: { firstName: 'Ahmed', lastName: 'Al-Rashid' },
+  },
+  {
+    id: 'r2',
+    stars: 4,
+    comment: null,
+    createdAt: new Date('2026-03-10'),
+    patient: null,
+  },
 ];
 
 describe('ReportsService', () => {
@@ -68,7 +96,9 @@ describe('ReportsService', () => {
     beforeEach(() => {
       mockRevenueQueries.getTotals.mockResolvedValue(mockTotals);
       mockRevenueQueries.getByMonth.mockResolvedValue(mockByMonth);
-      mockRevenueQueries.getByPractitioner.mockResolvedValue(mockByPractitioner);
+      mockRevenueQueries.getByPractitioner.mockResolvedValue(
+        mockByPractitioner,
+      );
       mockRevenueQueries.getByService.mockResolvedValue(mockByService);
     });
 
@@ -88,16 +118,46 @@ describe('ReportsService', () => {
       const from = new Date(DATE_FROM);
       const to = new Date(DATE_TO);
       to.setHours(23, 59, 59, 999);
-      expect(mockRevenueQueries.getByMonth).toHaveBeenCalledWith(from, to, undefined, undefined);
-      expect(mockRevenueQueries.getTotals).toHaveBeenCalledWith(from, to, undefined, undefined);
+      expect(mockRevenueQueries.getByMonth).toHaveBeenCalledWith(
+        from,
+        to,
+        undefined,
+        undefined,
+      );
+      expect(mockRevenueQueries.getTotals).toHaveBeenCalledWith(
+        from,
+        to,
+        undefined,
+        undefined,
+      );
     });
 
     it('should pass practitionerId filter when provided', async () => {
       await service.getRevenueReport(DATE_FROM, DATE_TO, PRAC_ID, BRANCH_ID);
-      expect(mockRevenueQueries.getByMonth).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID, BRANCH_ID);
-      expect(mockRevenueQueries.getByPractitioner).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID, BRANCH_ID);
-      expect(mockRevenueQueries.getByService).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID, BRANCH_ID);
-      expect(mockRevenueQueries.getTotals).toHaveBeenCalledWith(expect.any(Date), expect.any(Date), PRAC_ID, BRANCH_ID);
+      expect(mockRevenueQueries.getByMonth).toHaveBeenCalledWith(
+        expect.any(Date),
+        expect.any(Date),
+        PRAC_ID,
+        BRANCH_ID,
+      );
+      expect(mockRevenueQueries.getByPractitioner).toHaveBeenCalledWith(
+        expect.any(Date),
+        expect.any(Date),
+        PRAC_ID,
+        BRANCH_ID,
+      );
+      expect(mockRevenueQueries.getByService).toHaveBeenCalledWith(
+        expect.any(Date),
+        expect.any(Date),
+        PRAC_ID,
+        BRANCH_ID,
+      );
+      expect(mockRevenueQueries.getTotals).toHaveBeenCalledWith(
+        expect.any(Date),
+        expect.any(Date),
+        PRAC_ID,
+        BRANCH_ID,
+      );
     });
 
     it('should call all four revenue queries exactly once', async () => {
@@ -112,13 +172,17 @@ describe('ReportsService', () => {
   // ── getBookingReport ─────────────────────────────────────────
 
   describe('getBookingReport', () => {
-    beforeEach(() => { mockPrisma.booking.count.mockResolvedValue(50); });
+    beforeEach(() => {
+      mockPrisma.booking.count.mockResolvedValue(50);
+    });
 
     it('should return total from prisma count', async () => {
       mockPrisma.$queryRaw
         .mockResolvedValueOnce([{ status: 'confirmed', count: BigInt(20) }])
         .mockResolvedValueOnce([{ type: 'in_person', count: BigInt(30) }])
-        .mockResolvedValueOnce([{ date: new Date('2026-03-01'), count: BigInt(5) }]);
+        .mockResolvedValueOnce([
+          { date: new Date('2026-03-01'), count: BigInt(5) },
+        ]);
       const r = await service.getBookingReport(DATE_FROM, DATE_TO);
       expect(r.total).toBe(50);
     });
@@ -130,9 +194,16 @@ describe('ReportsService', () => {
           { status: 'completed', count: BigInt(15) },
           { status: 'cancelled', count: BigInt(5) },
         ])
-        .mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
       const r = await service.getBookingReport(DATE_FROM, DATE_TO);
-      expect(r.byStatus).toEqual({ pending: 0, confirmed: 20, completed: 15, cancelled: 5, pending_cancellation: 0 });
+      expect(r.byStatus).toEqual({
+        pending: 0,
+        confirmed: 20,
+        completed: 15,
+        cancelled: 5,
+        pending_cancellation: 0,
+      });
     });
 
     it('should map type rows with defaults for missing types', async () => {
@@ -149,18 +220,25 @@ describe('ReportsService', () => {
 
     it('should format byDay date strings from raw query', async () => {
       mockPrisma.$queryRaw
-        .mockResolvedValueOnce([]).mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
         .mockResolvedValueOnce([
           { date: new Date('2026-03-01'), count: BigInt(5) },
           { date: new Date('2026-03-02'), count: BigInt(8) },
         ]);
       const r = await service.getBookingReport(DATE_FROM, DATE_TO);
-      expect(r.byDay).toEqual([{ date: '2026-03-01', count: 5 }, { date: '2026-03-02', count: 8 }]);
+      expect(r.byDay).toEqual([
+        { date: '2026-03-01', count: 5 },
+        { date: '2026-03-02', count: 8 },
+      ]);
     });
 
     it('should handle empty results gracefully', async () => {
       mockPrisma.booking.count.mockResolvedValue(0);
-      mockPrisma.$queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
       const r = await service.getBookingReport(DATE_FROM, DATE_TO);
       expect(r.total).toBe(0);
       expect(r.byDay).toEqual([]);
@@ -168,7 +246,10 @@ describe('ReportsService', () => {
     });
 
     it('should apply branchId filter to booking totals when provided', async () => {
-      mockPrisma.$queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+      mockPrisma.$queryRaw
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
 
       await service.getBookingReport(DATE_FROM, DATE_TO, BRANCH_ID);
 
@@ -182,14 +263,24 @@ describe('ReportsService', () => {
 
   describe('getPractitionerReport', () => {
     beforeEach(() => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitionerRecord);
-      mockPrisma.booking.count.mockResolvedValueOnce(20).mockResolvedValueOnce(15);
-      mockPrisma.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: 300000 } });
+      mockPrisma.practitioner.findFirst.mockResolvedValue(
+        mockPractitionerRecord,
+      );
+      mockPrisma.booking.count
+        .mockResolvedValueOnce(20)
+        .mockResolvedValueOnce(15);
+      mockPrisma.payment.aggregate.mockResolvedValue({
+        _sum: { totalAmount: 300000 },
+      });
       mockPrisma.rating.findMany.mockResolvedValue(mockRatings);
     });
 
     it('should return practitioner info with stats and revenue', async () => {
-      const r = await service.getPractitionerReport(PRAC_ID, DATE_FROM, DATE_TO);
+      const r = await service.getPractitionerReport(
+        PRAC_ID,
+        DATE_FROM,
+        DATE_TO,
+      );
       expect(r.id).toBe(PRAC_ID);
       expect(r.name).toBe('Khalid Al-Fahd');
       expect(r.specialty).toBe('أمراض القلب');
@@ -201,7 +292,11 @@ describe('ReportsService', () => {
 
     it('should return empty report when practitioner not found', async () => {
       mockPrisma.practitioner.findFirst.mockResolvedValue(null);
-      const r = await service.getPractitionerReport('nonexistent', DATE_FROM, DATE_TO);
+      const r = await service.getPractitionerReport(
+        'nonexistent',
+        DATE_FROM,
+        DATE_TO,
+      );
       expect(r.name).toBe('Unknown');
       expect(r.totalBookings).toBe(0);
       expect(r.totalRevenue).toBe(0);
@@ -209,21 +304,39 @@ describe('ReportsService', () => {
     });
 
     it('should include ratings with patient names', async () => {
-      const r = await service.getPractitionerReport(PRAC_ID, DATE_FROM, DATE_TO);
+      const r = await service.getPractitionerReport(
+        PRAC_ID,
+        DATE_FROM,
+        DATE_TO,
+      );
       expect(r.ratings).toHaveLength(2);
       expect(r.ratings[0]).toEqual(
-        expect.objectContaining({ id: 'r1', stars: 5, patientName: 'Ahmed Al-Rashid' }),
+        expect.objectContaining({
+          id: 'r1',
+          stars: 5,
+          patientName: 'Ahmed Al-Rashid',
+        }),
       );
     });
 
     it('should use fallback name for null patient', async () => {
-      const r = await service.getPractitionerReport(PRAC_ID, DATE_FROM, DATE_TO);
+      const r = await service.getPractitionerReport(
+        PRAC_ID,
+        DATE_FROM,
+        DATE_TO,
+      );
       expect(r.ratings[1].patientName).toBe('مريض');
     });
 
     it('should default totalRevenue to 0 when no payments', async () => {
-      mockPrisma.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
-      const r = await service.getPractitionerReport(PRAC_ID, DATE_FROM, DATE_TO);
+      mockPrisma.payment.aggregate.mockResolvedValue({
+        _sum: { totalAmount: null },
+      });
+      const r = await service.getPractitionerReport(
+        PRAC_ID,
+        DATE_FROM,
+        DATE_TO,
+      );
       expect(r.totalRevenue).toBe(0);
     });
   });

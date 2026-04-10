@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { InvoiceCreatorService } from '../../../src/modules/invoices/invoice-creator.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { ZatcaService } from '../../../src/modules/zatca/zatca.service.js';
@@ -7,30 +11,49 @@ import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.se
 import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 
 const mockPayment = {
-  id: 'payment-1', bookingId: 'booking-1', amount: 15000,
-  vatAmount: 2250, totalAmount: 17250, method: 'moyasar', status: 'paid',
+  id: 'payment-1',
+  bookingId: 'booking-1',
+  amount: 15000,
+  vatAmount: 2250,
+  totalAmount: 17250,
+  method: 'moyasar',
+  status: 'paid',
   booking: {
-    id: 'booking-1', patientId: 'patient-1',
+    id: 'booking-1',
+    patientId: 'patient-1',
     patient: { firstName: 'أحمد', lastName: 'الراشد' },
     service: { nameAr: 'استشارة عامة', nameEn: 'General Consultation' },
   },
 };
 
 const mockZatcaConfig = {
-  phase: 'phase1', vatRate: 15, vatRegistrationNumber: '300000000000003',
-  businessRegistration: '', sellerName: 'CareKit', sellerAddress: 'Riyadh', city: 'Riyadh',
+  phase: 'phase1',
+  vatRate: 15,
+  vatRegistrationNumber: '300000000000003',
+  businessRegistration: '',
+  sellerName: 'CareKit',
+  sellerAddress: 'Riyadh',
+  city: 'Riyadh',
 };
 
 const mockZatcaData = {
-  vatAmount: 2250, vatRate: 15, totalAmount: 17250,
-  invoiceHash: 'abc123hash', previousHash: 'prev123hash',
-  qrCodeData: 'base64qrdata', xmlContent: null, status: 'not_applicable',
+  vatAmount: 2250,
+  vatRate: 15,
+  totalAmount: 17250,
+  invoiceHash: 'abc123hash',
+  previousHash: 'prev123hash',
+  qrCodeData: 'base64qrdata',
+  xmlContent: null,
+  status: 'not_applicable',
 };
 
 const mockCreatedInvoice = {
-  id: 'invoice-1', paymentId: 'payment-1',
+  id: 'invoice-1',
+  paymentId: 'payment-1',
   invoiceNumber: 'INV-20260322-00001',
-  zatcaStatus: 'not_applicable', vatAmount: 2250, vatRate: 15,
+  zatcaStatus: 'not_applicable',
+  vatAmount: 2250,
+  vatRate: 15,
 };
 
 const mockWhitelabelService: Record<string, jest.Mock> = {
@@ -52,15 +75,25 @@ const mockClinicSettingsService: Record<string, jest.Mock> = {
 
 const mockPrismaService: any = {
   payment: { findUnique: jest.fn() },
-  invoice: { findUnique: jest.fn(), findFirst: jest.fn().mockResolvedValue(null), create: jest.fn() },
-  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
+  invoice: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn().mockResolvedValue(null),
+    create: jest.fn(),
+  },
+  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) =>
+    fn(mockPrismaService),
+  ),
 };
 
 const mockZatcaService: any = {
   loadConfig: jest.fn(),
   getPreviousInvoiceHash: jest.fn(),
   generateForInvoice: jest.fn(),
-  zeroHash: jest.fn().mockReturnValue('0000000000000000000000000000000000000000000000000000000000000000'),
+  zeroHash: jest
+    .fn()
+    .mockReturnValue(
+      '0000000000000000000000000000000000000000000000000000000000000000',
+    ),
 };
 
 describe('InvoiceCreatorService', () => {
@@ -92,27 +125,39 @@ describe('InvoiceCreatorService', () => {
   describe('createInvoice — validations', () => {
     it('throws NotFoundException when payment not found', async () => {
       mockPrismaService.payment.findUnique.mockResolvedValue(null);
-      await expect(service.createInvoice({ paymentId: 'missing' }))
-        .rejects.toThrow(NotFoundException);
+      await expect(
+        service.createInvoice({ paymentId: 'missing' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throws BadRequestException when payment.status is pending', async () => {
-      mockPrismaService.payment.findUnique.mockResolvedValue({ ...mockPayment, status: 'pending' });
-      await expect(service.createInvoice({ paymentId: 'payment-1' }))
-        .rejects.toThrow(BadRequestException);
+      mockPrismaService.payment.findUnique.mockResolvedValue({
+        ...mockPayment,
+        status: 'pending',
+      });
+      await expect(
+        service.createInvoice({ paymentId: 'payment-1' }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws BadRequestException when payment.status is failed', async () => {
-      mockPrismaService.payment.findUnique.mockResolvedValue({ ...mockPayment, status: 'failed' });
-      await expect(service.createInvoice({ paymentId: 'payment-1' }))
-        .rejects.toThrow(BadRequestException);
+      mockPrismaService.payment.findUnique.mockResolvedValue({
+        ...mockPayment,
+        status: 'failed',
+      });
+      await expect(
+        service.createInvoice({ paymentId: 'payment-1' }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws ConflictException when invoice already exists for paymentId', async () => {
       // Override: invoice.findUnique returns existing invoice (conflict)
-      mockPrismaService.invoice.findUnique.mockResolvedValueOnce({ id: 'existing-invoice' });
-      await expect(service.createInvoice({ paymentId: 'payment-1' }))
-        .rejects.toThrow(ConflictException);
+      mockPrismaService.invoice.findUnique.mockResolvedValueOnce({
+        id: 'existing-invoice',
+      });
+      await expect(
+        service.createInvoice({ paymentId: 'payment-1' }),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -244,7 +289,12 @@ describe('InvoiceCreatorService', () => {
           type: 'in_person',
           date: new Date('2026-03-22'),
           startTime: '10:00',
-          patient: { firstName: 'أحمد', lastName: 'الراشد', email: null, phone: null },
+          patient: {
+            firstName: 'أحمد',
+            lastName: 'الراشد',
+            email: null,
+            phone: null,
+          },
           practitioner: {
             user: { id: 'u1', firstName: 'خالد', lastName: 'الفهد' },
           },
@@ -270,8 +320,9 @@ describe('InvoiceCreatorService', () => {
 
     it('throws NotFoundException when invoice not found', async () => {
       mockPrismaService.invoice.findUnique.mockResolvedValue(null);
-      await expect(service.generateInvoiceHtml('missing-id'))
-        .rejects.toThrow(NotFoundException);
+      await expect(service.generateInvoiceHtml('missing-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('returns HTML string containing invoiceNumber', async () => {

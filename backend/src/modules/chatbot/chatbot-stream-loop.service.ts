@@ -76,7 +76,8 @@ export class ChatbotStreamLoopService {
         subscriber,
       );
 
-      lastToolName = result.toolCalls[result.toolCalls.length - 1].function.name;
+      lastToolName =
+        result.toolCalls[result.toolCalls.length - 1].function.name;
       const lastResult = buildActionCard(lastToolName, { success: true });
       if (lastResult) lastActionCard = lastResult;
     }

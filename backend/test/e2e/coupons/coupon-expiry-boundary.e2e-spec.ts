@@ -242,7 +242,8 @@ describe('Coupon Expiry Boundary (e2e)', () => {
       })
       .expect(201);
 
-    const couponId = (createRes.body.data as Record<string, unknown>).id as string;
+    const couponId = (createRes.body.data as Record<string, unknown>)
+      .id as string;
 
     // Deactivate via PATCH
     await request(httpServer)
@@ -257,7 +258,10 @@ describe('Coupon Expiry Boundary (e2e)', () => {
       .send({ code, amount: 150 })
       .expect(404);
 
-    expectErrorResponse(res.body as Record<string, unknown>, 'COUPON_NOT_FOUND');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'COUPON_NOT_FOUND',
+    );
   });
 
   // ---------------------------------------------------------------------------

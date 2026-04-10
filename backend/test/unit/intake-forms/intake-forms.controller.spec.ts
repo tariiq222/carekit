@@ -105,7 +105,9 @@ describe('IntakeFormsController', () => {
       const result = { id: 'resp-1' };
       mockService.submitResponse.mockResolvedValue(result);
 
-      expect(await controller.submitResponse('f1', 'patient-1', dto)).toEqual(result);
+      expect(await controller.submitResponse('f1', 'patient-1', dto)).toEqual(
+        result,
+      );
       expect(mockService.submitResponse).toHaveBeenCalledWith('patient-1', {
         ...dto,
         formId: 'f1',

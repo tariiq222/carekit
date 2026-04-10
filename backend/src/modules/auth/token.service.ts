@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -9,7 +6,10 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { AuthCacheService } from './auth-cache.service.js';
 import { UserPayload } from '../../common/types/user-payload.type.js';
 import { TokenPair } from './types/auth-response.type.js';
-import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY } from '../../config/constants.js';
+import {
+  ACCESS_TOKEN_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
+} from '../../config/constants.js';
 
 @Injectable()
 export class TokenService {
@@ -60,63 +60,76 @@ export class TokenService {
     // Token theft detection: if a token that was already rotated is presented again,
     // we decode the JWT to extract userId and revoke ALL tokens for that user
     // (token family invalidation).
-    return this.prisma.$transaction(async (tx) => {
-      const storedToken = await tx.refreshToken.findFirst({
-        where: { token: tokenHash },
-      });
+    return this.prisma.$transaction(
+      async (tx) => {
+        const storedToken = await tx.refreshToken.findFirst({
+          where: { token: tokenHash },
+        });
 
-      if (!storedToken) {
-        // Token not found in DB. Decode JWT to check if this userId had tokens — if
-        // the JWT is structurally valid, it may be a reused/rotated token (theft).
-        const decoded = this.jwtService.decode(token) as { sub?: string } | null;
-        if (decoded?.sub) {
-          // Revoke all tokens for this user as a compromise response
-          await tx.refreshToken.deleteMany({ where: { userId: decoded.sub } });
-          await this.authCache.invalidate(decoded.sub);
+        if (!storedToken) {
+          // Token not found in DB. Decode JWT to check if this userId had tokens — if
+          // the JWT is structurally valid, it may be a reused/rotated token (theft).
+          const decoded = this.jwtService.decode(token);
+          if (decoded?.sub) {
+            // Revoke all tokens for this user as a compromise response
+            await tx.refreshToken.deleteMany({
+              where: { userId: decoded.sub },
+            });
+            await this.authCache.invalidate(decoded.sub);
+          }
+          throw new UnauthorizedException({
+            statusCode: 401,
+            message: 'Invalid refresh token',
+            error: 'AUTH_REFRESH_TOKEN_INVALID',
+          });
         }
-        throw new UnauthorizedException({
-          statusCode: 401,
-          message: 'Invalid refresh token',
-          error: 'AUTH_REFRESH_TOKEN_INVALID',
-        });
-      }
 
-      if (storedToken.expiresAt < new Date()) {
+        if (storedToken.expiresAt < new Date()) {
+          await tx.refreshToken.delete({ where: { id: storedToken.id } });
+          throw new UnauthorizedException({
+            statusCode: 401,
+            message: 'Refresh token has expired',
+            error: 'AUTH_REFRESH_TOKEN_EXPIRED',
+          });
+        }
+
+        const user = await tx.user.findUnique({
+          where: { id: storedToken.userId },
+        });
+        if (!user || !user.isActive) {
+          throw new UnauthorizedException({
+            statusCode: 401,
+            message: 'Account is deactivated',
+            error: 'AUTH_REFRESH_TOKEN_INVALID',
+          });
+        }
+
+        // Rotate: delete old token atomically within the same transaction
         await tx.refreshToken.delete({ where: { id: storedToken.id } });
-        throw new UnauthorizedException({
-          statusCode: 401,
-          message: 'Refresh token has expired',
-          error: 'AUTH_REFRESH_TOKEN_EXPIRED',
+
+        // Generate new token pair
+        const tokens = await this.generateTokens(user.id, user.email);
+
+        // Store new refresh token within the same transaction
+        const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY * 1000);
+        await tx.refreshToken.create({
+          data: {
+            userId: user.id,
+            token: this.hashToken(tokens.refreshToken),
+            expiresAt: newExpiresAt,
+          },
         });
-      }
 
-      const user = await tx.user.findUnique({ where: { id: storedToken.userId } });
-      if (!user || !user.isActive) {
-        throw new UnauthorizedException({
-          statusCode: 401,
-          message: 'Account is deactivated',
-          error: 'AUTH_REFRESH_TOKEN_INVALID',
-        });
-      }
-
-      // Rotate: delete old token atomically within the same transaction
-      await tx.refreshToken.delete({ where: { id: storedToken.id } });
-
-      // Generate new token pair
-      const tokens = await this.generateTokens(user.id, user.email);
-
-      // Store new refresh token within the same transaction
-      const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY * 1000);
-      await tx.refreshToken.create({
-        data: { userId: user.id, token: this.hashToken(tokens.refreshToken), expiresAt: newExpiresAt },
-      });
-
-      return tokens;
-    }, { isolationLevel: 'Serializable' });
+        return tokens;
+      },
+      { isolationLevel: 'Serializable' },
+    );
   }
 
   async deleteRefreshToken(token: string): Promise<void> {
-    await this.prisma.refreshToken.deleteMany({ where: { token: this.hashToken(token) } });
+    await this.prisma.refreshToken.deleteMany({
+      where: { token: this.hashToken(token) },
+    });
   }
 
   buildUserPayload(user: {

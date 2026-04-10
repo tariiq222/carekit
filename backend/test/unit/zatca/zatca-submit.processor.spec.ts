@@ -73,7 +73,10 @@ describe('ZatcaSubmitProcessor', () => {
       providers: [
         ZatcaSubmitProcessor,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: ClinicIntegrationsService, useValue: mockClinicIntegrationsService },
+        {
+          provide: ClinicIntegrationsService,
+          useValue: mockClinicIntegrationsService,
+        },
         { provide: ZatcaApiService, useValue: mockApiService },
         { provide: XmlSigningService, useValue: mockSigningService },
         { provide: InvoiceHashService, useValue: mockHashService },

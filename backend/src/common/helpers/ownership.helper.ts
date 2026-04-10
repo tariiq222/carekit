@@ -17,8 +17,11 @@ export async function checkOwnership(
     include: { userRoles: { include: { role: true } } },
   });
 
-  const roles = dbUser?.userRoles.map((ur: { role: { slug: string } }) => ur.role.slug) ?? [];
-  const isAdmin = roles.includes('super_admin') || roles.includes('receptionist');
+  const roles =
+    dbUser?.userRoles.map((ur: { role: { slug: string } }) => ur.role.slug) ??
+    [];
+  const isAdmin =
+    roles.includes('super_admin') || roles.includes('receptionist');
 
   if (!isAdmin) {
     throw new ForbiddenException({

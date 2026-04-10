@@ -24,7 +24,13 @@ export class PatientWalkInService {
   async createWalkIn(dto: CreateWalkInPatientDto) {
     const existing = await this.prisma.user.findUnique({
       where: { phone: dto.phone },
-      select: { id: true, firstName: true, lastName: true, phone: true, accountType: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        accountType: true,
+      },
     });
 
     if (existing) {
@@ -46,7 +52,8 @@ export class PatientWalkInService {
     if (!patientRole) {
       throw new InternalServerErrorException({
         statusCode: 500,
-        message: 'Patient role not found — ensure the patient role is seeded with isDefault: true',
+        message:
+          'Patient role not found — ensure the patient role is seeded with isDefault: true',
         error: 'PATIENT_ROLE_NOT_FOUND',
       });
     }
@@ -74,14 +81,14 @@ export class PatientWalkInService {
       await tx.patientProfile.create({
         data: {
           userId: created.id,
-          nationalId:         dto.nationalId,
-          nationality:        dto.nationality,
-          dateOfBirth:        dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
-          emergencyName:      dto.emergencyName,
-          emergencyPhone:     dto.emergencyPhone,
-          bloodType:          dto.bloodType,
-          allergies:          dto.allergies,
-          chronicConditions:  dto.chronicConditions,
+          nationalId: dto.nationalId,
+          nationality: dto.nationality,
+          dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
+          emergencyName: dto.emergencyName,
+          emergencyPhone: dto.emergencyPhone,
+          bloodType: dto.bloodType,
+          allergies: dto.allergies,
+          chronicConditions: dto.chronicConditions,
         },
       });
 
@@ -123,7 +130,11 @@ export class PatientWalkInService {
       const updated = await this.prisma.$transaction(async (tx) => {
         // تحقق داخل الـ transaction أن الإيميل غير مستخدم (يستثني الحسابات المحذوفة والحساب الحالي)
         const emailTaken = await tx.user.findFirst({
-          where: { email: dto.email, deletedAt: null, id: { not: walkInUser.id } },
+          where: {
+            email: dto.email,
+            deletedAt: null,
+            id: { not: walkInUser.id },
+          },
           select: { id: true },
         });
 

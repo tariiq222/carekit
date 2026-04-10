@@ -1,7 +1,11 @@
 /** CareKit — RatingsService Unit Tests */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { RatingsService } from '../../../src/modules/ratings/ratings.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
@@ -37,7 +41,9 @@ const mockPrismaService: any = {
   $transaction: jest.fn(),
 };
 
-async function runInTransaction<T>(fn: (tx: typeof mockPrismaService) => Promise<T>): Promise<T> {
+async function runInTransaction<T>(
+  fn: (tx: typeof mockPrismaService) => Promise<T>,
+): Promise<T> {
   return fn(mockPrismaService);
 }
 
@@ -58,7 +64,8 @@ describe('RatingsService', () => {
   describe('create', () => {
     beforeEach(async () => {
       mockPrismaService.$transaction.mockImplementation(
-        async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService),
+        async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
       );
     });
 
@@ -66,7 +73,11 @@ describe('RatingsService', () => {
       mockPrismaService.booking.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.create({ bookingId: 'nonexistent', patientId: 'patient-1', stars: 5 }),
+        service.create({
+          bookingId: 'nonexistent',
+          patientId: 'patient-1',
+          stars: 5,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -77,7 +88,11 @@ describe('RatingsService', () => {
       });
 
       await expect(
-        service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 5 }),
+        service.create({
+          bookingId: 'booking-1',
+          patientId: 'patient-1',
+          stars: 5,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -88,7 +103,11 @@ describe('RatingsService', () => {
       });
 
       await expect(
-        service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 5 }),
+        service.create({
+          bookingId: 'booking-1',
+          patientId: 'patient-1',
+          stars: 5,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -96,7 +115,11 @@ describe('RatingsService', () => {
       mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
 
       await expect(
-        service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 0 }),
+        service.create({
+          bookingId: 'booking-1',
+          patientId: 'patient-1',
+          stars: 0,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -104,7 +127,11 @@ describe('RatingsService', () => {
       mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
 
       await expect(
-        service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 6 }),
+        service.create({
+          bookingId: 'booking-1',
+          patientId: 'patient-1',
+          stars: 6,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -116,7 +143,11 @@ describe('RatingsService', () => {
         _count: { id: 1 },
       });
 
-      await service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 5 });
+      await service.create({
+        bookingId: 'booking-1',
+        patientId: 'patient-1',
+        stars: 5,
+      });
 
       expect(mockPrismaService.rating.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -138,19 +169,23 @@ describe('RatingsService', () => {
       mockPrismaService.booking.findFirst.mockResolvedValue(booking);
 
       let transactionWasCalled = false;
-      mockPrismaService.$transaction.mockImplementation(async (fn: (tx: any) => Promise<unknown>) => {
-        transactionWasCalled = true;
-        const tx = {
-          rating: {
-            create: jest.fn().mockResolvedValue({ id: 'rating-1', stars: 5 }),
-            aggregate: jest.fn().mockResolvedValue({ _avg: { stars: 4.5 }, _count: { id: 2 } }),
-          },
-          practitioner: {
-            update: jest.fn().mockResolvedValue({}),
-          },
-        };
-        return fn(tx);
-      });
+      mockPrismaService.$transaction.mockImplementation(
+        async (fn: (tx: any) => Promise<unknown>) => {
+          transactionWasCalled = true;
+          const tx = {
+            rating: {
+              create: jest.fn().mockResolvedValue({ id: 'rating-1', stars: 5 }),
+              aggregate: jest
+                .fn()
+                .mockResolvedValue({ _avg: { stars: 4.5 }, _count: { id: 2 } }),
+            },
+            practitioner: {
+              update: jest.fn().mockResolvedValue({}),
+            },
+          };
+          return fn(tx);
+        },
+      );
 
       await service.create({
         bookingId: 'booking-1',
@@ -169,23 +204,34 @@ describe('RatingsService', () => {
         _count: { id: 2 },
       });
 
-      await service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 5 });
+      await service.create({
+        bookingId: 'booking-1',
+        patientId: 'patient-1',
+        stars: 5,
+      });
 
       expect(mockPrismaService.rating.aggregate).toHaveBeenCalled();
       expect(mockPrismaService.practitioner.update).toHaveBeenCalled();
     });
 
     it('[REGRESSION] throws ConflictException when P2002 unique constraint fires (double-rating race)', async () => {
-      const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-        code: 'P2002',
-        clientVersion: '7.0.0',
-      });
+      const p2002 = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed',
+        {
+          code: 'P2002',
+          clientVersion: '7.0.0',
+        },
+      );
 
       mockPrismaService.booking.findFirst.mockResolvedValue(mockBooking);
       mockPrismaService.$transaction.mockRejectedValue(p2002);
 
       await expect(
-        service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 5 }),
+        service.create({
+          bookingId: 'booking-1',
+          patientId: 'patient-1',
+          stars: 5,
+        }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -195,7 +241,11 @@ describe('RatingsService', () => {
       mockPrismaService.$transaction.mockRejectedValue(networkError);
 
       await expect(
-        service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 5 }),
+        service.create({
+          bookingId: 'booking-1',
+          patientId: 'patient-1',
+          stars: 5,
+        }),
       ).rejects.toThrow('DB connection lost');
     });
 
@@ -207,7 +257,11 @@ describe('RatingsService', () => {
         _count: { id: 1 },
       });
 
-      const result = await service.create({ bookingId: 'booking-1', patientId: 'patient-1', stars: 5 });
+      const result = await service.create({
+        bookingId: 'booking-1',
+        patientId: 'patient-1',
+        stars: 5,
+      });
 
       expect(result).toEqual(mockRating);
     });

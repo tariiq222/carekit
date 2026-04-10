@@ -78,26 +78,36 @@ describe('QrGeneratorService', () => {
   });
 
   it('vatAmount=0 encodes as "0.00"', () => {
-    const map = decodeTlv(service.buildTlvBase64({ ...BASE_DATA, vatAmount: 0 }));
+    const map = decodeTlv(
+      service.buildTlvBase64({ ...BASE_DATA, vatAmount: 0 }),
+    );
     expect(map.get(5)).toBe('0.00');
   });
 
   it('Arabic seller name encodes correctly (multi-byte UTF-8)', () => {
     const arabicName = 'عيادة النور';
-    const map = decodeTlv(service.buildTlvBase64({ ...BASE_DATA, sellerName: arabicName }));
+    const map = decodeTlv(
+      service.buildTlvBase64({ ...BASE_DATA, sellerName: arabicName }),
+    );
     expect(map.get(1)).toBe(arabicName);
   });
 
   it('Arabic seller name: tag 1 length byte matches actual UTF-8 byte length', () => {
     const arabicName = 'عيادة النور';
-    const raw = Buffer.from(service.buildTlvBase64({ ...BASE_DATA, sellerName: arabicName }), 'base64');
+    const raw = Buffer.from(
+      service.buildTlvBase64({ ...BASE_DATA, sellerName: arabicName }),
+      'base64',
+    );
     const expectedLen = Buffer.byteLength(arabicName, 'utf8');
     expect(raw.readUInt8(1)).toBe(expectedLen);
   });
 
   it('different inputs produce different Base64 outputs', () => {
     const out1 = service.buildTlvBase64(BASE_DATA);
-    const out2 = service.buildTlvBase64({ ...BASE_DATA, sellerName: 'Other Clinic' });
+    const out2 = service.buildTlvBase64({
+      ...BASE_DATA,
+      sellerName: 'Other Clinic',
+    });
     expect(out1).not.toBe(out2);
   });
 

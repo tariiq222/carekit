@@ -121,7 +121,13 @@ export const mockPractitionerService = {
 };
 
 export const mockAvailability = [
-  { dayOfWeek: 0, startTime: '08:00', endTime: '18:00', isActive: true, branchId: null },
+  {
+    dayOfWeek: 0,
+    startTime: '08:00',
+    endTime: '18:00',
+    isActive: true,
+    branchId: null,
+  },
 ];
 
 export const mockBookingSettings = {
@@ -138,7 +144,6 @@ export const mockBookingSettings = {
 // Mock factories
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockPrisma(): any {
   return {
     booking: {
@@ -160,7 +165,10 @@ export function createMockPrisma(): any {
     practitionerService: { findUnique: jest.fn() },
     practitionerAvailability: { findMany: jest.fn() },
     practitionerVacation: { findMany: jest.fn(), findFirst: jest.fn() },
-    serviceBranch: { count: jest.fn().mockResolvedValue(0), findUnique: jest.fn() },
+    serviceBranch: {
+      count: jest.fn().mockResolvedValue(0),
+      findUnique: jest.fn(),
+    },
     payment: { findFirst: jest.fn(), updateMany: jest.fn() },
     intakeForm: { findFirst: jest.fn().mockResolvedValue(null) },
     intakeResponse: { findFirst: jest.fn().mockResolvedValue(null) },
@@ -197,21 +205,60 @@ export function createMockNotificationsService() {
   return { createNotification: jest.fn().mockResolvedValue(undefined) };
 }
 
-export function createMockBookingStatusService(prisma: ReturnType<typeof createMockPrisma>) {
+export function createMockBookingStatusService(
+  prisma: ReturnType<typeof createMockPrisma>,
+) {
   return {
     confirm: jest.fn().mockImplementation(async (id: string) => {
-      const booking = await prisma.booking.findFirst({ where: { id, deletedAt: null } });
-      if (!booking) throw new (require('@nestjs/common').NotFoundException)({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
-      if (booking.status !== 'pending') throw new (require('@nestjs/common').ConflictException)({ statusCode: 409, message: `Cannot confirm booking with status '${booking.status}'`, error: 'CONFLICT' });
-      const payment = await prisma.payment.findFirst({ where: { bookingId: id } });
-      if (!payment || payment.status !== 'paid') throw new (require('@nestjs/common').ConflictException)({ statusCode: 409, message: 'Payment is required', error: 'PAYMENT_REQUIRED' });
-      return prisma.booking.update({ where: { id }, data: { status: 'confirmed', confirmedAt: new Date() } });
+      const booking = await prisma.booking.findFirst({
+        where: { id, deletedAt: null },
+      });
+      if (!booking)
+        throw new (require('@nestjs/common').NotFoundException)({
+          statusCode: 404,
+          message: 'Booking not found',
+          error: 'NOT_FOUND',
+        });
+      if (booking.status !== 'pending')
+        throw new (require('@nestjs/common').ConflictException)({
+          statusCode: 409,
+          message: `Cannot confirm booking with status '${booking.status}'`,
+          error: 'CONFLICT',
+        });
+      const payment = await prisma.payment.findFirst({
+        where: { bookingId: id },
+      });
+      if (!payment || payment.status !== 'paid')
+        throw new (require('@nestjs/common').ConflictException)({
+          statusCode: 409,
+          message: 'Payment is required',
+          error: 'PAYMENT_REQUIRED',
+        });
+      return prisma.booking.update({
+        where: { id },
+        data: { status: 'confirmed', confirmedAt: new Date() },
+      });
     }),
     complete: jest.fn().mockImplementation(async (id: string) => {
-      const booking = await prisma.booking.findFirst({ where: { id, deletedAt: null } });
-      if (!booking) throw new (require('@nestjs/common').NotFoundException)({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
-      if (!['confirmed', 'checked_in', 'in_progress'].includes(booking.status)) throw new (require('@nestjs/common').ConflictException)({ statusCode: 409, message: `Cannot complete booking with status '${booking.status}'`, error: 'CONFLICT' });
-      return prisma.booking.update({ where: { id }, data: { status: 'completed', completedAt: new Date() } });
+      const booking = await prisma.booking.findFirst({
+        where: { id, deletedAt: null },
+      });
+      if (!booking)
+        throw new (require('@nestjs/common').NotFoundException)({
+          statusCode: 404,
+          message: 'Booking not found',
+          error: 'NOT_FOUND',
+        });
+      if (!['confirmed', 'checked_in', 'in_progress'].includes(booking.status))
+        throw new (require('@nestjs/common').ConflictException)({
+          statusCode: 409,
+          message: `Cannot complete booking with status '${booking.status}'`,
+          error: 'CONFLICT',
+        });
+      return prisma.booking.update({
+        where: { id },
+        data: { status: 'completed', completedAt: new Date() },
+      });
     }),
     checkIn: jest.fn(),
     startSession: jest.fn(),
@@ -228,9 +275,11 @@ export const mockClinicHoursService = {
       isActive: true,
     })),
   ),
-  getForDay: jest.fn().mockResolvedValue([
-    { dayOfWeek: 1, startTime: '08:00', endTime: '20:00', isActive: true },
-  ]),
+  getForDay: jest
+    .fn()
+    .mockResolvedValue([
+      { dayOfWeek: 1, startTime: '08:00', endTime: '20:00', isActive: true },
+    ]),
 };
 
 export const mockClinicHolidaysService = {

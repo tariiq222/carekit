@@ -83,10 +83,20 @@ describe('PractitionersService.resolveDurationForSlots', () => {
   // ─────────────────────────────────────────────────────────────────────────
 
   it('uses PriceResolverService when practitionerId provided', async () => {
-    mockPrisma.practitionerService.findUnique.mockResolvedValue({ id: 'ps-uuid' });
-    mockPriceResolver.resolve.mockResolvedValue({ price: 150, duration: 75, source: 'practitioner_option' });
+    mockPrisma.practitionerService.findUnique.mockResolvedValue({
+      id: 'ps-uuid',
+    });
+    mockPriceResolver.resolve.mockResolvedValue({
+      price: 150,
+      duration: 75,
+      source: 'practitioner_option',
+    });
 
-    const result = await service.resolveDurationForSlots('svc-1', 'in_person', 'prac-1');
+    const result = await service.resolveDurationForSlots(
+      'svc-1',
+      'in_person',
+      'prac-1',
+    );
 
     expect(result).toBe(75);
     expect(mockPriceResolver.resolve).toHaveBeenCalledWith({
@@ -104,17 +114,29 @@ describe('PractitionersService.resolveDurationForSlots', () => {
       durationOptions: [],
     });
 
-    const result = await service.resolveDurationForSlots('svc-1', 'in_person', 'prac-1');
+    const result = await service.resolveDurationForSlots(
+      'svc-1',
+      'in_person',
+      'prac-1',
+    );
 
     expect(result).toBe(50);
     expect(mockPriceResolver.resolve).not.toHaveBeenCalled();
   });
 
   it('returns 30 (safe default) when PriceResolverService throws', async () => {
-    mockPrisma.practitionerService.findUnique.mockResolvedValue({ id: 'ps-uuid' });
-    mockPriceResolver.resolve.mockRejectedValue(new Error('booking type not active'));
+    mockPrisma.practitionerService.findUnique.mockResolvedValue({
+      id: 'ps-uuid',
+    });
+    mockPriceResolver.resolve.mockRejectedValue(
+      new Error('booking type not active'),
+    );
 
-    const result = await service.resolveDurationForSlots('svc-1', 'in_person', 'prac-1');
+    const result = await service.resolveDurationForSlots(
+      'svc-1',
+      'in_person',
+      'prac-1',
+    );
 
     expect(result).toBe(30); // non-blocking — must not propagate error
   });
@@ -132,7 +154,9 @@ describe('PractitionersService.resolveDurationForSlots', () => {
     //
     // New behavior: both must return 60
 
-    mockPrisma.practitionerService.findUnique.mockResolvedValue({ id: 'ps-uuid' });
+    mockPrisma.practitionerService.findUnique.mockResolvedValue({
+      id: 'ps-uuid',
+    });
     mockPriceResolver.resolve.mockResolvedValue({
       price: 300,
       duration: 60,
@@ -140,7 +164,11 @@ describe('PractitionersService.resolveDurationForSlots', () => {
       durationOptionId: 'opt-60',
     });
 
-    const slotDuration = await service.resolveDurationForSlots('svc-1', 'in_person', 'prac-1');
+    const slotDuration = await service.resolveDurationForSlots(
+      'svc-1',
+      'in_person',
+      'prac-1',
+    );
 
     // This must equal what booking-creation.service.ts would resolve
     expect(slotDuration).toBe(60);

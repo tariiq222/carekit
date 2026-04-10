@@ -32,7 +32,8 @@ describe('AuthService — generateOtp', () => {
     ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 0 });
     ctx.mockPrisma.otpCode.create.mockImplementation(
       ({ data }: { data: { expiresAt: Date } }) => {
-        const diffMinutes = (new Date(data.expiresAt).getTime() - Date.now()) / (1000 * 60);
+        const diffMinutes =
+          (new Date(data.expiresAt).getTime() - Date.now()) / (1000 * 60);
         expect(diffMinutes).toBeGreaterThan(9);
         expect(diffMinutes).toBeLessThanOrEqual(11);
         return Promise.resolve({ id: 'otp-id', ...data });
@@ -44,13 +45,20 @@ describe('AuthService — generateOtp', () => {
 
   it('should invalidate previous unused OTPs for same user and type', async () => {
     ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 1 });
-    ctx.mockPrisma.otpCode.create.mockResolvedValue({ id: 'otp-id', code: '123456' });
+    ctx.mockPrisma.otpCode.create.mockResolvedValue({
+      id: 'otp-id',
+      code: '123456',
+    });
 
     await ctx.service.generateOtp('user-id', 'login');
 
     expect(ctx.mockPrisma.otpCode.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ userId: 'user-id', type: 'login', usedAt: null }),
+        where: expect.objectContaining({
+          userId: 'user-id',
+          type: 'login',
+          usedAt: null,
+        }),
       }),
     );
   });
@@ -79,15 +87,21 @@ describe('AuthService — verifyOtp', () => {
     };
     ctx.mockPrisma.user.findUnique.mockResolvedValue(mockUser);
     ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 1 });
-    ctx.mockPrisma.user.update.mockResolvedValue({ ...mockUser, emailVerified: true });
+    ctx.mockPrisma.user.update.mockResolvedValue({
+      ...mockUser,
+      emailVerified: true,
+    });
 
     await ctx.service.verifyOtp('user@example.com', '123456', 'login');
 
     // verifyOtp hashes the input code before DB lookup
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const crypto = require('crypto');
-    const hashedCode = crypto.createHash('sha256').update('123456').digest('hex');
+    const hashedCode = crypto
+      .createHash('sha256')
+      .update('123456')
+      .digest('hex');
     expect(ctx.mockPrisma.otpCode.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -100,17 +114,19 @@ describe('AuthService — verifyOtp', () => {
     );
   });
 
-  it.each([
-    ['expired OTP'],
-    ['used OTP'],
-    ['wrong code'],
-  ])('should reject %s', async () => {
-    ctx.mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', email: 'user@example.com' });
-    ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 0 });
-    ctx.mockPrisma.otpCode.findFirst.mockResolvedValue(null);
+  it.each([['expired OTP'], ['used OTP'], ['wrong code']])(
+    'should reject %s',
+    async () => {
+      ctx.mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-id',
+        email: 'user@example.com',
+      });
+      ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 0 });
+      ctx.mockPrisma.otpCode.findFirst.mockResolvedValue(null);
 
-    await expect(
-      ctx.service.verifyOtp('user@example.com', '123456', 'login'),
-    ).rejects.toThrow();
-  });
+      await expect(
+        ctx.service.verifyOtp('user@example.com', '123456', 'login'),
+      ).rejects.toThrow();
+    },
+  );
 });

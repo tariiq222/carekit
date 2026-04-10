@@ -8,7 +8,6 @@ const mockSession = {
   down: jest.fn().mockReturnValue({ redis: { status: 'down' } }),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockRedis: any = {
   ping: jest.fn(),
 };

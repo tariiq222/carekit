@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { BookingSettingsService } from '../bookings/booking-settings.service.js';
 import { SetAvailabilityDto } from './dto/set-availability.dto.js';
@@ -44,7 +41,10 @@ export class PractitionerAvailabilityService {
     dto: SetAvailabilityDto,
     currentUserId?: string,
   ) {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
+    const practitioner = await ensurePractitionerExists(
+      this.prisma,
+      practitionerId,
+    );
 
     if (currentUserId) {
       await checkOwnership(this.prisma, practitioner.userId, currentUserId);
@@ -55,7 +55,9 @@ export class PractitionerAvailabilityService {
 
     // Replace all availability records atomically
     await this.prisma.$transaction([
-      this.prisma.practitionerAvailability.deleteMany({ where: { practitionerId } }),
+      this.prisma.practitionerAvailability.deleteMany({
+        where: { practitionerId },
+      }),
       this.prisma.practitionerAvailability.createMany({
         data: dto.schedule.map((slot) => ({
           practitionerId,
@@ -74,7 +76,12 @@ export class PractitionerAvailabilityService {
     });
   }
 
-  async getSlots(practitionerId: string, date: string, duration: number = 30, branchId?: string) {
+  async getSlots(
+    practitionerId: string,
+    date: string,
+    duration: number = 30,
+    branchId?: string,
+  ) {
     if (!date) {
       throw new BadRequestException({
         statusCode: 400,
@@ -85,8 +92,18 @@ export class PractitionerAvailabilityService {
     return this.resolveSlots(practitionerId, date, duration, branchId);
   }
 
-  async getAvailableSlots(practitionerId: string, date: string, duration: number = 30, branchId?: string) {
-    const { slots } = await this.resolveSlots(practitionerId, date, duration, branchId);
+  async getAvailableSlots(
+    practitionerId: string,
+    date: string,
+    duration: number = 30,
+    branchId?: string,
+  ) {
+    const { slots } = await this.resolveSlots(
+      practitionerId,
+      date,
+      duration,
+      branchId,
+    );
     return slots.filter((s) => s.available);
   }
 
@@ -101,7 +118,10 @@ export class PractitionerAvailabilityService {
     duration: number = 30,
     branchId?: string,
   ): Promise<{ availableDates: string[] }> {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
+    const practitioner = await ensurePractitionerExists(
+      this.prisma,
+      practitionerId,
+    );
     if (!practitioner.isAcceptingBookings) {
       return { availableDates: [] };
     }
@@ -112,46 +132,60 @@ export class PractitionerAvailabilityService {
     const lastDay = new Date(Date.UTC(year, mon, 0)); // last day of month
 
     // Today (start of day UTC) — skip past days
-    const todayUTC = new Date(Date.UTC(
-      new Date().getFullYear(),
-      new Date().getMonth(),
-      new Date().getDate(),
-    ));
+    const todayUTC = new Date(
+      Date.UTC(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate(),
+      ),
+    );
 
     // Bulk fetch: all availability records for this practitioner
-    const [allAvailabilities, vacations, breaks, bookings, settings] = await Promise.all([
-      this.prisma.practitionerAvailability.findMany({
-        where: {
-          practitionerId,
-          isActive: true,
-          ...(branchId ? { OR: [{ branchId }, { branchId: null }] } : {}),
-        },
-      }),
-      this.prisma.practitionerVacation.findMany({
-        where: {
-          practitionerId,
-          startDate: { lte: lastDay },
-          endDate: { gte: firstDay },
-        },
-      }),
-      this.prisma.practitionerBreak.findMany({ where: { practitionerId } }),
-      this.prisma.booking.findMany({
-        where: {
-          practitionerId,
-          date: { gte: firstDay, lte: new Date(lastDay.getTime() + 86399999) },
-          status: { in: ['confirmed', 'pending', 'checked_in', 'in_progress'] },
-          deletedAt: null,
-        },
-        select: { startTime: true, endTime: true, date: true },
-      }),
-      this.bookingSettingsService.getForBranch(branchId),
-    ]);
+    const [allAvailabilities, vacations, breaks, bookings, settings] =
+      await Promise.all([
+        this.prisma.practitionerAvailability.findMany({
+          where: {
+            practitionerId,
+            isActive: true,
+            ...(branchId ? { OR: [{ branchId }, { branchId: null }] } : {}),
+          },
+        }),
+        this.prisma.practitionerVacation.findMany({
+          where: {
+            practitionerId,
+            startDate: { lte: lastDay },
+            endDate: { gte: firstDay },
+          },
+        }),
+        this.prisma.practitionerBreak.findMany({ where: { practitionerId } }),
+        this.prisma.booking.findMany({
+          where: {
+            practitionerId,
+            date: {
+              gte: firstDay,
+              lte: new Date(lastDay.getTime() + 86399999),
+            },
+            status: {
+              in: ['confirmed', 'pending', 'checked_in', 'in_progress'],
+            },
+            deletedAt: null,
+          },
+          select: { startTime: true, endTime: true, date: true },
+        }),
+        this.bookingSettingsService.getForBranch(branchId),
+      ]);
 
-    const bufferMinutes = await this.resolveBufferMinutes(practitionerId, settings.bufferMinutes ?? 0);
+    const bufferMinutes = await this.resolveBufferMinutes(
+      practitionerId,
+      settings.bufferMinutes ?? 0,
+    );
     const availableDates: string[] = [];
 
     // Group bookings by date string for fast lookup
-    const bookingsByDate = new Map<string, Array<{ startTime: string; endTime: string }>>();
+    const bookingsByDate = new Map<
+      string,
+      Array<{ startTime: string; endTime: string }>
+    >();
     for (const b of bookings) {
       const key = b.date.toISOString().slice(0, 10);
       const arr = bookingsByDate.get(key) ?? [];
@@ -209,7 +243,9 @@ export class PractitionerAvailabilityService {
       }
 
       // Get availability for this day-of-week
-      const dayAvailabilities = allAvailabilities.filter((a) => a.dayOfWeek === dayOfWeek);
+      const dayAvailabilities = allAvailabilities.filter(
+        (a) => a.dayOfWeek === dayOfWeek,
+      );
       if (dayAvailabilities.length === 0) {
         cursor.setUTCDate(cursor.getUTCDate() + 1);
         continue;
@@ -220,11 +256,24 @@ export class PractitionerAvailabilityService {
 
       // Generate slots
       const isToday = isSameLocalDate(cursor, new Date(), clinicTz);
-      const allSlots = generateSlots(dayAvailabilities, duration, bufferMinutes, isToday);
+      const allSlots = generateSlots(
+        dayAvailabilities,
+        duration,
+        bufferMinutes,
+        isToday,
+      );
 
       // Filter out break-overlapping slots
       const slotsAfterBreaks = allSlots.filter(
-        (slot) => !dayBreaks.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
+        (slot) =>
+          !dayBreaks.some((b) =>
+            timeSlotsOverlap(
+              slot.startTime,
+              slot.endTime,
+              b.startTime,
+              b.endTime,
+            ),
+          ),
       );
 
       if (slotsAfterBreaks.length === 0) {
@@ -235,7 +284,15 @@ export class PractitionerAvailabilityService {
       // Check if at least one slot is not booked
       const dayBookings = bookingsByDate.get(dateStr) ?? [];
       const hasAvailable = slotsAfterBreaks.some(
-        (slot) => !dayBookings.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
+        (slot) =>
+          !dayBookings.some((b) =>
+            timeSlotsOverlap(
+              slot.startTime,
+              slot.endTime,
+              b.startTime,
+              b.endTime,
+            ),
+          ),
       );
 
       if (hasAvailable) {
@@ -258,18 +315,23 @@ export class PractitionerAvailabilityService {
     date: string;
     practitionerId: string;
   }> {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
+    const practitioner = await ensurePractitionerExists(
+      this.prisma,
+      practitionerId,
+    );
     if (!practitioner.isAcceptingBookings) {
       return { date, practitionerId, slots: [] };
     }
 
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
-    const normalizedDate = new Date(Date.UTC(
-      targetDate.getFullYear(),
-      targetDate.getMonth(),
-      targetDate.getDate(),
-    ));
+    const normalizedDate = new Date(
+      Date.UTC(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate(),
+      ),
+    );
 
     const [availabilities, vacation] = await Promise.all([
       this.prisma.practitionerAvailability.findMany({
@@ -292,7 +354,8 @@ export class PractitionerAvailabilityService {
 
     if (vacation) return { date, practitionerId, slots: [] };
 
-    const isHoliday = await this.clinicHolidaysService.isHoliday(normalizedDate);
+    const isHoliday =
+      await this.clinicHolidaysService.isHoliday(normalizedDate);
     if (isHoliday) return { date, practitionerId, slots: [] };
 
     const targetDateEnd = new Date(normalizedDate);
@@ -300,7 +363,9 @@ export class PractitionerAvailabilityService {
 
     const [settings, breaks, bookings] = await Promise.all([
       this.bookingSettingsService.getForBranch(branchId),
-      this.prisma.practitionerBreak.findMany({ where: { practitionerId, dayOfWeek } }),
+      this.prisma.practitionerBreak.findMany({
+        where: { practitionerId, dayOfWeek },
+      }),
       this.prisma.booking.findMany({
         where: {
           practitionerId,
@@ -312,14 +377,30 @@ export class PractitionerAvailabilityService {
       }),
     ]);
 
-    const bufferMinutes = await this.resolveBufferMinutes(practitionerId, settings.bufferMinutes ?? 0);
+    const bufferMinutes = await this.resolveBufferMinutes(
+      practitionerId,
+      settings.bufferMinutes ?? 0,
+    );
 
     const clinicTz = await this.clinicSettingsService.getTimezone();
     const isToday = isSameLocalDate(targetDate, new Date(), clinicTz);
-    const allSlots = generateSlots(availabilities, duration, bufferMinutes, isToday);
+    const allSlots = generateSlots(
+      availabilities,
+      duration,
+      bufferMinutes,
+      isToday,
+    );
 
     const slotsWithoutBreaks = allSlots.filter(
-      (slot) => !breaks.some((b) => timeSlotsOverlap(slot.startTime, slot.endTime, b.startTime, b.endTime)),
+      (slot) =>
+        !breaks.some((b) =>
+          timeSlotsOverlap(
+            slot.startTime,
+            slot.endTime,
+            b.startTime,
+            b.endTime,
+          ),
+        ),
     );
 
     const slots = slotsWithoutBreaks.map((slot) => ({
@@ -363,9 +444,8 @@ export class PractitionerAvailabilityService {
       if (!ps) return globalBufferMinutes;
 
       // ps.bufferMinutes > 0 means explicit practitioner override; otherwise use service default
-      const effectiveBuffer = ps.bufferMinutes > 0
-        ? ps.bufferMinutes
-        : ps.service.bufferMinutes;
+      const effectiveBuffer =
+        ps.bufferMinutes > 0 ? ps.bufferMinutes : ps.service.bufferMinutes;
 
       return Math.max(globalBufferMinutes, effectiveBuffer);
     }
@@ -382,7 +462,8 @@ export class PractitionerAvailabilityService {
 
     const maxServiceBuffer = psRecords.reduce((max, ps) => {
       // Use ps override when explicitly set (> 0), otherwise fall back to service default
-      const effective = ps.bufferMinutes > 0 ? ps.bufferMinutes : ps.service.bufferMinutes;
+      const effective =
+        ps.bufferMinutes > 0 ? ps.bufferMinutes : ps.service.bufferMinutes;
       return Math.max(max, effective);
     }, 0);
 

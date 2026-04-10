@@ -68,8 +68,10 @@ beforeAll(async () => {
       .send({ language: 'ar' }),
   ]);
 
-  patientSessionId = (sess1.body as { data: { session: { id: string } } }).data.session.id;
-  endableSessionId = (sess2.body as { data: { session: { id: string } } }).data.session.id;
+  patientSessionId = (sess1.body as { data: { session: { id: string } } }).data
+    .session.id;
+  endableSessionId = (sess2.body as { data: { session: { id: string } } }).data
+    .session.id;
 });
 
 afterAll(async () => {
@@ -156,7 +158,10 @@ describe('GET /chatbot/sessions', () => {
 
   it('returns 401 without token', async () => {
     const res = await request(httpServer).get(SESSIONS_URL).expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 });
 
@@ -172,7 +177,7 @@ describe('GET /chatbot/sessions/:id', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    const data = (res.body as { data: Record<string, unknown> }).data as Record<string, unknown>;
+    const data = (res.body as { data: Record<string, unknown> }).data;
     expect(data.id).toBe(patientSessionId);
     expect(Array.isArray(data.messages)).toBe(true);
   });
@@ -197,7 +202,10 @@ describe('GET /chatbot/sessions/:id', () => {
     const res = await request(httpServer)
       .get(`${SESSIONS_URL}/${patientSessionId}`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 });
 
@@ -213,7 +221,7 @@ describe('POST /chatbot/sessions/:id/end', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    const data = (res.body as { data: Record<string, unknown> }).data as Record<string, unknown>;
+    const data = (res.body as { data: Record<string, unknown> }).data;
     expect(data).toHaveProperty('endedAt');
   });
 
@@ -237,6 +245,9 @@ describe('POST /chatbot/sessions/:id/end', () => {
     const res = await request(httpServer)
       .post(`${SESSIONS_URL}/${endableSessionId}/end`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 });

@@ -53,7 +53,9 @@ describe('EmailTemplatesService', () => {
     it('should throw NotFoundException when template not found', async () => {
       mockPrisma.emailTemplate.findUnique.mockResolvedValue(null);
 
-      await expect(service.findBySlug('unknown_slug')).rejects.toThrow(NotFoundException);
+      await expect(service.findBySlug('unknown_slug')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -67,7 +69,9 @@ describe('EmailTemplatesService', () => {
       mockPrisma.emailTemplate.findUnique.mockResolvedValue(activeTemplate);
       mockPrisma.emailTemplate.update.mockResolvedValue(updated);
 
-      const result = await service.update('tpl-1', { subjectEn: 'Updated subject' });
+      const result = await service.update('tpl-1', {
+        subjectEn: 'Updated subject',
+      });
 
       expect(mockPrisma.emailTemplate.update).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'tpl-1' } }),
@@ -78,9 +82,9 @@ describe('EmailTemplatesService', () => {
     it('should throw NotFoundException when template not found', async () => {
       mockPrisma.emailTemplate.findUnique.mockResolvedValue(null);
 
-      await expect(service.update('missing-id', { subjectEn: 'x' })).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.update('missing-id', { subjectEn: 'x' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

@@ -44,20 +44,35 @@ const baseGroup = {
   updatedAt: new Date(),
   deletedAt: null,
   practitioner: { id: 'prac-1', nameAr: 'د. علي' },
-  enrollments: [] as Array<{ id: string; patientId: string; status: string; payment?: { id: string; status: string } }>,
+  enrollments: [] as Array<{
+    id: string;
+    patientId: string;
+    status: string;
+    payment?: { id: string; status: string };
+  }>,
 };
 
 const mockPrisma: DeepMockProxy<PrismaClient> = mockDeep<PrismaClient>();
 
-const mockNotifications: jest.Mocked<Pick<NotificationsService, 'createNotification'>> = {
+const mockNotifications: jest.Mocked<
+  Pick<NotificationsService, 'createNotification'>
+> = {
   createNotification: jest.fn().mockResolvedValue(undefined),
 };
 
-const mockActivityLog: jest.Mocked<Pick<import('../../../src/modules/activity-log/activity-log.service.js').ActivityLogService, 'log'>> = {
+const mockActivityLog: jest.Mocked<
+  Pick<
+    import('../../../src/modules/activity-log/activity-log.service.js').ActivityLogService,
+    'log'
+  >
+> = {
   log: jest.fn().mockResolvedValue(undefined),
 };
 
-mockPrisma.$transaction.mockImplementation(async (fn: (tx: PrismaClient) => Promise<unknown>) => fn(mockPrisma as unknown as PrismaClient));
+mockPrisma.$transaction.mockImplementation(
+  async (fn: (tx: PrismaClient) => Promise<unknown>) =>
+    fn(mockPrisma as unknown as PrismaClient),
+);
 
 describe('GroupsService', () => {
   let service: GroupsService;
@@ -108,26 +123,43 @@ describe('GroupsService', () => {
     };
 
     it('throws 400 when minParticipants > maxParticipants', async () => {
-      await expect(service.create({ ...validDto, minParticipants: 10, maxParticipants: 5 }))
-        .rejects.toThrow(BadRequestException);
+      await expect(
+        service.create({
+          ...validDto,
+          minParticipants: 10,
+          maxParticipants: 5,
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws 400 when fixed_date with no startTime', async () => {
-      await expect(service.create({ ...validDto, schedulingMode: 'fixed_date', startTime: undefined }))
-        .rejects.toThrow(BadRequestException);
+      await expect(
+        service.create({
+          ...validDto,
+          schedulingMode: 'fixed_date',
+          startTime: undefined,
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws 400 when DEPOSIT paymentType with no depositAmount', async () => {
-      await expect(service.create({ ...validDto, paymentType: 'DEPOSIT', depositAmount: undefined }))
-        .rejects.toThrow(BadRequestException);
+      await expect(
+        service.create({
+          ...validDto,
+          paymentType: 'DEPOSIT',
+          depositAmount: undefined,
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws 400 when startTime is in the past', async () => {
-      await expect(service.create({
-        ...validDto,
-        schedulingMode: 'fixed_date',
-        startTime: new Date(Date.now() - 3600000).toISOString(),
-      })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.create({
+          ...validDto,
+          schedulingMode: 'fixed_date',
+          startTime: new Date(Date.now() - 3600000).toISOString(),
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('creates group successfully for on_capacity mode', async () => {
@@ -158,7 +190,10 @@ describe('GroupsService', () => {
         deliveryMode: 'in_person' as const,
       };
 
-      mockPrisma.group.create.mockResolvedValue({ id: 'group-new', ...dto } as never);
+      mockPrisma.group.create.mockResolvedValue({
+        id: 'group-new',
+        ...dto,
+      } as never);
 
       await service.create(dto);
 
@@ -177,7 +212,9 @@ describe('GroupsService', () => {
   describe('findOne()', () => {
     it('throws 404 when group not found', async () => {
       mockPrisma.group.findFirst.mockResolvedValue(null);
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('returns group when found', async () => {
@@ -191,24 +228,43 @@ describe('GroupsService', () => {
 
   describe('triggerPaymentRequest() — payment amount logic', () => {
     beforeEach(() => {
-      mockPrisma.groupEnrollment.findMany.mockResolvedValue([{ id: 'enr-1', patientId: 'pat-1' }]);
-      mockPrisma.groupEnrollment.updateMany.mockResolvedValue({ count: 1 } as never);
+      mockPrisma.groupEnrollment.findMany.mockResolvedValue([
+        { id: 'enr-1', patientId: 'pat-1' },
+      ]);
+      mockPrisma.groupEnrollment.updateMany.mockResolvedValue({
+        count: 1,
+      } as never);
       mockPrisma.group.update.mockResolvedValue(baseGroup as never);
     });
 
     it('sends 0 for FREE_HOLD groups', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, paymentType: 'FREE_HOLD', status: 'open', currentEnrollment: 5 } as never);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        paymentType: 'FREE_HOLD',
+        status: 'open',
+        currentEnrollment: 5,
+      } as never);
       await service.triggerPaymentRequest('grp-1');
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ bodyEn: expect.stringContaining('0 halalat') }),
+        expect.objectContaining({
+          bodyEn: expect.stringContaining('0 halalat'),
+        }),
       );
     });
 
     it('sends depositAmount for DEPOSIT groups', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, paymentType: 'DEPOSIT', depositAmount: 1000, status: 'open', currentEnrollment: 5 } as never);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        paymentType: 'DEPOSIT',
+        depositAmount: 1000,
+        status: 'open',
+        currentEnrollment: 5,
+      } as never);
       await service.triggerPaymentRequest('grp-1');
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ bodyEn: expect.stringContaining('1000 halalat') }),
+        expect.objectContaining({
+          bodyEn: expect.stringContaining('1000 halalat'),
+        }),
       );
     });
 
@@ -216,18 +272,32 @@ describe('GroupsService', () => {
       mockPrisma.group.findFirst.mockResolvedValue(baseGroup as never);
       await service.triggerPaymentRequest('grp-1');
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ bodyEn: expect.stringContaining('5000 halalat') }),
+        expect.objectContaining({
+          bodyEn: expect.stringContaining('5000 halalat'),
+        }),
       );
     });
 
     it('throws 400 when minimum participants not met', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, currentEnrollment: 2, minParticipants: 3, status: 'open' } as never);
-      await expect(service.triggerPaymentRequest('grp-1')).rejects.toThrow(BadRequestException);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        currentEnrollment: 2,
+        minParticipants: 3,
+        status: 'open',
+      } as never);
+      await expect(service.triggerPaymentRequest('grp-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws 400 when group is not open or full', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'cancelled' } as never);
-      await expect(service.triggerPaymentRequest('grp-1')).rejects.toThrow(BadRequestException);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        status: 'cancelled',
+      } as never);
+      await expect(service.triggerPaymentRequest('grp-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -235,13 +305,24 @@ describe('GroupsService', () => {
 
   describe('complete()', () => {
     it('throws 400 when group is not confirmed or full', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'open' } as never);
-      await expect(service.complete('grp-1', [])).rejects.toThrow(BadRequestException);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        status: 'open',
+      } as never);
+      await expect(service.complete('grp-1', [])).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('completes group with empty attended list — skips updateMany', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'confirmed' } as never);
-      mockPrisma.group.update.mockResolvedValue({ ...baseGroup, status: 'completed' } as never);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        status: 'confirmed',
+      } as never);
+      mockPrisma.group.update.mockResolvedValue({
+        ...baseGroup,
+        status: 'completed',
+      } as never);
 
       const result = await service.complete('grp-1', []);
       expect(result).toEqual({ completed: true });
@@ -249,13 +330,23 @@ describe('GroupsService', () => {
     });
 
     it('marks attended patients on complete', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'confirmed' } as never);
-      mockPrisma.group.update.mockResolvedValue({ ...baseGroup, status: 'completed' } as never);
-      mockPrisma.groupEnrollment.updateMany.mockResolvedValue({ count: 2 } as never);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        status: 'confirmed',
+      } as never);
+      mockPrisma.group.update.mockResolvedValue({
+        ...baseGroup,
+        status: 'completed',
+      } as never);
+      mockPrisma.groupEnrollment.updateMany.mockResolvedValue({
+        count: 2,
+      } as never);
 
       await service.complete('grp-1', ['pat-1', 'pat-2']);
       expect(mockPrisma.groupEnrollment.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ status: 'attended', attended: true }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ status: 'attended', attended: true }),
+        }),
       );
     });
   });
@@ -263,29 +354,55 @@ describe('GroupsService', () => {
   // ─── confirmSchedule() ──────────────────────────────────────────
 
   describe('confirmSchedule()', () => {
-    const dto: ConfirmScheduleDto = { startTime: new Date(Date.now() + 86400000).toISOString() };
+    const dto: ConfirmScheduleDto = {
+      startTime: new Date(Date.now() + 86400000).toISOString(),
+    };
 
     it('throws 400 when group is not awaiting_payment', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'open' } as never);
-      await expect(service.confirmSchedule('grp-1', dto)).rejects.toThrow(BadRequestException);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        status: 'open',
+      } as never);
+      await expect(service.confirmSchedule('grp-1', dto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws 400 when startTime is in the past', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'awaiting_payment' } as never);
-      await expect(service.confirmSchedule('grp-1', { startTime: new Date(Date.now() - 1000).toISOString() }))
-        .rejects.toThrow(BadRequestException);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        status: 'awaiting_payment',
+      } as never);
+      await expect(
+        service.confirmSchedule('grp-1', {
+          startTime: new Date(Date.now() - 1000).toISOString(),
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws 400 when no confirmed (paid) enrollments exist', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'awaiting_payment' } as never);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        status: 'awaiting_payment',
+      } as never);
       mockPrisma.groupEnrollment.findMany.mockResolvedValue([]);
-      await expect(service.confirmSchedule('grp-1', dto)).rejects.toThrow(BadRequestException);
+      await expect(service.confirmSchedule('grp-1', dto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('sets status to confirmed and sends notifications', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'awaiting_payment' } as never);
-      mockPrisma.groupEnrollment.findMany.mockResolvedValue([{ id: 'enr-1', patientId: 'pat-1' }]);
-      mockPrisma.group.update.mockResolvedValue({ ...baseGroup, status: 'confirmed' } as never);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        status: 'awaiting_payment',
+      } as never);
+      mockPrisma.groupEnrollment.findMany.mockResolvedValue([
+        { id: 'enr-1', patientId: 'pat-1' },
+      ]);
+      mockPrisma.group.update.mockResolvedValue({
+        ...baseGroup,
+        status: 'confirmed',
+      } as never);
 
       const result = await service.confirmSchedule('grp-1', dto);
       expect(result.status).toBe('confirmed');
@@ -304,15 +421,31 @@ describe('GroupsService', () => {
     });
 
     it('throws 400 when group already cancelled', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ ...baseGroup, status: 'cancelled' } as never);
-      await expect(service.cancel(groupId)).rejects.toThrow(BadRequestException);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        ...baseGroup,
+        status: 'cancelled',
+      } as never);
+      await expect(service.cancel(groupId)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('cancels successfully and updates enrollment statuses', async () => {
-      const group = { ...baseGroup, id: groupId, status: 'open', enrollments: [] } as never;
+      const group = {
+        ...baseGroup,
+        id: groupId,
+        status: 'open',
+        enrollments: [],
+      } as never;
       mockPrisma.group.findFirst.mockResolvedValue(group);
-      mockPrisma.groupEnrollment.updateMany.mockResolvedValue({ count: 2 } as never);
-      mockPrisma.group.update.mockResolvedValue({ ...baseGroup, id: groupId, status: 'cancelled' } as never);
+      mockPrisma.groupEnrollment.updateMany.mockResolvedValue({
+        count: 2,
+      } as never);
+      mockPrisma.group.update.mockResolvedValue({
+        ...baseGroup,
+        id: groupId,
+        status: 'cancelled',
+      } as never);
 
       const result = await service.cancel(groupId);
       expect(result).toEqual({ cancelled: true });
@@ -324,7 +457,9 @@ describe('GroupsService', () => {
   describe('resendPaymentRequest()', () => {
     it('throws 404 when enrollment not found', async () => {
       mockPrisma.groupEnrollment.findFirst.mockResolvedValue(null);
-      await expect(service.resendPaymentRequest('grp-1', 'non-existent')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.resendPaymentRequest('grp-1', 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('resends notification successfully', async () => {
@@ -334,11 +469,18 @@ describe('GroupsService', () => {
         patientId: 'pat-1',
         status: 'payment_requested',
         paymentDeadlineAt: new Date(),
-        group: { pricePerPersonHalalat: 5000, depositAmount: null, paymentType: 'FULL_PAYMENT', paymentDeadlineHours: 48 },
+        group: {
+          pricePerPersonHalalat: 5000,
+          depositAmount: null,
+          paymentType: 'FULL_PAYMENT',
+          paymentDeadlineHours: 48,
+        },
       } as never;
       mockPrisma.groupEnrollment.findFirst.mockResolvedValue(enrollment);
 
-      await expect(service.resendPaymentRequest('grp-1', 'enr-1')).resolves.toEqual({ resent: true });
+      await expect(
+        service.resendPaymentRequest('grp-1', 'enr-1'),
+      ).resolves.toEqual({ resent: true });
       expect(mockNotifications.createNotification).toHaveBeenCalledTimes(1);
     });
   });

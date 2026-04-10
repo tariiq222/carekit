@@ -60,7 +60,6 @@ export const mockClinicService = {
   category: mockCategory,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockPrisma(): any {
   return {
     service: {
@@ -85,14 +84,15 @@ export function createMockPrisma(): any {
     },
     $transaction: jest.fn((fnOrOps: unknown) => {
       if (typeof fnOrOps === 'function') {
-        return (fnOrOps as (tx: unknown) => Promise<unknown>)(createMockPrisma());
+        return (fnOrOps as (tx: unknown) => Promise<unknown>)(
+          createMockPrisma(),
+        );
       }
       return Promise.resolve([]);
     }),
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockCache(): any {
   return {
     get: jest.fn().mockResolvedValue(null),

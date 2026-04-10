@@ -54,8 +54,10 @@ export class ZatcaOnboardingService {
 
     // Request Compliance CSID
     this.logger.log('Requesting compliance CSID...');
-    const complianceResult =
-      await this.apiService.requestComplianceCsid(csr, otp);
+    const complianceResult = await this.apiService.requestComplianceCsid(
+      csr,
+      otp,
+    );
 
     const complianceCredentials: ZatcaCredentials = {
       csid: complianceResult.binarySecurityToken,
@@ -129,7 +131,10 @@ export class ZatcaOnboardingService {
     }
   }
 
-  private async buildCsr(config: ZatcaConfig, privateKey: string): Promise<string> {
+  private async buildCsr(
+    config: ZatcaConfig,
+    privateKey: string,
+  ): Promise<string> {
     return this.cryptoService.generateCsr(privateKey, {
       commonName: config.sellerName,
       organizationUnit: 'CareKit',
@@ -234,8 +239,9 @@ export class ZatcaOnboardingService {
   }
 
   private getEncryptionKey(): string {
-    const key = this.config.get<string>('ZATCA_ENCRYPTION_KEY')
-      ?? this.config.get<string>('JWT_SECRET');
+    const key =
+      this.config.get<string>('ZATCA_ENCRYPTION_KEY') ??
+      this.config.get<string>('JWT_SECRET');
 
     if (!key) {
       throw new BadRequestException(

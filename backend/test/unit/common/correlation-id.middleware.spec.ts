@@ -15,7 +15,9 @@ describe('CorrelationIdMiddleware', () => {
   });
 
   it('should use incoming x-correlation-id header when present', (done) => {
-    const req = { headers: { [CORRELATION_HEADER]: 'test-correlation-id' } } as never;
+    const req = {
+      headers: { [CORRELATION_HEADER]: 'test-correlation-id' },
+    } as never;
     const res = { setHeader: jest.fn() } as never;
     const next = jest.fn(() => done());
 
@@ -43,7 +45,9 @@ describe('CorrelationIdMiddleware', () => {
   });
 
   it('should make correlationId available via correlationStorage inside next()', (done) => {
-    const req = { headers: { [CORRELATION_HEADER]: 'store-check-id' } } as never;
+    const req = {
+      headers: { [CORRELATION_HEADER]: 'store-check-id' },
+    } as never;
     const res = { setHeader: jest.fn() } as never;
     const next = jest.fn(() => {
       const stored = correlationStorage.getStore();

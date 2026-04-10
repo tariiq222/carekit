@@ -41,7 +41,9 @@ export class ServiceCategoriesService {
 
     const categories = await this.prisma.serviceCategory.findMany({
       where: { isActive: true },
-      include: { department: { select: { id: true, nameEn: true, nameAr: true } } },
+      include: {
+        department: { select: { id: true, nameEn: true, nameAr: true } },
+      },
       orderBy: { sortOrder: 'asc' },
     });
 

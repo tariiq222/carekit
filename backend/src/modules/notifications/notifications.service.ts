@@ -10,7 +10,10 @@ import { CreateNotificationDto } from './dto/create-notification.dto.js';
 import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
 import { PushService } from './push.service.js';
 import { SmsService } from './sms.service.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 
 /** Notification types that warrant an SMS to the user */
 const SMS_ELIGIBLE_TYPES: ReadonlySet<string> = new Set([
@@ -41,7 +44,10 @@ export class NotificationsService {
   // ═══════════════════════════════════════════════════════════════
 
   async findAll(userId: string, query: NotificationListQuery) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      query.page,
+      query.perPage,
+    );
 
     const where = { userId };
 
@@ -135,7 +141,7 @@ export class NotificationsService {
         titleEn: dto.titleEn,
         bodyAr: dto.bodyAr,
         bodyEn: dto.bodyEn,
-        type: dto.type as NotificationType,
+        type: dto.type,
         data: dto.data as Prisma.InputJsonValue | undefined,
       },
     });
@@ -156,7 +162,11 @@ export class NotificationsService {
           ...(dto.data ? { payload: JSON.stringify(dto.data) } : {}),
         },
       })
-      .catch((err) => this.logger.warn('Push notification send failed', { error: err?.message })); // Never fail the main operation
+      .catch((err) =>
+        this.logger.warn('Push notification send failed', {
+          error: err?.message,
+        }),
+      ); // Never fail the main operation
 
     // Fire-and-forget SMS for critical notification types
     if (SMS_ELIGIBLE_TYPES.has(dto.type)) {

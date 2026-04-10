@@ -4,11 +4,7 @@ import * as crypto from 'crypto';
 import { Queue } from 'bullmq';
 import { getQueueToken } from '@nestjs/bullmq';
 import { NotFoundException } from '@nestjs/common';
-import {
-  createTestApp,
-  closeTestApp,
-  TestApp,
-} from '../setup/setup';
+import { createTestApp, closeTestApp, TestApp } from '../setup/setup';
 import { ReceiptVerificationService } from '../../../src/modules/ai/receipt-verification.service';
 import { ReceiptVerificationProcessor } from '../../../src/modules/ai/receipt-verification.processor';
 
@@ -68,23 +64,17 @@ describe('AI Module (e2e)', () => {
 
   describe('Receipt verification queue integration', () => {
     it('should resolve the BullMQ queue from the module', () => {
-      const queue = testApp.module.get<Queue>(
-        getQueueToken(QUEUE_NAME),
-      );
+      const queue = testApp.module.get<Queue>(getQueueToken(QUEUE_NAME));
       expect(queue).toBeDefined();
     });
 
     it('queue should have the correct name', () => {
-      const queue = testApp.module.get<Queue>(
-        getQueueToken(QUEUE_NAME),
-      );
+      const queue = testApp.module.get<Queue>(getQueueToken(QUEUE_NAME));
       expect(queue.name).toBe(QUEUE_NAME);
     });
 
     it('should add a verify job to the queue without throwing', async () => {
-      const queue = testApp.module.get<Queue>(
-        getQueueToken(QUEUE_NAME),
-      );
+      const queue = testApp.module.get<Queue>(getQueueToken(QUEUE_NAME));
       const ghostId = crypto.randomUUID();
 
       const job = await queue.add('verify', { receiptId: ghostId });
@@ -94,9 +84,7 @@ describe('AI Module (e2e)', () => {
     });
 
     it('queued job should have name "verify"', async () => {
-      const queue = testApp.module.get<Queue>(
-        getQueueToken(QUEUE_NAME),
-      );
+      const queue = testApp.module.get<Queue>(getQueueToken(QUEUE_NAME));
       const ghostId = crypto.randomUUID();
 
       const job = await queue.add('verify', { receiptId: ghostId });
@@ -105,9 +93,7 @@ describe('AI Module (e2e)', () => {
     });
 
     it('queued job data should contain the receiptId', async () => {
-      const queue = testApp.module.get<Queue>(
-        getQueueToken(QUEUE_NAME),
-      );
+      const queue = testApp.module.get<Queue>(getQueueToken(QUEUE_NAME));
       const ghostId = crypto.randomUUID();
 
       const job = await queue.add('verify', { receiptId: ghostId });

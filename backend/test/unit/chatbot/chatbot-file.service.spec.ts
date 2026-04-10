@@ -67,7 +67,9 @@ function createMockRagService() {
 
 function createMockMinioService() {
   return {
-    uploadFile: jest.fn().mockResolvedValue('https://storage.example.com/kb-files/test.pdf'),
+    uploadFile: jest
+      .fn()
+      .mockResolvedValue('https://storage.example.com/kb-files/test.pdf'),
   };
 }
 
@@ -116,7 +118,8 @@ describe('ChatbotFileService', () => {
       prisma.knowledgeBaseFile.findUnique.mockResolvedValue(mockFileRecord);
 
       // Mock downloadFile (via fetch)
-      const pdfContent = 'This is extracted PDF text content with enough length to test.';
+      const pdfContent =
+        'This is extracted PDF text content with enough length to test.';
       jest.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: true,
         arrayBuffer: jest.fn().mockResolvedValue(Buffer.from('fake pdf')),
@@ -124,7 +127,10 @@ describe('ChatbotFileService', () => {
 
       // Mock extractText for PDF — we need to mock the dynamic import
       // Since extractText is private and uses dynamic imports, we'll verify the status updates
-      prisma.knowledgeBaseFile.update.mockResolvedValue({ ...mockFileRecord, status: 'completed' });
+      prisma.knowledgeBaseFile.update.mockResolvedValue({
+        ...mockFileRecord,
+        status: 'completed',
+      });
 
       // The actual text extraction depends on pdf-parse which we can't easily mock
       // So let's test the flow more directly
@@ -135,7 +141,9 @@ describe('ChatbotFileService', () => {
       prisma.knowledgeBaseFile.findUnique.mockResolvedValue(file);
 
       // fetch fails
-      jest.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
+      jest
+        .spyOn(globalThis, 'fetch')
+        .mockRejectedValue(new Error('Network error'));
 
       await service.processFile('file-1');
 
@@ -160,7 +168,9 @@ describe('ChatbotFileService', () => {
       // This tests that deleteMany is called with fileId
       prisma.knowledgeBaseFile.findUnique.mockResolvedValue(mockFileRecord);
 
-      jest.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Download failed'));
+      jest
+        .spyOn(globalThis, 'fetch')
+        .mockRejectedValue(new Error('Download failed'));
 
       await service.processFile('file-1');
 
@@ -259,7 +269,9 @@ describe('ChatbotFileService', () => {
       };
 
       prisma.knowledgeBaseFile.create.mockResolvedValue(mockFileRecord);
-      minioService.uploadFile.mockResolvedValue('https://storage.example.com/kb-files/test.pdf');
+      minioService.uploadFile.mockResolvedValue(
+        'https://storage.example.com/kb-files/test.pdf',
+      );
 
       const result = await service.uploadFile('user-1', file);
 
@@ -285,7 +297,8 @@ describe('ChatbotFileService', () => {
       const file: Express.Multer.File = {
         buffer: Buffer.from('docx content'),
         originalname: 'document.docx',
-        mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        mimetype:
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         size: 2048,
         fieldname: 'file',
         encoding: '7bit',
@@ -296,7 +309,9 @@ describe('ChatbotFileService', () => {
       };
 
       prisma.knowledgeBaseFile.create.mockResolvedValue(mockDocxFileRecord);
-      minioService.uploadFile.mockResolvedValue('https://storage.example.com/kb-files/test.docx');
+      minioService.uploadFile.mockResolvedValue(
+        'https://storage.example.com/kb-files/test.docx',
+      );
 
       await service.uploadFile('user-1', file);
 

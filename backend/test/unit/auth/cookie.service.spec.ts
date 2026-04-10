@@ -6,7 +6,6 @@ import { ConfigService } from '@nestjs/config';
 import { CookieService } from '../../../src/modules/auth/cookie.service.js';
 import { Response, Request } from 'express';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockConfigService: any = {
   get: jest.fn(),
 };

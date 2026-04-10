@@ -21,8 +21,10 @@ describe('PermissionsController', () => {
       controllers: [PermissionsController],
       providers: [{ provide: PermissionsService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get<PermissionsController>(PermissionsController);

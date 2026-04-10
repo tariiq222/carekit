@@ -35,9 +35,7 @@ return count
 export class OtpThrottleRedisService {
   private readonly logger = new Logger(OtpThrottleRedisService.name);
 
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   /**
    * Check if the email+route combination is within rate limits.
@@ -82,12 +80,7 @@ export class OtpThrottleRedisService {
 
       // If enough failed windows, set lockout
       if (failCount >= OTP_LOCKOUT_THRESHOLD) {
-        await this.redis.set(
-          lockoutKey,
-          '1',
-          'EX',
-          OTP_LOCKOUT_TTL_SECONDS,
-        );
+        await this.redis.set(lockoutKey, '1', 'EX', OTP_LOCKOUT_TTL_SECONDS);
         // Clean up the fail counter since lockout is now active
         await this.redis.del(failKey);
 

@@ -36,25 +36,49 @@ describe('ServiceCategoriesService — create', () => {
   });
 
   it('should create a category with default sortOrder=0', async () => {
-    const dto = { nameEn: 'New Category', nameAr: 'فئة جديدة', departmentId: 'dept-uuid-1' };
-    mockPrisma.serviceCategory.create.mockResolvedValue({ ...mockCategory, ...dto, sortOrder: 0 });
+    const dto = {
+      nameEn: 'New Category',
+      nameAr: 'فئة جديدة',
+      departmentId: 'dept-uuid-1',
+    };
+    mockPrisma.serviceCategory.create.mockResolvedValue({
+      ...mockCategory,
+      ...dto,
+      sortOrder: 0,
+    });
 
     const result = await service.create(dto);
 
     expect(result.nameEn).toBe(dto.nameEn);
     expect(mockPrisma.serviceCategory.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ nameEn: dto.nameEn, nameAr: dto.nameAr, sortOrder: 0 }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({
+          nameEn: dto.nameEn,
+          nameAr: dto.nameAr,
+          sortOrder: 0,
+        }),
+      }),
     );
   });
 
   it('should create a category with explicit sortOrder', async () => {
-    const dto = { nameEn: 'Priority Category', nameAr: 'فئة ذات أولوية', sortOrder: 5, departmentId: 'dept-uuid-1' };
-    mockPrisma.serviceCategory.create.mockResolvedValue({ ...mockCategory, ...dto });
+    const dto = {
+      nameEn: 'Priority Category',
+      nameAr: 'فئة ذات أولوية',
+      sortOrder: 5,
+      departmentId: 'dept-uuid-1',
+    };
+    mockPrisma.serviceCategory.create.mockResolvedValue({
+      ...mockCategory,
+      ...dto,
+    });
 
     await service.create(dto);
 
     expect(mockPrisma.serviceCategory.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ sortOrder: 5 }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({ sortOrder: 5 }),
+      }),
     );
   });
 });
@@ -70,13 +94,19 @@ describe('ServiceCategoriesService — findAll', () => {
   });
 
   it('should return all active categories sorted by sortOrder', async () => {
-    mockPrisma.serviceCategory.findMany.mockResolvedValue([mockCategory, mockCategory2]);
+    mockPrisma.serviceCategory.findMany.mockResolvedValue([
+      mockCategory,
+      mockCategory2,
+    ]);
 
     const result = await service.findAll();
 
     expect(result).toHaveLength(2);
     expect(mockPrisma.serviceCategory.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { isActive: true }, orderBy: { sortOrder: 'asc' } }),
+      expect.objectContaining({
+        where: { isActive: true },
+        orderBy: { sortOrder: 'asc' },
+      }),
     );
   });
 });
@@ -93,16 +123,24 @@ describe('ServiceCategoriesService — update', () => {
 
   it('should update category fields', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
-    mockPrisma.serviceCategory.update.mockResolvedValue({ ...mockCategory, nameEn: 'Updated Category' });
+    mockPrisma.serviceCategory.update.mockResolvedValue({
+      ...mockCategory,
+      nameEn: 'Updated Category',
+    });
 
-    const result = await service.update(mockCategory.id, { nameEn: 'Updated Category' });
+    const result = await service.update(mockCategory.id, {
+      nameEn: 'Updated Category',
+    });
 
     expect(result.nameEn).toBe('Updated Category');
   });
 
   it('should allow deactivating a category', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
-    mockPrisma.serviceCategory.update.mockResolvedValue({ ...mockCategory, isActive: false });
+    mockPrisma.serviceCategory.update.mockResolvedValue({
+      ...mockCategory,
+      isActive: false,
+    });
 
     const result = await service.update(mockCategory.id, { isActive: false });
 
@@ -112,7 +150,9 @@ describe('ServiceCategoriesService — update', () => {
   it('should throw NotFoundException if category not found', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(null);
 
-    await expect(service.update('non-existent-id', { nameEn: 'Updated' })).rejects.toThrow(NotFoundException);
+    await expect(
+      service.update('non-existent-id', { nameEn: 'Updated' }),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -142,7 +182,9 @@ describe('ServiceCategoriesService — delete', () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
     mockPrisma.service.count.mockResolvedValue(3);
 
-    await expect(service.delete(mockCategory.id)).rejects.toThrow(ConflictException);
+    await expect(service.delete(mockCategory.id)).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('should allow deleting a category whose services are all soft-deleted', async () => {
@@ -168,6 +210,8 @@ describe('ServiceCategoriesService — delete', () => {
   it('should throw NotFoundException if category not found', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(null);
 
-    await expect(service.delete('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(service.delete('non-existent-id')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

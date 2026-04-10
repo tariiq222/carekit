@@ -7,7 +7,11 @@ import { AuthModule } from '../auth/auth.module.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 
 @Module({
-  imports: [forwardRef(() => PractitionersModule), AuthModule, ActivityLogModule],
+  imports: [
+    forwardRef(() => PractitionersModule),
+    AuthModule,
+    ActivityLogModule,
+  ],
   controllers: [UsersController],
   providers: [UsersService, UserRolesService],
   exports: [UsersService],

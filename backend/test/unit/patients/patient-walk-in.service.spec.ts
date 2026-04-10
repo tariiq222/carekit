@@ -36,7 +36,6 @@ const claimDto = {
   password: 'Secret1234!',
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockTx: any = {
   user: {
     create: jest.fn().mockResolvedValue(walkInUser),
@@ -47,14 +46,15 @@ const mockTx: any = {
   patientProfile: { create: jest.fn().mockResolvedValue({}) },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   user: {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
   role: { findFirst: jest.fn() },
-  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
+  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) =>
+    fn(mockTx),
+  ),
 };
 
 describe('PatientWalkInService', () => {
@@ -75,7 +75,10 @@ describe('PatientWalkInService', () => {
     );
     mockTx.user.create.mockResolvedValue(walkInUser);
     mockTx.user.findFirst.mockResolvedValue(null);
-    mockTx.user.update.mockResolvedValue({ ...walkInUser, accountType: 'full' });
+    mockTx.user.update.mockResolvedValue({
+      ...walkInUser,
+      accountType: 'full',
+    });
     mockTx.userRole.create.mockResolvedValue({});
     mockTx.patientProfile.create.mockResolvedValue({});
   });
@@ -105,14 +108,18 @@ describe('PatientWalkInService', () => {
     it('should throw ConflictException when phone belongs to a full account', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(fullUser);
 
-      await expect(service.createWalkIn(createDto)).rejects.toThrow(ConflictException);
+      await expect(service.createWalkIn(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw InternalServerErrorException when patient role not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
       mockPrisma.role.findFirst.mockResolvedValue(null);
 
-      await expect(service.createWalkIn(createDto)).rejects.toThrow(InternalServerErrorException);
+      await expect(service.createWalkIn(createDto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
     });
 
     it('should create user, userRole, and patientProfile in transaction', async () => {
@@ -123,7 +130,9 @@ describe('PatientWalkInService', () => {
 
       expect(mockTx.user.create).toHaveBeenCalled();
       expect(mockTx.userRole.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ roleId: mockRole.id }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ roleId: mockRole.id }),
+        }),
       );
       expect(mockTx.patientProfile.create).toHaveBeenCalled();
     });
@@ -136,7 +145,9 @@ describe('PatientWalkInService', () => {
 
       const userCreateCall = mockTx.user.create.mock.calls[0][0];
       expect(userCreateCall.data.accountType).toBe('walk_in');
-      expect(userCreateCall.data.email).toMatch(/^walkin_.+@internal\.carekit$/);
+      expect(userCreateCall.data.email).toMatch(
+        /^walkin_.+@internal\.carekit$/,
+      );
     });
 
     it('creates patientProfile with optional fields when provided', async () => {
@@ -206,7 +217,11 @@ describe('PatientWalkInService', () => {
   // ────────────────────────────────────────────
   describe('claimAccount', () => {
     it('should upgrade walk-in account to full', async () => {
-      const updatedUser = { ...walkInUser, accountType: 'full', email: claimDto.email };
+      const updatedUser = {
+        ...walkInUser,
+        accountType: 'full',
+        email: claimDto.email,
+      };
       mockPrisma.user.findUnique.mockResolvedValueOnce(walkInUser); // findByPhone
       mockTx.user.findFirst.mockResolvedValue(null); // email not taken
       mockTx.user.update.mockResolvedValue(updatedUser);
@@ -228,24 +243,34 @@ describe('PatientWalkInService', () => {
     it('should throw NotFoundException when phone not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.claimAccount(claimDto)).rejects.toThrow(NotFoundException);
+      await expect(service.claimAccount(claimDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when account is already full', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(fullUser);
 
-      await expect(service.claimAccount(claimDto)).rejects.toThrow(NotFoundException);
+      await expect(service.claimAccount(claimDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException when email already exists', async () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce(walkInUser); // findByPhone
       mockTx.user.findFirst.mockResolvedValue({ id: 'other-uuid' }); // email taken
 
-      await expect(service.claimAccount(claimDto)).rejects.toThrow(ConflictException);
+      await expect(service.claimAccount(claimDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('sets emailVerified=false on claim', async () => {
-      const updatedUser = { ...walkInUser, accountType: 'full', email: claimDto.email };
+      const updatedUser = {
+        ...walkInUser,
+        accountType: 'full',
+        email: claimDto.email,
+      };
       mockPrisma.user.findUnique.mockResolvedValueOnce(walkInUser);
       mockTx.user.findFirst.mockResolvedValue(null);
       mockTx.user.update.mockResolvedValue(updatedUser);
@@ -260,7 +285,11 @@ describe('PatientWalkInService', () => {
     });
 
     it('sets claimedAt timestamp on claim', async () => {
-      const updatedUser = { ...walkInUser, accountType: 'full', email: claimDto.email };
+      const updatedUser = {
+        ...walkInUser,
+        accountType: 'full',
+        email: claimDto.email,
+      };
       mockPrisma.user.findUnique.mockResolvedValueOnce(walkInUser);
       mockTx.user.findFirst.mockResolvedValue(null);
       mockTx.user.update.mockResolvedValue(updatedUser);
@@ -272,7 +301,11 @@ describe('PatientWalkInService', () => {
     });
 
     it('hashes the password before storing', async () => {
-      const updatedUser = { ...walkInUser, accountType: 'full', email: claimDto.email };
+      const updatedUser = {
+        ...walkInUser,
+        accountType: 'full',
+        email: claimDto.email,
+      };
       mockPrisma.user.findUnique.mockResolvedValueOnce(walkInUser);
       mockTx.user.findFirst.mockResolvedValue(null);
       mockTx.user.update.mockResolvedValue(updatedUser);
@@ -306,17 +339,22 @@ describe('PatientWalkInService', () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce(walkInUser);
       mockTx.user.findFirst.mockResolvedValue(null); // both pass in-memory check
 
-      const p2002 = Object.assign(new Error('Unique constraint failed on the fields: (`email`)'), {
-        code: 'P2002',
-        meta: { target: ['email'] },
-      });
+      const p2002 = Object.assign(
+        new Error('Unique constraint failed on the fields: (`email`)'),
+        {
+          code: 'P2002',
+          meta: { target: ['email'] },
+        },
+      );
       mockTx.user.update.mockRejectedValue(p2002);
       // $transaction propagates the error from inside callback
       mockPrisma.$transaction.mockImplementationOnce(
         async (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
       );
 
-      await expect(service.claimAccount(claimDto)).rejects.toThrow(ConflictException);
+      await expect(service.claimAccount(claimDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -342,7 +380,10 @@ describe('PatientWalkInService', () => {
     });
 
     it('selects only id and accountType — no sensitive fields', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: 'x', accountType: 'walk_in' });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'x',
+        accountType: 'walk_in',
+      });
 
       await service.findWalkInByPhone('0501234567');
 

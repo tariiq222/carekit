@@ -8,13 +8,26 @@ import { Booking, Payment, Practitioner } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 
 /** Statuses that cannot be cancelled by anyone (including admin) */
-export const NON_CANCELLABLE: string[] = ['in_progress', 'completed', 'cancelled', 'expired', 'no_show'];
+export const NON_CANCELLABLE: string[] = [
+  'in_progress',
+  'completed',
+  'cancelled',
+  'expired',
+  'no_show',
+];
 
 /** Statuses from which admin can directly cancel */
-export const ADMIN_CANCELLABLE_STATUSES: string[] = ['pending', 'confirmed', 'checked_in', 'pending_cancellation'];
+export const ADMIN_CANCELLABLE_STATUSES: string[] = [
+  'pending',
+  'confirmed',
+  'checked_in',
+  'pending_cancellation',
+];
 
 export type BookingWithPayment = Booking & { payment: Payment | null };
-export type BookingWithPractitioner = Booking & { practitioner: Practitioner & { userId: string } | null };
+export type BookingWithPractitioner = Booking & {
+  practitioner: (Practitioner & { userId: string }) | null;
+};
 export type BookingWithRelations = BookingWithPayment & BookingWithPractitioner;
 
 type BookingIncludeOptions =
@@ -29,16 +42,32 @@ export class BookingLookupHelper {
 
   /** M2: Unified lookup — include is optional. Replaces findBookingOrFail, findWithPayment, findWithRelations. */
   async findOrFail(id: string): Promise<Booking>;
-  async findOrFail(id: string, include: { payment: true }): Promise<BookingWithPayment>;
-  async findOrFail(id: string, include: { practitioner: true }): Promise<BookingWithPractitioner>;
-  async findOrFail(id: string, include: { payment: true; practitioner: true }): Promise<BookingWithRelations>;
-  async findOrFail(id: string, include?: BookingIncludeOptions): Promise<Booking> {
+  async findOrFail(
+    id: string,
+    include: { payment: true },
+  ): Promise<BookingWithPayment>;
+  async findOrFail(
+    id: string,
+    include: { practitioner: true },
+  ): Promise<BookingWithPractitioner>;
+  async findOrFail(
+    id: string,
+    include: { payment: true; practitioner: true },
+  ): Promise<BookingWithRelations>;
+  async findOrFail(
+    id: string,
+    include?: BookingIncludeOptions,
+  ): Promise<Booking> {
     const booking = await this.prisma.booking.findFirst({
       where: { id, deletedAt: null },
       ...(include && Object.keys(include).length > 0 ? { include } : {}),
     });
     if (!booking) {
-      throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Booking not found',
+        error: 'NOT_FOUND',
+      });
     }
     return booking;
   }
@@ -69,7 +98,10 @@ export class BookingLookupHelper {
   }
 
   /** M3: Centralized patient ownership check */
-  assertPatientOwnership(booking: { patientId: string | null }, patientId: string): void {
+  assertPatientOwnership(
+    booking: { patientId: string | null },
+    patientId: string,
+  ): void {
     if (booking.patientId !== patientId) {
       throw new ForbiddenException({
         statusCode: 403,

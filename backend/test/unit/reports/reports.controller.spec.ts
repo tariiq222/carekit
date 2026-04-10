@@ -10,8 +10,16 @@ import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../../src/common/guards/feature-flag.guard.js';
 
-const mockReportsService = { getRevenueReport: jest.fn(), getBookingReport: jest.fn(), getPractitionerReport: jest.fn() };
-const mockExportService = { exportRevenueCsv: jest.fn(), exportBookingsCsv: jest.fn(), exportPatientsCsv: jest.fn() };
+const mockReportsService = {
+  getRevenueReport: jest.fn(),
+  getBookingReport: jest.fn(),
+  getPractitionerReport: jest.fn(),
+};
+const mockExportService = {
+  exportRevenueCsv: jest.fn(),
+  exportBookingsCsv: jest.fn(),
+  exportPatientsCsv: jest.fn(),
+};
 const mockDashboardStatsService = { getStats: jest.fn() };
 
 const mockRes = {
@@ -49,7 +57,7 @@ describe('ReportsController', () => {
     expect(mockReportsService.getRevenueReport).toHaveBeenCalled();
   });
 
-it('getBookings → reportsService.getBookingReport()', async () => {
+  it('getBookings → reportsService.getBookingReport()', async () => {
     mockReportsService.getBookingReport.mockResolvedValue({});
     await controller.getBookings('2026-01-01', '2026-01-31', undefined);
     expect(mockReportsService.getBookingReport).toHaveBeenCalled();
@@ -63,7 +71,9 @@ it('getBookings → reportsService.getBookingReport()', async () => {
 
   it('exportRevenue → exportService.exportRevenueCsv()', async () => {
     mockExportService.exportRevenueCsv.mockResolvedValue('csv-data');
-    await controller.exportRevenue('2026-01-01', '2026-01-31', undefined, mockRes as any).catch(() => {});
+    await controller
+      .exportRevenue('2026-01-01', '2026-01-31', undefined, mockRes as any)
+      .catch(() => {});
     expect(mockExportService.exportRevenueCsv).toHaveBeenCalled();
   });
 

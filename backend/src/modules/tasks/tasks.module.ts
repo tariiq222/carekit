@@ -16,11 +16,17 @@ import { PaymentsModule } from '../payments/payments.module.js';
 import { MetricsModule } from '../../common/metrics/metrics.module.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
-import { DEFAULT_JOB_OPTIONS, QUEUE_TASKS } from '../../config/constants/queues.js';
+import {
+  DEFAULT_JOB_OPTIONS,
+  QUEUE_TASKS,
+} from '../../config/constants/queues.js';
 
 @Module({
   imports: [
-    BullModule.registerQueue({ name: QUEUE_TASKS, defaultJobOptions: DEFAULT_JOB_OPTIONS }),
+    BullModule.registerQueue({
+      name: QUEUE_TASKS,
+      defaultJobOptions: DEFAULT_JOB_OPTIONS,
+    }),
     NotificationsModule,
     BookingsModule,
     PaymentsModule,

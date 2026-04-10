@@ -29,13 +29,15 @@ export function parsePaginationParams(
 ): PaginationParams {
   const p = Math.max(
     1,
-    typeof page === 'string' ? parseInt(page, 10) || 1 : page ?? 1,
+    typeof page === 'string' ? parseInt(page, 10) || 1 : (page ?? 1),
   );
   const pp = Math.min(
     maxPerPage,
     Math.max(
       1,
-      typeof perPage === 'string' ? parseInt(perPage, 10) || 20 : perPage ?? 20,
+      typeof perPage === 'string'
+        ? parseInt(perPage, 10) || 20
+        : (perPage ?? 20),
     ),
   );
   return { page: p, perPage: pp, skip: (p - 1) * pp };
@@ -75,7 +77,10 @@ export function paginate<T>(
  * // result = { items: [...], meta: { total, page, perPage, totalPages, hasNextPage, hasPreviousPage } }
  */
 export async function paginatedQuery<T>(
-  model: { findMany: (args: any) => Promise<T[]>; count: (args: any) => Promise<number> },
+  model: {
+    findMany: (args: any) => Promise<T[]>;
+    count: (args: any) => Promise<number>;
+  },
   args: { where?: any; include?: any; orderBy?: any },
   page: number,
   perPage: number,

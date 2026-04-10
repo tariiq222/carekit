@@ -10,7 +10,6 @@ import { CacheService } from '../../../src/common/services/cache.service.js';
 
 const BRANCH_ID = 'branch-uuid-1';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: { count: jest.fn() },
   payment: { aggregate: jest.fn() },
@@ -19,7 +18,6 @@ const mockPrisma: any = {
   user: { count: jest.fn() },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockCacheService: any = {
   get: jest.fn(),
   set: jest.fn(),
@@ -44,7 +42,9 @@ describe('DashboardStatsService', () => {
     mockCacheService.get.mockResolvedValue(null);
     mockCacheService.set.mockResolvedValue(undefined);
     mockPrisma.booking.count.mockResolvedValue(4);
-    mockPrisma.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: 150000 } });
+    mockPrisma.payment.aggregate.mockResolvedValue({
+      _sum: { totalAmount: 150000 },
+    });
     mockPrisma.practitioner.count.mockResolvedValue(2);
     mockPrisma.practitionerBranch.count.mockResolvedValue(1);
     mockPrisma.user.count.mockResolvedValue(3);

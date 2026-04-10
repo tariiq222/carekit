@@ -156,15 +156,16 @@ describe('Department ↔ Category ↔ Service Chain (e2e)', () => {
         .expect(200);
 
       expectSuccessResponse(res.body);
-      const svc = res.body.data as { categoryId: string; category: { id: string } };
+      const svc = res.body.data as {
+        categoryId: string;
+        category: { id: string };
+      };
       expect(svc.categoryId).toBe(catId);
       expect(svc.category.id).toBe(catId);
     });
 
     it('category is associated with the correct department', async () => {
-      const res = await request(httpServer)
-        .get(CATEGORIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(CATEGORIES_URL).expect(200);
 
       expectSuccessResponse(res.body);
       const categories = res.body.data as Array<{
@@ -307,9 +308,7 @@ describe('Department ↔ Category ↔ Service Chain (e2e)', () => {
         .expect(200);
 
       // Category should still be accessible
-      const res = await request(httpServer)
-        .get(CATEGORIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(CATEGORIES_URL).expect(200);
 
       expectSuccessResponse(res.body);
       const categories = res.body.data as Array<{ id: string }>;
@@ -493,12 +492,12 @@ describe('Department ↔ Category ↔ Service Chain (e2e)', () => {
         .get(`${SERVICES_URL}?categoryId=${catY}`)
         .expect(200);
 
-      const idsX = (resX.body.data as { items: Array<{ id: string }> }).items.map(
-        (s) => s.id,
-      );
-      const idsY = (resY.body.data as { items: Array<{ id: string }> }).items.map(
-        (s) => s.id,
-      );
+      const idsX = (
+        resX.body.data as { items: Array<{ id: string }> }
+      ).items.map((s) => s.id);
+      const idsY = (
+        resY.body.data as { items: Array<{ id: string }> }
+      ).items.map((s) => s.id);
 
       // No overlap between the two category filters
       const overlap = idsX.filter((id) => idsY.includes(id));
@@ -513,7 +512,10 @@ describe('Department ↔ Category ↔ Service Chain (e2e)', () => {
         .expect(200);
 
       expectSuccessResponse(res.body);
-      const data = res.body.data as { items: unknown[]; meta: { total: number } };
+      const data = res.body.data as {
+        items: unknown[];
+        meta: { total: number };
+      };
       expect(data.items).toHaveLength(0);
       expect(data.meta.total).toBe(0);
     });
@@ -545,9 +547,7 @@ describe('Department ↔ Category ↔ Service Chain (e2e)', () => {
     });
 
     it('public GET categories works without auth', async () => {
-      const res = await request(httpServer)
-        .get(CATEGORIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(CATEGORIES_URL).expect(200);
 
       expectSuccessResponse(res.body);
       expect(Array.isArray(res.body.data)).toBe(true);

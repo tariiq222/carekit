@@ -10,7 +10,6 @@ import { WhitelabelService } from '../../../src/modules/whitelabel/whitelabel.se
 const sessionId = 'session-uuid-1';
 const userId = 'user-uuid-1';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockConfig: any = {
   enabled: true,
   context_window_size: 10,
@@ -29,22 +28,21 @@ const mockConfig: any = {
   custom_instructions: null,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockWhitelabelService: any = {
   getSystemName: jest.fn().mockResolvedValue('CareKit Clinic'),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   user: {
-    findUnique: jest.fn().mockResolvedValue({ firstName: 'Ahmad', lastName: 'Al-Rashid' }),
+    findUnique: jest
+      .fn()
+      .mockResolvedValue({ firstName: 'Ahmad', lastName: 'Al-Rashid' }),
   },
   chatMessage: {
     findMany: jest.fn().mockResolvedValue([]),
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockConfigService: any = {
   getConfig: jest.fn().mockResolvedValue(mockConfig),
 };
@@ -64,14 +62,22 @@ describe('ChatbotContextService', () => {
 
     service = module.get<ChatbotContextService>(ChatbotContextService);
     jest.clearAllMocks();
-    mockPrisma.user.findUnique.mockResolvedValue({ firstName: 'Ahmad', lastName: 'Al-Rashid' });
+    mockPrisma.user.findUnique.mockResolvedValue({
+      firstName: 'Ahmad',
+      lastName: 'Al-Rashid',
+    });
     mockWhitelabelService.getSystemName.mockResolvedValue('CareKit Clinic');
     mockPrisma.chatMessage.findMany.mockResolvedValue([]);
   });
 
   describe('buildAiContext', () => {
     it('should return messages array with system, user content', async () => {
-      const result = await service.buildAiContext(sessionId, userId, 'Hello', mockConfig as Parameters<typeof service.buildAiContext>[3]);
+      const result = await service.buildAiContext(
+        sessionId,
+        userId,
+        'Hello',
+        mockConfig as Parameters<typeof service.buildAiContext>[3],
+      );
 
       expect(result.messages).toBeDefined();
       expect(result.tools).toBeDefined();
@@ -84,7 +90,12 @@ describe('ChatbotContextService', () => {
     it('should use "Patient" when user not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      const result = await service.buildAiContext(sessionId, userId, 'Hi', mockConfig as Parameters<typeof service.buildAiContext>[3]);
+      const result = await service.buildAiContext(
+        sessionId,
+        userId,
+        'Hi',
+        mockConfig as Parameters<typeof service.buildAiContext>[3],
+      );
 
       expect(result.messages[0].content).toContain('Patient');
     });
@@ -92,18 +103,42 @@ describe('ChatbotContextService', () => {
     it('should use default clinic name when service returns fallback', async () => {
       mockWhitelabelService.getSystemName.mockResolvedValue('CareKit Clinic');
 
-      const result = await service.buildAiContext(sessionId, userId, 'Hi', mockConfig as Parameters<typeof service.buildAiContext>[3]);
+      const result = await service.buildAiContext(
+        sessionId,
+        userId,
+        'Hi',
+        mockConfig as Parameters<typeof service.buildAiContext>[3],
+      );
 
       expect(result.messages[0].content).toContain('CareKit Clinic');
     });
 
     it('should include history messages between system and user', async () => {
       mockPrisma.chatMessage.findMany.mockResolvedValue([
-        { id: 'm-1', sessionId, role: 'user', content: 'Previous message', functionCall: null, createdAt: new Date() },
-        { id: 'm-2', sessionId, role: 'assistant', content: 'Previous response', functionCall: null, createdAt: new Date() },
+        {
+          id: 'm-1',
+          sessionId,
+          role: 'user',
+          content: 'Previous message',
+          functionCall: null,
+          createdAt: new Date(),
+        },
+        {
+          id: 'm-2',
+          sessionId,
+          role: 'assistant',
+          content: 'Previous response',
+          functionCall: null,
+          createdAt: new Date(),
+        },
       ]);
 
-      const result = await service.buildAiContext(sessionId, userId, 'New message', mockConfig as Parameters<typeof service.buildAiContext>[3]);
+      const result = await service.buildAiContext(
+        sessionId,
+        userId,
+        'New message',
+        mockConfig as Parameters<typeof service.buildAiContext>[3],
+      );
 
       // system + 2 history + user
       expect(result.messages.length).toBe(4);
@@ -121,7 +156,12 @@ describe('ChatbotContextService', () => {
 
     it('should return user and assistant messages in order', async () => {
       mockPrisma.chatMessage.findMany.mockResolvedValue([
-        { id: 'm-2', role: 'assistant', content: 'Response', functionCall: null },
+        {
+          id: 'm-2',
+          role: 'assistant',
+          content: 'Response',
+          functionCall: null,
+        },
         { id: 'm-1', role: 'user', content: 'Question', functionCall: null },
       ]);
 
@@ -145,7 +185,9 @@ describe('ChatbotContextService', () => {
       const result = await service.loadHistory(sessionId, 10);
 
       expect(result[0].role).toBe('tool');
-      expect((result[0] as { tool_call_id: string }).tool_call_id).toBe('call-123');
+      expect((result[0] as { tool_call_id: string }).tool_call_id).toBe(
+        'call-123',
+      );
     });
 
     it('should pass windowSize as take limit', async () => {

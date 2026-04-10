@@ -18,7 +18,7 @@ export class ReminderService {
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const windowStart = new Date(tomorrow.getTime() - 30 * 60 * 1000); // 23.5h
-    const windowEnd = new Date(tomorrow.getTime() + 30 * 60 * 1000);   // 24.5h
+    const windowEnd = new Date(tomorrow.getTime() + 30 * 60 * 1000); // 24.5h
 
     const bookings = await this.prisma.booking.findMany({
       where: {
@@ -64,7 +64,7 @@ export class ReminderService {
           notifications.push(
             timePromise.then((timeStr) =>
               this.notificationsService.createNotification({
-                userId: booking.practitioner!.userId,
+                userId: booking.practitioner.userId,
                 titleAr: 'تذكير بموعد غداً',
                 titleEn: 'Appointment Reminder — Tomorrow',
                 bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
@@ -89,8 +89,8 @@ export class ReminderService {
   async sendHourBeforeReminders() {
     const now = new Date();
     const oneHour = new Date(now.getTime() + 60 * 60 * 1000);
-    const windowStart = new Date(oneHour.getTime() - 8 * 60 * 1000);  // 52min
-    const windowEnd = new Date(oneHour.getTime() + 8 * 60 * 1000);    // 68min
+    const windowStart = new Date(oneHour.getTime() - 8 * 60 * 1000); // 52min
+    const windowEnd = new Date(oneHour.getTime() + 8 * 60 * 1000); // 68min
 
     const bookings = await this.prisma.booking.findMany({
       where: {
@@ -109,7 +109,9 @@ export class ReminderService {
       bookings
         .filter((booking) => booking.patientId)
         .map(async (booking) => {
-          const timeStr = await this.formatTimeForNotification(booking.startTime);
+          const timeStr = await this.formatTimeForNotification(
+            booking.startTime,
+          );
           return this.notificationsService.createNotification({
             userId: booking.patientId!,
             titleAr: 'موعدك بعد ساعة',
@@ -150,7 +152,10 @@ export class ReminderService {
     });
 
     const matched = bookings.filter((booking) => {
-      const bookingDt = this.combineDateAndTime(booking.date, booking.startTime);
+      const bookingDt = this.combineDateAndTime(
+        booking.date,
+        booking.startTime,
+      );
       const diffMin = (bookingDt.getTime() - now.getTime()) / 60_000;
       return diffMin >= 90 && diffMin <= 150; // 1.5h–2.5h window
     });
@@ -180,7 +185,7 @@ export class ReminderService {
           notifications.push(
             timePromise.then((timeStr) =>
               this.notificationsService.createNotification({
-                userId: booking.practitioner!.userId,
+                userId: booking.practitioner.userId,
                 titleAr: 'موعدك بعد ساعتين',
                 titleEn: 'Appointment in 2 Hours',
                 bodyAr: `تذكير: لديك موعد بعد ساعتين الساعة ${timeStr}`,
@@ -224,7 +229,10 @@ export class ReminderService {
     });
 
     const matched = bookings.filter((booking) => {
-      const bookingDt = this.combineDateAndTime(booking.date, booking.startTime);
+      const bookingDt = this.combineDateAndTime(
+        booking.date,
+        booking.startTime,
+      );
       const diffMin = (bookingDt.getTime() - now.getTime()) / 60_000;
       return diffMin >= 10 && diffMin <= 20; // 10–20min window
     });
@@ -233,7 +241,9 @@ export class ReminderService {
       matched
         .filter((booking) => booking.patientId)
         .map(async (booking) => {
-          const timeStr = await this.formatTimeForNotification(booking.startTime);
+          const timeStr = await this.formatTimeForNotification(
+            booking.startTime,
+          );
           return this.notificationsService.createNotification({
             userId: booking.patientId!,
             titleAr: 'موعدك بعد 15 دقيقة!',

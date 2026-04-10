@@ -59,13 +59,19 @@ export async function createBookingsTestModule(): Promise<BookingsTestContext> {
   );
 
   const mockPaymentHelper = {
-    resolvePatientId: jest.fn().mockImplementation((_caller: string, patientId?: string) =>
-      Promise.resolve(patientId ?? _caller),
-    ),
+    resolvePatientId: jest
+      .fn()
+      .mockImplementation((_caller: string, patientId?: string) =>
+        Promise.resolve(patientId ?? _caller),
+      ),
     createPaymentIfNeeded: jest.fn().mockResolvedValue(undefined),
   };
   const mockPriceResolver = {
-    resolve: jest.fn().mockResolvedValue({ price: 20000, duration: 30, source: 'service_type' }),
+    resolve: jest.fn().mockResolvedValue({
+      price: 20000,
+      duration: 30,
+      source: 'service_type',
+    }),
   };
   const mockActivityLog = { log: jest.fn().mockResolvedValue(undefined) };
 
@@ -75,18 +81,27 @@ export async function createBookingsTestModule(): Promise<BookingsTestContext> {
       BookingCreationService,
       { provide: PrismaService, useValue: mockPrisma },
       { provide: ZoomService, useValue: mockZoom },
-      { provide: BookingCancellationService, useValue: mockCancellationService },
+      {
+        provide: BookingCancellationService,
+        useValue: mockCancellationService,
+      },
       { provide: BookingQueryService, useValue: mockQueryService },
       { provide: NotificationsService, useValue: mockNotificationsService },
       { provide: BookingSettingsService, useValue: mockBookingSettingsService },
-      { provide: BookingStatusService, useValue: createMockBookingStatusService(mockPrisma) },
+      {
+        provide: BookingStatusService,
+        useValue: createMockBookingStatusService(mockPrisma),
+      },
       BookingRescheduleService,
       { provide: ActivityLogService, useValue: mockActivityLog },
       { provide: BookingPaymentHelper, useValue: mockPaymentHelper },
       { provide: PriceResolverService, useValue: mockPriceResolver },
       { provide: ClinicHoursService, useValue: mockClinicHoursService },
       { provide: ClinicHolidaysService, useValue: mockClinicHolidaysService },
-      { provide: ClinicSettingsService, useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') } },
+      {
+        provide: ClinicSettingsService,
+        useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') },
+      },
     ],
   }).compile();
 

@@ -9,7 +9,12 @@ import { resilientFetch } from '../helpers/resilient-fetch.helper.js';
 
 export interface ChatCompletionOptions {
   model: string;
-  messages: Array<{ role: string; content: unknown; tool_calls?: unknown; tool_call_id?: string }>;
+  messages: Array<{
+    role: string;
+    content: unknown;
+    tool_calls?: unknown;
+    tool_call_id?: string;
+  }>;
   tools?: unknown[];
   temperature?: number;
   max_tokens?: number;
@@ -51,11 +56,15 @@ export class OpenRouterService {
       body.stream = true;
     }
 
-    return resilientFetch(OPENROUTER_CHAT_URL, {
-      method: 'POST',
-      headers: this.buildHeaders(),
-      body: JSON.stringify(body),
-    }, { circuit: 'openrouter', timeoutMs: options.stream ? 60_000 : 30_000 });
+    return resilientFetch(
+      OPENROUTER_CHAT_URL,
+      {
+        method: 'POST',
+        headers: this.buildHeaders(),
+        body: JSON.stringify(body),
+      },
+      { circuit: 'openrouter', timeoutMs: options.stream ? 60_000 : 30_000 },
+    );
   }
 
   /**
@@ -63,18 +72,24 @@ export class OpenRouterService {
    * Returns the embedding vector.
    */
   async generateEmbedding(options: EmbeddingOptions): Promise<number[]> {
-    const response = await resilientFetch(OPENROUTER_EMBEDDINGS_URL, {
-      method: 'POST',
-      headers: this.buildHeaders(),
-      body: JSON.stringify({
-        model: options.model,
-        input: options.input,
-      }),
-    }, { circuit: 'openrouter', timeoutMs: 15_000 });
+    const response = await resilientFetch(
+      OPENROUTER_EMBEDDINGS_URL,
+      {
+        method: 'POST',
+        headers: this.buildHeaders(),
+        body: JSON.stringify({
+          model: options.model,
+          input: options.input,
+        }),
+      },
+      { circuit: 'openrouter', timeoutMs: 15_000 },
+    );
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error');
-      this.logger.error(`Embedding API error: ${response.status} — ${errorText}`);
+      this.logger.error(
+        `Embedding API error: ${response.status} — ${errorText}`,
+      );
       throw new Error(`OpenRouter embedding failed: ${response.status}`);
     }
 

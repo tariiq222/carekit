@@ -12,16 +12,23 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 import { CacheService } from '../../../src/common/services/cache.service.js';
 import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-forms.service.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
-  service: { create: jest.fn(), findMany: jest.fn(), findFirst: jest.fn(), count: jest.fn() },
+  service: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    count: jest.fn(),
+  },
   practitioner: { findMany: jest.fn() },
   serviceCategory: { findUnique: jest.fn() },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockCache: any = { get: jest.fn().mockResolvedValue(null), set: jest.fn(), del: jest.fn() };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockCache: any = {
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn(),
+  del: jest.fn(),
+};
+
 const mockIntakeForms: any = {};
 
 const BASE_DTO = {
@@ -38,7 +45,9 @@ describe('ServicesService — practitionerIds validation (fix #9)', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockPrisma.serviceCategory = { findUnique: jest.fn().mockResolvedValue({ id: 'cat-uuid' }) };
+    mockPrisma.serviceCategory = {
+      findUnique: jest.fn().mockResolvedValue({ id: 'cat-uuid' }),
+    };
     mockPrisma.service.create.mockResolvedValue({ id: 'svc-new', ...BASE_DTO });
 
     const module: TestingModule = await Test.createTestingModule({
@@ -71,7 +80,10 @@ describe('ServicesService — practitionerIds validation (fix #9)', () => {
     ]);
 
     await expect(
-      service.create({ ...BASE_DTO, practitionerIds: ['prac-1', 'prac-missing-2', 'prac-missing-3'] }),
+      service.create({
+        ...BASE_DTO,
+        practitionerIds: ['prac-1', 'prac-missing-2', 'prac-missing-3'],
+      }),
     ).rejects.toMatchObject({
       response: {
         message: expect.stringContaining('prac-missing-2'),
@@ -80,7 +92,10 @@ describe('ServicesService — practitionerIds validation (fix #9)', () => {
   });
 
   it('proceeds when all practitionerIds exist', async () => {
-    mockPrisma.practitioner.findMany.mockResolvedValue([{ id: 'prac-1' }, { id: 'prac-2' }]);
+    mockPrisma.practitioner.findMany.mockResolvedValue([
+      { id: 'prac-1' },
+      { id: 'prac-2' },
+    ]);
 
     await expect(
       service.create({ ...BASE_DTO, practitionerIds: ['prac-1', 'prac-2'] }),

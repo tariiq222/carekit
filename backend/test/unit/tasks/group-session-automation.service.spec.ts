@@ -25,20 +25,23 @@ const makeEnrollment = (overrides = {}) => ({
   ...overrides,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockTx: any = {
-  groupEnrollment: { findFirst: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
+  groupEnrollment: {
+    findFirst: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+  },
   group: { update: jest.fn() },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   groupEnrollment: { findMany: jest.fn() },
   group: { findMany: jest.fn(), update: jest.fn() },
-  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
+  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) =>
+    fn(mockTx),
+  ),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockNotifications: any = {
   createNotification: jest.fn().mockResolvedValue(undefined),
 };
@@ -81,7 +84,9 @@ describe('GroupAutomationService', () => {
     });
 
     it('expires enrollment and decrements group count', async () => {
-      const enrollment = makeEnrollment({ group: makeGroup({ currentEnrollment: 3 }) });
+      const enrollment = makeEnrollment({
+        group: makeGroup({ currentEnrollment: 3 }),
+      });
       mockPrisma.groupEnrollment.findMany.mockResolvedValue([enrollment]);
 
       await service.expireUnpaidEnrollments();
@@ -115,7 +120,11 @@ describe('GroupAutomationService', () => {
 
     it('sets group status to open when count drops below minParticipants', async () => {
       const enrollment = makeEnrollment({
-        group: makeGroup({ currentEnrollment: 2, minParticipants: 2, status: 'confirmed' }),
+        group: makeGroup({
+          currentEnrollment: 2,
+          minParticipants: 2,
+          status: 'confirmed',
+        }),
       });
       mockPrisma.groupEnrollment.findMany.mockResolvedValue([enrollment]);
 
@@ -123,14 +132,22 @@ describe('GroupAutomationService', () => {
 
       expect(mockTx.group.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ status: 'open', currentEnrollment: 1 }),
+          data: expect.objectContaining({
+            status: 'open',
+            currentEnrollment: 1,
+          }),
         }),
       );
     });
 
     it('sets group status to confirmed when count drops below maxParticipants from full', async () => {
       const enrollment = makeEnrollment({
-        group: makeGroup({ currentEnrollment: 5, maxParticipants: 5, minParticipants: 2, status: 'full' }),
+        group: makeGroup({
+          currentEnrollment: 5,
+          maxParticipants: 5,
+          minParticipants: 2,
+          status: 'full',
+        }),
       });
       mockPrisma.groupEnrollment.findMany.mockResolvedValue([enrollment]);
 
@@ -138,7 +155,10 @@ describe('GroupAutomationService', () => {
 
       expect(mockTx.group.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ status: 'confirmed', currentEnrollment: 4 }),
+          data: expect.objectContaining({
+            status: 'confirmed',
+            currentEnrollment: 4,
+          }),
         }),
       );
     });
@@ -159,7 +179,9 @@ describe('GroupAutomationService', () => {
       mockPrisma.groupEnrollment.findMany.mockResolvedValue([e1, e2]);
       mockPrisma.$transaction
         .mockRejectedValueOnce(new Error('DB error'))
-        .mockImplementation((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx));
+        .mockImplementation((fn: (tx: typeof mockTx) => Promise<unknown>) =>
+          fn(mockTx),
+        );
 
       await service.expireUnpaidEnrollments();
 
@@ -181,7 +203,10 @@ describe('GroupAutomationService', () => {
     });
 
     it('cancels group and its registered enrollments', async () => {
-      const group = { ...makeGroup({ status: 'open' }), enrollments: [{ id: 'e1', patientId: 'p1' }] };
+      const group = {
+        ...makeGroup({ status: 'open' }),
+        enrollments: [{ id: 'e1', patientId: 'p1' }],
+      };
       mockPrisma.group.findMany.mockResolvedValue([group]);
 
       await service.cancelExpiredSessions();
@@ -211,20 +236,34 @@ describe('GroupAutomationService', () => {
 
       expect(mockNotifications.createNotification).toHaveBeenCalledTimes(2);
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'p1', type: 'group_session_cancelled' }),
+        expect.objectContaining({
+          userId: 'p1',
+          type: 'group_session_cancelled',
+        }),
       );
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'p2', type: 'group_session_cancelled' }),
+        expect.objectContaining({
+          userId: 'p2',
+          type: 'group_session_cancelled',
+        }),
       );
     });
 
     it('continues processing remaining groups when one transaction fails', async () => {
-      const g1 = { ...makeGroup({ id: 'g1', status: 'open' }), enrollments: [] };
-      const g2 = { ...makeGroup({ id: 'g2', status: 'open' }), enrollments: [] };
+      const g1 = {
+        ...makeGroup({ id: 'g1', status: 'open' }),
+        enrollments: [],
+      };
+      const g2 = {
+        ...makeGroup({ id: 'g2', status: 'open' }),
+        enrollments: [],
+      };
       mockPrisma.group.findMany.mockResolvedValue([g1, g2]);
       mockPrisma.$transaction
         .mockRejectedValueOnce(new Error('DB error'))
-        .mockImplementation((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx));
+        .mockImplementation((fn: (tx: typeof mockTx) => Promise<unknown>) =>
+          fn(mockTx),
+        );
 
       await service.cancelExpiredSessions();
 
@@ -255,7 +294,10 @@ describe('GroupAutomationService', () => {
 
       expect(mockNotifications.createNotification).toHaveBeenCalledTimes(2);
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'p1', type: 'group_session_reminder' }),
+        expect.objectContaining({
+          userId: 'p1',
+          type: 'group_session_reminder',
+        }),
       );
     });
 

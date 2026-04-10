@@ -176,11 +176,14 @@ function bookingConfirmationBody(context: Record<string, unknown>): string {
   ].join('\n');
 }
 
-const TEMPLATE_BUILDERS: Record<string, (ctx: Record<string, unknown>) => string> = {
+const TEMPLATE_BUILDERS: Record<
+  string,
+  (ctx: Record<string, unknown>) => string
+> = {
   'otp-login': otpLoginBody,
   'otp-reset': otpResetBody,
   'otp-verify': otpVerifyBody,
-  'welcome': welcomeBody,
+  welcome: welcomeBody,
   'practitioner-welcome': practitionerWelcomeBody,
   'booking-confirmation': bookingConfirmationBody,
 };

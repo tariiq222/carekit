@@ -33,8 +33,7 @@ import {
 // ---------------------------------------------------------------------------
 
 const WEBHOOK_URL = `${API_PREFIX}/payments/moyasar/webhook`;
-const WEBHOOK_SECRET =
-  process.env['MOYASAR_WEBHOOK_SECRET'] ?? 'test-secret';
+const WEBHOOK_SECRET = process.env['MOYASAR_WEBHOOK_SECRET'] ?? 'test-secret';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -53,7 +52,9 @@ interface WebhookPayloadData {
   metadata: Record<string, string>;
 }
 
-function buildWebhookPayload(overrides: Partial<WebhookPayloadData> = {}): WebhookPayloadData {
+function buildWebhookPayload(
+  overrides: Partial<WebhookPayloadData> = {},
+): WebhookPayloadData {
   return {
     id: `pay_test_${Date.now()}`,
     status: 'paid',
@@ -257,7 +258,7 @@ describe('POST /payments/moyasar/webhook — signature security', () => {
 
   // ── 9. SQL injection in body fields → not 500 ────────────────────────────
 
-  it("SQL injection in id field → 400 or 401 (Prisma handles safely, never 500)", async () => {
+  it('SQL injection in id field → 400 or 401 (Prisma handles safely, never 500)', async () => {
     const payload = buildWebhookPayload({
       id: "'; DROP TABLE payments;--",
       status: "paid'; DELETE FROM bookings;--",

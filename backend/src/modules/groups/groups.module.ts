@@ -12,7 +12,13 @@ import { GroupsAttendanceService } from './groups-attendance.service.js';
 @Module({
   imports: [ActivityLogModule, FeatureFlagsModule, NotificationsModule],
   controllers: [GroupsController],
-  providers: [GroupsService, GroupsPaymentService, GroupsLifecycleService, GroupsEnrollmentsService, GroupsAttendanceService],
+  providers: [
+    GroupsService,
+    GroupsPaymentService,
+    GroupsLifecycleService,
+    GroupsEnrollmentsService,
+    GroupsAttendanceService,
+  ],
   exports: [GroupsService, GroupsEnrollmentsService, GroupsPaymentService],
 })
 export class GroupsModule {}

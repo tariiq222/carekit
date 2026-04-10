@@ -29,7 +29,6 @@ const makeBooking = (status: string) => ({
   deletedAt: null,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: {
     findFirst: jest.fn(),
@@ -41,22 +40,21 @@ const mockPrisma: any = {
     findUnique: jest.fn(),
     findFirst: jest.fn(),
   },
-  $transaction: jest.fn().mockImplementation(
-    (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma),
-  ),
+  $transaction: jest
+    .fn()
+    .mockImplementation((fn: (tx: typeof mockPrisma) => Promise<unknown>) =>
+      fn(mockPrisma),
+    ),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockNotifications: any = {
   createNotification: jest.fn().mockResolvedValue(undefined),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockActivityLog: any = {
   log: jest.fn().mockResolvedValue(undefined),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockStatusLog: any = {
   log: jest.fn().mockResolvedValue(undefined),
 };
@@ -106,39 +104,53 @@ describe('BookingStatusService', () => {
     it('should throw ConflictException when booking is not pending', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('confirmed'));
 
-      await expect(service.confirm(bookingId)).rejects.toThrow(ConflictException);
+      await expect(service.confirm(bookingId)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw ConflictException when payment not found', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('pending'));
       mockPrisma.payment.findFirst.mockResolvedValue(null);
 
-      await expect(service.confirm(bookingId)).rejects.toThrow(ConflictException);
+      await expect(service.confirm(bookingId)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw ConflictException when payment is not paid', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('pending'));
       mockPrisma.payment.findFirst.mockResolvedValue({ status: 'pending' });
 
-      await expect(service.confirm(bookingId)).rejects.toThrow(ConflictException);
+      await expect(service.confirm(bookingId)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw NotFoundException when booking not found', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(null);
 
-      await expect(service.confirm('non-existent')).rejects.toThrow(NotFoundException);
+      await expect(service.confirm('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should send notification to patient on confirm', async () => {
       const booking = makeBooking('pending');
       mockPrisma.booking.findFirst.mockResolvedValue(booking);
       mockPrisma.payment.findFirst.mockResolvedValue({ status: 'paid' });
-      mockPrisma.booking.update.mockResolvedValue({ ...booking, status: 'confirmed' });
+      mockPrisma.booking.update.mockResolvedValue({
+        ...booking,
+        status: 'confirmed',
+      });
 
       await service.confirm(bookingId);
 
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: patientId, type: 'booking_confirmed' }),
+        expect.objectContaining({
+          userId: patientId,
+          type: 'booking_confirmed',
+        }),
       );
     });
   });
@@ -147,8 +159,13 @@ describe('BookingStatusService', () => {
     it('should check in a confirmed booking', async () => {
       const booking = makeBooking('confirmed');
       mockPrisma.booking.findFirst.mockResolvedValue(booking);
-      mockPrisma.booking.update.mockResolvedValue({ ...booking, status: 'checked_in' });
-      mockPrisma.practitioner.findUnique.mockResolvedValue({ userId: practitionerUserId });
+      mockPrisma.booking.update.mockResolvedValue({
+        ...booking,
+        status: 'checked_in',
+      });
+      mockPrisma.practitioner.findUnique.mockResolvedValue({
+        userId: practitionerUserId,
+      });
 
       const result = await service.checkIn(bookingId);
 
@@ -158,12 +175,16 @@ describe('BookingStatusService', () => {
     it('should throw ConflictException when booking is not confirmed', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('pending'));
 
-      await expect(service.checkIn(bookingId)).rejects.toThrow(ConflictException);
+      await expect(service.checkIn(bookingId)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw NotFoundException when booking not found', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(null);
-      await expect(service.checkIn('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.checkIn('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -171,8 +192,14 @@ describe('BookingStatusService', () => {
     it('should start session for the practitioner own booking', async () => {
       const booking = makeBooking('checked_in');
       mockPrisma.booking.findFirst.mockResolvedValue(booking);
-      mockPrisma.practitioner.findFirst.mockResolvedValue({ id: practitionerId, userId: practitionerUserId });
-      mockPrisma.booking.update.mockResolvedValue({ ...booking, status: 'in_progress' });
+      mockPrisma.practitioner.findFirst.mockResolvedValue({
+        id: practitionerId,
+        userId: practitionerUserId,
+      });
+      mockPrisma.booking.update.mockResolvedValue({
+        ...booking,
+        status: 'in_progress',
+      });
 
       const result = await service.startSession(bookingId, practitionerUserId);
 
@@ -182,21 +209,30 @@ describe('BookingStatusService', () => {
     it('should throw ForbiddenException when practitioner not matched', async () => {
       const booking = makeBooking('checked_in');
       mockPrisma.booking.findFirst.mockResolvedValue(booking);
-      mockPrisma.practitioner.findFirst.mockResolvedValue({ id: 'other-pract-id', userId: practitionerUserId });
+      mockPrisma.practitioner.findFirst.mockResolvedValue({
+        id: 'other-pract-id',
+        userId: practitionerUserId,
+      });
 
-      await expect(service.startSession(bookingId, practitionerUserId)).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.startSession(bookingId, practitionerUserId),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw ConflictException when status is not checked_in or confirmed', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('pending'));
 
-      await expect(service.startSession(bookingId, practitionerUserId)).rejects.toThrow(ConflictException);
+      await expect(
+        service.startSession(bookingId, practitionerUserId),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should throw BadRequestException when status is confirmed (checkIn required first)', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('confirmed'));
 
-      await expect(service.startSession(bookingId, practitionerUserId)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.startSession(bookingId, practitionerUserId),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -204,9 +240,14 @@ describe('BookingStatusService', () => {
     it('should complete an in_progress booking', async () => {
       const booking = makeBooking('in_progress');
       mockPrisma.booking.findFirst.mockResolvedValue(booking);
-      mockPrisma.booking.update.mockResolvedValue({ ...booking, status: 'completed' });
+      mockPrisma.booking.update.mockResolvedValue({
+        ...booking,
+        status: 'completed',
+      });
 
-      const result = await service.complete(bookingId, { completionNotes: 'Done' });
+      const result = await service.complete(bookingId, {
+        completionNotes: 'Done',
+      });
 
       expect(result.status).toBe('completed');
     });
@@ -214,13 +255,17 @@ describe('BookingStatusService', () => {
     it('should throw BadRequestException when completing checked_in booking without session start', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('checked_in'));
 
-      await expect(service.complete(bookingId)).rejects.toThrow(BadRequestException);
+      await expect(service.complete(bookingId)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw ConflictException when status is invalid', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('cancelled'));
 
-      await expect(service.complete(bookingId)).rejects.toThrow(ConflictException);
+      await expect(service.complete(bookingId)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -228,7 +273,10 @@ describe('BookingStatusService', () => {
     it('should mark a confirmed booking as no_show', async () => {
       const booking = makeBooking('confirmed');
       mockPrisma.booking.findFirst.mockResolvedValue(booking);
-      mockPrisma.booking.update.mockResolvedValue({ ...booking, status: 'no_show' });
+      mockPrisma.booking.update.mockResolvedValue({
+        ...booking,
+        status: 'no_show',
+      });
 
       const result = await service.markNoShow(bookingId);
 
@@ -238,12 +286,16 @@ describe('BookingStatusService', () => {
     it('should throw ConflictException when booking is not confirmed', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(makeBooking('checked_in'));
 
-      await expect(service.markNoShow(bookingId)).rejects.toThrow(ConflictException);
+      await expect(service.markNoShow(bookingId)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw NotFoundException when booking not found', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(null);
-      await expect(service.markNoShow('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.markNoShow('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

@@ -29,17 +29,14 @@ const CLINIC_SETTINGS = {
   bufferMinutes: 0,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   service: { findFirst: jest.fn() },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockBookingsService: any = {
   create: jest.fn().mockResolvedValue({ id: 'booking-uuid' }),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockSettingsService: any = {
   getForBranch: jest.fn().mockResolvedValue(CLINIC_SETTINGS),
 };
@@ -69,7 +66,9 @@ describe('BookingRecurringService — service-level validation (CRITICAL #4)', (
   it('throws NotFoundException when service does not exist', async () => {
     mockPrisma.service.findFirst.mockResolvedValue(null);
 
-    await expect(service.createRecurring('user-1', BASE_DTO)).rejects.toThrow(NotFoundException);
+    await expect(service.createRecurring('user-1', BASE_DTO)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   // ── service.allowRecurring ───────────────────────────────────────────────
@@ -83,7 +82,9 @@ describe('BookingRecurringService — service-level validation (CRITICAL #4)', (
       maxRecurrences: 12,
     });
 
-    await expect(service.createRecurring('user-1', BASE_DTO)).rejects.toMatchObject({
+    await expect(
+      service.createRecurring('user-1', BASE_DTO),
+    ).rejects.toMatchObject({
       response: { error: 'SERVICE_RECURRING_NOT_ALLOWED' },
     });
   });
@@ -112,7 +113,9 @@ describe('BookingRecurringService — service-level validation (CRITICAL #4)', (
 
     await expect(
       service.createRecurring('user-1', { ...BASE_DTO, repeatEvery: 'daily' }),
-    ).rejects.toMatchObject({ response: { error: 'RECURRING_PATTERN_NOT_ALLOWED' } });
+    ).rejects.toMatchObject({
+      response: { error: 'RECURRING_PATTERN_NOT_ALLOWED' },
+    });
   });
 
   it('accepts pattern that is in both service and clinic patterns (intersection)', async () => {
@@ -122,7 +125,10 @@ describe('BookingRecurringService — service-level validation (CRITICAL #4)', (
       maxRecurrences: 0,
     });
 
-    const result = await service.createRecurring('user-1', { ...BASE_DTO, repeatEvery: 'weekly' });
+    const result = await service.createRecurring('user-1', {
+      ...BASE_DTO,
+      repeatEvery: 'weekly',
+    });
     expect(result.pattern).toBe('weekly');
   });
 

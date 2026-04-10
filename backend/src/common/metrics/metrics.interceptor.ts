@@ -30,7 +30,11 @@ export class MetricsInterceptor implements NestInterceptor {
             .switchToHttp()
             .getResponse<{ statusCode: number }>();
           const statusCode = String(res.statusCode);
-          this.metrics.httpRequestsTotal.inc({ method, route, status_code: statusCode });
+          this.metrics.httpRequestsTotal.inc({
+            method,
+            route,
+            status_code: statusCode,
+          });
           end();
         },
         error: () => {
@@ -38,7 +42,11 @@ export class MetricsInterceptor implements NestInterceptor {
           // we still record the duration. Count is handled by the filter
           // pipeline — the status code here would be unreliable, so we
           // record a generic "error" bucket to keep cardinality low.
-          this.metrics.httpRequestsTotal.inc({ method, route, status_code: 'error' });
+          this.metrics.httpRequestsTotal.inc({
+            method,
+            route,
+            status_code: 'error',
+          });
           end();
         },
       }),

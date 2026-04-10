@@ -52,7 +52,9 @@ describe('JwtAuthGuard', () => {
   });
 
   it('should check IS_PUBLIC_KEY on handler and class', () => {
-    const spy = jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
+    const spy = jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue(true);
     const handler = jest.fn();
     const cls = jest.fn();
     const ctx = {
@@ -87,7 +89,9 @@ describe('JwtAuthGuard', () => {
   });
 
   it('should throw UnauthorizedException when no user', () => {
-    expect(() => guard.handleRequest(null, null)).toThrow(UnauthorizedException);
+    expect(() => guard.handleRequest(null, null)).toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('should throw with AUTH_TOKEN_INVALID error code', () => {
@@ -95,7 +99,10 @@ describe('JwtAuthGuard', () => {
       guard.handleRequest(null, null);
     } catch (e) {
       expect(e).toBeInstanceOf(UnauthorizedException);
-      const res = (e as UnauthorizedException).getResponse() as Record<string, unknown>;
+      const res = (e as UnauthorizedException).getResponse() as Record<
+        string,
+        unknown
+      >;
       expect(res['error']).toBe('AUTH_TOKEN_INVALID');
     }
   });

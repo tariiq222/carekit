@@ -11,9 +11,7 @@ const AUTH_CACHE_LOCK_TTL = 5; // seconds — short lock to prevent stampede
 
 @Injectable()
 export class AuthCacheService {
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async get(userId: string): Promise<UserPayload | null> {
     const cached = await this.redis.get(`${AUTH_CACHE_PREFIX}${userId}`);
@@ -46,7 +44,13 @@ export class AuthCacheService {
   async acquirePopulateLock(userId: string): Promise<boolean> {
     const key = `${AUTH_CACHE_LOCK_PREFIX}${userId}`;
     // SET key value NX EX ttl — atomic acquire
-    const result = await this.redis.set(key, '1', 'EX', AUTH_CACHE_LOCK_TTL, 'NX');
+    const result = await this.redis.set(
+      key,
+      '1',
+      'EX',
+      AUTH_CACHE_LOCK_TTL,
+      'NX',
+    );
     return result === 'OK';
   }
 

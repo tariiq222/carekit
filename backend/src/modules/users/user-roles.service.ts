@@ -16,13 +16,20 @@ export class UserRolesService {
     private readonly permissionCache: PermissionCacheService,
   ) {}
 
-  async assignRole(userId: string, roleId?: string, roleSlug?: string, requesterId?: string): Promise<void> {
+  async assignRole(
+    userId: string,
+    roleId?: string,
+    roleSlug?: string,
+    requesterId?: string,
+  ): Promise<void> {
     let resolvedRoleId: string;
 
     if (roleId) {
       resolvedRoleId = roleId;
     } else if (roleSlug) {
-      const roleBySlug = await this.prisma.role.findUnique({ where: { slug: roleSlug } });
+      const roleBySlug = await this.prisma.role.findUnique({
+        where: { slug: roleSlug },
+      });
       if (!roleBySlug) {
         throw new NotFoundException({
           statusCode: 404,
@@ -48,7 +55,9 @@ export class UserRolesService {
       });
     }
 
-    const role = await this.prisma.role.findUnique({ where: { id: resolvedRoleId } });
+    const role = await this.prisma.role.findUnique({
+      where: { id: resolvedRoleId },
+    });
     if (!role) {
       throw new NotFoundException({
         statusCode: 404,
@@ -63,7 +72,9 @@ export class UserRolesService {
         where: { userId: requesterId },
         include: { role: true },
       });
-      const isSuperAdmin = requesterRoles.some((ur) => ur.role.slug === 'super_admin');
+      const isSuperAdmin = requesterRoles.some(
+        (ur) => ur.role.slug === 'super_admin',
+      );
       if (!isSuperAdmin) {
         throw new ForbiddenException({
           statusCode: 403,

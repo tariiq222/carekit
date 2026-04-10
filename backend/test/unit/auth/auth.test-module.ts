@@ -45,7 +45,10 @@ export async function createAuthTestModule(): Promise<AuthTestContext> {
       { provide: ConfigService, useValue: createMockConfig() },
       { provide: EmailService, useValue: mockEmail },
       { provide: AuthCacheService, useValue: createMockAuthCache() },
-      { provide: PermissionCacheService, useValue: { invalidate: jest.fn().mockResolvedValue(undefined) } },
+      {
+        provide: PermissionCacheService,
+        useValue: { invalidate: jest.fn().mockResolvedValue(undefined) },
+      },
       { provide: PatientWalkInService, useValue: createMockWalkIn() },
     ],
   }).compile();

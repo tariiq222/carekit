@@ -25,7 +25,12 @@ describe('PractitionersService — findAll', () => {
 
     expect(result).toHaveProperty('items');
     expect(result).toHaveProperty('meta');
-    expect(result.meta).toMatchObject({ page: 1, perPage: 20, total: 1, totalPages: 1 });
+    expect(result.meta).toMatchObject({
+      page: 1,
+      perPage: 20,
+      total: 1,
+      totalPages: 1,
+    });
     expect(result.items).toHaveLength(1);
   });
 
@@ -44,7 +49,16 @@ describe('PractitionersService — findAll', () => {
   });
 
   it.each([
-    [{ specialty: 'Cardiology' }, { OR: expect.arrayContaining([expect.objectContaining({ specialty: expect.objectContaining({ contains: 'Cardiology' }) })]) }],
+    [
+      { specialty: 'Cardiology' },
+      {
+        OR: expect.arrayContaining([
+          expect.objectContaining({
+            specialty: expect.objectContaining({ contains: 'Cardiology' }),
+          }),
+        ]),
+      },
+    ],
     [{ isActive: true }, { isActive: true }],
   ])('should filter by %o', async (filter, expectedWhere) => {
     ctx.mockPrisma.practitioner.findMany.mockResolvedValue([]);
@@ -53,7 +67,9 @@ describe('PractitionersService — findAll', () => {
     await ctx.service.findAll(filter);
 
     expect(ctx.mockPrisma.practitioner.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining(expectedWhere) }),
+      expect.objectContaining({
+        where: expect.objectContaining(expectedWhere),
+      }),
     );
   });
 
@@ -68,7 +84,9 @@ describe('PractitionersService — findAll', () => {
         where: expect.objectContaining({
           user: expect.objectContaining({
             OR: expect.arrayContaining([
-              expect.objectContaining({ firstName: expect.objectContaining({ contains: 'خالد' }) }),
+              expect.objectContaining({
+                firstName: expect.objectContaining({ contains: 'خالد' }),
+              }),
             ]),
           }),
         }),
@@ -83,7 +101,9 @@ describe('PractitionersService — findAll', () => {
     await ctx.service.findAll({});
 
     expect(ctx.mockPrisma.practitioner.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ deletedAt: null }) }),
+      expect.objectContaining({
+        where: expect.objectContaining({ deletedAt: null }),
+      }),
     );
   });
 
@@ -110,7 +130,9 @@ describe('PractitionersService — findAll', () => {
     await ctx.service.findAll({});
 
     expect(ctx.mockPrisma.practitioner.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: expect.objectContaining({ rating: 'desc' }) }),
+      expect.objectContaining({
+        orderBy: expect.objectContaining({ rating: 'desc' }),
+      }),
     );
   });
 });
@@ -130,18 +152,23 @@ describe('PractitionersService — findOne', () => {
 
     expect(result.id).toBe(mockPractitioner.id);
     expect(ctx.mockPrisma.practitioner.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: mockPractitioner.id, deletedAt: null } }),
+      expect.objectContaining({
+        where: { id: mockPractitioner.id, deletedAt: null },
+      }),
     );
   });
 
   it.each([
     ['non-existent practitioner', null, 'non-existent-id'],
     ['soft-deleted practitioner', null, mockPractitioner.id],
-  ])('should throw NotFoundException for %s', async (_label, returnValue, id) => {
-    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(returnValue);
+  ])(
+    'should throw NotFoundException for %s',
+    async (_label, returnValue, id) => {
+      ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(returnValue);
 
-    await expect(ctx.service.findOne(id)).rejects.toThrow(NotFoundException);
-  });
+      await expect(ctx.service.findOne(id)).rejects.toThrow(NotFoundException);
+    },
+  );
 });
 
 describe('PractitionersService — create', () => {
@@ -175,7 +202,10 @@ describe('PractitionersService — create', () => {
     expect(result.userId).toBe(createDto.userId);
     expect(ctx.mockPrisma.practitioner.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ userId: createDto.userId, specialty: createDto.specialty }),
+        data: expect.objectContaining({
+          userId: createDto.userId,
+          specialty: createDto.specialty,
+        }),
       }),
     );
   });
@@ -189,7 +219,10 @@ describe('PractitionersService — create', () => {
 
     expect(ctx.mockPrisma.practitioner.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ userId: mockUser.id, specialty: 'General' }),
+        data: expect.objectContaining({
+          userId: mockUser.id,
+          specialty: 'General',
+        }),
       }),
     );
   });
@@ -197,14 +230,18 @@ describe('PractitionersService — create', () => {
   it('should throw NotFoundException if user does not exist', async () => {
     ctx.mockPrisma.user.findUnique.mockResolvedValue(null);
 
-    await expect(ctx.service.create(createDto)).rejects.toThrow(NotFoundException);
+    await expect(ctx.service.create(createDto)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw ConflictException if user already has a practitioner record', async () => {
     ctx.mockPrisma.user.findUnique.mockResolvedValue(mockUser);
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
 
-    await expect(ctx.service.create(createDto)).rejects.toThrow(ConflictException);
+    await expect(ctx.service.create(createDto)).rejects.toThrow(
+      ConflictException,
+    );
   });
 });
 
@@ -224,7 +261,10 @@ describe('PractitionersService — update', () => {
 
   it('should update practitioner fields', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitioner.update.mockResolvedValue({ ...mockPractitioner, ...updateDto });
+    ctx.mockPrisma.practitioner.update.mockResolvedValue({
+      ...mockPractitioner,
+      ...updateDto,
+    });
 
     const result = await ctx.service.update(mockPractitioner.id, updateDto);
 
@@ -238,11 +278,12 @@ describe('PractitionersService — update', () => {
     );
   });
 
-
   it('should throw NotFoundException if practitioner not found', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(null);
 
-    await expect(ctx.service.update('non-existent-id', updateDto)).rejects.toThrow(NotFoundException);
+    await expect(
+      ctx.service.update('non-existent-id', updateDto),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -274,6 +315,8 @@ describe('PractitionersService — softDelete', () => {
   it('should throw NotFoundException if practitioner not found', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(null);
 
-    await expect(ctx.service.delete('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(ctx.service.delete('non-existent-id')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

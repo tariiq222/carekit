@@ -53,7 +53,10 @@ describe('CouponsController', () => {
       const coupon = { id: 'c1', code: 'SAVE10' };
       mockService.findById.mockResolvedValue(coupon);
 
-      expect(await controller.findById('c1')).toEqual({ success: true, data: coupon });
+      expect(await controller.findById('c1')).toEqual({
+        success: true,
+        data: coupon,
+      });
       expect(mockService.findById).toHaveBeenCalledWith('c1');
     });
   });
@@ -64,7 +67,10 @@ describe('CouponsController', () => {
       const created = { id: 'c2', ...dto };
       mockService.create.mockResolvedValue(created);
 
-      expect(await controller.create(dto)).toEqual({ success: true, data: created });
+      expect(await controller.create(dto)).toEqual({
+        success: true,
+        data: created,
+      });
       expect(mockService.create).toHaveBeenCalledWith(dto);
     });
   });
@@ -75,7 +81,10 @@ describe('CouponsController', () => {
       const updated = { id: 'c1', discountPercent: 25 };
       mockService.update.mockResolvedValue(updated);
 
-      expect(await controller.update('c1', dto)).toEqual({ success: true, data: updated });
+      expect(await controller.update('c1', dto)).toEqual({
+        success: true,
+        data: updated,
+      });
       expect(mockService.update).toHaveBeenCalledWith('c1', dto);
     });
   });
@@ -84,7 +93,10 @@ describe('CouponsController', () => {
     it('should delegate and wrap result', async () => {
       mockService.delete.mockResolvedValue({ id: 'c1' });
 
-      expect(await controller.delete('c1')).toEqual({ success: true, data: { id: 'c1' } });
+      expect(await controller.delete('c1')).toEqual({
+        success: true,
+        data: { id: 'c1' },
+      });
       expect(mockService.delete).toHaveBeenCalledWith('c1');
     });
   });

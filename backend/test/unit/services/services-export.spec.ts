@@ -19,12 +19,13 @@ import { IntakeFormsService } from '../../../src/modules/intake-forms/intake-for
 // Mock factory
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrismaService: any = {
   service: {
     findMany: jest.fn(),
   },
-  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
+  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) =>
+    fn(mockPrismaService),
+  ),
 };
 
 // ---------------------------------------------------------------------------
@@ -107,7 +108,10 @@ describe('ServicesService — exportServices', () => {
         ServicesService,
         ServiceCategoriesService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: CacheService, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() } },
+        {
+          provide: CacheService,
+          useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() },
+        },
         { provide: IntakeFormsService, useValue: { listForms: jest.fn() } },
       ],
     }).compile();
@@ -158,11 +162,18 @@ describe('ServicesService — exportServices', () => {
   });
 
   it('maps isActive and isHidden to Arabic yes/no strings', async () => {
-    mockPrismaService.service.findMany.mockResolvedValue([mockActiveService, mockHiddenService]);
+    mockPrismaService.service.findMany.mockResolvedValue([
+      mockActiveService,
+      mockHiddenService,
+    ]);
 
     const result = await service.exportServices();
-    const active = result.find((r: { id: string }) => r.id === 'service-uuid-1')!;
-    const hidden = result.find((r: { id: string }) => r.id === 'service-uuid-2')!;
+    const active = result.find(
+      (r: { id: string }) => r.id === 'service-uuid-1',
+    )!;
+    const hidden = result.find(
+      (r: { id: string }) => r.id === 'service-uuid-2',
+    )!;
 
     expect(active).toBeDefined();
     expect(hidden).toBeDefined();

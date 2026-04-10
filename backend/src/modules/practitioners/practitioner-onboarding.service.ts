@@ -19,7 +19,11 @@ export class PractitionerOnboardingService {
     private readonly emailService: EmailService,
   ) {}
 
-  async onboard(dto: OnboardPractitionerDto): Promise<{ success: boolean; message: string; data: Practitioner & { user: User } }> {
+  async onboard(dto: OnboardPractitionerDto): Promise<{
+    success: boolean;
+    message: string;
+    data: Practitioner & { user: User };
+  }> {
     const normalizedEmail = dto.email.toLowerCase();
 
     const existingUser = await this.prisma.user.findUnique({
@@ -98,7 +102,10 @@ export class PractitionerOnboardingService {
       createdPractitioner = result.practitioner;
       createdUser = result.user;
     } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
         throw new ConflictException({
           statusCode: 409,
           message: 'A user with this email already exists',
@@ -108,8 +115,15 @@ export class PractitionerOnboardingService {
       throw err;
     }
 
-    const otpCode = await this.otpService.generateOtp(createdUserId, OtpType.RESET_PASSWORD);
-    await this.emailService.sendPractitionerWelcome(normalizedEmail, firstName, otpCode);
+    const otpCode = await this.otpService.generateOtp(
+      createdUserId,
+      OtpType.RESET_PASSWORD,
+    );
+    await this.emailService.sendPractitionerWelcome(
+      normalizedEmail,
+      firstName,
+      otpCode,
+    );
 
     return {
       success: true,

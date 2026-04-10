@@ -55,20 +55,39 @@ describe('Branches Module (e2e)', () => {
     testApp = await createTestApp();
     httpServer = testApp.httpServer;
 
-    superAdmin = await loginTestUser(httpServer, TEST_USERS.super_admin.email, TEST_USERS.super_admin.password);
-    receptionist = await createTestUserWithRole(httpServer, superAdmin.accessToken, TEST_USERS.receptionist, 'receptionist');
-    accountant = await createTestUserWithRole(httpServer, superAdmin.accessToken, TEST_USERS.accountant, 'accountant');
+    superAdmin = await loginTestUser(
+      httpServer,
+      TEST_USERS.super_admin.email,
+      TEST_USERS.super_admin.password,
+    );
+    receptionist = await createTestUserWithRole(
+      httpServer,
+      superAdmin.accessToken,
+      TEST_USERS.receptionist,
+      'receptionist',
+    );
+    accountant = await createTestUserWithRole(
+      httpServer,
+      superAdmin.accessToken,
+      TEST_USERS.accountant,
+      'accountant',
+    );
     patient = await registerTestPatient(httpServer);
   });
 
-  afterAll(async () => { await closeTestApp(testApp.app); });
+  afterAll(async () => {
+    await closeTestApp(testApp.app);
+  });
 
   // ─── POST /branches ───────────────────────────────────────────
 
   describe('POST /branches', () => {
     it('should create branch as super_admin (201)', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken)).send(validBranch).expect(201);
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send(validBranch)
+        .expect(201);
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('id');
       expect(res.body.data).toHaveProperty('nameEn', validBranch.nameEn);
@@ -77,32 +96,50 @@ describe('Branches Module (e2e)', () => {
 
     it('should create deletable branch (201)', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ ...validBranch, nameEn: 'Branch To Delete', nameAr: 'فرع للحذف', phone: '+966501234568' })
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          ...validBranch,
+          nameEn: 'Branch To Delete',
+          nameAr: 'فرع للحذف',
+          phone: '+966501234568',
+        })
         .expect(201);
       deletableBranchId = res.body.data.id as string;
     });
 
     it('should return 400 for missing required fields', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken)).send({}).expect(400);
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({})
+        .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
     it('should return 401 when unauthenticated', async () => {
-      const res = await request(httpServer).post(URL).send(validBranch).expect(401);
+      const res = await request(httpServer)
+        .post(URL)
+        .send(validBranch)
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
     it('should return 403 for patient (no branches:create)', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(patient.accessToken)).send(validBranch).expect(403);
+        .post(URL)
+        .set(getAuthHeaders(patient.accessToken))
+        .send(validBranch)
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should return 403 for accountant (no branches:create)', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(accountant.accessToken)).send(validBranch).expect(403);
+        .post(URL)
+        .set(getAuthHeaders(accountant.accessToken))
+        .send(validBranch)
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -112,7 +149,9 @@ describe('Branches Module (e2e)', () => {
   describe('GET /branches', () => {
     it('should return branches list for super_admin (200)', async () => {
       const res = await request(httpServer)
-        .get(URL).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .get(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
       const data = res.body.data;
       expect(Array.isArray(data) || Array.isArray(data?.items)).toBe(true);
@@ -126,7 +165,9 @@ describe('Branches Module (e2e)', () => {
     // Regression: receptionist received 403 before branches:view was added to seed.data.ts
     it('REGRESSION: should return 200 for receptionist (branches:view permission)', async () => {
       const res = await request(httpServer)
-        .get(URL).set(getAuthHeaders(receptionist.accessToken)).expect(200);
+        .get(URL)
+        .set(getAuthHeaders(receptionist.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
       const data = res.body.data;
       expect(Array.isArray(data) || Array.isArray(data?.items)).toBe(true);
@@ -134,7 +175,9 @@ describe('Branches Module (e2e)', () => {
 
     it('should return 403 for patient (no branches:view)', async () => {
       const res = await request(httpServer)
-        .get(URL).set(getAuthHeaders(patient.accessToken)).expect(403);
+        .get(URL)
+        .set(getAuthHeaders(patient.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -144,25 +187,33 @@ describe('Branches Module (e2e)', () => {
   describe('GET /branches/:id', () => {
     it('should return branch by ID (200)', async () => {
       const res = await request(httpServer)
-        .get(`${URL}/${branchId}`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .get(`${URL}/${branchId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('id', branchId);
     });
 
     it('should return 404 for non-existent branch', async () => {
       const res = await request(httpServer)
-        .get(`${URL}/${FAKE_ID}`).set(getAuthHeaders(superAdmin.accessToken)).expect(404);
+        .get(`${URL}/${FAKE_ID}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
 
     it('should return 401 when unauthenticated', async () => {
-      const res = await request(httpServer).get(`${URL}/${branchId}`).expect(401);
+      const res = await request(httpServer)
+        .get(`${URL}/${branchId}`)
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
     it('should return 403 for patient (no branches:view)', async () => {
       const res = await request(httpServer)
-        .get(`${URL}/${branchId}`).set(getAuthHeaders(patient.accessToken)).expect(403);
+        .get(`${URL}/${branchId}`)
+        .set(getAuthHeaders(patient.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -172,36 +223,46 @@ describe('Branches Module (e2e)', () => {
   describe('PATCH /branches/:id', () => {
     it('should update branch as super_admin (200)', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${branchId}`).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameEn: 'Riyadh Branch Updated', address: 'Olaya Street' }).expect(200);
+        .patch(`${URL}/${branchId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({ nameEn: 'Riyadh Branch Updated', address: 'Olaya Street' })
+        .expect(200);
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('nameEn', 'Riyadh Branch Updated');
     });
 
     it('should return 403 for receptionist (no branches:edit)', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${branchId}`).set(getAuthHeaders(receptionist.accessToken))
-        .send({ nameAr: 'فرع الرياض المحدث' }).expect(403);
+        .patch(`${URL}/${branchId}`)
+        .set(getAuthHeaders(receptionist.accessToken))
+        .send({ nameAr: 'فرع الرياض المحدث' })
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should return 404 for non-existent branch', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${FAKE_ID}`).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameEn: 'Ghost' }).expect(404);
+        .patch(`${URL}/${FAKE_ID}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({ nameEn: 'Ghost' })
+        .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
 
     it('should return 401 when unauthenticated', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${branchId}`).send({ nameEn: 'Unauthorized' }).expect(401);
+        .patch(`${URL}/${branchId}`)
+        .send({ nameEn: 'Unauthorized' })
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
     it('should return 403 for patient (no branches:edit)', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${branchId}`).set(getAuthHeaders(patient.accessToken))
-        .send({ nameEn: 'Hijacked' }).expect(403);
+        .patch(`${URL}/${branchId}`)
+        .set(getAuthHeaders(patient.accessToken))
+        .send({ nameEn: 'Hijacked' })
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -211,7 +272,9 @@ describe('Branches Module (e2e)', () => {
   describe('GET /branches/:id/practitioners', () => {
     it('should return practitioners list for branch (200)', async () => {
       const res = await request(httpServer)
-        .get(`${URL}/${branchId}/practitioners`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .get(`${URL}/${branchId}/practitioners`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
       const data = res.body.data;
       expect(Array.isArray(data) || Array.isArray(data?.items)).toBe(true);
@@ -219,12 +282,16 @@ describe('Branches Module (e2e)', () => {
 
     it('should return 404 for non-existent branch', async () => {
       const res = await request(httpServer)
-        .get(`${URL}/${FAKE_ID}/practitioners`).set(getAuthHeaders(superAdmin.accessToken)).expect(404);
+        .get(`${URL}/${FAKE_ID}/practitioners`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
 
     it('should return 401 when unauthenticated', async () => {
-      const res = await request(httpServer).get(`${URL}/${branchId}/practitioners`).expect(401);
+      const res = await request(httpServer)
+        .get(`${URL}/${branchId}/practitioners`)
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
   });
@@ -234,21 +301,27 @@ describe('Branches Module (e2e)', () => {
   describe('PATCH /branches/:id/practitioners', () => {
     it('should return 400 for empty practitioner list (min 1 required)', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${branchId}/practitioners`).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ practitionerIds: [] }).expect(400);
+        .patch(`${URL}/${branchId}/practitioners`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({ practitionerIds: [] })
+        .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
     it('should return 401 when unauthenticated', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${branchId}/practitioners`).send({ practitionerIds: [] }).expect(401);
+        .patch(`${URL}/${branchId}/practitioners`)
+        .send({ practitionerIds: [] })
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
     it('should return 403 for patient (no branches:edit)', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${branchId}/practitioners`).set(getAuthHeaders(patient.accessToken))
-        .send({ practitionerIds: [] }).expect(403);
+        .patch(`${URL}/${branchId}/practitioners`)
+        .set(getAuthHeaders(patient.accessToken))
+        .send({ practitionerIds: [] })
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -257,50 +330,69 @@ describe('Branches Module (e2e)', () => {
 
   describe('DELETE /branches/:id', () => {
     it('should return 401 when unauthenticated', async () => {
-      const res = await request(httpServer).delete(`${URL}/${deletableBranchId}`).expect(401);
+      const res = await request(httpServer)
+        .delete(`${URL}/${deletableBranchId}`)
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
     it('should return 403 for patient (no branches:delete)', async () => {
       const res = await request(httpServer)
-        .delete(`${URL}/${deletableBranchId}`).set(getAuthHeaders(patient.accessToken)).expect(403);
+        .delete(`${URL}/${deletableBranchId}`)
+        .set(getAuthHeaders(patient.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should return 403 for receptionist (no branches:delete)', async () => {
       const res = await request(httpServer)
-        .delete(`${URL}/${deletableBranchId}`).set(getAuthHeaders(receptionist.accessToken)).expect(403);
+        .delete(`${URL}/${deletableBranchId}`)
+        .set(getAuthHeaders(receptionist.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should soft-delete branch as super_admin (200)', async () => {
       const res = await request(httpServer)
-        .delete(`${URL}/${deletableBranchId}`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .delete(`${URL}/${deletableBranchId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
     });
 
     it('should return 404 for non-existent branch', async () => {
       const res = await request(httpServer)
-        .delete(`${URL}/${FAKE_ID}`).set(getAuthHeaders(superAdmin.accessToken)).expect(404);
+        .delete(`${URL}/${FAKE_ID}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
 
     it('should make deleted branch invisible in GET list and return 404 on GET by id', async () => {
       const createRes = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken))
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
         .send({ nameAr: 'فرع مؤقت للحذف', nameEn: 'Temp Delete Branch' })
         .expect(201);
       const tempId = (createRes.body.data as { id: string }).id;
 
       await request(httpServer)
-        .delete(`${URL}/${tempId}`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .delete(`${URL}/${tempId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
 
       await request(httpServer)
-        .get(`${URL}/${tempId}`).set(getAuthHeaders(superAdmin.accessToken)).expect(404);
+        .get(`${URL}/${tempId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(404);
 
       const listRes = await request(httpServer)
-        .get(URL).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
-      const items = (listRes.body.data?.items ?? listRes.body.data) as Array<{ id: string }>;
+        .get(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
+      const items = (listRes.body.data?.items ?? listRes.body.data) as Array<{
+        id: string;
+      }>;
       expect(items.every((b) => b.id !== tempId)).toBe(true);
     });
   });

@@ -83,9 +83,13 @@ describe('ServicePractitionersService — getPractitionersForService', () => {
     const result = await service.getPractitionersForService(SERVICE_ID);
 
     expect(result).toEqual([mockPractitionerService]);
-    const whereArg = mockPrisma.practitionerService.findMany.mock.calls[0][0].where;
+    const whereArg =
+      mockPrisma.practitionerService.findMany.mock.calls[0][0].where;
     expect(whereArg.serviceId).toBe(SERVICE_ID);
-    expect(whereArg.practitioner).toMatchObject({ isActive: true, deletedAt: null });
+    expect(whereArg.practitioner).toMatchObject({
+      isActive: true,
+      deletedAt: null,
+    });
   });
 
   it('should filter practitioners by branch when branchId is provided', async () => {
@@ -96,7 +100,8 @@ describe('ServicePractitionersService — getPractitionersForService', () => {
 
     await service.getPractitionersForService(SERVICE_ID, BRANCH_ID);
 
-    const whereArg = mockPrisma.practitionerService.findMany.mock.calls[0][0].where;
+    const whereArg =
+      mockPrisma.practitionerService.findMany.mock.calls[0][0].where;
     expect(whereArg.serviceId).toBe(SERVICE_ID);
     expect(whereArg.practitioner).toMatchObject({
       isActive: true,
@@ -141,11 +146,25 @@ describe('ServicePractitionersService — getPractitionersForService', () => {
     mockPrisma.practitionerService = {
       findMany: jest.fn().mockResolvedValue([
         {
-          practitioner: { id: 'p-1', isActive: true, deletedAt: null, nameAr: 'طبيب', title: 'Dr', user: { firstName: 'Ahmad', lastName: 'Ali', avatarUrl: null } },
+          practitioner: {
+            id: 'p-1',
+            isActive: true,
+            deletedAt: null,
+            nameAr: 'طبيب',
+            title: 'Dr',
+            user: { firstName: 'Ahmad', lastName: 'Ali', avatarUrl: null },
+          },
           serviceTypes: [],
         },
         {
-          practitioner: { id: 'p-2', isActive: false, deletedAt: null, nameAr: 'طبيب', title: 'Dr', user: { firstName: 'Khalid', lastName: 'Omar', avatarUrl: null } },
+          practitioner: {
+            id: 'p-2',
+            isActive: false,
+            deletedAt: null,
+            nameAr: 'طبيب',
+            title: 'Dr',
+            user: { firstName: 'Khalid', lastName: 'Omar', avatarUrl: null },
+          },
           serviceTypes: [],
         },
       ] as never),

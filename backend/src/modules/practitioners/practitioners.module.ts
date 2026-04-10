@@ -16,7 +16,13 @@ import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.
 import { ClinicModule } from '../clinic/clinic.module.js';
 
 @Module({
-  imports: [BookingsModule, AuthModule, EmailModule, ClinicSettingsModule, ClinicModule],
+  imports: [
+    BookingsModule,
+    AuthModule,
+    EmailModule,
+    ClinicSettingsModule,
+    ClinicModule,
+  ],
   controllers: [FavoritePractitionersController, PractitionersController],
   providers: [
     PractitionersService,

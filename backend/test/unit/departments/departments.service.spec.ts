@@ -76,7 +76,10 @@ describe('DepartmentsService', () => {
 
   describe('findAll', () => {
     it('should return paginated results with meta', async () => {
-      mockPrisma.department.findMany.mockResolvedValue([mockDepartment, mockDepartment2]);
+      mockPrisma.department.findMany.mockResolvedValue([
+        mockDepartment,
+        mockDepartment2,
+      ]);
       mockPrisma.department.count.mockResolvedValue(2);
 
       const result = await service.findAll({});
@@ -362,9 +365,9 @@ describe('DepartmentsService', () => {
     it('should throw NotFoundException when department does not exist', async () => {
       mockPrisma.department.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.update('non-existent', updateDto),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.update('non-existent', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should invalidate cache after update', async () => {

@@ -27,9 +27,36 @@ const baseLicense = {
   updatedAt: new Date(),
 };
 
-const flagCoupons = { key: 'coupons', enabled: true, nameAr: 'الكوبونات', nameEn: 'Coupons', descriptionAr: '', descriptionEn: '', createdAt: new Date(), updatedAt: new Date() };
-const flagGifts = { key: 'gift_cards', enabled: true, nameAr: 'بطاقات الهدايا', nameEn: 'Gift Cards', descriptionAr: '', descriptionEn: '', createdAt: new Date(), updatedAt: new Date() };
-const flagUnknown = { key: 'unknown_feature', enabled: true, nameAr: 'غير معروف', nameEn: 'Unknown', descriptionAr: '', descriptionEn: '', createdAt: new Date(), updatedAt: new Date() };
+const flagCoupons = {
+  key: 'coupons',
+  enabled: true,
+  nameAr: 'الكوبونات',
+  nameEn: 'Coupons',
+  descriptionAr: '',
+  descriptionEn: '',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+const flagGifts = {
+  key: 'gift_cards',
+  enabled: true,
+  nameAr: 'بطاقات الهدايا',
+  nameEn: 'Gift Cards',
+  descriptionAr: '',
+  descriptionEn: '',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+const flagUnknown = {
+  key: 'unknown_feature',
+  enabled: true,
+  nameAr: 'غير معروف',
+  nameEn: 'Unknown',
+  descriptionAr: '',
+  descriptionEn: '',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 const mockPrisma = {
   licenseConfig: {
@@ -87,12 +114,18 @@ describe('LicenseService', () => {
 
       expect(result).toEqual(baseLicense);
       expect(mockPrisma.licenseConfig.findFirstOrThrow).toHaveBeenCalled();
-      expect(mockCache.set).toHaveBeenCalledWith('cache:license', baseLicense, 3600);
+      expect(mockCache.set).toHaveBeenCalledWith(
+        'cache:license',
+        baseLicense,
+        3600,
+      );
     });
 
     it('throws when no license record exists', async () => {
       mockCache.get.mockResolvedValue(null);
-      mockPrisma.licenseConfig.findFirstOrThrow.mockRejectedValue(new Error('Not found'));
+      mockPrisma.licenseConfig.findFirstOrThrow.mockRejectedValue(
+        new Error('Not found'),
+      );
 
       await expect(service.get()).rejects.toThrow('Not found');
     });
@@ -119,7 +152,10 @@ describe('LicenseService', () => {
 
     it('handles partial update — only changed fields are sent', async () => {
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense);
-      mockPrisma.licenseConfig.update.mockResolvedValue({ ...baseLicense, hasZoom: true });
+      mockPrisma.licenseConfig.update.mockResolvedValue({
+        ...baseLicense,
+        hasZoom: true,
+      });
 
       await service.update({ hasZoom: true });
 
@@ -192,13 +228,28 @@ describe('LicenseService', () => {
     it('returns features with correct licensed and enabled status', async () => {
       mockCache.get.mockResolvedValue(null);
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense);
-      mockPrisma.featureFlag.findMany.mockResolvedValue([flagCoupons, flagGifts]);
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        flagCoupons,
+        flagGifts,
+      ]);
 
       const result = await service.getFeaturesWithStatus();
 
       expect(result).toEqual([
-        { key: 'coupons', licensed: true, enabled: true, nameAr: 'الكوبونات', nameEn: 'Coupons' },
-        { key: 'gift_cards', licensed: false, enabled: false, nameAr: 'بطاقات الهدايا', nameEn: 'Gift Cards' },
+        {
+          key: 'coupons',
+          licensed: true,
+          enabled: true,
+          nameAr: 'الكوبونات',
+          nameEn: 'Coupons',
+        },
+        {
+          key: 'gift_cards',
+          licensed: false,
+          enabled: false,
+          nameAr: 'بطاقات الهدايا',
+          nameEn: 'Gift Cards',
+        },
       ]);
     });
 
@@ -247,26 +298,54 @@ describe('LicenseService', () => {
     });
 
     it('groups shows licensed=false and enabled=false when not in license', async () => {
-      const flagGroups = { key: 'groups', enabled: true, nameAr: 'المجموعات', nameEn: 'Groups', descriptionAr: '', descriptionEn: '', createdAt: new Date(), updatedAt: new Date() };
+      const flagGroups = {
+        key: 'groups',
+        enabled: true,
+        nameAr: 'المجموعات',
+        nameEn: 'Groups',
+        descriptionAr: '',
+        descriptionEn: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       mockCache.get.mockResolvedValue(null);
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense); // hasGroups=false
       mockPrisma.featureFlag.findMany.mockResolvedValue([flagGroups]);
 
       const result = await service.getFeaturesWithStatus();
 
-      expect(result[0]).toMatchObject({ key: 'groups', licensed: false, enabled: false });
+      expect(result[0]).toMatchObject({
+        key: 'groups',
+        licensed: false,
+        enabled: false,
+      });
     });
 
     it('groups shows licensed=true and enabled=true when in license and flag enabled', async () => {
       const licensedLicense = { ...baseLicense, hasGroups: true };
-      const flagGroups = { key: 'groups', enabled: true, nameAr: 'المجموعات', nameEn: 'Groups', descriptionAr: '', descriptionEn: '', createdAt: new Date(), updatedAt: new Date() };
+      const flagGroups = {
+        key: 'groups',
+        enabled: true,
+        nameAr: 'المجموعات',
+        nameEn: 'Groups',
+        descriptionAr: '',
+        descriptionEn: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       mockCache.get.mockResolvedValue(null);
-      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(licensedLicense);
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(
+        licensedLicense,
+      );
       mockPrisma.featureFlag.findMany.mockResolvedValue([flagGroups]);
 
       const result = await service.getFeaturesWithStatus();
 
-      expect(result[0]).toMatchObject({ key: 'groups', licensed: true, enabled: true });
+      expect(result[0]).toMatchObject({
+        key: 'groups',
+        licensed: true,
+        enabled: true,
+      });
     });
   });
 

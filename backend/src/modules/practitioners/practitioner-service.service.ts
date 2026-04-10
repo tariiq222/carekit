@@ -13,7 +13,13 @@ import type { PractitionerTypeConfigDto } from './dto/practitioner-type-config.d
 
 const serviceInclude = {
   service: {
-    select: { id: true, nameAr: true, nameEn: true, price: true, duration: true },
+    select: {
+      id: true,
+      nameAr: true,
+      nameEn: true,
+      price: true,
+      duration: true,
+    },
   },
   serviceTypes: {
     include: { durationOptions: { orderBy: { sortOrder: 'asc' as const } } },
@@ -25,19 +31,33 @@ const serviceInclude = {
 export class PractitionerServiceService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async assignService(practitionerId: string, dto: AssignPractitionerServiceDto, currentUserId?: string) {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
-    if (currentUserId) await checkOwnership(this.prisma, practitioner.userId, currentUserId);
+  async assignService(
+    practitionerId: string,
+    dto: AssignPractitionerServiceDto,
+    currentUserId?: string,
+  ) {
+    const practitioner = await ensurePractitionerExists(
+      this.prisma,
+      practitionerId,
+    );
+    if (currentUserId)
+      await checkOwnership(this.prisma, practitioner.userId, currentUserId);
 
     const service = await this.prisma.service.findFirst({
       where: { id: dto.serviceId, deletedAt: null },
     });
     if (!service) {
-      throw new NotFoundException({ statusCode: 404, message: 'Service not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Service not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     const existing = await this.prisma.practitionerService.findUnique({
-      where: { practitionerId_serviceId: { practitionerId, serviceId: dto.serviceId } },
+      where: {
+        practitionerId_serviceId: { practitionerId, serviceId: dto.serviceId },
+      },
     });
     if (existing) {
       throw new ConflictException({
@@ -84,8 +104,12 @@ export class PractitionerServiceService {
     dto: UpdatePractitionerServiceDto,
     currentUserId?: string,
   ) {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
-    if (currentUserId) await checkOwnership(this.prisma, practitioner.userId, currentUserId);
+    const practitioner = await ensurePractitionerExists(
+      this.prisma,
+      practitionerId,
+    );
+    if (currentUserId)
+      await checkOwnership(this.prisma, practitioner.userId, currentUserId);
 
     const ps = await this.prisma.practitionerService.findUnique({
       where: { practitionerId_serviceId: { practitionerId, serviceId } },
@@ -118,9 +142,17 @@ export class PractitionerServiceService {
     });
   }
 
-  async removeService(practitionerId: string, serviceId: string, currentUserId?: string) {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
-    if (currentUserId) await checkOwnership(this.prisma, practitioner.userId, currentUserId);
+  async removeService(
+    practitionerId: string,
+    serviceId: string,
+    currentUserId?: string,
+  ) {
+    const practitioner = await ensurePractitionerExists(
+      this.prisma,
+      practitionerId,
+    );
+    if (currentUserId)
+      await checkOwnership(this.prisma, practitioner.userId, currentUserId);
 
     const ps = await this.prisma.practitionerService.findUnique({
       where: { practitionerId_serviceId: { practitionerId, serviceId } },
@@ -153,7 +185,10 @@ export class PractitionerServiceService {
     return { deleted: true };
   }
 
-  async findByPractitionerAndService(practitionerId: string, serviceId: string) {
+  async findByPractitionerAndService(
+    practitionerId: string,
+    serviceId: string,
+  ) {
     return this.prisma.practitionerService.findUnique({
       where: { practitionerId_serviceId: { practitionerId, serviceId } },
       include: serviceInclude,

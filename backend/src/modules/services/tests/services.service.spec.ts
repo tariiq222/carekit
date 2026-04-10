@@ -31,14 +31,13 @@ import { UpdateServiceDto } from '../dto/update-service.dto.js';
 import { CreateCategoryDto } from '../dto/create-category.dto.js';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { UpdateCategoryDto } from '../dto/update-category.dto.js';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 import { ServiceListQueryDto } from '../dto/service-list-query.dto.js';
 
 // ---------------------------------------------------------------------------
 // Mock factories
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrismaService: any = {
   service: {
     create: jest.fn(),
@@ -56,7 +55,9 @@ const mockPrismaService: any = {
     delete: jest.fn(),
     count: jest.fn(),
   },
-  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
+  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) =>
+    fn(mockPrismaService),
+  ),
 };
 
 // ---------------------------------------------------------------------------
@@ -123,13 +124,18 @@ describe('ServicesService', () => {
         ServicesService,
         ServiceCategoriesService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: CacheService, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() } },
+        {
+          provide: CacheService,
+          useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() },
+        },
         { provide: IntakeFormsService, useValue: { listForms: jest.fn() } },
       ],
     }).compile();
 
     service = module.get<ServicesService>(ServicesService);
-    categoriesService = module.get<ServiceCategoriesService>(ServiceCategoriesService);
+    categoriesService = module.get<ServiceCategoriesService>(
+      ServiceCategoriesService,
+    );
 
     jest.clearAllMocks();
   });
@@ -214,7 +220,9 @@ describe('ServicesService', () => {
 
   describe('updateCategory', () => {
     it('should update category fields', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.serviceCategory.update.mockResolvedValue({
         ...mockCategory,
         nameEn: 'Updated Category',
@@ -236,7 +244,9 @@ describe('ServicesService', () => {
     });
 
     it('should allow deactivating a category', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.serviceCategory.update.mockResolvedValue({
         ...mockCategory,
         isActive: false,
@@ -252,7 +262,9 @@ describe('ServicesService', () => {
 
   describe('deleteCategory', () => {
     it('should delete a category with no services', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.service.count.mockResolvedValue(0);
       mockPrismaService.serviceCategory.delete.mockResolvedValue(mockCategory);
 
@@ -268,22 +280,26 @@ describe('ServicesService', () => {
     it('should throw NotFoundException if category not found', async () => {
       mockPrismaService.serviceCategory.findUnique.mockResolvedValue(null);
 
-      await expect(
-        categoriesService.delete('non-existent-id'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(categoriesService.delete('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException if category has assigned services', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.service.count.mockResolvedValue(3);
 
-      await expect(
-        categoriesService.delete(mockCategory.id),
-      ).rejects.toThrow(ConflictException);
+      await expect(categoriesService.delete(mockCategory.id)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should allow deleting a category whose services are all soft-deleted', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       // All services are soft-deleted — count of ACTIVE services = 0
       mockPrismaService.service.count.mockResolvedValue(0);
       mockPrismaService.serviceCategory.delete.mockResolvedValue(mockCategory);
@@ -319,7 +335,9 @@ describe('ServicesService', () => {
     };
 
     it('should create a service with valid data', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.service.create.mockResolvedValue({
         ...mockService,
         ...createDto,
@@ -336,11 +354,15 @@ describe('ServicesService', () => {
     it('should throw NotFoundException if category does not exist', async () => {
       mockPrismaService.serviceCategory.findUnique.mockResolvedValue(null);
 
-      await expect(service.create(createDto)).rejects.toThrow(NotFoundException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should default price to 0 when not provided', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.service.create.mockResolvedValue({
         ...mockService,
         price: 0,
@@ -362,7 +384,9 @@ describe('ServicesService', () => {
     });
 
     it('should default duration to 30 when not provided', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.service.create.mockResolvedValue({
         ...mockService,
         duration: 30,
@@ -384,7 +408,9 @@ describe('ServicesService', () => {
     });
 
     it('should store price as integer (halalat)', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.service.create.mockResolvedValue({
         ...mockService,
         price: 25050,
@@ -405,7 +431,9 @@ describe('ServicesService', () => {
     });
 
     it('should persist depositEnabled and depositPercent to the DB', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.service.create.mockResolvedValue({
         ...mockService,
         depositEnabled: true,
@@ -429,7 +457,9 @@ describe('ServicesService', () => {
     });
 
     it('should persist allowRecurring and allowedRecurringPatterns to the DB', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.service.create.mockResolvedValue({
         ...mockService,
         allowRecurring: true,
@@ -439,7 +469,9 @@ describe('ServicesService', () => {
       await service.create({
         ...createDto,
         allowRecurring: true,
-        allowedRecurringPatterns: ['WEEKLY'] as CreateServiceDto['allowedRecurringPatterns'],
+        allowedRecurringPatterns: [
+          'WEEKLY',
+        ] as CreateServiceDto['allowedRecurringPatterns'],
       });
 
       expect(mockPrismaService.service.create).toHaveBeenCalledWith(
@@ -453,7 +485,9 @@ describe('ServicesService', () => {
     });
 
     it('should persist minLeadMinutes and maxAdvanceDays to the DB', async () => {
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.service.create.mockResolvedValue({
         ...mockService,
         minLeadMinutes: 60,
@@ -670,7 +704,9 @@ describe('ServicesService', () => {
 
     it('should allow changing category to a valid one', async () => {
       mockPrismaService.service.findFirst.mockResolvedValue(mockService);
-      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(mockCategory2);
+      mockPrismaService.serviceCategory.findUnique.mockResolvedValue(
+        mockCategory2,
+      );
       mockPrismaService.service.update.mockResolvedValue({
         ...mockService,
         categoryId: mockCategory2.id,
@@ -726,7 +762,9 @@ describe('ServicesService', () => {
     it('should call intakeForms.listForms with the serviceId', async () => {
       const mockForms = [{ id: 'form-1', titleEn: 'Health History' }];
       const mockIntakeFormsService = module.get(IntakeFormsService);
-      jest.spyOn(mockIntakeFormsService, 'listForms').mockResolvedValue(mockForms as never);
+      jest
+        .spyOn(mockIntakeFormsService, 'listForms')
+        .mockResolvedValue(mockForms as never);
 
       const result = await service.getIntakeForms('service-uuid-1');
 
@@ -738,9 +776,9 @@ describe('ServicesService', () => {
 
     it('should propagate errors from intakeForms.listForms', async () => {
       const mockIntakeFormsService = module.get(IntakeFormsService);
-      jest.spyOn(mockIntakeFormsService, 'listForms').mockRejectedValue(
-        new Error('intake forms error'),
-      );
+      jest
+        .spyOn(mockIntakeFormsService, 'listForms')
+        .mockRejectedValue(new Error('intake forms error'));
 
       await expect(service.getIntakeForms('service-uuid-1')).rejects.toThrow(
         'intake forms error',

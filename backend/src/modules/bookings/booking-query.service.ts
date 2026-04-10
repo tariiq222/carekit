@@ -8,16 +8,25 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { BookingListQueryDto } from './dto/booking-list-query.dto.js';
 import { bookingInclude } from './booking.constants.js';
 import { resolveUserRoleContext } from '../../common/helpers/user-role.helper.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
-import { toMinutes, minutesToTime } from '../../common/helpers/booking-time.helper.js';
+import {
+  toMinutes,
+  minutesToTime,
+} from '../../common/helpers/booking-time.helper.js';
 
 @Injectable()
 export class BookingQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: BookingListQueryDto) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      query.page,
+      query.perPage,
+    );
 
     const where: Record<string, unknown> = { deletedAt: null };
     if (query.status) where.status = query.status;
@@ -29,11 +38,19 @@ export class BookingQueryService {
     if (dateRange) where.date = dateRange;
 
     const [rawItems, total] = await Promise.all([
-      this.prisma.booking.findMany({ where, include: bookingInclude, orderBy: { createdAt: 'desc' }, skip, take: perPage }),
+      this.prisma.booking.findMany({
+        where,
+        include: bookingInclude,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: perPage,
+      }),
       this.prisma.booking.count({ where }),
     ]);
 
-    const items = rawItems.map(({ deletedAt: _, zoomMeetingId: _z, ...item }) => item);
+    const items = rawItems.map(
+      ({ deletedAt: _, zoomMeetingId: _z, ...item }) => item,
+    );
 
     return {
       items,
@@ -42,9 +59,16 @@ export class BookingQueryService {
   }
 
   async findOne(id: string) {
-    const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null }, include: bookingInclude });
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, deletedAt: null },
+      include: bookingInclude,
+    });
     if (!booking) {
-      throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Booking not found',
+        error: 'NOT_FOUND',
+      });
     }
     return booking;
   }
@@ -69,7 +93,8 @@ export class BookingQueryService {
 
     if (ctx.isAdmin) return booking;
     if (booking.patientId === userId) return booking;
-    if (ctx.practitionerId && booking.practitionerId === ctx.practitionerId) return booking;
+    if (ctx.practitionerId && booking.practitionerId === ctx.practitionerId)
+      return booking;
 
     throw new ForbiddenException({
       statusCode: 403,
@@ -82,11 +107,22 @@ export class BookingQueryService {
     const pagination = parsePaginationParams(page, perPage);
     const where = { patientId, deletedAt: null };
     const [rawItems, total] = await Promise.all([
-      this.prisma.booking.findMany({ where, include: bookingInclude, orderBy: { createdAt: 'desc' }, skip: pagination.skip, take: pagination.perPage }),
+      this.prisma.booking.findMany({
+        where,
+        include: bookingInclude,
+        orderBy: { createdAt: 'desc' },
+        skip: pagination.skip,
+        take: pagination.perPage,
+      }),
       this.prisma.booking.count({ where }),
     ]);
-    const items = rawItems.map(({ deletedAt: _, zoomMeetingId: _z, ...item }) => item);
-    return { items, meta: buildPaginationMeta(total, pagination.page, pagination.perPage) };
+    const items = rawItems.map(
+      ({ deletedAt: _, zoomMeetingId: _z, ...item }) => item,
+    );
+    return {
+      items,
+      meta: buildPaginationMeta(total, pagination.page, pagination.perPage),
+    };
   }
 
   async findTodayBookingsForUser(userId: string) {
@@ -110,13 +146,28 @@ export class BookingQueryService {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const where = { practitionerId, date: { gte: today, lt: tomorrow }, deletedAt: null };
+    const where = {
+      practitionerId,
+      date: { gte: today, lt: tomorrow },
+      deletedAt: null,
+    };
     const [rawItems, total] = await Promise.all([
-      this.prisma.booking.findMany({ where, include: bookingInclude, orderBy: { startTime: 'asc' }, skip: pagination.skip, take: pagination.perPage }),
+      this.prisma.booking.findMany({
+        where,
+        include: bookingInclude,
+        orderBy: { startTime: 'asc' },
+        skip: pagination.skip,
+        take: pagination.perPage,
+      }),
       this.prisma.booking.count({ where }),
     ]);
-    const items = rawItems.map(({ deletedAt: _, zoomMeetingId: _z, ...item }) => item);
-    return { items, meta: buildPaginationMeta(total, pagination.page, pagination.perPage) };
+    const items = rawItems.map(
+      ({ deletedAt: _, zoomMeetingId: _z, ...item }) => item,
+    );
+    return {
+      items,
+      meta: buildPaginationMeta(total, pagination.page, pagination.perPage),
+    };
   }
 
   async getNextAvailableSlots(
@@ -125,10 +176,13 @@ export class BookingQueryService {
     count: number,
     branchId?: string,
   ): Promise<Array<{ date: string; startTime: string; endTime: string }>> {
-    const slots: Array<{ date: string; startTime: string; endTime: string }> = [];
+    const slots: Array<{ date: string; startTime: string; endTime: string }> =
+      [];
     const activeStatuses: BookingStatus[] = [
-      BookingStatus.pending, BookingStatus.confirmed,
-      BookingStatus.checked_in, BookingStatus.in_progress,
+      BookingStatus.pending,
+      BookingStatus.confirmed,
+      BookingStatus.checked_in,
+      BookingStatus.in_progress,
     ];
 
     // Pre-compute the 8-day range and collect unique days of week
@@ -183,7 +237,11 @@ export class BookingQueryService {
       bookingsByDate.set(key, list);
     }
 
-    for (let dayOffset = 0; dayOffset <= 7 && slots.length < count; dayOffset++) {
+    for (
+      let dayOffset = 0;
+      dayOffset <= 7 && slots.length < count;
+      dayOffset++
+    ) {
       const checkDate = dates[dayOffset];
       const dayOfWeek = checkDate.getDay();
       const dateStr = checkDate.toISOString().split('T')[0];
@@ -197,7 +255,11 @@ export class BookingQueryService {
         const availStart = toMinutes(avail.startTime);
         const availEnd = toMinutes(avail.endTime);
 
-        for (let slotStart = availStart; slotStart + 30 <= availEnd && slots.length < count; slotStart += 30) {
+        for (
+          let slotStart = availStart;
+          slotStart + 30 <= availEnd && slots.length < count;
+          slotStart += 30
+        ) {
           const slotEnd = slotStart + 30;
           const slotStartStr = minutesToTime(slotStart);
           const slotEndStr = minutesToTime(slotEnd);
@@ -246,7 +308,11 @@ export class BookingQueryService {
     // Apply date range filter — default to last 30 days when no range provided
     const effectiveDateFrom = dateFrom
       ? new Date(dateFrom)
-      : (() => { const d = new Date(); d.setDate(d.getDate() - 30); return d; })();
+      : (() => {
+          const d = new Date();
+          d.setDate(d.getDate() - 30);
+          return d;
+        })();
     const effectiveDateTo = dateTo ? new Date(dateTo) : new Date();
     where.date = { gte: effectiveDateFrom, lte: effectiveDateTo };
 
@@ -256,7 +322,9 @@ export class BookingQueryService {
       _count: { _all: true },
     });
 
-    const map = Object.fromEntries(counts.map((g) => [g.status, g._count._all]));
+    const map = Object.fromEntries(
+      counts.map((g) => [g.status, g._count._all]),
+    );
 
     return {
       total: counts.reduce((acc, g) => acc + g._count._all, 0),
@@ -295,19 +363,26 @@ export class BookingQueryService {
     });
 
     if (!booking) {
-      throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Booking not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     const ctx = await resolveUserRoleContext(this.prisma, userId);
     const isOwner = booking.patientId === userId;
     if (!isOwner && ctx.roles.includes('patient')) {
-      throw new ForbiddenException({ statusCode: 403, message: 'Access denied', error: 'FORBIDDEN' });
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: 'Access denied',
+        error: 'FORBIDDEN',
+      });
     }
 
     const RETRYABLE_STATUSES = ['failed', 'pending', 'awaiting'];
     const canRetry =
-      !booking.payment ||
-      RETRYABLE_STATUSES.includes(booking.payment.status);
+      !booking.payment || RETRYABLE_STATUSES.includes(booking.payment.status);
 
     return {
       bookingId: booking.id,

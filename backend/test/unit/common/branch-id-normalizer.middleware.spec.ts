@@ -29,38 +29,62 @@ describe('BranchIdNormalizerMiddleware', () => {
     });
 
     it('strips branchId from query string', async () => {
-      const req = { query: { branchId: 'some-uuid', status: 'active' }, body: {} } as never;
+      const req = {
+        query: { branchId: 'some-uuid', status: 'active' },
+        body: {},
+      } as never;
       const next = mockNext();
 
       await buildMiddleware().use(req, {} as never, next);
 
-      expect((req as { query: Record<string, unknown> }).query).not.toHaveProperty('branchId');
-      expect((req as { query: Record<string, unknown> }).query).toHaveProperty('status', 'active');
+      expect(
+        (req as { query: Record<string, unknown> }).query,
+      ).not.toHaveProperty('branchId');
+      expect((req as { query: Record<string, unknown> }).query).toHaveProperty(
+        'status',
+        'active',
+      );
       expect(next).toHaveBeenCalledTimes(1);
     });
 
     it('strips branchId from request body', async () => {
       const req = {
         query: {},
-        body: { branchId: 'some-uuid', date: '2026-04-10', practitionerId: 'p1' },
+        body: {
+          branchId: 'some-uuid',
+          date: '2026-04-10',
+          practitionerId: 'p1',
+        },
       } as never;
       const next = mockNext();
 
       await buildMiddleware().use(req, {} as never, next);
 
-      expect((req as { body: Record<string, unknown> }).body).not.toHaveProperty('branchId');
-      expect((req as { body: Record<string, unknown> }).body).toHaveProperty('date', '2026-04-10');
+      expect(
+        (req as { body: Record<string, unknown> }).body,
+      ).not.toHaveProperty('branchId');
+      expect((req as { body: Record<string, unknown> }).body).toHaveProperty(
+        'date',
+        '2026-04-10',
+      );
       expect(next).toHaveBeenCalledTimes(1);
     });
 
     it('handles request with no branchId gracefully', async () => {
-      const req = { query: { status: 'confirmed' }, body: { serviceId: 'svc1' } } as never;
+      const req = {
+        query: { status: 'confirmed' },
+        body: { serviceId: 'svc1' },
+      } as never;
       const next = mockNext();
 
       await buildMiddleware().use(req, {} as never, next);
 
-      expect((req as { query: Record<string, unknown> }).query).toEqual({ status: 'confirmed' });
-      expect((req as { body: Record<string, unknown> }).body).toEqual({ serviceId: 'svc1' });
+      expect((req as { query: Record<string, unknown> }).query).toEqual({
+        status: 'confirmed',
+      });
+      expect((req as { body: Record<string, unknown> }).body).toEqual({
+        serviceId: 'svc1',
+      });
       expect(next).toHaveBeenCalledTimes(1);
     });
 
@@ -93,7 +117,10 @@ describe('BranchIdNormalizerMiddleware', () => {
     });
 
     it('preserves branchId in request body', async () => {
-      const req = { query: {}, body: { branchId: 'branch-uuid', date: '2026-04-10' } } as never;
+      const req = {
+        query: {},
+        body: { branchId: 'branch-uuid', date: '2026-04-10' },
+      } as never;
       const next = mockNext();
 
       await buildMiddleware().use(req, {} as never, next);
@@ -112,6 +139,8 @@ describe('BranchIdNormalizerMiddleware', () => {
 
     await buildMiddleware().use(req, {} as never, mockNext());
 
-    expect(mockFeatureFlagsService.isEnabled).toHaveBeenCalledWith('multi_branch');
+    expect(mockFeatureFlagsService.isEnabled).toHaveBeenCalledWith(
+      'multi_branch',
+    );
   });
 });

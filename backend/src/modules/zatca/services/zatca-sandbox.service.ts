@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { ClinicIntegrationsService } from '../../clinic-integrations/clinic-integrations.service.js';
 import { ZatcaService } from '../zatca.service.js';
@@ -35,7 +40,11 @@ export class ZatcaSandboxService {
     });
 
     if (!invoice) {
-      throw new NotFoundException({ statusCode: 404, message: `Invoice ${invoiceId} not found`, error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: `Invoice ${invoiceId} not found`,
+        error: 'NOT_FOUND',
+      });
     }
 
     if (!invoice.xmlContent || !invoice.invoiceHash) {
@@ -48,7 +57,9 @@ export class ZatcaSandboxService {
 
     const xmlBase64 = Buffer.from(invoice.xmlContent).toString('base64');
 
-    this.logger.log(`Reporting invoice ${invoice.invoiceNumber} to ZATCA sandbox`);
+    this.logger.log(
+      `Reporting invoice ${invoice.invoiceNumber} to ZATCA sandbox`,
+    );
 
     const response = await this.zatcaApiService.reportInvoice(
       {
@@ -80,7 +91,8 @@ export class ZatcaSandboxService {
       success: succeeded,
       status: response.status,
       reportingStatus: response.reportingStatus,
-      validationResults: response.validationResults as ZatcaSandboxResult['validationResults'],
+      validationResults:
+        response.validationResults as ZatcaSandboxResult['validationResults'],
       message: succeeded
         ? 'Invoice reported successfully to ZATCA sandbox'
         : 'Invoice reporting failed — check validation results',

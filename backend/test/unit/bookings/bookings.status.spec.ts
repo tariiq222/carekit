@@ -5,7 +5,10 @@
  *       Migrate here once BookingStatusService gets its own spec file.
  */
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { createBookingsTestModule, BookingsTestContext } from './bookings.test-module.js';
+import {
+  createBookingsTestModule,
+  BookingsTestContext,
+} from './bookings.test-module.js';
 import { mockBooking } from './bookings.fixtures.js';
 
 describe.skip('BookingsService — confirm', () => {
@@ -35,20 +38,26 @@ describe.skip('BookingsService — confirm', () => {
     expect(result.confirmedAt).toBeDefined();
   });
 
-  it.each([
-    ['confirmed'],
-    ['completed'],
-    ['cancelled'],
-  ])('should throw ConflictException if status is %s', async (status) => {
-    ctx.mockPrisma.booking.findFirst.mockResolvedValue({ ...mockBooking, status });
+  it.each([['confirmed'], ['completed'], ['cancelled']])(
+    'should throw ConflictException if status is %s',
+    async (status) => {
+      ctx.mockPrisma.booking.findFirst.mockResolvedValue({
+        ...mockBooking,
+        status,
+      });
 
-    await expect((ctx.service as any).confirm(mockBooking.id)).rejects.toThrow(ConflictException);
-  });
+      await expect(
+        (ctx.service as any).confirm(mockBooking.id),
+      ).rejects.toThrow(ConflictException);
+    },
+  );
 
   it('should throw NotFoundException if booking not found', async () => {
     ctx.mockPrisma.booking.findFirst.mockResolvedValue(null);
 
-    await expect((ctx.service as any).confirm('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(
+      (ctx.service as any).confirm('non-existent-id'),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -61,7 +70,10 @@ describe.skip('BookingsService — complete', () => {
   });
 
   it('should transition from confirmed to completed', async () => {
-    ctx.mockPrisma.booking.findFirst.mockResolvedValue({ ...mockBooking, status: 'confirmed' });
+    ctx.mockPrisma.booking.findFirst.mockResolvedValue({
+      ...mockBooking,
+      status: 'confirmed',
+    });
     ctx.mockPrisma.booking.update.mockResolvedValue({
       ...mockBooking,
       status: 'completed',
@@ -74,18 +86,25 @@ describe.skip('BookingsService — complete', () => {
     expect(result.completedAt).toBeDefined();
   });
 
-  it.each([
-    ['pending'],
-    ['completed'],
-  ])('should throw ConflictException if status is %s', async (status) => {
-    ctx.mockPrisma.booking.findFirst.mockResolvedValue({ ...mockBooking, status });
+  it.each([['pending'], ['completed']])(
+    'should throw ConflictException if status is %s',
+    async (status) => {
+      ctx.mockPrisma.booking.findFirst.mockResolvedValue({
+        ...mockBooking,
+        status,
+      });
 
-    await expect((ctx.service as any).complete(mockBooking.id)).rejects.toThrow(ConflictException);
-  });
+      await expect(
+        (ctx.service as any).complete(mockBooking.id),
+      ).rejects.toThrow(ConflictException);
+    },
+  );
 
   it('should throw NotFoundException if booking not found', async () => {
     ctx.mockPrisma.booking.findFirst.mockResolvedValue(null);
 
-    await expect((ctx.service as any).complete('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(
+      (ctx.service as any).complete('non-existent-id'),
+    ).rejects.toThrow(NotFoundException);
   });
 });

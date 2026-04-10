@@ -65,12 +65,15 @@ describe('EmailService', () => {
     it('should enqueue login OTP email with correct template and subject', async () => {
       await service.sendOtp(testEmail, testOtpCode, 'login', testFirstName);
 
-      expect(mockQueue.add).toHaveBeenCalledWith('send-email', expect.objectContaining({
-        template: 'otp-login',
-        to: testEmail,
-        subject: 'Your Login Code | رمز تسجيل الدخول',
-        context: { code: testOtpCode, firstName: testFirstName },
-      }));
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'send-email',
+        expect.objectContaining({
+          template: 'otp-login',
+          to: testEmail,
+          subject: 'Your Login Code | رمز تسجيل الدخول',
+          context: { code: testOtpCode, firstName: testFirstName },
+        }),
+      );
     });
 
     it('should enqueue reset_password OTP email with correct template and subject', async () => {
@@ -81,12 +84,15 @@ describe('EmailService', () => {
         testFirstName,
       );
 
-      expect(mockQueue.add).toHaveBeenCalledWith('send-email', expect.objectContaining({
-        template: 'otp-reset',
-        to: testEmail,
-        subject: 'Password Reset Code | رمز إعادة تعيين كلمة المرور',
-        context: { code: testOtpCode, firstName: testFirstName },
-      }));
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'send-email',
+        expect.objectContaining({
+          template: 'otp-reset',
+          to: testEmail,
+          subject: 'Password Reset Code | رمز إعادة تعيين كلمة المرور',
+          context: { code: testOtpCode, firstName: testFirstName },
+        }),
+      );
     });
 
     it('should enqueue verify_email OTP email with correct template and subject', async () => {
@@ -97,12 +103,15 @@ describe('EmailService', () => {
         testFirstName,
       );
 
-      expect(mockQueue.add).toHaveBeenCalledWith('send-email', expect.objectContaining({
-        template: 'otp-verify',
-        to: testEmail,
-        subject: 'Email Verification Code | رمز تأكيد البريد الإلكتروني',
-        context: { code: testOtpCode, firstName: testFirstName },
-      }));
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'send-email',
+        expect.objectContaining({
+          template: 'otp-verify',
+          to: testEmail,
+          subject: 'Email Verification Code | رمز تأكيد البريد الإلكتروني',
+          context: { code: testOtpCode, firstName: testFirstName },
+        }),
+      );
     });
 
     it('should default firstName to empty string when not provided', async () => {
@@ -135,12 +144,15 @@ describe('EmailService', () => {
     it('should enqueue welcome email with correct template', async () => {
       await service.sendWelcome(testEmail, testFirstName);
 
-      expect(mockQueue.add).toHaveBeenCalledWith('send-email', expect.objectContaining({
-        template: 'welcome',
-        to: testEmail,
-        subject: 'Welcome to CareKit | أهلا بك في كيركت',
-        context: { firstName: testFirstName },
-      }));
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'send-email',
+        expect.objectContaining({
+          template: 'welcome',
+          to: testEmail,
+          subject: 'Welcome to CareKit | أهلا بك في كيركت',
+          context: { firstName: testFirstName },
+        }),
+      );
     });
 
     it('should use the correct recipient email', async () => {
@@ -166,18 +178,21 @@ describe('EmailService', () => {
         testBookingDetails,
       );
 
-      expect(mockQueue.add).toHaveBeenCalledWith('send-email', expect.objectContaining({
-        template: 'booking-confirmation',
-        to: testEmail,
-        subject: 'Booking Confirmed | تأكيد الحجز',
-        context: {
-          firstName: testFirstName,
-          date: testBookingDetails.date,
-          time: testBookingDetails.time,
-          practitioner: testBookingDetails.practitioner,
-          service: testBookingDetails.service,
-        },
-      }));
+      expect(mockQueue.add).toHaveBeenCalledWith(
+        'send-email',
+        expect.objectContaining({
+          template: 'booking-confirmation',
+          to: testEmail,
+          subject: 'Booking Confirmed | تأكيد الحجز',
+          context: {
+            firstName: testFirstName,
+            date: testBookingDetails.date,
+            time: testBookingDetails.time,
+            practitioner: testBookingDetails.practitioner,
+            service: testBookingDetails.service,
+          },
+        }),
+      );
     });
 
     it('should include booking date and time in context', async () => {

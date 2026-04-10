@@ -54,7 +54,12 @@ describe('Email Module (e2e)', () => {
 
     it('should resolve without throwing when queuing a verify-email OTP email', async () => {
       await expect(
-        emailService.sendOtp('verify@example.com', '111222', 'verify_email', 'Nora'),
+        emailService.sendOtp(
+          'verify@example.com',
+          '111222',
+          'verify_email',
+          'Nora',
+        ),
       ).resolves.not.toThrow();
     });
 
@@ -158,7 +163,9 @@ describe('Email Module (e2e)', () => {
           .expect(201);
 
         expectSuccessResponse(res.body as Record<string, unknown>);
-        const body = res.body as { data: { accessToken: string; user: { email: string } } };
+        const body = res.body as {
+          data: { accessToken: string; user: { email: string } };
+        };
         expect(body.data).toHaveProperty('accessToken');
         expect(body.data.user.email).toBe(uniqueEmail);
       });

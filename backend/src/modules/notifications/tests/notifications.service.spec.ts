@@ -19,10 +19,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { NotificationsService } from '../notifications.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 
@@ -49,7 +46,6 @@ interface RegisterFcmTokenDto {
 // Mock factories
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrismaService: any = {
   notification: {
     create: jest.fn(),
@@ -64,7 +60,9 @@ const mockPrismaService: any = {
     deleteMany: jest.fn(),
     findFirst: jest.fn(),
   },
-  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrismaService)),
+  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) =>
+    fn(mockPrismaService),
+  ),
 };
 
 // ---------------------------------------------------------------------------
@@ -80,7 +78,8 @@ const mockNotification = {
   titleAr: 'تم تأكيد الحجز',
   titleEn: 'Booking Confirmed',
   bodyAr: 'تم تأكيد حجزك مع د. خالد الفهد في 1 أبريل 2026',
-  bodyEn: 'Your booking with Dr. Khalid Al-Fahad on April 1, 2026 has been confirmed',
+  bodyEn:
+    'Your booking with Dr. Khalid Al-Fahad on April 1, 2026 has been confirmed',
   type: 'booking_confirmed',
   isRead: false,
   data: { bookingId: 'booking-uuid-1' },
@@ -147,7 +146,10 @@ describe('NotificationsService', () => {
       ]);
       mockPrismaService.notification.count.mockResolvedValue(2);
 
-      const result = await service.findAll(mockUserId, { page: 1, perPage: 20 });
+      const result = await service.findAll(mockUserId, {
+        page: 1,
+        perPage: 20,
+      });
 
       expect(result).toHaveProperty('items');
       expect(result).toHaveProperty('meta');
@@ -191,7 +193,10 @@ describe('NotificationsService', () => {
       mockPrismaService.notification.findMany.mockResolvedValue([]);
       mockPrismaService.notification.count.mockResolvedValue(50);
 
-      const result = await service.findAll(mockUserId, { page: 3, perPage: 10 });
+      const result = await service.findAll(mockUserId, {
+        page: 3,
+        perPage: 10,
+      });
 
       expect(result.meta.page).toBe(3);
       expect(result.meta.perPage).toBe(10);
@@ -257,7 +262,9 @@ describe('NotificationsService', () => {
 
   describe('markAsRead', () => {
     it('should mark a notification as read', async () => {
-      mockPrismaService.notification.findUnique.mockResolvedValue(mockNotification);
+      mockPrismaService.notification.findUnique.mockResolvedValue(
+        mockNotification,
+      );
       mockPrismaService.notification.update.mockResolvedValue({
         ...mockNotification,
         isRead: true,
@@ -281,7 +288,9 @@ describe('NotificationsService', () => {
     });
 
     it('should throw ForbiddenException when user does not own the notification', async () => {
-      mockPrismaService.notification.findUnique.mockResolvedValue(mockNotification);
+      mockPrismaService.notification.findUnique.mockResolvedValue(
+        mockNotification,
+      );
 
       await expect(
         service.markAsRead(mockNotification.id, mockUser2Id), // different user
@@ -289,10 +298,17 @@ describe('NotificationsService', () => {
     });
 
     it('should be idempotent (already-read notification succeeds)', async () => {
-      mockPrismaService.notification.findUnique.mockResolvedValue(mockReadNotification);
-      mockPrismaService.notification.update.mockResolvedValue(mockReadNotification);
+      mockPrismaService.notification.findUnique.mockResolvedValue(
+        mockReadNotification,
+      );
+      mockPrismaService.notification.update.mockResolvedValue(
+        mockReadNotification,
+      );
 
-      const result = await service.markAsRead(mockReadNotification.id, mockUserId);
+      const result = await service.markAsRead(
+        mockReadNotification.id,
+        mockUserId,
+      );
 
       expect(result.isRead).toBe(true);
     });
@@ -324,7 +340,7 @@ describe('NotificationsService', () => {
       await expect(service.markAllAsRead(mockUserId)).resolves.not.toThrow();
     });
 
-    it('should only update the specified user\'s notifications', async () => {
+    it("should only update the specified user's notifications", async () => {
       mockPrismaService.notification.updateMany.mockResolvedValue({ count: 3 });
 
       await service.markAllAsRead(mockUserId);

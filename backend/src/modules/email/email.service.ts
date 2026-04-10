@@ -14,9 +14,7 @@ interface BookingDetails {
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
 
-  constructor(
-    @InjectQueue('email') private readonly emailQueue: Queue,
-  ) {}
+  constructor(@InjectQueue('email') private readonly emailQueue: Queue) {}
 
   async sendOtp(
     email: string,
@@ -72,7 +70,8 @@ export class EmailService {
     await this.emailQueue.add('send-email', {
       template: 'practitioner-welcome',
       to: email,
-      subject: 'Welcome to CareKit — Set Your Password | مرحبا بك في كيركت — عيّن كلمة مرورك',
+      subject:
+        'Welcome to CareKit — Set Your Password | مرحبا بك في كيركت — عيّن كلمة مرورك',
       context: { firstName, otpCode },
       correlationId: correlationStorage.getStore() ?? null,
     });

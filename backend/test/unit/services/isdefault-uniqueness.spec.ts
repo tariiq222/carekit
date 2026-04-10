@@ -13,14 +13,20 @@ import { ServicesService } from '../../../src/modules/services/services.service.
 
 // ── minimal mocks ─────────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
-  serviceBookingType: { deleteMany: jest.fn(), create: jest.fn(), findMany: jest.fn() },
-  serviceDurationOption: { deleteMany: jest.fn(), createMany: jest.fn(), findMany: jest.fn() },
+  serviceBookingType: {
+    deleteMany: jest.fn(),
+    create: jest.fn(),
+    findMany: jest.fn(),
+  },
+  serviceDurationOption: {
+    deleteMany: jest.fn(),
+    createMany: jest.fn(),
+    findMany: jest.fn(),
+  },
   booking: { count: jest.fn().mockResolvedValue(0) },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockServices: any = {
   ensureExists: jest.fn().mockResolvedValue({}),
   invalidateServicesCache: jest.fn().mockResolvedValue(undefined),
@@ -33,7 +39,11 @@ describe('ServiceBookingTypeService — isDefault uniqueness (fix #8)', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockPrisma.$transaction = jest.fn().mockImplementation((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrisma));
+    mockPrisma.$transaction = jest
+      .fn()
+      .mockImplementation((fn: (tx: unknown) => Promise<unknown>) =>
+        fn(mockPrisma),
+      );
     mockPrisma.serviceBookingType.deleteMany.mockResolvedValue({ count: 0 });
     mockPrisma.serviceBookingType.create.mockResolvedValue({});
     mockPrisma.serviceBookingType.findMany.mockResolvedValue([]);
@@ -52,50 +62,98 @@ describe('ServiceBookingTypeService — isDefault uniqueness (fix #8)', () => {
   it('REGRESSION: rejects when multiple durationOptions have isDefault=true', async () => {
     await expect(
       service.setBookingTypes('svc-1', {
-        types: [{
-          bookingType: 'in_person',
-          price: 100,
-          duration: 30,
-          durationOptions: [
-            { label: 'Short', labelAr: 'قصير', durationMinutes: 30, price: 100, isDefault: true, serviceBookingTypeId: 'sbt-1' },
-            { label: 'Long',  labelAr: 'طويل', durationMinutes: 60, price: 200, isDefault: true, serviceBookingTypeId: 'sbt-1' }, // second default!
-          ],
-        }],
+        types: [
+          {
+            bookingType: 'in_person',
+            price: 100,
+            duration: 30,
+            durationOptions: [
+              {
+                label: 'Short',
+                labelAr: 'قصير',
+                durationMinutes: 30,
+                price: 100,
+                isDefault: true,
+                serviceBookingTypeId: 'sbt-1',
+              },
+              {
+                label: 'Long',
+                labelAr: 'طويل',
+                durationMinutes: 60,
+                price: 200,
+                isDefault: true,
+                serviceBookingTypeId: 'sbt-1',
+              }, // second default!
+            ],
+          },
+        ],
       }),
     ).rejects.toMatchObject({ response: { error: 'MULTIPLE_DEFAULTS' } });
   });
 
   it('auto-assigns first option as default when none is marked', async () => {
     await service.setBookingTypes('svc-1', {
-      types: [{
-        bookingType: 'in_person',
-        price: 100,
-        duration: 30,
-        durationOptions: [
-          { label: 'Short', labelAr: 'قصير', durationMinutes: 30, price: 100, isDefault: false, serviceBookingTypeId: 'sbt-1' },
-          { label: 'Long',  labelAr: 'طويل', durationMinutes: 60, price: 200, isDefault: false, serviceBookingTypeId: 'sbt-1' },
-        ],
-      }],
+      types: [
+        {
+          bookingType: 'in_person',
+          price: 100,
+          duration: 30,
+          durationOptions: [
+            {
+              label: 'Short',
+              labelAr: 'قصير',
+              durationMinutes: 30,
+              price: 100,
+              isDefault: false,
+              serviceBookingTypeId: 'sbt-1',
+            },
+            {
+              label: 'Long',
+              labelAr: 'طويل',
+              durationMinutes: 60,
+              price: 200,
+              isDefault: false,
+              serviceBookingTypeId: 'sbt-1',
+            },
+          ],
+        },
+      ],
     });
 
     const createCall = mockPrisma.serviceBookingType.create.mock.calls[0][0];
     const opts = createCall.data.durationOptions.createMany.data;
-    expect(opts[0].isDefault).toBe(true);  // first auto-assigned
+    expect(opts[0].isDefault).toBe(true); // first auto-assigned
     expect(opts[1].isDefault).toBe(false);
   });
 
   it('accepts exactly one isDefault=true', async () => {
     await expect(
       service.setBookingTypes('svc-1', {
-        types: [{
-          bookingType: 'in_person',
-          price: 100,
-          duration: 30,
-          durationOptions: [
-            { label: 'Short', labelAr: 'قصير', durationMinutes: 30, price: 100, isDefault: false, serviceBookingTypeId: 'sbt-1' },
-            { label: 'Long',  labelAr: 'طويل', durationMinutes: 60, price: 200, isDefault: true,  serviceBookingTypeId: 'sbt-1' },
-          ],
-        }],
+        types: [
+          {
+            bookingType: 'in_person',
+            price: 100,
+            duration: 30,
+            durationOptions: [
+              {
+                label: 'Short',
+                labelAr: 'قصير',
+                durationMinutes: 30,
+                price: 100,
+                isDefault: false,
+                serviceBookingTypeId: 'sbt-1',
+              },
+              {
+                label: 'Long',
+                labelAr: 'طويل',
+                durationMinutes: 60,
+                price: 200,
+                isDefault: true,
+                serviceBookingTypeId: 'sbt-1',
+              },
+            ],
+          },
+        ],
       }),
     ).resolves.not.toThrow();
   });
@@ -108,7 +166,11 @@ describe('DurationOptionsService — isDefault uniqueness (fix #8)', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockPrisma.$transaction = jest.fn().mockImplementation((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrisma));
+    mockPrisma.$transaction = jest
+      .fn()
+      .mockImplementation((fn: (tx: unknown) => Promise<unknown>) =>
+        fn(mockPrisma),
+      );
     mockPrisma.serviceDurationOption.deleteMany.mockResolvedValue({ count: 0 });
     mockPrisma.serviceDurationOption.createMany.mockResolvedValue({ count: 2 });
     mockPrisma.serviceDurationOption.findMany.mockResolvedValue([]);
@@ -128,8 +190,20 @@ describe('DurationOptionsService — isDefault uniqueness (fix #8)', () => {
     await expect(
       service.setDurationOptions('svc-1', {
         options: [
-          { label: 'A', durationMinutes: 30, price: 100, isDefault: true,  serviceBookingTypeId: 'sbt-1' },
-          { label: 'B', durationMinutes: 60, price: 200, isDefault: true,  serviceBookingTypeId: 'sbt-1' },
+          {
+            label: 'A',
+            durationMinutes: 30,
+            price: 100,
+            isDefault: true,
+            serviceBookingTypeId: 'sbt-1',
+          },
+          {
+            label: 'B',
+            durationMinutes: 60,
+            price: 200,
+            isDefault: true,
+            serviceBookingTypeId: 'sbt-1',
+          },
         ],
       }),
     ).rejects.toMatchObject({ response: { error: 'MULTIPLE_DEFAULTS' } });
@@ -138,17 +212,32 @@ describe('DurationOptionsService — isDefault uniqueness (fix #8)', () => {
   it('auto-assigns first as default when none marked', async () => {
     await service.setDurationOptions('svc-1', {
       options: [
-        { label: 'A', durationMinutes: 30, price: 100, isDefault: false, serviceBookingTypeId: 'sbt-1' },
-        { label: 'B', durationMinutes: 60, price: 200, isDefault: false, serviceBookingTypeId: 'sbt-1' },
+        {
+          label: 'A',
+          durationMinutes: 30,
+          price: 100,
+          isDefault: false,
+          serviceBookingTypeId: 'sbt-1',
+        },
+        {
+          label: 'B',
+          durationMinutes: 60,
+          price: 200,
+          isDefault: false,
+          serviceBookingTypeId: 'sbt-1',
+        },
       ],
     });
 
-    const createCall = mockPrisma.serviceDurationOption.createMany.mock.calls[0][0];
+    const createCall =
+      mockPrisma.serviceDurationOption.createMany.mock.calls[0][0];
     expect(createCall.data[0].isDefault).toBe(true);
     expect(createCall.data[1].isDefault).toBe(false);
   });
 
   it('accepts empty options array', async () => {
-    await expect(service.setDurationOptions('svc-1', { options: [] })).resolves.not.toThrow();
+    await expect(
+      service.setDurationOptions('svc-1', { options: [] }),
+    ).resolves.not.toThrow();
   });
 });

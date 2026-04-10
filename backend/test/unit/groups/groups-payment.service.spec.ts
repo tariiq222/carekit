@@ -97,19 +97,33 @@ describe('GroupsPaymentService', () => {
 
     it('throws NotFoundException when group not found', async () => {
       mockPrisma.group.findFirst.mockResolvedValue(null);
-      await expect(service.triggerPaymentRequest('group-x')).rejects.toThrow(NotFoundException);
+      await expect(service.triggerPaymentRequest('group-x')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws BadRequestException when group status is not open or full', async () => {
-      mockPrisma.group.findFirst.mockResolvedValue({ id: 'group-1', status: 'completed', deletedAt: null });
-      await expect(service.triggerPaymentRequest('group-1')).rejects.toThrow(BadRequestException);
+      mockPrisma.group.findFirst.mockResolvedValue({
+        id: 'group-1',
+        status: 'completed',
+        deletedAt: null,
+      });
+      await expect(service.triggerPaymentRequest('group-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws BadRequestException when currentEnrollment < minParticipants', async () => {
       mockPrisma.group.findFirst.mockResolvedValue({
-        id: 'group-1', status: 'open', currentEnrollment: 1, minParticipants: 3, deletedAt: null,
+        id: 'group-1',
+        status: 'open',
+        currentEnrollment: 1,
+        minParticipants: 3,
+        deletedAt: null,
       });
-      await expect(service.triggerPaymentRequest('group-1')).rejects.toThrow(BadRequestException);
+      await expect(service.triggerPaymentRequest('group-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

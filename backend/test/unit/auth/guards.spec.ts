@@ -8,7 +8,11 @@
  *   multi-permission AND logic, multiple roles union
  */
 
-import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../../../src/modules/auth/decorators/public.decorator.js';
 import { PERMISSIONS_KEY } from '../../../src/modules/auth/decorators/check-permissions.decorator.js';
@@ -19,10 +23,12 @@ import { PermissionsGuard } from '../../../src/modules/auth/guards/permissions.g
 // Helpers
 // ---------------------------------------------------------------------------
 
-function buildContext(overrides: {
-  isPublic?: boolean;
-  user?: { id: string; email: string } | null;
-} = {}): ExecutionContext {
+function buildContext(
+  overrides: {
+    isPublic?: boolean;
+    user?: { id: string; email: string } | null;
+  } = {},
+): ExecutionContext {
   return {
     getHandler: () => ({}),
     getClass: () => ({}),
@@ -32,7 +38,9 @@ function buildContext(overrides: {
   } as unknown as ExecutionContext;
 }
 
-function buildReflector(meta: { isPublic?: boolean; permissions?: unknown[] } = {}): Reflector {
+function buildReflector(
+  meta: { isPublic?: boolean; permissions?: unknown[] } = {},
+): Reflector {
   return {
     getAllAndOverride: (_key: string) => {
       if (_key === IS_PUBLIC_KEY) return meta.isPublic ?? false;
@@ -72,7 +80,11 @@ describe('JwtAuthGuard', () => {
       const ctx = buildContext();
 
       // Override super.canActivate to detect if it was called
-      const superSpy = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
+      const superSpy = jest
+        .spyOn(
+          Object.getPrototypeOf(Object.getPrototypeOf(guard)),
+          'canActivate',
+        )
         .mockReturnValue(false);
 
       const result = guard.canActivate(ctx);
@@ -88,7 +100,11 @@ describe('JwtAuthGuard', () => {
       const guard = new JwtAuthGuard(reflector);
       const ctx = buildContext();
 
-      const superSpy = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
+      const superSpy = jest
+        .spyOn(
+          Object.getPrototypeOf(Object.getPrototypeOf(guard)),
+          'canActivate',
+        )
         .mockReturnValue(true);
 
       const result = guard.canActivate(ctx);
@@ -124,7 +140,9 @@ describe('JwtAuthGuard', () => {
       reflector = buildReflector();
       const guard = new JwtAuthGuard(reflector);
 
-      expect(() => guard.handleRequest(null, null)).toThrow(UnauthorizedException);
+      expect(() => guard.handleRequest(null, null)).toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('error body contains AUTH_TOKEN_INVALID code', () => {
@@ -158,8 +176,14 @@ describe('PermissionsGuard', () => {
     const reflector = buildReflector({ permissions });
     const prisma = buildPrisma(dbUser);
     const permCache = buildPermissionCache(cachedPermissions);
-    const guard = new PermissionsGuard(reflector as Reflector, prisma as never, permCache as never);
-    const ctx = buildContext({ user: reqUser ?? { id: 'u1', email: 'x@y.com' } });
+    const guard = new PermissionsGuard(
+      reflector,
+      prisma as never,
+      permCache as never,
+    );
+    const ctx = buildContext({
+      user: reqUser ?? { id: 'u1', email: 'x@y.com' },
+    });
     return { guard, ctx, prisma, permCache };
   }
 
@@ -174,9 +198,11 @@ describe('PermissionsGuard', () => {
   });
 
   it('throws UnauthorizedException when request has no user', async () => {
-    const reflector = buildReflector({ permissions: [{ module: 'users', action: 'view' }] });
+    const reflector = buildReflector({
+      permissions: [{ module: 'users', action: 'view' }],
+    });
     const prisma = buildPrisma(null);
-    const guard = new PermissionsGuard(reflector as Reflector, prisma as never);
+    const guard = new PermissionsGuard(reflector, prisma as never);
     const ctx = buildContext({ user: null });
 
     await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
@@ -319,11 +345,19 @@ describe('PermissionsGuard', () => {
       ],
     };
 
-    const reflector = buildReflector({ permissions: [{ module: 'reports', action: 'view' }] });
+    const reflector = buildReflector({
+      permissions: [{ module: 'reports', action: 'view' }],
+    });
     const prisma = buildPrisma(dbUser);
     const permCache = buildPermissionCache(null); // cache miss
-    const guard = new PermissionsGuard(reflector as Reflector, prisma as never, permCache as never);
-    const ctx = buildContext({ user: { id: 'specific-user-id', email: 'x@y.com' } });
+    const guard = new PermissionsGuard(
+      reflector,
+      prisma as never,
+      permCache as never,
+    );
+    const ctx = buildContext({
+      user: { id: 'specific-user-id', email: 'x@y.com' },
+    });
 
     await guard.canActivate(ctx);
 
@@ -360,13 +394,15 @@ describe('PermissionsGuard', () => {
 
   it('cache MISS: populates cache after DB query', async () => {
     const dbUser = {
-      userRoles: [{
-        role: {
-          rolePermissions: [
-            { permission: { module: 'users', action: 'view' } },
-          ],
+      userRoles: [
+        {
+          role: {
+            rolePermissions: [
+              { permission: { module: 'users', action: 'view' } },
+            ],
+          },
         },
-      }],
+      ],
     };
     const { guard, ctx, permCache } = makeGuard(
       [{ module: 'users', action: 'view' }],

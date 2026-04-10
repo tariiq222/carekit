@@ -41,12 +41,17 @@ describe('PractitionerAvailabilityService — holiday exclusion', () => {
       providers: [
         PractitionerAvailabilityService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: BookingSettingsService, useValue: mockBookingSettingsService },
+        {
+          provide: BookingSettingsService,
+          useValue: mockBookingSettingsService,
+        },
         { provide: ClinicSettingsService, useValue: mockClinicSettingsService },
         { provide: ClinicHolidaysService, useValue: mockClinicHolidaysService },
       ],
     }).compile();
-    service = module.get<PractitionerAvailabilityService>(PractitionerAvailabilityService);
+    service = module.get<PractitionerAvailabilityService>(
+      PractitionerAvailabilityService,
+    );
     clinicHolidaysService = mockClinicHolidaysService;
   });
 
@@ -58,7 +63,14 @@ describe('PractitionerAvailabilityService — holiday exclusion', () => {
         deletedAt: null,
       });
       mockPrisma.practitionerAvailability.findMany.mockResolvedValue([
-        { practitionerId: 'p-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true, branchId: null },
+        {
+          practitionerId: 'p-1',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          endTime: '17:00',
+          isActive: true,
+          branchId: null,
+        },
       ]);
       mockPrisma.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrisma.practitionerBreak.findMany.mockResolvedValue([]);
@@ -78,7 +90,14 @@ describe('PractitionerAvailabilityService — holiday exclusion', () => {
         deletedAt: null,
       });
       mockPrisma.practitionerAvailability.findMany.mockResolvedValue([
-        { practitionerId: 'p-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true, branchId: null },
+        {
+          practitionerId: 'p-1',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          endTime: '17:00',
+          isActive: true,
+          branchId: null,
+        },
       ]);
       mockPrisma.practitionerVacation.findFirst.mockResolvedValue(null);
       mockPrisma.practitionerBreak.findMany.mockResolvedValue([]);
@@ -100,13 +119,22 @@ describe('PractitionerAvailabilityService — holiday exclusion', () => {
         deletedAt: null,
       });
       mockPrisma.practitionerAvailability.findMany.mockResolvedValue([
-        { practitionerId: 'p-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true, branchId: null },
+        {
+          practitionerId: 'p-1',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          endTime: '17:00',
+          isActive: true,
+          branchId: null,
+        },
       ]);
       mockPrisma.practitionerVacation.findMany.mockResolvedValue([]);
       mockPrisma.practitionerBreak.findMany.mockResolvedValue([]);
       mockPrisma.booking.findMany.mockResolvedValue([]);
       mockPrisma.practitionerService.findMany.mockResolvedValue([]);
-      mockBookingSettingsService.getForBranch.mockResolvedValue({ bufferMinutes: 0 });
+      mockBookingSettingsService.getForBranch.mockResolvedValue({
+        bufferMinutes: 0,
+      });
       mockClinicSettingsService.getTimezone.mockResolvedValue('Asia/Riyadh');
 
       // findAll is called once before the loop; return a holiday on 2026-04-13
@@ -126,13 +154,22 @@ describe('PractitionerAvailabilityService — holiday exclusion', () => {
         deletedAt: null,
       });
       mockPrisma.practitionerAvailability.findMany.mockResolvedValue([
-        { practitionerId: 'p-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true, branchId: null },
+        {
+          practitionerId: 'p-1',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          endTime: '17:00',
+          isActive: true,
+          branchId: null,
+        },
       ]);
       mockPrisma.practitionerVacation.findMany.mockResolvedValue([]);
       mockPrisma.practitionerBreak.findMany.mockResolvedValue([]);
       mockPrisma.booking.findMany.mockResolvedValue([]);
       mockPrisma.practitionerService.findMany.mockResolvedValue([]);
-      mockBookingSettingsService.getForBranch.mockResolvedValue({ bufferMinutes: 0 });
+      mockBookingSettingsService.getForBranch.mockResolvedValue({
+        bufferMinutes: 0,
+      });
       mockClinicSettingsService.getTimezone.mockResolvedValue('Asia/Riyadh');
       clinicHolidaysService.findAll.mockResolvedValue([]);
 

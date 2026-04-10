@@ -8,7 +8,11 @@ import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../../src/common/guards/feature-flag.guard.js';
 
-const mockRatingsService = { create: jest.fn(), findByPractitioner: jest.fn(), findByBooking: jest.fn() };
+const mockRatingsService = {
+  create: jest.fn(),
+  findByPractitioner: jest.fn(),
+  findByBooking: jest.fn(),
+};
 const mockUser = { id: 'user-1' };
 
 describe('RatingsController', () => {
@@ -39,7 +43,10 @@ describe('RatingsController', () => {
   it('findByPractitioner → ratingsService.findByPractitioner()', () => {
     mockRatingsService.findByPractitioner.mockResolvedValue([]);
     controller.findByPractitioner('prac-1', undefined, undefined);
-    expect(mockRatingsService.findByPractitioner).toHaveBeenCalledWith('prac-1', expect.any(Object));
+    expect(mockRatingsService.findByPractitioner).toHaveBeenCalledWith(
+      'prac-1',
+      expect.any(Object),
+    );
   });
 
   it('findByBooking → ratingsService.findByBooking()', () => {

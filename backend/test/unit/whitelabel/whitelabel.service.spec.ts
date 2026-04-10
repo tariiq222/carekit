@@ -67,8 +67,12 @@ describe('WhitelabelService', () => {
 
     jest.clearAllMocks();
     mockCacheService.get.mockResolvedValue(null);
-    (mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>).findFirstOrThrow.mockResolvedValue(mockConfigRow);
-    (mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>).update.mockResolvedValue(mockConfigRow);
+    (
+      mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>
+    ).findFirstOrThrow.mockResolvedValue(mockConfigRow);
+    (
+      mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>
+    ).update.mockResolvedValue(mockConfigRow);
   });
 
   // ─── get ──────────────────────────────────────────────────────────────
@@ -80,14 +84,20 @@ describe('WhitelabelService', () => {
       const result = await service.get();
 
       expect(result).toEqual(mockConfigRow);
-      expect((mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>).findFirstOrThrow).not.toHaveBeenCalled();
+      expect(
+        (mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>)
+          .findFirstOrThrow,
+      ).not.toHaveBeenCalled();
     });
 
     it('should query DB and cache result when cache is empty', async () => {
       const result = await service.get();
 
       expect(result).toEqual(mockConfigRow);
-      expect((mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>).findFirstOrThrow).toHaveBeenCalled();
+      expect(
+        (mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>)
+          .findFirstOrThrow,
+      ).toHaveBeenCalled();
       expect(mockCacheService.set).toHaveBeenCalled();
     });
   });
@@ -121,22 +131,30 @@ describe('WhitelabelService', () => {
     it('should update config and invalidate cache', async () => {
       const dto = { systemName: 'Updated Clinic' };
       const updated = { ...mockConfigRow, ...dto };
-      (mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>).update.mockResolvedValue(updated);
+      (
+        mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>
+      ).update.mockResolvedValue(updated);
 
-      const result = await service.update(dto as Parameters<typeof service.update>[0]);
+      const result = await service.update(
+        dto as Parameters<typeof service.update>[0],
+      );
 
       expect(result.systemName).toBe('Updated Clinic');
       expect(mockCacheService.del).toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when clinicCanEdit is false', async () => {
-      (mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>).findFirstOrThrow.mockResolvedValue({
+      (
+        mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>
+      ).findFirstOrThrow.mockResolvedValue({
         ...mockConfigRow,
         clinicCanEdit: false,
       });
 
       await expect(
-        service.update({ systemName: 'Locked' } as Parameters<typeof service.update>[0]),
+        service.update({ systemName: 'Locked' } as Parameters<
+          typeof service.update
+        >[0]),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -145,14 +163,20 @@ describe('WhitelabelService', () => {
 
   describe('adminUpdate', () => {
     it('should update config bypassing clinicCanEdit lock', async () => {
-      (mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>).findFirstOrThrow.mockResolvedValue({
+      (
+        mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>
+      ).findFirstOrThrow.mockResolvedValue({
         ...mockConfigRow,
         clinicCanEdit: false,
       });
       const updated = { ...mockConfigRow, systemName: 'Admin Updated' };
-      (mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>).update.mockResolvedValue(updated);
+      (
+        mockPrismaService.whiteLabelConfig as Record<string, jest.Mock>
+      ).update.mockResolvedValue(updated);
 
-      const result = await service.adminUpdate({ systemName: 'Admin Updated' } as Parameters<typeof service.adminUpdate>[0]);
+      const result = await service.adminUpdate({
+        systemName: 'Admin Updated',
+      } as Parameters<typeof service.adminUpdate>[0]);
 
       expect(result.systemName).toBe('Admin Updated');
     });

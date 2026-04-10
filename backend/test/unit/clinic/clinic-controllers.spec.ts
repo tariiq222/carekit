@@ -6,13 +6,19 @@ import { ClinicHoursService } from '../../../src/modules/clinic/clinic-hours.ser
 import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
 
-const mockHolidays = { findAll: jest.fn(), create: jest.fn(), delete: jest.fn() };
+const mockHolidays = {
+  findAll: jest.fn(),
+  create: jest.fn(),
+  delete: jest.fn(),
+};
 const mockHours = { getAll: jest.fn(), setHours: jest.fn() };
 
 const guardOverrides = (builder: any) =>
   builder
-    .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
-    .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true });
+    .overrideGuard(JwtAuthGuard)
+    .useValue({ canActivate: () => true })
+    .overrideGuard(PermissionsGuard)
+    .useValue({ canActivate: () => true });
 
 describe('ClinicHolidaysController', () => {
   let controller: ClinicHolidaysController;
@@ -32,7 +38,10 @@ describe('ClinicHolidaysController', () => {
     it('should parse year and wrap in success envelope', async () => {
       const holidays = [{ id: 'h1', date: '2026-01-01' }];
       mockHolidays.findAll.mockResolvedValue(holidays);
-      expect(await controller.findAll('2026')).toEqual({ success: true, data: holidays });
+      expect(await controller.findAll('2026')).toEqual({
+        success: true,
+        data: holidays,
+      });
       expect(mockHolidays.findAll).toHaveBeenCalledWith(2026);
     });
 
@@ -48,7 +57,10 @@ describe('ClinicHolidaysController', () => {
       const dto = { date: '2026-09-23', nameAr: 'اليوم الوطني' } as any;
       const created = { id: 'h2', ...dto };
       mockHolidays.create.mockResolvedValue(created);
-      expect(await controller.create(dto)).toEqual({ success: true, data: created });
+      expect(await controller.create(dto)).toEqual({
+        success: true,
+        data: created,
+      });
       expect(mockHolidays.create).toHaveBeenCalledWith(dto);
     });
   });
@@ -56,7 +68,10 @@ describe('ClinicHolidaysController', () => {
   describe('remove', () => {
     it('should delegate and return null data', async () => {
       mockHolidays.delete.mockResolvedValue(undefined);
-      expect(await controller.remove('h1')).toEqual({ success: true, data: null });
+      expect(await controller.remove('h1')).toEqual({
+        success: true,
+        data: null,
+      });
       expect(mockHolidays.delete).toHaveBeenCalledWith('h1');
     });
   });
@@ -89,9 +104,11 @@ describe('ClinicHoursController', () => {
       const dto = { hours: [{ day: 0, open: '09:00', close: '17:00' }] } as any;
       const result = [{ day: 0, open: '09:00', close: '17:00' }];
       mockHours.setHours.mockResolvedValue(result);
-      expect(await controller.setHours(dto)).toEqual({ success: true, data: result });
+      expect(await controller.setHours(dto)).toEqual({
+        success: true,
+        data: result,
+      });
       expect(mockHours.setHours).toHaveBeenCalledWith(dto);
     });
   });
 });
-

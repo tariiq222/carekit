@@ -64,14 +64,20 @@ beforeAll(async () => {
   );
 
   // Attempt to upload a test file for use in process/delete tests
-  const txtContent = Buffer.from('This is a test knowledge base document for CareKit e2e tests.');
+  const txtContent = Buffer.from(
+    'This is a test knowledge base document for CareKit e2e tests.',
+  );
   const uploadRes = await request(httpServer)
     .post(FILES_URL)
     .set(getAuthHeaders(adminAuth.accessToken))
-    .attach('file', txtContent, { filename: 'test-kb.txt', contentType: 'text/plain' });
+    .attach('file', txtContent, {
+      filename: 'test-kb.txt',
+      contentType: 'text/plain',
+    });
 
   if (uploadRes.status === 201) {
-    uploadedFileId = (uploadRes.body as { data: { id: string } }).data?.id ?? null;
+    uploadedFileId =
+      (uploadRes.body as { data: { id: string } }).data?.id ?? null;
   }
 });
 
@@ -98,7 +104,10 @@ describe('POST /chatbot/knowledge-base/files', () => {
     const res = await request(httpServer)
       .post(FILES_URL)
       .set(getAuthHeaders(adminAuth.accessToken))
-      .attach('file', fakeImage, { filename: 'test.gif', contentType: 'image/gif' })
+      .attach('file', fakeImage, {
+        filename: 'test.gif',
+        contentType: 'image/gif',
+      })
       .expect(400);
 
     expect((res.body as Record<string, unknown>).success).toBe(false);
@@ -108,9 +117,15 @@ describe('POST /chatbot/knowledge-base/files', () => {
     const txtContent = Buffer.from('test content');
     const res = await request(httpServer)
       .post(FILES_URL)
-      .attach('file', txtContent, { filename: 'test.txt', contentType: 'text/plain' })
+      .attach('file', txtContent, {
+        filename: 'test.txt',
+        contentType: 'text/plain',
+      })
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:create)', async () => {
@@ -118,17 +133,25 @@ describe('POST /chatbot/knowledge-base/files', () => {
     const res = await request(httpServer)
       .post(FILES_URL)
       .set(getAuthHeaders(practitionerAuth.accessToken))
-      .attach('file', txtContent, { filename: 'test.txt', contentType: 'text/plain' })
+      .attach('file', txtContent, {
+        filename: 'test.txt',
+        contentType: 'text/plain',
+      })
       .expect(403);
     expectErrorResponse(res.body as Record<string, unknown>, 'FORBIDDEN');
   });
 
   it('returns 201 and file record for super_admin with valid txt file', async () => {
-    const txtContent = Buffer.from('Knowledge base content: CareKit clinic services and practitioners.');
+    const txtContent = Buffer.from(
+      'Knowledge base content: CareKit clinic services and practitioners.',
+    );
     const res = await request(httpServer)
       .post(FILES_URL)
       .set(getAuthHeaders(adminAuth.accessToken))
-      .attach('file', txtContent, { filename: 'kb-upload.txt', contentType: 'text/plain' })
+      .attach('file', txtContent, {
+        filename: 'kb-upload.txt',
+        contentType: 'text/plain',
+      })
       .expect(201);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
@@ -165,10 +188,11 @@ describe('GET /chatbot/knowledge-base/files', () => {
   });
 
   it('returns 401 without token', async () => {
-    const res = await request(httpServer)
-      .get(FILES_URL)
-      .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    const res = await request(httpServer).get(FILES_URL).expect(401);
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:view)', async () => {
@@ -206,7 +230,10 @@ describe('POST /chatbot/knowledge-base/files/:id/process', () => {
     const res = await request(httpServer)
       .post(`${FILES_URL}/${GHOST_UUID}/process`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:edit)', async () => {
@@ -267,7 +294,10 @@ describe('DELETE /chatbot/knowledge-base/files/:id', () => {
     const res = await request(httpServer)
       .delete(`${FILES_URL}/${GHOST_UUID}`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:delete)', async () => {

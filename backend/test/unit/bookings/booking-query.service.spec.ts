@@ -24,7 +24,6 @@ const makeBooking = (overrides = {}) => ({
   ...overrides,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: {
     findMany: jest.fn(),
@@ -87,7 +86,9 @@ describe('BookingQueryService', () => {
     it('should apply status filter', async () => {
       mockPrisma.booking.findMany.mockResolvedValue([]);
 
-      await service.findAll({ status: 'confirmed' as Parameters<typeof service.findAll>[0]['status'] });
+      await service.findAll({
+        status: 'confirmed' as Parameters<typeof service.findAll>[0]['status'],
+      });
 
       expect(mockPrisma.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -109,7 +110,9 @@ describe('BookingQueryService', () => {
     it('should throw NotFoundException when booking not found', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -133,11 +136,15 @@ describe('BookingQueryService', () => {
     it('should throw ForbiddenException when user is not a practitioner', async () => {
       mockPrisma.practitioner.findFirst.mockResolvedValue(null);
 
-      await expect(service.findTodayBookingsForUser(userId)).rejects.toThrow(ForbiddenException);
+      await expect(service.findTodayBookingsForUser(userId)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should return today bookings for practitioner user', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue({ id: practitionerId });
+      mockPrisma.practitioner.findFirst.mockResolvedValue({
+        id: practitionerId,
+      });
       mockPrisma.booking.findMany.mockResolvedValue([]);
       mockPrisma.booking.count.mockResolvedValue(0);
 
@@ -179,7 +186,11 @@ describe('BookingQueryService', () => {
       mockPrisma.practitionerAvailability.findMany.mockResolvedValue([]);
       mockPrisma.booking.findMany.mockResolvedValue([]);
 
-      const result = await service.getNextAvailableSlots(practitionerId, new Date(), 3);
+      const result = await service.getNextAvailableSlots(
+        practitionerId,
+        new Date(),
+        3,
+      );
 
       expect(result).toEqual([]);
     });
@@ -199,7 +210,11 @@ describe('BookingQueryService', () => {
       ]);
       mockPrisma.booking.findMany.mockResolvedValue([]);
 
-      const result = await service.getNextAvailableSlots(practitionerId, new Date(), 3);
+      const result = await service.getNextAvailableSlots(
+        practitionerId,
+        new Date(),
+        3,
+      );
 
       expect(result.length).toBeGreaterThan(0);
       expect(result[0]).toHaveProperty('date');

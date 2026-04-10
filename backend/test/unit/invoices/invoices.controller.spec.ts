@@ -7,8 +7,16 @@ import { InvoicesService } from '../../../src/modules/invoices/invoices.service.
 import { InvoiceCreatorService } from '../../../src/modules/invoices/invoice-creator.service.js';
 import { InvoiceStatsService } from '../../../src/modules/invoices/invoice-stats.service.js';
 
-const mockInvoicesService = { findAll: jest.fn(), findOne: jest.fn(), findByPayment: jest.fn(), markAsSent: jest.fn() };
-const mockCreatorService = { createInvoice: jest.fn(), generateInvoiceHtml: jest.fn() };
+const mockInvoicesService = {
+  findAll: jest.fn(),
+  findOne: jest.fn(),
+  findByPayment: jest.fn(),
+  markAsSent: jest.fn(),
+};
+const mockCreatorService = {
+  createInvoice: jest.fn(),
+  generateInvoiceHtml: jest.fn(),
+};
 const mockStatsService = { getInvoiceStats: jest.fn() };
 
 describe('InvoicesController', () => {

@@ -15,7 +15,9 @@ jest.mock('../../../src/common/helpers/resilient-fetch.helper.js', () => ({
   resilientFetch: jest.fn(),
 }));
 import { resilientFetch } from '../../../src/common/helpers/resilient-fetch.helper.js';
-const mockResilientFetch = resilientFetch as jest.MockedFunction<typeof resilientFetch>;
+const mockResilientFetch = resilientFetch as jest.MockedFunction<
+  typeof resilientFetch
+>;
 
 jest.mock('../../../src/modules/payments/payments.helpers.js', () => ({
   paymentInclude: {},
@@ -24,7 +26,9 @@ jest.mock('../../../src/modules/payments/payments.helpers.js', () => ({
 describe('MoyasarRefundService', () => {
   let service: MoyasarRefundService;
   let mockPrisma: ReturnType<typeof createMockPrisma>;
-  const mockCheckoutService = { buildCredentials: jest.fn().mockReturnValue('dGVzdDo=') };
+  const mockCheckoutService = {
+    buildCredentials: jest.fn().mockReturnValue('dGVzdDo='),
+  };
 
   beforeEach(async () => {
     mockPrisma = createMockPrisma();
@@ -47,7 +51,9 @@ describe('MoyasarRefundService', () => {
     it('should throw NotFoundException when payment not found', async () => {
       mockPrisma.payment.findUnique.mockResolvedValue(null);
 
-      await expect(service.refund(mockPaymentId)).rejects.toThrow(NotFoundException);
+      await expect(service.refund(mockPaymentId)).rejects.toThrow(
+        NotFoundException,
+      );
       await expect(service.refund(mockPaymentId)).rejects.toMatchObject({
         response: { statusCode: 404, error: 'NOT_FOUND' },
       });
@@ -57,7 +63,9 @@ describe('MoyasarRefundService', () => {
       const pendingPayment = { ...mockPayment, status: 'pending' };
       mockPrisma.payment.findUnique.mockResolvedValue(pendingPayment);
 
-      await expect(service.refund(mockPaymentId)).rejects.toThrow(BadRequestException);
+      await expect(service.refund(mockPaymentId)).rejects.toThrow(
+        BadRequestException,
+      );
       await expect(service.refund(mockPaymentId)).rejects.toMatchObject({
         response: { statusCode: 400, error: 'INVALID_PAYMENT_STATUS' },
       });
@@ -67,14 +75,21 @@ describe('MoyasarRefundService', () => {
       const refundedPayment = { ...mockPayment, status: 'refunded' };
       mockPrisma.payment.findUnique.mockResolvedValue(refundedPayment);
 
-      await expect(service.refund(mockPaymentId)).rejects.toThrow(BadRequestException);
+      await expect(service.refund(mockPaymentId)).rejects.toThrow(
+        BadRequestException,
+      );
       await expect(service.refund(mockPaymentId)).rejects.toMatchObject({
         response: { statusCode: 400, error: 'INVALID_PAYMENT_STATUS' },
       });
     });
 
     it('should update payment status to refunded for bank_transfer without calling Moyasar API', async () => {
-      const paidBankTransfer = { ...mockPayment, status: 'paid', method: 'bank_transfer', moyasarPaymentId: null };
+      const paidBankTransfer = {
+        ...mockPayment,
+        status: 'paid',
+        method: 'bank_transfer',
+        moyasarPaymentId: null,
+      };
       const updatedPayment = { ...paidBankTransfer, status: 'refunded' };
       mockPrisma.payment.findUnique.mockResolvedValue(paidBankTransfer);
       mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
@@ -92,7 +107,12 @@ describe('MoyasarRefundService', () => {
     });
 
     it('should throw BadRequestException when payment already claimed by concurrent request', async () => {
-      const paidPayment = { ...mockPayment, status: 'paid', method: 'bank_transfer', moyasarPaymentId: null };
+      const paidPayment = {
+        ...mockPayment,
+        status: 'paid',
+        method: 'bank_transfer',
+        moyasarPaymentId: null,
+      };
       mockPrisma.payment.findUnique.mockResolvedValue(paidPayment);
       mockPrisma.booking.findUnique.mockResolvedValue({ status: 'cancelled' });
       mockPrisma.payment.updateMany.mockResolvedValue({ count: 0 });
@@ -174,9 +194,15 @@ describe('MoyasarRefundService', () => {
         json: jest.fn().mockResolvedValue({ message: 'Insufficient balance' }),
       } as unknown as Response);
 
-      await expect(service.refund(mockPaymentId)).rejects.toThrow(BadRequestException);
+      await expect(service.refund(mockPaymentId)).rejects.toThrow(
+        BadRequestException,
+      );
       await expect(service.refund(mockPaymentId)).rejects.toMatchObject({
-        response: { statusCode: 400, error: 'MOYASAR_REFUND_ERROR', message: 'Insufficient balance' },
+        response: {
+          statusCode: 400,
+          error: 'MOYASAR_REFUND_ERROR',
+          message: 'Insufficient balance',
+        },
       });
       // DB should be reverted after Moyasar failure
       expect(mockPrisma.payment.updateMany).toHaveBeenCalledWith(
@@ -196,9 +222,15 @@ describe('MoyasarRefundService', () => {
         json: jest.fn().mockRejectedValue(new Error('parse error')),
       } as unknown as Response);
 
-      await expect(service.refund(mockPaymentId)).rejects.toThrow(BadRequestException);
+      await expect(service.refund(mockPaymentId)).rejects.toThrow(
+        BadRequestException,
+      );
       await expect(service.refund(mockPaymentId)).rejects.toMatchObject({
-        response: { statusCode: 400, error: 'MOYASAR_REFUND_ERROR', message: 'Unknown error' },
+        response: {
+          statusCode: 400,
+          error: 'MOYASAR_REFUND_ERROR',
+          message: 'Unknown error',
+        },
       });
     });
 

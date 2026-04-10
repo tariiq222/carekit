@@ -18,8 +18,12 @@ describe('StructuredLogger', () => {
     beforeEach(() => {
       process.env['NODE_ENV'] = 'production';
       logger = new StructuredLogger();
-      stdoutSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
-      stderrSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true);
+      stdoutSpy = jest
+        .spyOn(process.stdout, 'write')
+        .mockImplementation(() => true);
+      stderrSpy = jest
+        .spyOn(process.stderr, 'write')
+        .mockImplementation(() => true);
     });
 
     it('should write JSON log entry for log()', () => {
@@ -91,8 +95,12 @@ describe('StructuredLogger', () => {
     beforeEach(() => {
       process.env['NODE_ENV'] = 'development';
       logger = new StructuredLogger();
-      stdoutSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
-      stderrSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true);
+      stdoutSpy = jest
+        .spyOn(process.stdout, 'write')
+        .mockImplementation(() => true);
+      stderrSpy = jest
+        .spyOn(process.stderr, 'write')
+        .mockImplementation(() => true);
     });
 
     it('should not write JSON in development (uses parent ConsoleLogger)', () => {

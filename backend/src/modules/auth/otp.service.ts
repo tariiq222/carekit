@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { type OtpType as PrismaOtpType } from '@prisma/client';
@@ -39,13 +36,22 @@ export class OtpService {
 
     // Store hashed OTP — plain code is returned to caller only
     await this.prisma.otpCode.create({
-      data: { userId, code: this.hashOtp(code), type: type as PrismaOtpType, expiresAt },
+      data: {
+        userId,
+        code: this.hashOtp(code),
+        type: type as PrismaOtpType,
+        expiresAt,
+      },
     });
 
     return code;
   }
 
-  async verifyOtp(email: string, code: string, type: OtpType | string): Promise<UserPayload> {
+  async verifyOtp(
+    email: string,
+    code: string,
+    type: OtpType | string,
+  ): Promise<UserPayload> {
     const normalizedEmail = email.toLowerCase();
 
     const user = await this.prisma.user.findUnique({
@@ -116,7 +122,13 @@ export class OtpService {
     const now = new Date();
     const hashedCode = this.hashOtp(code);
     const claimed = await this.prisma.otpCode.updateMany({
-      where: { userId, type: OtpType.VERIFY_EMAIL as PrismaOtpType, code: hashedCode, usedAt: null, expiresAt: { gt: now } },
+      where: {
+        userId,
+        type: OtpType.VERIFY_EMAIL as PrismaOtpType,
+        code: hashedCode,
+        usedAt: null,
+        expiresAt: { gt: now },
+      },
       data: { usedAt: now },
     });
 
@@ -137,7 +149,11 @@ export class OtpService {
     await this.authCache.invalidate(userId);
   }
 
-  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+  async resetPassword(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<void> {
     const normalizedEmail = email.toLowerCase();
 
     const user = await this.prisma.user.findUnique({
@@ -155,7 +171,13 @@ export class OtpService {
     const now = new Date();
     const hashedCode = this.hashOtp(code);
     const claimed = await this.prisma.otpCode.updateMany({
-      where: { userId: user.id, type: OtpType.RESET_PASSWORD as PrismaOtpType, code: hashedCode, usedAt: null, expiresAt: { gt: now } },
+      where: {
+        userId: user.id,
+        type: OtpType.RESET_PASSWORD as PrismaOtpType,
+        code: hashedCode,
+        usedAt: null,
+        expiresAt: { gt: now },
+      },
       data: { usedAt: now },
     });
 

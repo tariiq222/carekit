@@ -10,7 +10,10 @@ interface PromptContext {
  * Builds the system prompt dynamically from chatbot config.
  * This is the core of the White Label chatbot — same code, different behavior per client.
  */
-export function buildSystemPrompt(config: ChatbotConfigMap, ctx: PromptContext): string {
+export function buildSystemPrompt(
+  config: ChatbotConfigMap,
+  ctx: PromptContext,
+): string {
   const capabilities = buildCapabilities(config);
   const restrictions = buildRestrictions(config);
 
@@ -47,25 +50,35 @@ function buildCapabilities(config: ChatbotConfigMap): string {
   if (config.can_book) {
     lines.push('- Book new appointments for patients');
   } else {
-    lines.push('- You CANNOT book appointments directly. Suggest the patient contacts the clinic.');
+    lines.push(
+      '- You CANNOT book appointments directly. Suggest the patient contacts the clinic.',
+    );
   }
 
   if (config.can_reschedule) {
     lines.push('- Reschedule existing appointments to a new date/time');
   } else {
-    lines.push('- You CANNOT reschedule appointments. Direct the patient to contact the clinic.');
+    lines.push(
+      '- You CANNOT reschedule appointments. Direct the patient to contact the clinic.',
+    );
   }
 
   if (config.can_request_cancel) {
-    lines.push('- Request appointment cancellation (admin must approve — do NOT say it is cancelled)');
+    lines.push(
+      '- Request appointment cancellation (admin must approve — do NOT say it is cancelled)',
+    );
   } else {
-    lines.push('- You CANNOT cancel appointments. Direct the patient to contact the clinic.');
+    lines.push(
+      '- You CANNOT cancel appointments. Direct the patient to contact the clinic.',
+    );
   }
 
   if (config.can_view_prices) {
     lines.push('- Show service prices and practitioner consultation fees');
   } else {
-    lines.push('- Do NOT discuss prices or fees. Direct the patient to reception for pricing.');
+    lines.push(
+      '- Do NOT discuss prices or fees. Direct the patient to reception for pricing.',
+    );
   }
 
   lines.push('- Show patient their upcoming appointments');

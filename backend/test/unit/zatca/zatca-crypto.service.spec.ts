@@ -1,5 +1,8 @@
 import { Test } from '@nestjs/testing';
-import { ZatcaCryptoService, CsrParams } from '../../../src/modules/zatca/services/zatca-crypto.service.js';
+import {
+  ZatcaCryptoService,
+  CsrParams,
+} from '../../../src/modules/zatca/services/zatca-crypto.service.js';
 
 const CSR_PARAMS: CsrParams = {
   commonName: 'Test Clinic',
@@ -70,7 +73,9 @@ describe('ZatcaCryptoService', () => {
     it('throws on wrong password', () => {
       const { privateKey } = service.generateKeyPair();
       const encrypted = service.encryptPrivateKey(privateKey, 'correct-pass');
-      expect(() => service.decryptPrivateKey(encrypted, 'wrong-pass')).toThrow();
+      expect(() =>
+        service.decryptPrivateKey(encrypted, 'wrong-pass'),
+      ).toThrow();
     });
 
     it('throws on invalid format', () => {

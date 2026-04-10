@@ -21,7 +21,6 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 // Mock PrismaService
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrismaService: any = {
   bankTransferReceipt: {
     findUnique: jest.fn(),
@@ -33,7 +32,6 @@ const mockPrismaService: any = {
 // Mock ConfigService
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockConfigService: any = {
   get: jest.fn().mockReturnValue('test-openrouter-api-key'),
 };
@@ -121,7 +119,9 @@ describe('ReceiptVerificationService', () => {
       ],
     }).compile();
 
-    service = module.get<ReceiptVerificationService>(ReceiptVerificationService);
+    service = module.get<ReceiptVerificationService>(
+      ReceiptVerificationService,
+    );
 
     jest.clearAllMocks();
   });
@@ -216,14 +216,12 @@ describe('ReceiptVerificationService', () => {
 
       jest
         .spyOn(global, 'fetch')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         .mockResolvedValueOnce(buildFetchResponse(aiResult) as any);
 
       await service.verifyReceipt(mockReceiptId);
 
-      expect(
-        mockPrismaService.bankTransferReceipt.update,
-      ).toHaveBeenCalledWith(
+      expect(mockPrismaService.bankTransferReceipt.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: mockReceiptId },
           data: expect.objectContaining({
@@ -252,7 +250,7 @@ describe('ReceiptVerificationService', () => {
 
       const fetchSpy = jest
         .spyOn(global, 'fetch')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         .mockResolvedValueOnce(buildFetchResponse(aiResult) as any);
 
       await service.verifyReceipt(mockReceiptId);
@@ -290,7 +288,7 @@ describe('ReceiptVerificationService', () => {
 
       const fetchSpy = jest
         .spyOn(global, 'fetch')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         .mockResolvedValueOnce(buildFetchResponse(aiResult) as any);
 
       await service.verifyReceipt(mockReceiptId);
@@ -325,15 +323,13 @@ describe('ReceiptVerificationService', () => {
       );
       mockPrismaService.bankTransferReceipt.update.mockResolvedValue({});
 
-      jest.spyOn(global, 'fetch').mockRejectedValueOnce(
-        new Error('Network connection refused'),
-      );
+      jest
+        .spyOn(global, 'fetch')
+        .mockRejectedValueOnce(new Error('Network connection refused'));
 
       await service.verifyReceipt(mockReceiptId);
 
-      expect(
-        mockPrismaService.bankTransferReceipt.update,
-      ).toHaveBeenCalledWith(
+      expect(mockPrismaService.bankTransferReceipt.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: mockReceiptId },
           data: expect.objectContaining({
@@ -355,14 +351,11 @@ describe('ReceiptVerificationService', () => {
         status: 500,
         statusText: 'Internal Server Error',
         text: () => Promise.resolve('Service Unavailable'),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       await service.verifyReceipt(mockReceiptId);
 
-      expect(
-        mockPrismaService.bankTransferReceipt.update,
-      ).toHaveBeenCalledWith(
+      expect(mockPrismaService.bankTransferReceipt.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: mockReceiptId },
           data: expect.objectContaining({
@@ -392,14 +385,11 @@ describe('ReceiptVerificationService', () => {
         ok: true,
         status: 200,
         json: () => Promise.resolve(invalidJsonResponse),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       await service.verifyReceipt(mockReceiptId);
 
-      expect(
-        mockPrismaService.bankTransferReceipt.update,
-      ).toHaveBeenCalledWith(
+      expect(mockPrismaService.bankTransferReceipt.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: mockReceiptId },
           data: expect.objectContaining({
@@ -439,14 +429,12 @@ describe('ReceiptVerificationService', () => {
 
       jest
         .spyOn(global, 'fetch')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         .mockResolvedValueOnce(buildFetchResponse(aiResult) as any);
 
       await service.verifyReceipt(mockReceiptId);
 
-      expect(
-        mockPrismaService.bankTransferReceipt.update,
-      ).toHaveBeenCalledWith(
+      expect(mockPrismaService.bankTransferReceipt.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: mockReceiptId },
           data: expect.objectContaining({
@@ -481,7 +469,7 @@ describe('ReceiptVerificationService', () => {
 
       jest
         .spyOn(global, 'fetch')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         .mockResolvedValueOnce(buildFetchResponse(aiResult) as any);
 
       await service.verifyReceipt(mockReceiptId);

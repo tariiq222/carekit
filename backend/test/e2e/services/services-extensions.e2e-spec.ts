@@ -63,7 +63,10 @@ describe('Services Extensions (e2e)', () => {
     const catRes = await request(httpServer)
       .post(CATEGORIES_URL)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .send({ nameEn: 'Extensions Test Category', nameAr: 'فئة اختبار الامتدادات' })
+      .send({
+        nameEn: 'Extensions Test Category',
+        nameAr: 'فئة اختبار الامتدادات',
+      })
       .expect(201);
 
     categoryId = catRes.body.data.id as string;
@@ -95,8 +98,20 @@ describe('Services Extensions (e2e)', () => {
   describe('PUT /services/:id/duration-options', () => {
     const validOptions = {
       options: [
-        { label: '30 min', labelAr: '٣٠ دقيقة', durationMinutes: 30, price: 15000, isDefault: true },
-        { label: '60 min', labelAr: '٦٠ دقيقة', durationMinutes: 60, price: 25000, isDefault: false },
+        {
+          label: '30 min',
+          labelAr: '٣٠ دقيقة',
+          durationMinutes: 30,
+          price: 15000,
+          isDefault: true,
+        },
+        {
+          label: '60 min',
+          labelAr: '٦٠ دقيقة',
+          durationMinutes: 60,
+          price: 25000,
+          isDefault: false,
+        },
       ],
     };
 
@@ -149,7 +164,9 @@ describe('Services Extensions (e2e)', () => {
 
     it('should return 404 for non-existent service', async () => {
       const res = await request(httpServer)
-        .put(`${SERVICES_URL}/00000000-0000-0000-0000-000000000000/duration-options`)
+        .put(
+          `${SERVICES_URL}/00000000-0000-0000-0000-000000000000/duration-options`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .send(validOptions)
         .expect(404);
@@ -164,7 +181,13 @@ describe('Services Extensions (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           options: [
-            { label: '45 min', labelAr: '٤٥ دقيقة', durationMinutes: 45, price: 18000, isDefault: true },
+            {
+              label: '45 min',
+              labelAr: '٤٥ دقيقة',
+              durationMinutes: 45,
+              price: 18000,
+              isDefault: true,
+            },
           ],
         })
         .expect(200);
@@ -195,7 +218,9 @@ describe('Services Extensions (e2e)', () => {
 
     it('should return 404 for non-existent service', async () => {
       const res = await request(httpServer)
-        .get(`${SERVICES_URL}/00000000-0000-0000-0000-000000000000/duration-options`)
+        .get(
+          `${SERVICES_URL}/00000000-0000-0000-0000-000000000000/duration-options`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(404);
 
@@ -210,7 +235,12 @@ describe('Services Extensions (e2e)', () => {
   describe('PUT /services/:id/booking-types', () => {
     const validBookingTypes = {
       types: [
-        { bookingType: 'in_person', price: 15000, duration: 30, isActive: true },
+        {
+          bookingType: 'in_person',
+          price: 15000,
+          duration: 30,
+          isActive: true,
+        },
         { bookingType: 'online', price: 10000, duration: 30, isActive: true },
       ],
     };
@@ -226,9 +256,9 @@ describe('Services Extensions (e2e)', () => {
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(res.body.data).toHaveLength(2);
 
-      const inPerson = (res.body.data as Array<{ bookingType: string; price: number }>).find(
-        (t) => t.bookingType === 'in_person',
-      );
+      const inPerson = (
+        res.body.data as Array<{ bookingType: string; price: number }>
+      ).find((t) => t.bookingType === 'in_person');
       expect(inPerson).toBeDefined();
       expect(inPerson!.price).toBe(15000);
     });
@@ -267,7 +297,14 @@ describe('Services Extensions (e2e)', () => {
         .put(`${SERVICES_URL}/${serviceId}/booking-types`)
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
-          types: [{ bookingType: 'home_visit', price: 10000, duration: 30, isActive: true }],
+          types: [
+            {
+              bookingType: 'home_visit',
+              price: 10000,
+              duration: 30,
+              isActive: true,
+            },
+          ],
         })
         .expect(400);
 
@@ -276,7 +313,9 @@ describe('Services Extensions (e2e)', () => {
 
     it('should return 404 for non-existent service', async () => {
       const res = await request(httpServer)
-        .put(`${SERVICES_URL}/00000000-0000-0000-0000-000000000000/booking-types`)
+        .put(
+          `${SERVICES_URL}/00000000-0000-0000-0000-000000000000/booking-types`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .send(validBookingTypes)
         .expect(404);
@@ -290,7 +329,14 @@ describe('Services Extensions (e2e)', () => {
         .put(`${SERVICES_URL}/${serviceId}/booking-types`)
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({
-          types: [{ bookingType: 'in_person', price: 20000, duration: 45, isActive: true }],
+          types: [
+            {
+              bookingType: 'in_person',
+              price: 20000,
+              duration: 45,
+              isActive: true,
+            },
+          ],
         })
         .expect(200);
 
@@ -322,7 +368,9 @@ describe('Services Extensions (e2e)', () => {
 
     it('should return 404 for non-existent service', async () => {
       const res = await request(httpServer)
-        .get(`${SERVICES_URL}/00000000-0000-0000-0000-000000000000/booking-types`)
+        .get(
+          `${SERVICES_URL}/00000000-0000-0000-0000-000000000000/booking-types`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(404);
 

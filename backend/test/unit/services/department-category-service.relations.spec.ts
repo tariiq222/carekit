@@ -99,8 +99,15 @@ describe('Category-Department relationship', () => {
 
   describe('create category with departmentId', () => {
     it('should pass departmentId to prisma when provided', async () => {
-      const dto = { nameEn: 'Cat A', nameAr: 'فئة أ', departmentId: 'dept-uuid-1' };
-      prisma.serviceCategory.create.mockResolvedValue({ ...mockCategory, ...dto });
+      const dto = {
+        nameEn: 'Cat A',
+        nameAr: 'فئة أ',
+        departmentId: 'dept-uuid-1',
+      };
+      prisma.serviceCategory.create.mockResolvedValue({
+        ...mockCategory,
+        ...dto,
+      });
 
       await catService.create(dto);
 
@@ -110,8 +117,15 @@ describe('Category-Department relationship', () => {
     });
 
     it('should require departmentId when creating category', async () => {
-      const dto = { nameEn: 'Cat B', nameAr: 'فئة ب', departmentId: 'dept-uuid-1' };
-      prisma.serviceCategory.create.mockResolvedValue({ ...mockCategory2, ...dto });
+      const dto = {
+        nameEn: 'Cat B',
+        nameAr: 'فئة ب',
+        departmentId: 'dept-uuid-1',
+      };
+      prisma.serviceCategory.create.mockResolvedValue({
+        ...mockCategory2,
+        ...dto,
+      });
 
       await catService.create(dto);
 
@@ -121,7 +135,11 @@ describe('Category-Department relationship', () => {
     });
 
     it('should return the created category', async () => {
-      const dto = { nameEn: 'Cat C', nameAr: 'فئة ج', departmentId: 'dept-uuid-1' };
+      const dto = {
+        nameEn: 'Cat C',
+        nameAr: 'فئة ج',
+        departmentId: 'dept-uuid-1',
+      };
       const expected = { ...mockCategory, ...dto };
       prisma.serviceCategory.create.mockResolvedValue(expected);
 
@@ -195,7 +213,11 @@ describe('Category-Department relationship', () => {
     it('should invalidate CATEGORIES_ACTIVE and SERVICES_ACTIVE on create', async () => {
       prisma.serviceCategory.create.mockResolvedValue(mockCategory);
 
-      await catService.create({ nameEn: 'X', nameAr: 'ص', departmentId: 'dept-uuid-1' });
+      await catService.create({
+        nameEn: 'X',
+        nameAr: 'ص',
+        departmentId: 'dept-uuid-1',
+      });
 
       expect(cache.del).toHaveBeenCalledWith(CACHE_KEYS.CATEGORIES_ACTIVE);
       expect(cache.del).toHaveBeenCalledWith(CACHE_KEYS.SERVICES_ACTIVE);
@@ -482,7 +504,11 @@ describe('Cross-entity cache invalidation', () => {
 
     prisma.serviceCategory.create.mockResolvedValue(mockCategory);
 
-    await catService.create({ nameEn: 'New', nameAr: 'جديد', departmentId: 'dept-uuid-1' });
+    await catService.create({
+      nameEn: 'New',
+      nameAr: 'جديد',
+      departmentId: 'dept-uuid-1',
+    });
 
     expect(cache.del).toHaveBeenCalledWith(CACHE_KEYS.CATEGORIES_ACTIVE);
     expect(cache.del).toHaveBeenCalledWith(CACHE_KEYS.SERVICES_ACTIVE);

@@ -14,7 +14,6 @@ const defaultSettings = {
   autoCompleteAfterHours: 2,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: {
     findMany: jest.fn(),
@@ -52,11 +51,16 @@ describe('BookingAutocompleteService', () => {
         { provide: ActivityLogService, useValue: mockActivityLog },
         { provide: BookingSettingsService, useValue: mockSettings },
         { provide: BookingStatusLogService, useValue: mockStatusLog },
-        { provide: ClinicSettingsService, useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') } },
+        {
+          provide: ClinicSettingsService,
+          useValue: { getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh') },
+        },
       ],
     }).compile();
 
-    service = module.get<BookingAutocompleteService>(BookingAutocompleteService);
+    service = module.get<BookingAutocompleteService>(
+      BookingAutocompleteService,
+    );
     jest.clearAllMocks();
     mockSettings.get.mockResolvedValue(defaultSettings);
     // Re-check guard: findFirst returns truthy by default
@@ -123,7 +127,10 @@ describe('BookingAutocompleteService', () => {
         }),
       );
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'patient-2', type: 'booking_completed' }),
+        expect.objectContaining({
+          userId: 'patient-2',
+          type: 'booking_completed',
+        }),
       );
     });
 

@@ -22,7 +22,6 @@ const mockFavorite = {
   createdAt: new Date('2026-01-01'),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   practitioner: {
     findFirst: jest.fn(),
@@ -46,7 +45,9 @@ describe('FavoritePractitionersService', () => {
       ],
     }).compile();
 
-    service = module.get<FavoritePractitionersService>(FavoritePractitionersService);
+    service = module.get<FavoritePractitionersService>(
+      FavoritePractitionersService,
+    );
     jest.clearAllMocks();
   });
 
@@ -66,18 +67,22 @@ describe('FavoritePractitionersService', () => {
 
     it('should throw ConflictException when practitioner already in favorites', async () => {
       mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.favoritePractitioner.findUnique.mockResolvedValue(mockFavorite);
+      mockPrisma.favoritePractitioner.findUnique.mockResolvedValue(
+        mockFavorite,
+      );
 
-      await expect(service.addFavorite(patientId, practitionerId)).rejects.toThrow(ConflictException);
+      await expect(
+        service.addFavorite(patientId, practitionerId),
+      ).rejects.toThrow(ConflictException);
       expect(mockPrisma.favoritePractitioner.create).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if practitioner not found', async () => {
       mockPrisma.practitioner.findFirst.mockResolvedValue(null);
 
-      await expect(service.addFavorite(patientId, 'non-existent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.addFavorite(patientId, 'non-existent'),
+      ).rejects.toThrow(NotFoundException);
       expect(mockPrisma.favoritePractitioner.create).not.toHaveBeenCalled();
     });
 
@@ -96,7 +101,9 @@ describe('FavoritePractitionersService', () => {
 
   describe('removeFavorite', () => {
     it('should delete and return success', async () => {
-      mockPrisma.favoritePractitioner.findUnique.mockResolvedValue(mockFavorite);
+      mockPrisma.favoritePractitioner.findUnique.mockResolvedValue(
+        mockFavorite,
+      );
       mockPrisma.favoritePractitioner.delete.mockResolvedValue(mockFavorite);
 
       const result = await service.removeFavorite(patientId, practitionerId);
@@ -120,7 +127,18 @@ describe('FavoritePractitionersService', () => {
   describe('getFavorites', () => {
     it('should return all favorites for a patient', async () => {
       const favorites = [
-        { ...mockFavorite, practitioner: { ...mockPractitioner, user: { id: 'u1', firstName: 'Ali', lastName: 'Hassan', avatarUrl: null } } },
+        {
+          ...mockFavorite,
+          practitioner: {
+            ...mockPractitioner,
+            user: {
+              id: 'u1',
+              firstName: 'Ali',
+              lastName: 'Hassan',
+              avatarUrl: null,
+            },
+          },
+        },
       ];
       mockPrisma.favoritePractitioner.findMany.mockResolvedValue(favorites);
 

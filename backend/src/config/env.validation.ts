@@ -1,5 +1,11 @@
 import { plainToInstance } from 'class-transformer';
-import { IsString, IsNotEmpty, IsOptional, MinLength, validateSync } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  MinLength,
+  validateSync,
+} from 'class-validator';
 import { Logger } from '@nestjs/common';
 
 interface CriticalKey {
@@ -25,12 +31,13 @@ const CRITICAL_OPTIONAL_KEYS: CriticalKey[] = [
   { key: 'FIREBASE_PRIVATE_KEY', feature: 'Push Notifications (FCM)' },
   { key: 'SMS_PROVIDER', feature: 'SMS Notifications' },
   { key: 'SMS_API_KEY', feature: 'SMS Notifications' },
-  { key: 'METRICS_TOKEN', feature: 'Prometheus Metrics Endpoint (access will be blocked without it)' },
+  {
+    key: 'METRICS_TOKEN',
+    feature: 'Prometheus Metrics Endpoint (access will be blocked without it)',
+  },
 ];
 
-export function logMissingOptionalKeys(
-  config: Record<string, unknown>,
-): void {
+export function logMissingOptionalKeys(config: Record<string, unknown>): void {
   const missing = CRITICAL_OPTIONAL_KEYS.filter(({ key }) => !config[key]);
   if (missing.length === 0) return;
 
@@ -44,10 +51,14 @@ export function logMissingOptionalKeys(
 
   // In production, if Moyasar payments are enabled but webhook secret is missing,
   // all webhooks will fail silently — block startup to prevent money loss
-  if (config['NODE_ENV'] === 'production' && config['MOYASAR_API_KEY'] && !config['MOYASAR_WEBHOOK_SECRET']) {
+  if (
+    config['NODE_ENV'] === 'production' &&
+    config['MOYASAR_API_KEY'] &&
+    !config['MOYASAR_WEBHOOK_SECRET']
+  ) {
     throw new Error(
-      'FATAL: MOYASAR_API_KEY is set but MOYASAR_WEBHOOK_SECRET is missing. '
-      + 'All payment webhooks will be rejected. Set the webhook secret or remove the API key.',
+      'FATAL: MOYASAR_API_KEY is set but MOYASAR_WEBHOOK_SECRET is missing. ' +
+        'All payment webhooks will be rejected. Set the webhook secret or remove the API key.',
     );
   }
 
@@ -55,9 +66,9 @@ export function logMissingOptionalKeys(
   // Prometheus scraping will silently fail, alerting and monitoring will be dark.
   if (config['NODE_ENV'] === 'production' && !config['METRICS_TOKEN']) {
     throw new Error(
-      'FATAL: METRICS_TOKEN is not set in production. '
-      + 'The /metrics endpoint will be permanently blocked and Prometheus cannot scrape. '
-      + 'Set METRICS_TOKEN to enable observability.',
+      'FATAL: METRICS_TOKEN is not set in production. ' +
+        'The /metrics endpoint will be permanently blocked and Prometheus cannot scrape. ' +
+        'Set METRICS_TOKEN to enable observability.',
     );
   }
 }
@@ -206,7 +217,9 @@ export class EnvironmentVariables {
   METRICS_TOKEN?: string;
 }
 
-export function validate(config: Record<string, unknown>): EnvironmentVariables {
+export function validate(
+  config: Record<string, unknown>,
+): EnvironmentVariables {
   const validatedConfig = plainToInstance(EnvironmentVariables, config, {
     enableImplicitConversion: true,
   });

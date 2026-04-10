@@ -1,0 +1,97 @@
+name: feature-workflow
+description: CareKit full multi-agent workflow — Architect → Executor → Tests → Review → QA → Memory
+trigger: manual
+
+# Full pipeline. Run this for any feature, bug fix, or significant change.
+# For one-liner fixes or config changes, use individual pipelines instead.
+
+steps:
+  - id: tokenscope-pre
+    type: pipeline
+    pipeline: tokenscope
+    required: false
+    description: "Trim context before starting — avoid token waste"
+
+  - id: analyze
+    type: pipeline
+    pipeline: analyze-task
+    required: true
+    depends_on: tokenscope-pre
+    description: "Architect analyzes task, produces plan, detects blocking questions"
+    gate:
+      condition: "blocking_questions == 'none — proceed' AND risk_level != 'CRITICAL'"
+      on_blocked:
+        action: pause
+        message: "Blocking questions must be answered before implementation proceeds. OR risk is CRITICAL — explicit approval required."
+
+  - id: implement
+    type: pipeline
+    pipeline: implement-plan
+    required: true
+    depends_on: analyze
+    description: "Executor implements approved plan — no improvisation"
+
+  - id: test
+    type: pipeline
+    pipeline: write-tests
+    required: true
+    depends_on: implement
+    description: "Test Engineer adds regression/behavior/edge-case coverage"
+    gate:
+      condition: "all_tests_pass"
+      on_fail:
+        action: return_to_implement
+        max_retries: 1
+
+  - id: review
+    type: pipeline
+    pipeline: review-diff
+    required: true
+    depends_on: test
+    description: "Reviewer validates diff — strict check on plan adherence, TS, security, tests"
+    gate:
+      condition: "decision in ['PASS', 'PASS+debt']"
+      on_fail:
+        action: return_to_implement
+        max_retries: 1
+        on_exhaust:
+          action: escalate_to_user
+          message: "Review failed after retry. Manual decision required."
+
+  - id: qa
+    type: pipeline
+    pipeline: qa-check
+    required: true
+    depends_on: review
+    description: "QA Validator assesses production risk — appointment workflow, data integrity, payment safety"
+    gate:
+      condition: "decision in ['QA_PASS', 'QA_PASS+monitor']"
+      on_fail:
+        action: return_to_analyze
+        message: "QA failure is a plan-level issue. Architect must re-analyze with QA fail_reasons."
+        max_retries: 0
+
+  - id: memory
+    type: pipeline
+    pipeline: memory-write
+    required: true
+    depends_on: qa
+    description: "Write decisions, bugs, lessons to opencode.md"
+
+  - id: commit-ready
+    type: output
+    required: true
+    depends_on: memory
+    message: |
+      ✅ Workflow complete. Ready to commit.
+
+      Commit format:
+        feat(module): description
+        fix(module): description
+        refactor(module): description
+        test(module): description
+
+      Rules:
+        - One system per commit (backend OR dashboard OR mobile)
+        - Max 10 files or 500 lines per commit
+        - Run: git add -p (selective staging)

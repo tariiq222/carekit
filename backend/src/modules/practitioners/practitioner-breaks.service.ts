@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { SetBreaksDto } from './dto/set-breaks.dto.js';
 import { checkOwnership } from '../../common/helpers/ownership.helper.js';
@@ -28,7 +25,10 @@ export class PractitionerBreaksService {
     dto: SetBreaksDto,
     currentUserId?: string,
   ) {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
+    const practitioner = await ensurePractitionerExists(
+      this.prisma,
+      practitionerId,
+    );
 
     if (currentUserId) {
       await checkOwnership(this.prisma, practitioner.userId, currentUserId);
@@ -71,7 +71,9 @@ export class PractitionerBreaksService {
     });
 
     for (const brk of breaks) {
-      const dayWindows = availabilities.filter((a) => a.dayOfWeek === brk.dayOfWeek);
+      const dayWindows = availabilities.filter(
+        (a) => a.dayOfWeek === brk.dayOfWeek,
+      );
       const insideWindow = dayWindows.some(
         (a) => a.startTime <= brk.startTime && a.endTime >= brk.endTime,
       );
@@ -118,11 +120,21 @@ export class PractitionerBreaksService {
   private checkOverlappingBreaks(
     breaks: Array<{ dayOfWeek: number; startTime: string; endTime: string }>,
   ) {
-    const byDay = new Map<number, Array<{ startTime: string; endTime: string }>>();
+    const byDay = new Map<
+      number,
+      Array<{ startTime: string; endTime: string }>
+    >();
     for (const slot of breaks) {
       const daySlots = byDay.get(slot.dayOfWeek) ?? [];
       for (const existing of daySlots) {
-        if (timeSlotsOverlap(slot.startTime, slot.endTime, existing.startTime, existing.endTime)) {
+        if (
+          timeSlotsOverlap(
+            slot.startTime,
+            slot.endTime,
+            existing.startTime,
+            existing.endTime,
+          )
+        ) {
           throw new BadRequestException({
             statusCode: 400,
             message: 'Overlapping break periods on the same day',

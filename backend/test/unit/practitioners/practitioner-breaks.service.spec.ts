@@ -11,14 +11,17 @@ const userId = 'user-uuid-1';
 const mockPractitioner = { id: practitionerId, userId, deletedAt: null };
 
 const mockAvailability = [
-  { practitionerId, dayOfWeek: 1, startTime: '08:00', endTime: '17:00', isActive: true },
+  {
+    practitionerId,
+    dayOfWeek: 1,
+    startTime: '08:00',
+    endTime: '17:00',
+    isActive: true,
+  },
 ];
 
-const validBreaks = [
-  { dayOfWeek: 1, startTime: '12:00', endTime: '13:00' },
-];
+const validBreaks = [{ dayOfWeek: 1, startTime: '12:00', endTime: '13:00' }];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockTx: any = {
   practitionerBreak: {
     deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
@@ -27,13 +30,14 @@ const mockTx: any = {
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   practitioner: { findFirst: jest.fn() },
   practitionerBreak: { findMany: jest.fn() },
   practitionerAvailability: { findMany: jest.fn() },
   user: { findUnique: jest.fn().mockResolvedValue({ id: userId }) },
-  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
+  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) =>
+    fn(mockTx),
+  ),
 };
 
 describe('PractitionerBreaksService', () => {
@@ -70,24 +74,37 @@ describe('PractitionerBreaksService', () => {
 
     it('should throw NotFoundException when practitioner not found', async () => {
       mockPrisma.practitioner.findFirst.mockResolvedValue(null);
-      await expect(service.getBreaks('non-existent')).rejects.toThrow(NotFoundException);
+      await expect(service.getBreaks('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when practitioner is soft-deleted', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue({ ...mockPractitioner, deletedAt: new Date() });
-      await expect(service.getBreaks(practitionerId)).rejects.toThrow(NotFoundException);
+      mockPrisma.practitioner.findFirst.mockResolvedValue({
+        ...mockPractitioner,
+        deletedAt: new Date(),
+      });
+      await expect(service.getBreaks(practitionerId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('setBreaks', () => {
     it('should replace breaks atomically', async () => {
       mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(
+        mockAvailability,
+      );
       mockTx.practitionerBreak.findMany.mockResolvedValue(validBreaks);
 
-      const result = await service.setBreaks(practitionerId, { breaks: validBreaks });
+      const result = await service.setBreaks(practitionerId, {
+        breaks: validBreaks,
+      });
 
-      expect(mockTx.practitionerBreak.deleteMany).toHaveBeenCalledWith({ where: { practitionerId } });
+      expect(mockTx.practitionerBreak.deleteMany).toHaveBeenCalledWith({
+        where: { practitionerId },
+      });
       expect(mockTx.practitionerBreak.createMany).toHaveBeenCalled();
       expect(result).toHaveLength(1);
     });
@@ -156,7 +173,13 @@ describe('PractitionerBreaksService', () => {
     it('should throw BadRequestException when break is outside availability', async () => {
       mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
       mockPrisma.practitionerAvailability.findMany.mockResolvedValue([
-        { practitionerId, dayOfWeek: 1, startTime: '09:00', endTime: '12:00', isActive: true },
+        {
+          practitionerId,
+          dayOfWeek: 1,
+          startTime: '09:00',
+          endTime: '12:00',
+          isActive: true,
+        },
       ]);
 
       await expect(

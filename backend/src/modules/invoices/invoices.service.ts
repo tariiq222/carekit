@@ -2,7 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { InvoiceFilterDto } from './dto/invoice-filter.dto.js';
 import { invoiceInclude } from './invoice.constants.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
 
 @Injectable()
@@ -10,7 +13,10 @@ export class InvoicesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: InvoiceFilterDto) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      query.page,
+      query.perPage,
+    );
 
     const where: Record<string, unknown> = {};
 

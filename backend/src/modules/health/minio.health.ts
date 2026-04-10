@@ -13,12 +13,8 @@ export class MinioHealthIndicator {
     private readonly config: ConfigService,
   ) {
     const endpoint = this.config.get<string>('MINIO_ENDPOINT', 'localhost');
-    const port = parseInt(
-      this.config.get<string>('MINIO_PORT', '9000'),
-      10,
-    );
-    const useSSL =
-      this.config.get<string>('MINIO_USE_SSL', 'false') === 'true';
+    const port = parseInt(this.config.get<string>('MINIO_PORT', '9000'), 10);
+    const useSSL = this.config.get<string>('MINIO_USE_SSL', 'false') === 'true';
     const accessKey = this.config.get<string>('MINIO_ACCESS_KEY', '');
     const secretKey = this.config.get<string>('MINIO_SECRET_KEY', '');
 
@@ -38,8 +34,7 @@ export class MinioHealthIndicator {
       await this.client.listBuckets();
       return session.up();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unknown error';
       this.logger.warn(`MinIO health check failed: ${message}`);
       return session.down({ message });
     }

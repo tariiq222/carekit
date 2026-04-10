@@ -38,7 +38,9 @@ export class AuthService {
     const email = dto.email.toLowerCase();
 
     // فحص الايميل أولاً
-    const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
+    const existingByEmail = await this.prisma.user.findUnique({
+      where: { email },
+    });
     if (existingByEmail) {
       throw new ConflictException({
         statusCode: 409,
@@ -58,10 +60,18 @@ export class AuthService {
             email,
             password: dto.password,
           });
-          const tokens = await this.tokenService.generateTokens(claimed.id, claimed.email);
-          await this.tokenService.storeRefreshToken(claimed.id, tokens.refreshToken);
+          const tokens = await this.tokenService.generateTokens(
+            claimed.id,
+            claimed.email,
+          );
+          await this.tokenService.storeRefreshToken(
+            claimed.id,
+            tokens.refreshToken,
+          );
           await this.emailService.sendWelcome(claimed.email, claimed.firstName);
-          const fullUser = await this.tokenService.buildUserPayloadFromId(claimed.id);
+          const fullUser = await this.tokenService.buildUserPayloadFromId(
+            claimed.id,
+          );
           return { user: fullUser, ...tokens };
         }
         // حساب FULL بنفس الجوال — خطأ
@@ -102,7 +112,10 @@ export class AuthService {
         return created;
       });
     } catch (err) {
-      const prismaErr = err as { code?: string; constructor?: { name?: string } };
+      const prismaErr = err as {
+        code?: string;
+        constructor?: { name?: string };
+      };
       if (
         prismaErr.constructor?.name === 'PrismaClientKnownRequestError' &&
         prismaErr.code === 'P2002'
@@ -121,7 +134,11 @@ export class AuthService {
 
     await this.emailService.sendWelcome(user.email, user.firstName);
 
-    const roleInfo = patientRole as { id: string; slug: string; name?: string } | null;
+    const roleInfo = patientRole as {
+      id: string;
+      slug: string;
+      name?: string;
+    } | null;
     const userPayload: UserPayload = {
       id: user.id,
       email: user.email,
@@ -133,7 +150,13 @@ export class AuthService {
       emailVerified: user.emailVerified,
       createdAt: user.createdAt,
       roles: roleInfo
-        ? [{ id: roleInfo.id, name: roleInfo.name ?? roleInfo.slug, slug: roleInfo.slug }]
+        ? [
+            {
+              id: roleInfo.id,
+              name: roleInfo.name ?? roleInfo.slug,
+              slug: roleInfo.slug,
+            },
+          ]
         : [],
       permissions: [],
     };
@@ -141,7 +164,10 @@ export class AuthService {
     return { user: userPayload, ...tokens };
   }
 
-  async validateUser(email: string, password: string): Promise<UserPayload | null> {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<UserPayload | null> {
     const normalizedEmail = email.toLowerCase();
 
     const user = await this.prisma.user.findUnique({
@@ -175,8 +201,14 @@ export class AuthService {
   }
 
   async login(userPayload: UserPayload): Promise<AuthResponse> {
-    const tokens = await this.tokenService.generateTokens(userPayload.id, userPayload.email);
-    await this.tokenService.storeRefreshToken(userPayload.id, tokens.refreshToken);
+    const tokens = await this.tokenService.generateTokens(
+      userPayload.id,
+      userPayload.email,
+    );
+    await this.tokenService.storeRefreshToken(
+      userPayload.id,
+      tokens.refreshToken,
+    );
     return { user: userPayload, ...tokens };
   }
 
@@ -184,7 +216,11 @@ export class AuthService {
     await this.tokenService.deleteRefreshToken(refreshToken);
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (!user || !user.passwordHash) {
@@ -233,11 +269,19 @@ export class AuthService {
     return this.otpService.generateOtp(userId, type);
   }
 
-  async verifyOtp(email: string, code: string, type: OtpType | string): Promise<UserPayload> {
+  async verifyOtp(
+    email: string,
+    code: string,
+    type: OtpType | string,
+  ): Promise<UserPayload> {
     return this.otpService.verifyOtp(email, code, type);
   }
 
-  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+  async resetPassword(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<void> {
     return this.otpService.resetPassword(email, code, newPassword);
   }
 

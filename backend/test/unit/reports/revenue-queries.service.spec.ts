@@ -8,14 +8,15 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 const from = new Date('2026-01-01');
 const to = new Date('2026-03-31');
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   $queryRaw: jest.fn(),
   booking: {
     count: jest.fn().mockResolvedValue(0),
   },
   payment: {
-    aggregate: jest.fn().mockResolvedValue({ _sum: { totalAmount: 0 }, _count: 0 }),
+    aggregate: jest
+      .fn()
+      .mockResolvedValue({ _sum: { totalAmount: 0 }, _count: 0 }),
   },
 };
 
@@ -33,7 +34,10 @@ describe('RevenueQueriesService', () => {
     service = module.get<RevenueQueriesService>(RevenueQueriesService);
     jest.clearAllMocks();
     mockPrisma.booking.count.mockResolvedValue(0);
-    mockPrisma.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: 0 }, _count: 0 });
+    mockPrisma.payment.aggregate.mockResolvedValue({
+      _sum: { totalAmount: 0 },
+      _count: 0,
+    });
   });
 
   describe('getByMonth', () => {
@@ -47,7 +51,11 @@ describe('RevenueQueriesService', () => {
 
     it('should map raw rows to RevenueByMonth format', async () => {
       mockPrisma.$queryRaw.mockResolvedValue([
-        { month: new Date('2026-01-01'), bookings: 10, revenue: BigInt(100000) },
+        {
+          month: new Date('2026-01-01'),
+          bookings: 10,
+          revenue: BigInt(100000),
+        },
       ]);
 
       const result = await service.getByMonth(from, to);

@@ -46,7 +46,9 @@ describe('WhitelabelController', () => {
 
   describe('update', () => {
     it('should delegate to service.update with dto', async () => {
-      const dto = { systemName: 'Updated' } as Parameters<typeof controller.update>[0];
+      const dto = { systemName: 'Updated' } as Parameters<
+        typeof controller.update
+      >[0];
       const result = { id: 'wl-1', systemName: 'Updated' };
       mockService.update.mockResolvedValue(result);
       expect(await controller.update(dto)).toEqual(result);

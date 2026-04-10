@@ -87,18 +87,14 @@ describe('Specialties Module (e2e)', () => {
 
   describe('GET /specialties', () => {
     it('should return specialties list without authentication (PUBLIC)', async () => {
-      const res = await request(httpServer)
-        .get(SPECIALTIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SPECIALTIES_URL).expect(200);
 
       expectSuccessResponse(res.body);
       expect(Array.isArray(res.body.data)).toBe(true);
     });
 
     it('should return seeded specialties with correct shape', async () => {
-      const res = await request(httpServer)
-        .get(SPECIALTIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SPECIALTIES_URL).expect(200);
 
       expectSuccessResponse(res.body);
       const specialties = res.body.data as Array<Record<string, unknown>>;
@@ -117,9 +113,7 @@ describe('Specialties Module (e2e)', () => {
     });
 
     it('should return specialties sorted by sortOrder ascending', async () => {
-      const res = await request(httpServer)
-        .get(SPECIALTIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SPECIALTIES_URL).expect(200);
 
       const specialties = res.body.data as Array<{ sortOrder: number }>;
       for (let i = 1; i < specialties.length; i++) {
@@ -130,9 +124,7 @@ describe('Specialties Module (e2e)', () => {
     });
 
     it('should only return active specialties by default', async () => {
-      const res = await request(httpServer)
-        .get(SPECIALTIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SPECIALTIES_URL).expect(200);
 
       const specialties = res.body.data as Array<{ isActive: boolean }>;
       for (const s of specialties) {
@@ -141,9 +133,7 @@ describe('Specialties Module (e2e)', () => {
     });
 
     it('should include Arabic and English names for all specialties', async () => {
-      const res = await request(httpServer)
-        .get(SPECIALTIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SPECIALTIES_URL).expect(200);
 
       const specialties = res.body.data as Array<{
         nameAr: string;
@@ -229,9 +219,18 @@ describe('Specialties Module (e2e)', () => {
       expect(res.body.data).toHaveProperty('id');
       expect(res.body.data).toHaveProperty('nameEn', validSpecialty.nameEn);
       expect(res.body.data).toHaveProperty('nameAr', validSpecialty.nameAr);
-      expect(res.body.data).toHaveProperty('descriptionEn', validSpecialty.descriptionEn);
-      expect(res.body.data).toHaveProperty('descriptionAr', validSpecialty.descriptionAr);
-      expect(res.body.data).toHaveProperty('sortOrder', validSpecialty.sortOrder);
+      expect(res.body.data).toHaveProperty(
+        'descriptionEn',
+        validSpecialty.descriptionEn,
+      );
+      expect(res.body.data).toHaveProperty(
+        'descriptionAr',
+        validSpecialty.descriptionAr,
+      );
+      expect(res.body.data).toHaveProperty(
+        'sortOrder',
+        validSpecialty.sortOrder,
+      );
       expect(res.body.data).toHaveProperty('isActive', true);
 
       // Save ID for later tests

@@ -79,7 +79,9 @@ describe('ProblemReportsService', () => {
     it('should throw NotFoundException when booking not found', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(null);
 
-      await expect(service.create(createDto)).rejects.toThrow(NotFoundException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException when booking status is not completed', async () => {
@@ -88,7 +90,9 @@ describe('ProblemReportsService', () => {
         status: 'pending',
       });
 
-      await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should notify admin users after creating report', async () => {
@@ -129,7 +133,9 @@ describe('ProblemReportsService', () => {
     it('should throw NotFoundException when report not found', async () => {
       mockPrisma.problemReport.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('missing-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('missing-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -140,7 +146,11 @@ describe('ProblemReportsService', () => {
   describe('resolve', () => {
     it('should update report status and set resolvedAt', async () => {
       const openReport = { id: 'report-1', status: 'open' };
-      const resolvedReport = { id: 'report-1', status: 'resolved', resolvedAt: new Date() };
+      const resolvedReport = {
+        id: 'report-1',
+        status: 'resolved',
+        resolvedAt: new Date(),
+      };
       mockPrisma.problemReport.findUnique.mockResolvedValue(openReport);
       mockPrisma.problemReport.update.mockResolvedValue(resolvedReport);
 
@@ -265,7 +275,12 @@ describe('ProblemReportsService', () => {
       expect(mockPrisma.problemReport.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 5, take: 5 }),
       );
-      expect(result.meta).toMatchObject({ total: 12, page: 2, perPage: 5, totalPages: 3 });
+      expect(result.meta).toMatchObject({
+        total: 12,
+        page: 2,
+        perPage: 5,
+        totalPages: 3,
+      });
     });
   });
 });

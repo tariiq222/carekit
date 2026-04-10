@@ -40,8 +40,20 @@ const validForm = {
 
 const validFields = {
   fields: [
-    { labelAr: 'العمر', labelEn: 'Age', fieldType: 'number', isRequired: true, sortOrder: 0 },
-    { labelAr: 'الأعراض', labelEn: 'Symptoms', fieldType: 'text', isRequired: false, sortOrder: 1 },
+    {
+      labelAr: 'العمر',
+      labelEn: 'Age',
+      fieldType: 'number',
+      isRequired: true,
+      sortOrder: 0,
+    },
+    {
+      labelAr: 'الأعراض',
+      labelEn: 'Symptoms',
+      fieldType: 'text',
+      isRequired: false,
+      sortOrder: 1,
+    },
   ],
 };
 
@@ -61,20 +73,39 @@ describe('Intake Forms Module (e2e)', () => {
     testApp = await createTestApp();
     httpServer = testApp.httpServer;
 
-    superAdmin = await loginTestUser(httpServer, TEST_USERS.super_admin.email, TEST_USERS.super_admin.password);
-    receptionist = await createTestUserWithRole(httpServer, superAdmin.accessToken, TEST_USERS.receptionist, 'receptionist');
-    accountant = await createTestUserWithRole(httpServer, superAdmin.accessToken, TEST_USERS.accountant, 'accountant');
+    superAdmin = await loginTestUser(
+      httpServer,
+      TEST_USERS.super_admin.email,
+      TEST_USERS.super_admin.password,
+    );
+    receptionist = await createTestUserWithRole(
+      httpServer,
+      superAdmin.accessToken,
+      TEST_USERS.receptionist,
+      'receptionist',
+    );
+    accountant = await createTestUserWithRole(
+      httpServer,
+      superAdmin.accessToken,
+      TEST_USERS.accountant,
+      'accountant',
+    );
     patient = await registerTestPatient(httpServer);
   });
 
-  afterAll(async () => { await closeTestApp(testApp.app); });
+  afterAll(async () => {
+    await closeTestApp(testApp.app);
+  });
 
   // ─── POST /intake-forms ───────────────────────────────────────
 
   describe('POST /intake-forms', () => {
     it('should create form as super_admin (201)', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken)).send(validForm).expect(201);
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send(validForm)
+        .expect(201);
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('id');
       expect(res.body.data).toHaveProperty('nameEn', validForm.nameEn);
@@ -84,40 +115,62 @@ describe('Intake Forms Module (e2e)', () => {
 
     it('should create deletable form (201)', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ ...validForm, nameEn: 'Form To Delete', nameAr: 'استمارة للحذف' })
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          ...validForm,
+          nameEn: 'Form To Delete',
+          nameAr: 'استمارة للحذف',
+        })
         .expect(201);
       deletableFormId = res.body.data.id as string;
     });
 
     it('should return 403 for receptionist (no intake_forms:create)', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(receptionist.accessToken))
-        .send({ ...validForm, nameEn: 'Receptionist Form', nameAr: 'استمارة الاستقبال' })
+        .post(URL)
+        .set(getAuthHeaders(receptionist.accessToken))
+        .send({
+          ...validForm,
+          nameEn: 'Receptionist Form',
+          nameAr: 'استمارة الاستقبال',
+        })
         .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should return 400 for missing required fields', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken)).send({}).expect(400);
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({})
+        .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
     it('should return 401 when unauthenticated', async () => {
-      const res = await request(httpServer).post(URL).send(validForm).expect(401);
+      const res = await request(httpServer)
+        .post(URL)
+        .send(validForm)
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
     it('should return 403 for patient (no intake_forms:create)', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(patient.accessToken)).send(validForm).expect(403);
+        .post(URL)
+        .set(getAuthHeaders(patient.accessToken))
+        .send(validForm)
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should return 403 for accountant (no intake_forms:create)', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(accountant.accessToken)).send(validForm).expect(403);
+        .post(URL)
+        .set(getAuthHeaders(accountant.accessToken))
+        .send(validForm)
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -127,7 +180,9 @@ describe('Intake Forms Module (e2e)', () => {
   describe('GET /intake-forms', () => {
     it('should return forms list for super_admin (200)', async () => {
       const res = await request(httpServer)
-        .get(URL).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .get(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
       const data = res.body.data;
       expect(Array.isArray(data) || Array.isArray(data?.items)).toBe(true);
@@ -135,7 +190,9 @@ describe('Intake Forms Module (e2e)', () => {
 
     it('should return 403 for receptionist (no intake_forms:view)', async () => {
       const res = await request(httpServer)
-        .get(URL).set(getAuthHeaders(receptionist.accessToken)).expect(403);
+        .get(URL)
+        .set(getAuthHeaders(receptionist.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
@@ -146,13 +203,17 @@ describe('Intake Forms Module (e2e)', () => {
 
     it('should return 403 for patient (no intake_forms:view)', async () => {
       const res = await request(httpServer)
-        .get(URL).set(getAuthHeaders(patient.accessToken)).expect(403);
+        .get(URL)
+        .set(getAuthHeaders(patient.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should return 403 for accountant (no intake_forms:view)', async () => {
       const res = await request(httpServer)
-        .get(URL).set(getAuthHeaders(accountant.accessToken)).expect(403);
+        .get(URL)
+        .set(getAuthHeaders(accountant.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -162,7 +223,9 @@ describe('Intake Forms Module (e2e)', () => {
   describe('GET /intake-forms/:formId', () => {
     it('should return form by ID (200)', async () => {
       const res = await request(httpServer)
-        .get(`${URL}/${formId}`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .get(`${URL}/${formId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('id', formId);
       expect(res.body.data).toHaveProperty('type');
@@ -170,7 +233,9 @@ describe('Intake Forms Module (e2e)', () => {
 
     it('should return 404 for non-existent form', async () => {
       const res = await request(httpServer)
-        .get(`${URL}/${FAKE_ID}`).set(getAuthHeaders(superAdmin.accessToken)).expect(404);
+        .get(`${URL}/${FAKE_ID}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
 
@@ -181,7 +246,9 @@ describe('Intake Forms Module (e2e)', () => {
 
     it('should return 403 for patient (no intake_forms:view)', async () => {
       const res = await request(httpServer)
-        .get(`${URL}/${formId}`).set(getAuthHeaders(patient.accessToken)).expect(403);
+        .get(`${URL}/${formId}`)
+        .set(getAuthHeaders(patient.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -191,36 +258,46 @@ describe('Intake Forms Module (e2e)', () => {
   describe('PATCH /intake-forms/:formId', () => {
     it('should partial-update form as super_admin (200)', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${formId}`).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameEn: 'Updated Intake Form', isActive: false }).expect(200);
+        .patch(`${URL}/${formId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({ nameEn: 'Updated Intake Form', isActive: false })
+        .expect(200);
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('nameEn', 'Updated Intake Form');
     });
 
     it('should return 403 for receptionist (no intake_forms:edit)', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${formId}`).set(getAuthHeaders(receptionist.accessToken))
-        .send({ nameAr: 'استمارة المريض المحدثة' }).expect(403);
+        .patch(`${URL}/${formId}`)
+        .set(getAuthHeaders(receptionist.accessToken))
+        .send({ nameAr: 'استمارة المريض المحدثة' })
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should return 404 for non-existent form', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${FAKE_ID}`).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameEn: 'Ghost' }).expect(404);
+        .patch(`${URL}/${FAKE_ID}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({ nameEn: 'Ghost' })
+        .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
 
     it('should return 401 when unauthenticated', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${formId}`).send({ nameEn: 'Unauthorized' }).expect(401);
+        .patch(`${URL}/${formId}`)
+        .send({ nameEn: 'Unauthorized' })
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
     it('should return 403 for patient (no intake_forms:edit)', async () => {
       const res = await request(httpServer)
-        .patch(`${URL}/${formId}`).set(getAuthHeaders(patient.accessToken))
-        .send({ nameEn: 'Hijacked' }).expect(403);
+        .patch(`${URL}/${formId}`)
+        .set(getAuthHeaders(patient.accessToken))
+        .send({ nameEn: 'Hijacked' })
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -230,50 +307,64 @@ describe('Intake Forms Module (e2e)', () => {
   describe('PUT /intake-forms/:formId/fields', () => {
     it('should replace fields as super_admin (200)', async () => {
       const res = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).set(getAuthHeaders(superAdmin.accessToken))
-        .send(validFields).expect(200);
+        .put(`${URL}/${formId}/fields`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send(validFields)
+        .expect(200);
       expectSuccessResponse(res.body);
       expect(Array.isArray(res.body.data)).toBe(true);
     });
 
     it('should accept empty fields array (clears all fields) (200)', async () => {
       const res = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ fields: [] }).expect(200);
+        .put(`${URL}/${formId}/fields`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({ fields: [] })
+        .expect(200);
       expectSuccessResponse(res.body);
     });
 
     it('should return 403 for receptionist (no intake_forms:edit)', async () => {
       const res = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).set(getAuthHeaders(receptionist.accessToken))
-        .send(validFields).expect(403);
+        .put(`${URL}/${formId}/fields`)
+        .set(getAuthHeaders(receptionist.accessToken))
+        .send(validFields)
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should return 400 for missing fields array', async () => {
       const res = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).set(getAuthHeaders(superAdmin.accessToken))
-        .send({}).expect(400);
+        .put(`${URL}/${formId}/fields`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({})
+        .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
     it('should return 404 for non-existent form', async () => {
       const res = await request(httpServer)
-        .put(`${URL}/${FAKE_ID}/fields`).set(getAuthHeaders(superAdmin.accessToken))
-        .send(validFields).expect(404);
+        .put(`${URL}/${FAKE_ID}/fields`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send(validFields)
+        .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
 
     it('should return 401 when unauthenticated', async () => {
       const res = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).send(validFields).expect(401);
+        .put(`${URL}/${formId}/fields`)
+        .send(validFields)
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
     it('should return 403 for patient (no intake_forms:edit)', async () => {
       const res = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).set(getAuthHeaders(patient.accessToken))
-        .send(validFields).expect(403);
+        .put(`${URL}/${formId}/fields`)
+        .set(getAuthHeaders(patient.accessToken))
+        .send(validFields)
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
   });
@@ -282,37 +373,49 @@ describe('Intake Forms Module (e2e)', () => {
 
   describe('DELETE /intake-forms/:formId', () => {
     it('should return 401 when unauthenticated', async () => {
-      const res = await request(httpServer).delete(`${URL}/${deletableFormId}`).expect(401);
+      const res = await request(httpServer)
+        .delete(`${URL}/${deletableFormId}`)
+        .expect(401);
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
     it('should return 403 for patient (no intake_forms:delete)', async () => {
       const res = await request(httpServer)
-        .delete(`${URL}/${deletableFormId}`).set(getAuthHeaders(patient.accessToken)).expect(403);
+        .delete(`${URL}/${deletableFormId}`)
+        .set(getAuthHeaders(patient.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should return 403 for accountant (no intake_forms:delete)', async () => {
       const res = await request(httpServer)
-        .delete(`${URL}/${deletableFormId}`).set(getAuthHeaders(accountant.accessToken)).expect(403);
+        .delete(`${URL}/${deletableFormId}`)
+        .set(getAuthHeaders(accountant.accessToken))
+        .expect(403);
       expectErrorResponse(res.body, 'FORBIDDEN');
     });
 
     it('should delete form as super_admin (200)', async () => {
       const res = await request(httpServer)
-        .delete(`${URL}/${deletableFormId}`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .delete(`${URL}/${deletableFormId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
     });
 
     it('should return 404 for non-existent form', async () => {
       const res = await request(httpServer)
-        .delete(`${URL}/${FAKE_ID}`).set(getAuthHeaders(superAdmin.accessToken)).expect(404);
+        .delete(`${URL}/${FAKE_ID}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
 
     it('should return 404 when deleting already-deleted form', async () => {
       const res = await request(httpServer)
-        .delete(`${URL}/${deletableFormId}`).set(getAuthHeaders(superAdmin.accessToken)).expect(404);
+        .delete(`${URL}/${deletableFormId}`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
   });

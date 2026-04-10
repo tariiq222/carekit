@@ -80,9 +80,7 @@ describe('Problem Reports Module (e2e)', () => {
     });
 
     it('should return 401 without authentication', async () => {
-      const res = await request(httpServer)
-        .get(REPORTS_URL)
-        .expect(401);
+      const res = await request(httpServer).get(REPORTS_URL).expect(401);
 
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });

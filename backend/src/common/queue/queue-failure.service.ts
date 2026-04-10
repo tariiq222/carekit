@@ -27,7 +27,10 @@ export class QueueFailureService {
     error: Error,
   ): Promise<void> {
     try {
-      this.metricsService.jobFailuresTotal.inc({ queue: queueName, job_name: jobName });
+      this.metricsService.jobFailuresTotal.inc({
+        queue: queueName,
+        job_name: jobName,
+      });
 
       this.logger.error(
         `[DLQ] Job permanently failed — queue=${queueName} job=${jobName} id=${jobId ?? 'unknown'}`,
@@ -55,7 +58,9 @@ export class QueueFailureService {
       });
 
       if (admins.length === 0) {
-        this.logger.warn('[DLQ] No active admin users found — skipping notification');
+        this.logger.warn(
+          '[DLQ] No active admin users found — skipping notification',
+        );
         return;
       }
 

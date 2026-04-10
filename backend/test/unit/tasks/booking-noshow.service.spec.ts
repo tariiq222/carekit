@@ -19,7 +19,6 @@ const defaultSettings = {
   noShowRefundPercent: 0,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: {
     findMany: jest.fn(),
@@ -167,7 +166,10 @@ describe('BookingNoShowService', () => {
       await service.autoNoShow();
 
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'user-pract-3', type: 'booking_no_show' }),
+        expect.objectContaining({
+          userId: 'user-pract-3',
+          type: 'booking_no_show',
+        }),
       );
     });
 
@@ -185,7 +187,10 @@ describe('BookingNoShowService', () => {
       await service.autoNoShow();
 
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'patient-4', type: 'booking_no_show' }),
+        expect.objectContaining({
+          userId: 'patient-4',
+          type: 'booking_no_show',
+        }),
       );
     });
 
@@ -215,7 +220,10 @@ describe('BookingNoShowService', () => {
 
       expect(mockPrisma.payment.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ status: 'refunded', refundAmount: 5000 }),
+          data: expect.objectContaining({
+            status: 'refunded',
+            refundAmount: 5000,
+          }),
         }),
       );
     });
@@ -234,7 +242,10 @@ describe('BookingNoShowService', () => {
 
       await service.autoNoShow();
 
-      expect(mockWaitlist.checkAndNotify).toHaveBeenCalledWith('pract-6', pastDate);
+      expect(mockWaitlist.checkAndNotify).toHaveBeenCalledWith(
+        'pract-6',
+        pastDate,
+      );
     });
 
     it('should build date boundaries using dynamic timezone, not hardcoded +03:00', async () => {

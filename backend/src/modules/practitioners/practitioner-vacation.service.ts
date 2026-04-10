@@ -31,7 +31,10 @@ export class PractitionerVacationService {
     dto: CreateVacationDto,
     currentUserId?: string,
   ) {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
+    const practitioner = await ensurePractitionerExists(
+      this.prisma,
+      practitionerId,
+    );
 
     if (currentUserId) {
       await checkOwnership(this.prisma, practitioner.userId, currentUserId);
@@ -61,11 +64,13 @@ export class PractitionerVacationService {
       where: { practitionerId },
     });
 
-    const hasOverlap = existingVacations.some((v: { startDate: Date; endDate: Date }) => {
-      const existStart = new Date(v.startDate);
-      const existEnd = new Date(v.endDate);
-      return startDate <= existEnd && endDate >= existStart;
-    });
+    const hasOverlap = existingVacations.some(
+      (v: { startDate: Date; endDate: Date }) => {
+        const existStart = new Date(v.startDate);
+        const existEnd = new Date(v.endDate);
+        return startDate <= existEnd && endDate >= existStart;
+      },
+    );
 
     if (hasOverlap) {
       throw new BadRequestException({
@@ -90,7 +95,10 @@ export class PractitionerVacationService {
     vacationId: string,
     currentUserId?: string,
   ) {
-    const practitioner = await ensurePractitionerExists(this.prisma, practitionerId);
+    const practitioner = await ensurePractitionerExists(
+      this.prisma,
+      practitionerId,
+    );
 
     if (currentUserId) {
       await checkOwnership(this.prisma, practitioner.userId, currentUserId);

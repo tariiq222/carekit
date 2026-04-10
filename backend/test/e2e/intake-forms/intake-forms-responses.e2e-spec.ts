@@ -37,8 +37,20 @@ const validForm = {
 
 const validFields = {
   fields: [
-    { labelAr: 'العمر', labelEn: 'Age', fieldType: 'number', isRequired: true, sortOrder: 0 },
-    { labelAr: 'الأعراض', labelEn: 'Symptoms', fieldType: 'text', isRequired: false, sortOrder: 1 },
+    {
+      labelAr: 'العمر',
+      labelEn: 'Age',
+      fieldType: 'number',
+      isRequired: true,
+      sortOrder: 0,
+    },
+    {
+      labelAr: 'الأعراض',
+      labelEn: 'Symptoms',
+      fieldType: 'text',
+      isRequired: false,
+      sortOrder: 1,
+    },
   ],
 };
 
@@ -57,58 +69,94 @@ describe('Intake Forms — Responses & Extended (e2e)', () => {
     testApp = await createTestApp();
     httpServer = testApp.httpServer;
 
-    superAdmin = await loginTestUser(httpServer, TEST_USERS.super_admin.email, TEST_USERS.super_admin.password);
-    receptionist = await createTestUserWithRole(httpServer, superAdmin.accessToken, TEST_USERS.receptionist, 'receptionist');
-    accountant = await createTestUserWithRole(httpServer, superAdmin.accessToken, TEST_USERS.accountant, 'accountant');
+    superAdmin = await loginTestUser(
+      httpServer,
+      TEST_USERS.super_admin.email,
+      TEST_USERS.super_admin.password,
+    );
+    receptionist = await createTestUserWithRole(
+      httpServer,
+      superAdmin.accessToken,
+      TEST_USERS.receptionist,
+      'receptionist',
+    );
+    accountant = await createTestUserWithRole(
+      httpServer,
+      superAdmin.accessToken,
+      TEST_USERS.accountant,
+      'accountant',
+    );
     patient = await registerTestPatient(httpServer);
 
     // Create form and set fields once for all response tests
     const formRes = await request(httpServer)
-      .post(URL).set(getAuthHeaders(superAdmin.accessToken)).send(validForm);
+      .post(URL)
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .send(validForm);
     formId = formRes.body.data.id as string;
 
     await request(httpServer)
-      .put(`${URL}/${formId}/fields`).set(getAuthHeaders(superAdmin.accessToken)).send(validFields);
+      .put(`${URL}/${formId}/fields`)
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .send(validFields);
   });
 
-  afterAll(async () => { await closeTestApp(testApp.app); });
+  afterAll(async () => {
+    await closeTestApp(testApp.app);
+  });
 
   // ─── GET /intake-forms?filters ───────────────────────────────
 
   describe('GET /intake-forms (filtered)', () => {
     it('should filter by scope=global (200)', async () => {
       const res = await request(httpServer)
-        .get(`${URL}?scope=global`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .get(`${URL}?scope=global`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
-      const items: Array<{ scope: string }> = Array.isArray(res.body.data) ? res.body.data : res.body.data?.items ?? [];
+      const items: Array<{ scope: string }> = Array.isArray(res.body.data)
+        ? res.body.data
+        : (res.body.data?.items ?? []);
       items.forEach((item) => expect(item.scope).toBe('global'));
     });
 
     it('should filter by type=pre_booking (200)', async () => {
       const res = await request(httpServer)
-        .get(`${URL}?type=pre_booking`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .get(`${URL}?type=pre_booking`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
-      const items: Array<{ type: string }> = Array.isArray(res.body.data) ? res.body.data : res.body.data?.items ?? [];
+      const items: Array<{ type: string }> = Array.isArray(res.body.data)
+        ? res.body.data
+        : (res.body.data?.items ?? []);
       items.forEach((item) => expect(item.type).toBe('pre_booking'));
     });
 
     it('should filter by isActive=false (200)', async () => {
       const res = await request(httpServer)
-        .get(`${URL}?isActive=false`).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+        .get(`${URL}?isActive=false`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
       expectSuccessResponse(res.body);
-      const items: Array<{ isActive: boolean }> = Array.isArray(res.body.data) ? res.body.data : res.body.data?.items ?? [];
+      const items: Array<{ isActive: boolean }> = Array.isArray(res.body.data)
+        ? res.body.data
+        : (res.body.data?.items ?? []);
       items.forEach((item) => expect(item.isActive).toBe(false));
     });
 
     it('should return 400 for invalid scope value', async () => {
       const res = await request(httpServer)
-        .get(`${URL}?scope=invalid_scope`).set(getAuthHeaders(superAdmin.accessToken)).expect(400);
+        .get(`${URL}?scope=invalid_scope`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
     it('should return 400 for invalid type value', async () => {
       const res = await request(httpServer)
-        .get(`${URL}?type=invalid_type`).set(getAuthHeaders(superAdmin.accessToken)).expect(400);
+        .get(`${URL}?type=invalid_type`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
   });
@@ -118,14 +166,21 @@ describe('Intake Forms — Responses & Extended (e2e)', () => {
   describe('PUT /intake-forms/:formId/fields (advanced)', () => {
     it('should accept fields with options array (200)', async () => {
       const res = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).set(getAuthHeaders(superAdmin.accessToken))
+        .put(`${URL}/${formId}/fields`)
+        .set(getAuthHeaders(superAdmin.accessToken))
         .send({
-          fields: [{
-            labelAr: 'التخصص', labelEn: 'Specialty',
-            fieldType: 'select', options: ['باطنة', 'نساء', 'أطفال'],
-            isRequired: true, sortOrder: 0,
-          }],
-        }).expect(200);
+          fields: [
+            {
+              labelAr: 'التخصص',
+              labelEn: 'Specialty',
+              fieldType: 'select',
+              options: ['باطنة', 'نساء', 'أطفال'],
+              isRequired: true,
+              sortOrder: 0,
+            },
+          ],
+        })
+        .expect(200);
       expectSuccessResponse(res.body);
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(res.body.data[0]).toHaveProperty('options');
@@ -133,26 +188,48 @@ describe('Intake Forms — Responses & Extended (e2e)', () => {
 
     it('should accept fields with condition object (200)', async () => {
       const baseRes = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).set(getAuthHeaders(superAdmin.accessToken))
+        .put(`${URL}/${formId}/fields`)
+        .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           fields: [
-            { labelAr: 'هل لديك حساسية', labelEn: 'Do you have allergies', fieldType: 'radio', options: ['نعم', 'لا'], sortOrder: 0 },
+            {
+              labelAr: 'هل لديك حساسية',
+              labelEn: 'Do you have allergies',
+              fieldType: 'radio',
+              options: ['نعم', 'لا'],
+              sortOrder: 0,
+            },
           ],
-        }).expect(200);
+        })
+        .expect(200);
       const baseFieldId = (baseRes.body.data as Array<{ id: string }>)[0].id;
 
       const res = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).set(getAuthHeaders(superAdmin.accessToken))
+        .put(`${URL}/${formId}/fields`)
+        .set(getAuthHeaders(superAdmin.accessToken))
         .send({
           fields: [
-            { labelAr: 'هل لديك حساسية', labelEn: 'Do you have allergies', fieldType: 'radio', options: ['نعم', 'لا'], sortOrder: 0 },
             {
-              labelAr: 'ما نوع الحساسية', labelEn: 'What type of allergy',
-              fieldType: 'text', sortOrder: 1,
-              condition: { fieldId: baseFieldId, operator: 'equals', value: 'نعم' },
+              labelAr: 'هل لديك حساسية',
+              labelEn: 'Do you have allergies',
+              fieldType: 'radio',
+              options: ['نعم', 'لا'],
+              sortOrder: 0,
+            },
+            {
+              labelAr: 'ما نوع الحساسية',
+              labelEn: 'What type of allergy',
+              fieldType: 'text',
+              sortOrder: 1,
+              condition: {
+                fieldId: baseFieldId,
+                operator: 'equals',
+                value: 'نعم',
+              },
             },
           ],
-        }).expect(200);
+        })
+        .expect(200);
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveLength(2);
       expect(res.body.data[1]).toHaveProperty('condition');
@@ -160,8 +237,13 @@ describe('Intake Forms — Responses & Extended (e2e)', () => {
 
     it('should return 400 for invalid fieldType', async () => {
       const res = await request(httpServer)
-        .put(`${URL}/${formId}/fields`).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ fields: [{ labelAr: 'اختبار', labelEn: 'Test', fieldType: 'invalid_type' }] })
+        .put(`${URL}/${formId}/fields`)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          fields: [
+            { labelAr: 'اختبار', labelEn: 'Test', fieldType: 'invalid_type' },
+          ],
+        })
         .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
@@ -282,40 +364,71 @@ describe('Intake Forms — Responses & Extended (e2e)', () => {
   describe('POST /intake-forms (scope validation)', () => {
     it('should return 400 when scope=service but serviceId missing', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameAr: 'نموذج خدمة', nameEn: 'Service Form', type: 'pre_booking', scope: 'service' })
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameAr: 'نموذج خدمة',
+          nameEn: 'Service Form',
+          type: 'pre_booking',
+          scope: 'service',
+        })
         .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
     it('should return 400 when scope=practitioner but practitionerId missing', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameAr: 'نموذج طبيب', nameEn: 'Practitioner Form', type: 'pre_booking', scope: 'practitioner' })
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameAr: 'نموذج طبيب',
+          nameEn: 'Practitioner Form',
+          type: 'pre_booking',
+          scope: 'practitioner',
+        })
         .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
     it('should return 400 when scope=branch but branchId missing', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameAr: 'نموذج فرع', nameEn: 'Branch Form', type: 'pre_booking', scope: 'branch' })
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameAr: 'نموذج فرع',
+          nameEn: 'Branch Form',
+          type: 'pre_booking',
+          scope: 'branch',
+        })
         .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });
 
     it('should return 404 when scope=service but serviceId does not exist', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameAr: 'نموذج خدمة', nameEn: 'Service Form', type: 'pre_booking', scope: 'service', serviceId: FAKE_ID })
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameAr: 'نموذج خدمة',
+          nameEn: 'Service Form',
+          type: 'pre_booking',
+          scope: 'service',
+          serviceId: FAKE_ID,
+        })
         .expect(404);
       expectErrorResponse(res.body, 'NOT_FOUND');
     });
 
     it('should return 400 for invalid type value', async () => {
       const res = await request(httpServer)
-        .post(URL).set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameAr: 'ن', nameEn: 'N', type: 'invalid_type', scope: 'global' })
+        .post(URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .send({
+          nameAr: 'ن',
+          nameEn: 'N',
+          type: 'invalid_type',
+          scope: 'global',
+        })
         .expect(400);
       expectErrorResponse(res.body, 'VALIDATION_ERROR');
     });

@@ -12,8 +12,15 @@ import { BookingQueryService } from './booking-query.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
-import { validateAvailability, checkDoubleBooking, validateClinicAvailability } from './booking-validation.helper.js';
-import { calculateEndTime, validateNoCrossMidnight } from '../../common/helpers/booking-time.helper.js';
+import {
+  validateAvailability,
+  checkDoubleBooking,
+  validateClinicAvailability,
+} from './booking-validation.helper.js';
+import {
+  calculateEndTime,
+  validateNoCrossMidnight,
+} from '../../common/helpers/booking-time.helper.js';
 import { bookingInclude } from './booking.constants.js';
 import { BookingPaymentHelper } from './booking-payment.helper.js';
 import { PriceResolverService } from './price-resolver.service.js';
@@ -46,26 +53,71 @@ export class BookingCreationService {
     dto: CreateBookingDto,
     callerRoles?: Array<{ slug: string }>,
   ) {
-    const actualPatientId = await this.paymentHelper.resolvePatientId(callerUserId, dto.patientId, callerRoles);
+    const actualPatientId = await this.paymentHelper.resolvePatientId(
+      callerUserId,
+      dto.patientId,
+      callerRoles,
+    );
 
-    const practitioner = await this.prisma.practitioner.findFirst({ where: { id: dto.practitionerId, isActive: true, deletedAt: null } });
-    if (!practitioner) throw new NotFoundException({ statusCode: 404, message: ERR.practitioner.notFound, error: 'NOT_FOUND' });
+    const practitioner = await this.prisma.practitioner.findFirst({
+      where: { id: dto.practitionerId, isActive: true, deletedAt: null },
+    });
+    if (!practitioner)
+      throw new NotFoundException({
+        statusCode: 404,
+        message: ERR.practitioner.notFound,
+        error: 'NOT_FOUND',
+      });
     if (!practitioner.isAcceptingBookings) {
-      throw new BadRequestException({ statusCode: 400, message: ERR.practitioner.notAcceptingBookings, error: 'NOT_ACCEPTING_BOOKINGS' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.practitioner.notAcceptingBookings,
+        error: 'NOT_ACCEPTING_BOOKINGS',
+      });
     }
 
-    const service = await this.prisma.service.findFirst({ where: { id: dto.serviceId, isActive: true, deletedAt: null } });
-    if (!service) throw new NotFoundException({ statusCode: 404, message: ERR.service.notFound, error: 'NOT_FOUND' });
+    const service = await this.prisma.service.findFirst({
+      where: { id: dto.serviceId, isActive: true, deletedAt: null },
+    });
+    if (!service)
+      throw new NotFoundException({
+        statusCode: 404,
+        message: ERR.service.notFound,
+        error: 'NOT_FOUND',
+      });
 
     const ps = await this.prisma.practitionerService.findUnique({
-      where: { practitionerId_serviceId: { practitionerId: dto.practitionerId, serviceId: dto.serviceId } },
+      where: {
+        practitionerId_serviceId: {
+          practitionerId: dto.practitionerId,
+          serviceId: dto.serviceId,
+        },
+      },
     });
-    if (!ps) throw new BadRequestException({ statusCode: 400, message: ERR.service.notOffered, error: 'SERVICE_NOT_OFFERED' });
-    if (!ps.isActive) throw new BadRequestException({ statusCode: 400, message: ERR.service.inactive, error: 'SERVICE_INACTIVE' });
-    if (!ps.availableTypes.includes(dto.type)) throw new BadRequestException({ statusCode: 400, message: ERR.service.typeNotAvailable(dto.type), error: 'TYPE_NOT_AVAILABLE' });
+    if (!ps)
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.service.notOffered,
+        error: 'SERVICE_NOT_OFFERED',
+      });
+    if (!ps.isActive)
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.service.inactive,
+        error: 'SERVICE_INACTIVE',
+      });
+    if (!ps.availableTypes.includes(dto.type))
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.service.typeNotAvailable(dto.type),
+        error: 'TYPE_NOT_AVAILABLE',
+      });
 
     // Validate service is available at the booking's branch
-    const branchId = await this.resolveBranchContext(dto.practitionerId, dto.branchId);
+    const branchId = await this.resolveBranchContext(
+      dto.practitionerId,
+      dto.branchId,
+    );
     const serviceBranchCount = await this.prisma.serviceBranch.count({
       where: { serviceId: dto.serviceId },
     });
@@ -86,7 +138,11 @@ export class BookingCreationService {
     const settings = await this.bookingSettingsService.getForBranch(branchId);
 
     if (dto.type === 'walk_in' && !settings.allowWalkIn) {
-      throw new BadRequestException({ statusCode: 400, message: ERR.booking.walkInNotAllowed, error: 'WALK_IN_NOT_ALLOWED' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.booking.walkInNotAllowed,
+        error: 'WALK_IN_NOT_ALLOWED',
+      });
     }
 
     const resolved = await this.resolvePriceOrFallback(dto, ps, service);
@@ -94,17 +150,25 @@ export class BookingCreationService {
 
     const bookingDate = new Date(dto.date);
     const clinicTz = await this.clinicSettingsService.getTimezone();
-    const nowRiyadh = new Intl.DateTimeFormat('en-CA', { timeZone: clinicTz }).format(new Date());
+    const nowRiyadh = new Intl.DateTimeFormat('en-CA', {
+      timeZone: clinicTz,
+    }).format(new Date());
     const today = new Date(nowRiyadh);
-    if (bookingDate < today) throw new BadRequestException({ statusCode: 400, message: ERR.booking.pastDate, error: 'VALIDATION_ERROR' });
+    if (bookingDate < today)
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.booking.pastDate,
+        error: 'VALIDATION_ERROR',
+      });
 
     // Use the stricter of clinic-level and service-level constraints (HIGH fix #5).
     // Service constraints override clinic when more restrictive — never less restrictive.
-    const effectiveMaxDays = (service.maxAdvanceDays != null && service.maxAdvanceDays > 0)
-      ? (settings.maxAdvanceBookingDays > 0
+    const effectiveMaxDays =
+      service.maxAdvanceDays != null && service.maxAdvanceDays > 0
+        ? settings.maxAdvanceBookingDays > 0
           ? Math.min(settings.maxAdvanceBookingDays, service.maxAdvanceDays)
-          : service.maxAdvanceDays)
-      : settings.maxAdvanceBookingDays;
+          : service.maxAdvanceDays
+        : settings.maxAdvanceBookingDays;
 
     const effectiveLeadMinutes = Math.max(
       settings.minBookingLeadMinutes ?? 0,
@@ -127,7 +191,8 @@ export class BookingCreationService {
       const bookingDateTime = new Date(bookingDate);
       const [leadH, leadM] = dto.startTime.split(':').map(Number);
       bookingDateTime.setHours(leadH, leadM, 0, 0);
-      const minutesUntil = (bookingDateTime.getTime() - Date.now()) / (1000 * 60);
+      const minutesUntil =
+        (bookingDateTime.getTime() - Date.now()) / (1000 * 60);
       if (minutesUntil < effectiveLeadMinutes) {
         throw new BadRequestException({
           statusCode: 400,
@@ -140,16 +205,27 @@ export class BookingCreationService {
     const endTime = calculateEndTime(dto.startTime, duration);
     validateNoCrossMidnight(dto.startTime, duration);
 
-    const skipChecks = callerUserId !== actualPatientId && settings.adminCanBookOutsideHours;
+    const skipChecks =
+      callerUserId !== actualPatientId && settings.adminCanBookOutsideHours;
     if (!skipChecks) {
       const [clinicHours, holidays] = await Promise.all([
         this.clinicHoursService.getAll(),
         this.clinicHolidaysService.findAll(),
       ]);
-      validateClinicAvailability(clinicHours, holidays, bookingDate, dto.startTime, endTime);
+      validateClinicAvailability(
+        clinicHours,
+        holidays,
+        bookingDate,
+        dto.startTime,
+        endTime,
+      );
     }
 
-    let zoomData: { zoomMeetingId?: string; zoomJoinUrl?: string; zoomHostUrl?: string } = {};
+    const zoomData: {
+      zoomMeetingId?: string;
+      zoomJoinUrl?: string;
+      zoomHostUrl?: string;
+    } = {};
     // Zoom is triggered for online bookings on-demand (at session time), not at booking creation.
     // zoomData remains empty here; a separate endpoint will create the meeting when needed.
 
@@ -160,59 +236,88 @@ export class BookingCreationService {
     let lastErr: unknown;
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        booking = await this.prisma.$transaction(async (tx) => {
-          if (!skipChecks) {
-            await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, branchId);
-          }
-          try {
-            // Use ps.bufferMinutes as explicit override only when > 0 (Prisma @default(0) fix)
-            const bufferMinutes = ps.bufferMinutes > 0
-              ? ps.bufferMinutes
-              : (service.bufferMinutes > 0 ? service.bufferMinutes : settings.bufferMinutes);
-            await checkDoubleBooking(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, bufferMinutes);
-          } catch (err) {
-            if (err instanceof ConflictException) {
-              if (settings.suggestAlternativesOnConflict) {
-                const alternatives = await this.queryService.getNextAvailableSlots(
-                  dto.practitionerId, bookingDate, settings.suggestAlternativesCount, branchId,
-                );
-                throw new ConflictException({
-                  statusCode: 409, message: ERR.booking.conflict,
-                  error: 'BOOKING_CONFLICT', alternatives,
-                });
-              }
+        booking = await this.prisma.$transaction(
+          async (tx) => {
+            if (!skipChecks) {
+              await validateAvailability(
+                tx,
+                dto.practitionerId,
+                bookingDate,
+                dto.startTime,
+                endTime,
+                branchId,
+              );
             }
-            throw err;
-          }
+            try {
+              // Use ps.bufferMinutes as explicit override only when > 0 (Prisma @default(0) fix)
+              const bufferMinutes =
+                ps.bufferMinutes > 0
+                  ? ps.bufferMinutes
+                  : service.bufferMinutes > 0
+                    ? service.bufferMinutes
+                    : settings.bufferMinutes;
+              await checkDoubleBooking(
+                tx,
+                dto.practitionerId,
+                bookingDate,
+                dto.startTime,
+                endTime,
+                undefined,
+                bufferMinutes,
+              );
+            } catch (err) {
+              if (err instanceof ConflictException) {
+                if (settings.suggestAlternativesOnConflict) {
+                  const alternatives =
+                    await this.queryService.getNextAvailableSlots(
+                      dto.practitionerId,
+                      bookingDate,
+                      settings.suggestAlternativesCount,
+                      branchId,
+                    );
+                  throw new ConflictException({
+                    statusCode: 409,
+                    message: ERR.booking.conflict,
+                    error: 'BOOKING_CONFLICT',
+                    alternatives,
+                  });
+                }
+              }
+              throw err;
+            }
 
-          return tx.booking.create({
-            data: {
-              patientId: actualPatientId,
-              branchId,
-              practitionerId: dto.practitionerId,
-              serviceId: dto.serviceId,
-              practitionerServiceId: ps.id,
-              type: dto.type,
-              date: bookingDate,
-              startTime: dto.startTime,
-              endTime,
-              status: isWalkIn || isPayAtClinic ? 'confirmed' : 'pending',
-              confirmedAt: isWalkIn || isPayAtClinic ? new Date() : undefined,
-              isWalkIn,
-              notes: dto.notes,
-              bookedPrice: resolved.price,
-              bookedDuration: resolved.duration,
-              durationOptionId: resolved.durationOptionId ?? null,
-              // FK-backed field: only set when option is a ServiceDurationOption (not PractitionerDurationOption)
-              serviceDurationOptionId: (resolved.source === 'service_option' && resolved.durationOptionId)
-                ? resolved.durationOptionId
-                : null,
-              recurringGroupId: dto.recurringGroupId ?? null,
-              ...zoomData,
-            },
-            include: bookingInclude,
-          });
-        }, { isolationLevel: 'Serializable', timeout: 10000 });
+            return tx.booking.create({
+              data: {
+                patientId: actualPatientId,
+                branchId,
+                practitionerId: dto.practitionerId,
+                serviceId: dto.serviceId,
+                practitionerServiceId: ps.id,
+                type: dto.type,
+                date: bookingDate,
+                startTime: dto.startTime,
+                endTime,
+                status: isWalkIn || isPayAtClinic ? 'confirmed' : 'pending',
+                confirmedAt: isWalkIn || isPayAtClinic ? new Date() : undefined,
+                isWalkIn,
+                notes: dto.notes,
+                bookedPrice: resolved.price,
+                bookedDuration: resolved.duration,
+                durationOptionId: resolved.durationOptionId ?? null,
+                // FK-backed field: only set when option is a ServiceDurationOption (not PractitionerDurationOption)
+                serviceDurationOptionId:
+                  resolved.source === 'service_option' &&
+                  resolved.durationOptionId
+                    ? resolved.durationOptionId
+                    : null,
+                recurringGroupId: dto.recurringGroupId ?? null,
+                ...zoomData,
+              },
+              include: bookingInclude,
+            });
+          },
+          { isolationLevel: 'Serializable', timeout: 10000 },
+        );
         break; // success — exit retry loop
       } catch (err) {
         const isSerializationFailure =
@@ -220,16 +325,22 @@ export class BookingCreationService {
           String((err as { message?: string })?.message).includes('40001');
 
         if (isSerializationFailure && attempt < MAX_RETRIES) {
-          this.logger.warn(`Booking creation serialization failure (attempt ${attempt}/${MAX_RETRIES}), retrying...`);
+          this.logger.warn(
+            `Booking creation serialization failure (attempt ${attempt}/${MAX_RETRIES}), retrying...`,
+          );
           await new Promise((resolve) => setTimeout(resolve, 50 * attempt));
           lastErr = err;
           continue;
         }
 
         if (zoomData.zoomMeetingId) {
-          this.zoomService.deleteMeeting(zoomData.zoomMeetingId).catch((e) =>
-            this.logger.warn(`Failed to delete Zoom meeting after booking transaction failure: ${e.message}`),
-          );
+          this.zoomService
+            .deleteMeeting(zoomData.zoomMeetingId)
+            .catch((e) =>
+              this.logger.warn(
+                `Failed to delete Zoom meeting after booking transaction failure: ${e.message}`,
+              ),
+            );
         }
         throw err;
       }
@@ -237,9 +348,13 @@ export class BookingCreationService {
 
     if (!booking) {
       if (zoomData.zoomMeetingId) {
-        this.zoomService.deleteMeeting(zoomData.zoomMeetingId).catch((e) =>
-          this.logger.warn(`Failed to delete Zoom meeting after booking transaction failure: ${e.message}`),
-        );
+        this.zoomService
+          .deleteMeeting(zoomData.zoomMeetingId)
+          .catch((e) =>
+            this.logger.warn(
+              `Failed to delete Zoom meeting after booking transaction failure: ${e.message}`,
+            ),
+          );
       }
       throw lastErr;
     }
@@ -261,7 +376,11 @@ export class BookingCreationService {
       );
       await this.prisma.booking.update({
         where: { id: booking.id },
-        data: { status: 'cancelled', cancelledAt: new Date(), adminNotes: 'Auto-cancelled: payment record creation failed' },
+        data: {
+          status: 'cancelled',
+          cancelledAt: new Date(),
+          adminNotes: 'Auto-cancelled: payment record creation failed',
+        },
       });
       throw paymentErr;
     }
@@ -269,7 +388,8 @@ export class BookingCreationService {
     if (practitioner.userId) {
       const d = bookingDate.toISOString().split('T')[0];
       await this.notificationsService.createNotification({
-        userId: practitioner.userId, type: 'booking_confirmed',
+        userId: practitioner.userId,
+        type: 'booking_confirmed',
         ...NOTIF.BOOKING_NEW_FOR_PRACTITIONER,
         bodyAr: `لديك حجز جديد بتاريخ ${d} الساعة ${dto.startTime}`,
         bodyEn: `You have a new booking on ${d} at ${dto.startTime}`,
@@ -277,12 +397,16 @@ export class BookingCreationService {
       });
     }
 
-    this.activityLogService.log({
-      action: 'booking_created',
-      module: 'bookings',
-      resourceId: booking.id,
-      description: `Booking created for ${dto.date} at ${dto.startTime}`,
-    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
+    this.activityLogService
+      .log({
+        action: 'booking_created',
+        module: 'bookings',
+        resourceId: booking.id,
+        description: `Booking created for ${dto.date} at ${dto.startTime}`,
+      })
+      .catch((err) =>
+        this.logger.warn('Activity log failed', { error: err?.message }),
+      );
 
     // Resolve intake form info for the widget popup
     const intakeForm = await this.prisma.intakeForm.findFirst({
@@ -310,7 +434,12 @@ export class BookingCreationService {
     dto: CreateBookingDto,
     ps: { id: string; customDuration: number | null },
     service: { id: string; price: number; duration: number },
-  ): Promise<{ price: number; duration: number; source: string; durationOptionId?: string }> {
+  ): Promise<{
+    price: number;
+    duration: number;
+    source: string;
+    durationOptionId?: string;
+  }> {
     return await this.priceResolver.resolve({
       serviceId: dto.serviceId,
       practitionerServiceId: ps.id,
@@ -320,12 +449,22 @@ export class BookingCreationService {
   }
 
   private async ensureBookingExists(id: string) {
-    const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null } });
-    if (!booking) throw new NotFoundException({ statusCode: 404, message: ERR.booking.notFound, error: 'NOT_FOUND' });
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!booking)
+      throw new NotFoundException({
+        statusCode: 404,
+        message: ERR.booking.notFound,
+        error: 'NOT_FOUND',
+      });
     return booking;
   }
 
-  private async resolveBranchContext(practitionerId: string, branchId?: string): Promise<string | undefined> {
+  private async resolveBranchContext(
+    practitionerId: string,
+    branchId?: string,
+  ): Promise<string | undefined> {
     if (!branchId) return undefined;
 
     const branch = await this.prisma.branch.findFirst({
@@ -333,7 +472,11 @@ export class BookingCreationService {
       select: { id: true },
     });
     if (!branch) {
-      throw new NotFoundException({ statusCode: 404, message: ERR.branch.notFound, error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: ERR.branch.notFound,
+        error: 'NOT_FOUND',
+      });
     }
 
     const assignment = await this.prisma.practitionerBranch.findUnique({

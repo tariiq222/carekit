@@ -19,7 +19,6 @@ function makeResponse(ok: boolean, status: number, body: unknown) {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockCache: any = {
   get: jest.fn(),
   set: jest.fn(),
@@ -81,7 +80,11 @@ describe('ZoomService', () => {
 
       mockCache.get.mockResolvedValue('cached-token');
       mockResilientFetch.mockResolvedValue(
-        makeResponse(true, 200, { id: 12345, join_url: 'https://zoom.us/j/12345', start_url: 'https://zoom.us/s/12345' }),
+        makeResponse(true, 200, {
+          id: 12345,
+          join_url: 'https://zoom.us/j/12345',
+          start_url: 'https://zoom.us/s/12345',
+        }),
       );
 
       const result = await service.createMeeting('Test Topic');
@@ -103,7 +106,9 @@ describe('ZoomService', () => {
 
       await service.createMeeting('Topic', '2026-04-01T10:00:00Z');
 
-      const body = JSON.parse(mockResilientFetch.mock.calls[0][1].body as string);
+      const body = JSON.parse(
+        mockResilientFetch.mock.calls[0][1].body as string,
+      );
       expect(body.type).toBe(2);
       expect(body.start_time).toBe('2026-04-01T10:00:00Z');
     });
@@ -112,9 +117,13 @@ describe('ZoomService', () => {
       const { service } = await createModule(credentials);
 
       mockCache.get.mockResolvedValue('cached-token');
-      mockResilientFetch.mockResolvedValue(makeResponse(false, 401, 'Unauthorized'));
+      mockResilientFetch.mockResolvedValue(
+        makeResponse(false, 401, 'Unauthorized'),
+      );
 
-      await expect(service.createMeeting()).rejects.toThrow('Zoom API error: 401');
+      await expect(service.createMeeting()).rejects.toThrow(
+        'Zoom API error: 401',
+      );
     });
   });
 
@@ -166,9 +175,13 @@ describe('ZoomService', () => {
       });
 
       mockCache.get.mockResolvedValue('cached-token');
-      mockResilientFetch.mockResolvedValue(makeResponse(false, 404, 'Not Found'));
+      mockResilientFetch.mockResolvedValue(
+        makeResponse(false, 404, 'Not Found'),
+      );
 
-      await expect(service.deleteMeeting('meeting-404')).resolves.toBeUndefined();
+      await expect(
+        service.deleteMeeting('meeting-404'),
+      ).resolves.toBeUndefined();
     });
 
     it('logs warning but does not throw on non-404 failure', async () => {
@@ -179,9 +192,13 @@ describe('ZoomService', () => {
       });
 
       mockCache.get.mockResolvedValue('cached-token');
-      mockResilientFetch.mockResolvedValue(makeResponse(false, 500, 'Server Error'));
+      mockResilientFetch.mockResolvedValue(
+        makeResponse(false, 500, 'Server Error'),
+      );
 
-      await expect(service.deleteMeeting('meeting-500')).resolves.toBeUndefined();
+      await expect(
+        service.deleteMeeting('meeting-500'),
+      ).resolves.toBeUndefined();
     });
   });
 
@@ -204,7 +221,9 @@ describe('ZoomService', () => {
 
       // Only one call — to create meeting, not to OAuth
       expect(mockResilientFetch).toHaveBeenCalledTimes(1);
-      expect(mockResilientFetch.mock.calls[0][0]).toBe('https://api.zoom.us/v2/users/me/meetings');
+      expect(mockResilientFetch.mock.calls[0][0]).toBe(
+        'https://api.zoom.us/v2/users/me/meetings',
+      );
     });
 
     it('fetches OAuth token and caches it when cache is empty', async () => {
@@ -214,7 +233,11 @@ describe('ZoomService', () => {
       // First call: OAuth, Second call: create meeting
       mockResilientFetch
         .mockResolvedValueOnce(
-          makeResponse(true, 200, { access_token: 'fresh-token', token_type: 'Bearer', expires_in: 3600 }),
+          makeResponse(true, 200, {
+            access_token: 'fresh-token',
+            token_type: 'Bearer',
+            expires_in: 3600,
+          }),
         )
         .mockResolvedValueOnce(
           makeResponse(true, 200, { id: 2, join_url: 'j', start_url: 's' }),
@@ -233,9 +256,13 @@ describe('ZoomService', () => {
       const { service } = await createModule(credentials);
 
       mockCache.get.mockResolvedValue(null);
-      mockResilientFetch.mockResolvedValue(makeResponse(false, 400, 'Bad Request'));
+      mockResilientFetch.mockResolvedValue(
+        makeResponse(false, 400, 'Bad Request'),
+      );
 
-      await expect(service.createMeeting()).rejects.toThrow('Zoom OAuth error: 400');
+      await expect(service.createMeeting()).rejects.toThrow(
+        'Zoom OAuth error: 400',
+      );
     });
   });
 });

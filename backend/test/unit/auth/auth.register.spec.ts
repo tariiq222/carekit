@@ -25,7 +25,9 @@ describe('AuthService — register', () => {
       mockCreatedUser(email, registerDto.firstName, registerDto.lastName),
     );
     ctx.mockPrisma.userRole.create.mockResolvedValue({});
-    ctx.mockPrisma.refreshToken.create.mockResolvedValue({ token: 'refresh-token' });
+    ctx.mockPrisma.refreshToken.create.mockResolvedValue({
+      token: 'refresh-token',
+    });
   }
 
   beforeEach(async () => {
@@ -51,10 +53,14 @@ describe('AuthService — register', () => {
     await ctx.service.register(registerDto);
 
     expect(ctx.mockPrisma.role.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ slug: 'patient' }) }),
+      expect.objectContaining({
+        where: expect.objectContaining({ slug: 'patient' }),
+      }),
     );
     expect(ctx.mockPrisma.userRole.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ roleId: 'patient-role-id' }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({ roleId: 'patient-role-id' }),
+      }),
     );
   });
 
@@ -90,7 +96,10 @@ describe('AuthService — register', () => {
   });
 
   it('should throw if email already exists', async () => {
-    ctx.mockPrisma.user.findUnique.mockResolvedValue({ id: 'existing-id', email: registerDto.email });
+    ctx.mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'existing-id',
+      email: registerDto.email,
+    });
 
     await expect(ctx.service.register(registerDto)).rejects.toThrow();
   });
@@ -99,7 +108,9 @@ describe('AuthService — register', () => {
     ctx.mockPrisma.user.findUnique.mockResolvedValue(null);
     ctx.mockPrisma.role.findFirst.mockResolvedValue(null);
 
-    const p2002Error = new Error('Unique constraint failed on the fields: (`email`)') as Error & { code: string };
+    const p2002Error = new Error(
+      'Unique constraint failed on the fields: (`email`)',
+    ) as Error & { code: string };
     p2002Error.code = 'P2002';
     Object.defineProperty(p2002Error, 'constructor', {
       value: { name: 'PrismaClientKnownRequestError' },
@@ -133,7 +144,8 @@ describe('AuthService — validateUser', () => {
     ctx.mockPrisma.user.findUnique.mockResolvedValue({
       id: 'user-id',
       email: 'user@example.com',
-      passwordHash: '$2b$10$9j3H5FgD2RehMd.kiLvD5e9OgKUXdn3Muco883p5BENhEsEDQAl2C',
+      passwordHash:
+        '$2b$10$9j3H5FgD2RehMd.kiLvD5e9OgKUXdn3Muco883p5BENhEsEDQAl2C',
       firstName: 'أحمد',
       lastName: 'الراشد',
       isActive: true,
@@ -141,7 +153,10 @@ describe('AuthService — validateUser', () => {
       userRoles: [{ role: { slug: 'patient' } }],
     });
 
-    const result = await ctx.service.validateUser('user@example.com', 'correctpassword');
+    const result = await ctx.service.validateUser(
+      'user@example.com',
+      'correctpassword',
+    );
 
     expect(result).not.toBeNull();
     expect(result!.email).toBe('user@example.com');
@@ -155,7 +170,10 @@ describe('AuthService — validateUser', () => {
       isActive: true,
     });
 
-    const result = await ctx.service.validateUser('user@example.com', 'wrongpassword');
+    const result = await ctx.service.validateUser(
+      'user@example.com',
+      'wrongpassword',
+    );
 
     expect(result).toBeNull();
   });
@@ -163,7 +181,10 @@ describe('AuthService — validateUser', () => {
   it('should return null for non-existent email', async () => {
     ctx.mockPrisma.user.findUnique.mockResolvedValue(null);
 
-    const result = await ctx.service.validateUser('nobody@example.com', 'anypassword');
+    const result = await ctx.service.validateUser(
+      'nobody@example.com',
+      'anypassword',
+    );
 
     expect(result).toBeNull();
   });

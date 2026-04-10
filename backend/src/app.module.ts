@@ -5,7 +5,11 @@ import { I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ThrottlerRedisStorage } from './common/services/throttler-redis-storage.js';
-import { THROTTLE_TTL, THROTTLE_LIMIT, DEFAULT_JOB_OPTIONS } from './config/constants.js';
+import {
+  THROTTLE_TTL,
+  THROTTLE_LIMIT,
+  DEFAULT_JOB_OPTIONS,
+} from './config/constants.js';
 import { REDIS_CLIENT } from './common/redis/redis.constants.js';
 import Redis from 'ioredis';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';

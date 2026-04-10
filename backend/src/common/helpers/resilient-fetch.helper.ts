@@ -24,7 +24,12 @@ const RESET_TIMEOUT_MS = 30_000; // 30 seconds before trying again
 
 function getCircuit(name: string): CircuitState {
   if (!circuits.has(name)) {
-    circuits.set(name, { failures: 0, lastFailure: 0, state: 'closed', halfOpenProbeActive: false });
+    circuits.set(name, {
+      failures: 0,
+      lastFailure: 0,
+      state: 'closed',
+      halfOpenProbeActive: false,
+    });
   }
   return circuits.get(name)!;
 }
@@ -43,7 +48,9 @@ function recordFailure(name: string): void {
   circuit.halfOpenProbeActive = false;
   if (circuit.failures >= FAILURE_THRESHOLD) {
     circuit.state = 'open';
-    logger.warn(`Circuit breaker OPEN for "${name}" after ${circuit.failures} failures`);
+    logger.warn(
+      `Circuit breaker OPEN for "${name}" after ${circuit.failures} failures`,
+    );
   }
 }
 
@@ -56,7 +63,9 @@ function canAttempt(name: string): boolean {
       if (!circuit.halfOpenProbeActive) {
         circuit.state = 'half-open';
         circuit.halfOpenProbeActive = true;
-        logger.log(`Circuit breaker HALF-OPEN for "${name}" — allowing one probe`);
+        logger.log(
+          `Circuit breaker HALF-OPEN for "${name}" — allowing one probe`,
+        );
         return true;
       }
       // Another probe is already in-flight — block this one
@@ -102,7 +111,9 @@ export async function resilientFetch(
 
   // Circuit breaker check
   if (!canAttempt(circuitName)) {
-    throw new Error(`Circuit breaker is OPEN for "${circuitName}" — request blocked`);
+    throw new Error(
+      `Circuit breaker is OPEN for "${circuitName}" — request blocked`,
+    );
   }
 
   // Timeout via AbortController
@@ -129,7 +140,9 @@ export async function resilientFetch(
     recordFailure(circuitName);
 
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new Error(`Request to "${circuitName}" timed out after ${timeoutMs}ms`);
+      throw new Error(
+        `Request to "${circuitName}" timed out after ${timeoutMs}ms`,
+      );
     }
     throw err;
   }

@@ -62,7 +62,9 @@ describe('OpenRouterService', () => {
         tools: [{ type: 'function', function: { name: 'test' } }],
       });
 
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as Record<string, unknown>;
+      const body = JSON.parse(
+        mockFetch.mock.calls[0][1].body as string,
+      ) as Record<string, unknown>;
       expect(body.tools).toBeDefined();
       expect(body.tool_choice).toBe('auto');
     });
@@ -76,7 +78,9 @@ describe('OpenRouterService', () => {
         stream: true,
       });
 
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as Record<string, unknown>;
+      const body = JSON.parse(
+        mockFetch.mock.calls[0][1].body as string,
+      ) as Record<string, unknown>;
       expect(body.stream).toBe(true);
     });
 
@@ -117,7 +121,10 @@ describe('OpenRouterService', () => {
       } as unknown as Response);
 
       await expect(
-        service.generateEmbedding({ model: 'text-embedding-3-small', input: 'test' }),
+        service.generateEmbedding({
+          model: 'text-embedding-3-small',
+          input: 'test',
+        }),
       ).rejects.toThrow();
     });
 
@@ -125,7 +132,10 @@ describe('OpenRouterService', () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       await expect(
-        service.generateEmbedding({ model: 'text-embedding-3-small', input: 'test' }),
+        service.generateEmbedding({
+          model: 'text-embedding-3-small',
+          input: 'test',
+        }),
       ).rejects.toThrow('Network error');
     });
   });

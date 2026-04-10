@@ -12,9 +12,16 @@ import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { PractitionersService } from '../practitioners/practitioners.service.js';
 import { AuthCacheService } from '../auth/auth-cache.service.js';
-import { sanitizeUser, SanitizableUser, userRolesInclude } from './users.helpers.js';
+import {
+  sanitizeUser,
+  SanitizableUser,
+  userRolesInclude,
+} from './users.helpers.js';
 import { SALT_ROUNDS, ROLE_PRACTITIONER } from '../../config/constants.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 
 @Injectable()
 export class UsersService {
@@ -36,9 +43,22 @@ export class UsersService {
     role?: string;
     isActive?: boolean;
   }) {
-    const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage, 100);
-    const allowedSortFields = ['createdAt', 'updatedAt', 'firstName', 'lastName', 'email', 'isActive'];
-    const sortBy = allowedSortFields.includes(params?.sortBy ?? '') ? params!.sortBy! : 'createdAt';
+    const { page, perPage, skip } = parsePaginationParams(
+      params?.page,
+      params?.perPage,
+      100,
+    );
+    const allowedSortFields = [
+      'createdAt',
+      'updatedAt',
+      'firstName',
+      'lastName',
+      'email',
+      'isActive',
+    ];
+    const sortBy = allowedSortFields.includes(params?.sortBy ?? '')
+      ? params!.sortBy!
+      : 'createdAt';
     const sortOrder = params?.sortOrder ?? 'desc';
 
     const where: Record<string, unknown> = { deletedAt: null };
@@ -126,7 +146,9 @@ export class UsersService {
         where: { userId: requesterId },
         include: { role: true },
       });
-      const isSuperAdmin = requesterRoles.some((ur) => ur.role.slug === 'super_admin');
+      const isSuperAdmin = requesterRoles.some(
+        (ur) => ur.role.slug === 'super_admin',
+      );
       if (!isSuperAdmin) {
         throw new ForbiddenException({
           statusCode: 403,
@@ -162,13 +184,17 @@ export class UsersService {
       await this.practitionersService.createForUser(user.id);
     }
 
-    this.activityLogService.log({
-      userId: requesterId,
-      action: 'user_created',
-      module: 'users',
-      resourceId: user.id,
-      description: `User created with role ${dto.roleSlug}`,
-    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
+    this.activityLogService
+      .log({
+        userId: requesterId,
+        action: 'user_created',
+        module: 'users',
+        resourceId: user.id,
+        description: `User created with role ${dto.roleSlug}`,
+      })
+      .catch((err) =>
+        this.logger.warn('Activity log failed', { error: err?.message }),
+      );
 
     return {
       ...sanitizeUser({
@@ -243,13 +269,17 @@ export class UsersService {
     // Invalidate cache so deleted user cannot use existing access tokens
     await this.authCache.invalidate(id);
 
-    this.activityLogService.log({
-      userId: requesterId,
-      action: 'user_deleted',
-      module: 'users',
-      resourceId: id,
-      description: 'User soft-deleted',
-    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
+    this.activityLogService
+      .log({
+        userId: requesterId,
+        action: 'user_deleted',
+        module: 'users',
+        resourceId: id,
+        description: 'User soft-deleted',
+      })
+      .catch((err) =>
+        this.logger.warn('Activity log failed', { error: err?.message }),
+      );
   }
 
   async activate(id: string) {
@@ -303,5 +333,4 @@ export class UsersService {
 
     return sanitizeUser(updated);
   }
-
 }

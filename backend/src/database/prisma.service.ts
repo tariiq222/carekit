@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -23,19 +28,27 @@ export class PrismaService
       adapter,
       log: [
         { level: 'error', emit: 'event' },
-        { level: 'warn',  emit: 'event' },
+        { level: 'warn', emit: 'event' },
         { level: 'query', emit: 'event' },
       ],
     });
 
     // Log Prisma errors and warnings
-    (this.$on as (event: Prisma.LogLevel, cb: (e: Prisma.QueryEvent | Prisma.LogEvent) => void) => void)(
-      'error',
-      (e) => this.logger.error(`Prisma error: ${(e as Prisma.LogEvent).message}`),
+    (
+      this.$on as (
+        event: Prisma.LogLevel,
+        cb: (e: Prisma.QueryEvent | Prisma.LogEvent) => void,
+      ) => void
+    )('error', (e) =>
+      this.logger.error(`Prisma error: ${(e as Prisma.LogEvent).message}`),
     );
-    (this.$on as (event: Prisma.LogLevel, cb: (e: Prisma.QueryEvent | Prisma.LogEvent) => void) => void)(
-      'warn',
-      (e) => this.logger.warn(`Prisma warning: ${(e as Prisma.LogEvent).message}`),
+    (
+      this.$on as (
+        event: Prisma.LogLevel,
+        cb: (e: Prisma.QueryEvent | Prisma.LogEvent) => void,
+      ) => void
+    )('warn', (e) =>
+      this.logger.warn(`Prisma warning: ${(e as Prisma.LogEvent).message}`),
     );
 
     // Slow query detection

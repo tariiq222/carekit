@@ -27,9 +27,12 @@ describe('ProblemReportsController', () => {
       controllers: [ProblemReportsController],
       providers: [{ provide: ProblemReportsService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
-      .overridePipe(uuidPipe).useValue({ transform: (v: string) => v })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .overridePipe(uuidPipe)
+      .useValue({ transform: (v: string) => v })
       .compile();
 
     controller = module.get<ProblemReportsController>(ProblemReportsController);
@@ -37,7 +40,11 @@ describe('ProblemReportsController', () => {
 
   describe('create', () => {
     it('delegates to service.create with patientId from user', async () => {
-      const dto = { bookingId: 'b-1', type: 'service_quality', description: 'Poor service' };
+      const dto = {
+        bookingId: 'b-1',
+        type: 'service_quality',
+        description: 'Poor service',
+      };
       const report = { id: 'r-1', status: 'open' };
       mockService.create.mockResolvedValue(report);
 
@@ -55,7 +62,10 @@ describe('ProblemReportsController', () => {
 
   describe('findAll', () => {
     it('delegates with parsed page and perPage to integers', async () => {
-      const paginated = { items: [], meta: { total: 0, page: 2, perPage: 10, totalPages: 0 } };
+      const paginated = {
+        items: [],
+        meta: { total: 0, page: 2, perPage: 10, totalPages: 0 },
+      };
       mockService.findAll.mockResolvedValue(paginated);
 
       const result = await controller.findAll('2', '10', undefined, undefined);

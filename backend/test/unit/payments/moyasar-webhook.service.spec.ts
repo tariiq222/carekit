@@ -8,7 +8,6 @@ import { InvoiceCreatorService } from '../../../src/modules/invoices/invoice-cre
 import { BookingStatusService } from '../../../src/modules/bookings/booking-status.service.js';
 import { GroupsPaymentService } from '../../../src/modules/groups/groups-payment.service.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const prismaServiceMock: any = {
   payment: {
     findFirst: jest.fn(),
@@ -28,22 +27,30 @@ const prismaServiceMock: any = {
     create: jest.fn(),
   },
   booking: { update: jest.fn() },
-  groupEnrollment: { update: jest.fn().mockResolvedValue({}), findUnique: jest.fn() },
+  groupEnrollment: {
+    update: jest.fn().mockResolvedValue({}),
+    findUnique: jest.fn(),
+  },
   invoice: { findUnique: jest.fn(), create: jest.fn() },
-  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(prismaServiceMock)),
+  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) =>
+    cb(prismaServiceMock),
+  ),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const configServiceMock: any = {
   get: jest.fn().mockReturnValue('test-secret'),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const invoicesServiceMock: any = { createInvoice: jest.fn(), createGroupInvoice: jest.fn() };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const invoicesServiceMock: any = {
+  createInvoice: jest.fn(),
+  createGroupInvoice: jest.fn(),
+};
+
 const bookingStatusServiceMock: any = { confirm: jest.fn(), cancel: jest.fn() };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const groupsPaymentServiceMock: any = { confirmEnrollmentAfterPayment: jest.fn() };
+
+const groupsPaymentServiceMock: any = {
+  confirmEnrollmentAfterPayment: jest.fn(),
+};
 
 describe('MoyasarWebhookService', () => {
   let service: MoyasarWebhookService;
@@ -67,51 +74,83 @@ describe('MoyasarWebhookService', () => {
   describe('verifySignature', () => {
     it('should reject a non-hex signature without throwing a Buffer error', () => {
       jest.spyOn(configServiceMock, 'get').mockReturnValue('test-secret');
-      expect(() => (service as any).verifySignature('not-hex-$$$$', Buffer.from('body'))).toThrow(UnauthorizedException);
+      expect(() =>
+        (service as any).verifySignature('not-hex-$$$$', Buffer.from('body')),
+      ).toThrow(UnauthorizedException);
     });
 
     it('should reject a valid-format signature with wrong value', () => {
       const secret = 'test-secret';
       const body = Buffer.from('{"id":"evt_1","status":"paid","amount":1000}');
-      const correctSig = crypto.createHmac('sha256', secret).update(body).digest('hex');
-      const tamperedSig = correctSig.slice(0, -1) + (correctSig.endsWith('a') ? 'b' : 'a');
+      const correctSig = crypto
+        .createHmac('sha256', secret)
+        .update(body)
+        .digest('hex');
+      const tamperedSig =
+        correctSig.slice(0, -1) + (correctSig.endsWith('a') ? 'b' : 'a');
       jest.spyOn(configServiceMock, 'get').mockReturnValue(secret);
-      expect(() => (service as any).verifySignature(tamperedSig, body)).toThrow(UnauthorizedException);
+      expect(() => (service as any).verifySignature(tamperedSig, body)).toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should accept a valid signature', () => {
       const secret = 'test-secret';
       const body = Buffer.from('{"id":"evt_1","status":"paid","amount":1000}');
-      const validSig = crypto.createHmac('sha256', secret).update(body).digest('hex');
+      const validSig = crypto
+        .createHmac('sha256', secret)
+        .update(body)
+        .digest('hex');
       jest.spyOn(configServiceMock, 'get').mockReturnValue(secret);
-      expect(() => (service as any).verifySignature(validSig, body)).not.toThrow();
+      expect(() =>
+        (service as any).verifySignature(validSig, body),
+      ).not.toThrow();
     });
 
     it('should throw WEBHOOK_CONFIG_ERROR when secret is not configured', () => {
       jest.spyOn(configServiceMock, 'get').mockReturnValue('');
-      expect(() => (service as any).verifySignature('abc123', Buffer.from('body'))).toThrow(UnauthorizedException);
+      expect(() =>
+        (service as any).verifySignature('abc123', Buffer.from('body')),
+      ).toThrow(UnauthorizedException);
     });
   });
 
   describe('processGroupPaymentSuccess', () => {
     it('marks groupPayment failed and does NOT confirm enrollment when amount mismatch', async () => {
-      const groupPayment = { id: 'gp1', enrollmentId: 'e1', totalAmount: 1000, status: 'pending' };
+      const groupPayment = {
+        id: 'gp1',
+        enrollmentId: 'e1',
+        totalAmount: 1000,
+        status: 'pending',
+      };
       prismaServiceMock.groupPayment.findUnique.mockResolvedValue(groupPayment);
       prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 1 });
       prismaServiceMock.processedWebhook.findUnique.mockResolvedValue(null);
       prismaServiceMock.processedWebhook.create.mockResolvedValue({});
 
-      await (service as any).processGroupPaymentSuccess('gp1', 'e1', 'evt_1', 500);
+      await (service as any).processGroupPaymentSuccess(
+        'gp1',
+        'e1',
+        'evt_1',
+        500,
+      );
 
       expect(prismaServiceMock.groupPayment.updateMany).toHaveBeenCalledWith({
         where: { id: 'gp1', status: 'pending' },
         data: { status: 'failed' },
       });
-      expect(groupsPaymentServiceMock.confirmEnrollmentAfterPayment).not.toHaveBeenCalled();
+      expect(
+        groupsPaymentServiceMock.confirmEnrollmentAfterPayment,
+      ).not.toHaveBeenCalled();
     });
 
     it('confirms enrollment AFTER transaction when amount matches', async () => {
-      const groupPayment = { id: 'gp1', enrollmentId: 'e1', totalAmount: 1000, status: 'pending' };
+      const groupPayment = {
+        id: 'gp1',
+        enrollmentId: 'e1',
+        totalAmount: 1000,
+        status: 'pending',
+      };
       prismaServiceMock.groupPayment.findUnique.mockResolvedValue(groupPayment);
       prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 1 });
       prismaServiceMock.processedWebhook.findUnique.mockResolvedValue(null);
@@ -125,27 +164,49 @@ describe('MoyasarWebhookService', () => {
       prismaServiceMock.invoice.findUnique.mockResolvedValue(null);
       invoicesServiceMock.createGroupInvoice.mockResolvedValue({ id: 'inv-1' });
 
-      await (service as any).processGroupPaymentSuccess('gp1', 'e1', 'evt_1', 1000);
+      await (service as any).processGroupPaymentSuccess(
+        'gp1',
+        'e1',
+        'evt_1',
+        1000,
+      );
 
-      expect(groupsPaymentServiceMock.confirmEnrollmentAfterPayment).toHaveBeenCalledWith('e1');
+      expect(
+        groupsPaymentServiceMock.confirmEnrollmentAfterPayment,
+      ).toHaveBeenCalledWith('e1');
       expect(invoicesServiceMock.createGroupInvoice).toHaveBeenCalledWith('e1');
     });
 
     it('is idempotent — duplicate webhook does not double-confirm', async () => {
-      prismaServiceMock.processedWebhook.findUnique.mockResolvedValue({ eventId: 'evt_1', processedAt: new Date() });
+      prismaServiceMock.processedWebhook.findUnique.mockResolvedValue({
+        eventId: 'evt_1',
+        processedAt: new Date(),
+      });
 
-      await (service as any).processGroupPaymentSuccess('gp1', 'e1', 'evt_1', 1000);
+      await (service as any).processGroupPaymentSuccess(
+        'gp1',
+        'e1',
+        'evt_1',
+        1000,
+      );
 
       expect(prismaServiceMock.groupPayment.updateMany).not.toHaveBeenCalled();
-      expect(groupsPaymentServiceMock.confirmEnrollmentAfterPayment).not.toHaveBeenCalled();
+      expect(
+        groupsPaymentServiceMock.confirmEnrollmentAfterPayment,
+      ).not.toHaveBeenCalled();
     });
 
     it('should store amount (base), vatAmount, and totalAmount (base+vat) correctly', async () => {
       const baseAmount = 10000; // 100 SAR
-      const expectedVat = Math.round(baseAmount * 15 / 100); // 1500 halalat
+      const expectedVat = Math.round((baseAmount * 15) / 100); // 1500 halalat
       const expectedTotal = baseAmount + expectedVat; // 11500
 
-      const groupPayment = { id: 'gp1', enrollmentId: 'e1', totalAmount: baseAmount, status: 'pending' };
+      const groupPayment = {
+        id: 'gp1',
+        enrollmentId: 'e1',
+        totalAmount: baseAmount,
+        status: 'pending',
+      };
       prismaServiceMock.groupPayment.findUnique.mockResolvedValue(groupPayment);
       prismaServiceMock.groupPayment.update.mockResolvedValue({});
       prismaServiceMock.groupEnrollment.update.mockResolvedValue({});
@@ -153,7 +214,12 @@ describe('MoyasarWebhookService', () => {
       prismaServiceMock.processedWebhook.create.mockResolvedValue({});
       prismaServiceMock.payment.create.mockResolvedValue({ id: 'pmt-1' });
 
-      await (service as any).processGroupPaymentSuccess('gp1', 'e1', 'evt_vat', baseAmount);
+      await (service as any).processGroupPaymentSuccess(
+        'gp1',
+        'e1',
+        'evt_vat',
+        baseAmount,
+      );
 
       expect(prismaServiceMock.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -169,7 +235,9 @@ describe('MoyasarWebhookService', () => {
 
   describe('createGroupInvoiceAfterPayment', () => {
     it('should swallow P2002 error from createGroupInvoice (race condition)', async () => {
-      const p2002 = Object.assign(new Error('Unique constraint'), { code: 'P2002' });
+      const p2002 = Object.assign(new Error('Unique constraint'), {
+        code: 'P2002',
+      });
       invoicesServiceMock.createGroupInvoice.mockRejectedValue(p2002);
 
       await expect(
@@ -192,7 +260,8 @@ describe('MoyasarWebhookService', () => {
   describe('processGroupPaymentFailed', () => {
     it('should wrap groupPayment update and processedWebhook create in a single $transaction', async () => {
       prismaServiceMock.$transaction.mockImplementationOnce(
-        async (fn: (tx: typeof prismaServiceMock) => Promise<unknown>) => fn(prismaServiceMock),
+        async (fn: (tx: typeof prismaServiceMock) => Promise<unknown>) =>
+          fn(prismaServiceMock),
       );
       prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 1 });
       prismaServiceMock.processedWebhook.create.mockResolvedValue({});
@@ -205,16 +274,21 @@ describe('MoyasarWebhookService', () => {
         data: { status: 'failed' },
       });
       expect(prismaServiceMock.processedWebhook.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ eventId: 'evt-failed-1' }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ eventId: 'evt-failed-1' }),
+        }),
       );
     });
 
     it('should swallow P2002 on processedWebhook create (idempotency)', async () => {
       prismaServiceMock.$transaction.mockImplementationOnce(
-        async (fn: (tx: typeof prismaServiceMock) => Promise<unknown>) => fn(prismaServiceMock),
+        async (fn: (tx: typeof prismaServiceMock) => Promise<unknown>) =>
+          fn(prismaServiceMock),
       );
       prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 0 });
-      const p2002 = Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+      const p2002 = Object.assign(new Error('Unique constraint failed'), {
+        code: 'P2002',
+      });
       prismaServiceMock.processedWebhook.create.mockRejectedValue(p2002);
 
       await expect(
@@ -224,7 +298,8 @@ describe('MoyasarWebhookService', () => {
 
     it('should propagate non-P2002 errors from processedWebhook create', async () => {
       prismaServiceMock.$transaction.mockImplementationOnce(
-        async (fn: (tx: typeof prismaServiceMock) => Promise<unknown>) => fn(prismaServiceMock),
+        async (fn: (tx: typeof prismaServiceMock) => Promise<unknown>) =>
+          fn(prismaServiceMock),
       );
       prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 1 });
       const dbError = new Error('DB connection lost');

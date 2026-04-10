@@ -25,10 +25,7 @@
 
 import request from 'supertest';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import {
-  createTestApp,
-  closeTestApp,
-} from '../setup/setup.js';
+import { createTestApp, closeTestApp } from '../setup/setup.js';
 
 describe('HTTP Security Headers', () => {
   let app: INestApplication;

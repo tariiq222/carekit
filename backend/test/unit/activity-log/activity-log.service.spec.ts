@@ -36,10 +36,18 @@ describe('ActivityLogService', () => {
     it('should create activity log record', async () => {
       mockPrisma.activityLog.create.mockResolvedValue({ id: 'log-1' });
 
-      await service.log({ action: 'CREATE', module: 'patients', userId: 'u-1' });
+      await service.log({
+        action: 'CREATE',
+        module: 'patients',
+        userId: 'u-1',
+      });
 
       expect(mockPrisma.activityLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({ action: 'CREATE', module: 'patients', userId: 'u-1' }),
+        data: expect.objectContaining({
+          action: 'CREATE',
+          module: 'patients',
+          userId: 'u-1',
+        }),
       });
     });
 
@@ -126,7 +134,9 @@ describe('ActivityLogService', () => {
     it('should throw NotFoundException when log not found', async () => {
       mockPrisma.activityLog.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('missing-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('missing-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

@@ -5,7 +5,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ChatbotAnalyticsService } from '../../../src/modules/chatbot/chatbot-analytics.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   chatSession: {
     count: jest.fn(),
@@ -35,7 +34,9 @@ describe('ChatbotAnalyticsService', () => {
     // Default mocks for all stats calls
     mockPrisma.chatSession.count.mockResolvedValue(0);
     mockPrisma.chatMessage.count.mockResolvedValue(0);
-    mockPrisma.chatMessage.aggregate.mockResolvedValue({ _sum: { tokenCount: null } });
+    mockPrisma.chatMessage.aggregate.mockResolvedValue({
+      _sum: { tokenCount: null },
+    });
     mockPrisma.chatSession.groupBy.mockResolvedValue([]);
     mockPrisma.chatMessage.groupBy.mockResolvedValue([]);
   });
@@ -52,10 +53,12 @@ describe('ChatbotAnalyticsService', () => {
 
     it('should calculate handoff rate correctly', async () => {
       mockPrisma.chatSession.count
-        .mockResolvedValueOnce(10)  // totalSessions
-        .mockResolvedValueOnce(4);  // handedOffCount
+        .mockResolvedValueOnce(10) // totalSessions
+        .mockResolvedValueOnce(4); // handedOffCount
       mockPrisma.chatMessage.count.mockResolvedValue(50);
-      mockPrisma.chatMessage.aggregate.mockResolvedValue({ _sum: { tokenCount: 1000 } });
+      mockPrisma.chatMessage.aggregate.mockResolvedValue({
+        _sum: { tokenCount: 1000 },
+      });
 
       const result = await service.getSessionStats();
 
@@ -94,7 +97,9 @@ describe('ChatbotAnalyticsService', () => {
     it('should include language distribution in result', async () => {
       mockPrisma.chatSession.count.mockResolvedValue(5);
       mockPrisma.chatMessage.count.mockResolvedValue(20);
-      mockPrisma.chatMessage.aggregate.mockResolvedValue({ _sum: { tokenCount: 500 } });
+      mockPrisma.chatMessage.aggregate.mockResolvedValue({
+        _sum: { tokenCount: 500 },
+      });
       mockPrisma.chatSession.groupBy.mockResolvedValue([
         { language: 'ar', _count: { language: 3 } },
         { language: 'en', _count: { language: 2 } },
@@ -108,7 +113,9 @@ describe('ChatbotAnalyticsService', () => {
     it('should include top intents and tools in result', async () => {
       mockPrisma.chatSession.count.mockResolvedValue(2);
       mockPrisma.chatMessage.count.mockResolvedValue(10);
-      mockPrisma.chatMessage.aggregate.mockResolvedValue({ _sum: { tokenCount: 200 } });
+      mockPrisma.chatMessage.aggregate.mockResolvedValue({
+        _sum: { tokenCount: 200 },
+      });
       mockPrisma.chatSession.groupBy.mockResolvedValue([]);
       mockPrisma.chatMessage.groupBy
         .mockResolvedValueOnce([
@@ -120,8 +127,14 @@ describe('ChatbotAnalyticsService', () => {
 
       const result = await service.getSessionStats();
 
-      expect(result.topIntents[0]).toEqual({ intent: 'book_appointment', count: 5 });
-      expect(result.topTools[0]).toEqual({ tool: 'getAvailableSlots', count: 3 });
+      expect(result.topIntents[0]).toEqual({
+        intent: 'book_appointment',
+        count: 5,
+      });
+      expect(result.topTools[0]).toEqual({
+        tool: 'getAvailableSlots',
+        count: 3,
+      });
     });
   });
 

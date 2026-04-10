@@ -52,7 +52,10 @@ describe('ChatbotController', () => {
       mockChatbotService.createSession.mockResolvedValue(session);
 
       expect(await controller.createSession(dto, patientUser)).toEqual(session);
-      expect(mockChatbotService.createSession).toHaveBeenCalledWith('patient-1', 'ar');
+      expect(mockChatbotService.createSession).toHaveBeenCalledWith(
+        'patient-1',
+        'ar',
+      );
     });
   });
 
@@ -91,8 +94,13 @@ describe('ChatbotController', () => {
       const session = { id: 'sess-1', messages: [] };
       mockChatbotService.getSession.mockResolvedValue(session);
 
-      expect(await controller.getSession('sess-1', patientUser)).toEqual(session);
-      expect(mockChatbotService.getSession).toHaveBeenCalledWith('sess-1', 'patient-1');
+      expect(await controller.getSession('sess-1', patientUser)).toEqual(
+        session,
+      );
+      expect(mockChatbotService.getSession).toHaveBeenCalledWith(
+        'sess-1',
+        'patient-1',
+      );
     });
   });
 
@@ -102,9 +110,13 @@ describe('ChatbotController', () => {
       const result = { reply: 'من 8 صباحا...' };
       mockChatbotService.handleMessage.mockResolvedValue(result);
 
-      expect(await controller.sendMessage('sess-1', dto, patientUser)).toEqual(result);
+      expect(await controller.sendMessage('sess-1', dto, patientUser)).toEqual(
+        result,
+      );
       expect(mockChatbotService.handleMessage).toHaveBeenCalledWith(
-        'sess-1', 'patient-1', 'ما هي مواعيد العمل؟',
+        'sess-1',
+        'patient-1',
+        'ما هي مواعيد العمل؟',
       );
     });
   });
@@ -113,7 +125,9 @@ describe('ChatbotController', () => {
     it('should set SSE headers and pipe observable to response', async () => {
       const dto = { content: 'مرحبا' } as any;
       const subject = new Subject();
-      mockStreamService.handleMessageStream.mockReturnValue(subject.asObservable());
+      mockStreamService.handleMessageStream.mockReturnValue(
+        subject.asObservable(),
+      );
 
       const mockRes = {
         setHeader: jest.fn(),
@@ -122,11 +136,25 @@ describe('ChatbotController', () => {
         end: jest.fn(),
       };
 
-      await controller.streamMessage('sess-1', dto, patientUser, mockRes as any);
+      await controller.streamMessage(
+        'sess-1',
+        dto,
+        patientUser,
+        mockRes as any,
+      );
 
-      expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'text/event-stream');
-      expect(mockRes.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
-      expect(mockRes.setHeader).toHaveBeenCalledWith('Connection', 'keep-alive');
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'text/event-stream',
+      );
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Cache-Control',
+        'no-cache',
+      );
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Connection',
+        'keep-alive',
+      );
       expect(mockRes.flushHeaders).toHaveBeenCalled();
 
       subject.next({ data: 'Hello' });
@@ -145,7 +173,9 @@ describe('ChatbotController', () => {
     it('should handle stream errors', async () => {
       const dto = { content: 'test' } as any;
       const subject = new Subject();
-      mockStreamService.handleMessageStream.mockReturnValue(subject.asObservable());
+      mockStreamService.handleMessageStream.mockReturnValue(
+        subject.asObservable(),
+      );
 
       const mockRes = {
         setHeader: jest.fn(),
@@ -154,7 +184,12 @@ describe('ChatbotController', () => {
         end: jest.fn(),
       };
 
-      await controller.streamMessage('sess-1', dto, patientUser, mockRes as any);
+      await controller.streamMessage(
+        'sess-1',
+        dto,
+        patientUser,
+        mockRes as any,
+      );
 
       subject.error(new Error('LLM timeout'));
 
@@ -170,8 +205,13 @@ describe('ChatbotController', () => {
       const result = { ended: true };
       mockChatbotService.endSession.mockResolvedValue(result);
 
-      expect(await controller.endSession('sess-1', patientUser)).toEqual(result);
-      expect(mockChatbotService.endSession).toHaveBeenCalledWith('sess-1', 'patient-1');
+      expect(await controller.endSession('sess-1', patientUser)).toEqual(
+        result,
+      );
+      expect(mockChatbotService.endSession).toHaveBeenCalledWith(
+        'sess-1',
+        'patient-1',
+      );
     });
   });
 });

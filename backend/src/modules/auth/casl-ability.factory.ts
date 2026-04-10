@@ -30,7 +30,7 @@ export class CaslAbilityFactory {
     // Collect all permissions from all roles (union)
     for (const role of user.roles) {
       for (const perm of role.permissions) {
-        can(perm.action as Action, perm.module);
+        can(perm.action, perm.module);
       }
     }
 

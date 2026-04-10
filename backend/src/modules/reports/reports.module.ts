@@ -9,7 +9,12 @@ import { DashboardStatsService } from './dashboard-stats.service.js';
 @Module({
   imports: [FeatureFlagsModule],
   controllers: [ReportsController],
-  providers: [ReportsService, RevenueQueriesService, ExportService, DashboardStatsService],
+  providers: [
+    ReportsService,
+    RevenueQueriesService,
+    ExportService,
+    DashboardStatsService,
+  ],
   exports: [DashboardStatsService],
 })
 export class ReportsModule {}

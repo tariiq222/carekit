@@ -3,11 +3,24 @@
  * Covers: findAll (pagination + filters), findOne, findMyBookings, findTodayBookings
  */
 import { NotFoundException } from '@nestjs/common';
-import { createBookingsTestModule, BookingsTestContext } from './bookings.test-module.js';
-import { mockBooking, mockPractitioner, mockPatientId } from './bookings.fixtures.js';
+import {
+  createBookingsTestModule,
+  BookingsTestContext,
+} from './bookings.test-module.js';
+import {
+  mockBooking,
+  mockPractitioner,
+  mockPatientId,
+} from './bookings.fixtures.js';
 
-const emptyPage = { items: [], meta: { page: 1, perPage: 20, total: 0, totalPages: 0 } };
-const singlePage = { items: [mockBooking], meta: { page: 1, perPage: 20, total: 1, totalPages: 1 } };
+const emptyPage = {
+  items: [],
+  meta: { page: 1, perPage: 20, total: 0, totalPages: 0 },
+};
+const singlePage = {
+  items: [mockBooking],
+  meta: { page: 1, perPage: 20, total: 1, totalPages: 1 },
+};
 
 describe('BookingsService — findAll', () => {
   let ctx: BookingsTestContext;
@@ -38,7 +51,10 @@ describe('BookingsService — findAll', () => {
 
     expect(result.meta.page).toBe(3);
     expect(result.meta.totalPages).toBe(5);
-    expect(ctx.mockQueryService.findAll).toHaveBeenCalledWith({ page: 3, perPage: 10 });
+    expect(ctx.mockQueryService.findAll).toHaveBeenCalledWith({
+      page: 3,
+      perPage: 10,
+    });
   });
 
   it.each([
@@ -78,10 +94,16 @@ describe('BookingsService — findOne', () => {
 
   it('should throw NotFoundException for non-existent booking', async () => {
     ctx.mockQueryService.findOne.mockRejectedValue(
-      new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' }),
+      new NotFoundException({
+        statusCode: 404,
+        message: 'Booking not found',
+        error: 'NOT_FOUND',
+      }),
     );
 
-    await expect(ctx.service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(ctx.service.findOne('non-existent-id')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });
 
@@ -98,7 +120,11 @@ describe('BookingsService — findMyBookings', () => {
 
     const result = await ctx.service.findMyBookings(mockPatientId);
 
-    expect(ctx.mockQueryService.findMyBookings).toHaveBeenCalledWith(mockPatientId, undefined, undefined);
+    expect(ctx.mockQueryService.findMyBookings).toHaveBeenCalledWith(
+      mockPatientId,
+      undefined,
+      undefined,
+    );
     expect(result.items).toHaveLength(1);
   });
 
@@ -126,12 +152,18 @@ describe('BookingsService — findTodayBookings', () => {
     const result = await ctx.service.findTodayBookings(mockPractitioner.userId);
 
     expect(result).toEqual([mockBooking]);
-    expect(ctx.mockQueryService.findTodayBookings).toHaveBeenCalledWith(mockPractitioner.userId);
+    expect(ctx.mockQueryService.findTodayBookings).toHaveBeenCalledWith(
+      mockPractitioner.userId,
+    );
   });
 
   it('should throw NotFoundException if user is not a practitioner', async () => {
     ctx.mockQueryService.findTodayBookings.mockRejectedValue(
-      new NotFoundException({ statusCode: 404, message: 'Practitioner not found', error: 'NOT_FOUND' }),
+      new NotFoundException({
+        statusCode: 404,
+        message: 'Practitioner not found',
+        error: 'NOT_FOUND',
+      }),
     );
 
     await expect(

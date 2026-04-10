@@ -14,11 +14,17 @@ export class ClinicSettingsService {
   ) {}
 
   async get(): Promise<ClinicSettings> {
-    const cached = await this.cache.get<ClinicSettings>(CACHE_KEYS.CLINIC_SETTINGS);
+    const cached = await this.cache.get<ClinicSettings>(
+      CACHE_KEYS.CLINIC_SETTINGS,
+    );
     if (cached) return cached;
 
     const settings = await this.prisma.clinicSettings.findFirstOrThrow();
-    await this.cache.set(CACHE_KEYS.CLINIC_SETTINGS, settings, CACHE_TTL.CLINIC_SETTINGS);
+    await this.cache.set(
+      CACHE_KEYS.CLINIC_SETTINGS,
+      settings,
+      CACHE_TTL.CLINIC_SETTINGS,
+    );
     return settings;
   }
 
@@ -40,7 +46,9 @@ export class ClinicSettingsService {
     cancellationPolicyAr: string | null;
     cancellationPolicyEn: string | null;
   }> {
-    const cached = await this.cache.get<ReturnType<ClinicSettingsService['getPublic']>>(CACHE_KEYS.CLINIC_SETTINGS_PUBLIC);
+    const cached = await this.cache.get<
+      ReturnType<ClinicSettingsService['getPublic']>
+    >(CACHE_KEYS.CLINIC_SETTINGS_PUBLIC);
     if (cached) return cached;
 
     const s = await this.get();
@@ -52,17 +60,27 @@ export class ClinicSettingsService {
       cancellationPolicyAr: s.cancellationPolicyAr,
       cancellationPolicyEn: s.cancellationPolicyEn,
     };
-    await this.cache.set(CACHE_KEYS.CLINIC_SETTINGS_PUBLIC, result, CACHE_TTL.CLINIC_SETTINGS);
+    await this.cache.set(
+      CACHE_KEYS.CLINIC_SETTINGS_PUBLIC,
+      result,
+      CACHE_TTL.CLINIC_SETTINGS,
+    );
     return result;
   }
 
   async getTimezone(): Promise<string> {
-    const cached = await this.cache.get<string>(CACHE_KEYS.CLINIC_SETTINGS_TIMEZONE);
+    const cached = await this.cache.get<string>(
+      CACHE_KEYS.CLINIC_SETTINGS_TIMEZONE,
+    );
     if (cached) return cached;
 
     const settings = await this.get();
     const tz = settings.timezone || CLINIC_TIMEZONE_DEFAULT;
-    await this.cache.set(CACHE_KEYS.CLINIC_SETTINGS_TIMEZONE, tz, CACHE_TTL.CLINIC_SETTINGS);
+    await this.cache.set(
+      CACHE_KEYS.CLINIC_SETTINGS_TIMEZONE,
+      tz,
+      CACHE_TTL.CLINIC_SETTINGS,
+    );
     return tz;
   }
 

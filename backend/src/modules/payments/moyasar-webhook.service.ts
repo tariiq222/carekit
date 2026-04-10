@@ -44,7 +44,12 @@ export class MoyasarWebhookService {
 
       if (groupPayment) {
         if (dto.status === 'paid') {
-          await this.processGroupPaymentSuccess(groupPayment.id, groupPayment.enrollmentId, dto.id, dto.amount);
+          await this.processGroupPaymentSuccess(
+            groupPayment.id,
+            groupPayment.enrollmentId,
+            dto.id,
+            dto.amount,
+          );
         } else if (dto.status === 'failed') {
           await this.processGroupPaymentFailed(groupPayment.id, dto.id);
         }
@@ -57,7 +62,9 @@ export class MoyasarWebhookService {
 
     if (dto.status === 'paid') {
       if (!payment.bookingId) {
-        this.logger.error(`Received paid webhook for payment ${payment.id} with no bookingId — unexpected for non-group payment`);
+        this.logger.error(
+          `Received paid webhook for payment ${payment.id} with no bookingId — unexpected for non-group payment`,
+        );
         return { success: true };
       }
       await this.processPaidWebhook(
@@ -100,7 +107,12 @@ export class MoyasarWebhookService {
       .digest('hex');
 
     // timingSafeEqual prevents timing side-channel attacks
-    if (!crypto.timingSafeEqual(Buffer.from(expectedSig, 'hex'), Buffer.from(signature, 'hex'))) {
+    if (
+      !crypto.timingSafeEqual(
+        Buffer.from(expectedSig, 'hex'),
+        Buffer.from(signature, 'hex'),
+      )
+    ) {
       throw new UnauthorizedException({
         statusCode: 401,
         message: 'Invalid webhook signature',
@@ -139,7 +151,9 @@ export class MoyasarWebhookService {
             where: { id: paymentId, status: 'pending' },
             data: { status: 'failed' },
           });
-          await tx.processedWebhook.create({ data: { eventId: `${eventId}_${status}` } });
+          await tx.processedWebhook.create({
+            data: { eventId: `${eventId}_${status}` },
+          });
           return { count: 0, amountMismatch: true, mismatchResult: result };
         }
 
@@ -147,7 +161,9 @@ export class MoyasarWebhookService {
           where: { id: paymentId, status: 'pending' },
           data: { status: 'paid' },
         });
-        await tx.processedWebhook.create({ data: { eventId: `${eventId}_${status}` } });
+        await tx.processedWebhook.create({
+          data: { eventId: `${eventId}_${status}` },
+        });
         return { count: result.count, amountMismatch: false };
       });
     } catch (err) {
@@ -177,7 +193,9 @@ export class MoyasarWebhookService {
           where: { id: paymentId, status: 'pending' },
           data: { status: 'failed' },
         });
-        await tx.processedWebhook.create({ data: { eventId: `${eventId}_${status}` } });
+        await tx.processedWebhook.create({
+          data: { eventId: `${eventId}_${status}` },
+        });
       });
     } catch (err) {
       if (
@@ -200,7 +218,8 @@ export class MoyasarWebhookService {
     } catch (err) {
       // Race recovery: if cron expired the booking while payment was processing,
       // revert to confirmed since money was actually paid.
-      const recovered = await this.bookingStatusService.recoverExpiredBooking(bookingId);
+      const recovered =
+        await this.bookingStatusService.recoverExpiredBooking(bookingId);
       if (recovered) {
         this.logger.warn(
           `Recovered expired booking ${bookingId} → confirmed (payment ${paymentId} was paid)`,
@@ -236,7 +255,9 @@ export class MoyasarWebhookService {
 
     updated = await this.prisma.$transaction(async (tx) => {
       // Idempotency
-      const existing = await tx.processedWebhook.findUnique({ where: { eventId } });
+      const existing = await tx.processedWebhook.findUnique({
+        where: { eventId },
+      });
       if (existing) return { count: 0, amountMismatch: false };
 
       // Verify the paid amount matches the stored totalAmount before confirming.
@@ -287,9 +308,11 @@ export class MoyasarWebhookService {
         data: { paymentId: payment.id },
       });
 
-      await tx.processedWebhook.create({ data: { eventId, processedAt: new Date() } }).catch((e: unknown) => {
-        if ((e as { code?: string }).code !== 'P2002') throw e;
-      });
+      await tx.processedWebhook
+        .create({ data: { eventId, processedAt: new Date() } })
+        .catch((e: unknown) => {
+          if ((e as { code?: string }).code !== 'P2002') throw e;
+        });
 
       return { count: 1, amountMismatch: false };
     });
@@ -300,11 +323,15 @@ export class MoyasarWebhookService {
     await this.createGroupInvoiceAfterPayment(enrollmentId);
   }
 
-  private async createGroupInvoiceAfterPayment(enrollmentId: string): Promise<void> {
+  private async createGroupInvoiceAfterPayment(
+    enrollmentId: string,
+  ): Promise<void> {
     try {
       await this.invoicesService.createGroupInvoice(enrollmentId);
     } catch (err) {
-      const isConflict = err instanceof ConflictException || (err as { code?: string }).code === 'P2002';
+      const isConflict =
+        err instanceof ConflictException ||
+        (err as { code?: string }).code === 'P2002';
       if (!isConflict) {
         this.logger.error(
           `Group invoice creation failed for enrollment ${enrollmentId}`,
@@ -314,18 +341,23 @@ export class MoyasarWebhookService {
     }
   }
 
-  private async processGroupPaymentFailed(groupPaymentId: string, eventId: string): Promise<void> {
+  private async processGroupPaymentFailed(
+    groupPaymentId: string,
+    eventId: string,
+  ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       await tx.groupPayment.updateMany({
         where: { id: groupPaymentId, status: 'pending' },
         data: { status: 'failed' },
       });
 
-      await tx.processedWebhook.create({
-        data: { eventId, processedAt: new Date() },
-      }).catch((e: unknown) => {
-        if ((e as { code?: string }).code !== 'P2002') throw e;
-      });
+      await tx.processedWebhook
+        .create({
+          data: { eventId, processedAt: new Date() },
+        })
+        .catch((e: unknown) => {
+          if ((e as { code?: string }).code !== 'P2002') throw e;
+        });
     });
   }
 }

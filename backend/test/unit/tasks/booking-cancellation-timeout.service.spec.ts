@@ -15,7 +15,6 @@ const defaultSettings = {
   cancellationReviewTimeoutHours: 24,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: {
     findMany: jest.fn(),
@@ -70,7 +69,9 @@ describe('BookingCancellationTimeoutService', () => {
       ],
     }).compile();
 
-    service = module.get<BookingCancellationTimeoutService>(BookingCancellationTimeoutService);
+    service = module.get<BookingCancellationTimeoutService>(
+      BookingCancellationTimeoutService,
+    );
     jest.clearAllMocks();
     mockSettings.get.mockResolvedValue(defaultSettings);
     // Re-check guard: findFirst returns truthy (booking still pending_cancellation)
@@ -137,7 +138,10 @@ describe('BookingCancellationTimeoutService', () => {
       expect(mockPrisma.payment.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'pay-1' },
-          data: expect.objectContaining({ status: 'refunded', refundAmount: 10000 }),
+          data: expect.objectContaining({
+            status: 'refunded',
+            refundAmount: 10000,
+          }),
         }),
       );
     });
@@ -174,7 +178,10 @@ describe('BookingCancellationTimeoutService', () => {
       await service.autoExpirePendingCancellations();
 
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'patient-4', type: 'booking_cancelled' }),
+        expect.objectContaining({
+          userId: 'patient-4',
+          type: 'booking_cancelled',
+        }),
       );
     });
 
@@ -189,7 +196,10 @@ describe('BookingCancellationTimeoutService', () => {
 
       await service.autoExpirePendingCancellations();
 
-      expect(mockWaitlist.checkAndNotify).toHaveBeenCalledWith('pract-5', staleBooking.date);
+      expect(mockWaitlist.checkAndNotify).toHaveBeenCalledWith(
+        'pract-5',
+        staleBooking.date,
+      );
     });
 
     it('should skip already-processed booking when re-check returns null', async () => {

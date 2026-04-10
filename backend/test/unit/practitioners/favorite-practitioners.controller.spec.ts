@@ -24,11 +24,16 @@ describe('FavoritePractitionersController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [FavoritePractitionersController],
       providers: [
-        { provide: FavoritePractitionersService, useValue: mockFavoritesService },
+        {
+          provide: FavoritePractitionersService,
+          useValue: mockFavoritesService,
+        },
       ],
     })
-      .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get(FavoritePractitionersController);
@@ -41,7 +46,9 @@ describe('FavoritePractitionersController', () => {
 
       const result = await controller.getFavorites(mockUser);
 
-      expect(mockFavoritesService.getFavorites).toHaveBeenCalledWith(mockUser.id);
+      expect(mockFavoritesService.getFavorites).toHaveBeenCalledWith(
+        mockUser.id,
+      );
       expect(result).toEqual({ success: true, data: favorites });
     });
   });
@@ -53,7 +60,10 @@ describe('FavoritePractitionersController', () => {
 
       const result = await controller.addFavorite(mockPractitionerId, mockUser);
 
-      expect(mockFavoritesService.addFavorite).toHaveBeenCalledWith(mockUser.id, mockPractitionerId);
+      expect(mockFavoritesService.addFavorite).toHaveBeenCalledWith(
+        mockUser.id,
+        mockPractitionerId,
+      );
       expect(result).toEqual({ success: true, data: added });
     });
   });
@@ -62,10 +72,19 @@ describe('FavoritePractitionersController', () => {
     it('delegates to favoritesService.removeFavorite(user.id, id) and returns { success, message }', async () => {
       mockFavoritesService.removeFavorite.mockResolvedValue(undefined);
 
-      const result = await controller.removeFavorite(mockPractitionerId, mockUser);
+      const result = await controller.removeFavorite(
+        mockPractitionerId,
+        mockUser,
+      );
 
-      expect(mockFavoritesService.removeFavorite).toHaveBeenCalledWith(mockUser.id, mockPractitionerId);
-      expect(result).toEqual({ success: true, message: 'Removed from favorites' });
+      expect(mockFavoritesService.removeFavorite).toHaveBeenCalledWith(
+        mockUser.id,
+        mockPractitionerId,
+      );
+      expect(result).toEqual({
+        success: true,
+        message: 'Removed from favorites',
+      });
     });
   });
 });

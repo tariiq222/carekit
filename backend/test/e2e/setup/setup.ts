@@ -61,7 +61,8 @@ export const PERMISSION_MODULES = [
 
 export const PERMISSION_ACTIONS = ['view', 'create', 'edit', 'delete'] as const;
 
-export const TOTAL_PERMISSIONS = PERMISSION_MODULES.length * PERMISSION_ACTIONS.length; // 72
+export const TOTAL_PERMISSIONS =
+  PERMISSION_MODULES.length * PERMISSION_ACTIONS.length; // 72
 
 // ---------------------------------------------------------------------------
 // Test user data — realistic Saudi clinic data
@@ -184,10 +185,16 @@ export async function createTestApp(): Promise<TestApp> {
   // Match production configuration
   app.use(helmet());
   // Set Permissions-Policy header (not natively supported by this helmet version)
-  app.use((_req: unknown, res: import('express').Response, next: import('express').NextFunction) => {
-    res.setHeader('Permissions-Policy', '');
-    next();
-  });
+  app.use(
+    (
+      _req: unknown,
+      res: import('express').Response,
+      next: import('express').NextFunction,
+    ) => {
+      res.setHeader('Permissions-Policy', '');
+      next();
+    },
+  );
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({

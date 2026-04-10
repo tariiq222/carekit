@@ -11,8 +11,11 @@ const AUTH_URL = `${API_PREFIX}/auth`;
 
 /** Extract refresh_token value from Set-Cookie header */
 export function extractCookieToken(cookieHeader: string[]): string {
-  const entry = cookieHeader.find((c: string) => c.startsWith('refresh_token='));
-  if (!entry) throw new Error('refresh_token cookie not found in Set-Cookie header');
+  const entry = cookieHeader.find((c: string) =>
+    c.startsWith('refresh_token='),
+  );
+  if (!entry)
+    throw new Error('refresh_token cookie not found in Set-Cookie header');
   return entry.split(';')[0].replace('refresh_token=', '');
 }
 
@@ -44,7 +47,9 @@ export async function registerFresh(
     })
     .expect(201);
 
-  const refreshToken = extractCookieToken(res.headers['set-cookie'] as string[]);
+  const refreshToken = extractCookieToken(
+    res.headers['set-cookie'] as string[],
+  );
 
   return {
     email,
@@ -66,7 +71,10 @@ export async function getLatestOtp(
   type: 'login' | 'reset_password' | 'verify_email',
 ): Promise<string> {
   const plainCode = '999999';
-  const hashedCode = crypto.createHash('sha256').update(plainCode).digest('hex');
+  const hashedCode = crypto
+    .createHash('sha256')
+    .update(plainCode)
+    .digest('hex');
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
   // Invalidate existing OTPs (mirrors OtpService.generateOtp behaviour)

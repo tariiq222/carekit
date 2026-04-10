@@ -1,10 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Booking, BookingSettings, NotificationType, RefundType } from '@prisma/client';
+import {
+  Booking,
+  BookingSettings,
+  NotificationType,
+  RefundType,
+} from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
@@ -26,12 +27,16 @@ export class BookingCancelHelpersService {
   //  Fix 12: Calculate suggested refund type
   // ───────────────────────────────────────────────────────────────
 
-  calculateSuggestedRefund(booking: Booking, settings: BookingSettings): RefundType {
+  calculateSuggestedRefund(
+    booking: Booking,
+    settings: BookingSettings,
+  ): RefundType {
     const bookingDateTime = new Date(booking.date);
     const [hours, minutes] = booking.startTime.split(':').map(Number);
     bookingDateTime.setHours(hours, minutes, 0, 0);
 
-    const hoursUntilBooking = (bookingDateTime.getTime() - Date.now()) / (1000 * 60 * 60);
+    const hoursUntilBooking =
+      (bookingDateTime.getTime() - Date.now()) / (1000 * 60 * 60);
 
     if (hoursUntilBooking >= settings.freeCancelBeforeHours) {
       return settings.freeCancelRefundType;
@@ -72,12 +77,23 @@ export class BookingCancelHelpersService {
   async processRefund(
     tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
     refundType: RefundType,
-    payment: { id: string; status: string; totalAmount: number; method?: string; moyasarPaymentId?: string | null } | null | undefined,
+    payment:
+      | {
+          id: string;
+          status: string;
+          totalAmount: number;
+          method?: string;
+          moyasarPaymentId?: string | null;
+        }
+      | null
+      | undefined,
     refundAmount?: number,
   ): Promise<void> {
-    if (refundType === RefundType.none || !payment || payment.status !== 'paid') return;
+    if (refundType === RefundType.none || !payment || payment.status !== 'paid')
+      return;
 
-    const amount = refundType === RefundType.full ? payment.totalAmount : refundAmount!;
+    const amount =
+      refundType === RefundType.full ? payment.totalAmount : refundAmount!;
 
     // For Moyasar payments: call the actual refund API before updating DB
     if (payment.method === 'moyasar' && payment.moyasarPaymentId) {
@@ -90,7 +106,10 @@ export class BookingCancelHelpersService {
     });
   }
 
-  private async executeMoyasarRefund(moyasarPaymentId: string, amount: number): Promise<void> {
+  private async executeMoyasarRefund(
+    moyasarPaymentId: string,
+    amount: number,
+  ): Promise<void> {
     const apiKey = this.config.get<string>('MOYASAR_API_KEY', '');
     const credentials = Buffer.from(`${apiKey}:`).toString('base64');
 
@@ -108,7 +127,9 @@ export class BookingCancelHelpersService {
     );
 
     if (!response.ok) {
-      const errorBody = (await response.json().catch(() => ({ message: 'Unknown error' }))) as { message?: string };
+      const errorBody = (await response
+        .json()
+        .catch(() => ({ message: 'Unknown error' }))) as { message?: string };
       throw new BadRequestException({
         statusCode: 400,
         message: errorBody.message ?? 'Moyasar refund failed',
@@ -128,8 +149,14 @@ export class BookingCancelHelpersService {
     if (!booking.patientId) return;
 
     const bodyMap = {
-      admin: { ar: 'تم إلغاء موعدك من قبل الإدارة', en: 'Your booking has been cancelled by the administration' },
-      approved: { ar: 'تم الموافقة على طلب إلغاء موعدك', en: 'Your booking cancellation request has been approved' },
+      admin: {
+        ar: 'تم إلغاء موعدك من قبل الإدارة',
+        en: 'Your booking has been cancelled by the administration',
+      },
+      approved: {
+        ar: 'تم الموافقة على طلب إلغاء موعدك',
+        en: 'Your booking cancellation request has been approved',
+      },
     };
     await this.notificationsService.createNotification({
       userId: booking.patientId,
@@ -141,9 +168,12 @@ export class BookingCancelHelpersService {
     });
   }
 
-  async notifyPractitionerCancelled(
-    booking: { practitioner?: { userId: string } | null; date: Date; startTime: string; id: string },
-  ): Promise<void> {
+  async notifyPractitionerCancelled(booking: {
+    practitioner?: { userId: string } | null;
+    date: Date;
+    startTime: string;
+    id: string;
+  }): Promise<void> {
     if (!booking.practitioner?.userId) return;
 
     const d = booking.date.toISOString().split('T')[0];
@@ -157,9 +187,11 @@ export class BookingCancelHelpersService {
     });
   }
 
-  async notifyPatientPractitionerCancelled(
-    booking: { patientId: string | null; date: Date; id: string },
-  ): Promise<void> {
+  async notifyPatientPractitionerCancelled(booking: {
+    patientId: string | null;
+    date: Date;
+    id: string;
+  }): Promise<void> {
     if (!booking.patientId) return;
 
     const d = booking.date.toISOString().split('T')[0];
@@ -174,20 +206,37 @@ export class BookingCancelHelpersService {
   }
 
   async notifyAdmins(
-    titleAr: string, titleEn: string, bodyAr: string, bodyEn: string,
-    type: string, data: Record<string, unknown>,
+    titleAr: string,
+    titleEn: string,
+    bodyAr: string,
+    bodyEn: string,
+    type: string,
+    data: Record<string, unknown>,
   ): Promise<void> {
     const adminRoles = await this.prisma.userRole.findMany({
       where: { role: { slug: { in: ['super_admin', 'receptionist'] } } },
       select: { userId: true },
     });
-    await Promise.all(adminRoles.map(({ userId }) =>
-      this.notificationsService.createNotification({ userId, titleAr, titleEn, bodyAr, bodyEn, type: type as NotificationType, data }),
-    ));
+    await Promise.all(
+      adminRoles.map(({ userId }) =>
+        this.notificationsService.createNotification({
+          userId,
+          titleAr,
+          titleEn,
+          bodyAr,
+          bodyEn,
+          type: type as NotificationType,
+          data,
+        }),
+      ),
+    );
   }
 
   /** Fix 4: Notify patient that cancellation request was rejected */
-  async notifyPatientCancellationRejected(patientId: string, bookingId: string): Promise<void> {
+  async notifyPatientCancellationRejected(
+    patientId: string,
+    bookingId: string,
+  ): Promise<void> {
     await this.notificationsService.createNotification({
       userId: patientId,
       ...NOTIF.CANCELLATION_REJECTED,
@@ -200,11 +249,18 @@ export class BookingCancelHelpersService {
   //  Zoom cleanup
   // ───────────────────────────────────────────────────────────────
 
-  deleteZoomIfNeeded(booking: { type: string; zoomMeetingId: string | null }): void {
+  deleteZoomIfNeeded(booking: {
+    type: string;
+    zoomMeetingId: string | null;
+  }): void {
     if (booking.type === 'online' && booking.zoomMeetingId) {
-      this.zoomService.deleteMeeting(booking.zoomMeetingId).catch((err) =>
-        this.logger.warn(`Failed to delete Zoom meeting on cancellation: ${err.message}`),
-      );
+      this.zoomService
+        .deleteMeeting(booking.zoomMeetingId)
+        .catch((err) =>
+          this.logger.warn(
+            `Failed to delete Zoom meeting on cancellation: ${err.message}`,
+          ),
+        );
     }
   }
 }

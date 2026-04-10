@@ -33,10 +33,14 @@ describe('BranchesController', () => {
       controllers: [BranchesController],
       providers: [{ provide: BranchesService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
-      .overrideGuard(FeatureFlagGuard).useValue({ canActivate: () => true })
-      .overridePipe(uuidPipe).useValue({ transform: (v: string) => v })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(FeatureFlagGuard)
+      .useValue({ canActivate: () => true })
+      .overridePipe(uuidPipe)
+      .useValue({ transform: (v: string) => v })
       .compile();
 
     controller = module.get<BranchesController>(BranchesController);
@@ -56,7 +60,10 @@ describe('BranchesController', () => {
   describe('findAll', () => {
     it('delegates to service.findAll with query', async () => {
       const query = { page: 1, perPage: 10 };
-      const paginated = { items: [branch], meta: { total: 1, page: 1, perPage: 10, totalPages: 1 } };
+      const paginated = {
+        items: [branch],
+        meta: { total: 1, page: 1, perPage: 10, totalPages: 1 },
+      };
       mockService.findAll.mockResolvedValue(paginated);
 
       const result = await controller.findAll(query as any);
@@ -79,7 +86,13 @@ describe('BranchesController', () => {
 
   describe('create', () => {
     it('delegates to service.create with dto', async () => {
-      const dto = { nameEn: 'New Branch', nameAr: 'فرع جديد', address: 'Riyadh', phone: '+966500000000', email: 'br@test.com' };
+      const dto = {
+        nameEn: 'New Branch',
+        nameAr: 'فرع جديد',
+        address: 'Riyadh',
+        phone: '+966500000000',
+        email: 'br@test.com',
+      };
       mockService.create.mockResolvedValue({ ...dto, id: 'branch-2' });
 
       const result = await controller.create(dto as any);
@@ -127,11 +140,20 @@ describe('BranchesController', () => {
   describe('assignPractitioners', () => {
     it('delegates to service.assignPractitioners with id and practitionerIds', async () => {
       const dto = { practitionerIds: ['prac-1', 'prac-2'] };
-      mockService.assignPractitioners.mockResolvedValue([{ id: 'prac-1' }, { id: 'prac-2' }]);
+      mockService.assignPractitioners.mockResolvedValue([
+        { id: 'prac-1' },
+        { id: 'prac-2' },
+      ]);
 
-      const result = await controller.assignPractitioners('branch-1', dto as any);
+      const result = await controller.assignPractitioners(
+        'branch-1',
+        dto as any,
+      );
 
-      expect(mockService.assignPractitioners).toHaveBeenCalledWith('branch-1', ['prac-1', 'prac-2']);
+      expect(mockService.assignPractitioners).toHaveBeenCalledWith('branch-1', [
+        'prac-1',
+        'prac-2',
+      ]);
       expect(result).toHaveLength(2);
     });
   });
@@ -142,7 +164,10 @@ describe('BranchesController', () => {
 
       const result = await controller.removePractitioner('branch-1', 'prac-1');
 
-      expect(mockService.removePractitioner).toHaveBeenCalledWith('branch-1', 'prac-1');
+      expect(mockService.removePractitioner).toHaveBeenCalledWith(
+        'branch-1',
+        'prac-1',
+      );
       expect(result).toEqual({ removed: true });
     });
   });

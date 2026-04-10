@@ -16,7 +16,12 @@ interface AiReceiptResult {
   extractedAmount: number | null;
   extractedDate: string | null;
   confidence: number;
-  status: 'matched' | 'amount_differs' | 'suspicious' | 'old_date' | 'unreadable';
+  status:
+    | 'matched'
+    | 'amount_differs'
+    | 'suspicious'
+    | 'old_date'
+    | 'unreadable';
   notes: string;
 }
 

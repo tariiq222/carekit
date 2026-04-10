@@ -27,7 +27,10 @@ const mockServices = {
   getIntakeForms: jest.fn(),
 };
 const mockAvatar = { uploadAvatar: jest.fn() };
-const mockDuration = { getDurationOptions: jest.fn(), setDurationOptions: jest.fn() };
+const mockDuration = {
+  getDurationOptions: jest.fn(),
+  setDurationOptions: jest.fn(),
+};
 const mockBookingType = { getByService: jest.fn(), setBookingTypes: jest.fn() };
 const mockPractitioners = { getPractitionersForService: jest.fn() };
 
@@ -87,7 +90,9 @@ describe('ServicesController', () => {
   describe('deleteCategory', () => {
     it('should delegate with id', async () => {
       mockCategories.delete.mockResolvedValue({ deleted: true });
-      expect(await controller.deleteCategory('cat1')).toEqual({ deleted: true });
+      expect(await controller.deleteCategory('cat1')).toEqual({
+        deleted: true,
+      });
     });
   });
 
@@ -130,8 +135,13 @@ describe('ServicesController', () => {
 
   describe('uploadAvatar', () => {
     it('should delegate to avatarService when file is provided', async () => {
-      const file = { originalname: 'photo.jpg', buffer: Buffer.from('img') } as any;
-      mockAvatar.uploadAvatar.mockResolvedValue({ url: 'https://cdn/photo.jpg' });
+      const file = {
+        originalname: 'photo.jpg',
+        buffer: Buffer.from('img'),
+      } as any;
+      mockAvatar.uploadAvatar.mockResolvedValue({
+        url: 'https://cdn/photo.jpg',
+      });
 
       const result = await controller.uploadAvatar('svc1', file);
 
@@ -140,8 +150,9 @@ describe('ServicesController', () => {
     });
 
     it('should throw BadRequestException when no file', async () => {
-      await expect(controller.uploadAvatar('svc1', undefined as any))
-        .rejects.toThrow(BadRequestException);
+      await expect(
+        controller.uploadAvatar('svc1', undefined as any),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -150,8 +161,13 @@ describe('ServicesController', () => {
       const dto = { branchIds: ['b1', 'b2'] } as any;
       mockServices.setBranches.mockResolvedValue(undefined);
 
-      expect(await controller.setBranches('svc1', dto)).toEqual({ updated: true });
-      expect(mockServices.setBranches).toHaveBeenCalledWith('svc1', ['b1', 'b2']);
+      expect(await controller.setBranches('svc1', dto)).toEqual({
+        updated: true,
+      });
+      expect(mockServices.setBranches).toHaveBeenCalledWith('svc1', [
+        'b1',
+        'b2',
+      ]);
     });
   });
 
@@ -201,16 +217,26 @@ describe('ServicesController', () => {
   describe('getPractitioners', () => {
     it('should delegate with id and optional branchId', async () => {
       const practitioners = [{ id: 'p1' }];
-      mockPractitioners.getPractitionersForService.mockResolvedValue(practitioners);
+      mockPractitioners.getPractitionersForService.mockResolvedValue(
+        practitioners,
+      );
 
-      expect(await controller.getPractitioners('svc1', 'b1')).toEqual(practitioners);
-      expect(mockPractitioners.getPractitionersForService).toHaveBeenCalledWith('svc1', 'b1');
+      expect(await controller.getPractitioners('svc1', 'b1')).toEqual(
+        practitioners,
+      );
+      expect(mockPractitioners.getPractitionersForService).toHaveBeenCalledWith(
+        'svc1',
+        'b1',
+      );
     });
 
     it('should work without branchId', async () => {
       mockPractitioners.getPractitionersForService.mockResolvedValue([]);
       await controller.getPractitioners('svc1', undefined);
-      expect(mockPractitioners.getPractitionersForService).toHaveBeenCalledWith('svc1', undefined);
+      expect(mockPractitioners.getPractitionersForService).toHaveBeenCalledWith(
+        'svc1',
+        undefined,
+      );
     });
   });
 

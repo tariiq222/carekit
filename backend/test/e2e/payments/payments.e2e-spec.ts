@@ -78,7 +78,9 @@ async function createTestBooking(
     });
 
   if (res.status !== 201) {
-    throw new Error(`Failed to create test booking: ${res.status} ${JSON.stringify(res.body)}`);
+    throw new Error(
+      `Failed to create test booking: ${res.status} ${JSON.stringify(res.body)}`,
+    );
   }
   return res.body.data.id as string;
 }
@@ -98,7 +100,9 @@ async function createCashPayment(
     return { id: res.body.data.id as string };
   }
 
-  throw new Error(`Could not retrieve payment for booking ${bookingId}: ${res.status}`);
+  throw new Error(
+    `Could not retrieve payment for booking ${bookingId}: ${res.status}`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -183,7 +187,9 @@ describe('Payments Module (e2e)', () => {
       });
     serviceId = serviceRes.body.data?.id as string;
     if (!serviceId) {
-      throw new Error(`Service creation failed: ${serviceRes.status} ${JSON.stringify(serviceRes.body)}`);
+      throw new Error(
+        `Service creation failed: ${serviceRes.status} ${JSON.stringify(serviceRes.body)}`,
+      );
     }
 
     // Practitioner user
@@ -223,7 +229,9 @@ describe('Payments Module (e2e)', () => {
     }
 
     if (!practitionerId) {
-      throw new Error('practitionerId is undefined — practitioner setup failed');
+      throw new Error(
+        'practitionerId is undefined — practitioner setup failed',
+      );
     }
 
     // Enable adminCanBookOutsideHours so we can create test bookings without
@@ -241,7 +249,9 @@ describe('Payments Module (e2e)', () => {
         types: [{ bookingType: 'in_person', price: 20000, duration: 30 }],
       });
     if (sbtRes.status !== 200 && sbtRes.status !== 201) {
-      throw new Error(`Failed to set service booking types: ${sbtRes.status} ${JSON.stringify(sbtRes.body)}`);
+      throw new Error(
+        `Failed to set service booking types: ${sbtRes.status} ${JSON.stringify(sbtRes.body)}`,
+      );
     }
 
     // Assign service to practitioner (tolerate 409 if already assigned)
@@ -253,8 +263,14 @@ describe('Payments Module (e2e)', () => {
         availableTypes: ['in_person'],
         isActive: true,
       });
-    if (assignRes.status !== 201 && assignRes.status !== 200 && assignRes.status !== 409) {
-      throw new Error(`Failed to assign service to practitioner: ${assignRes.status} ${JSON.stringify(assignRes.body)}`);
+    if (
+      assignRes.status !== 201 &&
+      assignRes.status !== 200 &&
+      assignRes.status !== 409
+    ) {
+      throw new Error(
+        `Failed to assign service to practitioner: ${assignRes.status} ${JSON.stringify(assignRes.body)}`,
+      );
     }
 
     // Booking + payment for main tests
@@ -352,7 +368,8 @@ describe('Payments Module (e2e)', () => {
 
       expectSuccessResponse(res.body);
       // Items should belong only to patient2
-      const items: Array<{ booking?: { patientId?: string } }> = res.body.data.items;
+      const items: Array<{ booking?: { patientId?: string } }> =
+        res.body.data.items;
       const patient2Id = patient2.user['id'] as string;
       items.forEach((item) => {
         if (item.booking?.patientId) {
@@ -497,7 +514,9 @@ describe('Payments Module (e2e)', () => {
       to.setDate(to.getDate() + 1);
 
       const res = await request(httpServer)
-        .get(`${PAYMENTS_URL}?dateFrom=${from.toISOString()}&dateTo=${to.toISOString()}`)
+        .get(
+          `${PAYMENTS_URL}?dateFrom=${from.toISOString()}&dateTo=${to.toISOString()}`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(200);
 
@@ -678,7 +697,10 @@ describe('Payments Module (e2e)', () => {
         .post(`${PAYMENTS_URL}/bank-transfer`)
         .set('Authorization', `Bearer ${patient2.accessToken}`)
         .field('bookingId', bankTransferBookingId)
-        .attach('receipt', FAKE_JPEG, { filename: 'receipt.jpg', contentType: 'image/jpeg' });
+        .attach('receipt', FAKE_JPEG, {
+          filename: 'receipt.jpg',
+          contentType: 'image/jpeg',
+        });
 
       // 201 = success, or 400 if booking not in right state
       if (res.status === 201) {
@@ -695,7 +717,10 @@ describe('Payments Module (e2e)', () => {
       const res = await request(httpServer)
         .post(`${PAYMENTS_URL}/bank-transfer`)
         .set('Authorization', `Bearer ${patient.accessToken}`)
-        .attach('receipt', FAKE_JPEG, { filename: 'receipt.jpg', contentType: 'image/jpeg' });
+        .attach('receipt', FAKE_JPEG, {
+          filename: 'receipt.jpg',
+          contentType: 'image/jpeg',
+        });
 
       expect(res.status).toBe(400);
     });
@@ -727,7 +752,10 @@ describe('Payments Module (e2e)', () => {
       await request(httpServer)
         .post(`${PAYMENTS_URL}/bank-transfer`)
         .field('bookingId', bankTransferBookingId)
-        .attach('receipt', FAKE_JPEG, { filename: 'r.jpg', contentType: 'image/jpeg' })
+        .attach('receipt', FAKE_JPEG, {
+          filename: 'r.jpg',
+          contentType: 'image/jpeg',
+        })
         .expect(401);
     });
   });
@@ -799,7 +827,9 @@ describe('Payments Module (e2e)', () => {
 
     it('non-existent receipt id → 404', async () => {
       const res = await request(httpServer)
-        .post(`${PAYMENTS_URL}/bank-transfer/00000000-0000-0000-0000-000000000000/verify`)
+        .post(
+          `${PAYMENTS_URL}/bank-transfer/00000000-0000-0000-0000-000000000000/verify`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .send({ action: 'approve' })
         .expect(404);

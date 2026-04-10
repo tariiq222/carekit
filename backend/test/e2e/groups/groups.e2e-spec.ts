@@ -111,7 +111,10 @@ describe('Groups Module (e2e)', () => {
       const listRes = await request(httpServer)
         .get(PRACTITIONERS_URL)
         .query({ search: TEST_USERS.practitioner.firstName, perPage: '50' });
-      const items = (listRes.body.data?.items ?? []) as Array<{ id: string; user?: { id: string } }>;
+      const items = (listRes.body.data?.items ?? []) as Array<{
+        id: string;
+        user?: { id: string };
+      }>;
       const found = items.find((p) => p.user?.id === practitionerUserId);
       practitionerId = found?.id as string;
     }
@@ -185,7 +188,9 @@ describe('Groups Module (e2e)', () => {
         .expect(403);
 
       expect(res.body.success).toBe(false);
-      expect((res.body.error as { code: string }).code).toBe('FEATURE_NOT_ENABLED');
+      expect((res.body.error as { code: string }).code).toBe(
+        'FEATURE_NOT_ENABLED',
+      );
 
       await request(httpServer)
         .patch(`${FLAGS_URL}/groups`)
@@ -366,7 +371,10 @@ describe('Groups Module (e2e)', () => {
         .expect(200);
 
       expectSuccessResponse(res.body);
-      const data = res.body.data as { items: unknown[]; meta: { total: number; page: number } };
+      const data = res.body.data as {
+        items: unknown[];
+        meta: { total: number; page: number };
+      };
       expect(Array.isArray(data.items)).toBe(true);
       expect(data.meta.page).toBe(1);
       expect(typeof data.meta.total).toBe('number');
@@ -458,7 +466,7 @@ describe('Groups Module (e2e)', () => {
       const res = await request(httpServer)
         .post(`${GROUPS_URL}/${groupId}/enroll`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ patientId: patient.user!['id'] })
+        .send({ patientId: patient.user['id'] })
         .expect(201);
 
       expectSuccessResponse(res.body);
@@ -472,19 +480,21 @@ describe('Groups Module (e2e)', () => {
       const secondPatient = await registerTestPatient(httpServer, {
         ...TEST_USERS.patient,
         email: `secondpat_${Date.now()}@test.com`,
-        phone: `+9665555${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+        phone: `+9665555${Math.floor(Math.random() * 10000)
+          .toString()
+          .padStart(4, '0')}`,
       });
 
       await request(httpServer)
         .post(`${GROUPS_URL}/${groupId}/enroll`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ patientId: patient.user!['id'] })
+        .send({ patientId: patient.user['id'] })
         .expect(201);
 
       await request(httpServer)
         .post(`${GROUPS_URL}/${groupId}/enroll`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ patientId: secondPatient.user!['id'] })
+        .send({ patientId: secondPatient.user['id'] })
         .expect(201);
 
       // Trigger payment — moves to awaiting_payment
@@ -498,19 +508,23 @@ describe('Groups Module (e2e)', () => {
         .get(`${GROUPS_URL}/${groupId}`)
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(200);
-      expect((groupRes.body.data as { status: string }).status).toBe('awaiting_payment');
+      expect((groupRes.body.data as { status: string }).status).toBe(
+        'awaiting_payment',
+      );
 
       // Register a 3rd patient — should be BLOCKED
       const thirdPatient = await registerTestPatient(httpServer, {
         ...TEST_USERS.patient,
         email: `thirdpat_${Date.now()}@test.com`,
-        phone: `+9665555${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+        phone: `+9665555${Math.floor(Math.random() * 10000)
+          .toString()
+          .padStart(4, '0')}`,
       });
 
       const res = await request(httpServer)
         .post(`${GROUPS_URL}/${groupId}/enroll`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ patientId: thirdPatient.user!['id'] })
+        .send({ patientId: thirdPatient.user['id'] })
         .expect(400);
 
       expect(res.body.success).toBe(false);
@@ -520,13 +534,13 @@ describe('Groups Module (e2e)', () => {
       await request(httpServer)
         .post(`${GROUPS_URL}/${groupId}/enroll`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ patientId: patient.user!['id'] })
+        .send({ patientId: patient.user['id'] })
         .expect(201);
 
       const res = await request(httpServer)
         .post(`${GROUPS_URL}/${groupId}/enroll`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ patientId: patient.user!['id'] })
+        .send({ patientId: patient.user['id'] })
         .expect(400);
       expect(res.body.success).toBe(false);
     });
@@ -535,7 +549,7 @@ describe('Groups Module (e2e)', () => {
       const enrollRes = await request(httpServer)
         .post(`${GROUPS_URL}/${groupId}/enroll`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ patientId: patient.user!['id'] })
+        .send({ patientId: patient.user['id'] })
         .expect(201);
 
       const eid = (enrollRes.body.data as { id: string }).id;
@@ -559,7 +573,7 @@ describe('Groups Module (e2e)', () => {
       const res = await request(httpServer)
         .post(`${GROUPS_URL}/${group.id}/enroll`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ patientId: patient.user!['id'] })
+        .send({ patientId: patient.user['id'] })
         .expect(201);
 
       expectSuccessResponse(res.body);
@@ -666,7 +680,9 @@ describe('Groups Module (e2e)', () => {
         .expect(200);
 
       expectSuccessResponse(res.body);
-      expect((res.body.data as { markedAttended: number }).markedAttended).toBe(0);
+      expect((res.body.data as { markedAttended: number }).markedAttended).toBe(
+        0,
+      );
     });
   });
 
@@ -677,7 +693,9 @@ describe('Groups Module (e2e)', () => {
       const group = await createGroup();
 
       const res = await request(httpServer)
-        .post(`${GROUPS_URL}/${group.id}/enrollments/${NON_EXISTENT_UUID}/certificate`)
+        .post(
+          `${GROUPS_URL}/${group.id}/enrollments/${NON_EXISTENT_UUID}/certificate`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(404);
       expect(res.body.success).toBe(false);

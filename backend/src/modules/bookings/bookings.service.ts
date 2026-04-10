@@ -37,65 +37,167 @@ export class BookingsService {
     private readonly activityLogService: ActivityLogService,
   ) {}
 
-  create(callerUserId: string, dto: CreateBookingDto, callerRoles?: Array<{ slug: string }>) {
+  create(
+    callerUserId: string,
+    dto: CreateBookingDto,
+    callerRoles?: Array<{ slug: string }>,
+  ) {
     return this.creationService.execute(callerUserId, dto, callerRoles);
   }
 
   // --- Delegated: Queries ---
-  findAll(query: BookingListQueryDto) { return this.queryService.findAll(query); }
-  findOne(id: string) { return this.queryService.findOne(id); }
-  findAllScoped(query: BookingListQueryDto, userId: string) { return this.queryService.findAllScoped(query, userId); }
-  findOneScoped(bookingId: string, userId: string) { return this.queryService.findOneScoped(bookingId, userId); }
-  findMyBookings(patientId: string, page?: number, perPage?: number) { return this.queryService.findMyBookings(patientId, page, perPage); }
-  findTodayBookingsForUser(userId: string) { return this.queryService.findTodayBookingsForUser(userId); }
-  findTodayBookings(userId: string) { return this.queryService.findTodayBookings(userId); }
-  getStats(userId?: string, dateFrom?: string, dateTo?: string) { return this.queryService.getStats(userId, dateFrom, dateTo); }
-  getPaymentStatus(bookingId: string, userId: string) { return this.queryService.getPaymentStatus(bookingId, userId); }
+  findAll(query: BookingListQueryDto) {
+    return this.queryService.findAll(query);
+  }
+  findOne(id: string) {
+    return this.queryService.findOne(id);
+  }
+  findAllScoped(query: BookingListQueryDto, userId: string) {
+    return this.queryService.findAllScoped(query, userId);
+  }
+  findOneScoped(bookingId: string, userId: string) {
+    return this.queryService.findOneScoped(bookingId, userId);
+  }
+  findMyBookings(patientId: string, page?: number, perPage?: number) {
+    return this.queryService.findMyBookings(patientId, page, perPage);
+  }
+  findTodayBookingsForUser(userId: string) {
+    return this.queryService.findTodayBookingsForUser(userId);
+  }
+  findTodayBookings(userId: string) {
+    return this.queryService.findTodayBookings(userId);
+  }
+  getStats(userId?: string, dateFrom?: string, dateTo?: string) {
+    return this.queryService.getStats(userId, dateFrom, dateTo);
+  }
+  getPaymentStatus(bookingId: string, userId: string) {
+    return this.queryService.getPaymentStatus(bookingId, userId);
+  }
 
-  async reschedule(id: string, dto: RescheduleBookingDto, adminUserId?: string) {
+  async reschedule(
+    id: string,
+    dto: RescheduleBookingDto,
+    adminUserId?: string,
+  ) {
     if (!dto.date && !dto.startTime) {
-      throw new BadRequestException({ statusCode: 400, message: ERR.booking.invalidRescheduleInput, error: 'VALIDATION_ERROR' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.booking.invalidRescheduleInput,
+        error: 'VALIDATION_ERROR',
+      });
     }
     return this.rescheduleService.reschedule(id, dto, adminUserId);
   }
 
-  async patientReschedule(bookingId: string, patientId: string, dto: RescheduleBookingDto) {
+  async patientReschedule(
+    bookingId: string,
+    patientId: string,
+    dto: RescheduleBookingDto,
+  ) {
     const settings = await this.bookingSettingsService.get();
-    if (!settings.patientCanReschedule) throw new BadRequestException({ statusCode: 400, message: ERR.booking.rescheduleNotAllowed, error: 'RESCHEDULE_NOT_ALLOWED' });
+    if (!settings.patientCanReschedule)
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.booking.rescheduleNotAllowed,
+        error: 'RESCHEDULE_NOT_ALLOWED',
+      });
     const booking = await this.ensureBookingExists(bookingId);
-    if (booking.patientId !== patientId) throw new ForbiddenException({ statusCode: 403, message: ERR.booking.rescheduleOwnership, error: 'FORBIDDEN' });
+    if (booking.patientId !== patientId)
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: ERR.booking.rescheduleOwnership,
+        error: 'FORBIDDEN',
+      });
     const reschedulableStatuses = ['pending', 'confirmed', 'checked_in'];
     if (!reschedulableStatuses.includes(booking.status)) {
-      throw new BadRequestException({ statusCode: 400, message: ERR.booking.invalidStatusForReschedule(booking.status), error: 'INVALID_STATUS_FOR_RESCHEDULE' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.booking.invalidStatusForReschedule(booking.status),
+        error: 'INVALID_STATUS_FOR_RESCHEDULE',
+      });
     }
-    if (booking.rescheduleCount >= settings.maxReschedulesPerBooking) throw new BadRequestException({ statusCode: 400, message: ERR.booking.rescheduleLimitReached(settings.maxReschedulesPerBooking), error: 'RESCHEDULE_LIMIT_REACHED' });
+    if (booking.rescheduleCount >= settings.maxReschedulesPerBooking)
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.booking.rescheduleLimitReached(
+          settings.maxReschedulesPerBooking,
+        ),
+        error: 'RESCHEDULE_LIMIT_REACHED',
+      });
     const bdt = new Date(booking.date);
     const [h, m] = booking.startTime.split(':').map(Number);
     bdt.setHours(h, m, 0, 0);
-    if ((bdt.getTime() - Date.now()) / (1000 * 60 * 60) < settings.rescheduleBeforeHours) throw new BadRequestException({ statusCode: 400, message: ERR.booking.rescheduleTooLate(settings.rescheduleBeforeHours), error: 'RESCHEDULE_TOO_LATE' });
+    if (
+      (bdt.getTime() - Date.now()) / (1000 * 60 * 60) <
+      settings.rescheduleBeforeHours
+    )
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ERR.booking.rescheduleTooLate(settings.rescheduleBeforeHours),
+        error: 'RESCHEDULE_TOO_LATE',
+      });
     const result = await this.reschedule(bookingId, dto);
-    await this.prisma.booking.update({ where: { id: result.id }, data: { rescheduleCount: booking.rescheduleCount + 1 } });
-    this.activityLogService.log({ action: 'booking_patient_rescheduled', module: 'bookings', resourceId: result.id, description: `Patient rescheduled booking (count: ${booking.rescheduleCount + 1})` }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
+    await this.prisma.booking.update({
+      where: { id: result.id },
+      data: { rescheduleCount: booking.rescheduleCount + 1 },
+    });
+    this.activityLogService
+      .log({
+        action: 'booking_patient_rescheduled',
+        module: 'bookings',
+        resourceId: result.id,
+        description: `Patient rescheduled booking (count: ${booking.rescheduleCount + 1})`,
+      })
+      .catch((err) =>
+        this.logger.warn('Activity log failed', { error: err?.message }),
+      );
     return { ...result, rescheduleCount: booking.rescheduleCount + 1 };
   }
 
   // --- Delegated: Status Transitions ---
-  confirm(id: string, userId?: string) { return this.statusService.confirm(id, userId); }
-  checkIn(id: string, userId?: string) { return this.statusService.checkIn(id, userId); }
-  startSession(id: string, userId: string) { return this.statusService.startSession(id, userId); }
-  complete(id: string, dto?: CompleteBookingDto, userId?: string) { return this.statusService.complete(id, dto, userId); }
-  markNoShow(id: string, userId?: string) { return this.statusService.markNoShow(id, userId); }
+  confirm(id: string, userId?: string) {
+    return this.statusService.confirm(id, userId);
+  }
+  checkIn(id: string, userId?: string) {
+    return this.statusService.checkIn(id, userId);
+  }
+  startSession(id: string, userId: string) {
+    return this.statusService.startSession(id, userId);
+  }
+  complete(id: string, dto?: CompleteBookingDto, userId?: string) {
+    return this.statusService.complete(id, dto, userId);
+  }
+  markNoShow(id: string, userId?: string) {
+    return this.statusService.markNoShow(id, userId);
+  }
 
   // --- Delegated: Cancellation ---
-  requestCancellation(id: string, patientId: string, reason?: string) { return this.cancellationService.requestCancellation(id, patientId, reason); }
-  approveCancellation(id: string, dto: CancelApproveDto) { return this.cancellationService.approveCancellation(id, dto); }
-  rejectCancellation(id: string, dto: CancelRejectDto) { return this.cancellationService.rejectCancellation(id, dto); }
-  adminDirectCancel(id: string, adminUserId: string, dto: AdminCancelDto) { return this.cancellationService.adminDirectCancel(id, adminUserId, dto); }
-  practitionerCancel(id: string, userId: string, reason?: string) { return this.cancellationService.practitionerCancel(id, userId, reason); }
+  requestCancellation(id: string, patientId: string, reason?: string) {
+    return this.cancellationService.requestCancellation(id, patientId, reason);
+  }
+  approveCancellation(id: string, dto: CancelApproveDto) {
+    return this.cancellationService.approveCancellation(id, dto);
+  }
+  rejectCancellation(id: string, dto: CancelRejectDto) {
+    return this.cancellationService.rejectCancellation(id, dto);
+  }
+  adminDirectCancel(id: string, adminUserId: string, dto: AdminCancelDto) {
+    return this.cancellationService.adminDirectCancel(id, adminUserId, dto);
+  }
+  practitionerCancel(id: string, userId: string, reason?: string) {
+    return this.cancellationService.practitionerCancel(id, userId, reason);
+  }
 
   private async ensureBookingExists(id: string) {
-    const booking = await this.prisma.booking.findFirst({ where: { id, deletedAt: null } });
-    if (!booking) throw new NotFoundException({ statusCode: 404, message: ERR.booking.notFound, error: 'NOT_FOUND' });
+    const booking = await this.prisma.booking.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!booking)
+      throw new NotFoundException({
+        statusCode: 404,
+        message: ERR.booking.notFound,
+        error: 'NOT_FOUND',
+      });
     return booking;
   }
 }

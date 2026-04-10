@@ -48,7 +48,15 @@ describe('UsersController', () => {
       const data = [{ id: 'u1' }];
       mockUsersService.findAll.mockResolvedValue(data);
 
-      const result = await controller.findAll('1', '20', 'name', 'asc', 'ahmed', 'admin', 'true');
+      const result = await controller.findAll(
+        '1',
+        '20',
+        'name',
+        'asc',
+        'ahmed',
+        'admin',
+        'true',
+      );
 
       expect(mockUsersService.findAll).toHaveBeenCalledWith({
         page: 1,
@@ -65,7 +73,15 @@ describe('UsersController', () => {
     it('should pass undefined for missing optional params', async () => {
       mockUsersService.findAll.mockResolvedValue([]);
 
-      await controller.findAll(undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+      await controller.findAll(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+      );
 
       expect(mockUsersService.findAll).toHaveBeenCalledWith({
         page: undefined,
@@ -97,7 +113,11 @@ describe('UsersController', () => {
 
       const result = await controller.create(dto, mockUser);
 
-      expect(result).toEqual({ success: true, data: created, message: 'User created successfully' });
+      expect(result).toEqual({
+        success: true,
+        data: created,
+        message: 'User created successfully',
+      });
       expect(mockUsersService.create).toHaveBeenCalledWith(dto, 'user-1');
     });
   });
@@ -117,7 +137,9 @@ describe('UsersController', () => {
     it('should call softDelete with id and current user id', async () => {
       mockUsersService.softDelete.mockResolvedValue(undefined);
 
-      expect(await controller.delete('u1', mockUser)).toEqual({ deleted: true });
+      expect(await controller.delete('u1', mockUser)).toEqual({
+        deleted: true,
+      });
       expect(mockUsersService.softDelete).toHaveBeenCalledWith('u1', 'user-1');
     });
   });
@@ -150,8 +172,16 @@ describe('UsersController', () => {
 
       const result = await controller.assignRole('u1', dto, requester);
 
-      expect(result).toEqual({ success: true, message: 'Role assigned successfully' });
-      expect(mockUserRolesService.assignRole).toHaveBeenCalledWith('u1', 'r1', 'admin', 'req-1');
+      expect(result).toEqual({
+        success: true,
+        message: 'Role assigned successfully',
+      });
+      expect(mockUserRolesService.assignRole).toHaveBeenCalledWith(
+        'u1',
+        'r1',
+        'admin',
+        'req-1',
+      );
     });
   });
 
@@ -159,7 +189,9 @@ describe('UsersController', () => {
     it('should delegate with userId and roleId', async () => {
       mockUserRolesService.removeRole.mockResolvedValue(undefined);
 
-      expect(await controller.removeRole('u1', 'r1')).toEqual({ removed: true });
+      expect(await controller.removeRole('u1', 'r1')).toEqual({
+        removed: true,
+      });
       expect(mockUserRolesService.removeRole).toHaveBeenCalledWith('u1', 'r1');
     });
   });

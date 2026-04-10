@@ -21,16 +21,66 @@ const MODULES_DIR = path.resolve(__dirname, '../../../src/modules');
  * Format: { licenseKey: [{ module, controllerFile, featureKey }] }
  */
 const LICENSED_CONTROLLERS = [
-  { licenseKey: 'hasCoupons', module: 'coupons', file: 'coupons.controller.ts', featureKey: 'coupons' },
-  { licenseKey: 'hasGiftCards', module: 'gift-cards', file: 'gift-cards.controller.ts', featureKey: 'gift_cards' },
-  { licenseKey: 'hasIntakeForms', module: 'intake-forms', file: 'intake-forms.controller.ts', featureKey: 'intake_forms' },
-  { licenseKey: 'hasChatbot', module: 'chatbot', file: 'chatbot.controller.ts', featureKey: 'chatbot' },
-  { licenseKey: 'hasChatbot', module: 'chatbot', file: 'chatbot-kb.controller.ts', featureKey: 'chatbot' },
-  { licenseKey: 'hasChatbot', module: 'chatbot', file: 'chatbot-admin.controller.ts', featureKey: 'chatbot' },
-  { licenseKey: 'hasRatings', module: 'ratings', file: 'ratings.controller.ts', featureKey: 'ratings' },
-  { licenseKey: 'hasReports', module: 'reports', file: 'reports.controller.ts', featureKey: 'reports' },
-  { licenseKey: 'hasMultiBranch', module: 'branches', file: 'branches.controller.ts', featureKey: 'multi_branch' },
-  { licenseKey: 'hasDepartments', module: 'departments', file: 'departments.controller.ts', featureKey: 'departments' },
+  {
+    licenseKey: 'hasCoupons',
+    module: 'coupons',
+    file: 'coupons.controller.ts',
+    featureKey: 'coupons',
+  },
+  {
+    licenseKey: 'hasGiftCards',
+    module: 'gift-cards',
+    file: 'gift-cards.controller.ts',
+    featureKey: 'gift_cards',
+  },
+  {
+    licenseKey: 'hasIntakeForms',
+    module: 'intake-forms',
+    file: 'intake-forms.controller.ts',
+    featureKey: 'intake_forms',
+  },
+  {
+    licenseKey: 'hasChatbot',
+    module: 'chatbot',
+    file: 'chatbot.controller.ts',
+    featureKey: 'chatbot',
+  },
+  {
+    licenseKey: 'hasChatbot',
+    module: 'chatbot',
+    file: 'chatbot-kb.controller.ts',
+    featureKey: 'chatbot',
+  },
+  {
+    licenseKey: 'hasChatbot',
+    module: 'chatbot',
+    file: 'chatbot-admin.controller.ts',
+    featureKey: 'chatbot',
+  },
+  {
+    licenseKey: 'hasRatings',
+    module: 'ratings',
+    file: 'ratings.controller.ts',
+    featureKey: 'ratings',
+  },
+  {
+    licenseKey: 'hasReports',
+    module: 'reports',
+    file: 'reports.controller.ts',
+    featureKey: 'reports',
+  },
+  {
+    licenseKey: 'hasMultiBranch',
+    module: 'branches',
+    file: 'branches.controller.ts',
+    featureKey: 'multi_branch',
+  },
+  {
+    licenseKey: 'hasDepartments',
+    module: 'departments',
+    file: 'departments.controller.ts',
+    featureKey: 'departments',
+  },
 ];
 
 function readControllerSource(moduleName: string, fileName: string): string {

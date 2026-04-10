@@ -10,7 +10,13 @@ const serviceId = 'svc-uuid';
 const practitionerServiceId = 'ps-uuid';
 const bookingType = 'in_person' as const;
 
-const durationOption = { id: 'opt-1', price: 15000, durationMinutes: 30, isDefault: true, sortOrder: 0 };
+const durationOption = {
+  id: 'opt-1',
+  price: 15000,
+  durationMinutes: 30,
+  isDefault: true,
+  sortOrder: 0,
+};
 
 const mockSbt = {
   id: 'sbt-1',
@@ -33,7 +39,6 @@ const mockPst = {
   durationOptions: [],
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   serviceBookingType: { findUnique: jest.fn() },
   practitionerServiceType: { findUnique: jest.fn() },
@@ -60,20 +65,32 @@ describe('PriceResolverService', () => {
     it('should throw BadRequestException when SBT not found', async () => {
       mockPrisma.serviceBookingType.findUnique.mockResolvedValue(null);
 
-      await expect(service.resolve(baseParams)).rejects.toThrow(BadRequestException);
+      await expect(service.resolve(baseParams)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when SBT is inactive', async () => {
-      mockPrisma.serviceBookingType.findUnique.mockResolvedValue({ ...mockSbt, isActive: false });
+      mockPrisma.serviceBookingType.findUnique.mockResolvedValue({
+        ...mockSbt,
+        isActive: false,
+      });
 
-      await expect(service.resolve(baseParams)).rejects.toThrow(BadRequestException);
+      await expect(service.resolve(baseParams)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when PST is inactive', async () => {
       mockPrisma.serviceBookingType.findUnique.mockResolvedValue(mockSbt);
-      mockPrisma.practitionerServiceType.findUnique.mockResolvedValue({ ...mockPst, isActive: false });
+      mockPrisma.practitionerServiceType.findUnique.mockResolvedValue({
+        ...mockPst,
+        isActive: false,
+      });
 
-      await expect(service.resolve(baseParams)).rejects.toThrow(BadRequestException);
+      await expect(service.resolve(baseParams)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -143,7 +160,10 @@ describe('PriceResolverService', () => {
       });
       mockPrisma.practitionerServiceType.findUnique.mockResolvedValue(null);
 
-      const result = await service.resolve({ ...baseParams, durationOptionId: 'opt-1' });
+      const result = await service.resolve({
+        ...baseParams,
+        durationOptionId: 'opt-1',
+      });
 
       expect(result.source).toBe('service_option');
       expect(result.durationOptionId).toBe('opt-1');
@@ -158,7 +178,10 @@ describe('PriceResolverService', () => {
         durationOptions: [practOpt],
       });
 
-      const result = await service.resolve({ ...baseParams, durationOptionId: 'popt-1' });
+      const result = await service.resolve({
+        ...baseParams,
+        durationOptionId: 'popt-1',
+      });
 
       expect(result.source).toBe('practitioner_option');
       expect(result.durationOptionId).toBe('popt-1');

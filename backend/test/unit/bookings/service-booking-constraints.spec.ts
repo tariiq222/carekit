@@ -38,7 +38,9 @@ describe('SetServiceBranchesDto — allow empty branchIds (fix #25)', () => {
   });
 
   it('rejects non-array value', async () => {
-    const dto = Object.assign(new SetServiceBranchesDto(), { branchIds: 'not-an-array' });
+    const dto = Object.assign(new SetServiceBranchesDto(), {
+      branchIds: 'not-an-array',
+    });
 
     const errors = await validate(dto);
     expect(errors.length).toBeGreaterThan(0);
@@ -50,15 +52,24 @@ describe('SetServiceBranchesDto — allow empty branchIds (fix #25)', () => {
 
 describe('Service-level booking constraint resolution logic (fix #5)', () => {
   // Helper that mirrors the effectiveMaxDays logic in booking-creation.service.ts
-  function resolveMaxDays(clinicMax: number, serviceMax: number | null): number {
-    const effectiveMaxDays = (serviceMax != null && serviceMax > 0)
-      ? (clinicMax > 0 ? Math.min(clinicMax, serviceMax) : serviceMax)
-      : clinicMax;
+  function resolveMaxDays(
+    clinicMax: number,
+    serviceMax: number | null,
+  ): number {
+    const effectiveMaxDays =
+      serviceMax != null && serviceMax > 0
+        ? clinicMax > 0
+          ? Math.min(clinicMax, serviceMax)
+          : serviceMax
+        : clinicMax;
     return effectiveMaxDays;
   }
 
   // Helper that mirrors effectiveLeadMinutes logic
-  function resolveLeadMinutes(clinicLead: number, serviceLead: number | null): number {
+  function resolveLeadMinutes(
+    clinicLead: number,
+    serviceLead: number | null,
+  ): number {
     return Math.max(clinicLead ?? 0, serviceLead ?? 0);
   }
 

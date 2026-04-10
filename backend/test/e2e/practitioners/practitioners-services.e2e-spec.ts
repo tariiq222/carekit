@@ -360,9 +360,7 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
         .send({
           serviceId: service2Id,
           availableTypes: ['in_person', 'online'],
-          types: [
-            { bookingType: 'in_person', price: 18000, isActive: true },
-          ],
+          types: [{ bookingType: 'in_person', price: 18000, isActive: true }],
         })
         .expect(201);
 
@@ -885,10 +883,16 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
       const services = res.body.data.items || res.body.data;
       expect(Array.isArray(services)).toBe(true);
       // practitioner2 has service2 assigned with in_person price override (18000 via types[])
-      const withCustom = (services as Array<{ serviceId: string; types?: Array<{ bookingType: string; price: number | null }> }>)
-        .find((s) => s.serviceId === service2Id);
+      const withCustom = (
+        services as Array<{
+          serviceId: string;
+          types?: Array<{ bookingType: string; price: number | null }>;
+        }>
+      ).find((s) => s.serviceId === service2Id);
       if (withCustom?.types) {
-        const inPersonType = withCustom.types.find((t) => t.bookingType === 'in_person');
+        const inPersonType = withCustom.types.find(
+          (t) => t.bookingType === 'in_person',
+        );
         if (inPersonType) {
           expect(inPersonType.price).toBe(18000);
         }
@@ -1786,11 +1790,23 @@ describe('Practitioners ↔ Services Integration (e2e)', () => {
         .get(`${PRACTITIONERS_URL}/${practitioner2Id}/services`)
         .expect(200);
 
-      const p1Services = p1Res.body.data.items || p1Res.body.data as Array<{ serviceId: string }>;
-      const p2Services = p2Res.body.data.items || p2Res.body.data as Array<{ serviceId: string }>;
+      const p1Services =
+        p1Res.body.data.items ||
+        (p1Res.body.data as Array<{ serviceId: string }>);
+      const p2Services =
+        p2Res.body.data.items ||
+        (p2Res.body.data as Array<{ serviceId: string }>);
 
-      expect((p1Services as Array<{ serviceId: string }>).some((s) => s.serviceId === serviceId)).toBe(true);
-      expect((p2Services as Array<{ serviceId: string }>).some((s) => s.serviceId === serviceId)).toBe(true);
+      expect(
+        (p1Services as Array<{ serviceId: string }>).some(
+          (s) => s.serviceId === serviceId,
+        ),
+      ).toBe(true);
+      expect(
+        (p2Services as Array<{ serviceId: string }>).some(
+          (s) => s.serviceId === serviceId,
+        ),
+      ).toBe(true);
     });
 
     it('deleting service does not affect other practitioners assignments', async () => {

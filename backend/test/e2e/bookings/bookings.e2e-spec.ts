@@ -60,13 +60,13 @@ const SPECIALTIES_URL = `${API_PREFIX}/specialties`;
 function getTomorrow(): string {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0]!;
+  return d.toISOString().split('T')[0];
 }
 
 function getDaysFromNow(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0]!;
+  return d.toISOString().split('T')[0];
 }
 
 /** Round-robin counter to spread booking creation across multiple users (throttle bypass) */
@@ -74,7 +74,8 @@ let _bookingTokenIndex = 0;
 let _bookingTokenPool: string[] = [];
 
 function nextBookingToken(): string {
-  const token = _bookingTokenPool[_bookingTokenIndex % _bookingTokenPool.length]!;
+  const token =
+    _bookingTokenPool[_bookingTokenIndex % _bookingTokenPool.length];
   _bookingTokenIndex++;
   return token;
 }
@@ -84,7 +85,12 @@ async function createBooking(
   token: string,
   practitionerId: string,
   serviceId: string,
-  opts: { date?: string; startTime?: string; patientId?: string; type?: string } = {},
+  opts: {
+    date?: string;
+    startTime?: string;
+    patientId?: string;
+    type?: string;
+  } = {},
 ): Promise<string> {
   // Use provided token if explicitly given, otherwise rotate to stay under per-user throttle
   const effectiveToken = token;
@@ -101,7 +107,9 @@ async function createBooking(
     });
 
   if (res.status !== 201) {
-    throw new Error(`createBooking failed: ${res.status} ${JSON.stringify(res.body)}`);
+    throw new Error(
+      `createBooking failed: ${res.status} ${JSON.stringify(res.body)}`,
+    );
   }
   return res.body.data.id as string;
 }
@@ -111,7 +119,12 @@ async function createBookingRotated(
   httpServer: ReturnType<INestApplication['getHttpServer']>,
   practitionerId: string,
   serviceId: string,
-  opts: { date?: string; startTime?: string; patientId?: string; type?: string } = {},
+  opts: {
+    date?: string;
+    startTime?: string;
+    patientId?: string;
+    type?: string;
+  } = {},
 ): Promise<string> {
   const token = nextBookingToken();
   return createBooking(httpServer, token, practitionerId, serviceId, opts);
@@ -137,8 +150,8 @@ describe('Bookings Module (e2e)', () => {
   let serviceId: string;
 
   // Bookings created during tests
-  let pendingBookingId: string;     // created, status=pending (unpaid)
-  let confirmedBookingId: string;   // paid → confirmed
+  let pendingBookingId: string; // created, status=pending (unpaid)
+  let confirmedBookingId: string; // paid → confirmed
   let cancelRequestBookingId: string;
 
   beforeAll(async () => {
@@ -195,15 +208,29 @@ describe('Bookings Module (e2e)', () => {
     const serviceRes = await request(httpServer)
       .post(SERVICES_URL)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .send({ nameEn: 'General Consultation', nameAr: 'استشارة عامة', categoryId, price: 15000, duration: 30 });
+      .send({
+        nameEn: 'General Consultation',
+        nameAr: 'استشارة عامة',
+        categoryId,
+        price: 15000,
+        duration: 30,
+      });
     serviceId = serviceRes.body.data?.id as string;
-    if (!serviceId) throw new Error(`Service creation failed: ${JSON.stringify(serviceRes.body)}`);
+    if (!serviceId)
+      throw new Error(
+        `Service creation failed: ${JSON.stringify(serviceRes.body)}`,
+      );
 
     // Practitioner profile — idempotent
     const practCreateRes = await request(httpServer)
       .post(PRACTITIONERS_URL)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .send({ userId: practitionerUserId, specialtyId, titleEn: 'Dr.', titleAr: 'د.' });
+      .send({
+        userId: practitionerUserId,
+        specialtyId,
+        titleEn: 'Dr.',
+        titleAr: 'د.',
+      });
 
     if (practCreateRes.status === 201 || practCreateRes.status === 200) {
       practitionerId = practCreateRes.body.data?.id as string;
@@ -211,7 +238,10 @@ describe('Bookings Module (e2e)', () => {
       const listRes = await request(httpServer)
         .get(PRACTITIONERS_URL)
         .query({ search: TEST_USERS.practitioner.firstName, perPage: '50' });
-      const items = (listRes.body.data?.items ?? []) as Array<{ id: string; user?: { id: string } }>;
+      const items = (listRes.body.data?.items ?? []) as Array<{
+        id: string;
+        user?: { id: string };
+      }>;
       const found = items.find((p) => p.user?.id === practitionerUserId);
       practitionerId = found?.id as string;
     }
@@ -227,7 +257,11 @@ describe('Bookings Module (e2e)', () => {
     await request(httpServer)
       .patch(`${API_PREFIX}/booking-settings`)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .send({ patientCanReschedule: true, rescheduleBeforeHours: 0, maxReschedulesPerBooking: 5 });
+      .send({
+        patientCanReschedule: true,
+        rescheduleBeforeHours: 0,
+        maxReschedulesPerBooking: 5,
+      });
 
     // Allow patient to cancel pending bookings
     await request(httpServer)
@@ -239,7 +273,9 @@ describe('Bookings Module (e2e)', () => {
     await request(httpServer)
       .put(`${SERVICES_URL}/${serviceId}/booking-types`)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .send({ types: [{ bookingType: 'in_person', price: 15000, duration: 30 }] });
+      .send({
+        types: [{ bookingType: 'in_person', price: 15000, duration: 30 }],
+      });
 
     // Assign service to practitioner
     const assignRes = await request(httpServer)
@@ -247,31 +283,47 @@ describe('Bookings Module (e2e)', () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .send({ serviceId, availableTypes: ['in_person'], isActive: true });
     if (![201, 200, 409].includes(assignRes.status)) {
-      throw new Error(`Service assignment failed: ${JSON.stringify(assignRes.body)}`);
+      throw new Error(
+        `Service assignment failed: ${JSON.stringify(assignRes.body)}`,
+      );
     }
 
     // Set practitioner availability for all 7 days so reschedule/recurring tests pass
     const schedule = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
-      dayOfWeek: day, startTime: '08:00', endTime: '20:00',
+      dayOfWeek: day,
+      startTime: '08:00',
+      endTime: '20:00',
     }));
     const availRes = await request(httpServer)
       .put(`${PRACTITIONERS_URL}/${practitionerId}/availability`)
       .set(getAuthHeaders(superAdmin.accessToken))
       .send({ schedule });
     if (availRes.status !== 200) {
-      throw new Error(`Availability setup failed: ${availRes.status} ${JSON.stringify(availRes.body)}`);
+      throw new Error(
+        `Availability setup failed: ${availRes.status} ${JSON.stringify(availRes.body)}`,
+      );
     }
 
     // Create initial bookings for tests (rotate tokens to stay under per-user throttle)
-    pendingBookingId = await createBookingRotated(httpServer, practitionerId, serviceId, {
-      patientId: patient.user['id'] as string,
-    });
+    pendingBookingId = await createBookingRotated(
+      httpServer,
+      practitionerId,
+      serviceId,
+      {
+        patientId: patient.user['id'] as string,
+      },
+    );
 
     // Create a confirmed booking: mark payment paid (auto-confirms)
-    confirmedBookingId = await createBookingRotated(httpServer, practitionerId, serviceId, {
-      patientId: patient.user['id'] as string,
-      startTime: '11:00',
-    });
+    confirmedBookingId = await createBookingRotated(
+      httpServer,
+      practitionerId,
+      serviceId,
+      {
+        patientId: patient.user['id'] as string,
+        startTime: '11:00',
+      },
+    );
     const pmtRes = await request(httpServer)
       .get(`${API_PREFIX}/payments/booking/${confirmedBookingId}`)
       .set(getAuthHeaders(superAdmin.accessToken));
@@ -361,7 +413,12 @@ describe('Bookings Module (e2e)', () => {
       const res = await request(httpServer)
         .post(BOOKINGS_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ serviceId, type: 'in_person', date: getTomorrow(), startTime: '15:00' })
+        .send({
+          serviceId,
+          type: 'in_person',
+          date: getTomorrow(),
+          startTime: '15:00',
+        })
         .expect(400);
 
       expect(res.body.success).toBe(false);
@@ -371,7 +428,13 @@ describe('Bookings Module (e2e)', () => {
       const res = await request(httpServer)
         .post(BOOKINGS_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ practitionerId, serviceId, type: 'in_person', date: '01/01/2027', startTime: '09:00' })
+        .send({
+          practitionerId,
+          serviceId,
+          type: 'in_person',
+          date: '01/01/2027',
+          startTime: '09:00',
+        })
         .expect(400);
 
       expect(res.body.success).toBe(false);
@@ -381,7 +444,13 @@ describe('Bookings Module (e2e)', () => {
       const res = await request(httpServer)
         .post(BOOKINGS_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ practitionerId, serviceId, type: 'telepathy', date: getTomorrow(), startTime: '09:00' })
+        .send({
+          practitionerId,
+          serviceId,
+          type: 'telepathy',
+          date: getTomorrow(),
+          startTime: '09:00',
+        })
         .expect(400);
 
       expect(res.body.success).toBe(false);
@@ -391,7 +460,13 @@ describe('Bookings Module (e2e)', () => {
       const res = await request(httpServer)
         .post(BOOKINGS_URL)
         .set(getAuthHeaders(accountant.accessToken))
-        .send({ practitionerId, serviceId, type: 'in_person', date: getDaysFromNow(4), startTime: '09:00' })
+        .send({
+          practitionerId,
+          serviceId,
+          type: 'in_person',
+          date: getDaysFromNow(4),
+          startTime: '09:00',
+        })
         .expect(403);
 
       expectErrorResponse(res.body, 'FORBIDDEN');
@@ -400,7 +475,13 @@ describe('Bookings Module (e2e)', () => {
     it('unauthenticated → 401', async () => {
       await request(httpServer)
         .post(BOOKINGS_URL)
-        .send({ practitionerId, serviceId, type: 'in_person', date: getTomorrow(), startTime: '09:00' })
+        .send({
+          practitionerId,
+          serviceId,
+          type: 'in_person',
+          date: getTomorrow(),
+          startTime: '09:00',
+        })
         .expect(401);
     });
   });
@@ -673,7 +754,9 @@ describe('Bookings Module (e2e)', () => {
 
     it('non-existent booking → 404', async () => {
       const res = await request(httpServer)
-        .get(`${BOOKINGS_URL}/00000000-0000-0000-0000-000000000000/payment-status`)
+        .get(
+          `${BOOKINGS_URL}/00000000-0000-0000-0000-000000000000/payment-status`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(404);
 
@@ -691,7 +774,9 @@ describe('Bookings Module (e2e)', () => {
     beforeAll(async () => {
       // Create a fresh booking dedicated to lifecycle tests (unpaid — lifecycle tests drive state)
       lifecycleBookingId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
+        httpServer,
+        practitionerId,
+        serviceId,
         { patientId: patient.user['id'] as string, startTime: '14:00' },
       );
     });
@@ -703,7 +788,9 @@ describe('Bookings Module (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken));
       if (pmtRes.status === 200) {
         await request(httpServer)
-          .patch(`${API_PREFIX}/payments/${pmtRes.body.data.id as string}/status`)
+          .patch(
+            `${API_PREFIX}/payments/${pmtRes.body.data.id as string}/status`,
+          )
           .set(getAuthHeaders(superAdmin.accessToken))
           .send({ status: 'paid' });
       }
@@ -830,7 +917,9 @@ describe('Bookings Module (e2e)', () => {
 
     beforeAll(async () => {
       noShowBookingId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
+        httpServer,
+        practitionerId,
+        serviceId,
         { patientId: patient2.user['id'] as string, startTime: '16:00' },
       );
       // Pay + confirm
@@ -839,7 +928,9 @@ describe('Bookings Module (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken));
       if (pmtRes.status === 200) {
         await request(httpServer)
-          .patch(`${API_PREFIX}/payments/${pmtRes.body.data.id as string}/status`)
+          .patch(
+            `${API_PREFIX}/payments/${pmtRes.body.data.id as string}/status`,
+          )
           .set(getAuthHeaders(superAdmin.accessToken))
           .send({ status: 'paid' });
       }
@@ -886,8 +977,14 @@ describe('Bookings Module (e2e)', () => {
 
     beforeAll(async () => {
       adminCancelBookingId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(5), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(5),
+          startTime: '09:00',
+        },
       );
     });
 
@@ -905,8 +1002,14 @@ describe('Bookings Module (e2e)', () => {
 
     it('missing refundType → 400 validation', async () => {
       const freshId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(6), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(6),
+          startTime: '09:00',
+        },
       );
       const res = await request(httpServer)
         .post(`${BOOKINGS_URL}/${freshId}/admin-cancel`)
@@ -919,8 +1022,14 @@ describe('Bookings Module (e2e)', () => {
 
     it('invalid refundType → 400', async () => {
       const freshId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(7), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(7),
+          startTime: '09:00',
+        },
       );
       const res = await request(httpServer)
         .post(`${BOOKINGS_URL}/${freshId}/admin-cancel`)
@@ -933,8 +1042,14 @@ describe('Bookings Module (e2e)', () => {
 
     it('accountant cannot admin-cancel (no bookings:delete) → 403', async () => {
       const freshId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(8), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(8),
+          startTime: '09:00',
+        },
       );
       const res = await request(httpServer)
         .post(`${BOOKINGS_URL}/${freshId}/admin-cancel`)
@@ -947,8 +1062,14 @@ describe('Bookings Module (e2e)', () => {
 
     it('receptionist cannot admin-cancel (no bookings:delete) → 403', async () => {
       const freshId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(9), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(9),
+          startTime: '09:00',
+        },
       );
       const res = await request(httpServer)
         .post(`${BOOKINGS_URL}/${freshId}/admin-cancel`)
@@ -989,7 +1110,9 @@ describe('Bookings Module (e2e)', () => {
 
     it('non-existent booking → 404', async () => {
       const res = await request(httpServer)
-        .post(`${BOOKINGS_URL}/00000000-0000-0000-0000-000000000000/cancel-request`)
+        .post(
+          `${BOOKINGS_URL}/00000000-0000-0000-0000-000000000000/cancel-request`,
+        )
         .set(getAuthHeaders(patient.accessToken))
         .send({})
         .expect(404);
@@ -1010,15 +1133,23 @@ describe('Bookings Module (e2e)', () => {
       // Create confirmed bookings by marking payment as paid (auto-confirms)
       // Then patient requests cancellation → status becomes pending_cancellation
       pendingCancelBookingId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(10), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(10),
+          startTime: '09:00',
+        },
       );
       const pmtRes1 = await request(httpServer)
         .get(`${API_PREFIX}/payments/booking/${pendingCancelBookingId}`)
         .set(getAuthHeaders(superAdmin.accessToken));
       if (pmtRes1.status === 200) {
         await request(httpServer)
-          .patch(`${API_PREFIX}/payments/${pmtRes1.body.data.id as string}/status`)
+          .patch(
+            `${API_PREFIX}/payments/${pmtRes1.body.data.id as string}/status`,
+          )
           .set(getAuthHeaders(superAdmin.accessToken))
           .send({ status: 'paid' });
         // Payment auto-confirms the booking
@@ -1031,15 +1162,23 @@ describe('Bookings Module (e2e)', () => {
 
       // Second booking for reject test
       pendingCancelBookingId2 = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(11), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(11),
+          startTime: '09:00',
+        },
       );
       const pmtRes2 = await request(httpServer)
         .get(`${API_PREFIX}/payments/booking/${pendingCancelBookingId2}`)
         .set(getAuthHeaders(superAdmin.accessToken));
       if (pmtRes2.status === 200) {
         await request(httpServer)
-          .patch(`${API_PREFIX}/payments/${pmtRes2.body.data.id as string}/status`)
+          .patch(
+            `${API_PREFIX}/payments/${pmtRes2.body.data.id as string}/status`,
+          )
           .set(getAuthHeaders(superAdmin.accessToken))
           .send({ status: 'paid' });
         // Payment auto-confirms the booking
@@ -1113,8 +1252,14 @@ describe('Bookings Module (e2e)', () => {
 
     beforeAll(async () => {
       rescheduleBookingId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient2.user['id'] as string, date: getDaysFromNow(12), startTime: '10:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient2.user['id'] as string,
+          date: getDaysFromNow(12),
+          startTime: '10:00',
+        },
       );
     });
 
@@ -1133,8 +1278,14 @@ describe('Bookings Module (e2e)', () => {
 
     it('missing both date and startTime → 400', async () => {
       const freshId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient2.user['id'] as string, date: getDaysFromNow(14), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient2.user['id'] as string,
+          date: getDaysFromNow(14),
+          startTime: '09:00',
+        },
       );
       const res = await request(httpServer)
         .patch(`${BOOKINGS_URL}/${freshId}`)
@@ -1147,8 +1298,14 @@ describe('Bookings Module (e2e)', () => {
 
     it('accountant cannot reschedule → 403', async () => {
       const freshId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient2.user['id'] as string, date: getDaysFromNow(15), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient2.user['id'] as string,
+          date: getDaysFromNow(15),
+          startTime: '09:00',
+        },
       );
       const res = await request(httpServer)
         .patch(`${BOOKINGS_URL}/${freshId}`)
@@ -1169,8 +1326,14 @@ describe('Bookings Module (e2e)', () => {
 
     beforeAll(async () => {
       selfRescheduleBookingId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(17), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(17),
+          startTime: '09:00',
+        },
       );
     });
 
@@ -1187,8 +1350,14 @@ describe('Bookings Module (e2e)', () => {
 
     it('patient cannot reschedule another patient booking → 403', async () => {
       const freshId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient2.user['id'] as string, date: getDaysFromNow(19), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient2.user['id'] as string,
+          date: getDaysFromNow(19),
+          startTime: '09:00',
+        },
       );
       const res = await request(httpServer)
         .post(`${BOOKINGS_URL}/${freshId}/patient-reschedule`)
@@ -1210,7 +1379,11 @@ describe('Bookings Module (e2e)', () => {
       await request(httpServer)
         .patch(`${API_PREFIX}/booking-settings`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ allowRecurring: true, allowedRecurringPatterns: ['weekly', 'biweekly', 'monthly'], adminCanBookOutsideHours: true });
+        .send({
+          allowRecurring: true,
+          allowedRecurringPatterns: ['weekly', 'biweekly', 'monthly'],
+          adminCanBookOutsideHours: true,
+        });
 
       // Use superAdmin (adminCanBookOutsideHours=true + callerUserId !== actualPatientId = skipChecks=true)
       // This bypasses clinic hours validation which has no working hours set up in test DB
@@ -1294,7 +1467,15 @@ describe('Bookings Module (e2e)', () => {
     it('unauthenticated → 401', async () => {
       await request(httpServer)
         .post(`${BOOKINGS_URL}/recurring`)
-        .send({ practitionerId, serviceId, type: 'in_person', date: getDaysFromNow(30), startTime: '09:00', repeatEvery: 'weekly', repeatCount: 2 })
+        .send({
+          practitionerId,
+          serviceId,
+          type: 'in_person',
+          date: getDaysFromNow(30),
+          startTime: '09:00',
+          repeatEvery: 'weekly',
+          repeatCount: 2,
+        })
         .expect(401);
     });
   });
@@ -1306,8 +1487,14 @@ describe('Bookings Module (e2e)', () => {
   describe('RBAC — bookings:delete guard (admin-cancel)', () => {
     it('super_admin has bookings:delete', async () => {
       const freshId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(35), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(35),
+          startTime: '09:00',
+        },
       );
       const res = await request(httpServer)
         .post(`${BOOKINGS_URL}/${freshId}/admin-cancel`)
@@ -1320,8 +1507,14 @@ describe('Bookings Module (e2e)', () => {
 
     it('practitioner cannot admin-cancel (no bookings:delete) → 403', async () => {
       const freshId = await createBookingRotated(
-        httpServer, practitionerId, serviceId,
-        { patientId: patient.user['id'] as string, date: getDaysFromNow(36), startTime: '09:00' },
+        httpServer,
+        practitionerId,
+        serviceId,
+        {
+          patientId: patient.user['id'] as string,
+          date: getDaysFromNow(36),
+          startTime: '09:00',
+        },
       );
       const res = await request(httpServer)
         .post(`${BOOKINGS_URL}/${freshId}/admin-cancel`)

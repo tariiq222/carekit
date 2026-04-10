@@ -24,7 +24,10 @@ interface MockResponse {
   _body: Record<string, unknown>;
 }
 
-function buildHost(response: MockResponse, request: Record<string, unknown> = {}): ArgumentsHost {
+function buildHost(
+  response: MockResponse,
+  request: Record<string, unknown> = {},
+): ArgumentsHost {
   return {
     switchToHttp: () => ({
       getResponse: () => response,
@@ -68,7 +71,8 @@ describe('GlobalExceptionFilter — stack trace & internal details', () => {
   it('does not include stack trace in response for unhandled Error', () => {
     const res = buildResponse();
     const err = new Error('Something broke internally');
-    err.stack = 'Error: Something broke internally\n    at Object.<anonymous> (/app/src/secret.ts:42:7)';
+    err.stack =
+      'Error: Something broke internally\n    at Object.<anonymous> (/app/src/secret.ts:42:7)';
 
     filter.catch(err, buildHost(res));
 
@@ -116,7 +120,9 @@ describe('GlobalExceptionFilter — Prisma error leakage', () => {
 
   it('does not expose Prisma class name in response', () => {
     const res = buildResponse();
-    const prismaError = new Error('Unique constraint failed on the fields: (`email`)') as Error & { code?: string };
+    const prismaError = new Error(
+      'Unique constraint failed on the fields: (`email`)',
+    ) as Error & { code?: string };
     prismaError.name = 'PrismaClientKnownRequestError';
     prismaError.code = 'P2002';
     Object.defineProperty(prismaError, 'constructor', {
@@ -133,7 +139,9 @@ describe('GlobalExceptionFilter — Prisma error leakage', () => {
 
   it('does not expose database field names from Prisma errors', () => {
     const res = buildResponse();
-    const prismaError = new Error('Foreign key constraint failed on the field: `userId`');
+    const prismaError = new Error(
+      'Foreign key constraint failed on the field: `userId`',
+    );
     Object.defineProperty(prismaError, 'constructor', {
       value: { name: 'PrismaClientKnownRequestError' },
     });
@@ -177,7 +185,10 @@ describe('GlobalExceptionFilter — HTTP error codes', () => {
   it('respects custom error code passed in exception body', () => {
     const res = buildResponse();
     filter.catch(
-      new HttpException({ error: 'EMAIL_ALREADY_EXISTS', message: 'Email taken' }, 409),
+      new HttpException(
+        { error: 'EMAIL_ALREADY_EXISTS', message: 'Email taken' },
+        409,
+      ),
       buildHost(res),
     );
 
@@ -211,7 +222,10 @@ describe('GlobalExceptionFilter — enumeration resistance', () => {
 
     filter.catch(new HttpException('Not Found', 404), buildHost(res404));
     filter.catch(
-      new HttpException({ error: 'AUTH_TOKEN_INVALID', message: 'Invalid token' }, 401),
+      new HttpException(
+        { error: 'AUTH_TOKEN_INVALID', message: 'Invalid token' },
+        401,
+      ),
       buildHost(res401),
     );
 
@@ -231,16 +245,26 @@ describe('GlobalExceptionFilter — enumeration resistance', () => {
 
     // Both wrong-user and wrong-password should use the same AUTH_TOKEN_INVALID or similar
     filter.catch(
-      new HttpException({ error: 'AUTH_TOKEN_INVALID', message: 'Invalid credentials' }, 401),
+      new HttpException(
+        { error: 'AUTH_TOKEN_INVALID', message: 'Invalid credentials' },
+        401,
+      ),
       buildHost(resUserNotFound, { url: '/api/v1/auth/login' }),
     );
     filter.catch(
-      new HttpException({ error: 'AUTH_TOKEN_INVALID', message: 'Invalid credentials' }, 401),
+      new HttpException(
+        { error: 'AUTH_TOKEN_INVALID', message: 'Invalid credentials' },
+        401,
+      ),
       buildHost(resWrongPassword, { url: '/api/v1/auth/login' }),
     );
 
-    const body1 = (resUserNotFound._body as { error: { code: string; message: string } }).error;
-    const body2 = (resWrongPassword._body as { error: { code: string; message: string } }).error;
+    const body1 = (
+      resUserNotFound._body as { error: { code: string; message: string } }
+    ).error;
+    const body2 = (
+      resWrongPassword._body as { error: { code: string; message: string } }
+    ).error;
 
     expect(body1.code).toBe(body2.code);
     expect(body1.message).toBe(body2.message);
@@ -262,7 +286,10 @@ describe('GlobalExceptionFilter — validation errors', () => {
     const res = buildResponse();
     filter.catch(
       new HttpException(
-        { message: ['email must be an email', 'password is too short'], statusCode: 400 },
+        {
+          message: ['email must be an email', 'password is too short'],
+          statusCode: 400,
+        },
         400,
       ),
       buildHost(res),
@@ -278,7 +305,10 @@ describe('GlobalExceptionFilter — validation errors', () => {
     const res = buildResponse();
     filter.catch(
       new HttpException(
-        { message: ['password must be longer than or equal to 8 characters'], statusCode: 400 },
+        {
+          message: ['password must be longer than or equal to 8 characters'],
+          statusCode: 400,
+        },
         400,
       ),
       buildHost(res),

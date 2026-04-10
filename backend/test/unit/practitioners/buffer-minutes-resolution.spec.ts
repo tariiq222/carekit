@@ -19,16 +19,30 @@ import { ClinicHolidaysService } from '../../../src/modules/clinic/clinic-holida
 
 const mockPrisma = {
   practitioner: { findFirst: jest.fn() },
-  practitionerAvailability: { findMany: jest.fn(), deleteMany: jest.fn(), createMany: jest.fn() },
+  practitionerAvailability: {
+    findMany: jest.fn(),
+    deleteMany: jest.fn(),
+    createMany: jest.fn(),
+  },
   practitionerVacation: { findFirst: jest.fn(), findMany: jest.fn() },
   practitionerBreak: { findMany: jest.fn() },
-  practitionerService: { findUnique: jest.fn(), findMany: jest.fn(), aggregate: jest.fn() },
+  practitionerService: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    aggregate: jest.fn(),
+  },
   booking: { findMany: jest.fn() },
   $transaction: jest.fn(),
 };
 
 const mockBookingSettings = {
-  getForBranch: jest.fn().mockResolvedValue({ bufferMinutes: 0, minBookingLeadMinutes: 0, maxAdvanceBookingDays: 0, walkInPaymentRequired: false, allowWalkIn: true }),
+  getForBranch: jest.fn().mockResolvedValue({
+    bufferMinutes: 0,
+    minBookingLeadMinutes: 0,
+    maxAdvanceBookingDays: 0,
+    walkInPaymentRequired: false,
+    allowWalkIn: true,
+  }),
 };
 
 const mockClinicSettings = {
@@ -75,14 +89,16 @@ describe('PractitionerAvailabilityService — resolveBufferMinutes (CRITICAL #2)
     // New code: 0 > 0 ? 0 : 15 → 15 (correct)
     mockPrisma.practitionerService.findMany.mockResolvedValue([
       {
-        bufferMinutes: 0,           // Prisma @default(0) — not an explicit override
+        bufferMinutes: 0, // Prisma @default(0) — not an explicit override
         service: { bufferMinutes: 15 },
       },
     ]);
 
-    const result = await (service as unknown as {
-      resolveBufferMinutes: (id: string, global: number) => Promise<number>;
-    }).resolveBufferMinutes('prac-1', 0);
+    const result = await (
+      service as unknown as {
+        resolveBufferMinutes: (id: string, global: number) => Promise<number>;
+      }
+    ).resolveBufferMinutes('prac-1', 0);
 
     expect(result).toBe(15); // must be 15, not 0
   });
@@ -90,14 +106,16 @@ describe('PractitionerAvailabilityService — resolveBufferMinutes (CRITICAL #2)
   it('uses ps.bufferMinutes when explicitly set > 0', async () => {
     mockPrisma.practitionerService.findMany.mockResolvedValue([
       {
-        bufferMinutes: 10,          // explicit practitioner override
+        bufferMinutes: 10, // explicit practitioner override
         service: { bufferMinutes: 15 },
       },
     ]);
 
-    const result = await (service as unknown as {
-      resolveBufferMinutes: (id: string, global: number) => Promise<number>;
-    }).resolveBufferMinutes('prac-1', 0);
+    const result = await (
+      service as unknown as {
+        resolveBufferMinutes: (id: string, global: number) => Promise<number>;
+      }
+    ).resolveBufferMinutes('prac-1', 0);
 
     expect(result).toBe(10); // practitioner override wins
   });
@@ -107,9 +125,11 @@ describe('PractitionerAvailabilityService — resolveBufferMinutes (CRITICAL #2)
       { bufferMinutes: 0, service: { bufferMinutes: 5 } },
     ]);
 
-    const result = await (service as unknown as {
-      resolveBufferMinutes: (id: string, global: number) => Promise<number>;
-    }).resolveBufferMinutes('prac-1', 20);
+    const result = await (
+      service as unknown as {
+        resolveBufferMinutes: (id: string, global: number) => Promise<number>;
+      }
+    ).resolveBufferMinutes('prac-1', 20);
 
     expect(result).toBe(20); // global wins — most conservative
   });
@@ -117,13 +137,15 @@ describe('PractitionerAvailabilityService — resolveBufferMinutes (CRITICAL #2)
   it('takes max across multiple services', async () => {
     mockPrisma.practitionerService.findMany.mockResolvedValue([
       { bufferMinutes: 0, service: { bufferMinutes: 10 } },
-      { bufferMinutes: 25, service: { bufferMinutes: 5 } },  // explicit 25
+      { bufferMinutes: 25, service: { bufferMinutes: 5 } }, // explicit 25
       { bufferMinutes: 0, service: { bufferMinutes: 15 } },
     ]);
 
-    const result = await (service as unknown as {
-      resolveBufferMinutes: (id: string, global: number) => Promise<number>;
-    }).resolveBufferMinutes('prac-1', 0);
+    const result = await (
+      service as unknown as {
+        resolveBufferMinutes: (id: string, global: number) => Promise<number>;
+      }
+    ).resolveBufferMinutes('prac-1', 0);
 
     expect(result).toBe(25); // max of [10, 25, 15] = 25
   });
@@ -131,9 +153,11 @@ describe('PractitionerAvailabilityService — resolveBufferMinutes (CRITICAL #2)
   it('returns 0 when no practitioner services and no global buffer', async () => {
     mockPrisma.practitionerService.findMany.mockResolvedValue([]);
 
-    const result = await (service as unknown as {
-      resolveBufferMinutes: (id: string, global: number) => Promise<number>;
-    }).resolveBufferMinutes('prac-1', 0);
+    const result = await (
+      service as unknown as {
+        resolveBufferMinutes: (id: string, global: number) => Promise<number>;
+      }
+    ).resolveBufferMinutes('prac-1', 0);
 
     expect(result).toBe(0);
   });

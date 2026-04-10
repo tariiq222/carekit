@@ -32,14 +32,20 @@ describe('PractitionersService — createVacation', () => {
       id: 'new-vacation-uuid',
     });
 
-    const result = await ctx.vacationService.createVacation(mockPractitioner.id, vacationDto);
+    const result = await ctx.vacationService.createVacation(
+      mockPractitioner.id,
+      vacationDto,
+    );
 
     expect(result).toHaveProperty('id');
     expect(ctx.mockPrisma.practitionerVacation.create).toHaveBeenCalled();
   });
 
   it.each([
-    ['endDate before startDate', { startDate: '2026-05-05', endDate: '2026-05-01' }],
+    [
+      'endDate before startDate',
+      { startDate: '2026-05-05', endDate: '2026-05-01' },
+    ],
     ['overlapping dates', { startDate: '2026-04-13', endDate: '2026-04-20' }],
   ])('should reject %s', async (_label, dto) => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
@@ -64,86 +70,104 @@ describe('PractitionersService — createVacation', () => {
 
   it('rejects fully-contained range (new inside existing)', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([
+      mockVacation,
+    ]);
 
     await expect(
       ctx.vacationService.createVacation(mockPractitioner.id, {
         startDate: '2026-04-11',
-        endDate:   '2026-04-14',
+        endDate: '2026-04-14',
       }),
     ).rejects.toThrow(BadRequestException);
   });
 
   it('rejects range that contains existing (existing inside new)', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([
+      mockVacation,
+    ]);
 
     await expect(
       ctx.vacationService.createVacation(mockPractitioner.id, {
         startDate: '2026-04-08',
-        endDate:   '2026-04-20',
+        endDate: '2026-04-20',
       }),
     ).rejects.toThrow(BadRequestException);
   });
 
   it('rejects partial overlap at the end (new starts inside existing)', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([
+      mockVacation,
+    ]);
 
     // Existing Apr 10-15, New Apr 13-20 → overlaps
     await expect(
       ctx.vacationService.createVacation(mockPractitioner.id, {
         startDate: '2026-04-13',
-        endDate:   '2026-04-20',
+        endDate: '2026-04-20',
       }),
     ).rejects.toThrow(BadRequestException);
   });
 
   it('rejects partial overlap at the start (new ends inside existing)', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([
+      mockVacation,
+    ]);
 
     // Existing Apr 10-15, New Apr 05-12 → overlaps
     await expect(
       ctx.vacationService.createVacation(mockPractitioner.id, {
         startDate: '2026-04-05',
-        endDate:   '2026-04-12',
+        endDate: '2026-04-12',
       }),
     ).rejects.toThrow(BadRequestException);
   });
 
   it('allows non-overlapping range before existing', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([
+      mockVacation,
+    ]);
     ctx.mockPrisma.practitionerVacation.create.mockResolvedValue({
       ...mockVacation,
-      id:        'new-vac',
+      id: 'new-vac',
       startDate: new Date('2026-04-01'),
-      endDate:   new Date('2026-04-09'),
+      endDate: new Date('2026-04-09'),
     });
 
-    const result = await ctx.vacationService.createVacation(mockPractitioner.id, {
-      startDate: '2026-04-01',
-      endDate:   '2026-04-09',
-    });
+    const result = await ctx.vacationService.createVacation(
+      mockPractitioner.id,
+      {
+        startDate: '2026-04-01',
+        endDate: '2026-04-09',
+      },
+    );
 
     expect(result).toHaveProperty('id', 'new-vac');
   });
 
   it('allows non-overlapping range after existing', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([
+      mockVacation,
+    ]);
     ctx.mockPrisma.practitionerVacation.create.mockResolvedValue({
       ...mockVacation,
-      id:        'new-vac',
+      id: 'new-vac',
       startDate: new Date('2026-04-16'),
-      endDate:   new Date('2026-04-20'),
+      endDate: new Date('2026-04-20'),
     });
 
-    const result = await ctx.vacationService.createVacation(mockPractitioner.id, {
-      startDate: '2026-04-16',
-      endDate:   '2026-04-20',
-    });
+    const result = await ctx.vacationService.createVacation(
+      mockPractitioner.id,
+      {
+        startDate: '2026-04-16',
+        endDate: '2026-04-20',
+      },
+    );
 
     expect(result).toHaveProperty('id', 'new-vac');
   });
@@ -155,7 +179,7 @@ describe('PractitionersService — createVacation', () => {
     await expect(
       ctx.vacationService.createVacation(mockPractitioner.id, {
         startDate: 'not-a-date',
-        endDate:   '2026-05-10',
+        endDate: '2026-05-10',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -167,7 +191,7 @@ describe('PractitionersService — createVacation', () => {
     await expect(
       ctx.vacationService.createVacation(mockPractitioner.id, {
         startDate: '2026-05-01',
-        endDate:   'not-a-date',
+        endDate: 'not-a-date',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -179,7 +203,7 @@ describe('PractitionersService — createVacation', () => {
     await expect(
       ctx.vacationService.createVacation(mockPractitioner.id, {
         startDate: '2026-05-01',
-        endDate:   '2026-05-01',
+        endDate: '2026-05-01',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -203,11 +227,11 @@ describe('PractitionersService — createVacation', () => {
     const [r1, r2] = await Promise.all([
       ctx.vacationService.createVacation(mockPractitioner.id, {
         startDate: '2026-07-01',
-        endDate:   '2026-07-15',
+        endDate: '2026-07-15',
       }),
       ctx.vacationService.createVacation(mockPractitioner.id, {
         startDate: '2026-07-01',
-        endDate:   '2026-07-15',
+        endDate: '2026-07-15',
       }),
     ]);
 
@@ -226,7 +250,9 @@ describe('PractitionersService — listVacations', () => {
 
   it('should return all vacations for a practitioner', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([
+      mockVacation,
+    ]);
 
     const result = await ctx.vacationService.listVacations(mockPractitioner.id);
 
@@ -247,10 +273,15 @@ describe('PractitionersService — deleteVacation', () => {
 
   it('should delete a vacation record', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-    ctx.mockPrisma.practitionerVacation.findUnique.mockResolvedValue(mockVacation);
+    ctx.mockPrisma.practitionerVacation.findUnique.mockResolvedValue(
+      mockVacation,
+    );
     ctx.mockPrisma.practitionerVacation.delete.mockResolvedValue(mockVacation);
 
-    await ctx.vacationService.deleteVacation(mockPractitioner.id, mockVacation.id);
+    await ctx.vacationService.deleteVacation(
+      mockPractitioner.id,
+      mockVacation.id,
+    );
 
     expect(ctx.mockPrisma.practitionerVacation.delete).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: mockVacation.id } }),
@@ -261,7 +292,10 @@ describe('PractitionersService — deleteVacation', () => {
     ctx.mockPrisma.practitionerVacation.findUnique.mockResolvedValue(null);
 
     await expect(
-      ctx.vacationService.deleteVacation(mockPractitioner.id, 'non-existent-id'),
+      ctx.vacationService.deleteVacation(
+        mockPractitioner.id,
+        'non-existent-id',
+      ),
     ).rejects.toThrow(NotFoundException);
   });
 

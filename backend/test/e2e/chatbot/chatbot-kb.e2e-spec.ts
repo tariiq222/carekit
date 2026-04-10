@@ -109,10 +109,11 @@ describe('GET /chatbot/knowledge-base', () => {
   });
 
   it('returns 401 without token', async () => {
-    const res = await request(httpServer)
-      .get(KB_URL)
-      .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    const res = await request(httpServer).get(KB_URL).expect(401);
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:view)', async () => {
@@ -160,7 +161,10 @@ describe('POST /chatbot/knowledge-base', () => {
       .post(KB_URL)
       .send(validEntry)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:create)', async () => {
@@ -206,7 +210,10 @@ describe('PATCH /chatbot/knowledge-base/:id', () => {
       .patch(`${KB_URL}/${GHOST_UUID}`)
       .send({ title: 'Updated' })
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:edit)', async () => {
@@ -252,7 +259,10 @@ describe('DELETE /chatbot/knowledge-base/:id', () => {
     const res = await request(httpServer)
       .delete(`${KB_URL}/${GHOST_UUID}`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:delete)', async () => {
@@ -282,10 +292,11 @@ describe('DELETE /chatbot/knowledge-base/:id', () => {
 
 describe('POST /chatbot/knowledge-base/sync', () => {
   it('returns 401 without token', async () => {
-    const res = await request(httpServer)
-      .post(`${KB_URL}/sync`)
-      .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    const res = await request(httpServer).post(`${KB_URL}/sync`).expect(401);
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:edit)', async () => {

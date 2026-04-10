@@ -95,10 +95,18 @@ describe('GiftCardsService', () => {
 
   describe('update', () => {
     it('should update gift card fields', async () => {
-      mockPrisma.giftCard.findUnique.mockResolvedValue({ ...baseCard, transactions: [] });
-      mockPrisma.giftCard.update.mockResolvedValue({ ...baseCard, isActive: false });
+      mockPrisma.giftCard.findUnique.mockResolvedValue({
+        ...baseCard,
+        transactions: [],
+      });
+      mockPrisma.giftCard.update.mockResolvedValue({
+        ...baseCard,
+        isActive: false,
+      });
 
-      const result = await service.update('gc-uuid-1', { isActive: false } as never);
+      const result = await service.update('gc-uuid-1', {
+        isActive: false,
+      } as never);
 
       expect(mockPrisma.giftCard.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -112,7 +120,9 @@ describe('GiftCardsService', () => {
     it('should throw NotFoundException when gift card not found', async () => {
       mockPrisma.giftCard.findUnique.mockResolvedValue(null);
 
-      await expect(service.update('missing-id', {} as never)).rejects.toThrow(NotFoundException);
+      await expect(service.update('missing-id', {} as never)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -122,8 +132,14 @@ describe('GiftCardsService', () => {
 
   describe('deactivate', () => {
     it('should set isActive=false and return {deactivated: true}', async () => {
-      mockPrisma.giftCard.findUnique.mockResolvedValue({ ...baseCard, transactions: [] });
-      mockPrisma.giftCard.update.mockResolvedValue({ ...baseCard, isActive: false });
+      mockPrisma.giftCard.findUnique.mockResolvedValue({
+        ...baseCard,
+        transactions: [],
+      });
+      mockPrisma.giftCard.update.mockResolvedValue({
+        ...baseCard,
+        isActive: false,
+      });
 
       const result = await service.deactivate('gc-uuid-1');
 
@@ -137,7 +153,9 @@ describe('GiftCardsService', () => {
     it('should throw NotFoundException when gift card not found', async () => {
       mockPrisma.giftCard.findUnique.mockResolvedValue(null);
 
-      await expect(service.deactivate('missing-id')).rejects.toThrow(NotFoundException);
+      await expect(service.deactivate('missing-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -177,7 +195,10 @@ describe('GiftCardsService', () => {
         code: 'CUSTOM-CODE',
       });
 
-      await service.create({ code: 'custom-code', initialAmount: 100 } as never);
+      await service.create({
+        code: 'custom-code',
+        initialAmount: 100,
+      } as never);
 
       const createCall = mockPrisma.giftCard.create.mock.calls[0][0];
       expect(createCall.data.code).toBe('CUSTOM-CODE');
@@ -246,7 +267,12 @@ describe('GiftCardsService', () => {
       mockTx.giftCard.update.mockResolvedValue({ ...baseCard, balance: 50 });
       mockTx.giftCardTransaction.create.mockResolvedValue({});
 
-      const result = await service.redeemBalance('GC-ABCD1234', 50, 'booking-1', 'user-1');
+      const result = await service.redeemBalance(
+        'GC-ABCD1234',
+        50,
+        'booking-1',
+        'user-1',
+      );
 
       expect(result).toEqual({ deducted: 50, remaining: 50 });
       expect(mockTx.giftCard.update).toHaveBeenCalledWith(
@@ -306,7 +332,10 @@ describe('GiftCardsService', () => {
       });
       mockTx.giftCard.update.mockResolvedValue({ ...baseCard, balance: 150 });
       mockTx.giftCardTransaction.create.mockResolvedValue({});
-      mockTx.giftCard.findUnique.mockResolvedValue({ ...baseCard, balance: 150 });
+      mockTx.giftCard.findUnique.mockResolvedValue({
+        ...baseCard,
+        balance: 150,
+      });
 
       const result = await service.addCredit('gc-uuid-1', {
         amount: 50,

@@ -44,10 +44,7 @@ export class ExportService {
   //  CSV HELPER
   // ═══════════════════════════════════════════════════════════════
 
-  generateCsv(
-    headers: string[],
-    rows: Record<string, unknown>[],
-  ): string {
+  generateCsv(headers: string[], rows: Record<string, unknown>[]): string {
     const escapeCsvValue = (val: unknown): string => {
       if (val === null || val === undefined) return '';
       const str = String(val);
@@ -72,7 +69,11 @@ export class ExportService {
   //  REVENUE CSV
   // ═══════════════════════════════════════════════════════════════
 
-  async exportRevenueCsv(dateFrom: string, dateTo: string, branchId?: string): Promise<string> {
+  async exportRevenueCsv(
+    dateFrom: string,
+    dateTo: string,
+    branchId?: string,
+  ): Promise<string> {
     const from = new Date(dateFrom);
     const to = new Date(dateTo);
     to.setHours(23, 59, 59, 999);
@@ -121,7 +122,11 @@ export class ExportService {
   //  BOOKINGS CSV
   // ═══════════════════════════════════════════════════════════════
 
-  async exportBookingsCsv(dateFrom: string, dateTo: string, branchId?: string): Promise<string> {
+  async exportBookingsCsv(
+    dateFrom: string,
+    dateTo: string,
+    branchId?: string,
+  ): Promise<string> {
     const from = new Date(dateFrom);
     const to = new Date(dateTo);
     to.setHours(23, 59, 59, 999);
@@ -244,7 +249,11 @@ export class ExportService {
     return `${year}-${month}`;
   }
 
-  private buildBranchWhere(from: Date, to: Date, branchId?: string): Prisma.Sql {
+  private buildBranchWhere(
+    from: Date,
+    to: Date,
+    branchId?: string,
+  ): Prisma.Sql {
     const filters: Prisma.Sql[] = [
       Prisma.sql`b.date >= ${from}`,
       Prisma.sql`b.date <= ${to}`,

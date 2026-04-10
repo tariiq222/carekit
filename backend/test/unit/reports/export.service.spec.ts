@@ -5,7 +5,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ExportService } from '../../../src/modules/reports/export.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   $queryRaw: jest.fn(),
 };
@@ -46,26 +45,17 @@ describe('ExportService', () => {
     });
 
     it('should escape values containing commas with quotes', () => {
-      const csv = service.generateCsv(
-        ['name'],
-        [{ name: 'Ahmad, Jr.' }],
-      );
+      const csv = service.generateCsv(['name'], [{ name: 'Ahmad, Jr.' }]);
       expect(csv).toContain('"Ahmad, Jr."');
     });
 
     it('should escape double quotes within values', () => {
-      const csv = service.generateCsv(
-        ['note'],
-        [{ note: 'He said "hello"' }],
-      );
+      const csv = service.generateCsv(['note'], [{ note: 'He said "hello"' }]);
       expect(csv).toContain('"He said ""hello"""');
     });
 
     it('should handle null and undefined as empty string', () => {
-      const csv = service.generateCsv(
-        ['a', 'b'],
-        [{ a: null, b: undefined }],
-      );
+      const csv = service.generateCsv(['a', 'b'], [{ a: null, b: undefined }]);
       // header,  blank row values
       expect(csv).toContain('a,b');
       const lines = csv.split('\n');
@@ -117,7 +107,10 @@ describe('ExportService', () => {
         },
       ]);
 
-      const result = await service.exportBookingsCsv('2026-03-01', '2026-03-31');
+      const result = await service.exportBookingsCsv(
+        '2026-03-01',
+        '2026-03-31',
+      );
 
       expect(result).toContain('id');
       expect(result).toContain('Sara Al-Ahmad');

@@ -68,8 +68,16 @@ export class EmailProcessor extends WorkerHost implements OnModuleInit {
     let bodyAr = '';
 
     try {
-      const enResult = await this.emailTemplatesService.renderTemplate(template, context, 'en');
-      const arResult = await this.emailTemplatesService.renderTemplate(template, context, 'ar');
+      const enResult = await this.emailTemplatesService.renderTemplate(
+        template,
+        context,
+        'en',
+      );
+      const arResult = await this.emailTemplatesService.renderTemplate(
+        template,
+        context,
+        'ar',
+      );
       if (enResult && arResult) {
         finalSubject = `${enResult.subject} | ${arResult.subject}`;
         bodyEn = enResult.body;
@@ -88,11 +96,18 @@ export class EmailProcessor extends WorkerHost implements OnModuleInit {
         const layoutConfig = await this.getLayoutConfig();
         html = buildHtmlEmail(bodyEn, bodyAr, layoutConfig);
       } catch (err) {
-        this.logger.warn(`Failed to build HTML email, sending text-only: ${err}`);
+        this.logger.warn(
+          `Failed to build HTML email, sending text-only: ${err}`,
+        );
       }
     }
 
-    await this.mailerService.sendMail({ to, subject: finalSubject, text, html });
+    await this.mailerService.sendMail({
+      to,
+      subject: finalSubject,
+      text,
+      html,
+    });
 
     this.logger.log(`Email sent successfully: job ${job.id} to ${to}`);
   }

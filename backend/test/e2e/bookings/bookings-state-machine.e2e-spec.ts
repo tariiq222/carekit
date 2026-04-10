@@ -48,7 +48,7 @@ const GHOST_ID = '00000000-0000-0000-0000-000000000000';
 function getDaysFromNow(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0]!;
+  return d.toISOString().split('T')[0];
 }
 
 let testApp: TestApp;
@@ -154,11 +154,14 @@ beforeAll(async () => {
   );
 
   // Create practitioner profile
-  const specRes = await request(httpServer).get(`${API_PREFIX}/specialties`).expect(200);
+  const specRes = await request(httpServer)
+    .get(`${API_PREFIX}/specialties`)
+    .expect(200);
   const specialties = specRes.body.data?.items ?? specRes.body.data ?? [];
-  const specialtyId = Array.isArray(specialties) && specialties.length > 0
-    ? (specialties[0] as { id: string }).id
-    : undefined;
+  const specialtyId =
+    Array.isArray(specialties) && specialties.length > 0
+      ? (specialties[0] as { id: string }).id
+      : undefined;
 
   const pracRes = await request(httpServer)
     .post(PRACTITIONERS_URL)
@@ -215,9 +218,7 @@ beforeAll(async () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .send({
         serviceId,
-        bookingTypes: [
-          { type: 'in_person', price: 20000, duration: 30 },
-        ],
+        bookingTypes: [{ type: 'in_person', price: 20000, duration: 30 }],
       });
   }
 });

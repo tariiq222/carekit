@@ -29,7 +29,9 @@ export class GroupsAttendanceService {
     }
 
     if (enrollment.status !== 'confirmed' && enrollment.status !== 'attended') {
-      throw new BadRequestException('Can only confirm attendance for confirmed enrollments');
+      throw new BadRequestException(
+        'Can only confirm attendance for confirmed enrollments',
+      );
     }
 
     const updated = await this.prisma.groupEnrollment.update({
@@ -37,7 +39,11 @@ export class GroupsAttendanceService {
       data: {
         attended: dto.attended,
         attendedAt: dto.attended ? new Date() : null,
-        status: dto.attended ? 'attended' : enrollment.status === 'attended' ? 'confirmed' : enrollment.status,
+        status: dto.attended
+          ? 'attended'
+          : enrollment.status === 'attended'
+            ? 'confirmed'
+            : enrollment.status,
       },
     });
 
@@ -93,7 +99,9 @@ export class GroupsAttendanceService {
     }
 
     if (!enrollment.attended) {
-      throw new BadRequestException('Cannot issue certificate for non-attended enrollment');
+      throw new BadRequestException(
+        'Cannot issue certificate for non-attended enrollment',
+      );
     }
 
     // Idempotent: check existing certificate
@@ -114,15 +122,21 @@ export class GroupsAttendanceService {
     });
 
     // Fire-and-forget notification
-    this.notificationsService.createNotification({
-      userId: enrollment.patientId,
-      titleAr: `تم إصدار شهادة إتمام "${enrollment.group.nameAr}"`,
-      titleEn: `Completion certificate issued for "${enrollment.group.nameEn}"`,
-      bodyAr: 'يمكنك عرض شهادتك من قسم الشهادات',
-      bodyEn: 'You can view your certificate from the certificates section',
-      type: NotificationType.group_certificate_issued,
-      data: { groupId: enrollment.groupId, certificateId: certificate.id },
-    }).catch((err) => this.logger.warn('Certificate notification failed', { error: (err as Error).message }));
+    this.notificationsService
+      .createNotification({
+        userId: enrollment.patientId,
+        titleAr: `تم إصدار شهادة إتمام "${enrollment.group.nameAr}"`,
+        titleEn: `Completion certificate issued for "${enrollment.group.nameEn}"`,
+        bodyAr: 'يمكنك عرض شهادتك من قسم الشهادات',
+        bodyEn: 'You can view your certificate from the certificates section',
+        type: NotificationType.group_certificate_issued,
+        data: { groupId: enrollment.groupId, certificateId: certificate.id },
+      })
+      .catch((err) =>
+        this.logger.warn('Certificate notification failed', {
+          error: (err as Error).message,
+        }),
+      );
 
     return certificate;
   }

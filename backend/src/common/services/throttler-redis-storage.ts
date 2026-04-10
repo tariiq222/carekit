@@ -7,9 +7,7 @@ import { REDIS_CLIENT } from '../redis/redis.constants.js';
 export class ThrottlerRedisStorage implements ThrottlerStorage {
   private readonly logger = new Logger(ThrottlerRedisStorage.name);
 
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async increment(
     key: string,
@@ -17,14 +15,24 @@ export class ThrottlerRedisStorage implements ThrottlerStorage {
     limit: number,
     blockDuration: number,
     _throttlerName: string,
-  ): Promise<{ totalHits: number; timeToExpire: number; isBlocked: boolean; timeToBlockExpire: number }> {
+  ): Promise<{
+    totalHits: number;
+    timeToExpire: number;
+    isBlocked: boolean;
+    timeToBlockExpire: number;
+  }> {
     try {
       return await this.doIncrement(key, ttl, limit, blockDuration);
     } catch (err) {
       this.logger.warn(
         `Redis throttle check failed, allowing request: ${err instanceof Error ? err.message : 'unknown'}`,
       );
-      return { totalHits: 0, timeToExpire: 0, isBlocked: false, timeToBlockExpire: 0 };
+      return {
+        totalHits: 0,
+        timeToExpire: 0,
+        isBlocked: false,
+        timeToBlockExpire: 0,
+      };
     }
   }
 
@@ -33,7 +41,12 @@ export class ThrottlerRedisStorage implements ThrottlerStorage {
     ttl: number,
     limit: number,
     blockDuration: number,
-  ): Promise<{ totalHits: number; timeToExpire: number; isBlocked: boolean; timeToBlockExpire: number }> {
+  ): Promise<{
+    totalHits: number;
+    timeToExpire: number;
+    isBlocked: boolean;
+    timeToBlockExpire: number;
+  }> {
     const ttlSeconds = Math.ceil(ttl / 1000);
     const blockKey = `${key}:blocked`;
 

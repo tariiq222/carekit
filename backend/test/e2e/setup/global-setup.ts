@@ -45,12 +45,16 @@ export default async function globalSetup(): Promise<void> {
     await prisma.intakeResponse.deleteMany({});
     await prisma.intakeField.deleteMany({});
     await prisma.intakeForm.deleteMany({});
-     await prisma.practitionerBranch.deleteMany({});
-     // Delete branch-specific booking settings before deleting branches (FK constraint)
-     await prisma.bookingSettings.deleteMany({ where: { branchId: { not: null } } });
-     // Delete branch-specific practitioner availabilities
-     await prisma.practitionerAvailability.deleteMany({ where: { branchId: { not: null } } });
-     await prisma.branch.deleteMany({ where: { isMain: false } });
+    await prisma.practitionerBranch.deleteMany({});
+    // Delete branch-specific booking settings before deleting branches (FK constraint)
+    await prisma.bookingSettings.deleteMany({
+      where: { branchId: { not: null } },
+    });
+    // Delete branch-specific practitioner availabilities
+    await prisma.practitionerAvailability.deleteMany({
+      where: { branchId: { not: null } },
+    });
+    await prisma.branch.deleteMany({ where: { isMain: false } });
     await prisma.clinicWorkingHours.deleteMany({});
     await prisma.clinicHoliday.deleteMany({});
     await prisma.problemReport.deleteMany({});
@@ -169,8 +173,14 @@ export default async function globalSetup(): Promise<void> {
 
     // Delete test-created specialties (keep only canonical seed specialties)
     const seedSpecialtyNames = [
-      'General Medicine', 'Dermatology', 'Pediatrics', 'Dentistry',
-      'Cardiology', 'Orthopedics', 'Ophthalmology', 'Psychiatry',
+      'General Medicine',
+      'Dermatology',
+      'Pediatrics',
+      'Dentistry',
+      'Cardiology',
+      'Orthopedics',
+      'Ophthalmology',
+      'Psychiatry',
     ];
     await prisma.specialty.deleteMany({
       where: { nameEn: { notIn: seedSpecialtyNames } },

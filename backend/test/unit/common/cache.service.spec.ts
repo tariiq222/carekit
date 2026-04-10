@@ -5,7 +5,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CacheService } from '../../../src/common/services/cache.service.js';
 import { REDIS_CLIENT } from '../../../src/common/redis/redis.constants.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockRedis: any = {
   get: jest.fn(),
   set: jest.fn().mockResolvedValue('OK'),
@@ -18,10 +17,7 @@ describe('CacheService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CacheService,
-        { provide: REDIS_CLIENT, useValue: mockRedis },
-      ],
+      providers: [CacheService, { provide: REDIS_CLIENT, useValue: mockRedis }],
     }).compile();
 
     service = module.get<CacheService>(CacheService);

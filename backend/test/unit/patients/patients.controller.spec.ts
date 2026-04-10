@@ -7,8 +7,12 @@ import { PatientsService } from '../../../src/modules/patients/patients.service.
 import { PatientWalkInService } from '../../../src/modules/patients/patient-walk-in.service.js';
 
 const mockPatientsService = {
-  findAll: jest.fn(), findOne: jest.fn(), updatePatient: jest.fn(),
-  getListStats: jest.fn(), getPatientStats: jest.fn(), getPatientBookings: jest.fn(),
+  findAll: jest.fn(),
+  findOne: jest.fn(),
+  updatePatient: jest.fn(),
+  getListStats: jest.fn(),
+  getPatientStats: jest.fn(),
+  getPatientBookings: jest.fn(),
 };
 const mockWalkInService = { createWalkIn: jest.fn(), claimAccount: jest.fn() };
 
@@ -48,7 +52,11 @@ describe('PatientsController', () => {
   it('update → patientsService.updatePatient()', () => {
     mockPatientsService.updatePatient.mockResolvedValue({ id: '1' });
     controller.update('id-1', {} as any, 'actor-uuid');
-    expect(mockPatientsService.updatePatient).toHaveBeenCalledWith('id-1', {}, 'actor-uuid');
+    expect(mockPatientsService.updatePatient).toHaveBeenCalledWith(
+      'id-1',
+      {},
+      'actor-uuid',
+    );
   });
 
   it('getStats → patientsService.getPatientStats()', () => {

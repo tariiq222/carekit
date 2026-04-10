@@ -67,7 +67,9 @@ export class ChatbotAiService {
     if (!response.ok) {
       const errorText = await response.text();
       this.logger.error(`OpenRouter error: ${response.status} — ${errorText}`);
-      throw new Error(`AI API error: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `AI API error: ${response.status} ${response.statusText}`,
+      );
     }
 
     const data = (await response.json()) as OpenRouterResponse;
@@ -124,8 +126,12 @@ export class ChatbotAiService {
 
     if (!response.ok || !response.body) {
       const errorText = response.body ? await response.text() : 'No body';
-      this.logger.error(`OpenRouter stream error: ${response.status} — ${errorText}`);
-      throw new Error(`AI API error: ${response.status} ${response.statusText}`);
+      this.logger.error(
+        `OpenRouter stream error: ${response.status} — ${errorText}`,
+      );
+      throw new Error(
+        `AI API error: ${response.status} ${response.statusText}`,
+      );
     }
 
     yield* this.parseSSEStream(response.body);
@@ -189,7 +195,9 @@ export class ChatbotAiService {
 
     try {
       const parsed = JSON.parse(data) as {
-        choices?: { delta?: { content?: string; tool_calls?: StreamDeltaToolCall[] } }[];
+        choices?: {
+          delta?: { content?: string; tool_calls?: StreamDeltaToolCall[] };
+        }[];
       };
       const delta = parsed.choices?.[0]?.delta;
       if (!delta) return null;

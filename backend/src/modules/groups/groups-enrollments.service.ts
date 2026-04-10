@@ -29,77 +29,108 @@ export class GroupsEnrollmentsService {
     }
 
     const existing = await this.prisma.groupEnrollment.findFirst({
-      where: { groupId, patientId, status: { notIn: ['cancelled', 'expired'] } },
+      where: {
+        groupId,
+        patientId,
+        status: { notIn: ['cancelled', 'expired'] },
+      },
     });
 
     if (existing) {
-      throw new BadRequestException('Patient is already enrolled in this group');
+      throw new BadRequestException(
+        'Patient is already enrolled in this group',
+      );
     }
 
     let result;
     try {
       result = await this.prisma.$transaction(
-      async (tx) => {
-        const group = await tx.group.findFirst({
-          where: { id: groupId },
-        });
+        async (tx) => {
+          const group = await tx.group.findFirst({
+            where: { id: groupId },
+          });
 
-        if (!group) throw new NotFoundException('Group not found');
+          if (!group) throw new NotFoundException('Group not found');
 
-        const blockedStatuses = ['full', 'completed', 'cancelled', 'awaiting_payment', 'confirmed'];
-        if (blockedStatuses.includes(group.status)) {
-          throw new BadRequestException(`Cannot enroll in a ${group.status} group`);
-        }
-
-        const isFree = group.paymentType === 'FREE_HOLD';
-
-        const enrollment = await tx.groupEnrollment.create({
-          data: {
-            groupId,
-            patientId,
-            status: isFree ? 'confirmed' : 'registered',
-          },
-        });
-
-        const newCount = group.currentEnrollment + 1;
-        let newStatus = group.status;
-
-        if (newCount >= group.maxParticipants) {
-          newStatus = 'full';
-        } else if (newCount >= group.minParticipants && group.status === 'open') {
-          if (group.schedulingMode === 'fixed_date') {
-            newStatus = 'confirmed';
+          const blockedStatuses = [
+            'full',
+            'completed',
+            'cancelled',
+            'awaiting_payment',
+            'confirmed',
+          ];
+          if (blockedStatuses.includes(group.status)) {
+            throw new BadRequestException(
+              `Cannot enroll in a ${group.status} group`,
+            );
           }
-        }
 
-        await tx.group.update({
-          where: { id: groupId },
-          data: { currentEnrollment: newCount, status: newStatus },
-        });
+          const isFree = group.paymentType === 'FREE_HOLD';
 
-        return { enrollment, newStatus, newCount, group, isFree };
-      },
-      { isolationLevel: 'Serializable' },
-    );
+          const enrollment = await tx.groupEnrollment.create({
+            data: {
+              groupId,
+              patientId,
+              status: isFree ? 'confirmed' : 'registered',
+            },
+          });
+
+          const newCount = group.currentEnrollment + 1;
+          let newStatus = group.status;
+
+          if (newCount >= group.maxParticipants) {
+            newStatus = 'full';
+          } else if (
+            newCount >= group.minParticipants &&
+            group.status === 'open'
+          ) {
+            if (group.schedulingMode === 'fixed_date') {
+              newStatus = 'confirmed';
+            }
+          }
+
+          await tx.group.update({
+            where: { id: groupId },
+            data: { currentEnrollment: newCount, status: newStatus },
+          });
+
+          return { enrollment, newStatus, newCount, group, isFree };
+        },
+        { isolationLevel: 'Serializable' },
+      );
     } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2034') {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2034'
+      ) {
         throw new ConflictException('Enrollment conflict — please try again');
       }
       throw err;
     }
 
-    this.notificationsService.createNotification({
-      userId: patientId,
-      titleAr: `تم تسجيلك في "${result.group.nameAr}"`,
-      titleEn: `You've been enrolled in "${result.group.nameEn}"`,
-      bodyAr: result.isFree ? 'تسجيلك مؤكد' : 'سنبلغك عند تأكيد الجلسة للدفع',
-      bodyEn: result.isFree ? 'Your enrollment is confirmed' : "We'll notify you when the session is confirmed for payment",
-      type: NotificationType.group_enrollment_created,
-      data: { groupId },
-    }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
+    this.notificationsService
+      .createNotification({
+        userId: patientId,
+        titleAr: `تم تسجيلك في "${result.group.nameAr}"`,
+        titleEn: `You've been enrolled in "${result.group.nameEn}"`,
+        bodyAr: result.isFree ? 'تسجيلك مؤكد' : 'سنبلغك عند تأكيد الجلسة للدفع',
+        bodyEn: result.isFree
+          ? 'Your enrollment is confirmed'
+          : "We'll notify you when the session is confirmed for payment",
+        type: NotificationType.group_enrollment_created,
+        data: { groupId },
+      })
+      .catch((err) =>
+        this.logger.warn('Notification failed', {
+          error: (err as Error).message,
+        }),
+      );
 
     if (result.newStatus === 'confirmed' && !result.isFree) {
-      await this.notifyGroupConfirmed(groupId, result.group.paymentDeadlineHours);
+      await this.notifyGroupConfirmed(
+        groupId,
+        result.group.paymentDeadlineHours,
+      );
     }
 
     if (
@@ -107,15 +138,21 @@ export class GroupsEnrollmentsService {
       result.newCount >= result.group.minParticipants &&
       result.group.currentEnrollment < result.group.minParticipants
     ) {
-      this.notificationsService.createNotification({
-        userId: result.group.practitionerId,
-        titleAr: `اكتمل الحد الأدنى — حدد موعد "${result.group.nameAr}"`,
-        titleEn: `Minimum reached — schedule "${result.group.nameEn}"`,
-        bodyAr: `وصل عدد المسجلين ${result.newCount}. حدد موعد الجلسة`,
-        bodyEn: `${result.newCount} enrolled. Set a date for this session`,
-        type: NotificationType.group_capacity_reached,
-        data: { groupId },
-      }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
+      this.notificationsService
+        .createNotification({
+          userId: result.group.practitionerId,
+          titleAr: `اكتمل الحد الأدنى — حدد موعد "${result.group.nameAr}"`,
+          titleEn: `Minimum reached — schedule "${result.group.nameEn}"`,
+          bodyAr: `وصل عدد المسجلين ${result.newCount}. حدد موعد الجلسة`,
+          bodyEn: `${result.newCount} enrolled. Set a date for this session`,
+          type: NotificationType.group_capacity_reached,
+          data: { groupId },
+        })
+        .catch((err) =>
+          this.logger.warn('Notification failed', {
+            error: (err as Error).message,
+          }),
+        );
     }
 
     return result.enrollment;
@@ -131,7 +168,9 @@ export class GroupsEnrollmentsService {
     }
 
     if (enrollment.status !== 'registered') {
-      throw new BadRequestException('Can only cancel enrollment before payment');
+      throw new BadRequestException(
+        'Can only cancel enrollment before payment',
+      );
     }
 
     await this.prisma.$transaction(async (tx) => {
@@ -180,13 +219,18 @@ export class GroupsEnrollmentsService {
     return this.cancelEnrollment(enrollmentId, enrollment.patientId);
   }
 
-  private async notifyGroupConfirmed(groupId: string, paymentDeadlineHours: number) {
+  private async notifyGroupConfirmed(
+    groupId: string,
+    paymentDeadlineHours: number,
+  ) {
     const enrollments = await this.prisma.groupEnrollment.findMany({
       where: { groupId, status: 'registered' },
       select: { id: true, patientId: true },
     });
 
-    const deadlineAt = new Date(Date.now() + paymentDeadlineHours * 60 * 60 * 1000);
+    const deadlineAt = new Date(
+      Date.now() + paymentDeadlineHours * 60 * 60 * 1000,
+    );
 
     await this.prisma.groupEnrollment.updateMany({
       where: { groupId, status: 'registered' },
@@ -194,15 +238,21 @@ export class GroupsEnrollmentsService {
     });
 
     for (const enrollment of enrollments) {
-      this.notificationsService.createNotification({
-        userId: enrollment.patientId,
-        titleAr: 'الجلسة مؤكدة — أكمل الدفع',
-        titleEn: 'Session Confirmed — Complete Payment',
-        bodyAr: `أكمل الدفع خلال ${paymentDeadlineHours} ساعة للحفاظ على مكانك`,
-        bodyEn: `Pay within ${paymentDeadlineHours} hours to keep your spot`,
-        type: NotificationType.group_session_confirmed,
-        data: { groupId, enrollmentId: enrollment.id },
-      }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
+      this.notificationsService
+        .createNotification({
+          userId: enrollment.patientId,
+          titleAr: 'الجلسة مؤكدة — أكمل الدفع',
+          titleEn: 'Session Confirmed — Complete Payment',
+          bodyAr: `أكمل الدفع خلال ${paymentDeadlineHours} ساعة للحفاظ على مكانك`,
+          bodyEn: `Pay within ${paymentDeadlineHours} hours to keep your spot`,
+          type: NotificationType.group_session_confirmed,
+          data: { groupId, enrollmentId: enrollment.id },
+        })
+        .catch((err) =>
+          this.logger.warn('Notification failed', {
+            error: (err as Error).message,
+          }),
+        );
     }
   }
 }

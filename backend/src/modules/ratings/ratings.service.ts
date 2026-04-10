@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 
 interface CreateRatingDto {
   bookingId: string;
@@ -31,11 +34,17 @@ export class RatingsService {
     });
 
     if (!booking) {
-      throw new NotFoundException({ statusCode: 404, message: 'Booking not found', error: 'NOT_FOUND' });
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Booking not found',
+        error: 'NOT_FOUND',
+      });
     }
 
     if (booking.status !== 'completed') {
-      throw new BadRequestException('Cannot rate a booking that is not completed');
+      throw new BadRequestException(
+        'Cannot rate a booking that is not completed',
+      );
     }
 
     if (booking.rating) {
@@ -48,35 +57,41 @@ export class RatingsService {
 
     let rating;
     try {
-      rating = await this.prisma.$transaction(async (tx) => {
-        const newRating = await tx.rating.create({
-          data: {
-            bookingId: dto.bookingId,
-            patientId: dto.patientId,
-            practitionerId: booking.practitionerId,
-            stars: dto.stars,
-            comment: dto.comment,
-          },
-        });
+      rating = await this.prisma.$transaction(
+        async (tx) => {
+          const newRating = await tx.rating.create({
+            data: {
+              bookingId: dto.bookingId,
+              patientId: dto.patientId,
+              practitionerId: booking.practitionerId,
+              stars: dto.stars,
+              comment: dto.comment,
+            },
+          });
 
-        const stats = await tx.rating.aggregate({
-          where: { practitionerId: booking.practitionerId, deletedAt: null },
-          _avg: { stars: true },
-          _count: { id: true },
-        });
+          const stats = await tx.rating.aggregate({
+            where: { practitionerId: booking.practitionerId, deletedAt: null },
+            _avg: { stars: true },
+            _count: { id: true },
+          });
 
-        await tx.practitioner.update({
-          where: { id: booking.practitionerId },
-          data: {
-            rating: stats._avg.stars ?? 0,
-            reviewCount: stats._count.id,
-          },
-        });
+          await tx.practitioner.update({
+            where: { id: booking.practitionerId },
+            data: {
+              rating: stats._avg.stars ?? 0,
+              reviewCount: stats._count.id,
+            },
+          });
 
-        return newRating;
-      }, { isolationLevel: 'Serializable' });
+          return newRating;
+        },
+        { isolationLevel: 'Serializable' },
+      );
     } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
         throw new ConflictException('This booking has already been rated');
       }
       throw err;
@@ -85,8 +100,14 @@ export class RatingsService {
     return rating;
   }
 
-  async findByPractitioner(practitionerId: string, query: RatingListQuery = {}) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+  async findByPractitioner(
+    practitionerId: string,
+    query: RatingListQuery = {},
+  ) {
+    const { page, perPage, skip } = parsePaginationParams(
+      query.page,
+      query.perPage,
+    );
 
     const [total, ratings] = await Promise.all([
       this.prisma.rating.count({ where: { practitionerId, deletedAt: null } }),

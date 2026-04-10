@@ -2,7 +2,10 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ChatbotRagService } from './chatbot-rag.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
-import type { ToolExecutionContext, ToolResult } from './interfaces/chatbot-tool.interface.js';
+import type {
+  ToolExecutionContext,
+  ToolResult,
+} from './interfaces/chatbot-tool.interface.js';
 import type {
   IChatbotBookingPort,
   IChatbotServicePort,
@@ -19,9 +22,12 @@ export class ChatbotToolsService {
   private readonly logger = new Logger(ChatbotToolsService.name);
 
   constructor(
-    @Inject(CHATBOT_BOOKING_PORT) private readonly bookingsPort: IChatbotBookingPort,
-    @Inject(CHATBOT_SERVICE_PORT) private readonly servicesPort: IChatbotServicePort,
-    @Inject(CHATBOT_PRACTITIONER_PORT) private readonly practitionersPort: IChatbotPractitionerPort,
+    @Inject(CHATBOT_BOOKING_PORT)
+    private readonly bookingsPort: IChatbotBookingPort,
+    @Inject(CHATBOT_SERVICE_PORT)
+    private readonly servicesPort: IChatbotServicePort,
+    @Inject(CHATBOT_PRACTITIONER_PORT)
+    private readonly practitionersPort: IChatbotPractitionerPort,
     private readonly ragService: ChatbotRagService,
     private readonly configService: ChatbotConfigService,
     private readonly prisma: PrismaService,
@@ -65,7 +71,9 @@ export class ChatbotToolsService {
     }
   }
 
-  private async listServices(args: Record<string, unknown>): Promise<ToolResult> {
+  private async listServices(
+    args: Record<string, unknown>,
+  ): Promise<ToolResult> {
     const result = await this.servicesPort.findAll({
       search: args.search as string | undefined,
       perPage: 100,
@@ -73,7 +81,9 @@ export class ChatbotToolsService {
     return { success: true, data: result.items };
   }
 
-  private async listPractitioners(args: Record<string, unknown>): Promise<ToolResult> {
+  private async listPractitioners(
+    args: Record<string, unknown>,
+  ): Promise<ToolResult> {
     const result = await this.practitionersPort.findAll({
       search: args.search as string | undefined,
       specialty: args.specialty as string | undefined,
@@ -82,7 +92,9 @@ export class ChatbotToolsService {
     return { success: true, data: result.items };
   }
 
-  private async getAvailableSlots(args: Record<string, unknown>): Promise<ToolResult> {
+  private async getAvailableSlots(
+    args: Record<string, unknown>,
+  ): Promise<ToolResult> {
     const practitionerId = args.practitionerId as string;
     const date = args.date as string;
     const serviceId = args.serviceId as string | undefined;
@@ -103,7 +115,11 @@ export class ChatbotToolsService {
       duration = service.duration;
     }
 
-    const slots = await this.practitionersPort.getAvailableSlots(practitionerId, date, duration);
+    const slots = await this.practitionersPort.getAvailableSlots(
+      practitionerId,
+      date,
+      duration,
+    );
     return { success: true, data: slots };
   }
 
@@ -114,7 +130,10 @@ export class ChatbotToolsService {
     // Double-check config allows booking
     const config = await this.configService.getConfigMap();
     if (!config.can_book) {
-      return { success: false, error: 'Booking via chatbot is disabled by clinic settings.' };
+      return {
+        success: false,
+        error: 'Booking via chatbot is disabled by clinic settings.',
+      };
     }
 
     const booking = await this.bookingsPort.create(ctx.userId, {
@@ -132,12 +151,16 @@ export class ChatbotToolsService {
   private async getMyBookings(ctx: ToolExecutionContext): Promise<ToolResult> {
     const result = await this.bookingsPort.findMyBookings(ctx.userId);
     const upcoming = result.items.filter(
-      (b: { status: string }) => b.status === 'pending' || b.status === 'confirmed',
+      (b: { status: string }) =>
+        b.status === 'pending' || b.status === 'confirmed',
     );
     return { success: true, data: upcoming };
   }
 
-  private async rescheduleBooking(args: Record<string, unknown>, ctx: ToolExecutionContext): Promise<ToolResult> {
+  private async rescheduleBooking(
+    args: Record<string, unknown>,
+    ctx: ToolExecutionContext,
+  ): Promise<ToolResult> {
     const bookingId = args.bookingId as string;
 
     // Verify the booking belongs to this patient
@@ -148,7 +171,10 @@ export class ChatbotToolsService {
       return { success: false, error: 'Booking not found' };
     }
     if (booking.patientId !== ctx.userId) {
-      return { success: false, error: 'You can only reschedule your own bookings' };
+      return {
+        success: false,
+        error: 'You can only reschedule your own bookings',
+      };
     }
 
     const dto: { date?: string; startTime?: string } = {};
@@ -157,7 +183,11 @@ export class ChatbotToolsService {
 
     // Use patientReschedule (not reschedule) to enforce patient-facing policies:
     // patientCanReschedule toggle, rescheduleBeforeHours, maxReschedulesPerBooking
-    const updated = await this.bookingsPort.patientReschedule(bookingId, ctx.userId, dto);
+    const updated = await this.bookingsPort.patientReschedule(
+      bookingId,
+      ctx.userId,
+      dto,
+    );
     return { success: true, data: updated };
   }
 
@@ -176,7 +206,9 @@ export class ChatbotToolsService {
     return { success: true, data: booking };
   }
 
-  private async searchKnowledgeBase(args: Record<string, unknown>): Promise<ToolResult> {
+  private async searchKnowledgeBase(
+    args: Record<string, unknown>,
+  ): Promise<ToolResult> {
     const query = args.query as string;
     const results = await this.ragService.searchSimilar(query, 5);
     return { success: true, data: results };
@@ -193,7 +225,8 @@ export class ChatbotToolsService {
       where: { id: ctx.sessionId },
       data: {
         handedOff: true,
-        handoffType: config.handoff_type === 'live_chat' ? 'live_chat' : 'contact_number',
+        handoffType:
+          config.handoff_type === 'live_chat' ? 'live_chat' : 'contact_number',
       },
     });
 

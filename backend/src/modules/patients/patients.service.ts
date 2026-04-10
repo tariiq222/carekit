@@ -1,6 +1,13 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 import { UpdatePatientDto } from './dto/update-patient.dto.js';
 import { PatientListQueryDto } from './dto/patient-list-query.dto.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
@@ -13,7 +20,10 @@ export class PatientsService {
   ) {}
 
   async findAll(query: PatientListQueryDto = {}) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      query.page,
+      query.perPage,
+    );
     const { search, isActive } = query;
 
     const where = {
@@ -64,7 +74,7 @@ export class PatientsService {
     ]);
 
     const now = new Date();
-    const patientIds = patients.map(p => p.id);
+    const patientIds = patients.map((p) => p.id);
     const upcomingBookings = await this.prisma.booking.findMany({
       where: {
         patientId: { in: patientIds },
@@ -77,9 +87,9 @@ export class PatientsService {
       distinct: ['patientId'],
     });
 
-    const upcomingMap = new Map(upcomingBookings.map(b => [b.patientId, b]));
+    const upcomingMap = new Map(upcomingBookings.map((b) => [b.patientId, b]));
 
-    const items = patients.map(p => ({
+    const items = patients.map((p) => ({
       ...p,
       lastBooking: p.bookingsAsPatient[0] ?? null,
       nextBooking: upcomingMap.get(p.id) ?? null,
@@ -124,14 +134,22 @@ export class PatientsService {
     if (!patient) throw new NotFoundException('Patient not found');
 
     const profileFields = {
-      ...(dto.dateOfBirth !== undefined && { dateOfBirth: new Date(dto.dateOfBirth) }),
+      ...(dto.dateOfBirth !== undefined && {
+        dateOfBirth: new Date(dto.dateOfBirth),
+      }),
       ...(dto.nationality !== undefined && { nationality: dto.nationality }),
       ...(dto.nationalId !== undefined && { nationalId: dto.nationalId }),
-      ...(dto.emergencyName !== undefined && { emergencyName: dto.emergencyName }),
-      ...(dto.emergencyPhone !== undefined && { emergencyPhone: dto.emergencyPhone }),
+      ...(dto.emergencyName !== undefined && {
+        emergencyName: dto.emergencyName,
+      }),
+      ...(dto.emergencyPhone !== undefined && {
+        emergencyPhone: dto.emergencyPhone,
+      }),
       ...(dto.bloodType !== undefined && { bloodType: dto.bloodType }),
       ...(dto.allergies !== undefined && { allergies: dto.allergies }),
-      ...(dto.chronicConditions !== undefined && { chronicConditions: dto.chronicConditions }),
+      ...(dto.chronicConditions !== undefined && {
+        chronicConditions: dto.chronicConditions,
+      }),
     };
 
     const user = await (async () => {
@@ -155,12 +173,24 @@ export class PatientsService {
             where: { id },
             data: {
               ...(dto.firstName !== undefined && { firstName: dto.firstName }),
-              ...(dto.middleName !== undefined && { middleName: dto.middleName }),
+              ...(dto.middleName !== undefined && {
+                middleName: dto.middleName,
+              }),
               ...(dto.lastName !== undefined && { lastName: dto.lastName }),
               ...(dto.gender !== undefined && { gender: dto.gender }),
               ...(dto.phone !== undefined && { phone: dto.phone }),
             },
-            select: { id: true, firstName: true, middleName: true, lastName: true, email: true, phone: true, gender: true, isActive: true, updatedAt: true },
+            select: {
+              id: true,
+              firstName: true,
+              middleName: true,
+              lastName: true,
+              email: true,
+              phone: true,
+              gender: true,
+              isActive: true,
+              updatedAt: true,
+            },
           });
 
           if (Object.keys(profileFields).length > 0) {
@@ -187,15 +217,21 @@ export class PatientsService {
       }
     })();
 
-    const changedFields = Object.keys({ ...dto }).filter((k) => (dto as Record<string, unknown>)[k] !== undefined);
-    this.activityLog.log({
-      userId: actorId,
-      action: 'updated',
-      module: 'patients',
-      resourceId: id,
-      description: `Patient profile updated — fields: ${changedFields.join(', ')}`,
-      newValues: { updatedFields: changedFields },
-    }).catch(() => { /* non-blocking */ });
+    const changedFields = Object.keys({ ...dto }).filter(
+      (k) => (dto as Record<string, unknown>)[k] !== undefined,
+    );
+    this.activityLog
+      .log({
+        userId: actorId,
+        action: 'updated',
+        module: 'patients',
+        resourceId: id,
+        description: `Patient profile updated — fields: ${changedFields.join(', ')}`,
+        newValues: { updatedFields: changedFields },
+      })
+      .catch(() => {
+        /* non-blocking */
+      });
 
     return user;
   }
@@ -223,9 +259,14 @@ export class PatientsService {
         claimedAt: true,
         patientProfile: {
           select: {
-            nationalId: true, nationality: true, dateOfBirth: true,
-            emergencyName: true, emergencyPhone: true,
-            bloodType: true, allergies: true, chronicConditions: true,
+            nationalId: true,
+            nationality: true,
+            dateOfBirth: true,
+            emergencyName: true,
+            emergencyPhone: true,
+            bloodType: true,
+            allergies: true,
+            chronicConditions: true,
           },
         },
         bookingsAsPatient: {
@@ -252,14 +293,24 @@ export class PatientsService {
     return patient;
   }
 
-  async getPatientBookings(id: string, pagination: { page?: number; perPage?: number } = {}) {
+  async getPatientBookings(
+    id: string,
+    pagination: { page?: number; perPage?: number } = {},
+  ) {
     const patient = await this.prisma.user.findFirst({
-      where: { id, deletedAt: null, userRoles: { some: { role: { slug: 'patient' } } } },
+      where: {
+        id,
+        deletedAt: null,
+        userRoles: { some: { role: { slug: 'patient' } } },
+      },
       select: { id: true },
     });
     if (!patient) throw new NotFoundException('Patient not found');
 
-    const { page, perPage, skip } = parsePaginationParams(pagination.page, pagination.perPage ?? 50);
+    const { page, perPage, skip } = parsePaginationParams(
+      pagination.page,
+      pagination.perPage ?? 50,
+    );
 
     const [total, items] = await Promise.all([
       this.prisma.booking.count({ where: { patientId: id, deletedAt: null } }),
@@ -285,7 +336,11 @@ export class PatientsService {
 
   async getPatientStats(id: string) {
     const patient = await this.prisma.user.findFirst({
-      where: { id, deletedAt: null, userRoles: { some: { role: { slug: 'patient' } } } },
+      where: {
+        id,
+        deletedAt: null,
+        userRoles: { some: { role: { slug: 'patient' } } },
+      },
       select: { id: true },
     });
 

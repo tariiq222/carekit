@@ -40,7 +40,11 @@ describe('TasksProcessor', () => {
       mockCleanup as any,
       mockReminder as any,
       mockAutomation as any,
-      { expireUnpaidEnrollments: jest.fn(), cancelIncompleteSessions: jest.fn(), sendSessionReminders: jest.fn() } as any,
+      {
+        expireUnpaidEnrollments: jest.fn(),
+        cancelIncompleteSessions: jest.fn(),
+        sendSessionReminders: jest.fn(),
+      } as any,
       mockQueueFailure as any,
     );
 
@@ -72,20 +76,28 @@ describe('TasksProcessor', () => {
       ['expire-pending-bookings', () => mockAutomation.expirePendingBookings],
       ['auto-complete-bookings', () => mockAutomation.autoCompleteBookings],
       ['auto-no-show', () => mockAutomation.autoNoShow],
-      ['expire-pending-cancellations', () => mockAutomation.autoExpirePendingCancellations],
+      [
+        'expire-pending-cancellations',
+        () => mockAutomation.autoExpirePendingCancellations,
+      ],
     ];
 
-    it.each(jobCases)('should route job "%s" to the correct service method', async (jobName, getMock) => {
-      const job = { name: jobName } as any;
-      getMock().mockResolvedValue(undefined);
+    it.each(jobCases)(
+      'should route job "%s" to the correct service method',
+      async (jobName, getMock) => {
+        const job = { name: jobName } as any;
+        getMock().mockResolvedValue(undefined);
 
-      await processor.process(job);
+        await processor.process(job);
 
-      expect(getMock()).toHaveBeenCalledTimes(1);
-    });
+        expect(getMock()).toHaveBeenCalledTimes(1);
+      },
+    );
 
     it('should log warning for unknown job names', async () => {
-      const loggerSpy = jest.spyOn((processor as any).logger, 'warn').mockImplementation();
+      const loggerSpy = jest
+        .spyOn((processor as any).logger, 'warn')
+        .mockImplementation();
       const job = { name: 'unknown-job' } as any;
 
       await processor.process(job);
@@ -98,14 +110,23 @@ describe('TasksProcessor', () => {
   describe('onModuleInit()', () => {
     it('should register a failed handler on worker', () => {
       processor.onModuleInit();
-      expect((processor as any).worker.on).toHaveBeenCalledWith('failed', expect.any(Function));
+      expect((processor as any).worker.on).toHaveBeenCalledWith(
+        'failed',
+        expect.any(Function),
+      );
     });
 
     it('should notify admins when job failure is final (attempts exhausted)', async () => {
       processor.onModuleInit();
       const handler = workerOnHandlers['failed'];
 
-      const job = { name: 'cleanup-otps', id: 'job-1', data: {}, attemptsMade: 3, opts: { attempts: 3 } };
+      const job = {
+        name: 'cleanup-otps',
+        id: 'job-1',
+        data: {},
+        attemptsMade: 3,
+        opts: { attempts: 3 },
+      };
       const error = new Error('DB connection lost');
 
       await handler(job, error);
@@ -123,8 +144,16 @@ describe('TasksProcessor', () => {
       processor.onModuleInit();
       const handler = workerOnHandlers['failed'];
 
-      const job = { name: 'reminder-1h', id: 'job-2', data: {}, attemptsMade: 1, opts: { attempts: 3 } };
-      const error = Object.assign(new Error('Unrecoverable'), { name: 'UnrecoverableError' });
+      const job = {
+        name: 'reminder-1h',
+        id: 'job-2',
+        data: {},
+        attemptsMade: 1,
+        opts: { attempts: 3 },
+      };
+      const error = Object.assign(new Error('Unrecoverable'), {
+        name: 'UnrecoverableError',
+      });
 
       await handler(job, error);
 
@@ -135,7 +164,13 @@ describe('TasksProcessor', () => {
       processor.onModuleInit();
       const handler = workerOnHandlers['failed'];
 
-      const job = { name: 'cleanup-otps', id: 'job-3', data: {}, attemptsMade: 1, opts: { attempts: 3 } };
+      const job = {
+        name: 'cleanup-otps',
+        id: 'job-3',
+        data: {},
+        attemptsMade: 1,
+        opts: { attempts: 3 },
+      };
       const error = new Error('Temporary');
 
       await handler(job, error);
@@ -147,7 +182,9 @@ describe('TasksProcessor', () => {
       processor.onModuleInit();
       const handler = workerOnHandlers['failed'];
 
-      const error = Object.assign(new Error('Fatal'), { name: 'UnrecoverableError' });
+      const error = Object.assign(new Error('Fatal'), {
+        name: 'UnrecoverableError',
+      });
 
       await handler(null, error);
 

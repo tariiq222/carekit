@@ -7,7 +7,11 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ServiceCategoriesService } from '../../../src/modules/services/service-categories.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { CacheService } from '../../../src/common/services/cache.service.js';
-import { createMockPrisma, createMockCache, mockCategory } from './services.fixtures.js';
+import {
+  createMockPrisma,
+  createMockCache,
+  mockCategory,
+} from './services.fixtures.js';
 
 async function createModule(
   mockPrisma: ReturnType<typeof createMockPrisma>,
@@ -59,9 +63,16 @@ describe('ServiceCategoriesService — create', () => {
   });
 
   it('should default sortOrder to 0 when not provided', async () => {
-    mockPrisma.serviceCategory.create.mockResolvedValue({ ...mockCategory, sortOrder: 0 });
+    mockPrisma.serviceCategory.create.mockResolvedValue({
+      ...mockCategory,
+      sortOrder: 0,
+    });
 
-    await service.create({ nameEn: 'New', nameAr: 'جديد', departmentId: 'dept-uuid-1' });
+    await service.create({
+      nameEn: 'New',
+      nameAr: 'جديد',
+      departmentId: 'dept-uuid-1',
+    });
 
     expect(mockPrisma.serviceCategory.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -139,7 +150,9 @@ describe('ServiceCategoriesService — update', () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
     mockPrisma.serviceCategory.update.mockResolvedValue(updated);
 
-    const result = await service.update(mockCategory.id, { nameEn: 'Updated General Medicine' });
+    const result = await service.update(mockCategory.id, {
+      nameEn: 'Updated General Medicine',
+    });
 
     expect(result.nameEn).toBe('Updated General Medicine');
     expect(mockPrisma.serviceCategory.update).toHaveBeenCalledWith(
@@ -165,7 +178,9 @@ describe('ServiceCategoriesService — delete', () => {
   it('should throw NotFoundException when category does not exist', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(null);
 
-    await expect(service.delete('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(service.delete('non-existent-id')).rejects.toThrow(
+      NotFoundException,
+    );
 
     expect(mockPrisma.service.count).not.toHaveBeenCalled();
     expect(mockPrisma.serviceCategory.delete).not.toHaveBeenCalled();
@@ -175,7 +190,9 @@ describe('ServiceCategoriesService — delete', () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
     mockPrisma.service.count.mockResolvedValue(3);
 
-    await expect(service.delete(mockCategory.id)).rejects.toThrow(ConflictException);
+    await expect(service.delete(mockCategory.id)).rejects.toThrow(
+      ConflictException,
+    );
 
     expect(mockPrisma.serviceCategory.delete).not.toHaveBeenCalled();
   });

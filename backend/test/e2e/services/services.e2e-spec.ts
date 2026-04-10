@@ -125,7 +125,10 @@ describe('Services Module (e2e)', () => {
       expect(res.body.data).toHaveProperty('id');
       expect(res.body.data).toHaveProperty('nameEn', validCategory.nameEn);
       expect(res.body.data).toHaveProperty('nameAr', validCategory.nameAr);
-      expect(res.body.data).toHaveProperty('sortOrder', validCategory.sortOrder);
+      expect(res.body.data).toHaveProperty(
+        'sortOrder',
+        validCategory.sortOrder,
+      );
       expect(res.body.data).toHaveProperty('isActive', true);
 
       categoryId = res.body.data.id as string;
@@ -216,9 +219,7 @@ describe('Services Module (e2e)', () => {
 
   describe('GET /services/categories', () => {
     it('should return categories list without authentication (PUBLIC)', async () => {
-      const res = await request(httpServer)
-        .get(CATEGORIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(CATEGORIES_URL).expect(200);
 
       expectSuccessResponse(res.body);
       expect(Array.isArray(res.body.data)).toBe(true);
@@ -226,9 +227,7 @@ describe('Services Module (e2e)', () => {
     });
 
     it('should return categories with correct shape', async () => {
-      const res = await request(httpServer)
-        .get(CATEGORIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(CATEGORIES_URL).expect(200);
 
       const categories = res.body.data as Array<Record<string, unknown>>;
       for (const cat of categories) {
@@ -241,9 +240,7 @@ describe('Services Module (e2e)', () => {
     });
 
     it('should return categories sorted by sortOrder', async () => {
-      const res = await request(httpServer)
-        .get(CATEGORIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(CATEGORIES_URL).expect(200);
 
       const categories = res.body.data as Array<{ sortOrder: number }>;
       for (let i = 1; i < categories.length; i++) {
@@ -254,9 +251,7 @@ describe('Services Module (e2e)', () => {
     });
 
     it('should only return active categories by default', async () => {
-      const res = await request(httpServer)
-        .get(CATEGORIES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(CATEGORIES_URL).expect(200);
 
       const categories = res.body.data as Array<{ isActive: boolean }>;
       for (const cat of categories) {
@@ -278,7 +273,10 @@ describe('Services Module (e2e)', () => {
         .expect(200);
 
       expectSuccessResponse(res.body);
-      expect(res.body.data).toHaveProperty('nameEn', 'Updated General Medicine');
+      expect(res.body.data).toHaveProperty(
+        'nameEn',
+        'Updated General Medicine',
+      );
       expect(res.body.data).toHaveProperty('sortOrder', 10);
     });
 
@@ -618,9 +616,7 @@ describe('Services Module (e2e)', () => {
 
   describe('GET /services', () => {
     it('should return services list without authentication (PUBLIC)', async () => {
-      const res = await request(httpServer)
-        .get(SERVICES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SERVICES_URL).expect(200);
 
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('items');
@@ -644,9 +640,7 @@ describe('Services Module (e2e)', () => {
     });
 
     it('should return services with correct shape', async () => {
-      const res = await request(httpServer)
-        .get(SERVICES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SERVICES_URL).expect(200);
 
       const items = res.body.data.items as Array<Record<string, unknown>>;
       expect(items.length).toBeGreaterThanOrEqual(1);
@@ -697,9 +691,7 @@ describe('Services Module (e2e)', () => {
       const items = res.body.data.items as Array<{ nameEn: string }>;
       expect(items.length).toBeGreaterThanOrEqual(1);
       for (const item of items) {
-        expect(
-          item.nameEn.toLowerCase().includes('consultation'),
-        ).toBe(true);
+        expect(item.nameEn.toLowerCase().includes('consultation')).toBe(true);
       }
     });
 
@@ -713,9 +705,7 @@ describe('Services Module (e2e)', () => {
     });
 
     it('should exclude soft-deleted services', async () => {
-      const res = await request(httpServer)
-        .get(SERVICES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SERVICES_URL).expect(200);
 
       const items = res.body.data.items as Array<{ deletedAt: string | null }>;
       for (const item of items) {
@@ -739,11 +729,11 @@ describe('Services Module (e2e)', () => {
       const hiddenId = hiddenRes.body.data.id as string;
 
       // Public (unauthenticated) GET should not return it
-      const res = await request(httpServer)
-        .get(SERVICES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SERVICES_URL).expect(200);
 
-      const ids = (res.body.data.items as Array<{ id: string }>).map((i) => i.id);
+      const ids = (res.body.data.items as Array<{ id: string }>).map(
+        (i) => i.id,
+      );
       expect(ids).not.toContain(hiddenId);
     });
   });
@@ -1031,9 +1021,7 @@ describe('Services Module (e2e)', () => {
     });
 
     it('should not return soft-deleted service in GET /services', async () => {
-      const res = await request(httpServer)
-        .get(SERVICES_URL)
-        .expect(200);
+      const res = await request(httpServer).get(SERVICES_URL).expect(200);
 
       const items = res.body.data.items as Array<{ id: string }>;
       const ids = items.map((item) => item.id);
@@ -1354,8 +1342,11 @@ describe('Services Module (e2e)', () => {
     // Scenario 11: Create service with practitioner linked atomically
     it('should create service with practitionerIds and link practitioners atomically', async () => {
       // Step 1: Get an existing specialty
-      const specRes = await request(httpServer).get(`${API_PREFIX}/specialties`).expect(200);
-      const specialties = (specRes.body.data?.items ?? specRes.body.data) as Array<{ id: string }>;
+      const specRes = await request(httpServer)
+        .get(`${API_PREFIX}/specialties`)
+        .expect(200);
+      const specialties = (specRes.body.data?.items ??
+        specRes.body.data) as Array<{ id: string }>;
       if (!Array.isArray(specialties) || specialties.length === 0) return; // skip if no specialties seeded
       const specialtyId = specialties[0].id;
 
@@ -1376,10 +1367,12 @@ describe('Services Module (e2e)', () => {
       if (practRes.status === 201) {
         practitionerId = practRes.body.data.id as string;
       } else {
-        const listRes = await request(httpServer).get(`${API_PREFIX}/practitioners`).expect(200);
-        const found = (listRes.body.data.items as Array<{ id: string; user: { id: string } }>).find(
-          (p) => p.user.id === practUserId,
-        );
+        const listRes = await request(httpServer)
+          .get(`${API_PREFIX}/practitioners`)
+          .expect(200);
+        const found = (
+          listRes.body.data.items as Array<{ id: string; user: { id: string } }>
+        ).find((p) => p.user.id === practUserId);
         expect(found).toBeDefined();
         practitionerId = found!.id;
       }
@@ -1388,7 +1381,11 @@ describe('Services Module (e2e)', () => {
       const catRes = await request(httpServer)
         .post(CATEGORIES_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameEn: 'Practitioner Link Test', nameAr: 'ربط الطبيب', sortOrder: 99 })
+        .send({
+          nameEn: 'Practitioner Link Test',
+          nameAr: 'ربط الطبيب',
+          sortOrder: 99,
+        })
         .expect(201);
       const testCategoryId = catRes.body.data.id as string;
 
@@ -1415,9 +1412,14 @@ describe('Services Module (e2e)', () => {
         .expect(200);
 
       expectSuccessResponse(linkRes.body);
-      const linked = linkRes.body.data as Array<{ practitionerId: string; practitioner: { id: string } }>;
+      const linked = linkRes.body.data as Array<{
+        practitionerId: string;
+        practitioner: { id: string };
+      }>;
       expect(Array.isArray(linked)).toBe(true);
-      expect(linked.some((p) => p.practitioner.id === practitionerId)).toBe(true);
+      expect(linked.some((p) => p.practitioner.id === practitionerId)).toBe(
+        true,
+      );
     });
 
     // Validation: minLeadMinutes > 1440

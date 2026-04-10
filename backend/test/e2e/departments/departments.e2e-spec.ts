@@ -110,27 +110,40 @@ describe('Departments Module (e2e)', () => {
       const r1 = await request(httpServer)
         .post(DEPTS_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameAr: 'قسم الطوارئ', nameEn: 'Emergency', isActive: true, sortOrder: 1 })
+        .send({
+          nameAr: 'قسم الطوارئ',
+          nameEn: 'Emergency',
+          isActive: true,
+          sortOrder: 1,
+        })
         .expect(201);
 
       const r2 = await request(httpServer)
         .post(DEPTS_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameAr: 'قسم الأسنان', nameEn: 'Dentistry', isActive: false, sortOrder: 2 })
+        .send({
+          nameAr: 'قسم الأسنان',
+          nameEn: 'Dentistry',
+          isActive: false,
+          sortOrder: 2,
+        })
         .expect(201);
 
       const id1 = (r1.body.data as { id: string }).id;
       const id2 = (r2.body.data as { id: string }).id;
       createdIds.push(id1, id2);
 
-      const res = await request(httpServer)
-        .get(DEPTS_URL)
-        .expect(200);
+      const res = await request(httpServer).get(DEPTS_URL).expect(200);
 
       expectSuccessResponse(res.body);
       const data = res.body.data as {
         items: unknown[];
-        meta: { total: number; page: number; perPage: number; totalPages: number };
+        meta: {
+          total: number;
+          page: number;
+          perPage: number;
+          totalPages: number;
+        };
       };
       expect(Array.isArray(data.items)).toBe(true);
       expect(data.items.length).toBeGreaterThanOrEqual(2);
@@ -373,7 +386,11 @@ describe('Departments Module (e2e)', () => {
       const res = await request(httpServer)
         .post(DEPTS_URL)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ nameAr: 'قسم للتحديث', nameEn: 'Update Target', isActive: true })
+        .send({
+          nameAr: 'قسم للتحديث',
+          nameEn: 'Update Target',
+          isActive: true,
+        })
         .expect(201);
 
       deptId = (res.body.data as { id: string }).id;
@@ -522,7 +539,9 @@ describe('Departments Module (e2e)', () => {
       const res = await request(httpServer).get(DEPTS_URL).expect(200);
 
       expectSuccessResponse(res.body);
-      const data = res.body.data as { items: Array<{ id: string; sortOrder: number }> };
+      const data = res.body.data as {
+        items: Array<{ id: string; sortOrder: number }>;
+      };
 
       const deptA = data.items.find((d) => d.id === idA);
       const deptB = data.items.find((d) => d.id === idB);

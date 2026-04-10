@@ -21,7 +21,9 @@ export function timeSlotsOverlap(
   start2: string,
   end2: string,
 ): boolean {
-  return toMinutes(start1) < toMinutes(end2) && toMinutes(start2) < toMinutes(end1);
+  return (
+    toMinutes(start1) < toMinutes(end2) && toMinutes(start2) < toMinutes(end1)
+  );
 }
 
 export function shiftTime(time: string, minutes: number): string {
@@ -31,7 +33,10 @@ export function shiftTime(time: string, minutes: number): string {
   return `${String(Math.floor(capped / 60)).padStart(2, '0')}:${String(capped % 60).padStart(2, '0')}`;
 }
 
-export function calculateEndTime(startTime: string, durationMinutes: number): string {
+export function calculateEndTime(
+  startTime: string,
+  durationMinutes: number,
+): string {
   const totalMinutes = toMinutes(startTime) + durationMinutes;
   const capped = Math.min(totalMinutes, 23 * 60 + 59);
   const h = Math.floor(capped / 60);
@@ -39,7 +44,10 @@ export function calculateEndTime(startTime: string, durationMinutes: number): st
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-export function validateNoCrossMidnight(startTime: string, durationMinutes: number): void {
+export function validateNoCrossMidnight(
+  startTime: string,
+  durationMinutes: number,
+): void {
   const totalMinutes = toMinutes(startTime) + durationMinutes;
   if (totalMinutes >= 24 * 60) {
     throw new BadRequestException({

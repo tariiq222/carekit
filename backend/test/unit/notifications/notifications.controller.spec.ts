@@ -57,7 +57,9 @@ describe('NotificationsController', () => {
     it('should return updated: true after calling service', async () => {
       mockService.markAllAsRead.mockResolvedValue(undefined);
 
-      expect(await controller.markAllAsRead(mockUser)).toEqual({ updated: true });
+      expect(await controller.markAllAsRead(mockUser)).toEqual({
+        updated: true,
+      });
       expect(mockService.markAllAsRead).toHaveBeenCalledWith('user-1');
     });
   });
@@ -88,8 +90,13 @@ describe('NotificationsController', () => {
       const dto = { token: 'fcm-token-abc' } as any;
       mockService.unregisterFcmToken.mockResolvedValue(undefined);
 
-      expect(await controller.unregisterFcmToken(dto, mockUser)).toEqual({ deleted: true });
-      expect(mockService.unregisterFcmToken).toHaveBeenCalledWith('user-1', 'fcm-token-abc');
+      expect(await controller.unregisterFcmToken(dto, mockUser)).toEqual({
+        deleted: true,
+      });
+      expect(mockService.unregisterFcmToken).toHaveBeenCalledWith(
+        'user-1',
+        'fcm-token-abc',
+      );
     });
   });
 });

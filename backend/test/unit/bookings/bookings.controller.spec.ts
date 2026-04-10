@@ -75,7 +75,9 @@ describe('BookingsController', () => {
       .compile();
 
     controller = module.get<BookingsController>(BookingsController);
-    actionsController = module.get<BookingActionsController>(BookingActionsController);
+    actionsController = module.get<BookingActionsController>(
+      BookingActionsController,
+    );
   });
 
   // ─── create ─────────────────────────────────────────────────────────
@@ -157,7 +159,11 @@ describe('BookingsController', () => {
       const booking = { id: 'bk-1', status: 'completed' };
       mockBookingsService.complete.mockResolvedValue(booking);
 
-      const result = await actionsController.complete('bk-1', dto as any, defaultUser);
+      const result = await actionsController.complete(
+        'bk-1',
+        dto as any,
+        defaultUser,
+      );
 
       expect(mockBookingsService.complete).toHaveBeenCalledWith(
         'bk-1',
@@ -222,9 +228,16 @@ describe('BookingsController', () => {
       mockBookingsService.findMyBookings.mockResolvedValue(bookings);
 
       const pagination = { page: 1, perPage: 20 };
-      const result = await controller.findMyBookings(defaultUser, pagination as any);
+      const result = await controller.findMyBookings(
+        defaultUser,
+        pagination as any,
+      );
 
-      expect(mockBookingsService.findMyBookings).toHaveBeenCalledWith('user-1', 1, 20);
+      expect(mockBookingsService.findMyBookings).toHaveBeenCalledWith(
+        'user-1',
+        1,
+        20,
+      );
       expect(result).toEqual(bookings);
     });
   });

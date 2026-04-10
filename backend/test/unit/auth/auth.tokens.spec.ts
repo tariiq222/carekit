@@ -30,7 +30,9 @@ describe('AuthService — refreshToken', () => {
       userRoles: [{ role: { slug: 'patient' } }],
     });
     ctx.mockPrisma.refreshToken.delete.mockResolvedValue({});
-    ctx.mockPrisma.refreshToken.create.mockResolvedValue({ token: 'new-refresh-token' });
+    ctx.mockPrisma.refreshToken.create.mockResolvedValue({
+      token: 'new-refresh-token',
+    });
 
     const result = await ctx.service.refreshToken(oldToken);
 
@@ -44,11 +46,22 @@ describe('AuthService — refreshToken', () => {
 
   it.each([
     ['token not in DB', null, true],
-    ['expired token', { id: 'rt-id', token: 'expired', userId: 'u', expiresAt: new Date(Date.now() - 60_000) }, false],
+    [
+      'expired token',
+      {
+        id: 'rt-id',
+        token: 'expired',
+        userId: 'u',
+        expiresAt: new Date(Date.now() - 60_000),
+      },
+      false,
+    ],
   ])('should reject %s', async (_label, tokenResult, _deactivated) => {
     ctx.mockPrisma.refreshToken.findFirst.mockResolvedValue(tokenResult);
 
-    await expect(ctx.service.refreshToken('token')).rejects.toThrow(UnauthorizedException);
+    await expect(ctx.service.refreshToken('token')).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('should reject if user is deactivated', async () => {
@@ -131,7 +144,10 @@ describe('AuthService — resetPassword', () => {
   });
 
   it('should throw if OTP is invalid', async () => {
-    ctx.mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', email: 'user@example.com' });
+    ctx.mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-id',
+      email: 'user@example.com',
+    });
     ctx.mockPrisma.otpCode.updateMany.mockResolvedValue({ count: 0 });
 
     await expect(
@@ -141,7 +157,10 @@ describe('AuthService — resetPassword', () => {
 
   it('should hash new password, update user, and mark OTP used', async () => {
     const futureExpiry = new Date(Date.now() + 10 * 60 * 1000);
-    ctx.mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-id', email: 'user@example.com' });
+    ctx.mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-id',
+      email: 'user@example.com',
+    });
     ctx.mockPrisma.otpCode.findFirst.mockResolvedValue({
       id: 'otp-id',
       code: '123456',
@@ -153,7 +172,11 @@ describe('AuthService — resetPassword', () => {
     ctx.mockPrisma.user.update.mockResolvedValue({});
     ctx.mockPrisma.refreshToken.deleteMany.mockResolvedValue({ count: 0 });
 
-    await ctx.service.resetPassword('user@example.com', '123456', 'NewStr0ngP@ss!');
+    await ctx.service.resetPassword(
+      'user@example.com',
+      '123456',
+      'NewStr0ngP@ss!',
+    );
 
     expect(ctx.mockPrisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({

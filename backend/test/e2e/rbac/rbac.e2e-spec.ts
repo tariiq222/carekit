@@ -147,7 +147,9 @@ describe('RBAC (e2e)', () => {
 
     it('should access GET /api/v1/reports/revenue (reports:view)', async () => {
       const res = await request(httpServer)
-        .get(`${API_PREFIX}/reports/revenue?dateFrom=2026-01-01&dateTo=2026-12-31`)
+        .get(
+          `${API_PREFIX}/reports/revenue?dateFrom=2026-01-01&dateTo=2026-12-31`,
+        )
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(200);
 
@@ -305,7 +307,9 @@ describe('RBAC (e2e)', () => {
 
     it('should access GET /api/v1/reports/revenue (reports:view)', async () => {
       const res = await request(httpServer)
-        .get(`${API_PREFIX}/reports/revenue?dateFrom=2026-01-01&dateTo=2026-12-31`)
+        .get(
+          `${API_PREFIX}/reports/revenue?dateFrom=2026-01-01&dateTo=2026-12-31`,
+        )
         .set(getAuthHeaders(accountant.accessToken))
         .expect(200);
 

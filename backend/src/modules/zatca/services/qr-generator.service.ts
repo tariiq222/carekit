@@ -3,10 +3,10 @@ import { QR_TAGS } from '../constants/zatca.constants.js';
 
 interface QrInvoiceData {
   sellerName: string;
-  vatNumber: string;          // VAT registration number or CR number
-  invoiceDatetime: string;    // ISO 8601 format
-  totalWithVat: number;       // in halalat (integer)
-  vatAmount: number;          // in halalat (integer)
+  vatNumber: string; // VAT registration number or CR number
+  invoiceDatetime: string; // ISO 8601 format
+  totalWithVat: number; // in halalat (integer)
+  vatAmount: number; // in halalat (integer)
 }
 
 @Injectable()
@@ -21,7 +21,10 @@ export class QrGeneratorService {
       this.encodeTlv(QR_TAGS.SELLER_NAME, data.sellerName),
       this.encodeTlv(QR_TAGS.VAT_NUMBER, data.vatNumber),
       this.encodeTlv(QR_TAGS.INVOICE_DATETIME, data.invoiceDatetime),
-      this.encodeTlv(QR_TAGS.TOTAL_WITH_VAT, this.formatAmount(data.totalWithVat)),
+      this.encodeTlv(
+        QR_TAGS.TOTAL_WITH_VAT,
+        this.formatAmount(data.totalWithVat),
+      ),
       this.encodeTlv(QR_TAGS.VAT_AMOUNT, this.formatAmount(data.vatAmount)),
     ];
 

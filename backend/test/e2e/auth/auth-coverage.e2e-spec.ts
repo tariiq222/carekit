@@ -38,7 +38,9 @@ const AUTH_URL = `${API_PREFIX}/auth`;
 
 /** Extract refresh_token value from Set-Cookie header */
 function extractCookieToken(cookieHeader: string[]): string {
-  const entry = cookieHeader.find((c: string) => c.startsWith('refresh_token='));
+  const entry = cookieHeader.find((c: string) =>
+    c.startsWith('refresh_token='),
+  );
   if (!entry) throw new Error('refresh_token cookie not found');
   return entry.split(';')[0].replace('refresh_token=', '');
 }
@@ -47,7 +49,13 @@ function extractCookieToken(cookieHeader: string[]): string {
 async function registerFresh(
   httpServer: unknown,
   suffix: string,
-): Promise<{ email: string; password: string; accessToken: string; refreshToken: string; userId: string }> {
+): Promise<{
+  email: string;
+  password: string;
+  accessToken: string;
+  refreshToken: string;
+  userId: string;
+}> {
   // Use timestamp to ensure unique email per test run
   const ts = Date.now().toString(36).slice(-4);
   const email = `coverage-${suffix}-${ts}@carekit-test.com`;
@@ -55,14 +63,25 @@ async function registerFresh(
   const phone = `+9665${Date.now().toString().slice(-7)}`;
   const res = await request(httpServer as Parameters<typeof request>[0])
     .post(`${AUTH_URL}/register`)
-    .send({ email, password, firstName: 'اختبار', lastName: 'التغطية', phone, gender: 'male' });
+    .send({
+      email,
+      password,
+      firstName: 'اختبار',
+      lastName: 'التغطية',
+      phone,
+      gender: 'male',
+    });
 
   if (res.status !== 201) {
-    throw new Error(`registerFresh failed with ${res.status}: ${JSON.stringify(res.body)}`);
+    throw new Error(
+      `registerFresh failed with ${res.status}: ${JSON.stringify(res.body)}`,
+    );
   }
 
   // refreshToken is in HTTP-only cookie, not body
-  const refreshToken = extractCookieToken(res.headers['set-cookie'] as string[]);
+  const refreshToken = extractCookieToken(
+    res.headers['set-cookie'] as string[],
+  );
 
   return {
     email,
@@ -83,7 +102,10 @@ async function getLatestOtp(
   type: 'login' | 'reset_password' | 'verify_email',
 ): Promise<string> {
   const plainCode = '888888'; // Known code we will send to verify
-  const hashedCode = crypto.createHash('sha256').update(plainCode).digest('hex');
+  const hashedCode = crypto
+    .createHash('sha256')
+    .update(plainCode)
+    .digest('hex');
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min from now
 
   // Invalidate existing OTPs of same type (mirrors OtpService.generateOtp)
@@ -126,7 +148,10 @@ describe('Auth Coverage — Gap Fill (e2e)', () => {
   describe('AU-L5: Deactivated account', () => {
     it('should return 403 AUTH_ACCOUNT_DEACTIVATED when account is deactivated', async () => {
       // Register user
-      const { email, password, userId } = await registerFresh(httpServer, 'deactivated');
+      const { email, password, userId } = await registerFresh(
+        httpServer,
+        'deactivated',
+      );
 
       // Deactivate via DB (simulates admin deactivating account)
       await prisma.user.update({
@@ -167,7 +192,9 @@ describe('Auth Coverage — Gap Fill (e2e)', () => {
         .expect(200);
 
       // No user, so no OTP should be in DB
-      const user = await prisma.user.findUnique({ where: { email: unknownEmail } });
+      const user = await prisma.user.findUnique({
+        where: { email: unknownEmail },
+      });
       expect(user).toBeNull();
     });
   });
@@ -197,11 +224,19 @@ describe('Auth Coverage — Gap Fill (e2e)', () => {
         .expect(200);
 
       expectSuccessResponse(res.body);
-      const { data } = res.body as { data: { accessToken: string; expiresIn: number; user: Record<string, unknown> } };
+      const { data } = res.body as {
+        data: {
+          accessToken: string;
+          expiresIn: number;
+          user: Record<string, unknown>;
+        };
+      };
       expect(typeof data.accessToken).toBe('string');
       // refreshToken is in HTTP-only cookie, not body (consistent with login endpoint)
       expect(res.headers['set-cookie']).toBeDefined();
-      const cookie = (res.headers['set-cookie'] as string[]).find((c: string) => c.startsWith('refresh_token='));
+      const cookie = (res.headers['set-cookie'] as string[]).find((c: string) =>
+        c.startsWith('refresh_token='),
+      );
       expect(cookie).toBeDefined();
       expect(data.expiresIn).toBe(900);
       expect(data.user.email).toBe(email);
@@ -311,7 +346,9 @@ describe('Auth Coverage — Gap Fill (e2e)', () => {
         .expect(200);
 
       expectSuccessResponse(res.body);
-      expect((res.body as { data: { user: { email: string } } }).data.user.email).toBe(email);
+      expect(
+        (res.body as { data: { user: { email: string } } }).data.user.email,
+      ).toBe(email);
     });
 
     it('AU-FP7 old password should be rejected after reset', async () => {
@@ -330,7 +367,8 @@ describe('Auth Coverage — Gap Fill (e2e)', () => {
 
   describe('AU-CP4: Old refresh token rejected after password change', () => {
     it('AU-CP4 should invalidate all refresh tokens when password is changed', async () => {
-      const { email, password, accessToken, refreshToken } = await registerFresh(httpServer, 'cp4-revoke');
+      const { email, password, accessToken, refreshToken } =
+        await registerFresh(httpServer, 'cp4-revoke');
 
       // Change password
       await request(httpServer)
@@ -358,7 +396,10 @@ describe('Auth Coverage — Gap Fill (e2e)', () => {
 
   describe('AU-EV2: Email verification with valid OTP', () => {
     it('AU-EV2 should set emailVerified=true after verifying OTP', async () => {
-      const { userId, accessToken } = await registerFresh(httpServer, 'ev2-verify');
+      const { userId, accessToken } = await registerFresh(
+        httpServer,
+        'ev2-verify',
+      );
 
       // Confirm initial state
       const meBefore = await request(httpServer)
@@ -366,7 +407,10 @@ describe('Auth Coverage — Gap Fill (e2e)', () => {
         .set(getAuthHeaders(accessToken))
         .expect(200);
 
-      expect((meBefore.body as { data: { emailVerified: boolean } }).data.emailVerified).toBe(false);
+      expect(
+        (meBefore.body as { data: { emailVerified: boolean } }).data
+          .emailVerified,
+      ).toBe(false);
 
       // Send verification OTP
       await request(httpServer)
@@ -386,7 +430,10 @@ describe('Auth Coverage — Gap Fill (e2e)', () => {
         .expect(200);
 
       expect(verifyRes.body).toHaveProperty('success', true);
-      expect(verifyRes.body).toHaveProperty('message', 'Email verified successfully');
+      expect(verifyRes.body).toHaveProperty(
+        'message',
+        'Email verified successfully',
+      );
 
       // Confirm DB state via /me
       const meAfter = await request(httpServer)
@@ -394,7 +441,10 @@ describe('Auth Coverage — Gap Fill (e2e)', () => {
         .set(getAuthHeaders(accessToken))
         .expect(200);
 
-      expect((meAfter.body as { data: { emailVerified: boolean } }).data.emailVerified).toBe(true);
+      expect(
+        (meAfter.body as { data: { emailVerified: boolean } }).data
+          .emailVerified,
+      ).toBe(true);
     });
   });
 

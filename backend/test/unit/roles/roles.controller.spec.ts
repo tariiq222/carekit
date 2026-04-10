@@ -97,7 +97,11 @@ describe('RolesController', () => {
 
       const result = await controller.assignPermission('r1', dto);
 
-      expect(mockService.assignPermission).toHaveBeenCalledWith('r1', 'bookings', 'create');
+      expect(mockService.assignPermission).toHaveBeenCalledWith(
+        'r1',
+        'bookings',
+        'create',
+      );
       expect(result).toEqual({ assigned: true });
     });
   });
@@ -109,7 +113,11 @@ describe('RolesController', () => {
 
       const result = await controller.removePermissionPost('r1', dto);
 
-      expect(mockService.removePermission).toHaveBeenCalledWith('r1', 'bookings', 'create');
+      expect(mockService.removePermission).toHaveBeenCalledWith(
+        'r1',
+        'bookings',
+        'create',
+      );
       expect(result).toEqual({ removed: true });
     });
   });
@@ -121,7 +129,11 @@ describe('RolesController', () => {
 
       const result = await controller.removePermission('r1', dto);
 
-      expect(mockService.removePermission).toHaveBeenCalledWith('r1', 'bookings', 'view');
+      expect(mockService.removePermission).toHaveBeenCalledWith(
+        'r1',
+        'bookings',
+        'view',
+      );
     });
   });
 });

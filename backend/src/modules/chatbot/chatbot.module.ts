@@ -28,7 +28,13 @@ import {
 } from './interfaces/chatbot-domain.interface.js';
 
 @Module({
-  imports: [BookingsModule, ServicesModule, PractitionersModule, WhitelabelModule, FeatureFlagsModule],
+  imports: [
+    BookingsModule,
+    ServicesModule,
+    PractitionersModule,
+    WhitelabelModule,
+    FeatureFlagsModule,
+  ],
   controllers: [ChatbotController, ChatbotKbController, ChatbotAdminController],
   providers: [
     ChatbotService,

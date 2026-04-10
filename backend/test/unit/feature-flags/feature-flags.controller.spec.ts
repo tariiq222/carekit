@@ -23,8 +23,10 @@ describe('FeatureFlagsController', () => {
       controllers: [FeatureFlagsController],
       providers: [{ provide: FeatureFlagsService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get<FeatureFlagsController>(FeatureFlagsController);

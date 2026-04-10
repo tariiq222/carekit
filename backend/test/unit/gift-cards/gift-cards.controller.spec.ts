@@ -41,7 +41,10 @@ describe('GiftCardsController', () => {
       mockService.findAll.mockResolvedValue(cards);
       const query = {} as any;
 
-      expect(await controller.findAll(query)).toEqual({ success: true, data: cards });
+      expect(await controller.findAll(query)).toEqual({
+        success: true,
+        data: cards,
+      });
       expect(mockService.findAll).toHaveBeenCalledWith(query);
     });
   });
@@ -51,7 +54,10 @@ describe('GiftCardsController', () => {
       const card = { id: 'gc1', balance: 100 };
       mockService.findById.mockResolvedValue(card);
 
-      expect(await controller.findById('gc1')).toEqual({ success: true, data: card });
+      expect(await controller.findById('gc1')).toEqual({
+        success: true,
+        data: card,
+      });
     });
   });
 
@@ -61,7 +67,10 @@ describe('GiftCardsController', () => {
       const created = { id: 'gc2', balance: 200 };
       mockService.create.mockResolvedValue(created);
 
-      expect(await controller.create(dto)).toEqual({ success: true, data: created });
+      expect(await controller.create(dto)).toEqual({
+        success: true,
+        data: created,
+      });
       expect(mockService.create).toHaveBeenCalledWith(dto);
     });
   });
@@ -72,7 +81,10 @@ describe('GiftCardsController', () => {
       const updated = { id: 'gc1', isActive: false };
       mockService.update.mockResolvedValue(updated);
 
-      expect(await controller.update('gc1', dto)).toEqual({ success: true, data: updated });
+      expect(await controller.update('gc1', dto)).toEqual({
+        success: true,
+        data: updated,
+      });
       expect(mockService.update).toHaveBeenCalledWith('gc1', dto);
     });
   });
@@ -82,7 +94,10 @@ describe('GiftCardsController', () => {
       const result = { id: 'gc1', isActive: false };
       mockService.deactivate.mockResolvedValue(result);
 
-      expect(await controller.deactivate('gc1')).toEqual({ success: true, data: result });
+      expect(await controller.deactivate('gc1')).toEqual({
+        success: true,
+        data: result,
+      });
       expect(mockService.deactivate).toHaveBeenCalledWith('gc1');
     });
   });
@@ -93,7 +108,10 @@ describe('GiftCardsController', () => {
       const balance = { balance: 150, currency: 'SAR' };
       mockService.checkBalance.mockResolvedValue(balance);
 
-      expect(await controller.checkBalance(dto)).toEqual({ success: true, data: balance });
+      expect(await controller.checkBalance(dto)).toEqual({
+        success: true,
+        data: balance,
+      });
       expect(mockService.checkBalance).toHaveBeenCalledWith('GIFT-001');
     });
   });
@@ -104,7 +122,10 @@ describe('GiftCardsController', () => {
       const result = { id: 'gc1', balance: 250 };
       mockService.addCredit.mockResolvedValue(result);
 
-      expect(await controller.addCredit('gc1', dto)).toEqual({ success: true, data: result });
+      expect(await controller.addCredit('gc1', dto)).toEqual({
+        success: true,
+        data: result,
+      });
       expect(mockService.addCredit).toHaveBeenCalledWith('gc1', dto);
     });
   });

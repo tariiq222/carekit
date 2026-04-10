@@ -82,7 +82,10 @@ describe('GET /chatbot/config', () => {
     const res = await request(httpServer)
       .get(`${CHATBOT_URL}/config`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:view)', async () => {
@@ -121,7 +124,10 @@ describe('GET /chatbot/config/:category', () => {
     const res = await request(httpServer)
       .get(`${CHATBOT_URL}/config/general`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:view)', async () => {
@@ -177,7 +183,10 @@ describe('PUT /chatbot/config', () => {
       .put(`${CHATBOT_URL}/config`)
       .send(validConfig)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:edit)', async () => {
@@ -210,7 +219,10 @@ describe('POST /chatbot/config/seed', () => {
     const res = await request(httpServer)
       .post(`${CHATBOT_URL}/config/seed`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:edit)', async () => {
@@ -249,8 +261,13 @@ describe('GET /chatbot/analytics', () => {
   });
 
   it('returns 401 without token', async () => {
-    const res = await request(httpServer).get(`${CHATBOT_URL}/analytics`).expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    const res = await request(httpServer)
+      .get(`${CHATBOT_URL}/analytics`)
+      .expect(401);
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:view)', async () => {
@@ -291,7 +308,10 @@ describe('GET /chatbot/analytics/questions', () => {
     const res = await request(httpServer)
       .get(`${CHATBOT_URL}/analytics/questions`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:view)', async () => {
@@ -331,7 +351,10 @@ describe('POST /chatbot/sessions/:id/staff-messages', () => {
       .post(`${CHATBOT_URL}/sessions/${GHOST_UUID}/staff-messages`)
       .send({ content: 'Hello' })
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no chatbot:edit)', async () => {

@@ -7,7 +7,10 @@ import { ZatcaApiService } from './zatca-api.service.js';
 import { XmlSigningService } from './xml-signing.service.js';
 import { InvoiceHashService } from './invoice-hash.service.js';
 import { QueueFailureService } from '../../../common/queue/queue-failure.service.js';
-import { JOB_ATTEMPTS, QUEUE_ZATCA_SUBMIT } from '../../../config/constants/queues.js';
+import {
+  JOB_ATTEMPTS,
+  QUEUE_ZATCA_SUBMIT,
+} from '../../../config/constants/queues.js';
 
 export interface ZatcaSubmitJobData {
   invoiceId: string;
@@ -137,7 +140,7 @@ export class ZatcaSubmitProcessor extends WorkerHost implements OnModuleInit {
     invoiceId: string,
     succeeded: boolean,
     signedXml: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     response: Record<string, any>,
   ): Promise<void> {
     await this.prisma.invoice.update({

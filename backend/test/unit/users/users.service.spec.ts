@@ -12,14 +12,21 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UsersService } from '../../../src/modules/users/users.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { UserRolesService } from '../../../src/modules/users/user-roles.service.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 import { PractitionersService } from '../../../src/modules/practitioners/practitioners.service.js';
 import { AuthCacheService } from '../../../src/modules/auth/auth-cache.service.js';
-import { CreateUserDto, UpdateUserDto } from '../../../src/modules/users/dto/create-user.dto.js';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+} from '../../../src/modules/users/dto/create-user.dto.js';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -52,7 +59,9 @@ const mockPrismaService: any = {
   specialty: {
     findFirst: jest.fn(),
   },
-  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(mockPrismaService)),
+  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) =>
+    cb(mockPrismaService),
+  ),
 };
 
 const mockUserRolesService = {
@@ -103,8 +112,20 @@ describe('UsersService', () => {
   describe('findAll', () => {
     it('should return paginated users', async () => {
       const mockUsers = [
-        { id: 'u1', email: 'a@test.com', firstName: 'أحمد', lastName: 'أ', isActive: true },
-        { id: 'u2', email: 'b@test.com', firstName: 'سارة', lastName: 'ب', isActive: true },
+        {
+          id: 'u1',
+          email: 'a@test.com',
+          firstName: 'أحمد',
+          lastName: 'أ',
+          isActive: true,
+        },
+        {
+          id: 'u2',
+          email: 'b@test.com',
+          firstName: 'سارة',
+          lastName: 'ب',
+          isActive: true,
+        },
       ];
 
       mockPrismaService.user.findMany.mockResolvedValue(mockUsers);
@@ -207,13 +228,19 @@ describe('UsersService', () => {
 
       expect(result.id).toBe('user-id');
       expect(result.email).toBe('user@test.com');
-      expect(result.roles).toEqual(expect.arrayContaining([expect.objectContaining({ slug: 'receptionist' })]));
+      expect(result.roles).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ slug: 'receptionist' }),
+        ]),
+      );
     });
 
     it('should throw NotFoundException for non-existent user', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException for soft-deleted user', async () => {
@@ -222,7 +249,9 @@ describe('UsersService', () => {
         deletedAt: new Date(),
       });
 
-      await expect(service.findOne('deleted-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('deleted-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -305,7 +334,9 @@ describe('UsersService', () => {
       await service.create({ ...createDto, roleSlug: 'practitioner' });
 
       // Should delegate to PractitionersService, not directly use Prisma
-      expect(mockPractitionersService.createForUser).toHaveBeenCalledWith('prac-user-id');
+      expect(mockPractitionersService.createForUser).toHaveBeenCalledWith(
+        'prac-user-id',
+      );
       expect(mockPrismaService.practitioner.create).not.toHaveBeenCalled();
     });
 
@@ -336,7 +367,9 @@ describe('UsersService', () => {
         email: createDto.email,
       });
 
-      await expect(service.create(createDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should normalize email to lowercase', async () => {
@@ -478,9 +511,9 @@ describe('UsersService', () => {
         deletedAt: null,
       });
 
-      await expect(
-        service.softDelete('admin-id', 'admin-id'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.softDelete('admin-id', 'admin-id')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw NotFoundException for non-existent user', async () => {
@@ -544,10 +577,9 @@ describe('UsersService', () => {
         deletedAt: null,
       });
 
-      await expect(
-        service.deactivate('admin-id', 'admin-id'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.deactivate('admin-id', 'admin-id')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
-
 });

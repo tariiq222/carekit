@@ -11,13 +11,11 @@ const callerUserId = 'user-uuid-caller';
 const targetPatientId = 'patient-uuid-1';
 const bookingId = 'booking-uuid-1';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   user: { findFirst: jest.fn() },
   payment: { create: jest.fn().mockResolvedValue({ id: 'pay-uuid' }) },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockSettings: any = {
   get: jest.fn().mockResolvedValue({ walkInPaymentRequired: true }),
 };
@@ -52,34 +50,52 @@ describe('BookingPaymentHelper', () => {
 
     it('should return targetPatientId when patient exists and caller is privileged', async () => {
       mockPrisma.user.findFirst.mockResolvedValue({ id: targetPatientId });
-      const result = await service.resolvePatientId(callerUserId, targetPatientId, [{ slug: 'receptionist' }]);
+      const result = await service.resolvePatientId(
+        callerUserId,
+        targetPatientId,
+        [{ slug: 'receptionist' }],
+      );
       expect(result).toBe(targetPatientId);
     });
 
     it('should throw NotFoundException when target patient not found', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
       await expect(
-        service.resolvePatientId(callerUserId, 'non-existent', [{ slug: 'super_admin' }]),
+        service.resolvePatientId(callerUserId, 'non-existent', [
+          { slug: 'super_admin' },
+        ]),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException when caller is not privileged and tries to book for another patient', async () => {
       await expect(
-        service.resolvePatientId(callerUserId, targetPatientId, [{ slug: 'patient' }]),
-      ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
+        service.resolvePatientId(callerUserId, targetPatientId, [
+          { slug: 'patient' },
+        ]),
+      ).rejects.toMatchObject({
+        response: { statusCode: 403, error: 'FORBIDDEN' },
+      });
     });
 
     it('should throw ForbiddenException when no roles provided and target differs from caller', async () => {
       await expect(
         service.resolvePatientId(callerUserId, targetPatientId, undefined),
-      ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
+      ).rejects.toMatchObject({
+        response: { statusCode: 403, error: 'FORBIDDEN' },
+      });
     });
   });
 
   describe('createPaymentIfNeeded', () => {
     it('should create cash payment when payAtClinic is true and caller has privilege', async () => {
       const staffRoles = [{ slug: 'staff' }];
-      await service.createPaymentIfNeeded(bookingId, 'in_person', 20000, true, staffRoles);
+      await service.createPaymentIfNeeded(
+        bookingId,
+        'in_person',
+        20000,
+        true,
+        staffRoles,
+      );
       expect(mockPrisma.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ method: 'cash', status: 'paid' }),
@@ -89,11 +105,23 @@ describe('BookingPaymentHelper', () => {
 
     it('should throw ForbiddenException when payAtClinic is true but caller lacks privilege', async () => {
       await expect(
-        service.createPaymentIfNeeded(bookingId, 'in_person', 20000, true, [{ slug: 'patient' }]),
-      ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
+        service.createPaymentIfNeeded(bookingId, 'in_person', 20000, true, [
+          { slug: 'patient' },
+        ]),
+      ).rejects.toMatchObject({
+        response: { statusCode: 403, error: 'FORBIDDEN' },
+      });
       await expect(
-        service.createPaymentIfNeeded(bookingId, 'in_person', 20000, true, undefined),
-      ).rejects.toMatchObject({ response: { statusCode: 403, error: 'FORBIDDEN' } });
+        service.createPaymentIfNeeded(
+          bookingId,
+          'in_person',
+          20000,
+          true,
+          undefined,
+        ),
+      ).rejects.toMatchObject({
+        response: { statusCode: 403, error: 'FORBIDDEN' },
+      });
     });
 
     it('should skip payment when resolvedPrice is 0 (free service)', async () => {
@@ -105,7 +133,10 @@ describe('BookingPaymentHelper', () => {
       await service.createPaymentIfNeeded(bookingId, 'in_person', 20000);
       expect(mockPrisma.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ method: 'moyasar', status: 'awaiting' }),
+          data: expect.objectContaining({
+            method: 'moyasar',
+            status: 'awaiting',
+          }),
         }),
       );
     });

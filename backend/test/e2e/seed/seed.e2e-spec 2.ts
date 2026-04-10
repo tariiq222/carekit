@@ -273,7 +273,9 @@ describe('Seed Data Validation (e2e)', () => {
       // (exact names may vary — this is a soft check)
       let matchCount = 0;
       for (const expected of expectedSpecialties) {
-        if (englishNames.some((name) => name.includes(expected.toLowerCase()))) {
+        if (
+          englishNames.some((name) => name.includes(expected.toLowerCase()))
+        ) {
           matchCount++;
         }
       }
@@ -309,9 +311,7 @@ describe('Seed Data Validation (e2e)', () => {
       ];
 
       if (Array.isArray(configs)) {
-        const configKeys = configs.map(
-          (c: { key: string }) => c.key,
-        );
+        const configKeys = configs.map((c: { key: string }) => c.key);
         for (const key of essentialKeys) {
           expect(configKeys).toContain(key);
         }

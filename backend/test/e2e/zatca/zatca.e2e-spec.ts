@@ -90,8 +90,13 @@ describe('GET /zatca/config', () => {
   });
 
   it('returns 401 without token', async () => {
-    const res = await request(httpServer).get(`${ZATCA_URL}/config`).expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    const res = await request(httpServer)
+      .get(`${ZATCA_URL}/config`)
+      .expect(401);
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for accountant (no whitelabel:view)', async () => {
@@ -134,7 +139,10 @@ describe('GET /zatca/onboarding/status', () => {
     const res = await request(httpServer)
       .get(`${ZATCA_URL}/onboarding/status`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for accountant (no whitelabel:view)', async () => {
@@ -209,7 +217,10 @@ describe('POST /zatca/onboard', () => {
       .post(`${ZATCA_URL}/onboard`)
       .send({ otp: '123456' })
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for accountant (no whitelabel:edit)', async () => {
@@ -278,7 +289,10 @@ describe('GET /zatca/sandbox/stats', () => {
     const res = await request(httpServer)
       .get(`${ZATCA_URL}/sandbox/stats`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no invoices:view)', async () => {
@@ -323,7 +337,10 @@ describe('POST /zatca/sandbox/report/:invoiceId', () => {
     const res = await request(httpServer)
       .post(`${ZATCA_URL}/sandbox/report/${GHOST_UUID}`)
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for practitioner (no invoices:edit)', async () => {

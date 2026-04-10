@@ -59,7 +59,9 @@ describe('TasksBootstrapService', () => {
 
       expect(mockQueue.getRepeatableJobs).toHaveBeenCalled();
       expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledTimes(1);
-      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledWith('stale-job:::* * * * *');
+      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledWith(
+        'stale-job:::* * * * *',
+      );
     });
 
     it('should register cleanup-otps with daily 3AM schedule', async () => {
@@ -246,7 +248,11 @@ describe('TasksBootstrapService', () => {
 
     it('should NOT remove jobs that are already registered with the desired name', async () => {
       mockQueue.getRepeatableJobs.mockResolvedValue([
-        { key: 'expire-pending-bookings:::*/5 * * * *', name: 'expire-pending-bookings', pattern: '*/5 * * * *' },
+        {
+          key: 'expire-pending-bookings:::*/5 * * * *',
+          name: 'expire-pending-bookings',
+          pattern: '*/5 * * * *',
+        },
       ]);
 
       await service.onModuleInit();
@@ -261,19 +267,37 @@ describe('TasksBootstrapService', () => {
 
       await service.onModuleInit();
 
-      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledWith('old-job:::* * * * *');
+      expect(mockQueue.removeRepeatableByKey).toHaveBeenCalledWith(
+        'old-job:::* * * * *',
+      );
     });
 
     it('should not add jobs that already exist', async () => {
       const allJobNames = [
-        'cleanup-otps', 'cleanup-tokens', 'reminder-24h', 'reminder-1h',
-        'expire-pending-bookings', 'auto-complete-bookings', 'auto-no-show',
-        'expire-pending-cancellations', 'reminder-2h', 'reminder-15min',
-        'cleanup-webhooks', 'archive-activity-logs', 'repair-rating-cache', 'db-snapshot',
-        'group-enrollment-expiry', 'group-session-cancellation', 'group-session-reminder',
+        'cleanup-otps',
+        'cleanup-tokens',
+        'reminder-24h',
+        'reminder-1h',
+        'expire-pending-bookings',
+        'auto-complete-bookings',
+        'auto-no-show',
+        'expire-pending-cancellations',
+        'reminder-2h',
+        'reminder-15min',
+        'cleanup-webhooks',
+        'archive-activity-logs',
+        'repair-rating-cache',
+        'db-snapshot',
+        'group-enrollment-expiry',
+        'group-session-cancellation',
+        'group-session-reminder',
       ];
       mockQueue.getRepeatableJobs.mockResolvedValue(
-        allJobNames.map(name => ({ key: `${name}:::* * * * *`, name, pattern: '* * * * *' })),
+        allJobNames.map((name) => ({
+          key: `${name}:::* * * * *`,
+          name,
+          pattern: '* * * * *',
+        })),
       );
 
       await service.onModuleInit();
@@ -284,7 +308,9 @@ describe('TasksBootstrapService', () => {
     it('should handle errors during job registration gracefully', async () => {
       mockQueue.add.mockRejectedValueOnce(new Error('Redis connection failed'));
 
-      await expect(service.onModuleInit()).rejects.toThrow('Redis connection failed');
+      await expect(service.onModuleInit()).rejects.toThrow(
+        'Redis connection failed',
+      );
     });
 
     it('should handle errors during removal of old jobs', async () => {

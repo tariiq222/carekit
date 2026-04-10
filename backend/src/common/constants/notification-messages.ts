@@ -44,7 +44,8 @@ export const NOTIF = {
     titleAr: 'تم رفض طلب الإلغاء',
     titleEn: 'Cancellation Rejected',
     bodyAr: 'تم رفض طلب إلغاء موعدك. الموعد لا يزال مؤكداً',
-    bodyEn: 'Your cancellation request was rejected. The booking remains confirmed',
+    bodyEn:
+      'Your cancellation request was rejected. The booking remains confirmed',
   },
   PATIENT_ARRIVED: {
     titleAr: 'وصول المريض',

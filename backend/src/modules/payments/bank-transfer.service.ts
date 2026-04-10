@@ -16,7 +16,11 @@ import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { UploadReceiptDto } from './dto/upload-receipt.dto.js';
-import { paymentInclude, bookingWithPriceInclude, calculateAmounts } from './payments.helpers.js';
+import {
+  paymentInclude,
+  bookingWithPriceInclude,
+  calculateAmounts,
+} from './payments.helpers.js';
 import { correlationStorage } from '../../common/middleware/correlation-id.middleware.js';
 import { NOTIF } from '../../common/constants/notification-messages.js';
 
@@ -89,7 +93,10 @@ export class BankTransferService {
     });
 
     const switchableStatuses = ['failed', 'pending', 'awaiting'];
-    if (existingPayment && !switchableStatuses.includes(existingPayment.status)) {
+    if (
+      existingPayment &&
+      !switchableStatuses.includes(existingPayment.status)
+    ) {
       throw new BadRequestException({
         statusCode: 400,
         message: 'Payment already exists for this booking',
@@ -117,7 +124,9 @@ export class BankTransferService {
 
     let result: {
       payment: Awaited<ReturnType<PrismaService['payment']['create']>>;
-      receipt: Awaited<ReturnType<PrismaService['bankTransferReceipt']['create']>>;
+      receipt: Awaited<
+        ReturnType<PrismaService['bankTransferReceipt']['create']>
+      >;
     };
 
     try {
@@ -146,9 +155,14 @@ export class BankTransferService {
       });
     } catch (err) {
       // Transaction failed — clean up the orphaned MinIO file
-      await this.minioService.deleteFile(MINIO_BUCKET, objectName).catch((deleteErr) => {
-        this.logger.error(`Failed to clean up orphaned MinIO file ${objectName}`, deleteErr);
-      });
+      await this.minioService
+        .deleteFile(MINIO_BUCKET, objectName)
+        .catch((deleteErr) => {
+          this.logger.error(
+            `Failed to clean up orphaned MinIO file ${objectName}`,
+            deleteErr,
+          );
+        });
       throw err;
     }
 
@@ -190,10 +204,14 @@ export class BankTransferService {
     // error is surfaced to the admin — no orphaned paid-without-invoice state.
     if (dto.action === 'approve') {
       try {
-        await this.invoicesService.createInvoice({ paymentId: receipt.paymentId });
+        await this.invoicesService.createInvoice({
+          paymentId: receipt.paymentId,
+        });
       } catch (err) {
         if (err instanceof ConflictException) {
-          this.logger.warn(`Invoice already exists for payment ${receipt.paymentId}`);
+          this.logger.warn(
+            `Invoice already exists for payment ${receipt.paymentId}`,
+          );
         } else {
           this.logger.error(
             `Invoice creation failed for payment ${receipt.paymentId}. ` +
@@ -232,7 +250,9 @@ export class BankTransferService {
       try {
         await this.bookingStatusService.confirm(payment.bookingId);
       } catch (err) {
-        const recovered = await this.bookingStatusService.recoverExpiredBooking(payment.bookingId);
+        const recovered = await this.bookingStatusService.recoverExpiredBooking(
+          payment.bookingId,
+        );
         if (recovered) {
           this.logger.warn(
             `Recovered expired booking ${payment.bookingId} → confirmed (bank transfer approved)`,
@@ -246,16 +266,25 @@ export class BankTransferService {
     }
 
     if (dto.action === 'reject' && payment?.bookingId) {
-      await this.handleRejectedTransfer(payment.bookingId, payment.booking?.patientId, dto.adminNotes);
+      await this.handleRejectedTransfer(
+        payment.bookingId,
+        payment.booking?.patientId,
+        dto.adminNotes,
+      );
     }
 
-    this.activityLogService.log({
-      userId: adminId,
-      action: dto.action === 'approve' ? 'receipt_approved' : 'receipt_rejected',
-      module: 'payments',
-      resourceId: receiptId,
-      description: `Bank transfer receipt ${dto.action}d by admin`,
-    }).catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
+    this.activityLogService
+      .log({
+        userId: adminId,
+        action:
+          dto.action === 'approve' ? 'receipt_approved' : 'receipt_rejected',
+        module: 'payments',
+        resourceId: receiptId,
+        description: `Bank transfer receipt ${dto.action}d by admin`,
+      })
+      .catch((err) =>
+        this.logger.warn('Activity log failed', { error: err?.message }),
+      );
 
     return this.prisma.payment.findUnique({
       where: { id: receipt.paymentId },
@@ -282,7 +311,11 @@ export class BankTransferService {
       });
       await tx.booking.updateMany({
         where: { id: bookingId, status: 'pending', deletedAt: null },
-        data: { status: 'cancelled', cancelledBy: 'system', cancelledAt: new Date() },
+        data: {
+          status: 'cancelled',
+          cancelledBy: 'system',
+          cancelledAt: new Date(),
+        },
       });
     });
 

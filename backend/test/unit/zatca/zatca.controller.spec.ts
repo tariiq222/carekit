@@ -38,8 +38,10 @@ describe('ZatcaController', () => {
         { provide: ZatcaOnboardingService, useValue: mockOnboardingService },
       ],
     })
-      .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get(ZatcaController);
@@ -64,7 +66,9 @@ describe('ZatcaController', () => {
 
       const result = controller.onboard({ otp: 'TEST-OTP-123' });
 
-      expect(mockOnboardingService.onboard).toHaveBeenCalledWith('TEST-OTP-123');
+      expect(mockOnboardingService.onboard).toHaveBeenCalledWith(
+        'TEST-OTP-123',
+      );
       expect(result).toBe(promise);
     });
   });
@@ -76,7 +80,9 @@ describe('ZatcaController', () => {
 
       const result = controller.getOnboardingStatus();
 
-      expect(mockOnboardingService.getOnboardingStatus).toHaveBeenCalledTimes(1);
+      expect(mockOnboardingService.getOnboardingStatus).toHaveBeenCalledTimes(
+        1,
+      );
       expect(result).toBe(promise);
     });
   });
@@ -100,7 +106,9 @@ describe('ZatcaController', () => {
 
       const result = controller.reportToSandbox(mockInvoiceId);
 
-      expect(mockSandboxService.reportInvoiceToSandbox).toHaveBeenCalledWith(mockInvoiceId);
+      expect(mockSandboxService.reportInvoiceToSandbox).toHaveBeenCalledWith(
+        mockInvoiceId,
+      );
       expect(result).toBe(promise);
     });
   });

@@ -35,8 +35,8 @@ const CATEGORIES_URL = `${SERVICES_URL}/categories`;
 function buildMinimalPng(): Buffer {
   // Minimal 1×1 transparent PNG — 67 bytes
   return Buffer.from(
-    '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489'
-    + '0000000a49444154789c6260000000020001e221bc330000000049454e44ae426082',
+    '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489' +
+      '0000000a49444154789c6260000000020001e221bc330000000049454e44ae426082',
     'hex',
   );
 }
@@ -220,7 +220,10 @@ describe('Services Avatar & Icon (e2e)', () => {
       const res = await request(httpServer)
         .post(`${SERVICES_URL}/${serviceId}/avatar`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .attach('image', pngBuffer, { filename: 'avatar.png', contentType: 'image/png' })
+        .attach('image', pngBuffer, {
+          filename: 'avatar.png',
+          contentType: 'image/png',
+        })
         .expect(201);
 
       expectSuccessResponse(res.body);
@@ -235,7 +238,10 @@ describe('Services Avatar & Icon (e2e)', () => {
       const res = await request(httpServer)
         .post(`${SERVICES_URL}/${serviceId}/avatar`)
         .set(getAuthHeaders(receptionist.accessToken))
-        .attach('image', pngBuffer, { filename: 'avatar.png', contentType: 'image/png' })
+        .attach('image', pngBuffer, {
+          filename: 'avatar.png',
+          contentType: 'image/png',
+        })
         .expect(201);
 
       expectSuccessResponse(res.body);
@@ -245,7 +251,10 @@ describe('Services Avatar & Icon (e2e)', () => {
       const res = await request(httpServer)
         .post(`${SERVICES_URL}/${serviceId}/avatar`)
         .set(getAuthHeaders(patient.accessToken))
-        .attach('image', pngBuffer, { filename: 'avatar.png', contentType: 'image/png' })
+        .attach('image', pngBuffer, {
+          filename: 'avatar.png',
+          contentType: 'image/png',
+        })
         .expect(403);
 
       expectErrorResponse(res.body, 'FORBIDDEN');
@@ -254,7 +263,10 @@ describe('Services Avatar & Icon (e2e)', () => {
     it('should reject upload without authentication (401)', async () => {
       const res = await request(httpServer)
         .post(`${SERVICES_URL}/${serviceId}/avatar`)
-        .attach('image', pngBuffer, { filename: 'avatar.png', contentType: 'image/png' })
+        .attach('image', pngBuffer, {
+          filename: 'avatar.png',
+          contentType: 'image/png',
+        })
         .expect(401);
 
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
@@ -275,7 +287,10 @@ describe('Services Avatar & Icon (e2e)', () => {
       const res = await request(httpServer)
         .post(`${SERVICES_URL}/00000000-0000-0000-0000-000000000000/avatar`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .attach('image', pngBuffer, { filename: 'avatar.png', contentType: 'image/png' })
+        .attach('image', pngBuffer, {
+          filename: 'avatar.png',
+          contentType: 'image/png',
+        })
         .expect(404);
 
       expectErrorResponse(res.body, 'NOT_FOUND');
@@ -286,14 +301,21 @@ describe('Services Avatar & Icon (e2e)', () => {
       await request(httpServer)
         .post(`${SERVICES_URL}/${serviceId}/avatar`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .attach('image', pngBuffer, { filename: 'avatar.png', contentType: 'image/png' })
+        .attach('image', pngBuffer, {
+          filename: 'avatar.png',
+          contentType: 'image/png',
+        })
         .expect(201);
 
       // Then switch back to icon
       const res = await request(httpServer)
         .patch(`${SERVICES_URL}/${serviceId}`)
         .set(getAuthHeaders(superAdmin.accessToken))
-        .send({ imageUrl: null, iconName: 'StethoscopeIcon', iconBgColor: '#354FD8' })
+        .send({
+          imageUrl: null,
+          iconName: 'StethoscopeIcon',
+          iconBgColor: '#354FD8',
+        })
         .expect(200);
 
       expectSuccessResponse(res.body);

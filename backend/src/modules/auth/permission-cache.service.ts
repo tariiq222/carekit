@@ -7,9 +7,7 @@ const PERM_CACHE_TTL = 900; // matches access token lifetime
 
 @Injectable()
 export class PermissionCacheService {
-  constructor(
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
-  ) {}
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async get(userId: string): Promise<Set<string> | null> {
     const cached = await this.redis.get(`${PERM_CACHE_PREFIX}${userId}`);

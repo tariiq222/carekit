@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CreateIntakeFormDto } from './dto/create-intake-form.dto.js';
 import { UpdateIntakeFormDto } from './dto/update-intake-form.dto.js';
@@ -123,7 +128,11 @@ export class IntakeFormsService {
 
   async submitResponse(patientId: string, dto: SubmitResponseDto) {
     if (!dto.formId) {
-      throw new BadRequestException({ statusCode: 400, message: 'formId is required', error: 'FORM_ID_REQUIRED' });
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'formId is required',
+        error: 'FORM_ID_REQUIRED',
+      });
     }
     const formId = dto.formId;
     await this.ensureFormExists(formId);
@@ -205,11 +214,19 @@ export class IntakeFormsService {
     });
     if (!booking) throw this.notFound('Booking not found');
     if (booking.patientId !== patientId) {
-      throw new ForbiddenException({ statusCode: 403, message: 'Booking does not belong to you', error: 'FORBIDDEN' });
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: 'Booking does not belong to you',
+        error: 'FORBIDDEN',
+      });
     }
   }
 
   private notFound(message: string) {
-    return new NotFoundException({ statusCode: 404, message, error: 'NOT_FOUND' });
+    return new NotFoundException({
+      statusCode: 404,
+      message,
+      error: 'NOT_FOUND',
+    });
   }
 }

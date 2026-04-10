@@ -85,11 +85,14 @@ beforeAll(async () => {
     'practitioner',
   );
 
-  const specRes = await request(httpServer).get(`${API_PREFIX}/specialties`).expect(200);
+  const specRes = await request(httpServer)
+    .get(`${API_PREFIX}/specialties`)
+    .expect(200);
   const specialties = specRes.body.data?.items ?? specRes.body.data ?? [];
-  const specialtyId = Array.isArray(specialties) && specialties.length > 0
-    ? (specialties[0] as { id: string }).id
-    : undefined;
+  const specialtyId =
+    Array.isArray(specialties) && specialties.length > 0
+      ? (specialties[0] as { id: string }).id
+      : undefined;
 
   const pracRes = await request(httpServer)
     .post(PRACTITIONERS_URL)
@@ -120,9 +123,7 @@ afterAll(async () => {
 
 describe('GET /practitioners/favorites', () => {
   it('returns 401 without auth', async () => {
-    await request(httpServer)
-      .get(`${PRACTITIONERS_URL}/favorites`)
-      .expect(401);
+    await request(httpServer).get(`${PRACTITIONERS_URL}/favorites`).expect(401);
   });
 
   it('patient gets empty favorites list initially → 200', async () => {
@@ -132,7 +133,9 @@ describe('GET /practitioners/favorites', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    expect(Array.isArray((res.body as Record<string, { data: unknown[] }>).data)).toBe(true);
+    expect(
+      Array.isArray((res.body as Record<string, { data: unknown[] }>).data),
+    ).toBe(true);
   });
 
   it('patient2 favorites are scoped to patient2 only', async () => {
@@ -213,7 +216,8 @@ describe('POST /practitioners/:id/favorite — add to favorites', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    const items = (res.body as Record<string, { data: Array<{ id: string }> }>).data;
+    const items = (res.body as Record<string, { data: Array<{ id: string }> }>)
+      .data;
     if (Array.isArray(items) && items.length > 0) {
       const found = items.some((p) => p.id === practitionerId);
       expect(found).toBe(true);
@@ -308,7 +312,8 @@ describe('DELETE /practitioners/:id/favorite — remove from favorites', () => {
       .set(getAuthHeaders(patient.accessToken))
       .expect(200);
 
-    const items = (res.body as Record<string, { data: Array<{ id: string }> }>).data;
+    const items = (res.body as Record<string, { data: Array<{ id: string }> }>)
+      .data;
     if (Array.isArray(items)) {
       const found = items.some((p) => p.id === practitionerId);
       expect(found).toBe(false);

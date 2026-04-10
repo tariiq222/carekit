@@ -54,7 +54,10 @@ describe('ChatbotToolsService', () => {
         ChatbotToolsService,
         { provide: CHATBOT_BOOKING_PORT, useValue: mockBookingsService },
         { provide: CHATBOT_SERVICE_PORT, useValue: mockServicesService },
-        { provide: CHATBOT_PRACTITIONER_PORT, useValue: mockPractitionersService },
+        {
+          provide: CHATBOT_PRACTITIONER_PORT,
+          useValue: mockPractitionersService,
+        },
         { provide: ChatbotRagService, useValue: mockRagService },
         { provide: ChatbotConfigService, useValue: mockConfigService },
         { provide: PrismaService, useValue: mockPrisma },
@@ -68,10 +71,17 @@ describe('ChatbotToolsService', () => {
       const mockItems = [{ id: 's-1', nameEn: 'Checkup' }];
       mockServicesService.findAll.mockResolvedValue({ items: mockItems });
 
-      const result = await service.execute('list_services', { search: 'check' }, ctx);
+      const result = await service.execute(
+        'list_services',
+        { search: 'check' },
+        ctx,
+      );
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockItems);
-      expect(mockServicesService.findAll).toHaveBeenCalledWith({ search: 'check', perPage: 100 });
+      expect(mockServicesService.findAll).toHaveBeenCalledWith({
+        search: 'check',
+        perPage: 100,
+      });
     });
   });
 
@@ -79,7 +89,11 @@ describe('ChatbotToolsService', () => {
     it('calls PractitionersService.findAll with params', async () => {
       mockPractitionersService.findAll.mockResolvedValue({ items: [] });
 
-      const result = await service.execute('list_practitioners', { search: 'Ahmed' }, ctx);
+      const result = await service.execute(
+        'list_practitioners',
+        { search: 'Ahmed' },
+        ctx,
+      );
       expect(result.success).toBe(true);
       expect(mockPractitionersService.findAll).toHaveBeenCalledWith({
         search: 'Ahmed',
@@ -105,7 +119,10 @@ describe('ChatbotToolsService', () => {
 
     it('resolves service duration when serviceId provided', async () => {
       // practitionerService has no customDuration, so falls back to servicesService.findOne
-      mockPrisma.practitionerService.findUnique.mockResolvedValue({ id: 'ps-1', customDuration: null });
+      mockPrisma.practitionerService.findUnique.mockResolvedValue({
+        id: 'ps-1',
+        customDuration: null,
+      });
       mockServicesService.findOne.mockResolvedValue({ duration: 45 });
       mockPractitionersService.getAvailableSlots.mockResolvedValue([]);
 
@@ -115,7 +132,11 @@ describe('ChatbotToolsService', () => {
         ctx,
       );
       expect(mockServicesService.findOne).toHaveBeenCalledWith('s-1');
-      expect(mockPractitionersService.getAvailableSlots).toHaveBeenCalledWith('p-1', '2026-04-01', 45);
+      expect(mockPractitionersService.getAvailableSlots).toHaveBeenCalledWith(
+        'p-1',
+        '2026-04-01',
+        45,
+      );
     });
   });
 
@@ -138,10 +159,13 @@ describe('ChatbotToolsService', () => {
       );
 
       expect(result.success).toBe(true);
-      expect(mockBookingsService.create).toHaveBeenCalledWith('user-1', expect.objectContaining({
-        practitionerId: 'p-1',
-        serviceId: 's-1',
-      }));
+      expect(mockBookingsService.create).toHaveBeenCalledWith(
+        'user-1',
+        expect.objectContaining({
+          practitionerId: 'p-1',
+          serviceId: 's-1',
+        }),
+      );
     });
 
     it('rejects booking when can_book is false', async () => {
@@ -149,7 +173,13 @@ describe('ChatbotToolsService', () => {
 
       const result = await service.execute(
         'create_booking',
-        { practitionerId: 'p-1', serviceId: 's-1', type: 'in_person', date: '2026-04-01', startTime: '10:00' },
+        {
+          practitionerId: 'p-1',
+          serviceId: 's-1',
+          type: 'in_person',
+          date: '2026-04-01',
+          startTime: '10:00',
+        },
         ctx,
       );
 
@@ -185,7 +215,11 @@ describe('ChatbotToolsService', () => {
         ctx,
       );
       expect(result.success).toBe(true);
-      expect(mockBookingsService.requestCancellation).toHaveBeenCalledWith('b-1', 'user-1', 'Changed my mind');
+      expect(mockBookingsService.requestCancellation).toHaveBeenCalledWith(
+        'b-1',
+        'user-1',
+        'Changed my mind',
+      );
     });
   });
 
@@ -195,9 +229,16 @@ describe('ChatbotToolsService', () => {
         { title: 'FAQ', content: 'Answer', similarity: 0.9 },
       ]);
 
-      const result = await service.execute('search_knowledge_base', { query: 'working hours' }, ctx);
+      const result = await service.execute(
+        'search_knowledge_base',
+        { query: 'working hours' },
+        ctx,
+      );
       expect(result.success).toBe(true);
-      expect(mockRagService.searchSimilar).toHaveBeenCalledWith('working hours', 5);
+      expect(mockRagService.searchSimilar).toHaveBeenCalledWith(
+        'working hours',
+        5,
+      );
     });
   });
 
@@ -211,7 +252,11 @@ describe('ChatbotToolsService', () => {
       });
       mockPrisma.chatSession.update.mockResolvedValue({});
 
-      const result = await service.execute('handoff_to_human', { reason: 'complex' }, ctx);
+      const result = await service.execute(
+        'handoff_to_human',
+        { reason: 'complex' },
+        ctx,
+      );
       expect(result.success).toBe(true);
       expect(mockPrisma.chatSession.update).toHaveBeenCalledWith({
         where: { id: 'session-1' },
@@ -231,7 +276,9 @@ describe('ChatbotToolsService', () => {
 
   describe('error handling', () => {
     it('catches service errors and returns them gracefully', async () => {
-      mockServicesService.findAll.mockRejectedValue(new Error('DB connection lost'));
+      mockServicesService.findAll.mockRejectedValue(
+        new Error('DB connection lost'),
+      );
 
       const result = await service.execute('list_services', {}, ctx);
       expect(result.success).toBe(false);

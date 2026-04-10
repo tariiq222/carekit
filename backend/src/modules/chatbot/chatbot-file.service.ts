@@ -4,10 +4,13 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { KbFileType } from '@prisma/client';
 import { MinioService } from '../../common/services/minio.service.js';
 import { ChatbotRagService } from './chatbot-rag.service.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 
 // Dynamic imports for file parsing (ESM compatibility)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const loadPdfParse = () => import('pdf-parse').then((m: any) => m.default ?? m);
 const loadMammoth = () => import('mammoth');
 
@@ -35,7 +38,14 @@ export class ChatbotFileService {
       file.mimetype,
     );
 
-    const fileType: KbFileType = ext === 'docx' ? KbFileType.docx : ext === 'doc' ? KbFileType.doc : ext === 'txt' ? KbFileType.txt : KbFileType.pdf;
+    const fileType: KbFileType =
+      ext === 'docx'
+        ? KbFileType.docx
+        : ext === 'doc'
+          ? KbFileType.doc
+          : ext === 'txt'
+            ? KbFileType.txt
+            : KbFileType.pdf;
 
     const record = await this.prisma.knowledgeBaseFile.create({
       data: {
@@ -159,7 +169,10 @@ export class ChatbotFileService {
    * List all uploaded files with pagination.
    */
   async listFiles(params?: { page?: number; perPage?: number }) {
-    const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      params?.page,
+      params?.perPage,
+    );
 
     const [items, total] = await Promise.all([
       this.prisma.knowledgeBaseFile.findMany({

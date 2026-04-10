@@ -14,11 +14,17 @@ import { ZatcaCryptoService } from './services/zatca-crypto.service.js';
 import { ZatcaOnboardingService } from './services/zatca-onboarding.service.js';
 import { XmlSigningService } from './services/xml-signing.service.js';
 import { ZatcaSubmitProcessor } from './services/zatca-submit.processor.js';
-import { DEFAULT_JOB_OPTIONS, QUEUE_ZATCA_SUBMIT } from '../../config/constants/queues.js';
+import {
+  DEFAULT_JOB_OPTIONS,
+  QUEUE_ZATCA_SUBMIT,
+} from '../../config/constants/queues.js';
 
 @Module({
   imports: [
-    BullModule.registerQueue({ name: QUEUE_ZATCA_SUBMIT, defaultJobOptions: DEFAULT_JOB_OPTIONS }),
+    BullModule.registerQueue({
+      name: QUEUE_ZATCA_SUBMIT,
+      defaultJobOptions: DEFAULT_JOB_OPTIONS,
+    }),
     ConfigModule,
     ClinicSettingsModule,
     ClinicIntegrationsModule,

@@ -55,13 +55,15 @@ export class LicenseService {
     return license[field] as boolean;
   }
 
-  async getFeaturesWithStatus(): Promise<Array<{
-    key: string;
-    licensed: boolean;
-    enabled: boolean;
-    nameAr: string;
-    nameEn: string;
-  }>> {
+  async getFeaturesWithStatus(): Promise<
+    Array<{
+      key: string;
+      licensed: boolean;
+      enabled: boolean;
+      nameAr: string;
+      nameEn: string;
+    }>
+  > {
     const [license, flags] = await Promise.all([
       this.get(),
       this.prisma.featureFlag.findMany({ orderBy: { key: 'asc' } }),

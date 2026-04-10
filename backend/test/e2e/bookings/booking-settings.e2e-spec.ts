@@ -146,10 +146,7 @@ describe('GET /booking-settings', () => {
 
 describe('PATCH /booking-settings', () => {
   it('returns 401 without auth', async () => {
-    await request(httpServer)
-      .patch(BOOKING_SETTINGS_URL)
-      .send({})
-      .expect(401);
+    await request(httpServer).patch(BOOKING_SETTINGS_URL).send({}).expect(401);
   });
 
   it('patient has no whitelabel:edit → 403', async () => {
@@ -233,7 +230,11 @@ describe('PATCH /booking-settings — branch override', () => {
     const bRes = await request(httpServer)
       .post(`${API_PREFIX}/branches`)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .send({ nameAr: 'فرع إعدادات الحجز', nameEn: 'Settings Test Branch', isActive: true })
+      .send({
+        nameAr: 'فرع إعدادات الحجز',
+        nameEn: 'Settings Test Branch',
+        isActive: true,
+      })
       .expect(201);
     settingsBranchId = (bRes.body.data as { id: string }).id;
   });
@@ -256,7 +257,9 @@ describe('PATCH /booking-settings — branch override', () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .expect(200);
 
-    const globalData = (globalRes.body as Record<string, Record<string, unknown>>).data;
+    const globalData = (
+      globalRes.body as Record<string, Record<string, unknown>>
+    ).data;
     expect(globalData.paymentTimeoutMinutes).not.toBe(99);
   });
 
@@ -272,7 +275,9 @@ describe('PATCH /booking-settings — branch override', () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .expect(200);
 
-    const globalData = (globalRes.body as Record<string, Record<string, unknown>>).data;
+    const globalData = (
+      globalRes.body as Record<string, Record<string, unknown>>
+    ).data;
     expect(globalData.paymentTimeoutMinutes).not.toBe(77);
   });
 });

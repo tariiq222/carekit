@@ -19,27 +19,22 @@ const makeSettings = (overrides = {}) => ({
   ...overrides,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockTx: any = {
   payment: { update: jest.fn().mockResolvedValue({}) },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   userRole: { findMany: jest.fn().mockResolvedValue([]) },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockNotifications: any = {
   createNotification: jest.fn().mockResolvedValue(undefined),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockZoom: any = {
   deleteMeeting: jest.fn().mockResolvedValue(undefined),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockConfig: any = {
   get: jest.fn().mockReturnValue('test-api-key'),
 };
@@ -58,7 +53,9 @@ describe('BookingCancelHelpersService', () => {
       ],
     }).compile();
 
-    service = module.get<BookingCancelHelpersService>(BookingCancelHelpersService);
+    service = module.get<BookingCancelHelpersService>(
+      BookingCancelHelpersService,
+    );
     jest.clearAllMocks();
     mockNotifications.createNotification.mockResolvedValue(undefined);
   });
@@ -68,13 +65,17 @@ describe('BookingCancelHelpersService', () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const booking: any = {
         date: futureDate,
         startTime: '10:00',
       };
 
-      const result = service.calculateSuggestedRefund(booking, makeSettings() as Parameters<typeof service.calculateSuggestedRefund>[1]);
+      const result = service.calculateSuggestedRefund(
+        booking,
+        makeSettings() as Parameters<
+          typeof service.calculateSuggestedRefund
+        >[1],
+      );
       expect(result).toBe('full');
     });
 
@@ -82,13 +83,17 @@ describe('BookingCancelHelpersService', () => {
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - 1);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const booking: any = {
         date: pastDate,
         startTime: '10:00',
       };
 
-      const result = service.calculateSuggestedRefund(booking, makeSettings() as Parameters<typeof service.calculateSuggestedRefund>[1]);
+      const result = service.calculateSuggestedRefund(
+        booking,
+        makeSettings() as Parameters<
+          typeof service.calculateSuggestedRefund
+        >[1],
+      );
       expect(result).toBe('none');
     });
   });
@@ -96,14 +101,25 @@ describe('BookingCancelHelpersService', () => {
   describe('validatePartialRefund', () => {
     it('should not throw when refundType is not partial', () => {
       expect(() =>
-        service.validatePartialRefund({ refundType: 'full' as Parameters<typeof service.validatePartialRefund>[0]['refundType'] }, null),
+        service.validatePartialRefund(
+          {
+            refundType: 'full' as Parameters<
+              typeof service.validatePartialRefund
+            >[0]['refundType'],
+          },
+          null,
+        ),
       ).not.toThrow();
     });
 
     it('should throw BadRequestException when partial but no refundAmount', () => {
       expect(() =>
         service.validatePartialRefund(
-          { refundType: 'partial' as Parameters<typeof service.validatePartialRefund>[0]['refundType'] },
+          {
+            refundType: 'partial' as Parameters<
+              typeof service.validatePartialRefund
+            >[0]['refundType'],
+          },
           { totalAmount: 10000 },
         ),
       ).toThrow(BadRequestException);
@@ -112,7 +128,12 @@ describe('BookingCancelHelpersService', () => {
     it('should throw BadRequestException when refundAmount exceeds totalAmount', () => {
       expect(() =>
         service.validatePartialRefund(
-          { refundType: 'partial' as Parameters<typeof service.validatePartialRefund>[0]['refundType'], refundAmount: 15000 },
+          {
+            refundType: 'partial' as Parameters<
+              typeof service.validatePartialRefund
+            >[0]['refundType'],
+            refundAmount: 15000,
+          },
           { totalAmount: 10000 },
         ),
       ).toThrow(BadRequestException);
@@ -121,7 +142,12 @@ describe('BookingCancelHelpersService', () => {
     it('should not throw when valid partial refund', () => {
       expect(() =>
         service.validatePartialRefund(
-          { refundType: 'partial' as Parameters<typeof service.validatePartialRefund>[0]['refundType'], refundAmount: 5000 },
+          {
+            refundType: 'partial' as Parameters<
+              typeof service.validatePartialRefund
+            >[0]['refundType'],
+            refundAmount: 5000,
+          },
           { totalAmount: 10000 },
         ),
       ).not.toThrow();
@@ -129,26 +155,48 @@ describe('BookingCancelHelpersService', () => {
   });
 
   describe('processRefund', () => {
-    const paidPayment = { id: 'pay-1', status: 'paid', totalAmount: 10000, method: 'bank_transfer', moyasarPaymentId: null };
+    const paidPayment = {
+      id: 'pay-1',
+      status: 'paid',
+      totalAmount: 10000,
+      method: 'bank_transfer',
+      moyasarPaymentId: null,
+    };
 
     it('should skip refund when refundType is none', async () => {
-      await service.processRefund(mockTx, 'none' as Parameters<typeof service.processRefund>[1], paidPayment);
+      await service.processRefund(
+        mockTx,
+        'none' as Parameters<typeof service.processRefund>[1],
+        paidPayment,
+      );
       expect(mockTx.payment.update).not.toHaveBeenCalled();
     });
 
     it('should skip refund when payment is null', async () => {
-      await service.processRefund(mockTx, 'full' as Parameters<typeof service.processRefund>[1], null);
+      await service.processRefund(
+        mockTx,
+        'full' as Parameters<typeof service.processRefund>[1],
+        null,
+      );
       expect(mockTx.payment.update).not.toHaveBeenCalled();
     });
 
     it('should skip refund when payment status is not paid', async () => {
-      await service.processRefund(mockTx, 'full' as Parameters<typeof service.processRefund>[1], { ...paidPayment, status: 'pending' });
+      await service.processRefund(
+        mockTx,
+        'full' as Parameters<typeof service.processRefund>[1],
+        { ...paidPayment, status: 'pending' },
+      );
       expect(mockTx.payment.update).not.toHaveBeenCalled();
     });
 
     it('should process full refund', async () => {
       mockTx.payment.update.mockResolvedValue({});
-      await service.processRefund(mockTx, 'full' as Parameters<typeof service.processRefund>[1], paidPayment);
+      await service.processRefund(
+        mockTx,
+        'full' as Parameters<typeof service.processRefund>[1],
+        paidPayment,
+      );
       expect(mockTx.payment.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { status: 'refunded', refundAmount: 10000 },
@@ -158,7 +206,12 @@ describe('BookingCancelHelpersService', () => {
 
     it('should process partial refund with given amount', async () => {
       mockTx.payment.update.mockResolvedValue({});
-      await service.processRefund(mockTx, 'partial' as Parameters<typeof service.processRefund>[1], paidPayment, 5000);
+      await service.processRefund(
+        mockTx,
+        'partial' as Parameters<typeof service.processRefund>[1],
+        paidPayment,
+        5000,
+      );
       expect(mockTx.payment.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { status: 'refunded', refundAmount: 5000 },
@@ -169,14 +222,23 @@ describe('BookingCancelHelpersService', () => {
 
   describe('notifyPatientCancelled', () => {
     it('should send notification to patient', async () => {
-      await service.notifyPatientCancelled({ patientId, id: bookingId }, 'admin');
+      await service.notifyPatientCancelled(
+        { patientId, id: bookingId },
+        'admin',
+      );
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: patientId, type: 'booking_cancelled' }),
+        expect.objectContaining({
+          userId: patientId,
+          type: 'booking_cancelled',
+        }),
       );
     });
 
     it('should skip when patientId is null', async () => {
-      await service.notifyPatientCancelled({ patientId: null, id: bookingId }, 'admin');
+      await service.notifyPatientCancelled(
+        { patientId: null, id: bookingId },
+        'admin',
+      );
       expect(mockNotifications.createNotification).not.toHaveBeenCalled();
     });
   });
@@ -190,7 +252,10 @@ describe('BookingCancelHelpersService', () => {
         id: bookingId,
       });
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'pract-user-id', type: 'booking_cancelled' }),
+        expect.objectContaining({
+          userId: 'pract-user-id',
+          type: 'booking_cancelled',
+        }),
       );
     });
 
@@ -212,7 +277,14 @@ describe('BookingCancelHelpersService', () => {
         { userId: 'admin-2' },
       ]);
 
-      await service.notifyAdmins('titleAr', 'titleEn', 'bodyAr', 'bodyEn', 'test_event', {});
+      await service.notifyAdmins(
+        'titleAr',
+        'titleEn',
+        'bodyAr',
+        'bodyEn',
+        'test_event',
+        {},
+      );
 
       expect(mockNotifications.createNotification).toHaveBeenCalledTimes(2);
     });
@@ -231,7 +303,10 @@ describe('BookingCancelHelpersService', () => {
     });
 
     it('should skip when not online', () => {
-      service.deleteZoomIfNeeded({ type: 'in_person', zoomMeetingId: 'zoom-123' });
+      service.deleteZoomIfNeeded({
+        type: 'in_person',
+        zoomMeetingId: 'zoom-123',
+      });
       expect(mockZoom.deleteMeeting).not.toHaveBeenCalled();
     });
 

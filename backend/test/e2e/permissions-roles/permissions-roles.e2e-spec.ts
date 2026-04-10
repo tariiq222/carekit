@@ -92,9 +92,7 @@ describe('Permissions & Roles Module (e2e)', () => {
     });
 
     it('should return 401 for unauthenticated request', async () => {
-      const res = await request(httpServer)
-        .get(PERMISSIONS_URL)
-        .expect(401);
+      const res = await request(httpServer).get(PERMISSIONS_URL).expect(401);
 
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
@@ -148,9 +146,7 @@ describe('Permissions & Roles Module (e2e)', () => {
     });
 
     it('should return 401 for unauthenticated request', async () => {
-      const res = await request(httpServer)
-        .get(ROLES_URL)
-        .expect(401);
+      const res = await request(httpServer).get(ROLES_URL).expect(401);
 
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
@@ -250,7 +246,9 @@ describe('Permissions & Roles Module (e2e)', () => {
       expect(role).toBeDefined();
 
       const hasPermission = role!.permissions.some(
-        (p) => p.module === PERMISSION_PAYLOAD.module && p.action === PERMISSION_PAYLOAD.action,
+        (p) =>
+          p.module === PERMISSION_PAYLOAD.module &&
+          p.action === PERMISSION_PAYLOAD.action,
       );
       expect(hasPermission).toBe(true);
     });

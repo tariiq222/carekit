@@ -34,7 +34,13 @@ export const mockPayment = {
   updatedAt: new Date('2026-03-20'),
   booking: {
     id: mockBookingId,
-    patient: { id: mockUserId, firstName: 'أحمد', lastName: 'الراشد', email: 'ahmed@example.com', phone: null },
+    patient: {
+      id: mockUserId,
+      firstName: 'أحمد',
+      lastName: 'الراشد',
+      email: 'ahmed@example.com',
+      phone: null,
+    },
     practitioner: {
       id: 'practitioner-uuid-1',
       user: { id: 'user-uuid-1', firstName: 'خالد', lastName: 'الفهد' },
@@ -67,7 +73,6 @@ export const mockReceipt = {
   createdAt: new Date('2026-03-20'),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockPrisma(): any {
   const mock: any = {
     payment: {
@@ -88,11 +93,12 @@ export function createMockPrisma(): any {
       update: jest.fn(),
     },
   };
-  mock.$transaction = jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(mock));
+  mock.$transaction = jest.fn((fn: (tx: unknown) => Promise<unknown>) =>
+    fn(mock),
+  );
   return mock;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockMoyasarService(): any {
   return {
     createMoyasarPayment: jest.fn(),
@@ -101,7 +107,6 @@ export function createMockMoyasarService(): any {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createMockBankTransferService(): any {
   return {
     uploadReceipt: jest.fn(),

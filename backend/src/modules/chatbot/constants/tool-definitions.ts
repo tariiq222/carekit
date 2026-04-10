@@ -20,11 +20,15 @@ const TOOL_LIST_PRACTITIONERS: OpenRouterTool = {
   type: 'function',
   function: {
     name: 'list_practitioners',
-    description: 'List available practitioners/doctors with specialties and prices',
+    description:
+      'List available practitioners/doctors with specialties and prices',
     parameters: {
       type: 'object',
       properties: {
-        specialty: { type: 'string', description: 'Filter by specialty text (e.g. "Addiction Counselor")' },
+        specialty: {
+          type: 'string',
+          description: 'Filter by specialty text (e.g. "Addiction Counselor")',
+        },
         search: { type: 'string', description: 'Search by practitioner name' },
       },
     },
@@ -35,13 +39,17 @@ const TOOL_GET_AVAILABLE_SLOTS: OpenRouterTool = {
   type: 'function',
   function: {
     name: 'get_available_slots',
-    description: 'Get available appointment time slots for a practitioner on a specific date',
+    description:
+      'Get available appointment time slots for a practitioner on a specific date',
     parameters: {
       type: 'object',
       properties: {
         practitionerId: { type: 'string', description: 'Practitioner UUID' },
         date: { type: 'string', description: 'Date in YYYY-MM-DD format' },
-        serviceId: { type: 'string', description: 'Service UUID to determine slot duration' },
+        serviceId: {
+          type: 'string',
+          description: 'Service UUID to determine slot duration',
+        },
       },
       required: ['practitionerId', 'date'],
     },
@@ -61,7 +69,8 @@ const TOOL_CREATE_BOOKING: OpenRouterTool = {
         type: {
           type: 'string',
           enum: ['in_person', 'online'],
-          description: 'Appointment type (in_person = clinic visit, online = remote consultation)',
+          description:
+            'Appointment type (in_person = clinic visit, online = remote consultation)',
         },
         date: { type: 'string', description: 'Date in YYYY-MM-DD format' },
         startTime: { type: 'string', description: 'Time in HH:mm format' },
@@ -90,8 +99,14 @@ const TOOL_RESCHEDULE_BOOKING: OpenRouterTool = {
       type: 'object',
       properties: {
         bookingId: { type: 'string', description: 'Booking UUID' },
-        newDate: { type: 'string', description: 'New date in YYYY-MM-DD format' },
-        newStartTime: { type: 'string', description: 'New time in HH:mm format' },
+        newDate: {
+          type: 'string',
+          description: 'New date in YYYY-MM-DD format',
+        },
+        newStartTime: {
+          type: 'string',
+          description: 'New time in HH:mm format',
+        },
       },
       required: ['bookingId'],
     },
@@ -102,7 +117,8 @@ const TOOL_REQUEST_CANCELLATION: OpenRouterTool = {
   type: 'function',
   function: {
     name: 'request_cancellation',
-    description: 'Submit a cancellation request for a booking. The cancellation requires admin approval — it is NOT executed immediately.',
+    description:
+      'Submit a cancellation request for a booking. The cancellation requires admin approval — it is NOT executed immediately.',
     parameters: {
       type: 'object',
       properties: {
@@ -118,11 +134,15 @@ const TOOL_SEARCH_KB: OpenRouterTool = {
   type: 'function',
   function: {
     name: 'search_knowledge_base',
-    description: 'Search the clinic knowledge base for information about services, policies, FAQ, etc.',
+    description:
+      'Search the clinic knowledge base for information about services, policies, FAQ, etc.',
     parameters: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'The question or topic to search for' },
+        query: {
+          type: 'string',
+          description: 'The question or topic to search for',
+        },
       },
       required: ['query'],
     },
@@ -133,7 +153,8 @@ const TOOL_HANDOFF: OpenRouterTool = {
   type: 'function',
   function: {
     name: 'handoff_to_human',
-    description: 'Transfer the conversation to a human agent or provide contact information when you cannot help further',
+    description:
+      'Transfer the conversation to a human agent or provide contact information when you cannot help further',
     parameters: {
       type: 'object',
       properties: {
@@ -148,7 +169,9 @@ const TOOL_HANDOFF: OpenRouterTool = {
  * Builds the tool list dynamically based on chatbot config rules.
  * If a capability is disabled, the corresponding tool is excluded.
  */
-export function buildToolDefinitions(config: ChatbotConfigMap): OpenRouterTool[] {
+export function buildToolDefinitions(
+  config: ChatbotConfigMap,
+): OpenRouterTool[] {
   const tools: OpenRouterTool[] = [
     TOOL_LIST_PRACTITIONERS,
     TOOL_GET_AVAILABLE_SLOTS,

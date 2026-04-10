@@ -228,7 +228,9 @@ describe('Business Logic Security — Function Level Auth', () => {
     ];
 
     for (const { method, path } of endpoints) {
-      const res = await (request(httpServer) as Record<string, (path: string) => request.Test>)[method](path);
+      const res = await (
+        request(httpServer) as Record<string, (path: string) => request.Test>
+      )[method](path);
       expect([401, 403]).toContain(res.status);
     }
   });
@@ -268,8 +270,8 @@ describe('Business Logic Security — Mass Assignment', () => {
       .send({
         email: TEST_USERS.patient.email,
         password: TEST_USERS.patient.password,
-        isAdmin: true,           // injected extra field
-        role: 'super_admin',    // injected extra field
+        isAdmin: true, // injected extra field
+        role: 'super_admin', // injected extra field
         __proto__: { admin: true }, // prototype pollution attempt
       });
 
@@ -299,8 +301,12 @@ describe('Business Logic Security — Mass Assignment', () => {
     // Either 400 (validation rejects unknown field) or 422/404 (service not found)
     // Must NOT be 201 with patientId overridden to another user
     if (res.status === 201) {
-      expect(res.body.data?.patientId).not.toBe('a0000000-0000-0000-0000-000000000099');
-      expect(res.body.data?.userId).not.toBe('a0000000-0000-0000-0000-000000000099');
+      expect(res.body.data?.patientId).not.toBe(
+        'a0000000-0000-0000-0000-000000000099',
+      );
+      expect(res.body.data?.userId).not.toBe(
+        'a0000000-0000-0000-0000-000000000099',
+      );
     } else {
       expect([400, 404, 422, 403]).toContain(res.status);
     }

@@ -5,7 +5,8 @@ import { createHash } from 'crypto';
 import { InvoiceHashService } from '../../../src/modules/zatca/services/invoice-hash.service.js';
 
 const ZERO_HASH = '0'.repeat(64);
-const EMPTY_SHA256 = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+const EMPTY_SHA256 =
+  'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
 describe('InvoiceHashService', () => {
   let service: InvoiceHashService;
@@ -28,7 +29,9 @@ describe('InvoiceHashService', () => {
   });
 
   it('hashXml produces different hashes for different inputs', () => {
-    expect(service.hashXml('<Invoice>A</Invoice>')).not.toBe(service.hashXml('<Invoice>B</Invoice>'));
+    expect(service.hashXml('<Invoice>A</Invoice>')).not.toBe(
+      service.hashXml('<Invoice>B</Invoice>'),
+    );
   });
 
   it('hashXml of empty string equals known SHA-256 value', () => {

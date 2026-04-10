@@ -62,7 +62,9 @@ export class ChatbotAnalyticsService {
     };
   }
 
-  async getMostAskedQuestions(limit = 10): Promise<{ content: string; count: number }[]> {
+  async getMostAskedQuestions(
+    limit = 10,
+  ): Promise<{ content: string; count: number }[]> {
     // Get the most common user messages (simplified — in production, use NLP clustering)
     const messages = await this.prisma.chatMessage.groupBy({
       by: ['content'],

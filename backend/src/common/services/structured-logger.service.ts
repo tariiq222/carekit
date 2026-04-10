@@ -21,8 +21,7 @@ interface LogEntry {
  */
 @Injectable()
 export class StructuredLogger extends ConsoleLogger {
-  private readonly isProduction =
-    process.env['NODE_ENV'] === 'production';
+  private readonly isProduction = process.env['NODE_ENV'] === 'production';
 
   log(message: string, context?: string): void {
     if (this.isProduction) {

@@ -42,8 +42,10 @@ describe('LicenseController', () => {
       controllers: [LicenseController],
       providers: [{ provide: LicenseService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard).useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get<LicenseController>(LicenseController);
@@ -85,8 +87,20 @@ describe('LicenseController', () => {
   describe('getFeatures', () => {
     it('delegates to service.getFeaturesWithStatus and returns features', async () => {
       const features = [
-        { key: 'coupons', licensed: true, enabled: true, nameAr: 'الكوبونات', nameEn: 'Coupons' },
-        { key: 'gift_cards', licensed: false, enabled: false, nameAr: 'بطاقات الهدايا', nameEn: 'Gift Cards' },
+        {
+          key: 'coupons',
+          licensed: true,
+          enabled: true,
+          nameAr: 'الكوبونات',
+          nameEn: 'Coupons',
+        },
+        {
+          key: 'gift_cards',
+          licensed: false,
+          enabled: false,
+          nameAr: 'بطاقات الهدايا',
+          nameEn: 'Gift Cards',
+        },
       ];
       mockService.getFeaturesWithStatus.mockResolvedValue(features);
 

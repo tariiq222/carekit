@@ -35,19 +35,16 @@ const mockServiceRecord = {
   maxRecurrences: 12,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   service: {
     findFirst: jest.fn().mockResolvedValue(mockServiceRecord),
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockBookingsService: any = {
   create: jest.fn().mockResolvedValue({ id: 'booking-uuid' }),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockSettingsService: any = {
   getForBranch: jest.fn().mockResolvedValue(defaultSettings),
 };
@@ -103,7 +100,10 @@ describe('BookingRecurringService', () => {
       });
 
       await expect(
-        service.createRecurring(patientId, { ...recurringDto, repeatEvery: 'weekly' }),
+        service.createRecurring(patientId, {
+          ...recurringDto,
+          repeatEvery: 'weekly',
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -178,7 +178,10 @@ describe('BookingRecurringService', () => {
 
       // repeatCount 13 > default max 12
       await expect(
-        service.createRecurring(patientId, { ...recurringDto, repeatCount: 13 }),
+        service.createRecurring(patientId, {
+          ...recurringDto,
+          repeatCount: 13,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
   });

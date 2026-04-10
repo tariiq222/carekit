@@ -29,7 +29,8 @@ import {
 const HEALTH_URL = `${API_PREFIX}/health`;
 const OTP_SEND_URL = `${API_PREFIX}/auth/login/otp/send`;
 const CORRELATION_HEADER = 'x-correlation-id';
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CorrelationIdMiddleware
@@ -89,7 +90,9 @@ describe('CorrelationIdMiddleware (e2e)', () => {
 
   describe('error response header propagation', () => {
     it('x-correlation-id present in 404 response headers', async () => {
-      const res = await request(httpServer).get(`${API_PREFIX}/nonexistent-route-xyz`);
+      const res = await request(httpServer).get(
+        `${API_PREFIX}/nonexistent-route-xyz`,
+      );
       expect(res.headers[CORRELATION_HEADER]).toBeDefined();
       expect(res.headers[CORRELATION_HEADER]).toMatch(UUID_REGEX);
     });
@@ -120,7 +123,9 @@ describe('CorrelationIdMiddleware (e2e)', () => {
     });
 
     it('generated correlationId matches between response header and error body', async () => {
-      const res = await request(httpServer).get(`${API_PREFIX}/nonexistent-route-xyz`);
+      const res = await request(httpServer).get(
+        `${API_PREFIX}/nonexistent-route-xyz`,
+      );
       const headerId = res.headers[CORRELATION_HEADER];
       const error = res.body.error as Record<string, unknown>;
       expect(error.correlationId).toBe(headerId);
@@ -152,9 +157,7 @@ describe('EmailThrottleGuard — OTP Rate Limiting (e2e)', () => {
   describe('within rate limit', () => {
     it('first OTP send for valid email returns 200', async () => {
       const email = uniqueEmail('first');
-      const res = await request(httpServer)
-        .post(OTP_SEND_URL)
-        .send({ email });
+      const res = await request(httpServer).post(OTP_SEND_URL).send({ email });
       // 200 = success | 404 = endpoint not implemented — both are acceptable, NOT 429
       expect([200, 201, 404]).toContain(res.status);
     });
@@ -167,7 +170,9 @@ describe('EmailThrottleGuard — OTP Rate Limiting (e2e)', () => {
 
       const statuses: number[] = [];
       for (let i = 0; i < ATTEMPTS; i++) {
-        const res = await request(httpServer).post(OTP_SEND_URL).send({ email });
+        const res = await request(httpServer)
+          .post(OTP_SEND_URL)
+          .send({ email });
         statuses.push(res.status);
         if (res.status === 429) break;
       }
@@ -183,7 +188,9 @@ describe('EmailThrottleGuard — OTP Rate Limiting (e2e)', () => {
       let throttledBody: Record<string, unknown> | null = null;
 
       for (let i = 0; i < 10; i++) {
-        const res = await request(httpServer).post(OTP_SEND_URL).send({ email });
+        const res = await request(httpServer)
+          .post(OTP_SEND_URL)
+          .send({ email });
         if (res.status === 429) {
           throttledBody = res.body as Record<string, unknown>;
           break;
@@ -196,7 +203,9 @@ describe('EmailThrottleGuard — OTP Rate Limiting (e2e)', () => {
       }
 
       const error = throttledBody.error as Record<string, unknown>;
-      expect(['OTP_RATE_LIMIT_EXCEEDED', 'OTP_EMAIL_LOCKED']).toContain(error.code);
+      expect(['OTP_RATE_LIMIT_EXCEEDED', 'OTP_EMAIL_LOCKED']).toContain(
+        error.code,
+      );
     });
 
     it('x-correlation-id is present in 429 throttled response', async () => {
@@ -204,7 +213,9 @@ describe('EmailThrottleGuard — OTP Rate Limiting (e2e)', () => {
       let throttledRes: request.Response | null = null;
 
       for (let i = 0; i < 10; i++) {
-        const res = await request(httpServer).post(OTP_SEND_URL).send({ email });
+        const res = await request(httpServer)
+          .post(OTP_SEND_URL)
+          .send({ email });
         if (res.status === 429) {
           throttledRes = res;
           break;
@@ -225,14 +236,20 @@ describe('EmailThrottleGuard — OTP Rate Limiting (e2e)', () => {
 
       // Exhaust limit for emailA
       for (let i = 0; i < 10; i++) {
-        const res = await request(httpServer).post(OTP_SEND_URL).send({ email: emailA });
+        const res = await request(httpServer)
+          .post(OTP_SEND_URL)
+          .send({ email: emailA });
         if (res.status === 429) break;
       }
 
-      const verifyA = await request(httpServer).post(OTP_SEND_URL).send({ email: emailA });
+      const verifyA = await request(httpServer)
+        .post(OTP_SEND_URL)
+        .send({ email: emailA });
 
       // Email B should be unaffected — first request for it
-      const verifyB = await request(httpServer).post(OTP_SEND_URL).send({ email: emailB });
+      const verifyB = await request(httpServer)
+        .post(OTP_SEND_URL)
+        .send({ email: emailB });
 
       if (verifyA.status === 429) {
         // A is throttled — B must NOT be

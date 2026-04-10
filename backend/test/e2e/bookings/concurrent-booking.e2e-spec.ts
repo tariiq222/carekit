@@ -37,7 +37,7 @@ const GHOST_ID = '00000000-0000-0000-0000-000000000099';
 function getDateOffset(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0]!;
+  return d.toISOString().split('T')[0];
 }
 
 // ---------------------------------------------------------------------------
@@ -56,7 +56,10 @@ let serviceId: string;
 // Setup helpers
 // ---------------------------------------------------------------------------
 
-async function createPractitionerUser(email: string, phone: string): Promise<string> {
+async function createPractitionerUser(
+  email: string,
+  phone: string,
+): Promise<string> {
   const res = await request(httpServer)
     .post(`${API_PREFIX}/users`)
     .set(getAuthHeaders(superAdmin.accessToken))
@@ -77,7 +80,9 @@ async function createPractitionerUser(email: string, phone: string): Promise<str
       .expect(200);
     return login.body.data.user.id as string;
   }
-  throw new Error(`createPractitionerUser failed: ${res.status} ${JSON.stringify(res.body)}`);
+  throw new Error(
+    `createPractitionerUser failed: ${res.status} ${JSON.stringify(res.body)}`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -136,12 +141,15 @@ beforeAll(async () => {
       duration: 30,
     });
   serviceId = (svcRes.body.data?.id ?? '') as string;
-  if (!serviceId) throw new Error(`Service creation failed: ${JSON.stringify(svcRes.body)}`);
+  if (!serviceId)
+    throw new Error(`Service creation failed: ${JSON.stringify(svcRes.body)}`);
 
   await request(httpServer)
     .put(`${SERVICES_URL}/${serviceId}/booking-types`)
     .set(getAuthHeaders(superAdmin.accessToken))
-    .send({ types: [{ bookingType: 'in_person', price: 10000, duration: 30 }] });
+    .send({
+      types: [{ bookingType: 'in_person', price: 10000, duration: 30 }],
+    });
 
   // Practitioner profile
   const pracUserId = await createPractitionerUser(
@@ -166,7 +174,9 @@ beforeAll(async () => {
   if (pracRes.status === 201) {
     practitionerId = pracRes.body.data.id as string;
   } else {
-    const listRes = await request(httpServer).get(PRACTITIONERS_URL).query({ perPage: '100' });
+    const listRes = await request(httpServer)
+      .get(PRACTITIONERS_URL)
+      .query({ perPage: '100' });
     const items = (listRes.body.data?.items ?? []) as Array<{
       id: string;
       user?: { id: string };
@@ -298,7 +308,9 @@ describe('Concurrent Booking — Conflict Detection', () => {
         .send(body),
     ]);
 
-    const successCount = [res1.status, res2.status].filter((s) => s === 201).length;
+    const successCount = [res1.status, res2.status].filter(
+      (s) => s === 201,
+    ).length;
     expect(successCount).toBeLessThanOrEqual(1);
   });
 

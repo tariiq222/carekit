@@ -5,7 +5,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BookingStatusLogService } from '../../../src/modules/bookings/booking-status-log.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   bookingStatusLog: {
     create: jest.fn().mockResolvedValue({}),
@@ -80,8 +79,18 @@ describe('BookingStatusLogService', () => {
   describe('findByBooking', () => {
     it('should return logs ordered by createdAt asc', async () => {
       const logs = [
-        { id: '1', bookingId: 'booking-uuid', toStatus: 'confirmed', createdAt: new Date('2026-01-01') },
-        { id: '2', bookingId: 'booking-uuid', toStatus: 'cancelled', createdAt: new Date('2026-01-02') },
+        {
+          id: '1',
+          bookingId: 'booking-uuid',
+          toStatus: 'confirmed',
+          createdAt: new Date('2026-01-01'),
+        },
+        {
+          id: '2',
+          bookingId: 'booking-uuid',
+          toStatus: 'cancelled',
+          createdAt: new Date('2026-01-02'),
+        },
       ];
       mockPrisma.bookingStatusLog.findMany.mockResolvedValue(logs);
 

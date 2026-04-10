@@ -64,7 +64,10 @@ describe('Auth Module (e2e)', () => {
     };
 
     it('should register a new patient with valid data', async () => {
-      const res = await request(httpServer).post(url).send(validPayload).expect(201);
+      const res = await request(httpServer)
+        .post(url)
+        .send(validPayload)
+        .expect(201);
 
       expectSuccessResponse(res.body);
       // register returns { success, data } — no top-level message field
@@ -303,12 +306,10 @@ describe('Auth Module (e2e)', () => {
       // This test assumes a super_admin can deactivate a user.
       // For now, we test the expected behaviour — implementation will
       // need to seed a deactivated user or use admin API.
-      const res = await request(httpServer)
-        .post(url)
-        .send({
-          email: 'deactivated-user@carekit-test.com',
-          password: 'SomeP@ss1',
-        });
+      const res = await request(httpServer).post(url).send({
+        email: 'deactivated-user@carekit-test.com',
+        password: 'SomeP@ss1',
+      });
 
       // If user doesn't exist, we get 401. If deactivated, we expect 403.
       // This test specifically targets the deactivation path —
@@ -358,16 +359,14 @@ describe('Auth Module (e2e)', () => {
 
     beforeAll(async () => {
       // Ensure a user exists for OTP testing
-      await request(httpServer)
-        .post(`${AUTH_URL}/register`)
-        .send({
-          email: 'otp-user@carekit-test.com',
-          password: 'OtpUserP@ss1',
-          firstName: 'ياسر',
-          lastName: 'الدوسري',
-          phone: '+966504567890',
-          gender: 'male',
-        });
+      await request(httpServer).post(`${AUTH_URL}/register`).send({
+        email: 'otp-user@carekit-test.com',
+        password: 'OtpUserP@ss1',
+        firstName: 'ياسر',
+        lastName: 'الدوسري',
+        phone: '+966504567890',
+        gender: 'male',
+      });
     });
 
     it('should send OTP to valid email and return success', async () => {
@@ -449,12 +448,10 @@ describe('Auth Module (e2e)', () => {
 
       // In real test, we'd need to extract the OTP from DB or mock email.
       // For TDD contract: this defines the expected response shape.
-      const res = await request(httpServer)
-        .post(url)
-        .send({
-          email: 'otp-user@carekit-test.com',
-          code: '123456', // Placeholder — backend-dev should provide test OTP mechanism
-        });
+      const res = await request(httpServer).post(url).send({
+        email: 'otp-user@carekit-test.com',
+        code: '123456', // Placeholder — backend-dev should provide test OTP mechanism
+      });
 
       // If OTP is valid (backend-dev to implement test OTP), expect login response
       if (res.status === 200) {
@@ -484,12 +481,10 @@ describe('Auth Module (e2e)', () => {
     });
 
     it('should reject already-used OTP', async () => {
-      const res = await request(httpServer)
-        .post(url)
-        .send({
-          email: 'otp-user@carekit-test.com',
-          code: '111111', // Previously used OTP
-        });
+      const res = await request(httpServer).post(url).send({
+        email: 'otp-user@carekit-test.com',
+        code: '111111', // Previously used OTP
+      });
 
       // Could be AUTH_OTP_INVALID or AUTH_OTP_EXPIRED depending on impl
       if (res.status === 400) {
@@ -539,8 +534,11 @@ describe('Auth Module (e2e)', () => {
 
     /** Extract refresh_token value from Set-Cookie header */
     function extractRefreshTokenCookie(cookieHeader: string[]): string {
-      const entry = cookieHeader.find((c: string) => c.startsWith('refresh_token='));
-      if (!entry) throw new Error('refresh_token cookie not found in Set-Cookie header');
+      const entry = cookieHeader.find((c: string) =>
+        c.startsWith('refresh_token='),
+      );
+      if (!entry)
+        throw new Error('refresh_token cookie not found in Set-Cookie header');
       return entry.split(';')[0].replace('refresh_token=', '');
     }
 
@@ -611,9 +609,10 @@ describe('Auth Module (e2e)', () => {
         .expect(401);
 
       const errorCode = (res.body.error as { code: string }).code;
-      expect(['AUTH_REFRESH_TOKEN_EXPIRED', 'AUTH_REFRESH_TOKEN_INVALID']).toContain(
-        errorCode,
-      );
+      expect([
+        'AUTH_REFRESH_TOKEN_EXPIRED',
+        'AUTH_REFRESH_TOKEN_INVALID',
+      ]).toContain(errorCode);
     });
 
     it('should reject revoked refresh token (after logout)', async () => {
@@ -978,7 +977,10 @@ describe('Auth Module (e2e)', () => {
         .expect(200);
 
       expect(res.body).toHaveProperty('success', true);
-      expect(res.body).toHaveProperty('message', 'Password changed successfully');
+      expect(res.body).toHaveProperty(
+        'message',
+        'Password changed successfully',
+      );
 
       // Verify: old password no longer works
       const oldLoginRes = await request(httpServer)
@@ -1096,7 +1098,10 @@ describe('Auth Module (e2e)', () => {
 
         if (res.status === 200) {
           expect(res.body).toHaveProperty('success', true);
-          expect(res.body).toHaveProperty('message', 'Email verified successfully');
+          expect(res.body).toHaveProperty(
+            'message',
+            'Email verified successfully',
+          );
 
           // Check /me returns emailVerified: true
           const meRes = await request(httpServer)
@@ -1120,7 +1125,10 @@ describe('Auth Module (e2e)', () => {
       });
 
       it('should require authentication', async () => {
-        await request(httpServer).post(url).send({ code: '123456' }).expect(401);
+        await request(httpServer)
+          .post(url)
+          .send({ code: '123456' })
+          .expect(401);
       });
     });
   });
@@ -1150,16 +1158,14 @@ describe('Auth Module (e2e)', () => {
     it('should not be vulnerable to XSS in registration fields', async () => {
       const xssPayload = '<script>alert("xss")</script>';
 
-      const res = await request(httpServer)
-        .post(`${AUTH_URL}/register`)
-        .send({
-          email: 'xss-test@carekit-test.com',
-          password: 'Str0ngP@ss!',
-          firstName: xssPayload,
-          lastName: xssPayload,
-          phone: '+966513456789',
-          gender: 'male',
-        });
+      const res = await request(httpServer).post(`${AUTH_URL}/register`).send({
+        email: 'xss-test@carekit-test.com',
+        password: 'Str0ngP@ss!',
+        firstName: xssPayload,
+        lastName: xssPayload,
+        phone: '+966513456789',
+        gender: 'male',
+      });
 
       // Should either reject (400) or sanitize — if stored, must be escaped
       if (res.status === 201) {

@@ -47,15 +47,21 @@ describe('Auth Multi-Session Invalidation (e2e)', () => {
 
   describe('AU-CP1-MULTI: Password change invalidates all active sessions', () => {
     it('should reject BOTH refreshTokens (device 1 and device 2) after password change', async () => {
-      const { email, password, accessToken, refreshToken: token1 } =
-        await registerFresh(httpServer, 'multi-cp1');
+      const {
+        email,
+        password,
+        accessToken,
+        refreshToken: token1,
+      } = await registerFresh(httpServer, 'multi-cp1');
 
       // Second session — login from "device 2"
       const loginRes = await request(httpServer)
         .post(`${AUTH_URL}/login`)
         .send({ email, password })
         .expect(200);
-      const token2 = extractCookieToken(loginRes.headers['set-cookie'] as string[]);
+      const token2 = extractCookieToken(
+        loginRes.headers['set-cookie'] as string[],
+      );
 
       // Sanity: token2 is a different value than token1
       expect(token2).not.toBe(token1);
@@ -83,8 +89,10 @@ describe('Auth Multi-Session Invalidation (e2e)', () => {
     });
 
     it('should allow login with the new password after invalidating all sessions', async () => {
-      const { email, password, accessToken } =
-        await registerFresh(httpServer, 'multi-cp1-newlogin');
+      const { email, password, accessToken } = await registerFresh(
+        httpServer,
+        'multi-cp1-newlogin',
+      );
 
       await request(httpServer)
         .patch(`${AUTH_URL}/password/change`)
@@ -107,15 +115,21 @@ describe('Auth Multi-Session Invalidation (e2e)', () => {
 
   describe('AU-CP1-MULTI-RESET: Password reset invalidates all active sessions', () => {
     it('should reject BOTH refreshTokens after password reset via OTP', async () => {
-      const { email, password, refreshToken: token1, userId } =
-        await registerFresh(httpServer, 'multi-reset');
+      const {
+        email,
+        password,
+        refreshToken: token1,
+        userId,
+      } = await registerFresh(httpServer, 'multi-reset');
 
       // Second session
       const loginRes = await request(httpServer)
         .post(`${AUTH_URL}/login`)
         .send({ email, password })
         .expect(200);
-      const token2 = extractCookieToken(loginRes.headers['set-cookie'] as string[]);
+      const token2 = extractCookieToken(
+        loginRes.headers['set-cookie'] as string[],
+      );
 
       // Trigger password reset OTP
       await request(httpServer)

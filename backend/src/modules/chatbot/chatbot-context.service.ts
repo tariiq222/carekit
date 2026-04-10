@@ -37,9 +37,7 @@ export class ChatbotContextService {
       where: { id: userId },
       select: { firstName: true, lastName: true },
     });
-    const patientName = user
-      ? `${user.firstName} ${user.lastName}`
-      : 'Patient';
+    const patientName = user ? `${user.firstName} ${user.lastName}` : 'Patient';
 
     const clinicName = await this.whitelabelService.getSystemName();
 
@@ -73,7 +71,10 @@ export class ChatbotContextService {
     windowSize: number,
   ): Promise<OpenRouterMessage[]> {
     const messages = await this.prisma.chatMessage.findMany({
-      where: { sessionId, role: { in: ['user', 'assistant', 'tool'] as any[] } },
+      where: {
+        sessionId,
+        role: { in: ['user', 'assistant', 'tool'] as any[] },
+      },
       orderBy: { createdAt: 'desc' },
       take: windowSize,
     });

@@ -8,7 +8,6 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 const ownerUserId = 'owner-uuid-1';
 const currentUserId = 'current-uuid-1';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   user: {
     findUnique: jest.fn(),

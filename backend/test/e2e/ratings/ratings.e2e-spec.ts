@@ -163,7 +163,10 @@ describe('POST /ratings — auth and permissions', () => {
       .send({ bookingId: GHOST_UUID, stars: 4 })
       .expect(401);
 
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 403 for accountant (no ratings:create permission)', async () => {
@@ -218,7 +221,10 @@ describe('GET /ratings/practitioner/:practitionerId', () => {
       .get(`${RATINGS_URL}/practitioner/${GHOST_UUID}`)
       .expect(401);
 
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 400 for non-UUID practitionerId', async () => {
@@ -247,7 +253,10 @@ describe('GET /ratings/practitioner/:practitionerId', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    const data = (res.body as Record<string, unknown>).data as Record<string, unknown>;
+    const data = (res.body as Record<string, unknown>).data as Record<
+      string,
+      unknown
+    >;
     expect(Array.isArray(data.items)).toBe(true);
     expect((data.items as unknown[]).length).toBe(0);
   });
@@ -277,7 +286,10 @@ describe('GET /ratings/practitioner/:practitionerId', () => {
       .expect(200);
 
     expectSuccessResponse(res.body as Record<string, unknown>);
-    const data = (res.body as Record<string, unknown>).data as Record<string, unknown>;
+    const data = (res.body as Record<string, unknown>).data as Record<
+      string,
+      unknown
+    >;
     expect(data).toHaveProperty('meta');
   });
 });
@@ -292,7 +304,10 @@ describe('GET /ratings/booking/:bookingId', () => {
       .get(`${RATINGS_URL}/booking/${GHOST_UUID}`)
       .expect(401);
 
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 400 for non-UUID bookingId', async () => {

@@ -11,12 +11,32 @@ import { PractitionerBreaksService } from '../../../src/modules/practitioners/pr
 import { PractitionerServiceService } from '../../../src/modules/practitioners/practitioner-service.service.js';
 import { PractitionerRatingsService } from '../../../src/modules/practitioners/practitioner-ratings.service.js';
 
-const mockPractitionersService = { findAll: jest.fn(), findOne: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() };
+const mockPractitionersService = {
+  findAll: jest.fn(),
+  findOne: jest.fn(),
+  create: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+};
 const mockOnboardingService = { onboard: jest.fn() };
-const mockAvailabilityService = { getAvailability: jest.fn(), setAvailability: jest.fn(), getSlots: jest.fn() };
-const mockVacationService = { getVacations: jest.fn(), createVacation: jest.fn(), deleteVacation: jest.fn() };
+const mockAvailabilityService = {
+  getAvailability: jest.fn(),
+  setAvailability: jest.fn(),
+  getSlots: jest.fn(),
+};
+const mockVacationService = {
+  getVacations: jest.fn(),
+  createVacation: jest.fn(),
+  deleteVacation: jest.fn(),
+};
 const mockBreaksService = { getBreaks: jest.fn(), setBreaks: jest.fn() };
-const mockServiceService = { listServices: jest.fn(), assignService: jest.fn(), updateService: jest.fn(), removeService: jest.fn(), getServiceTypes: jest.fn() };
+const mockServiceService = {
+  listServices: jest.fn(),
+  assignService: jest.fn(),
+  updateService: jest.fn(),
+  removeService: jest.fn(),
+  getServiceTypes: jest.fn(),
+};
 const mockRatingsService = { getRatings: jest.fn() };
 
 describe('PractitionersController', () => {
@@ -28,8 +48,14 @@ describe('PractitionersController', () => {
       controllers: [PractitionersController],
       providers: [
         { provide: PractitionersService, useValue: mockPractitionersService },
-        { provide: PractitionerOnboardingService, useValue: mockOnboardingService },
-        { provide: PractitionerAvailabilityService, useValue: mockAvailabilityService },
+        {
+          provide: PractitionerOnboardingService,
+          useValue: mockOnboardingService,
+        },
+        {
+          provide: PractitionerAvailabilityService,
+          useValue: mockAvailabilityService,
+        },
         { provide: PractitionerVacationService, useValue: mockVacationService },
         { provide: PractitionerBreaksService, useValue: mockBreaksService },
         { provide: PractitionerServiceService, useValue: mockServiceService },
@@ -78,12 +104,18 @@ describe('PractitionersController', () => {
   it('getAvailability → availabilityService.getAvailability()', async () => {
     mockAvailabilityService.getAvailability.mockResolvedValue([]);
     await controller.getAvailability('id-1');
-    expect(mockAvailabilityService.getAvailability).toHaveBeenCalledWith('id-1');
+    expect(mockAvailabilityService.getAvailability).toHaveBeenCalledWith(
+      'id-1',
+    );
   });
 
   it('setAvailability → availabilityService.setAvailability()', async () => {
     mockAvailabilityService.setAvailability.mockResolvedValue([]);
-    await controller.setAvailability('id-1', {} as any, { id: 'user-1' } as any);
+    await controller.setAvailability(
+      'id-1',
+      {} as any,
+      { id: 'user-1' } as any,
+    );
     expect(mockAvailabilityService.setAvailability).toHaveBeenCalled();
   });
 

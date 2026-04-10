@@ -79,9 +79,7 @@ describe('Coupons Module (e2e)', () => {
     });
 
     it('should return 401 for unauthenticated request', async () => {
-      const res = await request(httpServer)
-        .get(COUPONS_URL)
-        .expect(401);
+      const res = await request(httpServer).get(COUPONS_URL).expect(401);
 
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
@@ -111,8 +109,14 @@ describe('Coupons Module (e2e)', () => {
       expectSuccessResponse(res.body);
       expect(res.body.data).toHaveProperty('id');
       expect(res.body.data).toHaveProperty('code', VALID_COUPON.code);
-      expect(res.body.data).toHaveProperty('discountType', VALID_COUPON.discountType);
-      expect(res.body.data).toHaveProperty('discountValue', VALID_COUPON.discountValue);
+      expect(res.body.data).toHaveProperty(
+        'discountType',
+        VALID_COUPON.discountType,
+      );
+      expect(res.body.data).toHaveProperty(
+        'discountValue',
+        VALID_COUPON.discountValue,
+      );
       expect(res.body.data).toHaveProperty('isActive', true);
 
       couponId = res.body.data.id as string;

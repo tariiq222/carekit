@@ -22,7 +22,6 @@ import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clin
 // Mock factories
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrismaService: any = {
   booking: {
     findMany: jest.fn(),
@@ -73,12 +72,19 @@ const mockBookingForHourReminderNoPatient = {
 };
 
 /** Build a booking whose startTime is `offsetMinutes` from now — for time-sensitive tests */
-function buildTimedBooking(offsetMinutes: number, patientId: string | null = 'patient-timed') {
+function buildTimedBooking(
+  offsetMinutes: number,
+  patientId: string | null = 'patient-timed',
+) {
   const now = new Date();
   const target = new Date(now.getTime() + offsetMinutes * 60_000);
   const hh = String(target.getHours()).padStart(2, '0');
   const mm = String(target.getMinutes()).padStart(2, '0');
-  const today = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+  const today = new Date(
+    target.getFullYear(),
+    target.getMonth(),
+    target.getDate(),
+  );
   return {
     id: `booking-timed-${offsetMinutes}`,
     date: today,
@@ -177,9 +183,9 @@ describe('ReminderService', () => {
         }),
       );
 
-      expect(
-        mockNotificationsService.createNotification,
-      ).toHaveBeenCalledTimes(2);
+      expect(mockNotificationsService.createNotification).toHaveBeenCalledTimes(
+        2,
+      );
     });
 
     it('should skip patient notification when patientId is null', async () => {
@@ -190,9 +196,9 @@ describe('ReminderService', () => {
       await service.sendDayBeforeReminders();
 
       // Only practitioner notification should be sent
-      expect(
-        mockNotificationsService.createNotification,
-      ).toHaveBeenCalledTimes(1);
+      expect(mockNotificationsService.createNotification).toHaveBeenCalledTimes(
+        1,
+      );
       expect(mockNotificationsService.createNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: 'practitioner-user-uuid-2',
@@ -257,9 +263,9 @@ describe('ReminderService', () => {
       // Booking 1: patient + practitioner = 2
       // Booking 2: practitioner only = 1
       // Total = 3
-      expect(
-        mockNotificationsService.createNotification,
-      ).toHaveBeenCalledTimes(3);
+      expect(mockNotificationsService.createNotification).toHaveBeenCalledTimes(
+        3,
+      );
     });
   });
 
@@ -297,9 +303,9 @@ describe('ReminderService', () => {
 
       await service.sendHourBeforeReminders();
 
-      expect(
-        mockNotificationsService.createNotification,
-      ).toHaveBeenCalledTimes(1);
+      expect(mockNotificationsService.createNotification).toHaveBeenCalledTimes(
+        1,
+      );
       expect(mockNotificationsService.createNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: 'patient-uuid-3',
@@ -355,9 +361,9 @@ describe('ReminderService', () => {
       await service.sendHourBeforeReminders();
 
       // Only bookings with patientId get notifications: 2 out of 3
-      expect(
-        mockNotificationsService.createNotification,
-      ).toHaveBeenCalledTimes(2);
+      expect(mockNotificationsService.createNotification).toHaveBeenCalledTimes(
+        2,
+      );
     });
   });
 
@@ -371,7 +377,9 @@ describe('ReminderService', () => {
 
       await service.sendTwoHourReminders();
 
-      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.createNotification,
+      ).not.toHaveBeenCalled();
     });
 
     it('should send notifications to patient and practitioner for bookings ~2h away', async () => {
@@ -401,7 +409,9 @@ describe('ReminderService', () => {
 
       await service.sendTwoHourReminders();
 
-      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.createNotification,
+      ).not.toHaveBeenCalled();
     });
 
     it('should skip patient notification when patientId is null', async () => {
@@ -410,7 +420,9 @@ describe('ReminderService', () => {
 
       await service.sendTwoHourReminders();
 
-      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.createNotification,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -424,7 +436,9 @@ describe('ReminderService', () => {
 
       await service.sendUrgentReminders();
 
-      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.createNotification,
+      ).not.toHaveBeenCalled();
     });
 
     it('should notify patient for bookings ~15 min away', async () => {
@@ -448,7 +462,9 @@ describe('ReminderService', () => {
 
       await service.sendUrgentReminders();
 
-      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.createNotification,
+      ).not.toHaveBeenCalled();
     });
 
     it('should skip notification when patientId is null', async () => {
@@ -457,7 +473,9 @@ describe('ReminderService', () => {
 
       await service.sendUrgentReminders();
 
-      expect(mockNotificationsService.createNotification).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.createNotification,
+      ).not.toHaveBeenCalled();
     });
   });
 });

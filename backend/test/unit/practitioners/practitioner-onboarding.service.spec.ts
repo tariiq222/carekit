@@ -9,29 +9,32 @@ import { OtpService } from '../../../src/modules/auth/otp.service.js';
 import { EmailService } from '../../../src/modules/email/email.service.js';
 
 const mockRole = { id: 'role-uuid-1', slug: 'practitioner' };
-const mockUser = { id: 'user-uuid-1', email: 'ali@example.com', firstName: 'Ali', lastName: 'Hassan' };
+const mockUser = {
+  id: 'user-uuid-1',
+  email: 'ali@example.com',
+  firstName: 'Ali',
+  lastName: 'Hassan',
+};
 const mockPractitioner = { id: 'pract-uuid-1', userId: mockUser.id };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockTx: any = {
   user: { create: jest.fn().mockResolvedValue(mockUser) },
   practitioner: { create: jest.fn().mockResolvedValue(mockPractitioner) },
   userRole: { create: jest.fn().mockResolvedValue({}) },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   user: { findUnique: jest.fn() },
   role: { findFirst: jest.fn() },
-  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
+  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) =>
+    fn(mockTx),
+  ),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockOtpService: any = {
   generateOtp: jest.fn().mockResolvedValue('123456'),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockEmailService: any = {
   sendPractitionerWelcome: jest.fn().mockResolvedValue(undefined),
 };
@@ -57,7 +60,9 @@ describe('PractitionerOnboardingService', () => {
       ],
     }).compile();
 
-    service = module.get<PractitionerOnboardingService>(PractitionerOnboardingService);
+    service = module.get<PractitionerOnboardingService>(
+      PractitionerOnboardingService,
+    );
     jest.clearAllMocks();
     mockPrisma.$transaction.mockImplementation(
       (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx),
@@ -95,7 +100,9 @@ describe('PractitionerOnboardingService', () => {
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'ali@example.com' },
       });
-      expect(mockTx.user.create.mock.calls[0][0].data.email).toBe('ali@example.com');
+      expect(mockTx.user.create.mock.calls[0][0].data.email).toBe(
+        'ali@example.com',
+      );
     });
 
     it('should split nameEn into firstName and lastName', async () => {
@@ -115,7 +122,11 @@ describe('PractitionerOnboardingService', () => {
     it('should use full nameEn as firstName when single word', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
       mockPrisma.role.findFirst.mockResolvedValue(mockRole);
-      mockTx.user.create.mockResolvedValue({ ...mockUser, firstName: 'Ali', lastName: '' });
+      mockTx.user.create.mockResolvedValue({
+        ...mockUser,
+        firstName: 'Ali',
+        lastName: '',
+      });
       mockTx.practitioner.create.mockResolvedValue(mockPractitioner);
       mockTx.userRole.create.mockResolvedValue({});
 
@@ -129,7 +140,9 @@ describe('PractitionerOnboardingService', () => {
     it('should throw ConflictException if email already exists', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
 
-      await expect(service.onboard(onboardDto)).rejects.toThrow(ConflictException);
+      await expect(service.onboard(onboardDto)).rejects.toThrow(
+        ConflictException,
+      );
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
 
@@ -137,7 +150,9 @@ describe('PractitionerOnboardingService', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
       mockPrisma.role.findFirst.mockResolvedValue(null);
 
-      await expect(service.onboard(onboardDto)).rejects.toThrow(NotFoundException);
+      await expect(service.onboard(onboardDto)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
 
@@ -150,7 +165,10 @@ describe('PractitionerOnboardingService', () => {
 
       await service.onboard(onboardDto);
 
-      expect(mockOtpService.generateOtp).toHaveBeenCalledWith(mockUser.id, 'reset_password');
+      expect(mockOtpService.generateOtp).toHaveBeenCalledWith(
+        mockUser.id,
+        'reset_password',
+      );
       expect(mockEmailService.sendPractitionerWelcome).toHaveBeenCalled();
     });
   });

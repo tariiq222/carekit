@@ -42,8 +42,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status = exception.getStatus();
 
       // Log auth failures for audit trail (401, 403)
-      if (status === HttpStatus.UNAUTHORIZED || status === HttpStatus.FORBIDDEN) {
-        const request = ctx.getRequest<{ url?: string; method?: string; ip?: string }>();
+      if (
+        status === HttpStatus.UNAUTHORIZED ||
+        status === HttpStatus.FORBIDDEN
+      ) {
+        const request = ctx.getRequest<{
+          url?: string;
+          method?: string;
+          ip?: string;
+        }>();
         this.logger.warn(
           `Auth failure [${status}] ${request.method} ${request.url} — IP: ${request.ip} [${CORRELATION_HEADER}=${correlationId}]`,
         );
@@ -64,7 +71,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
         code = this.getErrorCode(status, 'INTERNAL_ERROR');
-      } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      } else if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse !== null
+      ) {
         const responseObj = exceptionResponse as ExceptionResponseObject;
 
         // Check for custom error code passed via the 'error' field
@@ -73,7 +83,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         }
 
         // Handle class-validator validation errors (array of messages)
-        if (Array.isArray(responseObj.message) && status === HttpStatus.BAD_REQUEST) {
+        if (
+          Array.isArray(responseObj.message) &&
+          status === HttpStatus.BAD_REQUEST
+        ) {
           code = 'VALIDATION_ERROR';
           details = responseObj.message.map((msg: string) => {
             const parts = msg.split(' ');
@@ -83,10 +96,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           message = 'Request validation failed';
         } else {
           message = Array.isArray(responseObj.message)
-            ? responseObj.message[0] ?? 'Validation failed'
-            : (typeof responseObj.message === 'string'
-                ? responseObj.message
-                : exception.message);
+            ? (responseObj.message[0] ?? 'Validation failed')
+            : typeof responseObj.message === 'string'
+              ? responseObj.message
+              : exception.message;
         }
 
         // If no custom code was set, derive from status
@@ -103,9 +116,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // P2025 = record not found, P2002 = unique constraint, P2003 = FK constraint
       const EXPECTED_PRISMA_CODES = new Set(['P2025', 'P2002', 'P2003']);
 
-      const isPrismaValidation = exception.constructor?.name === 'PrismaClientValidationError';
-      const isPrismaKnown = exception.constructor?.name === 'PrismaClientKnownRequestError';
-      const isExpectedPrismaCode = isPrismaKnown && EXPECTED_PRISMA_CODES.has((exception as { code?: string }).code ?? '');
+      const isPrismaValidation =
+        exception.constructor?.name === 'PrismaClientValidationError';
+      const isPrismaKnown =
+        exception.constructor?.name === 'PrismaClientKnownRequestError';
+      const isExpectedPrismaCode =
+        isPrismaKnown &&
+        EXPECTED_PRISMA_CODES.has((exception as { code?: string }).code ?? '');
 
       if (!isPrismaValidation && !isExpectedPrismaCode) {
         Sentry.captureException(exception);

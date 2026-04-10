@@ -84,7 +84,9 @@ describe('ChatbotAdminController', () => {
 
   describe('updateConfig', () => {
     it('should pass dto.configs to configService.bulkUpsert()', async () => {
-      const dto = { configs: [{ key: 'greeting', value: 'Hi', category: 'general' }] } as any;
+      const dto = {
+        configs: [{ key: 'greeting', value: 'Hi', category: 'general' }],
+      } as any;
       const updated = [{ id: 'cfg-1' }];
       mockConfigService.bulkUpsert.mockResolvedValue(updated);
 
@@ -135,7 +137,9 @@ describe('ChatbotAdminController', () => {
       mockAnalyticsService.getMostAskedQuestions.mockResolvedValue(questions);
 
       expect(await controller.getMostAskedQuestions('5')).toEqual(questions);
-      expect(mockAnalyticsService.getMostAskedQuestions).toHaveBeenCalledWith(5);
+      expect(mockAnalyticsService.getMostAskedQuestions).toHaveBeenCalledWith(
+        5,
+      );
     });
 
     it('should default limit to 10 when not provided', async () => {
@@ -143,7 +147,9 @@ describe('ChatbotAdminController', () => {
 
       await controller.getMostAskedQuestions();
 
-      expect(mockAnalyticsService.getMostAskedQuestions).toHaveBeenCalledWith(10);
+      expect(mockAnalyticsService.getMostAskedQuestions).toHaveBeenCalledWith(
+        10,
+      );
     });
   });
 
@@ -153,7 +159,11 @@ describe('ChatbotAdminController', () => {
       const data = { id: 'msg-1', content: dto.content };
       mockChatbotService.sendStaffMessage.mockResolvedValue(data);
 
-      const result = await controller.sendStaffMessage('sess-42', dto, staffUser);
+      const result = await controller.sendStaffMessage(
+        'sess-42',
+        dto,
+        staffUser,
+      );
 
       expect(result).toEqual({ success: true, data });
       expect(mockChatbotService.sendStaffMessage).toHaveBeenCalledWith(
@@ -217,7 +227,9 @@ describe('ChatbotKbController', () => {
       const result = { data: [], total: 0 };
       mockRagService.findAll.mockResolvedValue(result);
 
-      expect(await controller.listKnowledgeBase('2', '15', 'manual', 'procedures')).toEqual(result);
+      expect(
+        await controller.listKnowledgeBase('2', '15', 'manual', 'procedures'),
+      ).toEqual(result);
       expect(mockRagService.findAll).toHaveBeenCalledWith({
         page: 2,
         perPage: 15,
@@ -242,7 +254,11 @@ describe('ChatbotKbController', () => {
 
   describe('createKbEntry', () => {
     it('should call ragService.upsertEntry with source forced to manual', async () => {
-      const dto = { title: 'رسوم الكشف', content: 'تكلف 200 ريال', category: 'pricing' } as any;
+      const dto = {
+        title: 'رسوم الكشف',
+        content: 'تكلف 200 ريال',
+        category: 'pricing',
+      } as any;
       const entry = { id: 'kb-1' };
       mockRagService.upsertEntry.mockResolvedValue(entry);
 
@@ -288,7 +304,11 @@ describe('ChatbotKbController', () => {
 
   describe('uploadFile', () => {
     it('should call fileService.uploadFile() when req.file is present', async () => {
-      const file = { originalname: 'guide.pdf', mimetype: 'application/pdf', buffer: Buffer.from('data') } as any;
+      const file = {
+        originalname: 'guide.pdf',
+        mimetype: 'application/pdf',
+        buffer: Buffer.from('data'),
+      } as any;
       const req = { file } as any;
       const uploaded = { id: 'file-1' };
       mockFileService.uploadFile.mockResolvedValue(uploaded);
@@ -300,7 +320,9 @@ describe('ChatbotKbController', () => {
     it('should throw BadRequestException when req.file is missing', async () => {
       const req = { file: undefined } as any;
 
-      await expect(controller.uploadFile(adminUser, req)).rejects.toThrow(BadRequestException);
+      await expect(controller.uploadFile(adminUser, req)).rejects.toThrow(
+        BadRequestException,
+      );
       expect(mockFileService.uploadFile).not.toHaveBeenCalled();
     });
   });
@@ -311,7 +333,10 @@ describe('ChatbotKbController', () => {
       mockFileService.listFiles.mockResolvedValue(result);
 
       expect(await controller.listFiles('3', '5')).toEqual(result);
-      expect(mockFileService.listFiles).toHaveBeenCalledWith({ page: 3, perPage: 5 });
+      expect(mockFileService.listFiles).toHaveBeenCalledWith({
+        page: 3,
+        perPage: 5,
+      });
     });
 
     it('should default page to 1 and perPage to 20 when not provided', async () => {
@@ -319,7 +344,10 @@ describe('ChatbotKbController', () => {
 
       await controller.listFiles();
 
-      expect(mockFileService.listFiles).toHaveBeenCalledWith({ page: 1, perPage: 20 });
+      expect(mockFileService.listFiles).toHaveBeenCalledWith({
+        page: 1,
+        perPage: 20,
+      });
     });
   });
 

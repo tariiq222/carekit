@@ -39,11 +39,13 @@ const mockPrismaService: any = {
   payment: {
     aggregate: jest.fn(),
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $transaction: jest.fn((opsOrFn: Promise<unknown>[] | ((tx: any) => Promise<unknown>)) => {
-    if (typeof opsOrFn === 'function') return opsOrFn(mockPrismaService);
-    return Promise.all(opsOrFn);
-  }),
+
+  $transaction: jest.fn(
+    (opsOrFn: Promise<unknown>[] | ((tx: any) => Promise<unknown>)) => {
+      if (typeof opsOrFn === 'function') return opsOrFn(mockPrismaService);
+      return Promise.all(opsOrFn);
+    },
+  ),
 };
 
 const mockActivityLogService: any = {
@@ -192,8 +194,15 @@ describe('PatientsService', () => {
     });
 
     it('maps lastBooking from bookingsAsPatient[0]', async () => {
-      const lastBooking = { id: 'booking-1', date: new Date('2026-03-01'), status: 'completed' };
-      const patientWithBooking = { ...mockPatient, bookingsAsPatient: [lastBooking] };
+      const lastBooking = {
+        id: 'booking-1',
+        date: new Date('2026-03-01'),
+        status: 'completed',
+      };
+      const patientWithBooking = {
+        ...mockPatient,
+        bookingsAsPatient: [lastBooking],
+      };
       mockPrismaService.user.count.mockResolvedValue(1);
       mockPrismaService.user.findMany.mockResolvedValue([patientWithBooking]);
 
@@ -203,7 +212,12 @@ describe('PatientsService', () => {
     });
 
     it('maps nextBooking from upcomingBookings when available', async () => {
-      const upcomingBooking = { patientId: 'patient-1', id: 'booking-2', date: new Date('2026-04-01'), status: 'confirmed' };
+      const upcomingBooking = {
+        patientId: 'patient-1',
+        id: 'booking-2',
+        date: new Date('2026-04-01'),
+        status: 'confirmed',
+      };
       mockPrismaService.user.count.mockResolvedValue(1);
       mockPrismaService.user.findMany.mockResolvedValue([mockPatient]);
       mockPrismaService.booking.findMany.mockResolvedValue([upcomingBooking]);
@@ -257,7 +271,9 @@ describe('PatientsService', () => {
       mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
       mockPrismaService.user.update.mockResolvedValue(updatedUser);
 
-      const result = await service.updatePatient('patient-1', { firstName: 'محمد' } as never);
+      const result = await service.updatePatient('patient-1', {
+        firstName: 'محمد',
+      } as never);
 
       expect(result).toEqual(updatedUser);
       expect(mockPrismaService.$transaction).toHaveBeenCalled();
@@ -282,7 +298,10 @@ describe('PatientsService', () => {
         expect.objectContaining({
           where: { userId: 'patient-1' },
           update: expect.objectContaining({ nationality: 'SA' }),
-          create: expect.objectContaining({ userId: 'patient-1', nationality: 'SA' }),
+          create: expect.objectContaining({
+            userId: 'patient-1',
+            nationality: 'SA',
+          }),
         }),
       );
     });
@@ -301,24 +320,35 @@ describe('PatientsService', () => {
       mockPrismaService.user.update.mockResolvedValue(updatedUser);
       mockPrismaService.patientProfile.upsert.mockResolvedValue({});
 
-      await service.updatePatient('patient-1', { dateOfBirth: '1990-05-15' } as never);
+      await service.updatePatient('patient-1', {
+        dateOfBirth: '1990-05-15',
+      } as never);
 
       expect(mockPrismaService.patientProfile.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          update: expect.objectContaining({ dateOfBirth: new Date('1990-05-15') }),
+          update: expect.objectContaining({
+            dateOfBirth: new Date('1990-05-15'),
+          }),
         }),
       );
     });
 
     it('queries with id AND deletedAt=null AND patient role before updating', async () => {
-      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1', phone: '+966501234567' });
+      mockPrismaService.user.findFirst.mockResolvedValue({
+        id: 'patient-1',
+        phone: '+966501234567',
+      });
       mockPrismaService.user.update.mockResolvedValue(updatedUser);
 
       await service.updatePatient('patient-1', { firstName: 'Test' } as never);
 
       expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ id: 'patient-1', deletedAt: null, userRoles: { some: { role: { slug: 'patient' } } } }),
+          where: expect.objectContaining({
+            id: 'patient-1',
+            deletedAt: null,
+            userRoles: { some: { role: { slug: 'patient' } } },
+          }),
         }),
       );
     });
@@ -349,10 +379,15 @@ describe('PatientsService', () => {
 
     it('should call activityLog.log after successful update', async () => {
       const updatedResult = { id: 'patient-1', firstName: 'Ahmad' };
-      mockPrismaService.user.findFirst.mockResolvedValueOnce({ id: 'patient-1', phone: '+966501234567' });
+      mockPrismaService.user.findFirst.mockResolvedValueOnce({
+        id: 'patient-1',
+        phone: '+966501234567',
+      });
       mockPrismaService.user.update.mockResolvedValueOnce(updatedResult);
 
-      const logSpy = jest.spyOn(activityLogService, 'log').mockResolvedValue(undefined);
+      const logSpy = jest
+        .spyOn(activityLogService, 'log')
+        .mockResolvedValue(undefined);
 
       await service.updatePatient('patient-1', { firstName: 'Ahmad' } as never);
 
@@ -384,7 +419,9 @@ describe('PatientsService', () => {
     it('throws NotFoundException when patient not found', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
 
       expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -413,7 +450,16 @@ describe('PatientsService', () => {
     it('includes patientProfile in select', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue({
         ...mockPatient,
-        patientProfile: { nationalId: '1234', nationality: 'SA', dateOfBirth: null, emergencyName: null, emergencyPhone: null, bloodType: null, allergies: null, chronicConditions: null },
+        patientProfile: {
+          nationalId: '1234',
+          nationality: 'SA',
+          dateOfBirth: null,
+          emergencyName: null,
+          emergencyPhone: null,
+          bloodType: null,
+          allergies: null,
+          chronicConditions: null,
+        },
       });
 
       const result = await service.findOne('patient-1');
@@ -427,14 +473,18 @@ describe('PatientsService', () => {
     it('throws NotFoundException when patient not found', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
-      await expect(service.getPatientBookings('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.getPatientBookings('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('[IDOR] throws NotFoundException when ID belongs to a non-patient user', async () => {
       // Simulate a staff user ID — findFirst with patient role guard returns null
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
-      await expect(service.getPatientBookings('staff-user-uuid')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.getPatientBookings('staff-user-uuid'),
+      ).rejects.toThrow(NotFoundException);
 
       expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -474,7 +524,10 @@ describe('PatientsService', () => {
 
       expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ patientId: 'patient-1', deletedAt: null }),
+          where: expect.objectContaining({
+            patientId: 'patient-1',
+            deletedAt: null,
+          }),
         }),
       );
     });
@@ -496,13 +549,17 @@ describe('PatientsService', () => {
     it('throws NotFoundException when patient not found', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
-      await expect(service.getPatientStats('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.getPatientStats('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('[IDOR] throws NotFoundException when ID belongs to a non-patient user', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
-      await expect(service.getPatientStats('admin-user-uuid')).rejects.toThrow(NotFoundException);
+      await expect(service.getPatientStats('admin-user-uuid')).rejects.toThrow(
+        NotFoundException,
+      );
 
       expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -601,13 +658,19 @@ describe('PatientsService', () => {
     it('filters bookings by patientId and deletedAt=null in groupBy', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(mockPatient);
       mockPrismaService.booking.groupBy.mockResolvedValue([]);
-      mockPrismaService.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: null }, _count: { id: 0 } });
+      mockPrismaService.payment.aggregate.mockResolvedValue({
+        _sum: { totalAmount: null },
+        _count: { id: 0 },
+      });
 
       await service.getPatientStats('patient-1');
 
       expect(mockPrismaService.booking.groupBy).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ patientId: 'patient-1', deletedAt: null }),
+          where: expect.objectContaining({
+            patientId: 'patient-1',
+            deletedAt: null,
+          }),
         }),
       );
     });
@@ -615,7 +678,10 @@ describe('PatientsService', () => {
     it('aggregates only paid payments', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(mockPatient);
       mockPrismaService.booking.groupBy.mockResolvedValue([]);
-      mockPrismaService.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: null }, _count: { id: 0 } });
+      mockPrismaService.payment.aggregate.mockResolvedValue({
+        _sum: { totalAmount: null },
+        _count: { id: 0 },
+      });
 
       await service.getPatientStats('patient-1');
 
@@ -631,12 +697,18 @@ describe('PatientsService', () => {
 
   describe('[TOCTOU] updatePatient phone uniqueness race condition', () => {
     it('maps P2002 from concurrent phone update to ConflictException', async () => {
-      mockPrismaService.user.findFirst.mockResolvedValueOnce({ id: 'patient-1', phone: '+966501234567' });
-
-      const p2002 = Object.assign(new Error('Unique constraint failed on the fields: (`phone`)'), {
-        code: 'P2002',
-        meta: { target: ['phone'] },
+      mockPrismaService.user.findFirst.mockResolvedValueOnce({
+        id: 'patient-1',
+        phone: '+966501234567',
       });
+
+      const p2002 = Object.assign(
+        new Error('Unique constraint failed on the fields: (`phone`)'),
+        {
+          code: 'P2002',
+          meta: { target: ['phone'] },
+        },
+      );
       // Simulate DB constraint firing even after the in-transaction check passed
       mockPrismaService.$transaction.mockRejectedValueOnce(p2002);
 

@@ -3,7 +3,11 @@
  * Covers: findAll, findOne, create, delete, assignPermission, removePermission
  */
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { RolesService } from '../../../src/modules/roles/roles.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { AuthCacheService } from '../../../src/modules/auth/auth-cache.service.js';
@@ -40,7 +44,11 @@ const mockRoleId = 'role-uuid-001';
 const mockPermissionId = 'perm-uuid-001';
 const mockUserId = 'user-uuid-001';
 
-const mockPermission = { id: mockPermissionId, module: 'bookings', action: 'create' };
+const mockPermission = {
+  id: mockPermissionId,
+  module: 'bookings',
+  action: 'create',
+};
 
 const mockRole = {
   id: mockRoleId,
@@ -53,7 +61,12 @@ const mockRole = {
   rolePermissions: [{ permission: mockPermission }],
 };
 
-const mockSystemRole = { ...mockRole, id: 'system-role-id', slug: 'admin', isSystem: true };
+const mockSystemRole = {
+  ...mockRole,
+  id: 'system-role-id',
+  slug: 'admin',
+  isSystem: true,
+};
 
 const mockRolePermission = {
   roleId: mockRoleId,
@@ -123,7 +136,9 @@ describe('RolesService — findOne', () => {
   it('should throw NotFoundException when role not found', async () => {
     mockPrisma.role.findUnique.mockResolvedValue(null);
 
-    await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(service.findOne('non-existent-id')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });
 
@@ -140,27 +155,46 @@ describe('RolesService — create', () => {
   it('should auto-generate slug from name', async () => {
     const dto = { name: 'Clinic Manager', description: 'Manages clinic' };
     mockPrisma.role.findUnique.mockResolvedValue(null);
-    mockPrisma.role.create.mockResolvedValue({ ...mockRole, name: 'Clinic Manager', slug: 'clinic_manager' });
+    mockPrisma.role.create.mockResolvedValue({
+      ...mockRole,
+      name: 'Clinic Manager',
+      slug: 'clinic_manager',
+    });
 
     const result = await service.create(dto);
 
-    expect(mockPrisma.role.findUnique).toHaveBeenCalledWith({ where: { slug: 'clinic_manager' } });
+    expect(mockPrisma.role.findUnique).toHaveBeenCalledWith({
+      where: { slug: 'clinic_manager' },
+    });
     expect(mockPrisma.role.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ slug: 'clinic_manager', isSystem: false, isDefault: false }),
+        data: expect.objectContaining({
+          slug: 'clinic_manager',
+          isSystem: false,
+          isDefault: false,
+        }),
       }),
     );
     expect(result.slug).toBe('clinic_manager');
   });
 
   it('should use provided slug if given', async () => {
-    const dto = { name: 'Clinic Manager', slug: 'custom_slug', description: 'Manages clinic' };
+    const dto = {
+      name: 'Clinic Manager',
+      slug: 'custom_slug',
+      description: 'Manages clinic',
+    };
     mockPrisma.role.findUnique.mockResolvedValue(null);
-    mockPrisma.role.create.mockResolvedValue({ ...mockRole, slug: 'custom_slug' });
+    mockPrisma.role.create.mockResolvedValue({
+      ...mockRole,
+      slug: 'custom_slug',
+    });
 
     await service.create(dto);
 
-    expect(mockPrisma.role.findUnique).toHaveBeenCalledWith({ where: { slug: 'custom_slug' } });
+    expect(mockPrisma.role.findUnique).toHaveBeenCalledWith({
+      where: { slug: 'custom_slug' },
+    });
     expect(mockPrisma.role.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ slug: 'custom_slug' }),
@@ -197,21 +231,27 @@ describe('RolesService — delete', () => {
     const result = await service.delete(mockRoleId);
 
     expect(result).toEqual({ deleted: true });
-    expect(mockPrisma.role.delete).toHaveBeenCalledWith({ where: { id: mockRoleId } });
+    expect(mockPrisma.role.delete).toHaveBeenCalledWith({
+      where: { id: mockRoleId },
+    });
     expect(mockAuthCache.invalidate).toHaveBeenCalledWith(mockUserId);
   });
 
   it('should throw NotFoundException when role not found', async () => {
     mockPrisma.role.findUnique.mockResolvedValue(null);
 
-    await expect(service.delete('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(service.delete('non-existent-id')).rejects.toThrow(
+      NotFoundException,
+    );
     expect(mockPrisma.role.delete).not.toHaveBeenCalled();
   });
 
   it('should throw BadRequestException when trying to delete system role', async () => {
     mockPrisma.role.findUnique.mockResolvedValue(mockSystemRole);
 
-    await expect(service.delete(mockSystemRole.id)).rejects.toThrow(BadRequestException);
+    await expect(service.delete(mockSystemRole.id)).rejects.toThrow(
+      BadRequestException,
+    );
     expect(mockPrisma.role.delete).not.toHaveBeenCalled();
   });
 });
@@ -235,7 +275,11 @@ describe('RolesService — assignPermission', () => {
     mockPrisma.rolePermission.create.mockResolvedValue(mockRolePermission);
     mockPrisma.userRole.findMany.mockResolvedValue([{ userId: mockUserId }]);
 
-    const result = await service.assignPermission(mockRoleId, 'bookings', 'create');
+    const result = await service.assignPermission(
+      mockRoleId,
+      'bookings',
+      'create',
+    );
 
     expect(result).toEqual(mockRolePermission);
     expect(mockPrisma.rolePermission.create).toHaveBeenCalledWith({
@@ -250,7 +294,11 @@ describe('RolesService — assignPermission', () => {
     mockPrisma.permission.findUnique.mockResolvedValue(mockPermission);
     mockPrisma.rolePermission.findUnique.mockResolvedValue(mockRolePermission);
 
-    const result = await service.assignPermission(mockRoleId, 'bookings', 'create');
+    const result = await service.assignPermission(
+      mockRoleId,
+      'bookings',
+      'create',
+    );
 
     expect(result).toEqual(mockRolePermission);
     expect(mockPrisma.rolePermission.create).not.toHaveBeenCalled();
@@ -260,14 +308,19 @@ describe('RolesService — assignPermission', () => {
   it('should throw NotFoundException when role not found', async () => {
     mockPrisma.role.findUnique.mockResolvedValue(null);
 
-    await expect(service.assignPermission('bad-id', 'bookings', 'create')).rejects.toThrow(NotFoundException);
+    await expect(
+      service.assignPermission('bad-id', 'bookings', 'create'),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('should allow permission assignment even for system roles (only deletion/rename is restricted)', async () => {
     mockPrisma.role.findUnique.mockResolvedValue(mockSystemRole);
     mockPrisma.permission.findUnique.mockResolvedValue(mockPermission);
     mockPrisma.rolePermission.findUnique.mockResolvedValue(null);
-    mockPrisma.rolePermission.create.mockResolvedValue({ ...mockPermission, roleId: mockSystemRole.id });
+    mockPrisma.rolePermission.create.mockResolvedValue({
+      ...mockPermission,
+      roleId: mockSystemRole.id,
+    });
     mockPrisma.userRole.findMany.mockResolvedValue([]);
 
     // System roles CAN have permissions modified — no exception expected
@@ -280,7 +333,9 @@ describe('RolesService — assignPermission', () => {
     mockPrisma.role.findUnique.mockResolvedValue(mockRole);
     mockPrisma.permission.findUnique.mockResolvedValue(null);
 
-    await expect(service.assignPermission(mockRoleId, 'bookings', 'nonexistent')).rejects.toThrow(NotFoundException);
+    await expect(
+      service.assignPermission(mockRoleId, 'bookings', 'nonexistent'),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -302,7 +357,11 @@ describe('RolesService — removePermission', () => {
     mockPrisma.rolePermission.deleteMany.mockResolvedValue({ count: 1 });
     mockPrisma.userRole.findMany.mockResolvedValue([{ userId: mockUserId }]);
 
-    const result = await service.removePermission(mockRoleId, 'bookings', 'create');
+    const result = await service.removePermission(
+      mockRoleId,
+      'bookings',
+      'create',
+    );
 
     expect(result).toEqual({ deleted: true });
     expect(mockPrisma.rolePermission.deleteMany).toHaveBeenCalledWith({
@@ -318,7 +377,11 @@ describe('RolesService — removePermission', () => {
     mockPrisma.userRole.findMany.mockResolvedValue([]);
 
     // System roles CAN have permissions removed — no exception expected
-    const result = await service.removePermission(mockSystemRole.id, 'bookings', 'create');
+    const result = await service.removePermission(
+      mockSystemRole.id,
+      'bookings',
+      'create',
+    );
     expect(result).toEqual({ deleted: true });
     expect(mockPrisma.rolePermission.deleteMany).toHaveBeenCalled();
   });

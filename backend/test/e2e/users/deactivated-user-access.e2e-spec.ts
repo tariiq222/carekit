@@ -130,9 +130,10 @@ describe('Deactivated User Access (e2e)', () => {
       .set(getAuthHeaders(superAdmin.accessToken))
       .expect(200);
 
-    const loginRes = await request(httpServer)
-      .post(LOGIN_URL)
-      .send({ email: DEACTIVATED_USER_2.email, password: DEACTIVATED_USER_2.password });
+    const loginRes = await request(httpServer).post(LOGIN_URL).send({
+      email: DEACTIVATED_USER_2.email,
+      password: DEACTIVATED_USER_2.password,
+    });
 
     expect([401, 403]).toContain(loginRes.status);
     expect(loginRes.body.success).toBe(false);
@@ -170,7 +171,10 @@ describe('Deactivated User Access (e2e)', () => {
     // Login again — should succeed
     const loginRes = await request(httpServer)
       .post(LOGIN_URL)
-      .send({ email: DEACTIVATED_USER_3.email, password: DEACTIVATED_USER_3.password })
+      .send({
+        email: DEACTIVATED_USER_3.email,
+        password: DEACTIVATED_USER_3.password,
+      })
       .expect(200);
 
     expect(loginRes.body.data.accessToken).toBeDefined();

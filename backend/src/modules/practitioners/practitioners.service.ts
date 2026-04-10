@@ -8,7 +8,10 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { checkOwnership } from '../../common/helpers/ownership.helper.js';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 import { PriceResolverService } from '../bookings/price-resolver.service.js';
 
 @Injectable()
@@ -43,9 +46,20 @@ export class PractitionersService {
     branchId?: string;
     serviceId?: string;
   }) {
-    const { page, perPage, skip } = parsePaginationParams(params?.page, params?.perPage, 100);
-    const allowedSortFields = ['rating', 'reviewCount', 'experience', 'createdAt'];
-    const sortBy = allowedSortFields.includes(params?.sortBy ?? '') ? params!.sortBy! : 'rating';
+    const { page, perPage, skip } = parsePaginationParams(
+      params?.page,
+      params?.perPage,
+      100,
+    );
+    const allowedSortFields = [
+      'rating',
+      'reviewCount',
+      'experience',
+      'createdAt',
+    ];
+    const sortBy = allowedSortFields.includes(params?.sortBy ?? '')
+      ? params!.sortBy!
+      : 'rating';
     const sortOrder = params?.sortOrder ?? 'desc';
 
     const where: Record<string, unknown> = {
@@ -86,11 +100,20 @@ export class PractitionersService {
     const include: Record<string, unknown> = {
       user: true,
       specialtyRel: { select: { id: true, nameEn: true, nameAr: true } },
-      practitionerServices: { where: { isActive: true }, include: { service: { select: { id: true, nameAr: true, nameEn: true } } } },
+      practitionerServices: {
+        where: { isActive: true },
+        include: {
+          service: { select: { id: true, nameAr: true, nameEn: true } },
+        },
+      },
     };
     // Only include branches when filtering by branch to avoid N+1
     if (params?.branchId) {
-      include.branches = { include: { branch: { select: { id: true, nameAr: true, nameEn: true } } } };
+      include.branches = {
+        include: {
+          branch: { select: { id: true, nameAr: true, nameEn: true } },
+        },
+      };
     }
 
     const [practitioners, total] = await Promise.all([
@@ -134,7 +157,9 @@ export class PractitionersService {
    * Renames specialtyRel → specialty in the API response so callers get
    * { specialty: { id, nameEn, nameAr } } instead of the raw relation name.
    */
-  private mapSpecialtyRelation<T extends { specialtyRel?: unknown; specialty?: unknown }>(
+  private mapSpecialtyRelation<
+    T extends { specialtyRel?: unknown; specialty?: unknown },
+  >(
     practitioner: T,
   ): Omit<T, 'specialtyRel' | 'specialty'> & { specialty: unknown } {
     const { specialtyRel, specialty: _stringSpecialty, ...rest } = practitioner;
@@ -142,7 +167,9 @@ export class PractitionersService {
   }
 
   async create(dto: CreatePractitionerDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: dto.userId },
+    });
     if (!user) {
       throw new NotFoundException({
         statusCode: 404,
@@ -191,7 +218,15 @@ export class PractitionersService {
             educationAr: dto.educationAr,
           },
           include: {
-            user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
           },
         });
       }
@@ -216,15 +251,27 @@ export class PractitionersService {
         educationAr: dto.educationAr,
       },
       include: {
-        user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
       },
     });
   }
 
   async update(id: string, dto: UpdatePractitionerDto, currentUserId?: string) {
-    let practitioner = await this.prisma.practitioner.findFirst({ where: { id } });
+    let practitioner = await this.prisma.practitioner.findFirst({
+      where: { id },
+    });
     if (!practitioner) {
-      practitioner = await this.prisma.practitioner.findFirst({ where: { userId: id } });
+      practitioner = await this.prisma.practitioner.findFirst({
+        where: { userId: id },
+      });
     }
     if (!practitioner || practitioner.deletedAt) {
       throw new NotFoundException({
@@ -235,7 +282,7 @@ export class PractitionersService {
     }
 
     if (currentUserId) {
-      await checkOwnership(this.prisma,practitioner.userId, currentUserId);
+      await checkOwnership(this.prisma, practitioner.userId, currentUserId);
     }
 
     return this.prisma.practitioner.update({
@@ -254,13 +301,23 @@ export class PractitionersService {
         isAcceptingBookings: dto.isAcceptingBookings,
       },
       include: {
-        user: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
       },
     });
   }
 
   async delete(id: string) {
-    const practitioner = await this.prisma.practitioner.findFirst({ where: { id } });
+    const practitioner = await this.prisma.practitioner.findFirst({
+      where: { id },
+    });
     if (!practitioner || practitioner.deletedAt) {
       throw new NotFoundException({
         statusCode: 404,
@@ -294,11 +351,17 @@ export class PractitionersService {
       if (!practitionerId) {
         // No practitioner context — resolve from service-level only
         const sbt = await this.prisma.serviceBookingType.findUnique({
-          where: { serviceId_bookingType: { serviceId, bookingType: bookingType as BookingType } },
+          where: {
+            serviceId_bookingType: {
+              serviceId,
+              bookingType: bookingType as BookingType,
+            },
+          },
           include: { durationOptions: { where: { isDefault: true }, take: 1 } },
         });
         if (!sbt) return 30;
-        if (sbt.durationOptions.length > 0) return sbt.durationOptions[0].durationMinutes;
+        if (sbt.durationOptions.length > 0)
+          return sbt.durationOptions[0].durationMinutes;
         return sbt.duration;
       }
 
@@ -309,11 +372,17 @@ export class PractitionersService {
       if (!ps) {
         // Practitioner doesn't offer this service — fall back to service-level
         const sbt = await this.prisma.serviceBookingType.findUnique({
-          where: { serviceId_bookingType: { serviceId, bookingType: bookingType as BookingType } },
+          where: {
+            serviceId_bookingType: {
+              serviceId,
+              bookingType: bookingType as BookingType,
+            },
+          },
           include: { durationOptions: { where: { isDefault: true }, take: 1 } },
         });
         if (!sbt) return 30;
-        if (sbt.durationOptions.length > 0) return sbt.durationOptions[0].durationMinutes;
+        if (sbt.durationOptions.length > 0)
+          return sbt.durationOptions[0].durationMinutes;
         return sbt.duration;
       }
 
@@ -328,5 +397,4 @@ export class PractitionersService {
       return 30;
     }
   }
-
 }

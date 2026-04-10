@@ -112,7 +112,7 @@ describe('Notifications Module (e2e)', () => {
       expect(meta).toHaveProperty('hasPreviousPage');
     });
 
-    it('should return only the current user\'s notifications', async () => {
+    it("should return only the current user's notifications", async () => {
       const resPatient = await request(httpServer)
         .get(NOTIFICATIONS_URL)
         .set(getAuthHeaders(patient.accessToken))
@@ -157,9 +157,7 @@ describe('Notifications Module (e2e)', () => {
     });
 
     it('should reject without authentication (401)', async () => {
-      const res = await request(httpServer)
-        .get(NOTIFICATIONS_URL)
-        .expect(401);
+      const res = await request(httpServer).get(NOTIFICATIONS_URL).expect(401);
 
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
@@ -216,15 +214,28 @@ describe('Notifications Module (e2e)', () => {
     it('should include notification type from enum (booking_confirmed, etc.)', async () => {
       // All valid NotificationType enum values
       const validTypes = [
-        'booking_confirmed', 'booking_completed', 'booking_cancelled',
-        'booking_rescheduled', 'booking_expired', 'booking_no_show',
-        'booking_reminder', 'booking_reminder_urgent',
-        'booking_cancellation_requested', 'booking_cancellation_rejected',
+        'booking_confirmed',
+        'booking_completed',
+        'booking_cancelled',
+        'booking_rescheduled',
+        'booking_expired',
+        'booking_no_show',
+        'booking_reminder',
+        'booking_reminder_urgent',
+        'booking_cancellation_requested',
+        'booking_cancellation_rejected',
         'booking_practitioner_cancelled',
-        'cancellation_rejected', 'cancellation_requested',
-        'no_show_review', 'patient_arrived', 'receipt_rejected',
-        'reminder', 'payment_received', 'new_rating', 'problem_report',
-        'waitlist_slot_available', 'system_alert',
+        'cancellation_rejected',
+        'cancellation_requested',
+        'no_show_review',
+        'patient_arrived',
+        'receipt_rejected',
+        'reminder',
+        'payment_received',
+        'new_rating',
+        'problem_report',
+        'waitlist_slot_available',
+        'system_alert',
       ];
 
       const res = await request(httpServer)
@@ -256,7 +267,7 @@ describe('Notifications Module (e2e)', () => {
       expect(res.body.data.count).toBeGreaterThanOrEqual(0);
     });
 
-    it('should return count only for the current user\'s notifications', async () => {
+    it("should return count only for the current user's notifications", async () => {
       const res1 = await request(httpServer)
         .get(`${NOTIFICATIONS_URL}/unread-count`)
         .set(getAuthHeaders(patient.accessToken))
@@ -304,7 +315,7 @@ describe('Notifications Module (e2e)', () => {
       expect(res.body.data).toHaveProperty('isRead', true);
     });
 
-    it('should reject marking another user\'s notification as read (403)', async () => {
+    it("should reject marking another user's notification as read (403)", async () => {
       if (!notificationId) {
         return;
       }
@@ -362,7 +373,7 @@ describe('Notifications Module (e2e)', () => {
   // ─────────────────────────────────────────────────────────────
 
   describe('PATCH /notifications/read-all', () => {
-    it('should mark all user\'s notifications as read', async () => {
+    it("should mark all user's notifications as read", async () => {
       const res = await request(httpServer)
         .patch(`${NOTIFICATIONS_URL}/read-all`)
         .set(getAuthHeaders(patient.accessToken))
@@ -387,7 +398,7 @@ describe('Notifications Module (e2e)', () => {
       expect(res.body.data.count).toBe(0);
     });
 
-    it('should not affect other users\' notifications', async () => {
+    it("should not affect other users' notifications", async () => {
       // Get patient2's unread count before
       const beforeRes = await request(httpServer)
         .get(`${NOTIFICATIONS_URL}/unread-count`)

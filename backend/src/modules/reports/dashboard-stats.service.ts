@@ -11,10 +11,10 @@ const cacheKey = (branchId?: string) =>
 export interface DashboardStats {
   todayBookings: number;
   pendingBookings: number;
-  revenueThisMonth: number;   // halalat
+  revenueThisMonth: number; // halalat
   activePractitioners: number;
   newPatientsThisMonth: number;
-  lastUpdatedAt: string;      // ISO timestamp — shown in dashboard UI
+  lastUpdatedAt: string; // ISO timestamp — shown in dashboard UI
 }
 
 @Injectable()
@@ -47,7 +47,11 @@ export class DashboardStatsService {
 
   private async computeStats(branchId?: string): Promise<DashboardStats> {
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const bookingWhere = branchId ? { branchId } : {};

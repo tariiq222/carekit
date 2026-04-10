@@ -123,7 +123,10 @@ describe('Group Sessions Module (e2e)', () => {
       const listRes = await request(httpServer)
         .get(PRACTITIONERS_URL)
         .query({ search: TEST_USERS.practitioner.firstName, perPage: '50' });
-      const items = (listRes.body.data?.items ?? []) as Array<{ id: string; user?: { id: string } }>;
+      const items = (listRes.body.data?.items ?? []) as Array<{
+        id: string;
+        user?: { id: string };
+      }>;
       const found = items.find((p) => p.user?.id === practitionerUserId);
       practitionerId = found?.id as string;
     }
@@ -366,7 +369,12 @@ describe('Group Sessions Module (e2e)', () => {
       expectSuccessResponse(res.body);
       const data = res.body.data as {
         items: unknown[];
-        meta: { total: number; page: number; perPage: number; totalPages: number };
+        meta: {
+          total: number;
+          page: number;
+          perPage: number;
+          totalPages: number;
+        };
       };
       expect(Array.isArray(data.items)).toBe(true);
       expect(data.meta.page).toBe(1);
@@ -555,7 +563,11 @@ describe('Group Sessions Module (e2e)', () => {
         .expect(201);
 
       expectSuccessResponse(res.body);
-      const data = res.body.data as { id: string; groupSessionId: string; status: string };
+      const data = res.body.data as {
+        id: string;
+        groupSessionId: string;
+        status: string;
+      };
       expect(data.groupSessionId).toBe(sessionId);
       expect(data.status).toBe('confirmed'); // free session → auto-confirmed
       enrollmentId = data.id;

@@ -28,7 +28,6 @@ const mockRatings = [
   },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   practitioner: { findUnique: jest.fn() },
   rating: {
@@ -48,7 +47,9 @@ describe('PractitionerRatingsService', () => {
       ],
     }).compile();
 
-    service = module.get<PractitionerRatingsService>(PractitionerRatingsService);
+    service = module.get<PractitionerRatingsService>(
+      PractitionerRatingsService,
+    );
     jest.clearAllMocks();
   });
 
@@ -90,7 +91,9 @@ describe('PractitionerRatingsService', () => {
     it('should throw NotFoundException when practitioner not found', async () => {
       mockPrisma.practitioner.findUnique.mockResolvedValue(null);
 
-      await expect(service.getRatings('non-existent')).rejects.toThrow(NotFoundException);
+      await expect(service.getRatings('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when practitioner is soft-deleted', async () => {
@@ -99,7 +102,9 @@ describe('PractitionerRatingsService', () => {
         deletedAt: new Date(),
       });
 
-      await expect(service.getRatings(practitionerId)).rejects.toThrow(NotFoundException);
+      await expect(service.getRatings(practitionerId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should pass pagination params to findMany', async () => {

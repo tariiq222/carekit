@@ -47,7 +47,8 @@ beforeAll(async () => {
     .set(getAuthHeaders(patientAuth.accessToken))
     .send({ language: 'en' });
 
-  activeSessionId = (res.body as { data: { session: { id: string } } }).data.session.id;
+  activeSessionId = (res.body as { data: { session: { id: string } } }).data
+    .session.id;
 });
 
 afterAll(async () => {
@@ -64,7 +65,10 @@ describe('POST /chatbot/sessions/:id/messages', () => {
       .post(`${SESSIONS_URL}/${activeSessionId}/messages`)
       .send({ content: 'Hello' })
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 400 when content is missing', async () => {
@@ -137,7 +141,10 @@ describe('POST /chatbot/sessions/:id/messages/stream', () => {
       .post(`${SESSIONS_URL}/${activeSessionId}/messages/stream`)
       .send({ content: 'Hello' })
       .expect(401);
-    expectErrorResponse(res.body as Record<string, unknown>, 'AUTH_TOKEN_INVALID');
+    expectErrorResponse(
+      res.body as Record<string, unknown>,
+      'AUTH_TOKEN_INVALID',
+    );
   });
 
   it('returns 400 when content is missing', async () => {
@@ -171,7 +178,9 @@ describe('POST /chatbot/sessions/:id/messages/stream', () => {
       .buffer(true)
       .parse((_res, callback) => {
         let data = '';
-        _res.on('data', (chunk: Buffer) => { data += chunk.toString(); });
+        _res.on('data', (chunk: Buffer) => {
+          data += chunk.toString();
+        });
         _res.on('end', () => callback(null, data));
       });
 

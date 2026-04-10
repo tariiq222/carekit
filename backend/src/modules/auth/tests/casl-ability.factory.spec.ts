@@ -58,7 +58,10 @@ const ALL_MODULES = [
 const ALL_ACTIONS: Action[] = ['view', 'create', 'edit', 'delete'];
 
 /** Expected permissions for each default role (from api-spec.md matrix) */
-const ROLE_PERMISSIONS: Record<string, Array<{ module: string; action: Action }>> = {
+const ROLE_PERMISSIONS: Record<
+  string,
+  Array<{ module: string; action: Action }>
+> = {
   super_admin: ALL_MODULES.flatMap((module) =>
     ALL_ACTIONS.map((action) => ({ module, action })),
   ), // All 52
@@ -99,28 +102,31 @@ const ROLE_PERMISSIONS: Record<string, Array<{ module: string; action: Action }>
   // practitioner and patient have "own" conditions —
   // tested separately in ownership tests
   practitioner: [
-    { module: 'practitioners', action: 'view' },  // own
-    { module: 'practitioners', action: 'edit' },   // own
-    { module: 'bookings', action: 'view' },        // own
-    { module: 'patients', action: 'view' },        // own
-    { module: 'ratings', action: 'view' },         // own
+    { module: 'practitioners', action: 'view' }, // own
+    { module: 'practitioners', action: 'edit' }, // own
+    { module: 'bookings', action: 'view' }, // own
+    { module: 'patients', action: 'view' }, // own
+    { module: 'ratings', action: 'view' }, // own
   ],
 
   patient: [
     { module: 'practitioners', action: 'view' },
-    { module: 'bookings', action: 'view' },   // own
+    { module: 'bookings', action: 'view' }, // own
     { module: 'bookings', action: 'create' },
     { module: 'services', action: 'view' },
-    { module: 'payments', action: 'view' },   // own
-    { module: 'invoices', action: 'view' },   // own
+    { module: 'payments', action: 'view' }, // own
+    { module: 'invoices', action: 'view' }, // own
     { module: 'ratings', action: 'view' },
     { module: 'ratings', action: 'create' },
-    { module: 'ratings', action: 'edit' },    // own
+    { module: 'ratings', action: 'edit' }, // own
   ],
 };
 
 /** Permissions that a role should explicitly NOT have */
-const ROLE_FORBIDDEN: Record<string, Array<{ module: string; action: Action }>> = {
+const ROLE_FORBIDDEN: Record<
+  string,
+  Array<{ module: string; action: Action }>
+> = {
   receptionist: [
     { module: 'users', action: 'view' },
     { module: 'users', action: 'create' },

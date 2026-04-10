@@ -43,7 +43,10 @@ describe('BookingSettingsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BookingSettingsController],
       providers: [
-        { provide: BookingSettingsService, useValue: mockBookingSettingsService },
+        {
+          provide: BookingSettingsService,
+          useValue: mockBookingSettingsService,
+        },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -52,7 +55,9 @@ describe('BookingSettingsController', () => {
       .useValue(guardOverride)
       .compile();
 
-    controller = module.get<BookingSettingsController>(BookingSettingsController);
+    controller = module.get<BookingSettingsController>(
+      BookingSettingsController,
+    );
   });
 
   describe('get', () => {
@@ -91,7 +96,10 @@ describe('BookingStatusLogController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BookingStatusLogController],
       providers: [
-        { provide: BookingStatusLogService, useValue: mockBookingStatusLogService },
+        {
+          provide: BookingStatusLogService,
+          useValue: mockBookingStatusLogService,
+        },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -100,7 +108,9 @@ describe('BookingStatusLogController', () => {
       .useValue(guardOverride)
       .compile();
 
-    controller = module.get<BookingStatusLogController>(BookingStatusLogController);
+    controller = module.get<BookingStatusLogController>(
+      BookingStatusLogController,
+    );
   });
 
   describe('getStatusLog', () => {
@@ -111,7 +121,9 @@ describe('BookingStatusLogController', () => {
 
       const result = await controller.getStatusLog(bookingId);
 
-      expect(mockBookingStatusLogService.findByBooking).toHaveBeenCalledWith(bookingId);
+      expect(mockBookingStatusLogService.findByBooking).toHaveBeenCalledWith(
+        bookingId,
+      );
       expect(result).toEqual({ success: true, data: log });
     });
   });
@@ -127,9 +139,7 @@ describe('WaitlistController', () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WaitlistController],
-      providers: [
-        { provide: WaitlistService, useValue: mockWaitlistService },
-      ],
+      providers: [{ provide: WaitlistService, useValue: mockWaitlistService }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue(guardOverride)
@@ -203,8 +213,14 @@ describe('WaitlistController', () => {
 
       const result = await controller.leave('wl-uuid-001', user);
 
-      expect(mockWaitlistService.leave).toHaveBeenCalledWith('wl-uuid-001', user.id);
-      expect(result).toEqual({ success: true, message: 'Left waitlist successfully' });
+      expect(mockWaitlistService.leave).toHaveBeenCalledWith(
+        'wl-uuid-001',
+        user.id,
+      );
+      expect(result).toEqual({
+        success: true,
+        message: 'Left waitlist successfully',
+      });
     });
   });
 });

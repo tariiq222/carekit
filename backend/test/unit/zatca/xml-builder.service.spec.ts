@@ -1,4 +1,7 @@
-import { XmlBuilderService, type ZatcaXmlInput } from '../../../src/modules/zatca/services/xml-builder.service.js';
+import {
+  XmlBuilderService,
+  type ZatcaXmlInput,
+} from '../../../src/modules/zatca/services/xml-builder.service.js';
 
 const baseInput: ZatcaXmlInput = {
   invoiceNumber: 'INV-20260322-12345',
@@ -49,7 +52,9 @@ describe('XmlBuilderService', () => {
   });
 
   it('contains UBL Invoice namespace', () => {
-    expect(xml).toContain('urn:oasis:names:specification:ubl:schema:xsd:Invoice-2');
+    expect(xml).toContain(
+      'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2',
+    );
   });
 
   it('contains <Invoice root element', () => {
@@ -71,7 +76,9 @@ describe('XmlBuilderService', () => {
   });
 
   it('contains uuid as cbc:UUID', () => {
-    expect(xml).toContain('<cbc:UUID>550e8400-e29b-41d4-a716-446655440000</cbc:UUID>');
+    expect(xml).toContain(
+      '<cbc:UUID>550e8400-e29b-41d4-a716-446655440000</cbc:UUID>',
+    );
   });
 
   it('contains issueDate', () => {
@@ -79,11 +86,15 @@ describe('XmlBuilderService', () => {
   });
 
   it('contains InvoiceTypeCode with name=0200000 and value 388', () => {
-    expect(xml).toContain('<cbc:InvoiceTypeCode name="0200000">388</cbc:InvoiceTypeCode>');
+    expect(xml).toContain(
+      '<cbc:InvoiceTypeCode name="0200000">388</cbc:InvoiceTypeCode>',
+    );
   });
 
   it('contains DocumentCurrencyCode SAR', () => {
-    expect(xml).toContain('<cbc:DocumentCurrencyCode>SAR</cbc:DocumentCurrencyCode>');
+    expect(xml).toContain(
+      '<cbc:DocumentCurrencyCode>SAR</cbc:DocumentCurrencyCode>',
+    );
   });
 
   // --- Seller / Buyer ---
@@ -109,9 +120,10 @@ describe('XmlBuilderService', () => {
       ...baseInput,
       buyer: { name: 'أحمد الراشد' },
     });
-    const customerPartyBlock = xmlNoBuyerVat.match(
-      /<cac:AccountingCustomerParty>[\s\S]*?<\/cac:AccountingCustomerParty>/,
-    )?.[0] ?? '';
+    const customerPartyBlock =
+      xmlNoBuyerVat.match(
+        /<cac:AccountingCustomerParty>[\s\S]*?<\/cac:AccountingCustomerParty>/,
+      )?.[0] ?? '';
     expect(customerPartyBlock).not.toContain('PartyTaxScheme');
   });
 
@@ -120,9 +132,10 @@ describe('XmlBuilderService', () => {
       ...baseInput,
       buyer: { name: 'أحمد الراشد', vatNumber: '311111111111113' },
     });
-    const customerPartyBlock = xmlWithBuyerVat.match(
-      /<cac:AccountingCustomerParty>[\s\S]*?<\/cac:AccountingCustomerParty>/,
-    )?.[0] ?? '';
+    const customerPartyBlock =
+      xmlWithBuyerVat.match(
+        /<cac:AccountingCustomerParty>[\s\S]*?<\/cac:AccountingCustomerParty>/,
+      )?.[0] ?? '';
     expect(customerPartyBlock).toContain('PartyTaxScheme');
     expect(customerPartyBlock).toContain('311111111111113');
   });
@@ -130,23 +143,33 @@ describe('XmlBuilderService', () => {
   // --- Financial amounts ---
 
   it('TaxAmount equals (vatAmount/100).toFixed(2) = 22.50', () => {
-    expect(xml).toContain('<cbc:TaxAmount currencyID="SAR">22.50</cbc:TaxAmount>');
+    expect(xml).toContain(
+      '<cbc:TaxAmount currencyID="SAR">22.50</cbc:TaxAmount>',
+    );
   });
 
   it('PayableAmount equals (totalIncludingVat/100).toFixed(2) = 172.50', () => {
-    expect(xml).toContain('<cbc:PayableAmount currencyID="SAR">172.50</cbc:PayableAmount>');
+    expect(xml).toContain(
+      '<cbc:PayableAmount currencyID="SAR">172.50</cbc:PayableAmount>',
+    );
   });
 
   it('LineExtensionAmount equals (totalExcludingVat/100).toFixed(2) = 150.00', () => {
-    expect(xml).toContain('<cbc:LineExtensionAmount currencyID="SAR">150.00</cbc:LineExtensionAmount>');
+    expect(xml).toContain(
+      '<cbc:LineExtensionAmount currencyID="SAR">150.00</cbc:LineExtensionAmount>',
+    );
   });
 
   it('AllowanceTotalAmount is 0.00', () => {
-    expect(xml).toContain('<cbc:AllowanceTotalAmount currencyID="SAR">0.00</cbc:AllowanceTotalAmount>');
+    expect(xml).toContain(
+      '<cbc:AllowanceTotalAmount currencyID="SAR">0.00</cbc:AllowanceTotalAmount>',
+    );
   });
 
   it('PrepaidAmount is 0.00', () => {
-    expect(xml).toContain('<cbc:PrepaidAmount currencyID="SAR">0.00</cbc:PrepaidAmount>');
+    expect(xml).toContain(
+      '<cbc:PrepaidAmount currencyID="SAR">0.00</cbc:PrepaidAmount>',
+    );
   });
 
   // --- Hash chaining ---
@@ -164,6 +187,8 @@ describe('XmlBuilderService', () => {
       totalIncludingVat: 15000,
       lines: [{ ...baseInput.lines[0], vatAmount: 0 }],
     });
-    expect(xmlZeroVat).toContain('<cbc:TaxAmount currencyID="SAR">0.00</cbc:TaxAmount>');
+    expect(xmlZeroVat).toContain(
+      '<cbc:TaxAmount currencyID="SAR">0.00</cbc:TaxAmount>',
+    );
   });
 });

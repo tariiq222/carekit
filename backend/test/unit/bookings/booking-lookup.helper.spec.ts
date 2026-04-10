@@ -24,7 +24,6 @@ const mockBooking = {
   payment: null,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: { findFirst: jest.fn() },
 };
@@ -59,11 +58,16 @@ describe('BookingLookupHelper', () => {
     it('should throw NotFoundException when booking not found', async () => {
       mockPrisma.booking.findFirst.mockResolvedValue(null);
 
-      await expect(helper.findOrFail('non-existent')).rejects.toThrow(NotFoundException);
+      await expect(helper.findOrFail('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should pass include option when provided', async () => {
-      mockPrisma.booking.findFirst.mockResolvedValue({ ...mockBooking, payment: null });
+      mockPrisma.booking.findFirst.mockResolvedValue({
+        ...mockBooking,
+        payment: null,
+      });
 
       await helper.findOrFail(bookingId, { payment: true });
 
@@ -99,40 +103,64 @@ describe('BookingLookupHelper', () => {
 
   describe('assertCancellable', () => {
     it('should not throw for pending booking', () => {
-      expect(() => helper.assertCancellable({ ...mockBooking, status: 'pending' } as Parameters<typeof helper.assertCancellable>[0])).not.toThrow();
+      expect(() =>
+        helper.assertCancellable({
+          ...mockBooking,
+          status: 'pending',
+        } as Parameters<typeof helper.assertCancellable>[0]),
+      ).not.toThrow();
     });
 
     it('should not throw for confirmed booking', () => {
-      expect(() => helper.assertCancellable({ ...mockBooking, status: 'confirmed' } as Parameters<typeof helper.assertCancellable>[0])).not.toThrow();
+      expect(() =>
+        helper.assertCancellable({
+          ...mockBooking,
+          status: 'confirmed',
+        } as Parameters<typeof helper.assertCancellable>[0]),
+      ).not.toThrow();
     });
 
     it('should throw ConflictException for completed booking', () => {
       expect(() =>
-        helper.assertCancellable({ ...mockBooking, status: 'completed' } as Parameters<typeof helper.assertCancellable>[0]),
+        helper.assertCancellable({
+          ...mockBooking,
+          status: 'completed',
+        } as Parameters<typeof helper.assertCancellable>[0]),
       ).toThrow(ConflictException);
     });
 
     it('should throw ConflictException for cancelled booking', () => {
       expect(() =>
-        helper.assertCancellable({ ...mockBooking, status: 'cancelled' } as Parameters<typeof helper.assertCancellable>[0]),
+        helper.assertCancellable({
+          ...mockBooking,
+          status: 'cancelled',
+        } as Parameters<typeof helper.assertCancellable>[0]),
       ).toThrow(ConflictException);
     });
 
     it('should throw ConflictException for in_progress booking', () => {
       expect(() =>
-        helper.assertCancellable({ ...mockBooking, status: 'in_progress' } as Parameters<typeof helper.assertCancellable>[0]),
+        helper.assertCancellable({
+          ...mockBooking,
+          status: 'in_progress',
+        } as Parameters<typeof helper.assertCancellable>[0]),
       ).toThrow(ConflictException);
     });
   });
 
   describe('assertPatientOwnership', () => {
     it('should not throw when patientId matches', () => {
-      expect(() => helper.assertPatientOwnership({ patientId }, patientId)).not.toThrow();
+      expect(() =>
+        helper.assertPatientOwnership({ patientId }, patientId),
+      ).not.toThrow();
     });
 
     it('should throw ForbiddenException when patientId does not match', () => {
       expect(() =>
-        helper.assertPatientOwnership({ patientId: 'other-patient' }, patientId),
+        helper.assertPatientOwnership(
+          { patientId: 'other-patient' },
+          patientId,
+        ),
       ).toThrow(ForbiddenException);
     });
   });
@@ -158,7 +186,10 @@ describe('BookingLookupHelper', () => {
 
     it('should throw ForbiddenException when practitioner is null', () => {
       expect(() =>
-        helper.assertPractitionerOwnership({ practitioner: null }, practitionerUserId),
+        helper.assertPractitionerOwnership(
+          { practitioner: null },
+          practitionerUserId,
+        ),
       ).toThrow(ForbiddenException);
     });
   });

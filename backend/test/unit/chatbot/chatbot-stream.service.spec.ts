@@ -131,7 +131,11 @@ describe('ChatbotStreamService', () => {
     it('should return an Observable that emits SSE events', async () => {
       prisma.chatSession.findFirst.mockResolvedValue(mockSession);
 
-      const observable = service.handleMessageStream(sessionId, userId, content);
+      const observable = service.handleMessageStream(
+        sessionId,
+        userId,
+        content,
+      );
 
       expect(observable).toBeDefined();
       // Observable should be subscribable
@@ -155,7 +159,11 @@ describe('ChatbotStreamService', () => {
     it('should save user message to DB', async () => {
       prisma.chatSession.findFirst.mockResolvedValue(mockSession);
 
-      const observable = service.handleMessageStream(sessionId, userId, content);
+      const observable = service.handleMessageStream(
+        sessionId,
+        userId,
+        content,
+      );
       observable.subscribe();
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -171,7 +179,11 @@ describe('ChatbotStreamService', () => {
         language: null,
       });
 
-      const observable = service.handleMessageStream(sessionId, userId, content);
+      const observable = service.handleMessageStream(
+        sessionId,
+        userId,
+        content,
+      );
       observable.subscribe();
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -189,7 +201,11 @@ describe('ChatbotStreamService', () => {
         language: 'ar',
       });
 
-      const observable = service.handleMessageStream(sessionId, userId, content);
+      const observable = service.handleMessageStream(
+        sessionId,
+        userId,
+        content,
+      );
       observable.subscribe();
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -205,7 +221,11 @@ describe('ChatbotStreamService', () => {
     it('should build AI context and delegate to stream loop', async () => {
       prisma.chatSession.findFirst.mockResolvedValue(mockSession);
 
-      const observable = service.handleMessageStream(sessionId, userId, content);
+      const observable = service.handleMessageStream(
+        sessionId,
+        userId,
+        content,
+      );
       observable.subscribe();
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -229,7 +249,11 @@ describe('ChatbotStreamService', () => {
       prisma.chatSession.findFirst.mockResolvedValue(null);
 
       const events: MessageEvent[] = [];
-      const observable = service.handleMessageStream('bad-session', 'user-1', 'Hello');
+      const observable = service.handleMessageStream(
+        'bad-session',
+        'user-1',
+        'Hello',
+      );
 
       await new Promise<void>((resolve) => {
         observable.subscribe({
@@ -255,7 +279,11 @@ describe('ChatbotStreamService', () => {
       });
 
       const events: MessageEvent[] = [];
-      const observable = service.handleMessageStream('session-1', 'user-1', 'Hello');
+      const observable = service.handleMessageStream(
+        'session-1',
+        'user-1',
+        'Hello',
+      );
 
       await new Promise<void>((resolve) => {
         observable.subscribe({
@@ -279,7 +307,11 @@ describe('ChatbotStreamService', () => {
       prisma.chatMessage.count.mockResolvedValue(999);
 
       const events: MessageEvent[] = [];
-      const observable = service.handleMessageStream('session-1', 'user-1', 'Hello');
+      const observable = service.handleMessageStream(
+        'session-1',
+        'user-1',
+        'Hello',
+      );
 
       await new Promise<void>((resolve) => {
         observable.subscribe({
@@ -308,7 +340,11 @@ describe('ChatbotStreamService', () => {
       prisma.chatSession.findFirst.mockRejectedValue(new Error('DB crash'));
 
       const events: MessageEvent[] = [];
-      const observable = service.handleMessageStream('session-1', 'user-1', 'Hi');
+      const observable = service.handleMessageStream(
+        'session-1',
+        'user-1',
+        'Hi',
+      );
 
       await new Promise<void>((resolve) => {
         observable.subscribe({
@@ -331,7 +367,11 @@ describe('ChatbotStreamService', () => {
       prisma.chatSession.findFirst.mockRejectedValue('string error');
 
       const events: MessageEvent[] = [];
-      const observable = service.handleMessageStream('session-1', 'user-1', 'Hi');
+      const observable = service.handleMessageStream(
+        'session-1',
+        'user-1',
+        'Hi',
+      );
 
       await new Promise<void>((resolve) => {
         observable.subscribe({

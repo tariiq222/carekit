@@ -71,7 +71,13 @@ describe('validateAvailability', () => {
   it('throws OUTSIDE_AVAILABILITY when requested time falls outside hours', async () => {
     const prisma = createMockPrisma();
     (prisma.practitionerAvailability.findMany as jest.Mock).mockResolvedValue([
-      { id: 'a1', dayOfWeek: date.getDay(), startTime: '09:00', endTime: '12:00', isActive: true },
+      {
+        id: 'a1',
+        dayOfWeek: date.getDay(),
+        startTime: '09:00',
+        endTime: '12:00',
+        isActive: true,
+      },
     ]);
 
     await expectBadRequest(
@@ -84,7 +90,13 @@ describe('validateAvailability', () => {
   it('resolves without throwing when time is within availability', async () => {
     const prisma = createMockPrisma();
     (prisma.practitionerAvailability.findMany as jest.Mock).mockResolvedValue([
-      { id: 'a1', dayOfWeek: date.getDay(), startTime: '08:00', endTime: '17:00', isActive: true },
+      {
+        id: 'a1',
+        dayOfWeek: date.getDay(),
+        startTime: '08:00',
+        endTime: '17:00',
+        isActive: true,
+      },
     ]);
 
     await expect(
@@ -95,12 +107,20 @@ describe('validateAvailability', () => {
   it('passes OR filter with branchId and null when branchId is supplied', async () => {
     const prisma = createMockPrisma();
     (prisma.practitionerAvailability.findMany as jest.Mock).mockResolvedValue([
-      { id: 'a1', dayOfWeek: date.getDay(), startTime: '08:00', endTime: '17:00', branchId: 'b1', isActive: true },
+      {
+        id: 'a1',
+        dayOfWeek: date.getDay(),
+        startTime: '08:00',
+        endTime: '17:00',
+        branchId: 'b1',
+        isActive: true,
+      },
     ]);
 
     await validateAvailability(prisma, 'p1', date, '09:00', '10:00', 'b1');
 
-    const callArgs = (prisma.practitionerAvailability.findMany as jest.Mock).mock.calls;
+    const callArgs = (prisma.practitionerAvailability.findMany as jest.Mock)
+      .mock.calls;
     const where = callArgs[0][0].where as Record<string, unknown>;
 
     expect(where).toMatchObject({

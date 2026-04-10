@@ -25,7 +25,10 @@ async function createModule(mockPrisma: ReturnType<typeof createMockPrisma>) {
       { provide: PrismaService, useValue: mockPrisma },
       { provide: CacheService, useValue: createMockCache() },
       { provide: IntakeFormsService, useValue: { listForms: jest.fn() } },
-      { provide: MinioService, useValue: { uploadFile: jest.fn(), deleteFile: jest.fn() } },
+      {
+        provide: MinioService,
+        useValue: { uploadFile: jest.fn(), deleteFile: jest.fn() },
+      },
     ],
   }).compile();
   return module.get<ServicesService>(ServicesService);
@@ -51,7 +54,10 @@ describe('ServicesService — create', () => {
 
   it('should create a service with valid data', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
-    mockPrisma.service.create.mockResolvedValue({ ...mockClinicService, ...createDto });
+    mockPrisma.service.create.mockResolvedValue({
+      ...mockClinicService,
+      ...createDto,
+    });
 
     const result = await service.create(createDto);
 
@@ -63,25 +69,42 @@ describe('ServicesService — create', () => {
   it.each([
     ['price', { price: 0 }, { price: 0 }],
     ['duration', { duration: 30 }, { duration: 30 }],
-  ])('should default %s when not provided', async (_field, _override, expectedData) => {
-    mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
-    mockPrisma.service.create.mockResolvedValue({ ...mockClinicService, ...expectedData });
+  ])(
+    'should default %s when not provided',
+    async (_field, _override, expectedData) => {
+      mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrisma.service.create.mockResolvedValue({
+        ...mockClinicService,
+        ...expectedData,
+      });
 
-    await service.create({ nameEn: 'Test', nameAr: 'اختبار', categoryId: mockCategory.id });
+      await service.create({
+        nameEn: 'Test',
+        nameAr: 'اختبار',
+        categoryId: mockCategory.id,
+      });
 
-    expect(mockPrisma.service.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining(expectedData) }),
-    );
-  });
+      expect(mockPrisma.service.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining(expectedData),
+        }),
+      );
+    },
+  );
 
   it('should store price as integer (halalat)', async () => {
     mockPrisma.serviceCategory.findUnique.mockResolvedValue(mockCategory);
-    mockPrisma.service.create.mockResolvedValue({ ...mockClinicService, price: 25050 });
+    mockPrisma.service.create.mockResolvedValue({
+      ...mockClinicService,
+      price: 25050,
+    });
 
     await service.create({ ...createDto, price: 25050 });
 
     expect(mockPrisma.service.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ price: 25050 }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({ price: 25050 }),
+      }),
     );
   });
 
@@ -99,11 +122,18 @@ describe('ServicesService — create', () => {
       depositPercent: 50,
     });
 
-    await service.create({ ...createDto, depositEnabled: true, depositPercent: 50 });
+    await service.create({
+      ...createDto,
+      depositEnabled: true,
+      depositPercent: 50,
+    });
 
     expect(mockPrisma.service.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ depositEnabled: true, depositPercent: 50 }),
+        data: expect.objectContaining({
+          depositEnabled: true,
+          depositPercent: 50,
+        }),
       }),
     );
   });
@@ -119,7 +149,9 @@ describe('ServicesService — create', () => {
     await service.create({
       ...createDto,
       allowRecurring: true,
-      allowedRecurringPatterns: ['WEEKLY'] as CreateServiceDto['allowedRecurringPatterns'],
+      allowedRecurringPatterns: [
+        'WEEKLY',
+      ] as CreateServiceDto['allowedRecurringPatterns'],
     });
 
     expect(mockPrisma.service.create).toHaveBeenCalledWith(
@@ -140,11 +172,18 @@ describe('ServicesService — create', () => {
       maxAdvanceDays: 30,
     });
 
-    await service.create({ ...createDto, minLeadMinutes: 60, maxAdvanceDays: 30 });
+    await service.create({
+      ...createDto,
+      minLeadMinutes: 60,
+      maxAdvanceDays: 30,
+    });
 
     expect(mockPrisma.service.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ minLeadMinutes: 60, maxAdvanceDays: 30 }),
+        data: expect.objectContaining({
+          minLeadMinutes: 60,
+          maxAdvanceDays: 30,
+        }),
       }),
     );
   });
@@ -185,7 +224,7 @@ describe('ServicesService — findAll', () => {
   it.each([
     [{ categoryId: mockCategory.id }, { categoryId: mockCategory.id }],
     [{ isActive: true }, { isActive: true }],
-    [{ }, { deletedAt: null }],
+    [{}, { deletedAt: null }],
   ])('should apply where filter for %o', async (filter, expectedWhere) => {
     mockPrisma.service.findMany.mockResolvedValue([]);
     mockPrisma.service.count.mockResolvedValue(0);
@@ -193,7 +232,9 @@ describe('ServicesService — findAll', () => {
     await service.findAll(filter);
 
     expect(mockPrisma.service.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining(expectedWhere) }),
+      expect.objectContaining({
+        where: expect.objectContaining(expectedWhere),
+      }),
     );
   });
 
@@ -207,8 +248,12 @@ describe('ServicesService — findAll', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           OR: expect.arrayContaining([
-            expect.objectContaining({ nameEn: expect.objectContaining({ contains: 'Consultation' }) }),
-            expect.objectContaining({ nameAr: expect.objectContaining({ contains: 'Consultation' }) }),
+            expect.objectContaining({
+              nameEn: expect.objectContaining({ contains: 'Consultation' }),
+            }),
+            expect.objectContaining({
+              nameAr: expect.objectContaining({ contains: 'Consultation' }),
+            }),
           ]),
         }),
       }),
@@ -222,7 +267,9 @@ describe('ServicesService — findAll', () => {
     await service.findAll({});
 
     expect(mockPrisma.service.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ include: expect.objectContaining({ category: true }) }),
+      expect.objectContaining({
+        include: expect.objectContaining({ category: true }),
+      }),
     );
   });
 });
@@ -249,17 +296,26 @@ describe('ServicesService — findOne', () => {
   it('should query with deletedAt: null filter', async () => {
     mockPrisma.service.findFirst.mockResolvedValue(null);
 
-    await expect(service.findOne(mockClinicService.id)).rejects.toThrow(NotFoundException);
+    await expect(service.findOne(mockClinicService.id)).rejects.toThrow(
+      NotFoundException,
+    );
 
     expect(mockPrisma.service.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ id: mockClinicService.id, deletedAt: null }) }),
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: mockClinicService.id,
+          deletedAt: null,
+        }),
+      }),
     );
   });
 
   it('should throw NotFoundException for non-existent service', async () => {
     mockPrisma.service.findFirst.mockResolvedValue(null);
 
-    await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(service.findOne('non-existent-id')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });
 
@@ -274,9 +330,16 @@ describe('ServicesService — update', () => {
   });
 
   it('should update service fields', async () => {
-    const updateDto = { descriptionEn: 'Updated description', price: 20000, duration: 45 };
+    const updateDto = {
+      descriptionEn: 'Updated description',
+      price: 20000,
+      duration: 45,
+    };
     mockPrisma.service.findFirst.mockResolvedValue(mockClinicService);
-    mockPrisma.service.update.mockResolvedValue({ ...mockClinicService, ...updateDto });
+    mockPrisma.service.update.mockResolvedValue({
+      ...mockClinicService,
+      ...updateDto,
+    });
 
     const result = await service.update(mockClinicService.id, updateDto);
 
@@ -302,7 +365,9 @@ describe('ServicesService — update', () => {
       category: mockCategory2,
     });
 
-    const result = await service.update(mockClinicService.id, { categoryId: mockCategory2.id });
+    const result = await service.update(mockClinicService.id, {
+      categoryId: mockCategory2.id,
+    });
 
     expect(result.categoryId).toBe(mockCategory2.id);
   });
@@ -310,7 +375,9 @@ describe('ServicesService — update', () => {
   it('should throw NotFoundException if service not found', async () => {
     mockPrisma.service.findFirst.mockResolvedValue(null);
 
-    await expect(service.update('non-existent-id', { price: 10000 })).rejects.toThrow(NotFoundException);
+    await expect(
+      service.update('non-existent-id', { price: 10000 }),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -326,7 +393,10 @@ describe('ServicesService — softDelete', () => {
 
   it('should set deletedAt timestamp', async () => {
     mockPrisma.service.findFirst.mockResolvedValue(mockClinicService);
-    mockPrisma.service.update.mockResolvedValue({ ...mockClinicService, deletedAt: new Date() });
+    mockPrisma.service.update.mockResolvedValue({
+      ...mockClinicService,
+      deletedAt: new Date(),
+    });
 
     await service.softDelete(mockClinicService.id);
 
@@ -341,7 +411,9 @@ describe('ServicesService — softDelete', () => {
   it('should throw NotFoundException if service not found or already deleted', async () => {
     mockPrisma.service.findFirst.mockResolvedValue(null);
 
-    await expect(service.softDelete('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(service.softDelete('non-existent-id')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });
 
@@ -379,7 +451,10 @@ describe('branch filtering', () => {
   });
 
   it('setBranches replaces all branch records for a service', async () => {
-    mockPrisma.service.findFirst.mockResolvedValue({ id: 'svc-uuid-1', deletedAt: null });
+    mockPrisma.service.findFirst.mockResolvedValue({
+      id: 'svc-uuid-1',
+      deletedAt: null,
+    });
     mockPrisma.$transaction.mockResolvedValue([]);
 
     await service.setBranches('svc-uuid-1', ['branch-uuid-1', 'branch-uuid-2']);
@@ -388,7 +463,10 @@ describe('branch filtering', () => {
   });
 
   it('clearBranches deletes all ServiceBranch records for a service', async () => {
-    mockPrisma.service.findFirst.mockResolvedValue({ id: 'svc-uuid-1', deletedAt: null });
+    mockPrisma.service.findFirst.mockResolvedValue({
+      id: 'svc-uuid-1',
+      deletedAt: null,
+    });
     mockPrisma.serviceBranch.deleteMany.mockResolvedValue({ count: 2 });
 
     await service.clearBranches('svc-uuid-1');
@@ -401,19 +479,23 @@ describe('branch filtering', () => {
   it('setBranches throws NotFoundException for non-existent service', async () => {
     mockPrisma.service.findFirst.mockResolvedValue(null);
 
-    await expect(service.setBranches('bad-id', ['branch-uuid-1'])).rejects.toThrow(NotFoundException);
+    await expect(
+      service.setBranches('bad-id', ['branch-uuid-1']),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('clearBranches throws NotFoundException for non-existent service', async () => {
     mockPrisma.service.findFirst.mockResolvedValue(null);
 
-    await expect(service.clearBranches('bad-id')).rejects.toThrow(NotFoundException);
+    await expect(service.clearBranches('bad-id')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });
 
 describe('ServicesService — export', () => {
   let service: ServicesService;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   let mockPrisma: any;
 
   beforeEach(async () => {

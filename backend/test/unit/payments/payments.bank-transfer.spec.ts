@@ -33,7 +33,10 @@ async function createModule(
       { provide: MoyasarPaymentService, useValue: createMockMoyasarService() },
       { provide: BankTransferService, useValue: mockBankTransfer },
       { provide: BookingStatusService, useValue: { confirm: jest.fn() } },
-      { provide: InvoiceCreatorService, useValue: { createInvoice: jest.fn() } },
+      {
+        provide: InvoiceCreatorService,
+        useValue: { createInvoice: jest.fn() },
+      },
     ],
   }).compile();
   return module.get<PaymentsService>(PaymentsService);
@@ -65,19 +68,29 @@ describe('PaymentsService — uploadReceipt', () => {
   it('should delegate to BankTransferService.uploadReceipt', async () => {
     mockBankTransfer.uploadReceipt.mockResolvedValue(mockReceipt);
 
-    const result = await service.uploadReceipt(mockPaymentId, { receiptUrl: 'https://example.com/receipt.jpg' });
+    const result = await service.uploadReceipt(mockPaymentId, {
+      receiptUrl: 'https://example.com/receipt.jpg',
+    });
 
-    expect(mockBankTransfer.uploadReceipt).toHaveBeenCalledWith(mockPaymentId, { receiptUrl: 'https://example.com/receipt.jpg' });
+    expect(mockBankTransfer.uploadReceipt).toHaveBeenCalledWith(mockPaymentId, {
+      receiptUrl: 'https://example.com/receipt.jpg',
+    });
     expect(result.id).toBe(mockReceiptId);
   });
 
   it.each([
-    ['BadRequestException', BadRequestException, 'Receipts can only be uploaded for bank transfer payments'],
+    [
+      'BadRequestException',
+      BadRequestException,
+      'Receipts can only be uploaded for bank transfer payments',
+    ],
     ['NotFoundException', NotFoundException, 'Payment not found'],
   ])('should propagate %s', async (_label, Exception, message) => {
     mockBankTransfer.uploadReceipt.mockRejectedValue(new Exception(message));
 
-    await expect(service.uploadReceipt(mockPaymentId, { receiptUrl: '' })).rejects.toThrow(Exception);
+    await expect(
+      service.uploadReceipt(mockPaymentId, { receiptUrl: '' }),
+    ).rejects.toThrow(Exception);
   });
 });
 
@@ -94,21 +107,42 @@ describe('PaymentsService — reviewReceipt (via verifyBankTransfer)', () => {
   it.each([
     ['approve', 'paid'],
     ['reject', 'pending'],
-  ])('should delegate %s to BankTransferService', async (action, expectedStatus) => {
-    mockBankTransfer.verifyBankTransfer.mockResolvedValue({ ...mockPayment, status: expectedStatus });
+  ])(
+    'should delegate %s to BankTransferService',
+    async (action, expectedStatus) => {
+      mockBankTransfer.verifyBankTransfer.mockResolvedValue({
+        ...mockPayment,
+        status: expectedStatus,
+      });
 
-    const dto = { action: action as 'approve' | 'reject', adminNotes: 'Notes' };
-    const result = await service.verifyBankTransfer(mockReceiptId, mockReviewerId, dto);
+      const dto = {
+        action: action as 'approve' | 'reject',
+        adminNotes: 'Notes',
+      };
+      const result = await service.verifyBankTransfer(
+        mockReceiptId,
+        mockReviewerId,
+        dto,
+      );
 
-    expect(mockBankTransfer.verifyBankTransfer).toHaveBeenCalledWith(mockReceiptId, mockReviewerId, dto);
-    expect(result!.status).toBe(expectedStatus);
-  });
+      expect(mockBankTransfer.verifyBankTransfer).toHaveBeenCalledWith(
+        mockReceiptId,
+        mockReviewerId,
+        dto,
+      );
+      expect(result!.status).toBe(expectedStatus);
+    },
+  );
 
   it('should propagate NotFoundException', async () => {
-    mockBankTransfer.verifyBankTransfer.mockRejectedValue(new NotFoundException('Receipt not found'));
+    mockBankTransfer.verifyBankTransfer.mockRejectedValue(
+      new NotFoundException('Receipt not found'),
+    );
 
     await expect(
-      service.verifyBankTransfer('non-existent-id', mockReviewerId, { action: 'approve' }),
+      service.verifyBankTransfer('non-existent-id', mockReviewerId, {
+        action: 'approve',
+      }),
     ).rejects.toThrow(NotFoundException);
   });
 });
@@ -125,14 +159,33 @@ describe('PaymentsService — uploadBankTransferReceipt', () => {
 
   it('should delegate to BankTransferService and return payment + receipt', async () => {
     const bankTransferResult = {
-      payment: { ...mockPayment, method: 'bank_transfer', amount: 20000, vatAmount: 3000, totalAmount: 23000 },
-      receipt: { ...mockReceipt, receiptUrl: 'http://localhost:9000/carekit/receipts/uuid.jpg' },
+      payment: {
+        ...mockPayment,
+        method: 'bank_transfer',
+        amount: 20000,
+        vatAmount: 3000,
+        totalAmount: 23000,
+      },
+      receipt: {
+        ...mockReceipt,
+        receiptUrl: 'http://localhost:9000/carekit/receipts/uuid.jpg',
+      },
     };
-    mockBankTransfer.uploadBankTransferReceipt.mockResolvedValue(bankTransferResult);
+    mockBankTransfer.uploadBankTransferReceipt.mockResolvedValue(
+      bankTransferResult,
+    );
 
-    const result = await service.uploadBankTransferReceipt(mockUserId, mockBookingId, mockFile);
+    const result = await service.uploadBankTransferReceipt(
+      mockUserId,
+      mockBookingId,
+      mockFile,
+    );
 
-    expect(mockBankTransfer.uploadBankTransferReceipt).toHaveBeenCalledWith(mockUserId, mockBookingId, mockFile);
+    expect(mockBankTransfer.uploadBankTransferReceipt).toHaveBeenCalledWith(
+      mockUserId,
+      mockBookingId,
+      mockFile,
+    );
     expect(result).toHaveProperty('payment');
     expect(result).toHaveProperty('receipt');
   });
@@ -141,9 +194,13 @@ describe('PaymentsService — uploadBankTransferReceipt', () => {
     ['NotFoundException', NotFoundException, 'Booking not found'],
     ['BadRequestException', BadRequestException, 'Payment already exists'],
   ])('should propagate %s', async (_label, Exception, message) => {
-    mockBankTransfer.uploadBankTransferReceipt.mockRejectedValue(new Exception(message));
+    mockBankTransfer.uploadBankTransferReceipt.mockRejectedValue(
+      new Exception(message),
+    );
 
-    await expect(service.uploadBankTransferReceipt(mockUserId, mockBookingId, mockFile)).rejects.toThrow(Exception);
+    await expect(
+      service.uploadBankTransferReceipt(mockUserId, mockBookingId, mockFile),
+    ).rejects.toThrow(Exception);
   });
 });
 
@@ -160,21 +217,42 @@ describe('PaymentsService — verifyBankTransfer', () => {
   it.each([
     ['approve', 'paid'],
     ['reject', 'pending'],
-  ])('should delegate %s to BankTransferService', async (action, expectedStatus) => {
-    mockBankTransfer.verifyBankTransfer.mockResolvedValue({ ...mockPayment, status: expectedStatus });
+  ])(
+    'should delegate %s to BankTransferService',
+    async (action, expectedStatus) => {
+      mockBankTransfer.verifyBankTransfer.mockResolvedValue({
+        ...mockPayment,
+        status: expectedStatus,
+      });
 
-    const dto = { action: action as 'approve' | 'reject', adminNotes: 'Notes' };
-    const result = await service.verifyBankTransfer(mockReceiptId, mockReviewerId, dto);
+      const dto = {
+        action: action as 'approve' | 'reject',
+        adminNotes: 'Notes',
+      };
+      const result = await service.verifyBankTransfer(
+        mockReceiptId,
+        mockReviewerId,
+        dto,
+      );
 
-    expect(mockBankTransfer.verifyBankTransfer).toHaveBeenCalledWith(mockReceiptId, mockReviewerId, dto);
-    expect(result!.status).toBe(expectedStatus);
-  });
+      expect(mockBankTransfer.verifyBankTransfer).toHaveBeenCalledWith(
+        mockReceiptId,
+        mockReviewerId,
+        dto,
+      );
+      expect(result!.status).toBe(expectedStatus);
+    },
+  );
 
   it('should propagate NotFoundException', async () => {
-    mockBankTransfer.verifyBankTransfer.mockRejectedValue(new NotFoundException('Receipt not found'));
+    mockBankTransfer.verifyBankTransfer.mockRejectedValue(
+      new NotFoundException('Receipt not found'),
+    );
 
     await expect(
-      service.verifyBankTransfer('non-existent-id', mockReviewerId, { action: 'approve' }),
+      service.verifyBankTransfer('non-existent-id', mockReviewerId, {
+        action: 'approve',
+      }),
     ).rejects.toThrow(NotFoundException);
   });
 });

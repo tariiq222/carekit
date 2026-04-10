@@ -126,7 +126,9 @@ describe('Users Module (e2e)', () => {
         roles: Array<string | { slug: string }>;
       }>;
       for (const user of items) {
-        const slugs = user.roles.map((r) => (typeof r === 'string' ? r : r.slug));
+        const slugs = user.roles.map((r) =>
+          typeof r === 'string' ? r : r.slug,
+        );
         expect(slugs).toContain('patient');
       }
     });
@@ -244,7 +246,9 @@ describe('Users Module (e2e)', () => {
           .set(getAuthHeaders(superAdmin.accessToken))
           .expect(200);
 
-        const ids = (afterRes.body.data.items as Array<{ id: string }>).map((u) => u.id);
+        const ids = (afterRes.body.data.items as Array<{ id: string }>).map(
+          (u) => u.id,
+        );
         expect(ids).not.toContain(userId);
       }
     });
@@ -371,7 +375,9 @@ describe('Users Module (e2e)', () => {
       expect(data.firstName).toBe('منيرة');
       expect(data.lastName).toBe('العصيمي');
       expect(data.isActive).toBe(true);
-      expect(data.roles.some((r: { slug: string }) => r.slug === 'receptionist')).toBe(true);
+      expect(
+        data.roles.some((r: { slug: string }) => r.slug === 'receptionist'),
+      ).toBe(true);
       expect(data.createdAt).toBeDefined();
       expect(data).not.toHaveProperty('password');
       expect(data).not.toHaveProperty('passwordHash');
@@ -393,7 +399,11 @@ describe('Users Module (e2e)', () => {
         .expect(201);
 
       expectSuccessResponse(res.body);
-      expect(res.body.data.roles.some((r: { slug: string }) => r.slug === 'accountant')).toBe(true);
+      expect(
+        res.body.data.roles.some(
+          (r: { slug: string }) => r.slug === 'accountant',
+        ),
+      ).toBe(true);
     });
 
     it('should hash password before storing', async () => {
@@ -463,7 +473,12 @@ describe('Users Module (e2e)', () => {
         .send({ email: 'partial@carekit-test.com' })
         .expect(400);
 
-      expectValidationError(res.body, ['password', 'firstName', 'lastName', 'roleSlug']);
+      expectValidationError(res.body, [
+        'password',
+        'firstName',
+        'lastName',
+        'roleSlug',
+      ]);
     });
 
     it('should reject invalid email format -> 400', async () => {
@@ -876,9 +891,9 @@ describe('Users Module (e2e)', () => {
         .expect(200);
 
       const roles = rolesRes.body.data.items || rolesRes.body.data;
-      const accountantRole = (roles as Array<{ slug: string; id: string }>).find(
-        (r) => r.slug === 'accountant',
-      );
+      const accountantRole = (
+        roles as Array<{ slug: string; id: string }>
+      ).find((r) => r.slug === 'accountant');
 
       if (accountantRole) {
         const res = await request(httpServer)
@@ -888,7 +903,10 @@ describe('Users Module (e2e)', () => {
           .expect(200);
 
         expect(res.body).toHaveProperty('success', true);
-        expect(res.body).toHaveProperty('message', 'Role assigned successfully');
+        expect(res.body).toHaveProperty(
+          'message',
+          'Role assigned successfully',
+        );
       }
     });
 
@@ -899,9 +917,9 @@ describe('Users Module (e2e)', () => {
         .expect(200);
 
       const roles = rolesRes.body.data.items || rolesRes.body.data;
-      const receptionistRole = (roles as Array<{ slug: string; id: string }>).find(
-        (r) => r.slug === 'receptionist',
-      );
+      const receptionistRole = (
+        roles as Array<{ slug: string; id: string }>
+      ).find((r) => r.slug === 'receptionist');
 
       if (receptionistRole) {
         // User already has receptionist role from creation
@@ -1006,7 +1024,9 @@ describe('Users Module (e2e)', () => {
         .set(getAuthHeaders(superAdmin.accessToken))
         .expect(200);
 
-      const userRoles = userRes.body.data.roles as Array<string | { id: string }>;
+      const userRoles = userRes.body.data.roles as Array<
+        string | { id: string }
+      >;
       const roleIds = userRoles.map((r) => (typeof r === 'string' ? r : r.id));
       expect(roleIds).not.toContain(accountantRoleId);
     });

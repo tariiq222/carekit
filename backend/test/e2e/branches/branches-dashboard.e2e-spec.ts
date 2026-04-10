@@ -41,12 +41,18 @@ describe('Branch-Scoped Dashboard Stats (e2e)', () => {
     const bRes = await request(httpServer)
       .post(`${API_PREFIX}/branches`)
       .set(getAuthHeaders(superAdmin.accessToken))
-      .send({ nameAr: 'فرع الإحصاءات', nameEn: 'Stats Test Branch', isActive: true })
+      .send({
+        nameAr: 'فرع الإحصاءات',
+        nameEn: 'Stats Test Branch',
+        isActive: true,
+      })
       .expect(201);
     statsBranchId = (bRes.body.data as { id: string }).id;
   });
 
-  afterAll(async () => { await closeTestApp(testApp.app); });
+  afterAll(async () => {
+    await closeTestApp(testApp.app);
+  });
 
   it('should return global stats with correct shape (no branchId)', async () => {
     const res = await request(httpServer)
@@ -75,7 +81,10 @@ describe('Branch-Scoped Dashboard Stats (e2e)', () => {
       .expect(200);
 
     expectSuccessResponse(res.body);
-    const data = res.body.data as { todayBookings: number; activePractitioners: number };
+    const data = res.body.data as {
+      todayBookings: number;
+      activePractitioners: number;
+    };
     expect(data.todayBookings).toBe(0);
     expect(data.activePractitioners).toBe(0);
   });

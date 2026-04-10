@@ -16,7 +16,10 @@ import { CreateMoyasarPaymentDto } from './dto/create-moyasar-payment.dto.js';
 import { MoyasarWebhookDto } from './dto/moyasar-webhook.dto.js';
 import { RefundDto } from './dto/refund.dto.js';
 import { paymentInclude, applyVat } from './payments.helpers.js';
-import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import {
+  parsePaginationParams,
+  buildPaginationMeta,
+} from '../../common/helpers/pagination.helper.js';
 import { buildDateRangeFilter } from '../../common/helpers/date-filter.helper.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
@@ -36,7 +39,10 @@ export class PaymentsService {
   // --- Core ---
 
   async findAll(query: PaymentFilterDto) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      query.page,
+      query.perPage,
+    );
 
     const where: Record<string, unknown> = { deletedAt: null };
 
@@ -91,31 +97,34 @@ export class PaymentsService {
 
     // Atomic check-then-create inside a serializable transaction to prevent
     // duplicate payments from concurrent requests on the same booking.
-    return this.prisma.$transaction(async (tx) => {
-      const existingPayment = await tx.payment.findUnique({
-        where: { bookingId: dto.bookingId },
-      });
-      if (existingPayment) {
-        throw new BadRequestException({
-          statusCode: 400,
-          message: 'Payment already exists for this booking',
-          error: 'DUPLICATE_PAYMENT',
+    return this.prisma.$transaction(
+      async (tx) => {
+        const existingPayment = await tx.payment.findUnique({
+          where: { bookingId: dto.bookingId },
         });
-      }
+        if (existingPayment) {
+          throw new BadRequestException({
+            statusCode: 400,
+            message: 'Payment already exists for this booking',
+            error: 'DUPLICATE_PAYMENT',
+          });
+        }
 
-      const { amount, vatAmount, totalAmount } = applyVat(dto.amount);
-      return tx.payment.create({
-        data: {
-          bookingId: dto.bookingId,
-          amount,
-          vatAmount,
-          totalAmount,
-          method: dto.method,
-          status: 'pending',
-        },
-        include: paymentInclude,
-      });
-    }, { isolationLevel: 'Serializable' });
+        const { amount, vatAmount, totalAmount } = applyVat(dto.amount);
+        return tx.payment.create({
+          data: {
+            bookingId: dto.bookingId,
+            amount,
+            vatAmount,
+            totalAmount,
+            method: dto.method,
+            status: 'pending',
+          },
+          include: paymentInclude,
+        });
+      },
+      { isolationLevel: 'Serializable' },
+    );
   }
 
   async updateStatus(id: string, dto: UpdatePaymentStatusDto) {
@@ -134,7 +143,8 @@ export class PaymentsService {
       if (!hasTransactionRef && !hasMoyasarId) {
         throw new BadRequestException({
           statusCode: 400,
-          message: 'Transaction reference or Moyasar payment ID is required when marking a payment as paid',
+          message:
+            'Transaction reference or Moyasar payment ID is required when marking a payment as paid',
           error: 'MISSING_TRANSACTION_REFERENCE',
         });
       }
@@ -168,8 +178,12 @@ export class PaymentsService {
       where: { id },
       data: {
         status: dto.status,
-        ...(dto.moyasarPaymentId !== undefined && { moyasarPaymentId: dto.moyasarPaymentId }),
-        ...(dto.transactionRef !== undefined && { transactionRef: dto.transactionRef }),
+        ...(dto.moyasarPaymentId !== undefined && {
+          moyasarPaymentId: dto.moyasarPaymentId,
+        }),
+        ...(dto.transactionRef !== undefined && {
+          transactionRef: dto.transactionRef,
+        }),
       },
       include: paymentInclude,
     });
@@ -214,26 +228,40 @@ export class PaymentsService {
 
   async getPaymentStats() {
     const baseWhere = { deletedAt: null } as const;
-    const [total, paid, pending, failed, refunded, revenueAgg] = await Promise.all([
-      this.prisma.payment.count({ where: baseWhere }),
-      this.prisma.payment.count({ where: { ...baseWhere, status: 'paid' } }),
-      this.prisma.payment.count({ where: { ...baseWhere, status: 'pending' } }),
-      this.prisma.payment.count({ where: { ...baseWhere, status: 'failed' } }),
-      this.prisma.payment.count({ where: { ...baseWhere, status: 'refunded' } }),
-      this.prisma.payment.aggregate({
-        _sum: { totalAmount: true },
-        where: { ...baseWhere, status: 'paid' },
-      }),
-    ]);
+    const [total, paid, pending, failed, refunded, revenueAgg] =
+      await Promise.all([
+        this.prisma.payment.count({ where: baseWhere }),
+        this.prisma.payment.count({ where: { ...baseWhere, status: 'paid' } }),
+        this.prisma.payment.count({
+          where: { ...baseWhere, status: 'pending' },
+        }),
+        this.prisma.payment.count({
+          where: { ...baseWhere, status: 'failed' },
+        }),
+        this.prisma.payment.count({
+          where: { ...baseWhere, status: 'refunded' },
+        }),
+        this.prisma.payment.aggregate({
+          _sum: { totalAmount: true },
+          where: { ...baseWhere, status: 'paid' },
+        }),
+      ]);
 
     return {
-      total, paid, pending, failed, refunded,
+      total,
+      paid,
+      pending,
+      failed,
+      refunded,
       totalRevenue: revenueAgg._sum.totalAmount ?? 0,
     };
   }
 
   async getMyPayments(userId: string, query: PaymentFilterDto) {
-    const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
+    const { page, perPage, skip } = parsePaginationParams(
+      query.page,
+      query.perPage,
+    );
 
     const where: Record<string, unknown> = {
       booking: { patientId: userId },
@@ -268,7 +296,11 @@ export class PaymentsService {
     return this.moyasarService.createMoyasarPayment(userId, dto);
   }
 
-  async handleMoyasarWebhook(signature: string, rawBody: Buffer, dto: MoyasarWebhookDto) {
+  async handleMoyasarWebhook(
+    signature: string,
+    rawBody: Buffer,
+    dto: MoyasarWebhookDto,
+  ) {
     return this.moyasarService.handleMoyasarWebhook(signature, rawBody, dto);
   }
 
@@ -282,8 +314,16 @@ export class PaymentsService {
     return this.bankTransferService.uploadReceipt(paymentId, dto);
   }
 
-  async uploadBankTransferReceipt(userId: string, bookingId: string, file: Express.Multer.File) {
-    return this.bankTransferService.uploadBankTransferReceipt(userId, bookingId, file);
+  async uploadBankTransferReceipt(
+    userId: string,
+    bookingId: string,
+    file: Express.Multer.File,
+  ) {
+    return this.bankTransferService.uploadBankTransferReceipt(
+      userId,
+      bookingId,
+      file,
+    );
   }
 
   async verifyBankTransfer(

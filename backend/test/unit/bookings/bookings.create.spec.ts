@@ -2,8 +2,15 @@
  * BookingsService — Create & Reschedule Tests
  * Covers: create booking, endTime calculation, Zoom link generation, double-booking, reschedule
  */
-import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
-import { createBookingsTestModule, BookingsTestContext } from './bookings.test-module.js';
+import {
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import {
+  createBookingsTestModule,
+  BookingsTestContext,
+} from './bookings.test-module.js';
 import {
   mockPractitioner,
   mockService,
@@ -36,8 +43,12 @@ describe('BookingsService — create', () => {
   function setupHappyPath() {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
     ctx.mockPrisma.service.findFirst.mockResolvedValue(mockService);
-    ctx.mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
-    ctx.mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+    ctx.mockPrisma.practitionerService.findUnique.mockResolvedValue(
+      mockPractitionerService,
+    );
+    ctx.mockPrisma.practitionerAvailability.findMany.mockResolvedValue(
+      mockAvailability,
+    );
     ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([]);
     ctx.mockPrisma.practitionerVacation.findFirst.mockResolvedValue(null);
     ctx.mockPrisma.booking.findMany.mockResolvedValue([]);
@@ -95,42 +106,50 @@ describe('BookingsService — create', () => {
     expect(ctx.mockZoom.createMeeting).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ['in_person' as const],
-    ['online' as const],
-  ])('should NOT generate Zoom links for %s at creation', async (type) => {
-    setupHappyPath();
-    ctx.mockPrisma.booking.create.mockResolvedValue({ ...mockBooking, type });
+  it.each([['in_person' as const], ['online' as const]])(
+    'should NOT generate Zoom links for %s at creation',
+    async (type) => {
+      setupHappyPath();
+      ctx.mockPrisma.booking.create.mockResolvedValue({ ...mockBooking, type });
 
-    await ctx.service.create(mockPatientId, { ...createDto, type });
+      await ctx.service.create(mockPatientId, { ...createDto, type });
 
-    expect(ctx.mockZoom.createMeeting).not.toHaveBeenCalled();
-  });
+      expect(ctx.mockZoom.createMeeting).not.toHaveBeenCalled();
+    },
+  );
 
   it('should throw ConflictException for double-booking', async () => {
     setupHappyPath();
     ctx.mockPrisma.booking.findMany.mockResolvedValue([mockBooking]); // conflict
 
-    await expect(ctx.service.create(mockPatientId, createDto)).rejects.toThrow(ConflictException);
+    await expect(ctx.service.create(mockPatientId, createDto)).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('should throw NotFoundException if practitioner not found', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(null);
 
-    await expect(ctx.service.create(mockPatientId, createDto)).rejects.toThrow(NotFoundException);
+    await expect(ctx.service.create(mockPatientId, createDto)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw NotFoundException if service not found', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
     ctx.mockPrisma.service.findFirst.mockResolvedValue(null);
 
-    await expect(ctx.service.create(mockPatientId, createDto)).rejects.toThrow(NotFoundException);
+    await expect(ctx.service.create(mockPatientId, createDto)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw BadRequestException for past dates', async () => {
     ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
     ctx.mockPrisma.service.findFirst.mockResolvedValue(mockService);
-    ctx.mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+    ctx.mockPrisma.practitionerService.findUnique.mockResolvedValue(
+      mockPractitionerService,
+    );
 
     await expect(
       ctx.service.create(mockPatientId, { ...createDto, date: '2024-01-01' }),
@@ -140,16 +159,25 @@ describe('BookingsService — create', () => {
   it('should persist branchId and load branch-specific settings when branchId is provided', async () => {
     setupHappyPath();
     ctx.mockPrisma.branch.findFirst.mockResolvedValue(mockBranch);
-    ctx.mockPrisma.practitionerBranch.findUnique.mockResolvedValue({ id: 'pb-1' });
-    ctx.mockPrisma.booking.create.mockResolvedValue({ ...mockBooking, branchId: mockBranch.id });
+    ctx.mockPrisma.practitionerBranch.findUnique.mockResolvedValue({
+      id: 'pb-1',
+    });
+    ctx.mockPrisma.booking.create.mockResolvedValue({
+      ...mockBooking,
+      branchId: mockBranch.id,
+    });
 
     const result = await ctx.service.create(mockPatientId, {
       ...createDto,
       branchId: mockBranch.id,
     });
 
-    expect(ctx.mockBookingSettingsService.getForBranch).toHaveBeenCalledWith(mockBranch.id);
-    expect(ctx.mockPrisma.practitionerAvailability.findMany).toHaveBeenCalledWith(
+    expect(ctx.mockBookingSettingsService.getForBranch).toHaveBeenCalledWith(
+      mockBranch.id,
+    );
+    expect(
+      ctx.mockPrisma.practitionerAvailability.findMany,
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           OR: [{ branchId: mockBranch.id }, { branchId: null }],
@@ -170,7 +198,10 @@ describe('BookingsService — create', () => {
     ctx.mockPrisma.practitionerBranch.findUnique.mockResolvedValue(null);
 
     await expect(
-      ctx.service.create(mockPatientId, { ...createDto, branchId: mockBranch.id }),
+      ctx.service.create(mockPatientId, {
+        ...createDto,
+        branchId: mockBranch.id,
+      }),
     ).rejects.toThrow(BadRequestException);
   });
 });
@@ -188,9 +219,13 @@ describe('BookingsService — reschedule', () => {
       ...mockBooking,
       practitionerServiceId: mockPractitionerService.id,
     });
-    ctx.mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPractitionerService);
+    ctx.mockPrisma.practitionerService.findUnique.mockResolvedValue(
+      mockPractitionerService,
+    );
     ctx.mockPrisma.service.findFirst.mockResolvedValue(mockService);
-    ctx.mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+    ctx.mockPrisma.practitionerAvailability.findMany.mockResolvedValue(
+      mockAvailability,
+    );
     ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([]);
     ctx.mockPrisma.practitionerVacation.findFirst.mockResolvedValue(null);
     ctx.mockPrisma.booking.findMany.mockResolvedValue(conflicts);
@@ -226,7 +261,9 @@ describe('BookingsService — reschedule', () => {
       endTime: '15:30',
     });
 
-    const result = await ctx.service.reschedule(mockBooking.id, { startTime: '15:00' });
+    const result = await ctx.service.reschedule(mockBooking.id, {
+      startTime: '15:00',
+    });
 
     expect(result.startTime).toBe('15:00');
     expect(result.endTime).toBe('15:30');
@@ -234,11 +271,19 @@ describe('BookingsService — reschedule', () => {
 
   it('should throw ConflictException if new time conflicts', async () => {
     setupReschedulePath([
-      { ...mockBooking, id: 'other-booking', startTime: '10:00', endTime: '10:30' },
+      {
+        ...mockBooking,
+        id: 'other-booking',
+        startTime: '10:00',
+        endTime: '10:30',
+      },
     ]);
 
     await expect(
-      ctx.service.reschedule(mockBooking.id, { date: '2026-06-01', startTime: '10:00' }),
+      ctx.service.reschedule(mockBooking.id, {
+        date: '2026-06-01',
+        startTime: '10:00',
+      }),
     ).rejects.toThrow(ConflictException);
   });
 

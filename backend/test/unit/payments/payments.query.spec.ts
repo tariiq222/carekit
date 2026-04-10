@@ -19,7 +19,9 @@ import {
   mockBookingId,
 } from './payments.fixtures.js';
 
-const mockBookingStatusService = { confirm: jest.fn().mockResolvedValue(undefined) };
+const mockBookingStatusService = {
+  confirm: jest.fn().mockResolvedValue(undefined),
+};
 
 async function createModule(mockPrisma: ReturnType<typeof createMockPrisma>) {
   const module: TestingModule = await Test.createTestingModule({
@@ -27,9 +29,15 @@ async function createModule(mockPrisma: ReturnType<typeof createMockPrisma>) {
       PaymentsService,
       { provide: PrismaService, useValue: mockPrisma },
       { provide: MoyasarPaymentService, useValue: createMockMoyasarService() },
-      { provide: BankTransferService, useValue: createMockBankTransferService() },
+      {
+        provide: BankTransferService,
+        useValue: createMockBankTransferService(),
+      },
       { provide: BookingStatusService, useValue: mockBookingStatusService },
-      { provide: InvoiceCreatorService, useValue: { createInvoice: jest.fn() } },
+      {
+        provide: InvoiceCreatorService,
+        useValue: { createInvoice: jest.fn() },
+      },
     ],
   }).compile();
   return module.get<PaymentsService>(PaymentsService);
@@ -74,7 +82,12 @@ describe('PaymentsService — findAll', () => {
     [{ method: 'bank_transfer' }, { method: 'bank_transfer' }],
     [
       { dateFrom: '2026-01-01', dateTo: '2026-03-31' },
-      { createdAt: expect.objectContaining({ gte: expect.any(Date), lte: expect.any(Date) }) },
+      {
+        createdAt: expect.objectContaining({
+          gte: expect.any(Date),
+          lte: expect.any(Date),
+        }),
+      },
     ],
   ])('should filter by %o', async (filter, expectedWhere) => {
     mockPrisma.payment.findMany.mockResolvedValue([]);
@@ -83,7 +96,9 @@ describe('PaymentsService — findAll', () => {
     await service.findAll(filter);
 
     expect(mockPrisma.payment.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining(expectedWhere) }),
+      expect.objectContaining({
+        where: expect.objectContaining(expectedWhere),
+      }),
     );
   });
 
@@ -94,7 +109,9 @@ describe('PaymentsService — findAll', () => {
     await service.findAll({});
 
     expect(mockPrisma.payment.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ include: expect.objectContaining({ booking: expect.anything() }) }),
+      expect.objectContaining({
+        include: expect.objectContaining({ booking: expect.anything() }),
+      }),
     );
   });
 });
@@ -120,7 +137,9 @@ describe('PaymentsService — findOne', () => {
   it('should throw NotFoundException for non-existent payment', async () => {
     mockPrisma.payment.findUnique.mockResolvedValue(null);
 
-    await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(service.findOne('non-existent-id')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should query with deletedAt: null filter', async () => {
@@ -129,7 +148,9 @@ describe('PaymentsService — findOne', () => {
     await service.findOne(mockPaymentId);
 
     expect(mockPrisma.payment.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: mockPaymentId, deletedAt: null } }),
+      expect.objectContaining({
+        where: { id: mockPaymentId, deletedAt: null },
+      }),
     );
   });
 });
@@ -158,7 +179,9 @@ describe('PaymentsService — findPaymentByBooking', () => {
   it('should throw NotFoundException if no payment exists for booking', async () => {
     mockPrisma.payment.findUnique.mockResolvedValue(null);
 
-    await expect(service.findPaymentByBooking('non-existent-id')).rejects.toThrow(NotFoundException);
+    await expect(
+      service.findPaymentByBooking('non-existent-id'),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -179,18 +202,32 @@ describe('PaymentsService — getPaymentStats', () => {
       .mockResolvedValueOnce(25)
       .mockResolvedValueOnce(10)
       .mockResolvedValueOnce(5);
-    mockPrisma.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: 900000 } });
+    mockPrisma.payment.aggregate.mockResolvedValue({
+      _sum: { totalAmount: 900000 },
+    });
 
     const result = await service.getPaymentStats();
 
-    expect(result).toMatchObject({ total: 100, paid: 60, pending: 25, failed: 10, refunded: 5, totalRevenue: 900000 });
+    expect(result).toMatchObject({
+      total: 100,
+      paid: 60,
+      pending: 25,
+      failed: 10,
+      refunded: 5,
+      totalRevenue: 900000,
+    });
   });
 
   it('should return 0 totalRevenue when no paid payments', async () => {
     mockPrisma.payment.count
-      .mockResolvedValueOnce(5).mockResolvedValueOnce(0)
-      .mockResolvedValueOnce(5).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
-    mockPrisma.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
+      .mockResolvedValueOnce(5)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(5)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0);
+    mockPrisma.payment.aggregate.mockResolvedValue({
+      _sum: { totalAmount: null },
+    });
 
     const result = await service.getPaymentStats();
 
@@ -199,14 +236,22 @@ describe('PaymentsService — getPaymentStats', () => {
 
   it('should aggregate totalRevenue only from paid payments', async () => {
     mockPrisma.payment.count
-      .mockResolvedValueOnce(10).mockResolvedValueOnce(8)
-      .mockResolvedValueOnce(2).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
-    mockPrisma.payment.aggregate.mockResolvedValue({ _sum: { totalAmount: 120000 } });
+      .mockResolvedValueOnce(10)
+      .mockResolvedValueOnce(8)
+      .mockResolvedValueOnce(2)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0);
+    mockPrisma.payment.aggregate.mockResolvedValue({
+      _sum: { totalAmount: 120000 },
+    });
 
     await service.getPaymentStats();
 
     expect(mockPrisma.payment.aggregate).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { status: 'paid', deletedAt: null }, _sum: { totalAmount: true } }),
+      expect.objectContaining({
+        where: { status: 'paid', deletedAt: null },
+        _sum: { totalAmount: true },
+      }),
     );
   });
 });

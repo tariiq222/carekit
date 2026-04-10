@@ -109,7 +109,11 @@ describe('ChatbotAiService', () => {
         .mockResolvedValue(mockFetchSuccess(aiResponse) as any);
 
       const config = makeConfig();
-      const result = await service.chatCompletion(mockMessages, mockTools, config);
+      const result = await service.chatCompletion(
+        mockMessages,
+        mockTools,
+        config,
+      );
 
       expect(result.content).toBe('Hello! How can I help?');
       expect(result.toolCalls).toEqual([]);
@@ -174,7 +178,10 @@ describe('ChatbotAiService', () => {
       const aiResponse = {
         id: 'chatcmpl-789',
         choices: [
-          { message: { role: 'assistant', content: 'Hi' }, finish_reason: 'stop' },
+          {
+            message: { role: 'assistant', content: 'Hi' },
+            finish_reason: 'stop',
+          },
         ],
         usage: { prompt_tokens: 5, completion_tokens: 2, total_tokens: 7 },
       };
@@ -233,7 +240,10 @@ describe('ChatbotAiService', () => {
       const aiResponse = {
         id: 'chatcmpl-1',
         choices: [
-          { message: { role: 'assistant', content: 'OK' }, finish_reason: 'stop' },
+          {
+            message: { role: 'assistant', content: 'OK' },
+            finish_reason: 'stop',
+          },
         ],
         usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
       };
@@ -253,7 +263,10 @@ describe('ChatbotAiService', () => {
       const aiResponse = {
         id: 'chatcmpl-null',
         choices: [
-          { message: { role: 'assistant', content: null }, finish_reason: 'stop' },
+          {
+            message: { role: 'assistant', content: null },
+            finish_reason: 'stop',
+          },
         ],
         usage: { prompt_tokens: 5, completion_tokens: 0, total_tokens: 5 },
       };
@@ -263,7 +276,11 @@ describe('ChatbotAiService', () => {
         .mockResolvedValue(mockFetchSuccess(aiResponse) as any);
 
       const config = makeConfig();
-      const result = await service.chatCompletion(mockMessages, mockTools, config);
+      const result = await service.chatCompletion(
+        mockMessages,
+        mockTools,
+        config,
+      );
 
       expect(result.content).toBeNull();
       expect(result.tokenCount).toBe(5);
@@ -273,7 +290,10 @@ describe('ChatbotAiService', () => {
       const aiResponse = {
         id: 'chatcmpl-nousage',
         choices: [
-          { message: { role: 'assistant', content: 'Hey' }, finish_reason: 'stop' },
+          {
+            message: { role: 'assistant', content: 'Hey' },
+            finish_reason: 'stop',
+          },
         ],
         // no usage field
       };
@@ -283,7 +303,11 @@ describe('ChatbotAiService', () => {
         .mockResolvedValue(mockFetchSuccess(aiResponse) as any);
 
       const config = makeConfig();
-      const result = await service.chatCompletion(mockMessages, mockTools, config);
+      const result = await service.chatCompletion(
+        mockMessages,
+        mockTools,
+        config,
+      );
 
       expect(result.tokenCount).toBe(0);
     });

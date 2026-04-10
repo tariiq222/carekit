@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareKit — المواعيد</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  
+  <style>
+    :root {
+      --primary: #354FD8;
+      --primary-light: #5B72E8;
+      --primary-dark: #2A3FA8;
+      --primary-ultra-light: rgba(53, 79, 216, 0.08);
+      --primary-glow: rgba(53, 79, 216, 0.25);
+      
+      --accent: #82CC17;
+      --accent-light: #9FE035;
+      --accent-ultra-light: rgba(130, 204, 23, 0.10);
+      
+      --background: #F2F4F8;
+      --foreground: #1B2026;
+      --muted: #667085;
+      --muted-light: #98A2B3;
+      
+      --surface: rgba(255, 255, 255, 0.72);
+      --surface-solid: #FFFFFF;
+      --surface-muted: #F7F9FC;
+      
+      --border: rgba(0, 0, 0, 0.06);
+      --border-strong: rgba(0, 0, 0, 0.10);
+      
+      --success: #16A34A;
+      --success-light: rgba(22, 163, 74, 0.10);
+      --warning: #D97706;
+      --warning-light: rgba(217, 119, 6, 0.10);
+      --error: #DC2626;
+      --error-light: rgba(220, 38, 38, 0.10);
+      --info: #2563EB;
+      --info-light: rgba(37, 99, 235, 0.10);
+      
+      --font-family: 'IBM Plex Sans Arabic', sans-serif;
+      --shadow-card: 0 1px 3px rgba(16, 24, 40, 0.04);
+      --shadow-card-hover: 0 8px 24px rgba(16, 24, 40, 0.08);
+      --shadow-primary: 0 4px 16px var(--primary-glow);
+      
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      
+      --glass-blur: 24px;
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      
+      --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-family: var(--font-family); font-size: 16px; -webkit-font-smoothing: antialiased; }
+    body { min-height: 100vh; background: var(--background); color: var(--foreground); }
+
+    /* ══════════════════════════════════════════════════════════════
+       LAYOUT
+    ══════════════════════════════════════════════════════════════ */
+    .app-layout { display: flex; min-height: 100vh; }
+    
+    /* ══════════════════════════════════════════════════════════════
+       TOP HEADER
+    ══════════════════════════════════════════════════════════════ */
+    .top-header {
+      position: fixed; top: 0; inset-inline: 0; height: 64px;
+      background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem; z-index: 200;
+    }
+    .header-brand { display: flex; align-items: center; gap: 0.75rem; }
+    .header-logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+      box-shadow: var(--shadow-primary);
+    }
+    .header-logo svg { width: 20px; height: 20px; fill: white; }
+    .header-title { font-size: 1rem; font-weight: 700; color: var(--foreground); }
+    .header-subtitle { font-size: 0.6875rem; color: var(--muted); }
+    .header-actions { display: flex; align-items: center; gap: 0.5rem; }
+    .header-btn {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      border: none; background: transparent; color: var(--muted);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .header-btn:hover { background: var(--surface-muted); color: var(--primary); }
+    .header-btn i { width: 18px; height: 18px; }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      width: 240px; height: 100vh; position: fixed; inset-inline-start: 0; top: 64px;
+      background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border-inline-end: 1px solid var(--border); padding: 1rem 1.25rem;
+      display: flex; flex-direction: column; z-index: 100;
+    }
+
+    .main-content { flex: 1; margin-inline-start: 240px; padding: 1.5rem; padding-top: calc(64px + 1.5rem); min-height: 100vh; }
+
+    .sidebar-header { display: flex; align-items: center; gap: 0.625rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+    .sidebar-logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-primary); }
+    .sidebar-logo svg { width: 18px; height: 18px; fill: white; }
+    .sidebar-brand { flex: 1; }
+    .sidebar-brand-name { font-size: 0.9375rem; font-weight: 700; }
+    .sidebar-brand-role { font-size: 0.6875rem; color: var(--muted); }
+
+    .nav-section { margin-bottom: 1rem; }
+    .nav-section-title { font-size: 0.625rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.375rem; padding-inline-start: 0.625rem; }
+    
+    .nav-item {
+      display: flex; align-items: center; gap: 0.625rem; padding: 0.5rem 0.625rem; border-radius: var(--radius-sm);
+      color: var(--muted); text-decoration: none; font-size: 0.9375rem; font-weight: 500;
+      transition: all 0.2s var(--ease-out-quart); cursor: pointer;
+    }
+    .nav-item:hover { background: var(--primary-ultra-light); color: var(--primary); }
+    .nav-item.active { background: var(--primary-ultra-light); color: var(--primary); font-weight: 600; }
+    .nav-item i { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .sidebar-footer { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .user-profile { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: var(--radius-md); cursor: pointer; }
+    .user-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem; }
+    .user-info { flex: 1; }
+    .user-name { font-size: 0.875rem; font-weight: 600; }
+    .user-email { font-size: 0.75rem; color: var(--muted); }
+
+    /* ══════════════════════════════════════════════════════════════
+       PAGE STRUCTURE
+    ══════════════════════════════════════════════════════════════ */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+    .page-header-start { flex: 1; }
+    .page-title { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    .page-subtitle { font-size: 0.8125rem; color: var(--muted); margin-top: 0.125rem; }
+    .page-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+      padding: 0.5rem 0.875rem; border-radius: var(--radius-md);
+      font-family: var(--font-family); font-size: 0.8125rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s var(--ease-out-quart); border: none; text-decoration: none;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; box-shadow: var(--shadow-primary); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--primary-glow); }
+    .btn-outline { background: transparent; border: 1px solid var(--border-strong); color: var(--foreground); }
+    .btn-outline:hover { background: var(--surface-muted); border-color: var(--primary); color: var(--primary); }
+    .btn i { width: 16px; height: 16px; }
+
+    /* ══════════════════════════════════════════════════════════════
+       CALENDAR HEADER
+    ══════════════════════════════════════════════════════════════ */
+    .calendar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .calendar-nav {
+      display: flex; align-items: center; gap: 0.625rem;
+    }
+
+    .nav-btn {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      border: 1px solid var(--border-strong); background: var(--surface-solid);
+      color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { background: var(--surface-muted); border-color: var(--primary); color: var(--primary); }
+    .nav-btn i { width: 16px; height: 16px; }
+
+    .current-month {
+      font-size: 1rem; font-weight: 600; color: var(--foreground);
+    }
+
+    .view-tabs {
+      display: flex; gap: 0.25rem; background: var(--surface-muted);
+      padding: 0.25rem; border-radius: var(--radius-md);
+    }
+
+    .view-tab {
+      padding: 0.375rem 0.75rem; border-radius: var(--radius-sm);
+      font-size: 0.75rem; font-weight: 500;
+      background: transparent; border: none;
+      color: var(--muted); cursor: pointer; transition: all 0.2s;
+    }
+    .view-tab:hover { color: var(--foreground); }
+    .view-tab.active { background: var(--surface-solid); color: var(--primary); box-shadow: var(--shadow-card); }
+
+    /* ══════════════════════════════════════════════════════════════
+       CALENDAR GRID
+    ══════════════════════════════════════════════════════════════ */
+    .calendar-grid {
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .calendar-weekdays {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .weekday {
+      padding: 0.625rem; text-align: center;
+      font-size: 0.6875rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .calendar-days {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+    }
+
+    .calendar-day {
+      min-height: 90px; padding: 0.375rem;
+      border-bottom: 1px solid var(--border);
+      border-inline-end: 1px solid var(--border);
+    }
+    .calendar-day:nth-child(7n) { border-inline-end: none; }
+    .calendar-day:nth-last-child(-n+7) { border-bottom: none; }
+
+    .day-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .day-number {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8125rem; font-weight: 500;
+      color: var(--muted);
+    }
+    .day-number.today { background: var(--primary); color: white; font-weight: 600; }
+    .day-number.other-month { color: var(--muted-light); }
+
+    .day-appointments { display: flex; flex-direction: column; gap: 0.25rem; }
+
+    .appointment-chip {
+      padding: 0.25rem 0.5rem; border-radius: var(--radius-sm);
+      font-size: 0.6875rem; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .appointment-chip:hover { filter: brightness(0.95); }
+
+    .appt-confirmed { background: var(--success-light); color: var(--success); }
+    .appt-pending { background: var(--warning-light); color: var(--warning); }
+    .appt-in-progress { background: var(--primary-ultra-light); color: var(--primary); }
+
+    .more-appointments {
+      font-size: 0.6875rem; color: var(--muted);
+      padding: 0.125rem 0.25rem; cursor: pointer;
+    }
+    .more-appointments:hover { color: var(--primary); }
+
+    /* ══════════════════════════════════════════════════════════════
+       SCHEDULE SIDEBAR
+    ══════════════════════════════════════════════════════════════ */
+    .content-with-sidebar {
+      display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem;
+    }
+
+    .schedule-sidebar {
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      height: fit-content;
+      position: sticky;
+      top: 2rem;
+    }
+
+    .sidebar-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-section-title {
+      font-size: 0.875rem; font-weight: 600; color: var(--foreground);
+    }
+
+    .schedule-item {
+      display: flex; gap: 0.75rem; padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .schedule-item:last-child { border-bottom: none; }
+    .schedule-item:hover { background: var(--surface-muted); }
+
+    .schedule-time {
+      width: 50px; flex-shrink: 0;
+      text-align: center;
+    }
+    .schedule-time-value { font-size: 0.8125rem; font-weight: 600; color: var(--primary); }
+    .schedule-time-period { font-size: 0.625rem; color: var(--muted); text-transform: uppercase; }
+
+    .schedule-divider {
+      width: 2px; background: var(--border);
+      border-radius: 1px; flex-shrink: 0;
+    }
+
+    .schedule-details { flex: 1; }
+    .schedule-patient { font-size: 0.875rem; font-weight: 500; color: var(--foreground); }
+    .schedule-service { font-size: 0.75rem; color: var(--muted); margin-top: 0.125rem; }
+    .schedule-status {
+      display: inline-block; margin-top: 0.375rem;
+      padding: 0.125rem 0.5rem; border-radius: 100px;
+      font-size: 0.625rem; font-weight: 600;
+    }
+    .status-confirmed { background: var(--success-light); color: var(--success); }
+    .status-pending { background: var(--warning-light); color: var(--warning); }
+
+    /* ══════════════════════════════════════════════════════════════
+       PRACTITIONERS ROW
+    ══════════════════════════════════════════════════════════════ */
+    .practitioners-row {
+      display: flex; gap: 0.75rem; margin-bottom: 1.5rem;
+    }
+
+    .practitioner-chip {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 1rem; background: var(--surface-solid);
+      border: 1px solid var(--border); border-radius: 100px;
+      font-size: 0.8125rem; font-weight: 500; color: var(--muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .practitioner-chip:hover { background: var(--surface-muted); border-color: var(--border-strong); color: var(--foreground); }
+    .practitioner-chip.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+    .practitioner-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 0.625rem; font-weight: 600;
+    }
+    .practitioner-chip.active .practitioner-avatar { background: rgba(255,255,255,0.2); }
+
+    /* ══════════════════════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════════════════════ */
+    @media (max-width: 1200px) {
+      .content-with-sidebar { grid-template-columns: 1fr; }
+      .schedule-sidebar { position: static; }
+    }
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-inline-start: 0; }
+    }
+    @media (max-width: 768px) {
+      .calendar-day { min-height: 70px; }
+      .day-appointments { display: none; }
+      .more-appointments { display: block; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- ═══════════════════════════════════════════════════════════
+         TOP HEADER
+    ═══════════════════════════════════════════════════════════ -->
+    <header class="top-header">
+      <div class="header-brand">
+        <div class="header-logo">
+          <svg viewBox="0 0 28 28"><path d="M22 18H8a5 5 0 1 1 .93-9.9 7 7 0 0 1 13.56 2.26A4.5 4.5 0 1 1 22 18z"/></svg>
+        </div>
+        <div>
+          <div class="header-title">CareKit</div>
+          <div class="header-subtitle">منصة إدارة العيادات</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn"><i data-lucide="bell"></i></button>
+        <button class="header-btn"><i data-lucide="settings"></i></button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg viewBox="0 0 28 28"><path d="M22 18H8a5 5 0 1 1 .93-9.9 7 7 0 0 1 13.56 2.26A4.5 4.5 0 1 1 22 18z"/></svg>
+        </div>
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-name">CareKit</div>
+          <div class="sidebar-brand-role">لوحة التحكم</div>
+        </div>
+      </div>
+
+      <nav class="nav-section">
+        <div class="nav-section-title">الرئيسية</div>
+        <a href="#" class="nav-item"><i data-lucide="layout-dashboard"></i>لوحة التحكم</a>
+        <a href="#" class="nav-item"><i data-lucide="calendar"></i>الحجوزات</a>
+        <a href="#" class="nav-item"><i data-lucide="users"></i>المرضى</a>
+        <a href="#" class="nav-item"><i data-lucide="user-cog"></i>الممارسون</a>
+      </nav>
+
+      <nav class="nav-section">
+        <div class="nav-section-title">الإدارة</div>
+        <a href="#" class="nav-item"><i data-lucide="sparkles"></i>الخدمات</a>
+        <a href="#" class="nav-item active"><i data-lucide="calendar-clock"></i>المواعيد</a>
+        <a href="#" class="nav-item"><i data-lucide="building-2"></i>الفروع</a>
+        <a href="#" class="nav-item"><i data-lucide="receipt"></i>الفواتير</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">أح</div>
+          <div class="user-info">
+            <div class="user-name">أحمد محمد</div>
+            <div class="user-email">admin@clinic.com</div>
+          </div>
+          <i data-lucide="log-out" style="width:18px;height:18px;color:var(--muted)"></i>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="page-header-start">
+          <h1 class="page-title">المواعيد</h1>
+          <p class="page-subtitle">عرض وتخطيط مواعيد العيادة</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline">
+            <i data-lucide="download"></i>
+            تصدير
+          </button>
+          <button class="btn btn-primary">
+            <i data-lucide="plus"></i>
+            موعد جديد
+          </button>
+        </div>
+      </header>
+
+      <!-- Practitioners Filter -->
+      <div class="practitioners-row">
+        <div class="practitioner-chip active">
+          <div class="practitioner-avatar">أح</div>
+          د. أحمد
+        </div>
+        <div class="practitioner-chip">
+          <div class="practitioner-avatar">سع</div>
+          د. سارة
+        </div>
+        <div class="practitioner-chip">
+          <div class="practitioner-avatar">خل</div>
+          د. خالد
+        </div>
+        <div class="practitioner-chip">
+          <div class="practitioner-avatar">ن</div>
+          د. نورة
+        </div>
+      </div>
+
+      <div class="content-with-sidebar">
+        <!-- Calendar -->
+        <div>
+          <!-- Calendar Header -->
+          <div class="calendar-header">
+            <div class="calendar-nav">
+              <button class="nav-btn"><i data-lucide="chevron-right"></i></button>
+              <span class="current-month">أبريل 2026</span>
+              <button class="nav-btn"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <div class="view-tabs">
+              <button class="view-tab active">اليوم</button>
+              <button class="view-tab">الأسبوع</button>
+              <button class="view-tab">الشهر</button>
+            </div>
+          </div>
+
+          <!-- Calendar Grid -->
+          <div class="calendar-grid">
+            <div class="calendar-weekdays">
+              <div class="weekday">أحد</div>
+              <div class="weekday">إثنين</div>
+              <div class="weekday">ثلاثاء</div>
+              <div class="weekday">أربعاء</div>
+              <div class="weekday">خميس</div>
+              <div class="weekday">جمعة</div>
+              <div class="weekday">سبت</div>
+            </div>
+            <div class="calendar-days">
+              <!-- Previous Month -->
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">30</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">31</span></div>
+              </div>
+              <!-- Current Month -->
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number">1</span></div>
+                <div class="day-appointments">
+                  <div class="appointment-chip appt-confirmed">09:00 - محمد</div>
+                  <div class="appointment-chip appt-pending">11:30 - فاطمة</div>
+                </div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number">2</span></div>
+                <div class="day-appointments">
+                  <div class="appointment-chip appt-confirmed">10:00 - عبدالله</div>
+                  <div class="appointment-chip appt-in-progress">14:00 - نورة</div>
+                </div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number">3</span></div>
+                <div class="day-appointments">
+                  <div class="appointment-chip appt-confirmed">09:30 - خالد</div>
+                </div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number">4</span></div>
+                <div class="day-appointments"></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number">5</span></div>
+                <div class="day-appointments"></div>
+              </div>
+              <!-- Next -->
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">6</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">7</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">8</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">9</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">10</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">11</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">12</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">13</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">14</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">15</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">16</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">17</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">18</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">19</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">20</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">21</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">22</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">23</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">24</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">25</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">26</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">27</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">28</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">29</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">30</span></div>
+              </div>
+              <div class="calendar-day">
+                <div class="day-header"><span class="day-number other-month">31</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule Sidebar -->
+        <aside class="schedule-sidebar">
+          <div class="sidebar-section-header">
+            <h3 class="sidebar-section-title">مواعيد اليوم</h3>
+            <span style="font-size:0.75rem;color:var(--muted)">10 أبريل</span>
+          </div>
+          
+          <div class="schedule-item">
+            <div class="schedule-time">
+              <div class="schedule-time-value">09:00</div>
+              <div class="schedule-time-period">صباحاً</div>
+            </div>
+            <div class="schedule-divider"></div>
+            <div class="schedule-details">
+              <div class="schedule-patient">محمد العمري</div>
+              <div class="schedule-service">فحص أسنان</div>
+              <span class="schedule-status status-confirmed">مؤكد</span>
+            </div>
+          </div>
+
+          <div class="schedule-item">
+            <div class="schedule-time">
+              <div class="schedule-time-value">10:30</div>
+              <div class="schedule-time-period">صباحاً</div>
+            </div>
+            <div class="schedule-divider"></div>
+            <div class="schedule-details">
+              <div class="schedule-patient">فاطمة الزهراء</div>
+              <div class="schedule-service">علاج عصب</div>
+              <span class="schedule-status status-pending">في الانتظار</span>
+            </div>
+          </div>
+
+          <div class="schedule-item">
+            <div class="schedule-time">
+              <div class="schedule-time-value">11:45</div>
+              <div class="schedule-time-period">صباحاً</div>
+            </div>
+            <div class="schedule-divider"></div>
+            <div class="schedule-details">
+              <div class="schedule-patient">عبدالله أحمد</div>
+              <div class="schedule-service">استشارة تقويم</div>
+              <span class="schedule-status status-confirmed">مؤكد</span>
+            </div>
+          </div>
+
+          <div class="schedule-item">
+            <div class="schedule-time">
+              <div class="schedule-time-value">14:00</div>
+              <div class="schedule-time-period">مساءً</div>
+            </div>
+            <div class="schedule-divider"></div>
+            <div class="schedule-details">
+              <div class="schedule-patient">نورة السعيد</div>
+              <div class="schedule-service">حشوة تجميلية</div>
+              <span class="schedule-status status-confirmed">مؤكد</span>
+            </div>
+          </div>
+
+          <div class="schedule-item">
+            <div class="schedule-time">
+              <div class="schedule-time-value">15:30</div>
+              <div class="schedule-time-period">مساءً</div>
+            </div>
+            <div class="schedule-divider"></div>
+            <div class="schedule-details">
+              <div class="schedule-patient">خالد العلي</div>
+              <div class="schedule-service">فحص دوري</div>
+              <span class="schedule-status status-pending">في الانتظار</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script> lucide.createIcons(); </script>
+</body>
+</html>

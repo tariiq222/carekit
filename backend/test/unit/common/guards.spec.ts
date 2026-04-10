@@ -7,7 +7,11 @@
  * - MetricsAuthGuard (src/common/metrics/metrics-auth.guard.ts)
  */
 
-import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from '../../../src/common/decorators/check-permissions.decorator.js';
 import { OTP_THROTTLE_META } from '../../../src/common/decorators/otp-throttle.decorator.js';
@@ -20,14 +24,16 @@ import { ConfigService } from '@nestjs/config';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function buildContext(overrides: {
-  user?: Record<string, unknown> | null;
-  email?: string;
-  authorization?: string;
-  handler?: () => void;
-  otpThrottleMeta?: unknown;
-  permissionsMeta?: unknown;
-} = {}): ExecutionContext {
+function buildContext(
+  overrides: {
+    user?: Record<string, unknown> | null;
+    email?: string;
+    authorization?: string;
+    handler?: () => void;
+    otpThrottleMeta?: unknown;
+    permissionsMeta?: unknown;
+  } = {},
+): ExecutionContext {
   return {
     getHandler: () => overrides.handler ?? (() => {}),
     getClass: () => ({}),
@@ -74,18 +80,18 @@ describe('PermissionsGuard', () => {
   });
 
   it('should throw ForbiddenException if user is not logged in', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([
-      { module: 'bookings', action: 'create' },
-    ]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([{ module: 'bookings', action: 'create' }]);
     const context = buildContext({ user: null });
 
     expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
   });
 
   it('should throw ForbiddenException if request has no user', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([
-      { module: 'bookings', action: 'create' },
-    ]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([{ module: 'bookings', action: 'create' }]);
     const context = buildContext();
 
     expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
@@ -97,9 +103,9 @@ describe('PermissionsGuard', () => {
   });
 
   it('should throw ForbiddenException if user lacks the required permission', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([
-      { module: 'bookings', action: 'create' },
-    ]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([{ module: 'bookings', action: 'create' }]);
     const context = buildContext({
       user: {
         id: 'user-1',
@@ -112,14 +118,16 @@ describe('PermissionsGuard', () => {
     try {
       guard.canActivate(context);
     } catch (err) {
-      expect((err as ForbiddenException).message).toBe('You do not have permission to perform this action');
+      expect((err as ForbiddenException).message).toBe(
+        'You do not have permission to perform this action',
+      );
     }
   });
 
   it('should allow access if user has the required permission', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([
-      { module: 'bookings', action: 'create' },
-    ]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([{ module: 'bookings', action: 'create' }]);
     const context = buildContext({
       user: {
         id: 'user-1',
@@ -164,9 +172,9 @@ describe('PermissionsGuard', () => {
   });
 
   it('should handle user with undefined permissions array', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([
-      { module: 'bookings', action: 'create' },
-    ]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([{ module: 'bookings', action: 'create' }]);
     const context = buildContext({
       user: { id: 'user-1', email: 'test@test.com', permissions: undefined },
     });
@@ -294,7 +302,9 @@ describe('MetricsAuthGuard', () => {
     try {
       guard.canActivate(context);
     } catch (err) {
-      expect((err as UnauthorizedException).message).toContain('not configured');
+      expect((err as UnauthorizedException).message).toContain(
+        'not configured',
+      );
     }
   });
 

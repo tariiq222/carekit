@@ -35,22 +35,33 @@ describe('Branch Practitioner Assignment (e2e)', () => {
     testApp = await createTestApp();
     httpServer = testApp.httpServer;
 
-    superAdmin = await loginTestUser(httpServer, TEST_USERS.super_admin.email, TEST_USERS.super_admin.password);
+    superAdmin = await loginTestUser(
+      httpServer,
+      TEST_USERS.super_admin.email,
+      TEST_USERS.super_admin.password,
+    );
 
     const bRes = await request(httpServer)
-      .post(BRANCHES_URL).set(getAuthHeaders(superAdmin.accessToken))
+      .post(BRANCHES_URL)
+      .set(getAuthHeaders(superAdmin.accessToken))
       .send({ nameAr: 'فرع دورة الاختبار', nameEn: 'Test Cycle Branch' })
       .expect(201);
     cycleBranchId = (bRes.body.data as { id: string }).id;
 
     const pRes = await request(httpServer)
-      .get(PRACTITIONERS_URL).set(getAuthHeaders(superAdmin.accessToken)).expect(200);
-    const practitioners = (pRes.body.data?.items ?? pRes.body.data) as Array<{ id: string }>;
+      .get(PRACTITIONERS_URL)
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .expect(200);
+    const practitioners = (pRes.body.data?.items ?? pRes.body.data) as Array<{
+      id: string;
+    }>;
     expect(practitioners.length).toBeGreaterThan(0);
     practitionerId = practitioners[0].id;
   });
 
-  afterAll(async () => { await closeTestApp(testApp.app); });
+  afterAll(async () => {
+    await closeTestApp(testApp.app);
+  });
 
   it('should assign practitioners and reflect in GET response', async () => {
     await request(httpServer)
@@ -61,9 +72,12 @@ describe('Branch Practitioner Assignment (e2e)', () => {
 
     const res = await request(httpServer)
       .get(`${BRANCHES_URL}/${cycleBranchId}/practitioners`)
-      .set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .expect(200);
     expectSuccessResponse(res.body);
-    const items = (res.body.data?.items ?? res.body.data) as Array<{ practitioner: { id: string } }>;
+    const items = (res.body.data?.items ?? res.body.data) as Array<{
+      practitioner: { id: string };
+    }>;
     expect(items.some((p) => p.practitioner.id === practitionerId)).toBe(true);
   });
 
@@ -76,27 +90,39 @@ describe('Branch Practitioner Assignment (e2e)', () => {
 
     const res = await request(httpServer)
       .get(`${BRANCHES_URL}/${cycleBranchId}/practitioners`)
-      .set(getAuthHeaders(superAdmin.accessToken)).expect(200);
-    const items = (res.body.data?.items ?? res.body.data) as Array<{ practitioner: { id: string } }>;
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .expect(200);
+    const items = (res.body.data?.items ?? res.body.data) as Array<{
+      practitioner: { id: string };
+    }>;
     const matches = items.filter((p) => p.practitioner.id === practitionerId);
     expect(matches).toHaveLength(1);
   });
 
   it('should remove practitioner from branch', async () => {
     await request(httpServer)
-      .delete(`${BRANCHES_URL}/${cycleBranchId}/practitioners/${practitionerId}`)
-      .set(getAuthHeaders(superAdmin.accessToken)).expect(200);
+      .delete(
+        `${BRANCHES_URL}/${cycleBranchId}/practitioners/${practitionerId}`,
+      )
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .expect(200);
 
     const res = await request(httpServer)
       .get(`${BRANCHES_URL}/${cycleBranchId}/practitioners`)
-      .set(getAuthHeaders(superAdmin.accessToken)).expect(200);
-    const items = (res.body.data?.items ?? res.body.data) as Array<{ practitioner: { id: string } }>;
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .expect(200);
+    const items = (res.body.data?.items ?? res.body.data) as Array<{
+      practitioner: { id: string };
+    }>;
     expect(items.every((p) => p.practitioner.id !== practitionerId)).toBe(true);
   });
 
   it('should return 404 when removing practitioner not assigned to branch', async () => {
     await request(httpServer)
-      .delete(`${BRANCHES_URL}/${cycleBranchId}/practitioners/${practitionerId}`)
-      .set(getAuthHeaders(superAdmin.accessToken)).expect(404);
+      .delete(
+        `${BRANCHES_URL}/${cycleBranchId}/practitioners/${practitionerId}`,
+      )
+      .set(getAuthHeaders(superAdmin.accessToken))
+      .expect(404);
   });
 });

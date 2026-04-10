@@ -2,10 +2,7 @@
  * PractitionerServiceService Unit Tests
  */
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { PractitionerServiceService } from '../../../src/modules/practitioners/practitioner-service.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
@@ -13,8 +10,18 @@ const practitionerId = 'pract-uuid-1';
 const serviceId = 'svc-uuid-1';
 const psId = 'ps-uuid-1';
 
-const mockPractitioner = { id: practitionerId, userId: 'user-uuid-1', deletedAt: null };
-const mockService = { id: serviceId, deletedAt: null, nameEn: 'Consultation', price: 20000, duration: 30 };
+const mockPractitioner = {
+  id: practitionerId,
+  userId: 'user-uuid-1',
+  deletedAt: null,
+};
+const mockService = {
+  id: serviceId,
+  deletedAt: null,
+  nameEn: 'Consultation',
+  price: 20000,
+  duration: 30,
+};
 const mockPs = {
   id: psId,
   practitionerId,
@@ -26,7 +33,6 @@ const mockPs = {
   bufferMinutes: 0,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   practitioner: { findFirst: jest.fn() },
   service: { findFirst: jest.fn() },
@@ -58,7 +64,9 @@ describe('PractitionerServiceService', () => {
       ],
     }).compile();
 
-    service = module.get<PractitionerServiceService>(PractitionerServiceService);
+    service = module.get<PractitionerServiceService>(
+      PractitionerServiceService,
+    );
     jest.clearAllMocks();
     mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-uuid-1' });
   });
@@ -69,11 +77,13 @@ describe('PractitionerServiceService', () => {
       mockPrisma.service.findFirst.mockResolvedValue(mockService);
       mockPrisma.practitionerService.findUnique.mockResolvedValue(null);
       mockPrisma.practitionerService.create.mockResolvedValue(mockPs);
-      mockPrisma.practitionerService.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
-        ...mockPs,
-        service: mockService,
-        serviceTypes: [],
-      });
+      mockPrisma.practitionerService.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          ...mockPs,
+          service: mockService,
+          serviceTypes: [],
+        });
 
       const result = await service.assignService(practitionerId, { serviceId });
 
@@ -124,7 +134,9 @@ describe('PractitionerServiceService', () => {
 
     it('should throw NotFoundException when practitioner not found', async () => {
       mockPrisma.practitioner.findFirst.mockResolvedValue(null);
-      await expect(service.listServices('non-existent')).rejects.toThrow(NotFoundException);
+      await expect(service.listServices('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -132,14 +144,18 @@ describe('PractitionerServiceService', () => {
     it('should update practitioner service', async () => {
       const updatedPs = { ...mockPs, isActive: false };
       mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerService.findUnique.mockResolvedValueOnce(mockPs).mockResolvedValueOnce({
-        ...updatedPs,
-        service: mockService,
-        serviceTypes: [],
-      });
+      mockPrisma.practitionerService.findUnique
+        .mockResolvedValueOnce(mockPs)
+        .mockResolvedValueOnce({
+          ...updatedPs,
+          service: mockService,
+          serviceTypes: [],
+        });
       mockPrisma.practitionerService.update.mockResolvedValue(updatedPs);
 
-      const result = await service.updateService(practitionerId, serviceId, { isActive: false });
+      const result = await service.updateService(practitionerId, serviceId, {
+        isActive: false,
+      });
 
       expect(mockPrisma.practitionerService.update).toHaveBeenCalled();
       expect(result).toBeDefined();
@@ -165,7 +181,9 @@ describe('PractitionerServiceService', () => {
       const result = await service.removeService(practitionerId, serviceId);
 
       expect(result).toEqual({ deleted: true });
-      expect(mockPrisma.practitionerService.delete).toHaveBeenCalledWith({ where: { id: psId } });
+      expect(mockPrisma.practitionerService.delete).toHaveBeenCalledWith({
+        where: { id: psId },
+      });
     });
 
     it('should throw ConflictException when active bookings exist', async () => {
@@ -241,7 +259,9 @@ describe('PractitionerServiceService', () => {
       expect(mockPrisma.booking.count).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            status: { in: ['pending', 'confirmed', 'checked_in', 'in_progress'] },
+            status: {
+              in: ['pending', 'confirmed', 'checked_in', 'in_progress'],
+            },
           }),
         }),
       );

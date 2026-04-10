@@ -43,8 +43,7 @@ export class ChatbotStreamService {
     return new Observable((subscriber: Subscriber<MessageEvent>) => {
       this.processStream(sessionId, userId, content, subscriber).catch(
         (err: unknown) => {
-          const message =
-            err instanceof Error ? err.message : 'Unknown error';
+          const message = err instanceof Error ? err.message : 'Unknown error';
           this.logger.error(`Stream error: ${message}`);
           this.emit(subscriber, { event: 'error', message });
           subscriber.complete();

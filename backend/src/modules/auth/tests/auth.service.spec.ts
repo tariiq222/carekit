@@ -296,7 +296,8 @@ describe('AuthService', () => {
 
   describe('validateUser', () => {
     it('should return user for valid credentials', async () => {
-      const hashedPassword = '$2b$10$9j3H5FgD2RehMd.kiLvD5e9OgKUXdn3Muco883p5BENhEsEDQAl2C'; // bcrypt hash of 'correctpassword'
+      const hashedPassword =
+        '$2b$10$9j3H5FgD2RehMd.kiLvD5e9OgKUXdn3Muco883p5BENhEsEDQAl2C'; // bcrypt hash of 'correctpassword'
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: 'user-id',
         email: 'user@example.com',
@@ -308,7 +309,10 @@ describe('AuthService', () => {
         userRoles: [{ role: { slug: 'patient' } }],
       });
 
-      const result = await service.validateUser('user@example.com', 'correctpassword');
+      const result = await service.validateUser(
+        'user@example.com',
+        'correctpassword',
+      );
 
       expect(result).toBeDefined();
       expect(result).not.toBeNull();
@@ -323,7 +327,10 @@ describe('AuthService', () => {
         isActive: true,
       });
 
-      const result = await service.validateUser('user@example.com', 'wrongpassword');
+      const result = await service.validateUser(
+        'user@example.com',
+        'wrongpassword',
+      );
 
       expect(result).toBeNull();
     });
@@ -344,7 +351,10 @@ describe('AuthService', () => {
     it('should return null for non-existent email', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      const result = await service.validateUser('nobody@example.com', 'anypassword');
+      const result = await service.validateUser(
+        'nobody@example.com',
+        'anypassword',
+      );
 
       expect(result).toBeNull();
     });
@@ -383,7 +393,8 @@ describe('AuthService', () => {
         ({ data }: { data: { expiresAt: Date } }) => {
           const now = new Date();
           const expiresAt = new Date(data.expiresAt);
-          const diffMinutes = (expiresAt.getTime() - now.getTime()) / (1000 * 60);
+          const diffMinutes =
+            (expiresAt.getTime() - now.getTime()) / (1000 * 60);
 
           // Should be approximately 10 minutes (allow small margin for execution time)
           expect(diffMinutes).toBeGreaterThan(9);
@@ -546,9 +557,9 @@ describe('AuthService', () => {
     it('should reject if refresh token not in database', async () => {
       mockPrismaService.refreshToken.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.refreshToken('non-existent-token'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.refreshToken('non-existent-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should reject if refresh token is expired', async () => {
@@ -561,9 +572,9 @@ describe('AuthService', () => {
         expiresAt: pastExpiry,
       });
 
-      await expect(
-        service.refreshToken('expired-token'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.refreshToken('expired-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should reject if user is deactivated', async () => {
@@ -581,9 +592,7 @@ describe('AuthService', () => {
         isActive: false,
       });
 
-      await expect(
-        service.refreshToken('valid-token'),
-      ).rejects.toThrow();
+      await expect(service.refreshToken('valid-token')).rejects.toThrow();
     });
   });
 
@@ -677,7 +686,11 @@ describe('AuthService', () => {
       mockPrismaService.otpCode.update.mockResolvedValue({});
       mockPrismaService.user.update.mockResolvedValue({});
 
-      await service.resetPassword('user@example.com', '123456', 'NewStr0ngP@ss!');
+      await service.resetPassword(
+        'user@example.com',
+        '123456',
+        'NewStr0ngP@ss!',
+      );
 
       // Should update user with hashed password
       expect(mockPrismaService.user.update).toHaveBeenCalledWith(

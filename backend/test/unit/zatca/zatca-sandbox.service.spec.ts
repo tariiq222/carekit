@@ -84,14 +84,19 @@ describe('ZatcaSandboxService', () => {
     // Default: invoice exists and has credentials
     mockPrisma.invoice.findUnique.mockResolvedValue(mockInvoice);
     mockClinicIntegrationsService.getRaw.mockResolvedValue(mockCredentials);
-    mockPrisma.invoice.update.mockResolvedValue({ ...mockInvoice, zatcaStatus: 'reported' });
+    mockPrisma.invoice.update.mockResolvedValue({
+      ...mockInvoice,
+      zatcaStatus: 'reported',
+    });
   });
 
   // ── reportInvoiceToSandbox ────────────────────────────────────────────────
 
   describe('reportInvoiceToSandbox', () => {
     it('reports invoice successfully when API returns REPORTED', async () => {
-      mockZatcaApiService.reportInvoice.mockResolvedValue(successfulApiResponse);
+      mockZatcaApiService.reportInvoice.mockResolvedValue(
+        successfulApiResponse,
+      );
 
       const result = await service.reportInvoiceToSandbox(INVOICE_ID);
 
@@ -101,11 +106,15 @@ describe('ZatcaSandboxService', () => {
     });
 
     it('calls reportInvoice with correct base64 XML and credentials', async () => {
-      mockZatcaApiService.reportInvoice.mockResolvedValue(successfulApiResponse);
+      mockZatcaApiService.reportInvoice.mockResolvedValue(
+        successfulApiResponse,
+      );
 
       await service.reportInvoiceToSandbox(INVOICE_ID);
 
-      const expectedBase64 = Buffer.from(mockInvoice.xmlContent).toString('base64');
+      const expectedBase64 = Buffer.from(mockInvoice.xmlContent).toString(
+        'base64',
+      );
       expect(mockZatcaApiService.reportInvoice).toHaveBeenCalledWith(
         {
           invoiceHash: mockInvoice.invoiceHash,
@@ -117,7 +126,9 @@ describe('ZatcaSandboxService', () => {
     });
 
     it('updates invoice status to reported on success', async () => {
-      mockZatcaApiService.reportInvoice.mockResolvedValue(successfulApiResponse);
+      mockZatcaApiService.reportInvoice.mockResolvedValue(
+        successfulApiResponse,
+      );
 
       await service.reportInvoiceToSandbox(INVOICE_ID);
 
@@ -151,9 +162,9 @@ describe('ZatcaSandboxService', () => {
     it('throws NotFoundException when invoice does not exist', async () => {
       mockPrisma.invoice.findUnique.mockResolvedValue(null);
 
-      await expect(service.reportInvoiceToSandbox('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.reportInvoiceToSandbox('nonexistent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throws BadRequestException when invoice has no XML content', async () => {
@@ -253,7 +264,12 @@ describe('ZatcaSandboxService', () => {
 
       const stats = await service.getSandboxStats();
 
-      expect(stats).toEqual({ pending: 0, reported: 0, failed: 0, notApplicable: 0 });
+      expect(stats).toEqual({
+        pending: 0,
+        reported: 0,
+        failed: 0,
+        notApplicable: 0,
+      });
     });
   });
 });

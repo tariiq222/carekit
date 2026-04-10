@@ -77,10 +77,12 @@ describe('CouponsService', () => {
     });
 
     it('should return serviceIds array in each item', async () => {
-      mockPrisma.coupon.findMany.mockResolvedValue([{
-        ...baseCoupon,
-        couponServices: [{ serviceId: 'svc-1' }],
-      }]);
+      mockPrisma.coupon.findMany.mockResolvedValue([
+        {
+          ...baseCoupon,
+          couponServices: [{ serviceId: 'svc-1' }],
+        },
+      ]);
       mockPrisma.coupon.count.mockResolvedValue(1);
 
       const result = await service.findAll({});
@@ -96,7 +98,10 @@ describe('CouponsService', () => {
 
       expect(mockPrisma.coupon.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ isActive: true, OR: expect.any(Array) }),
+          where: expect.objectContaining({
+            isActive: true,
+            OR: expect.any(Array),
+          }),
         }),
       );
     });
@@ -122,7 +127,9 @@ describe('CouponsService', () => {
 
       expect(mockPrisma.coupon.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ expiresAt: expect.objectContaining({ lte: expect.any(Date) }) }),
+          where: expect.objectContaining({
+            expiresAt: expect.objectContaining({ lte: expect.any(Date) }),
+          }),
         }),
       );
     });
@@ -135,9 +142,14 @@ describe('CouponsService', () => {
   describe('update', () => {
     it('should update coupon and return shaped result', async () => {
       mockPrisma.coupon.findUnique.mockResolvedValue(baseCoupon);
-      mockPrisma.coupon.update.mockResolvedValue({ ...baseCoupon, descriptionEn: 'Updated' });
+      mockPrisma.coupon.update.mockResolvedValue({
+        ...baseCoupon,
+        descriptionEn: 'Updated',
+      });
 
-      const result = await service.update(baseCoupon.id, { descriptionEn: 'Updated' } as never);
+      const result = await service.update(baseCoupon.id, {
+        descriptionEn: 'Updated',
+      } as never);
 
       expect(result).toHaveProperty('serviceIds');
       expect(mockPrisma.coupon.update).toHaveBeenCalled();
@@ -146,16 +158,18 @@ describe('CouponsService', () => {
     it('should throw NotFoundException when coupon not found', async () => {
       mockPrisma.coupon.findUnique.mockResolvedValue(null);
 
-      await expect(service.update('missing-id', { descriptionEn: 'X' } as never)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.update('missing-id', { descriptionEn: 'X' } as never),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should replace service restrictions when serviceIds provided', async () => {
       mockPrisma.coupon.findUnique.mockResolvedValue(baseCoupon);
       mockPrisma.coupon.update.mockResolvedValue(baseCoupon);
 
-      await service.update(baseCoupon.id, { serviceIds: ['svc-1', 'svc-2'] } as never);
+      await service.update(baseCoupon.id, {
+        serviceIds: ['svc-1', 'svc-2'],
+      } as never);
 
       expect(mockPrisma.couponService.deleteMany).toHaveBeenCalledWith({
         where: { couponId: baseCoupon.id },
@@ -195,7 +209,10 @@ describe('CouponsService', () => {
   describe('create', () => {
     it('should uppercase the coupon code', async () => {
       mockPrisma.coupon.findUnique.mockResolvedValue(null);
-      mockPrisma.coupon.create.mockResolvedValue({ ...baseCoupon, code: 'SAVE20' });
+      mockPrisma.coupon.create.mockResolvedValue({
+        ...baseCoupon,
+        code: 'SAVE20',
+      });
 
       await service.create({
         code: 'save20',
@@ -252,9 +269,9 @@ describe('CouponsService', () => {
     it('should throw NotFoundException when coupon not found or inactive', async () => {
       mockPrisma.coupon.findFirst.mockResolvedValue(null);
 
-      await expect(service.applyCoupon(applyDto as never, userId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.applyCoupon(applyDto as never, userId),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException when coupon expired', async () => {
@@ -263,9 +280,9 @@ describe('CouponsService', () => {
         expiresAt: new Date('2020-01-01'),
       });
 
-      await expect(service.applyCoupon(applyDto as never, userId)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.applyCoupon(applyDto as never, userId),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException when usage limit reached (maxUses=5, usedCount=5)', async () => {
@@ -275,9 +292,9 @@ describe('CouponsService', () => {
         usedCount: 5,
       });
 
-      await expect(service.applyCoupon(applyDto as never, userId)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.applyCoupon(applyDto as never, userId),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException when per-user limit reached', async () => {
@@ -287,9 +304,9 @@ describe('CouponsService', () => {
       });
       mockPrisma.couponRedemption.count.mockResolvedValue(1);
 
-      await expect(service.applyCoupon(applyDto as never, userId)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.applyCoupon(applyDto as never, userId),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException when service not in restriction list', async () => {

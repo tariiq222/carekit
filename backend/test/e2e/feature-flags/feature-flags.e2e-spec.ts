@@ -54,7 +54,8 @@ describe('Feature Flags Module (e2e)', () => {
       .get(FLAGS_URL)
       .set(await getSuperAdminHeaders());
 
-    if (res.status !== 200) throw new Error(`Cannot fetch feature flags: ${res.status}`);
+    if (res.status !== 200)
+      throw new Error(`Cannot fetch feature flags: ${res.status}`);
 
     const flags = (res.body.data ?? res.body) as Array<Record<string, unknown>>;
     if (!flags.length) throw new Error('No feature flags seeded in DB');
@@ -150,11 +151,16 @@ describe('Feature Flags Module (e2e)', () => {
 
     it('/map keys and values match the full /feature-flags list', async () => {
       const [fullRes, mapRes] = await Promise.all([
-        request(httpServer).get(FLAGS_URL).set(await getSuperAdminHeaders()),
+        request(httpServer)
+          .get(FLAGS_URL)
+          .set(await getSuperAdminHeaders()),
         request(httpServer).get(FLAGS_MAP_URL),
       ]);
 
-      const flags = fullRes.body.data as Array<{ key: string; enabled: boolean }>;
+      const flags = fullRes.body.data as Array<{
+        key: string;
+        enabled: boolean;
+      }>;
       const map = mapRes.body.data as Record<string, boolean>;
 
       for (const flag of flags) {
@@ -280,7 +286,9 @@ describe('Feature Flags Module (e2e)', () => {
 
       // Capture current state
       const before = await request(httpServer).get(FLAGS_MAP_URL);
-      const originalEnabled = (before.body.data as Record<string, boolean>)[key];
+      const originalEnabled = (before.body.data as Record<string, boolean>)[
+        key
+      ];
 
       // Toggle twice
       await request(httpServer)

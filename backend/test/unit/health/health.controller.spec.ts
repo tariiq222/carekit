@@ -11,19 +11,20 @@ const mockSession = {
 };
 
 const mockHealthCheckService = {
-  check: jest.fn().mockImplementation(async (checks: (() => Promise<unknown>)[]) => {
-    for (const check of checks) {
-      await check();
-    }
-    return { status: 'ok', info: {}, error: {}, details: {} };
-  }),
+  check: jest
+    .fn()
+    .mockImplementation(async (checks: (() => Promise<unknown>)[]) => {
+      for (const check of checks) {
+        await check();
+      }
+      return { status: 'ok', info: {}, error: {}, details: {} };
+    }),
 };
 
 const mockIndicator = {
   check: jest.fn().mockReturnValue(mockSession),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   $queryRaw: jest.fn(),
 };
@@ -53,12 +54,14 @@ describe('HealthController', () => {
 
     controller = module.get<HealthController>(HealthController);
     jest.clearAllMocks();
-    mockHealthCheckService.check.mockImplementation(async (checks: (() => Promise<unknown>)[]) => {
-      for (const check of checks) {
-        await check();
-      }
-      return { status: 'ok', info: {}, error: {}, details: {} };
-    });
+    mockHealthCheckService.check.mockImplementation(
+      async (checks: (() => Promise<unknown>)[]) => {
+        for (const check of checks) {
+          await check();
+        }
+        return { status: 'ok', info: {}, error: {}, details: {} };
+      },
+    );
     mockIndicator.check.mockReturnValue(mockSession);
     mockSession.up.mockReturnValue({ database: { status: 'up' } });
     mockSession.down.mockReturnValue({ database: { status: 'down' } });

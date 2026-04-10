@@ -29,8 +29,18 @@ const mockCache = {
   del: jest.fn(),
 };
 
-const flagA = { key: 'dark_mode', enabled: true, createdAt: new Date(), updatedAt: new Date() };
-const flagB = { key: 'new_dashboard', enabled: false, createdAt: new Date(), updatedAt: new Date() };
+const flagA = {
+  key: 'dark_mode',
+  enabled: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+const flagB = {
+  key: 'new_dashboard',
+  enabled: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 async function createModule() {
   const module: TestingModule = await Test.createTestingModule({
@@ -74,8 +84,14 @@ describe('FeatureFlagsService', () => {
       const result = await service.findAll();
 
       expect(result).toEqual([flagA, flagB]);
-      expect(mockPrisma.featureFlag.findMany).toHaveBeenCalledWith({ orderBy: { key: 'asc' } });
-      expect(mockCache.set).toHaveBeenCalledWith('feature_flags:all', [flagA, flagB], 300);
+      expect(mockPrisma.featureFlag.findMany).toHaveBeenCalledWith({
+        orderBy: { key: 'asc' },
+      });
+      expect(mockCache.set).toHaveBeenCalledWith(
+        'feature_flags:all',
+        [flagA, flagB],
+        300,
+      );
     });
 
     it('returns empty array when no flags exist', async () => {
@@ -144,7 +160,9 @@ describe('FeatureFlagsService', () => {
       const result = await service.toggle('dark_mode', false);
 
       expect(result).toEqual(updated);
-      expect(mockPrisma.featureFlag.findUnique).toHaveBeenCalledWith({ where: { key: 'dark_mode' } });
+      expect(mockPrisma.featureFlag.findUnique).toHaveBeenCalledWith({
+        where: { key: 'dark_mode' },
+      });
       expect(mockPrisma.featureFlag.update).toHaveBeenCalledWith({
         where: { key: 'dark_mode' },
         data: { enabled: false },
@@ -157,7 +175,9 @@ describe('FeatureFlagsService', () => {
     it('throws NotFoundException with correct shape when flag does not exist', async () => {
       mockPrisma.featureFlag.findUnique.mockResolvedValue(null);
 
-      await expect(service.toggle('unknown_flag', true)).rejects.toThrow(NotFoundException);
+      await expect(service.toggle('unknown_flag', true)).rejects.toThrow(
+        NotFoundException,
+      );
       await expect(service.toggle('unknown_flag', true)).rejects.toMatchObject({
         response: { statusCode: 404, error: 'Not Found' },
       });
@@ -190,7 +210,9 @@ describe('FeatureFlagsService', () => {
       mockPrisma.featureFlag.findUnique.mockResolvedValue(flagB);
       mockLicenseService.isFeatureLicensed.mockResolvedValue(false);
 
-      await expect(service.toggle('new_dashboard', true)).rejects.toThrow(ForbiddenException);
+      await expect(service.toggle('new_dashboard', true)).rejects.toThrow(
+        ForbiddenException,
+      );
       expect(mockPrisma.featureFlag.update).not.toHaveBeenCalled();
       expect(mockCache.del).not.toHaveBeenCalled();
     });
@@ -208,7 +230,10 @@ describe('FeatureFlagsService', () => {
 
     it('checks license only when enabling, not when disabling', async () => {
       mockPrisma.featureFlag.findUnique.mockResolvedValue(flagA);
-      mockPrisma.featureFlag.update.mockResolvedValue({ ...flagA, enabled: false });
+      mockPrisma.featureFlag.update.mockResolvedValue({
+        ...flagA,
+        enabled: false,
+      });
 
       await service.toggle('dark_mode', false);
 

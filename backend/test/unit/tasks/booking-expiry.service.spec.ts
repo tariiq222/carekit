@@ -14,7 +14,6 @@ const defaultSettings = {
   paymentTimeoutMinutes: 30,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   booking: {
     findMany: jest.fn(),
@@ -86,7 +85,11 @@ describe('BookingExpiryService', () => {
 
   describe('filterSafeToExpire', () => {
     it('should use a single batched query instead of one per booking', async () => {
-      const bookings = [{ id: 'booking-1' }, { id: 'booking-2' }, { id: 'booking-3' }];
+      const bookings = [
+        { id: 'booking-1' },
+        { id: 'booking-2' },
+        { id: 'booking-3' },
+      ];
 
       mockPrisma.payment.findMany.mockResolvedValue([
         { bookingId: 'booking-2' },
@@ -102,7 +105,10 @@ describe('BookingExpiryService', () => {
         },
         select: { bookingId: true },
       });
-      expect(result.map((b: { id: string }) => b.id)).toEqual(['booking-1', 'booking-3']);
+      expect(result.map((b: { id: string }) => b.id)).toEqual([
+        'booking-1',
+        'booking-3',
+      ]);
     });
 
     it('should return empty array if input is empty without querying DB', async () => {
@@ -142,7 +148,10 @@ describe('BookingExpiryService', () => {
         }),
       );
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'patient-1', type: 'booking_expired' }),
+        expect.objectContaining({
+          userId: 'patient-1',
+          type: 'booking_expired',
+        }),
       );
     });
 
@@ -194,7 +203,10 @@ describe('BookingExpiryService', () => {
 
       await service.expirePendingBookings();
 
-      expect(mockWaitlist.checkAndNotify).toHaveBeenCalledWith('pract-1', booking.date);
+      expect(mockWaitlist.checkAndNotify).toHaveBeenCalledWith(
+        'pract-1',
+        booking.date,
+      );
     });
 
     it('should skip already-transitioned booking when re-check returns null', async () => {
