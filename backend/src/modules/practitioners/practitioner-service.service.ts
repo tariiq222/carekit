@@ -137,7 +137,7 @@ export class PractitionerServiceService {
     const activeBookings = await this.prisma.booking.count({
       where: {
         practitionerServiceId: ps.id,
-        status: { in: ['pending', 'confirmed'] },
+        status: { in: ['pending', 'confirmed', 'checked_in', 'in_progress'] },
         deletedAt: null,
       },
     });

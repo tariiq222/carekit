@@ -206,4 +206,56 @@ describe('PractitionerServiceService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  // ─── Hard edge cases ────────────────────────────────────────────────────────
+
+  describe('[FIXED] removeService guards all 4 active booking statuses', () => {
+    it('throws ConflictException when a checked_in booking exists', async () => {
+      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPs);
+      mockPrisma.booking.count.mockResolvedValue(1);
+
+      await expect(
+        service.removeService(practitionerId, serviceId),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('throws ConflictException when an in_progress booking exists', async () => {
+      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPs);
+      mockPrisma.booking.count.mockResolvedValue(1);
+
+      await expect(
+        service.removeService(practitionerId, serviceId),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('verifies booking.count query includes all 4 active statuses', async () => {
+      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPs);
+      mockPrisma.booking.count.mockResolvedValue(0);
+      mockPrisma.practitionerService.delete.mockResolvedValue(mockPs);
+
+      await service.removeService(practitionerId, serviceId);
+
+      expect(mockPrisma.booking.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ['pending', 'confirmed', 'checked_in', 'in_progress'] },
+          }),
+        }),
+      );
+    });
+
+    it('allows removal when no active bookings exist', async () => {
+      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPs);
+      mockPrisma.booking.count.mockResolvedValue(0);
+      mockPrisma.practitionerService.delete.mockResolvedValue(mockPs);
+
+      const result = await service.removeService(practitionerId, serviceId);
+
+      expect(result).toEqual({ deleted: true });
+    });
+  });
 });
