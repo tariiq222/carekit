@@ -215,6 +215,15 @@ export const queryKeys = {
     detail: (id: string) => ["group-sessions", "detail", id] as const,
   },
 
+  /* ─── Courses ─── */
+  courses: {
+    all: ["courses"] as const,
+    list: (filters?: object) => ["courses", "list", filters] as const,
+    detail: (id: string) => ["courses", "detail", id] as const,
+    sessions: (id: string) => ["courses", "sessions", id] as const,
+    enrollments: (id: string) => ["courses", "enrollments", id] as const,
+  },
+
   /* ─── Email Templates ─── */
   emailTemplates: {
     all: ["email-templates"] as const,

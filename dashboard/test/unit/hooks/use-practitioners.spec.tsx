@@ -103,6 +103,95 @@ describe("usePractitioners", () => {
       ),
     )
   })
+
+  it("setIsActive resets page to 1", async () => {
+    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    act(() => { result.current.setIsActive(true) })
+
+    await waitFor(() =>
+      expect(fetchPractitioners).toHaveBeenCalledWith(
+        expect.objectContaining({ isActive: true, page: 1 }),
+      ),
+    )
+  })
+
+  it("resetFilters clears search, isActive, and resets page", async () => {
+    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    act(() => {
+      result.current.setSearch("test")
+      result.current.setIsActive(true)
+    })
+
+    act(() => { result.current.resetFilters() })
+
+    await waitFor(() => {
+      expect(result.current.search).toBe("")
+      expect(result.current.isActive).toBeUndefined()
+      expect(result.current.page).toBe(1)
+    })
+  })
+
+  it("hasFilters is true when search is set", async () => {
+    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(result.current.hasFilters).toBe(false)
+
+    act(() => { result.current.setSearch("Dr.") })
+
+    await waitFor(() => expect(result.current.hasFilters).toBe(true))
+  })
+
+  it("hasFilters is true when isActive is set", async () => {
+    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    act(() => { result.current.setIsActive(false) })
+
+    await waitFor(() => expect(result.current.hasFilters).toBe(true))
+  })
+
+  it("returns error message when fetch fails", async () => {
+    fetchPractitioners.mockRejectedValueOnce(new Error("Network error"))
+
+    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(result.current.error).toBe("Network error")
+  })
+
+  it("returns null meta when no data", () => {
+    fetchPractitioners.mockReturnValueOnce(new Promise(() => undefined))
+
+    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+
+    expect(result.current.meta).toBeNull()
+    expect(result.current.practitioners).toEqual([])
+  })
+
+  it("passes undefined search when search is empty string", async () => {
+    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(fetchPractitioners).toHaveBeenCalledWith(
+      expect.objectContaining({ search: undefined }),
+    )
+  })
 })
 
 describe("usePractitioner", () => {

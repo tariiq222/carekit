@@ -20,6 +20,7 @@
     "docker:down": "docker compose -f docker/docker-compose.yml down"
   },
   "devDependencies": {
+    "lru-cache": "^11.3.3",
     "turbo": "^2"
   },
   "overrides": {

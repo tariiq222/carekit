@@ -28,8 +28,8 @@ export class UpdateCategoryDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({ description: 'Department ID (null to unassign)' })
+  @ApiPropertyOptional({ description: 'Department ID' })
   @IsOptional()
   @IsUUID()
-  departmentId?: string | null;
+  departmentId?: string;
 }

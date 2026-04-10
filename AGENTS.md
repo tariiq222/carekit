@@ -1,5 +1,56 @@
 # CareKit — Agent Instructions
 
+---
+
+## 🔀 Session Routing — Read This First, Every Session
+
+This is the first rule applied at the start of every session. No exceptions.
+
+### Two session types. Nothing else.
+
+**Type A — Normal new session** (default for everything except `/نكمل`):
+
+Any input that is NOT the literal string `/نكمل` is a new independent task.
+
+- Do NOT load `.opencode/context/current-task.json`
+- Do NOT resume paused work
+- Do NOT check if a paused task exists
+- Treat the input as a fresh task and route through CTO normally
+
+**Type B — Resume session** (only when `/نكمل` is typed explicitly):
+
+When the user's FIRST message in a session is exactly `/نكمل`:
+
+- Read `.opencode/context/current-task.json`
+- Follow the full behavior defined in `.opencode/commands/نكمل.md`
+- Do NOT treat this as a new task
+
+### Decision table
+
+| First message in session | Behavior |
+|--------------------------|----------|
+| Any task description | NEW task — CTO handles normally |
+| Any question | NEW task — answer normally |
+| Any command except /نكمل | NEW task — handle normally |
+| `/نوقف` | Save current state → write current-task.json → stop |
+| `/نكمل` | Resume paused task — follow نكمل.md exactly |
+
+### What CTO must NEVER do
+
+- Auto-load current-task.json at session start without `/نكمل`
+- Infer that a session is a continuation based on topic similarity
+- Resume paused work because the user "seems to be continuing"
+- Treat `/نكمل` as a generic workflow trigger for new tasks
+
+### Commands
+
+| Command | Definition file | What it does |
+|---------|----------------|--------------|
+| `/نوقف` | `.opencode/commands/نوقف.md` | Pause and save current task state |
+| `/نكمل` | `.opencode/commands/نكمل.md` | Resume last paused task (explicit only) |
+
+---
+
 ## What this repo is
 
 npm workspaces + Turborepo monorepo. Four packages: `backend`, `dashboard`, `mobile`, `shared`.  
@@ -7,10 +58,46 @@ White-label clinic management. Every client gets an isolated Docker deployment.
 
 ---
 
-## 🤖 Maestro Skill Auto-Dispatch (CareKit Edition)
+## 🧠 Model Routing (Stage-Level)
 
-> Maestro **automatically** loads the right skill for each agent. No manual selection needed.
-> The table below is the single source of truth — Maestro reads this before every execution phase.
+OpenCode selects models at session level. CTO enforces correct model through stage boundaries.
+
+| Agent | Model | When |
+|-------|-------|------|
+| CTO | Sonnet 4 | Always |
+| ARCHITECT | Sonnet 4 | LOW / MEDIUM / HIGH |
+| ARCHITECT | Opus 4 | Escalation only (COMPLEX / CRITICAL) |
+| EXECUTOR | GLM 5.1 | Always |
+| TEST ENGINEER | GLM 5.1 | Always |
+| REVIEWER | Sonnet 4 | Always |
+| QA VALIDATOR | Sonnet 4 | Always |
+
+**Session groups:**
+```
+Sonnet 4:  CTO → ARCHITECT → REVIEWER → QA VALIDATOR
+GLM 5.1:   EXECUTOR → TEST ENGINEER
+Opus 4:    ARCHITECT (re-analysis on escalation)
+```
+
+**Model switch required only at boundaries:**
+- ARCHITECT done → EXECUTOR starts = switch to GLM 5.1
+- TEST ENGINEER done → REVIEWER starts = switch to Sonnet 4
+- ARCHITECT escalation = switch to Opus 4
+
+**Escalation triggers (ARCHITECT → Opus 4):**
+1. Root cause unclear after 2 attempts
+2. Task spans 3+ layers
+3. High-risk domains: booking, payments, auth, scheduling, recurring appointments
+4. Migration affects live data
+5. Concurrency / race condition risk
+6. confidence_score < 80 (supporting signal only)
+
+---
+
+## 🤖 Skill Auto-Dispatch (CareKit Edition)
+
+> CTO automatically loads the right skill for each agent. No manual selection needed.
+> The table below is the single source of truth — loaded before every execution phase.
 
 ### TIER 1 — CareKit Custom Skills (always preferred)
 
@@ -34,6 +121,30 @@ White-label clinic management. Every client gets an isolated Docker deployment.
 | Complex React state \| hook patterns \| composition | **`frontend-patterns`** | frontend | On demand |
 | Code review requested \| quality check | **`review`** | any | On demand |
 | Architecture decisions \| large refactor | **`architect`** | any | On demand |
+| New page design \| color palette \| typography choice \| accessibility audit \| animation \| style decision \| glassmorphism \| dark mode \| component visual design \| UX review \| design system deep-dive | **`ui-ux-pro-max`** | frontend | Paired with carekit-ds when deep design reasoning needed |
+
+### ui-ux-pro-max — CareKit Usage
+
+Loaded when carekit-ds alone is insufficient for a design decision. Provides searchable database of 50+ styles, color palettes, font pairings, UX guidelines, and accessibility rules.
+
+**CareKit stack:** always use `--stack shadcn` for component-level, `--stack nextjs` for page-level.
+
+```bash
+# Step 1 — Generate full design system for a new page/component
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<component or page name>" --design-system -p "CareKit"
+
+# Step 2 — Domain-specific lookups
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain style    # glassmorphism, dark mode, etc.
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain ux       # accessibility, animation, layout
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain color    # palettes by industry
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain typography  # font pairings
+
+# Step 3 — Stack-specific guidelines
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn    # shadcn/ui patterns
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack nextjs    # Next.js 15 patterns
+```
+
+**Rule:** ui-ux-pro-max supplements carekit-ds — it does NOT replace it. CareKit design tokens (CSS custom properties, glass classes, RTL rules) always take precedence over generic style recommendations from this skill.
 
 ### Auto-Dispatch Rules (non-negotiable)
 
@@ -44,13 +155,16 @@ White-label clinic management. Every client gets an isolated Docker deployment.
    nestjs-carekit → also load api-design-carekit
    e2e-carekit    → also load tdd-carekit
    carekit-ds     → also load vercel-react-best-practices
+   ui-ux-pro-max  → always paired with carekit-ds (never standalone for dashboard work)
 4. Token savings: only load skills for agents in this task's dependency graph
+5. ui-ux-pro-max loads only when task involves: new page design, style/color/font decisions,
+   accessibility audit, animation, or visual component design — NOT for logic or data changes
 ```
 
 ### MCP Auto-Routing
 
 ```yaml
-# Maestro routes to the RIGHT tool automatically:
+# CTO routes to the RIGHT tool automatically:
 db migrations  → mcp_prisma_migrate-dev / mcp_prisma_migrate-status
 db queries     → mcp_postgres_query
 git ops        → mcp_git_git_status / mcp_git_git_log / mcp_git_git_diff_unstaged

@@ -19,6 +19,8 @@ const FLAG_TO_LICENSE: Record<string, keyof LicenseConfig> = {
   zoom: 'hasZoom',
   zatca: 'hasZatca',
   departments: 'hasDepartments',
+  group_sessions: 'hasGroupSessions',
+  courses: 'hasCourses',
 };
 
 @Injectable()

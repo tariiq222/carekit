@@ -12,7 +12,7 @@ export interface ServiceCategory {
   nameAr: string
   sortOrder: number
   isActive: boolean
-  departmentId: string | null
+  departmentId: string
   department?: { id: string; nameEn: string; nameAr: string }
   createdAt: string
   _count?: { services: number }

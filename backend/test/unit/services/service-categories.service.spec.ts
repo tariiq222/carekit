@@ -42,6 +42,7 @@ describe('ServiceCategoriesService — create', () => {
       nameEn: mockCategory.nameEn,
       nameAr: mockCategory.nameAr,
       sortOrder: mockCategory.sortOrder,
+      departmentId: mockCategory.departmentId,
     });
 
     expect(result.id).toBe(mockCategory.id);
@@ -60,7 +61,7 @@ describe('ServiceCategoriesService — create', () => {
   it('should default sortOrder to 0 when not provided', async () => {
     mockPrisma.serviceCategory.create.mockResolvedValue({ ...mockCategory, sortOrder: 0 });
 
-    await service.create({ nameEn: 'New', nameAr: 'جديد' });
+    await service.create({ nameEn: 'New', nameAr: 'جديد', departmentId: 'dept-uuid-1' });
 
     expect(mockPrisma.serviceCategory.create).toHaveBeenCalledWith(
       expect.objectContaining({

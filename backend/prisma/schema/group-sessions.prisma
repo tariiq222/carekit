@@ -5,7 +5,6 @@
 model GroupSession {
   id                    String                     @id @default(uuid())
   practitionerId        String                     @map("practitioner_id")
-  departmentId          String?                    @map("department_id")
 
   // Definition
   nameAr                String                     @map("name_ar")
@@ -17,6 +16,7 @@ model GroupSession {
   pricePerPersonHalalat Int                        @map("price_per_person_halalat")
   durationMinutes       Int                        @map("duration_minutes")
   paymentDeadlineHours  Int                        @default(48) @map("payment_deadline_hours")
+  depositPercent        Int                        @default(100) @map("deposit_percent") // 100 = full payment, <100 = deposit only
 
   // Scheduling
   schedulingMode        GroupSessionSchedulingMode @map("scheduling_mode")
@@ -39,7 +39,6 @@ model GroupSession {
 
   // Relations
   practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
-  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   enrollments  GroupEnrollment[]
 
   @@index([practitionerId, status])

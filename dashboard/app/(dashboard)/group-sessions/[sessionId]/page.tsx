@@ -46,7 +46,7 @@ export default function GroupSessionDetailPage() {
   return (
     <ListPageShell>
       <Breadcrumbs items={[
-        { label: t("groupSessions.title"), href: "/group-sessions" },
+        { label: t("groupSessions.title"), href: "/services?tab=group-sessions" },
         { label: name },
       ]} />
 

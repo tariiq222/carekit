@@ -143,6 +143,7 @@ describe('ServicesService', () => {
       const dto: CreateCategoryDto = {
         nameEn: 'New Category',
         nameAr: 'فئة جديدة',
+        departmentId: 'dept-uuid-1',
       };
 
       mockPrismaService.serviceCategory.create.mockResolvedValue({
@@ -171,6 +172,7 @@ describe('ServicesService', () => {
         nameEn: 'Priority Category',
         nameAr: 'فئة ذات أولوية',
         sortOrder: 5,
+        departmentId: 'dept-uuid-1',
       };
 
       mockPrismaService.serviceCategory.create.mockResolvedValue({

@@ -20,6 +20,7 @@ import { arIntakeForms } from "./ar.intake-forms"
 import { arWhiteLabel } from "./ar.whitelabel"
 import { arGroupSessions } from "./ar.group-sessions"
 import { arDepartments } from "./ar.departments"
+import { arCourses } from "./ar.courses"
 
 export const ar: Record<string, string> = {
   ...arNav,
@@ -37,4 +38,5 @@ export const ar: Record<string, string> = {
   ...arWhiteLabel,
   ...arGroupSessions,
   ...arDepartments,
+  ...arCourses,
 }

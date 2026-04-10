@@ -258,4 +258,68 @@ describe("usePractitionerServiceMutations", () => {
       expect(removePractitionerService).toHaveBeenCalledWith("p-1", "svc-1"),
     )
   })
+
+  it("updateMut calls updatePractitionerService with practitionerId, serviceId, payload", async () => {
+    updatePractitionerService.mockResolvedValueOnce({ id: "ps-1" })
+
+    const { result } = renderHook(
+      () => usePractitionerServiceMutations("p-1"),
+      { wrapper: makeWrapper() },
+    )
+
+    act(() => {
+      result.current.updateMut.mutate({
+        serviceId: "svc-1",
+        payload: { customDuration: 30 },
+      })
+    })
+
+    await waitFor(() =>
+      expect(updatePractitionerService).toHaveBeenCalledWith(
+        "p-1",
+        "svc-1",
+        expect.objectContaining({ customDuration: 30 }),
+      ),
+    )
+  })
+})
+
+describe("usePractitionerMutations error handling", () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it("createMutation propagates error", async () => {
+    createPractitioner.mockRejectedValueOnce(new Error("Email already exists"))
+
+    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+
+    act(() => {
+      result.current.createMutation.mutate({ email: "dup@clinic.com" } as Parameters<typeof createPractitioner>[0])
+    })
+
+    await waitFor(() => expect(result.current.createMutation.isError).toBe(true))
+    expect(result.current.createMutation.error?.message).toBe("Email already exists")
+  })
+
+  it("deleteMutation propagates error", async () => {
+    deletePractitioner.mockRejectedValueOnce(new Error("Has active bookings"))
+
+    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+
+    act(() => { result.current.deleteMutation.mutate("p-1") })
+
+    await waitFor(() => expect(result.current.deleteMutation.isError).toBe(true))
+    expect(result.current.deleteMutation.error?.message).toBe("Has active bookings")
+  })
+
+  it("onboardMutation resolves successfully", async () => {
+    onboardPractitioner.mockResolvedValueOnce({ id: "p-1" })
+
+    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+
+    act(() => {
+      result.current.onboardMutation.mutate({ email: "new@clinic.com" } as Parameters<typeof onboardPractitioner>[0])
+    })
+
+    await waitFor(() => expect(result.current.onboardMutation.isSuccess).toBe(true))
+  })
 })

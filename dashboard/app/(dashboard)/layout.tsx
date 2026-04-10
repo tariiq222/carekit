@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar"
+import { Header } from "@/components/header"
 import { MobileSidebarTrigger } from "@/components/mobile-sidebar-trigger"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { LocaleProvider } from "@/components/locale-provider"
@@ -16,6 +17,7 @@ export default function DashboardLayout({
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset className="min-h-0 relative z-[1]">
+            <Header />
             <div className="flex-1 overflow-y-auto p-4 md:px-8 md:py-7">
               {children}
             </div>

@@ -123,6 +123,15 @@ describe('Branches Module (e2e)', () => {
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
     });
 
+    // Regression: receptionist received 403 before branches:view was added to seed.data.ts
+    it('REGRESSION: should return 200 for receptionist (branches:view permission)', async () => {
+      const res = await request(httpServer)
+        .get(URL).set(getAuthHeaders(receptionist.accessToken)).expect(200);
+      expectSuccessResponse(res.body);
+      const data = res.body.data;
+      expect(Array.isArray(data) || Array.isArray(data?.items)).toBe(true);
+    });
+
     it('should return 403 for patient (no branches:view)', async () => {
       const res = await request(httpServer)
         .get(URL).set(getAuthHeaders(patient.accessToken)).expect(403);

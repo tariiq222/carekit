@@ -36,7 +36,7 @@ describe('ServiceCategoriesService — create', () => {
   });
 
   it('should create a category with default sortOrder=0', async () => {
-    const dto = { nameEn: 'New Category', nameAr: 'فئة جديدة' };
+    const dto = { nameEn: 'New Category', nameAr: 'فئة جديدة', departmentId: 'dept-uuid-1' };
     mockPrisma.serviceCategory.create.mockResolvedValue({ ...mockCategory, ...dto, sortOrder: 0 });
 
     const result = await service.create(dto);
@@ -48,7 +48,7 @@ describe('ServiceCategoriesService — create', () => {
   });
 
   it('should create a category with explicit sortOrder', async () => {
-    const dto = { nameEn: 'Priority Category', nameAr: 'فئة ذات أولوية', sortOrder: 5 };
+    const dto = { nameEn: 'Priority Category', nameAr: 'فئة ذات أولوية', sortOrder: 5, departmentId: 'dept-uuid-1' };
     mockPrisma.serviceCategory.create.mockResolvedValue({ ...mockCategory, ...dto });
 
     await service.create(dto);

@@ -15,7 +15,7 @@ export class GroupSessionAutomationService {
   async expireUnpaidEnrollments(): Promise<void> {
     const expired = await this.prisma.groupEnrollment.findMany({
       where: {
-        status: 'registered',
+        status: { in: ['registered', 'payment_requested'] },
         paymentDeadlineAt: { not: null, lt: new Date() },
       },
       select: {
@@ -38,7 +38,7 @@ export class GroupSessionAutomationService {
       try {
         await this.prisma.$transaction(async (tx) => {
           const current = await tx.groupEnrollment.findFirst({
-            where: { id: enrollment.id, status: 'registered' },
+            where: { id: enrollment.id, status: { in: ['registered', 'payment_requested'] } },
           });
           if (!current) return;
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon, Download04Icon, GridIcon } from "@hugeicons/core-free-icons"
 
@@ -22,6 +23,9 @@ import { CategoriesTabContent } from "@/components/features/services/categories-
 import { CreateCategoryDialog } from "@/components/features/services/create-category-dialog"
 import { DepartmentsTabContent } from "@/components/features/departments/departments-tab-content"
 import { SessionsListContent } from "@/components/features/group-sessions/sessions-list-content"
+import { CoursesListContent } from "@/components/features/courses/courses-list-content"
+import { fetchLicenseFeatures } from "@/lib/api/license"
+import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
 
 export default function ServicesPage() {
@@ -33,17 +37,29 @@ export default function ServicesPage() {
   const [createCategoryOpen, setCreateCategoryOpen] = useState(false)
   const [createDepartmentOpen, setCreateDepartmentOpen] = useState(false)
 
+  const { data: licenseFeatures } = useQuery({
+    queryKey: queryKeys.license.features(),
+    queryFn: fetchLicenseFeatures,
+    staleTime: 5 * 60_000,
+  })
+
+  const isCoursesLicensed = licenseFeatures
+    ? licenseFeatures.some((f) => f.key === "courses" && f.licensed !== false)
+    : true // optimistic — hide only when explicitly false
+
   const handleAddClick = () => {
     if (activeTab === "services") router.push("/services/create")
     else if (activeTab === "categories") setCreateCategoryOpen(true)
     else if (activeTab === "departments") setCreateDepartmentOpen(true)
     else if (activeTab === "group-sessions") router.push("/group-sessions/create")
+    else if (activeTab === "courses") router.push("/courses/create")
   }
 
   const addLabel = () => {
     if (activeTab === "services") return t("services.addService")
     if (activeTab === "categories") return t("services.categories.addCategory")
     if (activeTab === "departments") return t("departments.addDepartment")
+    if (activeTab === "courses") return t("courses.addCourse")
     return t("groupSessions.addSession")
   }
 
@@ -87,6 +103,9 @@ export default function ServicesPage() {
           <TabsTrigger value="categories">{t("services.tabs.categories")}</TabsTrigger>
           <TabsTrigger value="services">{t("services.tabs.services")}</TabsTrigger>
           <TabsTrigger value="group-sessions">{t("services.tabs.groupSessions")}</TabsTrigger>
+          {isCoursesLicensed && (
+            <TabsTrigger value="courses">{t("services.tabs.courses")}</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="services" className="flex flex-col gap-6 pt-4">
@@ -108,6 +127,12 @@ export default function ServicesPage() {
         <TabsContent value="group-sessions" className="flex flex-col gap-6 pt-4">
           <SessionsListContent />
         </TabsContent>
+
+        {isCoursesLicensed && (
+          <TabsContent value="courses" className="flex flex-col gap-6 pt-4">
+            <CoursesListContent />
+          </TabsContent>
+        )}
       </Tabs>
 
       <CreateCategoryDialog open={createCategoryOpen} onOpenChange={setCreateCategoryOpen} />

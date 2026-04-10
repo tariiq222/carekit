@@ -1,19 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
-import { useTheme } from "next-themes"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  Logout03Icon,
   MedicalMaskIcon,
-  Moon02Icon,
-  Sun03Icon,
-  LanguageSkillIcon,
   CustomerService01Icon,
   Book02Icon,
-  UserCircle02Icon,
-  LockPasswordIcon,
 } from "@hugeicons/core-free-icons"
 
 import {
@@ -30,48 +22,24 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Separator } from "@/components/ui/separator"
 import { useLocale } from "@/components/locale-provider"
-import { useAuth } from "@/components/providers/auth-provider"
-import { ChangePasswordDialog } from "@/components/features/change-password-dialog"
 import { cn } from "@/lib/utils"
 import { useSidebarNav } from "@/hooks/use-sidebar-nav"
 
 /* ─── Component ─── */
 
 export function AppSidebar() {
-  const { t, dir, locale, toggleLocale } = useLocale()
-  const { resolvedTheme, setTheme } = useTheme()
-  const { logout, user } = useAuth()
-  const [passwordOpen, setPasswordOpen] = useState(false)
-  const [logoutOpen, setLogoutOpen] = useState(false)
+  const { t, dir } = useLocale()
   const { isMobile, setOpenMobile } = useSidebar()
 
   const {
     filteredGroups,
     actionableBookings,
-    userInitials,
-    userName,
     isItemActive,
     navigate,
     prefetchItem,
@@ -142,134 +110,37 @@ export function AppSidebar() {
           ))}
         </SidebarContent>
 
+        {/* ─── Footer — Support & Knowledge Base ─── */}
         <div className="px-4"><Separator /></div>
 
-        {/* ─── Icon Toolbar ─── */}
-        <div className="flex items-center justify-center gap-2 px-4 py-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                aria-label={resolvedTheme === "dark" ? "Light Mode" : "Dark Mode"}
-                className="toolbar-icon flex size-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
-              >
-                <HugeiconsIcon icon={resolvedTheme === "dark" ? Sun03Icon : Moon02Icon} size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              {resolvedTheme === "dark" ? "Light Mode" : "Dark Mode"}
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={toggleLocale}
-                aria-label={locale === "en" ? "العربية" : "English"}
-                className="toolbar-icon flex size-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
-              >
-                <HugeiconsIcon icon={LanguageSkillIcon} size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              {locale === "en" ? "العربية" : "English"}
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                aria-label={t("nav.support")}
-                className="toolbar-icon flex size-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
-              >
-                <HugeiconsIcon icon={CustomerService01Icon} size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top">{t("nav.support")}</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                aria-label={t("nav.knowledge")}
-                className="toolbar-icon flex size-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
-              >
-                <HugeiconsIcon icon={Book02Icon} size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top">{t("nav.knowledge")}</TooltipContent>
-          </Tooltip>
-        </div>
-
-        <div className="px-4"><Separator /></div>
-
-        {/* ─── Footer — User ─── */}
         <SidebarFooter className="px-4 pt-2 pb-4">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton size="lg" className="toolbar-icon !rounded-[22px] !h-auto !py-2 border border-transparent">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-[16px] bg-gradient-to-br from-primary to-primary-light text-primary-foreground text-xs font-bold">
-                      {userInitials}
-                    </div>
-                    <div className="grid flex-1 text-start text-sm leading-tight">
-                      <span className="truncate font-semibold">{userName}</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {t("header.role")}
-                      </span>
-                    </div>
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="top" sideOffset={8} className="w-52 rounded-xl p-1.5">
-                  <button
-                    onClick={() => {}}
-                    className="toolbar-icon flex w-full items-center gap-3 !rounded-xl px-3 py-2.5 text-sm font-medium text-foreground border border-transparent"
-                  >
-                    <HugeiconsIcon icon={UserCircle02Icon} size={18} className="shrink-0 text-muted-foreground" />
-                    {t("header.myProfile")}
-                  </button>
-                  <button
-                    onClick={() => setPasswordOpen(true)}
-                    className="toolbar-icon flex w-full items-center gap-3 !rounded-xl px-3 py-2.5 text-sm font-medium text-foreground border border-transparent"
-                  >
-                    <HugeiconsIcon icon={LockPasswordIcon} size={18} className="shrink-0 text-muted-foreground" />
-                    {t("header.changePassword")}
-                  </button>
-                  <DropdownMenuSeparator className="my-1" />
-                  <button
-                    onClick={() => setLogoutOpen(true)}
-                    className="toolbar-icon flex w-full items-center gap-3 !rounded-xl px-3 py-2.5 text-sm font-medium text-error border border-transparent"
-                  >
-                    <HugeiconsIcon icon={Logout03Icon} size={18} className="shrink-0" />
-                    {t("header.logout")}
-                  </button>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <div className="flex items-center justify-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label={t("nav.support")}
+                  className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+                >
+                  <HugeiconsIcon icon={CustomerService01Icon} size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("nav.support")}</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label={t("nav.knowledge")}
+                  className="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+                >
+                  <HugeiconsIcon icon={Book02Icon} size={18} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("nav.knowledge")}</TooltipContent>
+            </Tooltip>
+          </div>
         </SidebarFooter>
       </Sidebar>
-
-      <ChangePasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} />
-
-      <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
-        <AlertDialogContent className="max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("header.logoutConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("header.logoutConfirmDesc")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={logout}
-              className="bg-error text-white hover:bg-error/90"
-            >
-              {t("header.logoutConfirm")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }

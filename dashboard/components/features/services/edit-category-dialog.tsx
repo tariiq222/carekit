@@ -128,29 +128,24 @@ export function EditCategoryDialog({
               <Input type="number" min={0} {...form.register("sortOrder")} />
             </div>
 
-            {departments.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("services.categories.edit.department")}</Label>
-                <Select
-                  value={form.watch("departmentId") ?? "__none__"}
-                  onValueChange={(v) =>
-                    form.setValue("departmentId", v === "__none__" ? null : v)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("services.categories.edit.departmentPlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">{t("services.categories.edit.departmentPlaceholder")}</SelectItem>
-                    {departments.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.nameAr} / {d.nameEn}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className="flex flex-col gap-1.5">
+              <Label>{t("services.categories.edit.department")} *</Label>
+              <Select
+                value={form.watch("departmentId") || ""}
+                onValueChange={(v) => form.setValue("departmentId", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("services.categories.edit.departmentPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.nameAr} / {d.nameEn}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </form>
         </DialogBody>
 

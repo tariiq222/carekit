@@ -6,17 +6,18 @@ describe("createCategorySchema", () => {
     const result = createCategorySchema.safeParse({
       nameEn: "Physiotherapy",
       nameAr: "علاج طبيعي",
+      departmentId: "00000000-0000-0000-0000-000000000001",
     })
     expect(result.success).toBe(true)
   })
 
   it("rejects empty nameEn", () => {
-    const result = createCategorySchema.safeParse({ nameEn: "", nameAr: "علاج طبيعي" })
+    const result = createCategorySchema.safeParse({ nameEn: "", nameAr: "علاج طبيعي", departmentId: "00000000-0000-0000-0000-000000000001" })
     expect(result.success).toBe(false)
   })
 
   it("rejects empty nameAr", () => {
-    const result = createCategorySchema.safeParse({ nameEn: "Physio", nameAr: "" })
+    const result = createCategorySchema.safeParse({ nameEn: "Physio", nameAr: "", departmentId: "00000000-0000-0000-0000-000000000001" })
     expect(result.success).toBe(false)
   })
 
@@ -25,6 +26,7 @@ describe("createCategorySchema", () => {
       nameEn: "Physio",
       nameAr: "علاج",
       sortOrder: "5",
+      departmentId: "00000000-0000-0000-0000-000000000001",
     })
     expect(result.success).toBe(true)
     if (result.success) expect(result.data.sortOrder).toBe(5)
