@@ -114,20 +114,23 @@ export default async function globalSetup(): Promise<void> {
           where: { practitionerId: { in: practitionerIds } },
         });
 
-        // Delete group session enrollments + sessions referencing these practitioners
-        // (GroupSession.practitioner has onDelete: Restrict)
-        const groupSessions = await prisma.groupSession.findMany({
+        // Delete group enrollments + groups referencing these practitioners
+        // (Group.practitioner has onDelete: Restrict)
+        const groups = await prisma.group.findMany({
           where: { practitionerId: { in: practitionerIds } },
           select: { id: true },
         });
-        const groupSessionIds = groupSessions.map((gs) => gs.id);
+        const groupIds = groups.map((g) => g.id);
 
-        if (groupSessionIds.length > 0) {
-          await prisma.groupEnrollment.deleteMany({
-            where: { groupSessionId: { in: groupSessionIds } },
+        if (groupIds.length > 0) {
+          await prisma.groupCertificate.deleteMany({
+            where: { groupId: { in: groupIds } },
           });
-          await prisma.groupSession.deleteMany({
-            where: { id: { in: groupSessionIds } },
+          await prisma.groupEnrollment.deleteMany({
+            where: { groupId: { in: groupIds } },
+          });
+          await prisma.group.deleteMany({
+            where: { id: { in: groupIds } },
           });
         }
       }
