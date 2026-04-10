@@ -16,6 +16,8 @@ export interface LicenseConfig {
   hasWaitlist: boolean
   hasZoom: boolean
   hasZatca: boolean
+  hasDepartments: boolean
+  hasGroups: boolean
   createdAt: string
   updatedAt: string
 }
