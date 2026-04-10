@@ -314,17 +314,17 @@ export class MoyasarWebhookService {
   }
 
   private async processGroupPaymentFailed(groupPaymentId: string, eventId: string): Promise<void> {
-    await this.prisma.groupPayment.updateMany({
-      where: { id: groupPaymentId, status: 'pending' },
-      data: { status: 'failed' },
-    }).catch((e: unknown) => {
-      if ((e as { code?: string }).code !== 'P2002') throw e;
-    });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.groupPayment.updateMany({
+        where: { id: groupPaymentId, status: 'pending' },
+        data: { status: 'failed' },
+      });
 
-    await this.prisma.processedWebhook.create({
-      data: { eventId, processedAt: new Date() },
-    }).catch((e: unknown) => {
-      if ((e as { code?: string }).code !== 'P2002') throw e;
+      await tx.processedWebhook.create({
+        data: { eventId, processedAt: new Date() },
+      }).catch((e: unknown) => {
+        if ((e as { code?: string }).code !== 'P2002') throw e;
+      });
     });
   }
 }

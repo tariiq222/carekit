@@ -166,4 +166,51 @@ describe('MoyasarWebhookService', () => {
       );
     });
   });
+
+  describe('processGroupPaymentFailed', () => {
+    it('should wrap groupPayment update and processedWebhook create in a single $transaction', async () => {
+      prismaServiceMock.$transaction.mockImplementationOnce(
+        async (fn: (tx: typeof prismaServiceMock) => Promise<unknown>) => fn(prismaServiceMock),
+      );
+      prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 1 });
+      prismaServiceMock.processedWebhook.create.mockResolvedValue({});
+
+      await (service as any).processGroupPaymentFailed('gp-1', 'evt-failed-1');
+
+      expect(prismaServiceMock.$transaction).toHaveBeenCalledTimes(1);
+      expect(prismaServiceMock.groupPayment.updateMany).toHaveBeenCalledWith({
+        where: { id: 'gp-1', status: 'pending' },
+        data: { status: 'failed' },
+      });
+      expect(prismaServiceMock.processedWebhook.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ eventId: 'evt-failed-1' }) }),
+      );
+    });
+
+    it('should swallow P2002 on processedWebhook create (idempotency)', async () => {
+      prismaServiceMock.$transaction.mockImplementationOnce(
+        async (fn: (tx: typeof prismaServiceMock) => Promise<unknown>) => fn(prismaServiceMock),
+      );
+      prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 0 });
+      const p2002 = Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+      prismaServiceMock.processedWebhook.create.mockRejectedValue(p2002);
+
+      await expect(
+        (service as any).processGroupPaymentFailed('gp-1', 'evt-dup'),
+      ).resolves.not.toThrow();
+    });
+
+    it('should propagate non-P2002 errors from processedWebhook create', async () => {
+      prismaServiceMock.$transaction.mockImplementationOnce(
+        async (fn: (tx: typeof prismaServiceMock) => Promise<unknown>) => fn(prismaServiceMock),
+      );
+      prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 1 });
+      const dbError = new Error('DB connection lost');
+      prismaServiceMock.processedWebhook.create.mockRejectedValue(dbError);
+
+      await expect(
+        (service as any).processGroupPaymentFailed('gp-1', 'evt-err'),
+      ).rejects.toThrow('DB connection lost');
+    });
+  });
 });
