@@ -25,7 +25,7 @@ const mockCache: any = { get: jest.fn().mockResolvedValue(null), set: jest.fn(),
 const mockIntakeForms: any = {};
 
 const BASE_DTO = {
-  name: 'Test Service',
+  nameEn: 'Test Service',
   nameAr: 'خدمة تجريبية',
   categoryId: 'cat-uuid',
   price: 100,

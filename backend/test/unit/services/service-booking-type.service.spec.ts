@@ -284,7 +284,7 @@ describe('ServiceBookingTypeService', () => {
         types: [
           { bookingType: BookingType.in_person, price: 20000, duration: 30 },
           { bookingType: BookingType.online, price: 15000, duration: 20 },
-          { bookingType: BookingType.home_visit, price: 25000, duration: 45 },
+          { bookingType: BookingType.walk_in, price: 25000, duration: 45 },
         ],
       });
 

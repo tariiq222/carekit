@@ -6,16 +6,8 @@ import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
+import { ServiceListQueryDto } from './dto/service-list-query.dto.js';
 import { IntakeFormsService } from '../intake-forms/intake-forms.service.js';
-interface ServiceListQuery {
-  page?: number;
-  perPage?: number;
-  categoryId?: string;
-  isActive?: boolean;
-  includeHidden?: boolean;
-  search?: string;
-  branchId?: string;
-}
 
 @Injectable()
 export class ServicesService {
@@ -106,7 +98,7 @@ export class ServicesService {
     return service;
   }
 
-  async findAll(query: ServiceListQuery) {
+  async findAll(query: ServiceListQueryDto) {
     // Only cache the default active-services query (no filters, no search, page 1)
     const isDefaultQuery =
       !query.categoryId &&
@@ -307,7 +299,7 @@ export class ServicesService {
   //  PRIVATE HELPERS
   // ═══════════════════════════════════════════════════════════════
 
-  private async queryServices(query: ServiceListQuery) {
+  private async queryServices(query: ServiceListQueryDto) {
     const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
 
     const where: Prisma.ServiceWhereInput = {
