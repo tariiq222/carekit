@@ -1,10 +1,11 @@
 import {
   Injectable,
   BadRequestException,
+  ConflictException,
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import { NotificationType } from '@prisma/client';
+import { NotificationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 
@@ -35,7 +36,9 @@ export class GroupsEnrollmentsService {
       throw new BadRequestException('Patient is already enrolled in this group');
     }
 
-    const result = await this.prisma.$transaction(
+    let result;
+    try {
+      result = await this.prisma.$transaction(
       async (tx) => {
         const group = await tx.group.findFirst({
           where: { id: groupId },
@@ -78,6 +81,12 @@ export class GroupsEnrollmentsService {
       },
       { isolationLevel: 'Serializable' },
     );
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2034') {
+        throw new ConflictException('Enrollment conflict — please try again');
+      }
+      throw err;
+    }
 
     this.notificationsService.createNotification({
       userId: patientId,
