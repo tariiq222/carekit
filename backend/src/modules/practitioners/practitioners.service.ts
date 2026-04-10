@@ -9,11 +9,13 @@ import { checkOwnership } from '../../common/helpers/ownership.helper.js';
 import { CreatePractitionerDto } from './dto/create-practitioner.dto.js';
 import { UpdatePractitionerDto } from './dto/update-practitioner.dto.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
+import { PriceResolverService } from '../bookings/price-resolver.service.js';
 
 @Injectable()
 export class PractitionersService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly priceResolver: PriceResolverService,
   ) {}
 
   /** Creates a practitioner profile for a new user. */
@@ -273,11 +275,58 @@ export class PractitionersService {
     });
   }
 
-  async resolveDurationForSlots(serviceId: string, bookingType: string): Promise<number> {
-    const sbt = await this.prisma.serviceBookingType.findUnique({
-      where: { serviceId_bookingType: { serviceId, bookingType: bookingType as BookingType } },
-    });
-    return sbt?.duration ?? 30;
+  /**
+   * Resolves the correct slot duration for a given service + bookingType combination.
+   * Uses the full PriceResolverService chain:
+   *   practitioner duration option → service duration option → practitioner type → service type
+   * This ensures slot generation uses the exact same duration as booking creation,
+   * preventing slot/booking duration mismatch (CRITICAL fix #1).
+   *
+   * Falls back to 30 if the service or practitioner relation is not found
+   * (e.g. public slot browsing before selecting a practitioner).
+   */
+  async resolveDurationForSlots(
+    serviceId: string,
+    bookingType: string,
+    practitionerId?: string,
+  ): Promise<number> {
+    try {
+      if (!practitionerId) {
+        // No practitioner context — resolve from service-level only
+        const sbt = await this.prisma.serviceBookingType.findUnique({
+          where: { serviceId_bookingType: { serviceId, bookingType: bookingType as BookingType } },
+          include: { durationOptions: { where: { isDefault: true }, take: 1 } },
+        });
+        if (!sbt) return 30;
+        if (sbt.durationOptions.length > 0) return sbt.durationOptions[0].durationMinutes;
+        return sbt.duration;
+      }
+
+      const ps = await this.prisma.practitionerService.findUnique({
+        where: { practitionerId_serviceId: { practitionerId, serviceId } },
+        select: { id: true },
+      });
+      if (!ps) {
+        // Practitioner doesn't offer this service — fall back to service-level
+        const sbt = await this.prisma.serviceBookingType.findUnique({
+          where: { serviceId_bookingType: { serviceId, bookingType: bookingType as BookingType } },
+          include: { durationOptions: { where: { isDefault: true }, take: 1 } },
+        });
+        if (!sbt) return 30;
+        if (sbt.durationOptions.length > 0) return sbt.durationOptions[0].durationMinutes;
+        return sbt.duration;
+      }
+
+      const resolved = await this.priceResolver.resolve({
+        serviceId,
+        practitionerServiceId: ps.id,
+        bookingType: bookingType as BookingType,
+      });
+      return resolved.duration;
+    } catch {
+      // Non-blocking — return safe default rather than breaking slot availability
+      return 30;
+    }
   }
 
 }
