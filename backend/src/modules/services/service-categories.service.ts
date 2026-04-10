@@ -30,21 +30,30 @@ export class ServiceCategoriesService {
   }
 
   async findAll() {
-    const cached = await this.cache.get<
-      Awaited<ReturnType<typeof this.prisma.serviceCategory.findMany>>
-    >(CACHE_KEYS.CATEGORIES_ACTIVE);
-    if (cached) return cached;
+    try {
+      const cached = await this.cache.get<
+        Awaited<ReturnType<typeof this.prisma.serviceCategory.findMany>>
+      >(CACHE_KEYS.CATEGORIES_ACTIVE);
+      if (cached) return cached;
+    } catch {
+      // Cache read failure — fall through to DB
+    }
 
     const categories = await this.prisma.serviceCategory.findMany({
       where: { isActive: true },
+      include: { department: { select: { id: true, nameEn: true, nameAr: true } } },
       orderBy: { sortOrder: 'asc' },
     });
 
-    await this.cache.set(
-      CACHE_KEYS.CATEGORIES_ACTIVE,
-      categories,
-      CACHE_TTL.CATEGORIES_LIST,
-    );
+    try {
+      await this.cache.set(
+        CACHE_KEYS.CATEGORIES_ACTIVE,
+        categories,
+        CACHE_TTL.CATEGORIES_LIST,
+      );
+    } catch {
+      // Cache write failure is non-fatal
+    }
 
     return categories;
   }
@@ -105,9 +114,13 @@ export class ServiceCategoriesService {
   }
 
   private async invalidateCache(): Promise<void> {
-    await Promise.all([
-      this.cache.del(CACHE_KEYS.CATEGORIES_ACTIVE),
-      this.cache.del(CACHE_KEYS.SERVICES_ACTIVE),
-    ]);
+    try {
+      await Promise.all([
+        this.cache.del(CACHE_KEYS.CATEGORIES_ACTIVE),
+        this.cache.del(CACHE_KEYS.SERVICES_ACTIVE),
+      ]);
+    } catch {
+      // Cache invalidation failure is non-fatal
+    }
   }
 }

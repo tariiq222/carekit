@@ -95,36 +95,12 @@ export class ServicesController {
 
   @Get('export')
   @CheckPermissions({ module: 'services', action: 'view' })
-  async exportCsv(
-    @Query('format') format: string = 'csv',
-    @Res() res: Response,
-  ) {
-    const data = await this.servicesService.exportServices();
-
-    const headers: string[] = ['ID', 'Name (AR)', 'Name (EN)', 'Category (AR)', 'Category (EN)', 'Price (SAR)', 'Duration (min)', 'Active', 'Hidden', 'Created At'];
-    const rows: string[][] = data.map((r) => [
-      r.id,
-      r.nameAr,
-      r.nameEn,
-      r.categoryAr,
-      r.categoryEn,
-      r.priceSar,
-      String(r.durationMinutes),
-      r.isActive,
-      r.isHidden,
-      r.createdAt,
-    ]);
-
-    const csvContent = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-      .join('\r\n');
-
-    // Fix #11: always send CSV regardless of format param — we do not generate real XLSX.
-    // Using application/vnd.ms-excel with CSV content caused Excel to reject or misparse the file.
-    // If true XLSX is needed in future, replace this block with exceljs output.
+  async exportCsv(@Res() res: Response) {
+    // CSV generation logic lives in the service (fix #16 — separation of concerns)
+    const csvContent = await this.servicesService.exportServicesCsv();
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="services.csv"');
-    res.send('\uFEFF' + csvContent);
+    res.send(csvContent);
   }
 
   @Get(':id')
