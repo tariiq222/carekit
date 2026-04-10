@@ -7,15 +7,17 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBranchDto {
+  @ApiProperty({ description: 'Branch name in Arabic', maxLength: 255, example: 'فرع الرياض' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   nameAr!: string;
 
+  @ApiProperty({ description: 'Branch name in English', maxLength: 255, example: 'Riyadh Branch' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
