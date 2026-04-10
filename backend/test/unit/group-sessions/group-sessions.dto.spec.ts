@@ -160,22 +160,6 @@ describe('CreateGroupSessionDto', () => {
     expect(errors.some((e) => e.property === 'expiresAt')).toBe(true);
   });
 
-  it('should accept optional departmentId as UUID', async () => {
-    const errors = await getErrors(CreateGroupSessionDto, {
-      ...validCreateBase,
-      departmentId: '550e8400-e29b-41d4-a716-446655440001',
-    });
-    expect(errors).toHaveLength(0);
-  });
-
-  it('should reject invalid departmentId', async () => {
-    const errors = await getErrors(CreateGroupSessionDto, {
-      ...validCreateBase,
-      departmentId: 'bad-uuid',
-    });
-    expect(errors.some((e) => e.property === 'departmentId')).toBe(true);
-  });
-
   it('should accept optional descriptionAr', async () => {
     const errors = await getErrors(CreateGroupSessionDto, {
       ...validCreateBase,

@@ -5,7 +5,6 @@ export type GroupEnrollmentStatus = "registered" | "confirmed" | "attended" | "e
 export interface GroupSession {
   id: string
   practitionerId: string
-  departmentId: string | null
   nameAr: string
   nameEn: string
   descriptionAr: string | null
@@ -59,7 +58,6 @@ export interface CreateGroupSessionPayload {
   descriptionAr?: string
   descriptionEn?: string
   practitionerId: string
-  departmentId?: string
   minParticipants: number
   maxParticipants: number
   pricePerPersonHalalat: number

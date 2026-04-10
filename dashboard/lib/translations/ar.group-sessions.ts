@@ -10,6 +10,13 @@ export const arGroupSessions: Record<string, string> = {
 
   "groupSessions.tabs.offerings": "العروض",
   "groupSessions.tabs.sessions": "الجلسات",
+  "groupSessions.tabs.info": "المعلومات الأساسية",
+  "groupSessions.tabs.infoDesc": "الاسم والوصف وتعيين الممارس",
+  "groupSessions.tabs.settings": "الإعدادات",
+  "groupSessions.tabs.settingsDesc": "عدد المشاركين والسعر والمدة",
+  "groupSessions.tabs.scheduling": "الجدولة",
+  "groupSessions.tabs.schedulingDesc": "نوع الجدولة والنشر وتاريخ الانتهاء",
+  "groupSessions.createTitle": "إضافة جلسة",
 
   "groupSessions.addOffering": "إضافة عرض",
   "groupSessions.editOffering": "تعديل العرض",
@@ -22,6 +29,9 @@ export const arGroupSessions: Record<string, string> = {
   "groupSessions.descriptionAr": "الوصف (عربي)",
   "groupSessions.descriptionEn": "الوصف (إنجليزي)",
   "groupSessions.practitioner": "الممارس",
+  "groupSessions.selectPractitioner": "اختر ممارساً...",
+  "groupSessions.searchPractitioner": "ابحث عن ممارس...",
+  "groupSessions.noPractitionerFound": "لا يوجد ممارس بهذا الاسم",
   "groupSessions.minParticipants": "الحد الأدنى للمشاركين",
   "groupSessions.maxParticipants": "الحد الأقصى للمشاركين",
   "groupSessions.pricePerPerson": "السعر للشخص",
@@ -35,7 +45,13 @@ export const arGroupSessions: Record<string, string> = {
 
   "groupSessions.scheduleSession": "جدولة جلسة",
   "groupSessions.sessionScheduled": "تم جدولة الجلسة بنجاح",
+  "groupSessions.scheduling": "نوع الجدولة",
+  "groupSessions.fixedDate": "تاريخ محدد",
+  "groupSessions.onCapacity": "عند اكتمال العدد",
   "groupSessions.startTime": "وقت البدء",
+  "groupSessions.publishForClients": "نشر للعملاء",
+  "groupSessions.expiresAt": "تاريخ الانتهاء",
+  "groupSessions.expiresAtHint": "الجلسة لن تظهر للعملاء بعد هذا التاريخ",
   "groupSessions.registrationDeadline": "آخر موعد للتسجيل",
   "groupSessions.schedule": "جدولة",
 
@@ -67,4 +83,13 @@ export const arGroupSessions: Record<string, string> = {
 
   "groupSessions.paid": "مدفوع",
   "groupSessions.awaitingPayment": "بانتظار الدفع",
+
+  "groupSessions.wizard.submit": "إنشاء الجلسة",
+  "groupSessions.sessionCreated": "تم إنشاء الجلسة بنجاح",
+  "groupSessions.addSession": "إضافة جلسة",
+  "groupSessions.searchPlaceholder": "ابحث عن جلسة...",
+  "groupSessions.filterByVisibility": "تصفية حسب الرؤية",
+  "groupSessions.name": "اسم الجلسة",
+  "groupSessions.type": "النوع",
+  "groupSessions.published": "النشر",
 }

@@ -23,6 +23,7 @@ import { UpdateGroupSessionDto } from './dto/update-group-session.dto.js';
 import { GroupSessionQueryDto } from './dto/group-session-query.dto.js';
 import { EnrollPatientDto } from './dto/enroll-patient.dto.js';
 import { MarkAttendanceDto } from './dto/mark-attendance.dto.js';
+import { ConfirmScheduleDto } from './dto/confirm-schedule.dto.js';
 
 @ApiTags('Group Sessions')
 @ApiBearerAuth()
@@ -84,6 +85,33 @@ export class GroupSessionsController {
   @CheckPermissions({ module: 'group_sessions', action: 'edit' })
   complete(@Param('id', ParseUUIDPipe) id: string, @Body() dto: MarkAttendanceDto) {
     return this.sessionsService.complete(id, dto.attendedPatientIds);
+  }
+
+  @Patch(':id/trigger-payment')
+  @ApiOperation({ summary: 'Trigger payment request for all registered enrollments (on_capacity flow)' })
+  @CheckPermissions({ module: 'group_sessions', action: 'edit' })
+  triggerPayment(@Param('id', ParseUUIDPipe) id: string) {
+    return this.sessionsService.triggerPaymentRequest(id);
+  }
+
+  @Patch(':id/enrollments/:enrollmentId/resend-payment')
+  @ApiOperation({ summary: 'Resend payment request to a single unpaid enrollment' })
+  @CheckPermissions({ module: 'group_sessions', action: 'edit' })
+  resendPayment(
+    @Param('id', ParseUUIDPipe) sessionId: string,
+    @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
+  ) {
+    return this.sessionsService.resendPaymentRequest(sessionId, enrollmentId);
+  }
+
+  @Patch(':id/confirm-schedule')
+  @ApiOperation({ summary: 'Set session date after payments collected (on_capacity flow)' })
+  @CheckPermissions({ module: 'group_sessions', action: 'edit' })
+  confirmSchedule(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ConfirmScheduleDto,
+  ) {
+    return this.sessionsService.confirmSchedule(id, dto);
   }
 
   // ─── Enrollments ───

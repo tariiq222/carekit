@@ -38,10 +38,6 @@ export class UpdateGroupSessionDto {
   practitionerId?: string;
 
   @IsOptional()
-  @IsUUID()
-  departmentId?: string;
-
-  @IsOptional()
   @IsInt()
   @Min(1)
   minParticipants?: number;

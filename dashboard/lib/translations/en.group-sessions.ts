@@ -10,6 +10,13 @@ export const enGroupSessions: Record<string, string> = {
 
   "groupSessions.tabs.offerings": "Offerings",
   "groupSessions.tabs.sessions": "Sessions",
+  "groupSessions.tabs.info": "Basic Info",
+  "groupSessions.tabs.infoDesc": "Name, description and practitioner assignment",
+  "groupSessions.tabs.settings": "Settings",
+  "groupSessions.tabs.settingsDesc": "Participant limits, pricing and duration",
+  "groupSessions.tabs.scheduling": "Scheduling",
+  "groupSessions.tabs.schedulingDesc": "Schedule type, publishing and expiry date",
+  "groupSessions.createTitle": "Add Session",
 
   "groupSessions.addOffering": "Add Offering",
   "groupSessions.editOffering": "Edit Offering",
@@ -22,6 +29,9 @@ export const enGroupSessions: Record<string, string> = {
   "groupSessions.descriptionAr": "Description (Arabic)",
   "groupSessions.descriptionEn": "Description (English)",
   "groupSessions.practitioner": "Practitioner",
+  "groupSessions.selectPractitioner": "Select a practitioner...",
+  "groupSessions.searchPractitioner": "Search practitioners...",
+  "groupSessions.noPractitionerFound": "No practitioner found",
   "groupSessions.minParticipants": "Min Participants",
   "groupSessions.maxParticipants": "Max Participants",
   "groupSessions.pricePerPerson": "Price per Person",
@@ -35,7 +45,13 @@ export const enGroupSessions: Record<string, string> = {
 
   "groupSessions.scheduleSession": "Schedule Session",
   "groupSessions.sessionScheduled": "Session scheduled successfully",
+  "groupSessions.scheduling": "Scheduling Type",
+  "groupSessions.fixedDate": "Fixed Date",
+  "groupSessions.onCapacity": "On Capacity",
   "groupSessions.startTime": "Start Time",
+  "groupSessions.publishForClients": "Publish for Clients",
+  "groupSessions.expiresAt": "Expires At",
+  "groupSessions.expiresAtHint": "Session will be hidden from clients after this date",
   "groupSessions.registrationDeadline": "Registration Deadline",
   "groupSessions.schedule": "Schedule",
 
@@ -67,4 +83,13 @@ export const enGroupSessions: Record<string, string> = {
 
   "groupSessions.paid": "paid",
   "groupSessions.awaitingPayment": "awaiting payment",
+
+  "groupSessions.wizard.submit": "Create Session",
+  "groupSessions.sessionCreated": "Session created successfully",
+  "groupSessions.addSession": "Add Session",
+  "groupSessions.searchPlaceholder": "Search sessions...",
+  "groupSessions.filterByVisibility": "Filter by visibility",
+  "groupSessions.name": "Session Name",
+  "groupSessions.type": "Type",
+  "groupSessions.published": "Published",
 }

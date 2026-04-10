@@ -40,10 +40,6 @@ export class CreateGroupSessionDto {
   @IsNotEmpty()
   practitionerId!: string;
 
-  @IsOptional()
-  @IsUUID()
-  departmentId?: string;
-
   @IsInt()
   @Min(1)
   minParticipants!: number;
