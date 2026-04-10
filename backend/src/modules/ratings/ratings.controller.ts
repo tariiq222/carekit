@@ -7,7 +7,8 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
@@ -28,11 +29,10 @@ export class RatingsController {
 
   @Post()
   @CheckPermissions({ module: 'ratings', action: 'create' })
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Submit a rating for a completed booking' })
-  create(
-    @Body() dto: CreateRatingDto,
-    @CurrentUser() user: { id: string },
-  ) {
+  create(@Body() dto: CreateRatingDto, @CurrentUser() user: { id: string }) {
     return this.ratingsService.create({
       bookingId: dto.bookingId,
       patientId: user.id,
@@ -43,6 +43,8 @@ export class RatingsController {
 
   @Get('practitioner/:practitionerId')
   @CheckPermissions({ module: 'ratings', action: 'view' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Get all ratings for a practitioner' })
   findByPractitioner(
     @Param('practitionerId', uuidPipe) practitionerId: string,
@@ -57,6 +59,8 @@ export class RatingsController {
 
   @Get('booking/:bookingId')
   @CheckPermissions({ module: 'ratings', action: 'view' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Get rating for a specific booking' })
   findByBooking(@Param('bookingId', uuidPipe) bookingId: string) {
     return this.ratingsService.findByBooking(bookingId);

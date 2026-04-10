@@ -8,7 +8,8 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -26,6 +27,8 @@ export class ProblemReportsController {
   constructor(private readonly service: ProblemReportsService) {}
 
   @Post()
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Submit a problem report for a completed booking' })
   create(
     @Body() dto: CreateProblemReportDto,
@@ -41,6 +44,8 @@ export class ProblemReportsController {
 
   @Get()
   @CheckPermissions({ module: 'reports', action: 'view' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'List all problem reports (admin)' })
   findAll(
     @Query('page') page?: string,
@@ -58,6 +63,8 @@ export class ProblemReportsController {
 
   @Get(':id')
   @CheckPermissions({ module: 'reports', action: 'view' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Get a single problem report' })
   findOne(@Param('id', uuidPipe) id: string) {
     return this.service.findOne(id);
@@ -65,6 +72,8 @@ export class ProblemReportsController {
 
   @Patch(':id/resolve')
   @CheckPermissions({ module: 'reports', action: 'edit' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Resolve or dismiss a problem report (admin)' })
   resolve(
     @Param('id', uuidPipe) id: string,

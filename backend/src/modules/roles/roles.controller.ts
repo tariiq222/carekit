@@ -7,7 +7,8 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { RolesService } from './roles.service.js';
 import { CreateRoleDto, AssignPermissionDto } from './dto/create-role.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
@@ -24,6 +25,8 @@ export class RolesController {
 
   @Get()
   @CheckPermissions({ module: 'roles', action: 'view' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Get all roles with their permissions' })
   async findAll() {
     const roles = await this.rolesService.findAll();
@@ -46,6 +49,8 @@ export class RolesController {
 
   @Post()
   @CheckPermissions({ module: 'roles', action: 'create' })
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Create a new custom role' })
   async create(@Body() dto: CreateRoleDto) {
     const role = await this.rolesService.create(dto);
@@ -67,13 +72,19 @@ export class RolesController {
 
   @Delete(':id')
   @CheckPermissions({ module: 'roles', action: 'delete' })
-  @ApiOperation({ summary: 'Delete a custom role (system roles cannot be deleted)' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
+  @ApiOperation({
+    summary: 'Delete a custom role (system roles cannot be deleted)',
+  })
   async delete(@Param('id', uuidPipe) id: string) {
     return this.rolesService.delete(id);
   }
 
   @Post(':id/permissions')
   @CheckPermissions({ module: 'roles', action: 'edit' })
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Assign a permission to a role' })
   async assignPermission(
     @Param('id', uuidPipe) id: string,
@@ -89,7 +100,11 @@ export class RolesController {
    */
   @Post(':id/permissions/remove')
   @CheckPermissions({ module: 'roles', action: 'edit' })
-  @ApiOperation({ summary: 'Remove a permission from a role (proxy-safe POST variant)' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
+  @ApiOperation({
+    summary: 'Remove a permission from a role (proxy-safe POST variant)',
+  })
   async removePermissionPost(
     @Param('id', uuidPipe) id: string,
     @Body() dto: AssignPermissionDto,
@@ -103,7 +118,11 @@ export class RolesController {
    */
   @Delete(':id/permissions')
   @CheckPermissions({ module: 'roles', action: 'edit' })
-  @ApiOperation({ summary: 'Remove a permission from a role (deprecated — use POST /remove)' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
+  @ApiOperation({
+    summary: 'Remove a permission from a role (deprecated — use POST /remove)',
+  })
   async removePermission(
     @Param('id', uuidPipe) id: string,
     @Body() dto: AssignPermissionDto,

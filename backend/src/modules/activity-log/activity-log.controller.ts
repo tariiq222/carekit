@@ -1,5 +1,6 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -16,6 +17,8 @@ export class ActivityLogController {
 
   @Get()
   @CheckPermissions({ module: 'activity-log', action: 'view' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'List activity logs with filters and pagination' })
   findAll(@Query() query: ActivityLogQueryDto) {
     return this.service.findAll({
@@ -33,6 +36,8 @@ export class ActivityLogController {
 
   @Get(':id')
   @CheckPermissions({ module: 'activity-log', action: 'view' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   @ApiOperation({ summary: 'Get a single activity log entry' })
   findOne(@Param('id', uuidPipe) id: string) {
     return this.service.findOne(id);
