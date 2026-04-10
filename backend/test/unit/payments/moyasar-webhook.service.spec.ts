@@ -6,6 +6,7 @@ import { MoyasarWebhookService } from '../../../src/modules/payments/moyasar-web
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { InvoiceCreatorService } from '../../../src/modules/invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../../../src/modules/bookings/booking-status.service.js';
+import { GroupsPaymentService } from '../../../src/modules/groups/groups-payment.service.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const prismaServiceMock: any = {
@@ -14,6 +15,16 @@ const prismaServiceMock: any = {
     findUnique: jest.fn(),
     updateMany: jest.fn(),
     update: jest.fn(),
+  },
+  groupPayment: {
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    updateMany: jest.fn(),
+    update: jest.fn(),
+  },
+  processedWebhook: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
   },
   booking: { update: jest.fn() },
   $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(prismaServiceMock)),
@@ -28,6 +39,8 @@ const configServiceMock: any = {
 const invoicesServiceMock: any = { createInvoice: jest.fn() };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const bookingStatusServiceMock: any = { confirm: jest.fn(), cancel: jest.fn() };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const groupsPaymentServiceMock: any = { confirmEnrollmentAfterPayment: jest.fn() };
 
 describe('MoyasarWebhookService', () => {
   let service: MoyasarWebhookService;
@@ -40,6 +53,7 @@ describe('MoyasarWebhookService', () => {
         { provide: ConfigService, useValue: configServiceMock },
         { provide: InvoiceCreatorService, useValue: invoicesServiceMock },
         { provide: BookingStatusService, useValue: bookingStatusServiceMock },
+        { provide: GroupsPaymentService, useValue: groupsPaymentServiceMock },
       ],
     }).compile();
 
@@ -73,6 +87,45 @@ describe('MoyasarWebhookService', () => {
     it('should throw WEBHOOK_CONFIG_ERROR when secret is not configured', () => {
       jest.spyOn(configServiceMock, 'get').mockReturnValue('');
       expect(() => (service as any).verifySignature('abc123', Buffer.from('body'))).toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('processGroupPaymentSuccess', () => {
+    it('marks groupPayment failed and does NOT confirm enrollment when amount mismatch', async () => {
+      const groupPayment = { id: 'gp1', enrollmentId: 'e1', totalAmount: 1000, status: 'pending' };
+      prismaServiceMock.groupPayment.findUnique.mockResolvedValue(groupPayment);
+      prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 1 });
+      prismaServiceMock.processedWebhook.findUnique.mockResolvedValue(null);
+      prismaServiceMock.processedWebhook.create.mockResolvedValue({});
+
+      await (service as any).processGroupPaymentSuccess('gp1', 'e1', 'evt_1', 500);
+
+      expect(prismaServiceMock.groupPayment.updateMany).toHaveBeenCalledWith({
+        where: { id: 'gp1', status: 'pending' },
+        data: { status: 'failed' },
+      });
+      expect(groupsPaymentServiceMock.confirmEnrollmentAfterPayment).not.toHaveBeenCalled();
+    });
+
+    it('confirms enrollment AFTER transaction when amount matches', async () => {
+      const groupPayment = { id: 'gp1', enrollmentId: 'e1', totalAmount: 1000, status: 'pending' };
+      prismaServiceMock.groupPayment.findUnique.mockResolvedValue(groupPayment);
+      prismaServiceMock.groupPayment.updateMany.mockResolvedValue({ count: 1 });
+      prismaServiceMock.processedWebhook.findUnique.mockResolvedValue(null);
+      prismaServiceMock.processedWebhook.create.mockResolvedValue({});
+
+      await (service as any).processGroupPaymentSuccess('gp1', 'e1', 'evt_1', 1000);
+
+      expect(groupsPaymentServiceMock.confirmEnrollmentAfterPayment).toHaveBeenCalledWith('e1');
+    });
+
+    it('is idempotent — duplicate webhook does not double-confirm', async () => {
+      prismaServiceMock.processedWebhook.findUnique.mockResolvedValue({ eventId: 'evt_1', processedAt: new Date() });
+
+      await (service as any).processGroupPaymentSuccess('gp1', 'e1', 'evt_1', 1000);
+
+      expect(prismaServiceMock.groupPayment.updateMany).not.toHaveBeenCalled();
+      expect(groupsPaymentServiceMock.confirmEnrollmentAfterPayment).not.toHaveBeenCalled();
     });
   });
 });
