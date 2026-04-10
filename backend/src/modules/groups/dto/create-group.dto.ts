@@ -13,7 +13,11 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { GroupPaymentType, GroupSchedulingMode, DeliveryMode } from '@prisma/client';
+import {
+  GroupPaymentType,
+  GroupSchedulingMode,
+  DeliveryMode,
+} from '@prisma/client';
 
 export class CreateGroupDto {
   @ApiProperty({ description: 'Arabic name', maxLength: 255 })
@@ -78,7 +82,10 @@ export class CreateGroupDto {
   schedulingMode!: GroupSchedulingMode;
 
   @ValidateIf((o: CreateGroupDto) => o.schedulingMode === 'fixed_date')
-  @ApiPropertyOptional({ description: 'Start time (ISO 8601). Required when schedulingMode=fixed_date' })
+  @ApiPropertyOptional({
+    description:
+      'Start time (ISO 8601). Required when schedulingMode=fixed_date',
+  })
   @IsDateString()
   @IsNotEmpty()
   startTime?: string;
@@ -88,18 +95,26 @@ export class CreateGroupDto {
   @IsDateString()
   endDate?: string;
 
-  @ApiPropertyOptional({ description: 'Delivery mode', enum: DeliveryMode, default: 'in_person' })
+  @ApiPropertyOptional({
+    description: 'Delivery mode',
+    enum: DeliveryMode,
+    default: 'in_person',
+  })
   @IsOptional()
   @IsEnum(DeliveryMode)
   deliveryMode?: DeliveryMode;
 
-  @ApiPropertyOptional({ description: 'Physical location for in-person sessions' })
+  @ApiPropertyOptional({
+    description: 'Physical location for in-person sessions',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   location?: string;
 
-  @ApiPropertyOptional({ description: 'Online meeting link for online sessions' })
+  @ApiPropertyOptional({
+    description: 'Online meeting link for online sessions',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(1000)
@@ -110,13 +125,19 @@ export class CreateGroupDto {
   paymentType!: GroupPaymentType;
 
   @ValidateIf((o: CreateGroupDto) => o.paymentType === 'DEPOSIT')
-  @ApiPropertyOptional({ description: 'Deposit amount in halalat (required when paymentType=DEPOSIT)' })
+  @ApiPropertyOptional({
+    description:
+      'Deposit amount in halalat (required when paymentType=DEPOSIT)',
+  })
   @IsInt()
   @Min(0)
   depositAmount?: number;
 
   @ValidateIf((o: CreateGroupDto) => o.paymentType === 'DEPOSIT')
-  @ApiPropertyOptional({ description: 'Due date for remaining amount after deposit (required when paymentType=DEPOSIT)' })
+  @ApiPropertyOptional({
+    description:
+      'Due date for remaining amount after deposit (required when paymentType=DEPOSIT)',
+  })
   @IsDateString()
   @IsNotEmpty()
   remainingDueDate?: string;

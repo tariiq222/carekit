@@ -21,12 +21,17 @@ export class GroupQueryDto extends PaginationQueryDto {
   @IsEnum(GroupStatus)
   status?: GroupStatus;
 
-  @ApiPropertyOptional({ description: 'Filter by delivery mode', enum: DeliveryMode })
+  @ApiPropertyOptional({
+    description: 'Filter by delivery mode',
+    enum: DeliveryMode,
+  })
   @IsOptional()
   @IsEnum(DeliveryMode)
   deliveryMode?: DeliveryMode;
 
-  @ApiPropertyOptional({ description: 'Filter by visibility: published or draft' })
+  @ApiPropertyOptional({
+    description: 'Filter by visibility: published or draft',
+  })
   @IsOptional()
   @IsEnum(['published', 'draft'] as const)
   visibility?: string;
