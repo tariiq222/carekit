@@ -427,6 +427,21 @@ describe('PatientsService', () => {
       await expect(service.getPatientBookings('nonexistent')).rejects.toThrow(NotFoundException);
     });
 
+    it('[IDOR] throws NotFoundException when ID belongs to a non-patient user', async () => {
+      // Simulate a staff user ID — findFirst with patient role guard returns null
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+
+      await expect(service.getPatientBookings('staff-user-uuid')).rejects.toThrow(NotFoundException);
+
+      expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userRoles: { some: { role: { slug: 'patient' } } },
+          }),
+        }),
+      );
+    });
+
     it('returns bookings ordered by date desc', async () => {
       const mockBookings = [
         { id: 'b-2', date: new Date('2026-03-20'), status: 'completed' },
@@ -479,6 +494,20 @@ describe('PatientsService', () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
       await expect(service.getPatientStats('nonexistent')).rejects.toThrow(NotFoundException);
+    });
+
+    it('[IDOR] throws NotFoundException when ID belongs to a non-patient user', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+
+      await expect(service.getPatientStats('admin-user-uuid')).rejects.toThrow(NotFoundException);
+
+      expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userRoles: { some: { role: { slug: 'patient' } } },
+          }),
+        }),
+      );
     });
 
     it('returns totalBookings as sum of all group counts', async () => {
