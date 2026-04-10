@@ -54,6 +54,20 @@ export class GroupsPaymentService {
           where: { groupId, status: 'registered' },
           data: { status: 'payment_requested', paymentDeadlineAt: deadlineAt },
         });
+
+        const requiredAmount = this.getRequiredAmount(group);
+        await tx.groupPayment.createMany({
+          data: registered.map((e) => ({
+            enrollmentId: e.id,
+            groupId,
+            totalAmount: requiredAmount,
+            paidAmount: 0,
+            remainingAmount: requiredAmount,
+            method: 'online' as const,
+            status: 'pending' as const,
+          })),
+          skipDuplicates: true,
+        });
       }
 
       return registered;
