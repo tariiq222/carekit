@@ -18,6 +18,7 @@ export const enServices: Record<string, string> = {
   "services.tabs.departments": "Departments",
   "services.tabs.intake": "Intake Forms",
   "services.tabs.groupSessions": "Group Sessions",
+  "services.tabs.courses": "Training Courses",
   "services.col.service": "Service",
   "services.col.category": "Category",
   "services.col.price": "Price (SAR)",

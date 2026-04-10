@@ -52,7 +52,7 @@ export function Header() {
   }, [fontSize])
 
   return (
-    <header className="flex h-10 shrink-0 items-center gap-2 bg-transparent px-3 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/80 backdrop-blur-sm px-3 sm:px-6">
       <SidebarTrigger className="hover:text-primary hover:bg-primary/8" />
 
       <div className="flex-1" />
@@ -69,55 +69,60 @@ export function Header() {
             <HugeiconsIcon icon={Settings02Icon} size={18} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align={dir === "rtl" ? "start" : "end"} className="w-52">
-          <div className="flex items-center justify-between px-4 py-2">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon
-                icon={resolvedTheme === "dark" ? Moon02Icon : Sun03Icon}
-                size={14}
-                className="text-muted-foreground"
+        <DropdownMenuContent
+          align={dir === "rtl" ? "start" : "end"}
+          className="w-52"
+        >
+          <div dir={dir}>
+            <div className="flex items-center justify-between px-4 py-2">
+              <div className="flex items-center gap-2">
+                <HugeiconsIcon
+                  icon={resolvedTheme === "dark" ? Moon02Icon : Sun03Icon}
+                  size={14}
+                  className="text-muted-foreground"
+                />
+                <span className="text-sm text-foreground">
+                  {t("header.darkMode")}
+                </span>
+              </div>
+              <Switch
+                size="sm"
+                checked={resolvedTheme === "dark"}
+                onCheckedChange={(checked) =>
+                  setTheme(checked ? "dark" : "light")
+                }
               />
-              <span className="text-sm text-foreground">
-                {t("header.darkMode")}
-              </span>
             </div>
-            <Switch
-              size="sm"
-              checked={resolvedTheme === "dark"}
-              onCheckedChange={(checked) =>
-                setTheme(checked ? "dark" : "light")
-              }
-            />
-          </div>
-          <DropdownMenuSeparator />
-          <button
-            onClick={toggleLocale}
-            className="flex w-full items-center justify-between px-4 py-2 text-sm text-foreground hover:bg-primary/8 transition-all duration-200 rounded-sm"
-          >
-            <span>{t("header.language")}</span>
-            <span className="text-xs font-medium text-primary">
-              {locale === "en" ? "العربية" : "English"}
-            </span>
-          </button>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-xs text-muted-foreground px-4">
-            {t("header.fontSize")}
-          </DropdownMenuLabel>
-          <div className="flex gap-2 px-4 pb-2 pt-2">
-            {(["S", "M", "L"] as FontSize[]).map((size) => (
-              <button
-                key={size}
-                onClick={() => setFontSize(size)}
-                className={cn(
-                  "flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-200",
-                  fontSize === size
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-surface-muted text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {size}
-              </button>
-            ))}
+            <DropdownMenuSeparator />
+            <button
+              onClick={toggleLocale}
+              className="flex w-full items-center justify-between px-4 py-2 text-sm text-foreground hover:bg-primary/8 transition-all duration-200 rounded-sm"
+            >
+              <span>{t("header.language")}</span>
+              <span className="text-xs font-medium text-primary">
+                {locale === "en" ? "العربية" : "English"}
+              </span>
+            </button>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground px-4">
+              {t("header.fontSize")}
+            </DropdownMenuLabel>
+            <div className="flex gap-2 px-4 pb-2 pt-2">
+              {(["S", "M", "L"] as FontSize[]).map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setFontSize(size)}
+                  className={cn(
+                    "flex-1 rounded-md py-2 text-xs font-semibold transition-all duration-200",
+                    fontSize === size
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-surface-muted text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -140,22 +145,24 @@ export function Header() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align={dir === "rtl" ? "start" : "end"} className="w-72">
-          <DropdownMenuLabel className="text-xs text-muted-foreground">
-            {t("notifications.title")}
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <div className="px-2 py-3 text-center text-xs text-muted-foreground">
-            {(unreadCount ?? 0) > 0
-              ? `${unreadCount} ${t("notifications.unread")}`
-              : t("notifications.empty.description")}
+          <div dir={dir}>
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
+              {t("notifications.title")}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <div className="px-2 py-3 text-center text-xs text-muted-foreground">
+              {(unreadCount ?? 0) > 0
+                ? `${unreadCount} ${t("notifications.unread")}`
+                : t("notifications.empty.description")}
+            </div>
+            <DropdownMenuSeparator />
+            <Link
+              href="/notifications"
+              className="flex items-center justify-center rounded-sm px-4 py-2 text-sm font-medium text-primary hover:bg-primary/8 transition-all duration-200"
+            >
+              {t("notifications.viewAll")}
+            </Link>
           </div>
-          <DropdownMenuSeparator />
-          <Link
-            href="/notifications"
-            className="flex items-center justify-center rounded-sm px-4 py-2 text-sm font-medium text-primary hover:bg-primary/8 transition-all duration-200"
-          >
-            {t("notifications.viewAll")}
-          </Link>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -184,29 +191,32 @@ export function Header() {
           align={dir === "rtl" ? "start" : "end"}
           className="w-48"
         >
-          <button
-            onClick={() => {}}
-            className="flex w-full items-center gap-2.5 rounded-sm px-4 py-2 text-sm text-foreground hover:bg-primary/8 transition-all duration-200"
-          >
-            <HugeiconsIcon icon={UserCircle02Icon} size={16} className="text-muted-foreground" />
-            {t("header.myProfile")}
-          </button>
-          <button
-            onClick={() => setPasswordOpen(true)}
-            className="flex w-full items-center gap-2.5 rounded-sm px-4 py-2 text-sm text-foreground hover:bg-primary/8 transition-all duration-200"
-          >
-            <HugeiconsIcon icon={LockPasswordIcon} size={16} className="text-muted-foreground" />
-            {t("header.changePassword")}
-          </button>
-          <DropdownMenuSeparator />
-          <button
-            onClick={logout}
-            className="flex w-full items-center gap-2.5 rounded-sm px-4 py-2 text-sm text-error hover:bg-error/8 transition-all duration-200"
-          >
-            <HugeiconsIcon icon={Logout03Icon} size={16} />
-            {t("header.logout")}
-          </button>
+          <div dir={dir}>
+            <button
+              onClick={() => {}}
+              className="flex w-full items-center gap-2.5 rounded-sm px-4 py-2 text-sm text-foreground hover:bg-primary/8 transition-all duration-200"
+            >
+              <HugeiconsIcon icon={UserCircle02Icon} size={16} className="text-muted-foreground" />
+              {t("header.myProfile")}
+            </button>
+            <button
+              onClick={() => setPasswordOpen(true)}
+              className="flex w-full items-center gap-2.5 rounded-sm px-4 py-2 text-sm text-foreground hover:bg-primary/8 transition-all duration-200"
+            >
+              <HugeiconsIcon icon={LockPasswordIcon} size={16} className="text-muted-foreground" />
+              {t("header.changePassword")}
+            </button>
+            <DropdownMenuSeparator />
+            <button
+              onClick={logout}
+              className="flex w-full items-center gap-2.5 rounded-sm px-4 py-2 text-sm text-error hover:bg-error/8 transition-all duration-200"
+            >
+              <HugeiconsIcon icon={Logout03Icon} size={16} />
+              {t("header.logout")}
+            </button>
+          </div>
         </DropdownMenuContent>
+
       </DropdownMenu>
 
       <ChangePasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} />

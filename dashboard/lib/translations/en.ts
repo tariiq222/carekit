@@ -20,6 +20,7 @@ import { enIntakeForms } from "./en.intake-forms"
 import { enWhiteLabel } from "./en.whitelabel"
 import { enGroupSessions } from "./en.group-sessions"
 import { enDepartments } from "./en.departments"
+import { enCourses } from "./en.courses"
 
 export const en: Record<string, string> = {
   ...enNav,
@@ -37,4 +38,5 @@ export const en: Record<string, string> = {
   ...enWhiteLabel,
   ...enGroupSessions,
   ...enDepartments,
+  ...enCourses,
 }

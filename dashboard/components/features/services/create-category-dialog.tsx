@@ -50,7 +50,7 @@ export function CreateCategoryDialog({
 
   const form = useForm<CreateCategoryFormData>({
     resolver: zodResolver(createCategorySchema),
-    defaultValues: { nameEn: "", nameAr: "", sortOrder: 0, departmentId: null },
+    defaultValues: { nameEn: "", nameAr: "", sortOrder: 0, departmentId: "" },
   })
 
   const onSubmit = form.handleSubmit(async (data) => {
@@ -66,7 +66,7 @@ export function CreateCategoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t("services.categories.create.title")}</DialogTitle>
           <DialogDescription>{t("services.categories.create.description")}</DialogDescription>
@@ -95,25 +95,17 @@ export function CreateCategoryDialog({
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label>{t("services.categories.create.sortOrder")}</Label>
-              <Input type="number" min={0} {...form.register("sortOrder")} />
-            </div>
-
-            {departments.length > 0 && (
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label>{t("services.categories.create.department")}</Label>
+                <Label>{t("services.categories.create.department")} *</Label>
                 <Select
-                  value={form.watch("departmentId") ?? "__none__"}
-                  onValueChange={(v) =>
-                    form.setValue("departmentId", v === "__none__" ? null : v)
-                  }
+                  value={form.watch("departmentId") || ""}
+                  onValueChange={(v) => form.setValue("departmentId", v)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder={t("services.categories.create.departmentPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">{t("services.categories.create.departmentPlaceholder")}</SelectItem>
                     {departments.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
                         {d.nameAr} / {d.nameEn}
@@ -121,8 +113,17 @@ export function CreateCategoryDialog({
                     ))}
                   </SelectContent>
                 </Select>
+                {form.formState.errors.departmentId && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.departmentId.message}
+                  </p>
+                )}
               </div>
-            )}
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("services.categories.create.sortOrder")}</Label>
+                <Input type="number" min={0} {...form.register("sortOrder")} />
+              </div>
+            </div>
           </form>
         </DialogBody>
 

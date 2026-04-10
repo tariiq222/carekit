@@ -35,6 +35,7 @@ const FEATURES = [
   "activity-log",
   "problem-reports",
   "group-sessions",
+  "courses",
 ]
 
 /**

@@ -8,7 +8,7 @@ export interface CreateCategoryPayload {
   nameEn: string
   nameAr: string
   sortOrder?: number
-  departmentId?: string | null
+  departmentId: string
 }
 
 export interface UpdateCategoryPayload {
@@ -16,7 +16,7 @@ export interface UpdateCategoryPayload {
   nameAr?: string
   sortOrder?: number
   isActive?: boolean
-  departmentId?: string | null
+  departmentId?: string
 }
 
 /* ─── Service DTOs ─── */
