@@ -74,7 +74,7 @@ export class RatingsService {
         });
 
         return newRating;
-      });
+      }, { isolationLevel: 'Serializable' });
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
         throw new ConflictException('This booking has already been rated');
