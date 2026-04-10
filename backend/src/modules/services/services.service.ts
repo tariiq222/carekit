@@ -68,6 +68,23 @@ export class ServicesService {
       maxAdvanceDays: dto.maxAdvanceDays,
     };
 
+    // Validate practitioner IDs exist before creating relations (fix #9)
+    if (dto.practitionerIds?.length) {
+      const found = await this.prisma.practitioner.findMany({
+        where: { id: { in: dto.practitionerIds }, deletedAt: null },
+        select: { id: true },
+      });
+      const foundIds = found.map((p) => p.id);
+      const missing = dto.practitionerIds.filter((id) => !foundIds.includes(id));
+      if (missing.length > 0) {
+        throw new NotFoundException({
+          statusCode: 404,
+          message: `Practitioners not found: ${missing.join(', ')}`,
+          error: 'PRACTITIONER_NOT_FOUND',
+        });
+      }
+    }
+
     const service = await this.prisma.service.create({
       data: {
         ...serviceData,
