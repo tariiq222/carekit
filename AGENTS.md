@@ -64,27 +64,27 @@ OpenCode selects models at session level. CTO enforces correct model through sta
 
 | Agent | Model | When |
 |-------|-------|------|
-| CTO | Sonnet 4 | Always |
-| ARCHITECT | Sonnet 4 | LOW / MEDIUM / HIGH |
-| ARCHITECT | Opus 4 | Escalation only (COMPLEX / CRITICAL) |
-| EXECUTOR | GLM 5.1 | Always |
-| TEST ENGINEER | GLM 5.1 | Always |
-| REVIEWER | Sonnet 4 | Always |
-| QA VALIDATOR | Sonnet 4 | Always |
+| CTO | claude-sonnet-4-6 | Always |
+| ARCHITECT | claude-sonnet-4-6 | LOW / MEDIUM / HIGH |
+| ARCHITECT | claude-opus-4-6 | Escalation only (COMPLEX / CRITICAL) |
+| EXECUTOR | glm-5.1 | Always |
+| TEST ENGINEER | glm-5.1 | Always |
+| REVIEWER | claude-sonnet-4-6 | Always |
+| QA VALIDATOR | claude-sonnet-4-6 | Always |
 
 **Session groups:**
 ```
-Sonnet 4:  CTO → ARCHITECT → REVIEWER → QA VALIDATOR
-GLM 5.1:   EXECUTOR → TEST ENGINEER
-Opus 4:    ARCHITECT (re-analysis on escalation)
+claude-sonnet-4-6:  CTO → ARCHITECT → REVIEWER → QA VALIDATOR
+glm-5.1:            EXECUTOR → TEST ENGINEER
+claude-opus-4-6:    ARCHITECT (re-analysis on escalation)
 ```
 
 **Model switch required only at boundaries:**
-- ARCHITECT done → EXECUTOR starts = switch to GLM 5.1
-- TEST ENGINEER done → REVIEWER starts = switch to Sonnet 4
-- ARCHITECT escalation = switch to Opus 4
+- ARCHITECT done → EXECUTOR starts = switch to glm-5.1
+- TEST ENGINEER done → REVIEWER starts = switch to claude-sonnet-4-6
+- ARCHITECT escalation = switch to claude-opus-4-6
 
-**Escalation triggers (ARCHITECT → Opus 4):**
+**Escalation triggers (ARCHITECT → claude-opus-4-6):**
 1. Root cause unclear after 2 attempts
 2. Task spans 3+ layers
 3. High-risk domains: booking, payments, auth, scheduling, recurring appointments

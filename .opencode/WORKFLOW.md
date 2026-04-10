@@ -51,13 +51,16 @@ The pipeline handles all stages. It will pause at blocking questions and CRITICA
 
 ## Agent Files (Loaded Automatically)
 
-| Agent | File | When Active |
-|-------|------|-------------|
-| Architect | `.opencode/agents/architect.md` | analyze-task pipeline |
-| Executor | `.opencode/agents/executor.md` | implement-plan pipeline |
-| Test Engineer | `.opencode/agents/test-engineer.md` | write-tests pipeline |
-| Reviewer | `.opencode/agents/reviewer.md` | review-diff pipeline |
-| QA Validator | `.opencode/agents/qa-validator.md` | qa-check pipeline |
+| Agent | Model | File | When Active |
+|-------|-------|------|-------------|
+| Git Manager | claude-sonnet-4-6 | `.opencode/agents/git-manager.md` | commit / PR / changelog |
+| Architect | claude-sonnet-4-6 | `.opencode/agents/architect.md` | analyze-task pipeline |
+| Architect-Opus | claude-opus-4-6 | `.opencode/agents/architect-opus.md` | escalation only |
+| Executor | MiniMax-M2.7-HS | `.opencode/agents/executor.md` | implement-plan pipeline |
+| Test Engineer | MiniMax-M2.7-HS | `.opencode/agents/test-engineer.md` | write-tests pipeline |
+| Quick Reviewer | MiniMax-M2.7-HS | `.opencode/agents/quick-reviewer.md` | review-diff — first pass |
+| Deep Reviewer | claude-sonnet-4-6 | `.opencode/agents/deep-reviewer.md` | review-diff — escalation only |
+| QA Validator | MiniMax-M2.7-HS | `.opencode/agents/qa-validator.md` | qa-check pipeline |
 
 ---
 

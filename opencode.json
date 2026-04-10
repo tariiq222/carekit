@@ -8,37 +8,62 @@
     "AGENTS.md",
     "opencode.md",
     ".opencode/agents/cto.md",
+    ".opencode/agents/git-manager.md",
     ".opencode/agents/architect.md",
+    ".opencode/agents/architect-opus.md",
     ".opencode/agents/executor.md",
     ".opencode/agents/test-engineer.md",
-    ".opencode/agents/reviewer.md",
+    ".opencode/agents/quick-reviewer.md",
+    ".opencode/agents/deep-reviewer.md",
     ".opencode/agents/qa-validator.md",
     ".opencode/commands/نوقف.md",
     ".opencode/commands/نكمل.md"
   ],
   "agent": {
     "cto": {
+      "model": "anthropic/claude-sonnet-4-6",
       "description": "Master orchestrator — routes all tasks through the CareKit workflow. Start here.",
       "mode": "primary",
       "color": "#354FD8"
     },
+    "git-manager": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "description": "Owns commit, PR, and changelog lifecycle. Classifies changes by system, writes accurate commit messages, manages GitHub PRs, and builds session logs.",
+      "mode": "primary",
+      "color": "#10b981"
+    },
     "architect": {
+      "model": "anthropic/claude-sonnet-4-6",
       "description": "Analyzes tasks and produces implementation plans. Used by CTO only.",
       "mode": "subagent"
     },
+    "architect-opus": {
+      "model": "anthropic/claude-opus-4-6",
+      "description": "High-complexity analysis only — escalation from architect. Used by CTO only.",
+      "mode": "subagent"
+    },
     "executor": {
+      "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
       "description": "Implements approved plans with minimal scope. Used by CTO only.",
       "mode": "subagent"
     },
     "test-engineer": {
+      "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
       "description": "Writes tests for every change. Used by CTO only.",
       "mode": "subagent"
     },
-    "reviewer": {
-      "description": "Reviews diff quality and plan adherence. Used by CTO only.",
+    "quick-reviewer": {
+      "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
+      "description": "Fast first-pass review — syntax, lint, TypeScript, obvious errors. Used by CTO only.",
+      "mode": "subagent"
+    },
+    "deep-reviewer": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "description": "Deep review — security, logic, plan adherence. Runs only when quick-reviewer flags issues. Used by CTO only.",
       "mode": "subagent"
     },
     "qa-validator": {
+      "model": "minimax-coding-plan/MiniMax-M2.7-highspeed",
       "description": "Production risk simulation. Used by CTO only.",
       "mode": "subagent"
     }
