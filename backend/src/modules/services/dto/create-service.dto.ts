@@ -1,31 +1,51 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, IsUUID, Matches, Max, MaxLength, Min, ValidateIf } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsUUID,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+  ValidateIf,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RecurringPattern } from '@prisma/client';
 
 export class CreateServiceDto {
+  @ApiProperty({ description: 'Service name in English', maxLength: 255 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   nameEn!: string;
 
+  @ApiProperty({ description: 'Service name in Arabic', maxLength: 255 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   @Transform(({ value }: { value: string }) => value?.trim())
   nameAr!: string;
 
+  @ApiPropertyOptional({ description: 'Service description in English', maxLength: 500 })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   descriptionEn?: string;
 
+  @ApiPropertyOptional({ description: 'Service description in Arabic', maxLength: 500 })
   @IsOptional()
   @IsString()
   @MaxLength(500)
   descriptionAr?: string;
 
+  @ApiProperty({ description: 'Category ID', format: 'uuid' })
   @IsUUID()
   @IsNotEmpty()
   categoryId!: string;
@@ -35,11 +55,13 @@ export class CreateServiceDto {
   @IsBoolean()
   isActive?: boolean;
 
+  @ApiPropertyOptional({ description: 'Default price in halalat', minimum: 0 })
   @IsOptional()
   @IsInt()
   @Min(0)
   price?: number;
 
+  @ApiPropertyOptional({ description: 'Default duration in minutes', minimum: 1 })
   @IsOptional()
   @IsInt()
   @Min(1)
@@ -62,26 +84,44 @@ export class CreateServiceDto {
 
   @ApiPropertyOptional({ description: 'HugeIcon name, e.g. StethoscopeIcon' })
   @IsOptional()
-  @ValidateIf((o: CreateServiceDto) => o.iconName !== null && o.iconName !== undefined)
+  @ValidateIf(
+    (o: CreateServiceDto) => o.iconName !== null && o.iconName !== undefined,
+  )
   @IsString()
   @MaxLength(100)
   iconName?: string | null;
 
-  @ApiPropertyOptional({ description: 'Background color for icon, e.g. #354FD8' })
+  @ApiPropertyOptional({
+    description: 'Background color for icon, e.g. #354FD8',
+  })
   @IsOptional()
-  @ValidateIf((o: CreateServiceDto) => o.iconBgColor !== null && o.iconBgColor !== undefined)
+  @ValidateIf(
+    (o: CreateServiceDto) =>
+      o.iconBgColor !== null && o.iconBgColor !== undefined,
+  )
   @IsString()
-  @Matches(/^#[0-9A-Fa-f]{6}$/, { message: 'iconBgColor must be a valid hex color' })
+  @Matches(/^#[0-9A-Fa-f]{6}$/, {
+    message: 'iconBgColor must be a valid hex color',
+  })
   iconBgColor?: string | null;
 
-  @ApiPropertyOptional({ description: 'MinIO image URL — takes priority over icon' })
+  @ApiPropertyOptional({
+    description: 'MinIO image URL — takes priority over icon',
+  })
   @IsOptional()
-  @ValidateIf((o: CreateServiceDto) => o.imageUrl !== null && o.imageUrl !== undefined)
+  @ValidateIf(
+    (o: CreateServiceDto) => o.imageUrl !== null && o.imageUrl !== undefined,
+  )
   @IsUrl()
   imageUrl?: string | null;
 
   // ── Booking settings per service ───────────────────────────────
-  @ApiPropertyOptional({ minimum: 0, maximum: 120, description: 'Buffer applied before and after appointment. 0 = use global setting.' })
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 120,
+    description:
+      'Buffer applied before and after appointment. 0 = use global setting.',
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -141,13 +181,19 @@ export class CreateServiceDto {
   @Max(365)
   maxAdvanceDays?: number | null;
 
-  @ApiPropertyOptional({ type: [String], description: 'Practitioner UUIDs to link atomically on create' })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Practitioner UUIDs to link atomically on create',
+  })
   @IsOptional()
   @IsArray()
   @IsUUID('all', { each: true })
   practitionerIds?: string[];
 
-  @ApiPropertyOptional({ type: [String], description: 'Branch UUIDs to restrict this service atomically on create' })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Branch UUIDs to restrict this service atomically on create',
+  })
   @IsOptional()
   @IsArray()
   @IsUUID('all', { each: true })
