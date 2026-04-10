@@ -410,3 +410,76 @@ describe('branch filtering', () => {
     await expect(service.clearBranches('bad-id')).rejects.toThrow(NotFoundException);
   });
 });
+
+describe('ServicesService — export', () => {
+  let service: ServicesService;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockPrisma: any;
+
+  beforeEach(async () => {
+    mockPrisma = createMockPrisma();
+    service = await createModule(mockPrisma);
+    jest.clearAllMocks();
+  });
+
+  it('should export services as structured data', async () => {
+    const now = new Date('2026-01-15T10:00:00Z');
+    mockPrisma.service.findMany.mockResolvedValue([
+      {
+        ...mockClinicService,
+        createdAt: now,
+        isActive: true,
+        isHidden: false,
+      },
+    ]);
+
+    const result = await service.exportServices();
+
+    expect(result).toHaveLength(1);
+    expect(result[0].nameAr).toBe(mockClinicService.nameAr);
+    expect(result[0].priceSar).toBe('150.00'); // 15000 halalat → 150.00 SAR
+    expect(result[0].isActive).toBe('نعم');
+    expect(result[0].isHidden).toBe('لا');
+    expect(mockPrisma.service.findMany).toHaveBeenCalledWith({
+      where: { deletedAt: null },
+      include: { category: true },
+      orderBy: { createdAt: 'asc' },
+    });
+  });
+
+  it('should export services as CSV string', async () => {
+    const now = new Date('2026-01-15T10:00:00Z');
+    mockPrisma.service.findMany.mockResolvedValue([
+      {
+        ...mockClinicService,
+        createdAt: now,
+        isActive: true,
+        isHidden: false,
+      },
+    ]);
+
+    const result = await service.exportServicesCsv();
+
+    // Should start with BOM for Arabic
+    expect(result.charCodeAt(0)).toBe(0xfeff);
+    // Should contain header row
+    expect(result).toContain('"ID"');
+    expect(result).toContain('"Name (AR)"');
+    expect(result).toContain('"Name (EN)"');
+    // Should contain data row
+    expect(result).toContain('service-uuid-1');
+    expect(result).toContain('استشارة عامة');
+    expect(result).toContain('150.00');
+  });
+
+  it('exportServicesCsv returns empty CSV when no services', async () => {
+    mockPrisma.service.findMany.mockResolvedValue([]);
+
+    const result = await service.exportServicesCsv();
+
+    expect(result.charCodeAt(0)).toBe(0xfeff);
+    // Headers only, no data rows
+    const lines = result.trim().split('\r\n');
+    expect(lines.length).toBe(1);
+  });
+});
