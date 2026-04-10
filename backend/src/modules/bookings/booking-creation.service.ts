@@ -98,27 +98,40 @@ export class BookingCreationService {
     const today = new Date(nowRiyadh);
     if (bookingDate < today) throw new BadRequestException({ statusCode: 400, message: ERR.booking.pastDate, error: 'VALIDATION_ERROR' });
 
-    if (settings.maxAdvanceBookingDays > 0) {
+    // Use the stricter of clinic-level and service-level constraints (HIGH fix #5).
+    // Service constraints override clinic when more restrictive — never less restrictive.
+    const effectiveMaxDays = (service.maxAdvanceDays != null && service.maxAdvanceDays > 0)
+      ? (settings.maxAdvanceBookingDays > 0
+          ? Math.min(settings.maxAdvanceBookingDays, service.maxAdvanceDays)
+          : service.maxAdvanceDays)
+      : settings.maxAdvanceBookingDays;
+
+    const effectiveLeadMinutes = Math.max(
+      settings.minBookingLeadMinutes ?? 0,
+      service.minLeadMinutes ?? 0,
+    );
+
+    if (effectiveMaxDays > 0) {
       const maxDate = new Date(today);
-      maxDate.setDate(maxDate.getDate() + settings.maxAdvanceBookingDays);
+      maxDate.setDate(maxDate.getDate() + effectiveMaxDays);
       if (bookingDate > maxDate) {
         throw new BadRequestException({
           statusCode: 400,
-          message: ERR.booking.tooFarInAdvance(settings.maxAdvanceBookingDays),
+          message: ERR.booking.tooFarInAdvance(effectiveMaxDays),
           error: 'BOOKING_TOO_FAR_IN_ADVANCE',
         });
       }
     }
 
-    if (settings.minBookingLeadMinutes > 0) {
+    if (effectiveLeadMinutes > 0) {
       const bookingDateTime = new Date(bookingDate);
       const [leadH, leadM] = dto.startTime.split(':').map(Number);
       bookingDateTime.setHours(leadH, leadM, 0, 0);
       const minutesUntil = (bookingDateTime.getTime() - Date.now()) / (1000 * 60);
-      if (minutesUntil < settings.minBookingLeadMinutes) {
+      if (minutesUntil < effectiveLeadMinutes) {
         throw new BadRequestException({
           statusCode: 400,
-          message: ERR.booking.leadTimeViolation(settings.minBookingLeadMinutes),
+          message: ERR.booking.leadTimeViolation(effectiveLeadMinutes),
           error: 'BOOKING_LEAD_TIME_VIOLATION',
         });
       }
