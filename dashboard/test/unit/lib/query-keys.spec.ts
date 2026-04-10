@@ -135,4 +135,28 @@ describe("queryKeys", () => {
       )
     })
   })
+
+  describe("featureFlags", () => {
+    it("all returns base key", () => {
+      expect(queryKeys.featureFlags.all).toEqual(["feature-flags"])
+    })
+
+    it("map returns feature-flag-map key", () => {
+      expect(queryKeys.featureFlags.map()).toEqual(["feature-flag-map"])
+    })
+  })
+
+  describe("license", () => {
+    it("all returns base key", () => {
+      expect(queryKeys.license.all).toEqual(["license"])
+    })
+
+    it("config returns config key", () => {
+      expect(queryKeys.license.config()).toEqual(["license", "config"])
+    })
+
+    it("features returns features key", () => {
+      expect(queryKeys.license.features()).toEqual(["license", "features"])
+    })
+  })
 })

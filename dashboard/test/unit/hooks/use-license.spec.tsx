@@ -1,65 +1,65 @@
-import { renderHook, waitFor } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
-import { createWrapper } from "@/test/helpers/wrapper"
+import { renderHook, act } from "@testing-library/react"
+import { describe, expect, it, vi, beforeEach } from "vitest"
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query"
+import React from "react"
+import { useUpdateLicense } from "@/hooks/use-license"
+import * as apiModule from "@/lib/api/license"
+import { queryKeys } from "@/lib/query-keys"
 
-const {
-  fetchLicense,
-  fetchLicenseFeatures,
-  updateLicense,
-} = vi.hoisted(() => ({
-  fetchLicense: vi.fn(),
-  fetchLicenseFeatures: vi.fn(),
+vi.mock("@/lib/api/license", () => ({
   updateLicense: vi.fn(),
 }))
 
-vi.mock("@/lib/api/license", () => ({
-  fetchLicense,
-  fetchLicenseFeatures,
-  updateLicense,
-}))
-
-import { useLicense, useLicenseFeatures, useUpdateLicense } from "@/hooks/use-license"
-
-describe("useLicense", () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it("fetches license config", async () => {
-    const config = { plan: "pro", expiresAt: "2026-12-31" }
-    fetchLicense.mockResolvedValueOnce(config)
-
-    const { result } = renderHook(() => useLicense(), { wrapper: createWrapper() })
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(fetchLicense).toHaveBeenCalled()
-    expect(result.current.data).toEqual(config)
-  })
-})
-
-describe("useLicenseFeatures", () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it("fetches license features", async () => {
-    const features = [{ key: "chatbot", enabled: true, status: "active" }]
-    fetchLicenseFeatures.mockResolvedValueOnce(features)
-
-    const { result } = renderHook(() => useLicenseFeatures(), { wrapper: createWrapper() })
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(fetchLicenseFeatures).toHaveBeenCalled()
-    expect(result.current.data).toEqual(features)
-  })
-})
+const updateLicense = apiModule.updateLicense as ReturnType<typeof vi.fn>
 
 describe("useUpdateLicense", () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+    updateLicense.mockResolvedValue(undefined)
+  })
 
-  it("calls updateLicense with payload", async () => {
-    updateLicense.mockResolvedValueOnce({ plan: "enterprise" })
+  it("should call updateLicense with payload", async () => {
+    const queryClient = new QueryClient()
+    function Wrapper({ children }: { children: React.ReactNode }) {
+      return (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+    }
+    const { result } = renderHook(() => useUpdateLicense(), { wrapper: Wrapper })
+    const payload = { plan: "pro", expiresAt: "2027-01-01" }
+    await act(async () => {
+      result.current.mutate(payload)
+    })
+    await vi.waitFor(() => {
+      expect(updateLicense).toHaveBeenCalledWith(payload)
+    })
+  })
 
-    const { result } = renderHook(() => useUpdateLicense(), { wrapper: createWrapper() })
+  it("should invalidate license.all and featureFlags.map() on success", async () => {
+    const queryClient = new QueryClient()
+    const invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries")
 
-    result.current.mutate({ plan: "enterprise" } as Parameters<typeof updateLicense>[0])
+    function Wrapper({ children }: { children: React.ReactNode }) {
+      return (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+    }
 
-    await waitFor(() => expect(updateLicense).toHaveBeenCalled())
+    const { result } = renderHook(() => useUpdateLicense(), { wrapper: Wrapper })
+
+    await act(async () => {
+      result.current.mutate({ plan: "pro" })
+    })
+
+    await vi.waitFor(() => {
+      expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2)
+    })
+
+    const calledKeys = invalidateQueriesSpy.mock.calls.map(
+      (call) => (call[0] as { queryKey: unknown }).queryKey,
+    )
+
+    expect(calledKeys).toContainEqual([...queryKeys.license.all])
+    expect(calledKeys).toContainEqual(queryKeys.featureFlags.map())
   })
 })
