@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
 import { BookingsService } from './bookings.service.js';
@@ -37,6 +37,26 @@ export class BookingRecurringService {
   ) {}
 
   async createRecurring(callerUserId: string, dto: CreateRecurringBookingDto, callerRoles?: Array<{ slug: string }>) {
+    // Validate service exists and supports recurring bookings (CRITICAL fix #4)
+    const service = await this.prisma.service.findFirst({
+      where: { id: dto.serviceId, isActive: true, deletedAt: null },
+      select: { allowRecurring: true, allowedRecurringPatterns: true, maxRecurrences: true },
+    });
+    if (!service) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: 'Service not found or inactive',
+        error: 'NOT_FOUND',
+      });
+    }
+    if (!service.allowRecurring) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'This service does not support recurring bookings',
+        error: 'SERVICE_RECURRING_NOT_ALLOWED',
+      });
+    }
+
     const settings = await this.bookingSettingsService.getForBranch(dto.branchId);
 
     // Allow admin/staff to book for a specific patient; otherwise use the caller's own ID
@@ -50,20 +70,32 @@ export class BookingRecurringService {
       });
     }
 
-    /* Validate pattern is allowed — use DB config, not hardcoded list */
-    const allowedPatterns: string[] = settings.allowedRecurringPatterns?.length
+    /* Validate pattern is allowed:
+     * Service-level patterns (if set) take precedence over clinic-level — more restrictive.
+     * E.g. clinic allows [daily, weekly] but service only allows [weekly] → weekly only.
+     */
+    const servicePatterns: string[] = service.allowedRecurringPatterns?.length
+      ? service.allowedRecurringPatterns
+      : [];
+    const clinicPatterns: string[] = settings.allowedRecurringPatterns?.length
       ? settings.allowedRecurringPatterns
-      : ['weekly', 'biweekly']; // safe default if DB value is empty
+      : ['weekly', 'biweekly'];
+    // Intersection: pattern must be allowed by both service AND clinic
+    const allowedPatterns = servicePatterns.length > 0
+      ? servicePatterns.filter((p) => clinicPatterns.includes(p))
+      : clinicPatterns;
     if (!allowedPatterns.includes(dto.repeatEvery)) {
       throw new BadRequestException({
         statusCode: 400,
-        message: `Pattern "${dto.repeatEvery}" is not allowed. Allowed: ${allowedPatterns.join(', ')}`,
+        message: `Pattern "${dto.repeatEvery}" is not allowed for this service. Allowed: ${allowedPatterns.join(', ')}`,
         error: 'RECURRING_PATTERN_NOT_ALLOWED',
       });
     }
 
-    /* Validate count limit */
-    const maxCount = settings.maxRecurrences ?? 12;
+    /* Validate count limit — use the stricter of service and clinic limits */
+    const serviceMax = service.maxRecurrences > 0 ? service.maxRecurrences : Infinity;
+    const clinicMax = settings.maxRecurrences ?? 12;
+    const maxCount = Math.min(serviceMax, clinicMax);
     if (dto.repeatCount > maxCount) {
       throw new BadRequestException({
         statusCode: 400,
