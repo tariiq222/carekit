@@ -15,11 +15,13 @@ export class ServicePractitionersService {
     const rows = await this.prisma.practitionerService.findMany({
       where: {
         serviceId,
-        ...(branchId && {
-          practitioner: {
+        practitioner: {
+          isActive: true,
+          deletedAt: null,
+          ...(branchId && {
             branches: { some: { branchId } },
-          },
-        }),
+          }),
+        },
       },
       include: {
         practitioner: {

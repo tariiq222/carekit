@@ -83,13 +83,9 @@ describe('ServicePractitionersService — getPractitionersForService', () => {
     const result = await service.getPractitionersForService(SERVICE_ID);
 
     expect(result).toEqual([mockPractitionerService]);
-    expect(mockPrisma.practitionerService.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { serviceId: SERVICE_ID },
-      }),
-    );
     const whereArg = mockPrisma.practitionerService.findMany.mock.calls[0][0].where;
-    expect(whereArg.practitioner).toBeUndefined();
+    expect(whereArg.serviceId).toBe(SERVICE_ID);
+    expect(whereArg.practitioner).toMatchObject({ isActive: true, deletedAt: null });
   });
 
   it('should filter practitioners by branch when branchId is provided', async () => {
@@ -100,16 +96,13 @@ describe('ServicePractitionersService — getPractitionersForService', () => {
 
     await service.getPractitionersForService(SERVICE_ID, BRANCH_ID);
 
-    expect(mockPrisma.practitionerService.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          serviceId: SERVICE_ID,
-          practitioner: {
-            branches: { some: { branchId: BRANCH_ID } },
-          },
-        },
-      }),
-    );
+    const whereArg = mockPrisma.practitionerService.findMany.mock.calls[0][0].where;
+    expect(whereArg.serviceId).toBe(SERVICE_ID);
+    expect(whereArg.practitioner).toMatchObject({
+      isActive: true,
+      deletedAt: null,
+      branches: { some: { branchId: BRANCH_ID } },
+    });
   });
 
   it('should call ensureExists before querying practitioners', async () => {
@@ -122,5 +115,34 @@ describe('ServicePractitionersService — getPractitionersForService', () => {
 
     expect(mockServicesService.ensureExists).toHaveBeenCalledWith(SERVICE_ID);
     expect(mockServicesService.ensureExists).toHaveBeenCalledTimes(1);
+  });
+
+  it('should only return active, non-deleted practitioners', async () => {
+    mockServicesService.ensureExists.mockResolvedValue(undefined);
+    mockPrisma.practitionerService = {
+      findMany: jest.fn().mockResolvedValue([
+        {
+          practitioner: { id: 'p-1', isActive: true, deletedAt: null, nameAr: 'طبيب', title: 'Dr', user: { firstName: 'Ahmad', lastName: 'Ali', avatarUrl: null } },
+          serviceTypes: [],
+        },
+        {
+          practitioner: { id: 'p-2', isActive: false, deletedAt: null, nameAr: 'طبيب', title: 'Dr', user: { firstName: 'Khalid', lastName: 'Omar', avatarUrl: null } },
+          serviceTypes: [],
+        },
+      ] as never),
+    };
+
+    await service.getPractitionersForService(SERVICE_ID);
+
+    expect(mockPrisma.practitionerService.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          practitioner: expect.objectContaining({
+            isActive: true,
+            deletedAt: null,
+          }),
+        }),
+      }),
+    );
   });
 });
