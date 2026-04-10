@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLM-5.1 vs MiniMax-M2.7-highspeed — CareKit Benchmark</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface-2: #1a1a24;
+    --surface-3: #222230;
+    --border: #2a2a3a;
+    --border-bright: #3a3a50;
+    --text: #e8e8f0;
+    --text-muted: #7a7a9a;
+    --text-dim: #4a4a6a;
+    --glm: #00c9a7;
+    --glm-dim: rgba(0,201,167,0.1);
+    --glm-border: rgba(0,201,167,0.25);
+    --mini: #a78bfa;
+    --mini-dim: rgba(167,139,250,0.1);
+    --mini-border: rgba(167,139,250,0.25);
+    --draw: #f59e0b;
+    --draw-dim: rgba(245,158,11,0.1);
+    --win: #10b981;
+    --fail: #ef4444;
+    --fail-dim: rgba(239,68,68,0.1);
+    --primary: #354FD8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    position: relative;
+    padding: 72px 40px 56px;
+    text-align: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    pointer-events: none;
+  }
+  .blob-glm  { width: 400px; height: 400px; background: var(--glm);  top: -100px; right: -80px; }
+  .blob-mini { width: 400px; height: 400px; background: var(--mini); top: -100px; left: -80px;  }
+
+  .badge-project {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface-2); border: 1px solid var(--border-bright);
+    border-radius: 100px; padding: 6px 16px; font-size: 12px;
+    color: var(--text-muted); margin-bottom: 24px; letter-spacing: 0.05em;
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+
+  .hero h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .hero h1 span.glm  { color: var(--glm); }
+  .hero h1 span.mini { color: var(--mini); }
+  .hero h1 span.vs   { color: var(--text-dim); font-weight: 300; }
+
+  .hero-sub {
+    color: var(--text-muted); font-size: 15px; max-width: 560px;
+    margin: 0 auto 36px;
+  }
+
+  .hero-stats {
+    display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-num { font-size: 32px; font-weight: 700; line-height: 1; }
+  .hero-stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .num-glm  { color: var(--glm); }
+  .num-mini { color: var(--mini); }
+  .num-draw { color: var(--draw); }
+
+  /* ── Layout ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 8px;
+  }
+  .section-title { font-size: 22px; font-weight: 600; margin-bottom: 32px; }
+
+  /* ── Prompt Card ── */
+  .prompt-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+
+  .card-header-left { display: flex; align-items: center; gap: 12px; }
+  .prompt-num {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--text-dim); background: var(--surface-3);
+    padding: 4px 10px; border-radius: 6px;
+  }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-desc  { font-size: 13px; color: var(--text-muted); }
+
+  .winner-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 100px;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .winner-mini  { background: var(--mini-dim);  color: var(--mini);  border: 1px solid var(--mini-border); }
+  .winner-glm   { background: var(--glm-dim);   color: var(--glm);   border: 1px solid var(--glm-border);  }
+  .winner-draw  { background: var(--draw-dim);  color: var(--draw);  border: 1px solid rgba(245,158,11,0.25); }
+  .winner-fail  { background: var(--fail-dim);  color: var(--fail);  border: 1px solid rgba(239,68,68,0.25); }
+
+  .card-body { padding: 24px; }
+
+  /* ── Comparison Grid ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .compare-col {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .compare-col.glm-col  { border-color: var(--glm-border);  }
+  .compare-col.mini-col { border-color: var(--mini-border); }
+  .compare-col.fail-col { border-color: rgba(239,68,68,0.3); }
+
+  .compare-col-header {
+    padding: 12px 16px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .glm-col  .compare-col-header { color: var(--glm);  background: var(--glm-dim);  }
+  .mini-col .compare-col-header { color: var(--mini); background: var(--mini-dim); }
+  .fail-col .compare-col-header { color: var(--fail); background: var(--fail-dim); }
+
+  .col-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .glm-dot  { background: var(--glm);  }
+  .mini-dot { background: var(--mini); }
+  .fail-dot { background: var(--fail); }
+
+  .compare-col-body { padding: 16px; }
+
+  .compare-item {
+    display: flex; gap: 8px; align-items: flex-start;
+    margin-bottom: 10px; font-size: 13px; color: var(--text-muted);
+  }
+  .compare-item:last-child { margin-bottom: 0; }
+  .compare-item-icon { flex-shrink: 0; margin-top: 2px; font-size: 12px; }
+  .compare-item strong { color: var(--text); font-weight: 500; }
+
+  /* ── Detail Table ── */
+  .detail-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .detail-table th {
+    text-align: right; padding: 10px 14px; font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-dim); border-bottom: 1px solid var(--border);
+    background: var(--surface-3); font-weight: 600;
+  }
+  .detail-table th:first-child { width: 30%; }
+  .detail-table th.glm-th  { color: var(--glm);  }
+  .detail-table th.mini-th { color: var(--mini); }
+
+  .detail-table td {
+    padding: 11px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: top; color: var(--text-muted);
+  }
+  .detail-table td:first-child { color: var(--text); font-weight: 500; }
+  .detail-table tr:last-child td { border-bottom: none; }
+  .detail-table tr:hover td { background: var(--surface-3); }
+
+  .tag-win  { color: var(--win);  font-size: 11px; }
+  .tag-fail { color: var(--fail); font-size: 11px; }
+  .tag-draw { color: var(--draw); font-size: 11px; }
+
+  .key-finding {
+    background: linear-gradient(135deg, var(--mini-dim), transparent);
+    border: 1px solid var(--mini-border);
+    border-radius: 10px; padding: 14px 16px;
+    font-size: 13px; color: var(--text-muted);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .key-finding-icon { font-size: 16px; flex-shrink: 0; }
+  .key-finding strong { color: var(--mini); }
+
+  .fail-finding {
+    background: var(--fail-dim);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 10px; padding: 14px 16px;
+    font-size: 13px; color: var(--text-muted);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .fail-finding strong { color: var(--fail); }
+
+  /* ── Overall Scorecard ── */
+  .scorecard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .scorecard-header {
+    padding: 28px 32px 24px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 20px;
+  }
+
+  .score-display {
+    display: flex; align-items: center; gap: 24px;
+  }
+
+  .score-pill {
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--surface-3); border-radius: 14px;
+    padding: 16px 28px; min-width: 100px;
+  }
+  .score-pill.glm-pill  { border: 1px solid var(--glm-border);  }
+  .score-pill.mini-pill { border: 1px solid var(--mini-border); }
+  .score-num  { font-size: 36px; font-weight: 800; line-height: 1; }
+  .score-lbl  { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-top: 4px; }
+  .glm-pill  .score-num { color: var(--glm);  }
+  .mini-pill .score-num { color: var(--mini); }
+
+  .score-vs { font-size: 14px; color: var(--text-dim); }
+
+  .scorecard-body { padding: 0; }
+
+  .score-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr 120px;
+    align-items: center;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+  .score-row:last-child { border-bottom: none; }
+  .score-row:hover { background: var(--surface-2); }
+
+  .score-row-label { font-size: 14px; font-weight: 500; }
+  .score-row-sub   { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+  .score-bar-wrap { position: relative; }
+  .score-bar-label { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+  .score-bar {
+    height: 6px; border-radius: 100px; background: var(--surface-3);
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%; border-radius: 100px;
+    transition: width 1s ease;
+  }
+  .glm-bar  .score-bar-fill { background: var(--glm);  }
+  .mini-bar .score-bar-fill { background: var(--mini); }
+
+  /* ── Recommendation ── */
+  .rec-card {
+    background: linear-gradient(135deg, #1a1a2e, #16162a);
+    border: 1px solid var(--primary);
+    border-radius: 20px;
+    padding: 36px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rec-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: var(--primary);
+    opacity: 0.08;
+    filter: blur(40px);
+  }
+
+  .rec-title {
+    font-size: 20px; font-weight: 700; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .rec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+  }
+
+  .rec-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .rec-item-agent {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .rec-item-model { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .rec-item-reason { font-size: 12px; color: var(--text-muted); }
+
+  .agent-cto       .rec-item-agent { color: var(--primary); }
+  .agent-arch      .rec-item-agent { color: #60a5fa; }
+  .agent-arch-opus .rec-item-agent { color: #c084fc; }
+  .agent-exec      .rec-item-agent { color: var(--mini); }
+  .agent-test      .rec-item-agent { color: var(--mini); }
+  .agent-rev       .rec-item-agent { color: #34d399; }
+  .agent-qa        .rec-item-agent { color: #fb923c; }
+
+  .agent-exec .rec-item, .agent-test .rec-item { border-color: var(--mini-border); }
+  .changed-tag {
+    display: inline-block;
+    background: var(--mini-dim); color: var(--mini);
+    border: 1px solid var(--mini-border);
+    font-size: 10px; padding: 2px 8px; border-radius: 100px;
+    font-weight: 600; letter-spacing: 0.06em; margin-top: 6px;
+  }
+
+  .rec-note {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 20px;
+    font-size: 13px; color: var(--text-muted);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .rec-note-icon { font-size: 16px; flex-shrink: 0; }
+
+  /* ── Footer ── */
+  .footer {
+    padding: 32px 40px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Util ── */
+  .icon-glm  { color: var(--glm);  }
+  .icon-mini { color: var(--mini); }
+  .icon-fail { color: var(--fail); }
+  .icon-draw { color: var(--draw); }
+  .icon-win  { color: var(--win);  }
+
+  @media (max-width: 700px) {
+    .hero { padding: 48px 20px 40px; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .score-row { grid-template-columns: 1fr 1fr; }
+    .score-row-label { grid-column: 1 / -1; }
+    .score-row > .winner-badge { grid-column: 1 / -1; }
+    .scorecard-header { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Hero ─── -->
+<div class="hero">
+  <div class="hero-blob blob-glm"></div>
+  <div class="hero-blob blob-mini"></div>
+
+  <div class="badge-project">
+    <span class="badge-dot"></span>
+    CareKit — Pipeline Model Benchmark
+  </div>
+
+  <h1>
+    <span class="glm">GLM-5.1</span>
+    <span class="vs"> vs </span>
+    <span class="mini">MiniMax-M2.7-HS</span>
+  </h1>
+
+  <p class="hero-sub">
+    5 مهام حقيقية من كود CareKit — كتابة، تحليل، توثيق، اختبار، إصلاح
+  </p>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num num-mini">3</div>
+      <div class="hero-stat-label">فاز MiniMax</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num num-draw">2</div>
+      <div class="hero-stat-label">تعادل</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num num-glm">0</div>
+      <div class="hero-stat-label">فاز GLM</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num" style="color:var(--fail)">1</div>
+      <div class="hero-stat-label">GLM Timeout</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Results ─── -->
+<div class="container">
+
+  <!-- P1 -->
+  <section>
+    <div class="section-label">المهمة الأولى</div>
+    <div class="section-title">P1 — كتابة DTO</div>
+
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <span class="prompt-num">P1</span>
+          <div>
+            <div class="card-title">CreateWaitlistEntryDto</div>
+            <div class="card-desc">NestJS DTO — class-validator + @nestjs/swagger</div>
+          </div>
+        </div>
+        <span class="winner-badge winner-draw">⚖ تعادل</span>
+      </div>
+      <div class="card-body">
+
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>المعيار</th>
+              <th class="glm-th">GLM-5.1</th>
+              <th class="mini-th">MiniMax M2.7-HS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>الـ Decorators</td>
+              <td><span class="tag-draw">▲</span> @IsNotEmpty زيادة + رسائل مخصصة</td>
+              <td><span class="tag-win">✓</span> نظيف بلا زوائد</td>
+            </tr>
+            <tr>
+              <td>@ApiProperty</td>
+              <td>ApiPropertyOptional للاختياري ✓</td>
+              <td>نفس + example على كل field ✓</td>
+            </tr>
+            <tr>
+              <td>التحقق من الوقت</td>
+              <td>@Matches صح ✓</td>
+              <td>@Matches صح ✓</td>
+            </tr>
+            <tr>
+              <td>TypeScript Strict</td>
+              <td>✓ لا any</td>
+              <td>✓ لا any</td>
+            </tr>
+            <tr>
+              <td>الأسلوب</td>
+              <td>دفاعي — أكثر تفصيلاً</td>
+              <td>أقصر وأوضح</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="compare-grid">
+          <div class="compare-col glm-col">
+            <div class="compare-col-header"><span class="col-dot glm-dot"></span>GLM-5.1</div>
+            <div class="compare-col-body">
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>أضاف <strong>@IsNotEmpty</strong> للمطلوب — دفاعي</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>رسائل خطأ مخصصة لكل decorator</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-draw">~</span><div>مطوّل أكثر من اللازم</div></div>
+            </div>
+          </div>
+          <div class="compare-col mini-col">
+            <div class="compare-col-header"><span class="col-dot mini-dot"></span>MiniMax M2.7-HS</div>
+            <div class="compare-col-body">
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>كود أنظف بلا decorators زائدة</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>example على كل @ApiProperty</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>أقرب لـ CareKit conventions</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- P2 -->
+  <section>
+    <div class="section-label">المهمة الثانية</div>
+    <div class="section-title">P2 — تحليل الكود</div>
+
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <span class="prompt-num">P2</span>
+          <div>
+            <div class="card-title">تحليل checkDoubleBooking</div>
+            <div class="card-desc">Race conditions، edge cases، توصيات</div>
+          </div>
+        </div>
+        <span class="winner-badge winner-mini">▲ MiniMax</span>
+      </div>
+      <div class="card-body">
+
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>المعيار</th>
+              <th class="glm-th">GLM-5.1</th>
+              <th class="mini-th">MiniMax M2.7-HS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TOCTOU Race</td>
+              <td>✓ شرح تفصيلي + advisory lock</td>
+              <td>✓ نفس + سيناريو concurrent reschedule</td>
+            </tr>
+            <tr>
+              <td>Double Buffer</td>
+              <td>✓ وصف المشكلة بالأرقام</td>
+              <td>✓ مثال كود مباشر للحل</td>
+            </tr>
+            <tr>
+              <td>excludeId Race</td>
+              <td><span class="tag-fail">✗</span> لم يكتشفها</td>
+              <td><span class="tag-win">✓</span> اكتشف race على الـ reschedule</td>
+            </tr>
+            <tr>
+              <td>التوصيات</td>
+              <td>6 توصيات مع كود</td>
+              <td>6 توصيات + جدول priority</td>
+            </tr>
+            <tr>
+              <td>Structure</td>
+              <td>نثر تقني</td>
+              <td>جداول + sections منظمة</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="key-finding">
+          <span class="key-finding-icon">🔍</span>
+          <div>
+            <strong>النقطة الحاسمة:</strong> MiniMax اكتشف أن <code>excludeId</code> يفتح race condition إضافية عند الـ reschedule المتزامن — نقطة أغفلها GLM. هذه النوع من الـ edge cases مهمة لنظام حجز في بيئة عالية الاستخدام.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- P3 -->
+  <section>
+    <div class="section-label">المهمة الثالثة</div>
+    <div class="section-title">P3 — توثيق الكود (JSDoc)</div>
+
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <span class="prompt-num">P3</span>
+          <div>
+            <div class="card-title">Module-level JSDoc</div>
+            <div class="card-desc">توثيق booking-validation.helper.ts</div>
+          </div>
+        </div>
+        <span class="winner-badge winner-mini">▲ MiniMax</span>
+      </div>
+      <div class="card-body">
+
+        <div class="compare-grid">
+          <div class="compare-col glm-col">
+            <div class="compare-col-header"><span class="col-dot glm-dot"></span>GLM-5.1</div>
+            <div class="compare-col-body">
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>مختصر ومركّز — يصف الهدف بوضوح</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-draw">~</span><div>Parameters مذكورة بإيجاز</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-draw">~</span><div>Dependencies مذكورة بدون تفصيل</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-fail">✗</span><div>لا source paths للـ dependencies</div></div>
+            </div>
+          </div>
+          <div class="compare-col mini-col">
+            <div class="compare-col-header"><span class="col-dot mini-dot"></span>MiniMax M2.7-HS</div>
+            <div class="compare-col-body">
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>كل parameter موثق بـ @param</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>جدول dependencies مع source path</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>Sections منفصلة للطبقتين</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>Production-grade — جاهز للـ team</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- P4 -->
+  <section>
+    <div class="section-label">المهمة الرابعة</div>
+    <div class="section-title">P4 — كتابة الاختبارات</div>
+
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <span class="prompt-num">P4</span>
+          <div>
+            <div class="card-title">Jest Tests — validateAvailability</div>
+            <div class="card-desc">5 سيناريوهات — vacation، availability، branchId</div>
+          </div>
+        </div>
+        <span class="winner-badge winner-fail">✗ GLM Timeout</span>
+      </div>
+      <div class="card-body">
+
+        <div class="compare-grid">
+          <div class="compare-col fail-col">
+            <div class="compare-col-header"><span class="col-dot fail-dot"></span>GLM-5.1 — Aborted</div>
+            <div class="compare-col-body">
+              <div class="compare-item"><span class="compare-item-icon icon-fail">✗</span><div>tool execution <strong>aborted</strong> — timeout</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-fail">✗</span><div>أثقل prompt في الجلسة (function كاملة + 5 سيناريوهات)</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-fail">✗</span><div>صفر output — لا يمكن التقييم</div></div>
+            </div>
+          </div>
+          <div class="compare-col mini-col">
+            <div class="compare-col-header"><span class="col-dot mini-dot"></span>MiniMax M2.7-HS — ✓ كامل</div>
+            <div class="compare-col-body">
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>5/5 سيناريوهات مكتملة</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>helper <strong>makePrisma</strong> + toMinutes mock</div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>assertions دقيقة على <strong>response.error</strong></div></div>
+              <div class="compare-item"><span class="compare-item-icon icon-win">✓</span><div>TypeScript strict — لا any</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fail-finding">
+          <span class="compare-item-icon icon-fail">⚠</span>
+          <div>
+            <strong>ملاحظة الـ Timeout:</strong> المشكلة في الـ reliability لا في جودة GLM. عند تشغيل 5 agents متوازية مع context ثقيل، GLM-5.1 timeout قبل الإنجاز. هذا سلوك بنيوي — مشاكل كتابة الاختبارات هي الأثقل في الـ pipeline.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- P5 -->
+  <section>
+    <div class="section-label">المهمة الخامسة</div>
+    <div class="section-title">P5 — إصلاح الأخطاء</div>
+
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <span class="prompt-num">P5</span>
+          <div>
+            <div class="card-title">Bug Fix — validateClinicAvailability</div>
+            <div class="card-desc">UTC timezone bug + inactive hours logic</div>
+          </div>
+        </div>
+        <span class="winner-badge winner-draw">⚖ تعادل</span>
+      </div>
+      <div class="card-body">
+
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>المعيار</th>
+              <th class="glm-th">GLM-5.1</th>
+              <th class="mini-th">MiniMax M2.7-HS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Bug 1 — UTC</td>
+              <td>✓ getUTCMonth() + getUTCDate()</td>
+              <td>✓ نفس الإصلاح</td>
+            </tr>
+            <tr>
+              <td>Bug 2 — Inactive</td>
+              <td>✓ filter → every(!isActive) → check منفصل</td>
+              <td>✓ نفس المنطق في سطر واحد</td>
+            </tr>
+            <tr>
+              <td>قابلية القراءة</td>
+              <td>خطوات منفصلة — أوضح للـ review</td>
+              <td>إيجاز — أقصر لكن أصعب قراءةً</td>
+            </tr>
+            <tr>
+              <td>Side Effects</td>
+              <td>✓ لا تأثيرات جانبية</td>
+              <td>✓ لا تأثيرات جانبية</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Scorecard -->
+  <section>
+    <div class="section-label">النتيجة الإجمالية</div>
+    <div class="section-title">Scorecard</div>
+
+    <div class="scorecard">
+      <div class="scorecard-header">
+        <div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:4px">النتيجة النهائية</div>
+          <div style="font-size:13px;color:var(--text-muted)">CareKit Production Benchmark — 5 مهام حقيقية</div>
+        </div>
+        <div class="score-display">
+          <div class="score-pill glm-pill">
+            <div class="score-num">0</div>
+            <div class="score-lbl">GLM-5.1</div>
+          </div>
+          <div class="score-vs">vs</div>
+          <div class="score-pill mini-pill">
+            <div class="score-num">3</div>
+            <div class="score-lbl">MiniMax</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scorecard-body">
+        <div class="score-row">
+          <div>
+            <div class="score-row-label">دقة تقنية</div>
+            <div class="score-row-sub">correctness + no bugs</div>
+          </div>
+          <div class="score-bar-wrap glm-bar">
+            <div class="score-bar-label" style="color:var(--glm)">GLM</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:85%"></div></div>
+          </div>
+          <div class="score-bar-wrap mini-bar">
+            <div class="score-bar-label" style="color:var(--mini)">MiniMax</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:90%"></div></div>
+          </div>
+          <span class="winner-badge winner-draw">تعادل</span>
+        </div>
+
+        <div class="score-row">
+          <div>
+            <div class="score-row-label">اكتشاف Edge Cases</div>
+            <div class="score-row-sub">race conditions، حالات حدودية</div>
+          </div>
+          <div class="score-bar-wrap glm-bar">
+            <div class="score-bar-label" style="color:var(--glm)">GLM</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:72%"></div></div>
+          </div>
+          <div class="score-bar-wrap mini-bar">
+            <div class="score-bar-label" style="color:var(--mini)">MiniMax</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:92%"></div></div>
+          </div>
+          <span class="winner-badge winner-mini">MiniMax</span>
+        </div>
+
+        <div class="score-row">
+          <div>
+            <div class="score-row-label">جودة التوثيق</div>
+            <div class="score-row-sub">JSDoc، structure، team-ready</div>
+          </div>
+          <div class="score-bar-wrap glm-bar">
+            <div class="score-bar-label" style="color:var(--glm)">GLM</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:65%"></div></div>
+          </div>
+          <div class="score-bar-wrap mini-bar">
+            <div class="score-bar-label" style="color:var(--mini)">MiniMax</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:95%"></div></div>
+          </div>
+          <span class="winner-badge winner-mini">MiniMax</span>
+        </div>
+
+        <div class="score-row">
+          <div>
+            <div class="score-row-label">إنتاج الاختبارات</div>
+            <div class="score-row-sub">Jest، coverage، assertions</div>
+          </div>
+          <div class="score-bar-wrap glm-bar">
+            <div class="score-bar-label" style="color:var(--glm)">GLM</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:0%"></div></div>
+          </div>
+          <div class="score-bar-wrap mini-bar">
+            <div class="score-bar-label" style="color:var(--mini)">MiniMax</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:90%"></div></div>
+          </div>
+          <span class="winner-badge winner-fail">GLM Timeout</span>
+        </div>
+
+        <div class="score-row">
+          <div>
+            <div class="score-row-label">إيجاز الكود</div>
+            <div class="score-row-sub">signal-to-noise، لا زوائد</div>
+          </div>
+          <div class="score-bar-wrap glm-bar">
+            <div class="score-bar-label" style="color:var(--glm)">GLM</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:70%"></div></div>
+          </div>
+          <div class="score-bar-wrap mini-bar">
+            <div class="score-bar-label" style="color:var(--mini)">MiniMax</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:88%"></div></div>
+          </div>
+          <span class="winner-badge winner-mini">MiniMax</span>
+        </div>
+
+        <div class="score-row">
+          <div>
+            <div class="score-row-label">الموثوقية</div>
+            <div class="score-row-sub">completion rate، لا timeout</div>
+          </div>
+          <div class="score-bar-wrap glm-bar">
+            <div class="score-bar-label" style="color:var(--glm)">GLM</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:80%"></div></div>
+          </div>
+          <div class="score-bar-wrap mini-bar">
+            <div class="score-bar-label" style="color:var(--mini)">MiniMax</div>
+            <div class="score-bar"><div class="score-bar-fill" style="width:100%"></div></div>
+          </div>
+          <span class="winner-badge winner-mini">MiniMax</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recommendation -->
+  <section>
+    <div class="section-label">التوصية</div>
+    <div class="section-title">التوزيع المقترح للـ Pipeline</div>
+
+    <div class="rec-card">
+      <div class="rec-title">
+        <span>🎯</span>
+        التوزيع الأمثل بناءً على البنشمارك
+      </div>
+
+      <div class="rec-grid">
+        <div class="agent-cto"><div class="rec-item">
+          <div class="rec-item-agent">CTO</div>
+          <div class="rec-item-model">claude-sonnet-4-6</div>
+          <div class="rec-item-reason">تنسيق وتوجيه — يحتاج reasoning قوي</div>
+        </div></div>
+
+        <div class="agent-arch"><div class="rec-item">
+          <div class="rec-item-agent">ARCHITECT</div>
+          <div class="rec-item-model">claude-sonnet-4-6</div>
+          <div class="rec-item-reason">تحليل multi-layer معقد</div>
+        </div></div>
+
+        <div class="agent-arch-opus"><div class="rec-item">
+          <div class="rec-item-agent">ARCHITECT-OPUS</div>
+          <div class="rec-item-model">claude-opus-4-6</div>
+          <div class="rec-item-reason">escalation فقط — الحالات الحرجة</div>
+        </div></div>
+
+        <div class="agent-exec"><div class="rec-item">
+          <div class="rec-item-agent">EXECUTOR</div>
+          <div class="rec-item-model" style="color:var(--mini)">MiniMax-M2.7-HS</div>
+          <div class="rec-item-reason">أداء مساوٍ + موثوقية أعلى</div>
+          <span class="changed-tag">← تغيير مقترح</span>
+        </div></div>
+
+        <div class="agent-test"><div class="rec-item">
+          <div class="rec-item-agent">TEST-ENGINEER</div>
+          <div class="rec-item-model" style="color:var(--mini)">MiniMax-M2.7-HS</div>
+          <div class="rec-item-reason">GLM timeout على الـ tests الثقيلة — MiniMax أكثر ثباتاً</div>
+          <span class="changed-tag">← تغيير مقترح</span>
+        </div></div>
+
+        <div class="agent-rev"><div class="rec-item">
+          <div class="rec-item-agent">REVIEWER</div>
+          <div class="rec-item-model">claude-sonnet-4-6</div>
+          <div class="rec-item-reason">يكتشف security issues — يحتاج judgment</div>
+        </div></div>
+
+        <div class="agent-qa"><div class="rec-item">
+          <div class="rec-item-agent">QA-VALIDATOR</div>
+          <div class="rec-item-model">claude-sonnet-4-6</div>
+          <div class="rec-item-reason">تقييم مخاطر production</div>
+        </div></div>
+      </div>
+
+      <div class="rec-note">
+        <span class="rec-note-icon">💡</span>
+        <div>
+          GLM خسر بالـ <strong>reliability</strong> لا بالجودة — مخرجاته حين تكتمل قابلة للمقارنة. لكن في pipeline إنتاجي، timeout على test-engineer يكسر الـ workflow بالكامل. MiniMax-M2.7-HS أثبت ثباتاً أعلى على الـ prompts الثقيلة.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ─── Pipeline Section ─── -->
+<div style="background:var(--bg);padding:64px 0 80px;border-top:1px solid var(--border)">
+<div class="container">
+  <div class="section-label">Pipeline Architecture</div>
+  <div class="section-title">CareKit Agent Pipeline — All Conditions</div>
+
+  <style>
+    /* Pipeline styles */
+    .pl-wrap { position:relative; width:100%; overflow-x:auto; }
+    .pl-svg { display:block; width:100%; min-width:800px; }
+
+    /* Node styles */
+    .node-box { rx:12; ry:12; }
+    .node-sonnet { fill:#1a1a2e; stroke:#354FD8; stroke-width:1.5; }
+    .node-mini   { fill:#1a1024; stroke:#a78bfa; stroke-width:1.5; }
+    .node-opus   { fill:#1c1020; stroke:#c084fc; stroke-width:1.5; }
+    .node-start  { fill:#0f1f18; stroke:#10b981; stroke-width:1.5; }
+    .node-done   { fill:#0f1f18; stroke:#10b981; stroke-width:1.5; }
+    .node-mem    { fill:#1a1a1a; stroke:#4a4a6a; stroke-width:1.5; }
+
+    .lbl-main  { fill:#e8e8f0; font-family:'Segoe UI',system-ui,sans-serif; font-size:13px; font-weight:600; }
+    .lbl-model { font-family:'Segoe UI',system-ui,sans-serif; font-size:10px; font-weight:400; }
+    .lbl-sonnet { fill:#354FD8; }
+    .lbl-mini   { fill:#a78bfa; }
+    .lbl-opus   { fill:#c084fc; }
+    .lbl-green  { fill:#10b981; }
+    .lbl-muted  { fill:#4a4a6a; }
+
+    /* Arrow styles */
+    .arrow-main    { stroke:#3a3a50; stroke-width:2; fill:none; marker-end:url(#arrowGray); }
+    .arrow-pass    { stroke:#10b981; stroke-width:1.5; fill:none; stroke-dasharray:5,3; marker-end:url(#arrowGreen); }
+    .arrow-fail    { stroke:#ef4444; stroke-width:1.5; fill:none; stroke-dasharray:5,3; marker-end:url(#arrowRed); }
+    .arrow-escalate{ stroke:#c084fc; stroke-width:1.5; fill:none; stroke-dasharray:5,3; marker-end:url(#arrowPurple); }
+    .arrow-retry   { stroke:#f59e0b; stroke-width:1.5; fill:none; stroke-dasharray:4,3; marker-end:url(#arrowAmber); }
+
+    .cond-label { font-family:'Segoe UI',system-ui,sans-serif; font-size:10.5px; }
+    .cond-pass    { fill:#10b981; }
+    .cond-fail    { fill:#ef4444; }
+    .cond-escalate{ fill:#c084fc; }
+    .cond-retry   { fill:#f59e0b; }
+    .cond-gray    { fill:#5a5a7a; }
+
+    .badge-rect { rx:4; ry:4; }
+    .badge-sonnet-bg { fill:rgba(53,79,216,0.15); stroke:rgba(53,79,216,0.3); stroke-width:1; }
+    .badge-mini-bg   { fill:rgba(167,139,250,0.15); stroke:rgba(167,139,250,0.3); stroke-width:1; }
+    .badge-opus-bg   { fill:rgba(192,132,252,0.15); stroke:rgba(192,132,252,0.3); stroke-width:1; }
+  </style>
+
+  <div class="pl-wrap">
+  <svg class="pl-svg" viewBox="0 0 860 1340" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrowGray"   markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#3a3a50"/></marker>
+      <marker id="arrowGreen"  markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#10b981"/></marker>
+      <marker id="arrowRed"    markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ef4444"/></marker>
+      <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#c084fc"/></marker>
+      <marker id="arrowAmber"  markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f59e0b"/></marker>
+    </defs>
+
+    <!-- ═══════════════════ NODES ═══════════════════ -->
+
+    <!-- START -->
+    <rect x="310" y="20" width="240" height="46" class="node-box node-start"/>
+    <text x="430" y="38" text-anchor="middle" class="lbl-main lbl-green" font-size="12">User Input</text>
+    <text x="430" y="54" text-anchor="middle" class="lbl-model lbl-muted">task / bug / feature / question</text>
+
+    <!-- CTO -->
+    <rect x="270" y="102" width="320" height="60" class="node-box node-sonnet"/>
+    <text x="430" y="124" text-anchor="middle" class="lbl-main">CTO</text>
+    <text x="430" y="141" text-anchor="middle" class="lbl-model lbl-sonnet">claude-sonnet-4-6</text>
+    <text x="430" y="156" text-anchor="middle" class="lbl-model lbl-muted">يصنف المهمة ويروت</text>
+
+    <!-- ARCHITECT -->
+    <rect x="270" y="212" width="320" height="60" class="node-box node-sonnet"/>
+    <text x="430" y="234" text-anchor="middle" class="lbl-main">ARCHITECT</text>
+    <text x="430" y="251" text-anchor="middle" class="lbl-model lbl-sonnet">claude-sonnet-4-6</text>
+    <text x="430" y="266" text-anchor="middle" class="lbl-model lbl-muted">يحلل المهمة وينتج خطة</text>
+
+    <!-- ARCHITECT-OPUS -->
+    <rect x="620" y="212" width="220" height="60" class="node-box node-opus"/>
+    <text x="730" y="234" text-anchor="middle" class="lbl-main" font-size="12">ARCHITECT-OPUS</text>
+    <text x="730" y="251" text-anchor="middle" class="lbl-model lbl-opus">claude-opus-4-6</text>
+    <text x="730" y="266" text-anchor="middle" class="lbl-model lbl-muted">escalation فقط</text>
+
+    <!-- EXECUTOR -->
+    <rect x="270" y="338" width="320" height="60" class="node-box node-mini"/>
+    <text x="430" y="360" text-anchor="middle" class="lbl-main">EXECUTOR</text>
+    <text x="430" y="377" text-anchor="middle" class="lbl-model lbl-mini">MiniMax-M2.7-highspeed</text>
+    <text x="430" y="392" text-anchor="middle" class="lbl-model lbl-muted">يكتب الكود حسب الخطة</text>
+
+    <!-- TEST-ENGINEER -->
+    <rect x="270" y="464" width="320" height="60" class="node-box node-mini"/>
+    <text x="430" y="486" text-anchor="middle" class="lbl-main">TEST-ENGINEER</text>
+    <text x="430" y="503" text-anchor="middle" class="lbl-model lbl-mini">MiniMax-M2.7-highspeed</text>
+    <text x="430" y="518" text-anchor="middle" class="lbl-model lbl-muted">يكتب الاختبارات</text>
+
+    <!-- QUICK-REVIEWER -->
+    <rect x="270" y="592" width="320" height="60" class="node-box node-mini"/>
+    <text x="430" y="614" text-anchor="middle" class="lbl-main">QUICK-REVIEWER</text>
+    <text x="430" y="631" text-anchor="middle" class="lbl-model lbl-mini">MiniMax-M2.7-highspeed</text>
+    <text x="430" y="646" text-anchor="middle" class="lbl-model lbl-muted">TypeScript · lint · scope · tests presence</text>
+
+    <!-- DEEP-REVIEWER -->
+    <rect x="620" y="592" width="220" height="60" class="node-box node-sonnet"/>
+    <text x="730" y="614" text-anchor="middle" class="lbl-main" font-size="12">DEEP-REVIEWER</text>
+    <text x="730" y="631" text-anchor="middle" class="lbl-model lbl-sonnet">claude-sonnet-4-6</text>
+    <text x="730" y="646" text-anchor="middle" class="lbl-model lbl-muted">security · logic · plan</text>
+
+    <!-- QA-VALIDATOR -->
+    <rect x="270" y="756" width="320" height="60" class="node-box node-mini"/>
+    <text x="430" y="778" text-anchor="middle" class="lbl-main">QA-VALIDATOR</text>
+    <text x="430" y="795" text-anchor="middle" class="lbl-model lbl-mini">MiniMax-M2.7-highspeed</text>
+    <text x="430" y="810" text-anchor="middle" class="lbl-model lbl-muted">تقييم مخاطر الـ production</text>
+
+    <!-- MEMORY-WRITE -->
+    <rect x="310" y="880" width="240" height="46" class="node-box node-mem"/>
+    <text x="430" y="898" text-anchor="middle" class="lbl-main" fill="#7a7a9a">MEMORY-WRITE</text>
+    <text x="430" y="914" text-anchor="middle" class="lbl-model lbl-muted">تسجيل القرارات والدروس</text>
+
+    <!-- DONE -->
+    <rect x="330" y="970" width="200" height="40" class="node-box node-done"/>
+    <text x="430" y="985" text-anchor="middle" class="lbl-main lbl-green" font-size="13">✓ DONE</text>
+    <text x="430" y="1001" text-anchor="middle" class="lbl-model lbl-muted">جاهز للـ commit</text>
+
+    <!-- ═══════════════════ LEGEND CARDS ═══════════════════ -->
+    <rect x="20" y="102" width="220" height="130" rx="10" fill="#111118" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="130" y="122" text-anchor="middle" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif" font-weight="600" letter-spacing="1">MODEL LEGEND</text>
+    <rect x="36" y="132" width="10" height="10" rx="2" fill="#354FD8"/>
+    <text x="53" y="142" fill="#a0a0c0" font-size="11" font-family="'Segoe UI',sans-serif">claude-sonnet-4-6</text>
+    <rect x="36" y="152" width="10" height="10" rx="2" fill="#c084fc"/>
+    <text x="53" y="162" fill="#a0a0c0" font-size="11" font-family="'Segoe UI',sans-serif">claude-opus-4-6</text>
+    <rect x="36" y="172" width="10" height="10" rx="2" fill="#a78bfa"/>
+    <text x="53" y="182" fill="#a0a0c0" font-size="11" font-family="'Segoe UI',sans-serif">MiniMax-M2.7-HS</text>
+    <line x1="36" y1="198" x2="100" y2="198" stroke="#10b981" stroke-width="2" stroke-dasharray="5,3"/>
+    <text x="107" y="202" fill="#10b981" font-size="11" font-family="'Segoe UI',sans-serif">PASS</text>
+    <line x1="36" y1="216" x2="100" y2="216" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3"/>
+    <text x="107" y="220" fill="#ef4444" font-size="11" font-family="'Segoe UI',sans-serif">FAIL</text>
+    <line x1="36" y1="234" x2="100" y2="234" stroke="#c084fc" stroke-width="2" stroke-dasharray="5,3"/>
+    <text x="107" y="238" fill="#c084fc" font-size="11" font-family="'Segoe UI',sans-serif">ESCALATE</text>
+
+    <!-- ═══════════════════ ARROWS — MAIN FLOW ═══════════════════ -->
+
+    <!-- Start → CTO -->
+    <line x1="430" y1="66" x2="430" y2="100" class="arrow-main"/>
+
+    <!-- CTO → ARCHITECT (task ≠ question) -->
+    <line x1="430" y1="162" x2="430" y2="210" class="arrow-main"/>
+    <text x="436" y="190" class="cond-label cond-gray">task ≠ question</text>
+
+    <!-- CTO → question (direct answer) -->
+    <line x1="270" y1="132" x2="200" y2="132" class="arrow-pass"/>
+    <text x="130" y="129" class="cond-label cond-pass" font-size="10">question</text>
+    <text x="130" y="142" class="cond-label cond-pass" font-size="10">→ answer direct</text>
+
+    <!-- ARCHITECT → EXECUTOR (blocking=none, risk≠CRITICAL) -->
+    <line x1="430" y1="272" x2="430" y2="336" class="arrow-main"/>
+    <text x="436" y="308" class="cond-label cond-gray">blocking=none</text>
+    <text x="436" y="320" class="cond-label cond-gray">risk ≠ CRITICAL</text>
+
+    <!-- ARCHITECT → ARCHITECT-OPUS (escalation_recommended=true) -->
+    <line x1="590" y1="242" x2="618" y2="242" class="arrow-escalate"/>
+    <text x="598" y="234" class="cond-label cond-escalate" font-size="10">escalation_recommended</text>
+    <text x="598" y="246" class="cond-label cond-escalate" font-size="10">= true</text>
+
+    <!-- ARCHITECT-OPUS → EXECUTOR -->
+    <line x1="730" y1="272" x2="730" y2="318" class="arrow-escalate"/>
+    <line x1="730" y1="318" x2="592" y2="358" class="arrow-escalate"/>
+
+    <!-- ARCHITECT CRITICAL stop -->
+    <line x1="270" y1="252" x2="200" y2="252" class="arrow-fail"/>
+    <rect x="20" y="237" width="180" height="32" rx="6" fill="#1a0a0a" stroke="rgba(239,68,68,0.3)" stroke-width="1"/>
+    <text x="110" y="250" text-anchor="middle" fill="#ef4444" font-size="10" font-family="'Segoe UI',sans-serif">risk = CRITICAL</text>
+    <text x="110" y="263" text-anchor="middle" fill="#7a7a9a" font-size="10" font-family="'Segoe UI',sans-serif">⏸ pause → user approval</text>
+
+    <!-- EXECUTOR → TEST-ENGINEER -->
+    <line x1="430" y1="398" x2="430" y2="462" class="arrow-main"/>
+
+    <!-- TEST-ENGINEER → QUICK-REVIEWER (all_tests_pass) -->
+    <line x1="430" y1="524" x2="430" y2="590" class="arrow-main"/>
+    <text x="436" y="560" class="cond-label cond-gray">all_tests_pass</text>
+
+    <!-- TEST-ENGINEER retry (fail) -->
+    <path d="M270,494 C180,494 180,545 270,545" class="arrow-retry" stroke-dasharray="4,3"/>
+    <text x="100" y="508" class="cond-label cond-retry">test fail</text>
+    <text x="100" y="521" class="cond-label cond-retry">max 2 retries</text>
+    <line x1="270" y1="545" x2="270" y2="494" class="arrow-retry"/>
+
+    <!-- QUICK-REVIEWER → QA (PASS) -->
+    <line x1="430" y1="652" x2="430" y2="754" class="arrow-pass"/>
+    <text x="436" y="710" class="cond-label cond-pass">PASS</text>
+    <text x="436" y="723" class="cond-label cond-gray" font-size="10">skip Deep Reviewer</text>
+
+    <!-- QUICK-REVIEWER → DEEP-REVIEWER (ESCALATE) -->
+    <line x1="590" y1="622" x2="618" y2="622" class="arrow-escalate"/>
+    <text x="596" y="614" class="cond-label cond-escalate" font-size="10">ESCALATE</text>
+
+    <!-- DEEP-REVIEWER → QA (PASS) -->
+    <line x1="730" y1="652" x2="730" y2="786" class="arrow-pass"/>
+    <line x1="730" y1="786" x2="592" y2="786" class="arrow-pass"/>
+    <text x="742" y="720" class="cond-label cond-pass" font-size="10">PASS /</text>
+    <text x="742" y="733" class="cond-label cond-pass" font-size="10">PASS+debt</text>
+
+    <!-- DEEP-REVIEWER → EXECUTOR (FAIL) -->
+    <path d="M620,640 C560,640 540,640 540,580 C540,400 540,368 592,368" class="arrow-fail"/>
+    <text x="545" y="520" class="cond-label cond-fail" font-size="10">FAIL</text>
+    <text x="545" y="533" class="cond-label cond-fail" font-size="10">max 1 retry</text>
+
+    <!-- DEEP-REVIEWER EXHAUSTED -->
+    <rect x="620" y="730" width="220" height="32" rx="6" fill="#1a0a0a" stroke="rgba(239,68,68,0.3)" stroke-width="1"/>
+    <text x="730" y="743" text-anchor="middle" fill="#ef4444" font-size="10" font-family="'Segoe UI',sans-serif">retry exhausted</text>
+    <text x="730" y="756" text-anchor="middle" fill="#7a7a9a" font-size="10" font-family="'Segoe UI',sans-serif">⏸ escalate_to_user</text>
+    <line x1="730" y1="652" x2="730" y2="728" class="arrow-fail" stroke-dasharray="none"/>
+
+    <!-- QA → MEMORY (QA_PASS) -->
+    <line x1="430" y1="816" x2="430" y2="878" class="arrow-pass"/>
+    <text x="436" y="850" class="cond-label cond-pass">QA_PASS</text>
+    <text x="436" y="863" class="cond-label cond-gray" font-size="10">QA_PASS+monitor</text>
+
+    <!-- QA → ARCHITECT (QA_FAIL) -->
+    <path d="M270,786 C160,786 160,242 268,242" class="arrow-fail"/>
+    <text x="90" y="520" class="cond-label cond-fail" font-size="10">QA_FAIL</text>
+    <text x="90" y="533" class="cond-label cond-fail" font-size="10">→ re-analyze</text>
+
+    <!-- MEMORY → DONE -->
+    <line x1="430" y1="926" x2="430" y2="968" class="arrow-main"/>
+
+    <!-- ═══════════════════ CONDITIONS BOX ═══════════════════ -->
+    <rect x="20" y="870" width="220" height="430" rx="10" fill="#111118" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="130" y="892" text-anchor="middle" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif" font-weight="600" letter-spacing="1">ALL CONDITIONS</text>
+
+    <!-- CTO conditions -->
+    <text x="36" y="912" fill="#354FD8" font-size="10.5" font-family="'Segoe UI',sans-serif" font-weight="600">CTO</text>
+    <text x="36" y="926" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• question → direct answer</text>
+    <text x="36" y="940" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• ui-design → ui-ux-pro-max first</text>
+    <text x="36" y="954" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• else → ARCHITECT</text>
+
+    <!-- ARCHITECT conditions -->
+    <text x="36" y="974" fill="#354FD8" font-size="10.5" font-family="'Segoe UI',sans-serif" font-weight="600">ARCHITECT</text>
+    <text x="36" y="988" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• blocking_questions → pause</text>
+    <text x="36" y="1002" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• risk=CRITICAL → pause+approval</text>
+    <text x="36" y="1016" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• escalation=true → OPUS</text>
+    <text x="36" y="1030" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• confidence &lt; 80 → consider OPUS</text>
+
+    <!-- EXECUTOR conditions -->
+    <text x="36" y="1050" fill="#a78bfa" font-size="10.5" font-family="'Segoe UI',sans-serif" font-weight="600">EXECUTOR</text>
+    <text x="36" y="1064" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• unplanned situation → stop+report</text>
+    <text x="36" y="1078" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• max 5 files per batch</text>
+
+    <!-- TEST-ENGINEER conditions -->
+    <text x="36" y="1098" fill="#a78bfa" font-size="10.5" font-family="'Segoe UI',sans-serif" font-weight="600">TEST-ENGINEER</text>
+    <text x="36" y="1112" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• fail → retry (max 2)</text>
+    <text x="36" y="1126" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• exhaust → escalate_to_user</text>
+    <text x="36" y="1140" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• coverage &lt; 40% → warn</text>
+
+    <!-- QUICK-REVIEWER conditions -->
+    <text x="36" y="1160" fill="#a78bfa" font-size="10.5" font-family="'Segoe UI',sans-serif" font-weight="600">QUICK-REVIEWER</text>
+    <text x="36" y="1174" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• any `any` → ESCALATE</text>
+    <text x="36" y="1188" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• unplanned files → ESCALATE</text>
+    <text x="36" y="1202" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• missing tests → ESCALATE</text>
+    <text x="36" y="1216" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• uncertain → ESCALATE</text>
+
+    <!-- DEEP-REVIEWER conditions -->
+    <text x="36" y="1236" fill="#354FD8" font-size="10.5" font-family="'Segoe UI',sans-serif" font-weight="600">DEEP-REVIEWER</text>
+    <text x="36" y="1250" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• score ≥ 7 → PASS</text>
+    <text x="36" y="1264" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• score 5-6 → PASS+debt</text>
+    <text x="36" y="1278" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• score ≤ 4 → FAIL → EXECUTOR</text>
+    <text x="36" y="1292" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• retry exhaust → user</text>
+
+    <!-- QA conditions -->
+    <text x="36" y="1312" fill="#a78bfa" font-size="10.5" font-family="'Segoe UI',sans-serif" font-weight="600">QA-VALIDATOR</text>
+    <text x="36" y="1326" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• QA_PASS → memory-write</text>
+    <text x="36" y="1340" fill="#5a5a7a" font-size="10" font-family="'Segoe UI',sans-serif">• QA_FAIL → ARCHITECT</text>
+
+  </svg>
+  </div>
+</div>
+</div>
+
+<div class="footer">
+  CareKit Benchmark — 10 أبريل 2026 — 5 مهام حقيقية من كود الإنتاج
+</div>
+
+</body>
+</html>
