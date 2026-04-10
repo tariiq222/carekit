@@ -1,9 +1,10 @@
 /** CareKit — PatientsService Unit Tests */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { PatientsService } from '../../../src/modules/patients/patients.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
+import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 
 const mockPatient = {
   id: 'patient-1',
@@ -41,8 +42,13 @@ const mockPrismaService: any = {
   $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
 };
 
+const mockActivityLogService: any = {
+  log: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('PatientsService', () => {
   let service: PatientsService;
+  let activityLogService: any;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -50,9 +56,11 @@ describe('PatientsService', () => {
       providers: [
         PatientsService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: ActivityLogService, useValue: mockActivityLogService },
       ],
     }).compile();
     service = module.get<PatientsService>(PatientsService);
+    activityLogService = module.get<ActivityLogService>(ActivityLogService);
   });
 
   // ────────────────────────────────────────────
@@ -298,15 +306,58 @@ describe('PatientsService', () => {
       );
     });
 
-    it('queries with id AND deletedAt=null before updating', async () => {
-      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+    it('queries with id AND deletedAt=null AND patient role before updating', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1', phone: '+966501234567' });
       mockPrismaService.user.update.mockResolvedValue(updatedUser);
 
       await service.updatePatient('patient-1', { firstName: 'Test' } as never);
 
       expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'patient-1', deletedAt: null },
+          where: expect.objectContaining({ id: 'patient-1', deletedAt: null, userRoles: { some: { role: { slug: 'patient' } } } }),
+        }),
+      );
+    });
+  });
+
+  // ────────────────────────────────────────────
+  describe('updatePatient phone conflict + role guard + audit', () => {
+    it('should throw ConflictException when phone is already taken', async () => {
+      const patientId = 'patient-uuid-1';
+      const existingPhone = '+966501234567';
+
+      mockPrismaService.user.findFirst
+        .mockResolvedValueOnce({ id: patientId })
+        .mockResolvedValueOnce({ id: 'other-user-uuid' });
+
+      await expect(
+        service.updatePatient(patientId, { phone: existingPhone } as never),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should require patient role in findFirst', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValueOnce(null);
+
+      await expect(
+        service.updatePatient('admin-uuid-1', { firstName: 'Test' } as never),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call activityLog.log after successful update', async () => {
+      mockPrismaService.user.findFirst
+        .mockResolvedValueOnce({ id: 'patient-1', phone: '+966501234567' })
+        .mockResolvedValueOnce(null);
+      mockPrismaService.$transaction.mockResolvedValueOnce([{ id: 'patient-1', firstName: 'Ahmad' }]);
+
+      const logSpy = jest.spyOn(activityLogService, 'log').mockResolvedValue(undefined);
+
+      await service.updatePatient('patient-1', { firstName: 'Ahmad' } as never);
+
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'updated',
+          module: 'patients',
+          resourceId: 'patient-1',
         }),
       );
     });
@@ -314,6 +365,10 @@ describe('PatientsService', () => {
 
   // ────────────────────────────────────────────
   describe('findOne', () => {
+    beforeEach(() => {
+      mockPrismaService.user.findFirst.mockReset();
+    });
+
     it('returns patient with bookingsAsPatient', async () => {
       const patientWithBookings = { ...mockPatient, bookingsAsPatient: [] };
       mockPrismaService.user.findFirst.mockResolvedValue(patientWithBookings);
@@ -327,6 +382,14 @@ describe('PatientsService', () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
       await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+
+      expect(mockPrismaService.user.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userRoles: { some: { role: { slug: 'patient' } } },
+          }),
+        }),
+      );
     });
 
     it('queries with id AND deletedAt=null', async () => {

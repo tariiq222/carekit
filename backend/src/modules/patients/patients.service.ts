@@ -1,12 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
 import { UpdatePatientDto } from './dto/update-patient.dto.js';
 import { PatientListQueryDto } from './dto/patient-list-query.dto.js';
+import { ActivityLogService } from '../activity-log/activity-log.service.js';
 
 @Injectable()
 export class PatientsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activityLog: ActivityLogService,
+  ) {}
 
   async findAll(query: PatientListQueryDto = {}) {
     const { page, perPage, skip } = parsePaginationParams(query.page, query.perPage);
@@ -108,14 +112,31 @@ export class PatientsService {
     return { total, active, inactive, newThisMonth };
   }
 
-  async updatePatient(id: string, dto: UpdatePatientDto) {
+  async updatePatient(id: string, dto: UpdatePatientDto, actorId?: string) {
     const patient = await this.prisma.user.findFirst({
-      where: { id, deletedAt: null },
-      select: { id: true },
+      where: {
+        id,
+        deletedAt: null,
+        userRoles: { some: { role: { slug: 'patient' } } },
+      },
+      select: { id: true, phone: true },
     });
     if (!patient) throw new NotFoundException('Patient not found');
 
-    // Profile fields that live in PatientProfile
+    if (dto.phone !== undefined && dto.phone !== patient.phone) {
+      const phoneOwner = await this.prisma.user.findFirst({
+        where: { phone: dto.phone, deletedAt: null },
+        select: { id: true },
+      });
+      if (phoneOwner) {
+        throw new ConflictException({
+          statusCode: 409,
+          message: 'رقم الجوال مستخدم بالفعل',
+          error: 'PHONE_CONFLICT',
+        });
+      }
+    }
+
     const profileFields = {
       ...(dto.dateOfBirth !== undefined && { dateOfBirth: new Date(dto.dateOfBirth) }),
       ...(dto.nationality !== undefined && { nationality: dto.nationality }),
@@ -147,12 +168,27 @@ export class PatientsService {
           })]
         : []),
     ]);
+
+    const changedFields = Object.keys({ ...dto }).filter((k) => (dto as Record<string, unknown>)[k] !== undefined);
+    this.activityLog.log({
+      userId: actorId,
+      action: 'updated',
+      module: 'patients',
+      resourceId: id,
+      description: `Patient profile updated — fields: ${changedFields.join(', ')}`,
+      newValues: { updatedFields: changedFields },
+    }).catch(() => { /* non-blocking */ });
+
     return user;
   }
 
   async findOne(id: string) {
     const patient = await this.prisma.user.findFirst({
-      where: { id, deletedAt: null },
+      where: {
+        id,
+        deletedAt: null,
+        userRoles: { some: { role: { slug: 'patient' } } },
+      },
       select: {
         id: true,
         firstName: true,
