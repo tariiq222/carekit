@@ -4,7 +4,7 @@ import type { Job } from 'bullmq';
 import { CleanupService } from './cleanup.service.js';
 import { ReminderService } from './reminder.service.js';
 import { BookingAutomationService } from './booking-automation.service.js';
-import { GroupSessionAutomationService } from './group-session-automation.service.js';
+import { GroupAutomationService } from './group-session-automation.service.js';
 import { QueueFailureService } from '../../common/queue/queue-failure.service.js';
 import { JOB_ATTEMPTS, QUEUE_TASKS } from '../../config/constants/queues.js';
 
@@ -16,7 +16,7 @@ export class TasksProcessor extends WorkerHost implements OnModuleInit {
     private readonly cleanupService: CleanupService,
     private readonly reminderService: ReminderService,
     private readonly bookingAutomationService: BookingAutomationService,
-    private readonly groupSessionAutomation: GroupSessionAutomationService,
+    private readonly groupAutomation: GroupAutomationService,
     private readonly queueFailureService: QueueFailureService,
   ) {
     super();
@@ -86,13 +86,13 @@ export class TasksProcessor extends WorkerHost implements OnModuleInit {
         await this.cleanupService.logTableGrowthSnapshot();
         break;
       case 'group-enrollment-expiry':
-        await this.groupSessionAutomation.expireUnpaidEnrollments();
+        await this.groupAutomation.expireUnpaidEnrollments();
         break;
       case 'group-session-cancellation':
-        await this.groupSessionAutomation.cancelExpiredSessions();
+        await this.groupAutomation.cancelExpiredSessions();
         break;
       case 'group-session-reminder':
-        await this.groupSessionAutomation.sendSessionReminders();
+        await this.groupAutomation.sendSessionReminders();
         break;
       default:
         this.logger.warn(`Unknown task job: ${job.name}`);

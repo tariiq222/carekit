@@ -9,60 +9,61 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Injectable()
-export class GroupSessionsEnrollmentsService {
-  private readonly logger = new Logger(GroupSessionsEnrollmentsService.name);
+export class GroupsEnrollmentsService {
+  private readonly logger = new Logger(GroupsEnrollmentsService.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async enroll(sessionId: string, patientId: string) {
-    const session = await this.prisma.groupSession.findFirst({
-      where: { id: sessionId, deletedAt: null },
+  async enroll(groupId: string, patientId: string) {
+    const group = await this.prisma.group.findFirst({
+      where: { id: groupId, deletedAt: null },
     });
 
-    if (!session) {
-      throw new NotFoundException('Group session not found');
+    if (!group) {
+      throw new NotFoundException('Group not found');
     }
 
-    if (session.status === 'full' || session.status === 'completed' || session.status === 'cancelled') {
-      throw new BadRequestException(`Cannot enroll in a ${session.status} session`);
+    const blockedStatuses = ['full', 'completed', 'cancelled', 'awaiting_payment', 'confirmed'];
+    if (blockedStatuses.includes(group.status)) {
+      throw new BadRequestException(`Cannot enroll in a ${group.status} group`);
     }
 
     const existing = await this.prisma.groupEnrollment.findFirst({
-      where: { groupSessionId: sessionId, patientId, status: { notIn: ['cancelled', 'expired'] } },
+      where: { groupId, patientId, status: { notIn: ['cancelled', 'expired'] } },
     });
 
     if (existing) {
-      throw new BadRequestException('Patient is already enrolled in this session');
+      throw new BadRequestException('Patient is already enrolled in this group');
     }
 
-    const isFree = session.pricePerPersonHalalat === 0;
+    const isFree = group.paymentType === 'FREE_HOLD';
 
     const result = await this.prisma.$transaction(async (tx) => {
       const enrollment = await tx.groupEnrollment.create({
         data: {
-          groupSessionId: sessionId,
+          groupId,
           patientId,
           status: isFree ? 'confirmed' : 'registered',
         },
       });
 
-      const newCount = session.currentEnrollment + 1;
-      let newStatus = session.status;
+      const newCount = group.currentEnrollment + 1;
+      let newStatus = group.status;
 
-      if (newCount >= session.maxParticipants) {
+      if (newCount >= group.maxParticipants) {
         newStatus = 'full';
-      } else if (newCount >= session.minParticipants && session.status === 'open') {
-        if (session.schedulingMode === 'fixed_date') {
+      } else if (newCount >= group.minParticipants && group.status === 'open') {
+        if (group.schedulingMode === 'fixed_date') {
           newStatus = 'confirmed';
         }
         // on_capacity: stays open until admin sets date
       }
 
-      await tx.groupSession.update({
-        where: { id: sessionId },
+      await tx.group.update({
+        where: { id: groupId },
         data: { currentEnrollment: newCount, status: newStatus },
       });
 
@@ -71,33 +72,33 @@ export class GroupSessionsEnrollmentsService {
 
     this.notificationsService.createNotification({
       userId: patientId,
-      titleAr: `تم تسجيلك في "${session.nameAr}"`,
-      titleEn: `You've been enrolled in "${session.nameEn}"`,
+      titleAr: `تم تسجيلك في "${group.nameAr}"`,
+      titleEn: `You've been enrolled in "${group.nameEn}"`,
       bodyAr: isFree ? 'تسجيلك مؤكد' : 'سنبلغك عند تأكيد الجلسة للدفع',
       bodyEn: isFree ? 'Your enrollment is confirmed' : "We'll notify you when the session is confirmed for payment",
       type: NotificationType.group_enrollment_created,
-      data: { groupSessionId: sessionId },
+      data: { groupId },
     }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
 
     // fixed_date: min reached → confirm + payment flow
-    if (result.newStatus === 'confirmed' && session.status === 'open' && !isFree) {
-      await this.notifySessionConfirmed(sessionId, session.paymentDeadlineHours);
+    if (result.newStatus === 'confirmed' && group.status === 'open' && !isFree) {
+      await this.notifyGroupConfirmed(groupId, group.paymentDeadlineHours);
     }
 
     // on_capacity: min reached → notify admin to set date
     if (
-      session.schedulingMode === 'on_capacity' &&
-      result.newCount >= session.minParticipants &&
-      session.currentEnrollment < session.minParticipants
+      group.schedulingMode === 'on_capacity' &&
+      result.newCount >= group.minParticipants &&
+      group.currentEnrollment < group.minParticipants
     ) {
       this.notificationsService.createNotification({
-        userId: session.practitionerId,
-        titleAr: `اكتمل الحد الأدنى — حدد موعد "${session.nameAr}"`,
-        titleEn: `Minimum reached — schedule "${session.nameEn}"`,
+        userId: group.practitionerId,
+        titleAr: `اكتمل الحد الأدنى — حدد موعد "${group.nameAr}"`,
+        titleEn: `Minimum reached — schedule "${group.nameEn}"`,
         bodyAr: `وصل عدد المسجلين ${result.newCount}. حدد موعد الجلسة`,
         bodyEn: `${result.newCount} enrolled. Set a date for this session`,
         type: NotificationType.group_capacity_reached,
-        data: { groupSessionId: sessionId },
+        data: { groupId },
       }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
     }
 
@@ -123,23 +124,23 @@ export class GroupSessionsEnrollmentsService {
         data: { status: 'cancelled' },
       });
 
-      const session = await tx.groupSession.findFirst({
-        where: { id: enrollment.groupSessionId },
+      const group = await tx.group.findFirst({
+        where: { id: enrollment.groupId },
       });
 
-      if (!session) return;
+      if (!group) return;
 
-      const newCount = session.currentEnrollment - 1;
-      let newStatus = session.status;
+      const newCount = group.currentEnrollment - 1;
+      let newStatus = group.status;
 
-      if (newCount < session.minParticipants && session.status !== 'open') {
+      if (newCount < group.minParticipants && group.status !== 'open') {
         newStatus = 'open';
-      } else if (newCount < session.maxParticipants && session.status === 'full') {
+      } else if (newCount < group.maxParticipants && group.status === 'full') {
         newStatus = 'confirmed';
       }
 
-      await tx.groupSession.update({
-        where: { id: enrollment.groupSessionId },
+      await tx.group.update({
+        where: { id: enrollment.groupId },
         data: { currentEnrollment: newCount, status: newStatus },
       });
     });
@@ -163,16 +164,16 @@ export class GroupSessionsEnrollmentsService {
     return this.cancelEnrollment(enrollmentId, enrollment.patientId);
   }
 
-  private async notifySessionConfirmed(sessionId: string, paymentDeadlineHours: number) {
+  private async notifyGroupConfirmed(groupId: string, paymentDeadlineHours: number) {
     const enrollments = await this.prisma.groupEnrollment.findMany({
-      where: { groupSessionId: sessionId, status: 'registered' },
+      where: { groupId, status: 'registered' },
       select: { id: true, patientId: true },
     });
 
     const deadlineAt = new Date(Date.now() + paymentDeadlineHours * 60 * 60 * 1000);
 
     await this.prisma.groupEnrollment.updateMany({
-      where: { groupSessionId: sessionId, status: 'registered' },
+      where: { groupId, status: 'registered' },
       data: { paymentDeadlineAt: deadlineAt },
     });
 
@@ -184,7 +185,7 @@ export class GroupSessionsEnrollmentsService {
         bodyAr: `أكمل الدفع خلال ${paymentDeadlineHours} ساعة للحفاظ على مكانك`,
         bodyEn: `Pay within ${paymentDeadlineHours} hours to keep your spot`,
         type: NotificationType.group_session_confirmed,
-        data: { groupSessionId: sessionId, enrollmentId: enrollment.id },
+        data: { groupId, enrollmentId: enrollment.id },
       }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
     }
   }

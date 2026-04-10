@@ -56,8 +56,7 @@ model Practitioner {
   favoritedBy          FavoritePractitioner[]
   branches             PractitionerBranch[]
   intakeForms          IntakeForm[]
-  groupSessions        GroupSession[]
-  courses              Course[]
+  groups               Group[]
 
   @@index([isActive, deletedAt])
   @@map("practitioners")

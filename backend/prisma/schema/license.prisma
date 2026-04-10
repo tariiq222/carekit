@@ -13,8 +13,7 @@ model LicenseConfig {
   hasZoom           Boolean  @default(false) @map("has_zoom")
   hasZatca          Boolean  @default(true) @map("has_zatca")
   hasDepartments    Boolean  @default(true) @map("has_departments")
-  hasGroupSessions  Boolean  @default(false) @map("has_group_sessions")
-  hasCourses        Boolean  @default(false) @map("has_courses")
+  hasGroups         Boolean  @default(false) @map("has_groups")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 

@@ -55,8 +55,7 @@ import { LicenseModule } from './modules/license/license.module.js';
 import { ClinicSettingsModule } from './modules/clinic-settings/clinic-settings.module.js';
 import { ClinicIntegrationsModule } from './modules/clinic-integrations/clinic-integrations.module.js';
 import { DepartmentsModule } from './modules/departments/departments.module.js';
-import { GroupSessionsModule } from './modules/group-sessions/group-sessions.module.js';
-import { CoursesModule } from './modules/courses/courses.module.js';
+import { GroupsModule } from './modules/groups/groups.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
 import { MetricsModule } from './common/metrics/metrics.module.js';
 import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
@@ -134,8 +133,7 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     ClinicSettingsModule,
     ClinicIntegrationsModule,
     DepartmentsModule,
-    GroupSessionsModule,
-    CoursesModule,
+    GroupsModule,
   ],
   controllers: [],
   providers: [

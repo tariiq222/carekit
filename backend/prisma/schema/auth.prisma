@@ -42,7 +42,7 @@ model User {
   purchasedGiftCards    GiftCard[]             @relation("GiftCardPurchaser")
   redeemedGiftCards     GiftCard[]             @relation("GiftCardRedeemer")
   groupEnrollments      GroupEnrollment[]      @relation("PatientGroupEnrollments")
-  courseEnrollments     CourseEnrollment[]     @relation("PatientCourseEnrollments")
+  groupCertificates     GroupCertificate[]     @relation("PatientGroupCertificates")
 
   @@map("users")
 }

@@ -4,8 +4,8 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Injectable()
-export class GroupSessionAutomationService {
-  private readonly logger = new Logger(GroupSessionAutomationService.name);
+export class GroupAutomationService {
+  private readonly logger = new Logger(GroupAutomationService.name);
 
   constructor(
     private readonly prisma: PrismaService,
@@ -21,8 +21,8 @@ export class GroupSessionAutomationService {
       select: {
         id: true,
         patientId: true,
-        groupSessionId: true,
-        groupSession: {
+        groupId: true,
+        group: {
           select: {
             id: true,
             currentEnrollment: true,
@@ -47,18 +47,18 @@ export class GroupSessionAutomationService {
             data: { status: 'expired', expiredAt: new Date() },
           });
 
-          const session = enrollment.groupSession;
-          const newCount = session.currentEnrollment - 1;
-          let newStatus = session.status;
+          const group = enrollment.group;
+          const newCount = group.currentEnrollment - 1;
+          let newStatus = group.status;
 
-          if (newCount < session.minParticipants && newStatus !== 'open') {
+          if (newCount < group.minParticipants && newStatus !== 'open') {
             newStatus = 'open';
-          } else if (newCount < session.maxParticipants && newStatus === 'full') {
+          } else if (newCount < group.maxParticipants && newStatus === 'full') {
             newStatus = 'confirmed';
           }
 
-          await tx.groupSession.update({
-            where: { id: session.id },
+          await tx.group.update({
+            where: { id: group.id },
             data: { currentEnrollment: newCount, status: newStatus },
           });
         }, { isolationLevel: 'Serializable', timeout: 10000 });
@@ -70,7 +70,7 @@ export class GroupSessionAutomationService {
           bodyAr: 'انتهت مهلة الدفع — فقدت مكانك في الجلسة',
           bodyEn: 'Payment deadline has passed — you lost your spot',
           type: NotificationType.group_enrollment_expired,
-          data: { groupSessionId: enrollment.groupSessionId },
+          data: { groupId: enrollment.groupId },
         }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
       } catch (err) {
         this.logger.warn(`Failed to expire enrollment ${enrollment.id}: ${(err as Error).message}`);
@@ -83,7 +83,7 @@ export class GroupSessionAutomationService {
   }
 
   async cancelExpiredSessions(): Promise<void> {
-    const sessions = await this.prisma.groupSession.findMany({
+    const groups = await this.prisma.group.findMany({
       where: {
         status: 'open',
         expiresAt: { not: null, lt: new Date() },
@@ -96,38 +96,38 @@ export class GroupSessionAutomationService {
       },
     });
 
-    for (const session of sessions) {
+    for (const group of groups) {
       try {
         await this.prisma.$transaction(async (tx) => {
-          await tx.groupSession.update({
-            where: { id: session.id },
+          await tx.group.update({
+            where: { id: group.id },
             data: { status: 'cancelled' },
           });
 
           await tx.groupEnrollment.updateMany({
-            where: { groupSessionId: session.id, status: 'registered' },
+            where: { groupId: group.id, status: 'registered' },
             data: { status: 'cancelled' },
           });
         });
 
-        for (const enrollment of session.enrollments) {
+        for (const enrollment of group.enrollments) {
           this.notificationsService.createNotification({
             userId: enrollment.patientId,
             titleAr: 'تم إلغاء الجلسة',
             titleEn: 'Session Cancelled',
-            bodyAr: `تم إلغاء جلسة "${session.nameAr}" لعدم اكتمال العدد`,
-            bodyEn: `"${session.nameEn}" cancelled due to insufficient enrollment`,
+            bodyAr: `تم إلغاء جلسة "${group.nameAr}" لعدم اكتمال العدد`,
+            bodyEn: `"${group.nameEn}" cancelled due to insufficient enrollment`,
             type: NotificationType.group_session_cancelled,
-            data: { groupSessionId: session.id },
+            data: { groupId: group.id },
           }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
         }
       } catch (err) {
-        this.logger.warn(`Failed to cancel session ${session.id}: ${(err as Error).message}`);
+        this.logger.warn(`Failed to cancel group ${group.id}: ${(err as Error).message}`);
       }
     }
 
-    if (sessions.length > 0) {
-      this.logger.log(`Cancelled ${sessions.length} expired group sessions`);
+    if (groups.length > 0) {
+      this.logger.log(`Cancelled ${groups.length} expired groups`);
     }
   }
 
@@ -135,7 +135,7 @@ export class GroupSessionAutomationService {
     const now = new Date();
     const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-    const sessions = await this.prisma.groupSession.findMany({
+    const groups = await this.prisma.group.findMany({
       where: {
         status: { in: ['confirmed', 'full'] },
         startTime: { not: null, gt: now, lte: in24h },
@@ -149,27 +149,27 @@ export class GroupSessionAutomationService {
       },
     });
 
-    for (const session of sessions) {
-      for (const enrollment of session.enrollments) {
+    for (const group of groups) {
+      for (const enrollment of group.enrollments) {
         this.notificationsService.createNotification({
           userId: enrollment.patientId,
           titleAr: 'تذكير: جلسة غداً',
           titleEn: 'Reminder: Session Tomorrow',
-          bodyAr: `جلسة "${session.nameAr}" غداً`,
-          bodyEn: `"${session.nameEn}" session is tomorrow`,
+          bodyAr: `جلسة "${group.nameAr}" غداً`,
+          bodyEn: `"${group.nameEn}" session is tomorrow`,
           type: NotificationType.group_session_reminder,
-          data: { groupSessionId: session.id },
+          data: { groupId: group.id },
         }).catch((err) => this.logger.warn('Notification failed', { error: (err as Error).message }));
       }
 
-      await this.prisma.groupSession.update({
-        where: { id: session.id },
+      await this.prisma.group.update({
+        where: { id: group.id },
         data: { reminderSent: true },
       });
     }
 
-    if (sessions.length > 0) {
-      this.logger.log(`Sent reminders for ${sessions.length} group sessions`);
+    if (groups.length > 0) {
+      this.logger.log(`Sent reminders for ${groups.length} groups`);
     }
   }
 }
