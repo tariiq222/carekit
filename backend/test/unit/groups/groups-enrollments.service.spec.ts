@@ -3,7 +3,8 @@
  * Includes regression tests for the awaiting_payment/confirmed enroll bug.
  */
 import { Test } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { GroupsEnrollmentsService } from '../../../src/modules/groups/groups-enrollments.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
@@ -219,6 +220,32 @@ describe('GroupsEnrollmentsService', () => {
       });
     });
   });
+
+    it('[REGRESSION] re-throws P2034 serialization failure as 409 ConflictException', async () => {
+      const p2034 = new Prisma.PrismaClientKnownRequestError('Serialization failure', {
+        code: 'P2034',
+        clientVersion: '7.0.0',
+      });
+
+      mockPrisma.group.findFirst.mockResolvedValue(baseGroup);
+      mockPrisma.groupEnrollment.findFirst.mockResolvedValue(null);
+      mockPrisma.$transaction.mockRejectedValue(p2034);
+
+      await expect(service.enroll('grp-1', 'pat-1')).rejects.toThrow(ConflictException);
+    });
+
+    it('re-throws non-P2034 Prisma errors as-is', async () => {
+      const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint', {
+        code: 'P2002',
+        clientVersion: '7.0.0',
+      });
+
+      mockPrisma.group.findFirst.mockResolvedValue(baseGroup);
+      mockPrisma.groupEnrollment.findFirst.mockResolvedValue(null);
+      mockPrisma.$transaction.mockRejectedValue(p2002);
+
+      await expect(service.enroll('grp-1', 'pat-1')).rejects.toThrow(p2002);
+    });
 
   // ─── cancelEnrollment() ─────────────────────────────────────────
 
