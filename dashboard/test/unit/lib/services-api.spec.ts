@@ -1,15 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getMock, postMock, patchMock, deleteMock, putMock } = vi.hoisted(() => ({
+const { getMock, postMock, patchMock, deleteMock, putMock, getAccessTokenMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   postMock: vi.fn(),
   patchMock: vi.fn(),
   deleteMock: vi.fn(),
   putMock: vi.fn(),
+  getAccessTokenMock: vi.fn(() => "test-token"),
 }))
 
 vi.mock("@/lib/api", () => ({
   api: { get: getMock, post: postMock, patch: patchMock, delete: deleteMock, put: putMock },
+  getAccessToken: getAccessTokenMock,
 }))
 
 import {
@@ -32,6 +34,9 @@ import {
   deleteIntakeForm,
   setIntakeFields,
   fetchIntakeResponses,
+  fetchServicePractitioners,
+  setServiceBranches,
+  clearServiceBranches,
 } from "@/lib/api/services"
 
 describe("services api", () => {
@@ -47,7 +52,7 @@ describe("services api", () => {
 
   it("createCategory posts to /services/categories", async () => {
     postMock.mockResolvedValueOnce({ id: "cat-1" })
-    await createCategory({ nameEn: "Physio", nameAr: "علاج" })
+    await createCategory({ nameEn: "Physio", nameAr: "علاج", departmentId: "dept-1" })
     expect(postMock).toHaveBeenCalledWith("/services/categories", expect.objectContaining({ nameEn: "Physio" }))
   })
 
@@ -151,5 +156,59 @@ describe("services api", () => {
     getMock.mockResolvedValueOnce([])
     await fetchIntakeResponses("bk-1")
     expect(getMock).toHaveBeenCalledWith("/intake-forms/responses/bk-1")
+  })
+
+  describe("fetchServices edge cases", () => {
+    it("sends all query params including branchId and includeHidden", async () => {
+      getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
+      await fetchServices({
+        page: 2,
+        perPage: 50,
+        categoryId: "cat-1",
+        isActive: false,
+        includeHidden: false,
+        search: "massage",
+        branchId: "br-1",
+      })
+      expect(getMock).toHaveBeenCalledWith("/services", {
+        page: 2,
+        perPage: 50,
+        categoryId: "cat-1",
+        isActive: false,
+        includeHidden: false,
+        search: "massage",
+        branchId: "br-1",
+      })
+    })
+
+    it("defaults to empty query object", async () => {
+      getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
+      await fetchServices()
+      expect(getMock).toHaveBeenCalledWith("/services", expect.any(Object))
+    })
+  })
+
+  describe("fetchServicePractitioners", () => {
+    it("calls /services/:id/practitioners", async () => {
+      getMock.mockResolvedValueOnce([{ id: "p-1", name: "Dr. Ali" }])
+      await fetchServicePractitioners("svc-1")
+      expect(getMock).toHaveBeenCalledWith("/services/svc-1/practitioners")
+    })
+  })
+
+  describe("setServiceBranches", () => {
+    it("puts to /services/:id/branches with payload", async () => {
+      putMock.mockResolvedValueOnce({ updated: true })
+      await setServiceBranches("svc-1", { branchIds: ["br-1", "br-2"] })
+      expect(putMock).toHaveBeenCalledWith("/services/svc-1/branches", { branchIds: ["br-1", "br-2"] })
+    })
+  })
+
+  describe("clearServiceBranches", () => {
+    it("deletes /services/:id/branches", async () => {
+      deleteMock.mockResolvedValueOnce({ cleared: true })
+      await clearServiceBranches("svc-1")
+      expect(deleteMock).toHaveBeenCalledWith("/services/svc-1/branches")
+    })
   })
 })

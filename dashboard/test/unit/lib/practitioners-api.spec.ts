@@ -182,4 +182,150 @@ describe("practitioners api", () => {
       expect(deleteMock).toHaveBeenCalledWith("/practitioners/p-1")
     })
   })
+
+  describe("mapPractitioner edge cases", () => {
+    it("maps specialty object to nameEn string", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", specialty: { id: "sp-1", nameEn: "Cardiology", nameAr: "قلب" } }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].specialty).toBe("Cardiology")
+    })
+
+    it("maps specialty object and sets specialtyAr", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", specialty: { id: "sp-1", nameEn: "Cardiology", nameAr: "أمراض القلب" } }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].specialtyAr).toBe("أمراض القلب")
+    })
+
+    it("preserves specialty as-is when it is already a string", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", specialty: "Orthopedics" }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].specialty).toBe("Orthopedics")
+    })
+
+    it("sets specialty to empty string when null", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", specialty: null }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].specialty).toBe("")
+    })
+
+    it("uses specialtyAr from raw when specialty is string", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", specialty: "Orthopedics", specialtyAr: "عظام" }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].specialtyAr).toBe("عظام")
+    })
+
+    it("sets specialtyAr to null when specialty is null", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", specialty: null }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].specialtyAr).toBeNull()
+    })
+
+    it("sets specialtyAr to null when specialty is string and specialtyAr is missing", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", specialty: "General" }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].specialtyAr).toBeNull()
+    })
+
+    it("extracts avatarUrl from user object", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", user: { avatarUrl: "https://img.url/pic.jpg" } }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].avatarUrl).toBe("https://img.url/pic.jpg")
+    })
+
+    it("falls back to raw avatarUrl when user.avatarUrl is null", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", user: { avatarUrl: null }, avatarUrl: "fallback.jpg" }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].avatarUrl).toBe("fallback.jpg")
+    })
+
+    it("sets avatarUrl to null when both user.avatarUrl and raw.avatarUrl are missing", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", user: {} }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].avatarUrl).toBeNull()
+    })
+
+    it("sets averageRating to undefined when neither averageRating nor rating exist", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", _count: { bookings: 0, ratings: 0 } }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0].averageRating).toBeUndefined()
+    })
+
+    it("defaults _count to {bookings:0, ratings:0} when _count and reviewCount both missing", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1" }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0]._count).toEqual({ bookings: 0, ratings: 0 })
+    })
+
+    it("uses reviewCount as ratings count in default _count", async () => {
+      getMock.mockResolvedValueOnce({
+        items: [{ id: "p-1", reviewCount: 7 }],
+        meta: { total: 1 },
+      })
+
+      const result = await fetchPractitioners()
+
+      expect(result.items[0]!._count!.ratings).toBe(7)
+      expect(result.items[0]!._count!.bookings).toBe(0)
+    })
+  })
 })

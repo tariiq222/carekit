@@ -139,6 +139,116 @@ describe("useServices", () => {
       expect(result.current.page).toBe(1)
     })
   })
+
+  it("setCategoryId resets page to 1", async () => {
+    fetchServices.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    act(() => { result.current.setCategoryId("cat-1") })
+
+    await waitFor(() =>
+      expect(fetchServices).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: "cat-1", page: 1 }),
+      ),
+    )
+  })
+
+  it("setIsActive resets page to 1", async () => {
+    fetchServices.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    act(() => { result.current.setIsActive(true) })
+
+    await waitFor(() =>
+      expect(fetchServices).toHaveBeenCalledWith(
+        expect.objectContaining({ isActive: true, page: 1 }),
+      ),
+    )
+  })
+
+  it("setBranchId resets page to 1", async () => {
+    fetchServices.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    act(() => { result.current.setBranchId("br-1") })
+
+    await waitFor(() =>
+      expect(fetchServices).toHaveBeenCalledWith(
+        expect.objectContaining({ branchId: "br-1", page: 1 }),
+      ),
+    )
+  })
+
+  it("resetFilters clears all filters including branchId", async () => {
+    fetchServices.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    act(() => {
+      result.current.setSearch("test")
+      result.current.setCategoryId("cat-1")
+      result.current.setIsActive(true)
+      result.current.setBranchId("br-1")
+    })
+
+    act(() => { result.current.resetFilters() })
+
+    await waitFor(() => {
+      expect(result.current.search).toBe("")
+      expect(result.current.categoryId).toBeUndefined()
+      expect(result.current.isActive).toBeUndefined()
+      expect(result.current.branchId).toBeUndefined()
+      expect(result.current.page).toBe(1)
+    })
+  })
+
+  it("returns error message when fetch fails", async () => {
+    fetchServices.mockRejectedValueOnce(new Error("Server error"))
+
+    const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(result.current.error).toBe("Server error")
+  })
+
+  it("returns null meta and empty services when no data", () => {
+    fetchServices.mockReturnValueOnce(new Promise(() => undefined))
+
+    const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
+
+    expect(result.current.meta).toBeNull()
+    expect(result.current.services).toEqual([])
+  })
+
+  it("always sends includeHidden: true in query", async () => {
+    fetchServices.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(fetchServices).toHaveBeenCalledWith(
+      expect.objectContaining({ includeHidden: true }),
+    )
+  })
+
+  it("passes undefined search when search is empty", async () => {
+    fetchServices.mockResolvedValue({ items: [], meta: { total: 0 } })
+
+    const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(fetchServices).toHaveBeenCalledWith(
+      expect.objectContaining({ search: undefined }),
+    )
+  })
 })
 
 describe("useCategories", () => {

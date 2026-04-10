@@ -115,4 +115,76 @@ describe("practitioners-schedule api", () => {
     await fetchPractitionerRatings("p-1", { page: 1 })
     expect(getMock).toHaveBeenCalledWith("/practitioners/p-1/ratings", expect.anything())
   })
+
+  describe("fetchSlots response normalization", () => {
+    it("returns array directly when response is an array", async () => {
+      const slots = [{ start: "09:00", end: "09:30" }, { start: "10:00", end: "10:30" }]
+      getMock.mockResolvedValueOnce(slots)
+
+      const result = await fetchSlots("p-1", "2026-04-01")
+
+      expect(result).toEqual(slots)
+    })
+
+    it("extracts slots from object when response is { slots: [...] }", async () => {
+      getMock.mockResolvedValueOnce({ slots: [{ start: "09:00", end: "09:30" }] })
+
+      const result = await fetchSlots("p-1", "2026-04-01")
+
+      expect(result).toEqual([{ start: "09:00", end: "09:30" }])
+    })
+
+    it("returns empty array when response object has null slots", async () => {
+      getMock.mockResolvedValueOnce({ slots: null })
+
+      const result = await fetchSlots("p-1", "2026-04-01")
+
+      expect(result).toEqual([])
+    })
+
+    it("returns empty array when response object has undefined slots", async () => {
+      getMock.mockResolvedValueOnce({ slots: undefined })
+
+      const result = await fetchSlots("p-1", "2026-04-01")
+
+      expect(result).toEqual([])
+    })
+
+    it("passes duration as optional param", async () => {
+      getMock.mockResolvedValueOnce([])
+      await fetchSlots("p-1", "2026-04-01", 45)
+      expect(getMock).toHaveBeenCalledWith("/practitioners/p-1/slots", { date: "2026-04-01", duration: 45 })
+    })
+
+    it("works without duration param", async () => {
+      getMock.mockResolvedValueOnce([])
+      await fetchSlots("p-1", "2026-04-01")
+      expect(getMock).toHaveBeenCalledWith("/practitioners/p-1/slots", { date: "2026-04-01", duration: undefined })
+    })
+  })
+
+  describe("fetchPractitionerRatings edge cases", () => {
+    it("sends page and perPage params", async () => {
+      getMock.mockResolvedValueOnce({ items: [], meta: {} })
+      await fetchPractitionerRatings("p-1", { page: 3, perPage: 50 })
+      expect(getMock).toHaveBeenCalledWith("/practitioners/p-1/ratings", { page: 3, perPage: 50 })
+    })
+
+    it("defaults to empty query object", async () => {
+      getMock.mockResolvedValueOnce({ items: [], meta: {} })
+      await fetchPractitionerRatings("p-1")
+      expect(getMock).toHaveBeenCalledWith("/practitioners/p-1/ratings", { page: undefined, perPage: undefined })
+    })
+  })
+
+  describe("setAvailability edge cases", () => {
+    it("sends full schedule payload", async () => {
+      putMock.mockResolvedValueOnce(undefined)
+      const payload = {
+        schedule: [{ dayOfWeek: 1, startTime: "09:00", endTime: "17:00", isActive: true }],
+      }
+      await setAvailability("p-1", payload as Parameters<typeof setAvailability>[1])
+      expect(putMock).toHaveBeenCalledWith("/practitioners/p-1/availability", payload)
+    })
+  })
 })
