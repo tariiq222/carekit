@@ -26,7 +26,9 @@ describe('RegisterDto — password policy (AU-R2, AU-R3)', () => {
   it('AU-R2: should reject password with no uppercase letter', async () => {
     const errors = await getPasswordErrors('nouppercase1');
     expect(errors.length).toBeGreaterThan(0);
-    expect(errors.some((m) => m.toLowerCase().includes('uppercase'))).toBe(true);
+    expect(errors.some((m) => m.toLowerCase().includes('uppercase'))).toBe(
+      true,
+    );
   });
 
   it('AU-R2: should reject password with no digit', async () => {
