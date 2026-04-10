@@ -5,6 +5,7 @@ import { useState, useCallback } from "react"
 import { queryKeys } from "@/lib/query-keys"
 import {
   fetchServices,
+  fetchServicesListStats,
   fetchCategories,
   createService,
   updateService,
@@ -90,6 +91,16 @@ export function useServices() {
     resetFilters,
     refetch,
   }
+}
+
+/* ─── Services List Stats ─── */
+
+export function useServicesListStats() {
+  return useQuery({
+    queryKey: queryKeys.services.listStats(),
+    queryFn: fetchServicesListStats,
+    staleTime: 30 * 1000,
+  })
 }
 
 /* ─── Categories ─── */

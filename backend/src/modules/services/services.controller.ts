@@ -98,6 +98,13 @@ export class ServicesController {
     return this.servicesService.findAll(query);
   }
 
+  @Get('list-stats')
+  @CheckPermissions({ module: 'services', action: 'view' })
+  @ApiOperation({ summary: 'Get aggregate stats for service list' })
+  async getListStats() {
+    return this.servicesService.getListStats();
+  }
+
   @Get('export')
   @CheckPermissions({ module: 'services', action: 'view' })
   @ApiOperation({ summary: 'Export all services as a CSV file' })

@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getServiceColumns } from "./service-columns"
 import { ServiceDetailSheet } from "./service-detail-sheet"
 
-import { useServices, useCategories, useServiceMutations } from "@/hooks/use-services"
+import { useServices, useServicesListStats, useCategories, useServiceMutations } from "@/hooks/use-services"
 import { useBranches } from "@/hooks/use-branches"
 import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import { useLocale } from "@/components/locale-provider"
@@ -40,6 +40,7 @@ export function ServicesTabContent() {
     resetFilters,
   } = useServices()
   const { data: categories } = useCategories()
+  const { data: listStats } = useServicesListStats()
   const { branches } = useBranches()
   const { deleteMut } = useServiceMutations()
   const { isEnabled } = useFeatureFlagMap()
@@ -89,19 +90,19 @@ export function ServicesTabContent() {
         <StatsGrid>
           <StatCard
             title={t("services.stats.total")}
-            value={meta?.total ?? 0}
+            value={listStats?.total ?? 0}
             icon={GridIcon}
             iconColor="primary"
           />
           <StatCard
             title={t("services.stats.active")}
-            value={services.filter((s) => s.isActive).length}
+            value={listStats?.active ?? 0}
             icon={CheckmarkCircle02Icon}
             iconColor="success"
           />
           <StatCard
             title={t("services.stats.inactive")}
-            value={services.filter((s) => !s.isActive).length}
+            value={listStats?.inactive ?? 0}
             icon={Cancel01Icon}
             iconColor="warning"
           />

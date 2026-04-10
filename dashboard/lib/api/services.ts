@@ -240,6 +240,18 @@ export async function fetchServicePractitioners(
   return api.get<ServicePractitioner[]>(`/services/${serviceId}/practitioners`)
 }
 
+/* ─── Service List Stats ─── */
+
+export interface ServiceListStats {
+  total: number;
+  active: number;
+  inactive: number;
+}
+
+export async function fetchServicesListStats(): Promise<ServiceListStats> {
+  return api.get<ServiceListStats>('/services/list-stats')
+}
+
 /* ─── Service Branches ─── */
 
 export async function setServiceBranches(

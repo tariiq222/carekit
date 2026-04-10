@@ -275,6 +275,18 @@ export class ServicesService {
     await this.invalidateServicesCache();
   }
 
+  async getListStats() {
+    const base = { deletedAt: null };
+
+    const [total, active, inactive] = await Promise.all([
+      this.prisma.service.count({ where: base }),
+      this.prisma.service.count({ where: { ...base, isActive: true } }),
+      this.prisma.service.count({ where: { ...base, isActive: false } }),
+    ]);
+
+    return { total, active, inactive };
+  }
+
   async getIntakeForms(serviceId: string) {
     // Only return active intake forms — consistent with booking-creation flow (fix #19)
     return this.intakeForms.listForms({ serviceId, isActive: true });
