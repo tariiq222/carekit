@@ -265,6 +265,27 @@ export class ServicesService {
     return this.intakeForms.listForms({ serviceId });
   }
 
+  async exportServices() {
+    const services = await this.prisma.service.findMany({
+      where: { deletedAt: null },
+      include: { category: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return services.map((s) => ({
+      id: s.id,
+      nameAr: s.nameAr,
+      nameEn: s.nameEn,
+      categoryAr: s.category.nameAr,
+      categoryEn: s.category.nameEn,
+      priceSar: (s.price / 100).toFixed(2),
+      durationMinutes: s.duration,
+      isActive: s.isActive ? 'نعم' : 'لا',
+      isHidden: s.isHidden ? 'نعم' : 'لا',
+      createdAt: s.createdAt.toISOString(),
+    }));
+  }
+
   // ═══════════════════════════════════════════════════════════════
   //  PRIVATE HELPERS
   // ═══════════════════════════════════════════════════════════════

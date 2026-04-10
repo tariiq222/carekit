@@ -155,7 +155,6 @@ export class GroupsPaymentService {
       module: 'groups',
       resourceId: enrollment.id,
       description: `Group enrollment confirmed after payment`,
-      actor: 'system',
       oldValues: { status: enrollment.status },
       newValues: { status: 'confirmed' },
     }).catch((err: unknown) =>

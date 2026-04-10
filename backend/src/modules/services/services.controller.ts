@@ -10,10 +10,12 @@ import {
   Post,
   Put,
   Query,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
@@ -89,6 +91,41 @@ export class ServicesController {
   @Public()
   async findAll(@Query() query: ServiceListQueryDto) {
     return this.servicesService.findAll(query);
+  }
+
+  @Get('export')
+  @CheckPermissions({ module: 'services', action: 'view' })
+  async exportCsv(
+    @Query('format') format: string = 'csv',
+    @Res() res: Response,
+  ) {
+    const data = await this.servicesService.exportServices();
+
+    const headers: string[] = ['ID', 'Name (AR)', 'Name (EN)', 'Category (AR)', 'Category (EN)', 'Price (SAR)', 'Duration (min)', 'Active', 'Hidden', 'Created At'];
+    const rows: string[][] = data.map((r) => [
+      r.id,
+      r.nameAr,
+      r.nameEn,
+      r.categoryAr,
+      r.categoryEn,
+      r.priceSar,
+      String(r.durationMinutes),
+      r.isActive,
+      r.isHidden,
+      r.createdAt,
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\r\n');
+
+    const isXlsx = format === 'xlsx';
+    const contentType = isXlsx ? 'application/vnd.ms-excel' : 'text/csv';
+    const filename = isXlsx ? 'services.xlsx' : 'services.csv';
+
+    res.setHeader('Content-Type', `${contentType}; charset=utf-8`);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send('\uFEFF' + csvContent);
   }
 
   @Get(':id')
