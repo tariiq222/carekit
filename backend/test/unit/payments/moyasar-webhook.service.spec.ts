@@ -167,6 +167,28 @@ describe('MoyasarWebhookService', () => {
     });
   });
 
+  describe('createGroupInvoiceAfterPayment', () => {
+    it('should swallow P2002 error from createGroupInvoice (race condition)', async () => {
+      const p2002 = Object.assign(new Error('Unique constraint'), { code: 'P2002' });
+      invoicesServiceMock.createGroupInvoice.mockRejectedValue(p2002);
+
+      await expect(
+        (service as any).createGroupInvoiceAfterPayment('enr-race'),
+      ).resolves.not.toThrow();
+    });
+
+    it('should log and propagate non-conflict errors from createGroupInvoice', async () => {
+      const dbError = new Error('Connection timeout');
+      invoicesServiceMock.createGroupInvoice.mockRejectedValue(dbError);
+
+      // يجب ألا يُرمى خطأ للخارج (best-effort)
+      await expect(
+        (service as any).createGroupInvoiceAfterPayment('enr-err'),
+      ).resolves.not.toThrow();
+      // لكن يُسجَّل
+    });
+  });
+
   describe('processGroupPaymentFailed', () => {
     it('should wrap groupPayment update and processedWebhook create in a single $transaction', async () => {
       prismaServiceMock.$transaction.mockImplementationOnce(

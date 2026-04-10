@@ -304,7 +304,8 @@ export class MoyasarWebhookService {
     try {
       await this.invoicesService.createGroupInvoice(enrollmentId);
     } catch (err) {
-      if (!(err instanceof ConflictException)) {
+      const isConflict = err instanceof ConflictException || (err as { code?: string }).code === 'P2002';
+      if (!isConflict) {
         this.logger.error(
           `Group invoice creation failed for enrollment ${enrollmentId}`,
           err,

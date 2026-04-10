@@ -262,6 +262,15 @@ export class InvoiceCreatorService {
           xmlContent: zatcaData.xmlContent,
         },
         include: invoiceInclude,
+      }).catch((e: unknown) => {
+        if ((e as { code?: string }).code === 'P2002') {
+          throw new ConflictException({
+            statusCode: 409,
+            message: 'Invoice already exists for this group enrollment',
+            error: 'CONFLICT',
+          });
+        }
+        throw e;
       });
     }, { isolationLevel: 'Serializable' });
 
