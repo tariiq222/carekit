@@ -24,6 +24,7 @@ import { ClaimAccountDto } from './dto/claim-account.dto.js';
 import { UpdatePatientDto } from './dto/update-patient.dto.js';
 import { PatientListQueryDto } from './dto/patient-list-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 
 @ApiTags('Patients')
 @ApiBearerAuth()
@@ -59,8 +60,8 @@ export class PatientsController {
   @Patch(':id')
   @CheckPermissions({ module: 'patients', action: 'edit' })
   @ApiOperation({ summary: 'Update patient profile' })
-  update(@Param('id', uuidPipe) id: string, @Body() dto: UpdatePatientDto) {
-    return this.patientsService.updatePatient(id, dto);
+  update(@Param('id', uuidPipe) id: string, @Body() dto: UpdatePatientDto, @CurrentUser('id') actorId: string) {
+    return this.patientsService.updatePatient(id, dto, actorId);
   }
 
   @Get(':id/stats')

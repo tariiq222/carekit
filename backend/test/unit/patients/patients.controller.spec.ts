@@ -47,8 +47,8 @@ describe('PatientsController', () => {
 
   it('update → patientsService.updatePatient()', () => {
     mockPatientsService.updatePatient.mockResolvedValue({ id: '1' });
-    controller.update('id-1', {} as any);
-    expect(mockPatientsService.updatePatient).toHaveBeenCalledWith('id-1', {});
+    controller.update('id-1', {} as any, 'actor-uuid');
+    expect(mockPatientsService.updatePatient).toHaveBeenCalledWith('id-1', {}, 'actor-uuid');
   });
 
   it('getStats → patientsService.getPatientStats()', () => {
