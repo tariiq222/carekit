@@ -109,20 +109,28 @@ export class ServicesService {
       query.perPage === undefined;
 
     if (isDefaultQuery) {
-      const cached = await this.cache.get<ReturnType<typeof this.buildFindAllResult>>(
-        CACHE_KEYS.SERVICES_ACTIVE,
-      );
-      if (cached) return cached;
+      try {
+        const cached = await this.cache.get<ReturnType<typeof this.buildFindAllResult>>(
+          CACHE_KEYS.SERVICES_ACTIVE,
+        );
+        if (cached) return cached;
+      } catch {
+        // Cache read failure — fall through to DB query
+      }
     }
 
     const result = await this.queryServices(query);
 
     if (isDefaultQuery) {
-      await this.cache.set(
-        CACHE_KEYS.SERVICES_ACTIVE,
-        result,
-        CACHE_TTL.SERVICES_LIST,
-      );
+      try {
+        await this.cache.set(
+          CACHE_KEYS.SERVICES_ACTIVE,
+          result,
+          CACHE_TTL.SERVICES_LIST,
+        );
+      } catch {
+        // Cache write failure is non-fatal — result still returned to caller
+      }
     }
 
     return result;
@@ -201,10 +209,7 @@ export class ServicesService {
       },
       include: { category: true },
     });
-    await this.invalidateServicesCache();
-    if (dto.categoryId) {
-      await this.cache.del(CACHE_KEYS.CATEGORIES_ACTIVE);
-    }
+    await this.invalidateServicesCache(!!dto.categoryId);
     return updated;
   }
 
@@ -362,7 +367,19 @@ export class ServicesService {
     }
   }
 
-  async invalidateServicesCache(): Promise<void> {
-    await this.cache.del(CACHE_KEYS.SERVICES_ACTIVE);
+  /**
+   * Invalidates all service-related cache keys.
+   * Errors are swallowed — cache failure must not surface as a request error.
+   * Pass invalidateCategories=true when the service's category may have changed.
+   */
+  async invalidateServicesCache(invalidateCategories = false): Promise<void> {
+    try {
+      await this.cache.del(CACHE_KEYS.SERVICES_ACTIVE);
+      if (invalidateCategories) {
+        await this.cache.del(CACHE_KEYS.CATEGORIES_ACTIVE);
+      }
+    } catch {
+      // Cache invalidation failure is non-fatal — stale data expires via TTL
+    }
   }
 }
