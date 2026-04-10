@@ -3,6 +3,7 @@
  */
 import { Test } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { GroupsPaymentService } from '../../../src/modules/groups/groups-payment.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
@@ -83,8 +84,8 @@ describe('GroupsPaymentService', () => {
             totalAmount: 10000,
             paidAmount: 0,
             remainingAmount: 10000,
-            method: 'online',
-            status: 'pending',
+            method: PaymentMethod.moyasar,
+            status: PaymentStatus.pending,
           })),
           skipDuplicates: true,
         });

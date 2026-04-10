@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
-import { NotificationType } from '@prisma/client';
+import { NotificationType, PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
@@ -63,8 +63,8 @@ export class GroupsPaymentService {
             totalAmount: requiredAmount,
             paidAmount: 0,
             remainingAmount: requiredAmount,
-            method: 'online' as const,
-            status: 'pending' as const,
+            method: PaymentMethod.moyasar,
+            status: PaymentStatus.pending,
           })),
           skipDuplicates: true,
         });
