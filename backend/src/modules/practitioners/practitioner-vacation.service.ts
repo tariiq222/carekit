@@ -40,6 +40,14 @@ export class PractitionerVacationService {
     const startDate = new Date(dto.startDate);
     const endDate = new Date(dto.endDate);
 
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Invalid date format',
+        error: 'VALIDATION_ERROR',
+      });
+    }
+
     if (startDate >= endDate) {
       throw new BadRequestException({
         statusCode: 400,

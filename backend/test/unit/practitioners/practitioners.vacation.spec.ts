@@ -59,6 +59,161 @@ describe('PractitionersService — createVacation', () => {
       ctx.vacationService.createVacation('non-existent-id', vacationDto),
     ).rejects.toThrow(NotFoundException);
   });
+
+  // Existing vacation: Apr 10-15 (mockVacation)
+
+  it('rejects fully-contained range (new inside existing)', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+
+    await expect(
+      ctx.vacationService.createVacation(mockPractitioner.id, {
+        startDate: '2026-04-11',
+        endDate:   '2026-04-14',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects range that contains existing (existing inside new)', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+
+    await expect(
+      ctx.vacationService.createVacation(mockPractitioner.id, {
+        startDate: '2026-04-08',
+        endDate:   '2026-04-20',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects partial overlap at the end (new starts inside existing)', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+
+    // Existing Apr 10-15, New Apr 13-20 → overlaps
+    await expect(
+      ctx.vacationService.createVacation(mockPractitioner.id, {
+        startDate: '2026-04-13',
+        endDate:   '2026-04-20',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects partial overlap at the start (new ends inside existing)', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+
+    // Existing Apr 10-15, New Apr 05-12 → overlaps
+    await expect(
+      ctx.vacationService.createVacation(mockPractitioner.id, {
+        startDate: '2026-04-05',
+        endDate:   '2026-04-12',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('allows non-overlapping range before existing', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+    ctx.mockPrisma.practitionerVacation.create.mockResolvedValue({
+      ...mockVacation,
+      id:        'new-vac',
+      startDate: new Date('2026-04-01'),
+      endDate:   new Date('2026-04-09'),
+    });
+
+    const result = await ctx.vacationService.createVacation(mockPractitioner.id, {
+      startDate: '2026-04-01',
+      endDate:   '2026-04-09',
+    });
+
+    expect(result).toHaveProperty('id', 'new-vac');
+  });
+
+  it('allows non-overlapping range after existing', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+    ctx.mockPrisma.practitionerVacation.create.mockResolvedValue({
+      ...mockVacation,
+      id:        'new-vac',
+      startDate: new Date('2026-04-16'),
+      endDate:   new Date('2026-04-20'),
+    });
+
+    const result = await ctx.vacationService.createVacation(mockPractitioner.id, {
+      startDate: '2026-04-16',
+      endDate:   '2026-04-20',
+    });
+
+    expect(result).toHaveProperty('id', 'new-vac');
+  });
+
+  it('rejects invalid startDate string', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([]);
+
+    await expect(
+      ctx.vacationService.createVacation(mockPractitioner.id, {
+        startDate: 'not-a-date',
+        endDate:   '2026-05-10',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects invalid endDate string', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([]);
+
+    await expect(
+      ctx.vacationService.createVacation(mockPractitioner.id, {
+        startDate: '2026-05-01',
+        endDate:   'not-a-date',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects startDate equal to endDate', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([]);
+
+    await expect(
+      ctx.vacationService.createVacation(mockPractitioner.id, {
+        startDate: '2026-05-01',
+        endDate:   '2026-05-01',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  /**
+   * TOCTOU regression: overlap check loads vacations into memory then checks.
+   * Two concurrent requests with overlapping dates both load an empty list,
+   * both pass the guard, and both insert — creating overlapping vacations.
+   * No DB-level unique constraint on vacation date ranges exists.
+   */
+  it('[TOCTOU] concurrent requests both pass in-memory overlap check', async () => {
+    ctx.mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    // Both requests load an empty list at the same moment (before either inserts)
+    ctx.mockPrisma.practitionerVacation.findMany.mockResolvedValue([]);
+    ctx.mockPrisma.practitionerVacation.create.mockResolvedValue({
+      ...mockVacation,
+      id: 'concurrent-vac',
+    });
+
+    // Both succeed — this documents the race condition gap
+    const [r1, r2] = await Promise.all([
+      ctx.vacationService.createVacation(mockPractitioner.id, {
+        startDate: '2026-07-01',
+        endDate:   '2026-07-15',
+      }),
+      ctx.vacationService.createVacation(mockPractitioner.id, {
+        startDate: '2026-07-01',
+        endDate:   '2026-07-15',
+      }),
+    ]);
+
+    expect(r1).toBeDefined();
+    expect(r2).toBeDefined();
+  });
 });
 
 describe('PractitionersService — listVacations', () => {
