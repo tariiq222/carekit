@@ -28,6 +28,7 @@ export const MODULES = [
   'clinic-integrations',
   'feature-flags',
   'group_sessions',
+  'courses',
 ] as const;
 
 export const ACTIONS = ['view', 'create', 'edit', 'delete'] as const;
@@ -131,7 +132,10 @@ export const ROLES: RoleDefinition[] = [
       practitioners: ['view', 'create', 'edit'],
       services: ['view', 'create', 'edit'],
       departments: ['view'],
+      branches: ['view'],
+      'gift-cards': ['view'],
       group_sessions: ['view', 'create', 'edit'],
+      courses: ['view', 'create', 'edit'],
       notifications: ['view', 'create', 'edit', 'update'],
       payments: ['view'],
       invoices: ['view'],
@@ -187,6 +191,7 @@ export const ROLES: RoleDefinition[] = [
       services: ['view'],
       departments: ['view'],
       group_sessions: ['view', 'create'],
+      courses: ['view'],
       notifications: ['view', 'update'],
       chatbot: ['use'],
     },
@@ -227,6 +232,8 @@ export const LICENSE_DEFAULTS = {
   hasZoom: false,
   hasZatca: true,
   hasDepartments: true,
+  hasGroupSessions: true,
+  hasCourses: true,
 };
 
 // ──────────────────────────────────────────────
@@ -331,6 +338,7 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   { key: 'departments', nameEn: 'Departments', nameAr: 'الأقسام', descriptionEn: 'Enable department-based organization for services', descriptionAr: 'تفعيل تنظيم الخدمات حسب الأقسام', enabled: false },
   // Group features
   { key: 'group_sessions', nameEn: 'Group Sessions', nameAr: 'الجلسات الجماعية', descriptionEn: 'Pre-order group therapy sessions', descriptionAr: 'جلسات علاجية جماعية بنظام الطلب المسبق', enabled: true },
+  { key: 'courses', nameEn: 'Training Courses', nameAr: 'الدورات التدريبية', descriptionEn: 'Multi-session training programs with upfront enrollment', descriptionAr: 'برامج تدريبية متعددة الجلسات مع تسجيل مدفوع مسبقاً', enabled: true },
 ];
 
 // ──────────────────────────────────────────────

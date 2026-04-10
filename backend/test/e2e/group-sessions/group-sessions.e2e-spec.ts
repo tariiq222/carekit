@@ -180,6 +180,18 @@ describe('Group Sessions Module (e2e)', () => {
   // ─────────────────────────────────────────────────────────────
 
   describe('Feature flag gate', () => {
+    // Regression: group-sessions returned 403 FEATURE_NOT_ENABLED for all users
+    // because hasGroupSessions was false in LICENSE_DEFAULTS (seed.data.ts).
+    // Fix: set hasGroupSessions=true in LICENSE_DEFAULTS so the license gate passes.
+    it('REGRESSION: returns 200 for admin when license hasGroupSessions=true and flag is enabled', async () => {
+      const res = await request(httpServer)
+        .get(GS_URL)
+        .set(getAuthHeaders(superAdmin.accessToken))
+        .expect(200);
+
+      expectSuccessResponse(res.body);
+    });
+
     it('returns 403 FEATURE_NOT_ENABLED when flag is disabled', async () => {
       await request(httpServer)
         .patch(`${FLAGS_URL}/group_sessions`)

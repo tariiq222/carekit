@@ -16,6 +16,7 @@ import {
   createTestApp,
   closeTestApp,
   loginTestUser,
+  createTestUserWithRole,
   registerTestPatient,
   getAuthHeaders,
   expectSuccessResponse,
@@ -32,6 +33,7 @@ describe('Gift Cards Module (e2e)', () => {
   let httpServer: ReturnType<TestApp['app']['getHttpServer']>;
 
   let superAdmin: AuthResult;
+  let receptionist: AuthResult;
   let patient: AuthResult;
 
   let giftCardId: string;
@@ -46,6 +48,13 @@ describe('Gift Cards Module (e2e)', () => {
       httpServer,
       TEST_USERS.super_admin.email,
       TEST_USERS.super_admin.password,
+    );
+
+    receptionist = await createTestUserWithRole(
+      httpServer,
+      superAdmin.accessToken,
+      TEST_USERS.receptionist,
+      'receptionist',
     );
 
     patient = await registerTestPatient(httpServer);
@@ -78,6 +87,18 @@ describe('Gift Cards Module (e2e)', () => {
         .expect(401);
 
       expectErrorResponse(res.body, 'AUTH_TOKEN_INVALID');
+    });
+
+    // Regression: receptionist received 403 before gift-cards:view was added to seed.data.ts
+    it('REGRESSION: should return 200 for receptionist (gift-cards:view permission)', async () => {
+      const res = await request(httpServer)
+        .get(GIFT_CARDS_URL)
+        .set(getAuthHeaders(receptionist.accessToken))
+        .expect(200);
+
+      expectSuccessResponse(res.body);
+      expect(res.body.data).toHaveProperty('items');
+      expect(Array.isArray(res.body.data.items)).toBe(true);
     });
 
     it('should return 403 for patient (no gift-cards:view)', async () => {
