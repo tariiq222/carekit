@@ -119,12 +119,11 @@ export class ServicesController {
       .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
       .join('\r\n');
 
-    const isXlsx = format === 'xlsx';
-    const contentType = isXlsx ? 'application/vnd.ms-excel' : 'text/csv';
-    const filename = isXlsx ? 'services.xlsx' : 'services.csv';
-
-    res.setHeader('Content-Type', `${contentType}; charset=utf-8`);
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    // Fix #11: always send CSV regardless of format param — we do not generate real XLSX.
+    // Using application/vnd.ms-excel with CSV content caused Excel to reject or misparse the file.
+    // If true XLSX is needed in future, replace this block with exceljs output.
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="services.csv"');
     res.send('\uFEFF' + csvContent);
   }
 
