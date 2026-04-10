@@ -10,7 +10,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -20,15 +26,14 @@ import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto.js';
 import { UnregisterFcmTokenDto } from './dto/unregister-fcm-token.dto.js';
 import { NotificationListQueryDto } from './dto/notification-list-query.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
 @Controller('notifications')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class NotificationsController {
-  constructor(
-    private readonly notificationsService: NotificationsService,
-  ) {}
+  constructor(private readonly notificationsService: NotificationsService) {}
 
   // ═══════════════════════════════════════════════════════════════
   //  GET /notifications — List user's notifications
@@ -36,6 +41,9 @@ export class NotificationsController {
 
   @Get()
   @CheckPermissions({ module: 'notifications', action: 'view' })
+  @ApiOperation({ summary: "List current user's notifications (paginated)" })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   async findAll(
     @Query() query: NotificationListQueryDto,
     @CurrentUser() user: { id: string },
@@ -49,6 +57,9 @@ export class NotificationsController {
 
   @Get('unread-count')
   @CheckPermissions({ module: 'notifications', action: 'view' })
+  @ApiOperation({ summary: 'Get count of unread notifications' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   async getUnreadCount(@CurrentUser() user: { id: string }) {
     const count = await this.notificationsService.getUnreadCount(user.id);
     return { count };
@@ -61,6 +72,9 @@ export class NotificationsController {
   @Patch('read-all')
   @HttpCode(200)
   @CheckPermissions({ module: 'notifications', action: 'update' })
+  @ApiOperation({ summary: 'Mark all notifications as read' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   async markAllAsRead(@CurrentUser() user: { id: string }) {
     await this.notificationsService.markAllAsRead(user.id);
     return { updated: true };
@@ -73,6 +87,10 @@ export class NotificationsController {
   @Patch(':id/read')
   @HttpCode(200)
   @CheckPermissions({ module: 'notifications', action: 'update' })
+  @ApiOperation({ summary: 'Mark a single notification as read' })
+  @ApiParam({ name: 'id', description: 'Notification UUID' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   async markAsRead(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -86,6 +104,9 @@ export class NotificationsController {
 
   @Post('fcm-token')
   @CheckPermissions({ module: 'notifications', action: 'update' })
+  @ApiOperation({ summary: 'Register a Firebase FCM push notification token' })
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   async registerFcmToken(
     @Body() dto: RegisterFcmTokenDto,
     @CurrentUser() user: { id: string },
@@ -100,6 +121,11 @@ export class NotificationsController {
   @Delete('fcm-token')
   @HttpCode(200)
   @CheckPermissions({ module: 'notifications', action: 'update' })
+  @ApiOperation({
+    summary: 'Unregister a Firebase FCM push notification token',
+  })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   async unregisterFcmToken(
     @Body() dto: UnregisterFcmTokenDto,
     @CurrentUser() user: { id: string },

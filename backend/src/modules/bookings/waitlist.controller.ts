@@ -8,7 +8,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -16,6 +23,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { WaitlistService } from './waitlist.service.js';
 import { JoinWaitlistDto } from './dto/join-waitlist.dto.js';
 import { uuidPipe } from '../../common/pipes/uuid.pipe.js';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 
 @ApiTags('Waitlist')
 @ApiBearerAuth()
@@ -30,6 +38,9 @@ export class WaitlistController {
 
   @Get('my')
   @CheckPermissions({ module: 'bookings', action: 'view' })
+  @ApiOperation({ summary: "List current patient's waitlist entries" })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   async findMyEntries(@CurrentUser() user: { id: string }) {
     const data = await this.waitlistService.findMyEntries(user.id);
     return { success: true, data };
@@ -41,6 +52,11 @@ export class WaitlistController {
 
   @Get()
   @CheckPermissions({ module: 'bookings', action: 'view' })
+  @ApiOperation({ summary: 'List all waitlist entries (admin view)' })
+  @ApiQuery({ name: 'practitionerId', required: false })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   async findAll(
     @Query('practitionerId') practitionerId?: string,
     @Query('status') status?: string,
@@ -58,6 +74,9 @@ export class WaitlistController {
 
   @Post()
   @CheckPermissions({ module: 'bookings', action: 'create' })
+  @ApiOperation({ summary: 'Join the waitlist for a practitioner' })
+  @ApiResponse({ status: 201 })
+  @ApiStandardResponses()
   async join(
     @Body() dto: JoinWaitlistDto,
     @CurrentUser() user: { id: string },
@@ -72,6 +91,10 @@ export class WaitlistController {
 
   @Delete(':id')
   @CheckPermissions({ module: 'bookings', action: 'create' })
+  @ApiOperation({ summary: 'Leave the waitlist (remove entry)' })
+  @ApiParam({ name: 'id', description: 'Waitlist entry UUID' })
+  @ApiResponse({ status: 200 })
+  @ApiStandardResponses()
   async leave(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },

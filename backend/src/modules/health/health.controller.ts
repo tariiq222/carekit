@@ -5,6 +5,7 @@ import {
   HealthCheckResult,
   HealthIndicatorService,
 } from '@nestjs/terminus';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { PrismaService } from '../../database/prisma.service.js';
 import { RedisHealthIndicator } from './redis.health.js';
@@ -12,6 +13,7 @@ import { MinioHealthIndicator } from './minio.health.js';
 
 const startedAt = Date.now();
 
+@ApiTags('Health')
 @Controller('health')
 export class HealthController {
   constructor(
@@ -25,6 +27,9 @@ export class HealthController {
   @Get()
   @Public()
   @HealthCheck()
+  @ApiOperation({ summary: 'Check service health (database, Redis, MinIO)' })
+  @ApiResponse({ status: 200, description: 'All services healthy' })
+  @ApiResponse({ status: 503, description: 'One or more services degraded' })
   async check(): Promise<HealthCheckResult> {
     const result = await this.health.check([
       () => this.checkDatabase(),
@@ -48,8 +53,7 @@ export class HealthController {
       await this.prisma.$queryRaw`SELECT 1`;
       return session.up();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : 'Unknown error';
       return session.down({ message });
     }
   }
