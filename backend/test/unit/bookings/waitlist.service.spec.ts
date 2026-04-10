@@ -11,6 +11,7 @@ import { WaitlistService } from '../../../src/modules/bookings/waitlist.service.
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
+import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 
 const patientId = 'patient-uuid-1';
 const practitionerId = 'pract-uuid-1';
@@ -32,7 +33,6 @@ const defaultSettings = {
 
 const joinDto = { practitionerId };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma: any = {
   waitlistEntry: {
     count: jest.fn(),
@@ -43,14 +43,16 @@ const mockPrisma: any = {
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockNotifications: any = {
   createNotification: jest.fn().mockResolvedValue(undefined),
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockSettings: any = {
   get: jest.fn().mockResolvedValue(defaultSettings),
+};
+
+const mockClinicSettings: any = {
+  getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh'),
 };
 
 describe('WaitlistService', () => {
@@ -63,6 +65,7 @@ describe('WaitlistService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: NotificationsService, useValue: mockNotifications },
         { provide: BookingSettingsService, useValue: mockSettings },
+        { provide: ClinicSettingsService, useValue: mockClinicSettings },
       ],
     }).compile();
 
@@ -85,42 +88,59 @@ describe('WaitlistService', () => {
     });
 
     it('should throw BadRequestException when waitlist not enabled', async () => {
-      mockSettings.get.mockResolvedValue({ ...defaultSettings, waitlistEnabled: false });
+      mockSettings.get.mockResolvedValue({
+        ...defaultSettings,
+        waitlistEnabled: false,
+      });
 
-      await expect(service.join(patientId, joinDto)).rejects.toThrow(BadRequestException);
+      await expect(service.join(patientId, joinDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when waitlist is full', async () => {
       mockPrisma.waitlistEntry.count.mockResolvedValue(10);
 
-      await expect(service.join(patientId, joinDto)).rejects.toThrow(BadRequestException);
+      await expect(service.join(patientId, joinDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw ConflictException when already on waitlist', async () => {
       mockPrisma.waitlistEntry.count.mockResolvedValue(0);
       mockPrisma.waitlistEntry.findFirst.mockResolvedValue(mockEntry);
 
-      await expect(service.join(patientId, joinDto)).rejects.toThrow(ConflictException);
+      await expect(service.join(patientId, joinDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
   describe('leave', () => {
     it('should cancel waitlist entry', async () => {
       mockPrisma.waitlistEntry.findFirst.mockResolvedValue(mockEntry);
-      mockPrisma.waitlistEntry.update.mockResolvedValue({ ...mockEntry, status: 'cancelled' });
+      mockPrisma.waitlistEntry.update.mockResolvedValue({
+        ...mockEntry,
+        status: 'cancelled',
+      });
 
       const result = await service.leave(entryId, patientId);
 
       expect(result.status).toBe('cancelled');
       expect(mockPrisma.waitlistEntry.update).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: entryId }, data: { status: 'cancelled' } }),
+        expect.objectContaining({
+          where: { id: entryId },
+          data: { status: 'cancelled' },
+        }),
       );
     });
 
     it('should throw NotFoundException when entry not found', async () => {
       mockPrisma.waitlistEntry.findFirst.mockResolvedValue(null);
 
-      await expect(service.leave('non-existent', patientId)).rejects.toThrow(NotFoundException);
+      await expect(service.leave('non-existent', patientId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -163,7 +183,10 @@ describe('WaitlistService', () => {
 
   describe('checkAndNotify', () => {
     it('should skip when waitlist not enabled', async () => {
-      mockSettings.get.mockResolvedValue({ waitlistEnabled: false, waitlistAutoNotify: true });
+      mockSettings.get.mockResolvedValue({
+        waitlistEnabled: false,
+        waitlistAutoNotify: true,
+      });
 
       await service.checkAndNotify(practitionerId, new Date());
 
@@ -171,7 +194,10 @@ describe('WaitlistService', () => {
     });
 
     it('should skip when autoNotify not enabled', async () => {
-      mockSettings.get.mockResolvedValue({ waitlistEnabled: true, waitlistAutoNotify: false });
+      mockSettings.get.mockResolvedValue({
+        waitlistEnabled: true,
+        waitlistAutoNotify: false,
+      });
 
       await service.checkAndNotify(practitionerId, new Date());
 
@@ -183,16 +209,23 @@ describe('WaitlistService', () => {
         ...mockEntry,
         practitioner: { user: { firstName: 'Ahmad', lastName: 'Al-Omari' } },
       };
-      mockPrisma.waitlistEntry.findMany.mockResolvedValue([entryWithPractitioner]);
+      mockPrisma.waitlistEntry.findMany.mockResolvedValue([
+        entryWithPractitioner,
+      ]);
       mockPrisma.waitlistEntry.update.mockResolvedValue({});
 
       await service.checkAndNotify(practitionerId, new Date('2026-05-10'));
 
       expect(mockPrisma.waitlistEntry.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { status: 'notified', notifiedAt: expect.any(Date) } }),
+        expect.objectContaining({
+          data: { status: 'notified', notifiedAt: expect.any(Date) },
+        }),
       );
       expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: patientId, type: 'waitlist_slot_available' }),
+        expect.objectContaining({
+          userId: patientId,
+          type: 'waitlist_slot_available',
+        }),
       );
     });
 

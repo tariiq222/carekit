@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../../database/prisma.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
+import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 import { JoinWaitlistDto } from './dto/join-waitlist.dto.js';
 import { NOTIF } from '../../common/constants/notification-messages.js';
 
@@ -19,6 +20,7 @@ export class WaitlistService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly bookingSettingsService: BookingSettingsService,
+    private readonly clinicSettingsService: ClinicSettingsService,
   ) {}
 
   // ───────────────────────────────────────────────────────────────
@@ -72,9 +74,7 @@ export class WaitlistService {
         patientId,
         practitionerId: dto.practitionerId,
         serviceId: dto.serviceId,
-        preferredDate: dto.preferredDate
-          ? new Date(dto.preferredDate)
-          : null,
+        preferredDate: dto.preferredDate ? new Date(dto.preferredDate) : null,
         preferredTime: dto.preferredTime,
       },
     });
@@ -158,12 +158,26 @@ export class WaitlistService {
   // ───────────────────────────────────────────────────────────────
 
   async checkAndNotify(practitionerId: string, date: Date) {
-    const settings = await this.bookingSettingsService.get();
+    const [settings, clinicTz] = await Promise.all([
+      this.bookingSettingsService.get(),
+      this.clinicSettingsService.getTimezone(),
+    ]);
     if (!settings.waitlistEnabled || !settings.waitlistAutoNotify) return;
 
-    const dateStr = date.toISOString().split('T')[0];
-    const dayStart = new Date(`${dateStr}T00:00:00.000Z`);
-    const dayEnd = new Date(`${dateStr}T23:59:59.999Z`);
+    // Convert the booking date to a local date string in clinic timezone (H8 fix)
+    const dateStr = new Intl.DateTimeFormat('en-CA', {
+      timeZone: clinicTz,
+    }).format(date);
+
+    // Compute UTC boundaries corresponding to this local date in clinic TZ
+    const utcStr = new Date(dateStr + 'T12:00:00Z').toLocaleString('en-US', { timeZone: 'UTC' });
+    const localStr = new Date(dateStr + 'T12:00:00Z').toLocaleString('en-US', { timeZone: clinicTz });
+    const offsetMs = new Date(localStr).getTime() - new Date(utcStr).getTime();
+    const dayStart = new Date(new Date(`${dateStr}T00:00:00Z`).getTime() - offsetMs);
+    const dayEnd = new Date(new Date(`${dateStr}T23:59:59.999Z`).getTime() - offsetMs);
+
+    // Use waitlistMaxPerSlot setting instead of hardcoded 3 (H2 fix)
+    const limit = settings.waitlistMaxPerSlot ?? 3;
 
     const entries = await this.prisma.waitlistEntry.findMany({
       where: {
@@ -182,7 +196,7 @@ export class WaitlistService {
         },
       },
       orderBy: { createdAt: 'asc' },
-      take: 3,
+      take: limit,
     });
 
     for (const entry of entries) {
