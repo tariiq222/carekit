@@ -9,7 +9,15 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
@@ -18,7 +26,10 @@ import { RequireFeature } from '../../common/decorators/require-feature.decorato
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ChatbotService } from './chatbot.service.js';
 import { ChatbotConfigService } from './chatbot-config.service.js';
-import { ChatbotAnalyticsService, type SessionStats } from './chatbot-analytics.service.js';
+import {
+  ChatbotAnalyticsService,
+  type SessionStats,
+} from './chatbot-analytics.service.js';
 import { UpdateChatbotConfigDto } from './dto/update-chatbot-config.dto.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
 
@@ -40,18 +51,28 @@ export class ChatbotAdminController {
 
   @Get('config')
   @CheckPermissions({ module: 'chatbot', action: 'view' })
+  @ApiOperation({ summary: 'Get all chatbot configuration entries' })
+  @ApiResponse({ status: 200, description: 'All config entries' })
+  @ApiStandardResponses()
   async getConfig() {
     return this.configService.getAll();
   }
 
   @Get('config/:category')
   @CheckPermissions({ module: 'chatbot', action: 'view' })
+  @ApiOperation({ summary: 'Get chatbot config entries by category' })
+  @ApiParam({ name: 'category', description: 'Config category name' })
+  @ApiResponse({ status: 200, description: 'Config entries for the category' })
+  @ApiStandardResponses()
   async getConfigByCategory(@Param('category') category: string) {
     return this.configService.getByCategory(category);
   }
 
   @Put('config')
   @CheckPermissions({ module: 'chatbot', action: 'edit' })
+  @ApiOperation({ summary: 'Bulk upsert chatbot configuration entries' })
+  @ApiResponse({ status: 200, description: 'Config updated' })
+  @ApiStandardResponses()
   async updateConfig(@Body() dto: UpdateChatbotConfigDto) {
     return this.configService.bulkUpsert(dto.configs);
   }
@@ -59,6 +80,9 @@ export class ChatbotAdminController {
   @Post('config/seed')
   @HttpCode(200)
   @CheckPermissions({ module: 'chatbot', action: 'edit' })
+  @ApiOperation({ summary: 'Seed default chatbot configuration values' })
+  @ApiResponse({ status: 200, description: 'Number of seeded entries' })
+  @ApiStandardResponses()
   async seedDefaults() {
     const count = await this.configService.seedDefaults();
     return { seeded: count };
@@ -70,6 +94,11 @@ export class ChatbotAdminController {
 
   @Get('analytics')
   @CheckPermissions({ module: 'chatbot', action: 'view' })
+  @ApiOperation({ summary: 'Get chatbot session analytics' })
+  @ApiQuery({ name: 'from', required: false, description: 'Start date (ISO 8601)' })
+  @ApiQuery({ name: 'to', required: false, description: 'End date (ISO 8601)' })
+  @ApiResponse({ status: 200, description: 'Session statistics' })
+  @ApiStandardResponses()
   async getAnalytics(
     @Query('from') from?: string,
     @Query('to') to?: string,
@@ -79,6 +108,10 @@ export class ChatbotAdminController {
 
   @Get('analytics/questions')
   @CheckPermissions({ module: 'chatbot', action: 'view' })
+  @ApiOperation({ summary: 'Get most frequently asked questions' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Max number of questions to return (default 10)' })
+  @ApiResponse({ status: 200, description: 'Top questions list' })
+  @ApiStandardResponses()
   async getMostAskedQuestions(@Query('limit') limit?: string) {
     return this.analyticsService.getMostAskedQuestions(
       limit ? parseInt(limit, 10) : 10,
@@ -91,12 +124,20 @@ export class ChatbotAdminController {
 
   @Post('sessions/:id/staff-messages')
   @CheckPermissions({ module: 'chatbot', action: 'edit' })
+  @ApiOperation({ summary: 'Send a staff message in a handed-off session' })
+  @ApiParam({ name: 'id', description: 'Session UUID' })
+  @ApiResponse({ status: 201, description: 'Message sent' })
+  @ApiStandardResponses()
   async sendStaffMessage(
     @Param('id') id: string,
     @Body() dto: SendMessageDto,
     @CurrentUser() user: { id: string },
   ) {
-    const data = await this.chatbotService.sendStaffMessage(id, user.id, dto.content);
+    const data = await this.chatbotService.sendStaffMessage(
+      id,
+      user.id,
+      dto.content,
+    );
     return { success: true, data };
   }
 }

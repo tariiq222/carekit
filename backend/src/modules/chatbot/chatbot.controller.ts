@@ -12,7 +12,15 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
@@ -44,6 +52,9 @@ export class ChatbotController {
   @Post('sessions')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @CheckPermissions({ module: 'chatbot', action: 'use' })
+  @ApiOperation({ summary: 'Create a new chatbot session' })
+  @ApiResponse({ status: 201, description: 'Session created' })
+  @ApiStandardResponses()
   async createSession(
     @Body() dto: CreateSessionDto,
     @CurrentUser() user: { id: string },
@@ -53,6 +64,15 @@ export class ChatbotController {
 
   @Get('sessions')
   @CheckPermissions({ module: 'chatbot', action: 'use' })
+  @ApiOperation({ summary: 'List chatbot sessions' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'perPage', required: false, description: 'Items per page' })
+  @ApiQuery({ name: 'handedOff', required: false, description: 'Filter by hand-off status (true/false)' })
+  @ApiQuery({ name: 'language', required: false, description: 'Filter by language' })
+  @ApiQuery({ name: 'dateFrom', required: false, description: 'Start date filter (ISO 8601)' })
+  @ApiQuery({ name: 'dateTo', required: false, description: 'End date filter (ISO 8601)' })
+  @ApiResponse({ status: 200, description: 'Paginated session list' })
+  @ApiStandardResponses()
   async listSessions(
     @Query() query: SessionListQueryDto,
     @CurrentUser() user: { id: string; roles?: Array<{ slug: string }> },
@@ -62,7 +82,12 @@ export class ChatbotController {
       userId: isAdmin ? undefined : user.id,
       page: query.page ? parseInt(query.page, 10) : 1,
       perPage: query.perPage ? parseInt(query.perPage, 10) : 20,
-      handedOff: query.handedOff === 'true' ? true : query.handedOff === 'false' ? false : undefined,
+      handedOff:
+        query.handedOff === 'true'
+          ? true
+          : query.handedOff === 'false'
+            ? false
+            : undefined,
       language: query.language,
       dateFrom: query.dateFrom,
       dateTo: query.dateTo,
@@ -71,6 +96,10 @@ export class ChatbotController {
 
   @Get('sessions/:id')
   @CheckPermissions({ module: 'chatbot', action: 'use' })
+  @ApiOperation({ summary: 'Get a chatbot session by ID' })
+  @ApiParam({ name: 'id', description: 'Session UUID' })
+  @ApiResponse({ status: 200, description: 'Session details' })
+  @ApiStandardResponses()
   async getSession(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -81,6 +110,10 @@ export class ChatbotController {
   @Post('sessions/:id/messages')
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @CheckPermissions({ module: 'chatbot', action: 'use' })
+  @ApiOperation({ summary: 'Send a message in a chatbot session' })
+  @ApiParam({ name: 'id', description: 'Session UUID' })
+  @ApiResponse({ status: 201, description: 'AI response returned' })
+  @ApiStandardResponses()
   async sendMessage(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SendMessageDto,
@@ -97,6 +130,10 @@ export class ChatbotController {
   @Post('sessions/:id/messages/stream')
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @CheckPermissions({ module: 'chatbot', action: 'use' })
+  @ApiOperation({ summary: 'Stream a chatbot message response via SSE' })
+  @ApiParam({ name: 'id', description: 'Session UUID' })
+  @ApiResponse({ status: 200, description: 'SSE stream (text/event-stream) — events: text, tool, action, done, error' })
+  @ApiStandardResponses()
   async streamMessage(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SendMessageDto,
@@ -116,14 +153,19 @@ export class ChatbotController {
 
     observable.subscribe({
       next: (event: MessageEvent) => {
-        res.write(`data: ${typeof event.data === 'string' ? event.data : JSON.stringify(event.data)}\n\n`);
+        res.write(
+          `data: ${typeof event.data === 'string' ? event.data : JSON.stringify(event.data)}\n\n`,
+        );
       },
       complete: () => {
         res.write('data: [DONE]\n\n');
         res.end();
       },
       error: (err: Error) => {
-        const payload = JSON.stringify({ event: 'error', message: err.message });
+        const payload = JSON.stringify({
+          event: 'error',
+          message: err.message,
+        });
         res.write(`data: ${payload}\n\n`);
         res.end();
       },
@@ -133,6 +175,10 @@ export class ChatbotController {
   @Post('sessions/:id/end')
   @HttpCode(200)
   @CheckPermissions({ module: 'chatbot', action: 'use' })
+  @ApiOperation({ summary: 'End a chatbot session' })
+  @ApiParam({ name: 'id', description: 'Session UUID' })
+  @ApiResponse({ status: 200, description: 'Session ended' })
+  @ApiStandardResponses()
   async endSession(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: { id: string },
