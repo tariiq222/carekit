@@ -355,6 +355,7 @@ describe('Category: findAll returns only active categories', () => {
 
     expect(prisma.serviceCategory.findMany).toHaveBeenCalledWith({
       where: { isActive: true },
+      include: { department: { select: { id: true, nameEn: true, nameAr: true } } },
       orderBy: { sortOrder: 'asc' },
     });
   });

@@ -300,6 +300,31 @@ export class ServicesService {
     }));
   }
 
+  /**
+   * Returns a BOM-prefixed CSV string ready for download.
+   * CSV generation logic belongs in the service layer — controller only sets headers.
+   */
+  async exportServicesCsv(): Promise<string> {
+    const data = await this.exportServices();
+    const headers = ['ID', 'Name (AR)', 'Name (EN)', 'Category (AR)', 'Category (EN)', 'Price (SAR)', 'Duration (min)', 'Active', 'Hidden', 'Created At'];
+    const rows = data.map((r) => [
+      r.id,
+      r.nameAr,
+      r.nameEn,
+      r.categoryAr,
+      r.categoryEn,
+      r.priceSar,
+      String(r.durationMinutes),
+      r.isActive,
+      r.isHidden,
+      r.createdAt,
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\r\n');
+    return '\uFEFF' + csvContent;
+  }
+
   // ═══════════════════════════════════════════════════════════════
   //  PRIVATE HELPERS
   // ═══════════════════════════════════════════════════════════════
