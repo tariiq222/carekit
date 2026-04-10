@@ -17,6 +17,7 @@ export class ServicePractitionersService {
         serviceId,
         practitioner: {
           isActive: true,
+          isAcceptingBookings: true,
           deletedAt: null,
           ...(branchId && {
             branches: { some: { branchId } },
