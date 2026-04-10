@@ -115,6 +115,12 @@ export class CreateGroupDto {
   @Min(0)
   depositAmount?: number;
 
+  @ValidateIf((o: CreateGroupDto) => o.paymentType === 'DEPOSIT')
+  @ApiPropertyOptional({ description: 'Due date for remaining amount after deposit (required when paymentType=DEPOSIT)' })
+  @IsDateString()
+  @IsNotEmpty()
+  remainingDueDate?: string;
+
   @ApiPropertyOptional({ description: 'Whether the group is published' })
   @IsOptional()
   @IsBoolean()

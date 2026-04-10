@@ -56,6 +56,9 @@ export class GroupsService {
         paymentDeadlineHours: dto.paymentDeadlineHours ?? 48,
         paymentType: dto.paymentType,
         depositAmount: dto.depositAmount,
+        ...(dto.remainingDueDate !== undefined && {
+          remainingDueDate: new Date(dto.remainingDueDate),
+        }),
         schedulingMode: dto.schedulingMode,
         startTime,
         endTime,
@@ -185,6 +188,9 @@ export class GroupsService {
         paymentDeadlineHours: dto.paymentDeadlineHours,
         paymentType: dto.paymentType,
         depositAmount: dto.depositAmount,
+        ...(dto.remainingDueDate !== undefined && {
+          remainingDueDate: new Date(dto.remainingDueDate),
+        }),
         startTime,
         endTime,
         endDate: dto.endDate ? new Date(dto.endDate) : undefined,

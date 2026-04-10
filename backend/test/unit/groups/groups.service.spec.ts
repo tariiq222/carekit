@@ -140,6 +140,36 @@ describe('GroupsService', () => {
         }),
       );
     });
+
+    it('should save remainingDueDate when paymentType is DEPOSIT', async () => {
+      const dto = {
+        nameAr: 'مجموعة',
+        nameEn: 'Group',
+        practitionerId: 'p-1',
+        minParticipants: 2,
+        maxParticipants: 10,
+        pricePerPersonHalalat: 10000,
+        durationMinutes: 60,
+        paymentType: 'DEPOSIT' as const,
+        depositAmount: 3000,
+        remainingDueDate: '2026-05-01T00:00:00.000Z',
+        schedulingMode: 'fixed_date' as const,
+        startTime: '2026-05-10T10:00:00.000Z',
+        deliveryMode: 'in_person' as const,
+      };
+
+      mockPrisma.group.create.mockResolvedValue({ id: 'group-new', ...dto } as never);
+
+      await service.create(dto);
+
+      expect(mockPrisma.group.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            remainingDueDate: new Date('2026-05-01T00:00:00.000Z'),
+          }),
+        }),
+      );
+    });
   });
 
   // ─── findOne() ──────────────────────────────────────────────────
