@@ -152,7 +152,10 @@ export class BookingCreationService {
             await validateAvailability(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, branchId);
           }
           try {
-            const bufferMinutes = ps.bufferMinutes ?? service.bufferMinutes ?? settings.bufferMinutes;
+            // Use ps.bufferMinutes as explicit override only when > 0 (Prisma @default(0) fix)
+            const bufferMinutes = ps.bufferMinutes > 0
+              ? ps.bufferMinutes
+              : (service.bufferMinutes > 0 ? service.bufferMinutes : settings.bufferMinutes);
             await checkDoubleBooking(tx, dto.practitionerId, bookingDate, dto.startTime, endTime, undefined, bufferMinutes);
           } catch (err) {
             if (err instanceof ConflictException) {
@@ -225,7 +228,15 @@ export class BookingCreationService {
     }
 
     try {
-      await this.paymentHelper.createPaymentIfNeeded(booking.id, dto.type, resolved.price, isPayAtClinic, callerRoles);
+      await this.paymentHelper.createPaymentIfNeeded(
+        booking.id,
+        dto.type,
+        resolved.price,
+        isPayAtClinic,
+        callerRoles,
+        service.depositEnabled,
+        service.depositPercent,
+      );
     } catch (paymentErr) {
       this.logger.error(
         `Payment creation failed for booking ${booking.id} — cancelling booking to prevent orphan`,

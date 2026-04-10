@@ -40,13 +40,24 @@ export class BookingPaymentHelper {
 
   private static readonly PAY_AT_CLINIC_ROLES = ['owner', 'admin', 'staff'] as const;
 
-  /** Create awaiting payment record using the resolved price from PriceResolver */
+  /**
+   * Create a payment record for the booking using the resolved price.
+   *
+   * Deposit logic (CRITICAL fix #3):
+   * When the service has depositEnabled=true and depositPercent < 100, the patient
+   * pays only the deposit amount upfront. The deposit is applied BEFORE VAT calculation
+   * so VAT is proportional to the amount actually charged.
+   *
+   * depositPercent=100 or depositEnabled=false → full price charged (existing behaviour).
+   */
   async createPaymentIfNeeded(
     bookingId: string,
     type: string,
     resolvedPrice: number,
     payAtClinic?: boolean,
     callerRoles?: Array<{ slug: string }>,
+    depositEnabled?: boolean,
+    depositPercent?: number,
   ): Promise<void> {
     if (payAtClinic === true) {
       const hasPrivilege = callerRoles?.some((r) =>
@@ -55,7 +66,7 @@ export class BookingPaymentHelper {
       if (!hasPrivilege) {
         throw new ForbiddenException({ statusCode: 403, message: ERR.booking.payAtClinicForbidden, error: 'FORBIDDEN' });
       }
-      // Skip online payment — create a cash payment record marked as paid
+      // Cash payment — always full price regardless of deposit setting
       const { amount, vatAmount, totalAmount } = applyVat(resolvedPrice);
       await this.prisma.payment.create({
         data: { bookingId, amount, vatAmount, totalAmount, method: 'cash', status: 'paid' },
@@ -68,7 +79,13 @@ export class BookingPaymentHelper {
       if (!settings.walkInPaymentRequired) return;
     }
     if (resolvedPrice <= 0) return; // Free service — no payment needed
-    const { amount, vatAmount, totalAmount } = applyVat(resolvedPrice);
+
+    // Apply deposit: charge partial amount when service requires a deposit
+    const effectivePrice = depositEnabled && depositPercent && depositPercent > 0 && depositPercent < 100
+      ? Math.round(resolvedPrice * depositPercent / 100)
+      : resolvedPrice;
+
+    const { amount, vatAmount, totalAmount } = applyVat(effectivePrice);
     await this.prisma.payment.create({
       data: { bookingId, amount, vatAmount, totalAmount, method: 'moyasar', status: 'awaiting' },
     });
