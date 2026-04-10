@@ -39,7 +39,11 @@ const mockPrismaService: any = {
   payment: {
     aggregate: jest.fn(),
   },
-  $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $transaction: jest.fn((opsOrFn: Promise<unknown>[] | ((tx: any) => Promise<unknown>)) => {
+    if (typeof opsOrFn === 'function') return opsOrFn(mockPrismaService);
+    return Promise.all(opsOrFn);
+  }),
 };
 
 const mockActivityLogService: any = {
@@ -344,10 +348,9 @@ describe('PatientsService', () => {
     });
 
     it('should call activityLog.log after successful update', async () => {
-      mockPrismaService.user.findFirst
-        .mockResolvedValueOnce({ id: 'patient-1', phone: '+966501234567' })
-        .mockResolvedValueOnce(null);
-      mockPrismaService.$transaction.mockResolvedValueOnce([{ id: 'patient-1', firstName: 'Ahmad' }]);
+      const updatedResult = { id: 'patient-1', firstName: 'Ahmad' };
+      mockPrismaService.user.findFirst.mockResolvedValueOnce({ id: 'patient-1', phone: '+966501234567' });
+      mockPrismaService.user.update.mockResolvedValueOnce(updatedResult);
 
       const logSpy = jest.spyOn(activityLogService, 'log').mockResolvedValue(undefined);
 
@@ -620,6 +623,42 @@ describe('PatientsService', () => {
         expect.objectContaining({
           where: expect.objectContaining({ status: 'paid' }),
         }),
+      );
+    });
+  });
+
+  // ─── Hard edge cases ───────────────────────────────────────────────────────
+
+  describe('[TOCTOU] updatePatient phone uniqueness race condition', () => {
+    it('maps P2002 from concurrent phone update to ConflictException', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValueOnce({ id: 'patient-1', phone: '+966501234567' });
+
+      const p2002 = Object.assign(new Error('Unique constraint failed on the fields: (`phone`)'), {
+        code: 'P2002',
+        meta: { target: ['phone'] },
+      });
+      // Simulate DB constraint firing even after the in-transaction check passed
+      mockPrismaService.$transaction.mockRejectedValueOnce(p2002);
+
+      await expect(
+        service.updatePatient('patient-1', { phone: '+966509999999' }),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('[perPage cap] getPatientBookings enforces parsePaginationParams maxPerPage=100', () => {
+    it('caps perPage at 100 even when a larger value is requested', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'patient-1' });
+      mockPrismaService.booking.count.mockResolvedValue(0);
+      mockPrismaService.booking.findMany.mockResolvedValue([]);
+
+      await expect(
+        service.getPatientBookings('patient-1', { perPage: 10000 }),
+      ).resolves.not.toThrow();
+
+      // parsePaginationParams enforces maxPerPage=100 — 10000 is clamped to 100
+      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 100 }),
       );
     });
   });

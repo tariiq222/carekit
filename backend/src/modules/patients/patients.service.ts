@@ -123,20 +123,6 @@ export class PatientsService {
     });
     if (!patient) throw new NotFoundException('Patient not found');
 
-    if (dto.phone !== undefined && dto.phone !== patient.phone) {
-      const phoneOwner = await this.prisma.user.findFirst({
-        where: { phone: dto.phone, deletedAt: null },
-        select: { id: true },
-      });
-      if (phoneOwner) {
-        throw new ConflictException({
-          statusCode: 409,
-          message: 'رقم الجوال مستخدم بالفعل',
-          error: 'PHONE_CONFLICT',
-        });
-      }
-    }
-
     const profileFields = {
       ...(dto.dateOfBirth !== undefined && { dateOfBirth: new Date(dto.dateOfBirth) }),
       ...(dto.nationality !== undefined && { nationality: dto.nationality }),
@@ -148,26 +134,58 @@ export class PatientsService {
       ...(dto.chronicConditions !== undefined && { chronicConditions: dto.chronicConditions }),
     };
 
-    const [user] = await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id },
-        data: {
-          ...(dto.firstName !== undefined && { firstName: dto.firstName }),
-          ...(dto.middleName !== undefined && { middleName: dto.middleName }),
-          ...(dto.lastName !== undefined && { lastName: dto.lastName }),
-          ...(dto.gender !== undefined && { gender: dto.gender }),
-          ...(dto.phone !== undefined && { phone: dto.phone }),
-        },
-        select: { id: true, firstName: true, middleName: true, lastName: true, email: true, phone: true, gender: true, isActive: true, updatedAt: true },
-      }),
-      ...(Object.keys(profileFields).length > 0
-        ? [this.prisma.patientProfile.upsert({
-            where: { userId: id },
-            update: profileFields,
-            create: { userId: id, ...profileFields },
-          })]
-        : []),
-    ]);
+    const user = await (async () => {
+      try {
+        return await this.prisma.$transaction(async (tx) => {
+          if (dto.phone !== undefined && dto.phone !== patient.phone) {
+            const phoneOwner = await tx.user.findFirst({
+              where: { phone: dto.phone, deletedAt: null },
+              select: { id: true },
+            });
+            if (phoneOwner) {
+              throw new ConflictException({
+                statusCode: 409,
+                message: 'رقم الجوال مستخدم بالفعل',
+                error: 'PHONE_CONFLICT',
+              });
+            }
+          }
+
+          const updated = await tx.user.update({
+            where: { id },
+            data: {
+              ...(dto.firstName !== undefined && { firstName: dto.firstName }),
+              ...(dto.middleName !== undefined && { middleName: dto.middleName }),
+              ...(dto.lastName !== undefined && { lastName: dto.lastName }),
+              ...(dto.gender !== undefined && { gender: dto.gender }),
+              ...(dto.phone !== undefined && { phone: dto.phone }),
+            },
+            select: { id: true, firstName: true, middleName: true, lastName: true, email: true, phone: true, gender: true, isActive: true, updatedAt: true },
+          });
+
+          if (Object.keys(profileFields).length > 0) {
+            await tx.patientProfile.upsert({
+              where: { userId: id },
+              update: profileFields,
+              create: { userId: id, ...profileFields },
+            });
+          }
+
+          return updated;
+        });
+      } catch (err) {
+        if (err instanceof ConflictException) throw err;
+        const prismaErr = err as { code?: string };
+        if (prismaErr.code === 'P2002') {
+          throw new ConflictException({
+            statusCode: 409,
+            message: 'رقم الجوال مستخدم بالفعل',
+            error: 'PHONE_CONFLICT',
+          });
+        }
+        throw err;
+      }
+    })();
 
     const changedFields = Object.keys({ ...dto }).filter((k) => (dto as Record<string, unknown>)[k] !== undefined);
     this.activityLog.log({
