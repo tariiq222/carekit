@@ -26,8 +26,7 @@ export class BookingCancellationTimeoutService {
   async autoExpirePendingCancellations(): Promise<void> {
     const settings = await this.bookingSettingsService.get();
     const cutoff = new Date(
-      Date.now() -
-        settings.cancellationReviewTimeoutHours * 60 * 60 * 1000,
+      Date.now() - settings.cancellationReviewTimeoutHours * 60 * 60 * 1000,
     );
 
     const staleBookings = await this.prisma.booking.findMany({
@@ -36,72 +35,105 @@ export class BookingCancellationTimeoutService {
         updatedAt: { lt: cutoff },
         deletedAt: null,
       },
-      select: { id: true, patientId: true, practitionerId: true, date: true },
+      select: {
+        id: true,
+        patientId: true,
+        practitionerId: true,
+        date: true,
+        suggestedRefundType: true,
+      },
     });
 
     for (const booking of staleBookings) {
       try {
         // Atomic: re-check status inside transaction to prevent race with manual approveCancellation
-        const result = await this.prisma.$transaction(async (tx) => {
-          const current = await tx.booking.findFirst({
-            where: { id: booking.id, status: 'pending_cancellation', deletedAt: null },
-            select: { id: true },
-          });
-          if (!current) return null; // Already processed by manual approval
+        const result = await this.prisma.$transaction(
+          async (tx) => {
+            const current = await tx.booking.findFirst({
+              where: {
+                id: booking.id,
+                status: 'pending_cancellation',
+                deletedAt: null,
+              },
+              select: { id: true },
+            });
+            if (!current) return null; // Already processed by manual approval
 
-          await tx.booking.update({
-            where: { id: booking.id },
-            data: {
-              status: 'cancelled',
-              cancelledBy: CancelledBy.system,
-              cancelledAt: new Date(),
-              adminNotes: `Auto-approved after ${settings.cancellationReviewTimeoutHours}h timeout`,
-            },
-          });
-
-          // For non-Moyasar: update payment inside the transaction (atomic)
-          const p = await tx.payment.findUnique({ where: { bookingId: booking.id } });
-          if (p && p.status === 'paid' && p.method !== 'moyasar') {
-            await tx.payment.update({
-              where: { id: p.id },
+            await tx.booking.update({
+              where: { id: booking.id },
               data: {
-                status: 'refunded',
-                refundAmount: p.totalAmount,
-                refundedAt: new Date(),
-                refundedBy: 'system',
-                refundReason: `auto_cancellation_timeout_${settings.cancellationReviewTimeoutHours}h`,
+                status: 'cancelled',
+                cancelledBy: CancelledBy.system,
+                cancelledAt: new Date(),
+                adminNotes: `Auto-approved after ${settings.cancellationReviewTimeoutHours}h timeout`,
               },
             });
-          }
 
-          return { payment: p }; // Wrap in object to distinguish "no payment" from "not processed"
-        }, { isolationLevel: 'Serializable', timeout: 10000 });
+            // Apply refund based on the original suggestedRefundType
+            const refundType = booking.suggestedRefundType ?? 'full';
+            const p = await tx.payment.findUnique({
+              where: { bookingId: booking.id },
+            });
+            if (p && p.status === 'paid' && p.method !== 'moyasar') {
+              const refundAmount =
+                refundType === 'none'
+                  ? 0
+                  : refundType === 'partial'
+                    ? p.amount  // base amount without VAT
+                    : p.totalAmount; // full refund
+              await tx.payment.update({
+                where: { id: p.id },
+                data: {
+                  status: refundType === 'none' ? 'paid' : 'refunded',
+                  refundAmount,
+                  refundedAt: refundType === 'none' ? null : new Date(),
+                  refundedBy: refundType === 'none' ? null : 'system',
+                  refundReason: `auto_cancellation_timeout_${settings.cancellationReviewTimeoutHours}h`,
+                },
+              });
+            }
+
+            return { payment: p, refundType };
+          },
+          { isolationLevel: 'Serializable', timeout: 10000 },
+        );
 
         if (result === null) continue; // Was already processed by manual approval
-        const { payment } = result;
+        const { payment, refundType } = result;
 
-        this.statusLogService.log({
-          bookingId: booking.id,
-          fromStatus: 'pending_cancellation',
-          toStatus: 'cancelled',
-          changedBy: 'system',
-          reason: `Auto-approved after ${settings.cancellationReviewTimeoutHours}h timeout`,
-        }).catch((err) => this.logger.warn('Status log failed', { error: err?.message }));
+        this.statusLogService
+          .log({
+            bookingId: booking.id,
+            fromStatus: 'pending_cancellation',
+            toStatus: 'cancelled',
+            changedBy: 'system',
+            reason: `Auto-approved after ${settings.cancellationReviewTimeoutHours}h timeout`,
+          })
+          .catch((err) =>
+            this.logger.warn('Status log failed', { error: err?.message }),
+          );
 
-        // Moyasar refund must be called outside the transaction (external API)
-        if (payment && payment.status === 'paid' && payment.method === 'moyasar' && payment.moyasarPaymentId) {
+        // Moyasar refund — only when refund is owed
+        if (
+          payment &&
+          payment.status === 'paid' &&
+          payment.method === 'moyasar' &&
+          payment.moyasarPaymentId &&
+          refundType !== 'none'
+        ) {
+          const refundAmount =
+            refundType === 'partial' ? payment.amount : payment.totalAmount;
           try {
-            await this.moyasarRefundService.refund(payment.id, payment.totalAmount);
+            await this.moyasarRefundService.refund(payment.id, refundAmount);
           } catch (err) {
             this.logger.error(
               `Moyasar refund failed for auto-cancelled booking ${booking.id}: ${err instanceof Error ? err.message : 'unknown'}`,
             );
-            // Mark as refunded in DB so admin can reconcile manually
             await this.prisma.payment.update({
               where: { id: payment.id },
               data: {
                 status: 'refunded',
-                refundAmount: payment.totalAmount,
+                refundAmount,
                 refundedAt: new Date(),
                 refundedBy: 'system',
                 refundReason: `auto_cancellation_timeout_moyasar_fallback`,
@@ -111,12 +143,19 @@ export class BookingCancellationTimeoutService {
         }
 
         if (booking.patientId) {
+          const refundMsg =
+            refundType === 'none'
+              ? { ar: 'بدون استرداد وفق سياسة الإلغاء', en: 'No refund per cancellation policy' }
+              : refundType === 'partial'
+                ? { ar: 'مع استرداد جزئي', en: 'with a partial refund' }
+                : { ar: 'مع استرداد كامل', en: 'with a full refund' };
+
           await this.notificationsService.createNotification({
             userId: booking.patientId,
             titleAr: 'تمت الموافقة على إلغاء موعدك',
             titleEn: 'Cancellation Auto-Approved',
-            bodyAr: 'تمت الموافقة تلقائياً على طلب إلغاء موعدك مع استرداد كامل',
-            bodyEn: 'Your cancellation request was auto-approved with a full refund',
+            bodyAr: `تمت الموافقة تلقائياً على طلب إلغاء موعدك ${refundMsg.ar}`,
+            bodyEn: `Your cancellation request was auto-approved ${refundMsg.en}`,
             type: 'booking_cancelled',
             data: { bookingId: booking.id },
           });
@@ -124,9 +163,13 @@ export class BookingCancellationTimeoutService {
 
         await this.waitlistService
           .checkAndNotify(booking.practitionerId, booking.date)
-          .catch((err) => this.logger.warn('Waitlist notify failed', { error: err?.message }));
+          .catch((err) =>
+            this.logger.warn('Waitlist notify failed', { error: err?.message }),
+          );
       } catch (err) {
-        this.logger.warn(`Failed to auto-approve cancellation for booking ${booking.id}: ${(err as Error).message}`);
+        this.logger.warn(
+          `Failed to auto-approve cancellation for booking ${booking.id}: ${(err as Error).message}`,
+        );
       }
     }
 
@@ -140,7 +183,9 @@ export class BookingCancellationTimeoutService {
           module: 'bookings',
           description: `Auto-approved ${staleBookings.length} stale pending_cancellation requests`,
         })
-        .catch((err) => this.logger.warn('Activity log failed', { error: err?.message }));
+        .catch((err) =>
+          this.logger.warn('Activity log failed', { error: err?.message }),
+        );
     }
   }
 }
