@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class ServiceListQueryDto {
@@ -12,6 +12,7 @@ export class ServiceListQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   perPage?: number;
 
   @IsOptional()
