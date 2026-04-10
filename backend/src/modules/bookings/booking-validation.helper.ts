@@ -1,8 +1,15 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { toMinutes, timeSlotsOverlap, shiftTime } from '../../common/helpers/booking-time.helper.js';
+import {
+  toMinutes,
+  timeSlotsOverlap,
+  shiftTime,
+} from '../../common/helpers/booking-time.helper.js';
 
-type PrismaLike = Pick<Prisma.TransactionClient, 'practitionerVacation' | 'practitionerAvailability' | 'booking'>;
+type PrismaLike = Pick<
+  Prisma.TransactionClient,
+  'practitionerVacation' | 'practitionerAvailability' | 'booking'
+>;
 
 /**
  * Validates that the requested time slot falls within the practitioner's
@@ -17,11 +24,17 @@ export async function validateAvailability(
   branchId?: string,
 ): Promise<void> {
   // Normalize to UTC midnight to avoid timezone mismatches with stored vacation dates
-  const normalizedDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const normalizedDate = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
 
   // Check vacation
   const vacation = await prisma.practitionerVacation.findFirst({
-    where: { practitionerId, startDate: { lte: normalizedDate }, endDate: { gte: normalizedDate } },
+    where: {
+      practitionerId,
+      startDate: { lte: normalizedDate },
+      endDate: { gte: normalizedDate },
+    },
   });
   if (vacation) {
     throw new BadRequestException({
@@ -77,27 +90,43 @@ export async function validateAvailability(
  */
 export async function checkDoubleBooking(
   prisma: PrismaLike,
-  practitionerId: string, date: Date, startTime: string, endTime: string,
-  excludeId?: string, bufferMinutes: number = 0,
+  practitionerId: string,
+  date: Date,
+  startTime: string,
+  endTime: string,
+  excludeId?: string,
+  bufferMinutes: number = 0,
 ): Promise<void> {
   const whereClause: Record<string, unknown> = {
-    practitionerId, date,
+    practitionerId,
+    date,
     status: { in: ['pending', 'confirmed', 'checked_in', 'in_progress'] },
     deletedAt: null,
   };
   if (excludeId) whereClause.id = { not: excludeId };
 
-  const existingBookings = await prisma.booking.findMany({ where: whereClause });
-  // Expand slot by buffer symmetrically before and after
+  const existingBookings = await prisma.booking.findMany({
+    where: whereClause,
+  });
+  // Expand only the new slot by buffer on both sides.
+  // This enforces a minimum gap of bufferMinutes between the new booking
+  // and any existing booking. Expanding both sides would double the gap.
   const effectiveStart = shiftTime(startTime, -bufferMinutes);
   const effectiveEnd = shiftTime(endTime, bufferMinutes);
   const hasConflict = existingBookings.some((existing) => {
-    const existingEffectiveStart = shiftTime(existing.startTime, -bufferMinutes);
-    const existingEffectiveEnd = shiftTime(existing.endTime, bufferMinutes);
-    return timeSlotsOverlap(effectiveStart, effectiveEnd, existingEffectiveStart, existingEffectiveEnd);
+    return timeSlotsOverlap(
+      effectiveStart,
+      effectiveEnd,
+      existing.startTime,
+      existing.endTime,
+    );
   });
   if (hasConflict) {
-    throw new ConflictException({ statusCode: 409, message: 'Practitioner already has a booking at this time', error: 'BOOKING_CONFLICT' });
+    throw new ConflictException({
+      statusCode: 409,
+      message: 'Practitioner already has a booking at this time',
+      error: 'BOOKING_CONFLICT',
+    });
   }
 }
 
