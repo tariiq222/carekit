@@ -13,6 +13,7 @@ import { PractitionerAvailabilityService } from '../../../src/modules/practition
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
+import { ClinicHolidaysService } from '../../../src/modules/clinic/clinic-holidays.service.js';
 
 // ─── Minimal mocks ────────────────────────────────────────────────────────────
 
@@ -32,6 +33,10 @@ const mockBookingSettings = {
 
 const mockClinicSettings = {
   getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh'),
+};
+
+const mockClinicHolidays = {
+  isHoliday: jest.fn().mockResolvedValue(false),
 };
 
 // ─── Test Suite ───────────────────────────────────────────────────────────────
@@ -55,6 +60,7 @@ describe('PractitionerAvailabilityService — resolveBufferMinutes (CRITICAL #2)
         { provide: PrismaService, useValue: mockPrisma },
         { provide: BookingSettingsService, useValue: mockBookingSettings },
         { provide: ClinicSettingsService, useValue: mockClinicSettings },
+        { provide: ClinicHolidaysService, useValue: mockClinicHolidays },
       ],
     }).compile();
 

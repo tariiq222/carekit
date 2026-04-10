@@ -12,6 +12,7 @@ import { PractitionerBreaksService } from '../../../src/modules/practitioners/pr
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 import { PriceResolverService } from '../../../src/modules/bookings/price-resolver.service.js';
+import { ClinicHolidaysService } from '../../../src/modules/clinic/clinic-holidays.service.js';
 import { createMockPrisma } from './practitioners.fixtures.js';
 
 export interface PractitionersTestContext {
@@ -61,6 +62,12 @@ export async function createPractitionersTestModule(): Promise<PractitionersTest
         provide: ClinicSettingsService,
         useValue: {
           getTimezone: jest.fn().mockResolvedValue('Asia/Riyadh'),
+        },
+      },
+      {
+        provide: ClinicHolidaysService,
+        useValue: {
+          isHoliday: jest.fn().mockResolvedValue(false),
         },
       },
       {

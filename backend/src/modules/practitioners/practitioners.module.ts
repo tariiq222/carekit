@@ -13,9 +13,10 @@ import { BookingsModule } from '../bookings/bookings.module.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { EmailModule } from '../email/email.module.js';
 import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
+import { ClinicModule } from '../clinic/clinic.module.js';
 
 @Module({
-  imports: [BookingsModule, AuthModule, EmailModule, ClinicSettingsModule],
+  imports: [BookingsModule, AuthModule, EmailModule, ClinicSettingsModule, ClinicModule],
   controllers: [FavoritePractitionersController, PractitionersController],
   providers: [
     PractitionersService,

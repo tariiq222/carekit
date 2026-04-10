@@ -15,6 +15,7 @@ import {
   checkOverlappingSlots,
 } from './availability-helpers.js';
 import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
+import { ClinicHolidaysService } from '../clinic/clinic-holidays.service.js';
 
 @Injectable()
 export class PractitionerAvailabilityService {
@@ -22,6 +23,7 @@ export class PractitionerAvailabilityService {
     private readonly prisma: PrismaService,
     private readonly bookingSettingsService: BookingSettingsService,
     private readonly clinicSettingsService: ClinicSettingsService,
+    private readonly clinicHolidaysService: ClinicHolidaysService,
   ) {}
 
   async getAvailability(practitionerId: string, branchId?: string) {
@@ -159,6 +161,7 @@ export class PractitionerAvailabilityService {
 
     // Iterate each day of the month
     const cursor = new Date(firstDay);
+    const clinicTz = await this.clinicSettingsService.getTimezone();
     while (cursor <= lastDay) {
       const dateStr = cursor.toISOString().slice(0, 10);
       const dayOfWeek = cursor.getDay();
@@ -178,6 +181,13 @@ export class PractitionerAvailabilityService {
         continue;
       }
 
+      // Skip clinic holidays
+      const isHoliday = await this.clinicHolidaysService.isHoliday(cursor);
+      if (isHoliday) {
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+        continue;
+      }
+
       // Get availability for this day-of-week
       const dayAvailabilities = allAvailabilities.filter((a) => a.dayOfWeek === dayOfWeek);
       if (dayAvailabilities.length === 0) {
@@ -189,7 +199,6 @@ export class PractitionerAvailabilityService {
       const dayBreaks = breaks.filter((b) => b.dayOfWeek === dayOfWeek);
 
       // Generate slots
-      const clinicTz = await this.clinicSettingsService.getTimezone();
       const isToday = isSameLocalDate(cursor, new Date(), clinicTz);
       const allSlots = generateSlots(dayAvailabilities, duration, bufferMinutes, isToday);
 
@@ -262,6 +271,9 @@ export class PractitionerAvailabilityService {
     ]);
 
     if (vacation) return { date, practitionerId, slots: [] };
+
+    const isHoliday = await this.clinicHolidaysService.isHoliday(normalizedDate);
+    if (isHoliday) return { date, practitionerId, slots: [] };
 
     const targetDateEnd = new Date(normalizedDate);
     targetDateEnd.setUTCHours(23, 59, 59, 999);
