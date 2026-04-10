@@ -5,15 +5,13 @@
   "workspaces": [
     "backend",
     "mobile",
-    "dashboard",
-    "shared",
     "apps/leadboard",
+    "shared",
     "api-client"
   ],
   "scripts": {
     "dev:backend": "turbo run dev --filter=backend",
     "dev:mobile": "turbo run dev --filter=mobile",
-    "dev:dashboard": "turbo run dev --filter=dashboard",
     "dev:leadboard": "turbo run dev --filter=leadboard",
     "dev:all": "turbo run dev",
     "build": "turbo run build",
