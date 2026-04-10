@@ -1,11 +1,48 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    "opencode-claude-auth"
+    "opencode-claude-auth",
+    "@openspoon/subtask2"
   ],
   "instructions": [
-    "AGENTS.md"
+    "AGENTS.md",
+    "opencode.md",
+    ".opencode/agents/cto.md",
+    ".opencode/agents/architect.md",
+    ".opencode/agents/executor.md",
+    ".opencode/agents/test-engineer.md",
+    ".opencode/agents/reviewer.md",
+    ".opencode/agents/qa-validator.md",
+    ".opencode/commands/نوقف.md",
+    ".opencode/commands/نكمل.md"
   ],
+  "agent": {
+    "cto": {
+      "description": "Master orchestrator — routes all tasks through the CareKit workflow. Start here.",
+      "mode": "primary",
+      "color": "#354FD8"
+    },
+    "architect": {
+      "description": "Analyzes tasks and produces implementation plans. Used by CTO only.",
+      "mode": "subagent"
+    },
+    "executor": {
+      "description": "Implements approved plans with minimal scope. Used by CTO only.",
+      "mode": "subagent"
+    },
+    "test-engineer": {
+      "description": "Writes tests for every change. Used by CTO only.",
+      "mode": "subagent"
+    },
+    "reviewer": {
+      "description": "Reviews diff quality and plan adherence. Used by CTO only.",
+      "mode": "subagent"
+    },
+    "qa-validator": {
+      "description": "Production risk simulation. Used by CTO only.",
+      "mode": "subagent"
+    }
+  },
   "mcp": {
     "maestro": {
       "type": "local",

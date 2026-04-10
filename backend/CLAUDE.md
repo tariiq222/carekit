@@ -15,13 +15,35 @@ Each feature lives in `src/modules/[name]/` with:
 dto/                      # Request/response DTOs (class-validator)
 ```
 
-## Active Modules (30)
+## Active Modules (36)
 
 `activity-log`, `ai`, `auth`, `bookings`, `branches`, `chatbot`, `clinic`,
-`coupons`, `email`, `email-templates`, `gift-cards`, `health`, `intake-forms`,
-`integrations`, `invoices`, `notifications`, `patients`, `payments`,
-`permissions`, `practitioners`, `problem-reports`, `ratings`, `reports`,
-`roles`, `services`, `specialties`, `tasks`, `users`, `whitelabel`, `zatca`
+`clinic-integrations`, `clinic-settings`, `coupons`, `departments`, `email`,
+`email-templates`, `feature-flags`, `gift-cards`, `group-sessions`, `health`,
+`intake-forms`, `integrations`, `invoices`, `license`, `notifications`,
+`patients`, `payments`, `permissions`, `practitioners`, `problem-reports`,
+`ratings`, `reports`, `roles`, `services`, `specialties`, `tasks`, `users`,
+`whitelabel`, `zatca`
+
+## Similar Modules — Why They Are Separate
+
+### `clinic/` vs `clinic-settings/`
+
+These are **not duplicates**. They serve different data patterns:
+
+- **`clinic/`** — CRUD on schedule tables: `ClinicWorkingHours` (multiple rows per day) and `ClinicHoliday` (list of dates). Routes: `clinic/hours`, `clinic/holidays`. Used by `bookings` only.
+- **`clinic-settings/`** — Singleton record: clinic identity (name, VAT, address, timezone, policies, email footer). Route: `clinic-settings`. Used by 8 modules (bookings, practitioners, email, zatca, invoices, tasks ×3).
+
+One manages **schedules** (lists), the other manages **configuration** (single record). Different Prisma models, different access patterns, different consumers.
+
+### `integrations/` vs `clinic-integrations/`
+
+These are **not duplicates**. They operate at different layers:
+
+- **`integrations/`** — SDK wrappers for third-party APIs (Zoom OAuth, meeting creation/deletion). Contains the actual API client logic. No Prisma model — reads credentials from env/config.
+- **`clinic-integrations/`** — Singleton CRUD for the clinic's API keys and secrets (Moyasar, Zoom, ZATCA, email provider, OpenRouter, Firebase). Prisma model: `ClinicIntegrations`. Masks sensitive fields on read. Used by `zatca` module.
+
+One is **implementation** (how to call external APIs), the other is **configuration** (which credentials to use). They share no code or Prisma models.
 
 ## Common Layer (`src/common/`)
 

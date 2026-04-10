@@ -24,9 +24,9 @@
 
 ```bash
 # Root (Turborepo)
-npm run dev:backend       # NestJS on :5000
-npm run dev:dashboard     # Next.js on :5001
-npm run dev:mobile        # Expo on :5002
+npm run dev:backend       # NestJS on :5100
+npm run dev:dashboard     # Next.js on :5101
+npm run dev:mobile        # Expo on :5102
 npm run dev:all           # All apps in parallel
 npm run docker:up         # Start PostgreSQL, Redis, MinIO
 npm run docker:down       # Stop infrastructure

@@ -1,0 +1,86 @@
+name: implement-plan
+description: CareKit Executor — implement an approved Architect plan with minimal scope
+trigger: manual
+
+preconditions:
+  - architect_analysis_exists: true    # analyze-task must have run first
+  - blocking_questions_resolved: true  # decision gate must be cleared
+
+steps:
+  - id: load-plan
+    type: context
+    required: true
+    sources:
+      - memory:active_work.current_task_analysis
+    scope: implementation_plan + files_to_read_next + required_tests
+
+  - id: read-target-files
+    type: file-read
+    required: true
+    depends_on: load-plan
+    files: "from:plan.files_to_read_next"
+    scope: exact_files_only    # no extra file reading beyond the list
+
+  - id: ui-design-context
+    type: skill
+    required: false    # only loads when task touches dashboard UI
+    depends_on: read-target-files
+    condition: "impact_analysis.dashboard != null AND task_type in ['feature', 'refactor']"
+    skill: ui-ux-pro-max
+    stack: shadcn    # CareKit dashboard uses shadcn/ui
+    commands:
+      - "python3 .claude/skills/ui-ux-pro-max/scripts/search.py '{component_name}' --design-system -p 'CareKit'"
+      - "python3 .claude/skills/ui-ux-pro-max/scripts/search.py '{component_name}' --stack shadcn"
+    scope: design_guidance_only    # do not pass to executor — use as reference for visual decisions
+    note: "carekit-ds rules always take precedence. Use ui-ux-pro-max for color/typography/accessibility lookups only."
+
+  - id: execute
+    agent: executor
+    type: execution
+    required: true
+    depends_on: read-target-files
+    prompt_file: .opencode/agents/executor.md
+    input:
+      - plan: "from:plan.implementation_plan"
+      - files: "from:read-target-files"
+    rules:
+      - no_unplanned_changes: true
+      - max_files_per_batch: 5
+      - stop_on_unplanned_situation: true
+    output:
+      format: structured
+      fields:
+        - steps_completed
+        - files_changed
+        - edge_cases_noted
+
+  - id: validate-types
+    agent: auto
+    type: gate
+    required: true
+    depends_on: execute
+    command: "cd backend && npx tsc --noEmit"
+    alt_command: "cd dashboard && npm run typecheck"
+    on_fail:
+      action: return_to_executor
+      max_retries: 1
+
+  - id: validate-lint
+    agent: auto
+    type: gate
+    required: true
+    depends_on: validate-types
+    command: "cd backend && npm run lint && cd ../dashboard && npm run lint"
+    on_fail:
+      action: return_to_executor
+      max_retries: 1
+
+  - id: output
+    type: finalization
+    required: true
+    depends_on: validate-lint
+    actions:
+      - display_executor_delivery
+      - save_to_memory
+    memory_key: "active_work.implementation_complete"
+    next_step: "Run write-tests pipeline"
