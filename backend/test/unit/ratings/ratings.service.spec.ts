@@ -33,7 +33,12 @@ const mockPrismaService: any = {
     aggregate: jest.fn(),
   },
   practitioner: { update: jest.fn() },
+  $transaction: jest.fn(),
 };
+
+async function runInTransaction<T>(fn: (tx: typeof mockPrismaService) => Promise<T>): Promise<T> {
+  return fn(mockPrismaService);
+}
 
 describe('RatingsService', () => {
   let service: RatingsService;
@@ -50,6 +55,12 @@ describe('RatingsService', () => {
   });
 
   describe('create', () => {
+    beforeEach(async () => {
+      mockPrismaService.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService),
+      );
+    });
+
     it('throws NotFoundException when booking not found', async () => {
       mockPrismaService.booking.findFirst.mockResolvedValue(null);
 
@@ -113,6 +124,40 @@ describe('RatingsService', () => {
           }),
         }),
       );
+    });
+
+    it('should call updatePractitionerRating inside the same transaction', async () => {
+      const booking = {
+        id: 'booking-1',
+        status: 'completed',
+        practitionerId: 'practitioner-1',
+        rating: null,
+      };
+
+      mockPrismaService.booking.findFirst.mockResolvedValue(booking);
+
+      let transactionWasCalled = false;
+      mockPrismaService.$transaction.mockImplementation(async (fn: (tx: any) => Promise<unknown>) => {
+        transactionWasCalled = true;
+        const tx = {
+          rating: {
+            create: jest.fn().mockResolvedValue({ id: 'rating-1', stars: 5 }),
+            aggregate: jest.fn().mockResolvedValue({ _avg: { stars: 4.5 }, _count: { id: 2 } }),
+          },
+          practitioner: {
+            update: jest.fn().mockResolvedValue({}),
+          },
+        };
+        return fn(tx);
+      });
+
+      await service.create({
+        bookingId: 'booking-1',
+        patientId: 'patient-1',
+        stars: 5,
+      });
+
+      expect(transactionWasCalled).toBe(true);
     });
 
     it('calls updatePractitionerRating after creating rating', async () => {
