@@ -26,12 +26,13 @@ export class FeatureFlagsService {
     const cached = await this.cache.get<Record<string, boolean>>(CACHE_KEYS.FEATURE_FLAGS_MAP);
     if (cached) return cached;
 
-    const flags = await this.prisma.featureFlag.findMany({
-      select: { key: true, enabled: true },
-    });
+    // Use getFeaturesWithStatus so the map reflects licensed && enabled —
+    // a flag that is enabled in the DB but not licensed returns false here.
+    // This is the source of truth consumed by the dashboard's useFeatureFlagMap().
+    const features = await this.licenseService.getFeaturesWithStatus();
 
-    const map = flags.reduce<Record<string, boolean>>((acc, f) => {
-      acc[f.key] = f.enabled;
+    const map = features.reduce<Record<string, boolean>>((acc, f) => {
+      acc[f.key] = f.enabled; // LicenseService already computes licensed && enabled
       return acc;
     }, {});
 
