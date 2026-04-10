@@ -11,7 +11,8 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { THROTTLE_LIMIT, THROTTLE_TTL } from '../../config/constants.js';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -44,6 +45,8 @@ export class BookingsController {
   @Throttle({ default: { limit: THROTTLE_LIMIT, ttl: THROTTLE_TTL } })
   @CheckPermissions({ module: 'bookings', action: 'create' })
   @ApiOperation({ summary: 'Create a new booking' })
+  @ApiResponse({ status: 201, description: 'Booking created' })
+  @ApiStandardResponses()
   async create(
     @Body() dto: CreateBookingDto,
     @CurrentUser() user: UserPayload,
@@ -58,6 +61,8 @@ export class BookingsController {
   @Get()
   @CheckPermissions({ module: 'bookings', action: 'view' })
   @ApiOperation({ summary: 'List bookings with filters and pagination' })
+  @ApiResponse({ status: 200, description: 'Paginated booking list' })
+  @ApiStandardResponses()
   async findAll(
     @Query() query: BookingListQueryDto,
     @CurrentUser() user: { id: string },
@@ -71,12 +76,20 @@ export class BookingsController {
 
   @Get('my')
   @CheckPermissions({ module: 'bookings', action: 'view' })
-  @ApiOperation({ summary: "Get current patient's own bookings with pagination" })
+  @ApiOperation({
+    summary: "Get current patient's own bookings with pagination",
+  })
+  @ApiResponse({ status: 200, description: "Patient's bookings" })
+  @ApiStandardResponses()
   async findMyBookings(
     @CurrentUser() user: { id: string },
     @Query() pagination: PaginationQueryDto,
   ) {
-    return this.bookingsService.findMyBookings(user.id, pagination.page, pagination.perPage);
+    return this.bookingsService.findMyBookings(
+      user.id,
+      pagination.page,
+      pagination.perPage,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -86,6 +99,8 @@ export class BookingsController {
   @Get('today')
   @CheckPermissions({ module: 'bookings', action: 'view' })
   @ApiOperation({ summary: "Get practitioner's bookings for today" })
+  @ApiResponse({ status: 200, description: "Today's bookings" })
+  @ApiStandardResponses()
   async findTodayBookings(@CurrentUser() user: { id: string }) {
     return this.bookingsService.findTodayBookingsForUser(user.id);
   }
@@ -97,6 +112,8 @@ export class BookingsController {
   @Get('stats')
   @CheckPermissions({ module: 'bookings', action: 'view' })
   @ApiOperation({ summary: 'Get booking statistics with optional date range' })
+  @ApiResponse({ status: 200, description: 'Booking statistics' })
+  @ApiStandardResponses()
   async getStats(
     @CurrentUser() user: { id: string },
     @Query('dateFrom') dateFrom?: string,
@@ -112,6 +129,8 @@ export class BookingsController {
   @Get(':id')
   @CheckPermissions({ module: 'bookings', action: 'view' })
   @ApiOperation({ summary: 'Get booking details by ID' })
+  @ApiResponse({ status: 200, description: 'Booking details' })
+  @ApiStandardResponses()
   async findOne(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -126,6 +145,8 @@ export class BookingsController {
   @Get(':id/payment-status')
   @CheckPermissions({ module: 'bookings', action: 'view' })
   @ApiOperation({ summary: 'Get booking payment status and retry eligibility' })
+  @ApiResponse({ status: 200, description: 'Payment status details' })
+  @ApiStandardResponses()
   async getPaymentStatus(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -141,6 +162,8 @@ export class BookingsController {
   @Throttle({ default: { limit: THROTTLE_LIMIT, ttl: THROTTLE_TTL } })
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   @ApiOperation({ summary: 'Reschedule a booking' })
+  @ApiResponse({ status: 200, description: 'Booking rescheduled' })
+  @ApiStandardResponses()
   async reschedule(
     @Param('id', uuidPipe) id: string,
     @Body() dto: RescheduleBookingDto,
@@ -158,6 +181,8 @@ export class BookingsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'create' })
   @ApiOperation({ summary: 'Patient self-reschedule a booking' })
+  @ApiResponse({ status: 200, description: 'Booking rescheduled by patient' })
+  @ApiStandardResponses()
   async patientReschedule(
     @Param('id', uuidPipe) id: string,
     @Body() dto: RescheduleBookingDto,
@@ -173,10 +198,16 @@ export class BookingsController {
   @Post('recurring')
   @CheckPermissions({ module: 'bookings', action: 'create' })
   @ApiOperation({ summary: 'Create recurring booking series' })
+  @ApiResponse({ status: 201, description: 'Recurring booking series created' })
+  @ApiStandardResponses()
   async createRecurring(
     @Body() dto: CreateRecurringBookingDto,
     @CurrentUser() user: UserPayload,
   ) {
-    return this.bookingRecurringService.createRecurring(user.id, dto, user.roles);
+    return this.bookingRecurringService.createRecurring(
+      user.id,
+      dto,
+      user.roles,
+    );
   }
 }

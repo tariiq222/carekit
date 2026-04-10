@@ -11,7 +11,8 @@ import {
   HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { type Request, type Response } from 'express';
 import { AuthService } from './auth.service.js';
 import { CookieService } from './cookie.service.js';
@@ -20,7 +21,10 @@ import { LoginDto } from './dto/login.dto.js';
 import { SendOtpDto, VerifyOtpDto } from './dto/otp.dto.js';
 import { RefreshTokenDto } from './dto/refresh-token.dto.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
-import { ForgotPasswordDto, ResetPasswordDto } from './dto/reset-password.dto.js';
+import {
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from './dto/reset-password.dto.js';
 import { VerifyEmailDto } from './dto/verify-email.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { Public } from '../../common/decorators/public.decorator.js';
@@ -41,6 +45,7 @@ export class AuthController {
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Register a new user account' })
+  @ApiResponse({ status: 201, description: 'User registered successfully' })
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
@@ -58,6 +63,7 @@ export class AuthController {
   @OtpThrottle('login', 5)
   @UseGuards(EmailThrottleGuard)
   @ApiOperation({ summary: 'Login with email and password' })
+  @ApiResponse({ status: 200, description: 'Login successful, returns access token' })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -83,6 +89,7 @@ export class AuthController {
   @OtpThrottle('otp_send', 3)
   @UseGuards(EmailThrottleGuard)
   @ApiOperation({ summary: 'Send OTP code to email for login' })
+  @ApiResponse({ status: 200, description: 'OTP sent (always succeeds for security)' })
   async sendLoginOtp(@Body() dto: SendOtpDto) {
     // Always return success for security (don't reveal if email exists)
     const user = await this.authService.findUserByEmail(dto.email);
@@ -103,6 +110,7 @@ export class AuthController {
   @OtpThrottle('otp_verify', 5)
   @UseGuards(EmailThrottleGuard)
   @ApiOperation({ summary: 'Verify OTP and login' })
+  @ApiResponse({ status: 200, description: 'OTP verified, returns access token' })
   async verifyLoginOtp(
     @Body() dto: VerifyOtpDto,
     @Res({ passthrough: true }) res: Response,
@@ -122,6 +130,7 @@ export class AuthController {
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
+  @ApiResponse({ status: 200, description: 'Returns new access token' })
   async refreshToken(
     @Body() dto: RefreshTokenDto,
     @Req() req: Request,
@@ -143,9 +152,10 @@ export class AuthController {
     this.cookieService.setRefreshTokenCookie(res, tokens.refreshToken);
 
     // Mobile compatibility: if token came from body, include refreshToken in response
-    const responseData = bodyToken && !cookieToken
-      ? tokens
-      : { accessToken: tokens.accessToken, expiresIn: tokens.expiresIn };
+    const responseData =
+      bodyToken && !cookieToken
+        ? tokens
+        : { accessToken: tokens.accessToken, expiresIn: tokens.expiresIn };
 
     return responseData;
   }
@@ -154,12 +164,15 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout and invalidate refresh token' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  @ApiStandardResponses()
   async logout(
     @Body() dto: RefreshTokenDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const token = this.cookieService.extractRefreshToken(req) || dto.refreshToken;
+    const token =
+      this.cookieService.extractRefreshToken(req) || dto.refreshToken;
     if (token) {
       await this.authService.logout(token);
     }
@@ -174,6 +187,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   @ApiOperation({ summary: 'Get current authenticated user profile' })
+  @ApiResponse({ status: 200, description: 'Returns user profile' })
+  @ApiStandardResponses()
   async getProfile(@CurrentUser('id') userId: string) {
     const profile = await this.authService.getUserProfile(userId);
     return profile;
@@ -186,11 +201,15 @@ export class AuthController {
   @OtpThrottle('pw_forgot', 3)
   @UseGuards(EmailThrottleGuard)
   @ApiOperation({ summary: 'Request password reset OTP' })
+  @ApiResponse({ status: 200, description: 'OTP sent (always succeeds for security)' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     // Always return success for security
     const user = await this.authService.findUserByEmail(dto.email);
     if (user) {
-      const code = await this.authService.generateOtp(user.id, OtpType.RESET_PASSWORD);
+      const code = await this.authService.generateOtp(
+        user.id,
+        OtpType.RESET_PASSWORD,
+      );
       await this.authService.sendOtpEmail(dto.email, code, 'reset_password');
     }
     return {
@@ -206,6 +225,7 @@ export class AuthController {
   @OtpThrottle('pw_reset', 3)
   @UseGuards(EmailThrottleGuard)
   @ApiOperation({ summary: 'Reset password using OTP code' })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto.email, dto.code, dto.newPassword);
     return {
@@ -217,6 +237,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Patch('password/change')
   @ApiOperation({ summary: 'Change password for authenticated user' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiStandardResponses()
   async changePassword(
     @CurrentUser('id') userId: string,
     @Body() dto: ChangePasswordDto,
@@ -236,11 +258,16 @@ export class AuthController {
   @Post('email/verify/send')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send email verification OTP' })
+  @ApiResponse({ status: 200, description: 'Verification OTP sent' })
+  @ApiStandardResponses()
   async sendEmailVerification(
     @CurrentUser('id') userId: string,
     @CurrentUser('email') email: string,
   ) {
-    const code = await this.authService.generateOtp(userId, OtpType.VERIFY_EMAIL);
+    const code = await this.authService.generateOtp(
+      userId,
+      OtpType.VERIFY_EMAIL,
+    );
     await this.authService.sendOtpEmail(email, code, 'verify_email');
     return {
       success: true,
@@ -254,6 +281,8 @@ export class AuthController {
   @Post('email/verify')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify email using OTP code' })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiStandardResponses()
   async verifyEmail(
     @CurrentUser('id') userId: string,
     @Body() dto: VerifyEmailDto,

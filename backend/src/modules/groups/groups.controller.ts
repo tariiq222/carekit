@@ -10,7 +10,8 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { FeatureFlagGuard } from '../../common/guards/feature-flag.guard.js';
@@ -43,6 +44,8 @@ export class GroupsController {
 
   @Post()
   @ApiOperation({ summary: 'Create group' })
+  @ApiResponse({ status: 201, description: 'Group created' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'create' })
   create(@Body() dto: CreateGroupDto) {
     return this.groupsService.create(dto);
@@ -50,6 +53,8 @@ export class GroupsController {
 
   @Get()
   @ApiOperation({ summary: 'List groups' })
+  @ApiResponse({ status: 200, description: 'Paginated group list' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'view' })
   findAll(@Query() query: GroupQueryDto) {
     return this.groupsService.findAll(query);
@@ -57,13 +62,19 @@ export class GroupsController {
 
   @Get('practitioner/:practitionerId')
   @ApiOperation({ summary: 'Get groups by practitioner' })
+  @ApiResponse({ status: 200, description: 'Groups for practitioner' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'view' })
-  getByPractitioner(@Param('practitionerId', ParseUUIDPipe) practitionerId: string) {
+  getByPractitioner(
+    @Param('practitionerId', ParseUUIDPipe) practitionerId: string,
+  ) {
     return this.groupsService.getGroupsByPractitioner(practitionerId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get group detail' })
+  @ApiResponse({ status: 200, description: 'Group detail' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'view' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.groupsService.findOne(id);
@@ -71,6 +82,8 @@ export class GroupsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update group' })
+  @ApiResponse({ status: 200, description: 'Group updated' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateGroupDto) {
     return this.groupsService.update(id, dto);
@@ -78,6 +91,8 @@ export class GroupsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Soft delete group' })
+  @ApiResponse({ status: 200, description: 'Group deleted' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'delete' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.groupsService.remove(id);
@@ -85,6 +100,8 @@ export class GroupsController {
 
   @Patch(':id/cancel')
   @ApiOperation({ summary: 'Cancel group' })
+  @ApiResponse({ status: 200, description: 'Group cancelled' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
   cancel(@Param('id', ParseUUIDPipe) id: string) {
     return this.groupsService.cancel(id);
@@ -92,20 +109,34 @@ export class GroupsController {
 
   @Patch(':id/complete')
   @ApiOperation({ summary: 'Complete group + mark attendance' })
+  @ApiResponse({ status: 200, description: 'Group completed' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
-  complete(@Param('id', ParseUUIDPipe) id: string, @Body() dto: BulkAttendanceDto) {
+  complete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: BulkAttendanceDto,
+  ) {
     return this.groupsService.complete(id, dto.attendedPatientIds);
   }
 
   @Patch(':id/trigger-payment')
-  @ApiOperation({ summary: 'Trigger payment request for all registered enrollments (on_capacity flow)' })
+  @ApiOperation({
+    summary:
+      'Trigger payment request for all registered enrollments (on_capacity flow)',
+  })
+  @ApiResponse({ status: 200, description: 'Payment requests triggered' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
   triggerPayment(@Param('id', ParseUUIDPipe) id: string) {
     return this.groupsService.triggerPaymentRequest(id);
   }
 
   @Patch(':id/enrollments/:enrollmentId/resend-payment')
-  @ApiOperation({ summary: 'Resend payment request to a single unpaid enrollment' })
+  @ApiOperation({
+    summary: 'Resend payment request to a single unpaid enrollment',
+  })
+  @ApiResponse({ status: 200, description: 'Payment request resent' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
   resendPayment(
     @Param('id', ParseUUIDPipe) groupId: string,
@@ -115,7 +146,11 @@ export class GroupsController {
   }
 
   @Patch(':id/confirm-schedule')
-  @ApiOperation({ summary: 'Set group date after payments collected (on_capacity flow)' })
+  @ApiOperation({
+    summary: 'Set group date after payments collected (on_capacity flow)',
+  })
+  @ApiResponse({ status: 200, description: 'Schedule confirmed' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
   confirmSchedule(
     @Param('id', ParseUUIDPipe) id: string,
@@ -128,13 +163,20 @@ export class GroupsController {
 
   @Post(':id/enroll')
   @ApiOperation({ summary: 'Enroll a patient' })
+  @ApiResponse({ status: 201, description: 'Patient enrolled' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
-  enroll(@Param('id', ParseUUIDPipe) groupId: string, @Body() dto: EnrollGroupDto) {
+  enroll(
+    @Param('id', ParseUUIDPipe) groupId: string,
+    @Body() dto: EnrollGroupDto,
+  ) {
     return this.enrollmentsService.enroll(groupId, dto.patientId);
   }
 
   @Delete(':groupId/enrollments/:enrollmentId')
   @ApiOperation({ summary: 'Remove enrollment (admin)' })
+  @ApiResponse({ status: 200, description: 'Enrollment removed' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
   removeEnrollment(@Param('enrollmentId', ParseUUIDPipe) enrollmentId: string) {
     return this.enrollmentsService.removeEnrollment(enrollmentId);
@@ -144,6 +186,8 @@ export class GroupsController {
 
   @Patch(':id/attendance')
   @ApiOperation({ summary: 'Confirm attendance for a single enrollment' })
+  @ApiResponse({ status: 200, description: 'Attendance confirmed' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
   confirmAttendance(@Body() dto: ConfirmAttendanceDto) {
     return this.attendanceService.confirmAttendance(dto);
@@ -151,16 +195,25 @@ export class GroupsController {
 
   @Patch(':id/bulk-attendance')
   @ApiOperation({ summary: 'Bulk confirm attendance for multiple patients' })
+  @ApiResponse({ status: 200, description: 'Bulk attendance confirmed' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
   bulkConfirmAttendance(
     @Param('id', ParseUUIDPipe) groupId: string,
     @Body() dto: BulkAttendanceDto,
   ) {
-    return this.attendanceService.bulkConfirmAttendance(groupId, dto.attendedPatientIds);
+    return this.attendanceService.bulkConfirmAttendance(
+      groupId,
+      dto.attendedPatientIds,
+    );
   }
 
   @Post(':id/enrollments/:enrollmentId/certificate')
-  @ApiOperation({ summary: 'Issue completion certificate for an attended enrollment' })
+  @ApiOperation({
+    summary: 'Issue completion certificate for an attended enrollment',
+  })
+  @ApiResponse({ status: 201, description: 'Certificate issued' })
+  @ApiStandardResponses()
   @CheckPermissions({ module: 'groups', action: 'edit' })
   issueCertificate(
     @Param('id', ParseUUIDPipe) groupId: string,

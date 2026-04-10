@@ -6,7 +6,8 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger/api-responses.decorator.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
@@ -34,6 +35,8 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   @ApiOperation({ summary: 'Confirm a pending booking' })
+  @ApiResponse({ status: 200, description: 'Booking confirmed' })
+  @ApiStandardResponses()
   async confirm(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -49,6 +52,8 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   @ApiOperation({ summary: 'Check in a confirmed booking' })
+  @ApiResponse({ status: 200, description: 'Patient checked in' })
+  @ApiStandardResponses()
   async checkIn(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -64,6 +69,8 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   @ApiOperation({ summary: 'Start session for a booking (practitioner only)' })
+  @ApiResponse({ status: 200, description: 'Session started' })
+  @ApiStandardResponses()
   async startSession(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -79,6 +86,8 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   @ApiOperation({ summary: 'Mark booking as completed' })
+  @ApiResponse({ status: 200, description: 'Booking completed' })
+  @ApiStandardResponses()
   async complete(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CompleteBookingDto,
@@ -95,6 +104,8 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   @ApiOperation({ summary: 'Mark booking as no-show' })
+  @ApiResponse({ status: 200, description: 'Booking marked as no-show' })
+  @ApiStandardResponses()
   async markNoShow(
     @Param('id', uuidPipe) id: string,
     @CurrentUser() user: { id: string },
@@ -110,16 +121,14 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'create' })
   @ApiOperation({ summary: 'Request booking cancellation (patient)' })
+  @ApiResponse({ status: 200, description: 'Cancellation request submitted' })
+  @ApiStandardResponses()
   async cancelRequest(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelRequestDto,
     @CurrentUser() user: { id: string },
   ) {
-    return this.bookingsService.requestCancellation(
-      id,
-      user.id,
-      dto.reason,
-    );
+    return this.bookingsService.requestCancellation(id, user.id, dto.reason);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -130,6 +139,8 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   @ApiOperation({ summary: 'Approve a pending cancellation request' })
+  @ApiResponse({ status: 200, description: 'Cancellation approved' })
+  @ApiStandardResponses()
   async cancelApprove(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelApproveDto,
@@ -145,6 +156,8 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'edit' })
   @ApiOperation({ summary: 'Reject a pending cancellation request' })
+  @ApiResponse({ status: 200, description: 'Cancellation rejected' })
+  @ApiStandardResponses()
   async cancelReject(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelRejectDto,
@@ -160,6 +173,8 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'delete' })
   @ApiOperation({ summary: 'Admin direct cancel a booking' })
+  @ApiResponse({ status: 200, description: 'Booking cancelled by admin' })
+  @ApiStandardResponses()
   async adminCancel(
     @Param('id', uuidPipe) id: string,
     @Body() dto: AdminCancelDto,
@@ -176,6 +191,8 @@ export class BookingActionsController {
   @HttpCode(200)
   @CheckPermissions({ module: 'bookings', action: 'delete' })
   @ApiOperation({ summary: 'Cancel a booking (practitioner)' })
+  @ApiResponse({ status: 200, description: 'Booking cancelled by practitioner' })
+  @ApiStandardResponses()
   async practitionerCancel(
     @Param('id', uuidPipe) id: string,
     @Body() dto: CancelRequestDto,
