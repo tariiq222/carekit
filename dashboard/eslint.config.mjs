@@ -34,8 +34,7 @@ const FEATURES = [
   "zatca",
   "activity-log",
   "problem-reports",
-  "group-sessions",
-  "courses",
+  "groups",
 ]
 
 /**

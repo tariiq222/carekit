@@ -18,9 +18,8 @@ import { arMisc } from "./ar.misc"
 import { arWidget } from "./ar.widget"
 import { arIntakeForms } from "./ar.intake-forms"
 import { arWhiteLabel } from "./ar.whitelabel"
-import { arGroupSessions } from "./ar.group-sessions"
+import { arGroups } from "./ar.groups"
 import { arDepartments } from "./ar.departments"
-import { arCourses } from "./ar.courses"
 
 export const ar: Record<string, string> = {
   ...arNav,
@@ -36,7 +35,6 @@ export const ar: Record<string, string> = {
   ...arWidget,
   ...arIntakeForms,
   ...arWhiteLabel,
-  ...arGroupSessions,
+  ...arGroups,
   ...arDepartments,
-  ...arCourses,
 }
