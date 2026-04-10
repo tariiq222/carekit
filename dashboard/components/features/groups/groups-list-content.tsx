@@ -1,0 +1,225 @@
+"use client"
+
+import { useGroupsMutations } from "@/hooks/use-groups-mutations"
+import { useLocale } from "@/components/locale-provider"
+import { DataTable } from "@/components/features/data-table"
+import { FilterBar } from "@/components/features/filter-bar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Skeleton } from "@/components/ui/skeleton"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Cancel01Icon, ViewIcon, Delete02Icon } from "@hugeicons/core-free-icons"
+import type { ColumnDef } from "@tanstack/react-table"
+import type { Group, GroupStatus, DeliveryMode } from "@/lib/types/groups"
+
+const statusStyles: Record<GroupStatus, string> = {
+  open: "bg-primary/10 text-primary border-primary/30",
+  awaiting_payment: "bg-warning/10 text-warning border-warning/30",
+  confirmed: "bg-success/10 text-success border-success/30",
+  full: "bg-warning/10 text-warning border-warning/30",
+  completed: "bg-muted text-muted-foreground",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/30",
+}
+
+const statusLabels: Record<GroupStatus, { ar: string; en: string }> = {
+  open: { ar: "مفتوح", en: "Open" },
+  awaiting_payment: { ar: "بانتظار الدفع", en: "Awaiting Payment" },
+  confirmed: { ar: "مؤكد", en: "Confirmed" },
+  full: { ar: "مكتمل", en: "Full" },
+  completed: { ar: "منتهي", en: "Completed" },
+  cancelled: { ar: "ملغي", en: "Cancelled" },
+}
+
+interface GroupsListContentProps {
+  groups: Group[]
+  meta: { total: number; page: number; totalPages: number } | null
+  isLoading: boolean
+  error: string | null
+  search: string
+  setSearch: (v: string) => void
+  status: GroupStatus | undefined
+  setStatus: (v: GroupStatus | undefined) => void
+  deliveryMode: DeliveryMode | undefined
+  setDeliveryMode: (v: DeliveryMode | undefined) => void
+  visibility: "published" | "draft" | undefined
+  setVisibility: (v: "published" | "draft" | undefined) => void
+  resetFilters: () => void
+  onGroupClick: (id: string) => void
+}
+
+export function GroupsListContent({
+  groups, meta, isLoading, error,
+  search, setSearch,
+  status, setStatus,
+  deliveryMode, setDeliveryMode,
+  visibility, setVisibility,
+  resetFilters,
+  onGroupClick,
+}: GroupsListContentProps) {
+  const { t, locale } = useLocale()
+  const { cancelGroupMut, deleteGroupMut } = useGroupsMutations()
+
+  const columns: ColumnDef<Group>[] = [
+    {
+      accessorKey: "name",
+      header: t("groups.name"),
+      cell: ({ row }) => locale === "ar" ? row.original.nameAr : row.original.nameEn,
+    },
+    {
+      accessorKey: "practitioner",
+      header: t("groups.practitioner"),
+      cell: ({ row }) => row.original.practitioner?.nameAr ?? "—",
+    },
+    {
+      accessorKey: "deliveryMode",
+      header: t("groups.deliveryMode"),
+      cell: ({ row }) => {
+        const modes: Record<DeliveryMode, { ar: string; en: string }> = {
+          in_person: { ar: "حضوري", en: "In-Person" },
+          online: { ar: "أونلاين", en: "Online" },
+          hybrid: { ar: "هجين", en: "Hybrid" },
+        }
+        const mode = row.original.deliveryMode
+        return locale === "ar" ? modes[mode].ar : modes[mode].en
+      },
+    },
+    {
+      accessorKey: "startTime",
+      header: t("groups.date"),
+      cell: ({ row }) => {
+        const st = row.original.startTime
+        if (!st) return locale === "ar" ? "بانتظار التاريخ" : "Pending"
+        return new Date(st).toLocaleDateString(
+          locale === "ar" ? "ar-SA" : "en-US",
+          { year: "numeric", month: "short", day: "numeric" },
+        )
+      },
+    },
+    {
+      accessorKey: "currentEnrollment",
+      header: t("groups.enrolled"),
+      cell: ({ row }) => `${row.original.currentEnrollment}/${row.original.maxParticipants}`,
+    },
+    {
+      accessorKey: "status",
+      header: t("groups.status"),
+      cell: ({ row }) => {
+        const s = row.original.status
+        const label = locale === "ar" ? statusLabels[s].ar : statusLabels[s].en
+        return <Badge className={statusStyles[s]}>{label}</Badge>
+      },
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const canAct = row.original.status !== "completed" && row.original.status !== "cancelled"
+        return (
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 rounded-sm"
+                  onClick={() => onGroupClick(row.original.id)}
+                >
+                  <HugeiconsIcon icon={ViewIcon} size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("common.view")}</TooltipContent>
+            </Tooltip>
+            {canAct && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-9 rounded-sm text-destructive"
+                    onClick={() => cancelGroupMut.mutate(row.original.id)}
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("groups.cancelGroup")}</TooltipContent>
+              </Tooltip>
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 rounded-sm text-destructive"
+                  onClick={() => deleteGroupMut.mutate(row.original.id)}
+                >
+                  <HugeiconsIcon icon={Delete02Icon} size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("common.delete")}</TooltipContent>
+            </Tooltip>
+          </div>
+        )
+      },
+    },
+  ]
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-12" />
+        ))}
+      </div>
+    )
+  }
+
+  const statusOptions = (Object.entries(statusLabels) as Array<[GroupStatus, { ar: string; en: string }]>).map(([value, label]) => ({
+    value,
+    label: locale === "ar" ? label.ar : label.en,
+  }))
+
+  const deliveryOptions = [
+    { value: "in_person", label: locale === "ar" ? "حضوري" : "In-Person" },
+    { value: "online", label: locale === "ar" ? "أونلاين" : "Online" },
+    { value: "hybrid", label: locale === "ar" ? "هجين" : "Hybrid" },
+  ]
+
+  return (
+    <>
+      <FilterBar
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: t("groups.searchPlaceholder"),
+        }}
+        selects={[
+          {
+            key: "status",
+            value: status ?? "",
+            onValueChange: (v: string) => setStatus((v || undefined) as GroupStatus | undefined),
+            options: statusOptions,
+            placeholder: t("groups.filterByStatus"),
+          },
+          {
+            key: "deliveryMode",
+            value: deliveryMode ?? "",
+            onValueChange: (v: string) => setDeliveryMode((v || undefined) as DeliveryMode | undefined),
+            options: deliveryOptions,
+            placeholder: t("groups.filterByDelivery"),
+          },
+        ]}
+        hasFilters={!!status || !!deliveryMode || !!visibility || !!search}
+        onReset={resetFilters}
+        resultCount={meta?.total}
+      />
+
+      <DataTable
+        columns={columns}
+        data={groups}
+        emptyTitle={t("groups.noGroups")}
+        emptyDescription={t("groups.noGroupsDesc")}
+      />
+    </>
+  )
+}

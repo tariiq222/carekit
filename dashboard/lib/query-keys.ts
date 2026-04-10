@@ -208,20 +208,11 @@ export const queryKeys = {
     detail: (id: string) => ["departments", "detail", id] as const,
   },
 
-  /* ─── Group Sessions ─── */
-  groupSessions: {
-    all: ["group-sessions"] as const,
-    list: (filters?: object) => ["group-sessions", "list", filters] as const,
-    detail: (id: string) => ["group-sessions", "detail", id] as const,
-  },
-
-  /* ─── Courses ─── */
-  courses: {
-    all: ["courses"] as const,
-    list: (filters?: object) => ["courses", "list", filters] as const,
-    detail: (id: string) => ["courses", "detail", id] as const,
-    sessions: (id: string) => ["courses", "sessions", id] as const,
-    enrollments: (id: string) => ["courses", "enrollments", id] as const,
+  /* ─── Groups ─── */
+  groups: {
+    all: ["groups"] as const,
+    list: (filters?: object) => ["groups", "list", filters] as const,
+    detail: (id: string) => ["groups", "detail", id] as const,
   },
 
   /* ─── Email Templates ─── */
@@ -289,6 +280,11 @@ export const queryKeys = {
   /* ─── Clinic Public Settings ─── */
   clinicPublic: {
     settings: () => ["clinic-settings", "public"] as const,
+  },
+
+  /* ─── Runs ─── */
+  runs: {
+    detail: (runId: string) => ["runs", "detail", runId] as const,
   },
 
 } as const

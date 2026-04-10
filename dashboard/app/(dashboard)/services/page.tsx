@@ -22,8 +22,7 @@ import { ServicesTabContent } from "@/components/features/services/services-tab-
 import { CategoriesTabContent } from "@/components/features/services/categories-tab-content"
 import { CreateCategoryDialog } from "@/components/features/services/create-category-dialog"
 import { DepartmentsTabContent } from "@/components/features/departments/departments-tab-content"
-import { SessionsListContent } from "@/components/features/group-sessions/sessions-list-content"
-import { CoursesListContent } from "@/components/features/courses/courses-list-content"
+import { GroupsTabContent } from "@/components/features/groups/groups-tab-content"
 import { fetchLicenseFeatures } from "@/lib/api/license"
 import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
@@ -43,24 +42,21 @@ export default function ServicesPage() {
     staleTime: 5 * 60_000,
   })
 
-  const isCoursesLicensed = licenseFeatures
-    ? licenseFeatures.some((f) => f.key === "courses" && f.licensed !== false)
-    : true // optimistic — hide only when explicitly false
+  void licenseFeatures // available for future feature flag checks
 
   const handleAddClick = () => {
     if (activeTab === "services") router.push("/services/create")
     else if (activeTab === "categories") setCreateCategoryOpen(true)
     else if (activeTab === "departments") setCreateDepartmentOpen(true)
-    else if (activeTab === "group-sessions") router.push("/group-sessions/create")
-    else if (activeTab === "courses") router.push("/courses/create")
+    else if (activeTab === "groups") router.push("/groups/create")
   }
 
   const addLabel = () => {
     if (activeTab === "services") return t("services.addService")
     if (activeTab === "categories") return t("services.categories.addCategory")
     if (activeTab === "departments") return t("departments.addDepartment")
-    if (activeTab === "courses") return t("courses.addCourse")
-    return t("groupSessions.addSession")
+    if (activeTab === "groups") return t("groups.addGroup")
+    return t("common.add")
   }
 
   return (
@@ -102,10 +98,7 @@ export default function ServicesPage() {
           <TabsTrigger value="departments">{t("services.tabs.departments")}</TabsTrigger>
           <TabsTrigger value="categories">{t("services.tabs.categories")}</TabsTrigger>
           <TabsTrigger value="services">{t("services.tabs.services")}</TabsTrigger>
-          <TabsTrigger value="group-sessions">{t("services.tabs.groupSessions")}</TabsTrigger>
-          {isCoursesLicensed && (
-            <TabsTrigger value="courses">{t("services.tabs.courses")}</TabsTrigger>
-          )}
+          <TabsTrigger value="groups">{t("services.tabs.groups")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="services" className="flex flex-col gap-6 pt-4">
@@ -124,15 +117,9 @@ export default function ServicesPage() {
           />
         </TabsContent>
 
-        <TabsContent value="group-sessions" className="flex flex-col gap-6 pt-4">
-          <SessionsListContent />
+        <TabsContent value="groups" className="flex flex-col gap-6 pt-4">
+          <GroupsTabContent />
         </TabsContent>
-
-        {isCoursesLicensed && (
-          <TabsContent value="courses" className="flex flex-col gap-6 pt-4">
-            <CoursesListContent />
-          </TabsContent>
-        )}
       </Tabs>
 
       <CreateCategoryDialog open={createCategoryOpen} onOpenChange={setCreateCategoryOpen} />
