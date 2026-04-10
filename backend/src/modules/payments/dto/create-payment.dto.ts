@@ -8,7 +8,10 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   bookingId!: string;
 
-  @ApiProperty({ description: 'Payment amount in halalat (SAR × 100)', minimum: 1 })
+  @ApiProperty({
+    description: 'Payment amount in halalat (SAR × 100)',
+    minimum: 1,
+  })
   @IsInt()
   @Min(1)
   amount!: number;
