@@ -205,6 +205,32 @@ function DurationOptionMiniRow({
           />
         </div>
       </div>
+
+      {/* Label EN + AR */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-0.5">
+          <Label className="text-xs text-muted-foreground">
+            {t("services.bookingTypes.labelEn")}
+          </Label>
+          <Input
+            value={option.label}
+            onChange={(e) => onUpdate("label", e.target.value)}
+            placeholder={t("services.bookingTypes.placeholderEn")}
+            className="h-7 text-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <Label className="text-xs text-muted-foreground">
+            {t("services.bookingTypes.labelAr")}
+          </Label>
+          <Input
+            value={option.labelAr ?? ""}
+            onChange={(e) => onUpdate("labelAr", e.target.value)}
+            placeholder={t("services.bookingTypes.placeholderAr")}
+            className="h-7 text-xs"
+          />
+        </div>
+      </div>
     </div>
   )
 }

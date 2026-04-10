@@ -178,11 +178,11 @@ export function BookingSettingsTab({ form }: BookingSettingsTabProps) {
                     {RECURRING_PATTERNS.map((p) => {
                       const selected = (allowedRecurringPatterns ?? []).includes(p.value)
                       const togglePattern = () => {
-                        const current = allowedRecurringPatterns ?? []
-                        form.setValue(
-                          "allowedRecurringPatterns",
-                          selected ? current.filter((v) => v !== p.value) : [...current, p.value],
-                        )
+                        // Single-select: replace the array with only this pattern.
+                        // Once a pattern is selected it cannot be deselected (radio behaviour).
+                        if (!selected) {
+                          form.setValue("allowedRecurringPatterns", [p.value])
+                        }
                       }
                       return (
                         <button
