@@ -145,16 +145,7 @@ export class PractitionerAvailabilityService {
       this.bookingSettingsService.getForBranch(branchId),
     ]);
 
-    // Use the most conservative buffer: max of global setting and practitioner's own buffer
-    // (service-level buffer not available here without serviceId)
-    const practitionerBuffer = await this.prisma.practitionerService.aggregate({
-      where: { practitionerId },
-      _max: { bufferMinutes: true },
-    });
-    const bufferMinutes = Math.max(
-      settings.bufferMinutes ?? 0,
-      practitionerBuffer._max.bufferMinutes ?? 0,
-    );
+    const bufferMinutes = await this.resolveBufferMinutes(practitionerId, settings.bufferMinutes ?? 0);
     const availableDates: string[] = [];
 
     // Group bookings by date string for fast lookup
@@ -289,16 +280,7 @@ export class PractitionerAvailabilityService {
       }),
     ]);
 
-    // Use the most conservative buffer: max of global setting and practitioner's own buffer
-    // (service-level buffer not available here without serviceId)
-    const practitionerBuffer = await this.prisma.practitionerService.aggregate({
-      where: { practitionerId },
-      _max: { bufferMinutes: true },
-    });
-    const bufferMinutes = Math.max(
-      settings.bufferMinutes ?? 0,
-      practitionerBuffer._max.bufferMinutes ?? 0,
-    );
+    const bufferMinutes = await this.resolveBufferMinutes(practitionerId, settings.bufferMinutes ?? 0);
 
     const clinicTz = await this.clinicSettingsService.getTimezone();
     const isToday = isSameLocalDate(targetDate, new Date(), clinicTz);
@@ -316,5 +298,62 @@ export class PractitionerAvailabilityService {
     }));
 
     return { date, practitionerId, slots };
+  }
+
+  /**
+   * Resolves the effective buffer minutes for slot generation.
+   *
+   * Bug fixed (CRITICAL #2): PractitionerService.bufferMinutes has @default(0) in Prisma,
+   * so `ps.bufferMinutes ?? service.bufferMinutes` always short-circuits to 0 — the ??
+   * operator only fires on null/undefined, not on the value 0.
+   *
+   * Correct logic: use ps.bufferMinutes as an explicit override only when > 0.
+   * Otherwise fall through to service.bufferMinutes, then global settings.
+   *
+   * Without serviceId (calendar view): take the maximum across all services this
+   * practitioner offers — conservative choice to avoid buffer collisions.
+   */
+  private async resolveBufferMinutes(
+    practitionerId: string,
+    globalBufferMinutes: number,
+    serviceId?: string,
+  ): Promise<number> {
+    if (serviceId) {
+      // Specific service context — resolve precisely
+      const ps = await this.prisma.practitionerService.findUnique({
+        where: { practitionerId_serviceId: { practitionerId, serviceId } },
+        select: {
+          bufferMinutes: true,
+          service: { select: { bufferMinutes: true } },
+        },
+      });
+
+      if (!ps) return globalBufferMinutes;
+
+      // ps.bufferMinutes > 0 means explicit practitioner override; otherwise use service default
+      const effectiveBuffer = ps.bufferMinutes > 0
+        ? ps.bufferMinutes
+        : ps.service.bufferMinutes;
+
+      return Math.max(globalBufferMinutes, effectiveBuffer);
+    }
+
+    // No specific service — take max across all services offered by this practitioner
+    // to ensure no booking can be squeezed into a buffer window of any service
+    const psRecords = await this.prisma.practitionerService.findMany({
+      where: { practitionerId, isActive: true },
+      select: {
+        bufferMinutes: true,
+        service: { select: { bufferMinutes: true } },
+      },
+    });
+
+    const maxServiceBuffer = psRecords.reduce((max, ps) => {
+      // Use ps override when explicitly set (> 0), otherwise fall back to service default
+      const effective = ps.bufferMinutes > 0 ? ps.bufferMinutes : ps.service.bufferMinutes;
+      return Math.max(max, effective);
+    }, 0);
+
+    return Math.max(globalBufferMinutes, maxServiceBuffer);
   }
 }
