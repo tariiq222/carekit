@@ -83,5 +83,8 @@ export class LicenseService {
   private async invalidate(): Promise<void> {
     await this.cache.del(CACHE_KEYS.LICENSE);
     await this.cache.del(CACHE_KEYS.LICENSE_FEATURES);
+    // Feature flags map is derived from license status — bust it too
+    // so getMap() recomputes with the updated license values.
+    await this.cache.del(CACHE_KEYS.FEATURE_FLAGS_MAP);
   }
 }
