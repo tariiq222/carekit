@@ -12,7 +12,7 @@ steps:
     required: true
     sources:
       - memory:active_work.current_task_analysis
-    scope: implementation_plan + files_to_read_next + required_tests + impact_analysis
+    scope: implementation_plan + files_to_read_next + required_tests + impact_analysis + risk_level + blocking_questions
 
   - id: read-target-files
     type: file-read
