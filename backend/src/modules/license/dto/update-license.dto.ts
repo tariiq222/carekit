@@ -15,4 +15,6 @@ export class UpdateLicenseDto {
   @ApiPropertyOptional() @IsOptional() @IsBoolean() hasZoom?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() hasZatca?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() hasDepartments?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() hasGroupSessions?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() hasCourses?: boolean;
 }

@@ -22,6 +22,8 @@ const baseLicense = {
   hasZoom: false,
   hasZatca: true,
   hasDepartments: false,
+  hasGroupSessions: false,
+  hasCourses: false,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -171,6 +173,38 @@ describe('LicenseService', () => {
       expect(await service.isFeatureLicensed('zatca')).toBe(true);
       expect(await service.isFeatureLicensed('departments')).toBe(false);
     });
+
+    it('returns false for group_sessions when hasGroupSessions=false (default)', async () => {
+      mockCache.get.mockResolvedValue(baseLicense);
+
+      expect(await service.isFeatureLicensed('group_sessions')).toBe(false);
+    });
+
+    it('returns false for courses when hasCourses=false (default)', async () => {
+      mockCache.get.mockResolvedValue(baseLicense);
+
+      expect(await service.isFeatureLicensed('courses')).toBe(false);
+    });
+
+    it('returns true for group_sessions when hasGroupSessions=true', async () => {
+      mockCache.get.mockResolvedValue({ ...baseLicense, hasGroupSessions: true });
+
+      expect(await service.isFeatureLicensed('group_sessions')).toBe(true);
+    });
+
+    it('returns true for courses when hasCourses=true', async () => {
+      mockCache.get.mockResolvedValue({ ...baseLicense, hasCourses: true });
+
+      expect(await service.isFeatureLicensed('courses')).toBe(true);
+    });
+
+    it('group_sessions and courses are independent license flags', async () => {
+      const licenseGroupOnly = { ...baseLicense, hasGroupSessions: true, hasCourses: false };
+      mockCache.get.mockResolvedValue(licenseGroupOnly);
+
+      expect(await service.isFeatureLicensed('group_sessions')).toBe(true);
+      expect(await service.isFeatureLicensed('courses')).toBe(false);
+    });
   });
 
   // ─── getFeaturesWithStatus ───────────────────────────────────
@@ -231,6 +265,40 @@ describe('LicenseService', () => {
       const result = await service.getFeaturesWithStatus();
 
       expect(result).toEqual([]);
+    });
+
+    it('group_sessions shows licensed=false and enabled=false when not in license', async () => {
+      const flagGroupSessions = { key: 'group_sessions', enabled: true, nameAr: 'الجلسات الجماعية', nameEn: 'Group Sessions', descriptionAr: '', descriptionEn: '', createdAt: new Date(), updatedAt: new Date() };
+      mockCache.get.mockResolvedValue(null);
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense); // hasGroupSessions=false
+      mockPrisma.featureFlag.findMany.mockResolvedValue([flagGroupSessions]);
+
+      const result = await service.getFeaturesWithStatus();
+
+      expect(result[0]).toMatchObject({ key: 'group_sessions', licensed: false, enabled: false });
+    });
+
+    it('courses shows licensed=false and enabled=false when not in license', async () => {
+      const flagCourses = { key: 'courses', enabled: true, nameAr: 'الدورات التدريبية', nameEn: 'Training Courses', descriptionAr: '', descriptionEn: '', createdAt: new Date(), updatedAt: new Date() };
+      mockCache.get.mockResolvedValue(null);
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense); // hasCourses=false
+      mockPrisma.featureFlag.findMany.mockResolvedValue([flagCourses]);
+
+      const result = await service.getFeaturesWithStatus();
+
+      expect(result[0]).toMatchObject({ key: 'courses', licensed: false, enabled: false });
+    });
+
+    it('group_sessions shows licensed=true and enabled=true when in license and flag enabled', async () => {
+      const licensedLicense = { ...baseLicense, hasGroupSessions: true };
+      const flagGroupSessions = { key: 'group_sessions', enabled: true, nameAr: 'الجلسات الجماعية', nameEn: 'Group Sessions', descriptionAr: '', descriptionEn: '', createdAt: new Date(), updatedAt: new Date() };
+      mockCache.get.mockResolvedValue(null);
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(licensedLicense);
+      mockPrisma.featureFlag.findMany.mockResolvedValue([flagGroupSessions]);
+
+      const result = await service.getFeaturesWithStatus();
+
+      expect(result[0]).toMatchObject({ key: 'group_sessions', licensed: true, enabled: true });
     });
   });
 

@@ -87,6 +87,11 @@ enum NotificationType {
   group_session_cancelled
   group_session_cancelled_admin
   group_session_reminder
+  course_enrolled
+  course_session_reminder
+  course_cancelled
+  course_completed
+  course_attendance_marked
 
   @@map("notification_type")
 }
@@ -307,6 +312,7 @@ enum GroupSessionSchedulingMode {
 
 enum GroupSessionStatus {
   open
+  awaiting_payment
   confirmed
   full
   completed
@@ -317,10 +323,55 @@ enum GroupSessionStatus {
 
 enum GroupEnrollmentStatus {
   registered
+  payment_requested
   confirmed
   attended
   expired
   cancelled
 
   @@map("group_enrollment_status")
+}
+
+enum CourseStatus {
+  draft
+  published
+  in_progress
+  completed
+  archived
+
+  @@map("course_status")
+}
+
+enum CourseSessionStatus {
+  scheduled
+  completed
+  cancelled
+
+  @@map("course_session_status")
+}
+
+enum CourseEnrollmentStatus {
+  enrolled
+  active
+  completed
+  dropped
+  refunded
+
+  @@map("course_enrollment_status")
+}
+
+enum CourseFrequency {
+  weekly
+  biweekly
+  monthly
+
+  @@map("course_frequency")
+}
+
+enum DeliveryMode {
+  in_person
+  online
+  hybrid
+
+  @@map("delivery_mode")
 }

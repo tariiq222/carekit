@@ -1,0 +1,111 @@
+// ──────────────────────────────────────────────
+// Courses — Training Programs (الدورات التدريبية)
+//
+// Three-layer model:
+//   Course → CourseSession (auto-generated) → CourseEnrollment
+//
+// Payment model:
+//   Free (priceHalalat = 0)  → enrollment status jumps to active immediately
+//   Paid (priceHalalat > 0)  → CoursePayment created (pending), Moyasar URL returned
+//                              enrollment stays enrolled until webhook confirms
+//
+// Completion threshold: 75% of totalSessions (hardcoded in service logic)
+// ──────────────────────────────────────────────
+
+model Course {
+  id                   String          @id @default(uuid())
+  nameAr               String          @map("name_ar")
+  nameEn               String          @map("name_en")
+  descriptionAr        String?         @map("description_ar")
+  descriptionEn        String?         @map("description_en")
+  practitionerId       String          @map("practitioner_id")
+  totalSessions        Int             @map("total_sessions")
+  durationPerSessionMin Int            @map("duration_per_session_min")
+  frequency            CourseFrequency
+  priceHalalat         Int             @default(0) @map("price_halalat")
+  isGroup              Boolean         @default(false) @map("is_group")
+  maxParticipants      Int?            @map("max_participants")
+  deliveryMode         DeliveryMode    @default(in_person) @map("delivery_mode")
+  location             String?
+  status               CourseStatus    @default(draft)
+  startDate            DateTime        @map("start_date")
+  currentEnrollment    Int             @default(0) @map("current_enrollment")
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+  deletedAt            DateTime?       @map("deleted_at")
+
+  practitioner Practitioner      @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  sessions     CourseSession[]
+  enrollments  CourseEnrollment[]
+  payments     CoursePayment[]
+
+  @@index([practitionerId, status])
+  @@index([status, startDate])
+  @@index([deletedAt])
+  @@map("courses")
+}
+
+model CourseSession {
+  id            String              @id @default(uuid())
+  courseId      String              @map("course_id")
+  sessionNumber Int                 @map("session_number")
+  titleAr       String?             @map("title_ar")
+  titleEn       String?             @map("title_en")
+  scheduledAt   DateTime            @map("scheduled_at")
+  status        CourseSessionStatus @default(scheduled)
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, sessionNumber])
+  @@index([courseId, status])
+  @@index([scheduledAt])
+  @@map("course_sessions")
+}
+
+model CourseEnrollment {
+  id               String                 @id @default(uuid())
+  courseId         String                 @map("course_id")
+  patientId        String                 @map("patient_id")
+  status           CourseEnrollmentStatus @default(enrolled)
+  sessionsAttended Int                    @default(0) @map("sessions_attended")
+  enrolledAt       DateTime               @default(now()) @map("enrolled_at")
+  completedAt      DateTime?              @map("completed_at")
+  createdAt        DateTime               @default(now()) @map("created_at")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
+
+  course   Course         @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  patient  User           @relation("PatientCourseEnrollments", fields: [patientId], references: [id], onDelete: Restrict)
+  payment  CoursePayment?
+
+  @@unique([courseId, patientId])
+  @@index([courseId, status])
+  @@index([patientId])
+  @@map("course_enrollments")
+}
+
+// Decoupled from the main Payment model — no bookingId dependency.
+// Tracks Moyasar payment for a course enrollment independently.
+model CoursePayment {
+  id               String        @id @default(uuid())
+  enrollmentId     String        @unique @map("enrollment_id")
+  courseId         String        @map("course_id")
+  amount           Int // halalat
+  method           PaymentMethod
+  status           PaymentStatus @default(pending)
+  moyasarPaymentId String?       @unique @map("moyasar_payment_id")
+  transactionRef   String?       @map("transaction_ref")
+  paidAt           DateTime?     @map("paid_at")
+  refundedAt       DateTime?     @map("refunded_at")
+  refundReason     String?       @map("refund_reason")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  enrollment CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  course     Course           @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@index([courseId])
+  @@map("course_payments")
+}
