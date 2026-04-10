@@ -117,6 +117,25 @@ describe('ServicePractitionersService — getPractitionersForService', () => {
     expect(mockServicesService.ensureExists).toHaveBeenCalledTimes(1);
   });
 
+  it('[REGRESSION] should exclude practitioners with isAcceptingBookings=false', async () => {
+    mockServicesService.ensureExists.mockResolvedValue(undefined);
+    mockPrisma.practitionerService = {
+      findMany: jest.fn().mockResolvedValue([mockPractitionerService]),
+    };
+
+    await service.getPractitionersForService(SERVICE_ID);
+
+    expect(mockPrisma.practitionerService.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          practitioner: expect.objectContaining({
+            isAcceptingBookings: true,
+          }),
+        }),
+      }),
+    );
+  });
+
   it('should only return active, non-deleted practitioners', async () => {
     mockServicesService.ensureExists.mockResolvedValue(undefined);
     mockPrisma.practitionerService = {
