@@ -5,10 +5,13 @@ import { SendNotificationHandler } from './send-notification/send-notification.h
 import { CreateNotificationHandler } from './notifications/create-notification.handler';
 import { ListNotificationsHandler } from './notifications/list-notifications.handler';
 import { MarkReadHandler } from './notifications/mark-read.handler';
+import { CreateConversationHandler } from './chat/create-conversation.handler';
+import { CreateChatMessageHandler } from './chat/create-chat-message.handler';
+import { ListConversationsHandler } from './chat/list-conversations.handler';
 import type { FcmService } from '../../infrastructure/mail';
 import type { SmtpService } from '../../infrastructure/mail';
 import type { PrismaService } from '../../infrastructure/database';
-import { NotificationType, RecipientType } from '@prisma/client';
+import { MessageSenderType, NotificationType, RecipientType } from '@prisma/client';
 
 const mockTemplate = {
   id: 'tpl-1',
@@ -27,6 +30,16 @@ const buildPrisma = () => ({
   },
   emailTemplate: {
     findUnique: jest.fn().mockResolvedValue(mockTemplate),
+  },
+  chatConversation: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    create: jest.fn().mockResolvedValue({ id: 'conv-1' }),
+    update: jest.fn().mockResolvedValue({ id: 'conv-1' }),
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
+  },
+  commsChatMessage: {
+    create: jest.fn().mockResolvedValue({ id: 'msg-1' }),
   },
 });
 
@@ -220,3 +233,65 @@ describe('MarkReadHandler', () => {
     });
   });
 });
+
+// ─── CreateConversationHandler ───────────────────────────────────────────────
+describe('CreateConversationHandler', () => {
+  it('returns existing open conversation instead of creating duplicate', async () => {
+    const prisma = buildPrisma();
+    prisma.chatConversation.findFirst.mockResolvedValue({ id: 'conv-existing', status: 'OPEN' });
+    const handler = new CreateConversationHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({ tenantId: 'tenant-1', clientId: 'client-1', employeeId: 'emp-1' });
+    expect(result.id).toBe('conv-existing');
+    expect(prisma.chatConversation.create).not.toHaveBeenCalled();
+  });
+
+  it('creates new conversation when none exists', async () => {
+    const prisma = buildPrisma();
+    const handler = new CreateConversationHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({ tenantId: 'tenant-1', clientId: 'client-1', employeeId: 'emp-1' });
+    expect(result.id).toBe('conv-1');
+    expect(prisma.chatConversation.create).toHaveBeenCalled();
+  });
+
+  it('creates AI conversation when no employeeId', async () => {
+    const prisma = buildPrisma();
+    const handler = new CreateConversationHandler(prisma as unknown as PrismaService);
+    await handler.execute({ tenantId: 'tenant-1', clientId: 'client-1' });
+    expect(prisma.chatConversation.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ isAiChat: true, employeeId: null }),
+    });
+  });
+});
+
+describe('CreateChatMessageHandler', () => {
+  it('creates message and updates lastMessageAt on conversation', async () => {
+    const prisma = buildPrisma();
+    prisma.chatConversation.findFirst.mockResolvedValue({ id: 'conv-1', status: 'OPEN', tenantId: 'tenant-1' });
+    const handler = new CreateChatMessageHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({
+      tenantId: 'tenant-1',
+      conversationId: 'conv-1',
+      senderType: MessageSenderType.CLIENT,
+      senderId: 'client-1',
+      body: 'Hello',
+    });
+    expect(result.id).toBe('msg-1');
+    expect(prisma.chatConversation.update).toHaveBeenCalledWith({
+      where: { id: 'conv-1' },
+      data: { lastMessageAt: expect.any(Date) },
+    });
+  });
+});
+
+describe('ListConversationsHandler', () => {
+  it('returns paginated conversations for a client', async () => {
+    const prisma = buildPrisma();
+    prisma.chatConversation.findMany.mockResolvedValue([{ id: 'conv-1' }]);
+    prisma.chatConversation.count.mockResolvedValue(1);
+    const handler = new ListConversationsHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({ tenantId: 'tenant-1', clientId: 'client-1', page: 1, limit: 20 });
+    expect(result.data).toHaveLength(1);
+    expect(result.meta.total).toBe(1);
+  });
+});
+
