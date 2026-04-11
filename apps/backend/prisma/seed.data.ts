@@ -200,15 +200,21 @@ export const ROLES: RoleDefinition[] = [
 // ──────────────────────────────────────────────
 
 export const WHITELABEL_DEFAULTS = {
-  systemName: 'CareKit Clinic',
-  systemNameAr: 'عيادة كيركت',
-  logoUrl: null as string | null,
-  faviconUrl: null as string | null,
-  primaryColor: '#2563EB',
-  secondaryColor: '#1E40AF',
-  fontFamily: 'Inter',
-  domain: 'localhost',
-  clinicCanEdit: false,
+  systemName:        'CareKit Clinic',
+  systemNameAr:      'عيادة كيركت',
+  productTagline:    'إدارة العيادة',
+  logoUrl:           null as string | null,
+  faviconUrl:        null as string | null,
+  colorPrimary:      '#354FD8',
+  colorPrimaryLight: '#5B72E8',
+  colorPrimaryDark:  '#2438B0',
+  colorAccent:       '#82CC17',
+  colorAccentDark:   '#5A9010',
+  colorBackground:   '#EEF1F8',
+  fontFamily:        'IBM Plex Sans Arabic',
+  fontUrl:           'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&display=swap' as string | null,
+  domain:            'localhost',
+  clinicCanEdit:     false,
 };
 
 // ──────────────────────────────────────────────
@@ -217,7 +223,6 @@ export const WHITELABEL_DEFAULTS = {
 
 export const LICENSE_DEFAULTS = {
   hasCoupons: true,
-  hasGiftCards: true,
   hasIntakeForms: true,
   hasChatbot: true,
   hasRatings: true,
@@ -229,8 +234,6 @@ export const LICENSE_DEFAULTS = {
   hasZoom: false,
   hasZatca: true,
   hasDepartments: true,
-  hasGroupSessions: true,
-  hasCourses: true,
 };
 
 // ──────────────────────────────────────────────
