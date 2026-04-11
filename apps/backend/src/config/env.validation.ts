@@ -26,6 +26,8 @@ export const envValidationSchema = Joi.object({
   // Redis (BullMQ + cache + token blacklist)
   REDIS_HOST: Joi.string().hostname().required(),
   REDIS_PORT: Joi.number().port().required(),
+  REDIS_PASSWORD: Joi.string().allow('').optional(),
+  REDIS_DB: Joi.number().integer().min(0).max(15).default(0),
 
   // MinIO (object storage)
   MINIO_ENDPOINT: Joi.string().hostname().required(),
