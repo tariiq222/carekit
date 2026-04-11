@@ -1,0 +1,127 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
+import { MinioService } from './minio.service';
+
+const mockClient = {
+  bucketExists: jest.fn(),
+  makeBucket: jest.fn(),
+  putObject: jest.fn(),
+  removeObject: jest.fn(),
+  presignedGetObject: jest.fn(),
+  statObject: jest.fn(),
+};
+
+jest.mock('minio', () => ({
+  Client: jest.fn().mockImplementation(() => mockClient),
+}));
+
+const configMap: Record<string, string | number> = {
+  MINIO_ENDPOINT: 'localhost',
+  MINIO_PORT: 9000,
+  MINIO_ACCESS_KEY: 'access',
+  MINIO_SECRET_KEY: 'secret',
+  MINIO_BUCKET: 'carekit',
+  MINIO_USE_SSL: 'false',
+};
+
+const mockConfig = {
+  getOrThrow: (key: string) => configMap[key],
+  get: (key: string) => configMap[key],
+};
+
+describe('MinioService', () => {
+  let service: MinioService;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        MinioService,
+        { provide: ConfigService, useValue: mockConfig },
+      ],
+    }).compile();
+
+    service = module.get<MinioService>(MinioService);
+  });
+
+  describe('onModuleInit', () => {
+    it('creates bucket if it does not exist', async () => {
+      mockClient.bucketExists.mockResolvedValue(false);
+      mockClient.makeBucket.mockResolvedValue(undefined);
+
+      await service.onModuleInit();
+
+      expect(mockClient.bucketExists).toHaveBeenCalledWith('carekit');
+      expect(mockClient.makeBucket).toHaveBeenCalledWith('carekit');
+    });
+
+    it('skips bucket creation if bucket already exists', async () => {
+      mockClient.bucketExists.mockResolvedValue(true);
+
+      await service.onModuleInit();
+
+      expect(mockClient.makeBucket).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('uploadFile', () => {
+    it('returns public URL after upload', async () => {
+      mockClient.putObject.mockResolvedValue({ etag: 'abc' });
+      const buf = Buffer.from('data');
+
+      const url = await service.uploadFile('carekit', 'test.jpg', buf, 'image/jpeg');
+
+      expect(mockClient.putObject).toHaveBeenCalledWith(
+        'carekit', 'test.jpg', buf, buf.length, { 'Content-Type': 'image/jpeg' }
+      );
+      expect(url).toBe('http://localhost:9000/carekit/test.jpg');
+    });
+  });
+
+  describe('deleteFile', () => {
+    it('calls removeObject', async () => {
+      mockClient.removeObject.mockResolvedValue(undefined);
+
+      await service.deleteFile('carekit', 'test.jpg');
+
+      expect(mockClient.removeObject).toHaveBeenCalledWith('carekit', 'test.jpg');
+    });
+  });
+
+  describe('getSignedUrl', () => {
+    it('returns presigned URL with default expiry', async () => {
+      mockClient.presignedGetObject.mockResolvedValue('https://signed-url');
+
+      const url = await service.getSignedUrl('carekit', 'test.jpg');
+
+      expect(mockClient.presignedGetObject).toHaveBeenCalledWith('carekit', 'test.jpg', 3600);
+      expect(url).toBe('https://signed-url');
+    });
+
+    it('uses custom expiry when provided', async () => {
+      mockClient.presignedGetObject.mockResolvedValue('https://signed-url-2');
+
+      await service.getSignedUrl('carekit', 'test.jpg', 7200);
+
+      expect(mockClient.presignedGetObject).toHaveBeenCalledWith('carekit', 'test.jpg', 7200);
+    });
+  });
+
+  describe('fileExists', () => {
+    it('returns true when object exists', async () => {
+      mockClient.statObject.mockResolvedValue({ size: 100 });
+
+      const result = await service.fileExists('carekit', 'test.jpg');
+
+      expect(result).toBe(true);
+    });
+
+    it('returns false when object does not exist', async () => {
+      mockClient.statObject.mockRejectedValue(new Error('Not Found'));
+
+      const result = await service.fileExists('carekit', 'test.jpg');
+
+      expect(result).toBe(false);
+    });
+  });
+});
