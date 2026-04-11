@@ -80,10 +80,8 @@ app/(dashboard)/notifications/      @tariq
 # ── Operations & Reports ─────────────────────────────
 components/features/reports/        @tariq
 components/features/activity-log/   @tariq
-components/features/problem-reports/ @tariq
 app/(dashboard)/reports/            @tariq
 app/(dashboard)/activity-log/       @tariq
-app/(dashboard)/problem-reports/    @tariq
 
 # ── User Management ──────────────────────────────────
 components/features/users/          @tariq

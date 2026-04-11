@@ -42,7 +42,7 @@ lib/utils.ts                           pure utilities
 `bookings/`, `patients/`, `practitioners/`, `payments/`, `reports/`,
 `services/`, `branches/`, `coupons/`, `chatbot/`,
 `intake-forms/`, `invoices/`, `ratings/`, `notifications/`,
-`activity-log/`, `problem-reports/`, `users/`, `settings/`,
+`activity-log/`, `users/`, `settings/`,
 `white-label/`, `zatca/`
 
 ## i18n

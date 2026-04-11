@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
 
-import { Badge } from "@/components/ui/badge"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchPractitionerRatings } from "@/lib/api/practitioners"
 import type { Rating } from "@/lib/types/rating"
@@ -16,18 +15,6 @@ function StarDisplay({ stars }: { stars: number }) {
       {"★".repeat(stars)}
       {"☆".repeat(5 - stars)}
     </span>
-  )
-}
-
-function ProblemBadge({ hasProblem }: { hasProblem: boolean }) {
-  if (!hasProblem) return null
-  return (
-    <Badge
-      variant="outline"
-      className="border-destructive/30 bg-destructive/10 text-destructive text-[10px]"
-    >
-      Problem Reported
-    </Badge>
   )
 }
 
@@ -81,11 +68,6 @@ export function PractitionerRatings({
               {r.comment && (
                 <p className="text-xs text-foreground">{r.comment}</p>
               )}
-              <ProblemBadge
-                hasProblem={
-                  "problemReport" in r && !!(r as RatingWithProblem).problemReport
-                }
-              />
             </div>
           ))}
           {data?.meta && data.meta.total > 10 && (
@@ -97,13 +79,4 @@ export function PractitionerRatings({
       )}
     </div>
   )
-}
-
-/* Extended type for rating that may include a problem report */
-interface RatingWithProblem extends Rating {
-  problemReport?: {
-    id: string
-    type: string
-    status: string
-  } | null
 }
