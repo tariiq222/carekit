@@ -17,7 +17,7 @@ describe("whitelabel api", () => {
   })
 
   it("fetchWhitelabel calls /whitelabel", async () => {
-    getMock.mockResolvedValueOnce({ primaryColor: "#354FD8" })
+    getMock.mockResolvedValueOnce({ colorPrimary: "#354FD8" })
     await fetchWhitelabel()
     expect(getMock).toHaveBeenCalledWith("/whitelabel")
   })
@@ -29,8 +29,8 @@ describe("whitelabel api", () => {
   })
 
   it("updateWhitelabel puts to /whitelabel", async () => {
-    putMock.mockResolvedValueOnce({ primaryColor: "#000000" })
-    await updateWhitelabel({ primaryColor: "#000000" } as Parameters<typeof updateWhitelabel>[0])
+    putMock.mockResolvedValueOnce({ colorPrimary: "#000000" })
+    await updateWhitelabel({ colorPrimary: "#000000" } as Parameters<typeof updateWhitelabel>[0])
     expect(putMock).toHaveBeenCalledWith("/whitelabel", expect.anything())
   })
 })

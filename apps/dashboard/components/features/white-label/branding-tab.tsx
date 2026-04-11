@@ -34,8 +34,8 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
     if (!whitelabel) return
     setSystemName(whitelabel.systemName ?? "")
     setSystemNameAr(whitelabel.systemNameAr ?? "")
-    setPrimaryColor(whitelabel.primaryColor ?? "")
-    setSecondaryColor(whitelabel.secondaryColor ?? "")
+    setPrimaryColor(whitelabel.colorPrimary ?? "")
+    setSecondaryColor(whitelabel.colorAccent ?? "")
     setLogoUrl(whitelabel.logoUrl ?? "")
     setFaviconUrl(whitelabel.faviconUrl ?? "")
     setFontFamily(whitelabel.fontFamily ?? "")
@@ -69,16 +69,17 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
     onSave({
       systemName,
       systemNameAr,
-      primaryColor,
-      secondaryColor,
-      logoUrl: logoUrl || null,
-      faviconUrl: faviconUrl || null,
+      colorPrimary:  primaryColor,
+      colorAccent:   secondaryColor,
+      logoUrl:       logoUrl || null,
+      faviconUrl:    faviconUrl || null,
       fontFamily,
     })
     if (isValidHex(primaryColor)) {
       apply({
-        primary: primaryColor,
-        accent: isValidHex(secondaryColor) ? secondaryColor : primaryColor,
+        primary:    primaryColor,
+        accent:     isValidHex(secondaryColor) ? secondaryColor : primaryColor,
+        fontFamily: fontFamily || null,
       })
     }
   }

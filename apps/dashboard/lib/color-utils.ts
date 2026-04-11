@@ -108,8 +108,11 @@ function contrastForeground(bg: RGB): string {
 /* ─── Derive all CSS variables from 2 colors ─── */
 
 export interface BrandingColors {
-  primary: string // hex
-  accent: string  // hex
+  primary:     string        // hex
+  accent:      string        // hex
+  background?: string | null
+  fontFamily?: string | null
+  fontUrl?:    string | null
 }
 
 export type CSSVarMap = Record<string, string>
