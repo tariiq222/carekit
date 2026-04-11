@@ -79,7 +79,7 @@
           "title": "Guards: JWT + CASL + RequiresFeature",
           "detail": "common/guards/: jwt.guard, casl.guard, feature.guard",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "common"
         },
         {
