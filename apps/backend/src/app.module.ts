@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from './config/env.validation';
 import { DatabaseModule } from './infrastructure/database';
 import { MessagingModule } from './infrastructure/messaging.module';
 import { StorageModule } from './infrastructure/storage';
 import { MailModule } from './infrastructure/mail';
+import { TenantMiddleware } from './common/tenant';
 
 @Module({
   imports: [
@@ -23,4 +24,8 @@ import { MailModule } from './infrastructure/mail';
     MailModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(TenantMiddleware).forRoutes('*');
+  }
+}
