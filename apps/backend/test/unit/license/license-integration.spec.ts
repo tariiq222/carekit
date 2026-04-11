@@ -329,14 +329,10 @@ describe('License ↔ FeatureFlags Integration', () => {
     });
 
     it('getFeaturesWithStatus correctly reflects bulk update', async () => {
-      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(updated);
+      const updatedLicense = { ...baseLicense, hasCoupons: false };
+      mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(updatedLicense);
       mockPrisma.featureFlag.findMany.mockResolvedValue([
         { key: 'coupons', enabled: true, nameAr: 'كوبونات', nameEn: 'Coupons' },
-        {
-          enabled: true,
-          nameAr: 'بطاقات هدايا',
-          nameEn: 'Gift Cards',
-        },
       ]);
 
       const features = await licenseService.getFeaturesWithStatus();
@@ -345,9 +341,6 @@ describe('License ↔ FeatureFlags Integration', () => {
       expect(features.find((f) => f.key === 'coupons')).toMatchObject({
         licensed: false,
         enabled: false,
-      });
-        licensed: true,
-        enabled: true,
       });
     });
   });

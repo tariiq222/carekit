@@ -127,7 +127,6 @@ async function migrate(): Promise<void> {
   await prisma.licenseConfig.create({
     data: {
       hasCoupons: flagMap['coupons'] ?? true,
-      hasGiftCards: flagMap['gift_cards'] ?? true,
       hasIntakeForms: flagMap['intake_forms'] ?? true,
       hasChatbot: flagMap['chatbot'] ?? true,
       hasRatings: flagMap['ratings'] ?? true,

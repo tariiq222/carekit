@@ -251,15 +251,6 @@ export const DEMO_COUPONS = [
   },
 ];
 
-// ─── Gift Cards ───────────────────────────────
-// Covers: code, initialAmount, balance (partial/full use)
-
-export const DEMO_GIFT_CARDS = [
-  { code: 'GIFT-100-A1B2', initialAmount: 10000, balance: 10000 },  // unused
-  { code: 'GIFT-250-C3D4', initialAmount: 25000, balance: 18000 },  // partially used
-  { code: 'GIFT-500-E5F6', initialAmount: 50000, balance:     0 },  // fully redeemed
-];
-
 // ─── Clinic Working Hours ─────────────────────
 
 export const DEMO_WORKING_HOURS = [

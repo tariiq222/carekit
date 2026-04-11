@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import {
   DEMO_CATEGORIES, DEMO_SERVICES, DEMO_BRANCHES,
-  DEMO_COUPONS, DEMO_GIFT_CARDS,
+  DEMO_COUPONS,
   DEMO_WORKING_HOURS, DEMO_HOLIDAYS,
   DEMO_CHATBOT_CONFIG, DEMO_KNOWLEDGE_BASE,
   DEMO_WAITLIST, DEMO_INTAKE_FORMS,
@@ -284,18 +284,7 @@ export async function seedPromotions(prisma: PrismaClient, patientId: string) {
       },
     });
   }
-  for (const g of DEMO_GIFT_CARDS) {
-    await prisma.giftCard.upsert({
-      where: { code: g.code },
-      update: {},
-      create: {
-        code: g.code,
-        initialAmount: g.initialAmount, balance: g.balance,
-        purchasedBy: patientId, isActive: true,
-      },
-    });
-  }
-  console.log(`  ${DEMO_COUPONS.length} coupons, ${DEMO_GIFT_CARDS.length} gift cards`);
+  console.log(`  ${DEMO_COUPONS.length} coupons`);
 }
 
 export async function seedWaitlist(
