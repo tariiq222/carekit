@@ -19,12 +19,12 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { ClinicHoliday } from "@/lib/api/clinic"
+import type { OrganizationHoliday } from "@/lib/api/organization"
 import {
-  useClinicHolidays,
+  useOrganizationHolidays,
   useCreateHoliday,
   useDeleteHoliday,
-} from "@/hooks/use-clinic-settings"
+} from "@/hooks/use-organization-settings"
 
 /* ─── Props ─── */
 
@@ -41,7 +41,7 @@ export function HolidaysSection({ t }: Props) {
   const [nameEn, setNameEn] = useState("")
   const [isRecurring, setIsRecurring] = useState(false)
 
-  const { data: holidays, isLoading } = useClinicHolidays()
+  const { data: holidays, isLoading } = useOrganizationHolidays()
   const createMutation = useCreateHoliday()
   const deleteMutation = useDeleteHoliday()
 
@@ -155,7 +155,7 @@ export function HolidaysSection({ t }: Props) {
           </p>
         ) : (
           <div className="space-y-2">
-            {holidays.map((holiday: ClinicHoliday) => (
+            {holidays.map((holiday: OrganizationHoliday) => (
               <HolidayRow
                 key={holiday.id}
                 holiday={holiday}
@@ -184,7 +184,7 @@ function HolidayRow({
   isDeleting,
   t,
 }: {
-  holiday: ClinicHoliday
+  holiday: OrganizationHoliday
   onDelete: () => void
   isDeleting: boolean
   t: (key: string) => string

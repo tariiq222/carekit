@@ -6,7 +6,7 @@ import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
-import { useClinicConfig } from "@/hooks/use-clinic-config"
+import { useOrganizationConfig } from "@/hooks/use-organization-config"
 import type { WizardState, WizardStep } from "../use-wizard-state"
 
 /* ─── Types ─── */
@@ -110,7 +110,7 @@ export function StepConfirm({
   onTogglePayAtClinic,
 }: StepConfirmProps) {
   const { t } = useLocale()
-  const { formatDate, formatTime } = useClinicConfig()
+  const { formatDate, formatTime } = useOrganizationConfig()
 
   const dateLabel = state.date
     ? formatDate(state.date + "T00:00:00")

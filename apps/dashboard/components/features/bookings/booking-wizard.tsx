@@ -8,8 +8,8 @@ import { ArrowLeft01Icon, UserSwitchIcon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchBookingFlowOrder } from "@/lib/api/clinic-settings"
-import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
+import { fetchBookingFlowOrder } from "@/lib/api/organization-settings"
+import type { BookingFlowOrder } from "@/lib/api/organization-settings"
 import { useWizardState } from "./use-wizard-state"
 import type { WizardStep } from "./use-wizard-state"
 import { ClientStep } from "./booking-client-step"
@@ -262,7 +262,7 @@ function WizardInner({
 
 export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
   const { data: flowOrder = "service_first", isLoading } = useQuery({
-    queryKey: queryKeys.clinicSettings.bookingFlowOrder(),
+    queryKey: queryKeys.organizationSettings.bookingFlowOrder(),
     queryFn: fetchBookingFlowOrder,
     staleTime: 5 * 60_000,
   })

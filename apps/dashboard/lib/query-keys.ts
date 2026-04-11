@@ -160,11 +160,11 @@ export const queryKeys = {
     },
   },
 
-  /* ─── Clinic ─── */
-  clinic: {
-    all: ["clinic"] as const,
-    hours: () => ["clinic-hours"] as const,
-    holidays: (year?: number) => ["clinic-holidays", year] as const,
+  /* ─── Organization ─── */
+  organization: {
+    all: ["organization"] as const,
+    hours: () => ["organization-hours"] as const,
+    holidays: (year?: number) => ["organization-holidays", year] as const,
   },
 
   /* ─── Coupons ─── */
@@ -234,19 +234,19 @@ export const queryKeys = {
     detail: () => ["booking-settings", "detail"] as const,
   },
 
-  /* ─── Clinic Settings ─── */
-  clinicSettings: {
-    all: ["clinic-settings"] as const,
-    config: () => ["clinic-settings", "config"] as const,
-    public: () => ["clinic-settings", "public"] as const,
-    bookingFlowOrder: () => ["clinic-settings", "booking-flow-order"] as const,
-    payment: () => ["clinic-settings", "payment"] as const,
+  /* ─── Organization Settings ─── */
+  organizationSettings: {
+    all: ["organization-settings"] as const,
+    config: () => ["organization-settings", "config"] as const,
+    public: () => ["organization-settings", "public"] as const,
+    bookingFlowOrder: () => ["organization-settings", "booking-flow-order"] as const,
+    payment: () => ["organization-settings", "payment"] as const,
   },
 
-  /* ─── Clinic Integrations ─── */
-  clinicIntegrations: {
-    all: ["clinic-integrations"] as const,
-    config: () => ["clinic-integrations", "config"] as const,
+  /* ─── Organization Integrations ─── */
+  organizationIntegrations: {
+    all: ["organization-integrations"] as const,
+    config: () => ["organization-integrations", "config"] as const,
   },
 
   /* ─── License ─── */
@@ -265,12 +265,12 @@ export const queryKeys = {
   /* ─── Widget ─── */
   widget: {
     branding: () => ["widget", "branding"] as const,
-    settings: () => ["clinic-settings", "widget"] as const,
+    settings: () => ["organization-settings", "widget"] as const,
   },
 
-  /* ─── Clinic Public Settings ─── */
-  clinicPublic: {
-    settings: () => ["clinic-settings", "public"] as const,
+  /* ─── Organization Public Settings ─── */
+  organizationPublic: {
+    settings: () => ["organization-settings", "public"] as const,
   },
 
   /* ─── Runs ─── */

@@ -194,7 +194,7 @@ git commit -m "fix(bookings): align buffer resolution in reschedule with creatio
 **Files:**
 - Modify: `backend/src/modules/tasks/booking-autocomplete.service.ts:28-54`
 
-**What to change:** Lines 31 and 54 hardcode `+03:00` (Riyadh UTC offset) when constructing Date objects from strings. The file already uses `clinicTz` (from `ClinicSettingsService`) to format the date string — it just doesn't use it for the time portion. Fix: use `Intl.DateTimeFormat` to get the full ISO string in clinic timezone instead of hardcoding the offset.
+**What to change:** Lines 31 and 54 hardcode `+03:00` (Riyadh UTC offset) when constructing Date objects from strings. The file already uses `clinicTz` (from `OrganizationSettingsService`) to format the date string — it just doesn't use it for the time portion. Fix: use `Intl.DateTimeFormat` to get the full ISO string in clinic timezone instead of hardcoding the offset.
 
 - [ ] **Step 1: Fix the two hardcoded timezone offsets**
 
@@ -552,30 +552,30 @@ git commit -m "fix(tasks): respect suggestedRefundType in cancellation timeout a
 
 **What to change:**
 - H2: Replace `take: 3` with `settings.waitlistMaxPerSlot` (already loaded via `bookingSettingsService.get()`)
-- H8: Replace UTC midnight boundaries (`T00:00:00.000Z`) with clinic-timezone-aware boundaries. The `date` passed to `checkAndNotify()` is a `Date` object — convert it to clinic-local date string using `ClinicSettingsService`.
+- H8: Replace UTC midnight boundaries (`T00:00:00.000Z`) with clinic-timezone-aware boundaries. The `date` passed to `checkAndNotify()` is a `Date` object — convert it to clinic-local date string using `OrganizationSettingsService`.
 
-**Note:** `checkAndNotify()` currently uses `bookingSettingsService.get()` but does NOT inject `ClinicSettingsService`. Need to add it as a dependency.
+**Note:** `checkAndNotify()` currently uses `bookingSettingsService.get()` but does NOT inject `OrganizationSettingsService`. Need to add it as a dependency.
 
-- [ ] **Step 1: Check if ClinicSettingsService is already injected into WaitlistService**
+- [ ] **Step 1: Check if OrganizationSettingsService is already injected into WaitlistService**
 
 ```bash
-cd backend && grep -n "ClinicSettings\|clinicSettings" src/modules/bookings/waitlist.service.ts
+cd backend && grep -n "OrganizationSettings\|organizationSettings" src/modules/bookings/waitlist.service.ts
 ```
 
 If it is not present, proceed to add it.
 
-- [ ] **Step 2: Add ClinicSettingsService import and injection to WaitlistService**
+- [ ] **Step 2: Add OrganizationSettingsService import and injection to WaitlistService**
 
 At the top of `waitlist.service.ts`, add the import (alongside existing imports):
 
 ```typescript
-import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
+import { OrganizationSettingsService } from '../organization-settings/organization-settings.service.js';
 ```
 
 In the constructor, add:
 
 ```typescript
-    private readonly clinicSettingsService: ClinicSettingsService,
+    private readonly organizationSettingsService: OrganizationSettingsService,
 ```
 
 - [ ] **Step 3: Fix `checkAndNotify()` — use settings limit and clinic TZ date boundaries**
@@ -586,7 +586,7 @@ Replace the `checkAndNotify` method body (lines 158–209):
   async checkAndNotify(employeeId: string, date: Date) {
     const [settings, clinicTz] = await Promise.all([
       this.bookingSettingsService.get(),
-      this.clinicSettingsService.getTimezone(),
+      this.organizationSettingsService.getTimezone(),
     ]);
     if (!settings.waitlistEnabled || !settings.waitlistAutoNotify) return;
 
@@ -653,13 +653,13 @@ Replace the `checkAndNotify` method body (lines 158–209):
   }
 ```
 
-- [ ] **Step 4: Verify `ClinicSettingsModule` is imported in the bookings module**
+- [ ] **Step 4: Verify `OrganizationSettingsModule` is imported in the bookings module**
 
 ```bash
-cd backend && grep -n "ClinicSettings" src/modules/bookings/bookings.module.ts
+cd backend && grep -n "OrganizationSettings" src/modules/bookings/bookings.module.ts
 ```
 
-If not present, add `ClinicSettingsModule` to the `imports` array of `bookings.module.ts`.
+If not present, add `OrganizationSettingsModule` to the `imports` array of `bookings.module.ts`.
 
 - [ ] **Step 5: Run tests**
 

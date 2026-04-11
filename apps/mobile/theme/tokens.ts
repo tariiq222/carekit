@@ -1,7 +1,7 @@
 import { colors, typography, spacing, radius, rnShadows, animations } from '@carekit/shared/tokens';
-import type { ClinicTheme } from '@carekit/shared/types';
+import type { OrganizationTheme } from '@carekit/shared/types';
 
-export function buildTheme(overrides?: Partial<ClinicTheme>) {
+export function buildTheme(overrides?: Partial<OrganizationTheme>) {
   return {
     colors: {
       ...colors,

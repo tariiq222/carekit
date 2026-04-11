@@ -9,7 +9,7 @@ export const enNav: Record<string, string> = {
   "nav.employees": "Employees",
   "nav.settings": "Settings",
   "nav.overview": "Overview",
-  "nav.clinic": "Clinic",
+  "nav.organization": "Clinic",
   "nav.finance": "Finance",
   "nav.tools": "Tools",
   "nav.admin": "Admin",

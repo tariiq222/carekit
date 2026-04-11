@@ -53,11 +53,11 @@ import { EmployeeOnboardingService } from './employee-onboarding.service.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { EmailModule } from '../email/email.module.js';
-import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
+import { OrganizationSettingsModule } from '../organization-settings/organization-settings.module.js';
 import { ClinicModule } from '../clinic/clinic.module.js';
 
 @Module({
-  imports: [BookingsModule, AuthModule, EmailModule, ClinicSettingsModule, ClinicModule],
+  imports: [BookingsModule, AuthModule, EmailModule, OrganizationSettingsModule, ClinicModule],
   controllers: [FavoriteEmployeesController, EmployeesController],
   providers: [
     EmployeesService,
@@ -92,7 +92,7 @@ describe('getAvailableDates — holiday exclusion', () => {
     prisma.employeeBreak.findMany.mockResolvedValue([]);
     prisma.booking.findMany.mockResolvedValue([]);
     bookingSettingsService.getForBranch.mockResolvedValue({ bufferMinutes: 0 });
-    clinicSettingsService.getTimezone.mockResolvedValue('Asia/Riyadh');
+    organizationSettingsService.getTimezone.mockResolvedValue('Asia/Riyadh');
 
     // 2026-04-13 is a Monday
     clinicHolidaysService.isHoliday.mockImplementation(async (date: Date) => {
@@ -147,7 +147,7 @@ Add to constructor:
 constructor(
   private readonly prisma: PrismaService,
   private readonly bookingSettingsService: BookingSettingsService,
-  private readonly clinicSettingsService: ClinicSettingsService,
+  private readonly organizationSettingsService: OrganizationSettingsService,
   private readonly clinicHolidaysService: ClinicHolidaysService,
 ) {}
 ```
@@ -181,10 +181,10 @@ Also move `clinicTz` outside the loop (existing N+1 bug P1-5):
 
 ```typescript
 // Move this BEFORE the while loop (currently it's inside at line 192):
-const clinicTz = await this.clinicSettingsService.getTimezone();
+const clinicTz = await this.organizationSettingsService.getTimezone();
 ```
 
-Remove the `await this.clinicSettingsService.getTimezone()` call from inside the loop.
+Remove the `await this.organizationSettingsService.getTimezone()` call from inside the loop.
 
 - [ ] **Step 7: Run tests to verify they pass**
 

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Align dashboard with the new 4-table backend config architecture — replace all old EAV whitelabel API calls with structured endpoints for WhiteLabelConfig, ClinicSettings, ClinicIntegrations, and LicenseConfig.
+**Goal:** Align dashboard with the new 4-table backend config architecture — replace all old EAV whitelabel API calls with structured endpoints for WhiteLabelConfig, OrganizationSettings, ClinicIntegrations, and LicenseConfig.
 
 **Architecture:** Bottom-up approach: types → API functions → hooks → query-keys → components → pages. Each layer only depends on layers below it. The old EAV key-value pattern (`WhiteLabelConfigMap`, `useConfigMap()`) is completely replaced with typed structured objects.
 
@@ -16,17 +16,17 @@
 
 | File | Responsibility |
 |------|---------------|
-| `dashboard/lib/types/clinic-settings.ts` | ClinicSettings + PublicClinicSettings types |
+| `dashboard/lib/types/organization-settings.ts` | OrganizationSettings + PublicOrganizationSettings types |
 | `dashboard/lib/types/clinic-integrations.ts` | ClinicIntegrations type |
 | `dashboard/lib/types/license.ts` | LicenseConfig + FeatureWithStatus types |
-| `dashboard/lib/api/clinic-settings.ts` | GET/PUT /clinic-settings API functions |
+| `dashboard/lib/api/organization-settings.ts` | GET/PUT /organization-settings API functions |
 | `dashboard/lib/api/clinic-integrations.ts` | GET/PUT /clinic-integrations API functions |
 | `dashboard/lib/api/license.ts` | GET/PUT /license + GET /license/features |
-| `dashboard/hooks/use-clinic-settings.ts` | useClinicSettings + useUpdateClinicSettings hooks |
+| `dashboard/hooks/use-organization-settings.ts` | useOrganizationSettings + useUpdateOrganizationSettings hooks |
 | `dashboard/hooks/use-clinic-integrations.ts` | useClinicIntegrations + useUpdateClinicIntegrations hooks |
 | `dashboard/hooks/use-license.ts` | useLicense + useLicenseFeatures + useUpdateLicense hooks |
-| `dashboard/components/features/settings/entity-tab.tsx` | Legal entity form (from clinic-settings) |
-| `dashboard/components/features/settings/legal-content-tab.tsx` | Bilingual legal content (from clinic-settings) |
+| `dashboard/components/features/settings/entity-tab.tsx` | Legal entity form (from organization-settings) |
+| `dashboard/components/features/settings/legal-content-tab.tsx` | Bilingual legal content (from organization-settings) |
 
 ### Modified Files
 
@@ -35,15 +35,15 @@
 | `dashboard/lib/types/whitelabel.ts` | Replace EAV types with structured WhiteLabelConfig + PublicBranding |
 | `dashboard/lib/api/whitelabel.ts` | Replace EAV functions with GET/PUT /whitelabel + GET /whitelabel/public |
 | `dashboard/hooks/use-whitelabel.ts` | Replace useConfigMap/useUpdateConfig with useWhitelabel/useUpdateWhitelabel |
-| `dashboard/hooks/use-clinic-config.ts` | Read from useClinicSettings instead of useConfigMap |
+| `dashboard/hooks/use-clinic-config.ts` | Read from useOrganizationSettings instead of useConfigMap |
 | `dashboard/hooks/use-feature-flags.ts` | Handle 403 license error in mutation |
-| `dashboard/lib/query-keys.ts` | Add clinicSettings, clinicIntegrations, license keys; update whitelabel |
+| `dashboard/lib/query-keys.ts` | Add organizationSettings, clinicIntegrations, license keys; update whitelabel |
 | `dashboard/components/providers/branding-provider.tsx` | Update for camelCase response fields |
 | `dashboard/components/features/white-label/branding-tab.tsx` | Read/write structured object instead of key-value map |
 | `dashboard/components/features/white-label/wl-features-tab.tsx` | Show license status with licensed + enabled |
-| `dashboard/components/features/settings/general-tab.tsx` | Read from useClinicSettings instead of configMap prop |
+| `dashboard/components/features/settings/general-tab.tsx` | Read from useOrganizationSettings instead of configMap prop |
 | `dashboard/components/features/settings/features-tab.tsx` | Show license status, disable unlicensed toggles |
-| `dashboard/components/features/settings/email-layout-form.tsx` | Read from useClinicSettings |
+| `dashboard/components/features/settings/email-layout-form.tsx` | Read from useOrganizationSettings |
 | `dashboard/components/features/settings/settings-integrations-tab.tsx` | Read from useClinicIntegrations |
 | `dashboard/components/features/settings/settings-payment-tab.tsx` | Read from useClinicIntegrations |
 | `dashboard/app/(dashboard)/white-label/page.tsx` | Simplify to 2 tabs (branding + license) |
@@ -66,7 +66,7 @@
 
 **Files:**
 - Modify: `dashboard/lib/types/whitelabel.ts`
-- Create: `dashboard/lib/types/clinic-settings.ts`
+- Create: `dashboard/lib/types/organization-settings.ts`
 - Create: `dashboard/lib/types/clinic-integrations.ts`
 - Create: `dashboard/lib/types/license.ts`
 
@@ -109,16 +109,16 @@ export interface PublicBranding {
 }
 ```
 
-- [ ] **Step 2: Create clinic-settings.ts**
+- [ ] **Step 2: Create organization-settings.ts**
 
-Create `dashboard/lib/types/clinic-settings.ts`:
+Create `dashboard/lib/types/organization-settings.ts`:
 
 ```typescript
 /**
  * Clinic Settings Types — CareKit Dashboard
  */
 
-export interface ClinicSettings {
+export interface OrganizationSettings {
   id: string
   companyNameAr: string | null
   companyNameEn: string | null
@@ -161,11 +161,11 @@ export interface ClinicSettings {
   updatedAt: string
 }
 
-export type UpdateClinicSettingsPayload = Partial<
-  Omit<ClinicSettings, "id" | "createdAt" | "updatedAt">
+export type UpdateOrganizationSettingsPayload = Partial<
+  Omit<OrganizationSettings, "id" | "createdAt" | "updatedAt">
 >
 
-export interface PublicClinicSettings {
+export interface PublicOrganizationSettings {
   contactPhone: string | null
   contactEmail: string | null
   address: string | null
@@ -257,7 +257,7 @@ export interface FeatureWithStatus {
 
 ```bash
 git add dashboard/lib/types/
-git commit -m "feat(dashboard): add structured types for clinic-settings, integrations, license"
+git commit -m "feat(dashboard): add structured types for organization-settings, integrations, license"
 ```
 
 ---
@@ -266,7 +266,7 @@ git commit -m "feat(dashboard): add structured types for clinic-settings, integr
 
 **Files:**
 - Modify: `dashboard/lib/api/whitelabel.ts`
-- Create: `dashboard/lib/api/clinic-settings.ts`
+- Create: `dashboard/lib/api/organization-settings.ts`
 - Create: `dashboard/lib/api/clinic-integrations.ts`
 - Create: `dashboard/lib/api/license.ts`
 
@@ -301,9 +301,9 @@ export async function updateWhitelabel(
 }
 ```
 
-- [ ] **Step 2: Create clinic-settings.ts API**
+- [ ] **Step 2: Create organization-settings.ts API**
 
-Create `dashboard/lib/api/clinic-settings.ts`:
+Create `dashboard/lib/api/organization-settings.ts`:
 
 ```typescript
 /**
@@ -312,27 +312,27 @@ Create `dashboard/lib/api/clinic-settings.ts`:
 
 import { api } from "@/lib/api"
 import type {
-  ClinicSettings,
-  UpdateClinicSettingsPayload,
-  PublicClinicSettings,
-} from "@/lib/types/clinic-settings"
+  OrganizationSettings,
+  UpdateOrganizationSettingsPayload,
+  PublicOrganizationSettings,
+} from "@/lib/types/organization-settings"
 
 /* ─── Queries ─── */
 
-export async function fetchClinicSettings(): Promise<ClinicSettings> {
-  return api.get<ClinicSettings>("/clinic-settings")
+export async function fetchOrganizationSettings(): Promise<OrganizationSettings> {
+  return api.get<OrganizationSettings>("/organization-settings")
 }
 
-export async function fetchClinicSettingsPublic(): Promise<PublicClinicSettings> {
-  return api.get<PublicClinicSettings>("/clinic-settings/public")
+export async function fetchOrganizationSettingsPublic(): Promise<PublicOrganizationSettings> {
+  return api.get<PublicOrganizationSettings>("/organization-settings/public")
 }
 
 /* ─── Mutations ─── */
 
-export async function updateClinicSettings(
-  data: UpdateClinicSettingsPayload,
-): Promise<ClinicSettings> {
-  return api.put<ClinicSettings>("/clinic-settings", data)
+export async function updateOrganizationSettings(
+  data: UpdateOrganizationSettingsPayload,
+): Promise<OrganizationSettings> {
+  return api.put<OrganizationSettings>("/organization-settings", data)
 }
 ```
 
@@ -405,7 +405,7 @@ export async function updateLicense(
 
 ```bash
 git add dashboard/lib/api/
-git commit -m "feat(dashboard): add API functions for clinic-settings, integrations, license"
+git commit -m "feat(dashboard): add API functions for organization-settings, integrations, license"
 ```
 
 ---
@@ -415,7 +415,7 @@ git commit -m "feat(dashboard): add API functions for clinic-settings, integrati
 **Files:**
 - Modify: `dashboard/lib/query-keys.ts`
 - Modify: `dashboard/hooks/use-whitelabel.ts`
-- Create: `dashboard/hooks/use-clinic-settings.ts`
+- Create: `dashboard/hooks/use-organization-settings.ts`
 - Create: `dashboard/hooks/use-clinic-integrations.ts`
 - Create: `dashboard/hooks/use-license.ts`
 - Modify: `dashboard/hooks/use-clinic-config.ts`
@@ -423,7 +423,7 @@ git commit -m "feat(dashboard): add API functions for clinic-settings, integrati
 
 - [ ] **Step 1: Update query-keys.ts**
 
-In `dashboard/lib/query-keys.ts`, replace the whitelabel section (lines ~210-215) and clinicSettings section (lines ~238-242) with:
+In `dashboard/lib/query-keys.ts`, replace the whitelabel section (lines ~210-215) and organizationSettings section (lines ~238-242) with:
 
 ```typescript
   /* ─── WhiteLabel ─── */
@@ -433,12 +433,12 @@ In `dashboard/lib/query-keys.ts`, replace the whitelabel section (lines ~210-215
   },
 
   /* ─── Clinic Settings ─── */
-  clinicSettings: {
-    all: ["clinic-settings"] as const,
-    config: () => ["clinic-settings", "config"] as const,
-    public: () => ["clinic-settings", "public"] as const,
-    bookingFlowOrder: () => ["clinic-settings", "booking-flow-order"] as const,
-    payment: () => ["clinic-settings", "payment"] as const,
+  organizationSettings: {
+    all: ["organization-settings"] as const,
+    config: () => ["organization-settings", "config"] as const,
+    public: () => ["organization-settings", "public"] as const,
+    bookingFlowOrder: () => ["organization-settings", "booking-flow-order"] as const,
+    payment: () => ["organization-settings", "payment"] as const,
   },
 
   /* ─── Clinic Integrations ─── */
@@ -488,32 +488,32 @@ export function useUpdateWhitelabel() {
 }
 ```
 
-- [ ] **Step 3: Create use-clinic-settings.ts**
+- [ ] **Step 3: Create use-organization-settings.ts**
 
-Create `dashboard/hooks/use-clinic-settings.ts`:
+Create `dashboard/hooks/use-organization-settings.ts`:
 
 ```typescript
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchClinicSettings, updateClinicSettings } from "@/lib/api/clinic-settings"
-import type { UpdateClinicSettingsPayload } from "@/lib/types/clinic-settings"
+import { fetchOrganizationSettings, updateOrganizationSettings } from "@/lib/api/organization-settings"
+import type { UpdateOrganizationSettingsPayload } from "@/lib/types/organization-settings"
 
-export function useClinicSettings() {
+export function useOrganizationSettings() {
   return useQuery({
-    queryKey: queryKeys.clinicSettings.config(),
-    queryFn: fetchClinicSettings,
+    queryKey: queryKeys.organizationSettings.config(),
+    queryFn: fetchOrganizationSettings,
     staleTime: 5 * 60 * 1000,
   })
 }
 
-export function useUpdateClinicSettings() {
+export function useUpdateOrganizationSettings() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: UpdateClinicSettingsPayload) => updateClinicSettings(data),
+    mutationFn: (data: UpdateOrganizationSettingsPayload) => updateOrganizationSettings(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.clinicSettings.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.organizationSettings.all })
     },
   })
 }
@@ -606,12 +606,12 @@ Replace entire `dashboard/hooks/use-clinic-config.ts`:
 ```typescript
 "use client"
 
-import { useClinicSettings } from "@/hooks/use-clinic-settings"
+import { useOrganizationSettings } from "@/hooks/use-organization-settings"
 import { formatClinicDate, formatClinicTime, getWeekStartDay } from "@/lib/utils"
 import type { DateFormat, TimeFormat } from "@/lib/utils"
 
 export function useClinicConfig() {
-  const { data: settings } = useClinicSettings()
+  const { data: settings } = useOrganizationSettings()
 
   const dateFormat = (settings?.dateFormat ?? "Y-m-d") as DateFormat
   const timeFormat = (settings?.timeFormat ?? "24h") as TimeFormat
@@ -648,7 +648,7 @@ onError: (error: Error & { response?: { status?: number } }) => {
 
 ```bash
 git add dashboard/lib/query-keys.ts dashboard/hooks/
-git commit -m "feat(dashboard): add hooks for clinic-settings, integrations, license"
+git commit -m "feat(dashboard): add hooks for organization-settings, integrations, license"
 ```
 
 ---
@@ -752,11 +752,11 @@ git commit -m "refactor(dashboard): simplify white-label page to branding + lice
 
 - [ ] **Step 1: Create entity-tab.tsx**
 
-Create `dashboard/components/features/settings/entity-tab.tsx` — legal entity form reading from `useClinicSettings()`:
+Create `dashboard/components/features/settings/entity-tab.tsx` — legal entity form reading from `useOrganizationSettings()`:
 
 Fields: companyNameAr, companyNameEn, businessRegistration, vatRegistrationNumber, vatRate, sellerAddress, clinicCity, postalCode.
 
-Follow the pattern of existing settings tabs (general-tab.tsx): card layout with form fields, save button at bottom. Use `useClinicSettings()` and `useUpdateClinicSettings()` hooks internally.
+Follow the pattern of existing settings tabs (general-tab.tsx): card layout with form fields, save button at bottom. Use `useOrganizationSettings()` and `useUpdateOrganizationSettings()` hooks internally.
 
 - [ ] **Step 2: Create legal-content-tab.tsx**
 
@@ -764,7 +764,7 @@ Create `dashboard/components/features/settings/legal-content-tab.tsx` — biling
 
 Fields: aboutAr/En, privacyPolicyAr/En, termsAr/En, cancellationPolicyAr/En.
 
-Use BilingualTextCard pattern (AR/EN textareas side by side). Use `useClinicSettings()` and `useUpdateClinicSettings()` hooks.
+Use BilingualTextCard pattern (AR/EN textareas side by side). Use `useOrganizationSettings()` and `useUpdateOrganizationSettings()` hooks.
 
 - [ ] **Step 3: Commit**
 
@@ -787,12 +787,12 @@ git commit -m "feat(dashboard): add entity and legal content tabs for settings"
 
 - [ ] **Step 1: Update general-tab.tsx**
 
-Currently receives `configMap: WhiteLabelConfigMap` prop and reads keys like `configMap["contact_email"]`. Rewrite to use `useClinicSettings()` hook internally:
+Currently receives `configMap: WhiteLabelConfigMap` prop and reads keys like `configMap["contact_email"]`. Rewrite to use `useOrganizationSettings()` hook internally:
 
 - Remove `configMap` and `onSave` props
-- Use `useClinicSettings()` and `useUpdateClinicSettings()` hooks directly
+- Use `useOrganizationSettings()` and `useUpdateOrganizationSettings()` hooks directly
 - Read typed fields: `settings.contactEmail`, `settings.timezone`, etc.
-- Save builds `UpdateClinicSettingsPayload` object
+- Save builds `UpdateOrganizationSettingsPayload` object
 
 - [ ] **Step 2: Update features-tab.tsx**
 
@@ -805,11 +805,11 @@ Add license status display. Use `useLicenseFeatures()` alongside `useFeatureFlag
 
 - [ ] **Step 3: Update email-layout-form.tsx**
 
-Currently uses `useConfigMap()` and `useUpdateConfig()`. Replace with `useClinicSettings()` and `useUpdateClinicSettings()`:
+Currently uses `useConfigMap()` and `useUpdateConfig()`. Replace with `useOrganizationSettings()` and `useUpdateOrganizationSettings()`:
 
 - Replace `configMap["email_header_show_logo"]` with `settings.emailHeaderShowLogo`
 - Replace `configMap["email_footer_phone"]` with `settings.emailFooterPhone`
-- Save sends `UpdateClinicSettingsPayload` with email fields only
+- Save sends `UpdateOrganizationSettingsPayload` with email fields only
 
 - [ ] **Step 4: Update settings-integrations-tab.tsx**
 

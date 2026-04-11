@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { useClinicSettings, useUpdateClinicSettings } from "@/hooks/use-clinic-settings"
+import { useOrganizationSettings, useUpdateOrganizationSettings } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"
 
 type TabId = "contact" | "regional"
@@ -53,14 +53,14 @@ const TIMEZONE_OPTIONS = [
 
 export function GeneralTab() {
   const { t } = useLocale()
-  const { data: settings, isLoading } = useClinicSettings()
-  const updateSettings = useUpdateClinicSettings()
+  const { data: settings, isLoading } = useOrganizationSettings()
+  const updateSettings = useUpdateOrganizationSettings()
 
   const [activeTab, setActiveTab] = useState<TabId>("contact")
 
-  const [clinicEmail, setClinicEmail] = useState("")
-  const [clinicPhone, setClinicPhone] = useState("")
-  const [clinicAddress, setClinicAddress] = useState("")
+  const [organizationEmail, setClinicEmail] = useState("")
+  const [organizationPhone, setClinicPhone] = useState("")
+  const [organizationAddress, setClinicAddress] = useState("")
   const [weekStartDay, setWeekStartDay] = useState("sunday")
   const [dateFormat, setDateFormat] = useState("Y-m-d")
   const [timeFormat, setTimeFormat] = useState("24h")
@@ -80,9 +80,9 @@ export function GeneralTab() {
   const handleSaveContact = () => {
     updateSettings.mutate(
       {
-        contactEmail: clinicEmail || null,
-        contactPhone: clinicPhone || null,
-        address: clinicAddress || null,
+        contactEmail: organizationEmail || null,
+        contactPhone: organizationPhone || null,
+        address: organizationAddress || null,
       },
       {
         onSuccess: () => toast.success(t("settings.saved")),
@@ -121,7 +121,7 @@ export function GeneralTab() {
   }
 
   const tabs: { id: TabId; label: string; desc: string }[] = [
-    { id: "contact", label: t("settings.tabs.general"), desc: t("settings.clinicEmail") },
+    { id: "contact", label: t("settings.tabs.general"), desc: t("settings.organizationEmail") },
     { id: "regional", label: t("settings.regionalSettings"), desc: t("settings.weekStartDay") },
   ]
 
@@ -165,20 +165,20 @@ export function GeneralTab() {
               <div className="grid grid-cols-2 gap-3">
                 <Card className="shadow-sm bg-surface">
                   <CardContent className="space-y-2 pt-3 pb-3">
-                    <Label>{t("settings.clinicEmail")}</Label>
-                    <Input type="email" value={clinicEmail} onChange={(e) => setClinicEmail(e.target.value)} />
+                    <Label>{t("settings.organizationEmail")}</Label>
+                    <Input type="email" value={organizationEmail} onChange={(e) => setClinicEmail(e.target.value)} />
                   </CardContent>
                 </Card>
                 <Card className="shadow-sm bg-surface">
                   <CardContent className="space-y-2 pt-3 pb-3">
-                    <Label>{t("settings.clinicPhone")}</Label>
-                    <Input value={clinicPhone} onChange={(e) => setClinicPhone(e.target.value)} />
+                    <Label>{t("settings.organizationPhone")}</Label>
+                    <Input value={organizationPhone} onChange={(e) => setClinicPhone(e.target.value)} />
                   </CardContent>
                 </Card>
                 <Card className="shadow-sm bg-surface">
                   <CardContent className="space-y-2 pt-3 pb-3">
-                    <Label>{t("settings.clinicAddress")}</Label>
-                    <Input value={clinicAddress} onChange={(e) => setClinicAddress(e.target.value)} />
+                    <Label>{t("settings.organizationAddress")}</Label>
+                    <Input value={organizationAddress} onChange={(e) => setClinicAddress(e.target.value)} />
                   </CardContent>
                 </Card>
                 <div />
@@ -229,7 +229,7 @@ export function GeneralTab() {
                 </Card>
                 <Card className="shadow-sm bg-surface">
                   <CardContent className="space-y-2 pt-3 pb-3">
-                    <Label>{t("settings.clinicTimezone")}</Label>
+                    <Label>{t("settings.organizationTimezone")}</Label>
                     <Select value={clinicTimezone} onValueChange={setClinicTimezone}>
                       <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>

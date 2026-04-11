@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { StatusBadge, BookingTypeBadge } from "@/components/features/status-badge"
 import { useLocale } from "@/components/locale-provider"
-import { useClinicConfig } from "@/hooks/use-clinic-config"
+import { useOrganizationConfig } from "@/hooks/use-organization-config"
 import type { Booking } from "@/lib/types/booking"
 import { BookingActions } from "./booking-actions"
 import { DetailsBody } from "./booking-details-body"
@@ -34,7 +34,7 @@ interface BookingDetailSheetProps {
 
 export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defaultTab = "details" }: BookingDetailSheetProps) {
   const { locale, t } = useLocale()
-  const { formatDate } = useClinicConfig()
+  const { formatDate } = useOrganizationConfig()
 
   if (!booking) return null
 

@@ -576,8 +576,8 @@ Invalidation: On update, both global and branch cache keys are deleted
 | `payments/` | Payment creation, Moyasar refund API |
 | `notifications/` | All state transitions trigger notifications |
 | `activity-log/` | All significant actions logged |
-| `clinic/` | ClinicHoursService, ClinicHolidaysService (availability validation) |
-| `clinic-settings/` | Timezone for date validation |
+| `organization/` | BusinessHoursService, ClinicHolidaysService (availability validation) |
+| `organization-settings/` | Timezone for date validation |
 | `integrations/zoom/` | Meeting creation/deletion |
 | `waitlist` | Triggered on every cancellation/expiry |
 
@@ -660,7 +660,7 @@ Creation uses explicit `> 0` checks (treats 0 as "not set"). Reschedule uses `??
 const riyadhTomorrow = new Date('...' + 'T00:00:00+03:00');
 const bookingEnd = new Date(`${dateStr}T${b.endTime}:00+03:00`);
 ```
-This hardcodes UTC+3 (Riyadh/Saudi Arabia) regardless of `ClinicSettings.timezone`. All other time-sensitive services (`BookingNoShowService`, `BookingCreationService`) use `Intl.DateTimeFormat` with the dynamic clinic timezone. White-label deployments in other timezones will experience incorrect auto-complete timing.
+This hardcodes UTC+3 (Riyadh/Saudi Arabia) regardless of `OrganizationSettings.timezone`. All other time-sensitive services (`BookingNoShowService`, `BookingCreationService`) use `Intl.DateTimeFormat` with the dynamic clinic timezone. White-label deployments in other timezones will experience incorrect auto-complete timing.
 
 **C4: Cancellation Timeout Always Applies Full Refund**
 `BookingCancellationTimeoutService` auto-approves with a full refund regardless of the original `suggestedRefundType` stored on the booking. A patient who made a late cancellation request (which would normally get `lateCancelRefundType=none`) gets a full refund when the admin doesn't review within 48 hours. This punishes admins for being slow.

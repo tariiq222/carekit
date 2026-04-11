@@ -21,13 +21,13 @@
 | `backend/src/modules/coupons/dto/validate-coupon.dto.ts` | Create | DTO for widget coupon+gift-card validation |
 | `backend/src/modules/coupons/coupons.controller.ts` | Modify | Add `POST /coupons/validate` (client JWT) |
 | `backend/src/modules/coupons/coupons.service.ts` | Modify | Add `validateCode()` — handles coupon + gift card |
-| `backend/src/modules/clinic/clinic-settings.service.ts` | Modify | Add `getPaymentSettings()` + `updatePaymentSettings()` |
-| `backend/src/modules/clinic/clinic-settings.controller.ts` | Modify | Add `GET/PATCH /clinic/settings/payment` |
+| `backend/src/modules/clinic/organization-settings.service.ts` | Modify | Add `getPaymentSettings()` + `updatePaymentSettings()` |
+| `backend/src/modules/clinic/organization-settings.controller.ts` | Modify | Add `GET/PATCH /clinic/settings/payment` |
 | `backend/src/modules/bookings/booking-creation.service.ts` | Modify | Extend create response with `intakeFormId` + `intakeFormAlreadySubmitted` |
 | `backend/src/modules/bookings/dto/create-booking.dto.ts` | Modify | Add `couponCode?` + `giftCardCode?` fields |
 | `backend/src/modules/whitelabel/whitelabel.service.ts` | Modify | Include `payment_moyasar_enabled` + `payment_at_clinic_enabled` in `getPublicBranding()` |
 | `dashboard/lib/api/widget.ts` | Modify | Add `fetchPublicBranches`, `validateWidgetCode`, extend `WidgetBranding` + `widgetCreateBooking` payload |
-| `dashboard/lib/api/clinic-settings.ts` | Modify | Add `fetchPaymentSettings` + `updatePaymentSettings` |
+| `dashboard/lib/api/organization-settings.ts` | Modify | Add `fetchPaymentSettings` + `updatePaymentSettings` |
 | `dashboard/lib/types/booking.ts` | Modify | Add `intakeFormId` + `intakeFormAlreadySubmitted` to `Booking`, extend `CreateBookingPayload` |
 | `dashboard/hooks/use-widget-booking.ts` | Modify | Add `branch` + coupon + payment method + intake popup state |
 | `dashboard/hooks/use-widget-booking-queries.ts` | Modify | Add `branchesQuery` |
@@ -295,12 +295,12 @@ git commit -m "feat(coupons): add POST /coupons/validate for widget coupon + gif
 ## Task 4: Backend — Payment settings in clinic settings
 
 **Files:**
-- Modify: `backend/src/modules/clinic/clinic-settings.service.ts`
-- Modify: `backend/src/modules/clinic/clinic-settings.controller.ts`
+- Modify: `backend/src/modules/clinic/organization-settings.service.ts`
+- Modify: `backend/src/modules/clinic/organization-settings.controller.ts`
 
 - [ ] **Step 1: Add service methods**
 
-In `backend/src/modules/clinic/clinic-settings.service.ts`, add after `updateBookingFlowOrder`:
+In `backend/src/modules/clinic/organization-settings.service.ts`, add after `updateBookingFlowOrder`:
 
 ```typescript
 async getPaymentSettings(): Promise<{
@@ -346,7 +346,7 @@ async updatePaymentSettings(data: {
 
 - [ ] **Step 2: Add controller endpoints**
 
-In `backend/src/modules/clinic/clinic-settings.controller.ts`, add imports:
+In `backend/src/modules/clinic/organization-settings.controller.ts`, add imports:
 
 ```typescript
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
@@ -360,7 +360,7 @@ Add after `updateBookingFlowOrder`:
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @CheckPermissions({ module: 'whitelabel', action: 'view' })
 async getPaymentSettings() {
-  const data = await this.clinicSettingsService.getPaymentSettings();
+  const data = await this.organizationSettingsService.getPaymentSettings();
   return { success: true, data };
 }
 
@@ -371,7 +371,7 @@ async getPaymentSettings() {
 async updatePaymentSettings(
   @Body() dto: { paymentMoyasarEnabled?: boolean; paymentAtClinicEnabled?: boolean },
 ) {
-  const data = await this.clinicSettingsService.updatePaymentSettings(dto);
+  const data = await this.organizationSettingsService.updatePaymentSettings(dto);
   return { success: true, data };
 }
 ```
@@ -472,7 +472,7 @@ git commit -m "feat(bookings): add couponCode/giftCardCode to DTO + intake info 
 **Files:**
 - Modify: `backend/src/modules/whitelabel/whitelabel.service.ts`
 
-- [ ] **Step 1: Inject ClinicSettingsService into WhitelabelService**
+- [ ] **Step 1: Inject OrganizationSettingsService into WhitelabelService**
 
 In `backend/src/modules/whitelabel/whitelabel.service.ts`, add to constructor:
 
@@ -480,18 +480,18 @@ In `backend/src/modules/whitelabel/whitelabel.service.ts`, add to constructor:
 constructor(
   private readonly prisma: PrismaService,
   private readonly cache: CacheService,
-  private readonly clinicSettingsService: ClinicSettingsService,
+  private readonly organizationSettingsService: OrganizationSettingsService,
 ) {}
 ```
 
-> If `ClinicSettingsService` is not already imported in `WhitelabelModule`, add it. Check `whitelabel.module.ts` — if `ClinicModule` is not imported there, add `ClinicModule` to `imports`.
+> If `OrganizationSettingsService` is not already imported in `WhitelabelModule`, add it. Check `whitelabel.module.ts` — if `ClinicModule` is not imported there, add `ClinicModule` to `imports`.
 
 - [ ] **Step 2: Extend `getPublicBranding()` return**
 
 Find `getPublicBranding()` in `whitelabel.service.ts`. After building `result` from WhiteLabelConfig keys, add payment settings:
 
 ```typescript
-const paymentSettings = await this.clinicSettingsService.getPaymentSettings();
+const paymentSettings = await this.organizationSettingsService.getPaymentSettings();
 const fullResult = {
   ...result,
   payment_moyasar_enabled: String(paymentSettings.paymentMoyasarEnabled),
@@ -522,7 +522,7 @@ git commit -m "feat(whitelabel): include payment flags in GET /whitelabel/public
 
 **Files:**
 - Modify: `dashboard/lib/api/widget.ts`
-- Modify: `dashboard/lib/api/clinic-settings.ts`
+- Modify: `dashboard/lib/api/organization-settings.ts`
 - Modify: `dashboard/lib/types/booking.ts`
 
 - [ ] **Step 1: Extend `WidgetBranding` type and `fetchPublicBranches`**
@@ -603,9 +603,9 @@ intakeFormId: string | null
 intakeFormAlreadySubmitted: boolean
 ```
 
-- [ ] **Step 4: Add payment settings to clinic-settings API**
+- [ ] **Step 4: Add payment settings to organization-settings API**
 
-In `dashboard/lib/api/clinic-settings.ts`, add:
+In `dashboard/lib/api/organization-settings.ts`, add:
 
 ```typescript
 export interface PaymentSettings {
@@ -637,7 +637,7 @@ Expected: no errors.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd dashboard && git add lib/api/widget.ts lib/api/clinic-settings.ts lib/types/booking.ts
+cd dashboard && git add lib/api/widget.ts lib/api/organization-settings.ts lib/types/booking.ts
 git commit -m "feat(widget): extend API layer — branches, coupon validate, payment settings, intake info"
 ```
 
@@ -1657,18 +1657,18 @@ git commit -m "feat(widget): add post-booking intake form popup"
 
 **Files:**
 - Modify: `dashboard/components/features/settings/booking-tab.tsx`
-- Modify: `dashboard/hooks/use-clinic-settings.ts`
+- Modify: `dashboard/hooks/use-organization-settings.ts`
 
 - [ ] **Step 1: Add hooks for payment settings**
 
-In `dashboard/hooks/use-clinic-settings.ts`, add:
+In `dashboard/hooks/use-organization-settings.ts`, add:
 
 ```typescript
-import { fetchPaymentSettings, updatePaymentSettings, type PaymentSettings } from "@/lib/api/clinic-settings"
+import { fetchPaymentSettings, updatePaymentSettings, type PaymentSettings } from "@/lib/api/organization-settings"
 
 export function usePaymentSettings() {
   return useQuery({
-    queryKey: ["clinic-settings", "payment"],
+    queryKey: ["organization-settings", "payment"],
     queryFn: fetchPaymentSettings,
   })
 }
@@ -1677,7 +1677,7 @@ export function usePaymentSettingsMutation() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: updatePaymentSettings,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["clinic-settings", "payment"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["organization-settings", "payment"] }),
   })
 }
 ```
@@ -1686,7 +1686,7 @@ export function usePaymentSettingsMutation() {
 
 In `dashboard/components/features/settings/booking-tab.tsx`, add import:
 ```typescript
-import { usePaymentSettings, usePaymentSettingsMutation } from "@/hooks/use-clinic-settings"
+import { usePaymentSettings, usePaymentSettingsMutation } from "@/hooks/use-organization-settings"
 ```
 
 Add the component inside the file (after `FlowOrderCard`):
@@ -1756,7 +1756,7 @@ Expected: no errors.
 - [ ] **Step 4: Commit**
 
 ```bash
-cd dashboard && git add components/features/settings/booking-tab.tsx hooks/use-clinic-settings.ts
+cd dashboard && git add components/features/settings/booking-tab.tsx hooks/use-organization-settings.ts
 git commit -m "feat(settings): add payment methods toggle card to booking settings"
 ```
 

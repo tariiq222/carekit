@@ -17,7 +17,7 @@ import { DetailSection, DetailRow } from "@/components/features/detail-sheet-par
 import { fetchPayment } from "@/lib/api/payments"
 import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
-import { useClinicConfig } from "@/hooks/use-clinic-config"
+import { useOrganizationConfig } from "@/hooks/use-organization-config"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 import type { Payment } from "@/lib/types/payment"
 import { PaymentActions } from "./payment-actions"
@@ -110,7 +110,7 @@ function PaymentDetailBody({
   payment: Payment
   onAction: () => void
 }) {
-  const { formatDate } = useClinicConfig()
+  const { formatDate } = useOrganizationConfig()
   const { locale, t } = useLocale()
 
   const clientName = payment.booking?.client

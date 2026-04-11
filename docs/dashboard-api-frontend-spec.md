@@ -182,8 +182,8 @@ PATCH  /settings/notifications         → Partial<NotificationPreferences> → 
 
 ### 1.16 Whitelabel (`/api/v1/whitelabel`)
 ```
-GET    /whitelabel/config              → {} → { config: WhitelabelConfig }
-PATCH  /whitelabel/config              → Partial<WhitelabelConfig> → { config: WhitelabelConfig }
+GET    /whitelabel/config              → {} → { config: BrandingConfig }
+PATCH  /whitelabel/config              → Partial<BrandingConfig> → { config: BrandingConfig }
 GET    /whitelabel/themes              → {} → { themes: Theme[] }
 POST   /whitelabel/themes              → CreateThemeDto → { theme: Theme }
 PATCH  /whitelabel/themes/:id         → UpdateThemeDto → { theme: Theme }

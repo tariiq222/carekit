@@ -1,8 +1,8 @@
 /**
- * ClinicTheme — the canonical shape returned by GET /whitelabel/public.
+ * OrganizationTheme — the canonical shape returned by GET /whitelabel/public.
  * All apps (dashboard, mobile) consume this type.
  */
-export interface ClinicTheme {
+export interface OrganizationTheme {
   // Identity
   systemName:        string;
   systemNameAr:      string;
@@ -29,7 +29,7 @@ export interface DerivedTokens {
   colorAccentUltra:  string;
 }
 
-export const DEFAULT_THEME: ClinicTheme = {
+export const DEFAULT_THEME: OrganizationTheme = {
   systemName:        'CareKit',
   systemNameAr:      'كيركيت',
   productTagline:    'إدارة العيادة',

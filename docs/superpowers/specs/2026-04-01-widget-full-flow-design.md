@@ -245,7 +245,7 @@ Bookings service applies discount before calculating final price.
 | File | Action | Change |
 |------|--------|--------|
 | `components/features/settings/booking-tab.tsx` | Modify | Add "طرق الدفع" card with two toggle switches |
-| `lib/api/clinic-settings.ts` | Modify | Add fetch/update for `paymentMoyasarEnabled` + `paymentAtClinicEnabled` |
+| `lib/api/organization-settings.ts` | Modify | Add fetch/update for `paymentMoyasarEnabled` + `paymentAtClinicEnabled` |
 
 ---
 

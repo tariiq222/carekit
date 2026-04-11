@@ -173,7 +173,7 @@ export const MODULES = [
   'activity-log',
   'departments',
   'license',
-  'clinic-settings',
+  'organization-settings',
   'clinic-integrations',
   'feature-flags',
 ] as const;

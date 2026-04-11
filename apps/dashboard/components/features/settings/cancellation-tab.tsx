@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useBookingSettings, useBookingSettingsMutation } from "@/hooks/use-clinic-settings"
+import { useBookingSettings, useBookingSettingsMutation } from "@/hooks/use-organization-settings"
 import type { BookingSettings } from "@/lib/api/booking-settings"
 import {
   NumRow,

@@ -11,10 +11,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import type { ClinicHour } from "@/lib/api/clinic"
-import { useClinicHours, useClinicHoursMutation } from "@/hooks/use-clinic-settings"
+import type { OrganizationHour } from "@/lib/api/organization"
+import { useOrganizationHours, useOrganizationHoursMutation } from "@/hooks/use-organization-settings"
 import { HolidaysSection } from "./holidays-section"
-import { useClinicConfig } from "@/hooks/use-clinic-config"
+import { useOrganizationConfig } from "@/hooks/use-organization-config"
 
 /* ─── Constants ─── */
 
@@ -33,7 +33,7 @@ function getOrderedDays(weekStart: 0 | 1) {
   return DAYS_BASE
 }
 
-function buildDefaultHours(days: typeof DAYS_BASE): ClinicHour[] {
+function buildDefaultHours(days: typeof DAYS_BASE): OrganizationHour[] {
   return days.map((d) => ({
     dayOfWeek: d.value,
     startTime: "09:00",
@@ -53,12 +53,12 @@ type TabId = "hours" | "holidays"
 /* ─── Working Hours Panel ─── */
 
 function WorkingHoursPanel({ t }: Props) {
-  const { weekStartDayNumber } = useClinicConfig()
+  const { weekStartDayNumber } = useOrganizationConfig()
   const orderedDays = useMemo(() => getOrderedDays(weekStartDayNumber), [weekStartDayNumber])
-  const [hours, setHours] = useState<ClinicHour[]>(() => buildDefaultHours(orderedDays))
+  const [hours, setHours] = useState<OrganizationHour[]>(() => buildDefaultHours(orderedDays))
 
-  const { data: serverHours, isLoading } = useClinicHours()
-  const mutation = useClinicHoursMutation()
+  const { data: serverHours, isLoading } = useOrganizationHours()
+  const mutation = useOrganizationHoursMutation()
 
   useEffect(() => {
     const defaults = buildDefaultHours(orderedDays)
@@ -67,14 +67,14 @@ function WorkingHoursPanel({ t }: Props) {
       return
     }
     const merged = defaults.map((def) => {
-      const match = serverHours.find((s: ClinicHour) => s.dayOfWeek === def.dayOfWeek)
+      const match = serverHours.find((s: OrganizationHour) => s.dayOfWeek === def.dayOfWeek)
       return match ?? { ...def, isActive: false }
     })
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHours(merged)
   }, [serverHours, orderedDays])
 
-  const updateDay = (index: number, patch: Partial<ClinicHour>) => {
+  const updateDay = (index: number, patch: Partial<OrganizationHour>) => {
     setHours((prev) => prev.map((h, i) => (i === index ? { ...h, ...patch } : h)))
   }
 
@@ -128,8 +128,8 @@ function DayRow({
   onChange,
 }: {
   day: { value: number; en: string; ar: string }
-  hour: ClinicHour
-  onChange: (patch: Partial<ClinicHour>) => void
+  hour: OrganizationHour
+  onChange: (patch: Partial<OrganizationHour>) => void
 }) {
   return (
     <div

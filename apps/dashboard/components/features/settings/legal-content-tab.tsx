@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useClinicSettings, useUpdateClinicSettings } from "@/hooks/use-clinic-settings"
+import { useOrganizationSettings, useUpdateOrganizationSettings } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"
 
 interface BilingualField {
@@ -56,8 +56,8 @@ function BilingualTextCard({ title, field, onChange, t }: {
 
 export function LegalContentTab() {
   const { t } = useLocale()
-  const { data: settings, isLoading } = useClinicSettings()
-  const updateSettings = useUpdateClinicSettings()
+  const { data: settings, isLoading } = useOrganizationSettings()
+  const updateSettings = useUpdateOrganizationSettings()
 
   const [about, setAbout] = useState<BilingualField>({ ar: "", en: "" })
   const [privacy, setPrivacy] = useState<BilingualField>({ ar: "", en: "" })

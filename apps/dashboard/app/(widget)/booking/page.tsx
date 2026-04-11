@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import { BookingWizard } from "@/components/features/widget/booking-wizard"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Loading03Icon } from "@hugeicons/core-free-icons"
-import { fetchBookingFlowOrder, type BookingFlowOrder } from "@/lib/api/clinic-settings"
+import { fetchBookingFlowOrder, type BookingFlowOrder } from "@/lib/api/organization-settings"
 
 interface PageProps {
   searchParams: Promise<{

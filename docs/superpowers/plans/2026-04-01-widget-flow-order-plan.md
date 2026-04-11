@@ -17,7 +17,7 @@
 | `backend/src/modules/employees/dto/get-employees-query.dto.ts` | Modify | Add `serviceId` optional field |
 | `backend/src/modules/employees/employees.service.ts` | Modify | Apply `serviceId` filter in `findAll` |
 | `backend/src/modules/employees/tests/employees.service.spec.ts` | Modify | Add test for `serviceId` filter |
-| `dashboard/hooks/use-clinic-settings.ts` | Modify | Add `useBookingFlowOrder` query + mutation |
+| `dashboard/hooks/use-organization-settings.ts` | Modify | Add `useBookingFlowOrder` query + mutation |
 | `dashboard/components/features/settings/booking-tab.tsx` | Modify | Add `FlowOrderCard` component |
 | `dashboard/components/features/settings/widget-tab.tsx` | Modify | Add `flow` param to configurator + URL builder |
 | `dashboard/app/booking/page.tsx` | Modify | Read `flow` from searchParams, pass to wizard |
@@ -133,23 +133,23 @@ git commit -m "feat(employees): add serviceId filter to GET /employees"
 ## Task 2: Dashboard Settings — `useBookingFlowOrder` hook + `FlowOrderCard`
 
 **Files:**
-- Modify: `dashboard/hooks/use-clinic-settings.ts`
+- Modify: `dashboard/hooks/use-organization-settings.ts`
 - Modify: `dashboard/components/features/settings/booking-tab.tsx`
 
-- [ ] **Step 1: Add hook to `use-clinic-settings.ts`**
+- [ ] **Step 1: Add hook to `use-organization-settings.ts`**
 
-Open `dashboard/hooks/use-clinic-settings.ts` and add at the end of the file:
+Open `dashboard/hooks/use-organization-settings.ts` and add at the end of the file:
 
 ```typescript
 import {
   fetchBookingFlowOrder,
   updateBookingFlowOrder,
   type BookingFlowOrder,
-} from "@/lib/api/clinic-settings"
+} from "@/lib/api/organization-settings"
 
 export function useBookingFlowOrder() {
   return useQuery({
-    queryKey: queryKeys.clinicSettings.bookingFlowOrder(),
+    queryKey: queryKeys.organizationSettings.bookingFlowOrder(),
     queryFn: fetchBookingFlowOrder,
     staleTime: 5 * 60 * 1000,
   })
@@ -160,7 +160,7 @@ export function useBookingFlowOrderMutation() {
   return useMutation({
     mutationFn: (order: BookingFlowOrder) => updateBookingFlowOrder(order),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.clinicSettings.bookingFlowOrder() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.organizationSettings.bookingFlowOrder() })
     },
   })
 }
@@ -174,8 +174,8 @@ Open `dashboard/components/features/settings/booking-tab.tsx`. Add these imports
 
 ```typescript
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { useBookingFlowOrder, useBookingFlowOrderMutation } from "@/hooks/use-clinic-settings"
-import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
+import { useBookingFlowOrder, useBookingFlowOrderMutation } from "@/hooks/use-organization-settings"
+import type { BookingFlowOrder } from "@/lib/api/organization-settings"
 ```
 
 Then add this component before the `BookingTab` export:
@@ -291,7 +291,7 @@ Expected: 0 errors.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add dashboard/hooks/use-clinic-settings.ts \
+git add dashboard/hooks/use-organization-settings.ts \
         dashboard/components/features/settings/booking-tab.tsx \
         dashboard/lib/translations/
 git commit -m "feat(dashboard/settings): add booking flow order card in booking tab"
@@ -448,7 +448,7 @@ import { Suspense } from "react"
 import { BookingWizard } from "@/components/features/widget/booking-wizard"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Loading03Icon } from "@hugeicons/core-free-icons"
-import { fetchBookingFlowOrder, type BookingFlowOrder } from "@/lib/api/clinic-settings"
+import { fetchBookingFlowOrder, type BookingFlowOrder } from "@/lib/api/organization-settings"
 
 interface PageProps {
   searchParams: Promise<{

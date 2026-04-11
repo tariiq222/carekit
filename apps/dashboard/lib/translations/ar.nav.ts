@@ -9,7 +9,7 @@ export const arNav: Record<string, string> = {
   "nav.employees": "الممارسون",
   "nav.settings": "الإعدادات",
   "nav.overview": "نظرة عامة",
-  "nav.clinic": "العيادة",
+  "nav.organization": "العيادة",
   "nav.finance": "المالية",
   "nav.tools": "الأدوات",
   "nav.admin": "الإدارة",

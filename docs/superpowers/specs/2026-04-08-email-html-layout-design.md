@@ -109,7 +109,7 @@ Fields:
 - Footer section: eight `Input` fields (phone, website, instagram, twitter, snapchat, tiktok, linkedin, youtube)
 - Actions: Cancel + Save buttons
 
-Uses existing `useWhitelabelConfig` / `useWhitelabelMutations` hooks (or a new `use-email-layout.ts` if those hooks don't cover batch PATCH of specific keys).
+Uses existing `useBrandingConfig` / `useWhitelabelMutations` hooks (or a new `use-email-layout.ts` if those hooks don't cover batch PATCH of specific keys).
 
 ### 5. `dashboard/components/features/settings/email-templates-tab.tsx` (modified)
 

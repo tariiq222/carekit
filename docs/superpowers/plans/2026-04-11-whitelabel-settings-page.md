@@ -190,7 +190,7 @@ git commit -m "feat(whitelabel): add logo and favicon upload endpoints"
 Open `packages/api-client/src/types/whitelabel.ts` and replace the entire contents with:
 
 ```typescript
-export interface WhitelabelConfig {
+export interface BrandingConfig {
   id: string
   systemName: string
   systemNameAr: string
@@ -205,7 +205,7 @@ export interface WhitelabelConfig {
   updatedAt: string
 }
 
-export interface PublicWhitelabelConfig {
+export interface PublicBrandingConfig {
   systemName: string
   systemNameAr: string
   logoUrl: string | null
@@ -237,24 +237,24 @@ Open `packages/api-client/src/modules/whitelabel.ts` and replace its entire cont
 ```typescript
 import { apiRequest } from '../client.js'
 import type {
-  WhitelabelConfig,
-  PublicWhitelabelConfig,
+  BrandingConfig,
+  PublicBrandingConfig,
   UpdateWhitelabelPayload,
   UploadedImageResponse,
 } from '../types/whitelabel.js'
 
-export async function getPublic(): Promise<PublicWhitelabelConfig> {
-  return apiRequest<PublicWhitelabelConfig>('/whitelabel/public')
+export async function getPublic(): Promise<PublicBrandingConfig> {
+  return apiRequest<PublicBrandingConfig>('/whitelabel/public')
 }
 
-export async function get(): Promise<WhitelabelConfig> {
-  return apiRequest<WhitelabelConfig>('/whitelabel')
+export async function get(): Promise<BrandingConfig> {
+  return apiRequest<BrandingConfig>('/whitelabel')
 }
 
 export async function update(
   payload: UpdateWhitelabelPayload,
-): Promise<WhitelabelConfig> {
-  return apiRequest<WhitelabelConfig>('/whitelabel', {
+): Promise<BrandingConfig> {
+  return apiRequest<BrandingConfig>('/whitelabel', {
     method: 'PUT',
     body: JSON.stringify(payload),
   })
@@ -298,9 +298,9 @@ const headers: Record<string, string> = {
 
 Only make this change if needed. Leave the rest of `client.ts` untouched.
 
-### - [ ] Step 4: Check existing callers of WhitelabelConfig
+### - [ ] Step 4: Check existing callers of BrandingConfig
 
-Run: `grep -rn "WhitelabelConfig" packages/api-client apps/leaderboard apps/mobile`
+Run: `grep -rn "BrandingConfig" packages/api-client apps/leaderboard apps/mobile`
 
 The old type had `clinicName`/`clinicNameAr`/`direction`/`locale`. If any caller still uses those, update them:
 - `apps/leaderboard/src/lib/whitelabel/apply.ts` uses `config.clinicNameAr`, `config.clinicName`, `config.direction`, `config.locale`, `config.fontFamily`.
@@ -308,9 +308,9 @@ The old type had `clinicName`/`clinicNameAr`/`direction`/`locale`. If any caller
 Update `apply.ts` to use `systemNameAr`/`systemName` and drop the `direction`/`locale` lines (they belong to the clinic, not whitelabel). New version:
 
 ```typescript
-import type { WhitelabelConfig, PublicWhitelabelConfig } from '@carekit/api-client'
+import type { BrandingConfig, PublicBrandingConfig } from '@carekit/api-client'
 
-type BrandingConfig = WhitelabelConfig | PublicWhitelabelConfig
+type BrandingConfig = BrandingConfig | PublicBrandingConfig
 
 export function applyWhitelabel(config: BrandingConfig): void {
   const root = document.documentElement

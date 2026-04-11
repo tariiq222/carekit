@@ -1,6 +1,6 @@
 import { apiRequest } from '../client.js'
-import type { ClinicTheme } from '@carekit/shared/types'
+import type { OrganizationTheme } from '@carekit/shared/types'
 
-export async function getWhitelabelPublic(): Promise<ClinicTheme> {
-  return apiRequest<ClinicTheme>('/whitelabel/public')
+export async function getWhitelabelPublic(): Promise<OrganizationTheme> {
+  return apiRequest<OrganizationTheme>('/whitelabel/public')
 }

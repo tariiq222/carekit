@@ -38,8 +38,8 @@ const { useEmployees } = vi.hoisted(() => ({
   useEmployees: vi.fn(() => ({ employees: [] })),
 }))
 
-const { useClinicConfig } = vi.hoisted(() => ({
-  useClinicConfig: vi.fn(() => ({ weekStartDayNumber: 0 })),
+const { useOrganizationConfig } = vi.hoisted(() => ({
+  useOrganizationConfig: vi.fn(() => ({ weekStartDayNumber: 0 })),
 }))
 
 const { useFeatureFlagMap } = vi.hoisted(() => ({
@@ -69,7 +69,7 @@ const { useLocale } = vi.hoisted(() => ({
 
 vi.mock("@/hooks/use-bookings", () => ({ useBookings, useBookingMutations }))
 vi.mock("@/hooks/use-employees", () => ({ useEmployees }))
-vi.mock("@/hooks/use-clinic-config", () => ({ useClinicConfig }))
+vi.mock("@/hooks/use-organization-config", () => ({ useOrganizationConfig }))
 vi.mock("@/hooks/use-feature-flags", () => ({ useFeatureFlagMap }))
 vi.mock("@/lib/api/bookings", () => ({}))
 vi.mock("@/components/features/data-table", () => ({

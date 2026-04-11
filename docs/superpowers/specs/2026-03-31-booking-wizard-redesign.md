@@ -209,7 +209,7 @@ bookingFlowOrder: 'service_first' | 'practitioner_first'
 | `dashboard/components/features/bookings/booking-create-dialog.tsx` | Replace step 2 with `<BookingWizard>` |
 | `backend/src/modules/services/services.controller.ts` | Add `GET /services/:id/practitioners` |
 | `backend/src/modules/services/services.service.ts` | Add `getPractitionersByService()` method |
-| `backend/src/modules/clinic/clinic-settings.service.ts` | Add `bookingFlowOrder` setting |
+| `backend/src/modules/clinic/organization-settings.service.ts` | Add `bookingFlowOrder` setting |
 | `dashboard/lib/api/services.ts` | Add API call for new endpoint |
 | `dashboard/lib/translations/ar.bookings.ts` | New translation keys |
 | `dashboard/lib/translations/en.bookings.ts` | New translation keys |

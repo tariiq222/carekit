@@ -36,7 +36,7 @@ export const overviewNav: NavItem[] = [
   { titleKey: "nav.dashboard", href: "/", icon: Home01Icon },
 ]
 
-export const clinicNav: NavItem[] = [
+export const organizationNav: NavItem[] = [
   { titleKey: "nav.bookings", href: "/bookings", icon: Calendar03Icon },
   { titleKey: "nav.clients", href: "/clients", icon: UserMultiple02Icon },
   { titleKey: "nav.employees", href: "/employees", icon: Stethoscope02Icon },
@@ -66,7 +66,7 @@ export const adminNav: NavItem[] = [
 
 export const navGroups: NavGroup[] = [
   { labelKey: "nav.overview", items: overviewNav },
-  { labelKey: "nav.clinic", items: clinicNav },
+  { labelKey: "nav.organization", items: organizationNav },
   { labelKey: "nav.finance", items: financeNav },
   { labelKey: "nav.tools", items: toolsNav },
   { labelKey: "nav.admin", items: adminNav },

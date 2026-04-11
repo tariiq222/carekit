@@ -1663,7 +1663,7 @@ import { NotificationsController } from './inbox/notifications.controller.js';
 import { MessagingPreferencesService } from './core/messaging-preferences.service.js';
 import { MessagingDispatcherService } from './core/messaging-dispatcher.service.js';
 import { WhitelabelModule } from '../whitelabel/whitelabel.module.js';
-import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
+import { OrganizationSettingsModule } from '../organization-settings/organization-settings.module.js';
 import {
   DEFAULT_JOB_OPTIONS,
   QUEUE_EMAIL,
@@ -1672,7 +1672,7 @@ import {
 @Module({
   imports: [
     WhitelabelModule,
-    ClinicSettingsModule,
+    OrganizationSettingsModule,
     BullModule.registerQueue({ name: QUEUE_EMAIL, defaultJobOptions: DEFAULT_JOB_OPTIONS }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],

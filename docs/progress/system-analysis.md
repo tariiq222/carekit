@@ -382,7 +382,7 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 | `use-activity-log.ts` | 1 | 0 | `lib/api/activity-log.ts` |
 | `use-problem-reports.ts` | 1 | 1 | `lib/api/problem-reports.ts` |
 | `use-waitlist.ts` | 1 | 1 | `lib/api/waitlist.ts` |
-| `use-clinic-settings.ts` | 3 | 5 | `lib/api/clinic.ts`, `lib/api/booking-settings.ts` |
+| `use-organization-settings.ts` | 3 | 5 | `lib/api/clinic.ts`, `lib/api/booking-settings.ts` |
 | `use-email-templates.ts` | 1 | 2 | `lib/api/email-templates.ts` |
 | `use-booking-slots.ts` | 2 | 0 | `lib/api/employees.ts` |
 
@@ -660,7 +660,7 @@ Dashboard ◄─── shared/ ───► Mobile
 | **RolePermission** | 5 | جدول ربط: Role ↔ Permission |
 | **UserRole** | 5 | جدول ربط: User ↔ Role |
 
-#### clinic.prisma (9 نماذج)
+#### organization.prisma (9 نماذج)
 
 | النموذج | الحقول | الوصف |
 |---------|--------|-------|

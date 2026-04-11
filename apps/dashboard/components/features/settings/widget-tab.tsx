@@ -19,7 +19,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-import { useWidgetSettings, useWidgetSettingsMutation } from "@/hooks/use-clinic-settings"
+import { useWidgetSettings, useWidgetSettingsMutation } from "@/hooks/use-organization-settings"
 import { CopyButton } from "./widget-tab-helpers"
 
 /* ─── Types ─── */

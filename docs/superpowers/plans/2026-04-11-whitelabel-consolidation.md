@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** دمج `WhiteLabelConfig` و `ClinicSettings.theme` (JSON blob) في جدول `WhiteLabelConfig` واحد موحّد، مع حذف التكرار بالكامل عبر Backend + Dashboard + Mobile + api-client + shared packages.
+**Goal:** دمج `WhiteLabelConfig` و `OrganizationSettings.theme` (JSON blob) في جدول `WhiteLabelConfig` واحد موحّد، مع حذف التكرار بالكامل عبر Backend + Dashboard + Mobile + api-client + shared packages.
 
 **Architecture:**
-- `WhiteLabelConfig` يُوسَّع ليستوعب جميع حقول `ClinicTheme` (الألوان المتقدمة، tagline، fontUrl) كحقول صريحة بدل JSON blob.
-- `ClinicSettings.theme` يُحذف من الـ schema وكل كوده.
+- `WhiteLabelConfig` يُوسَّع ليستوعب جميع حقول `OrganizationTheme` (الألوان المتقدمة، tagline، fontUrl) كحقول صريحة بدل JSON blob.
+- `OrganizationSettings.theme` يُحذف من الـ schema وكل كوده.
 - الـ endpoint الموحّد: `GET/PUT /whitelabel` يعود بـ config كاملة. `GET /whitelabel/public` للبيانات العامة.
 - الداشبورد والموبايل يستهلكان `/whitelabel/public` فقط لعمل theming.
 
@@ -18,32 +18,32 @@
 
 ### Backend (حذف + تعديل)
 - **MODIFY** `prisma/schema/config.prisma` — توسيع `WhiteLabelConfig` بالحقول الجديدة
-- **MODIFY** `prisma/schema/clinic-settings.prisma` — حذف حقل `theme` من `ClinicSettings`
+- **MODIFY** `prisma/schema/organization-settings.prisma` — حذف حقل `theme` من `OrganizationSettings`
 - **CREATE** `prisma/migrations/...` — migration جديدة (لا تُعدَّل القديمة)
 - **MODIFY** `src/modules/whitelabel/dto/update-config.dto.ts` — إضافة الحقول الجديدة
 - **MODIFY** `src/modules/whitelabel/whitelabel.service.ts` — توسيع `getPublicBranding` + حذف `adminUpdate`
 - **MODIFY** `src/modules/whitelabel/whitelabel.controller.ts` — لا تغيير جوهري
-- **DELETE** `src/modules/clinic-settings/theme.service.ts`
-- **DELETE** `src/modules/clinic-settings/theme.controller.ts`
-- **DELETE** `src/modules/clinic-settings/dto/update-theme.dto.ts`
-- **DELETE** `src/modules/clinic-settings/clinic-theme.ts`
-- **MODIFY** `src/modules/clinic-settings/clinic-settings.module.ts` — حذف ThemeService/ThemeController
+- **DELETE** `src/modules/organization-settings/theme.service.ts`
+- **DELETE** `src/modules/organization-settings/theme.controller.ts`
+- **DELETE** `src/modules/organization-settings/dto/update-theme.dto.ts`
+- **DELETE** `src/modules/organization-settings/clinic-theme.ts`
+- **MODIFY** `src/modules/organization-settings/organization-settings.module.ts` — حذف ThemeService/ThemeController
 - **MODIFY** `src/config/constants/cache.ts` — حذف مفاتيح cache غير المستخدمة
 - **MODIFY** `prisma/seed.data.ts` — تحديث `WHITELABEL_DEFAULTS`
-- **MODIFY** `prisma/seed.ts` — حذف seeding الـ theme من ClinicSettings
+- **MODIFY** `prisma/seed.ts` — حذف seeding الـ theme من OrganizationSettings
 
 ### Shared packages
-- **MODIFY** `packages/shared/types/theme.ts` — توحيد `ClinicTheme` مع `WhiteLabelConfig`
+- **MODIFY** `packages/shared/types/theme.ts` — توحيد `OrganizationTheme` مع `WhiteLabelConfig`
 - **MODIFY** `packages/shared/tokens/white-label.ts` — تبسيط `WhiteLabelTheme`
-- **MODIFY** `packages/api-client/src/modules/theme.ts` — تغيير endpoint من `/clinic-settings/theme` إلى `/whitelabel/public`
+- **MODIFY** `packages/api-client/src/modules/theme.ts` — تغيير endpoint من `/organization-settings/theme` إلى `/whitelabel/public`
 - **MODIFY** `packages/api-client/src/modules/whitelabel.ts` — توحيد الـ type
 
 ### Dashboard
 - **MODIFY** `lib/api/whitelabel.ts` — لا تغيير في الـ endpoint، فقط الـ type يتوسع
 - **MODIFY** `lib/types/whitelabel.ts` — إضافة الحقول الجديدة
-- **MODIFY** `components/providers/branding-provider.tsx` — تغذية من `WhitelabelConfig` الموسَّع
+- **MODIFY** `components/providers/branding-provider.tsx` — تغذية من `BrandingConfig` الموسَّع
 - **MODIFY** `components/features/white-label/branding-tab.tsx` — إضافة حقول colorAccent، colorPrimaryLight، colorPrimaryDark
-- **DELETE** أي استدعاء dashboard لـ `GET/PATCH /clinic-settings/theme`
+- **DELETE** أي استدعاء dashboard لـ `GET/PATCH /organization-settings/theme`
 - **MODIFY** `hooks/use-whitelabel.ts` — لا تغيير
 
 ### Mobile
@@ -52,11 +52,11 @@
 
 ---
 
-## Task 1: توسيع schema `WhiteLabelConfig` وحذف `theme` من `ClinicSettings`
+## Task 1: توسيع schema `WhiteLabelConfig` وحذف `theme` من `OrganizationSettings`
 
 **Files:**
 - Modify: `apps/backend/prisma/schema/config.prisma`
-- Modify: `apps/backend/prisma/schema/clinic-settings.prisma`
+- Modify: `apps/backend/prisma/schema/organization-settings.prisma`
 - Create: migration جديدة (بعد تشغيل `prisma migrate dev`)
 
 - [ ] **Step 1: تعديل `config.prisma`**
@@ -93,11 +93,11 @@ model WhiteLabelConfig {
 }
 ```
 
-- [ ] **Step 2: حذف حقل `theme` من `clinic-settings.prisma`**
+- [ ] **Step 2: حذف حقل `theme` من `organization-settings.prisma`**
 
-في ملف `apps/backend/prisma/schema/clinic-settings.prisma`، احذف السطر:
+في ملف `apps/backend/prisma/schema/organization-settings.prisma`، احذف السطر:
 ```prisma
-  theme                 Json?    // ClinicTheme — null = DEFAULT_THEME
+  theme                 Json?    // OrganizationTheme — null = DEFAULT_THEME
 ```
 
 - [ ] **Step 3: إنشاء Migration**
@@ -112,9 +112,9 @@ cd apps/backend && npx prisma migrate dev --name "consolidate_whitelabel_theme"
 
 ```bash
 git add apps/backend/prisma/schema/config.prisma \
-        apps/backend/prisma/schema/clinic-settings.prisma \
+        apps/backend/prisma/schema/organization-settings.prisma \
         apps/backend/prisma/migrations/
-git commit -m "refactor(schema): consolidate WhiteLabelConfig — absorb ClinicSettings.theme fields"
+git commit -m "refactor(schema): consolidate WhiteLabelConfig — absorb OrganizationSettings.theme fields"
 ```
 
 ---
@@ -305,37 +305,37 @@ git commit -m "refactor(whitelabel): expand service + DTO with full theme fields
 
 ---
 
-## Task 3: حذف ThemeService / ThemeController من clinic-settings
+## Task 3: حذف ThemeService / ThemeController من organization-settings
 
 **Files:**
-- Delete: `apps/backend/src/modules/clinic-settings/theme.service.ts`
-- Delete: `apps/backend/src/modules/clinic-settings/theme.controller.ts`
-- Delete: `apps/backend/src/modules/clinic-settings/dto/update-theme.dto.ts`
-- Delete: `apps/backend/src/modules/clinic-settings/clinic-theme.ts`
-- Modify: `apps/backend/src/modules/clinic-settings/clinic-settings.module.ts`
+- Delete: `apps/backend/src/modules/organization-settings/theme.service.ts`
+- Delete: `apps/backend/src/modules/organization-settings/theme.controller.ts`
+- Delete: `apps/backend/src/modules/organization-settings/dto/update-theme.dto.ts`
+- Delete: `apps/backend/src/modules/organization-settings/clinic-theme.ts`
+- Modify: `apps/backend/src/modules/organization-settings/organization-settings.module.ts`
 
 - [ ] **Step 1: حذف الملفات الأربعة**
 
 ```bash
-rm apps/backend/src/modules/clinic-settings/theme.service.ts
-rm apps/backend/src/modules/clinic-settings/theme.controller.ts
-rm apps/backend/src/modules/clinic-settings/dto/update-theme.dto.ts
-rm apps/backend/src/modules/clinic-settings/clinic-theme.ts
+rm apps/backend/src/modules/organization-settings/theme.service.ts
+rm apps/backend/src/modules/organization-settings/theme.controller.ts
+rm apps/backend/src/modules/organization-settings/dto/update-theme.dto.ts
+rm apps/backend/src/modules/organization-settings/clinic-theme.ts
 ```
 
-- [ ] **Step 2: تحديث `clinic-settings.module.ts`**
+- [ ] **Step 2: تحديث `organization-settings.module.ts`**
 
 ```typescript
 import { Module } from '@nestjs/common';
-import { ClinicSettingsController } from './clinic-settings.controller.js';
-import { ClinicSettingsService } from './clinic-settings.service.js';
+import { OrganizationSettingsController } from './organization-settings.controller.js';
+import { OrganizationSettingsService } from './organization-settings.service.js';
 
 @Module({
-  controllers: [ClinicSettingsController],
-  providers: [ClinicSettingsService],
-  exports: [ClinicSettingsService],
+  controllers: [OrganizationSettingsController],
+  providers: [OrganizationSettingsService],
+  exports: [OrganizationSettingsService],
 })
-export class ClinicSettingsModule {}
+export class OrganizationSettingsModule {}
 ```
 
 - [ ] **Step 3: تشغيل الـ tests**
@@ -349,8 +349,8 @@ cd apps/backend && npm run test
 - [ ] **Step 4: Commit**
 
 ```bash
-git add apps/backend/src/modules/clinic-settings/
-git commit -m "refactor(clinic-settings): remove ThemeService, ThemeController — merged into whitelabel"
+git add apps/backend/src/modules/organization-settings/
+git commit -m "refactor(organization-settings): remove ThemeService, ThemeController — merged into whitelabel"
 ```
 
 ---
@@ -387,7 +387,7 @@ export const WHITELABEL_DEFAULTS = {
 
 - [ ] **Step 2: تحديث `seed.ts` — حذف seeding الـ theme**
 
-في `seed.ts`، ابحث عن الجزء الذي يعمل `prisma.clinicSettings.create` ويتأكد أنه لا يشمل حقل `theme` بعد الآن (بسبب حذفه من الـ schema، Prisma سيرفضه تلقائياً).
+في `seed.ts`، ابحث عن الجزء الذي يعمل `prisma.organizationSettings.create` ويتأكد أنه لا يشمل حقل `theme` بعد الآن (بسبب حذفه من الـ schema، Prisma سيرفضه تلقائياً).
 
 إذا وُجد في الكود `theme: ...` أو `DEFAULT_THEME` ضمن `CLINIC_SETTINGS_DEFAULTS`، احذفه من `seed.data.ts`.
 
@@ -401,12 +401,12 @@ grep -n "theme\|DEFAULT_THEME" apps/backend/prisma/seed.data.ts
 
 ```bash
 git add apps/backend/prisma/seed.data.ts apps/backend/prisma/seed.ts
-git commit -m "refactor(seeds): update WHITELABEL_DEFAULTS with full theme fields, remove theme from ClinicSettings seed"
+git commit -m "refactor(seeds): update WHITELABEL_DEFAULTS with full theme fields, remove theme from OrganizationSettings seed"
 ```
 
 ---
 
-## Task 5: تحديث `@carekit/shared` — توحيد `ClinicTheme`
+## Task 5: تحديث `@carekit/shared` — توحيد `OrganizationTheme`
 
 **Files:**
 - Modify: `packages/shared/types/theme.ts`
@@ -415,14 +415,14 @@ git commit -m "refactor(seeds): update WHITELABEL_DEFAULTS with full theme field
 
 - [ ] **Step 1: تحديث `packages/shared/types/theme.ts`**
 
-استبدل الملف بالكامل. هذا هو **مصدر الحقيقة الوحيد** لـ `ClinicTheme`:
+استبدل الملف بالكامل. هذا هو **مصدر الحقيقة الوحيد** لـ `OrganizationTheme`:
 
 ```typescript
 /**
- * ClinicTheme — the canonical shape returned by GET /whitelabel/public.
+ * OrganizationTheme — the canonical shape returned by GET /whitelabel/public.
  * All apps (dashboard, mobile) consume this type.
  */
-export interface ClinicTheme {
+export interface OrganizationTheme {
   // Identity
   systemName:        string;
   systemNameAr:      string;
@@ -449,7 +449,7 @@ export interface DerivedTokens {
   colorAccentUltra:  string;
 }
 
-export const DEFAULT_THEME: ClinicTheme = {
+export const DEFAULT_THEME: OrganizationTheme = {
   systemName:        'CareKit',
   systemNameAr:      'كيركيت',
   productTagline:    'إدارة العيادة',
@@ -472,13 +472,13 @@ export const DEFAULT_THEME: ClinicTheme = {
 
 ```typescript
 // Re-export from canonical source — do not duplicate
-export type { ClinicTheme, DerivedTokens } from '../types/theme.js';
+export type { OrganizationTheme, DerivedTokens } from '../types/theme.js';
 export { DEFAULT_THEME } from '../types/theme.js';
 ```
 
 - [ ] **Step 3: التحقق من `generate-css.ts`**
 
-افتح `packages/shared/theme/generate-css.ts` وتأكد أن الحقول المستخدمة تطابق `ClinicTheme` الجديد:
+افتح `packages/shared/theme/generate-css.ts` وتأكد أن الحقول المستخدمة تطابق `OrganizationTheme` الجديد:
 - `theme.colorPrimary` ✓
 - `theme.colorPrimaryLight` ✓  
 - `theme.colorPrimaryDark` ✓
@@ -501,7 +501,7 @@ cd packages/shared && npm run build 2>/dev/null || npx tsc --noEmit
 
 ```bash
 git add packages/shared/
-git commit -m "refactor(shared): consolidate ClinicTheme — single source of truth with identity + theme fields"
+git commit -m "refactor(shared): consolidate OrganizationTheme — single source of truth with identity + theme fields"
 ```
 
 ---
@@ -516,14 +516,14 @@ git commit -m "refactor(shared): consolidate ClinicTheme — single source of tr
 
 ```typescript
 import { apiRequest } from '../client.js'
-import type { ClinicTheme } from '@carekit/shared/types'
+import type { OrganizationTheme } from '@carekit/shared/types'
 
 /**
  * Fetches public branding/theme from the unified whitelabel endpoint.
  * Used by mobile app on startup.
  */
-export async function getTheme(): Promise<ClinicTheme> {
-  return apiRequest<ClinicTheme>('/whitelabel/public')
+export async function getTheme(): Promise<OrganizationTheme> {
+  return apiRequest<OrganizationTheme>('/whitelabel/public')
 }
 ```
 
@@ -531,10 +531,10 @@ export async function getTheme(): Promise<ClinicTheme> {
 
 ```typescript
 import { apiRequest } from '../client.js'
-import type { ClinicTheme } from '@carekit/shared/types'
+import type { OrganizationTheme } from '@carekit/shared/types'
 
-export async function getWhitelabelPublic(): Promise<ClinicTheme> {
-  return apiRequest<ClinicTheme>('/whitelabel/public')
+export async function getWhitelabelPublic(): Promise<OrganizationTheme> {
+  return apiRequest<OrganizationTheme>('/whitelabel/public')
 }
 ```
 
@@ -790,12 +790,12 @@ git commit -m "feat(dashboard/whitelabel): expand branding tab with full theme c
 ## Task 9: إزالة أي استدعاء للـ theme endpoint القديم من Dashboard
 
 **Files:**
-- Modify: أي ملف يستدعي `/clinic-settings/theme`
+- Modify: أي ملف يستدعي `/organization-settings/theme`
 
 - [ ] **Step 1: البحث**
 
 ```bash
-grep -rn "clinic-settings/theme\|fetchTheme\|updateTheme\|resetTheme\|useTheme" \
+grep -rn "organization-settings/theme\|fetchTheme\|updateTheme\|resetTheme\|useTheme" \
   apps/dashboard --include="*.ts" --include="*.tsx" | grep -v node_modules
 ```
 
@@ -816,7 +816,7 @@ cd apps/dashboard && npm run typecheck && npm run test
 
 ```bash
 git add apps/dashboard/
-git commit -m "refactor(dashboard): remove all calls to deprecated /clinic-settings/theme endpoint"
+git commit -m "refactor(dashboard): remove all calls to deprecated /organization-settings/theme endpoint"
 ```
 
 ---
@@ -833,9 +833,9 @@ git commit -m "refactor(dashboard): remove all calls to deprecated /clinic-setti
 
 ```typescript
 import { colors, typography, spacing, radius, rnShadows, animations } from '@carekit/shared/tokens';
-import type { ClinicTheme } from '@carekit/shared/types';
+import type { OrganizationTheme } from '@carekit/shared/types';
 
-function buildTheme(overrides?: Partial<ClinicTheme>) {
+function buildTheme(overrides?: Partial<OrganizationTheme>) {
   return {
     colors: {
       ...colors,
@@ -862,7 +862,7 @@ export { buildTheme };
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { I18nManager } from 'react-native';
 import { buildTheme, type AppTheme } from './tokens';
-import type { ClinicTheme } from '@carekit/shared/types';
+import type { OrganizationTheme } from '@carekit/shared/types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5100/api/v1';
 
@@ -870,7 +870,7 @@ interface ThemeContextValue {
   theme: AppTheme;
   isRTL: boolean;
   language: 'ar' | 'en';
-  clinicTheme: ClinicTheme | null;
+  clinicTheme: OrganizationTheme | null;
 }
 
 const defaultTheme = buildTheme();
@@ -890,7 +890,7 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children, language = 'ar' }: ThemeProviderProps) {
   const isRTL = language === 'ar';
   const [appTheme, setAppTheme] = useState<AppTheme>(defaultTheme);
-  const [clinicTheme, setClinicTheme] = useState<ClinicTheme | null>(null);
+  const [clinicTheme, setOrganizationTheme] = useState<OrganizationTheme | null>(null);
 
   useEffect(() => {
     if (I18nManager.isRTL !== isRTL) {
@@ -902,8 +902,8 @@ export function ThemeProvider({ children, language = 'ar' }: ThemeProviderProps)
     fetch(`${API_BASE}/whitelabel/public`)
       .then((r) => r.json())
       .then((body) => {
-        const data: ClinicTheme = body.data ?? body;
-        setClinicTheme(data);
+        const data: OrganizationTheme = body.data ?? body;
+        setOrganizationTheme(data);
         setAppTheme(buildTheme(data));
       })
       .catch(() => { /* keep defaults */ });
@@ -949,7 +949,7 @@ git commit -m "feat(mobile): load dynamic theme from /whitelabel/public at start
 grep -rn "CLINIC_SETTINGS_TIMEZONE" apps/backend/src --include="*.ts"
 ```
 
-إذا ظهرت نتائج في `clinic-settings.service.ts` فقط، تأكد أن الـ service لا يزال يستخدمه (timezone ما زال في `ClinicSettings` وهذا صحيح — لا تحذفه).
+إذا ظهرت نتائج في `organization-settings.service.ts` فقط، تأكد أن الـ service لا يزال يستخدمه (timezone ما زال في `OrganizationSettings` وهذا صحيح — لا تحذفه).
 
 - [ ] **Step 2: إزالة مفاتيح cache غير المستخدمة**
 
@@ -1010,6 +1010,6 @@ cd apps/backend && npm run prisma:seed
 
 1. **Migration**: لا تمس الـ migrations القديمة. Migration الجديدة تضيف الأعمدة الجديدة وتحذف `theme` column فقط.
 2. **Backward compat**: الـ endpoint `GET /whitelabel/public` يبقى نفس الـ URL، فقط الـ response يتوسع. الـ clients القديمة لن تتأثر.
-3. **`ClinicSettings.timezone`**: يبقى في `ClinicSettings` كما هو — هو يخص إعدادات التشغيل وليس الهوية البصرية.
+3. **`OrganizationSettings.timezone`**: يبقى في `OrganizationSettings` كما هو — هو يخص إعدادات التشغيل وليس الهوية البصرية.
 4. **`clinicCanEdit` flag**: يبقى في `WhiteLabelConfig` ويُطبَّق في `update()` — الـ admin يتحكم في من يعدّل.
 5. **Mobile**: التغيير لا يكسر شيئاً — إذا فشل الـ API call يرجع للـ defaults.

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import type { BookingFlowOrder } from '@/lib/api/clinic-settings'
+import type { BookingFlowOrder } from '@/lib/api/organization-settings'
 
 export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6
 

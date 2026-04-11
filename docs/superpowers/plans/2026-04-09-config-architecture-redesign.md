@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Split the monolithic WhiteLabelConfig EAV table into 4 structured tables with clear ownership boundaries (WhiteLabelConfig, LicenseConfig, ClinicSettings, ClinicIntegrations).
+**Goal:** Split the monolithic WhiteLabelConfig EAV table into 4 structured tables with clear ownership boundaries (WhiteLabelConfig, LicenseConfig, OrganizationSettings, ClinicIntegrations).
 
 **Architecture:** New Prisma models replace the EAV pattern. Each gets a dedicated NestJS module (service + controller + DTOs). Existing consumers are rewired to read from the correct source. Feature flags gain a license-level gate. Data migration script moves EAV rows to structured fields.
 
@@ -17,15 +17,15 @@
 | File | Responsibility |
 |------|---------------|
 | `backend/prisma/schema/license.prisma` | LicenseConfig model |
-| `backend/prisma/schema/clinic-settings.prisma` | ClinicSettings + ClinicIntegrations models |
+| `backend/prisma/schema/organization-settings.prisma` | OrganizationSettings + ClinicIntegrations models |
 | `backend/src/modules/license/license.module.ts` | NestJS module registration |
 | `backend/src/modules/license/license.service.ts` | LicenseConfig CRUD + feature evaluation |
 | `backend/src/modules/license/license.controller.ts` | HTTP endpoints |
 | `backend/src/modules/license/dto/update-license.dto.ts` | Validation DTO |
-| `backend/src/modules/clinic-settings/clinic-settings.module.ts` | NestJS module registration |
-| `backend/src/modules/clinic-settings/clinic-settings.service.ts` | ClinicSettings CRUD + getTimezone/getTimeFormat |
-| `backend/src/modules/clinic-settings/clinic-settings.controller.ts` | HTTP endpoints |
-| `backend/src/modules/clinic-settings/dto/update-clinic-settings.dto.ts` | Validation DTO |
+| `backend/src/modules/organization-settings/organization-settings.module.ts` | NestJS module registration |
+| `backend/src/modules/organization-settings/organization-settings.service.ts` | OrganizationSettings CRUD + getTimezone/getTimeFormat |
+| `backend/src/modules/organization-settings/organization-settings.controller.ts` | HTTP endpoints |
+| `backend/src/modules/organization-settings/dto/update-organization-settings.dto.ts` | Validation DTO |
 | `backend/src/modules/clinic-integrations/clinic-integrations.module.ts` | NestJS module registration |
 | `backend/src/modules/clinic-integrations/clinic-integrations.service.ts` | ClinicIntegrations CRUD with masking |
 | `backend/src/modules/clinic-integrations/clinic-integrations.controller.ts` | HTTP endpoints |
@@ -49,32 +49,32 @@
 | `backend/src/modules/feature-flags/feature-flags.service.ts` | Add license check in toggle() |
 | `backend/src/modules/feature-flags/feature-flags.module.ts` | Import LicenseModule |
 | `backend/src/modules/feature-flags/feature-flags.controller.ts` | Change permission from whitelabel to feature-flags |
-| `backend/src/modules/clinic/clinic.module.ts` | Remove ClinicSettingsService + ClinicSettingsController |
-| `backend/src/modules/clinic/clinic-settings.service.ts` | Delete (replaced by new clinic-settings module) |
-| `backend/src/modules/clinic/clinic-settings.controller.ts` | Delete (replaced by new clinic-settings module) |
-| `backend/src/modules/zatca/zatca.service.ts` | Rewire loadConfig() to ClinicSettingsService + ClinicIntegrationsService |
+| `backend/src/modules/clinic/clinic.module.ts` | Remove OrganizationSettingsService + OrganizationSettingsController |
+| `backend/src/modules/clinic/organization-settings.service.ts` | Delete (replaced by new organization-settings module) |
+| `backend/src/modules/clinic/organization-settings.controller.ts` | Delete (replaced by new organization-settings module) |
+| `backend/src/modules/zatca/zatca.service.ts` | Rewire loadConfig() to OrganizationSettingsService + ClinicIntegrationsService |
 | `backend/src/modules/chatbot/chatbot-context.service.ts` | Rewire system_name to WhitelabelService |
-| `backend/src/modules/bookings/booking-creation.service.ts` | Rewire getTimezone() to ClinicSettingsService |
-| `backend/src/modules/bookings/bookings.module.ts` | Import ClinicSettingsModule instead of WhitelabelModule |
-| `backend/src/modules/tasks/tasks.module.ts` | Import ClinicSettingsModule instead of WhitelabelModule |
+| `backend/src/modules/bookings/booking-creation.service.ts` | Rewire getTimezone() to OrganizationSettingsService |
+| `backend/src/modules/bookings/bookings.module.ts` | Import OrganizationSettingsModule instead of WhitelabelModule |
+| `backend/src/modules/tasks/tasks.module.ts` | Import OrganizationSettingsModule instead of WhitelabelModule |
 | `backend/src/modules/tasks/booking-autocomplete.service.ts` | Rewire getTimezone() |
 | `backend/src/modules/tasks/booking-noshow.service.ts` | Rewire getTimezone() |
 | `backend/src/modules/tasks/reminder.service.ts` | Rewire getTimeFormat() |
 | `backend/src/modules/employees/employee-availability.service.ts` | Rewire getTimezone() |
-| `backend/src/modules/employees/employees.module.ts` | Import ClinicSettingsModule instead of WhitelabelModule |
+| `backend/src/modules/employees/employees.module.ts` | Import OrganizationSettingsModule instead of WhitelabelModule |
 | `backend/src/modules/notifications/notifications.service.ts` | Rewire getConfigMap() |
 | `backend/src/modules/notifications/notifications.module.ts` | Import changes |
-| `backend/src/modules/email/email.processor.ts` | Rewire getLayoutConfig() to WhitelabelService + ClinicSettingsService |
-| `backend/src/modules/email/email.module.ts` | Import ClinicSettingsModule |
-| `backend/src/app.module.ts` | Register LicenseModule, ClinicSettingsModule, ClinicIntegrationsModule |
+| `backend/src/modules/email/email.processor.ts` | Rewire getLayoutConfig() to WhitelabelService + OrganizationSettingsService |
+| `backend/src/modules/email/email.module.ts` | Import OrganizationSettingsModule |
+| `backend/src/app.module.ts` | Register LicenseModule, OrganizationSettingsModule, ClinicIntegrationsModule |
 
 ### Deleted Files
 
 | File | Reason |
 |------|--------|
 | `backend/src/modules/whitelabel/dto/upsert-config-item.dto.ts` | EAV pattern removed |
-| `backend/src/modules/clinic/clinic-settings.service.ts` | Replaced by new clinic-settings module |
-| `backend/src/modules/clinic/clinic-settings.controller.ts` | Replaced by new clinic-settings module |
+| `backend/src/modules/clinic/organization-settings.service.ts` | Replaced by new organization-settings module |
+| `backend/src/modules/clinic/organization-settings.controller.ts` | Replaced by new organization-settings module |
 
 ---
 
@@ -83,7 +83,7 @@
 **Files:**
 - Modify: `backend/prisma/schema/config.prisma`
 - Create: `backend/prisma/schema/license.prisma`
-- Create: `backend/prisma/schema/clinic-settings.prisma`
+- Create: `backend/prisma/schema/organization-settings.prisma`
 - Modify: `backend/prisma/schema/enums.prisma`
 
 - [ ] **Step 1: Create license.prisma**
@@ -112,12 +112,12 @@ model LicenseConfig {
 }
 ```
 
-- [ ] **Step 2: Create clinic-settings.prisma**
+- [ ] **Step 2: Create organization-settings.prisma**
 
 ```prisma
-// backend/prisma/schema/clinic-settings.prisma
+// backend/prisma/schema/organization-settings.prisma
 
-model ClinicSettings {
+model OrganizationSettings {
   id                    String   @id @default(uuid())
 
   // Legal entity
@@ -257,8 +257,8 @@ Note: The old EAV data in `white_label_config` will be dropped by Prisma. The se
 - [ ] **Step 6: Commit**
 
 ```bash
-git add backend/prisma/schema/license.prisma backend/prisma/schema/clinic-settings.prisma backend/prisma/schema/config.prisma backend/prisma/schema/enums.prisma backend/prisma/migrations/
-git commit -m "feat(schema): add LicenseConfig, ClinicSettings, ClinicIntegrations tables
+git add backend/prisma/schema/license.prisma backend/prisma/schema/organization-settings.prisma backend/prisma/schema/config.prisma backend/prisma/schema/enums.prisma backend/prisma/migrations/
+git commit -m "feat(schema): add LicenseConfig, OrganizationSettings, ClinicIntegrations tables
 
 Replace EAV WhiteLabelConfig with 4 structured singleton tables.
 Remove ConfigValueType enum."
@@ -422,13 +422,13 @@ import {
   }
   console.log('  LicenseConfig seeded');
 
-  // 6. Seed ClinicSettings (singleton)
-  console.log('Seeding ClinicSettings...');
-  const existingClinic = await prisma.clinicSettings.findFirst();
+  // 6. Seed OrganizationSettings (singleton)
+  console.log('Seeding OrganizationSettings...');
+  const existingClinic = await prisma.organizationSettings.findFirst();
   if (!existingClinic) {
-    await prisma.clinicSettings.create({ data: CLINIC_SETTINGS_DEFAULTS });
+    await prisma.organizationSettings.create({ data: CLINIC_SETTINGS_DEFAULTS });
   }
-  console.log('  ClinicSettings seeded');
+  console.log('  OrganizationSettings seeded');
 
   // 7. Seed ClinicIntegrations (singleton)
   console.log('Seeding ClinicIntegrations...');
@@ -451,7 +451,7 @@ Expected: All 4 tables seeded with singleton rows. No errors.
 git add backend/prisma/seed.data.ts backend/prisma/seed.ts
 git commit -m "feat(seed): replace EAV defaults with structured config seeding
 
-Seed WhiteLabelConfig, LicenseConfig, ClinicSettings, ClinicIntegrations
+Seed WhiteLabelConfig, LicenseConfig, OrganizationSettings, ClinicIntegrations
 as singleton rows with typed defaults."
 ```
 
@@ -473,7 +473,7 @@ export const CACHE_TTL = {
   WHITELABEL_CONFIG: 3600,
   /** LicenseConfig — 60 minutes (rarely changes) */
   LICENSE_CONFIG: 3600,
-  /** ClinicSettings — 10 minutes */
+  /** OrganizationSettings — 10 minutes */
   CLINIC_SETTINGS: 600,
   /** ClinicIntegrations — 30 minutes */
   CLINIC_INTEGRATIONS: 1800,
@@ -491,9 +491,9 @@ export const CACHE_KEYS = {
   WHITELABEL_PUBLIC: 'cache:whitelabel:public',
   LICENSE: 'cache:license',
   LICENSE_FEATURES: 'cache:license:features',
-  CLINIC_SETTINGS: 'cache:clinic-settings',
-  CLINIC_SETTINGS_PUBLIC: 'cache:clinic-settings:public',
-  CLINIC_SETTINGS_TIMEZONE: 'cache:clinic-settings:timezone',
+  CLINIC_SETTINGS: 'cache:organization-settings',
+  CLINIC_SETTINGS_PUBLIC: 'cache:organization-settings:public',
+  CLINIC_SETTINGS_TIMEZONE: 'cache:organization-settings:timezone',
   CLINIC_INTEGRATIONS: 'cache:clinic-integrations',
   FEATURE_FLAGS_ALL: 'feature_flags:all',
   FEATURE_FLAGS_MAP: 'feature_flags:map',
@@ -709,18 +709,18 @@ git commit -m "feat(license): add LicenseModule with CRUD and feature evaluation
 
 ---
 
-## Task 5: ClinicSettingsModule — New Module
+## Task 5: OrganizationSettingsModule — New Module
 
 **Files:**
-- Create: `backend/src/modules/clinic-settings/clinic-settings.module.ts`
-- Create: `backend/src/modules/clinic-settings/clinic-settings.service.ts`
-- Create: `backend/src/modules/clinic-settings/clinic-settings.controller.ts`
-- Create: `backend/src/modules/clinic-settings/dto/update-clinic-settings.dto.ts`
+- Create: `backend/src/modules/organization-settings/organization-settings.module.ts`
+- Create: `backend/src/modules/organization-settings/organization-settings.service.ts`
+- Create: `backend/src/modules/organization-settings/organization-settings.controller.ts`
+- Create: `backend/src/modules/organization-settings/dto/update-organization-settings.dto.ts`
 
-- [ ] **Step 1: Create update-clinic-settings.dto.ts**
+- [ ] **Step 1: Create update-organization-settings.dto.ts**
 
 ```typescript
-// backend/src/modules/clinic-settings/dto/update-clinic-settings.dto.ts
+// backend/src/modules/organization-settings/dto/update-organization-settings.dto.ts
 
 import {
   IsBoolean, IsDecimal, IsInt, IsJSON, IsObject, IsOptional,
@@ -728,7 +728,7 @@ import {
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class UpdateClinicSettingsDto {
+export class UpdateOrganizationSettingsDto {
   // Legal entity
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255) companyNameAr?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255) companyNameEn?: string;
@@ -780,38 +780,38 @@ export class UpdateClinicSettingsDto {
 }
 ```
 
-- [ ] **Step 2: Create clinic-settings.service.ts**
+- [ ] **Step 2: Create organization-settings.service.ts**
 
 ```typescript
-// backend/src/modules/clinic-settings/clinic-settings.service.ts
+// backend/src/modules/organization-settings/organization-settings.service.ts
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CacheService } from '../../common/services/cache.service.js';
 import { CACHE_TTL, CACHE_KEYS } from '../../config/constants.js';
 import { CLINIC_TIMEZONE_DEFAULT } from '../../config/constants/timezone.js';
-import { UpdateClinicSettingsDto } from './dto/update-clinic-settings.dto.js';
-import type { ClinicSettings } from '@prisma/client';
+import { UpdateOrganizationSettingsDto } from './dto/update-organization-settings.dto.js';
+import type { OrganizationSettings } from '@prisma/client';
 
 @Injectable()
-export class ClinicSettingsService {
+export class OrganizationSettingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
   ) {}
 
-  async get(): Promise<ClinicSettings> {
-    const cached = await this.cache.get<ClinicSettings>(CACHE_KEYS.CLINIC_SETTINGS);
+  async get(): Promise<OrganizationSettings> {
+    const cached = await this.cache.get<OrganizationSettings>(CACHE_KEYS.CLINIC_SETTINGS);
     if (cached) return cached;
 
-    const settings = await this.prisma.clinicSettings.findFirstOrThrow();
+    const settings = await this.prisma.organizationSettings.findFirstOrThrow();
     await this.cache.set(CACHE_KEYS.CLINIC_SETTINGS, settings, CACHE_TTL.CLINIC_SETTINGS);
     return settings;
   }
 
-  async update(dto: UpdateClinicSettingsDto): Promise<ClinicSettings> {
-    const current = await this.prisma.clinicSettings.findFirstOrThrow();
-    const updated = await this.prisma.clinicSettings.update({
+  async update(dto: UpdateOrganizationSettingsDto): Promise<OrganizationSettings> {
+    const current = await this.prisma.organizationSettings.findFirstOrThrow();
+    const updated = await this.prisma.organizationSettings.update({
       where: { id: current.id },
       data: dto,
     });
@@ -866,10 +866,10 @@ export class ClinicSettingsService {
 }
 ```
 
-- [ ] **Step 3: Create clinic-settings.controller.ts**
+- [ ] **Step 3: Create organization-settings.controller.ts**
 
 ```typescript
-// backend/src/modules/clinic-settings/clinic-settings.controller.ts
+// backend/src/modules/organization-settings/organization-settings.controller.ts
 
 import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -877,58 +877,58 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { CheckPermissions } from '../../common/decorators/check-permissions.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
-import { ClinicSettingsService } from './clinic-settings.service.js';
-import { UpdateClinicSettingsDto } from './dto/update-clinic-settings.dto.js';
+import { OrganizationSettingsService } from './organization-settings.service.js';
+import { UpdateOrganizationSettingsDto } from './dto/update-organization-settings.dto.js';
 
 @ApiTags('Clinic Settings')
 @ApiBearerAuth()
-@Controller('clinic-settings')
+@Controller('organization-settings')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
-export class ClinicSettingsController {
-  constructor(private readonly clinicSettingsService: ClinicSettingsService) {}
+export class OrganizationSettingsController {
+  constructor(private readonly organizationSettingsService: OrganizationSettingsService) {}
 
   @Get('public')
   @Public()
   getPublic() {
-    return this.clinicSettingsService.getPublic();
+    return this.organizationSettingsService.getPublic();
   }
 
   @Get()
-  @CheckPermissions({ module: 'clinic-settings', action: 'view' })
+  @CheckPermissions({ module: 'organization-settings', action: 'view' })
   get() {
-    return this.clinicSettingsService.get();
+    return this.organizationSettingsService.get();
   }
 
   @Put()
-  @CheckPermissions({ module: 'clinic-settings', action: 'edit' })
-  update(@Body() dto: UpdateClinicSettingsDto) {
-    return this.clinicSettingsService.update(dto);
+  @CheckPermissions({ module: 'organization-settings', action: 'edit' })
+  update(@Body() dto: UpdateOrganizationSettingsDto) {
+    return this.organizationSettingsService.update(dto);
   }
 }
 ```
 
-- [ ] **Step 4: Create clinic-settings.module.ts**
+- [ ] **Step 4: Create organization-settings.module.ts**
 
 ```typescript
-// backend/src/modules/clinic-settings/clinic-settings.module.ts
+// backend/src/modules/organization-settings/organization-settings.module.ts
 
 import { Module } from '@nestjs/common';
-import { ClinicSettingsController } from './clinic-settings.controller.js';
-import { ClinicSettingsService } from './clinic-settings.service.js';
+import { OrganizationSettingsController } from './organization-settings.controller.js';
+import { OrganizationSettingsService } from './organization-settings.service.js';
 
 @Module({
-  controllers: [ClinicSettingsController],
-  providers: [ClinicSettingsService],
-  exports: [ClinicSettingsService],
+  controllers: [OrganizationSettingsController],
+  providers: [OrganizationSettingsService],
+  exports: [OrganizationSettingsService],
 })
-export class ClinicSettingsModule {}
+export class OrganizationSettingsModule {}
 ```
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backend/src/modules/clinic-settings/
-git commit -m "feat(clinic-settings): add ClinicSettingsModule with CRUD, timezone, public endpoint"
+git add backend/src/modules/organization-settings/
+git commit -m "feat(organization-settings): add OrganizationSettingsModule with CRUD, timezone, public endpoint"
 ```
 
 ---
@@ -1503,7 +1503,7 @@ In `backend/src/modules/zatca/zatca.service.ts`, replace `loadConfig()`:
 
 ```typescript
 // Replace imports at top — add:
-import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
+import { OrganizationSettingsService } from '../organization-settings/organization-settings.service.js';
 import { ClinicIntegrationsService } from '../clinic-integrations/clinic-integrations.service.js';
 
 // Add to constructor:
@@ -1512,14 +1512,14 @@ constructor(
   private readonly hashService: InvoiceHashService,
   private readonly qrService: QrGeneratorService,
   private readonly xmlBuilder: XmlBuilderService,
-  private readonly clinicSettingsService: ClinicSettingsService,
+  private readonly organizationSettingsService: OrganizationSettingsService,
   private readonly clinicIntegrationsService: ClinicIntegrationsService,
 ) {}
 
 // Replace loadConfig() method:
 async loadConfig(): Promise<ZatcaConfig> {
   const [settings, integrations] = await Promise.all([
-    this.clinicSettingsService.get(),
+    this.organizationSettingsService.get(),
     this.clinicIntegrationsService.getRaw(),
   ]);
 
@@ -1540,7 +1540,7 @@ Note: `sellerName` now uses `companyNameAr` (legal entity name) instead of `syst
 Update `backend/src/modules/zatca/zatca.module.ts` to import the new modules:
 
 ```typescript
-imports: [ClinicSettingsModule, ClinicIntegrationsModule],
+imports: [OrganizationSettingsModule, ClinicIntegrationsModule],
 ```
 
 - [ ] **Step 2: Rewire ChatbotContextService**
@@ -1568,17 +1568,17 @@ In `backend/src/modules/bookings/booking-creation.service.ts`:
 // Replace import:
 // OLD: import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
 // NEW:
-import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
+import { OrganizationSettingsService } from '../organization-settings/organization-settings.service.js';
 
 // Replace constructor injection:
 // OLD: private readonly whitelabelService: WhitelabelService,
 // NEW:
-private readonly clinicSettingsService: ClinicSettingsService,
+private readonly organizationSettingsService: OrganizationSettingsService,
 
 // Replace line 96:
 // OLD: const clinicTz = await this.whitelabelService.getTimezone();
 // NEW:
-const clinicTz = await this.clinicSettingsService.getTimezone();
+const clinicTz = await this.organizationSettingsService.getTimezone();
 ```
 
 - [ ] **Step 4: Rewire BookingsModule imports**
@@ -1589,62 +1589,62 @@ In `backend/src/modules/bookings/bookings.module.ts`:
 // Replace import:
 // OLD: import { WhitelabelModule } from '../whitelabel/whitelabel.module.js';
 // NEW:
-import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
+import { OrganizationSettingsModule } from '../organization-settings/organization-settings.module.js';
 
-// In imports array, replace WhitelabelModule with ClinicSettingsModule
+// In imports array, replace WhitelabelModule with OrganizationSettingsModule
 ```
 
 - [ ] **Step 5: Rewire task services (autocomplete, noshow, reminder)**
 
 In `backend/src/modules/tasks/booking-autocomplete.service.ts`:
 ```typescript
-// Replace WhitelabelService → ClinicSettingsService
-// Replace this.whitelabelService.getTimezone() → this.clinicSettingsService.getTimezone()
+// Replace WhitelabelService → OrganizationSettingsService
+// Replace this.whitelabelService.getTimezone() → this.organizationSettingsService.getTimezone()
 ```
 
 In `backend/src/modules/tasks/booking-noshow.service.ts`:
 ```typescript
-// Same replacement: WhitelabelService → ClinicSettingsService, getTimezone()
+// Same replacement: WhitelabelService → OrganizationSettingsService, getTimezone()
 ```
 
 In `backend/src/modules/tasks/reminder.service.ts`:
 ```typescript
-// Replace WhitelabelService → ClinicSettingsService
-// Replace this.whitelabelService.getTimeFormat() → this.clinicSettingsService.getTimeFormat()
+// Replace WhitelabelService → OrganizationSettingsService
+// Replace this.whitelabelService.getTimeFormat() → this.organizationSettingsService.getTimeFormat()
 ```
 
 In `backend/src/modules/tasks/tasks.module.ts`:
 ```typescript
-// Replace WhitelabelModule import → ClinicSettingsModule
+// Replace WhitelabelModule import → OrganizationSettingsModule
 ```
 
 - [ ] **Step 6: Rewire EmployeeAvailabilityService**
 
 In `backend/src/modules/employees/employee-availability.service.ts`:
 ```typescript
-// Replace WhitelabelService → ClinicSettingsService
-// Replace this.whitelabelService.getTimezone() → this.clinicSettingsService.getTimezone()
+// Replace WhitelabelService → OrganizationSettingsService
+// Replace this.whitelabelService.getTimezone() → this.organizationSettingsService.getTimezone()
 ```
 
 In `backend/src/modules/employees/employees.module.ts`:
 ```typescript
-// Replace WhitelabelModule import → ClinicSettingsModule
+// Replace WhitelabelModule import → OrganizationSettingsModule
 ```
 
 - [ ] **Step 7: Rewire NotificationsService**
 
 In `backend/src/modules/notifications/notifications.service.ts`, the `isNotificationEnabled()` method reads from `getConfigMap()`. This needs to be re-evaluated since the EAV config map no longer exists.
 
-Check what `TYPE_TO_CONFIG_KEY` maps to — if the notification config keys were part of the old WhiteLabelConfig, they need to be moved to ClinicSettings or removed. For now, if the keys don't exist in any new table, the method defaults to `true` (enabled), which is safe.
+Check what `TYPE_TO_CONFIG_KEY` maps to — if the notification config keys were part of the old WhiteLabelConfig, they need to be moved to OrganizationSettings or removed. For now, if the keys don't exist in any new table, the method defaults to `true` (enabled), which is safe.
 
 ```typescript
-// Replace WhitelabelService → ClinicSettingsService
+// Replace WhitelabelService → OrganizationSettingsService
 // Replace this.whitelabelService.getConfigMap() with a direct check
 ```
 
 In `backend/src/modules/notifications/notifications.module.ts`:
 ```typescript
-// Replace WhitelabelModule import → ClinicSettingsModule
+// Replace WhitelabelModule import → OrganizationSettingsModule
 ```
 
 - [ ] **Step 8: Rewire EmailProcessor**
@@ -1654,17 +1654,17 @@ In `backend/src/modules/email/email.processor.ts`, `getLayoutConfig()` reads bot
 ```typescript
 // Add imports:
 import { WhitelabelService } from '../whitelabel/whitelabel.service.js';
-import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
+import { OrganizationSettingsService } from '../organization-settings/organization-settings.service.js';
 
 // Update constructor to inject both:
 private readonly whitelabelService: WhitelabelService,
-private readonly clinicSettingsService: ClinicSettingsService,
+private readonly organizationSettingsService: OrganizationSettingsService,
 
 // Replace getLayoutConfig():
 private async getLayoutConfig(): Promise<EmailLayoutConfig> {
   const [branding, settings] = await Promise.all([
     this.whitelabelService.get(),
-    this.clinicSettingsService.get(),
+    this.organizationSettingsService.get(),
   ]);
   return {
     clinicName: branding.systemName || 'CareKit',
@@ -1687,23 +1687,23 @@ private async getLayoutConfig(): Promise<EmailLayoutConfig> {
 
 In `backend/src/modules/email/email.module.ts`:
 ```typescript
-// Add ClinicSettingsModule to imports (keep WhitelabelModule)
-import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
-// imports: [WhitelabelModule, ClinicSettingsModule, ...]
+// Add OrganizationSettingsModule to imports (keep WhitelabelModule)
+import { OrganizationSettingsModule } from '../organization-settings/organization-settings.module.js';
+// imports: [WhitelabelModule, OrganizationSettingsModule, ...]
 ```
 
-- [ ] **Step 9: Remove old ClinicSettingsService from ClinicModule**
+- [ ] **Step 9: Remove old OrganizationSettingsService from ClinicModule**
 
 In `backend/src/modules/clinic/clinic.module.ts`:
 ```typescript
-// Remove ClinicSettingsService and ClinicSettingsController imports and registrations
-// Keep only ClinicHoursService, ClinicHoursController, ClinicHolidaysService, ClinicHolidaysController
+// Remove OrganizationSettingsService and OrganizationSettingsController imports and registrations
+// Keep only BusinessHoursService, BusinessHoursController, ClinicHolidaysService, ClinicHolidaysController
 ```
 
 Delete files:
 ```bash
-rm backend/src/modules/clinic/clinic-settings.service.ts
-rm backend/src/modules/clinic/clinic-settings.controller.ts
+rm backend/src/modules/clinic/organization-settings.service.ts
+rm backend/src/modules/clinic/organization-settings.controller.ts
 ```
 
 - [ ] **Step 10: Commit**
@@ -1712,11 +1712,11 @@ rm backend/src/modules/clinic/clinic-settings.controller.ts
 git add -A
 git commit -m "refactor: rewire all consumers to new config modules
 
-- ZatcaService reads from ClinicSettings + ClinicIntegrations
+- ZatcaService reads from OrganizationSettings + ClinicIntegrations
 - ChatbotContextService reads systemName from WhitelabelService
-- BookingCreationService, task services, employees read timezone from ClinicSettingsService
-- EmailProcessor reads branding from WhitelabelService, email config from ClinicSettingsService
-- Remove old ClinicSettingsService from clinic module"
+- BookingCreationService, task services, employees read timezone from OrganizationSettingsService
+- EmailProcessor reads branding from WhitelabelService, email config from OrganizationSettingsService
+- Remove old OrganizationSettingsService from clinic module"
 ```
 
 ---
@@ -1733,12 +1733,12 @@ Add imports for the 3 new modules:
 
 ```typescript
 import { LicenseModule } from './modules/license/license.module.js';
-import { ClinicSettingsModule } from './modules/clinic-settings/clinic-settings.module.js';
+import { OrganizationSettingsModule } from './modules/organization-settings/organization-settings.module.js';
 import { ClinicIntegrationsModule } from './modules/clinic-integrations/clinic-integrations.module.js';
 
 // Add to imports array:
 LicenseModule,
-ClinicSettingsModule,
+OrganizationSettingsModule,
 ClinicIntegrationsModule,
 ```
 
@@ -1752,20 +1752,20 @@ export const MODULES = [
   'payments', 'invoices', 'reports', 'notifications', 'chatbot',
   'whitelabel', 'clients', 'ratings', 'coupons', 'branches',
   'intake_forms', 'gift-cards', 'activity-log',
-  'license', 'clinic-settings', 'clinic-integrations', 'feature-flags',
+  'license', 'organization-settings', 'clinic-integrations', 'feature-flags',
 ];
 ```
 
 Update the ROLES array to grant proper access:
 - `super_admin` — already gets all permissions (no change needed)
-- `admin` — add `clinic-settings:*`, `clinic-integrations:*`, `feature-flags:*`, `license:view`
+- `admin` — add `organization-settings:*`, `clinic-integrations:*`, `feature-flags:*`, `license:view`
 - Other roles — no access to these new modules
 
 - [ ] **Step 3: Run seed to create new permissions**
 
 Run: `cd backend && npx prisma db seed`
 
-Expected: New permissions created for license, clinic-settings, clinic-integrations, feature-flags modules.
+Expected: New permissions created for license, organization-settings, clinic-integrations, feature-flags modules.
 
 - [ ] **Step 4: Commit**
 
@@ -1841,8 +1841,8 @@ async function migrate(): Promise<void> {
   });
   console.log('  WhiteLabelConfig migrated');
 
-  // 2. ClinicSettings
-  await prisma.clinicSettings.create({
+  // 2. OrganizationSettings
+  await prisma.organizationSettings.create({
     data: {
       contactPhone: get('contact_phone'),
       contactEmail: get('contact_email'),
@@ -1883,7 +1883,7 @@ async function migrate(): Promise<void> {
       reminderBeforeMinutes: parseInt(map['reminder_before_minutes'] ?? '60', 10),
     },
   });
-  console.log('  ClinicSettings migrated');
+  console.log('  OrganizationSettings migrated');
 
   // 3. ClinicIntegrations
   await prisma.clinicIntegrations.create({
@@ -1961,12 +1961,12 @@ Expected: No type errors.
 
 Run: `cd backend && npm run test`
 
-Expected: Some tests may fail due to mocking `WhitelabelService` — fix the mocks to match the new service API (e.g., `getTimezone()` now on `ClinicSettingsService`, `getConfigMap()` removed).
+Expected: Some tests may fail due to mocking `WhitelabelService` — fix the mocks to match the new service API (e.g., `getTimezone()` now on `OrganizationSettingsService`, `getConfigMap()` removed).
 
 - [ ] **Step 3: Fix broken test mocks**
 
 For each failing test:
-- If it mocks `WhitelabelService.getTimezone()` → change to mock `ClinicSettingsService.getTimezone()`
+- If it mocks `WhitelabelService.getTimezone()` → change to mock `OrganizationSettingsService.getTimezone()`
 - If it mocks `WhitelabelService.getConfigMap()` → remove or replace with specific service calls
 - If it mocks `WhitelabelService.getPublicBranding()` → update mock return value (no more BookingSettings fields)
 

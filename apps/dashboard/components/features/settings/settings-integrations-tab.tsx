@@ -9,15 +9,15 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { useClinicIntegrations, useUpdateClinicIntegrations } from "@/hooks/use-clinic-integrations"
+import { useOrganizationIntegrations, useUpdateOrganizationIntegrations } from "@/hooks/use-organization-integrations"
 import { useLocale } from "@/components/locale-provider"
 
 type TabId = "zoom" | "email"
 
 export function SettingsIntegrationsTab() {
   const { t } = useLocale()
-  const { data: integrations, isLoading } = useClinicIntegrations()
-  const updateIntegrations = useUpdateClinicIntegrations()
+  const { data: integrations, isLoading } = useOrganizationIntegrations()
+  const updateIntegrations = useUpdateOrganizationIntegrations()
 
   const [activeTab, setActiveTab] = useState<TabId>("zoom")
 

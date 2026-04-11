@@ -59,8 +59,8 @@ The `platform/` Bounded Context owns license validation and feature-flag enforce
 | Booking | `bookings/` |
 | Invoice | `finance/` |
 | Payment | `finance/` |
-| Service (clinic service) | `clinic/` |
-| Branch | `clinic/` |
+| Service (clinic service) | `organization/` |
+| Branch | `organization/` |
 | Message / Notification | `comms/` |
 
 No context reads another context's database table directly. Cross-context data flows through: (1) explicit service calls for synchronous reads, (2) domain events for asynchronous reactions.
@@ -264,14 +264,14 @@ BookingsContext                    FinanceContext
 | payment-completed (event out) | Event | — |
 | booking-confirmed (event in) | EventHandler | MEDIUM |
 
-### `clinic/` — Clinic Configuration
+### `organization/` — Clinic Configuration
 | Slice | Type | Complexity |
 |-------|------|-----------|
 | services CRUD | Command/Query | CRUD |
 | branches CRUD | Command/Query | CRUD |
-| clinic-hours | Command/Query | MEDIUM |
+| business-hours | Command/Query | MEDIUM |
 | holidays | Command/Query | CRUD |
-| whitelabel-config | Command/Query | MEDIUM |
+| branding-config | Command/Query | MEDIUM |
 | intake-forms | Command/Query | MEDIUM |
 | ratings | Command/Query | MEDIUM |
 

@@ -14,7 +14,7 @@
 import { useState, useCallback } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { widgetCreateBooking } from "@/lib/api/widget"
-import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
+import type { BookingFlowOrder } from "@/lib/api/organization-settings"
 import { useWidgetBookingQueries, useWidgetSlotsQuery } from "./use-widget-booking-queries"
 import type { Employee, EmployeeDurationOption, TimeSlot } from "@/lib/types/employee"
 import type { Service } from "@/lib/types/service"

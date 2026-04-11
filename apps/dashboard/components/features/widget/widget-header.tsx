@@ -25,7 +25,7 @@ export function WidgetHeader({ locale, onClose, hasParent = false }: Props) {
     staleTime: 10 * 60 * 1000,
   })
 
-  const clinicName = isRtl
+  const organizationName = isRtl
     ? (branding?.system_name_ar ?? branding?.system_name ?? "")
     : (branding?.system_name ?? "")
 
@@ -37,11 +37,11 @@ export function WidgetHeader({ locale, onClose, hasParent = false }: Props) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={branding.logo_url}
-            alt={clinicName}
+            alt={organizationName}
             className="h-7 w-auto object-contain"
           />
         ) : (
-          <span className="text-sm font-semibold text-foreground">{clinicName}</span>
+          <span className="text-sm font-semibold text-foreground">{organizationName}</span>
         )}
       </div>
 

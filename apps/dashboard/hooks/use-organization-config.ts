@@ -1,11 +1,11 @@
 "use client"
 
-import { useClinicSettings } from "@/hooks/use-clinic-settings"
+import { useOrganizationSettings } from "@/hooks/use-organization-settings"
 import { formatClinicDate, formatClinicTime, getWeekStartDay } from "@/lib/utils"
 import type { DateFormat, TimeFormat } from "@/lib/utils"
 
-export function useClinicConfig() {
-  const { data: settings } = useClinicSettings()
+export function useOrganizationConfig() {
+  const { data: settings } = useOrganizationSettings()
 
   const dateFormat = (settings?.dateFormat ?? "Y-m-d") as DateFormat
   const timeFormat = (settings?.timeFormat ?? "24h") as TimeFormat

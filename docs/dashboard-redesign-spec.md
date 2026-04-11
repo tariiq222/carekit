@@ -725,8 +725,8 @@ enum PaymentStatus {
 | PATCH | `/api/v1/clinic` | تعديل معلومات العيادة |
 | GET | `/api/v1/branches/:id` | معلومات الفرع |
 | PATCH | `/api/v1/branches/:id` | تعديل الفرع |
-| GET | `/api/v1/clinic-settings` | إعدادات العيادة |
-| PATCH | `/api/v1/clinic-settings` | تعديل الإعدادات |
+| GET | `/api/v1/organization-settings` | إعدادات العيادة |
+| PATCH | `/api/v1/organization-settings` | تعديل الإعدادات |
 
 #### التصميم
 

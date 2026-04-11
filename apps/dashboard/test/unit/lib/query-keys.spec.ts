@@ -96,9 +96,9 @@ describe("queryKeys", () => {
     })
   })
 
-  describe("clinic", () => {
+  describe("organization", () => {
     it("holidays includes year", () => {
-      expect(queryKeys.clinic.holidays(2026)).toContain(2026)
+      expect(queryKeys.organization.holidays(2026)).toContain(2026)
     })
   })
 

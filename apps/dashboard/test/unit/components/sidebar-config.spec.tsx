@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   overviewNav,
-  clinicNav,
+  organizationNav,
   financeNav,
   toolsNav,
   adminNav,
@@ -14,7 +14,7 @@ describe("SidebarConfig — groups added", () => {
   // Collect every nav item href from all nav groups
   const allNavItems = [
     ...overviewNav,
-    ...clinicNav,
+    ...organizationNav,
     ...financeNav,
     ...toolsNav,
     ...adminNav,
@@ -22,8 +22,8 @@ describe("SidebarConfig — groups added", () => {
 
   const allHrefs = allNavItems.map((item) => item.href)
 
-  it("contains /groups nav item in clinicNav with featureFlag: groups", () => {
-    const groupsItem = clinicNav.find((item) => item.href === "/groups")
+  it("contains /groups nav item in organizationNav with featureFlag: groups", () => {
+    const groupsItem = organizationNav.find((item) => item.href === "/groups")
     expect(groupsItem).toBeDefined()
     expect(groupsItem?.featureFlag).toBe("groups")
   })
@@ -44,14 +44,14 @@ describe("SidebarConfig — groups added", () => {
     expect(navGroups).toHaveLength(5)
     expect(navGroups.map((g) => g.labelKey)).toEqual([
       "nav.overview",
-      "nav.clinic",
+      "nav.organization",
       "nav.finance",
       "nav.tools",
       "nav.admin",
     ])
   })
 
-  it("clinicNav contains expected items including groups", () => {
+  it("organizationNav contains expected items including groups", () => {
     expect(allHrefs).toContain("/groups")
     expect(allHrefs).toContain("/services")
     expect(allHrefs).toContain("/bookings")
@@ -62,11 +62,11 @@ describe("SidebarConfig — groups added", () => {
 
   it("featureFlag keys are correct for all gated items", () => {
     // branches → multi_branch
-    const branches = clinicNav.find((i) => i.href === "/branches")
+    const branches = organizationNav.find((i) => i.href === "/branches")
     expect(branches?.featureFlag).toBe("multi_branch")
 
     // intakeForms → intake_forms
-    const intakeForms = clinicNav.find((i) => i.href === "/intake-forms")
+    const intakeForms = organizationNav.find((i) => i.href === "/intake-forms")
     expect(intakeForms?.featureFlag).toBe("intake_forms")
 
     // coupons → coupons

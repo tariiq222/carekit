@@ -25,7 +25,7 @@ import { ThemedButton } from '@/theme/components/ThemedButton';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
 import { paymentsService } from '@/services/payments';
-import { clinicService } from '@/services/clinic';
+import { organizationService } from '@/services/organization';
 
 interface BankDetailRowProps {
   label: string;
@@ -63,7 +63,7 @@ export default function BankTransferScreen() {
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
   useEffect(() => {
-    clinicService.getSettings().then((res) => {
+    organizationService.getSettings().then((res) => {
       if (res.data) {
         setBankName(res.data.bankName ?? '');
         setBankIban(res.data.bankIban ?? '');

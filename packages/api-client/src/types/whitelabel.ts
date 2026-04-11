@@ -1,6 +1,6 @@
 export interface WhitelabelConfig {
-  clinicName: string
-  clinicNameAr: string
+  organizationName: string
+  organizationNameAr: string
   logoUrl: string
   faviconUrl: string
   primaryColor: string

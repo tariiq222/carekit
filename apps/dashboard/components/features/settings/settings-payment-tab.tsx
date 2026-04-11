@@ -12,8 +12,8 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { useClinicIntegrations, useUpdateClinicIntegrations } from "@/hooks/use-clinic-integrations"
-import { usePaymentSettings, usePaymentSettingsMutation } from "@/hooks/use-clinic-settings"
+import { useOrganizationIntegrations, useUpdateOrganizationIntegrations } from "@/hooks/use-organization-integrations"
+import { usePaymentSettings, usePaymentSettingsMutation } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"
 import { BankAccountCard, SAUDI_BANKS } from "./bank-account-card"
 import type { BankAccount } from "./bank-account-card"
@@ -26,9 +26,9 @@ type TabId = "moyasar" | "atclinic" | "bank"
 
 export function SettingsPaymentTab() {
   const { t, locale } = useLocale()
-  const { data: integrations, isLoading: integrationsLoading } = useClinicIntegrations()
+  const { data: integrations, isLoading: integrationsLoading } = useOrganizationIntegrations()
   const { data: paymentSettings, isLoading: paymentLoading } = usePaymentSettings()
-  const updateIntegrations = useUpdateClinicIntegrations()
+  const updateIntegrations = useUpdateOrganizationIntegrations()
   const paymentMut = usePaymentSettingsMutation()
 
   const [activeTab, setActiveTab] = useState<TabId>("moyasar")

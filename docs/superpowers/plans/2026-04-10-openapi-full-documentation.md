@@ -175,13 +175,13 @@ git commit -m "docs(backend): add centralized Swagger config and shared response
 
 ## Task 2: `@ApiOperation` + `@ApiResponse` — Settings & Config Controllers
 
-Controllers: `whitelabel`, `clinic-settings`, `clinic-integrations`, `clinic-hours`, `clinic-holidays`, `booking-settings`, `booking-status-log`, `feature-flags`, `license`
+Controllers: `whitelabel`, `organization-settings`, `clinic-integrations`, `business-hours`, `clinic-holidays`, `booking-settings`, `booking-status-log`, `feature-flags`, `license`
 
 **Files:**
 - Modify: `backend/src/modules/whitelabel/whitelabel.controller.ts`
-- Modify: `backend/src/modules/clinic-settings/clinic-settings.controller.ts`
+- Modify: `backend/src/modules/organization-settings/organization-settings.controller.ts`
 - Modify: `backend/src/modules/clinic-integrations/clinic-integrations.controller.ts`
-- Modify: `backend/src/modules/clinic/clinic-hours.controller.ts`
+- Modify: `backend/src/modules/clinic/business-hours.controller.ts`
 - Modify: `backend/src/modules/clinic/clinic-holidays.controller.ts`
 - Modify: `backend/src/modules/bookings/booking-settings.controller.ts`
 - Modify: `backend/src/modules/bookings/booking-status-log.controller.ts`
@@ -219,7 +219,7 @@ Add decorators to each method:
   update(@Body() dto: UpdateWhitelabelDto) { ... }
 ```
 
-- [ ] **Step 2: Update `clinic-settings.controller.ts`**
+- [ ] **Step 2: Update `organization-settings.controller.ts`**
 
 ```typescript
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -234,18 +234,18 @@ import { ApiStandardResponses } from '../../common/swagger/api-responses.decorat
   getPublic() { ... }
 
   @Get()
-  @CheckPermissions({ module: 'clinic-settings', action: 'view' })
+  @CheckPermissions({ module: 'organization-settings', action: 'view' })
   @ApiOperation({ summary: 'Get full clinic settings' })
   @ApiResponse({ status: 200, description: 'Clinic settings returned' })
   @ApiStandardResponses()
   get() { ... }
 
   @Put()
-  @CheckPermissions({ module: 'clinic-settings', action: 'edit' })
+  @CheckPermissions({ module: 'organization-settings', action: 'edit' })
   @ApiOperation({ summary: 'Update clinic settings' })
   @ApiResponse({ status: 200, description: 'Settings updated' })
   @ApiStandardResponses()
-  update(@Body() dto: UpdateClinicSettingsDto) { ... }
+  update(@Body() dto: UpdateOrganizationSettingsDto) { ... }
 ```
 
 - [ ] **Step 3: Update `clinic-integrations.controller.ts`**
@@ -271,7 +271,7 @@ import { ApiStandardResponses } from '../../common/swagger/api-responses.decorat
   update(@Body() dto: UpdateClinicIntegrationsDto) { ... }
 ```
 
-- [ ] **Step 4: Update `clinic-hours.controller.ts`**
+- [ ] **Step 4: Update `business-hours.controller.ts`**
 
 ```typescript
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -440,9 +440,9 @@ Expected: no errors.
 cd backend
 git add \
   src/modules/whitelabel/whitelabel.controller.ts \
-  src/modules/clinic-settings/clinic-settings.controller.ts \
+  src/modules/organization-settings/organization-settings.controller.ts \
   src/modules/clinic-integrations/clinic-integrations.controller.ts \
-  src/modules/clinic/clinic-hours.controller.ts \
+  src/modules/clinic/business-hours.controller.ts \
   src/modules/clinic/clinic-holidays.controller.ts \
   src/modules/bookings/booking-settings.controller.ts \
   src/modules/bookings/booking-status-log.controller.ts \

@@ -1502,18 +1502,18 @@ git commit -m "test(services): add controller delegation tests for 18 endpoints"
 
 **Files:**
 - Create: `backend/test/unit/clinic/clinic-controllers.spec.ts`
-- Covers: 3 controllers — `clinic-holidays.controller.ts` (46 lines, 3 methods), `clinic-hours.controller.ts` (29 lines, 2 methods), `clinic-settings.controller.ts` (58 lines, 5 methods)
+- Covers: 3 controllers — `clinic-holidays.controller.ts` (46 lines, 3 methods), `business-hours.controller.ts` (29 lines, 2 methods), `organization-settings.controller.ts` (58 lines, 5 methods)
 
 - [ ] **Step 1: Write the test file**
 
 ```typescript
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClinicHolidaysController } from '../../../src/modules/clinic/clinic-holidays.controller.js';
-import { ClinicHoursController } from '../../../src/modules/clinic/clinic-hours.controller.js';
-import { ClinicSettingsController } from '../../../src/modules/clinic/clinic-settings.controller.js';
+import { BusinessHoursController } from '../../../src/modules/clinic/business-hours.controller.js';
+import { OrganizationSettingsController } from '../../../src/modules/clinic/organization-settings.controller.js';
 import { ClinicHolidaysService } from '../../../src/modules/clinic/clinic-holidays.service.js';
-import { ClinicHoursService } from '../../../src/modules/clinic/clinic-hours.service.js';
-import { ClinicSettingsService } from '../../../src/modules/clinic/clinic-settings.service.js';
+import { BusinessHoursService } from '../../../src/modules/clinic/business-hours.service.js';
+import { OrganizationSettingsService } from '../../../src/modules/clinic/organization-settings.service.js';
 import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
 
@@ -1600,18 +1600,18 @@ describe('ClinicHolidaysController', () => {
 
 // ── Hours ────────────────────────────────────────────────────────
 
-describe('ClinicHoursController', () => {
-  let controller: ClinicHoursController;
+describe('BusinessHoursController', () => {
+  let controller: BusinessHoursController;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await guardOverrides(
       Test.createTestingModule({
-        controllers: [ClinicHoursController],
-        providers: [{ provide: ClinicHoursService, useValue: mockHours }],
+        controllers: [BusinessHoursController],
+        providers: [{ provide: BusinessHoursService, useValue: mockHours }],
       }),
     ).compile();
-    controller = module.get<ClinicHoursController>(ClinicHoursController);
+    controller = module.get<BusinessHoursController>(BusinessHoursController);
   });
 
   describe('getAll', () => {
@@ -1637,18 +1637,18 @@ describe('ClinicHoursController', () => {
 
 // ── Settings ─────────────────────────────────────────────────────
 
-describe('ClinicSettingsController', () => {
-  let controller: ClinicSettingsController;
+describe('OrganizationSettingsController', () => {
+  let controller: OrganizationSettingsController;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await guardOverrides(
       Test.createTestingModule({
-        controllers: [ClinicSettingsController],
-        providers: [{ provide: ClinicSettingsService, useValue: mockSettings }],
+        controllers: [OrganizationSettingsController],
+        providers: [{ provide: OrganizationSettingsService, useValue: mockSettings }],
       }),
     ).compile();
-    controller = module.get<ClinicSettingsController>(ClinicSettingsController);
+    controller = module.get<OrganizationSettingsController>(OrganizationSettingsController);
   });
 
   describe('getPublicSettings', () => {

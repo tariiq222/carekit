@@ -24,23 +24,23 @@ Visible only to users with `whitelabel:edit` permission. Used during initial set
 
 ### `/settings` — Clinic admin (daily operations)
 
-Visible to users with `clinic-settings:view` permission.
+Visible to users with `organization-settings:view` permission.
 
 **Tabs:**
 1. **Branding** (conditional) — appears only when `clinicCanEdit = true` from `GET /whitelabel`
    - Same branding form as white-label page
    - Endpoint: `GET /whitelabel` + `PUT /whitelabel`
 2. **General** — contact info (phone, email, address, social) + localization (timezone, language, date/time format, week start)
-   - Endpoint: `GET /clinic-settings` + `PUT /clinic-settings`
+   - Endpoint: `GET /organization-settings` + `PUT /organization-settings`
 3. **Legal Entity** — company_name_ar/en, CR, VAT number, seller_address, clinic_city, postal_code
-   - Endpoint: `GET /clinic-settings` + `PUT /clinic-settings`
+   - Endpoint: `GET /organization-settings` + `PUT /organization-settings`
 4. **Legal Content** — about, privacy policy, terms, cancellation policy (bilingual)
-   - Endpoint: `GET /clinic-settings` + `PUT /clinic-settings`
+   - Endpoint: `GET /organization-settings` + `PUT /organization-settings`
 5. **Integrations** — Moyasar keys, bank details, Zoom, email provider, Firebase, OpenRouter, ZATCA credentials
    - Endpoint: `GET /clinic-integrations` + `PUT /clinic-integrations`
    - Sensitive fields display as `***`, skip on save if unchanged
 6. **Email Layout** — header show logo/name, footer links (phone, website, social)
-   - Endpoint: `GET /clinic-settings` + `PUT /clinic-settings`
+   - Endpoint: `GET /organization-settings` + `PUT /organization-settings`
 7. **Features** — runtime feature toggles (bounded by license)
    - Endpoint: `GET /license/features` (shows licensed + enabled state) + `PATCH /feature-flags/:key`
    - Disabled toggle + tooltip for unlicensed features
@@ -53,11 +53,11 @@ Visible to users with `clinic-settings:view` permission.
 
 ### New Files
 
-**`dashboard/lib/api/clinic-settings.ts`**
+**`dashboard/lib/api/organization-settings.ts`**
 ```typescript
-fetchClinicSettings(): Promise<ClinicSettings>     // GET /clinic-settings
-updateClinicSettings(data): Promise<ClinicSettings> // PUT /clinic-settings
-fetchClinicSettingsPublic(): Promise<PublicClinicSettings> // GET /clinic-settings/public
+fetchOrganizationSettings(): Promise<OrganizationSettings>     // GET /organization-settings
+updateOrganizationSettings(data): Promise<OrganizationSettings> // PUT /organization-settings
+fetchOrganizationSettingsPublic(): Promise<PublicOrganizationSettings> // GET /organization-settings/public
 ```
 
 **`dashboard/lib/api/clinic-integrations.ts`**
@@ -91,9 +91,9 @@ Remove: fetchConfig(), fetchConfigMap(), fetchConfigByKey(), deleteConfig() — 
 
 ### New Files
 
-**`dashboard/lib/types/clinic-settings.ts`**
+**`dashboard/lib/types/organization-settings.ts`**
 ```typescript
-export interface ClinicSettings {
+export interface OrganizationSettings {
   id: string;
   companyNameAr: string | null;
   companyNameEn: string | null;
@@ -134,7 +134,7 @@ export interface ClinicSettings {
   reminderBeforeMinutes: number;
 }
 
-export interface PublicClinicSettings {
+export interface PublicOrganizationSettings {
   contactPhone: string | null;
   contactEmail: string | null;
   address: string | null;
@@ -228,9 +228,9 @@ Remove: ConfigValueType, WhiteLabelConfigMap, UpsertConfigItem, UpdateConfigPayl
 
 ### New Files
 
-**`dashboard/hooks/use-clinic-settings.ts`**
-- `useClinicSettings()` — fetches `GET /clinic-settings`, staleTime: 5 min
-- `useUpdateClinicSettings()` — mutation for `PUT /clinic-settings`, invalidates clinic-settings queries
+**`dashboard/hooks/use-organization-settings.ts`**
+- `useOrganizationSettings()` — fetches `GET /organization-settings`, staleTime: 5 min
+- `useUpdateOrganizationSettings()` — mutation for `PUT /organization-settings`, invalidates organization-settings queries
 
 **`dashboard/hooks/use-clinic-integrations.ts`**
 - `useClinicIntegrations()` — fetches `GET /clinic-integrations` (masked), staleTime: 5 min
@@ -249,7 +249,7 @@ Remove: ConfigValueType, WhiteLabelConfigMap, UpsertConfigItem, UpdateConfigPayl
 - Remove: useConfigMap(), useUpdateConfig()
 
 **`dashboard/hooks/use-clinic-config.ts`** — Rewrite:
-- Read timezone, dateFormat, timeFormat, weekStartDay from `useClinicSettings()` instead of `useConfigMap()`
+- Read timezone, dateFormat, timeFormat, weekStartDay from `useOrganizationSettings()` instead of `useConfigMap()`
 - Same formatDate(), formatTime() helpers
 
 **`dashboard/hooks/use-feature-flags.ts`** — Minor update:
@@ -263,10 +263,10 @@ whitelabel: {
   all: ["whitelabel"] as const,
   config: () => ["whitelabel", "config"] as const,
 },
-clinicSettings: {
-  all: ["clinic-settings"] as const,
-  config: () => ["clinic-settings", "config"] as const,
-  public: () => ["clinic-settings", "public"] as const,
+organizationSettings: {
+  all: ["organization-settings"] as const,
+  config: () => ["organization-settings", "config"] as const,
+  public: () => ["organization-settings", "public"] as const,
 },
 clinicIntegrations: {
   all: ["clinic-integrations"] as const,
@@ -314,11 +314,11 @@ const tabs = [
 
 ### Settings components — New/Modify
 
-- **Modify**: `general-tab.tsx` — read from `useClinicSettings()` instead of `useConfigMap()`
-- **New**: `entity-tab.tsx` — legal entity fields from `useClinicSettings()`
-- **New**: `legal-content-tab.tsx` — bilingual legal text from `useClinicSettings()`
+- **Modify**: `general-tab.tsx` — read from `useOrganizationSettings()` instead of `useConfigMap()`
+- **New**: `entity-tab.tsx` — legal entity fields from `useOrganizationSettings()`
+- **New**: `legal-content-tab.tsx` — bilingual legal text from `useOrganizationSettings()`
 - **New**: `integrations-tab.tsx` — all API keys from `useClinicIntegrations()` (with masked fields)
-- **New**: `email-layout-tab.tsx` — header/footer settings from `useClinicSettings()`
+- **New**: `email-layout-tab.tsx` — header/footer settings from `useOrganizationSettings()`
 - **Modify**: `features-tab.tsx` — show license status, disable unlicensed toggles, handle 403
 
 ### Branding Provider
@@ -357,5 +357,5 @@ The notifications tab reads config keys like `notify_new_bookings`, `notify_canc
 ## Testing
 
 - All existing hooks tests need updating for new API shapes
-- New hooks need tests (useClinicSettings, useClinicIntegrations, useLicense)
+- New hooks need tests (useOrganizationSettings, useClinicIntegrations, useLicense)
 - E2E tests for settings page tabs

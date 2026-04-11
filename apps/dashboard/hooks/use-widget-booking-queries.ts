@@ -17,7 +17,7 @@ import {
 } from "@/lib/api/widget"
 import type { PublicBranch } from "@/lib/api/widget"
 import { queryKeys } from "@/lib/query-keys"
-import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
+import type { BookingFlowOrder } from "@/lib/api/organization-settings"
 import type { WizardState } from "./use-widget-booking"
 
 const STALE_5M = 5 * 60 * 1000

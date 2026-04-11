@@ -1,16 +1,14 @@
-/**
- * Clinic Settings Types — CareKit Dashboard
- */
+import { apiRequest } from '../client.js'
 
-export interface ClinicSettings {
+export interface OrganizationSettings {
   id: string
   companyNameAr: string | null
   companyNameEn: string | null
   businessRegistration: string | null
   vatRegistrationNumber: string | null
-  vatRate: number
+  vatRate: number | null
   sellerAddress: string | null
-  clinicCity: string
+  organizationCity: string | null
   postalCode: string | null
   contactPhone: string | null
   contactEmail: string | null
@@ -24,11 +22,11 @@ export interface ClinicSettings {
   termsEn: string | null
   cancellationPolicyAr: string | null
   cancellationPolicyEn: string | null
-  defaultLanguage: string
-  timezone: string
-  weekStartDay: string
-  dateFormat: string
-  timeFormat: string
+  defaultLanguage: string | null
+  timezone: string | null
+  weekStartDay: string | null
+  dateFormat: string | null
+  timeFormat: string | null
   emailHeaderShowLogo: boolean
   emailHeaderShowName: boolean
   emailFooterPhone: string | null
@@ -39,21 +37,23 @@ export interface ClinicSettings {
   emailFooterTiktok: string | null
   emailFooterLinkedin: string | null
   emailFooterYoutube: string | null
-  sessionDuration: number
-  reminderBeforeMinutes: number
+  sessionDuration: number | null
+  reminderBeforeMinutes: number | null
   createdAt: string
   updatedAt: string
 }
 
-export type UpdateClinicSettingsPayload = Partial<
-  Omit<ClinicSettings, "id" | "createdAt" | "updatedAt">
+export type UpdateOrganizationSettingsPayload = Partial<
+  Omit<OrganizationSettings, 'id' | 'createdAt' | 'updatedAt'>
 >
 
-export interface PublicClinicSettings {
-  contactPhone: string | null
-  contactEmail: string | null
-  address: string | null
-  socialMedia: Record<string, string> | null
-  cancellationPolicyAr: string | null
-  cancellationPolicyEn: string | null
+export async function get(): Promise<OrganizationSettings> {
+  return apiRequest<OrganizationSettings>('/organization-settings')
+}
+
+export async function update(payload: UpdateOrganizationSettingsPayload): Promise<OrganizationSettings> {
+  return apiRequest<OrganizationSettings>('/organization-settings', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
 }

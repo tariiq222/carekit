@@ -18,7 +18,7 @@
 | `dashboard/components/features/settings/settings-integrations-tab.tsx` | إصلاح Zoom toggle — يحفظ فوراً + إخفاء المفاتيح المحجوبة |
 | `dashboard/components/features/settings/advanced-cancellation-card.tsx` | إزالة `SwitchRow` المكرر (استخدام نسخة booking-tab) — في الواقع النسختان مختلفتان بالـ className، إصلاح double-save |
 | `dashboard/components/features/settings/cancellation-tab.tsx` | إصلاح double-save: حذف استدعاء `scheduleSave()` من onChange النصي |
-| `dashboard/hooks/use-clinic-settings.ts` | إصلاح widget branding invalidation key |
+| `dashboard/hooks/use-organization-settings.ts` | إصلاح widget branding invalidation key |
 | `backend/src/modules/bookings/booking-settings.controller.ts` | توحيد الصلاحيات: PATCH يستخدم `bookings:edit` بدل `whitelabel:edit` |
 
 ---
@@ -117,7 +117,7 @@ git commit -m "fix(bookings): align PATCH booking-settings to use bookings:edit 
 ## Task 3: Dashboard — إصلاح Widget branding invalidation key
 
 **Files:**
-- Modify: `dashboard/hooks/use-clinic-settings.ts:166`
+- Modify: `dashboard/hooks/use-organization-settings.ts:166`
 
 **السياق:** المفتاح `["widget", "branding"]` غير مُعرَّف في `queryKeys` — لا يُبطل أي cache فعلياً.
 
@@ -130,7 +130,7 @@ grep -rn '"widget"' dashboard/hooks/ | grep -v "branding"
 
 - [ ] **Step 2: إزالة السطر الزائد**
 
-في `dashboard/hooks/use-clinic-settings.ts`، في `useWidgetSettingsMutation`، احذف السطر:
+في `dashboard/hooks/use-organization-settings.ts`، في `useWidgetSettingsMutation`، احذف السطر:
 ```ts
       queryClient.invalidateQueries({ queryKey: ["widget", "branding"] })
 ```
@@ -142,7 +142,7 @@ export function useWidgetSettingsMutation() {
   return useMutation({
     mutationFn: (data: Partial<WidgetSettings>) => updateBookingSettings(data as Record<string, unknown>),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clinic-settings", "widget"] })
+      queryClient.invalidateQueries({ queryKey: ["organization-settings", "widget"] })
       queryClient.invalidateQueries({ queryKey: BOOKING_SETTINGS_KEY })
     },
   })
@@ -152,7 +152,7 @@ export function useWidgetSettingsMutation() {
 - [ ] **Step 3: Commit**
 
 ```bash
-git add dashboard/hooks/use-clinic-settings.ts
+git add dashboard/hooks/use-organization-settings.ts
 git commit -m "fix(settings): remove invalid widget branding cache invalidation key"
 ```
 

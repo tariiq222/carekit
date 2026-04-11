@@ -23,5 +23,5 @@ export * as reportsApi from './modules/reports.js'
 export * as chatbotAdminApi from './modules/chatbot-admin.js'
 export * as groupsApi from './modules/groups.js'
 export * as usersApi from './modules/users.js'
-export * as clinicSettingsApi from './modules/clinic-settings.js'
-export type { ClinicSettings, UpdateClinicSettingsPayload } from './modules/clinic-settings.js'
+export * as organizationSettingsApi from "./modules/organization-settings.js"
+export type { OrganizationSettings, UpdateOrganizationSettingsPayload } from "./modules/organization-settings.js"

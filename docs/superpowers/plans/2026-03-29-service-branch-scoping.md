@@ -15,7 +15,7 @@
 | Action | File | Responsibility |
 |--------|------|----------------|
 | Modify | `backend/prisma/schema/services.prisma` | Add `ServiceBranch` model + relation on `Service` |
-| Modify | `backend/prisma/schema/clinic.prisma` | Add `services` relation to `Branch` |
+| Modify | `backend/prisma/schema/organization.prisma` | Add `services` relation to `Branch` |
 | Create | `backend/prisma/migrations/20260329120000_add_service_branches/migration.sql` | DDL for new table |
 | Modify | `backend/src/modules/services/dto/service-list-query.dto.ts` | Add optional `branchId` field |
 | Create | `backend/src/modules/services/dto/set-service-branches.dto.ts` | `{ branchIds: string[] }` |
@@ -31,7 +31,7 @@
 
 **Files:**
 - Modify: `backend/prisma/schema/services.prisma`
-- Modify: `backend/prisma/schema/clinic.prisma`
+- Modify: `backend/prisma/schema/organization.prisma`
 
 - [ ] **Step 1: Add `ServiceBranch` model to `services.prisma`**
 
@@ -59,9 +59,9 @@ model ServiceBranch {
 }
 ```
 
-- [ ] **Step 2: Add `services` relation to `Branch` model in `clinic.prisma`**
+- [ ] **Step 2: Add `services` relation to `Branch` model in `organization.prisma`**
 
-Open `backend/prisma/schema/clinic.prisma`. In the `Branch` model relations block (it currently has `employees`, `intakeForms`, etc.), add:
+Open `backend/prisma/schema/organization.prisma`. In the `Branch` model relations block (it currently has `employees`, `intakeForms`, etc.), add:
 ```prisma
   services                ServiceBranch[]
 ```
@@ -109,7 +109,7 @@ Expected: Migration `20260329120000_add_service_branches` applied successfully. 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backend/prisma/schema/services.prisma backend/prisma/schema/clinic.prisma backend/prisma/migrations/20260329120000_add_service_branches/
+git add backend/prisma/schema/services.prisma backend/prisma/schema/organization.prisma backend/prisma/migrations/20260329120000_add_service_branches/
 git commit -m "feat(services): add service_branches M2M join table"
 ```
 

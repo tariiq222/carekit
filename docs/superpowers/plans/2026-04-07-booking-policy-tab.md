@@ -14,7 +14,7 @@
 
 | File | What changes |
 |------|-------------|
-| `dashboard/hooks/use-clinic-settings.ts` | `useBookingSettingsMutation` — add full cache invalidation (widget, public settings, booking-flow-order) |
+| `dashboard/hooks/use-organization-settings.ts` | `useBookingSettingsMutation` — add full cache invalidation (widget, public settings, booking-flow-order) |
 | `dashboard/components/features/settings/booking-tab.tsx` | Add missing fields in recurring section + adminCanBookOutsideHours + fix paymentTimeout min constraint |
 | `dashboard/lib/translations/ar.settings.ts` | Add missing translation keys for new fields |
 | `dashboard/lib/query-keys.ts` | Add `widget` and `clinicPublic` keys |
@@ -24,25 +24,25 @@
 ## Task 1: Centralize cache invalidation in useBookingSettingsMutation
 
 **Files:**
-- Modify: `dashboard/hooks/use-clinic-settings.ts`
+- Modify: `dashboard/hooks/use-organization-settings.ts`
 - Modify: `dashboard/lib/query-keys.ts`
 
 Currently `useBookingSettingsMutation` only invalidates `["booking-settings"]`. Any component reading widget settings or the public clinic config won't see changes.
 
 - [ ] **Step 1: Add widget and clinicPublic keys to query-keys.ts**
 
-Open `dashboard/lib/query-keys.ts`. After the `clinicSettings` block (line 239), the file already has `bookingSettings` and `clinicSettings`. Add `widget` and `clinicPublic` entries:
+Open `dashboard/lib/query-keys.ts`. After the `organizationSettings` block (line 239), the file already has `bookingSettings` and `organizationSettings`. Add `widget` and `clinicPublic` entries:
 
 ```typescript
   /* ─── Widget ─── */
   widget: {
     branding: () => ["widget", "branding"] as const,
-    settings: () => ["clinic-settings", "widget"] as const,
+    settings: () => ["organization-settings", "widget"] as const,
   },
 
   /* ─── Clinic Public Settings ─── */
   clinicPublic: {
-    settings: () => ["clinic-settings", "public"] as const,
+    settings: () => ["organization-settings", "public"] as const,
   },
 ```
 
@@ -50,7 +50,7 @@ Place these before the closing `} as const` on the last line.
 
 - [ ] **Step 2: Update useBookingSettingsMutation to invalidate all caches**
 
-In `dashboard/hooks/use-clinic-settings.ts`, replace the `useBookingSettingsMutation` function (lines 90–98):
+In `dashboard/hooks/use-organization-settings.ts`, replace the `useBookingSettingsMutation` function (lines 90–98):
 
 ```typescript
 export function useBookingSettingsMutation() {
@@ -69,7 +69,7 @@ export function useBookingSettingsMutation() {
 
 - [ ] **Step 3: Update useWidgetSettingsMutation to use the same keys**
 
-In `dashboard/hooks/use-clinic-settings.ts`, replace the `useWidgetSettingsMutation` function (lines 160–171) to use `queryKeys`:
+In `dashboard/hooks/use-organization-settings.ts`, replace the `useWidgetSettingsMutation` function (lines 160–171) to use `queryKeys`:
 
 ```typescript
 export function useWidgetSettingsMutation() {
@@ -97,7 +97,7 @@ Expected: 0 errors.
 
 ```bash
 # (run from repo root)
-git add dashboard/lib/query-keys.ts dashboard/hooks/use-clinic-settings.ts
+git add dashboard/lib/query-keys.ts dashboard/hooks/use-organization-settings.ts
 git commit -m "feat(settings): centralize booking settings cache invalidation"
 ```
 

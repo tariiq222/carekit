@@ -7,13 +7,13 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useClinicSettings, useUpdateClinicSettings } from "@/hooks/use-clinic-settings"
+import { useOrganizationSettings, useUpdateOrganizationSettings } from "@/hooks/use-organization-settings"
 import { useLocale } from "@/components/locale-provider"
 
 export function EntityTab() {
   const { t } = useLocale()
-  const { data: settings, isLoading } = useClinicSettings()
-  const updateSettings = useUpdateClinicSettings()
+  const { data: settings, isLoading } = useOrganizationSettings()
+  const updateSettings = useUpdateOrganizationSettings()
 
   const [companyNameAr, setCompanyNameAr] = useState("")
   const [companyNameEn, setCompanyNameEn] = useState("")
@@ -21,7 +21,7 @@ export function EntityTab() {
   const [vatRegistrationNumber, setVatRegistrationNumber] = useState("")
   const [vatRate, setVatRate] = useState("15")
   const [sellerAddress, setSellerAddress] = useState("")
-  const [clinicCity, setClinicCity] = useState("")
+  const [organizationCity, setClinicCity] = useState("")
   const [postalCode, setPostalCode] = useState("")
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export function EntityTab() {
     setVatRegistrationNumber(settings.vatRegistrationNumber ?? "")
     setVatRate(String(settings.vatRate ?? 15))
     setSellerAddress(settings.sellerAddress ?? "")
-    setClinicCity(settings.clinicCity ?? "")
+    setClinicCity(settings.organizationCity ?? "")
     setPostalCode(settings.postalCode ?? "")
   }, [settings])
 
@@ -45,7 +45,7 @@ export function EntityTab() {
         vatRegistrationNumber: vatRegistrationNumber || null,
         vatRate: Number(vatRate),
         sellerAddress: sellerAddress || null,
-        clinicCity,
+        organizationCity,
         postalCode: postalCode || null,
       },
       {
@@ -100,8 +100,8 @@ export function EntityTab() {
               <Input value={sellerAddress} onChange={(e) => setSellerAddress(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>{t("settings.entity.clinicCity") ?? "المدينة"}</Label>
-              <Input value={clinicCity} onChange={(e) => setClinicCity(e.target.value)} />
+              <Label>{t("settings.entity.organizationCity") ?? "المدينة"}</Label>
+              <Input value={organizationCity} onChange={(e) => setClinicCity(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>{t("settings.entity.postalCode") ?? "الرمز البريدي"}</Label>

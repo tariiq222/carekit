@@ -29,7 +29,7 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLocale } from "@/components/locale-provider"
-import { useClinicConfig } from "@/hooks/use-clinic-config"
+import { useOrganizationConfig } from "@/hooks/use-organization-config"
 import { useClient, useClientStats, useClientBookings } from "@/hooks/use-clients"
 
 /* ─── Props ─── */
@@ -43,7 +43,7 @@ interface Props {
 export function ClientDetailPage({ clientId }: Props) {
   const router = useRouter()
   const { locale, t } = useLocale()
-  const { formatDate } = useClinicConfig()
+  const { formatDate } = useOrganizationConfig()
 
   const { data: client, isLoading, error } = useClient(clientId)
   const { data: stats, isLoading: statsLoading } = useClientStats(clientId)

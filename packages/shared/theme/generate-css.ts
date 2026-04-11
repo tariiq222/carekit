@@ -1,4 +1,4 @@
-import type { ClinicTheme, DerivedTokens } from '../types/theme.js'
+import type { OrganizationTheme, DerivedTokens } from '../types/theme.js'
 
 function hexToRgbParts(hex: string): string {
   const clean = hex.replace('#', '')
@@ -8,7 +8,7 @@ function hexToRgbParts(hex: string): string {
   return `${r} ${g} ${b}`
 }
 
-function derivedTokens(theme: ClinicTheme): DerivedTokens {
+function derivedTokens(theme: OrganizationTheme): DerivedTokens {
   const pr = hexToRgbParts(theme.colorPrimary).replace(/ /g, ',')
   const ac = hexToRgbParts(theme.colorAccent).replace(/ /g, ',')
   return {
@@ -19,7 +19,7 @@ function derivedTokens(theme: ClinicTheme): DerivedTokens {
   }
 }
 
-export function generateCssVariables(theme: ClinicTheme): string {
+export function generateCssVariables(theme: OrganizationTheme): string {
   const d = derivedTokens(theme)
   return `:root {
   --primary:        ${theme.colorPrimary};

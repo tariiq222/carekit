@@ -62,7 +62,7 @@ The `packages/api-client/` package extracts all HTTP logic so it can be consumed
 Every clinic has a visual identity config loaded from the backend at login:
 
 ```ts
-interface WhitelabelConfig {
+interface BrandingConfig {
   clinicName: string
   logo: string           // MinIO URL
   favicon: string        // MinIO URL
@@ -109,7 +109,7 @@ interface FeatureFlags {
   branches: boolean
   reports: boolean
   users: boolean
-  clinicSettings: boolean
+  organizationSettings: boolean
   activityLog: boolean
 
   // Extended
@@ -139,9 +139,9 @@ Guard implementation: `lib/guards/feature-guard.tsx` — a `<FeatureGuard flag="
 ```
 Login form
   → POST /auth/login
-  → Response: { accessToken, refreshToken, user, clinic, featureFlags, whitelabelConfig }
+  → Response: { accessToken, refreshToken, user, clinic, featureFlags, brandingConfig }
   → Zustand store hydrated
-  → WhitelabelConfig applied to DOM
+  → BrandingConfig applied to DOM
   → Redirect to /dashboard
 ```
 
@@ -151,7 +151,7 @@ Login form
   user: User | null
   clinic: Clinic | null
   featureFlags: FeatureFlags
-  whitelabelConfig: WhitelabelConfig | null
+  brandingConfig: BrandingConfig | null
   accessToken: string | null
 }
 ```
@@ -195,7 +195,7 @@ Sidebar sections are driven by feature flags. Items not enabled are not rendered
 
 ─── الإعدادات ───
   المستخدمون والأدوار   [users]
-  إعدادات العيادة       [clinicSettings]
+  إعدادات العيادة       [organizationSettings]
   الهوية البصرية        [whitelabel]
   التكاملات             [integrations]
   قوالب البريد          [emailTemplates]

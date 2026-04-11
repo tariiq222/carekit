@@ -36,13 +36,13 @@
 ### New Files (Backend)
 | File | Responsibility |
 |------|---------------|
-| `backend/src/modules/clinic/dto/update-clinic-settings.dto.ts` | DTO for updating `bookingFlowOrder` |
+| `backend/src/modules/clinic/dto/update-organization-settings.dto.ts` | DTO for updating `bookingFlowOrder` |
 
 ### Modified Files (Backend)
 | File | Change |
 |------|--------|
-| `backend/src/modules/clinic/clinic-settings.service.ts` | Add `bookingFlowOrder` to settings + getBookingSettings() |
-| `backend/src/modules/clinic/clinic-settings.controller.ts` | Add GET/PATCH for booking flow setting |
+| `backend/src/modules/clinic/organization-settings.service.ts` | Add `bookingFlowOrder` to settings + getBookingSettings() |
+| `backend/src/modules/clinic/organization-settings.controller.ts` | Add GET/PATCH for booking flow setting |
 | `backend/prisma/schema/bookings.prisma` | Add `bookingFlowOrder` field to `BookingSettings` |
 
 ---
@@ -87,24 +87,24 @@ git commit -m "feat(backend/clinic): add booking_flow_order to BookingSettings"
 
 ---
 
-## Task 2: Backend — expose `bookingFlowOrder` in ClinicSettingsService
+## Task 2: Backend — expose `bookingFlowOrder` in OrganizationSettingsService
 
 **Files:**
-- Modify: `backend/src/modules/clinic/clinic-settings.service.ts`
-- Create: `backend/src/modules/clinic/dto/update-clinic-settings.dto.ts`
-- Modify: `backend/src/modules/clinic/clinic-settings.controller.ts`
+- Modify: `backend/src/modules/clinic/organization-settings.service.ts`
+- Create: `backend/src/modules/clinic/dto/update-organization-settings.dto.ts`
+- Modify: `backend/src/modules/clinic/organization-settings.controller.ts`
 
 - [ ] **Step 1: Write the failing test**
 
-Create `backend/test/unit/clinic/clinic-settings.service.spec.ts`:
+Create `backend/test/unit/clinic/organization-settings.service.spec.ts`:
 
 ```typescript
 import { Test } from '@nestjs/testing'
 import { PrismaService } from '../../../src/common/prisma/prisma.service'
-import { ClinicSettingsService } from '../../../src/modules/clinic/clinic-settings.service'
+import { OrganizationSettingsService } from '../../../src/modules/clinic/organization-settings.service'
 
-describe('ClinicSettingsService', () => {
-  let service: ClinicSettingsService
+describe('OrganizationSettingsService', () => {
+  let service: OrganizationSettingsService
   let prisma: { bookingSettings: { findFirst: jest.Mock; upsert: jest.Mock } }
 
   beforeEach(async () => {
@@ -116,11 +116,11 @@ describe('ClinicSettingsService', () => {
     }
     const module = await Test.createTestingModule({
       providers: [
-        ClinicSettingsService,
+        OrganizationSettingsService,
         { provide: PrismaService, useValue: prisma },
       ],
     }).compile()
-    service = module.get(ClinicSettingsService)
+    service = module.get(OrganizationSettingsService)
   })
 
   describe('getBookingFlowOrder', () => {
@@ -160,14 +160,14 @@ describe('ClinicSettingsService', () => {
 
 ```bash
 cd backend
-npm test -- --testPathPattern="clinic-settings.service.spec" --no-coverage
+npm test -- --testPathPattern="organization-settings.service.spec" --no-coverage
 ```
 
 Expected: FAIL — `service.getBookingFlowOrder is not a function`
 
-- [ ] **Step 3: Update ClinicSettingsService**
+- [ ] **Step 3: Update OrganizationSettingsService**
 
-Replace the full content of `backend/src/modules/clinic/clinic-settings.service.ts`:
+Replace the full content of `backend/src/modules/clinic/organization-settings.service.ts`:
 
 ```typescript
 import { Injectable } from '@nestjs/common'
@@ -175,17 +175,17 @@ import { PrismaService } from '../../common/prisma/prisma.service'
 
 export type BookingFlowOrder = 'service_first' | 'employee_first'
 
-export interface PublicClinicSettings {
+export interface PublicOrganizationSettings {
   bankName: string | null
   bankIban: string | null
   bankAccountHolder: string | null
 }
 
 @Injectable()
-export class ClinicSettingsService {
+export class OrganizationSettingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getPublicSettings(): Promise<PublicClinicSettings> {
+  async getPublicSettings(): Promise<PublicOrganizationSettings> {
     const config = await this.prisma.whiteLabelConfig.findFirst({
       select: {
         bankName: true,
@@ -223,7 +223,7 @@ export class ClinicSettingsService {
 
 - [ ] **Step 4: Create the DTO**
 
-Create `backend/src/modules/clinic/dto/update-clinic-settings.dto.ts`:
+Create `backend/src/modules/clinic/dto/update-organization-settings.dto.ts`:
 
 ```typescript
 import { IsIn } from 'class-validator'
@@ -236,19 +236,19 @@ export class UpdateBookingFlowOrderDto {
 
 - [ ] **Step 5: Update the controller**
 
-Replace the full content of `backend/src/modules/clinic/clinic-settings.controller.ts`:
+Replace the full content of `backend/src/modules/clinic/organization-settings.controller.ts`:
 
 ```typescript
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { RolesGuard } from '../../common/guards/roles.guard'
 import { Roles } from '../../common/decorators/roles.decorator'
-import { ClinicSettingsService } from './clinic-settings.service'
-import { UpdateBookingFlowOrderDto } from './dto/update-clinic-settings.dto'
+import { OrganizationSettingsService } from './organization-settings.service'
+import { UpdateBookingFlowOrderDto } from './dto/update-organization-settings.dto'
 
 @Controller('clinic/settings')
-export class ClinicSettingsController {
-  constructor(private readonly service: ClinicSettingsService) {}
+export class OrganizationSettingsController {
+  constructor(private readonly service: OrganizationSettingsService) {}
 
   @Get('public')
   getPublicSettings() {
@@ -270,13 +270,13 @@ export class ClinicSettingsController {
 }
 ```
 
-> **Note**: Check the guard/decorator import paths against other controllers in the project. Use the same pattern as `ClinicHoursController`.
+> **Note**: Check the guard/decorator import paths against other controllers in the project. Use the same pattern as `BusinessHoursController`.
 
 - [ ] **Step 6: Run test to verify it passes**
 
 ```bash
 cd backend
-npm test -- --testPathPattern="clinic-settings.service.spec" --no-coverage
+npm test -- --testPathPattern="organization-settings.service.spec" --no-coverage
 ```
 
 Expected: PASS (3 tests)
@@ -296,7 +296,7 @@ git commit -m "feat(backend/clinic): add booking flow order setting endpoint"
 **Files:**
 - Modify: `dashboard/lib/query-keys.ts`
 - Modify: `dashboard/lib/api/services.ts`
-- Create: `dashboard/lib/api/clinic-settings.ts`
+- Create: `dashboard/lib/api/organization-settings.ts`
 
 - [ ] **Step 1: Add query keys**
 
@@ -307,11 +307,11 @@ In `dashboard/lib/query-keys.ts`, find the `services` section and add:
 employees: (serviceId: string) => ['services', serviceId, 'employees'] as const,
 ```
 
-Also add a new top-level `clinicSettings` section (find a good place, e.g. after `bookingSettings`):
+Also add a new top-level `organizationSettings` section (find a good place, e.g. after `bookingSettings`):
 
 ```typescript
-clinicSettings: {
-  bookingFlowOrder: () => ['clinic-settings', 'booking-flow-order'] as const,
+organizationSettings: {
+  bookingFlowOrder: () => ['organization-settings', 'booking-flow-order'] as const,
 },
 ```
 
@@ -330,9 +330,9 @@ export async function fetchServiceEmployees(serviceId: string) {
 
 Where `EmployeeForService` matches the backend response (id, nameAr, nameEn, avatar, specialty).
 
-- [ ] **Step 3: Create clinic-settings API client**
+- [ ] **Step 3: Create organization-settings API client**
 
-Create `dashboard/lib/api/clinic-settings.ts`:
+Create `dashboard/lib/api/organization-settings.ts`:
 
 ```typescript
 import { apiClient } from './client'
@@ -363,7 +363,7 @@ export async function updateBookingFlowOrder(
 
 ```bash
 cd dashboard
-npm run typecheck 2>&1 | grep -E "clinic-settings|query-keys|services"
+npm run typecheck 2>&1 | grep -E "organization-settings|query-keys|services"
 ```
 
 Expected: no errors for the modified files.
@@ -372,7 +372,7 @@ Expected: no errors for the modified files.
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit
-git add dashboard/lib/api/clinic-settings.ts dashboard/lib/query-keys.ts dashboard/lib/api/services.ts
+git add dashboard/lib/api/organization-settings.ts dashboard/lib/query-keys.ts dashboard/lib/api/services.ts
 git commit -m "feat(dashboard/api): add clinic booking flow order + service employees query"
 ```
 
@@ -534,7 +534,7 @@ Create `dashboard/components/features/bookings/use-wizard-state.ts`:
 
 ```typescript
 import { useCallback, useState } from 'react'
-import type { BookingFlowOrder } from '@/lib/api/clinic-settings'
+import type { BookingFlowOrder } from '@/lib/api/organization-settings'
 
 export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -1666,7 +1666,7 @@ import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useLocale } from '@/hooks/use-locale'
 import { queryKeys } from '@/lib/query-keys'
-import { fetchBookingFlowOrder } from '@/lib/api/clinic-settings'
+import { fetchBookingFlowOrder } from '@/lib/api/organization-settings'
 import { useWizardState } from './use-wizard-state'
 import { useBookingMutations } from '@/hooks/use-booking-mutations'
 import { ClientStep } from './booking-client-step'
@@ -1710,7 +1710,7 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
   const { t } = useLocale()
 
   const { data: flowOrder = 'service_first' } = useQuery({
-    queryKey: queryKeys.clinicSettings.bookingFlowOrder(),
+    queryKey: queryKeys.organizationSettings.bookingFlowOrder(),
     queryFn: fetchBookingFlowOrder,
     staleTime: 5 * 60 * 1000, // 5 min — setting rarely changes
   })

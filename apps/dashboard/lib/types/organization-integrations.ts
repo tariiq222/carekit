@@ -1,8 +1,8 @@
 /**
- * Clinic Integrations Types — CareKit Dashboard
+ * Organization Integrations Types — CareKit Dashboard
  */
 
-export interface ClinicIntegrations {
+export interface OrganizationIntegrations {
   id: string
   moyasarPublishableKey: string | null
   moyasarSecretKey: string | null
@@ -26,6 +26,6 @@ export interface ClinicIntegrations {
   updatedAt: string
 }
 
-export type UpdateClinicIntegrationsPayload = Partial<
-  Omit<ClinicIntegrations, "id" | "createdAt" | "updatedAt">
+export type UpdateOrganizationIntegrationsPayload = Partial<
+  Omit<OrganizationIntegrations, "id" | "createdAt" | "updatedAt">
 >

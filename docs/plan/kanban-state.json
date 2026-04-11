@@ -309,7 +309,7 @@
     },
     {
       "id": "p5",
-      "title": "Clinic BC",
+      "title": "Organization BC",
       "titleAr": "إعدادات العيادة",
       "order": 5,
       "description": "Branches, services, hours, whitelabel — متوازية مع p4 و p6",
@@ -323,7 +323,7 @@
           "detail": "create-branch, update-branch, list-branches, get-branch",
           "complexity": "CRUD",
           "status": "todo",
-          "bc": "clinic"
+          "bc": "organization"
         },
         {
           "id": "p5-t2",
@@ -333,17 +333,17 @@
           "detail": "create-service, update-service, list-services, archive-service",
           "complexity": "CRUD",
           "status": "todo",
-          "bc": "clinic"
+          "bc": "organization"
         },
         {
           "id": "p5-t3",
           "seq": "2a",
           "parallel": true,
-          "title": "clinic-hours + holidays slices",
+          "title": "business-hours + holidays slices",
           "detail": "Working hours per branch, holiday calendar",
           "complexity": "MEDIUM",
           "status": "todo",
-          "bc": "clinic"
+          "bc": "organization"
         },
         {
           "id": "p5-t4",
@@ -353,7 +353,7 @@
           "detail": "Branding: logo, colors, fonts — serves /whitelabel/public endpoint",
           "complexity": "MEDIUM",
           "status": "todo",
-          "bc": "clinic"
+          "bc": "organization"
         },
         {
           "id": "p5-t5",
@@ -363,7 +363,7 @@
           "detail": "Form builder config, rating submission",
           "complexity": "MEDIUM",
           "status": "todo",
-          "bc": "clinic"
+          "bc": "organization"
         }
       ]
     },

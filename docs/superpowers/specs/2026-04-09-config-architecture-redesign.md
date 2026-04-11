@@ -64,7 +64,7 @@ Singleton row. Determines which features the clinic is licensed to use. Clinic c
 
 The existing `FeatureFlag` table remains as a runtime toggle. `FeatureFlagService.toggle()` checks `LicenseConfig` before allowing activation — returns 403 if the feature is not licensed.
 
-### Table 3: `ClinicSettings` — Clinic Operational Settings (Clinic controls)
+### Table 3: `OrganizationSettings` — Clinic Operational Settings (Clinic controls)
 
 Singleton row. Everything the clinic manages day-to-day.
 
@@ -159,7 +159,7 @@ Singleton row. All third-party integration credentials. Sensitive fields are enc
 backend/src/modules/
 ├── whitelabel/            → WhiteLabelConfig CRUD
 ├── license/               → LicenseConfig CRUD + feature evaluation
-├── clinic-settings/       → ClinicSettings CRUD
+├── organization-settings/       → OrganizationSettings CRUD
 ├── clinic-integrations/   → ClinicIntegrations CRUD (with masking)
 ├── feature-flags/         → FeatureFlag runtime toggle (checked against LicenseConfig)
 ├── clinic/                → ClinicWorkingHours + ClinicHolidays (unchanged)
@@ -182,11 +182,11 @@ PUT  /license               → license:edit (super-admin only, CareKit team)
 GET  /license/features      → license:view — licensed features + runtime state
 ```
 
-### ClinicSettingsModule
+### OrganizationSettingsModule
 ```
-GET  /clinic-settings           → clinic-settings:view
-PUT  /clinic-settings           → clinic-settings:edit
-GET  /clinic-settings/public    → No auth — contact, social, cancellation policy
+GET  /organization-settings           → organization-settings:view
+PUT  /organization-settings           → organization-settings:edit
+GET  /organization-settings/public    → No auth — contact, social, cancellation policy
 ```
 
 ### ClinicIntegrationsModule
@@ -209,8 +209,8 @@ PATCH  /feature-flags/:key      → feature-flags:toggle — checks LicenseConfi
 | `whitelabel` | `whitelabel:edit` | CareKit team (or clinic if `clinicCanEdit`) |
 | `license` | `license:view` | Admin |
 | `license` | `license:edit` | CareKit team only |
-| `clinic-settings` | `clinic-settings:view` | Admin |
-| `clinic-settings` | `clinic-settings:edit` | Admin |
+| `organization-settings` | `organization-settings:view` | Admin |
+| `organization-settings` | `organization-settings:edit` | Admin |
 | `clinic-integrations` | `clinic-integrations:view` | Admin |
 | `clinic-integrations` | `clinic-integrations:edit` | Admin |
 | `feature-flags` | `feature-flags:view` | Admin |
@@ -222,12 +222,12 @@ Services that currently bypass `WhitelabelService` and query `WhiteLabelConfig` 
 
 | Consumer | Before | After |
 |----------|--------|-------|
-| `ZatcaService` | `WhiteLabelConfig` direct (7 keys) | `ClinicSettingsService` (VAT, CR, address) + `ClinicIntegrationsService` (ZATCA credentials) |
-| `InvoiceCreatorService` | `WhiteLabelConfig` direct (2 keys) | `WhitelabelService` (systemName) + `ClinicSettingsService` (contact) |
+| `ZatcaService` | `WhiteLabelConfig` direct (7 keys) | `OrganizationSettingsService` (VAT, CR, address) + `ClinicIntegrationsService` (ZATCA credentials) |
+| `InvoiceCreatorService` | `WhiteLabelConfig` direct (2 keys) | `WhitelabelService` (systemName) + `OrganizationSettingsService` (contact) |
 | `ChatbotContextService` | `WhiteLabelConfig` direct (1 key) | `WhitelabelService` (systemName) |
-| `ClinicSettingsService` (old) | `WhiteLabelConfig` direct (bank) | Deleted — `ClinicIntegrationsService` handles bank |
-| `BookingCreationService` | `WhitelabelService.getTimezone()` | `ClinicSettingsService.getTimezone()` |
-| `ReminderService` | `WhitelabelService.getTimezone()` | `ClinicSettingsService.getTimezone()` |
+| `OrganizationSettingsService` (old) | `WhiteLabelConfig` direct (bank) | Deleted — `ClinicIntegrationsService` handles bank |
+| `BookingCreationService` | `WhitelabelService.getTimezone()` | `OrganizationSettingsService.getTimezone()` |
+| `ReminderService` | `WhitelabelService.getTimezone()` | `OrganizationSettingsService.getTimezone()` |
 | `WhitelabelService.getPublicBranding()` | `BookingSettings` direct | Removed — returns branding only |
 
 ## Cache Strategy
@@ -236,7 +236,7 @@ Services that currently bypass `WhitelabelService` and query `WhiteLabelConfig` 
 |-------|-----------|-----|-------------|
 | `WhiteLabelConfig` | `wl:branding` | 60 min | On PUT |
 | `LicenseConfig` | `wl:license` | 60 min | On PUT |
-| `ClinicSettings` | `clinic:settings` | 10 min | On PUT |
+| `OrganizationSettings` | `clinic:settings` | 10 min | On PUT |
 | `ClinicIntegrations` | `clinic:integrations` | 30 min | On PUT |
 | Feature evaluation | `feature:{key}` | 5 min | On LicenseConfig or FeatureFlag change |
 
@@ -253,7 +253,7 @@ Services that currently bypass `WhitelabelService` and query `WhiteLabelConfig` 
 **→ WhiteLabelConfig:**
 `system_name` → `systemName`, `system_name_ar` → `systemNameAr`, `logo_url` → `logoUrl`, `favicon_url` → `faviconUrl`, `primary_color` → `primaryColor`, `secondary_color` → `secondaryColor`, `font` → `fontFamily`, `domain` → `domain`
 
-**→ ClinicSettings:**
+**→ OrganizationSettings:**
 `company_name_ar` → `companyNameAr`, `company_name_en` → `companyNameEn`, `business_registration` → `businessRegistration`, `vat_registration_number` → `vatRegistrationNumber`, `vat_rate` → `vatRate`, `seller_address` → `sellerAddress`, `clinic_city` → `clinicCity`, `postal_code` → `postalCode`, `contact_phone` → `contactPhone`, `contact_email` → `contactEmail`, `address` → `address`, `social_media` → `socialMedia`, `about_ar` → `aboutAr`, `about_en` → `aboutEn`, `privacy_policy_ar` → `privacyPolicyAr`, `privacy_policy_en` → `privacyPolicyEn`, `terms_ar` → `termsAr`, `terms_en` → `termsEn`, `cancellation_policy` → `cancellationPolicyEn`, `cancellation_policy_ar` → `cancellationPolicyAr`, `default_language` → `defaultLanguage`, `timezone` → `timezone`, `week_start_day` → `weekStartDay`, `date_format` → `dateFormat`, `time_format` → `timeFormat`, `email_header_show_logo` → `emailHeaderShowLogo`, `email_header_show_name` → `emailHeaderShowName`, `email_footer_*` → corresponding fields, `session_duration` → `sessionDuration`, `reminder_before_minutes` → `reminderBeforeMinutes`
 
 **→ ClinicIntegrations:**
@@ -277,7 +277,7 @@ The dashboard settings pages will need to be updated to call the new endpoints:
 - `/dashboard/white-label` → splits into tabs calling different APIs
   - **Branding tab** → `GET/PUT /whitelabel`
   - **License tab** → `GET /license/features` (read-only for clinic, shows what's licensed)
-  - **Clinic Info tab** → `GET/PUT /clinic-settings`
+  - **Clinic Info tab** → `GET/PUT /organization-settings`
   - **Integrations tab** → `GET/PUT /clinic-integrations`
   - **Features tab** → `GET /feature-flags` + `PATCH /feature-flags/:key`
 

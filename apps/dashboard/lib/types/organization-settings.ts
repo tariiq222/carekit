@@ -1,14 +1,16 @@
-import { apiRequest } from '../client.js'
+/**
+ * Organization Settings Types — CareKit Dashboard
+ */
 
-export interface ClinicSettings {
+export interface OrganizationSettings {
   id: string
   companyNameAr: string | null
   companyNameEn: string | null
   businessRegistration: string | null
   vatRegistrationNumber: string | null
-  vatRate: number | null
+  vatRate: number
   sellerAddress: string | null
-  clinicCity: string | null
+  organizationCity: string
   postalCode: string | null
   contactPhone: string | null
   contactEmail: string | null
@@ -22,11 +24,11 @@ export interface ClinicSettings {
   termsEn: string | null
   cancellationPolicyAr: string | null
   cancellationPolicyEn: string | null
-  defaultLanguage: string | null
-  timezone: string | null
-  weekStartDay: string | null
-  dateFormat: string | null
-  timeFormat: string | null
+  defaultLanguage: string
+  timezone: string
+  weekStartDay: string
+  dateFormat: string
+  timeFormat: string
   emailHeaderShowLogo: boolean
   emailHeaderShowName: boolean
   emailFooterPhone: string | null
@@ -37,23 +39,21 @@ export interface ClinicSettings {
   emailFooterTiktok: string | null
   emailFooterLinkedin: string | null
   emailFooterYoutube: string | null
-  sessionDuration: number | null
-  reminderBeforeMinutes: number | null
+  sessionDuration: number
+  reminderBeforeMinutes: number
   createdAt: string
   updatedAt: string
 }
 
-export type UpdateClinicSettingsPayload = Partial<
-  Omit<ClinicSettings, 'id' | 'createdAt' | 'updatedAt'>
+export type UpdateOrganizationSettingsPayload = Partial<
+  Omit<OrganizationSettings, "id" | "createdAt" | "updatedAt">
 >
 
-export async function get(): Promise<ClinicSettings> {
-  return apiRequest<ClinicSettings>('/clinic-settings')
-}
-
-export async function update(payload: UpdateClinicSettingsPayload): Promise<ClinicSettings> {
-  return apiRequest<ClinicSettings>('/clinic-settings', {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  })
+export interface PublicOrganizationSettings {
+  contactPhone: string | null
+  contactEmail: string | null
+  address: string | null
+  socialMedia: Record<string, string> | null
+  cancellationPolicyAr: string | null
+  cancellationPolicyEn: string | null
 }

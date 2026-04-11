@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createWrapper } from "@/test/helpers/wrapper"
 
 const {
-  fetchClinicSettings,
+  fetchOrganizationSettings,
 } = vi.hoisted(() => ({
-  fetchClinicSettings: vi.fn(),
+  fetchOrganizationSettings: vi.fn(),
 }))
 
-vi.mock("@/lib/api/clinic-settings", () => ({
-  fetchClinicSettings,
+vi.mock("@/lib/api/organization-settings", () => ({
+  fetchOrganizationSettings,
 }))
 
 vi.mock("@/lib/utils", () => ({
@@ -18,15 +18,15 @@ vi.mock("@/lib/utils", () => ({
   getWeekStartDay: vi.fn((day: string) => day === "monday" ? 1 : 0),
 }))
 
-import { useClinicConfig } from "@/hooks/use-clinic-config"
+import { useOrganizationConfig } from "@/hooks/use-organization-config"
 
-describe("useClinicConfig", () => {
+describe("useOrganizationConfig", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
   it("returns default values when no settings", async () => {
-    fetchClinicSettings.mockResolvedValueOnce(undefined)
+    fetchOrganizationSettings.mockResolvedValueOnce(undefined)
 
-    const { result } = renderHook(() => useClinicConfig(), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useOrganizationConfig(), { wrapper: createWrapper() })
 
     await waitFor(() => {
       expect(result.current.dateFormat).toBe("Y-m-d")
@@ -36,14 +36,14 @@ describe("useClinicConfig", () => {
   })
 
   it("returns settings values when loaded", async () => {
-    fetchClinicSettings.mockResolvedValueOnce({
+    fetchOrganizationSettings.mockResolvedValueOnce({
       dateFormat: "d/m/Y",
       timeFormat: "12h",
       weekStartDay: "monday",
       timezone: "America/New_York",
     })
 
-    const { result } = renderHook(() => useClinicConfig(), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useOrganizationConfig(), { wrapper: createWrapper() })
 
     await waitFor(() => {
       expect(result.current.dateFormat).toBe("d/m/Y")
@@ -55,12 +55,12 @@ describe("useClinicConfig", () => {
   })
 
   it("provides formatDate and formatTime helpers", async () => {
-    fetchClinicSettings.mockResolvedValueOnce({
+    fetchOrganizationSettings.mockResolvedValueOnce({
       dateFormat: "Y-m-d",
       timeFormat: "24h",
     })
 
-    const { result } = renderHook(() => useClinicConfig(), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useOrganizationConfig(), { wrapper: createWrapper() })
 
     await waitFor(() => {
       expect(result.current.formatDate).toBeInstanceOf(Function)

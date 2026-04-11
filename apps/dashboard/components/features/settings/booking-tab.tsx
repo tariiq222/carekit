@@ -10,9 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
-import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
+import type { BookingFlowOrder } from "@/lib/api/organization-settings"
 import { RECURRING_PATTERNS } from "@/lib/api/booking-settings"
-import { useBookingSettings, useBookingSettingsMutation, useBookingFlowOrder, useBookingFlowOrderMutation } from "@/hooks/use-clinic-settings"
+import { useBookingSettings, useBookingSettingsMutation, useBookingFlowOrder, useBookingFlowOrderMutation } from "@/hooks/use-organization-settings"
 
 type TabId = "policies" | "walkin" | "waitlist" | "recurring" | "floworder"
 
