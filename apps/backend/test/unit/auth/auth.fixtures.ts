@@ -56,8 +56,7 @@ export function createMockConfig() {
 
 export function createMockEmail() {
   return {
-    sendWelcome: jest.fn().mockResolvedValue(undefined),
-    sendOtp: jest.fn().mockResolvedValue(undefined),
+    dispatch: jest.fn().mockResolvedValue(undefined),
   };
 }
 

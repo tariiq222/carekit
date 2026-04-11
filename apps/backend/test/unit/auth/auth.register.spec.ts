@@ -80,9 +80,8 @@ describe('AuthService — register', () => {
 
     await ctx.service.register(registerDto);
 
-    expect(ctx.mockEmail.sendWelcome).toHaveBeenCalledWith(
-      registerDto.email,
-      registerDto.firstName,
+    expect(ctx.mockEmail.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ recipientEmail: registerDto.email }),
     );
   });
 

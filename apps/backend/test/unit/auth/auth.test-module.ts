@@ -8,7 +8,7 @@ import { AuthService } from '../../../src/modules/auth/auth.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { TokenService } from '../../../src/modules/auth/token.service.js';
 import { OtpService } from '../../../src/modules/auth/otp.service.js';
-import { EmailService } from '../../../src/modules/email/email.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 import { AuthCacheService } from '../../../src/modules/auth/auth-cache.service.js';
 import { PermissionCacheService } from '../../../src/modules/auth/permission-cache.service.js';
 import { PatientWalkInService } from '../../../src/modules/patients/patient-walk-in.service.js';
@@ -43,7 +43,7 @@ export async function createAuthTestModule(): Promise<AuthTestContext> {
       { provide: PrismaService, useValue: mockPrisma },
       { provide: JwtService, useValue: createMockJwt() },
       { provide: ConfigService, useValue: createMockConfig() },
-      { provide: EmailService, useValue: mockEmail },
+      { provide: MessagingDispatcherService, useValue: mockEmail },
       { provide: AuthCacheService, useValue: createMockAuthCache() },
       {
         provide: PermissionCacheService,

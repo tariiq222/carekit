@@ -9,7 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
 import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';
 import { CookieService } from './cookie.service.js';
-import { EmailModule } from '../email/email.module.js';
+import { MessagingModule } from '../messaging/messaging.module.js';
 import { PatientsModule } from '../patients/patients.module.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 import { OtpThrottleRedisService } from '../../common/services/otp-throttle-redis.service.js';
@@ -19,7 +19,7 @@ import { ACCESS_TOKEN_EXPIRY } from '../../config/constants.js';
 
 @Module({
   imports: [
-    EmailModule,
+    MessagingModule,
     PatientsModule,
     ActivityLogModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),

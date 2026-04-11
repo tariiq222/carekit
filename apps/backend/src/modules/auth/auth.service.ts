@@ -15,7 +15,8 @@ import { UserPayload } from '../../common/types/user-payload.type.js';
 import { AuthResponse, TokenPair } from './types/auth-response.type.js';
 import { TokenService } from './token.service.js';
 import { OtpService } from './otp.service.js';
-import { EmailService } from '../email/email.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { AuthCacheService } from './auth-cache.service.js';
 import { PermissionCacheService } from './permission-cache.service.js';
 import { PatientWalkInService } from '../patients/patient-walk-in.service.js';
@@ -28,7 +29,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
     private readonly otpService: OtpService,
-    private readonly emailService: EmailService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly authCache: AuthCacheService,
     private readonly permissionCache: PermissionCacheService,
     private readonly walkInService: PatientWalkInService,
@@ -68,7 +69,12 @@ export class AuthService {
             claimed.id,
             tokens.refreshToken,
           );
-          await this.emailService.sendWelcome(claimed.email, claimed.firstName);
+          await this.messagingDispatcher.dispatch({
+            event: MessagingEvent.WELCOME,
+            recipientUserId: claimed.id,
+            context: { firstName: claimed.firstName ?? '' },
+            recipientEmail: claimed.email,
+          });
           const fullUser = await this.tokenService.buildUserPayloadFromId(
             claimed.id,
           );
@@ -132,7 +138,12 @@ export class AuthService {
     const tokens = await this.tokenService.generateTokens(user.id, user.email);
     await this.tokenService.storeRefreshToken(user.id, tokens.refreshToken);
 
-    await this.emailService.sendWelcome(user.email, user.firstName);
+    await this.messagingDispatcher.dispatch({
+      event: MessagingEvent.WELCOME,
+      recipientUserId: user.id,
+      context: { firstName: user.firstName ?? '' },
+      recipientEmail: user.email,
+    });
 
     const roleInfo = patientRole as {
       id: string;
@@ -296,7 +307,12 @@ export class AuthService {
     code: string,
     type: 'login' | 'reset_password' | 'verify_email',
   ): Promise<void> {
-    await this.emailService.sendOtp(email, code, type);
+    await this.messagingDispatcher.dispatch({
+      event: MessagingEvent.OTP_REQUESTED,
+      recipientUserId: 'system',
+      context: { code, otpType: type },
+      recipientEmail: email,
+    });
   }
 
   // --- Delegated: Token ---
