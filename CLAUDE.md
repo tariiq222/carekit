@@ -4,9 +4,9 @@
 
 - **Monorepo**: npm workspaces + Turborepo
 - **Backend**: NestJS 11, Prisma 7 (PostgreSQL + pgvector), BullMQ, Redis, MinIO
-- **Dashboard**: Next.js 15 (App Router), React 19, TanStack Query, shadcn/ui, Tailwind 4
+- **Leaderboard (admin dashboard)**: Vite + React 19, TanStack Router + Query, shadcn/ui, Tailwind 4 — replaces the legacy Next.js dashboard
 - **Mobile**: React Native 0.83, Expo SDK 55, Expo Router, Redux Toolkit
-- **Shared**: Types, enums, i18n tokens shared across all apps
+- **Shared packages**: `@carekit/api-client` (typed fetch client) + `@carekit/shared` (types, enums, i18n tokens)
 - **Infra**: Docker Compose, Nginx, Sentry, Prometheus
 
 ## Golden Rules
@@ -19,35 +19,48 @@
 - **Agent Team** is the default for any task touching 2+ files
 - **No audit loops** — code correct on first delivery
 - **Ports 5000–5999** reserved exclusively for CareKit tools/environments
+- **All DB changes via Prisma migrations** — never `prisma db push`, never manual SQL
+- **RTL-first layout** — use logical properties (`start`/`end`, `ps-`/`pe-`, `ms-`/`me-`); never hardcode `left`/`right`
+- **Semantic tokens only** — no hex colors, no `text-gray-*`; always use CSS custom properties so the white-label system works
 
 ## Commands
 
 ```bash
-# Root (Turborepo)
+# Root (Turborepo — wraps `turbo run <task> --filter=<pkg>`)
 npm run dev:backend       # NestJS on :5100
-npm run dev:dashboard     # Next.js on :5101
+npm run dev:leaderboard   # Vite dashboard on :5101
 npm run dev:mobile        # Expo on :5102
 npm run dev:all           # All apps in parallel
+npm run build             # turbo run build — respects task graph
+npm run lint              # turbo run lint
+npm run test              # turbo run test
 npm run docker:up         # Start PostgreSQL, Redis, MinIO
 npm run docker:down       # Stop infrastructure
 
-# Backend (cd backend/)
+# Backend (cd apps/backend)
 npm run dev               # Watch mode
 npm run test              # Jest unit tests
+npm run test:watch        # Jest watch
 npm run test:cov          # Coverage (40% branch, 50% fn/line)
+npm run test:e2e          # E2E suite (test/jest-e2e.json)
 npm run prisma:migrate    # Run pending migrations
 npm run prisma:seed       # Seed demo data
 npm run prisma:studio     # Prisma Studio GUI
 
-# Dashboard (cd dashboard/)
-npm run dev               # Next.js dev server
+# Leaderboard (cd apps/leaderboard)
+npm run dev               # Vite dev server on :5101
+npm run build             # tsc -b && vite build
 npm run typecheck         # tsc --noEmit
 npm run lint              # ESLint
 
-# Mobile (cd mobile/)
+# Mobile (cd apps/mobile)
 npm run dev               # Expo start
 npm run ios / android     # Native builds
 npm run test              # Jest + jest-expo
+
+# Running a single test (backend)
+cd apps/backend && npx jest path/to/file.spec.ts
+cd apps/backend && npx jest -t "describes partial name"   # by test name
 ```
 
 ## Structure
@@ -76,10 +89,12 @@ carekit/
 ## Module Map
 
 See `apps/backend/CLAUDE.md` for NestJS module conventions.
-See `apps/leaderboard/CLAUDE.md` for dashboard layer rules (if present).
+See `apps/leaderboard/CLAUDE.md` for leaderboard (dashboard) layer rules (if present).
 See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 
 ## Key Domains
+
+"Dashboard Route" below refers to routes inside **apps/leaderboard** (the current admin dashboard).
 
 | Domain | Backend Module | Dashboard Route | Notes |
 |--------|---------------|-----------------|-------|
