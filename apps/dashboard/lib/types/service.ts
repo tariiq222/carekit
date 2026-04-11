@@ -1,5 +1,5 @@
 /**
- * Service & Specialty Types — CareKit Dashboard
+ * Service Types — CareKit Dashboard
  */
 
 import type { PaginatedQuery } from "./common"
@@ -105,19 +105,6 @@ export interface IntakeResponse {
   answers: Record<string, string>
   createdAt: string
   form?: IntakeForm
-}
-
-export interface Specialty {
-  id: string
-  nameEn: string
-  nameAr: string
-  descriptionEn: string | null
-  descriptionAr: string | null
-  iconUrl: string | null
-  sortOrder: number
-  isActive: boolean
-  createdAt: string
-  _count?: { practitioners: number }
 }
 
 /* ─── Query ─── */

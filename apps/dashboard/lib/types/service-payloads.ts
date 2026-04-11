@@ -1,5 +1,5 @@
 /**
- * Service & Specialty Payload Types (DTOs) — CareKit Dashboard
+ * Service Payload Types (DTOs) — CareKit Dashboard
  */
 
 /* ─── Category DTOs ─── */
@@ -73,27 +73,6 @@ export interface UpdateServicePayload {
   maxParticipants?: number
   minLeadMinutes?: number | null
   maxAdvanceDays?: number | null
-}
-
-/* ─── Specialty DTOs ─── */
-
-export interface CreateSpecialtyPayload {
-  nameEn: string
-  nameAr: string
-  descriptionEn?: string
-  descriptionAr?: string
-  iconUrl?: string
-  sortOrder?: number
-}
-
-export interface UpdateSpecialtyPayload {
-  nameEn?: string
-  nameAr?: string
-  descriptionEn?: string
-  descriptionAr?: string
-  iconUrl?: string
-  sortOrder?: number
-  isActive?: boolean
 }
 
 /* ─── Duration Options Payloads ─── */
