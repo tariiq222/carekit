@@ -111,7 +111,7 @@ function NotificationsPage() {
             <button
               onClick={() => markReadMutation.mutate(n.id)}
               disabled={n.isRead || markReadMutation.isPending}
-              className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] hover:bg-[var(--surface)] text-[var(--fg-2)] transition-colors disabled:opacity-40"
+              className="inline-flex items-center justify-center size-7 rounded-sm hover:bg-[var(--surface)] text-[var(--fg-2)] transition-colors disabled:opacity-40"
             >
               <HIcon name="hgi-tick-02" />
             </button>

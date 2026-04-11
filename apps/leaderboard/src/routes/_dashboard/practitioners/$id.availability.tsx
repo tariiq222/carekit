@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { PageHeader } from '@/components/shared/page-header'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
 import { Button } from '@/components/ui/button'
+import { HIcon } from '@/components/shared/hicon'
 import { usePractitioner } from '@/hooks/use-practitioners'
 import {
   usePractitionerAvailability,
@@ -138,7 +139,7 @@ function PractitionerAvailabilityPage() {
 
         <div className="flex items-center gap-3 pt-2">
           <Button type="submit" disabled={isSubmitting || !isDirty}>
-            <i className="hgi hgi-tick-02 me-1" />
+            <HIcon name="hgi-tick-02" className="me-1" />
             حفظ الجدول
           </Button>
           {updateAvailability.isError && (

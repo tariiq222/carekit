@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { PageHeader } from '@/components/shared/page-header'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
 import { Button } from '@/components/ui/button'
+import { HIcon } from '@/components/shared/hicon'
 import { useInvoice, useInvoiceHtmlPath } from '@/hooks/use-invoices'
 import { InvoiceStatusBadge } from '@/components/features/invoices/invoice-status-badge'
 
@@ -67,7 +68,7 @@ function InvoiceDetailPage() {
               variant="outline"
               onClick={() => setShowPreview((v) => !v)}
             >
-              <i className="hgi hgi-eye me-1" />
+              <HIcon name="hgi-eye" className="me-1" />
               {showPreview ? 'إخفاء المعاينة' : 'معاينة HTML'}
             </Button>
             <Link to="/invoices">
@@ -115,7 +116,7 @@ function InvoiceDetailPage() {
               params={{ id: invoice.payment.id }}
               className="text-sm text-[var(--primary)] hover:underline inline-flex items-center gap-1"
             >
-              عرض المدفوعة <i className="hgi hgi-arrow-left-01" />
+              عرض المدفوعة <HIcon name="hgi-arrow-left-01" />
             </Link>
           </div>
         )}

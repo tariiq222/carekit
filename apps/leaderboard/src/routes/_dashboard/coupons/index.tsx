@@ -11,6 +11,7 @@ import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable } from '@/components/shared/data-table'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
 import { Button } from '@/components/ui/button'
+import { HIcon } from '@/components/shared/hicon'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { useCoupons, useDeleteCoupon } from '@/hooks/use-coupons'
 
@@ -163,9 +164,9 @@ function CouponsListPage() {
               <Link
                 to="/coupons/$id"
                 params={{ id: c.id }}
-                className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors"
+                className="inline-flex items-center justify-center size-7 rounded-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors"
               >
-                <i className="hgi hgi-edit-02" />
+                <HIcon name="hgi-edit-02" />
               </Link>
             </TooltipTrigger>
             <TooltipContent>تعديل</TooltipContent>
@@ -174,9 +175,9 @@ function CouponsListPage() {
             <TooltipTrigger asChild>
               <button
                 onClick={() => handleDelete(c.id)}
-                className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--error,#dc2626)] transition-colors"
+                className="inline-flex items-center justify-center size-7 rounded-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--error,#dc2626)] transition-colors"
               >
-                <i className="hgi hgi-delete-02" />
+                <HIcon name="hgi-delete-02" />
               </button>
             </TooltipTrigger>
             <TooltipContent>حذف</TooltipContent>
@@ -196,7 +197,7 @@ function CouponsListPage() {
         actions={
           <Link to="/coupons/new">
             <Button>
-              <i className="hgi hgi-add-01 me-1" />
+              <HIcon name="hgi-add-01" className="me-1" />
               كوبون جديد
             </Button>
           </Link>

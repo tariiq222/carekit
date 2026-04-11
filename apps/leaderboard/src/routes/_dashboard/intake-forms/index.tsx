@@ -112,7 +112,7 @@ function IntakeFormsListPage() {
               <Link
                 to="/intake-forms/$id"
                 params={{ id: f.id }}
-                className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] hover:bg-[var(--surface)] text-[var(--fg-2)] transition-colors"
+                className="inline-flex items-center justify-center size-7 rounded-sm hover:bg-[var(--surface)] text-[var(--fg-2)] transition-colors"
               >
                 <i className="hgi-stroke hgi-edit-02" />
               </Link>
@@ -125,7 +125,7 @@ function IntakeFormsListPage() {
                 onClick={() => {
                   if (confirm('حذف النموذج؟')) deleteMutation.mutate(f.id)
                 }}
-                className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] hover:bg-[var(--danger-bg)] text-[var(--muted)] hover:text-[var(--danger)] transition-colors"
+                className="inline-flex items-center justify-center size-7 rounded-sm hover:bg-[var(--danger-bg)] text-[var(--muted)] hover:text-[var(--danger)] transition-colors"
               >
                 <i className="hgi-stroke hgi-delete-02" />
               </button>

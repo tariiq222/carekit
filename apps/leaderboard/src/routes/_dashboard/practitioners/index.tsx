@@ -10,6 +10,7 @@ import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable } from '@/components/shared/data-table'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
 import { Button } from '@/components/ui/button'
+import { HIcon } from '@/components/shared/hicon'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import {
   usePractitioners,
@@ -137,9 +138,9 @@ function PractitionersListPage() {
             <Link
               to="/practitioners/$id"
               params={{ id: p.id }}
-              className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors"
+              className="inline-flex items-center justify-center size-7 rounded-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors"
             >
-              <i className="hgi hgi-eye" />
+              <HIcon name="hgi-eye" />
             </Link>
           </TooltipTrigger>
           <TooltipContent>عرض التفاصيل</TooltipContent>
@@ -158,7 +159,7 @@ function PractitionersListPage() {
         actions={
           <Link to="/practitioners/new">
             <Button>
-              <i className="hgi hgi-add-01 me-1" />
+              <HIcon name="hgi-add-01" className="me-1" />
               ممارس جديد
             </Button>
           </Link>

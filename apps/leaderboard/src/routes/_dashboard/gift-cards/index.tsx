@@ -11,6 +11,7 @@ import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable } from '@/components/shared/data-table'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
 import { Button } from '@/components/ui/button'
+import { HIcon } from '@/components/shared/hicon'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { useDeactivateGiftCard, useGiftCards } from '@/hooks/use-gift-cards'
 
@@ -165,9 +166,9 @@ function GiftCardsListPage() {
               <Link
                 to="/gift-cards/$id"
                 params={{ id: g.id }}
-                className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors"
+                className="inline-flex items-center justify-center size-7 rounded-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors"
               >
-                <i className="hgi hgi-edit-02" />
+                <HIcon name="hgi-edit-02" />
               </Link>
             </TooltipTrigger>
             <TooltipContent>تعديل</TooltipContent>
@@ -176,9 +177,9 @@ function GiftCardsListPage() {
             <TooltipTrigger asChild>
               <button
                 onClick={() => handleDeactivate(g.id)}
-                className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--error,#dc2626)] transition-colors"
+                className="inline-flex items-center justify-center size-7 rounded-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--error,#dc2626)] transition-colors"
               >
-                <i className="hgi hgi-delete-02" />
+                <HIcon name="hgi-delete-02" />
               </button>
             </TooltipTrigger>
             <TooltipContent>إلغاء التفعيل</TooltipContent>
@@ -198,7 +199,7 @@ function GiftCardsListPage() {
         actions={
           <Link to="/gift-cards/new">
             <Button>
-              <i className="hgi hgi-add-01 me-1" />
+              <HIcon name="hgi-add-01" className="me-1" />
               بطاقة جديدة
             </Button>
           </Link>

@@ -8,6 +8,7 @@ import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable } from '@/components/shared/data-table'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
 import { Button } from '@/components/ui/button'
+import { HIcon } from '@/components/shared/hicon'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export const Route = createFileRoute('/_dashboard/patients/')({
@@ -124,9 +125,9 @@ function PatientsListPage() {
             <Link
               to="/patients/$id"
               params={{ id: p.id }}
-              className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] hover:bg-[var(--surface)] text-[var(--fg-2)] transition-colors"
+              className="inline-flex items-center justify-center size-7 rounded-sm hover:bg-[var(--surface)] text-[var(--fg-2)] transition-colors"
             >
-              <i className="hgi hgi-eye" />
+              <HIcon name="hgi-eye" />
             </Link>
           </TooltipTrigger>
           <TooltipContent>عرض التفاصيل</TooltipContent>
@@ -157,7 +158,7 @@ function PatientsListPage() {
         actions={
           <Link to="/patients/new">
             <Button>
-              <i className="hgi hgi-add-01 me-2" />
+              <HIcon name="hgi-add-01" className="me-2" />
               مريض جديد
             </Button>
           </Link>

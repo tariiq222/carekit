@@ -8,6 +8,7 @@ import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable } from '@/components/shared/data-table'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
 import { Button } from '@/components/ui/button'
+import { HIcon } from '@/components/shared/hicon'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export const Route = createFileRoute('/_dashboard/services/')({
@@ -117,9 +118,9 @@ function ServicesListPage() {
             <Link
               to="/services/$id"
               params={{ id: s.id }}
-              className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] hover:bg-[var(--surface)] text-[var(--fg-2)] transition-colors"
+              className="inline-flex items-center justify-center size-7 rounded-sm hover:bg-[var(--surface)] text-[var(--fg-2)] transition-colors"
             >
-              <i className="hgi hgi-edit-02" />
+              <HIcon name="hgi-edit-02" />
             </Link>
           </TooltipTrigger>
           <TooltipContent>تعديل</TooltipContent>
@@ -150,12 +151,12 @@ function ServicesListPage() {
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline">
-              <i className="hgi hgi-download-02 me-2" />
+              <HIcon name="hgi-download-02" className="me-2" />
               تصدير
             </Button>
             <Link to="/services/new">
               <Button>
-                <i className="hgi hgi-add-01 me-2" />
+                <HIcon name="hgi-add-01" className="me-2" />
                 خدمة جديدة
               </Button>
             </Link>

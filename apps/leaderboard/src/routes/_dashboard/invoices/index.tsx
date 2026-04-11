@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { HIcon } from '@/components/shared/hicon'
 import type {
   InvoiceListItem,
   InvoiceListQuery,
@@ -114,9 +115,9 @@ function InvoicesListPage() {
             <Link
               to="/invoices/$id"
               params={{ id: i.id }}
-              className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors"
+              className="inline-flex items-center justify-center size-7 rounded-sm text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors"
             >
-              <i className="hgi hgi-eye" />
+              <HIcon name="hgi-eye" />
             </Link>
           </TooltipTrigger>
           <TooltipContent>عرض الفاتورة</TooltipContent>

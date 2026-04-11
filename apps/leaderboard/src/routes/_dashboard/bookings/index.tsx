@@ -12,6 +12,14 @@ import { FilterBar } from '@/components/shared/filter-bar'
 import { DataTable } from '@/components/shared/data-table'
 import { SkeletonPage } from '@/components/shared/skeleton-page'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { HIcon } from '@/components/shared/hicon'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { useBookings, useBookingStats } from '@/hooks/use-bookings'
 import { BookingStatusBadge } from '@/components/features/bookings/booking-status-badge'
@@ -26,8 +34,8 @@ const TYPE_LABELS: Record<BookingType, string> = {
   walk_in: 'بدون موعد',
 }
 
-const STATUS_FILTER_OPTIONS: Array<{ value: '' | BookingStatus; label: string }> = [
-  { value: '', label: 'كل الحالات' },
+const STATUS_FILTER_OPTIONS: Array<{ value: 'all' | BookingStatus; label: string }> = [
+  { value: 'all', label: 'كل الحالات' },
   { value: 'pending', label: 'معلق' },
   { value: 'confirmed', label: 'مؤكد' },
   { value: 'completed', label: 'مكتمل' },
@@ -136,9 +144,9 @@ function BookingsListPage() {
             <Link
               to="/bookings/$id"
               params={{ id: b.id }}
-              className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors"
+              className="inline-flex items-center justify-center size-9 rounded-sm text-muted-foreground hover:bg-surface-muted hover:text-foreground transition-colors"
             >
-              <i className="hgi hgi-eye" />
+              <HIcon name="hgi-eye" />
             </Link>
           </TooltipTrigger>
           <TooltipContent>عرض التفاصيل</TooltipContent>
@@ -157,7 +165,7 @@ function BookingsListPage() {
         actions={
           <Link to="/bookings/new">
             <Button>
-              <i className="hgi hgi-add-01 me-1" />
+              <HIcon name="hgi-add-01" className="me-1" />
               حجز جديد
             </Button>
           </Link>
@@ -175,23 +183,27 @@ function BookingsListPage() {
         }}
         placeholder="بحث في الحجوزات..."
       >
-        <select
-          value={query.status ?? ''}
-          onChange={(e) =>
+        <Select
+          value={query.status ?? 'all'}
+          onValueChange={(val) =>
             setQuery((q) => ({
               ...q,
               page: 1,
-              status: (e.target.value || undefined) as BookingStatus | undefined,
+              status: (val === 'all' ? undefined : val) as BookingStatus | undefined,
             }))
           }
-          className="h-9 rounded-[var(--radius-sm)] border border-[var(--border-soft)] bg-[var(--surface-solid)] text-sm text-[var(--fg)] px-3"
         >
-          {STATUS_FILTER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-9 w-40">
+            <SelectValue placeholder="كل الحالات" />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_FILTER_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </FilterBar>
 
       <DataTable<BookingListItem>
@@ -203,8 +215,8 @@ function BookingsListPage() {
       />
 
       {meta && meta.totalPages > 1 && (
-        <div className="glass rounded-[var(--radius)] p-3 flex items-center justify-between">
-          <span className="text-xs text-[var(--muted)]">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-muted-foreground">
             صفحة {meta.page} من {meta.totalPages}
           </span>
           <div className="flex items-center gap-2">
@@ -212,9 +224,7 @@ function BookingsListPage() {
               variant="outline"
               size="sm"
               disabled={!meta.hasPreviousPage}
-              onClick={() =>
-                setQuery((q) => ({ ...q, page: (q.page ?? 1) - 1 }))
-              }
+              onClick={() => setQuery((q) => ({ ...q, page: (q.page ?? 1) - 1 }))}
             >
               السابق
             </Button>
@@ -222,9 +232,7 @@ function BookingsListPage() {
               variant="outline"
               size="sm"
               disabled={!meta.hasNextPage}
-              onClick={() =>
-                setQuery((q) => ({ ...q, page: (q.page ?? 1) + 1 }))
-              }
+              onClick={() => setQuery((q) => ({ ...q, page: (q.page ?? 1) + 1 }))}
             >
               التالي
             </Button>
