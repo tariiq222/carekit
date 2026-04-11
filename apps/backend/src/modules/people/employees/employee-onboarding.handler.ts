@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EmployeeGender, OnboardingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
@@ -19,6 +19,26 @@ export interface EmployeeOnboardingCommand {
   serviceIds?: string[];
 }
 
+type RelationStep = 'specialties' | 'branches' | 'services';
+
+const RELATION_CONFIG = {
+  specialties: {
+    table: 'employeeSpecialty' as const,
+    idField: 'specialtyId' as const,
+    idsKey: 'specialtyIds' as const,
+  },
+  branches: {
+    table: 'employeeBranch' as const,
+    idField: 'branchId' as const,
+    idsKey: 'branchIds' as const,
+  },
+  services: {
+    table: 'employeeService' as const,
+    idField: 'serviceId' as const,
+    idsKey: 'serviceIds' as const,
+  },
+} satisfies Record<RelationStep, { table: string; idField: string; idsKey: keyof EmployeeOnboardingCommand }>;
+
 @Injectable()
 export class EmployeeOnboardingHandler {
   constructor(private readonly prisma: PrismaService) {}
@@ -32,98 +52,79 @@ export class EmployeeOnboardingHandler {
       throw new NotFoundException(`Employee ${cmd.employeeId} not found`);
     }
 
-    switch (cmd.step) {
-      case 'profile': {
-        await this.prisma.employee.update({
-          where: { id: cmd.employeeId },
-          data: {
-            ...cmd.profile,
-            ...(employee.onboardingStatus === OnboardingStatus.PENDING && {
-              onboardingStatus: OnboardingStatus.IN_PROGRESS,
-            }),
-          },
-        });
-        break;
-      }
-
-      case 'specialties': {
-        await this.prisma.employeeSpecialty.deleteMany({
-          where: { employeeId: cmd.employeeId },
-        });
-        if (cmd.specialtyIds?.length) {
-          await this.prisma.employeeSpecialty.createMany({
-            data: cmd.specialtyIds.map((specialtyId) => ({
-              tenantId: cmd.tenantId,
-              employeeId: cmd.employeeId,
-              specialtyId,
-            })),
-          });
-        }
-        if (employee.onboardingStatus === OnboardingStatus.PENDING) {
-          await this.prisma.employee.update({
+    return this.prisma.$transaction(async (tx) => {
+      switch (cmd.step) {
+        case 'profile': {
+          await tx.employee.update({
             where: { id: cmd.employeeId },
-            data: { onboardingStatus: OnboardingStatus.IN_PROGRESS },
+            data: {
+              ...cmd.profile,
+              ...(employee.onboardingStatus === OnboardingStatus.PENDING && {
+                onboardingStatus: OnboardingStatus.IN_PROGRESS,
+              }),
+            },
           });
+          break;
         }
-        break;
-      }
 
-      case 'branches': {
-        await this.prisma.employeeBranch.deleteMany({
-          where: { employeeId: cmd.employeeId },
-        });
-        if (cmd.branchIds?.length) {
-          await this.prisma.employeeBranch.createMany({
-            data: cmd.branchIds.map((branchId) => ({
-              tenantId: cmd.tenantId,
-              employeeId: cmd.employeeId,
-              branchId,
-            })),
-          });
+        case 'specialties':
+        case 'branches':
+        case 'services': {
+          const config = RELATION_CONFIG[cmd.step];
+          const ids = (cmd[config.idsKey] as string[] | undefined) ?? [];
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (tx[config.table] as any).deleteMany({ where: { employeeId: cmd.employeeId } });
+          if (ids.length) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (tx[config.table] as any).createMany({
+              data: ids.map((id) => ({
+                tenantId: cmd.tenantId,
+                employeeId: cmd.employeeId,
+                [config.idField]: id,
+              })),
+            });
+          }
+
+          if (employee.onboardingStatus === OnboardingStatus.PENDING) {
+            await tx.employee.update({
+              where: { id: cmd.employeeId },
+              data: { onboardingStatus: OnboardingStatus.IN_PROGRESS },
+            });
+          }
+          break;
         }
-        if (employee.onboardingStatus === OnboardingStatus.PENDING) {
-          await this.prisma.employee.update({
+
+        case 'complete': {
+          const current = await tx.employee.findUnique({
             where: { id: cmd.employeeId },
-            data: { onboardingStatus: OnboardingStatus.IN_PROGRESS },
+            include: { specialties: true, branches: true, services: true },
           });
-        }
-        break;
-      }
 
-      case 'services': {
-        await this.prisma.employeeService.deleteMany({
-          where: { employeeId: cmd.employeeId },
-        });
-        if (cmd.serviceIds?.length) {
-          await this.prisma.employeeService.createMany({
-            data: cmd.serviceIds.map((serviceId) => ({
-              tenantId: cmd.tenantId,
-              employeeId: cmd.employeeId,
-              serviceId,
-            })),
-          });
-        }
-        if (employee.onboardingStatus === OnboardingStatus.PENDING) {
-          await this.prisma.employee.update({
+          if (
+            !current ||
+            !current.name ||
+            current.specialties.length === 0 ||
+            current.branches.length === 0 ||
+            current.services.length === 0
+          ) {
+            throw new BadRequestException(
+              'Cannot complete onboarding: profile, specialties, branches, and services must all be filled',
+            );
+          }
+
+          await tx.employee.update({
             where: { id: cmd.employeeId },
-            data: { onboardingStatus: OnboardingStatus.IN_PROGRESS },
+            data: { onboardingStatus: OnboardingStatus.COMPLETED },
           });
+          break;
         }
-        break;
       }
 
-      case 'complete': {
-        await this.prisma.employee.update({
-          where: { id: cmd.employeeId },
-          data: { onboardingStatus: OnboardingStatus.COMPLETED },
-        });
-        break;
-      }
-    }
-
-    return this.prisma.employee.findUnique({
-      where: { id: cmd.employeeId },
-      include: { specialties: true, branches: true, services: true },
+      return tx.employee.findUnique({
+        where: { id: cmd.employeeId },
+        include: { specialties: true, branches: true, services: true },
+      });
     });
   }
 }

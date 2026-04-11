@@ -1,9 +1,8 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { EmployeeOnboardingHandler } from './employee-onboarding.handler';
 
-// Use string literals — OnboardingStatus enum is added in the next migration
 const OnboardingStatus = {
   PENDING: 'PENDING',
   IN_PROGRESS: 'IN_PROGRESS',
@@ -17,25 +16,6 @@ const mockEmployee = {
   name: 'Ahmed',
 };
 
-const mockPrisma = {
-  employee: {
-    findUnique: jest.fn(),
-    update: jest.fn(),
-  },
-  employeeSpecialty: {
-    deleteMany: jest.fn(),
-    createMany: jest.fn(),
-  },
-  employeeBranch: {
-    deleteMany: jest.fn(),
-    createMany: jest.fn(),
-  },
-  employeeService: {
-    deleteMany: jest.fn(),
-    createMany: jest.fn(),
-  },
-};
-
 describe('EmployeeOnboardingHandler', () => {
   let handler: EmployeeOnboardingHandler;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,10 +24,21 @@ describe('EmployeeOnboardingHandler', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
+    prisma = {
+      employee: {
+        findUnique: jest.fn(),
+        update: jest.fn(),
+      },
+      employeeSpecialty: { deleteMany: jest.fn(), createMany: jest.fn() },
+      employeeBranch: { deleteMany: jest.fn(), createMany: jest.fn() },
+      employeeService: { deleteMany: jest.fn(), createMany: jest.fn() },
+      $transaction: jest.fn().mockImplementation((fn: (tx: unknown) => unknown) => fn(prisma)),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmployeeOnboardingHandler,
-        { provide: PrismaService, useValue: mockPrisma },
+        { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 
@@ -60,11 +51,7 @@ describe('EmployeeOnboardingHandler', () => {
       prisma.employee.findUnique.mockResolvedValue(null);
 
       await expect(
-        handler.execute({
-          employeeId: 'emp-1',
-          tenantId: 'tenant-1',
-          step: 'profile',
-        }),
+        handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'profile' }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -72,11 +59,7 @@ describe('EmployeeOnboardingHandler', () => {
       prisma.employee.findUnique.mockResolvedValue(mockEmployee);
 
       await expect(
-        handler.execute({
-          employeeId: 'emp-1',
-          tenantId: 'wrong-tenant',
-          step: 'profile',
-        }),
+        handler.execute({ employeeId: 'emp-1', tenantId: 'wrong-tenant', step: 'profile' }),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -98,10 +81,7 @@ describe('EmployeeOnboardingHandler', () => {
 
       expect(prisma.employee.update).toHaveBeenCalledWith({
         where: { id: 'emp-1' },
-        data: {
-          name: 'Ali',
-          onboardingStatus: OnboardingStatus.IN_PROGRESS,
-        },
+        data: { name: 'Ali', onboardingStatus: OnboardingStatus.IN_PROGRESS },
       });
       expect(result).toEqual(updated);
     });
@@ -128,7 +108,7 @@ describe('EmployeeOnboardingHandler', () => {
   });
 
   describe('specialties step', () => {
-    it('deletes existing specialties and creates new ones', async () => {
+    it('deletes existing specialties and creates new ones inside a transaction', async () => {
       prisma.employee.findUnique
         .mockResolvedValueOnce(mockEmployee)
         .mockResolvedValueOnce(mockEmployee);
@@ -143,9 +123,8 @@ describe('EmployeeOnboardingHandler', () => {
         specialtyIds: ['spec-1', 'spec-2'],
       });
 
-      expect(prisma.employeeSpecialty.deleteMany).toHaveBeenCalledWith({
-        where: { employeeId: 'emp-1' },
-      });
+      expect(prisma.$transaction).toHaveBeenCalled();
+      expect(prisma.employeeSpecialty.deleteMany).toHaveBeenCalledWith({ where: { employeeId: 'emp-1' } });
       expect(prisma.employeeSpecialty.createMany).toHaveBeenCalledWith({
         data: [
           { tenantId: 'tenant-1', employeeId: 'emp-1', specialtyId: 'spec-1' },
@@ -159,25 +138,69 @@ describe('EmployeeOnboardingHandler', () => {
     });
   });
 
-  describe('complete step', () => {
-    it('sets onboardingStatus to COMPLETED', async () => {
-      const completed = { ...mockEmployee, onboardingStatus: OnboardingStatus.COMPLETED };
+  describe('branches step', () => {
+    it('replaces branches inside a transaction', async () => {
       prisma.employee.findUnique
         .mockResolvedValueOnce(mockEmployee)
-        .mockResolvedValueOnce(completed);
+        .mockResolvedValueOnce(mockEmployee);
+      prisma.employeeBranch.deleteMany.mockResolvedValue({ count: 1 });
+      prisma.employeeBranch.createMany.mockResolvedValue({ count: 1 });
+      prisma.employee.update.mockResolvedValue(mockEmployee);
+
+      await handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'branches', branchIds: ['br-1'] });
+
+      expect(prisma.$transaction).toHaveBeenCalled();
+      expect(prisma.employeeBranch.deleteMany).toHaveBeenCalledWith({ where: { employeeId: 'emp-1' } });
+      expect(prisma.employeeBranch.createMany).toHaveBeenCalledWith({
+        data: [{ tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'br-1' }],
+      });
+    });
+  });
+
+  describe('complete step', () => {
+    it('sets onboardingStatus to COMPLETED when profile+specialties+branches+services are filled', async () => {
+      const readyEmployee = {
+        ...mockEmployee,
+        name: 'Ahmed',
+        specialties: [{ id: 'es1' }],
+        branches: [{ id: 'eb1' }],
+        services: [{ id: 'ev1' }],
+        onboardingStatus: OnboardingStatus.IN_PROGRESS,
+      };
+      const completed = { ...readyEmployee, onboardingStatus: OnboardingStatus.COMPLETED };
+
+      prisma.employee.findUnique
+        .mockResolvedValueOnce(mockEmployee)      // guard check
+        .mockResolvedValueOnce(readyEmployee)     // complete validation inside tx
+        .mockResolvedValueOnce(completed);        // final return
       prisma.employee.update.mockResolvedValue(completed);
 
-      const result = await handler.execute({
-        employeeId: 'emp-1',
-        tenantId: 'tenant-1',
-        step: 'complete',
-      });
+      const result = await handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'complete' });
 
       expect(prisma.employee.update).toHaveBeenCalledWith({
         where: { id: 'emp-1' },
         data: { onboardingStatus: OnboardingStatus.COMPLETED },
       });
       expect(result).toEqual(completed);
+    });
+
+    it('throws BadRequestException when profile/specialties/branches/services are incomplete', async () => {
+      const incompleteEmployee = {
+        ...mockEmployee,
+        name: 'Ahmed',
+        specialties: [],
+        branches: [],
+        services: [],
+        onboardingStatus: OnboardingStatus.IN_PROGRESS,
+      };
+
+      prisma.employee.findUnique
+        .mockResolvedValueOnce(mockEmployee)
+        .mockResolvedValueOnce(incompleteEmployee);
+
+      await expect(
+        handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'complete' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UpdateAvailabilityHandler } from './update-availability.handler';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
@@ -42,8 +42,27 @@ describe('UpdateAvailabilityHandler', () => {
     await expect(handler.execute(makeCmd())).rejects.toThrow(NotFoundException);
   });
 
+  it('throws NotFoundException when tenant does not match', async () => {
+    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1', tenantId: 'other-tenant' });
+    await expect(handler.execute(makeCmd())).rejects.toThrow(NotFoundException);
+  });
+
+  it('throws BadRequestException for invalid dayOfWeek', async () => {
+    await expect(handler.execute(makeCmd({ windows: [{ dayOfWeek: 7, startTime: '09:00', endTime: '17:00' }] }))).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws BadRequestException when startTime is not before endTime', async () => {
+    await expect(handler.execute(makeCmd({ windows: [{ dayOfWeek: 1, startTime: '17:00', endTime: '09:00' }] }))).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws BadRequestException for duplicate dayOfWeek', async () => {
+    await expect(
+      handler.execute(makeCmd({ windows: [{ dayOfWeek: 1, startTime: '09:00', endTime: '12:00' }, { dayOfWeek: 1, startTime: '13:00', endTime: '17:00' }] })),
+    ).rejects.toThrow(BadRequestException);
+  });
+
   it('deletes existing windows and creates new ones', async () => {
-    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1' });
+    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 3 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 2 });
     const windowRows = [
@@ -67,7 +86,7 @@ describe('UpdateAvailabilityHandler', () => {
   });
 
   it('upserts exceptions when provided', async () => {
-    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1' });
+    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.findMany.mockResolvedValue([]);
@@ -86,7 +105,7 @@ describe('UpdateAvailabilityHandler', () => {
   });
 
   it('handles empty exceptions array without calling upsert', async () => {
-    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1' });
+    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.findMany.mockResolvedValue([]);
