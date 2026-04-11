@@ -2,7 +2,7 @@ export interface NotificationListItem {
   id: string
   title: string
   body: string
-  type: string
+  type: 'booking_confirmed' | 'booking_cancelled' | 'payment_received' | 'system' | string
   isRead: boolean
   createdAt: string
   data?: Record<string, unknown>

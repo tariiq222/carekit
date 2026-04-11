@@ -33,6 +33,6 @@ export async function update(id: string, payload: UpdateIntakeFormPayload): Prom
   })
 }
 
-export async function remove(id: string): Promise<void> {
-  return apiRequest<void>(`/intake-forms/${id}`, { method: 'DELETE' })
+export async function remove(id: string): Promise<{ deleted: boolean }> {
+  return apiRequest<{ deleted: boolean }>(`/intake-forms/${id}`, { method: 'DELETE' })
 }

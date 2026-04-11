@@ -18,5 +18,5 @@ export interface GroupListQuery {
   page?: number
   perPage?: number
   search?: string
-  status?: string
+  status?: GroupStatus
 }
