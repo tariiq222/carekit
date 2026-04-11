@@ -2,6 +2,9 @@ import { SendPushHandler } from './send-push/send-push.handler';
 import { SendSmsHandler } from './send-sms/send-sms.handler';
 import { SendEmailHandler } from './send-email/send-email.handler';
 import { SendNotificationHandler } from './send-notification/send-notification.handler';
+import { CreateNotificationHandler } from './notifications/create-notification.handler';
+import { ListNotificationsHandler } from './notifications/list-notifications.handler';
+import { MarkReadHandler } from './notifications/mark-read.handler';
 import type { FcmService } from '../../infrastructure/mail';
 import type { SmtpService } from '../../infrastructure/mail';
 import type { PrismaService } from '../../infrastructure/database';
@@ -18,6 +21,9 @@ const mockTemplate = {
 const buildPrisma = () => ({
   notification: {
     create: jest.fn().mockResolvedValue({ id: 'notif-1' }),
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
+    updateMany: jest.fn().mockResolvedValue({ count: 0 }),
   },
   emailTemplate: {
     findUnique: jest.fn().mockResolvedValue(mockTemplate),
@@ -147,5 +153,70 @@ describe('SendNotificationHandler', () => {
     });
     expect(email.execute).not.toHaveBeenCalled();
     expect(sms.execute).not.toHaveBeenCalled();
+  });
+});
+
+// ─── CreateNotificationHandler ───────────────────────────────────────────────
+describe('CreateNotificationHandler', () => {
+  it('creates a notification record', async () => {
+    const prisma = buildPrisma();
+    const handler = new CreateNotificationHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({
+      tenantId: 'tenant-1',
+      recipientId: 'client-1',
+      recipientType: RecipientType.CLIENT,
+      type: NotificationType.GENERAL,
+      title: 'Test',
+      body: 'Hello',
+    });
+    expect(result.id).toBe('notif-1');
+    expect(prisma.notification.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ tenantId: 'tenant-1', recipientId: 'client-1' }),
+    });
+  });
+});
+
+// ─── ListNotificationsHandler ────────────────────────────────────────────────
+describe('ListNotificationsHandler', () => {
+  it('returns paginated notifications', async () => {
+    const prisma = buildPrisma();
+    (prisma.notification.findMany as jest.Mock).mockResolvedValue([{ id: 'notif-1', isRead: false }]);
+    (prisma.notification.count as jest.Mock).mockResolvedValue(1);
+    const handler = new ListNotificationsHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({ tenantId: 'tenant-1', recipientId: 'client-1', page: 1, limit: 20 });
+    expect(result.data).toHaveLength(1);
+    expect(result.meta.total).toBe(1);
+  });
+
+  it('filters unread when unreadOnly=true', async () => {
+    const prisma = buildPrisma();
+    const handler = new ListNotificationsHandler(prisma as unknown as PrismaService);
+    await handler.execute({ tenantId: 'tenant-1', recipientId: 'client-1', unreadOnly: true, page: 1, limit: 20 });
+    expect(prisma.notification.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ isRead: false }) }),
+    );
+  });
+});
+
+// ─── MarkReadHandler ─────────────────────────────────────────────────────────
+describe('MarkReadHandler', () => {
+  it('marks all notifications read for a recipient', async () => {
+    const prisma = buildPrisma();
+    const handler = new MarkReadHandler(prisma as unknown as PrismaService);
+    await handler.execute({ tenantId: 'tenant-1', recipientId: 'client-1' });
+    expect(prisma.notification.updateMany).toHaveBeenCalledWith({
+      where: { tenantId: 'tenant-1', recipientId: 'client-1', isRead: false },
+      data: { isRead: true, readAt: expect.any(Date) },
+    });
+  });
+
+  it('marks single notification read when notificationId provided', async () => {
+    const prisma = buildPrisma();
+    const handler = new MarkReadHandler(prisma as unknown as PrismaService);
+    await handler.execute({ tenantId: 'tenant-1', recipientId: 'client-1', notificationId: 'notif-1' });
+    expect(prisma.notification.updateMany).toHaveBeenCalledWith({
+      where: { tenantId: 'tenant-1', recipientId: 'client-1', isRead: false, id: 'notif-1' },
+      data: { isRead: true, readAt: expect.any(Date) },
+    });
   });
 });
