@@ -13,6 +13,8 @@ import { GetBusinessHoursHandler } from './hours/get-business-hours.handler';
 import { AddHolidayHandler } from './hours/add-holiday.handler';
 import { RemoveHolidayHandler } from './hours/remove-holiday.handler';
 import { ListHolidaysHandler } from './hours/list-holidays.handler';
+import { UpsertBrandingHandler } from './branding/upsert-branding.handler';
+import { GetBrandingHandler } from './branding/get-branding.handler';
 
 const branchHandlers = [
   CreateBranchHandler, UpdateBranchHandler, ListBranchesHandler, GetBranchHandler,
@@ -29,7 +31,7 @@ const hoursHandlers = [
 
 @Module({
   imports: [DatabaseModule],
-  providers: [...branchHandlers, ...serviceHandlers, ...hoursHandlers],
-  exports: [...branchHandlers, ...serviceHandlers, ...hoursHandlers],
+  providers: [...branchHandlers, ...serviceHandlers, ...hoursHandlers, UpsertBrandingHandler, GetBrandingHandler],
+  exports: [...branchHandlers, ...serviceHandlers, ...hoursHandlers, UpsertBrandingHandler, GetBrandingHandler],
 })
 export class OrganizationModule {}
