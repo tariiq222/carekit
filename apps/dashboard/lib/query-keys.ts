@@ -160,14 +160,6 @@ export const queryKeys = {
     },
   },
 
-  /* ─── Problem Reports ─── */
-  problemReports: {
-    all: ["problem-reports"] as const,
-    list: (filters?: object) =>
-      ["problem-reports", "list", filters] as const,
-    detail: (id: string) => ["problem-reports", "detail", id] as const,
-  },
-
   /* ─── Clinic ─── */
   clinic: {
     all: ["clinic"] as const,

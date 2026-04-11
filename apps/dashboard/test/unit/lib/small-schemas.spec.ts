@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import { createKbEntrySchema } from "@/lib/schemas/chatbot.schema"
-import { resolveProblemReportSchema } from "@/lib/schemas/problem-report.schema"
 import { zatcaOtpSchema } from "@/lib/schemas/invoice.schema"
 
 describe("createKbEntrySchema", () => {
@@ -22,23 +21,6 @@ describe("createKbEntrySchema", () => {
   it("accepts optional category", () => {
     const result = createKbEntrySchema.safeParse({ title: "FAQ", content: "Answer", category: "General" })
     expect(result.success).toBe(true)
-  })
-})
-
-describe("resolveProblemReportSchema", () => {
-  it("accepts resolved status", () => {
-    const result = resolveProblemReportSchema.safeParse({ status: "resolved" })
-    expect(result.success).toBe(true)
-  })
-
-  it("accepts dismissed status with notes", () => {
-    const result = resolveProblemReportSchema.safeParse({ status: "dismissed", adminNotes: "Duplicate report" })
-    expect(result.success).toBe(true)
-  })
-
-  it("rejects unknown status", () => {
-    const result = resolveProblemReportSchema.safeParse({ status: "pending" })
-    expect(result.success).toBe(false)
   })
 })
 

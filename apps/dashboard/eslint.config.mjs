@@ -32,7 +32,6 @@ const FEATURES = [
   "white-label",
   "zatca",
   "activity-log",
-  "problem-reports",
   "groups",
 ]
 

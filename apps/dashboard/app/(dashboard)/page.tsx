@@ -77,7 +77,7 @@ export default function DashboardPage() {
           <DashboardStats stats={stats} />
         )}
 
-        <AttentionAlerts pendingPayments={0} cancelRequests={stats?.pendingCancellation ?? 0} problemReports={0} />
+        <AttentionAlerts pendingPayments={0} cancelRequests={stats?.pendingCancellation ?? 0} />
       </section>
 
       {/* Group 2: Quick Actions */}
