@@ -1,16 +1,23 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { CreateServicePayload } from '@carekit/api-client'
-import { useCreateService } from '@/hooks/use-services'
+import { useCreateService, useServiceCategories } from '@/hooks/use-services'
 import {
   createServiceSchema,
   type CreateServiceFormValues,
 } from '@/lib/schemas/service.schema'
-import { PageHeader } from '@/components/shared/page-header'
-import { Button } from '@/components/ui/button'
+import { FormShell, FormField, FormSection, FormToggle } from '@/components/shared/form-shell'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export const Route = createFileRoute('/_dashboard/services/new')({
   component: NewServicePage,
@@ -19,10 +26,14 @@ export const Route = createFileRoute('/_dashboard/services/new')({
 function NewServicePage() {
   const navigate = useNavigate()
   const mutation = useCreateService()
+  const { data: categoriesData } = useServiceCategories()
+  const categoryOptions = (categoriesData ?? []).map((c) => ({ id: c.id, label: c.nameAr }))
 
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateServiceFormValues>({
     resolver: zodResolver(createServiceSchema),
@@ -36,7 +47,9 @@ function NewServicePage() {
     },
   })
 
-  const onSubmit = (values: CreateServiceFormValues) => {
+  const isActive = watch('isActive')
+
+  const onSubmit = handleSubmit((values) => {
     const payload: CreateServicePayload = {
       nameAr: values.nameAr,
       nameEn: values.nameEn,
@@ -50,91 +63,85 @@ function NewServicePage() {
     mutation.mutate(payload, {
       onSuccess: () => navigate({ to: '/services' }),
     })
-  }
-
-  const errorClass = 'text-xs text-[var(--error,#dc2626)] mt-1'
+  })
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="خدمة جديدة"
-        description="إضافة خدمة إلى كتالوج العيادة"
-        actions={
-          <Link to="/services">
-            <Button variant="outline">رجوع</Button>
-          </Link>
-        }
-      />
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="glass rounded-[var(--radius)] p-6 max-w-2xl space-y-4"
-      >
+    <FormShell
+      title="خدمة جديدة"
+      description="إضافة خدمة إلى كتالوج العيادة"
+      backTo="/services"
+      submitLabel="إنشاء الخدمة"
+      isPending={mutation.isPending}
+      error={(mutation.error as Error)?.message}
+      onSubmit={onSubmit}
+    >
+      {/* Names */}
+      <FormSection label="اسم الخدمة">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="nameAr">الاسم (عربي) *</Label>
-            <Input id="nameAr" {...register('nameAr')} />
-            {errors.nameAr && <p className={errorClass}>{errors.nameAr.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="nameEn">الاسم (إنجليزي) *</Label>
-            <Input id="nameEn" {...register('nameEn')} />
-            {errors.nameEn && <p className={errorClass}>{errors.nameEn.message}</p>}
-          </div>
+          <FormField label="الاسم بالعربية" required error={errors.nameAr?.message}>
+            <Input placeholder="تنظيف الأسنان" dir="rtl" {...register('nameAr')} />
+          </FormField>
+          <FormField label="الاسم بالإنجليزية" required error={errors.nameEn?.message}>
+            <Input placeholder="Teeth Cleaning" dir="ltr" {...register('nameEn')} />
+          </FormField>
         </div>
 
-        <div>
-          <Label htmlFor="categoryId">معرف التصنيف *</Label>
-          <Input id="categoryId" placeholder="UUID" {...register('categoryId')} />
-          {errors.categoryId && (
-            <p className={errorClass}>{errors.categoryId.message}</p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="price">السعر (هللات)</Label>
-            <Input id="price" type="number" min="0" {...register('price')} />
-            {errors.price && <p className={errorClass}>{errors.price.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="duration">المدة (دقيقة)</Label>
-            <Input id="duration" type="number" min="1" {...register('duration')} />
-            {errors.duration && (
-              <p className={errorClass}>{errors.duration.message}</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="descriptionAr">الوصف (عربي)</Label>
-          <Input id="descriptionAr" {...register('descriptionAr')} />
-        </div>
-
-        <div>
-          <Label htmlFor="descriptionEn">الوصف (إنجليزي)</Label>
-          <Input id="descriptionEn" {...register('descriptionEn')} />
-        </div>
-
-        {mutation.isError && (
-          <p className={errorClass}>
-            {(mutation.error as Error)?.message ?? 'حدث خطأ غير متوقع'}
-          </p>
-        )}
-
-        <div className="flex items-center gap-3 pt-2">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جاري الحفظ...' : 'إنشاء الخدمة'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate({ to: '/services' })}
+        <FormField label="التصنيف" required error={errors.categoryId?.message}>
+          <Select
+            value={watch('categoryId') ?? ''}
+            onValueChange={(v) => setValue('categoryId', v, { shouldValidate: true })}
           >
-            إلغاء
-          </Button>
+            <SelectTrigger>
+              <SelectValue placeholder="اختر تصنيفاً..." />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryOptions.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+      </FormSection>
+
+      {/* Pricing & Duration */}
+      <FormSection label="السعر والمدة" description="اختياري">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            label="السعر"
+            hint="بالهللات — 10000 = 100 ريال"
+            error={errors.price?.message}
+          >
+            <Input type="number" min="0" placeholder="10000" {...register('price')} />
+          </FormField>
+          <FormField
+            label="مدة الجلسة"
+            hint="بالدقائق"
+            error={errors.duration?.message}
+          >
+            <Input type="number" min="1" placeholder="30" {...register('duration')} />
+          </FormField>
         </div>
-      </form>
-    </div>
+      </FormSection>
+
+      {/* Descriptions */}
+      <FormSection label="الوصف" description="اختياري">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField label="الوصف بالعربية">
+            <Textarea placeholder="وصف الخدمة..." dir="rtl" rows={3} {...register('descriptionAr')} />
+          </FormField>
+          <FormField label="الوصف بالإنجليزية">
+            <Textarea placeholder="Service description..." dir="ltr" rows={3} {...register('descriptionEn')} />
+          </FormField>
+        </div>
+      </FormSection>
+
+      {/* Status */}
+      <FormToggle label="نشطة" description="تظهر الخدمة في الكتالوج وتقبل الحجوزات">
+        <Switch
+          checked={isActive ?? true}
+          onCheckedChange={(v) => setValue('isActive', v)}
+        />
+      </FormToggle>
+    </FormShell>
   )
 }

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { CreateWalkInPayload } from '@carekit/api-client'
@@ -7,10 +7,8 @@ import {
   createWalkInSchema,
   type CreateWalkInFormValues,
 } from '@/lib/schemas/patient.schema'
-import { PageHeader } from '@/components/shared/page-header'
-import { Button } from '@/components/ui/button'
+import { FormShell, FormField, FormSection, FormToggle } from '@/components/shared/form-shell'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -18,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 
 export const Route = createFileRoute('/_dashboard/patients/new')({
   component: NewPatientPage,
@@ -31,78 +30,65 @@ function NewPatientPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateWalkInFormValues>({
     resolver: zodResolver(createWalkInSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      phone: '',
-      dateOfBirth: '',
-    },
+    defaultValues: { firstName: '', lastName: '', phone: '', dateOfBirth: '' },
   })
 
-  const onSubmit = (values: CreateWalkInFormValues) => {
+  const genderValue = watch('gender')
+
+  const onSubmit = handleSubmit((values) => {
     const payload: CreateWalkInPayload = {
       firstName: values.firstName,
       lastName: values.lastName,
-      phone: values.phone?.trim() ? values.phone : undefined,
+      phone: values.phone?.trim() || undefined,
       gender: values.gender,
-      dateOfBirth: values.dateOfBirth?.trim() ? values.dateOfBirth : undefined,
+      dateOfBirth: values.dateOfBirth?.trim() || undefined,
     }
     mutation.mutate(payload, {
       onSuccess: () => navigate({ to: '/patients' }),
     })
-  }
-
-  const errorClass = 'text-xs text-[var(--error,#dc2626)] mt-1'
+  })
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="مريض جديد"
-        description="تسجيل مريض حضور مباشر"
-        actions={
-          <Link to="/patients">
-            <Button variant="outline">رجوع</Button>
-          </Link>
-        }
-      />
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="glass rounded-[var(--radius)] p-6 max-w-2xl space-y-4"
-      >
+    <FormShell
+      title="مريض جديد"
+      description="تسجيل مريض حضور مباشر"
+      backTo="/patients"
+      submitLabel="تسجيل المريض"
+      isPending={mutation.isPending}
+      error={(mutation.error as Error)?.message}
+      onSubmit={onSubmit}
+    >
+      {/* Name */}
+      <FormSection label="الاسم الكامل">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="firstName">الاسم الأول *</Label>
-            <Input id="firstName" {...register('firstName')} />
-            {errors.firstName && (
-              <p className={errorClass}>{errors.firstName.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="lastName">اسم العائلة *</Label>
-            <Input id="lastName" {...register('lastName')} />
-            {errors.lastName && (
-              <p className={errorClass}>{errors.lastName.message}</p>
-            )}
-          </div>
+          <FormField label="الاسم الأول" required error={errors.firstName?.message}>
+            <Input placeholder="محمد" {...register('firstName')} />
+          </FormField>
+          <FormField label="اسم العائلة" required error={errors.lastName?.message}>
+            <Input placeholder="العمري" {...register('lastName')} />
+          </FormField>
         </div>
+      </FormSection>
 
-        <div>
-          <Label htmlFor="phone">الهاتف</Label>
-          <Input id="phone" placeholder="+966..." {...register('phone')} />
-          {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
-        </div>
+      {/* Contact & Info */}
+      <FormSection label="البيانات الشخصية">
+        <FormField
+          label="رقم الجوال"
+          error={errors.phone?.message}
+          hint="اختياري — +966xxxxxxxxx"
+        >
+          <Input placeholder="+966500000000" dir="ltr" {...register('phone')} />
+        </FormField>
 
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>الجنس</Label>
+          <FormField label="الجنس" error={errors.gender?.message}>
             <Select
-              onValueChange={(v) =>
-                setValue('gender', v as 'male' | 'female')
-              }
+              value={genderValue ?? ''}
+              onValueChange={(v) => setValue('gender', v as 'male' | 'female')}
             >
               <SelectTrigger>
                 <SelectValue placeholder="اختر..." />
@@ -112,38 +98,13 @@ function NewPatientPage() {
                 <SelectItem value="female">أنثى</SelectItem>
               </SelectContent>
             </Select>
-            {errors.gender && (
-              <p className={errorClass}>{errors.gender.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="dateOfBirth">تاريخ الميلاد</Label>
-            <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} />
-            {errors.dateOfBirth && (
-              <p className={errorClass}>{errors.dateOfBirth.message}</p>
-            )}
-          </div>
-        </div>
+          </FormField>
 
-        {mutation.isError && (
-          <p className={errorClass}>
-            {(mutation.error as Error)?.message ?? 'حدث خطأ غير متوقع'}
-          </p>
-        )}
-
-        <div className="flex items-center gap-3 pt-2">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جاري الحفظ...' : 'تسجيل المريض'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate({ to: '/patients' })}
-          >
-            إلغاء
-          </Button>
+          <FormField label="تاريخ الميلاد" error={errors.dateOfBirth?.message}>
+            <Input type="date" {...register('dateOfBirth')} />
+          </FormField>
         </div>
-      </form>
-    </div>
+      </FormSection>
+    </FormShell>
   )
 }

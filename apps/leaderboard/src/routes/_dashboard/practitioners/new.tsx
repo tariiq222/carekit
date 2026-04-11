@@ -2,15 +2,23 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { CreatePractitionerPayload } from '@carekit/api-client'
-import { PageHeader } from '@/components/shared/page-header'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useCreatePractitioner } from '@/hooks/use-practitioners'
+import { useSpecialties } from '@/hooks/use-specialties'
+import { useUsers } from '@/hooks/use-users'
 import {
   createPractitionerSchema,
   type CreatePractitionerFormValues,
 } from '@/lib/schemas/practitioner.schema'
+import { FormShell, FormField, FormSection } from '@/components/shared/form-shell'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export const Route = createFileRoute('/_dashboard/practitioners/new')({
   component: NewPractitionerPage,
@@ -18,12 +26,22 @@ export const Route = createFileRoute('/_dashboard/practitioners/new')({
 
 function NewPractitionerPage() {
   const navigate = useNavigate()
-  const createPractitioner = useCreatePractitioner()
+  const mutation = useCreatePractitioner()
+  const { data: specialtiesData } = useSpecialties()
+  const { data: usersData } = useUsers({ perPage: 200 })
+
+  const specialtyOptions = (specialtiesData ?? []).map((s) => ({ id: s.id, label: s.nameAr }))
+  const userOptions = (usersData?.items ?? []).map((u) => ({
+    id: u.id,
+    label: `${u.firstName} ${u.lastName} — ${u.email}`,
+  }))
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    setValue,
+    watch,
+    formState: { errors },
   } = useForm<CreatePractitionerFormValues>({
     resolver: zodResolver(createPractitionerSchema),
     defaultValues: { experience: 0 },
@@ -34,103 +52,98 @@ function NewPractitionerPage() {
       userId: values.userId,
       specialtyId: values.specialtyId,
       experience: values.experience,
-      ...(values.bio && values.bio.trim() !== '' ? { bio: values.bio } : {}),
-      ...(values.bioAr && values.bioAr.trim() !== ''
-        ? { bioAr: values.bioAr }
-        : {}),
+      bio: values.bio?.trim() || undefined,
+      bioAr: values.bioAr?.trim() || undefined,
     }
-    await createPractitioner.mutateAsync(payload)
+    await mutation.mutateAsync(payload)
     navigate({ to: '/practitioners' })
   })
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="ممارس جديد"
-        description="إضافة ممارس صحي للعيادة"
-      />
+    <FormShell
+      title="ممارس جديد"
+      description="ربط مستخدم موجود بملف ممارس صحي"
+      backTo="/practitioners"
+      submitLabel="إضافة الممارس"
+      isPending={mutation.isPending}
+      error={(mutation.error as Error)?.message}
+      onSubmit={onSubmit}
+    >
+      {/* Identity */}
+      <FormSection label="الهوية">
+        <FormField label="المستخدم" required error={errors.userId?.message}>
+          <Select
+            value={watch('userId') ?? ''}
+            onValueChange={(v) => setValue('userId', v, { shouldValidate: true })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="اختر مستخدماً..." />
+            </SelectTrigger>
+            <SelectContent>
+              {userOptions.map((u) => (
+                <SelectItem key={u.id} value={u.id}>{u.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
 
-      <form
-        onSubmit={onSubmit}
-        className="glass rounded-[var(--radius)] p-6 max-w-2xl space-y-5"
-      >
-        <div className="space-y-2">
-          <Label htmlFor="userId">معرف المستخدم *</Label>
-          <Input
-            id="userId"
-            placeholder="معرف المستخدم"
-            {...register('userId')}
-          />
-          {errors.userId && (
-            <p className="text-xs text-[var(--error,#dc2626)]">
-              {errors.userId.message}
-            </p>
-          )}
-        </div>
+        <FormField label="التخصص" required error={errors.specialtyId?.message}>
+          <Select
+            value={watch('specialtyId') ?? ''}
+            onValueChange={(v) => setValue('specialtyId', v, { shouldValidate: true })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="اختر تخصصاً..." />
+            </SelectTrigger>
+            <SelectContent>
+              {specialtyOptions.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+      </FormSection>
 
-        <div className="space-y-2">
-          <Label htmlFor="specialtyId">معرف التخصص *</Label>
+      {/* Experience */}
+      <FormSection label="الخبرة">
+        <FormField
+          label="سنوات الخبرة"
+          required
+          error={errors.experience?.message}
+          hint="من 0 إلى 50 سنة"
+        >
           <Input
-            id="specialtyId"
-            placeholder="معرف التخصص"
-            {...register('specialtyId')}
-          />
-          {errors.specialtyId && (
-            <p className="text-xs text-[var(--error,#dc2626)]">
-              {errors.specialtyId.message}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="experience">سنوات الخبرة *</Label>
-          <Input
-            id="experience"
             type="number"
             min={0}
             max={50}
+            placeholder="5"
+            className="max-w-[120px]"
             {...register('experience', { valueAsNumber: true })}
           />
-          {errors.experience && (
-            <p className="text-xs text-[var(--error,#dc2626)]">
-              {errors.experience.message}
-            </p>
-          )}
-        </div>
+        </FormField>
+      </FormSection>
 
-        <div className="space-y-2">
-          <Label htmlFor="bio">نبذة بالإنجليزية</Label>
-          <Input id="bio" {...register('bio')} />
-          {errors.bio && (
-            <p className="text-xs text-[var(--error,#dc2626)]">
-              {errors.bio.message}
-            </p>
-          )}
+      {/* Bio */}
+      <FormSection label="النبذة التعريفية" description="اختياري — تظهر لدى المرضى">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField label="النبذة بالعربية" error={errors.bioAr?.message}>
+            <Textarea
+              placeholder="طبيب متخصص في..."
+              dir="rtl"
+              rows={4}
+              {...register('bioAr')}
+            />
+          </FormField>
+          <FormField label="النبذة بالإنجليزية" error={errors.bio?.message}>
+            <Textarea
+              placeholder="Specialist in..."
+              dir="ltr"
+              rows={4}
+              {...register('bio')}
+            />
+          </FormField>
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="bioAr">نبذة بالعربية</Label>
-          <Input id="bioAr" {...register('bioAr')} />
-          {errors.bioAr && (
-            <p className="text-xs text-[var(--error,#dc2626)]">
-              {errors.bioAr.message}
-            </p>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3 pt-2">
-          <Button type="submit" disabled={isSubmitting}>
-            إضافة الممارس
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate({ to: '/practitioners' })}
-          >
-            إلغاء
-          </Button>
-        </div>
-      </form>
-    </div>
+      </FormSection>
+    </FormShell>
   )
 }

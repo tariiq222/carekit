@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { CreateCouponPayload } from '@carekit/api-client'
@@ -7,10 +7,16 @@ import {
   couponFormSchema,
   type CouponFormValues,
 } from '@/lib/schemas/coupon.schema'
-import { PageHeader } from '@/components/shared/page-header'
-import { Button } from '@/components/ui/button'
+import { FormShell, FormField, FormSection, FormToggle } from '@/components/shared/form-shell'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export const Route = createFileRoute('/_dashboard/coupons/new')({
   component: NewCouponPage,
@@ -23,6 +29,8 @@ function NewCouponPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CouponFormValues>({
     resolver: zodResolver(couponFormSchema),
@@ -34,7 +42,10 @@ function NewCouponPage() {
     },
   })
 
-  const onSubmit = (values: CouponFormValues) => {
+  const discountType = watch('discountType')
+  const isActive = watch('isActive')
+
+  const onSubmit = handleSubmit((values) => {
     const payload: CreateCouponPayload = {
       code: values.code.toUpperCase(),
       descriptionAr: values.descriptionAr || undefined,
@@ -43,125 +54,123 @@ function NewCouponPage() {
       discountValue: values.discountValue,
       minAmount: values.minAmount,
       maxUses: Number.isFinite(values.maxUses) ? values.maxUses : undefined,
-      maxUsesPerUser: Number.isFinite(values.maxUsesPerUser)
-        ? values.maxUsesPerUser
-        : undefined,
+      maxUsesPerUser: Number.isFinite(values.maxUsesPerUser) ? values.maxUsesPerUser : undefined,
       expiresAt: values.expiresAt || undefined,
       isActive: values.isActive,
     }
     mutation.mutate(payload, {
       onSuccess: () => navigate({ to: '/coupons' }),
     })
-  }
-
-  const errorClass = 'text-xs text-[var(--error,#dc2626)] mt-1'
+  })
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="كوبون جديد"
-        description="إنشاء كوبون خصم جديد"
-        actions={
-          <Link to="/coupons">
-            <Button variant="outline">رجوع</Button>
-          </Link>
-        }
-      />
+    <FormShell
+      title="كوبون جديد"
+      description="إنشاء كوبون خصم للمرضى"
+      backTo="/coupons"
+      submitLabel="إنشاء الكوبون"
+      isPending={mutation.isPending}
+      error={(mutation.error as Error)?.message}
+      onSubmit={onSubmit}
+    >
+      {/* Code */}
+      <FormSection label="الكود">
+        <FormField label="كود الكوبون" required error={errors.code?.message} hint="حروف إنجليزية وأرقام وشرطات فقط">
+          <Input
+            placeholder="SUMMER25"
+            dir="ltr"
+            className="uppercase"
+            {...register('code')}
+            onChange={(e) => {
+              e.target.value = e.target.value.toUpperCase()
+              register('code').onChange(e)
+            }}
+          />
+        </FormField>
+      </FormSection>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="glass rounded-[var(--radius)] p-6 max-w-2xl space-y-4"
-      >
-        <div>
-          <Label htmlFor="code">الكود *</Label>
-          <Input id="code" placeholder="SUMMER25" {...register('code')} />
-          {errors.code && <p className={errorClass}>{errors.code.message}</p>}
-        </div>
-
+      {/* Discount */}
+      <FormSection label="قيمة الخصم">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="discountType">النوع *</Label>
-            <select
-              id="discountType"
-              {...register('discountType')}
-              className="w-full h-9 rounded-[var(--radius-sm)] border border-[var(--border-soft)] bg-[var(--surface-solid)] text-sm text-[var(--fg)] px-3"
+          <FormField label="نوع الخصم" required error={errors.discountType?.message}>
+            <Select
+              value={discountType}
+              onValueChange={(v) => setValue('discountType', v as CouponFormValues['discountType'])}
             >
-              <option value="percentage">نسبة مئوية</option>
-              <option value="fixed">مبلغ ثابت (هللات)</option>
-            </select>
-          </div>
-          <div>
-            <Label htmlFor="discountValue">القيمة *</Label>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="percentage">نسبة مئوية (%)</SelectItem>
+                <SelectItem value="fixed">مبلغ ثابت (هللات)</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormField>
+
+          <FormField
+            label={discountType === 'percentage' ? 'نسبة الخصم (%)' : 'مبلغ الخصم (هللات)'}
+            required
+            error={errors.discountValue?.message}
+          >
             <Input
-              id="discountValue"
               type="number"
+              min="1"
+              placeholder={discountType === 'percentage' ? '10' : '5000'}
               {...register('discountValue')}
             />
-            {errors.discountValue && (
-              <p className={errorClass}>{errors.discountValue.message}</p>
-            )}
-          </div>
+          </FormField>
         </div>
 
+        <FormField
+          label="الحد الأدنى للطلب"
+          hint="اختياري — بالهللات"
+          error={errors.minAmount?.message}
+        >
+          <Input
+            type="number"
+            min="0"
+            placeholder="0"
+            className="max-w-[200px]"
+            {...register('minAmount')}
+          />
+        </FormField>
+      </FormSection>
+
+      {/* Limits */}
+      <FormSection label="حدود الاستخدام" description="اختياري — اتركها فارغة للاستخدام غير المحدود">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="minAmount">أدنى مبلغ (هللات)</Label>
-            <Input id="minAmount" type="number" {...register('minAmount')} />
-          </div>
-          <div>
-            <Label htmlFor="expiresAt">ينتهي في</Label>
-            <Input id="expiresAt" type="date" {...register('expiresAt')} />
-          </div>
+          <FormField label="الحد الأقصى الكلي" error={errors.maxUses?.message}>
+            <Input type="number" min="1" placeholder="∞" {...register('maxUses')} />
+          </FormField>
+          <FormField label="الحد لكل مستخدم" error={errors.maxUsesPerUser?.message}>
+            <Input type="number" min="1" placeholder="∞" {...register('maxUsesPerUser')} />
+          </FormField>
         </div>
 
+        <FormField label="تاريخ انتهاء الصلاحية">
+          <Input type="date" className="max-w-[200px]" {...register('expiresAt')} />
+        </FormField>
+      </FormSection>
+
+      {/* Description */}
+      <FormSection label="الوصف" description="اختياري — يظهر للمريض عند تطبيق الكوبون">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="maxUses">الحد الأقصى للاستخدام</Label>
-            <Input id="maxUses" type="number" {...register('maxUses')} />
-          </div>
-          <div>
-            <Label htmlFor="maxUsesPerUser">حد كل مستخدم</Label>
-            <Input
-              id="maxUsesPerUser"
-              type="number"
-              {...register('maxUsesPerUser')}
-            />
-          </div>
+          <FormField label="الوصف بالعربية">
+            <Input placeholder="خصم موسم الصيف..." dir="rtl" {...register('descriptionAr')} />
+          </FormField>
+          <FormField label="الوصف بالإنجليزية">
+            <Input placeholder="Summer discount..." dir="ltr" {...register('descriptionEn')} />
+          </FormField>
         </div>
+      </FormSection>
 
-        <div>
-          <Label htmlFor="descriptionAr">وصف بالعربية</Label>
-          <Input id="descriptionAr" {...register('descriptionAr')} />
-        </div>
-        <div>
-          <Label htmlFor="descriptionEn">وصف بالإنجليزية</Label>
-          <Input id="descriptionEn" {...register('descriptionEn')} />
-        </div>
-
-        <label className="flex items-center gap-2">
-          <input type="checkbox" {...register('isActive')} />
-          <span className="text-sm text-[var(--fg)]">فعال</span>
-        </label>
-
-        {mutation.isError && (
-          <p className={errorClass}>
-            {(mutation.error as Error)?.message ?? 'حدث خطأ غير متوقع'}
-          </p>
-        )}
-
-        <div className="flex items-center gap-3 pt-2">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جاري الحفظ...' : 'إنشاء الكوبون'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate({ to: '/coupons' })}
-          >
-            إلغاء
-          </Button>
-        </div>
-      </form>
-    </div>
+      {/* Status */}
+      <FormToggle label="فعال" description="يمكن للمرضى استخدامه فور الإنشاء">
+        <Switch
+          checked={isActive ?? true}
+          onCheckedChange={(v) => setValue('isActive', v)}
+        />
+      </FormToggle>
+    </FormShell>
   )
 }

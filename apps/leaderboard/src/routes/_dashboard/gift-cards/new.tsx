@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { CreateGiftCardPayload } from '@carekit/api-client'
@@ -7,10 +7,9 @@ import {
   giftCardFormSchema,
   type GiftCardFormValues,
 } from '@/lib/schemas/gift-card.schema'
-import { PageHeader } from '@/components/shared/page-header'
-import { Button } from '@/components/ui/button'
+import { FormShell, FormField, FormSection, FormToggle } from '@/components/shared/form-shell'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 
 export const Route = createFileRoute('/_dashboard/gift-cards/new')({
   component: NewGiftCardPage,
@@ -23,19 +22,19 @@ function NewGiftCardPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<GiftCardFormValues>({
     resolver: zodResolver(giftCardFormSchema),
-    defaultValues: {
-      code: '',
-      initialAmount: 50000,
-      isActive: true,
-    },
+    defaultValues: { code: '', initialAmount: 50000, isActive: true },
   })
 
-  const onSubmit = (values: GiftCardFormValues) => {
+  const isActive = watch('isActive')
+
+  const onSubmit = handleSubmit((values) => {
     const payload: CreateGiftCardPayload = {
-      code: values.code ? values.code.toUpperCase() : undefined,
+      code: values.code?.trim().toUpperCase() || undefined,
       initialAmount: values.initialAmount,
       expiresAt: values.expiresAt || undefined,
       isActive: values.isActive,
@@ -43,73 +42,59 @@ function NewGiftCardPage() {
     mutation.mutate(payload, {
       onSuccess: () => navigate({ to: '/gift-cards' }),
     })
-  }
-
-  const errorClass = 'text-xs text-[var(--error,#dc2626)] mt-1'
+  })
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="بطاقة إهداء جديدة"
-        description="إنشاء بطاقة إهداء جديدة"
-        actions={
-          <Link to="/gift-cards">
-            <Button variant="outline">رجوع</Button>
-          </Link>
-        }
-      />
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="glass rounded-[var(--radius)] p-6 max-w-2xl space-y-4"
-      >
-        <div>
-          <Label htmlFor="code">الكود (اختياري — يُولد تلقائيًا)</Label>
-          <Input id="code" placeholder="GC-VIP2026" {...register('code')} />
-          {errors.code && <p className={errorClass}>{errors.code.message}</p>}
-        </div>
-
-        <div>
-          <Label htmlFor="initialAmount">القيمة الأصلية (هللات) *</Label>
+    <FormShell
+      title="بطاقة إهداء جديدة"
+      description="إنشاء بطاقة إهداء قابلة للاستخدام في الحجوزات"
+      backTo="/gift-cards"
+      submitLabel="إنشاء البطاقة"
+      isPending={mutation.isPending}
+      error={(mutation.error as Error)?.message}
+      onSubmit={onSubmit}
+    >
+      {/* Value */}
+      <FormSection label="القيمة">
+        <FormField
+          label="القيمة الأصلية"
+          required
+          error={errors.initialAmount?.message}
+          hint="بالهللات — 50000 = 500 ريال"
+        >
           <Input
-            id="initialAmount"
             type="number"
+            min="1"
+            placeholder="50000"
+            className="max-w-[200px]"
             {...register('initialAmount')}
           />
-          {errors.initialAmount && (
-            <p className={errorClass}>{errors.initialAmount.message}</p>
-          )}
-        </div>
+        </FormField>
+      </FormSection>
 
-        <div>
-          <Label htmlFor="expiresAt">ينتهي في</Label>
-          <Input id="expiresAt" type="date" {...register('expiresAt')} />
-        </div>
-
-        <label className="flex items-center gap-2">
-          <input type="checkbox" {...register('isActive')} />
-          <span className="text-sm text-[var(--fg)]">فعالة</span>
-        </label>
-
-        {mutation.isError && (
-          <p className={errorClass}>
-            {(mutation.error as Error)?.message ?? 'حدث خطأ غير متوقع'}
-          </p>
-        )}
-
-        <div className="flex items-center gap-3 pt-2">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جاري الحفظ...' : 'إنشاء البطاقة'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate({ to: '/gift-cards' })}
+      {/* Code & Expiry */}
+      <FormSection label="الكود والصلاحية" description="اختياري">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            label="الكود"
+            error={errors.code?.message}
+            hint="يُولد تلقائيًا إذا تُرك فارغاً"
           >
-            إلغاء
-          </Button>
+            <Input placeholder="GC-VIP2026" dir="ltr" {...register('code')} />
+          </FormField>
+          <FormField label="تاريخ انتهاء الصلاحية">
+            <Input type="date" {...register('expiresAt')} />
+          </FormField>
         </div>
-      </form>
-    </div>
+      </FormSection>
+
+      {/* Status */}
+      <FormToggle label="فعالة" description="يمكن استخدامها في الحجوزات فور الإنشاء">
+        <Switch
+          checked={isActive ?? true}
+          onCheckedChange={(v) => setValue('isActive', v)}
+        />
+      </FormToggle>
+    </FormShell>
   )
 }

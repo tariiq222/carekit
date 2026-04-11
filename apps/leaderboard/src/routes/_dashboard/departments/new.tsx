@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { CreateDepartmentPayload } from '@carekit/api-client'
@@ -7,10 +7,10 @@ import {
   createDepartmentSchema,
   type CreateDepartmentFormValues,
 } from '@/lib/schemas/department.schema'
-import { PageHeader } from '@/components/shared/page-header'
-import { Button } from '@/components/ui/button'
+import { FormShell, FormField, FormSection, FormToggle } from '@/components/shared/form-shell'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 
 export const Route = createFileRoute('/_dashboard/departments/new')({
   component: NewDepartmentPage,
@@ -23,6 +23,8 @@ function NewDepartmentPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateDepartmentFormValues>({
     resolver: zodResolver(createDepartmentSchema),
@@ -36,7 +38,9 @@ function NewDepartmentPage() {
     },
   })
 
-  const onSubmit = (values: CreateDepartmentFormValues) => {
+  const isActive = watch('isActive')
+
+  const onSubmit = handleSubmit((values) => {
     const payload: CreateDepartmentPayload = {
       nameAr: values.nameAr,
       nameEn: values.nameEn,
@@ -49,84 +53,61 @@ function NewDepartmentPage() {
     mutation.mutate(payload, {
       onSuccess: () => navigate({ to: '/departments' }),
     })
-  }
-
-  const errorClass = 'text-xs text-[var(--error,#dc2626)] mt-1'
+  })
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="قسم جديد"
-        description="إضافة قسم جديد"
-        actions={
-          <Link to="/departments">
-            <Button variant="outline">رجوع</Button>
-          </Link>
-        }
-      />
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="glass rounded-[var(--radius)] p-6 max-w-2xl space-y-4"
-      >
+    <FormShell
+      title="قسم جديد"
+      description="إضافة قسم طبي للعيادة"
+      backTo="/departments"
+      submitLabel="إنشاء القسم"
+      isPending={mutation.isPending}
+      error={(mutation.error as Error)?.message}
+      onSubmit={onSubmit}
+    >
+      {/* Names */}
+      <FormSection label="الاسم">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="nameAr">الاسم (عربي) *</Label>
-            <Input id="nameAr" {...register('nameAr')} />
-            {errors.nameAr && <p className={errorClass}>{errors.nameAr.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="nameEn">الاسم (إنجليزي) *</Label>
-            <Input id="nameEn" {...register('nameEn')} />
-            {errors.nameEn && <p className={errorClass}>{errors.nameEn.message}</p>}
-          </div>
+          <FormField label="الاسم بالعربية" required error={errors.nameAr?.message}>
+            <Input placeholder="قسم الأسنان" dir="rtl" {...register('nameAr')} />
+          </FormField>
+          <FormField label="الاسم بالإنجليزية" required error={errors.nameEn?.message}>
+            <Input placeholder="Dental Department" dir="ltr" {...register('nameEn')} />
+          </FormField>
         </div>
+      </FormSection>
 
-        <div>
-          <Label htmlFor="descriptionAr">الوصف (عربي)</Label>
-          <Input id="descriptionAr" {...register('descriptionAr')} />
-        </div>
-
-        <div>
-          <Label htmlFor="descriptionEn">الوصف (إنجليزي)</Label>
-          <Input id="descriptionEn" {...register('descriptionEn')} />
-        </div>
-
+      {/* Descriptions */}
+      <FormSection label="الوصف" description="اختياري">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="icon">الأيقونة</Label>
-            <Input id="icon" placeholder="hgi-..." {...register('icon')} />
-          </div>
-          <div>
-            <Label htmlFor="sortOrder">الترتيب</Label>
-            <Input id="sortOrder" type="number" min="0" {...register('sortOrder')} />
-          </div>
+          <FormField label="الوصف بالعربية">
+            <Textarea placeholder="وصف مختصر..." dir="rtl" rows={3} {...register('descriptionAr')} />
+          </FormField>
+          <FormField label="الوصف بالإنجليزية">
+            <Textarea placeholder="Short description..." dir="ltr" rows={3} {...register('descriptionEn')} />
+          </FormField>
         </div>
+      </FormSection>
 
-        <label className="flex items-center gap-2 text-sm text-[var(--fg)]">
-          <input type="checkbox" {...register('isActive')} />
-          نشط
-        </label>
-
-        {mutation.isError && (
-          <p className={errorClass}>
-            {(mutation.error as Error)?.message ?? 'حدث خطأ غير متوقع'}
-          </p>
-        )}
-
-        <div className="flex items-center gap-3 pt-2">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جاري الحفظ...' : 'إنشاء القسم'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate({ to: '/departments' })}
-          >
-            إلغاء
-          </Button>
+      {/* Meta */}
+      <FormSection label="الأيقونة والترتيب" description="اختياري">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField label="الأيقونة" hint="مثال: hgi-stroke-tooth">
+            <Input placeholder="hgi-stroke-..." {...register('icon')} />
+          </FormField>
+          <FormField label="ترتيب العرض" hint="رقم أصغر = يظهر أولاً">
+            <Input type="number" min="0" placeholder="0" {...register('sortOrder')} />
+          </FormField>
         </div>
-      </form>
-    </div>
+      </FormSection>
+
+      {/* Status */}
+      <FormToggle label="نشط" description="يظهر القسم للمرضى والممارسين">
+        <Switch
+          checked={isActive ?? true}
+          onCheckedChange={(v) => setValue('isActive', v)}
+        />
+      </FormToggle>
+    </FormShell>
   )
 }

@@ -1,190 +1,213 @@
-import { useState } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import type { FormScope, FormType } from '@carekit/api-client'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import type { FormScope, FormType, CreateIntakeFormPayload } from '@carekit/api-client'
 import { useCreateIntakeForm } from '@/hooks/use-intake-forms'
-import { PageHeader } from '@/components/shared/page-header'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
+import { useBranches } from '@/hooks/use-branches'
+import { useServices } from '@/hooks/use-services'
+import { usePractitioners } from '@/hooks/use-practitioners'
+import { FormShell, FormField, FormSection } from '@/components/shared/form-shell'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export const Route = createFileRoute('/_dashboard/intake-forms/new')({
   component: NewIntakeFormPage,
 })
 
-const FORM_TYPE_OPTIONS: { value: FormType; label: string }[] = [
-  { value: 'pre_booking', label: 'قبل الحجز' },
-  { value: 'pre_session', label: 'قبل الجلسة' },
-  { value: 'post_session', label: 'بعد الجلسة' },
-  { value: 'registration', label: 'تسجيل' },
+const intakeFormSchema = z.object({
+  nameAr: z.string().min(2, 'الاسم بالعربية مطلوب'),
+  nameEn: z.string().min(2, 'الاسم بالإنجليزية مطلوب'),
+  type: z.enum(['pre_booking', 'pre_session', 'post_session', 'registration']),
+  scope: z.enum(['global', 'service', 'practitioner', 'branch']),
+  serviceId: z.string().optional().or(z.literal('')),
+  practitionerId: z.string().optional().or(z.literal('')),
+  branchId: z.string().optional().or(z.literal('')),
+})
+type IntakeFormValues = z.infer<typeof intakeFormSchema>
+
+const FORM_TYPES: { value: FormType; label: string; description: string }[] = [
+  { value: 'pre_booking', label: 'قبل الحجز', description: 'يُعرض للمريض لحظة إنشاء الحجز' },
+  { value: 'pre_session', label: 'قبل الجلسة', description: 'يُعرض عند تسجيل الحضور' },
+  { value: 'post_session', label: 'بعد الجلسة', description: 'يُعرض عند إتمام الجلسة' },
+  { value: 'registration', label: 'التسجيل', description: 'يُعرض عند تسجيل المريض أول مرة' },
 ]
 
-const FORM_SCOPE_OPTIONS: { value: FormScope; label: string }[] = [
-  { value: 'global', label: 'عام' },
-  { value: 'service', label: 'خدمة' },
-  { value: 'practitioner', label: 'ممارس' },
-  { value: 'branch', label: 'فرع' },
+const FORM_SCOPES: { value: FormScope; label: string; description: string }[] = [
+  { value: 'global', label: 'عام', description: 'يُطبَّق على جميع الحجوزات' },
+  { value: 'service', label: 'خدمة محددة', description: 'يُطبَّق على خدمة واحدة فقط' },
+  { value: 'practitioner', label: 'ممارس محدد', description: 'يُطبَّق على ممارس واحد فقط' },
+  { value: 'branch', label: 'فرع محدد', description: 'يُطبَّق على فرع واحد فقط' },
 ]
-
-const inputClass =
-  'w-full h-10 px-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/40'
-const errorClass = 'text-xs text-[var(--danger)] mt-1'
 
 function NewIntakeFormPage() {
   const navigate = useNavigate()
   const mutation = useCreateIntakeForm()
 
-  const [nameAr, setNameAr] = useState('')
-  const [nameEn, setNameEn] = useState('')
-  const [type, setType] = useState<FormType>('pre_booking')
-  const [scope, setScope] = useState<FormScope>('global')
-  const [serviceId, setServiceId] = useState('')
-  const [practitionerId, setPractitionerId] = useState('')
-  const [branchId, setBranchId] = useState('')
-  const [errors, setErrors] = useState<{ nameAr?: string; nameEn?: string }>({})
+  const { data: servicesData } = useServices({ perPage: 200 })
+  const { data: practitionersData } = usePractitioners({ perPage: 200 })
+  const { data: branchesData } = useBranches({ perPage: 200 })
 
-  const validate = () => {
-    const e: { nameAr?: string; nameEn?: string } = {}
-    if (!nameAr.trim()) e.nameAr = 'الاسم بالعربية مطلوب'
-    if (!nameEn.trim()) e.nameEn = 'الاسم بالإنجليزية مطلوب'
-    setErrors(e)
-    return Object.keys(e).length === 0
-  }
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<IntakeFormValues>({
+    resolver: zodResolver(intakeFormSchema),
+    defaultValues: {
+      nameAr: '',
+      nameEn: '',
+      type: 'pre_booking',
+      scope: 'global',
+    },
+  })
 
-  const handleSubmit = (ev: React.FormEvent) => {
-    ev.preventDefault()
-    if (!validate()) return
-    mutation.mutate(
-      {
-        nameAr: nameAr.trim(),
-        nameEn: nameEn.trim(),
-        type,
-        scope,
-        serviceId: scope === 'service' ? serviceId || undefined : undefined,
-        practitionerId: scope === 'practitioner' ? practitionerId || undefined : undefined,
-        branchId: scope === 'branch' ? branchId || undefined : undefined,
-      },
-      { onSuccess: () => navigate({ to: '/intake-forms' }) },
-    )
-  }
+  const scope = watch('scope')
+  const type = watch('type')
+
+  const onSubmit = handleSubmit((values) => {
+    const payload: CreateIntakeFormPayload = {
+      nameAr: values.nameAr.trim(),
+      nameEn: values.nameEn.trim(),
+      type: values.type,
+      scope: values.scope,
+      serviceId: values.scope === 'service' ? values.serviceId || undefined : undefined,
+      practitionerId: values.scope === 'practitioner' ? values.practitionerId || undefined : undefined,
+      branchId: values.scope === 'branch' ? values.branchId || undefined : undefined,
+    }
+    mutation.mutate(payload, {
+      onSuccess: () => navigate({ to: '/intake-forms' }),
+    })
+  })
+
+  const serviceOptions = (servicesData?.items ?? []).map((s) => ({ id: s.id, label: s.nameAr }))
+  const practitionerOptions = (practitionersData?.items ?? []).map((p) => ({
+    id: p.id,
+    label: `${p.user.firstName} ${p.user.lastName}`,
+  }))
+  const branchOptions = (branchesData?.items ?? []).map((b) => ({ id: b.id, label: b.nameAr }))
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="نموذج جديد"
-        description="إضافة نموذج استقبال جديد"
-        actions={
-          <Link to="/intake-forms">
-            <Button variant="outline">رجوع</Button>
-          </Link>
-        }
-      />
-
-      <form onSubmit={handleSubmit} className="glass rounded-[var(--radius)] p-6 max-w-2xl space-y-4">
+    <FormShell
+      title="نموذج استقبال جديد"
+      description="إنشاء نموذج يُعرض للمريض في نقاط محددة من رحلته"
+      backTo="/intake-forms"
+      submitLabel="إنشاء النموذج"
+      isPending={mutation.isPending}
+      error={(mutation.error as Error)?.message}
+      onSubmit={onSubmit}
+    >
+      {/* Name */}
+      <FormSection label="اسم النموذج">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="nameAr">الاسم (عربي) *</Label>
-            <input
-              id="nameAr"
-              dir="rtl"
-              value={nameAr}
-              onChange={(e) => setNameAr(e.target.value)}
-              className={inputClass}
-            />
-            {errors.nameAr && <p className={errorClass}>{errors.nameAr}</p>}
-          </div>
-          <div>
-            <Label htmlFor="nameEn">الاسم (إنجليزي) *</Label>
-            <input
-              id="nameEn"
-              dir="ltr"
-              value={nameEn}
-              onChange={(e) => setNameEn(e.target.value)}
-              className={inputClass}
-            />
-            {errors.nameEn && <p className={errorClass}>{errors.nameEn}</p>}
-          </div>
+          <FormField label="الاسم بالعربية" required error={errors.nameAr?.message}>
+            <Input placeholder="نموذج ما قبل الزيارة" dir="rtl" {...register('nameAr')} />
+          </FormField>
+          <FormField label="الاسم بالإنجليزية" required error={errors.nameEn?.message}>
+            <Input placeholder="Pre-visit Form" dir="ltr" {...register('nameEn')} />
+          </FormField>
+        </div>
+      </FormSection>
+
+      {/* Timing */}
+      <FormSection label="وقت الظهور" description="متى يُعرض هذا النموذج للمريض؟">
+        <div className="grid grid-cols-2 gap-3">
+          {FORM_TYPES.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setValue('type', t.value)}
+              className={`text-start p-3 rounded-lg border transition-all ${
+                type === t.value
+                  ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                  : 'border-border bg-surface hover:bg-surface-muted'
+              }`}
+            >
+              <p className={`text-sm font-medium ${type === t.value ? 'text-primary' : 'text-foreground'}`}>
+                {t.label}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
+            </button>
+          ))}
+        </div>
+      </FormSection>
+
+      {/* Scope */}
+      <FormSection label="نطاق التطبيق" description="على من يُطبَّق هذا النموذج؟">
+        <div className="grid grid-cols-2 gap-3">
+          {FORM_SCOPES.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => setValue('scope', s.value)}
+              className={`text-start p-3 rounded-lg border transition-all ${
+                scope === s.value
+                  ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                  : 'border-border bg-surface hover:bg-surface-muted'
+              }`}
+            >
+              <p className={`text-sm font-medium ${scope === s.value ? 'text-primary' : 'text-foreground'}`}>
+                {s.label}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">{s.description}</p>
+            </button>
+          ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="type">النوع</Label>
-            <select
-              id="type"
-              value={type}
-              onChange={(e) => setType(e.target.value as FormType)}
-              className={inputClass}
-            >
-              {FORM_TYPE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <Label htmlFor="scope">النطاق</Label>
-            <select
-              id="scope"
-              value={scope}
-              onChange={(e) => setScope(e.target.value as FormScope)}
-              className={inputClass}
-            >
-              {FORM_SCOPE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
+        {/* Conditional target selection */}
         {scope === 'service' && (
-          <div>
-            <Label htmlFor="serviceId">معرف الخدمة</Label>
-            <input
-              id="serviceId"
-              value={serviceId}
-              onChange={(e) => setServiceId(e.target.value)}
-              placeholder="UUID"
-              className={inputClass}
-            />
-          </div>
+          <FormField label="اختر الخدمة" error={errors.serviceId?.message}>
+            <Select onValueChange={(v) => setValue('serviceId', v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="اختر خدمة..." />
+              </SelectTrigger>
+              <SelectContent>
+                {serviceOptions.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
         )}
+
         {scope === 'practitioner' && (
-          <div>
-            <Label htmlFor="practitionerId">معرف الممارس</Label>
-            <input
-              id="practitionerId"
-              value={practitionerId}
-              onChange={(e) => setPractitionerId(e.target.value)}
-              placeholder="UUID"
-              className={inputClass}
-            />
-          </div>
+          <FormField label="اختر الممارس" error={errors.practitionerId?.message}>
+            <Select onValueChange={(v) => setValue('practitionerId', v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="اختر ممارساً..." />
+              </SelectTrigger>
+              <SelectContent>
+                {practitionerOptions.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
         )}
+
         {scope === 'branch' && (
-          <div>
-            <Label htmlFor="branchId">معرف الفرع</Label>
-            <input
-              id="branchId"
-              value={branchId}
-              onChange={(e) => setBranchId(e.target.value)}
-              placeholder="UUID"
-              className={inputClass}
-            />
-          </div>
+          <FormField label="اختر الفرع" error={errors.branchId?.message}>
+            <Select onValueChange={(v) => setValue('branchId', v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="اختر فرعاً..." />
+              </SelectTrigger>
+              <SelectContent>
+                {branchOptions.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
         )}
-
-        {mutation.isError && (
-          <p className={errorClass}>
-            {(mutation.error as Error)?.message ?? 'حدث خطأ غير متوقع'}
-          </p>
-        )}
-
-        <div className="flex items-center gap-3 pt-2">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جاري الحفظ...' : 'إنشاء النموذج'}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => navigate({ to: '/intake-forms' })}>
-            إلغاء
-          </Button>
-        </div>
-      </form>
-    </div>
+      </FormSection>
+    </FormShell>
   )
 }

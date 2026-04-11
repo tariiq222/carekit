@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { CreateSpecialtyPayload } from '@carekit/api-client'
@@ -7,10 +7,9 @@ import {
   createSpecialtySchema,
   type CreateSpecialtyFormValues,
 } from '@/lib/schemas/specialty.schema'
-import { PageHeader } from '@/components/shared/page-header'
-import { Button } from '@/components/ui/button'
+import { FormShell, FormField, FormSection } from '@/components/shared/form-shell'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 
 export const Route = createFileRoute('/_dashboard/specialties/new')({
   component: NewSpecialtyPage,
@@ -26,16 +25,10 @@ function NewSpecialtyPage() {
     formState: { errors },
   } = useForm<CreateSpecialtyFormValues>({
     resolver: zodResolver(createSpecialtySchema),
-    defaultValues: {
-      nameAr: '',
-      nameEn: '',
-      descriptionAr: '',
-      descriptionEn: '',
-      iconUrl: '',
-    },
+    defaultValues: { nameAr: '', nameEn: '', descriptionAr: '', descriptionEn: '', iconUrl: '' },
   })
 
-  const onSubmit = (values: CreateSpecialtyFormValues) => {
+  const onSubmit = handleSubmit((values) => {
     const payload: CreateSpecialtyPayload = {
       nameAr: values.nameAr,
       nameEn: values.nameEn,
@@ -47,82 +40,67 @@ function NewSpecialtyPage() {
     mutation.mutate(payload, {
       onSuccess: () => navigate({ to: '/specialties' }),
     })
-  }
-
-  const errorClass = 'text-xs text-[var(--error,#dc2626)] mt-1'
+  })
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="تخصص جديد"
-        description="إضافة تخصص ممارس جديد"
-        actions={
-          <Link to="/specialties">
-            <Button variant="outline">رجوع</Button>
-          </Link>
-        }
-      />
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="glass rounded-[var(--radius)] p-6 max-w-2xl space-y-4"
-      >
+    <FormShell
+      title="تخصص جديد"
+      description="إضافة تخصص ممارس جديد"
+      backTo="/specialties"
+      submitLabel="إنشاء التخصص"
+      isPending={mutation.isPending}
+      error={(mutation.error as Error)?.message}
+      onSubmit={onSubmit}
+    >
+      {/* Names */}
+      <FormSection label="الاسم">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="nameAr">الاسم (عربي) *</Label>
-            <Input id="nameAr" {...register('nameAr')} />
-            {errors.nameAr && <p className={errorClass}>{errors.nameAr.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="nameEn">الاسم (إنجليزي) *</Label>
-            <Input id="nameEn" {...register('nameEn')} />
-            {errors.nameEn && <p className={errorClass}>{errors.nameEn.message}</p>}
-          </div>
+          <FormField label="الاسم بالعربية" required error={errors.nameAr?.message}>
+            <Input placeholder="طب الأسنان" dir="rtl" {...register('nameAr')} />
+          </FormField>
+          <FormField label="الاسم بالإنجليزية" required error={errors.nameEn?.message}>
+            <Input placeholder="Dentistry" dir="ltr" {...register('nameEn')} />
+          </FormField>
         </div>
+      </FormSection>
 
-        <div>
-          <Label htmlFor="descriptionAr">الوصف (عربي)</Label>
-          <Input id="descriptionAr" {...register('descriptionAr')} />
-        </div>
-
-        <div>
-          <Label htmlFor="descriptionEn">الوصف (إنجليزي)</Label>
-          <Input id="descriptionEn" {...register('descriptionEn')} />
-        </div>
-
+      {/* Descriptions */}
+      <FormSection label="الوصف" description="اختياري">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="iconUrl">رابط الأيقونة</Label>
-            <Input id="iconUrl" placeholder="https://..." {...register('iconUrl')} />
-            {errors.iconUrl && (
-              <p className={errorClass}>{errors.iconUrl.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="sortOrder">الترتيب</Label>
-            <Input id="sortOrder" type="number" min="0" {...register('sortOrder')} />
-          </div>
+          <FormField label="الوصف بالعربية">
+            <Textarea
+              placeholder="وصف مختصر..."
+              dir="rtl"
+              rows={3}
+              {...register('descriptionAr')}
+            />
+          </FormField>
+          <FormField label="الوصف بالإنجليزية">
+            <Textarea
+              placeholder="Short description..."
+              dir="ltr"
+              rows={3}
+              {...register('descriptionEn')}
+            />
+          </FormField>
         </div>
+      </FormSection>
 
-        {mutation.isError && (
-          <p className={errorClass}>
-            {(mutation.error as Error)?.message ?? 'حدث خطأ غير متوقع'}
-          </p>
-        )}
-
-        <div className="flex items-center gap-3 pt-2">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جاري الحفظ...' : 'إنشاء التخصص'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate({ to: '/specialties' })}
+      {/* Meta */}
+      <FormSection label="الأيقونة والترتيب" description="اختياري">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            label="رابط الأيقونة"
+            error={errors.iconUrl?.message}
+            hint="رابط صورة SVG أو PNG"
           >
-            إلغاء
-          </Button>
+            <Input placeholder="https://..." dir="ltr" {...register('iconUrl')} />
+          </FormField>
+          <FormField label="ترتيب العرض" hint="رقم أصغر = يظهر أولاً">
+            <Input type="number" min="0" placeholder="0" {...register('sortOrder')} />
+          </FormField>
         </div>
-      </form>
-    </div>
+      </FormSection>
+    </FormShell>
   )
 }
