@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from './config/env.validation';
 import { DatabaseModule } from './infrastructure/database';
 import { MessagingModule } from './infrastructure/messaging.module';
+import { AiInfraModule } from './infrastructure/ai';
 import { StorageModule } from './infrastructure/storage';
 import { MailModule } from './infrastructure/mail';
 import { TenantMiddleware } from './common/tenant';
@@ -28,6 +29,7 @@ import { OpsModule } from './modules/ops/ops.module';
     }),
     DatabaseModule,
     MessagingModule,
+    AiInfraModule,
     StorageModule,
     MailModule,
     IdentityModule,
