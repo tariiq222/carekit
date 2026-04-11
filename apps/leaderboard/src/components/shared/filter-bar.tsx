@@ -1,3 +1,5 @@
+import { HIcon } from '@/components/shared/hicon'
+
 interface Props {
   search: string
   onSearchChange: (v: string) => void
@@ -10,7 +12,7 @@ export function FilterBar({ search, onSearchChange, onReset, children, placehold
   return (
     <div className="glass rounded-[var(--radius)] p-3 mb-4 flex items-center gap-3 flex-wrap">
       <div className="relative flex-1 min-w-48">
-        <i className="hgi hgi-search-01 absolute start-3 top-1/2 -translate-y-1/2 text-[var(--muted)] text-sm pointer-events-none" />
+        <HIcon name="hgi-search-01" size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-[var(--muted)] pointer-events-none" />
         <input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}

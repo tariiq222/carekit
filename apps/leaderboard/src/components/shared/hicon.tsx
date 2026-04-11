@@ -9,7 +9,7 @@ import {
   DashboardSquare01Icon, Delete02Icon,
   DiscountTag01Icon, DiscountTag02Icon,
   Doctor01Icon, Doctor02Icon, Download02Icon,
-  Edit02Icon, EyeIcon, File01Icon, Folder02Icon,
+  Edit02Icon, PencilEdit02Icon, EyeIcon, File01Icon, Folder02Icon,
   GiftIcon, HierarchyCircle01Icon, HourglassIcon,
   ImageNotFound01Icon,
   Invoice01Icon, Invoice02Icon, Invoice03Icon,
@@ -26,6 +26,7 @@ import {
   UserIcon, UserAdd01Icon, UserCheck01Icon,
   UserGroupIcon, UserMultiple02Icon, UserRemove01Icon, UserSettings01Icon,
   WalkingIcon, Home01Icon,
+  FullscreenIcon, ExpandIcon, Menu01Icon,
 } from '@hugeicons/core-free-icons'
 
 const ICON_MAP: Record<string, IconSvgElement> = {
@@ -56,7 +57,7 @@ const ICON_MAP: Record<string, IconSvgElement> = {
   'hgi-doctor-01': Doctor01Icon,
   'hgi-doctor-02': Doctor02Icon,
   'hgi-download-02': Download02Icon,
-  'hgi-edit-02': Edit02Icon,
+  'hgi-edit-02': PencilEdit02Icon,
   'hgi-eye': EyeIcon,
   'hgi-file-01': File01Icon,
   'hgi-folder-02': Folder02Icon,
@@ -102,6 +103,9 @@ const ICON_MAP: Record<string, IconSvgElement> = {
   'hgi-user-remove-01': UserRemove01Icon,
   'hgi-user-settings-01': UserSettings01Icon,
   'hgi-walking': WalkingIcon,
+  'hgi-fullscreen': FullscreenIcon,
+  'hgi-expand': ExpandIcon,
+  'hgi-menu-01': Menu01Icon,
 }
 
 interface HIconProps {
@@ -111,7 +115,7 @@ interface HIconProps {
   color?: string
 }
 
-export function HIcon({ name, size = 20, className, color = 'currentColor' }: HIconProps) {
+export function HIcon({ name, size = 16, className, color = 'currentColor' }: HIconProps) {
   // Strip hgi-stroke prefix if passed alongside icon name
   const key = name.trim().split(/\s+/).find(c => c.startsWith('hgi-') && c !== 'hgi-stroke') ?? name
   const icon = ICON_MAP[key]

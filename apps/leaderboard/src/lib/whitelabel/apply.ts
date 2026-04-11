@@ -22,7 +22,7 @@ export function applyWhitelabel(config: WhitelabelConfig): void {
     )
   }
 
-  document.title = config.clinicNameAr || config.clinicName
+  document.title = config.clinicNameAr || config.clinicName || 'CareKit'
 
   if (config.faviconUrl) {
     let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')

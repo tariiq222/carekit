@@ -1,3 +1,5 @@
+import { HIcon } from '@/components/shared/hicon'
+
 interface StatCard {
   label: string
   value: string | number
@@ -38,7 +40,7 @@ export function StatsGrid({ stats, loading }: Props) {
               variantStyles[stat.variant ?? 'primary'],
             ].join(' ')}
           >
-            <i className={`hgi ${stat.icon} text-lg`} />
+            <HIcon name={stat.icon} size={20} />
           </div>
           <div className="min-w-0">
             <p className="text-xs text-[var(--muted)] truncate">{stat.label}</p>

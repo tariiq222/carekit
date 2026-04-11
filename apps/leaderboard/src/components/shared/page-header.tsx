@@ -6,7 +6,7 @@ interface Props {
 
 export function PageHeader({ title, description, actions }: Props) {
   return (
-    <div className="flex items-start justify-between gap-4 mb-6">
+    <div className="flex items-start justify-between gap-4 bg-white border border-border rounded-[var(--radius)] shadow-sm px-6 py-4">
       <div>
         <h1 className="text-xl font-bold text-[var(--fg)]">{title}</h1>
         {description && (
