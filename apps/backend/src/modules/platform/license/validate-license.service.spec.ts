@@ -7,7 +7,8 @@ const futureDate = new Date(Date.now() + 86400000 * 365);
 
 describe('ValidateLicenseService', () => {
   let service: ValidateLicenseService;
-  let prisma: jest.Mocked<PrismaService>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let prisma: any;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({

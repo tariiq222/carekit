@@ -15,8 +15,10 @@ export class UpsertIntegrationHandler {
   async execute(cmd: UpsertIntegrationCommand) {
     return this.prisma.integration.upsert({
       where: { tenantId_provider: { tenantId: cmd.tenantId, provider: cmd.provider } },
-      create: { tenantId: cmd.tenantId, provider: cmd.provider, config: cmd.config, isActive: cmd.isActive ?? true },
-      update: { config: cmd.config, isActive: cmd.isActive ?? true },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      create: { tenantId: cmd.tenantId, provider: cmd.provider, config: cmd.config as any, isActive: cmd.isActive ?? true },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      update: { config: cmd.config as any, isActive: cmd.isActive ?? true },
     });
   }
 }
