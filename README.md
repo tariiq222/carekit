@@ -19,7 +19,7 @@ npm run dev:all
 |---------|-----|
 | Backend API | <http://localhost:5100> |
 | Swagger Docs | <http://localhost:5100/api/docs> |
-| Leaderboard (dashboard) | <http://localhost:5101> |
+| Dashboard (admin) | <http://localhost:5103> |
 | Mobile (Expo) | <http://localhost:5102> |
 
 > Ports 5000–5999 are reserved exclusively for CareKit environments.
@@ -31,7 +31,7 @@ npm run dev:all
 | App | Tech | Description |
 |-----|------|-------------|
 | `apps/backend/` | NestJS 11 + Prisma 7 + PostgreSQL | API server, business logic, BullMQ jobs |
-| `apps/leaderboard/` | Vite + React 19 + shadcn/ui | Admin dashboard for clinic staff (replaces legacy Next.js dashboard) |
+| `apps/dashboard/` | Next.js 15 + React 19 + shadcn/ui | Admin dashboard for clinic staff |
 | `apps/mobile/` | React Native 0.83 (Expo SDK 55) | Patient + practitioner mobile app |
 | `packages/api-client/` | TypeScript | `@carekit/api-client` — typed fetch client shared by UIs |
 | `packages/shared/` | TypeScript | `@carekit/shared` — cross-app types, enums, i18n tokens |
@@ -71,7 +71,7 @@ Start here depending on your role:
 ## Tech Stack
 
 **Backend:** NestJS 11 · Prisma 7 · PostgreSQL 16 (pgvector) · Redis 7 · BullMQ
-**Leaderboard (dashboard):** Vite · React 19 · TanStack Router + Query · shadcn/ui · Tailwind CSS v4
+**Dashboard:** Next.js 15 (App Router) · React 19 · TanStack Query · shadcn/ui · Tailwind CSS v4 · next-intl
 **Mobile:** React Native 0.83 · Expo SDK 55 · Expo Router · Redux Toolkit
 **AI:** OpenRouter (multi-model) · pgvector
 **Payments:** Moyasar

@@ -5,14 +5,14 @@
   "workspaces": [
     "apps/backend",
     "apps/mobile",
-    "apps/leaderboard",
+    "apps/dashboard",
     "packages/shared",
     "packages/api-client"
   ],
   "scripts": {
     "dev:backend": "turbo run dev --filter=backend",
     "dev:mobile": "turbo run dev --filter=carekit-mobile",
-    "dev:leaderboard": "turbo run dev --filter=leaderboard",
+    "dev:dashboard": "turbo run dev --filter=dashboard",
     "dev:all": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",

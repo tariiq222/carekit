@@ -4,7 +4,7 @@
 
 - **Monorepo**: npm workspaces + Turborepo
 - **Backend**: NestJS 11, Prisma 7 (PostgreSQL + pgvector), BullMQ, Redis, MinIO
-- **Leaderboard (admin dashboard)**: Vite + React 19, TanStack Router + Query, shadcn/ui, Tailwind 4 — replaces the legacy Next.js dashboard
+- **Dashboard (admin)**: Next.js 15 (App Router) + React 19, TanStack Query, shadcn/ui, Tailwind 4, next-intl (AR/EN)
 - **Mobile**: React Native 0.83, Expo SDK 55, Expo Router, Redux Toolkit
 - **Shared packages**: `@carekit/api-client` (typed fetch client) + `@carekit/shared` (types, enums, i18n tokens)
 - **Infra**: Docker Compose, Nginx, Sentry, Prometheus
@@ -28,7 +28,7 @@
 ```bash
 # Root (Turborepo — wraps `turbo run <task> --filter=<pkg>`)
 npm run dev:backend       # NestJS on :5100
-npm run dev:leaderboard   # Vite dashboard on :5101
+npm run dev:dashboard     # Next.js dashboard on :5103
 npm run dev:mobile        # Expo on :5102
 npm run dev:all           # All apps in parallel
 npm run build             # turbo run build — respects task graph
@@ -47,11 +47,13 @@ npm run prisma:migrate    # Run pending migrations
 npm run prisma:seed       # Seed demo data
 npm run prisma:studio     # Prisma Studio GUI
 
-# Leaderboard (cd apps/leaderboard)
-npm run dev               # Vite dev server on :5101
-npm run build             # tsc -b && vite build
+# Dashboard (cd apps/dashboard)
+npm run dev               # Next.js dev server on :5103
+npm run build             # next build
 npm run typecheck         # tsc --noEmit
 npm run lint              # ESLint
+npm run test              # Vitest
+npm run test:e2e          # Playwright
 
 # Mobile (cd apps/mobile)
 npm run dev               # Expo start
@@ -72,8 +74,11 @@ carekit/
 │   │   ├── prisma/schema/    # Split schemas (one per domain, immutable migrations)
 │   │   ├── src/common/       # Guards, filters, interceptors, decorators, pipes
 │   │   └── src/modules/      # Feature modules (25+ domains)
-│   ├── leaderboard/        # Vite + React admin dashboard (replaces Next.js dashboard)
-│   │   └── src/          # routes/, components/, hooks/, lib/
+│   ├── dashboard/        # Next.js 15 admin dashboard (App Router)
+│   │   ├── app/(dashboard)/  # Feature routes
+│   │   ├── components/       # ui/ (shadcn) + features/
+│   │   ├── hooks/            # TanStack Query hooks
+│   │   └── lib/              # api/, schemas/, types/, utils
 │   └── mobile/           # Expo — Patient + Practitioner apps
 │       ├── app/(patient)/      # Patient flows (booking, appointments, chat)
 │       ├── app/(practitioner)/ # Practitioner flows
@@ -89,12 +94,12 @@ carekit/
 ## Module Map
 
 See `apps/backend/CLAUDE.md` for NestJS module conventions.
-See `apps/leaderboard/CLAUDE.md` for leaderboard (dashboard) layer rules (if present).
+See `apps/dashboard/CLAUDE.md` for dashboard layer rules and DS spec.
 See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 
 ## Key Domains
 
-"Dashboard Route" below refers to routes inside **apps/leaderboard** (the current admin dashboard).
+"Dashboard Route" below refers to routes inside **apps/dashboard** (`app/(dashboard)/`).
 
 | Domain | Backend Module | Dashboard Route | Notes |
 |--------|---------------|-----------------|-------|
