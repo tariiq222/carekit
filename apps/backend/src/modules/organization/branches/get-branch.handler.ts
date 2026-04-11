@@ -1,0 +1,20 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../../infrastructure/database';
+import type { GetBranchDto } from './branch.dto';
+
+@Injectable()
+export class GetBranchHandler {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async execute(dto: GetBranchDto) {
+    const branch = await this.prisma.branch.findFirst({
+      where: { id: dto.branchId, tenantId: dto.tenantId },
+      include: {
+        businessHours: { orderBy: { dayOfWeek: 'asc' } },
+        holidays: { orderBy: { date: 'asc' } },
+      },
+    });
+    if (!branch) throw new NotFoundException('Branch not found');
+    return branch;
+  }
+}
