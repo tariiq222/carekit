@@ -40,7 +40,6 @@ export class PractitionersService {
     sortOrder?: 'asc' | 'desc';
     search?: string;
     specialty?: string;
-    specialtyId?: string;
     minRating?: number;
     isActive?: boolean;
     branchId?: string;
@@ -67,9 +66,7 @@ export class PractitionersService {
       isActive: params?.isActive ?? true,
     };
 
-    if (params?.specialtyId) {
-      where.specialtyId = params.specialtyId;
-    } else if (params?.specialty) {
+    if (params?.specialty) {
       where.OR = [
         { specialty: { contains: params.specialty, mode: 'insensitive' } },
         { specialtyAr: { contains: params.specialty, mode: 'insensitive' } },
@@ -99,7 +96,6 @@ export class PractitionersService {
 
     const include: Record<string, unknown> = {
       user: true,
-      specialtyRel: { select: { id: true, nameEn: true, nameAr: true } },
       practitionerServices: {
         where: { isActive: true },
         include: {
@@ -128,7 +124,7 @@ export class PractitionersService {
     ]);
 
     return {
-      items: practitioners.map(this.mapSpecialtyRelation),
+      items: practitioners,
       meta: buildPaginationMeta(total, page, perPage),
     };
   }
@@ -138,7 +134,6 @@ export class PractitionersService {
       where: { id, deletedAt: null },
       include: {
         user: true,
-        specialtyRel: { select: { id: true, nameEn: true, nameAr: true } },
       },
     });
 
@@ -150,20 +145,7 @@ export class PractitionersService {
       });
     }
 
-    return this.mapSpecialtyRelation(practitioner);
-  }
-
-  /**
-   * Renames specialtyRel → specialty in the API response so callers get
-   * { specialty: { id, nameEn, nameAr } } instead of the raw relation name.
-   */
-  private mapSpecialtyRelation<
-    T extends { specialtyRel?: unknown; specialty?: unknown },
-  >(
-    practitioner: T,
-  ): Omit<T, 'specialtyRel' | 'specialty'> & { specialty: unknown } {
-    const { specialtyRel, specialty: _stringSpecialty, ...rest } = practitioner;
-    return { ...rest, specialty: specialtyRel ?? null };
+    return practitioner;
   }
 
   async create(dto: CreatePractitionerDto) {
@@ -178,26 +160,8 @@ export class PractitionersService {
       });
     }
 
-    // Resolve specialty names from specialtyId when provided
-    let resolvedSpecialty = dto.specialty ?? '';
-    let resolvedSpecialtyAr = dto.specialtyAr ?? '';
-    let resolvedSpecialtyId = dto.specialtyId;
-
-    if (dto.specialtyId) {
-      const specialtyRecord = await this.prisma.specialty.findUnique({
-        where: { id: dto.specialtyId },
-      });
-      if (!specialtyRecord) {
-        throw new NotFoundException({
-          statusCode: 404,
-          message: 'Specialty not found',
-          error: 'SPECIALTY_NOT_FOUND',
-        });
-      }
-      resolvedSpecialty = specialtyRecord.nameEn;
-      resolvedSpecialtyAr = specialtyRecord.nameAr;
-      resolvedSpecialtyId = specialtyRecord.id;
-    }
+    const resolvedSpecialty = dto.specialty ?? '';
+    const resolvedSpecialtyAr = dto.specialtyAr ?? '';
 
     const existing = await this.prisma.practitioner.findFirst({
       where: { userId: dto.userId },
@@ -208,7 +172,6 @@ export class PractitionersService {
         return this.prisma.practitioner.update({
           where: { id: existing.id },
           data: {
-            specialtyId: resolvedSpecialtyId,
             specialty: resolvedSpecialty,
             specialtyAr: resolvedSpecialtyAr,
             bio: dto.bio,
@@ -241,7 +204,6 @@ export class PractitionersService {
     return this.prisma.practitioner.create({
       data: {
         userId: dto.userId,
-        specialtyId: resolvedSpecialtyId,
         specialty: resolvedSpecialty,
         specialtyAr: resolvedSpecialtyAr,
         bio: dto.bio,

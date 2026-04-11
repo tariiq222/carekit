@@ -17,7 +17,6 @@ export function setupSwagger(app: INestApplication): void {
       'Practitioner profiles, availability, and services',
     )
     .addTag('Favorite Practitioners', 'Patient favourite practitioners')
-    .addTag('Specialties', 'Medical specialties catalog')
     .addTag('Services', 'Clinic service catalog')
     .addTag(
       'Branches',

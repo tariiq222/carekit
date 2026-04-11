@@ -108,17 +108,14 @@ const mockZoomService = {
 const mockPractitioner = {
   id: 'practitioner-uuid-1',
   userId: 'user-uuid-1',
-  specialtyId: 'specialty-uuid-1',
+  specialty: 'Cardiology',
+  specialtyAr: 'أمراض القلب',
   isActive: true,
   deletedAt: null,
   user: {
     id: 'user-uuid-1',
     firstName: 'خالد',
     lastName: 'الفهد',
-  },
-  specialty: {
-    nameEn: 'Cardiology',
-    nameAr: 'أمراض القلب',
   },
 };
 

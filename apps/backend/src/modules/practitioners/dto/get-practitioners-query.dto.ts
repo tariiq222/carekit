@@ -58,11 +58,6 @@ export class GetPractitionersQueryDto {
   @IsString()
   specialty?: string;
 
-  @ApiPropertyOptional({ format: 'uuid' })
-  @IsOptional()
-  @IsString()
-  specialtyId?: string;
-
   @ApiPropertyOptional({ minimum: 0, maximum: 5 })
   @IsOptional()
   @Transform(({ value }: { value: string }) => parseFloat(value))
