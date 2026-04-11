@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { DatabaseModule } from '../../infrastructure/database';
@@ -28,7 +29,14 @@ const handlers = [
   imports: [
     DatabaseModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({}),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow<string>('JWT_ACCESS_SECRET'),
+        signOptions: { expiresIn: config.get<string>('JWT_ACCESS_TTL') ?? '15m' },
+      }),
+    }),
   ],
   providers: [JwtStrategy, PasswordService, TokenService, CaslAbilityFactory, ...handlers],
   exports: [CaslAbilityFactory, TokenService, PasswordService, ...handlers],
