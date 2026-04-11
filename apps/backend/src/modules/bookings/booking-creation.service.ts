@@ -10,7 +10,8 @@ import { CreateBookingDto } from './dto/create-booking.dto.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
 import { BookingQueryService } from './booking-query.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import {
   validateAvailability,
@@ -26,7 +27,6 @@ import { BookingPaymentHelper } from './booking-payment.helper.js';
 import { PriceResolverService } from './price-resolver.service.js';
 import { ClinicHoursService } from '../clinic/clinic-hours.service.js';
 import { ClinicHolidaysService } from '../clinic/clinic-holidays.service.js';
-import { NOTIF } from '../../common/constants/notification-messages.js';
 import { ERR } from '../../common/constants/error-messages.js';
 import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 
@@ -39,7 +39,7 @@ export class BookingCreationService {
     private readonly zoomService: ZoomService,
     private readonly queryService: BookingQueryService,
     private readonly bookingSettingsService: BookingSettingsService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly activityLogService: ActivityLogService,
     private readonly paymentHelper: BookingPaymentHelper,
     private readonly priceResolver: PriceResolverService,
@@ -387,13 +387,10 @@ export class BookingCreationService {
 
     if (practitioner.userId) {
       const d = bookingDate.toISOString().split('T')[0];
-      await this.notificationsService.createNotification({
-        userId: practitioner.userId,
-        type: 'booking_confirmed',
-        ...NOTIF.BOOKING_NEW_FOR_PRACTITIONER,
-        bodyAr: `لديك حجز جديد بتاريخ ${d} الساعة ${dto.startTime}`,
-        bodyEn: `You have a new booking on ${d} at ${dto.startTime}`,
-        data: { bookingId: booking.id },
+      await this.messagingDispatcher.dispatch({
+        event: MessagingEvent.BOOKING_CONFIRMED_PRACTITIONER,
+        recipientUserId: practitioner.userId,
+        context: { date: d, time: dto.startTime },
       });
     }
 

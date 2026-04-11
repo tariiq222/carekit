@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 
 @Injectable()
 export class GroupAutomationService {
@@ -9,7 +9,7 @@ export class GroupAutomationService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
   ) {}
 
   async expireUnpaidEnrollments(): Promise<void> {

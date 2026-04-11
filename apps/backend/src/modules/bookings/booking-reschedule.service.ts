@@ -6,7 +6,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingQueryService } from './booking-query.service.js';
 import { BookingSettingsService } from './booking-settings.service.js';
@@ -17,7 +18,6 @@ import {
 } from './booking-validation.helper.js';
 import { calculateEndTime } from '../../common/helpers/booking-time.helper.js';
 import { bookingInclude } from './booking.constants.js';
-import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class BookingRescheduleService {
@@ -26,7 +26,7 @@ export class BookingRescheduleService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly zoomService: ZoomService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly activityLogService: ActivityLogService,
     private readonly queryService: BookingQueryService,
     private readonly settingsService: BookingSettingsService,
@@ -202,24 +202,20 @@ export class BookingRescheduleService {
       newDate.toISOString().split('T')[0],
     ];
     if (old.patientId) {
-      await this.notificationsService.createNotification({
-        userId: old.patientId,
-        type: 'booking_rescheduled',
-        ...NOTIF.BOOKING_RESCHEDULED,
-        bodyAr: `تم إعادة جدولة موعدك من ${oldD} ${old.startTime} إلى ${newD} ${newStart}`,
-        bodyEn: `Your booking rescheduled from ${oldD} ${old.startTime} to ${newD} ${newStart}`,
-        data: { bookingId: newB.id },
+      await this.messagingDispatcher.dispatch({
+        event: MessagingEvent.BOOKING_RESCHEDULED,
+        recipientUserId: old.patientId,
+        context: { date: newD, time: newStart, practitionerName: '' },
       });
     }
     const pract = await this.prisma.practitioner.findUnique({
       where: { id: old.practitionerId },
     });
     if (pract?.userId) {
-      await this.notificationsService.createNotification({
-        userId: pract.userId,
-        type: 'booking_rescheduled',
-        ...NOTIF.BOOKING_RESCHEDULED_PRACTITIONER,
-        data: { bookingId: newB.id },
+      await this.messagingDispatcher.dispatch({
+        event: MessagingEvent.BOOKING_RESCHEDULED_PRACTITIONER,
+        recipientUserId: pract.userId,
+        context: {},
       });
     }
   }

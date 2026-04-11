@@ -19,14 +19,14 @@ import { BookingRescheduleService } from './booking-reschedule.service.js';
 import { BookingCreationService } from './booking-creation.service.js';
 import { WaitlistService } from './waitlist.service.js';
 import { ZoomModule } from '../integrations/zoom/zoom.module.js';
-import { NotificationsModule } from '../notifications/notifications.module.js';
+import { MessagingModule } from '../messaging/messaging.module.js';
 import { ClinicModule } from '../clinic/clinic.module.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
 
 @Module({
   imports: [
-    NotificationsModule,
+    MessagingModule,
     ZoomModule,
     ClinicModule,
     ActivityLogModule,

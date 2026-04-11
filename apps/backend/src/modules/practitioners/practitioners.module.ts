@@ -11,7 +11,7 @@ import { FavoritePractitionersService } from './favorite-practitioners.service.j
 import { PractitionerOnboardingService } from './practitioner-onboarding.service.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { AuthModule } from '../auth/auth.module.js';
-import { EmailModule } from '../email/email.module.js';
+import { MessagingModule } from '../messaging/messaging.module.js';
 import { ClinicSettingsModule } from '../clinic-settings/clinic-settings.module.js';
 import { ClinicModule } from '../clinic/clinic.module.js';
 
@@ -19,7 +19,7 @@ import { ClinicModule } from '../clinic/clinic.module.js';
   imports: [
     BookingsModule,
     AuthModule,
-    EmailModule,
+    MessagingModule,
     ClinicSettingsModule,
     ClinicModule,
   ],

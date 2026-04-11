@@ -6,11 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { BookingSettingsService } from './booking-settings.service.js';
 import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 import { JoinWaitlistDto } from './dto/join-waitlist.dto.js';
-import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class WaitlistService {
@@ -18,7 +18,7 @@ export class WaitlistService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly bookingSettingsService: BookingSettingsService,
     private readonly clinicSettingsService: ClinicSettingsService,
   ) {}
@@ -207,13 +207,10 @@ export class WaitlistService {
         data: { status: 'notified', notifiedAt: new Date() },
       });
 
-      await this.notificationsService.createNotification({
-        userId: entry.patientId,
-        ...NOTIF.WAITLIST_SLOT_AVAILABLE,
-        bodyAr: `تحرّر موعد مع د. ${docName} بتاريخ ${dateStr}. احجز الآن!`,
-        bodyEn: `A slot opened with Dr. ${docName} on ${dateStr}. Book now!`,
-        type: 'waitlist_slot_available',
-        data: { practitionerId, date: dateStr },
+      await this.messagingDispatcher.dispatch({
+        event: MessagingEvent.WAITLIST_SLOT_AVAILABLE,
+        recipientUserId: entry.patientId,
+        context: { practitionerName: docName, date: dateStr },
       });
     }
 

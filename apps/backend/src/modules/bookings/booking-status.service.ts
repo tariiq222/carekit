@@ -8,19 +8,18 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { CompleteBookingDto } from './dto/complete-booking.dto.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingStatusLogService } from './booking-status-log.service.js';
 import { bookingInclude } from './booking.constants.js';
-import { NOTIF } from '../../common/constants/notification-messages.js';
-
 @Injectable()
 export class BookingStatusService {
   private readonly logger = new Logger(BookingStatusService.name);
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly activityLogService: ActivityLogService,
     private readonly statusLogService: BookingStatusLogService,
   ) {}
@@ -66,13 +65,10 @@ export class BookingStatusService {
 
     if (confirmed.patientId) {
       const d = confirmed.date.toISOString().split('T')[0];
-      await this.notificationsService.createNotification({
-        userId: confirmed.patientId,
-        type: 'booking_confirmed',
-        ...NOTIF.BOOKING_CONFIRMED,
-        bodyAr: `تم تأكيد موعدك بتاريخ ${d} الساعة ${confirmed.startTime}`,
-        bodyEn: `Your booking on ${d} at ${confirmed.startTime} has been confirmed`,
-        data: { bookingId: id },
+      await this.messagingDispatcher.dispatch({
+        event: MessagingEvent.BOOKING_CONFIRMED,
+        recipientUserId: confirmed.patientId,
+        context: { date: d, time: confirmed.startTime, practitionerName: '', serviceName: '' },
       });
     }
 
@@ -135,11 +131,10 @@ export class BookingStatusService {
       where: { id: updated.practitionerId },
     });
     if (practitioner?.userId) {
-      await this.notificationsService.createNotification({
-        userId: practitioner.userId,
-        type: 'patient_arrived',
-        ...NOTIF.PATIENT_ARRIVED,
-        data: { bookingId: id },
+      await this.messagingDispatcher.dispatch({
+        event: MessagingEvent.PATIENT_ARRIVED,
+        recipientUserId: practitioner.userId,
+        context: {},
       });
     }
 
@@ -296,11 +291,10 @@ export class BookingStatusService {
     );
 
     if (completed.patientId) {
-      await this.notificationsService.createNotification({
-        userId: completed.patientId,
-        type: 'booking_completed',
-        ...NOTIF.BOOKING_COMPLETED,
-        data: { bookingId: id },
+      await this.messagingDispatcher.dispatch({
+        event: MessagingEvent.BOOKING_COMPLETED,
+        recipientUserId: completed.patientId,
+        context: {},
       });
     }
 

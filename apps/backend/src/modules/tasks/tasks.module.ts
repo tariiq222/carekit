@@ -10,7 +10,7 @@ import { BookingCancellationTimeoutService } from './booking-cancellation-timeou
 import { GroupAutomationService } from './group-session-automation.service.js';
 import { TasksProcessor } from './tasks.processor.js';
 import { TasksBootstrapService } from './tasks-bootstrap.service.js';
-import { NotificationsModule } from '../notifications/notifications.module.js';
+import { MessagingModule } from '../messaging/messaging.module.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { PaymentsModule } from '../payments/payments.module.js';
 import { MetricsModule } from '../../common/metrics/metrics.module.js';
@@ -27,7 +27,7 @@ import {
       name: QUEUE_TASKS,
       defaultJobOptions: DEFAULT_JOB_OPTIONS,
     }),
-    NotificationsModule,
+    MessagingModule,
     BookingsModule,
     PaymentsModule,
     MetricsModule,

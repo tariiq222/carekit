@@ -1,16 +1,11 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  Booking,
-  BookingSettings,
-  NotificationType,
-  RefundType,
-} from '@prisma/client';
+import { Booking, BookingSettings, RefundType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ZoomService } from '../integrations/zoom/zoom.service.js';
 import { resilientFetch } from '../../common/helpers/resilient-fetch.helper.js';
-import { NOTIF } from '../../common/constants/notification-messages.js';
 
 @Injectable()
 export class BookingCancelHelpersService {
@@ -18,7 +13,7 @@ export class BookingCancelHelpersService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly zoomService: ZoomService,
     private readonly config: ConfigService,
   ) {}
@@ -158,13 +153,10 @@ export class BookingCancelHelpersService {
         en: 'Your booking cancellation request has been approved',
       },
     };
-    await this.notificationsService.createNotification({
-      userId: booking.patientId,
-      ...NOTIF.BOOKING_CANCELLED,
-      bodyAr: bodyMap[trigger].ar,
-      bodyEn: bodyMap[trigger].en,
-      type: NotificationType.booking_cancelled,
-      data: { bookingId: booking.id },
+    await this.messagingDispatcher.dispatch({
+      event: MessagingEvent.BOOKING_CANCELLED,
+      recipientUserId: booking.patientId,
+      context: { practitionerName: '', date: '' },
     });
   }
 
@@ -177,13 +169,10 @@ export class BookingCancelHelpersService {
     if (!booking.practitioner?.userId) return;
 
     const d = booking.date.toISOString().split('T')[0];
-    await this.notificationsService.createNotification({
-      userId: booking.practitioner.userId,
-      ...NOTIF.BOOKING_CANCELLED,
-      bodyAr: `تم إلغاء الموعد بتاريخ ${d} الساعة ${booking.startTime}`,
-      bodyEn: `Booking on ${d} at ${booking.startTime} has been cancelled`,
-      type: NotificationType.booking_cancelled,
-      data: { bookingId: booking.id },
+    await this.messagingDispatcher.dispatch({
+      event: MessagingEvent.BOOKING_CANCELLED,
+      recipientUserId: booking.practitioner.userId,
+      context: { practitionerName: '', date: d },
     });
   }
 
@@ -195,22 +184,19 @@ export class BookingCancelHelpersService {
     if (!booking.patientId) return;
 
     const d = booking.date.toISOString().split('T')[0];
-    await this.notificationsService.createNotification({
-      userId: booking.patientId,
-      ...NOTIF.BOOKING_CANCELLED_BY_PRACTITIONER,
-      bodyAr: `نعتذر، تم إلغاء موعدك بتاريخ ${d}. سيتم استرداد المبلغ كاملاً`,
-      bodyEn: `We apologize, your booking on ${d} has been cancelled. A full refund will be processed`,
-      type: NotificationType.booking_cancelled,
-      data: { bookingId: booking.id },
+    await this.messagingDispatcher.dispatch({
+      event: MessagingEvent.BOOKING_CANCELLED_BY_PRACTITIONER,
+      recipientUserId: booking.patientId,
+      context: { practitionerName: '', date: d },
     });
   }
 
   async notifyAdmins(
-    titleAr: string,
-    titleEn: string,
-    bodyAr: string,
-    bodyEn: string,
-    type: string,
+    _titleAr: string,
+    _titleEn: string,
+    _bodyAr: string,
+    _bodyEn: string,
+    _type: string,
     data: Record<string, unknown>,
   ): Promise<void> {
     const adminRoles = await this.prisma.userRole.findMany({
@@ -219,14 +205,10 @@ export class BookingCancelHelpersService {
     });
     await Promise.all(
       adminRoles.map(({ userId }) =>
-        this.notificationsService.createNotification({
-          userId,
-          titleAr,
-          titleEn,
-          bodyAr,
-          bodyEn,
-          type: type as NotificationType,
-          data,
+        this.messagingDispatcher.dispatch({
+          event: MessagingEvent.BOOKING_CANCELLATION_REQUESTED,
+          recipientUserId: userId,
+          context: { date: String(data['date'] ?? ''), time: '' },
         }),
       ),
     );
@@ -235,13 +217,12 @@ export class BookingCancelHelpersService {
   /** Fix 4: Notify patient that cancellation request was rejected */
   async notifyPatientCancellationRejected(
     patientId: string,
-    bookingId: string,
+    _bookingId: string,
   ): Promise<void> {
-    await this.notificationsService.createNotification({
-      userId: patientId,
-      ...NOTIF.CANCELLATION_REJECTED,
-      type: 'booking_cancellation_rejected',
-      data: { bookingId },
+    await this.messagingDispatcher.dispatch({
+      event: MessagingEvent.BOOKING_CANCELLATION_REJECTED,
+      recipientUserId: patientId,
+      context: {},
     });
   }
 

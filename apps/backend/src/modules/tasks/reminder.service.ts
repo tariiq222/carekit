@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ClinicSettingsService } from '../clinic-settings/clinic-settings.service.js';
 
 @Injectable()
@@ -9,7 +10,7 @@ export class ReminderService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly clinicSettingsService: ClinicSettingsService,
   ) {}
 
@@ -33,7 +34,10 @@ export class ReminderService {
         patientId: true,
         practitionerId: true,
         practitioner: {
-          select: { userId: true },
+          select: {
+            userId: true,
+            user: { select: { firstName: true, lastName: true } },
+          },
         },
       },
     });
@@ -42,19 +46,18 @@ export class ReminderService {
       bookings.flatMap((booking) => {
         const dateStr = booking.date.toISOString().split('T')[0];
         const timePromise = this.formatTimeForNotification(booking.startTime);
+        const practitionerName = booking.practitioner?.user
+          ? `${booking.practitioner.user.firstName} ${booking.practitioner.user.lastName}`.trim()
+          : '';
         const notifications: Promise<unknown>[] = [];
 
         if (booking.patientId) {
           notifications.push(
             timePromise.then((timeStr) =>
-              this.notificationsService.createNotification({
-                userId: booking.patientId!,
-                titleAr: 'تذكير بموعدك غداً',
-                titleEn: 'Appointment Reminder — Tomorrow',
-                bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
-                bodyEn: `You have an appointment tomorrow ${dateStr} at ${timeStr}`,
-                type: 'booking_reminder',
-                data: { bookingId: booking.id },
+              this.messagingDispatcher.dispatch({
+                event: MessagingEvent.BOOKING_REMINDER,
+                recipientUserId: booking.patientId!,
+                context: { practitionerName, time: timeStr, date: dateStr },
               }),
             ),
           );
@@ -63,14 +66,10 @@ export class ReminderService {
         if (booking.practitioner?.userId) {
           notifications.push(
             timePromise.then((timeStr) =>
-              this.notificationsService.createNotification({
-                userId: booking.practitioner.userId,
-                titleAr: 'تذكير بموعد غداً',
-                titleEn: 'Appointment Reminder — Tomorrow',
-                bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
-                bodyEn: `You have an appointment tomorrow ${dateStr} at ${timeStr}`,
-                type: 'booking_reminder',
-                data: { bookingId: booking.id },
+              this.messagingDispatcher.dispatch({
+                event: MessagingEvent.BOOKING_REMINDER,
+                recipientUserId: booking.practitioner!.userId,
+                context: { practitionerName, time: timeStr, date: dateStr },
               }),
             ),
           );
@@ -112,14 +111,10 @@ export class ReminderService {
           const timeStr = await this.formatTimeForNotification(
             booking.startTime,
           );
-          return this.notificationsService.createNotification({
-            userId: booking.patientId!,
-            titleAr: 'موعدك بعد ساعة',
-            titleEn: 'Appointment in 1 Hour',
-            bodyAr: `تذكير: موعدك بعد ساعة الساعة ${timeStr}`,
-            bodyEn: `Reminder: Your appointment is in 1 hour at ${timeStr}`,
-            type: 'booking_reminder',
-            data: { bookingId: booking.id },
+          return this.messagingDispatcher.dispatch({
+            event: MessagingEvent.BOOKING_REMINDER,
+            recipientUserId: booking.patientId!,
+            context: { practitionerName: '', time: timeStr, date: '' },
           });
         }),
     );
@@ -146,7 +141,10 @@ export class ReminderService {
         startTime: true,
         patientId: true,
         practitioner: {
-          select: { userId: true },
+          select: {
+            userId: true,
+            user: { select: { firstName: true, lastName: true } },
+          },
         },
       },
     });
@@ -163,19 +161,18 @@ export class ReminderService {
     await Promise.all(
       matched.flatMap((booking) => {
         const timePromise = this.formatTimeForNotification(booking.startTime);
+        const practitionerName = booking.practitioner?.user
+          ? `${booking.practitioner.user.firstName} ${booking.practitioner.user.lastName}`.trim()
+          : '';
         const notifications: Promise<unknown>[] = [];
 
         if (booking.patientId) {
           notifications.push(
             timePromise.then((timeStr) =>
-              this.notificationsService.createNotification({
-                userId: booking.patientId!,
-                titleAr: 'موعدك بعد ساعتين',
-                titleEn: 'Appointment in 2 Hours',
-                bodyAr: `تذكير: موعدك بعد ساعتين الساعة ${timeStr}`,
-                bodyEn: `Reminder: Your appointment is in 2 hours at ${timeStr}`,
-                type: 'booking_reminder',
-                data: { bookingId: booking.id },
+              this.messagingDispatcher.dispatch({
+                event: MessagingEvent.BOOKING_REMINDER,
+                recipientUserId: booking.patientId!,
+                context: { practitionerName, time: timeStr, date: '' },
               }),
             ),
           );
@@ -184,14 +181,10 @@ export class ReminderService {
         if (booking.practitioner?.userId) {
           notifications.push(
             timePromise.then((timeStr) =>
-              this.notificationsService.createNotification({
-                userId: booking.practitioner.userId,
-                titleAr: 'موعدك بعد ساعتين',
-                titleEn: 'Appointment in 2 Hours',
-                bodyAr: `تذكير: لديك موعد بعد ساعتين الساعة ${timeStr}`,
-                bodyEn: `Reminder: You have an appointment in 2 hours at ${timeStr}`,
-                type: 'booking_reminder',
-                data: { bookingId: booking.id },
+              this.messagingDispatcher.dispatch({
+                event: MessagingEvent.BOOKING_REMINDER,
+                recipientUserId: booking.practitioner!.userId,
+                context: { practitionerName, time: timeStr, date: '' },
               }),
             ),
           );
@@ -223,7 +216,10 @@ export class ReminderService {
         startTime: true,
         patientId: true,
         practitioner: {
-          select: { userId: true },
+          select: {
+            userId: true,
+            user: { select: { firstName: true, lastName: true } },
+          },
         },
       },
     });
@@ -244,14 +240,13 @@ export class ReminderService {
           const timeStr = await this.formatTimeForNotification(
             booking.startTime,
           );
-          return this.notificationsService.createNotification({
-            userId: booking.patientId!,
-            titleAr: 'موعدك بعد 15 دقيقة!',
-            titleEn: 'Appointment in 15 Minutes!',
-            bodyAr: `تذكير عاجل: موعدك بعد 15 دقيقة الساعة ${timeStr}`,
-            bodyEn: `Urgent: Your appointment is in 15 minutes at ${timeStr}`,
-            type: 'booking_reminder_urgent',
-            data: { bookingId: booking.id },
+          const practitionerName = booking.practitioner?.user
+            ? `${booking.practitioner.user.firstName} ${booking.practitioner.user.lastName}`.trim()
+            : '';
+          return this.messagingDispatcher.dispatch({
+            event: MessagingEvent.BOOKING_REMINDER_URGENT,
+            recipientUserId: booking.patientId!,
+            context: { practitionerName, time: timeStr },
           });
         }),
     );

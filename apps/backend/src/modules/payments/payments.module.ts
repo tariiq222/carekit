@@ -9,7 +9,7 @@ import { MoyasarRefundService } from './moyasar-refund.service.js';
 import { BankTransferService } from './bank-transfer.service.js';
 import { InvoicesModule } from '../invoices/invoices.module.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
-import { NotificationsModule } from '../notifications/notifications.module.js';
+import { MessagingModule } from '../messaging/messaging.module.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 import { GroupsModule } from '../groups/groups.module.js';
 
@@ -17,7 +17,7 @@ import { GroupsModule } from '../groups/groups.module.js';
   imports: [
     InvoicesModule,
     BookingsModule,
-    NotificationsModule,
+    MessagingModule,
     ActivityLogModule,
     GroupsModule,
     BullModule.registerQueue({ name: 'receipt-verification' }),
