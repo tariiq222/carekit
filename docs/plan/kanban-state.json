@@ -676,7 +676,7 @@
           "title": "Cron task slices (5 jobs + refresh-token cleanup)",
           "detail": "booking-autocomplete, booking-expiry, booking-noshow, appointment-reminders, group-session-automation. PRIORITY: add refresh-token-cleanup job — deletes expired/revoked tokens older than 30d. Without it, RefreshTokenHandler does O(n) bcrypt compare across all tokens ever issued per user, degrading login refresh to seconds at scale.",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "ops",
           "priorityNote": "refresh-token-cleanup is HIGH priority — performance impact is proportional to uncleared token accumulation"
         },
@@ -687,7 +687,7 @@
           "title": "log-activity slice",
           "detail": "Audit trail — logs all mutations from all BCs via event subscription",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "ops"
         },
         {
@@ -697,7 +697,7 @@
           "title": "generate-report slice",
           "detail": "Revenue reports, activity reports, exports (PDF/Excel)",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "ops"
         },
         {
@@ -707,7 +707,7 @@
           "title": "health-check slice",
           "detail": "Terminus health checks: DB, Redis, BullMQ, MinIO",
           "complexity": "CRUD",
-          "status": "todo",
+          "status": "done",
           "bc": "ops"
         }
       ]
