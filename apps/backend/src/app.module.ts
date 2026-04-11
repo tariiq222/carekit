@@ -58,6 +58,7 @@ import { ClinicSettingsModule } from './modules/clinic-settings/clinic-settings.
 import { ClinicIntegrationsModule } from './modules/clinic-integrations/clinic-integrations.module.js';
 import { DepartmentsModule } from './modules/departments/departments.module.js';
 import { GroupsModule } from './modules/groups/groups.module.js';
+import { MessagingModule } from './modules/messaging/messaging.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
 import { MetricsModule } from './common/metrics/metrics.module.js';
 import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
@@ -133,6 +134,7 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     ClinicIntegrationsModule,
     DepartmentsModule,
     GroupsModule,
+    MessagingModule,
   ],
   controllers: [],
   providers: [
