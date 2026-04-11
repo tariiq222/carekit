@@ -242,7 +242,7 @@
           "title": "Client schema + create-client slice",
           "detail": "Prisma schema, CreateClientCommand + handler + dto + spec",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "people"
         },
         {
@@ -252,7 +252,7 @@
           "title": "update-client + list-clients + get-client slices",
           "detail": "CRUD + list with filters",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "people"
         },
         {
@@ -262,7 +262,7 @@
           "title": "ClientEnrolledEvent",
           "detail": "Emits on first client creation — Comms sends welcome message",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "people"
         },
         {
@@ -272,7 +272,7 @@
           "title": "Employee schema + create-employee slice",
           "detail": "Complex: specialties, branches, services linkage",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "people"
         },
         {
@@ -282,7 +282,7 @@
           "title": "update-availability slice",
           "detail": "Availability windows, recurring schedule, exceptions",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "people"
         },
         {
@@ -292,7 +292,7 @@
           "title": "employee-onboarding slice",
           "detail": "Multi-step onboarding flow",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "people"
         },
         {
@@ -302,7 +302,7 @@
           "title": "list-employees + get-employee slices",
           "detail": "With availability projection",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "people"
         }
       ]
