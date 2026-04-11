@@ -11,15 +11,18 @@ Includes a mobile app (iOS + Android), admin dashboard, AI chatbot assistant, an
 ```bash
 npm install
 cp .env.example .env     # fill in secrets
-cd backend && npx prisma migrate dev && npx prisma db seed && cd ..
-npm run dev
+cd apps/backend && npx prisma migrate dev && npx prisma db seed && cd ../..
+npm run dev:all
 ```
 
 | Service | URL |
 |---------|-----|
-| Backend API | http://localhost:3000 |
-| Swagger Docs | http://localhost:3000/api/docs |
-| Dashboard | http://localhost:3001 |
+| Backend API | <http://localhost:5100> |
+| Swagger Docs | <http://localhost:5100/api/docs> |
+| Leaderboard (dashboard) | <http://localhost:5101> |
+| Mobile (Expo) | <http://localhost:5102> |
+
+> Ports 5000–5999 are reserved exclusively for CareKit environments.
 
 ---
 
@@ -27,10 +30,11 @@ npm run dev
 
 | App | Tech | Description |
 |-----|------|-------------|
-| `backend/` | NestJS + Prisma + PostgreSQL | API server, business logic, BullMQ jobs |
-| `dashboard/` | Next.js 15 + shadcn/ui | Admin dashboard for clinic staff |
-| `mobile/` | React Native (Expo SDK 54) | Patient + practitioner mobile app |
-| `shared/` | TypeScript | Shared types and constants |
+| `apps/backend/` | NestJS 11 + Prisma 7 + PostgreSQL | API server, business logic, BullMQ jobs |
+| `apps/leaderboard/` | Vite + React 19 + shadcn/ui | Admin dashboard for clinic staff (replaces legacy Next.js dashboard) |
+| `apps/mobile/` | React Native 0.83 (Expo SDK 55) | Patient + practitioner mobile app |
+| `packages/api-client/` | TypeScript | `@carekit/api-client` — typed fetch client shared by UIs |
+| `packages/shared/` | TypeScript | `@carekit/shared` — cross-app types, enums, i18n tokens |
 
 ---
 
@@ -66,9 +70,9 @@ Start here depending on your role:
 
 ## Tech Stack
 
-**Backend:** NestJS 11 · Prisma ORM · PostgreSQL 16 · Redis 7 · BullMQ
-**Dashboard:** Next.js 15 · shadcn/ui · Tailwind CSS v4 · TanStack Query
-**Mobile:** React Native · Expo SDK 54 · Expo Router v6 · Redux Toolkit
+**Backend:** NestJS 11 · Prisma 7 · PostgreSQL 16 (pgvector) · Redis 7 · BullMQ
+**Leaderboard (dashboard):** Vite · React 19 · TanStack Router + Query · shadcn/ui · Tailwind CSS v4
+**Mobile:** React Native 0.83 · Expo SDK 55 · Expo Router · Redux Toolkit
 **AI:** OpenRouter (multi-model) · pgvector
 **Payments:** Moyasar
 **Storage:** MinIO (S3-compatible, self-hosted)
@@ -82,9 +86,9 @@ Start here depending on your role:
 
 1. **No file exceeds 350 lines** — split by responsibility
 2. **All DB changes via Prisma migrations** — never `prisma db push`, never manual SQL
-3. **Dashboard uses semantic tokens only** — no hex colors, no `text-gray-*`
-4. **Icons: `@hugeicons/react` only** — no Lucide, no Material Icons
-5. **RTL layout** — use `start`/`end`, `ps-`/`pe-` — never `left`/`right` hardcoded
+3. **Semantic tokens only** — no hex colors, no `text-gray-*`; the white-label system depends on CSS custom properties
+4. **RTL layout** — use `start`/`end`, `ps-`/`pe-` — never `left`/`right` hardcoded
+5. **Ports 5000–5999** reserved exclusively for CareKit environments
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full pre-PR checklist.
 
