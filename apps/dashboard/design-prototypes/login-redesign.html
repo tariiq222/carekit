@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareKit — تسجيل الدخول</title>
+  
+  <!-- Google Fonts: IBM Plex Sans Arabic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  
+  <style>
+    /* ══════════════════════════════════════════════════════════════
+       TOP HEADER
+    ══════════════════════════════════════════════════════════════ */
+    .top-header {
+      position: fixed;
+      top: 0;
+      inset-inline: 0;
+      height: 64px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      z-index: 200;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-primary);
+    }
+
+    .header-logo svg { width: 20px; height: 20px; fill: white; }
+
+    .header-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--foreground);
+    }
+
+    .header-subtitle {
+      font-size: 0.6875rem;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .header-btn:hover {
+      background: var(--surface-muted);
+      color: var(--primary);
+    }
+
+    .header-btn i { width: 18px; height: 18px; }
+
+    /* ══════════════════════════════════════════════════════════════
+       CSS VARIABLES — White-Label Ready
+       Override these per client in :root { ... }
+    ══════════════════════════════════════════════════════════════ */
+    :root {
+      /* Brand */
+      --primary: #354FD8;
+      --primary-light: #5B72E8;
+      --primary-dark: #2A3FA8;
+      --primary-ultra-light: rgba(53, 79, 216, 0.08);
+      --primary-glow: rgba(53, 79, 216, 0.25);
+      
+      --accent: #82CC17;
+      --accent-light: #9FE035;
+      --accent-dark: #6BA314;
+      --accent-ultra-light: rgba(130, 204, 23, 0.10);
+      
+      /* Neutrals */
+      --background: #F2F4F8;
+      --foreground: #1B2026;
+      --muted: #667085;
+      --muted-light: #98A2B3;
+      
+      /* Surface */
+      --surface: rgba(255, 255, 255, 0.72);
+      --surface-solid: #FFFFFF;
+      --surface-muted: #F7F9FC;
+      
+      /* Border */
+      --border: rgba(0, 0, 0, 0.06);
+      --border-strong: rgba(0, 0, 0, 0.10);
+      
+      /* States */
+      --success: #16A34A;
+      --warning: #D97706;
+      --error: #DC2626;
+      
+      /* Typography */
+      --font-family: 'IBM Plex Sans Arabic', sans-serif;
+      
+      /* Shadows */
+      --shadow-card: 0 8px 40px rgba(16, 24, 40, 0.12), 0 1px 0 rgba(255,255,255,0.8) inset;
+      --shadow-primary: 0 4px 16px var(--primary-glow);
+      --shadow-float: 0 20px 60px rgba(16, 24, 40, 0.15);
+      
+      /* Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-2xl: 24px;
+      
+      /* Glass */
+      --glass-blur: 24px;
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      
+      /* Animation */
+      --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       RESET & BASE
+    ══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: var(--font-family);
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--background);
+      color: var(--foreground);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 64px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       ANIMATED BACKGROUND
+    ══════════════════════════════════════════════════════════════ */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.6;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+      top: -150px;
+      inset-inline-start: -150px;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+      bottom: -100px;
+      inset-inline-end: -100px;
+      animation-delay: -7s;
+      opacity: 0.4;
+    }
+
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: -14s;
+      opacity: 0.3;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, -30px) scale(1.05); }
+      50% { transform: translate(-20px, 20px) scale(0.95); }
+      75% { transform: translate(20px, 30px) scale(1.02); }
+    }
+
+    /* Grid pattern overlay */
+    .grid-pattern {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.5;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       MAIN CONTAINER
+    ══════════════════════════════════════════════════════════════ */
+    .login-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      animation: slideUp 0.8s var(--ease-out-expo) forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       LOGIN CARD — Glassmorphism
+    ══════════════════════════════════════════════════════════════ */
+    .login-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-float);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Top accent bar */
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    /* Inner padding wrapper */
+    .card-inner {
+      padding: 1.75rem;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       BRAND SECTION
+    ══════════════════════════════════════════════════════════════ */
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-primary);
+      position: relative;
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: var(--shadow-primary); }
+      50% { box-shadow: 0 4px 24px var(--primary-glow); }
+    }
+
+    .brand-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: white;
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--foreground);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin-top: 0.125rem;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       FORM STYLES
+    ══════════════════════════════════════════════════════════════ */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--foreground);
+      margin-bottom: 0.375rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 42px;
+      padding: 0 0.875rem;
+      padding-inline-end: 2.5rem;
+      background: var(--surface-solid);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-family: var(--font-family);
+      font-size: 0.875rem;
+      color: var(--foreground);
+      transition: all 0.2s var(--ease-out-quart);
+    }
+
+    .form-input::placeholder {
+      color: var(--muted-light);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(53, 79, 216, 0.15);
+    }
+
+    /* Password toggle */
+    .password-toggle {
+      position: absolute;
+      top: 50%;
+      inset-inline-end: 0.75rem;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0.5rem;
+      border-radius: var(--radius-sm);
+      transition: color 0.2s;
+    }
+
+    .password-toggle:hover {
+      color: var(--foreground);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       ERROR STATE
+    ══════════════════════════════════════════════════════════════ */
+    .error-banner {
+      background: rgba(220, 38, 38, 0.08);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      animation: shake 0.5s var(--ease-out-quart);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    .error-icon {
+      width: 20px;
+      height: 20px;
+      fill: var(--error);
+      flex-shrink: 0;
+    }
+
+    .error-text {
+      font-size: 0.875rem;
+      color: var(--error);
+      font-weight: 500;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       SUBMIT BUTTON
+    ══════════════════════════════════════════════════════════════ */
+    .btn-submit {
+      width: 100%;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-family);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-primary);
+      transition: all 0.3s var(--ease-out-quart);
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.375rem;
+    }
+
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .btn-submit:hover::before {
+      opacity: 1;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px var(--primary-glow);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-text {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       FOOTER LINKS
+    ══════════════════════════════════════════════════════════════ */
+    .form-footer {
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .forgot-link {
+      font-size: 0.8125rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .forgot-link:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       DIVIDER
+    ══════════════════════════════════════════════════════════════ */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1rem 0;
+      color: var(--muted-light);
+      font-size: 0.75rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-strong);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       DEV LOGIN BUTTON
+    ══════════════════════════════════════════════════════════════ */
+    .btn-dev {
+      width: 100%;
+      height: 40px;
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-family: var(--font-family);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out-quart);
+    }
+
+    .btn-dev:hover {
+      background: var(--surface-muted);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       FLOATING DECORATIONS
+    ══════════════════════════════════════════════════════════════ */
+    .decoration {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    .deco-1 {
+      width: 80px;
+      height: 80px;
+      background: var(--accent);
+      border-radius: var(--radius-lg);
+      top: -20px;
+      inset-inline-end: -20px;
+      transform: rotate(15deg);
+      opacity: 0.15;
+    }
+
+    .deco-2 {
+      width: 60px;
+      height: 60px;
+      background: var(--primary);
+      border-radius: var(--radius-xl);
+      bottom: -15px;
+      inset-inline-start: -15px;
+      transform: rotate(-10deg);
+      opacity: 0.12;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════════════════════ */
+    @media (max-width: 480px) {
+      .card-inner {
+        padding: 1.25rem;
+      }
+      
+      .brand-icon {
+        width: 44px;
+        height: 44px;
+      }
+      
+      .brand-title {
+        font-size: 1.125rem;
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       ACCESSIBILITY
+    ══════════════════════════════════════════════════════════════ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Focus visible for keyboard navigation */
+    .btn-submit:focus-visible,
+    .form-input:focus-visible,
+    .password-toggle:focus-visible,
+    .forgot-link:focus-visible,
+    .btn-dev:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- ═══════════════════════════════════════════════════════════
+       TOP HEADER
+  ═══════════════════════════════════════════════════════════ -->
+  <header class="top-header">
+    <div class="header-brand">
+      <div class="header-logo">
+        <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 18H8a5 5 0 1 1 .93-9.9 7 7 0 0 1 13.56 2.26A4.5 4.5 0 1 1 22 18z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="header-title">CareKit</div>
+        <div class="header-subtitle">منصة إدارة العيادات</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn"><i data-lucide="bell"></i></button>
+      <button class="header-btn"><i data-lucide="settings"></i></button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ANIMATED BACKGROUND LAYER
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-pattern"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       LOGIN CARD
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="login-container" role="main">
+    <div class="login-card">
+      <!-- Floating decorations -->
+      <div class="decoration deco-1" aria-hidden="true"></div>
+      <div class="decoration deco-2" aria-hidden="true"></div>
+
+      <div class="card-inner">
+        <!-- Brand -->
+        <header class="brand">
+          <div class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 18H8a5 5 0 1 1 .93-9.9 7 7 0 0 1 13.56 2.26A4.5 4.5 0 1 1 22 18z"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="brand-title">مرحباً بعودتك</h1>
+            <p class="brand-subtitle">سجّل دخولك لإدارة عيادتك</p>
+          </div>
+        </header>
+
+        <!-- Error (hidden by default) -->
+        <!-- 
+        <div class="error-banner" role="alert">
+          <svg class="error-icon" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+          <span class="error-text">البريد الإلكتروني أو كلمة المرور غير صحيحة</span>
+        </div>
+        -->
+
+        <!-- Form -->
+        <form id="login-form" novalidate>
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email" class="form-label">البريد الإلكتروني</label>
+            <div class="input-wrapper">
+              <input 
+                type="email" 
+                id="email" 
+                name="email"
+                class="form-input" 
+                placeholder="you@clinic.com"
+                autocomplete="email"
+                required
+              >
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password" class="form-label">كلمة المرور</label>
+            <div class="input-wrapper">
+              <input 
+                type="password" 
+                id="password" 
+                name="password"
+                class="form-input" 
+                placeholder="••••••••"
+                autocomplete="current-password"
+                required
+              >
+              <button type="button" class="password-toggle" aria-label="إظهار كلمة المرور">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="btn-submit" id="submit-btn">
+            <span class="btn-text">
+              <span>تسجيل الدخول</span>
+            </span>
+          </button>
+
+          <!-- Forgot Password -->
+          <div class="form-footer">
+            <a href="/forgot-password" class="forgot-link">نسيت كلمة المرور؟</a>
+          </div>
+
+          <!-- Divider -->
+          <div class="divider">أو</div>
+
+          <!-- Dev Login (shown in development only) -->
+          <button type="button" class="btn-dev" id="dev-btn">
+            dev: تسجيل دخول سريع
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       JAVASCRIPT — Interactions
+  ═══════════════════════════════════════════════════════════ -->
+  <script>
+    lucide.createIcons();
+    
+    // Password visibility toggle
+    // Password visibility toggle
+    const passwordInput = document.getElementById('password');
+    const toggleBtn = document.querySelector('.password-toggle');
+
+    toggleBtn?.addEventListener('click', () => {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      toggleBtn.setAttribute('aria-label', isPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
+    });
+
+    // Form submission
+    const form = document.getElementById('login-form');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Show loading state
+      submitBtn.innerHTML = '<span class="btn-text"><div class="spinner"></div><span>جارٍ تسجيل الدخول...</span></span>';
+      submitBtn.disabled = true;
+
+      // Simulate API call (replace with actual auth logic)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Reset button
+      submitBtn.innerHTML = '<span class="btn-text"><span>تسجيل الدخول</span></span>';
+      submitBtn.disabled = false;
+    });
+
+    // Dev login button (development only)
+    const devBtn = document.getElementById('dev-btn');
+    devBtn?.addEventListener('click', async () => {
+      devBtn.textContent = '...';
+      devBtn.disabled = true;
+      
+      // Simulate dev login
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      devBtn.textContent = 'تم! جاري التحويل...';
+    });
+  </script>
+</body>
+</html>

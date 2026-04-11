@@ -1,0 +1,109 @@
+"use client"
+
+import { useQuery } from "@tanstack/react-query"
+import { format } from "date-fns"
+
+import { Badge } from "@/components/ui/badge"
+import { queryKeys } from "@/lib/query-keys"
+import { fetchPractitionerRatings } from "@/lib/api/practitioners"
+import type { Rating } from "@/lib/types/rating"
+
+/* ─── Helpers ─── */
+
+function StarDisplay({ stars }: { stars: number }) {
+  return (
+    <span className="text-xs font-medium tabular-nums text-foreground">
+      {"★".repeat(stars)}
+      {"☆".repeat(5 - stars)}
+    </span>
+  )
+}
+
+function ProblemBadge({ hasProblem }: { hasProblem: boolean }) {
+  if (!hasProblem) return null
+  return (
+    <Badge
+      variant="outline"
+      className="border-destructive/30 bg-destructive/10 text-destructive text-[10px]"
+    >
+      Problem Reported
+    </Badge>
+  )
+}
+
+/* ─── Props ─── */
+
+interface PractitionerRatingsProps {
+  practitionerId: string
+}
+
+/* ─── Component ─── */
+
+export function PractitionerRatings({
+  practitionerId,
+}: PractitionerRatingsProps) {
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.practitioners.ratings(practitionerId),
+    queryFn: () => fetchPractitionerRatings(practitionerId, { perPage: 10 }),
+    enabled: !!practitionerId,
+  })
+
+  const ratings = data?.items ?? []
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Recent Ratings
+      </h4>
+
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground">Loading...</p>
+      ) : ratings.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No ratings yet.</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {ratings.map((r: Rating) => (
+            <div
+              key={r.id}
+              className="flex flex-col gap-1 rounded-md border border-border p-2"
+            >
+              <div className="flex items-center justify-between">
+                <StarDisplay stars={r.stars} />
+                <span className="text-[10px] tabular-nums text-muted-foreground">
+                  {format(new Date(r.createdAt), "MMM d, yyyy")}
+                </span>
+              </div>
+              {r.patient && (
+                <span className="text-xs text-muted-foreground">
+                  {r.patient.firstName} {r.patient.lastName}
+                </span>
+              )}
+              {r.comment && (
+                <p className="text-xs text-foreground">{r.comment}</p>
+              )}
+              <ProblemBadge
+                hasProblem={
+                  "problemReport" in r && !!(r as RatingWithProblem).problemReport
+                }
+              />
+            </div>
+          ))}
+          {data?.meta && data.meta.total > 10 && (
+            <p className="text-center text-[10px] text-muted-foreground">
+              Showing 10 of {data.meta.total} ratings
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* Extended type for rating that may include a problem report */
+interface RatingWithProblem extends Rating {
+  problemReport?: {
+    id: string
+    type: string
+    status: string
+  } | null
+}
