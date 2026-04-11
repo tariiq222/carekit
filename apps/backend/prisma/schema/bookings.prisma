@@ -1,2 +1,139 @@
 // Bookings BC — appointments, waitlist, group sessions.
-// Models added in Phase 8 (p8-t*).
+// Models added in Phase 8 (p8-t*). Cross-BC IDs (clientId, employeeId, serviceId, branchId)
+// are plain strings — no Prisma FK relations. Referential integrity is event-driven.
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  EXPIRED
+}
+
+enum BookingType {
+  INDIVIDUAL
+  WALK_IN
+  GROUP
+}
+
+enum CancellationReason {
+  CLIENT_REQUESTED
+  EMPLOYEE_UNAVAILABLE
+  NO_SHOW
+  SYSTEM_EXPIRED
+  OTHER
+}
+
+enum WaitlistStatus {
+  WAITING
+  PROMOTED
+  EXPIRED
+  REMOVED
+}
+
+// ─── Booking ─────────────────────────────────────────────────────────────────
+
+model Booking {
+  id             String              @id @default(uuid())
+  tenantId       String
+  branchId       String
+  clientId       String
+  employeeId     String
+  serviceId      String
+  bookingType    BookingType         @default(INDIVIDUAL)
+  status         BookingStatus       @default(PENDING)
+  scheduledAt    DateTime
+  durationMins   Int
+  price          Decimal             @db.Decimal(12, 2)
+  currency       String              @default("SAR")
+  notes          String?
+  cancelReason   CancellationReason?
+  cancelNotes    String?
+  cancelledAt    DateTime?
+  confirmedAt    DateTime?
+  completedAt    DateTime?
+  expiresAt      DateTime?
+  groupSessionId String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([employeeId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@index([tenantId, employeeId, scheduledAt])
+}
+
+// ─── Waitlist ─────────────────────────────────────────────────────────────────
+
+model WaitlistEntry {
+  id            String         @id @default(uuid())
+  tenantId      String
+  clientId      String
+  employeeId    String
+  serviceId     String
+  branchId      String
+  preferredDate DateTime?
+  status        WaitlistStatus @default(WAITING)
+  promotedAt    DateTime?
+  expiresAt     DateTime?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([employeeId])
+  @@index([status])
+}
+
+// ─── Group Session ────────────────────────────────────────────────────────────
+
+enum GroupSessionStatus {
+  OPEN
+  FULL
+  CANCELLED
+  COMPLETED
+}
+
+model GroupSession {
+  id            String             @id @default(uuid())
+  tenantId      String
+  branchId      String
+  employeeId    String
+  serviceId     String
+  title         String
+  scheduledAt   DateTime
+  durationMins  Int
+  maxCapacity   Int
+  enrolledCount Int                @default(0)
+  price         Decimal            @db.Decimal(12, 2)
+  currency      String             @default("SAR")
+  status        GroupSessionStatus @default(OPEN)
+  cancelReason  String?
+  cancelledAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  enrollments GroupEnrollment[]
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([scheduledAt])
+}
+
+model GroupEnrollment {
+  id             String       @id @default(uuid())
+  tenantId       String
+  groupSessionId String
+  groupSession   GroupSession @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
+  clientId       String
+  bookingId      String       @unique
+  enrolledAt     DateTime     @default(now())
+
+  @@unique([groupSessionId, clientId])
+  @@index([tenantId])
+  @@index([clientId])
+}
