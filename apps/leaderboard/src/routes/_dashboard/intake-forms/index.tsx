@@ -38,13 +38,12 @@ function IntakeFormsListPage() {
   const items = listQuery.data?.items ?? []
   const meta = listQuery.data?.meta
 
-  const total = items.length
   const active = items.filter((f) => f.isActive).length
-  const inactive = total - active
+  const inactive = items.length - active
   const globalCount = items.filter((f) => f.scope === 'global').length
 
   const statCards = [
-    { label: 'إجمالي النماذج', value: total, icon: 'hgi-document-code', variant: 'primary' as const },
+    { label: 'إجمالي النماذج', value: meta?.total ?? 0, icon: 'hgi-document-code', variant: 'primary' as const },
     { label: 'نشطة', value: active, icon: 'hgi-checkmark-circle-02', variant: 'success' as const },
     { label: 'غير نشطة', value: inactive, icon: 'hgi-cancel-circle', variant: 'warning' as const },
     { label: 'نطاق عام', value: globalCount, icon: 'hgi-global', variant: 'accent' as const },
@@ -126,7 +125,7 @@ function IntakeFormsListPage() {
                 onClick={() => {
                   if (confirm('حذف النموذج؟')) deleteMutation.mutate(f.id)
                 }}
-                className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] hover:bg-[var(--error-bg,#fef2f2)] text-[var(--muted)] hover:text-[var(--error,#dc2626)] transition-colors"
+                className="inline-flex items-center justify-center size-9 rounded-[var(--radius-sm)] hover:bg-[var(--danger-bg)] text-[var(--muted)] hover:text-[var(--danger)] transition-colors"
               >
                 <i className="hgi-stroke hgi-delete-02" />
               </button>
@@ -144,12 +143,18 @@ function IntakeFormsListPage() {
         title="نماذج الاستقبال"
         description="إدارة نماذج المعلومات المرتبطة بالحجوزات والجلسات"
         actions={
-          <Link to="/intake-forms/new">
-            <Button>
-              <i className="hgi-stroke hgi-add-01 me-2" />
-              نموذج جديد
+          <div className="flex items-center gap-2">
+            <Button variant="outline">
+              <i className="hgi hgi-download-02 me-2" />
+              تصدير
             </Button>
-          </Link>
+            <Link to="/intake-forms/new">
+              <Button>
+                <i className="hgi-stroke hgi-add-01 me-2" />
+                نموذج جديد
+              </Button>
+            </Link>
+          </div>
         }
       />
 

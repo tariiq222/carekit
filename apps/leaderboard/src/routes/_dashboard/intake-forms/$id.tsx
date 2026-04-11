@@ -36,7 +36,7 @@ const FIELD_TYPE_LABELS: Record<IntakeFormField['type'], string> = {
 
 const inputClass =
   'w-full h-10 px-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/40'
-const errorClass = 'text-xs text-[var(--error,#dc2626)] mt-1'
+const errorClass = 'text-xs text-[var(--danger)] mt-1'
 
 function IntakeFormDetailPage() {
   const { id } = Route.useParams()
@@ -98,9 +98,13 @@ function IntakeFormDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!confirm('حذف النموذج؟')) return
-    await deleteMutation.mutateAsync(id)
-    navigate({ to: '/intake-forms' })
+    if (!confirm('حذف هذا النموذج نهائياً؟')) return
+    try {
+      await deleteMutation.mutateAsync(id)
+      navigate({ to: '/intake-forms' })
+    } catch {
+      // deleteMutation.isError handles UI feedback
+    }
   }
 
   const fields = formQuery.data.fields ?? []
@@ -184,6 +188,9 @@ function IntakeFormDetailPage() {
 
         {updateMutation.isError && (
           <p className={errorClass}>{(updateMutation.error as Error)?.message ?? 'حدث خطأ غير متوقع'}</p>
+        )}
+        {deleteMutation.isError && (
+          <p className={errorClass}>حدث خطأ أثناء الحذف. حاول مرة أخرى.</p>
         )}
 
         <div className="flex items-center gap-3 pt-2">

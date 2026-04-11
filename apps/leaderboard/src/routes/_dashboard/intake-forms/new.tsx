@@ -26,7 +26,7 @@ const FORM_SCOPE_OPTIONS: { value: FormScope; label: string }[] = [
 
 const inputClass =
   'w-full h-10 px-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/40'
-const errorClass = 'text-xs text-[var(--error,#dc2626)] mt-1'
+const errorClass = 'text-xs text-[var(--danger)] mt-1'
 
 function NewIntakeFormPage() {
   const navigate = useNavigate()
