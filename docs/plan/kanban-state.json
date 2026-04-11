@@ -4,6 +4,7 @@
   "lastUpdated": "2026-04-12",
   "p2_completed": "2026-04-11",
   "p3_completed": "2026-04-11",
+  "p5_completed": "2026-04-12",
   "p6_completed": "2026-04-12",
   "phases": [
     {
@@ -323,7 +324,7 @@
           "title": "Branches CRUD slices",
           "detail": "create-branch, update-branch, list-branches, get-branch",
           "complexity": "CRUD",
-          "status": "todo",
+          "status": "done",
           "bc": "organization"
         },
         {
@@ -333,7 +334,7 @@
           "title": "Services CRUD slices",
           "detail": "create-service, update-service, list-services, archive-service",
           "complexity": "CRUD",
-          "status": "todo",
+          "status": "done",
           "bc": "organization"
         },
         {
@@ -343,7 +344,7 @@
           "title": "business-hours + holidays slices",
           "detail": "Working hours per branch, holiday calendar",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "organization"
         },
         {
@@ -353,7 +354,7 @@
           "title": "branding-config slice",
           "detail": "Branding: logo, colors, fonts — serves /branding/public endpoint",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "organization"
         },
         {
@@ -363,7 +364,7 @@
           "title": "intake-forms + ratings slices",
           "detail": "Form builder config, rating submission",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "organization"
         }
       ]
