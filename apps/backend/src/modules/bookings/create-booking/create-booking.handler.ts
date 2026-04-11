@@ -2,8 +2,6 @@ import { Injectable, ConflictException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../infrastructure/database';
 import type { CreateBookingDto } from './create-booking.dto';
 
-const BUFFER_MINUTES = 0;
-
 @Injectable()
 export class CreateBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
@@ -14,21 +12,17 @@ export class CreateBookingHandler {
       throw new BadRequestException('Booking must be scheduled in the future');
     }
 
-    const slotEnd = new Date(scheduledAt.getTime() + (dto.durationMins + BUFFER_MINUTES) * 60_000);
+    const endsAt = new Date(scheduledAt.getTime() + dto.durationMins * 60_000);
 
+    // Correct overlap: existing booking overlaps if it starts before our slot ends
+    // AND its own endsAt is after our slot start.
     const conflict = await this.prisma.booking.findFirst({
       where: {
         tenantId: dto.tenantId,
         employeeId: dto.employeeId,
         status: { in: ['PENDING', 'CONFIRMED'] },
-        AND: [
-          { scheduledAt: { lt: slotEnd } },
-          {
-            scheduledAt: {
-              gte: new Date(scheduledAt.getTime() - dto.durationMins * 60_000),
-            },
-          },
-        ],
+        scheduledAt: { lt: endsAt },
+        endsAt: { gt: scheduledAt },
       },
     });
     if (conflict) {
@@ -43,6 +37,7 @@ export class CreateBookingHandler {
         employeeId: dto.employeeId,
         serviceId: dto.serviceId,
         scheduledAt,
+        endsAt,
         durationMins: dto.durationMins,
         price: dto.price,
         currency: dto.currency ?? 'SAR',

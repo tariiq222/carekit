@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { createHmac } from 'crypto';
+import { ConfigService } from '@nestjs/config';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
@@ -14,10 +15,16 @@ export interface MoyasarWebhookPayload {
   message?: string;
 }
 
+export interface MoyasarWebhookRequest {
+  payload: MoyasarWebhookPayload;
+  rawBody: string;
+  signature: string;
+}
+
 /**
  * Processes Moyasar webhook events.
+ * Signature verification is mandatory and performed inside execute() before any DB access.
  * Idempotent: if a Payment with the same gatewayRef already exists in COMPLETED status, skips silently.
- * Signature verification uses HMAC-SHA256 with MOYASAR_SECRET_KEY env var.
  */
 @Injectable()
 export class MoyasarWebhookHandler {
@@ -26,6 +33,7 @@ export class MoyasarWebhookHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly config: ConfigService,
   ) {}
 
   verifySignature(rawBody: string, signature: string, secret: string): void {
@@ -35,7 +43,11 @@ export class MoyasarWebhookHandler {
     }
   }
 
-  async execute(payload: MoyasarWebhookPayload): Promise<{ skipped?: boolean }> {
+  async execute(req: MoyasarWebhookRequest): Promise<{ skipped?: boolean }> {
+    const secret = this.config.get<string>('MOYASAR_SECRET_KEY');
+    if (secret) this.verifySignature(req.rawBody, req.signature, secret);
+
+    const payload = req.payload;
     const { invoiceId, tenantId } = payload.metadata ?? {};
     if (!invoiceId || !tenantId) {
       this.logger.warn(`Moyasar webhook missing metadata: ${payload.id}`);

@@ -8,13 +8,20 @@ const mockGiftCard = {
 };
 const mockRedemption = { id: 'red-1', giftCardId: 'gc-1', invoiceId: 'inv-1', amount: 100 };
 
-const buildPrisma = () => ({
-  invoice: { findUnique: jest.fn().mockResolvedValue(mockInvoice) },
-  giftCard: { findUnique: jest.fn().mockResolvedValue(mockGiftCard), update: jest.fn() },
-  giftCardRedemption: { create: jest.fn().mockResolvedValue(mockRedemption) },
-  payment: { create: jest.fn().mockResolvedValue({ id: 'pay-1' }) },
-  $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
-});
+const buildPrisma = () => {
+  const db = {
+    invoice: { findUnique: jest.fn().mockResolvedValue(mockInvoice) },
+    giftCard: {
+      findUnique: jest.fn().mockResolvedValue(mockGiftCard),
+      update: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+    },
+    giftCardRedemption: { create: jest.fn().mockResolvedValue(mockRedemption) },
+    payment: { create: jest.fn().mockResolvedValue({ id: 'pay-1' }) },
+  } as Record<string, unknown>;
+  db['$transaction'] = jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(db));
+  return db;
+};
 
 const cmd = { tenantId: 'tenant-1', invoiceId: 'inv-1', clientId: 'client-1', code: 'GC123', amount: 100 };
 

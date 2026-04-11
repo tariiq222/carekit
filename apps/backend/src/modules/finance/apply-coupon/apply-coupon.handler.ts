@@ -25,9 +25,6 @@ export class ApplyCouponHandler {
     if (coupon.expiresAt && coupon.expiresAt < new Date()) {
       throw new BadRequestException(`Coupon ${cmd.code} has expired`);
     }
-    if (coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
-      throw new BadRequestException(`Coupon ${cmd.code} has reached its usage limit`);
-    }
     if (coupon.minOrderAmt !== null && Number(invoice.subtotal) < Number(coupon.minOrderAmt)) {
       throw new BadRequestException(`Order total does not meet minimum for coupon ${cmd.code}`);
     }
@@ -39,7 +36,7 @@ export class ApplyCouponHandler {
 
     const discount =
       coupon.discountType === 'PERCENTAGE'
-        ? parseFloat((Number(invoice.subtotal) * Number(coupon.discountValue) / 100).toFixed(2))
+        ? parseFloat(((Number(invoice.subtotal) * Number(coupon.discountValue)) / 100).toFixed(2))
         : Math.min(Number(coupon.discountValue), Number(invoice.subtotal));
 
     const newDiscountAmt = parseFloat((Number(invoice.discountAmt) + discount).toFixed(2));
@@ -47,26 +44,29 @@ export class ApplyCouponHandler {
     const newVatAmt = parseFloat((newVatBase * Number(invoice.vatRate)).toFixed(2));
     const newTotal = parseFloat((newVatBase + newVatAmt).toFixed(2));
 
-    const [redemption] = await this.prisma.$transaction([
-      this.prisma.couponRedemption.create({
-        data: {
-          tenantId: cmd.tenantId,
-          couponId: coupon.id,
-          invoiceId: cmd.invoiceId,
-          clientId: cmd.clientId,
-          discount,
-        },
-      }),
-      this.prisma.coupon.update({
-        where: { id: coupon.id },
-        data: { usedCount: { increment: 1 } },
-      }),
-      this.prisma.invoice.update({
+    return this.prisma.$transaction(async (tx) => {
+      // Atomic guard: increment usedCount only if still below maxUses.
+      // updateMany returns { count: 0 } if the WHERE predicate fails — prevents race condition.
+      if (coupon.maxUses !== null) {
+        const { count } = await tx.coupon.updateMany({
+          where: { id: coupon.id, usedCount: { lt: coupon.maxUses } },
+          data: { usedCount: { increment: 1 } },
+        });
+        if (count === 0) throw new BadRequestException(`Coupon ${cmd.code} has reached its usage limit`);
+      } else {
+        await tx.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } });
+      }
+
+      const redemption = await tx.couponRedemption.create({
+        data: { tenantId: cmd.tenantId, couponId: coupon.id, invoiceId: cmd.invoiceId, clientId: cmd.clientId, discount },
+      });
+
+      await tx.invoice.update({
         where: { id: cmd.invoiceId },
         data: { discountAmt: newDiscountAmt, vatAmt: newVatAmt, total: newTotal },
-      }),
-    ]);
+      });
 
-    return redemption;
+      return redemption;
+    });
   }
 }

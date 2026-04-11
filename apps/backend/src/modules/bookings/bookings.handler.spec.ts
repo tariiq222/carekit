@@ -8,6 +8,10 @@ import { AddToWaitlistHandler } from './add-to-waitlist/add-to-waitlist.handler'
 import { GetBookingHandler } from './get-booking/get-booking.handler';
 import { ListBookingsHandler } from './list-bookings/list-bookings.handler';
 import { CheckAvailabilityHandler } from './check-availability/check-availability.handler';
+import { CheckInBookingHandler } from './check-in-booking/check-in-booking.handler';
+import { CompleteBookingHandler } from './complete-booking/complete-booking.handler';
+import { NoShowBookingHandler } from './no-show-booking/no-show-booking.handler';
+import { ExpireBookingHandler } from './expire-booking/expire-booking.handler';
 
 const future = new Date(Date.now() + 86400_000);
 const past = new Date(Date.now() - 86400_000);
@@ -15,7 +19,8 @@ const past = new Date(Date.now() - 86400_000);
 const mockBooking = {
   id: 'book-1', tenantId: 'tenant-1', branchId: 'branch-1',
   clientId: 'client-1', employeeId: 'emp-1', serviceId: 'svc-1',
-  scheduledAt: future, durationMins: 60, price: 200, currency: 'SAR',
+  scheduledAt: future, endsAt: new Date(future.getTime() + 3600_000),
+  durationMins: 60, price: 200, currency: 'SAR',
   status: BookingStatus.PENDING, bookingType: 'INDIVIDUAL',
 };
 
@@ -209,6 +214,125 @@ describe('ListBookingsHandler', () => {
     });
     expect(result.data).toHaveLength(1);
     expect(result.meta.total).toBe(1);
+  });
+});
+
+// ─── CheckInBookingHandler ───────────────────────────────────────────────────
+describe('CheckInBookingHandler', () => {
+  it('sets checkedInAt on CONFIRMED booking', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
+    await new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ checkedInAt: expect.any(Date) }) }),
+    );
+  });
+
+  it('throws BadRequestException when booking is not CONFIRMED', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.COMPLETED });
+    await expect(
+      new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws BadRequestException when already checked in', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED, checkedInAt: new Date() });
+    await expect(
+      new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws NotFoundException when booking not found', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
+    await expect(
+      new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad' }),
+    ).rejects.toThrow(NotFoundException);
+  });
+});
+
+// ─── CompleteBookingHandler ──────────────────────────────────────────────────
+describe('CompleteBookingHandler', () => {
+  it('completes CONFIRMED booking', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
+    await new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.COMPLETED }) }),
+    );
+  });
+
+  it('throws BadRequestException when booking is not CONFIRMED', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CANCELLED });
+    await expect(
+      new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws NotFoundException when not found', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
+    await expect(
+      new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad' }),
+    ).rejects.toThrow(NotFoundException);
+  });
+});
+
+// ─── NoShowBookingHandler ────────────────────────────────────────────────────
+describe('NoShowBookingHandler', () => {
+  it('marks CONFIRMED booking as NO_SHOW', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
+    await new NoShowBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.NO_SHOW }) }),
+    );
+  });
+
+  it('throws BadRequestException when booking is not CONFIRMED', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.COMPLETED });
+    await expect(
+      new NoShowBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws NotFoundException when not found', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
+    await expect(
+      new NoShowBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad' }),
+    ).rejects.toThrow(NotFoundException);
+  });
+});
+
+// ─── ExpireBookingHandler ────────────────────────────────────────────────────
+describe('ExpireBookingHandler', () => {
+  it('expires PENDING booking', async () => {
+    const prisma = buildPrisma();
+    await new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.EXPIRED }) }),
+    );
+  });
+
+  it('throws BadRequestException when booking is not PENDING', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
+    await expect(
+      new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws NotFoundException when not found', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
+    await expect(
+      new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad' }),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 

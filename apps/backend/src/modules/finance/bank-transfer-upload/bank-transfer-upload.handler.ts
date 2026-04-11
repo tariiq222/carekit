@@ -10,6 +10,7 @@ export interface BankTransferUploadCommand {
   tenantId: string;
   invoiceId: string;
   clientId: string;
+  amount: number;
   fileBuffer: Buffer;
   mimetype: string;
   filename: string;
@@ -41,7 +42,7 @@ export class BankTransferUploadHandler {
       data: {
         tenantId: cmd.tenantId,
         invoiceId: cmd.invoiceId,
-        amount: invoice.total,
+        amount: cmd.amount,
         currency: invoice.currency,
         method: PaymentMethod.BANK_TRANSFER,
         status: PaymentStatus.PENDING_VERIFICATION,

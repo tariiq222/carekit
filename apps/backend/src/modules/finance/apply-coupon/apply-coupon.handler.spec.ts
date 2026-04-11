@@ -10,15 +10,22 @@ const mockCoupon = {
 };
 const mockRedemption = { id: 'red-1', couponId: 'coupon-1', invoiceId: 'inv-1', discount: 20 };
 
-const buildPrisma = () => ({
-  invoice: { findUnique: jest.fn().mockResolvedValue(mockInvoice), update: jest.fn() },
-  coupon: { findUnique: jest.fn().mockResolvedValue(mockCoupon), update: jest.fn() },
-  couponRedemption: {
-    findUnique: jest.fn().mockResolvedValue(null),
-    create: jest.fn().mockResolvedValue(mockRedemption),
-  },
-  $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
-});
+const buildPrisma = () => {
+  const db = {
+    invoice: { findUnique: jest.fn().mockResolvedValue(mockInvoice), update: jest.fn() },
+    coupon: {
+      findUnique: jest.fn().mockResolvedValue(mockCoupon),
+      update: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+    },
+    couponRedemption: {
+      findUnique: jest.fn().mockResolvedValue(null),
+      create: jest.fn().mockResolvedValue(mockRedemption),
+    },
+  } as Record<string, unknown>;
+  db['$transaction'] = jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(db));
+  return db;
+};
 
 const cmd = { tenantId: 'tenant-1', invoiceId: 'inv-1', clientId: 'client-1', code: 'SAVE10' };
 
@@ -53,7 +60,8 @@ describe('ApplyCouponHandler', () => {
 
   it('throws BadRequestException when max uses reached', async () => {
     const prisma = buildPrisma();
-    prisma.coupon.findUnique = jest.fn().mockResolvedValue({ ...mockCoupon, maxUses: 10, usedCount: 10 });
+    (prisma.coupon as { findUnique: jest.Mock; updateMany: jest.Mock }).findUnique = jest.fn().mockResolvedValue({ ...mockCoupon, maxUses: 10, usedCount: 10 });
+    (prisma.coupon as { updateMany: jest.Mock }).updateMany = jest.fn().mockResolvedValue({ count: 0 });
     await expect(new ApplyCouponHandler(prisma as never).execute(cmd)).rejects.toThrow(BadRequestException);
   });
 

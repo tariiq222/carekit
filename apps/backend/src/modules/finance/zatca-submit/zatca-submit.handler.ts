@@ -90,6 +90,9 @@ export class ZatcaSubmitHandler {
     return submission;
   }
 
+  // TODO(zatca-xml): Replace stub with full UBL 2.1 / ZATCA Phase-2 XML builder.
+  // Tracked in: https://github.com/carekit-hq/carekit/issues/ZATCA-XML
+  // Owner: @tariq — do NOT modify XML structure without compliance review.
   private buildInvoiceXml(invoice: { id: string; tenantId: string; total: unknown; vatAmt: unknown; issuedAt: Date | null }): string {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">

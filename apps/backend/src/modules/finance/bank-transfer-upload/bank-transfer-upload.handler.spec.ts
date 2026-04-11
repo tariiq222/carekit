@@ -29,6 +29,7 @@ const cmd = {
   tenantId: 'tenant-1',
   invoiceId: 'inv-1',
   clientId: 'client-1',
+  amount: 230,
   fileBuffer: Buffer.from('fake-image'),
   mimetype: 'image/jpeg',
   filename: 'receipt.jpg',

@@ -33,10 +33,24 @@ export class RedeemGiftCardHandler {
     const redeemAmount = Math.min(cmd.amount, Number(giftCard.balance), Number(invoice.total));
     if (redeemAmount <= 0) throw new BadRequestException('Redemption amount must be greater than zero');
 
-    const newBalance = parseFloat((Number(giftCard.balance) - redeemAmount).toFixed(2));
+    return this.prisma.$transaction(async (tx) => {
+      // Atomic guard: decrement balance only if sufficient funds remain.
+      // updateMany with WHERE balance >= redeemAmount prevents concurrent overdraft.
+      const { count } = await tx.giftCard.updateMany({
+        where: { id: giftCard.id, balance: { gte: redeemAmount } },
+        data: { balance: { decrement: redeemAmount } },
+      });
+      if (count === 0) {
+        throw new BadRequestException(`Gift card ${cmd.code} has insufficient balance`);
+      }
 
-    const [redemption] = await this.prisma.$transaction([
-      this.prisma.giftCardRedemption.create({
+      // Deactivate card if balance hit zero
+      const updated = await tx.giftCard.findUnique({ where: { id: giftCard.id }, select: { balance: true } });
+      if (updated && Number(updated.balance) === 0) {
+        await tx.giftCard.update({ where: { id: giftCard.id }, data: { isActive: false } });
+      }
+
+      const redemption = await tx.giftCardRedemption.create({
         data: {
           tenantId: cmd.tenantId,
           giftCardId: giftCard.id,
@@ -44,12 +58,9 @@ export class RedeemGiftCardHandler {
           clientId: cmd.clientId,
           amount: redeemAmount,
         },
-      }),
-      this.prisma.giftCard.update({
-        where: { id: giftCard.id },
-        data: { balance: newBalance, isActive: newBalance > 0 },
-      }),
-      this.prisma.payment.create({
+      });
+
+      await tx.payment.create({
         data: {
           tenantId: cmd.tenantId,
           invoiceId: cmd.invoiceId,
@@ -59,9 +70,9 @@ export class RedeemGiftCardHandler {
           status: 'COMPLETED',
           processedAt: new Date(),
         },
-      }),
-    ]);
+      });
 
-    return redemption;
+      return redemption;
+    });
   }
 }

@@ -28,25 +28,25 @@ export class RescheduleBookingHandler {
     }
 
     const durationMins = cmd.newDurationMins ?? booking.durationMins;
-    const slotEnd = new Date(newScheduledAt.getTime() + durationMins * 60_000);
+    const newEndsAt = new Date(newScheduledAt.getTime() + durationMins * 60_000);
 
+    // Correct overlap: existing booking overlaps if it starts before our slot ends
+    // AND its endsAt is after our new slot start.
     const conflict = await this.prisma.booking.findFirst({
       where: {
         tenantId: cmd.tenantId,
         employeeId: booking.employeeId,
         id: { not: cmd.bookingId },
         status: { in: ['PENDING', 'CONFIRMED'] },
-        AND: [
-          { scheduledAt: { lt: slotEnd } },
-          { scheduledAt: { gte: new Date(newScheduledAt.getTime() - durationMins * 60_000) } },
-        ],
+        scheduledAt: { lt: newEndsAt },
+        endsAt: { gt: newScheduledAt },
       },
     });
     if (conflict) throw new ConflictException('Employee already has a booking in the new time slot');
 
     return this.prisma.booking.update({
       where: { id: cmd.bookingId },
-      data: { scheduledAt: newScheduledAt, durationMins },
+      data: { scheduledAt: newScheduledAt, endsAt: newEndsAt, durationMins },
     });
   }
 }
