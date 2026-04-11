@@ -77,4 +77,29 @@ export const QUERY_KEYS = {
     stats: ['gift-cards', 'stats'] as const,
     detail: (id: string) => ['gift-cards', id] as const,
   },
+  intakeForms: {
+    all: ['intake-forms'] as const,
+    list: (params: Record<string, unknown>) => ['intake-forms', 'list', params] as const,
+    detail: (id: string) => ['intake-forms', id] as const,
+  },
+  notifications: {
+    all: ['notifications'] as const,
+    list: (params: Record<string, unknown>) => ['notifications', 'list', params] as const,
+    unreadCount: ['notifications', 'unread-count'] as const,
+  },
+  reports: {
+    revenue: (params: Record<string, unknown>) => ['reports', 'revenue', params] as const,
+    bookings: (params: Record<string, unknown>) => ['reports', 'bookings', params] as const,
+    dashboard: ['reports', 'dashboard'] as const,
+  },
+  chatbot: {
+    config: ['chatbot', 'config'] as const,
+    analytics: ['chatbot', 'analytics'] as const,
+    topQuestions: ['chatbot', 'top-questions'] as const,
+  },
+  groups: {
+    all: ['groups'] as const,
+    list: (params: Record<string, unknown>) => ['groups', 'list', params] as const,
+    detail: (id: string) => ['groups', id] as const,
+  },
 } as const

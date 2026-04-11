@@ -111,3 +111,38 @@ export type {
   GiftCardListResponse,
   GiftCardStats,
 } from './gift-card.js'
+export type {
+  FormType,
+  FormScope,
+  IntakeFormField,
+  IntakeFormListItem,
+  IntakeFormDetail,
+  IntakeFormListQuery,
+  CreateIntakeFormPayload,
+  UpdateIntakeFormPayload,
+} from './intake-form.js'
+export type {
+  NotificationListItem,
+  NotificationListQuery,
+  UnreadCountResponse,
+} from './notification.js'
+export type {
+  RevenueByMonth,
+  RevenueByPractitioner,
+  RevenueByService,
+  RevenueReport,
+  BookingReport,
+  DashboardStats,
+  ReportDateParams,
+} from './report.js'
+export type {
+  ChatbotConfig,
+  ChatbotAnalytics,
+  ChatbotTopQuestion,
+  UpdateChatbotConfigPayload,
+} from './chatbot-admin.js'
+export type {
+  GroupStatus,
+  GroupListItem,
+  GroupListQuery,
+} from './group.js'
