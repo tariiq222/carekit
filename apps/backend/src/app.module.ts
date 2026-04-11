@@ -9,6 +9,7 @@ import { TenantMiddleware } from './common/tenant';
 import { IdentityModule } from './modules/identity/identity.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { PeopleModule } from './modules/people/people.module';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { PeopleModule } from './modules/people/people.module';
     IdentityModule,
     PlatformModule,
     PeopleModule,
+    MediaModule,
   ],
 })
 export class AppModule implements NestModule {

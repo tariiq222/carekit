@@ -1,2 +1,36 @@
 // Media BC — centralized file metadata backed by MinIO object storage.
 // Models added in Phase 6 (p6-t*).
+//
+// Design notes:
+// - Physical bytes live in MinIO; this table holds the metadata index.
+// - `storageKey` is the object key inside the bucket; globally unique per tenant.
+// - `ownerType` + `ownerId` are string references — no Prisma FKs across BCs.
+//   Other BCs reference files by fileId only; deletion is event-driven.
+// - `isDeleted` soft-deletes metadata; hard delete happens in a sweep job.
+
+enum FileVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+model File {
+  id          String         @id @default(uuid())
+  tenantId    String
+  bucket      String
+  storageKey  String
+  filename    String
+  mimetype    String
+  size        Int
+  visibility  FileVisibility @default(PRIVATE)
+  ownerType   String?
+  ownerId     String?
+  uploadedBy  String?
+  isDeleted   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([tenantId, storageKey])
+  @@index([tenantId])
+  @@index([ownerType, ownerId])
+  @@index([uploadedBy])
+}
