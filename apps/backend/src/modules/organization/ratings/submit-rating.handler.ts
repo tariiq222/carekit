@@ -1,0 +1,31 @@
+import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../../../infrastructure/database';
+import type { SubmitRatingDto } from './rating.dto';
+
+@Injectable()
+export class SubmitRatingHandler {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async execute(dto: SubmitRatingDto) {
+    if (dto.score < 1 || dto.score > 5) {
+      throw new BadRequestException('Score must be between 1 and 5');
+    }
+
+    const existing = await this.prisma.rating.findUnique({
+      where: { bookingId: dto.bookingId },
+    });
+    if (existing) throw new ConflictException('Rating already submitted for this booking');
+
+    return this.prisma.rating.create({
+      data: {
+        tenantId: dto.tenantId,
+        bookingId: dto.bookingId,
+        clientId: dto.clientId,
+        employeeId: dto.employeeId,
+        score: dto.score,
+        comment: dto.comment,
+        isPublic: dto.isPublic ?? false,
+      },
+    });
+  }
+}

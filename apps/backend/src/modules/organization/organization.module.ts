@@ -15,6 +15,11 @@ import { RemoveHolidayHandler } from './hours/remove-holiday.handler';
 import { ListHolidaysHandler } from './hours/list-holidays.handler';
 import { UpsertBrandingHandler } from './branding/upsert-branding.handler';
 import { GetBrandingHandler } from './branding/get-branding.handler';
+import { CreateIntakeFormHandler } from './intake-forms/create-intake-form.handler';
+import { GetIntakeFormHandler } from './intake-forms/get-intake-form.handler';
+import { ListIntakeFormsHandler } from './intake-forms/list-intake-forms.handler';
+import { SubmitRatingHandler } from './ratings/submit-rating.handler';
+import { ListRatingsHandler } from './ratings/list-ratings.handler';
 
 const branchHandlers = [
   CreateBranchHandler, UpdateBranchHandler, ListBranchesHandler, GetBranchHandler,
@@ -31,7 +36,17 @@ const hoursHandlers = [
 
 @Module({
   imports: [DatabaseModule],
-  providers: [...branchHandlers, ...serviceHandlers, ...hoursHandlers, UpsertBrandingHandler, GetBrandingHandler],
-  exports: [...branchHandlers, ...serviceHandlers, ...hoursHandlers, UpsertBrandingHandler, GetBrandingHandler],
+  providers: [
+    ...branchHandlers, ...serviceHandlers, ...hoursHandlers,
+    UpsertBrandingHandler, GetBrandingHandler,
+    CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler,
+    SubmitRatingHandler, ListRatingsHandler,
+  ],
+  exports: [
+    ...branchHandlers, ...serviceHandlers, ...hoursHandlers,
+    UpsertBrandingHandler, GetBrandingHandler,
+    CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler,
+    SubmitRatingHandler, ListRatingsHandler,
+  ],
 })
 export class OrganizationModule {}
