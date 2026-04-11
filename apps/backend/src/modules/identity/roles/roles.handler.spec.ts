@@ -48,7 +48,7 @@ describe('Roles handlers', () => {
     await assignPerms.execute({
       tenantId: 'tenant-1',
       customRoleId: 'role-1',
-      permissions: [{ action: 'create', subject: 'Booking' }, { action: 'read', subject: 'Patient' }],
+      permissions: [{ action: 'create', subject: 'Booking' }, { action: 'read', subject: 'Client' }],
     });
     expect(prisma.permission.deleteMany).toHaveBeenCalledWith(expect.objectContaining({ where: { customRoleId: 'role-1' } }));
     expect(prisma.permission.createMany).toHaveBeenCalled();

@@ -11,15 +11,15 @@ describe('CaslAbilityFactory', () => {
   it('grants specific permissions from custom role', () => {
     const ability = factory.buildForUser({
       role: 'RECEPTIONIST',
-      customRole: { permissions: [{ action: 'create', subject: 'Booking' }, { action: 'read', subject: 'Patient' }] },
+      customRole: { permissions: [{ action: 'create', subject: 'Booking' }, { action: 'read', subject: 'Client' }] },
     });
     expect(ability.can('create', 'Booking')).toBe(true);
-    expect(ability.can('read', 'Patient')).toBe(true);
+    expect(ability.can('read', 'Client')).toBe(true);
     expect(ability.can('delete', 'Booking')).toBe(false);
   });
 
-  it('grants read on own domain for PRACTITIONER', () => {
-    const ability = factory.buildForUser({ role: 'PRACTITIONER', customRole: null });
+  it('grants read on own domain for EMPLOYEE', () => {
+    const ability = factory.buildForUser({ role: 'EMPLOYEE', customRole: null });
     expect(ability.can('read', 'Booking')).toBe(true);
     expect(ability.can('delete', 'Invoice')).toBe(false);
   });

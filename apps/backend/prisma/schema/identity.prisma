@@ -5,8 +5,8 @@ enum UserRole {
   ADMIN
   RECEPTIONIST
   ACCOUNTANT
-  PRACTITIONER
-  PATIENT
+  EMPLOYEE
+  CLIENT
 }
 
 enum UserGender {

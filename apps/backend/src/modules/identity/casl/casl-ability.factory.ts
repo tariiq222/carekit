@@ -8,8 +8,8 @@ const BUILT_IN: Record<string, Array<{ action: string; subject: string }>> = {
   ADMIN: [
     { action: 'manage', subject: 'User' },
     { action: 'manage', subject: 'Booking' },
-    { action: 'manage', subject: 'Patient' },
-    { action: 'manage', subject: 'Practitioner' },
+    { action: 'manage', subject: 'Client' },
+    { action: 'manage', subject: 'Employee' },
     { action: 'manage', subject: 'Invoice' },
     { action: 'manage', subject: 'Payment' },
     { action: 'manage', subject: 'Report' },
@@ -17,8 +17,8 @@ const BUILT_IN: Record<string, Array<{ action: string; subject: string }>> = {
   ],
   RECEPTIONIST: [
     { action: 'manage', subject: 'Booking' },
-    { action: 'manage', subject: 'Patient' },
-    { action: 'read', subject: 'Practitioner' },
+    { action: 'manage', subject: 'Client' },
+    { action: 'read', subject: 'Employee' },
     { action: 'read', subject: 'Invoice' },
   ],
   ACCOUNTANT: [
@@ -27,12 +27,12 @@ const BUILT_IN: Record<string, Array<{ action: string; subject: string }>> = {
     { action: 'read', subject: 'Booking' },
     { action: 'read', subject: 'Report' },
   ],
-  PRACTITIONER: [
+  EMPLOYEE: [
     { action: 'read', subject: 'Booking' },
-    { action: 'read', subject: 'Patient' },
+    { action: 'read', subject: 'Client' },
     { action: 'update', subject: 'Booking' },
   ],
-  PATIENT: [
+  CLIENT: [
     { action: 'read', subject: 'Booking' },
     { action: 'create', subject: 'Booking' },
     { action: 'read', subject: 'Invoice' },
