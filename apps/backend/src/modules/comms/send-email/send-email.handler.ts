@@ -28,7 +28,8 @@ export class SendEmailHandler {
     }
 
     const html = this.interpolate(template.htmlBody, dto.vars);
-    const subject = this.interpolate(template.subjectAr, dto.vars);
+    const rawSubject = template.subjectAr || template.subjectEn || '';
+    const subject = this.interpolate(rawSubject, dto.vars);
 
     try {
       await this.smtp.sendMail(dto.to, subject, html);

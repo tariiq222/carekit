@@ -2,6 +2,9 @@ import { SendPushHandler } from './send-push/send-push.handler';
 import { SendSmsHandler } from './send-sms/send-sms.handler';
 import { SendEmailHandler } from './send-email/send-email.handler';
 import { SendNotificationHandler } from './send-notification/send-notification.handler';
+import type { FcmService } from '../../infrastructure/mail';
+import type { SmtpService } from '../../infrastructure/mail';
+import type { PrismaService } from '../../infrastructure/database';
 
 const mockTemplate = {
   id: 'tpl-1',
@@ -27,7 +30,7 @@ describe('SendPushHandler', () => {
       isAvailable: jest.fn().mockReturnValue(true),
       sendPush: jest.fn().mockResolvedValue('msg-id'),
     };
-    await new SendPushHandler(fcm as never).execute({
+    await new SendPushHandler(fcm as unknown as FcmService).execute({
       token: 'tok-1',
       title: 'Hello',
       body: 'World',
@@ -40,7 +43,7 @@ describe('SendPushHandler', () => {
       isAvailable: jest.fn().mockReturnValue(false),
       sendPush: jest.fn(),
     };
-    await new SendPushHandler(fcm as never).execute({
+    await new SendPushHandler(fcm as unknown as FcmService).execute({
       token: 'tok-1',
       title: 'Hello',
       body: 'World',
@@ -66,7 +69,7 @@ describe('SendEmailHandler', () => {
       isAvailable: jest.fn().mockReturnValue(true),
       sendMail: jest.fn().mockResolvedValue(undefined),
     };
-    await new SendEmailHandler(smtp as never, prisma as never).execute({
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({
       tenantId: 'tenant-1',
       to: 'client@example.com',
       templateSlug: 'welcome',
@@ -85,7 +88,7 @@ describe('SendEmailHandler', () => {
       isAvailable: jest.fn().mockReturnValue(false),
       sendMail: jest.fn(),
     };
-    await new SendEmailHandler(smtp as never, prisma as never).execute({
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({
       tenantId: 'tenant-1',
       to: 'client@example.com',
       templateSlug: 'welcome',
@@ -101,7 +104,7 @@ describe('SendEmailHandler', () => {
       isAvailable: jest.fn().mockReturnValue(true),
       sendMail: jest.fn(),
     };
-    await new SendEmailHandler(smtp as never, prisma as never).execute({
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({
       tenantId: 'tenant-1',
       to: 'client@example.com',
       templateSlug: 'missing',
@@ -120,10 +123,10 @@ describe('SendNotificationHandler', () => {
     const sms = { execute: jest.fn().mockResolvedValue(undefined) };
 
     await new SendNotificationHandler(
-      prisma as never,
-      push as never,
-      email as never,
-      sms as never,
+      prisma as unknown as PrismaService,
+      push as unknown as SendPushHandler,
+      email as unknown as SendEmailHandler,
+      sms as unknown as SendSmsHandler,
     ).execute({
       tenantId: 'tenant-1',
       recipientId: 'client-1',

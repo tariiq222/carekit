@@ -18,18 +18,25 @@ export class SendNotificationHandler {
   ) {}
 
   async execute(dto: SendNotificationDto): Promise<void> {
-    await this.prisma.notification.create({
-      data: {
-        tenantId: dto.tenantId,
-        recipientId: dto.recipientId,
-        recipientType: dto.recipientType,
-        type: dto.type,
-        title: dto.title,
-        body: dto.body,
-        metadata: (dto.metadata as Prisma.InputJsonValue) ?? undefined,
-      },
-    });
+    try {
+      await this.prisma.notification.create({
+        data: {
+          tenantId: dto.tenantId,
+          recipientId: dto.recipientId,
+          recipientType: dto.recipientType,
+          type: dto.type,
+          title: dto.title,
+          body: dto.body,
+          metadata: (dto.metadata as Prisma.InputJsonValue) ?? undefined,
+        },
+      });
+    } catch (err) {
+      this.logger.error('Failed to persist in-app notification', err);
+      // Don't return — still attempt channel dispatches
+    }
 
+    // 'in-app' channel is handled by the notification.create above.
+    // Remaining channels dispatch via external adapters.
     const tasks: Promise<void>[] = [];
 
     if (dto.channels.includes('push') && dto.fcmToken) {
