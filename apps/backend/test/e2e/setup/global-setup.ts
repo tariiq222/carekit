@@ -40,8 +40,6 @@ export default async function globalSetup(): Promise<void> {
 
     await prisma.couponRedemption.deleteMany({});
     await prisma.coupon.deleteMany({});
-    await prisma.giftCardTransaction.deleteMany({});
-    await prisma.giftCard.deleteMany({});
     await prisma.intakeResponse.deleteMany({});
     await prisma.intakeField.deleteMany({});
     await prisma.intakeForm.deleteMany({});

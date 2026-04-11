@@ -3,7 +3,6 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateLicenseDto {
   @ApiPropertyOptional() @IsOptional() @IsBoolean() hasCoupons?: boolean;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() hasGiftCards?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() hasIntakeForms?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() hasChatbot?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() hasRatings?: boolean;

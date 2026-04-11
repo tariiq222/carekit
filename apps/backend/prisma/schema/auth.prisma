@@ -39,8 +39,6 @@ model User {
   favoritePractitioners FavoritePractitioner[]
   patientProfile        PatientProfile?
   couponRedemptions     CouponRedemption[]
-  purchasedGiftCards    GiftCard[]             @relation("GiftCardPurchaser")
-  redeemedGiftCards     GiftCard[]             @relation("GiftCardRedeemer")
   groupEnrollments      GroupEnrollment[]      @relation("PatientGroupEnrollments")
   groupCertificates     GroupCertificate[]     @relation("PatientGroupCertificates")
 

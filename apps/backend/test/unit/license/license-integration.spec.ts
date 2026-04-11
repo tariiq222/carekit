@@ -15,7 +15,6 @@ import { CacheService } from '../../../src/common/services/cache.service.js';
 const baseLicense = {
   id: 'lic-1',
   hasCoupons: true,
-  hasGiftCards: false,
   hasIntakeForms: true,
   hasChatbot: false,
   hasRatings: true,
@@ -288,7 +287,6 @@ describe('License ↔ FeatureFlags Integration', () => {
     it('updates multiple license fields in a single call without corruption', async () => {
       const dto = {
         hasCoupons: false,
-        hasGiftCards: true,
         hasZoom: true,
         hasReports: true,
       };
@@ -301,7 +299,6 @@ describe('License ↔ FeatureFlags Integration', () => {
 
       // Changed fields
       expect(result.hasCoupons).toBe(false);
-      expect(result.hasGiftCards).toBe(true);
       expect(result.hasZoom).toBe(true);
       expect(result.hasReports).toBe(true);
 
@@ -319,7 +316,6 @@ describe('License ↔ FeatureFlags Integration', () => {
 
       await licenseService.update({
         hasCoupons: false,
-        hasGiftCards: true,
         hasZoom: true,
         hasReports: true,
         hasWaitlist: true,
@@ -333,12 +329,10 @@ describe('License ↔ FeatureFlags Integration', () => {
     });
 
     it('getFeaturesWithStatus correctly reflects bulk update', async () => {
-      const updated = { ...baseLicense, hasCoupons: false, hasGiftCards: true };
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(updated);
       mockPrisma.featureFlag.findMany.mockResolvedValue([
         { key: 'coupons', enabled: true, nameAr: 'كوبونات', nameEn: 'Coupons' },
         {
-          key: 'gift_cards',
           enabled: true,
           nameAr: 'بطاقات هدايا',
           nameEn: 'Gift Cards',
@@ -352,8 +346,6 @@ describe('License ↔ FeatureFlags Integration', () => {
         licensed: false,
         enabled: false,
       });
-      // gift_cards: license granted → enabled=true because flag=true
-      expect(features.find((f) => f.key === 'gift_cards')).toMatchObject({
         licensed: true,
         enabled: true,
       });
@@ -381,7 +373,6 @@ describe('License ↔ FeatureFlags Integration', () => {
       const allOff = {
         ...baseLicense,
         hasCoupons: false,
-        hasGiftCards: false,
         hasIntakeForms: false,
         hasChatbot: false,
         hasRatings: false,
@@ -399,7 +390,6 @@ describe('License ↔ FeatureFlags Integration', () => {
 
       const offResult = await licenseService.update({
         hasCoupons: false,
-        hasGiftCards: false,
         hasIntakeForms: false,
         hasChatbot: false,
         hasRatings: false,
@@ -424,7 +414,6 @@ describe('License ↔ FeatureFlags Integration', () => {
       const onResult = await licenseService.update({ hasCoupons: true });
 
       expect(onResult.hasCoupons).toBe(true);
-      expect(onResult.hasGiftCards).toBe(false);
       expect(onResult.hasZatca).toBe(false);
     });
   });

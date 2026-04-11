@@ -210,7 +210,6 @@ describe('BankTransferService', () => {
         id: 'booking-1',
         service: { price: 1000, vatPercent: 15 },
         coupon: null,
-        giftCard: null,
       });
       mockPrisma.payment.findUnique.mockResolvedValue(null);
       mockMinio.uploadFile.mockResolvedValue('https://minio/receipts/uuid.jpg');

@@ -55,7 +55,6 @@ export const PERMISSION_MODULES = [
   'coupons',
   'branches',
   'intake_forms',
-  'gift-cards',
   'activity-log',
 ] as const;
 

@@ -10,7 +10,6 @@ import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.j
 const baseLicense = {
   id: 'lic-1',
   hasCoupons: true,
-  hasGiftCards: false,
   hasIntakeForms: true,
   hasChatbot: false,
   hasRatings: true,
@@ -75,7 +74,6 @@ describe('LicenseController', () => {
     });
 
     it('passes partial update correctly', async () => {
-      const dto = { hasZoom: true, hasGiftCards: true };
       mockService.update.mockResolvedValue({ ...baseLicense, ...dto });
 
       await controller.update(dto);
@@ -95,7 +93,6 @@ describe('LicenseController', () => {
           nameEn: 'Coupons',
         },
         {
-          key: 'gift_cards',
           licensed: false,
           enabled: false,
           nameAr: 'بطاقات الهدايا',

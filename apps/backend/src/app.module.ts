@@ -50,7 +50,6 @@ import { TasksModule } from './modules/tasks/tasks.module.js';
 import { ClinicModule } from './modules/clinic/clinic.module.js';
 import { CouponsModule } from './modules/coupons/coupons.module.js';
 import { IntakeFormsModule } from './modules/intake-forms/intake-forms.module.js';
-import { GiftCardsModule } from './modules/gift-cards/gift-cards.module.js';
 import { BranchesModule } from './modules/branches/branches.module.js';
 import { EmailTemplatesModule } from './modules/email-templates/email-templates.module.js';
 import { IntegrationsModule } from './modules/integrations/integrations.module.js';
@@ -127,7 +126,6 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     ClinicModule,
     CouponsModule,
     IntakeFormsModule,
-    GiftCardsModule,
     BranchesModule,
     EmailTemplatesModule,
     IntegrationsModule,

@@ -28,12 +28,6 @@ const LICENSED_CONTROLLERS = [
     featureKey: 'coupons',
   },
   {
-    licenseKey: 'hasGiftCards',
-    module: 'gift-cards',
-    file: 'gift-cards.controller.ts',
-    featureKey: 'gift_cards',
-  },
-  {
     licenseKey: 'hasIntakeForms',
     module: 'intake-forms',
     file: 'intake-forms.controller.ts',

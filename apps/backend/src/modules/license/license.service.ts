@@ -7,7 +7,6 @@ import type { LicenseConfig } from '@prisma/client';
 
 const FLAG_TO_LICENSE: Record<string, keyof LicenseConfig> = {
   coupons: 'hasCoupons',
-  gift_cards: 'hasGiftCards',
   intake_forms: 'hasIntakeForms',
   chatbot: 'hasChatbot',
   ratings: 'hasRatings',

@@ -19,7 +19,7 @@ dto/                      # Request/response DTOs (class-validator)
 
 `activity-log`, `ai`, `auth`, `bookings`, `branches`, `chatbot`, `clinic`,
 `clinic-integrations`, `clinic-settings`, `coupons`, `departments`, `email`,
-`email-templates`, `feature-flags`, `gift-cards`, `group-sessions`, `health`,
+`email-templates`, `feature-flags`, `group-sessions`, `health`,
 `intake-forms`, `integrations`, `invoices`, `license`, `notifications`,
 `patients`, `payments`, `permissions`, `practitioners`, `problem-reports`,
 `ratings`, `reports`, `roles`, `services`, `specialties`, `tasks`, `users`,

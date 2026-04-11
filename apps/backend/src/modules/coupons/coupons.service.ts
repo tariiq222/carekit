@@ -195,62 +195,39 @@ export class CouponsService {
   ): Promise<{
     valid: boolean;
     discountAmount: number;
-    type: 'coupon' | 'gift_card';
+    type: 'coupon';
     couponId?: string;
-    giftCardId?: string;
   }> {
     const code = dto.code.toUpperCase();
 
-    // Try coupon first
     const coupon = await this.prisma.coupon.findFirst({
       where: { code, isActive: true },
       include: COUPON_INCLUDE,
     });
 
-    if (coupon) {
-      try {
-        this.validateCouponExpiry(coupon);
-        this.validateCouponUsageLimit(coupon);
-        await this.validatePerUserLimit(coupon, userId);
-        this.validateServiceRestriction(coupon, dto.serviceId);
-        this.validateMinAmount(coupon, dto.amount);
-      } catch {
-        return { valid: false, discountAmount: 0, type: 'coupon' };
-      }
-      const discountAmount = this.calculateDiscount(
-        coupon.discountType,
-        coupon.discountValue,
-        dto.amount,
-      );
-      return {
-        valid: true,
-        discountAmount,
-        type: 'coupon',
-        couponId: coupon.id,
-      };
+    if (!coupon) {
+      return { valid: false, discountAmount: 0, type: 'coupon' };
     }
 
-    // Try gift card
-    const giftCard = await this.prisma.giftCard.findUnique({
-      where: { code },
-    });
-
-    if (!giftCard || !giftCard.isActive) {
-      return { valid: false, discountAmount: 0, type: 'gift_card' };
+    try {
+      this.validateCouponExpiry(coupon);
+      this.validateCouponUsageLimit(coupon);
+      await this.validatePerUserLimit(coupon, userId);
+      this.validateServiceRestriction(coupon, dto.serviceId);
+      this.validateMinAmount(coupon, dto.amount);
+    } catch {
+      return { valid: false, discountAmount: 0, type: 'coupon' };
     }
-    if (giftCard.expiresAt && giftCard.expiresAt < new Date()) {
-      return { valid: false, discountAmount: 0, type: 'gift_card' };
-    }
-    if (giftCard.balance <= 0) {
-      return { valid: false, discountAmount: 0, type: 'gift_card' };
-    }
-
-    const discountAmount = Math.min(giftCard.balance, dto.amount);
+    const discountAmount = this.calculateDiscount(
+      coupon.discountType,
+      coupon.discountValue,
+      dto.amount,
+    );
     return {
       valid: true,
       discountAmount,
-      type: 'gift_card',
-      giftCardId: giftCard.id,
+      type: 'coupon',
+      couponId: coupon.id,
     };
   }
 
