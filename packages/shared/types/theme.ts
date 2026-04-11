@@ -1,25 +1,40 @@
+/**
+ * ClinicTheme — the canonical shape returned by GET /whitelabel/public.
+ * All apps (dashboard, mobile) consume this type.
+ */
 export interface ClinicTheme {
-  colorPrimary: string;
+  // Identity
+  systemName:        string;
+  systemNameAr:      string;
+  productTagline:    string | null;
+  // Assets
+  logoUrl:           string | null;
+  faviconUrl:        string | null;
+  // Colors
+  colorPrimary:      string;
   colorPrimaryLight: string;
-  colorPrimaryDark: string;
-  colorAccent: string;
-  colorAccentDark: string;
-  colorBackground: string;
-  fontFamily: string;
-  fontUrl: string | null;
-  logoUrl: string | null;
-  productName: string;
-  productTagline: string;
+  colorPrimaryDark:  string;
+  colorAccent:       string;
+  colorAccentDark:   string;
+  colorBackground:   string;
+  // Typography
+  fontFamily:        string;
+  fontUrl:           string | null;
 }
 
 export interface DerivedTokens {
-  colorPrimaryGlow: string;
+  colorPrimaryGlow:  string;
   colorPrimaryUltra: string;
-  colorAccentGlow: string;
-  colorAccentUltra: string;
+  colorAccentGlow:   string;
+  colorAccentUltra:  string;
 }
 
 export const DEFAULT_THEME: ClinicTheme = {
+  systemName:        'CareKit',
+  systemNameAr:      'كيركيت',
+  productTagline:    'إدارة العيادة',
+  logoUrl:           null,
+  faviconUrl:        null,
   colorPrimary:      '#354FD8',
   colorPrimaryLight: '#5B72E8',
   colorPrimaryDark:  '#2438B0',
@@ -28,7 +43,4 @@ export const DEFAULT_THEME: ClinicTheme = {
   colorBackground:   '#EEF1F8',
   fontFamily:        'IBM Plex Sans Arabic',
   fontUrl:           'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&display=swap',
-  logoUrl:           null,
-  productName:       'CareKit',
-  productTagline:    'إدارة العيادة',
-}
+};
