@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vertical Slices vs Bounded Contexts</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117; color: #e6edf3;
+    padding: 32px 24px; direction: rtl;
+    max-width: 1150px; margin: 0 auto;
+  }
+  h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: #8b949e; margin-bottom: 28px; }
+
+  code {
+    font-family: 'Fira Code', monospace; font-size: 12px;
+    background: #21262d; padding: 1px 6px; border-radius: 4px; color: #f0883e;
+  }
+
+  /* ===== MAIN COMPARISON ===== */
+  .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+
+  .approach {
+    border-radius: 14px; border: 1px solid; overflow: hidden;
+  }
+  .approach-header {
+    padding: 14px 18px; font-size: 14px; font-weight: 700;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .approach-header span { font-size: 12px; font-weight: 400; opacity: 0.7; }
+  .approach-body { padding: 16px; }
+
+  .bc  { border-color: #2ea043; }
+  .bc  .approach-header { background: #0a2a1a; color: #3fb950; }
+  .vs  { border-color: #1f6feb; }
+  .vs  .approach-header { background: #0d2230; color: #79c0ff; }
+
+  /* File tree */
+  .tree {
+    font-family: 'Fira Code', monospace; font-size: 12px;
+    line-height: 2; color: #8b949e;
+    background: #0d1117; padding: 12px 14px;
+    border-radius: 8px; border: 1px solid #21262d;
+    margin-bottom: 12px;
+  }
+  .tree .dir  { color: #e3b341; }
+  .tree .file { color: #c9d1d9; }
+  .tree .new  { color: #3fb950; }
+  .tree .svc  { color: #79c0ff; }
+  .tree .ctrl { color: #d2a8ff; }
+  .tree .dto  { color: #ffa657; }
+  .tree .note { color: #484f58; font-style: italic; }
+
+  /* Pros/Cons */
+  .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .pros, .cons {
+    border-radius: 8px; padding: 10px 12px;
+    font-size: 12px; line-height: 1.9;
+  }
+  .pros { background: #0a2a1a; border: 1px solid #238636; }
+  .cons { background: #2d0c0c; border: 1px solid #da3633; }
+  .pros h4 { color: #56d364; margin-bottom: 6px; font-size: 12px; }
+  .cons h4 { color: #ff7b72; margin-bottom: 6px; font-size: 12px; }
+  .pros li, .cons li { color: #c9d1d9; margin-right: 12px; }
+
+  /* ===== VS VISUAL ===== */
+  .vs-visual {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px;
+    align-items: center; margin-bottom: 28px;
+  }
+  .vs-label {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #161b22; border: 1px solid #30363d;
+    font-size: 13px; font-weight: 700; color: #8b949e;
+  }
+
+  /* Grid diagrams */
+  .grid-diagram {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 10px; padding: 16px;
+  }
+  .grid-title { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; font-weight: 600; }
+
+  /* Horizontal layers (BC style) */
+  .layers { display: flex; flex-direction: column; gap: 6px; }
+  .layer {
+    border-radius: 6px; padding: 7px 12px;
+    font-size: 11px; font-weight: 600; text-align: center;
+    font-family: 'Fira Code', monospace;
+  }
+  .layer-ctrl { background: #1a0d2e; border: 1px solid #6e40c9; color: #d2a8ff; }
+  .layer-svc  { background: #0d2230; border: 1px solid #1f6feb; color: #79c0ff; }
+  .layer-repo { background: #0a2a1a; border: 1px solid #238636; color: #56d364; }
+  .layer-db   { background: #2a2000; border: 1px solid #9e6a03; color: #e3b341; }
+
+  .shared-across {
+    font-size: 11px; color: #8b949e; text-align: center; margin-top: 8px;
+    padding: 5px; background: #0d1117; border-radius: 4px;
+  }
+  .modules-row {
+    display: flex; gap: 4px; justify-content: center; margin-top: 4px;
+  }
+  .mchip {
+    font-size: 10px; padding: 2px 8px; border-radius: 4px;
+    background: #161b22; border: 1px solid #30363d; color: #8b949e;
+    font-family: 'Fira Code', monospace;
+  }
+
+  /* Vertical slices diagram */
+  .slices-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  }
+  .slice {
+    border-radius: 6px; overflow: hidden; border: 1px solid #30363d;
+  }
+  .slice-header {
+    padding: 5px 8px; font-size: 10px; font-weight: 700; text-align: center;
+    font-family: 'Fira Code', monospace;
+  }
+  .slice-body { display: flex; flex-direction: column; gap: 3px; padding: 6px; }
+  .slice-cell {
+    border-radius: 3px; padding: 3px 6px;
+    font-size: 10px; text-align: center;
+    font-family: 'Fira Code', monospace; font-weight: 600;
+  }
+
+  .sl-booking .slice-header { background: #0d2230; color: #79c0ff; }
+  .sl-finance .slice-header { background: #0a2a1a; color: #3fb950; }
+  .sl-ai      .slice-header { background: #2a2000; color: #e3b341; }
+
+  .cell-ctrl { background: #1a0d2e; color: #d2a8ff; }
+  .cell-svc  { background: #0d2230; color: #79c0ff; }
+  .cell-repo { background: #0a2a1a; color: #56d364; }
+  .cell-db   { background: #2a2000; color: #e3b341; }
+
+  /* ===== HYBRID SECTION ===== */
+  .hybrid-box {
+    background: #161b22; border: 2px solid #e3b341;
+    border-radius: 14px; overflow: hidden; margin-bottom: 24px;
+    box-shadow: 0 0 20px rgba(158,106,3,0.15);
+  }
+  .hybrid-header {
+    background: #2a2000; padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hybrid-header h2 { font-size: 15px; font-weight: 700; color: #e3b341; }
+  .hybrid-header span { font-size: 13px; color: #8b949e; }
+  .hybrid-body { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .hybrid-col h3 { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #f0f6fc; }
+
+  .feature-slice {
+    border-radius: 10px; border: 1px solid #30363d;
+    overflow: hidden; margin-bottom: 10px;
+  }
+  .fs-header {
+    padding: 8px 12px; font-size: 12px; font-weight: 700;
+    background: #161b22; border-bottom: 1px solid #21262d;
+    font-family: 'Fira Code', monospace; display: flex; align-items: center; gap: 8px;
+  }
+  .fs-body { padding: 8px 12px; background: #0d1117; }
+  .fs-file {
+    font-size: 11px; color: #8b949e; font-family: 'Fira Code', monospace;
+    padding: 2px 0; display: flex; align-items: center; gap: 6px; line-height: 1.8;
+  }
+  .fs-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .verdict {
+    padding: 18px 20px; border-radius: 10px;
+    border: 1px solid #e3b341; background: #1a1400;
+    font-size: 14px; line-height: 1.8; color: #c9d1d9;
+    margin-bottom: 20px;
+  }
+  .verdict strong { color: #e3b341; }
+
+  /* when to use */
+  .when-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .when-box {
+    border-radius: 10px; border: 1px solid #30363d;
+    overflow: hidden;
+  }
+  .when-header { padding: 9px 14px; font-size: 12px; font-weight: 700; background: #161b22; border-bottom: 1px solid #21262d; }
+  .when-body { padding: 12px 14px; font-size: 12px; line-height: 1.8; color: #8b949e; background: #0d1117; }
+  .when-body strong { color: #c9d1d9; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Vertical Slices مقابل Bounded Contexts — وأين يلتقيان</h1>
+<p class="subtitle">مقارنة مباشرة + رأيي في CareKit تحديداً</p>
+
+<!-- VISUAL DIAGRAM COMPARISON -->
+<div class="vs-visual">
+
+  <div class="grid-diagram">
+    <div class="grid-title">Bounded Contexts (ما اقترحناه)</div>
+    <div class="shared-across">طبقات أفقية مشتركة بين الوحدات</div>
+    <div class="layers" style="margin-top:8px">
+      <div class="layer layer-ctrl">Controllers</div>
+      <div class="layer layer-svc">Services</div>
+      <div class="layer layer-repo">Repositories</div>
+      <div class="layer layer-db">Database</div>
+    </div>
+    <div class="shared-across" style="margin-top:8px">كل طبقة تخدم جميع الـ modules</div>
+    <div class="modules-row">
+      <div class="mchip">bookings</div>
+      <div class="mchip">finance</div>
+      <div class="mchip">ai</div>
+    </div>
+  </div>
+
+  <div class="vs-label">VS</div>
+
+  <div class="grid-diagram">
+    <div class="grid-title">Vertical Slices</div>
+    <div class="shared-across">كل feature تملك كل طبقاتها</div>
+    <div class="slices-grid" style="margin-top:8px">
+      <div class="slice sl-booking">
+        <div class="slice-header">bookings</div>
+        <div class="slice-body">
+          <div class="slice-cell cell-ctrl">controller</div>
+          <div class="slice-cell cell-svc">service</div>
+          <div class="slice-cell cell-repo">query</div>
+          <div class="slice-cell cell-db">schema</div>
+        </div>
+      </div>
+      <div class="slice sl-finance">
+        <div class="slice-header">finance</div>
+        <div class="slice-body">
+          <div class="slice-cell cell-ctrl">controller</div>
+          <div class="slice-cell cell-svc">service</div>
+          <div class="slice-cell cell-repo">query</div>
+          <div class="slice-cell cell-db">schema</div>
+        </div>
+      </div>
+      <div class="slice sl-ai">
+        <div class="slice-header">ai</div>
+        <div class="slice-body">
+          <div class="slice-cell cell-ctrl">controller</div>
+          <div class="slice-cell cell-svc">service</div>
+          <div class="slice-cell cell-repo">query</div>
+          <div class="slice-cell cell-db">schema</div>
+        </div>
+      </div>
+    </div>
+    <div class="shared-across" style="margin-top:8px">لا شيء مشترك — كل slice معزولة</div>
+  </div>
+
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="comparison" style="margin-bottom:28px">
+  <div class="approach bc">
+    <div class="approach-header">
+      Bounded Contexts
+      <span>ما اقترحناه — التنظيم حسب Domain</span>
+    </div>
+    <div class="approach-body">
+      <div class="tree">
+        <div><span class="dir">finance/</span></div>
+        <div>&nbsp;&nbsp;<span class="dir">payments/</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="svc">payments.service.ts</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ctrl">payments.controller.ts</span></div>
+        <div>&nbsp;&nbsp;<span class="dir">invoices/</span></div>
+        <div>&nbsp;&nbsp;<span class="dir">pricing/</span></div>
+        <div>&nbsp;&nbsp;<span class="file">finance.module.ts</span></div>
+        <div>&nbsp;&nbsp;<span class="svc">finance.service.ts</span> <span class="note">← الواجهة الخارجية</span></div>
+      </div>
+      <ul class="pros-cons" style="display:flex;flex-direction:column;gap:8px">
+        <div class="pros">
+          <h4>✅ المزايا</h4>
+          <ul>
+            <li>مألوف لمطوري NestJS</li>
+            <li>سهل migration التدريجي</li>
+            <li>منطق مشترك بين sub-modules طبيعي</li>
+            <li>Prisma schema موزّعة بالفعل</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>❌ العيوب</h4>
+          <ul>
+            <li>الطبقات تتشابك مع الوقت</li>
+            <li>feature جديدة تلمس ملفات متعددة</li>
+          </ul>
+        </div>
+      </ul>
+    </div>
+  </div>
+
+  <div class="approach vs">
+    <div class="approach-header">
+      Vertical Slices
+      <span>التنظيم حسب Feature — كل شيء في مكان واحد</span>
+    </div>
+    <div class="approach-body">
+      <div class="tree">
+        <div><span class="dir">create-booking/</span></div>
+        <div>&nbsp;&nbsp;<span class="ctrl">create-booking.handler.ts</span></div>
+        <div>&nbsp;&nbsp;<span class="svc">create-booking.command.ts</span></div>
+        <div>&nbsp;&nbsp;<span class="dto">create-booking.dto.ts</span></div>
+        <div>&nbsp;&nbsp;<span class="new">create-booking.spec.ts</span></div>
+        <div><span class="dir">cancel-booking/</span></div>
+        <div>&nbsp;&nbsp;<span class="ctrl">cancel-booking.handler.ts</span></div>
+        <div>&nbsp;&nbsp;<span class="note">... كل شيء هنا</span></div>
+      </div>
+      <ul class="pros-cons" style="display:flex;flex-direction:column;gap:8px">
+        <div class="pros">
+          <h4>✅ المزايا</h4>
+          <ul>
+            <li>feature جديدة = مجلد جديد فقط</li>
+            <li>لا تعديل على ملفات موجودة</li>
+            <li>كل feature تُختبر بالكامل</li>
+            <li>فريق يملك feature كاملة</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>❌ العيوب</h4>
+          <ul>
+            <li>تكرار كود للـ shared logic</li>
+            <li>تغيير DB model يلمس عشرات slices</li>
+            <li>يحتاج CQRS/MediatR pattern</li>
+            <li>إعادة كتابة شبه كاملة للمشروع</li>
+          </ul>
+        </div>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- HYBRID RECOMMENDATION -->
+<div class="hybrid-box">
+  <div class="hybrid-header">
+    <h2>⭐ الحل الهجين — الأنسب لـ CareKit</h2>
+    <span>Bounded Contexts من الخارج + Vertical Slices من الداخل</span>
+  </div>
+  <div class="hybrid-body">
+
+    <div class="hybrid-col">
+      <h3>الهيكل الخارجي — Bounded Contexts</h3>
+      <div class="feature-slice">
+        <div class="fs-header">
+          <span style="color:#3fb950">finance/</span>
+        </div>
+        <div class="fs-body">
+          <div class="fs-file"><div class="fs-dot" style="background:#3fb950"></div>finance.module.ts</div>
+          <div class="fs-file"><div class="fs-dot" style="background:#3fb950"></div>finance.service.ts</div>
+          <div class="fs-file" style="color:#484f58;padding-right:12px">── payments/ ──</div>
+          <div class="fs-file" style="color:#484f58;padding-right:12px">── invoices/ ──</div>
+          <div class="fs-file" style="color:#484f58;padding-right:12px">── pricing/  ──</div>
+        </div>
+      </div>
+      <div class="feature-slice">
+        <div class="fs-header">
+          <span style="color:#79c0ff">bookings/</span>
+        </div>
+        <div class="fs-body">
+          <div class="fs-file"><div class="fs-dot" style="background:#79c0ff"></div>bookings.module.ts</div>
+          <div class="fs-file" style="color:#484f58;padding-right:12px">── features/ ──</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hybrid-col">
+      <h3>الهيكل الداخلي — Vertical Slices</h3>
+      <div class="feature-slice">
+        <div class="fs-header">
+          <span style="color:#79c0ff">bookings/</span>
+          <span style="color:#484f58;font-size:10px;font-weight:400">features/</span>
+        </div>
+        <div class="fs-body">
+          <div class="fs-file"><div class="fs-dot" style="background:#d2a8ff"></div><span style="color:#d2a8ff">create-booking/</span></div>
+          <div class="fs-file" style="padding-right:16px"><div class="fs-dot" style="background:#484f58"></div>handler.ts + dto.ts + spec.ts</div>
+          <div class="fs-file"><div class="fs-dot" style="background:#d2a8ff"></div><span style="color:#d2a8ff">cancel-booking/</span></div>
+          <div class="fs-file" style="padding-right:16px"><div class="fs-dot" style="background:#484f58"></div>handler.ts + dto.ts + spec.ts</div>
+          <div class="fs-file"><div class="fs-dot" style="background:#d2a8ff"></div><span style="color:#d2a8ff">reschedule-booking/</span></div>
+          <div class="fs-file" style="padding-right:16px"><div class="fs-dot" style="background:#484f58"></div>handler.ts + dto.ts + spec.ts</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#8b949e;margin-top:8px;line-height:1.7;padding-right:4px">
+        كل feature داخل الـ Bounded Context = ملفاتها الخاصة فقط.<br>
+        feature جديدة = مجلد جديد فقط، لا تعديل على شيء موجود.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- WHEN TO USE WHAT -->
+<div class="when-grid" style="margin-bottom:24px">
+  <div class="when-box">
+    <div class="when-header" style="color:#3fb950">✅ Bounded Contexts فقط</div>
+    <div class="when-body">
+      <strong>متى؟</strong>
+      فريق صغير، مشروع ناضج،<br>
+      migration تدريجي مطلوب.<br><br>
+      <strong>CareKit الآن؟</strong>
+      نعم — هذا هو الحل المقترح.
+    </div>
+  </div>
+  <div class="when-box">
+    <div class="when-header" style="color:#e3b341">⭐ Hybrid (الموصى به مستقبلاً)</div>
+    <div class="when-body">
+      <strong>متى؟</strong>
+      عند بناء features جديدة كبيرة.<br>
+      Bounded Contexts من الخارج،<br>
+      Vertical Slices من الداخل.
+    </div>
+  </div>
+  <div class="when-box">
+    <div class="when-header" style="color:#79c0ff">Vertical Slices خالص</div>
+    <div class="when-body">
+      <strong>متى؟</strong>
+      مشروع جديد من الصفر،<br>
+      فريق كبير، CQRS منذ البداية.<br><br>
+      <strong>CareKit الآن؟</strong>
+      إعادة كتابة شبه كاملة — مكلفة جداً.
+    </div>
+  </div>
+</div>
+
+<div class="verdict">
+  <strong>رأيي لـ CareKit تحديداً:</strong>
+  Vertical Slices خالص الآن = إعادة كتابة 36 وحدة + تغيير نمط التفكير الكامل للفريق.
+  التكلفة عالية جداً مقابل المكسب. لكن الفكرة فيها جوهر صح —
+  خاصة داخل الـ Bounded Contexts. <strong>الحل المثالي هو Hybrid:</strong>
+  نطبق Bounded Contexts الآن (كما اقترحنا)، وعند بناء أي feature جديدة كبيرة
+  نبنيها Vertical Slice من الداخل. بعد سنة، الكود الجديد كله slices،
+  والقديم bounded contexts — وكلاهما يعمل بانسجام.
+</div>
+
+</body>
+</html>

@@ -1,0 +1,184 @@
+{
+  "project": "CareKit Backend — Rebuild from Scratch",
+  "spec": "docs/superpowers/specs/2026-04-11-backend-architecture-design.md",
+  "lastUpdated": "2026-04-11",
+  "phases": [
+    {
+      "id": "p1",
+      "title": "Foundation",
+      "titleAr": "الأساس",
+      "description": "Project scaffold, infrastructure adapters, cross-cutting concerns",
+      "order": 1,
+      "tasks": [
+        { "id": "p1-t1", "title": "Scaffold new NestJS project structure", "detail": "apps/backend-v2/ with src/common, infrastructure, api, modules folders", "complexity": "MEDIUM", "status": "todo", "bc": "foundation" },
+        { "id": "p1-t2", "title": "Prisma setup + split schema strategy", "detail": "One schema file per BC, prisma.service.ts, pgvector extension", "complexity": "MEDIUM", "status": "todo", "bc": "foundation" },
+        { "id": "p1-t3", "title": "Redis + BullMQ infrastructure adapters", "detail": "redis.service.ts, bull-mq.service.ts, event-bus.service.ts", "complexity": "MEDIUM", "status": "todo", "bc": "foundation" },
+        { "id": "p1-t4", "title": "MinIO storage adapter", "detail": "minio.service.ts in infrastructure/storage/", "complexity": "CRUD", "status": "todo", "bc": "foundation" },
+        { "id": "p1-t5", "title": "FCM + SMTP adapters", "detail": "fcm.service.ts, smtp.service.ts", "complexity": "CRUD", "status": "todo", "bc": "foundation" },
+        { "id": "p1-t6", "title": "TenantMiddleware + RequestContext", "detail": "common/tenant/: middleware, decorator, AsyncLocalStorage context", "complexity": "MEDIUM", "status": "todo", "bc": "common" },
+        { "id": "p1-t7", "title": "Guards: JWT + CASL + RequiresFeature", "detail": "common/guards/: jwt.guard, casl.guard, feature.guard", "complexity": "MEDIUM", "status": "todo", "bc": "common" },
+        { "id": "p1-t8", "title": "Global interceptors, filters, pipes", "detail": "Logging interceptor, exception filter, validation pipe", "complexity": "MEDIUM", "status": "todo", "bc": "common" },
+        { "id": "p1-t9", "title": "Event Contract base class", "detail": "BaseEvent with eventId, correlationId, tenantId, source, version, occurredAt", "complexity": "MEDIUM", "status": "todo", "bc": "common" }
+      ]
+    },
+    {
+      "id": "p2",
+      "title": "Identity BC",
+      "titleAr": "الهوية والصلاحيات",
+      "description": "Auth, roles, permissions, users — everything else depends on this",
+      "order": 2,
+      "tasks": [
+        { "id": "p2-t1", "title": "login slice", "detail": "LoginCommand + handler + dto + spec. JWT access + refresh tokens", "complexity": "MEDIUM", "status": "todo", "bc": "identity" },
+        { "id": "p2-t2", "title": "refresh-token + logout slices", "detail": "Token rotation, blacklist in Redis", "complexity": "MEDIUM", "status": "todo", "bc": "identity" },
+        { "id": "p2-t3", "title": "get-current-user slice", "detail": "GetCurrentUserQuery + handler", "complexity": "CRUD", "status": "todo", "bc": "identity" },
+        { "id": "p2-t4", "title": "users CRUD slices", "detail": "create-user, update-user, list-users, deactivate-user", "complexity": "CRUD", "status": "todo", "bc": "identity" },
+        { "id": "p2-t5", "title": "create-role + assign-permissions slices", "detail": "CASL permission sets, role assignment", "complexity": "MEDIUM", "status": "todo", "bc": "identity" },
+        { "id": "p2-t6", "title": "CaslAbilityFactory", "detail": "Core RBAC engine — builds ability from user roles + permissions", "complexity": "COMPLEX", "status": "todo", "bc": "identity" }
+      ]
+    },
+    {
+      "id": "p3",
+      "title": "Platform BC",
+      "titleAr": "المنصة والترخيص",
+      "description": "License validation + feature gating — must be ready before premium features",
+      "order": 3,
+      "tasks": [
+        { "id": "p3-t1", "title": "validate-license slice", "detail": "License key validation on startup + periodic re-check against License Server", "complexity": "COMPLEX", "status": "todo", "bc": "platform" },
+        { "id": "p3-t2", "title": "check-feature slice", "detail": "CheckFeatureQuery — reads active features from license", "complexity": "MEDIUM", "status": "todo", "bc": "platform" },
+        { "id": "p3-t3", "title": "@RequiresFeature() decorator wiring", "detail": "Connects to check-feature, throws 403 if feature not in license", "complexity": "MEDIUM", "status": "todo", "bc": "platform" },
+        { "id": "p3-t4", "title": "problem-reports + integrations slices", "detail": "CRUD slices, low complexity", "complexity": "CRUD", "status": "todo", "bc": "platform" }
+      ]
+    },
+    {
+      "id": "p4",
+      "title": "People BC",
+      "titleAr": "المرضى والممارسين",
+      "description": "Patient and practitioner domain entities",
+      "order": 4,
+      "tasks": [
+        { "id": "p4-t1", "title": "Patient schema + create-patient slice", "detail": "Prisma schema, CreatePatientCommand + handler + dto + spec", "complexity": "MEDIUM", "status": "todo", "bc": "people" },
+        { "id": "p4-t2", "title": "update-patient + list-patients + get-patient slices", "detail": "CRUD + list with filters", "complexity": "MEDIUM", "status": "todo", "bc": "people" },
+        { "id": "p4-t3", "title": "PatientEnrolledEvent", "detail": "Emits on first patient creation → Comms sends welcome message", "complexity": "MEDIUM", "status": "todo", "bc": "people" },
+        { "id": "p4-t4", "title": "Practitioner schema + create-practitioner slice", "detail": "Complex: specialties, branches, services linkage", "complexity": "COMPLEX", "status": "todo", "bc": "people" },
+        { "id": "p4-t5", "title": "update-availability slice", "detail": "Availability windows, recurring schedule, exceptions", "complexity": "COMPLEX", "status": "todo", "bc": "people" },
+        { "id": "p4-t6", "title": "practitioner-onboarding slice", "detail": "Multi-step onboarding flow", "complexity": "COMPLEX", "status": "todo", "bc": "people" },
+        { "id": "p4-t7", "title": "list-practitioners + get-practitioner slices", "detail": "With availability projection", "complexity": "MEDIUM", "status": "todo", "bc": "people" }
+      ]
+    },
+    {
+      "id": "p5",
+      "title": "Clinic BC",
+      "titleAr": "إعدادات العيادة",
+      "description": "Branches, services, hours, whitelabel config — reference data for bookings",
+      "order": 5,
+      "tasks": [
+        { "id": "p5-t1", "title": "Branches CRUD slices", "detail": "create-branch, update-branch, list-branches, get-branch", "complexity": "CRUD", "status": "todo", "bc": "clinic" },
+        { "id": "p5-t2", "title": "Services CRUD slices", "detail": "create-service, update-service, list-services, archive-service", "complexity": "CRUD", "status": "todo", "bc": "clinic" },
+        { "id": "p5-t3", "title": "clinic-hours + holidays slices", "detail": "Working hours per branch, holiday calendar", "complexity": "MEDIUM", "status": "todo", "bc": "clinic" },
+        { "id": "p5-t4", "title": "whitelabel-config slice", "detail": "Branding: logo, colors, fonts — serves /whitelabel/public endpoint", "complexity": "MEDIUM", "status": "todo", "bc": "clinic" },
+        { "id": "p5-t5", "title": "intake-forms + ratings slices", "detail": "Form builder config, rating submission", "complexity": "MEDIUM", "status": "todo", "bc": "clinic" }
+      ]
+    },
+    {
+      "id": "p6",
+      "title": "Media BC",
+      "titleAr": "الملفات والوسائط",
+      "description": "Centralized file upload/download via MinIO — used by people, bookings, ops",
+      "order": 6,
+      "tasks": [
+        { "id": "p6-t1", "title": "upload-file slice", "detail": "UploadFileCommand + handler + dto, streams to MinIO, returns fileId", "complexity": "MEDIUM", "status": "todo", "bc": "media" },
+        { "id": "p6-t2", "title": "get-file + delete-file slices", "detail": "GetFileQuery, DeleteFileCommand", "complexity": "CRUD", "status": "todo", "bc": "media" },
+        { "id": "p6-t3", "title": "generate-presigned-url slice", "detail": "Time-limited direct access URLs for mobile", "complexity": "MEDIUM", "status": "todo", "bc": "media" }
+      ]
+    },
+    {
+      "id": "p7",
+      "title": "Finance BC",
+      "titleAr": "المالية",
+      "description": "Payments, invoices, coupons, gift cards, ZATCA — replaces circular triangle",
+      "order": 7,
+      "tasks": [
+        { "id": "p7-t1", "title": "Invoice schema + create-invoice slice", "detail": "Triggered by BookingConfirmedEvent. CreateInvoiceCommand + handler", "complexity": "COMPLEX", "status": "todo", "bc": "finance" },
+        { "id": "p7-t2", "title": "process-payment slice", "detail": "ProcessPaymentCommand, integrates with Moyasar", "complexity": "COMPLEX", "status": "todo", "bc": "finance" },
+        { "id": "p7-t3", "title": "moyasar-webhook slice", "detail": "Validates webhook signature, emits PaymentCompletedEvent or PaymentFailedEvent", "complexity": "COMPLEX", "status": "todo", "bc": "finance" },
+        { "id": "p7-t4", "title": "bank-transfer-upload slice", "detail": "Upload receipt → pending manual approval", "complexity": "MEDIUM", "status": "todo", "bc": "finance" },
+        { "id": "p7-t5", "title": "apply-coupon + redeem-gift-card slices", "detail": "Discount calculation, balance tracking", "complexity": "MEDIUM", "status": "todo", "bc": "finance" },
+        { "id": "p7-t6", "title": "zatca-submit slice", "detail": "Saudi e-invoicing compliance. Complex regulatory logic", "complexity": "COMPLEX", "status": "todo", "bc": "finance" },
+        { "id": "p7-t7", "title": "get-invoice + list-payments slices", "detail": "Read queries with filters", "complexity": "MEDIUM", "status": "todo", "bc": "finance" },
+        { "id": "p7-t8", "title": "Finance event handlers", "detail": "on-booking-confirmed → create-invoice. Emits: PaymentCompleted, PaymentFailed", "complexity": "MEDIUM", "status": "todo", "bc": "finance" }
+      ]
+    },
+    {
+      "id": "p8",
+      "title": "Bookings BC",
+      "titleAr": "الحجوزات",
+      "description": "Core domain — scheduling, waitlist, groups",
+      "order": 8,
+      "tasks": [
+        { "id": "p8-t1", "title": "Booking schema + check-availability slice", "detail": "Complex: considers clinic hours, practitioner schedule, existing bookings", "complexity": "COMPLEX", "status": "todo", "bc": "bookings" },
+        { "id": "p8-t2", "title": "create-booking slice", "detail": "CreateBookingCommand + handler. Emits BookingConfirmedEvent", "complexity": "COMPLEX", "status": "todo", "bc": "bookings" },
+        { "id": "p8-t3", "title": "cancel-booking slice", "detail": "CancelBookingCommand. Emits BookingCancelledEvent", "complexity": "COMPLEX", "status": "todo", "bc": "bookings" },
+        { "id": "p8-t4", "title": "reschedule-booking slice", "detail": "Validates new slot availability, updates booking", "complexity": "COMPLEX", "status": "todo", "bc": "bookings" },
+        { "id": "p8-t5", "title": "confirm-booking slice", "detail": "Manual confirmation by receptionist", "complexity": "MEDIUM", "status": "todo", "bc": "bookings" },
+        { "id": "p8-t6", "title": "get-booking + list-bookings slices", "detail": "Read queries with rich filters", "complexity": "MEDIUM", "status": "todo", "bc": "bookings" },
+        { "id": "p8-t7", "title": "add-to-waitlist + promote-from-waitlist slices", "detail": "Waitlist queue management, auto-promote on cancellation", "complexity": "COMPLEX", "status": "todo", "bc": "bookings" },
+        { "id": "p8-t8", "title": "create-group-session + enroll-in-group slices", "detail": "Capacity management, enrollment rules", "complexity": "COMPLEX", "status": "todo", "bc": "bookings" },
+        { "id": "p8-t9", "title": "Booking event handlers", "detail": "on-payment-completed → update booking status", "complexity": "MEDIUM", "status": "todo", "bc": "bookings" }
+      ]
+    },
+    {
+      "id": "p9",
+      "title": "Comms BC",
+      "titleAr": "التواصل والإشعارات",
+      "description": "All outbound communication — event-driven, no direct calls from other BCs",
+      "order": 9,
+      "tasks": [
+        { "id": "p9-t1", "title": "send-push + send-email + send-sms slices", "detail": "Core communication commands. Each wraps its infrastructure adapter", "complexity": "MEDIUM", "status": "todo", "bc": "comms" },
+        { "id": "p9-t2", "title": "create-chat-message + list-conversations slices", "detail": "In-app messaging between patient and clinic", "complexity": "MEDIUM", "status": "todo", "bc": "comms" },
+        { "id": "p9-t3", "title": "email-templates CRUD slices", "detail": "Editable templates with variable substitution", "complexity": "CRUD", "status": "todo", "bc": "comms" },
+        { "id": "p9-t4", "title": "Comms event handlers", "detail": "on-booking-cancelled, on-reminder-due, on-payment-failed, on-patient-enrolled", "complexity": "MEDIUM", "status": "todo", "bc": "comms" }
+      ]
+    },
+    {
+      "id": "p10",
+      "title": "Ops BC",
+      "titleAr": "العمليات والتقارير",
+      "description": "Cron jobs, activity log, reports, health check",
+      "order": 10,
+      "tasks": [
+        { "id": "p10-t1", "title": "Cron task slices (5 jobs)", "detail": "booking-autocomplete, booking-expiry, booking-noshow, appointment-reminders, group-session-automation", "complexity": "MEDIUM", "status": "todo", "bc": "ops" },
+        { "id": "p10-t2", "title": "log-activity slice", "detail": "Audit trail — logs all mutations from all BCs via event subscription", "complexity": "MEDIUM", "status": "todo", "bc": "ops" },
+        { "id": "p10-t3", "title": "generate-report slice", "detail": "Revenue reports, activity reports, exports (PDF/Excel)", "complexity": "COMPLEX", "status": "todo", "bc": "ops" },
+        { "id": "p10-t4", "title": "health-check slice", "detail": "Terminus health checks: DB, Redis, BullMQ, MinIO", "complexity": "CRUD", "status": "todo", "bc": "ops" }
+      ]
+    },
+    {
+      "id": "p11",
+      "title": "AI BC",
+      "titleAr": "الذكاء الاصطناعي",
+      "description": "Chatbot, knowledge base, RAG pipeline — Enterprise tier only",
+      "order": 11,
+      "tasks": [
+        { "id": "p11-t1", "title": "Knowledge base schema + embed-document slice", "detail": "pgvector storage, OpenAI embeddings, chunking strategy", "complexity": "COMPLEX", "status": "todo", "bc": "ai" },
+        { "id": "p11-t2", "title": "semantic-search slice", "detail": "Vector similarity search with filters", "complexity": "COMPLEX", "status": "todo", "bc": "ai" },
+        { "id": "p11-t3", "title": "chat-completion slice", "detail": "RAG pipeline: retrieve → augment → generate. Streaming response", "complexity": "COMPLEX", "status": "todo", "bc": "ai" },
+        { "id": "p11-t4", "title": "manage-knowledge-base slice", "detail": "Add/remove/update documents in the knowledge base", "complexity": "MEDIUM", "status": "todo", "bc": "ai" }
+      ]
+    },
+    {
+      "id": "p12",
+      "title": "Presentation Layer",
+      "titleAr": "طبقة العرض",
+      "description": "Dashboard API + Mobile API + BFF Portal endpoints",
+      "order": 12,
+      "tasks": [
+        { "id": "p12-t1", "title": "api/dashboard/ controllers", "detail": "One controller per BC: bookings, finance, people, clinic, comms, ops, platform, ai, media", "complexity": "MEDIUM", "status": "todo", "bc": "api" },
+        { "id": "p12-t2", "title": "api/mobile/patient/ controllers", "detail": "bookings/, profile/, history/, payments/ — lightweight single-BC responses", "complexity": "MEDIUM", "status": "todo", "bc": "api" },
+        { "id": "p12-t3", "title": "api/mobile/patient/portal/home", "detail": "BFF: aggregates bookings + invoices + messages + profile in 1 call", "complexity": "MEDIUM", "status": "todo", "bc": "api" },
+        { "id": "p12-t4", "title": "api/mobile/patient/portal/upcoming + summary", "detail": "Lightweight composite endpoints per screen", "complexity": "MEDIUM", "status": "todo", "bc": "api" },
+        { "id": "p12-t5", "title": "api/mobile/practitioner/ controllers", "detail": "schedule/, patients/, earnings/", "complexity": "MEDIUM", "status": "todo", "bc": "api" },
+        { "id": "p12-t6", "title": "api/public/ controllers", "detail": "No-auth endpoints for landing page data", "complexity": "CRUD", "status": "todo", "bc": "api" }
+      ]
+    }
+  ]
+}

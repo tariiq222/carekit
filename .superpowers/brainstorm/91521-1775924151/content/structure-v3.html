@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareKit Backend — الهيكل v3</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans Arabic', 'Segoe UI', sans-serif;
+    background: #0a0f1e;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  h1 { text-align: center; font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+  .subtitle { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 36px; }
+
+  .badge-new { display: inline-block; font-size: 9px; font-weight: 700; background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.4); border-radius: 4px; padding: 1px 5px; margin-right: 4px; vertical-align: middle; letter-spacing: 0.5px; }
+  .badge-fix { display: inline-block; font-size: 9px; font-weight: 700; background: rgba(251,191,36,0.2); color: #fbbf24; border: 1px solid rgba(251,191,36,0.4); border-radius: 4px; padding: 1px 5px; margin-right: 4px; vertical-align: middle; letter-spacing: 0.5px; }
+
+  .arch { display: flex; flex-direction: column; gap: 10px; max-width: 1140px; margin: 0 auto; }
+
+  .layer { border-radius: 14px; padding: 14px 18px; border: 1px solid transparent; }
+  .layer-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; opacity: 0.7; }
+  .layer-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .layer-presentation { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.25); }
+  .layer-presentation .layer-label { color: #a78bfa; }
+  .layer-modules { background: rgba(14,165,233,0.06); border-color: rgba(14,165,233,0.2); }
+  .layer-modules .layer-label { color: #38bdf8; }
+  .layer-common { background: rgba(100,116,139,0.08); border-color: rgba(100,116,139,0.2); }
+  .layer-common .layer-label { color: #94a3b8; }
+  .layer-infra { background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.2); }
+  .layer-infra .layer-label { color: #34d399; }
+
+  .box { border-radius: 10px; padding: 10px 14px; font-size: 12px; font-weight: 600; border: 1px solid transparent; cursor: default; transition: transform 0.15s, box-shadow 0.15s; min-width: 110px; }
+  .box:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+  .box-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .box-sub { font-size: 10px; opacity: 0.65; font-weight: 400; line-height: 1.5; }
+
+  .bc-identity  { background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.35);  color: #fca5a5; }
+  .bc-people    { background: rgba(249,115,22,0.12); border-color: rgba(249,115,22,0.35); color: #fdba74; }
+  .bc-bookings  { background: rgba(234,179,8,0.12);  border-color: rgba(234,179,8,0.35);  color: #fde047; }
+  .bc-finance   { background: rgba(34,197,94,0.12);  border-color: rgba(34,197,94,0.35);  color: #86efac; }
+  .bc-clinic    { background: rgba(6,182,212,0.12);  border-color: rgba(6,182,212,0.35);  color: #67e8f9; }
+  .bc-comms     { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.35); color: #a5b4fc; }
+  .bc-ai        { background: rgba(168,85,247,0.12); border-color: rgba(168,85,247,0.35); color: #d8b4fe; }
+  .bc-ops       { background: rgba(20,184,166,0.12); border-color: rgba(20,184,166,0.35); color: #5eead4; }
+  .bc-platform  { background: rgba(244,63,94,0.12);  border-color: rgba(244,63,94,0.35);  color: #fda4af; }
+  .bc-media     { background: rgba(251,146,60,0.12); border-color: rgba(251,146,60,0.5);  color: #fb923c; }
+
+  .pres-dash   { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.4); color: #c4b5fd; }
+  .pres-mobile { background: rgba(139,92,246,0.10); border-color: rgba(139,92,246,0.3); color: #a78bfa; }
+  .pres-pub    { background: rgba(139,92,246,0.07); border-color: rgba(139,92,246,0.2); color: #8b5cf6; }
+  .infra-box   { background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.3); color: #6ee7b7; }
+  .common-box  { background: rgba(100,116,139,0.12); border-color: rgba(100,116,139,0.3); color: #cbd5e1; }
+  .common-new  { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.5); color: #86efac; }
+
+  /* mobile group */
+  .mobile-group { background: rgba(139,92,246,0.06); border: 1px dashed rgba(139,92,246,0.25); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .mobile-group-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: #7c3aed; text-transform: uppercase; margin-bottom: 4px; }
+  .mobile-inner { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-start; }
+
+  /* portal box — expanded */
+  .portal-box {
+    border-radius: 10px;
+    padding: 10px 14px;
+    background: rgba(139,92,246,0.18);
+    border: 1.5px solid rgba(139,92,246,0.5);
+    color: #c4b5fd;
+    min-width: 210px;
+  }
+  .portal-box-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .portal-endpoints { display: flex; flex-direction: column; gap: 4px; }
+  .portal-ep {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 10px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(139,92,246,0.2);
+  }
+  .portal-ep-name { color: #c4b5fd; font-weight: 700; min-width: 80px; font-family: monospace; }
+  .portal-ep-desc { color: #7c3aed; font-size: 9px; line-height: 1.4; }
+  .portal-ep-agg  { color: #64748b; font-size: 9px; font-style: italic; }
+
+  /* event bus */
+  .event-bus { border-radius: 12px; padding: 12px 18px; background: rgba(251,191,36,0.08); border: 1px dashed rgba(251,191,36,0.4); }
+  .event-bus-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .event-bus-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #fbbf24; }
+  .event-groups { display: flex; flex-direction: column; gap: 6px; }
+  .event-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .event-group-label { font-size: 10px; color: #78716c; font-weight: 600; min-width: 80px; }
+  .event-pill { font-size: 10px; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); color: #fde68a; border-radius: 20px; padding: 3px 10px; }
+  .event-pill-new { font-size: 10px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #86efac; border-radius: 20px; padding: 3px 10px; }
+
+  /* folder tree */
+  .tree-section { margin-top: 32px; max-width: 1140px; margin-inline: auto; }
+  .tree-section h2 { font-size: 14px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+  .tree-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .tree-card { border-radius: 12px; padding: 14px 16px; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.06); font-family: 'JetBrains Mono','Fira Code','Courier New',monospace; font-size: 11px; line-height: 1.9; direction: ltr; }
+  .tree-card-title { font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 12px; font-weight: 700; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .d { color: #38bdf8; } .f { color: #94a3b8; } .c { color: #fbbf24; } .q { color: #34d399; } .e { color: #f472b6; } .n { color: #4ade80; }
+  .indent { padding-left: 16px; display: block; } .indent2 { padding-left: 32px; display: block; } .indent3 { padding-left: 48px; display: block; }
+  .cm { color: #475569; font-size: 10px; }
+
+  .legend { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 24px; padding-bottom: 32px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<h1>CareKit Backend — الهيكل المعماري v3</h1>
+<p class="subtitle">BFF Portal — كل screen له endpoint مستقل</p>
+
+<div class="arch">
+
+  <!-- Presentation Layer -->
+  <div class="layer layer-presentation">
+    <div class="layer-label">Presentation Layer — api/ <span class="badge-fix">FIX v3: portal = multi-endpoint BFF</span></div>
+    <div class="layer-row">
+
+      <div class="box pres-dash">
+        <div class="box-title">api/dashboard/</div>
+        <div class="box-sub">Rich responses<br>Admin UI controllers</div>
+      </div>
+
+      <div class="mobile-group">
+        <div class="mobile-group-label">api/mobile/</div>
+        <div class="mobile-inner">
+
+          <!-- patient/ with portal expanded -->
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="box pres-mobile" style="min-width:140px">
+              <div class="box-title">patient/</div>
+              <div class="box-sub">bookings/ · profile/<br>history/ · payments/</div>
+            </div>
+            <!-- portal expanded -->
+            <div class="portal-box">
+              <div class="portal-box-title">patient/portal/ ← BFF Composite</div>
+              <div class="portal-endpoints">
+                <div class="portal-ep">
+                  <span class="portal-ep-name">home</span>
+                  <div>
+                    <div class="portal-ep-desc">الشاشة الرئيسية الكاملة</div>
+                    <div class="portal-ep-agg">bookings + invoices + messages + profile</div>
+                  </div>
+                </div>
+                <div class="portal-ep">
+                  <span class="portal-ep-name">upcoming</span>
+                  <div>
+                    <div class="portal-ep-desc">المواعيد القادمة فقط</div>
+                    <div class="portal-ep-agg">next 3 bookings → lightweight</div>
+                  </div>
+                </div>
+                <div class="portal-ep">
+                  <span class="portal-ep-name">summary</span>
+                  <div>
+                    <div class="portal-ep-desc">ملخص مالي</div>
+                    <div class="portal-ep-agg">outstanding invoices + last payment</div>
+                  </div>
+                </div>
+                <div class="portal-ep" style="border-color:rgba(100,116,139,0.15)">
+                  <span class="portal-ep-name" style="color:#475569">...</span>
+                  <div class="portal-ep-agg">يُضاف حسب كل screen جديد</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="box pres-mobile">
+            <div class="box-title">practitioner/</div>
+            <div class="box-sub">schedule/<br>patients/<br>earnings/</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="box pres-pub">
+        <div class="box-title">public/</div>
+        <div class="box-sub">No auth<br>Landing page data</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modules -->
+  <div class="layer layer-modules">
+    <div class="layer-label">Bounded Contexts — modules/</div>
+    <div class="layer-row">
+      <div class="box bc-identity"><div class="box-title">identity/</div><div class="box-sub">auth · roles<br>permissions · users</div></div>
+      <div class="box bc-people"><div class="box-title">people/</div><div class="box-sub">patients<br>practitioners</div></div>
+      <div class="box bc-bookings"><div class="box-title">bookings/</div><div class="box-sub">bookings · waitlist<br>groups · scheduling</div></div>
+      <div class="box bc-finance"><div class="box-title">finance/</div><div class="box-sub">payments · invoices<br>coupons · gift-cards · zatca</div></div>
+      <div class="box bc-clinic"><div class="box-title">clinic/</div><div class="box-sub">branches · services<br>whitelabel · intake-forms</div></div>
+      <div class="box bc-comms"><div class="box-title">comms/</div><div class="box-sub">messaging · notifications<br>email · email-templates</div></div>
+      <div class="box bc-ai"><div class="box-title">ai/</div><div class="box-sub">chatbot · knowledge-base<br>pgvector · RAG pipeline</div></div>
+      <div class="box bc-ops"><div class="box-title">ops/</div><div class="box-sub">cron tasks · activity-log<br>reports · health</div></div>
+      <div class="box bc-platform"><div class="box-title">platform/</div><div class="box-sub">license · feature-flags<br>integrations · problem-reports</div></div>
+      <div class="box bc-media"><div class="box-title">media/</div><div class="box-sub">upload · download<br>delete · presigned URLs</div></div>
+    </div>
+  </div>
+
+  <!-- Event Bus -->
+  <div class="event-bus">
+    <div class="event-bus-header">
+      <div class="event-bus-label">⚡ BullMQ Event Bus</div>
+    </div>
+    <div class="event-groups">
+      <div class="event-row">
+        <span class="event-group-label">Scheduling</span>
+        <span class="event-pill">BookingConfirmed → Finance</span>
+        <span class="event-pill">BookingCancelled → Finance · Comms</span>
+        <span class="event-pill">BookingCompleted → AI</span>
+        <span class="event-pill">TaskDue → Bookings</span>
+        <span class="event-pill">ReminderDue → Comms</span>
+      </div>
+      <div class="event-row">
+        <span class="event-group-label">Finance</span>
+        <span class="event-pill">PaymentCompleted → Bookings</span>
+        <span class="event-pill">PaymentFailed → Comms</span>
+      </div>
+      <div class="event-row">
+        <span class="event-group-label">People</span>
+        <span class="event-pill">PatientEnrolled → Comms</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Common -->
+  <div class="layer layer-common">
+    <div class="layer-label">Cross-cutting — common/</div>
+    <div class="layer-row">
+      <div class="box common-new">
+        <div class="box-title">TenantMiddleware</div>
+        <div class="box-sub">Resolves clinicId from JWT<br>→ RequestContext (AsyncLocalStorage)<br>→ @TenantId() decorator</div>
+      </div>
+      <div class="box common-box"><div class="box-title">Guards</div><div class="box-sub">JWT · CASL · Feature</div></div>
+      <div class="box common-box"><div class="box-title">Interceptors</div><div class="box-sub">Logging · Transform</div></div>
+      <div class="box common-box"><div class="box-title">Filters</div><div class="box-sub">Exception handling</div></div>
+      <div class="box common-box"><div class="box-title">Decorators</div><div class="box-sub">@CurrentUser · @RequiresFeature<br>@TenantId</div></div>
+      <div class="box common-box"><div class="box-title">Pipes</div><div class="box-sub">class-validator · Transform</div></div>
+    </div>
+  </div>
+
+  <!-- Infrastructure -->
+  <div class="layer layer-infra">
+    <div class="layer-label">Infrastructure — infrastructure/</div>
+    <div class="layer-row">
+      <div class="box infra-box"><div class="box-title">Prisma</div><div class="box-sub">PostgreSQL + pgvector</div></div>
+      <div class="box infra-box"><div class="box-title">Redis</div><div class="box-sub">Cache + sessions</div></div>
+      <div class="box infra-box"><div class="box-title">BullMQ</div><div class="box-sub">Queues + event bus</div></div>
+      <div class="box infra-box"><div class="box-title">MinIO</div><div class="box-sub">Used via media/ BC only</div></div>
+      <div class="box infra-box"><div class="box-title">FCM</div><div class="box-sub">Push notifications</div></div>
+      <div class="box infra-box"><div class="box-title">SMTP</div><div class="box-sub">Transactional email</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Folder Tree -->
+<div class="tree-section">
+  <h2>هيكل patient/portal/ — BFF Multi-endpoint</h2>
+  <div class="tree-grid">
+
+    <div class="tree-card">
+      <div class="tree-card-title" style="color:#c4b5fd">📱 api/mobile/patient/ — الهيكل الكامل</div>
+      <span class="d">api/mobile/patient/</span>
+      <span class="d indent">├── bookings/</span>
+      <span class="f indent2 cm">// single-BC, lightweight</span>
+      <span class="d indent">├── profile/</span>
+      <span class="d indent">├── history/</span>
+      <span class="d indent">├── payments/</span>
+      <span class="d indent" style="color:#c4b5fd">└── portal/              ← BFF</span>
+      <span class="n indent2">├── home.controller.ts</span>
+      <span class="f indent2 cm">// GET /mobile/patient/portal/home</span>
+      <span class="f indent2 cm">// → bookings+invoices+messages+profile</span>
+      <span class="n indent2">├── upcoming.controller.ts</span>
+      <span class="f indent2 cm">// GET /mobile/patient/portal/upcoming</span>
+      <span class="f indent2 cm">// → next 3 bookings only (fast)</span>
+      <span class="n indent2">├── summary.controller.ts</span>
+      <span class="f indent2 cm">// GET /mobile/patient/portal/summary</span>
+      <span class="f indent2 cm">// → outstanding invoices + last payment</span>
+      <span class="f indent2" style="color:#475569">└── ...  (screen per endpoint)</span>
+    </div>
+
+    <div class="tree-card">
+      <div class="tree-card-title" style="color:#c4b5fd">📐 قاعدة البناء — portal/ controllers</div>
+      <span class="f" style="color:#94a3b8">كل portal endpoint:</span>
+      <span class="n indent">✓ مخصص لـ screen واحد</span>
+      <span class="n indent">✓ يستدعي BCs المطلوبة فقط</span>
+      <span class="n indent">✓ يُعيد response مُشكّل للـ view</span>
+      <span class="f" style="color:#ef4444;margin-top:6px;display:block">✗ لا يحتوي business logic</span>
+      <span class="f" style="color:#ef4444">✗ لا يكتب مباشرة للـ DB</span>
+      <span class="f" style="color:#ef4444">✗ لا يُشارك response schema مع dashboard</span>
+      <span class="f" style="color:#475569;margin-top:8px;display:block;font-size:10px">--- مثال: home vs upcoming ---</span>
+      <span class="f indent" style="color:#fde047;font-size:10px">home    → 4 BC calls → rich payload</span>
+      <span class="f indent" style="color:#34d399;font-size:10px">upcoming→ 1 BC call  → minimal payload</span>
+      <span class="f indent" style="color:#94a3b8;font-size:10px">الفرق يُحدد في الـ controller، مو الـ BC</span>
+    </div>
+
+    <div class="tree-card">
+      <div class="tree-card-title" style="color:#fbbf24">⚡ Event Contract — final</div>
+      <span class="f">export class BookingConfirmedEvent {</span>
+      <span class="e indent">readonly source = 'bookings';</span>
+      <span class="e indent">readonly version = 1;</span>
+      <span class="n indent">readonly eventId: string;</span>
+      <span class="n indent">readonly correlationId: string;</span>
+      <span class="n indent">readonly tenantId: string;</span>
+      <span class="e indent">readonly occurredAt: Date;</span>
+      <span class="e indent">readonly payload: {</span>
+      <span class="e indent2">bookingId: string;</span>
+      <span class="e indent2">patientId: string;</span>
+      <span class="e indent2">practitionerId: string;</span>
+      <span class="e indent2">scheduledAt: Date;</span>
+      <span class="e indent">};</span>
+      <span class="f">}</span>
+    </div>
+
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div> Command</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div> Query</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div> Event</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> مضاف / محدّث</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div> ملف عادي</div>
+</div>
+
+</body>
+</html>

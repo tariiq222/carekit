@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الهيكل النهائي — CareKit Backend</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117; color: #e6edf3;
+    padding: 32px 24px; direction: rtl;
+    max-width: 1200px; margin: 0 auto;
+  }
+  h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: #8b949e; margin-bottom: 28px; }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    padding: 12px 16px; background: #161b22;
+    border: 1px solid #30363d; border-radius: 10px;
+    margin-bottom: 24px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #c9d1d9; }
+  .ldot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+  /* Tier container */
+  .tier {
+    border-radius: 14px; border: 1px solid #30363d;
+    overflow: hidden; margin-bottom: 14px;
+  }
+  .tier-header {
+    padding: 9px 18px; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px;
+    text-transform: uppercase;
+  }
+  .tier-body {
+    padding: 14px 16px; background: #0d1117;
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+
+  .tier-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 5px;
+    font-size: 11px; font-weight: 700;
+  }
+
+  /* Tier colors */
+  .t0 .tier-header { background: #1c2128; color: #79c0ff; }
+  .t0 .tier-num    { background: #1f3a6e; color: #79c0ff; }
+  .t1 .tier-header { background: #1c2128; color: #56d364; }
+  .t1 .tier-num    { background: #1a3a1a; color: #56d364; }
+  .t2 .tier-header { background: #1c2128; color: #e3b341; }
+  .t2 .tier-num    { background: #3a2a00; color: #e3b341; }
+  .t3 .tier-header { background: #1c2128; color: #f78166; }
+  .t3 .tier-num    { background: #3a1a1a; color: #f78166; }
+  .t4 .tier-header { background: #1c2128; color: #d2a8ff; }
+  .t4 .tier-num    { background: #2a1a4a; color: #d2a8ff; }
+
+  /* Module chips */
+  .mod {
+    border-radius: 8px; padding: 7px 13px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid; cursor: default;
+    transition: transform 0.15s;
+    font-family: 'Fira Code', monospace;
+    position: relative;
+  }
+  .mod:hover { transform: translateY(-2px); }
+
+  .mod-normal  { background: #161b22; border-color: #30363d; color: #c9d1d9; }
+  .mod-new     { background: #0a2a1a; border-color: #2ea043; color: #3fb950;
+                 box-shadow: 0 0 10px rgba(46,160,67,0.2); }
+  .mod-changed { background: #0d2230; border-color: #1f6feb; color: #79c0ff; }
+  .mod-event   { background: #1a0d2e; border-color: #6e40c9; color: #d2a8ff; }
+  .mod-split   { background: #2d1f00; border-color: #bd561d; color: #ffa657; }
+
+  .badge-new {
+    position: absolute; top: -7px; right: -7px;
+    background: #2ea043; color: #fff;
+    font-size: 9px; font-weight: 700; padding: 1px 5px;
+    border-radius: 10px; border: 2px solid #0d1117;
+    font-family: system-ui; letter-spacing: 0.3px;
+  }
+  .badge-changed {
+    position: absolute; top: -7px; right: -7px;
+    background: #1f6feb; color: #fff;
+    font-size: 9px; font-weight: 700; padding: 1px 5px;
+    border-radius: 10px; border: 2px solid #0d1117;
+    font-family: system-ui;
+  }
+  .badge-event {
+    position: absolute; top: -7px; right: -7px;
+    background: #6e40c9; color: #fff;
+    font-size: 9px; font-weight: 700; padding: 1px 5px;
+    border-radius: 10px; border: 2px solid #0d1117;
+    font-family: system-ui;
+  }
+
+  /* Bounded context boxes */
+  .bc-section { margin-bottom: 14px; }
+  .bc-label {
+    font-size: 11px; color: #8b949e; letter-spacing: 0.8px;
+    text-transform: uppercase; font-weight: 600;
+    margin-bottom: 6px; padding-right: 4px;
+  }
+  .bc-box {
+    border-radius: 10px; border: 1px dashed;
+    padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px;
+    align-items: center;
+  }
+  .bc-finance  { border-color: #3fb950; background: rgba(46,160,67,0.05); }
+  .bc-ai       { border-color: #e3b341; background: rgba(158,106,3,0.05); }
+  .bc-comms    { border-color: #d2a8ff; background: rgba(110,64,201,0.05); }
+
+  .bc-name {
+    font-size: 11px; font-weight: 700; padding: 3px 10px;
+    border-radius: 6px; font-family: 'Fira Code', monospace;
+  }
+  .bc-finance .bc-name { background: #0a2a1a; color: #3fb950; border: 1px solid #2ea043; }
+  .bc-ai      .bc-name { background: #2a2000; color: #e3b341; border: 1px solid #9e6a03; }
+  .bc-comms   .bc-name { background: #1a0d2e; color: #d2a8ff; border: 1px solid #6e40c9; }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid #21262d; margin: 24px 0; }
+
+  /* Stats bar */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 10px; padding: 14px 16px; text-align: center;
+  }
+  .stat-num { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: #8b949e; }
+  .s-keep    .stat-num { color: #8b949e; }
+  .s-new     .stat-num { color: #3fb950; }
+  .s-changed .stat-num { color: #79c0ff; }
+  .s-event   .stat-num { color: #d2a8ff; }
+
+  /* Event bus visual */
+  .event-bus {
+    background: #1a0d2e; border: 1px solid #6e40c9;
+    border-radius: 10px; padding: 12px 18px;
+    margin: 10px 0; display: flex; align-items: center; gap: 14px;
+  }
+  .event-bus-label { font-size: 12px; font-weight: 700; color: #d2a8ff; white-space: nowrap; }
+  .event-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .event-pill {
+    font-size: 11px; padding: 3px 10px; border-radius: 12px;
+    background: #2a1a4a; border: 1px solid #6e40c9; color: #d2a8ff;
+    font-family: 'Fira Code', monospace;
+  }
+
+  code {
+    font-family: 'Fira Code', monospace; font-size: 12px;
+    background: #21262d; padding: 1px 6px; border-radius: 4px; color: #f0883e;
+  }
+
+  .note {
+    margin-top: 20px; padding: 16px 18px; border-radius: 10px;
+    background: #161b22; border: 1px solid #30363d;
+    font-size: 13px; line-height: 1.7; color: #c9d1d9;
+  }
+  .note strong { color: #f0f6fc; }
+</style>
+</head>
+<body>
+
+<h1>الهيكل النهائي — CareKit Backend بعد كل التغييرات</h1>
+<p class="subtitle">من 36 وحدة متشابكة → بنية Bounded Contexts نظيفة وقابلة للتوسع</p>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat s-keep">
+    <div class="stat-num">28</div>
+    <div class="stat-label">وحدة تبقى كما هي</div>
+  </div>
+  <div class="stat s-changed">
+    <div class="stat-num">5</div>
+    <div class="stat-label">وحدة تتغير داخلياً</div>
+  </div>
+  <div class="stat s-new">
+    <div class="stat-num">4</div>
+    <div class="stat-label">Bounded Contexts جديدة</div>
+  </div>
+  <div class="stat s-event">
+    <div class="stat-num">3</div>
+    <div class="stat-label">دوائر مكسورة نهائياً</div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="ldot" style="background:#21262d;border:1px solid #484f58"></div> لا يتغير</div>
+  <div class="legend-item"><div class="ldot" style="background:#0a2a1a;border:1px solid #2ea043"></div> جديد</div>
+  <div class="legend-item"><div class="ldot" style="background:#0d2230;border:1px solid #1f6feb"></div> يتغير داخلياً (نزع استيراد)</div>
+  <div class="legend-item"><div class="ldot" style="background:#1a0d2e;border:1px solid #6e40c9"></div> يتحول لـ Event-driven</div>
+  <div class="legend-item"><div class="ldot" style="background:#2d1f00;border:1px solid #bd561d"></div> يُدمج داخل Bounded Context</div>
+</div>
+
+<!-- TIER 0 -->
+<div class="tier t0">
+  <div class="tier-header">
+    <span class="tier-num">0</span>
+    Tier 0 — مستقلة تماماً (لا تتغير)
+  </div>
+  <div class="tier-body">
+    <div class="mod mod-normal">roles</div>
+    <div class="mod mod-normal">permissions</div>
+    <div class="mod mod-normal">branches</div>
+    <div class="mod mod-normal">departments</div>
+    <div class="mod mod-normal">email-templates</div>
+    <div class="mod mod-normal">clinic</div>
+    <div class="mod mod-normal">health</div>
+    <!-- coupons ينتقل لـ finance -->
+    <div class="mod mod-split" title="ينتقل داخل finance/">
+      coupons
+      <span class="badge-changed">→ finance</span>
+    </div>
+  </div>
+</div>
+
+<!-- TIER 1 -->
+<div class="tier t1">
+  <div class="tier-header">
+    <span class="tier-num">1</span>
+    Tier 1 — تعتمد على Tier 0 فقط (لا تتغير)
+  </div>
+  <div class="tier-body">
+    <div class="mod mod-normal">users</div>
+    <div class="mod mod-normal">patients</div>
+    <div class="mod mod-normal">services</div>
+    <div class="mod mod-normal">practitioners</div>
+    <div class="mod mod-normal">clinic-settings</div>
+    <div class="mod mod-normal">intake-forms</div>
+    <div class="mod mod-normal">activity-log</div>
+    <div class="mod mod-normal">feature-flags</div>
+    <div class="mod mod-normal">license</div>
+  </div>
+</div>
+
+<!-- TIER 2 — Bounded Contexts appear here -->
+<div class="tier t2">
+  <div class="tier-header">
+    <span class="tier-num">2</span>
+    Tier 2 — Bounded Contexts + وحدات مستقلة
+  </div>
+  <div class="tier-body" style="flex-direction: column; gap: 14px;">
+
+    <!-- Normal modules -->
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <div class="mod mod-normal">auth</div>
+      <div class="mod mod-normal">ratings</div>
+      <div class="mod mod-normal">groups</div>
+      <div class="mod mod-normal">zatca</div>
+      <div class="mod mod-normal">clinic-integrations</div>
+
+      <!-- bookings: يتغير داخلياً -->
+      <div class="mod mod-changed" title="يزيل استيراد payments/invoices المباشر">
+        bookings
+        <span class="badge-changed">يتغير</span>
+      </div>
+
+      <!-- messaging: event-driven -->
+      <div class="mod mod-event" title="يرفع MessageReceived event بدل استيراد notifications">
+        messaging
+        <span class="badge-event">event</span>
+      </div>
+      <div class="mod mod-normal">notifications</div>
+    </div>
+
+    <!-- FINANCE Bounded Context -->
+    <div class="bc-section">
+      <div class="bc-label">Bounded Context المالي</div>
+      <div class="bc-box bc-finance">
+        <div class="bc-name">finance/</div>
+        <div class="mod mod-split" style="background:#161b22;border-color:#30363d;color:#c9d1d9">payments</div>
+        <div class="mod mod-split" style="background:#161b22;border-color:#30363d;color:#c9d1d9">invoices</div>
+        <div class="mod mod-split" style="background:#161b22;border-color:#30363d;color:#c9d1d9">pricing</div>
+        <div class="mod mod-split" style="background:#161b22;border-color:#30363d;color:#c9d1d9">coupons</div>
+        <div style="margin-right:auto;font-size:11px;color:#56d364">
+          يُصدّر: FinanceService واحدة فقط
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMS Bounded Context -->
+    <div class="bc-section">
+      <div class="bc-label">Bounded Context التواصل (اختياري مستقبلاً)</div>
+      <div class="bc-box bc-comms">
+        <div class="bc-name">comms/</div>
+        <div class="mod mod-event" style="background:#161b22;border-color:#30363d;color:#c9d1d9">messaging</div>
+        <div class="mod mod-normal" style="background:#161b22;border-color:#30363d;color:#c9d1d9">notifications</div>
+        <div class="mod mod-normal" style="background:#161b22;border-color:#30363d;color:#c9d1d9">email</div>
+        <div style="margin-right:auto;font-size:11px;color:#d2a8ff">
+          كل قنوات التواصل في مكان واحد — يُصدّر: CommsService
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EVENT BUS -->
+<div class="event-bus">
+  <div class="event-bus-label">⚡ BullMQ Event Bus</div>
+  <div class="event-pills">
+    <div class="event-pill">BookingConfirmed</div>
+    <div class="event-pill">BookingCancelled</div>
+    <div class="event-pill">BookingExpired</div>
+    <div class="event-pill">PaymentCompleted</div>
+    <div class="event-pill">MessageReceived</div>
+    <div class="event-pill">InvoiceGenerated</div>
+  </div>
+  <div style="margin-right:auto;font-size:11px;color:#8b949e">
+    يكسر tasks↔bookings و messaging↔notifications
+  </div>
+</div>
+
+<!-- TIER 3 -->
+<div class="tier t3">
+  <div class="tier-header">
+    <span class="tier-num">3</span>
+    Tier 3 — تعتمد على 0+1+2
+  </div>
+  <div class="tier-body" style="flex-direction: column; gap: 14px;">
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <!-- tasks: يستمع لـ events بدل استيراد bookings -->
+      <div class="mod mod-event" title="يستمع لـ BullMQ events بدل استيراد BookingsModule">
+        tasks
+        <span class="badge-event">event</span>
+      </div>
+
+      <!-- reports: يقرأ من ReportingProjection -->
+      <div class="mod mod-changed" title="يقرأ من ReportingProjection بدل 4 وحدات مباشرة">
+        reports
+        <span class="badge-changed">projection</span>
+      </div>
+    </div>
+
+    <!-- AI Bounded Context -->
+    <div class="bc-section">
+      <div class="bc-label">Bounded Context الذكاء الاصطناعي</div>
+      <div class="bc-box bc-ai">
+        <div class="bc-name">ai/</div>
+        <div class="mod mod-split" style="background:#161b22;border-color:#30363d;color:#c9d1d9">chatbot</div>
+        <div class="mod mod-new" style="box-shadow:none">knowledge-base</div>
+        <div class="mod mod-new" style="box-shadow:none">ai-tools</div>
+        <div style="margin-right:auto;font-size:11px;color:#e3b341">
+          تقسيم chatbot الضخم → 3 وحدات واضحة المسؤولية
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TIER 4 -->
+<div class="tier t4">
+  <div class="tier-header">
+    <span class="tier-num">4</span>
+    Tier 4 — تعتمد على الكل
+  </div>
+  <div class="tier-body">
+    <div class="mod mod-normal">whitelabel</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- Summary -->
+<div class="note">
+  <strong>ماذا تحقق هذا الهيكل:</strong><br><br>
+  🔴 <strong>المثلث bookings↔payments↔invoices</strong> — مكسور. الثلاث تعيش داخل <code>finance/</code>، وbookings تتكلم مع <code>FinanceService</code> فقط.<br><br>
+  🔴 <strong>tasks↔bookings</strong> — مكسور. tasks تستمع لـ BullMQ events، لا تستورد BookingsModule أبداً.<br><br>
+  🟠 <strong>messaging↔notifications</strong> — مكسور. messaging ترفع <code>MessageReceived</code> event، notifications تستمع.<br><br>
+  🟠 <strong>chatbot الضخم</strong> — مقسّم إلى 3 وحدات داخل <code>ai/</code> Bounded Context.<br><br>
+  🟠 <strong>reports God Module</strong> — يقرأ من ReportingProjection الذي تغذيه الوحدات عبر events.<br><br>
+  <strong>النتيجة:</strong> يمكن اختبار كل وحدة منفردة، يمكن استبدال payment provider بدون لمس bookings، ويمكن توسيع AI بدون لمس المنطق الأساسي.
+</div>
+
+</body>
+</html>

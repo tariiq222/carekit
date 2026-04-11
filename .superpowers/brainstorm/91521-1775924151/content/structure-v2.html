@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareKit Backend — الهيكل v2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans Arabic', 'Segoe UI', sans-serif;
+    background: #0a0f1e;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  h1 { text-align: center; font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+  .subtitle { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 36px; }
+  .badge-new {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    background: rgba(34,197,94,0.2);
+    color: #4ade80;
+    border: 1px solid rgba(34,197,94,0.4);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-right: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+  }
+  .badge-fix {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    background: rgba(251,191,36,0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251,191,36,0.4);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-right: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+  }
+
+  .arch { display: flex; flex-direction: column; gap: 10px; max-width: 1140px; margin: 0 auto; }
+
+  .layer { border-radius: 14px; padding: 14px 18px; border: 1px solid transparent; }
+  .layer-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; opacity: 0.7; }
+  .layer-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .layer-presentation { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.25); }
+  .layer-presentation .layer-label { color: #a78bfa; }
+  .layer-modules { background: rgba(14,165,233,0.06); border-color: rgba(14,165,233,0.2); }
+  .layer-modules .layer-label { color: #38bdf8; }
+  .layer-common { background: rgba(100,116,139,0.08); border-color: rgba(100,116,139,0.2); }
+  .layer-common .layer-label { color: #94a3b8; }
+  .layer-infra { background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.2); }
+  .layer-infra .layer-label { color: #34d399; }
+
+  .box { border-radius: 10px; padding: 10px 14px; font-size: 12px; font-weight: 600; border: 1px solid transparent; cursor: default; transition: transform 0.15s, box-shadow 0.15s; min-width: 110px; }
+  .box:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+  .box-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .box-sub { font-size: 10px; opacity: 0.65; font-weight: 400; line-height: 1.4; }
+
+  .bc-identity  { background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.35);  color: #fca5a5; }
+  .bc-people    { background: rgba(249,115,22,0.12); border-color: rgba(249,115,22,0.35); color: #fdba74; }
+  .bc-bookings  { background: rgba(234,179,8,0.12);  border-color: rgba(234,179,8,0.35);  color: #fde047; }
+  .bc-finance   { background: rgba(34,197,94,0.12);  border-color: rgba(34,197,94,0.35);  color: #86efac; }
+  .bc-clinic    { background: rgba(6,182,212,0.12);  border-color: rgba(6,182,212,0.35);  color: #67e8f9; }
+  .bc-comms     { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.35); color: #a5b4fc; }
+  .bc-ai        { background: rgba(168,85,247,0.12); border-color: rgba(168,85,247,0.35); color: #d8b4fe; }
+  .bc-ops       { background: rgba(20,184,166,0.12); border-color: rgba(20,184,166,0.35); color: #5eead4; }
+  .bc-platform  { background: rgba(244,63,94,0.12);  border-color: rgba(244,63,94,0.35);  color: #fda4af; }
+  .bc-media     { background: rgba(251,146,60,0.12); border-color: rgba(251,146,60,0.35); color: #fb923c; }
+
+  .pres-dash   { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.4); color: #c4b5fd; }
+  .pres-mobile { background: rgba(139,92,246,0.10); border-color: rgba(139,92,246,0.3); color: #a78bfa; }
+  .pres-pub    { background: rgba(139,92,246,0.07); border-color: rgba(139,92,246,0.2); color: #8b5cf6; }
+  .infra-box   { background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.3); color: #6ee7b7; }
+  .common-box  { background: rgba(100,116,139,0.12); border-color: rgba(100,116,139,0.3); color: #cbd5e1; }
+  .common-new  { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.35); color: #86efac; }
+
+  /* mobile sub-tree */
+  .mobile-group {
+    background: rgba(139,92,246,0.06);
+    border: 1px dashed rgba(139,92,246,0.25);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .mobile-group-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: #7c3aed; text-transform: uppercase; margin-bottom: 4px; }
+  .mobile-inner { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* event bus */
+  .event-bus {
+    border-radius: 12px; padding: 12px 18px;
+    background: rgba(251,191,36,0.08);
+    border: 1px dashed rgba(251,191,36,0.4);
+  }
+  .event-bus-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .event-bus-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #fbbf24; }
+  .event-groups { display: flex; flex-direction: column; gap: 6px; }
+  .event-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .event-group-label { font-size: 10px; color: #78716c; font-weight: 600; min-width: 80px; }
+  .event-pill { font-size: 10px; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); color: #fde68a; border-radius: 20px; padding: 3px 10px; }
+  .event-pill-new { font-size: 10px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #86efac; border-radius: 20px; padding: 3px 10px; }
+
+  /* domain rules box */
+  .rules-box {
+    border-radius: 12px;
+    padding: 14px 18px;
+    background: rgba(168,85,247,0.06);
+    border: 1px solid rgba(168,85,247,0.2);
+    max-width: 1140px;
+    margin: 10px auto 0;
+  }
+  .rules-box h3 { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #a78bfa; margin-bottom: 10px; }
+  .rules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .rule-item { font-size: 11px; color: #94a3b8; line-height: 1.6; }
+  .rule-item strong { color: #e2e8f0; display: block; margin-bottom: 2px; }
+
+  /* folder tree */
+  .tree-section { margin-top: 32px; max-width: 1140px; margin-inline: auto; }
+  .tree-section h2 { font-size: 14px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+  .tree-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+  .tree-card { border-radius: 12px; padding: 14px 16px; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.06); font-family: 'JetBrains Mono','Fira Code','Courier New',monospace; font-size: 11px; line-height: 1.9; direction: ltr; }
+  .tree-card-title { font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 12px; font-weight: 700; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .d { color: #38bdf8; } .f { color: #94a3b8; } .c { color: #fbbf24; } .q { color: #34d399; } .e { color: #f472b6; } .n { color: #4ade80; }
+  .indent { padding-left: 16px; display: block; } .indent2 { padding-left: 32px; display: block; } .indent3 { padding-left: 48px; display: block; }
+
+  .legend { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 24px; padding-bottom: 24px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<h1>CareKit Backend — الهيكل المعماري v2</h1>
+<p class="subtitle">6 تحسينات مطبّقة — <span style="color:#4ade80">NEW</span> = مضاف · <span style="color:#fbbf24">FIX</span> = معدّل</p>
+
+<div class="arch">
+
+  <!-- Presentation Layer -->
+  <div class="layer layer-presentation">
+    <div class="layer-label">Presentation Layer — api/ <span class="badge-fix">FIX: patient hierarchy</span></div>
+    <div class="layer-row">
+
+      <!-- Dashboard -->
+      <div class="box pres-dash">
+        <div class="box-title">api/dashboard/</div>
+        <div class="box-sub">Rich responses<br>Admin UI controllers</div>
+      </div>
+
+      <!-- Mobile group — fixed hierarchy -->
+      <div class="mobile-group">
+        <div class="mobile-group-label">api/mobile/</div>
+        <div class="mobile-inner">
+          <div class="box pres-mobile" style="min-width:160px">
+            <div class="box-title">patient/</div>
+            <div class="box-sub">
+              bookings/ · profile/ · history/<br>
+              <span style="color:#a78bfa">portal/</span> → composite (BFF)<br>
+              <span style="opacity:0.5;font-size:9px">كل شيء للمريض هنا</span>
+            </div>
+          </div>
+          <div class="box pres-mobile">
+            <div class="box-title">practitioner/</div>
+            <div class="box-sub">schedule/<br>patients/<br>earnings/</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Public -->
+      <div class="box pres-pub">
+        <div class="box-title">public/</div>
+        <div class="box-sub">No auth<br>Landing page data</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modules Layer -->
+  <div class="layer layer-modules">
+    <div class="layer-label">Bounded Contexts — modules/ <span class="badge-new">NEW: media/</span></div>
+    <div class="layer-row">
+      <div class="box bc-identity"><div class="box-title">identity/</div><div class="box-sub">auth · roles<br>permissions · users</div></div>
+      <div class="box bc-people"><div class="box-title">people/</div><div class="box-sub">patients<br>practitioners</div></div>
+      <div class="box bc-bookings"><div class="box-title">bookings/</div><div class="box-sub">bookings · waitlist<br>groups · scheduling</div></div>
+      <div class="box bc-finance"><div class="box-title">finance/</div><div class="box-sub">payments · invoices<br>coupons · gift-cards · zatca</div></div>
+      <div class="box bc-clinic"><div class="box-title">clinic/</div><div class="box-sub">branches · services<br>whitelabel · intake-forms</div></div>
+      <div class="box bc-comms"><div class="box-title">comms/</div><div class="box-sub">messaging · notifications<br>email · email-templates</div></div>
+      <div class="box bc-ai"><div class="box-title">ai/</div><div class="box-sub">chatbot · knowledge-base<br>pgvector · RAG pipeline</div></div>
+      <div class="box bc-ops"><div class="box-title">ops/</div><div class="box-sub">cron tasks · activity-log<br>reports · health</div></div>
+      <div class="box bc-platform"><div class="box-title">platform/</div><div class="box-sub">license · feature-flags<br>integrations · problem-reports</div></div>
+      <div class="box bc-media" style="border: 1.5px solid rgba(251,146,60,0.5)">
+        <div class="box-title">media/ <span class="badge-new">NEW</span></div>
+        <div class="box-sub">upload · download<br>delete · MinIO adapter</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Bus -->
+  <div class="event-bus">
+    <div class="event-bus-header">
+      <div class="event-bus-label">⚡ BullMQ Event Bus</div>
+      <span class="badge-new">+3 events مضافة</span>
+    </div>
+    <div class="event-groups">
+      <div class="event-row">
+        <span class="event-group-label">Scheduling</span>
+        <span class="event-pill">BookingConfirmed → Finance</span>
+        <span class="event-pill">BookingCancelled → Finance · Comms</span>
+        <span class="event-pill">TaskDue → Bookings</span>
+        <span class="event-pill">ReminderDue → Comms</span>
+        <span class="event-pill-new">BookingCompleted → AI</span>
+      </div>
+      <div class="event-row">
+        <span class="event-group-label">Finance</span>
+        <span class="event-pill">PaymentCompleted → Bookings</span>
+        <span class="event-pill-new">PaymentFailed → Comms</span>
+      </div>
+      <div class="event-row">
+        <span class="event-group-label">People</span>
+        <span class="event-pill-new">PatientEnrolled → Comms</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Common Layer -->
+  <div class="layer layer-common">
+    <div class="layer-label">Cross-cutting — common/ <span class="badge-new">NEW: TenantMiddleware</span></div>
+    <div class="layer-row">
+      <div class="box common-new" style="border: 1.5px solid rgba(34,197,94,0.5)">
+        <div class="box-title">TenantMiddleware <span class="badge-new">NEW</span></div>
+        <div class="box-sub">Resolves clinicId from JWT<br>Injects into RequestContext<br>Runs before every handler</div>
+      </div>
+      <div class="box common-box"><div class="box-title">Guards</div><div class="box-sub">JWT · CASL · Feature</div></div>
+      <div class="box common-box"><div class="box-title">Interceptors</div><div class="box-sub">Logging · Transform</div></div>
+      <div class="box common-box"><div class="box-title">Filters</div><div class="box-sub">Exception handling</div></div>
+      <div class="box common-box"><div class="box-title">Decorators</div><div class="box-sub">@CurrentUser · @RequiresFeature<br>@TenantId</div></div>
+      <div class="box common-box"><div class="box-title">Pipes</div><div class="box-sub">Validation · Transform</div></div>
+    </div>
+  </div>
+
+  <!-- Infrastructure Layer -->
+  <div class="layer layer-infra">
+    <div class="layer-label">Infrastructure — infrastructure/</div>
+    <div class="layer-row">
+      <div class="box infra-box"><div class="box-title">Prisma</div><div class="box-sub">PostgreSQL + pgvector</div></div>
+      <div class="box infra-box"><div class="box-title">Redis</div><div class="box-sub">Cache + sessions</div></div>
+      <div class="box infra-box"><div class="box-title">BullMQ</div><div class="box-sub">Queues + event bus</div></div>
+      <div class="box infra-box"><div class="box-title">MinIO</div><div class="box-sub">File storage (used by media/)</div></div>
+      <div class="box infra-box"><div class="box-title">FCM</div><div class="box-sub">Push notifications</div></div>
+      <div class="box infra-box"><div class="box-title">SMTP</div><div class="box-sub">Transactional email</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Domain Layer Rules -->
+<div class="rules-box">
+  <h3>قواعد الـ Domain Layer <span class="badge-fix">FIX: domain.service scope</span></h3>
+  <div class="rules-grid">
+    <div class="rule-item">
+      <strong>handler.ts</strong>
+      يُنسّق فقط: يستدعي repository، يُطلق events، لا business logic مباشرة
+    </div>
+    <div class="rule-item">
+      <strong>entity.ts</strong>
+      يحتوي كل الـ domain logic — لا NestJS imports، قابل للاختبار بدون framework
+    </div>
+    <div class="rule-item">
+      <strong>domain.service.ts</strong>
+      فقط للـ logic المشترك بين عدة slices داخل نفس الـ BC — لا تُنشئه إلا عند الحاجة
+    </div>
+    <div class="rule-item">
+      <strong>dto.ts</strong>
+      <span class="badge-fix">FIX</span> كل slice يلزمه dto.ts مع class-validator — لا استثناء، خصوصاً للموبايل
+    </div>
+  </div>
+</div>
+
+<!-- Folder Tree -->
+<div class="tree-section">
+  <h2>هيكل المجلدات التفصيلي</h2>
+  <div class="tree-grid">
+
+    <!-- API structure fixed -->
+    <div class="tree-card">
+      <div class="tree-card-title" style="color:#a78bfa">📱 api/mobile/ — <span style="color:#fbbf24">بعد الإصلاح</span></div>
+      <span class="d">api/mobile/</span>
+      <span class="d indent">├── patient/</span>
+      <span class="f indent2">├── bookings/      ← lightweight</span>
+      <span class="f indent2">├── profile/       ← lightweight</span>
+      <span class="f indent2">├── history/       ← lightweight</span>
+      <span class="d indent2" style="color:#a78bfa">└── portal/        ← BFF composite</span>
+      <span class="f indent3" style="color:#a78bfa">└── home.controller.ts</span>
+      <span class="f indent3" style="color:#64748b;font-size:10px">// GET /mobile/patient/portal/home</span>
+      <span class="f indent3" style="color:#64748b;font-size:10px">// aggregates: bookings + invoices</span>
+      <span class="f indent3" style="color:#64748b;font-size:10px">// + messages + profile in 1 call</span>
+      <span class="d indent">└── practitioner/</span>
+      <span class="f indent2">├── schedule/</span>
+      <span class="f indent2">├── patients/</span>
+      <span class="f indent2">└── earnings/</span>
+    </div>
+
+    <!-- bookings slices -->
+    <div class="tree-card">
+      <div class="tree-card-title" style="color:#fde047">📁 modules/bookings/ — Vertical Slices</div>
+      <span class="d">├── create-booking/</span>
+      <span class="c indent">├── create-booking.command.ts</span>
+      <span class="c indent">├── create-booking.handler.ts</span>
+      <span class="n indent">├── create-booking.dto.ts  ✓</span>
+      <span class="f indent">└── create-booking.spec.ts</span>
+      <span class="d">├── cancel-booking/</span>
+      <span class="d">├── reschedule-booking/</span>
+      <span class="d">├── get-booking/</span>
+      <span class="q indent">├── get-booking.query.ts</span>
+      <span class="q indent">└── get-booking.handler.ts</span>
+      <span class="d">├── list-bookings/</span>
+      <span class="d">├── check-availability/</span>
+      <span class="d">├── waitlist/</span>
+      <span class="d">├── groups/</span>
+      <span class="d">└── events/</span>
+      <span class="e indent">├── booking-confirmed.event.ts</span>
+      <span class="e indent">├── booking-cancelled.event.ts</span>
+      <span class="n indent">└── booking-completed.event.ts ✓</span>
+    </div>
+
+    <!-- media/ NEW -->
+    <div class="tree-card">
+      <div class="tree-card-title" style="color:#fb923c">📁 modules/media/ <span style="color:#4ade80">NEW</span></div>
+      <span class="d">├── upload-file/</span>
+      <span class="c indent">├── upload-file.command.ts</span>
+      <span class="c indent">├── upload-file.handler.ts</span>
+      <span class="n indent">└── upload-file.dto.ts</span>
+      <span class="d">├── get-file/</span>
+      <span class="q indent">├── get-file.query.ts</span>
+      <span class="q indent">└── get-file.handler.ts</span>
+      <span class="d">├── delete-file/</span>
+      <span class="d">└── generate-presigned-url/</span>
+      <span class="f indent">├── presigned-url.query.ts</span>
+      <span class="f indent">└── presigned-url.handler.ts</span>
+      <span class="f" style="color:#64748b;margin-top:6px;display:block;font-size:10px">// يُستدعى من: people/ · bookings/</span>
+      <span class="f" style="color:#64748b;font-size:10px">// ops/reports · intake-forms</span>
+    </div>
+
+    <!-- TenantMiddleware -->
+    <div class="tree-card">
+      <div class="tree-card-title" style="color:#4ade80">🛡️ common/tenant/ <span style="color:#4ade80">NEW</span></div>
+      <span class="d">common/tenant/</span>
+      <span class="n indent">├── tenant.middleware.ts</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">// Extracts clinicId from JWT</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">// Sets RequestContext.tenantId</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">// Runs before every route handler</span>
+      <span class="n indent">├── tenant-id.decorator.ts</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">// @TenantId() param decorator</span>
+      <span class="n indent">└── request-context.ts</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">// AsyncLocalStorage context</span>
+      <span class="" style="display:block;margin-top:8px;font-size:10px;color:#94a3b8">كل entity query تُمرّر</span>
+      <span class="f" style="font-size:10px;color:#94a3b8">clinicId تلقائياً من الـ context</span>
+    </div>
+
+    <!-- Event Contract updated -->
+    <div class="tree-card">
+      <div class="tree-card-title" style="color:#fbbf24">⚡ Event Contract <span style="color:#fbbf24">UPDATED</span></div>
+      <span class="f">export class BookingConfirmedEvent {</span>
+      <span class="e indent">readonly source = 'bookings';</span>
+      <span class="e indent">readonly version = 1;</span>
+      <span class="n indent">readonly eventId: string;       // UUID ✓</span>
+      <span class="n indent">readonly correlationId: string; // tracing ✓</span>
+      <span class="n indent">readonly tenantId: string;      // clinicId ✓</span>
+      <span class="e indent">readonly occurredAt: Date;</span>
+      <span class="e indent">readonly payload: {</span>
+      <span class="e indent2">bookingId: string;</span>
+      <span class="e indent2">patientId: string;</span>
+      <span class="e indent2">practitionerId: string;</span>
+      <span class="e indent2">scheduledAt: Date;</span>
+      <span class="e indent">};</span>
+      <span class="f">}</span>
+    </div>
+
+    <!-- Domain rules -->
+    <div class="tree-card">
+      <div class="tree-card-title" style="color:#d8b4fe">📐 قواعد الـ Domain Layer <span style="color:#fbbf24">CLARIFIED</span></div>
+      <span class="f" style="color:#a78bfa">handler.ts  ← orchestrator</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">calls repo → emits events</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">no business logic here</span>
+      <span class="f" style="color:#fde047;margin-top:4px;display:block">entity.ts  ← domain logic owner</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">zero NestJS imports</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">pure TypeScript, fully testable</span>
+      <span class="f" style="color:#f472b6;margin-top:4px;display:block">domain.service.ts  ← shared only</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">create ONLY when 2+ slices</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">share the same logic</span>
+      <span class="n" style="margin-top:4px;display:block">dto.ts  ← mandatory per slice</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">class-validator decorators</span>
+      <span class="f indent" style="color:#64748b;font-size:10px">no exceptions, especially mobile</span>
+    </div>
+
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div> Command</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div> Query</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div> Event</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> مضاف جديد</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div> ملف عادي</div>
+</div>
+
+</body>
+</html>
