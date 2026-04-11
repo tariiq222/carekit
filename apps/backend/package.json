@@ -16,8 +16,9 @@
     "prisma:generate": "prisma generate",
     "prisma:format": "prisma format",
     "prisma:validate": "prisma validate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate": "prisma migrate dev && npm run prisma:hooks",
+    "prisma:migrate:deploy": "prisma migrate deploy && npm run prisma:hooks",
+    "prisma:hooks": "prisma db execute --file prisma/hooks/ensure_vector_indexes.sql",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
