@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareKit — خطة التنفيذ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #080d1a; --surface: #0f172a; --surface2: #1e293b;
+  --border: rgba(255,255,255,0.07); --text: #e2e8f0; --muted: #64748b;
+}
+body { font-family: 'IBM Plex Sans Arabic','Segoe UI',system-ui,sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* Header */
+.header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; position: sticky; top: 0; background: rgba(8,13,26,0.97); backdrop-filter: blur(12px); z-index: 100; }
+.header h1 { font-size: 17px; font-weight: 700; color: #f8fafc; }
+.header p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.stats { display: flex; gap: 12px; }
+.stat { text-align: center; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); }
+.stat-num { font-size: 18px; font-weight: 800; }
+.stat-label { font-size: 10px; color: var(--muted); }
+.s-todo .stat-num { color: #94a3b8; }
+.s-design .stat-num { color: #818cf8; }
+.s-build .stat-num { color: #fbbf24; }
+.s-test .stat-num { color: #f472b6; }
+.s-done .stat-num { color: #4ade80; }
+
+/* Phase nav */
+.phase-nav { padding: 10px 24px; display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--surface); }
+.phase-tab { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid transparent; white-space: nowrap; color: var(--muted); background: transparent; transition: all 0.15s; }
+.phase-tab:hover { color: var(--text); background: var(--surface2); }
+.phase-tab.active { color: #f8fafc; background: var(--surface2); border-color: rgba(255,255,255,0.1); }
+.phase-badge { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; margin-right: 5px; }
+
+/* Main */
+.main { padding: 20px 24px; }
+.phase-header { margin-bottom: 16px; padding: 12px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.phase-info { display: flex; align-items: center; gap: 10px; }
+.phase-num { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
+.phase-titles h2 { font-size: 15px; font-weight: 700; }
+.phase-titles p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.progress-wrap { display: flex; align-items: center; gap: 8px; }
+.progress-bar { width: 100px; height: 5px; border-radius: 99px; background: var(--surface2); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#4ade80,#22d3ee); transition: width 0.3s; }
+.progress-label { font-size: 11px; color: var(--muted); }
+
+/* Kanban grid: 4 columns */
+.kanban { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; align-items: start; }
+
+/* In-progress is split into 3 sub-columns */
+.col-inprog-wrap { display: flex; flex-direction: column; gap: 8px; }
+.inprog-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #fbbf24; padding: 0 2px; margin-bottom: 2px; }
+.inprog-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+.column { border-radius: 12px; border: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; }
+.column-header { padding: 10px 12px 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.column-title { font-size: 12px; font-weight: 700; }
+.col-todo .column-title { color: #94a3b8; }
+.col-design .column-title { color: #818cf8; }
+.col-build .column-title { color: #fbbf24; }
+.col-test .column-title { color: #f472b6; }
+.col-done .column-title { color: #4ade80; }
+.column-count { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 20px; }
+.col-todo .column-count   { background: rgba(100,116,139,0.1); color: #94a3b8; border: 1px solid rgba(100,116,139,0.25); }
+.col-design .column-count { background: rgba(99,102,241,0.1);  color: #818cf8; border: 1px solid rgba(99,102,241,0.25); }
+.col-build .column-count  { background: rgba(251,191,36,0.1);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+.col-test .column-count   { background: rgba(244,114,182,0.1); color: #f472b6; border: 1px solid rgba(244,114,182,0.25); }
+.col-done .column-count   { background: rgba(34,197,94,0.08);  color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+.column-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 120px; }
+
+/* Task card */
+.task-card { border-radius: 9px; padding: 10px 11px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.12s; }
+.task-card:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); }
+.task-header { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 6px; }
+.task-seq { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 4px; white-space: nowrap; margin-top: 1px; flex-shrink: 0; }
+.seq-serial { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.25); }
+.seq-parallel { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+.task-title { font-size: 11px; font-weight: 600; color: #f1f5f9; line-height: 1.4; }
+.task-detail { font-size: 10px; color: var(--muted); line-height: 1.5; margin-bottom: 8px; display: none; }
+.task-card.expanded .task-detail { display: block; }
+
+/* Prompt box */
+.prompt-box { display: none; margin-bottom: 8px; }
+.task-card.expanded .prompt-box { display: block; }
+.prompt-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #818cf8; margin-bottom: 4px; }
+.prompt-text { font-size: 10px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: 6px; padding: 8px 10px; color: #c7d2fe; line-height: 1.6; white-space: pre-wrap; font-family: monospace; direction: ltr; text-align: left; }
+.btn-copy { font-size: 9px; padding: 3px 8px; border-radius: 5px; border: 1px solid rgba(99,102,241,0.3); background: rgba(99,102,241,0.1); color: #818cf8; cursor: pointer; margin-top: 5px; transition: all 0.12s; }
+.btn-copy:hover { background: rgba(99,102,241,0.2); }
+.btn-copy.copied { color: #4ade80; border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.1); }
+
+.task-footer { display: flex; align-items: center; justify-content: space-between; gap: 4px; flex-wrap: wrap; }
+.task-bc { font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 20px; }
+.task-cx { font-size: 9px; padding: 1px 6px; border-radius: 20px; font-weight: 600; }
+.cx-COMPLEX { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+.cx-MEDIUM  { background: rgba(251,191,36,0.1);  color: #fde047; border: 1px solid rgba(251,191,36,0.18); }
+.cx-CRUD    { background: rgba(100,116,139,0.1); color: #94a3b8; border: 1px solid rgba(100,116,139,0.18); }
+
+.task-actions { display: flex; gap: 3px; margin-top: 7px; flex-wrap: wrap; }
+.btn-mv { font-size: 9px; padding: 3px 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+.btn-mv:hover { color: var(--text); }
+.mv-design:hover { color: #818cf8; border-color: rgba(99,102,241,0.4); }
+.mv-build:hover  { color: #fbbf24; border-color: rgba(251,191,36,0.4); }
+.mv-test:hover   { color: #f472b6; border-color: rgba(244,114,182,0.4); }
+.mv-done:hover   { color: #4ade80; border-color: rgba(34,197,94,0.4); }
+.mv-todo:hover   { color: #94a3b8; border-color: rgba(100,116,139,0.4); }
+
+.empty-col { display: flex; align-items: center; justify-content: center; min-height: 60px; color: var(--muted); font-size: 11px; }
+
+/* BC colors */
+.bc-foundation,.bc-common { background: rgba(100,116,139,0.12); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
+.bc-identity  { background: rgba(239,68,68,0.1);   color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+.bc-platform  { background: rgba(244,63,94,0.1);   color: #fda4af; border: 1px solid rgba(244,63,94,0.2); }
+.bc-people    { background: rgba(249,115,22,0.1);  color: #fdba74; border: 1px solid rgba(249,115,22,0.2); }
+.bc-clinic    { background: rgba(6,182,212,0.1);   color: #67e8f9; border: 1px solid rgba(6,182,212,0.2); }
+.bc-media     { background: rgba(251,146,60,0.1);  color: #fb923c; border: 1px solid rgba(251,146,60,0.2); }
+.bc-finance   { background: rgba(34,197,94,0.1);   color: #86efac; border: 1px solid rgba(34,197,94,0.2); }
+.bc-bookings  { background: rgba(234,179,8,0.1);   color: #fde047; border: 1px solid rgba(234,179,8,0.2); }
+.bc-comms     { background: rgba(99,102,241,0.1);  color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
+.bc-ops       { background: rgba(20,184,166,0.1);  color: #5eead4; border: 1px solid rgba(20,184,166,0.2); }
+.bc-ai        { background: rgba(168,85,247,0.1);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.2); }
+.bc-api       { background: rgba(139,92,246,0.1);  color: #c4b5fd; border: 1px solid rgba(139,92,246,0.2); }
+
+/* Phase colors */
+.pc-1  { background:rgba(99,102,241,0.15);  color:#818cf8; }
+.pc-2  { background:rgba(239,68,68,0.15);   color:#f87171; }
+.pc-3  { background:rgba(244,63,94,0.15);   color:#fb7185; }
+.pc-4  { background:rgba(249,115,22,0.15);  color:#fb923c; }
+.pc-5  { background:rgba(6,182,212,0.15);   color:#22d3ee; }
+.pc-6  { background:rgba(251,146,60,0.15);  color:#fb923c; }
+.pc-7  { background:rgba(34,197,94,0.15);   color:#4ade80; }
+.pc-8  { background:rgba(234,179,8,0.15);   color:#facc15; }
+.pc-9  { background:rgba(99,102,241,0.15);  color:#818cf8; }
+.pc-10 { background:rgba(20,184,166,0.15);  color:#2dd4bf; }
+.pc-11 { background:rgba(168,85,247,0.15);  color:#c084fc; }
+.pc-12 { background:rgba(139,92,246,0.15);  color:#a78bfa; }
+
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(60px); background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.4); color: #4ade80; padding: 7px 18px; border-radius: 8px; font-size: 11px; font-weight: 600; transition: transform 0.2s; z-index: 999; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>CareKit Backend — خطة التنفيذ</h1>
+    <p id="last-updated">جاري التحميل...</p>
+  </div>
+  <div class="stats">
+    <div class="stat s-todo"><div class="stat-num" id="c-todo">—</div><div class="stat-label">Todo</div></div>
+    <div class="stat s-design"><div class="stat-num" id="c-design">—</div><div class="stat-label">Design</div></div>
+    <div class="stat s-build"><div class="stat-num" id="c-build">—</div><div class="stat-label">Build</div></div>
+    <div class="stat s-test"><div class="stat-num" id="c-test">—</div><div class="stat-label">Test</div></div>
+    <div class="stat s-done"><div class="stat-num" id="c-done">—</div><div class="stat-label">Done</div></div>
+  </div>
+</div>
+
+<div class="phase-nav" id="phase-nav"></div>
+
+<div class="main">
+  <div class="phase-header" id="phase-header"></div>
+  <div class="kanban" id="kanban"></div>
+</div>
+
+<div style="position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:5px;z-index:90;background:rgba(8,13,26,0.9);padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.07);">
+  <div style="font-size:10px;color:#64748b;font-weight:700;margin-bottom:2px;">ترتيب التنفيذ</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:#94a3b8;">
+    <span style="background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.25);border-radius:4px;padding:1px 6px;font-weight:800;">1</span>
+    متتابع
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:#94a3b8;">
+    <span style="background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.25);border-radius:4px;padding:1px 6px;font-weight:800;">1a</span>
+    متوازي
+  </div>
+</div>
+<div class="toast" id="toast">تم الحفظ</div>
+
+<script>
+// ── Prompts template per step ──────────────────────────────────────────────
+function getPrompt(step, task) {
+  var spec = 'docs/superpowers/specs/2026-04-11-backend-architecture-design.md';
+  var templates = {
+    design: [
+      'Task: ' + task.title,
+      'BC: ' + task.bc + ' | Complexity: ' + task.complexity,
+      'Detail: ' + task.detail,
+      '',
+      'Before writing any code:',
+      '1. Read the spec: ' + spec,
+      '2. Show me the files you will create (paths only)',
+      '3. Show the TypeScript interfaces/signatures',
+      '4. Wait for my approval before proceeding'
+    ].join('\n'),
+
+    build: [
+      'Task: ' + task.title,
+      'BC: ' + task.bc,
+      '',
+      'The design is approved. Now implement it:',
+      '- Follow 4-layer architecture (API → Application → Domain → Infrastructure)',
+      '- Vertical slice: all files in one folder',
+      '- DTOs with class-validator decorators',
+      '- No any in TypeScript',
+      '- Max 350 lines per file',
+      '- Spec: ' + spec
+    ].join('\n'),
+
+    test: [
+      'Task: ' + task.title,
+      'BC: ' + task.bc,
+      '',
+      'The implementation is done. Now:',
+      '1. Write unit tests for the handler (spec file in same slice folder)',
+      '2. Run the tests: cd apps/backend && npx jest ' + task.id,
+      '3. Fix any failures before marking done',
+      '4. Report: tests passed, coverage % if available'
+    ].join('\n')
+  };
+  return templates[step] || '';
+}
+
+// ── State ──────────────────────────────────────────────────────────────────
+var STORAGE_KEY = 'carekit-kanban-v3';
+var state = null;
+var activePhaseId = null;
+
+var INITIAL_STATE = {"project":"CareKit Backend — Rebuild from Scratch","spec":"docs/superpowers/specs/2026-04-11-backend-architecture-design.md","lastUpdated":"2026-04-11","phases":[{"id":"p1","title":"Foundation","titleAr":"الأساس","order":1,"description":"Project scaffold, infrastructure adapters, cross-cutting concerns","parallelNote":"t1→t2→t3 متتابعة. t4+t5 متوازية بعد t1. t6→t7→t8→t9 متتابعة بعد t1.","tasks":[{"id":"p1-t1","seq":"1","parallel":false,"title":"Scaffold NestJS project structure","detail":"apps/backend-v2/ with src/common, infrastructure, api, modules folders","complexity":"MEDIUM","status":"todo","bc":"foundation"},{"id":"p1-t2","seq":"2","parallel":false,"title":"Prisma setup + split schema strategy","detail":"One schema file per BC, prisma.service.ts, pgvector extension","complexity":"MEDIUM","status":"todo","bc":"foundation"},{"id":"p1-t3","seq":"3","parallel":false,"title":"Redis + BullMQ infrastructure adapters","detail":"redis.service.ts, bull-mq.service.ts, event-bus.service.ts","complexity":"MEDIUM","status":"todo","bc":"foundation"},{"id":"p1-t4","seq":"4a","parallel":true,"title":"MinIO storage adapter","detail":"minio.service.ts in infrastructure/storage/","complexity":"CRUD","status":"todo","bc":"foundation"},{"id":"p1-t5","seq":"4b","parallel":true,"title":"FCM + SMTP adapters","detail":"fcm.service.ts, smtp.service.ts","complexity":"CRUD","status":"todo","bc":"foundation"},{"id":"p1-t6","seq":"5","parallel":false,"title":"TenantMiddleware + RequestContext","detail":"common/tenant/: middleware, decorator, AsyncLocalStorage context","complexity":"MEDIUM","status":"todo","bc":"common"},{"id":"p1-t7","seq":"6","parallel":false,"title":"Guards: JWT + CASL + RequiresFeature","detail":"common/guards/: jwt.guard, casl.guard, feature.guard","complexity":"MEDIUM","status":"todo","bc":"common"},{"id":"p1-t8","seq":"7","parallel":false,"title":"Global interceptors, filters, pipes","detail":"Logging interceptor, exception filter, validation pipe","complexity":"MEDIUM","status":"todo","bc":"common"},{"id":"p1-t9","seq":"8","parallel":false,"title":"Event Contract base class","detail":"BaseEvent with eventId, correlationId, tenantId, source, version, occurredAt","complexity":"MEDIUM","status":"todo","bc":"common"}]},{"id":"p2","title":"Identity BC","titleAr":"الهوية والصلاحيات","order":2,"description":"Auth, roles, permissions, users — everything else depends on this","parallelNote":"t1+t2 متوازية. t3+t4 متوازية بعدها. t5→t6 متتابعة.","tasks":[{"id":"p2-t1","seq":"1a","parallel":true,"title":"login slice","detail":"LoginCommand + handler + dto + spec. JWT access + refresh tokens","complexity":"MEDIUM","status":"todo","bc":"identity"},{"id":"p2-t2","seq":"1b","parallel":true,"title":"refresh-token + logout slices","detail":"Token rotation, blacklist in Redis","complexity":"MEDIUM","status":"todo","bc":"identity"},{"id":"p2-t3","seq":"2a","parallel":true,"title":"get-current-user slice","detail":"GetCurrentUserQuery + handler","complexity":"CRUD","status":"todo","bc":"identity"},{"id":"p2-t4","seq":"2b","parallel":true,"title":"users CRUD slices","detail":"create-user, update-user, list-users, deactivate-user","complexity":"CRUD","status":"todo","bc":"identity"},{"id":"p2-t5","seq":"3","parallel":false,"title":"create-role + assign-permissions slices","detail":"CASL permission sets, role assignment","complexity":"MEDIUM","status":"todo","bc":"identity"},{"id":"p2-t6","seq":"4","parallel":false,"title":"CaslAbilityFactory","detail":"Core RBAC engine — builds ability from user roles + permissions","complexity":"COMPLEX","status":"todo","bc":"identity"}]},{"id":"p3","title":"Platform BC","titleAr":"المنصة والترخيص","order":3,"description":"License validation + feature gating — must be ready before premium features","parallelNote":"t1→t2→t3 متتابعة. t4 مستقلة تماماً (CRUD).","tasks":[{"id":"p3-t1","seq":"1","parallel":false,"title":"validate-license slice","detail":"License key validation on startup + periodic re-check against License Server","complexity":"COMPLEX","status":"todo","bc":"platform"},{"id":"p3-t2","seq":"2","parallel":false,"title":"check-feature slice","detail":"CheckFeatureQuery — reads active features from license","complexity":"MEDIUM","status":"todo","bc":"platform"},{"id":"p3-t3","seq":"3","parallel":false,"title":"@RequiresFeature() decorator wiring","detail":"Connects to check-feature, throws 403 if feature not in license","complexity":"MEDIUM","status":"todo","bc":"platform"},{"id":"p3-t4","seq":"1*","parallel":true,"title":"problem-reports + integrations slices","detail":"CRUD slices, مستقلة — تشتغل بالتوازي مع t1","complexity":"CRUD","status":"todo","bc":"platform"}]},{"id":"p4","title":"People BC","titleAr":"المرضى والممارسين","order":4,"description":"Patient and practitioner domain entities — متوازية مع p5 و p6","parallelNote":"p4+p5+p6 كلها متوازية مع بعض. داخلياً: t1→t2→t3 متتابعة. t4→t5+t6 ثم t7.","tasks":[{"id":"p4-t1","seq":"1","parallel":false,"title":"Patient schema + create-patient slice","detail":"Prisma schema, CreatePatientCommand + handler + dto + spec","complexity":"MEDIUM","status":"todo","bc":"people"},{"id":"p4-t2","seq":"2","parallel":false,"title":"update-patient + list-patients + get-patient slices","detail":"CRUD + list with filters","complexity":"MEDIUM","status":"todo","bc":"people"},{"id":"p4-t3","seq":"3","parallel":false,"title":"PatientEnrolledEvent","detail":"Emits on first patient creation — Comms sends welcome message","complexity":"MEDIUM","status":"todo","bc":"people"},{"id":"p4-t4","seq":"4","parallel":false,"title":"Practitioner schema + create-practitioner slice","detail":"Complex: specialties, branches, services linkage","complexity":"COMPLEX","status":"todo","bc":"people"},{"id":"p4-t5","seq":"5a","parallel":true,"title":"update-availability slice","detail":"Availability windows, recurring schedule, exceptions","complexity":"COMPLEX","status":"todo","bc":"people"},{"id":"p4-t6","seq":"5b","parallel":true,"title":"practitioner-onboarding slice","detail":"Multi-step onboarding flow","complexity":"COMPLEX","status":"todo","bc":"people"},{"id":"p4-t7","seq":"6","parallel":false,"title":"list-practitioners + get-practitioner slices","detail":"With availability projection","complexity":"MEDIUM","status":"todo","bc":"people"}]},{"id":"p5","title":"Clinic BC","titleAr":"إعدادات العيادة","order":5,"description":"Branches, services, hours, whitelabel — متوازية مع p4 و p6","parallelNote":"p4+p5+p6 متوازية. داخلياً: t1+t2 متوازية. t3+t4+t5 متوازية بعدها.","tasks":[{"id":"p5-t1","seq":"1a","parallel":true,"title":"Branches CRUD slices","detail":"create-branch, update-branch, list-branches, get-branch","complexity":"CRUD","status":"todo","bc":"clinic"},{"id":"p5-t2","seq":"1b","parallel":true,"title":"Services CRUD slices","detail":"create-service, update-service, list-services, archive-service","complexity":"CRUD","status":"todo","bc":"clinic"},{"id":"p5-t3","seq":"2a","parallel":true,"title":"clinic-hours + holidays slices","detail":"Working hours per branch, holiday calendar","complexity":"MEDIUM","status":"todo","bc":"clinic"},{"id":"p5-t4","seq":"2b","parallel":true,"title":"whitelabel-config slice","detail":"Branding: logo, colors, fonts — serves /whitelabel/public endpoint","complexity":"MEDIUM","status":"todo","bc":"clinic"},{"id":"p5-t5","seq":"2c","parallel":true,"title":"intake-forms + ratings slices","detail":"Form builder config, rating submission","complexity":"MEDIUM","status":"todo","bc":"clinic"}]},{"id":"p6","title":"Media BC","titleAr":"الملفات والوسائط","order":6,"description":"Centralized file upload/download via MinIO — متوازية مع p4 و p5","parallelNote":"p4+p5+p6 متوازية. داخلياً: t1→t2+t3 متتابعة ثم متوازية.","tasks":[{"id":"p6-t1","seq":"1","parallel":false,"title":"upload-file slice","detail":"UploadFileCommand + handler + dto, streams to MinIO, returns fileId","complexity":"MEDIUM","status":"todo","bc":"media"},{"id":"p6-t2","seq":"2a","parallel":true,"title":"get-file + delete-file slices","detail":"GetFileQuery, DeleteFileCommand","complexity":"CRUD","status":"todo","bc":"media"},{"id":"p6-t3","seq":"2b","parallel":true,"title":"generate-presigned-url slice","detail":"Time-limited direct access URLs for mobile","complexity":"MEDIUM","status":"todo","bc":"media"}]},{"id":"p7","title":"Finance BC","titleAr":"المالية","order":7,"description":"Payments, invoices, coupons, ZATCA — يبدأ بعد p4+p5","parallelNote":"t1→t2→t3 متتابعة (core flow). t4+t5 متوازية بعد t1. t6 مستقلة. t7+t8 متوازية في النهاية.","tasks":[{"id":"p7-t1","seq":"1","parallel":false,"title":"Invoice schema + create-invoice slice","detail":"Triggered by BookingConfirmedEvent. CreateInvoiceCommand + handler","complexity":"COMPLEX","status":"todo","bc":"finance"},{"id":"p7-t2","seq":"2","parallel":false,"title":"process-payment slice","detail":"ProcessPaymentCommand, integrates with Moyasar","complexity":"COMPLEX","status":"todo","bc":"finance"},{"id":"p7-t3","seq":"3","parallel":false,"title":"moyasar-webhook slice","detail":"Validates webhook signature, emits PaymentCompletedEvent or PaymentFailedEvent","complexity":"COMPLEX","status":"todo","bc":"finance"},{"id":"p7-t4","seq":"2a","parallel":true,"title":"bank-transfer-upload slice","detail":"Upload receipt — pending manual approval","complexity":"MEDIUM","status":"todo","bc":"finance"},{"id":"p7-t5","seq":"2b","parallel":true,"title":"apply-coupon slice","detail":"Discount calculation — gift cards محذوفة من النطاق","complexity":"MEDIUM","status":"todo","bc":"finance"},{"id":"p7-t6","seq":"1*","parallel":true,"title":"zatca-submit slice","detail":"Saudi e-invoicing compliance. مستقلة تبدأ مع t1","complexity":"COMPLEX","status":"todo","bc":"finance"},{"id":"p7-t7","seq":"4a","parallel":true,"title":"get-invoice + list-payments slices","detail":"Read queries with filters","complexity":"MEDIUM","status":"todo","bc":"finance"},{"id":"p7-t8","seq":"4b","parallel":true,"title":"Finance event handlers","detail":"on-booking-confirmed creates invoice. Emits: PaymentCompleted, PaymentFailed","complexity":"MEDIUM","status":"todo","bc":"finance"}]},{"id":"p8","title":"Bookings BC","titleAr":"الحجوزات","order":8,"description":"Core domain — scheduling, waitlist, groups — يبدأ بعد p4+p5+p7","parallelNote":"t1→t2 متتابعة (أساس). t3+t4+t5 متوازية بعد t2. t6 مستقلة. t7+t8 متوازية. t9 في النهاية.","tasks":[{"id":"p8-t1","seq":"1","parallel":false,"title":"Booking schema + check-availability slice","detail":"Complex: considers clinic hours, practitioner schedule, existing bookings","complexity":"COMPLEX","status":"todo","bc":"bookings"},{"id":"p8-t2","seq":"2","parallel":false,"title":"create-booking slice","detail":"CreateBookingCommand + handler. Emits BookingConfirmedEvent","complexity":"COMPLEX","status":"todo","bc":"bookings"},{"id":"p8-t3","seq":"3a","parallel":true,"title":"cancel-booking slice","detail":"CancelBookingCommand. Emits BookingCancelledEvent","complexity":"COMPLEX","status":"todo","bc":"bookings"},{"id":"p8-t4","seq":"3b","parallel":true,"title":"reschedule-booking slice","detail":"Validates new slot availability, updates booking","complexity":"COMPLEX","status":"todo","bc":"bookings"},{"id":"p8-t5","seq":"3c","parallel":true,"title":"confirm-booking slice","detail":"Manual confirmation by receptionist","complexity":"MEDIUM","status":"todo","bc":"bookings"},{"id":"p8-t6","seq":"1*","parallel":true,"title":"get-booking + list-bookings slices","detail":"Read queries — مستقلة تبدأ مع t1","complexity":"MEDIUM","status":"todo","bc":"bookings"},{"id":"p8-t7","seq":"4a","parallel":true,"title":"waitlist schema + add/promote slices","detail":"Waitlist schema + add-to-waitlist + promote-from-waitlist. Auto-promote on cancellation","complexity":"COMPLEX","status":"todo","bc":"bookings"},{"id":"p8-t8","seq":"4b","parallel":true,"title":"create-group-session + enroll-in-group slices","detail":"Capacity management, enrollment rules","complexity":"COMPLEX","status":"todo","bc":"bookings"},{"id":"p8-t9","seq":"5","parallel":false,"title":"Booking event handlers","detail":"on-payment-completed updates booking status","complexity":"MEDIUM","status":"todo","bc":"bookings"}]},{"id":"p9","title":"Comms BC","titleAr":"التواصل والإشعارات","order":9,"description":"All outbound communication — متوازية مع p7+p8","parallelNote":"p9 كلها متوازية مع p7+p8. داخلياً: t1→t2+t3+t4 ثم t5.","tasks":[{"id":"p9-t1","seq":"1","parallel":false,"title":"send-push + send-email + send-sms slices","detail":"Core communication commands. Each wraps its infrastructure adapter","complexity":"MEDIUM","status":"todo","bc":"comms"},{"id":"p9-t2","seq":"2a","parallel":true,"title":"notifications slice","detail":"In-app notification entity: create, list, mark-read. FCM push via send-push","complexity":"MEDIUM","status":"todo","bc":"comms"},{"id":"p9-t3","seq":"2b","parallel":true,"title":"create-chat-message + list-conversations slices","detail":"In-app messaging between patient and clinic","complexity":"MEDIUM","status":"todo","bc":"comms"},{"id":"p9-t4","seq":"2c","parallel":true,"title":"email-templates CRUD slices","detail":"Editable templates with variable substitution","complexity":"CRUD","status":"todo","bc":"comms"},{"id":"p9-t5","seq":"3","parallel":false,"title":"Comms event handlers","detail":"on-booking-cancelled, on-reminder-due, on-payment-failed, on-patient-enrolled","complexity":"MEDIUM","status":"todo","bc":"comms"}]},{"id":"p10","title":"Ops BC","titleAr":"العمليات والتقارير","order":10,"description":"Cron jobs, activity log, reports, health — يبدأ بعد p8","parallelNote":"t1+t2+t4 متوازية. t3 (reports) مستقلة تبدأ بالتوازي بعد p8.","tasks":[{"id":"p10-t1","seq":"1a","parallel":true,"title":"Cron task slices (5 jobs)","detail":"booking-autocomplete, booking-expiry, booking-noshow, appointment-reminders, group-session-automation","complexity":"MEDIUM","status":"todo","bc":"ops"},{"id":"p10-t2","seq":"1b","parallel":true,"title":"log-activity slice","detail":"Audit trail — logs all mutations from all BCs via event subscription","complexity":"MEDIUM","status":"todo","bc":"ops"},{"id":"p10-t3","seq":"1c","parallel":true,"title":"generate-report slice","detail":"Revenue reports, activity reports, exports (PDF/Excel)","complexity":"COMPLEX","status":"todo","bc":"ops"},{"id":"p10-t4","seq":"1d","parallel":true,"title":"health-check slice","detail":"Terminus health checks: DB, Redis, BullMQ, MinIO","complexity":"CRUD","status":"todo","bc":"ops"}]},{"id":"p11","title":"AI BC","titleAr":"الذكاء الاصطناعي","order":11,"description":"Chatbot, knowledge base, RAG — Enterprise tier — متوازية مع p7-p10","parallelNote":"p11 مستقلة تماماً بعد p1+p2. تشتغل بالتوازي مع p7-p10. داخلياً: t1→t2→t3+t4.","tasks":[{"id":"p11-t1","seq":"1","parallel":false,"title":"Knowledge base schema + embed-document slice","detail":"pgvector storage, OpenAI embeddings, chunking strategy","complexity":"COMPLEX","status":"todo","bc":"ai"},{"id":"p11-t2","seq":"2","parallel":false,"title":"semantic-search slice","detail":"Vector similarity search with filters","complexity":"COMPLEX","status":"todo","bc":"ai"},{"id":"p11-t3","seq":"3a","parallel":true,"title":"chat-completion slice","detail":"RAG pipeline: retrieve, augment, generate. Streaming response","complexity":"COMPLEX","status":"todo","bc":"ai"},{"id":"p11-t4","seq":"3b","parallel":true,"title":"manage-knowledge-base slice","detail":"Add/remove/update documents in the knowledge base","complexity":"MEDIUM","status":"todo","bc":"ai"}]},{"id":"p12","title":"Presentation Layer","titleAr":"طبقة العرض","order":12,"description":"Dashboard API + Mobile API + BFF Portal — يبدأ بعد كل البنية","parallelNote":"t1+t2+t6 متوازية أولاً. t3+t4+t5 متوازية بعدها.","tasks":[{"id":"p12-t1","seq":"1a","parallel":true,"title":"api/dashboard/ controllers","detail":"One controller per BC: bookings, finance, people, clinic, comms, ops, platform, ai, media","complexity":"MEDIUM","status":"todo","bc":"api"},{"id":"p12-t2","seq":"1b","parallel":true,"title":"api/mobile/patient/ controllers","detail":"bookings/, profile/, history/, payments/ — lightweight single-BC responses","complexity":"MEDIUM","status":"todo","bc":"api"},{"id":"p12-t3","seq":"2a","parallel":true,"title":"api/mobile/patient/portal/home","detail":"BFF: aggregates bookings + invoices + messages + profile in 1 call","complexity":"MEDIUM","status":"todo","bc":"api"},{"id":"p12-t4","seq":"2b","parallel":true,"title":"api/mobile/patient/portal/upcoming + summary","detail":"Lightweight composite endpoints per screen","complexity":"MEDIUM","status":"todo","bc":"api"},{"id":"p12-t5","seq":"2c","parallel":true,"title":"api/mobile/practitioner/ controllers","detail":"schedule/, patients/, earnings/","complexity":"MEDIUM","status":"todo","bc":"api"},{"id":"p12-t6","seq":"1c","parallel":true,"title":"api/public/ controllers","detail":"No-auth endpoints for landing page data","complexity":"CRUD","status":"todo","bc":"api"}]}]};
+
+function loadState() {
+  var saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) { try { state = JSON.parse(saved); return; } catch(e) {} }
+  state = JSON.parse(JSON.stringify(INITIAL_STATE));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function saveState() {
+  state.lastUpdated = new Date().toISOString().split('T')[0];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  showToast();
+  updateStats();
+  document.getElementById('last-updated').textContent = 'آخر تحديث: ' + state.lastUpdated;
+}
+
+function showToast() {
+  var t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 1600);
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+function updateStats() {
+  var counts = { todo:0, design:0, build:0, test:0, done:0 };
+  state.phases.forEach(function(p) {
+    p.tasks.forEach(function(t) { if (counts[t.status] !== undefined) counts[t.status]++; });
+  });
+  document.getElementById('c-todo').textContent = counts.todo;
+  document.getElementById('c-design').textContent = counts.design;
+  document.getElementById('c-build').textContent = counts.build;
+  document.getElementById('c-test').textContent = counts.test;
+  document.getElementById('c-done').textContent = counts.done;
+}
+
+// ── Move task ──────────────────────────────────────────────────────────────
+function moveTask(taskId, newStatus) {
+  state.phases.forEach(function(p) {
+    p.tasks.forEach(function(t) { if (t.id === taskId) t.status = newStatus; });
+  });
+  saveState();
+  render();
+}
+
+function toggleExpand(taskId) {
+  var card = document.querySelector('[data-task="' + taskId + '"]');
+  if (card) card.classList.toggle('expanded');
+}
+
+function copyPrompt(taskId, step) {
+  var task = null;
+  state.phases.forEach(function(p) {
+    p.tasks.forEach(function(t) { if (t.id === taskId) task = t; });
+  });
+  if (!task) return;
+  var text = getPrompt(step, task);
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.querySelector('[data-copy="' + taskId + '-' + step + '"]');
+    if (btn) {
+      btn.textContent = 'تم النسخ';
+      btn.classList.add('copied');
+      setTimeout(function() { btn.textContent = 'نسخ'; btn.classList.remove('copied'); }, 1800);
+    }
+  });
+}
+
+// ── DOM builders ───────────────────────────────────────────────────────────
+function makeBtn(label, cls, fn) {
+  var b = document.createElement('button');
+  b.className = 'btn-mv ' + cls;
+  b.textContent = label;
+  b.addEventListener('click', function(e) { e.stopPropagation(); fn(); });
+  return b;
+}
+
+function makePromptBox(task, step, label) {
+  var box = document.createElement('div');
+  box.className = 'prompt-box';
+
+  var lbl = document.createElement('div');
+  lbl.className = 'prompt-label';
+  lbl.textContent = label + ' — Prompt';
+
+  var pre = document.createElement('div');
+  pre.className = 'prompt-text';
+  pre.textContent = getPrompt(step, task);
+
+  var copyBtn = document.createElement('button');
+  copyBtn.className = 'btn-copy';
+  copyBtn.dataset.copy = task.id + '-' + step;
+  copyBtn.textContent = 'نسخ';
+  copyBtn.addEventListener('click', function(e) { e.stopPropagation(); copyPrompt(task.id, step); });
+
+  box.appendChild(lbl);
+  box.appendChild(pre);
+  box.appendChild(copyBtn);
+  return box;
+}
+
+function makeTaskCard(task) {
+  var card = document.createElement('div');
+  card.className = 'task-card';
+  card.dataset.task = task.id;
+  card.addEventListener('click', function() { toggleExpand(task.id); });
+
+  var header = document.createElement('div');
+  header.className = 'task-header';
+
+  var seq = document.createElement('span');
+  seq.className = 'task-seq ' + (task.parallel ? 'seq-parallel' : 'seq-serial');
+  seq.textContent = task.seq || '';
+
+  var title = document.createElement('div');
+  title.className = 'task-title';
+  title.textContent = task.title;
+
+  header.appendChild(seq);
+  header.appendChild(title);
+
+  var detail = document.createElement('div');
+  detail.className = 'task-detail';
+  detail.textContent = task.detail;
+
+  var promptStep = task.status === 'design' ? 'design' : task.status === 'build' ? 'build' : task.status === 'test' ? 'test' : null;
+  var promptLabels = { design: 'Design', build: 'Build', test: 'Test' };
+  card.appendChild(header);
+  card.appendChild(detail);
+  if (promptStep) {
+    card.appendChild(makePromptBox(task, promptStep, promptLabels[promptStep]));
+  }
+
+  var footer = document.createElement('div');
+  footer.className = 'task-footer';
+  var bc = document.createElement('span');
+  bc.className = 'task-bc bc-' + task.bc;
+  bc.textContent = task.bc;
+  var cx = document.createElement('span');
+  cx.className = 'task-cx cx-' + task.complexity;
+  cx.textContent = task.complexity;
+  footer.appendChild(bc);
+  footer.appendChild(cx);
+
+  var actions = document.createElement('div');
+  actions.className = 'task-actions';
+  actions.addEventListener('click', function(e) { e.stopPropagation(); });
+
+  if (task.status !== 'todo')   actions.appendChild(makeBtn('← Todo',      'mv-todo',   function() { moveTask(task.id, 'todo'); }));
+  if (task.status !== 'design') actions.appendChild(makeBtn('Design',       'mv-design', function() { moveTask(task.id, 'design'); }));
+  if (task.status !== 'build')  actions.appendChild(makeBtn('Build',        'mv-build',  function() { moveTask(task.id, 'build'); }));
+  if (task.status !== 'test')   actions.appendChild(makeBtn('Test',         'mv-test',   function() { moveTask(task.id, 'test'); }));
+  if (task.status !== 'done')   actions.appendChild(makeBtn('Done ✓',       'mv-done',   function() { moveTask(task.id, 'done'); }));
+
+  card.appendChild(footer);
+  card.appendChild(actions);
+  return card;
+}
+
+function makeColumn(cls, label, tasks) {
+  var col = document.createElement('div');
+  col.className = 'column ' + cls;
+
+  var header = document.createElement('div');
+  header.className = 'column-header';
+  var t = document.createElement('span');
+  t.className = 'column-title';
+  t.textContent = label;
+  var c = document.createElement('span');
+  c.className = 'column-count';
+  c.textContent = tasks.length;
+  header.appendChild(t);
+  header.appendChild(c);
+
+  var body = document.createElement('div');
+  body.className = 'column-body';
+  if (tasks.length === 0) {
+    var empty = document.createElement('div');
+    empty.className = 'empty-col';
+    empty.textContent = '—';
+    body.appendChild(empty);
+  } else {
+    tasks.forEach(function(task) { body.appendChild(makeTaskCard(task)); });
+  }
+
+  col.appendChild(header);
+  col.appendChild(body);
+  return col;
+}
+
+// ── Phase nav ──────────────────────────────────────────────────────────────
+function renderPhaseNav() {
+  var nav = document.getElementById('phase-nav');
+  while (nav.firstChild) nav.removeChild(nav.firstChild);
+  state.phases.forEach(function(p) {
+    var done = p.tasks.filter(function(t) { return t.status === 'done'; }).length;
+    var btn = document.createElement('button');
+    btn.className = 'phase-tab' + (p.id === activePhaseId ? ' active' : '');
+    var badge = document.createElement('span');
+    badge.className = 'phase-badge pc-' + p.order;
+    badge.textContent = done + '/' + p.tasks.length;
+    btn.appendChild(badge);
+    btn.appendChild(document.createTextNode(p.titleAr));
+    btn.addEventListener('click', function() { activePhaseId = p.id; render(); });
+    nav.appendChild(btn);
+  });
+}
+
+function renderPhaseHeader(phase) {
+  var done = phase.tasks.filter(function(t) { return t.status === 'done'; }).length;
+  var pct = phase.tasks.length ? Math.round((done / phase.tasks.length) * 100) : 0;
+  var wrap = document.getElementById('phase-header');
+  while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+
+  var info = document.createElement('div');
+  info.className = 'phase-info';
+  var num = document.createElement('div');
+  num.className = 'phase-num pc-' + phase.order;
+  num.textContent = phase.order;
+  var titles = document.createElement('div');
+  titles.className = 'phase-titles';
+  var h2 = document.createElement('h2');
+  h2.textContent = phase.titleAr + ' — ' + phase.title;
+  var desc = document.createElement('p');
+  desc.textContent = phase.description;
+  var note = document.createElement('p');
+  note.style.cssText = 'font-size:10px;color:#4ade80;margin-top:3px;';
+  note.textContent = phase.parallelNote || '';
+  titles.appendChild(h2);
+  titles.appendChild(desc);
+  titles.appendChild(note);
+  info.appendChild(num);
+  info.appendChild(titles);
+
+  var pw = document.createElement('div');
+  pw.className = 'progress-wrap';
+  var bar = document.createElement('div');
+  bar.className = 'progress-bar';
+  var fill = document.createElement('div');
+  fill.className = 'progress-fill';
+  fill.style.width = pct + '%';
+  bar.appendChild(fill);
+  var lbl = document.createElement('span');
+  lbl.className = 'progress-label';
+  lbl.textContent = done + ' / ' + phase.tasks.length + ' مكتملة';
+  pw.appendChild(bar);
+  pw.appendChild(lbl);
+
+  wrap.appendChild(info);
+  wrap.appendChild(pw);
+}
+
+// ── Kanban ─────────────────────────────────────────────────────────────────
+function renderKanban(phase) {
+  var cols = { todo:[], design:[], build:[], test:[], done:[] };
+  phase.tasks.forEach(function(t) { if (cols[t.status]) cols[t.status].push(t); });
+
+  var kanban = document.getElementById('kanban');
+  while (kanban.firstChild) kanban.removeChild(kanban.firstChild);
+
+  // Col 1: Todo
+  kanban.appendChild(makeColumn('col-todo', 'Todo', cols.todo));
+
+  // Col 2-4: In Progress wrapper
+  var ipWrap = document.createElement('div');
+  ipWrap.className = 'col-inprog-wrap';
+  ipWrap.style.gridColumn = 'span 2';
+
+  var ipLabel = document.createElement('div');
+  ipLabel.className = 'inprog-label';
+  ipLabel.textContent = 'In Progress';
+
+  var ipCols = document.createElement('div');
+  ipCols.className = 'inprog-cols';
+  ipCols.appendChild(makeColumn('col-design', 'Design', cols.design));
+  ipCols.appendChild(makeColumn('col-build',  'Build',  cols.build));
+  ipCols.appendChild(makeColumn('col-test',   'Test',   cols.test));
+
+  ipWrap.appendChild(ipLabel);
+  ipWrap.appendChild(ipCols);
+  kanban.appendChild(ipWrap);
+
+  // Col 4: Done
+  kanban.appendChild(makeColumn('col-done', 'Done', cols.done));
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render() {
+  var phase = state.phases.find(function(p) { return p.id === activePhaseId; }) || state.phases[0];
+  activePhaseId = phase.id;
+  renderPhaseNav();
+  renderPhaseHeader(phase);
+  renderKanban(phase);
+  updateStats();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadState();
+activePhaseId = state.phases[0].id;
+document.getElementById('last-updated').textContent = 'آخر تحديث: ' + (state.lastUpdated || '—');
+render();
+</script>
+</body>
+</html>
