@@ -58,8 +58,8 @@ export class ManageKnowledgeBaseHandler {
     return this.prisma.knowledgeDocument.update({
       where: { id: dto.documentId },
       data: {
-        ...(dto.title ? { title: dto.title } : {}),
-        ...(dto.metadata ? { metadata: dto.metadata } : {}),
+        ...(dto.title !== undefined ? { title: dto.title } : {}),
+        ...(dto.metadata !== undefined ? { metadata: dto.metadata } : {}),
       },
     });
   }
