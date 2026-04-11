@@ -89,7 +89,7 @@
           "title": "Global interceptors, filters, pipes",
           "detail": "Logging interceptor, exception filter, validation pipe",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "common"
         },
         {
