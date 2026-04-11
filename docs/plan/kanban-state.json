@@ -230,7 +230,7 @@
     {
       "id": "p4",
       "title": "People BC",
-      "titleAr": "المرضى والممارسين",
+      "titleAr": "العملاء والموظفين",
       "order": 4,
       "description": "Client and employee domain entities — متوازية مع p5 و p6",
       "parallelNote": "p4+p5+p6 كلها متوازية مع بعض. داخلياً: t1→t2→t3 متتابعة. t4→t5+t6 ثم t7.",
