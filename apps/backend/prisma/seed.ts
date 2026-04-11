@@ -12,7 +12,6 @@ import {
   CLINIC_SETTINGS_DEFAULTS,
   CLINIC_INTEGRATIONS_DEFAULTS,
   EMAIL_TEMPLATES,
-  SPECIALTIES,
   FEATURE_FLAGS,
 } from './seed.data';
 import { seedDemoData } from './seed.demo';
@@ -145,18 +144,7 @@ async function main(): Promise<void> {
   }
   console.log('  ClinicIntegrations seeded');
 
-  // 8. Create specialties
-  console.log('Creating specialties...');
-  for (const spec of SPECIALTIES) {
-    await prisma.specialty.upsert({
-      where: { nameEn: spec.nameEn },
-      update: { nameAr: spec.nameAr, descriptionEn: spec.descriptionEn, descriptionAr: spec.descriptionAr, sortOrder: spec.sortOrder },
-      create: { nameEn: spec.nameEn, nameAr: spec.nameAr, descriptionEn: spec.descriptionEn, descriptionAr: spec.descriptionAr, sortOrder: spec.sortOrder, isActive: true },
-    });
-  }
-  console.log(`  Created ${SPECIALTIES.length} specialties`);
-
-  // 9. Create email templates
+  // 8. Create email templates
   console.log('Creating email templates...');
   for (const tpl of EMAIL_TEMPLATES) {
     await prisma.emailTemplate.upsert({

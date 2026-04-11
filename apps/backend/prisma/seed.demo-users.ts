@@ -81,18 +81,11 @@ export async function seedPractitioners(prisma: PrismaClient) {
     const user = await upsertUser(prisma, doc, 'practitioner');
     practitionerUserIds.push(user.id);
 
-    // Resolve specialtyId from the seeded Specialty table
-    const specialtyRecord = await prisma.specialty.findUnique({
-      where: { nameEn: doc.specialtyEn },
-    });
-    const specialtyId = specialtyRecord?.id ?? null;
-
     const practitioner = await prisma.practitioner.upsert({
       where: { userId: user.id },
       update: {
         title: doc.title, nameAr: doc.nameAr,
         specialty: doc.specialtyEn, specialtyAr: doc.specialtyAr,
-        specialtyId,
         bio: doc.bio, bioAr: doc.bioAr, experience: doc.experience,
         education: doc.education, educationAr: doc.educationAr,
       },
@@ -100,7 +93,6 @@ export async function seedPractitioners(prisma: PrismaClient) {
         userId: user.id,
         title: doc.title, nameAr: doc.nameAr,
         specialty: doc.specialtyEn, specialtyAr: doc.specialtyAr,
-        specialtyId,
         bio: doc.bio, bioAr: doc.bioAr,
         experience: doc.experience,
         education: doc.education, educationAr: doc.educationAr,
