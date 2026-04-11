@@ -22,11 +22,17 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
   const { t } = useLocale()
   const [systemName, setSystemName] = useState("")
   const [systemNameAr, setSystemNameAr] = useState("")
-  const [primaryColor, setPrimaryColor] = useState("")
-  const [secondaryColor, setSecondaryColor] = useState("")
+  const [productTagline, setProductTagline] = useState("")
+  const [colorPrimary, setColorPrimary] = useState("")
+  const [colorPrimaryLight, setColorPrimaryLight] = useState("")
+  const [colorPrimaryDark, setColorPrimaryDark] = useState("")
+  const [colorAccent, setColorAccent] = useState("")
+  const [colorAccentDark, setColorAccentDark] = useState("")
+  const [colorBackground, setColorBackground] = useState("")
+  const [fontFamily, setFontFamily] = useState("")
+  const [fontUrl, setFontUrl] = useState("")
   const [logoUrl, setLogoUrl] = useState("")
   const [faviconUrl, setFaviconUrl] = useState("")
-  const [fontFamily, setFontFamily] = useState("")
 
   const { preview, clearPreview, apply } = useBranding()
 
@@ -34,11 +40,17 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
     if (!whitelabel) return
     setSystemName(whitelabel.systemName ?? "")
     setSystemNameAr(whitelabel.systemNameAr ?? "")
-    setPrimaryColor(whitelabel.colorPrimary ?? "")
-    setSecondaryColor(whitelabel.colorAccent ?? "")
+    setProductTagline(whitelabel.productTagline ?? "")
+    setColorPrimary(whitelabel.colorPrimary ?? "")
+    setColorPrimaryLight(whitelabel.colorPrimaryLight ?? "")
+    setColorPrimaryDark(whitelabel.colorPrimaryDark ?? "")
+    setColorAccent(whitelabel.colorAccent ?? "")
+    setColorAccentDark(whitelabel.colorAccentDark ?? "")
+    setColorBackground(whitelabel.colorBackground ?? "")
+    setFontFamily(whitelabel.fontFamily ?? "")
+    setFontUrl(whitelabel.fontUrl ?? "")
     setLogoUrl(whitelabel.logoUrl ?? "")
     setFaviconUrl(whitelabel.faviconUrl ?? "")
-    setFontFamily(whitelabel.fontFamily ?? "")
   }, [whitelabel])
 
   const updatePreview = useCallback(
@@ -54,13 +66,13 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
   )
 
   const handlePrimaryChange = (value: string) => {
-    setPrimaryColor(value)
-    updatePreview(value, secondaryColor)
+    setColorPrimary(value)
+    updatePreview(value, colorAccent)
   }
 
-  const handleSecondaryChange = (value: string) => {
-    setSecondaryColor(value)
-    updatePreview(primaryColor, value)
+  const handleAccentChange = (value: string) => {
+    setColorAccent(value)
+    updatePreview(colorPrimary, value)
   }
 
   useEffect(() => clearPreview, [clearPreview])
@@ -69,18 +81,20 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
     onSave({
       systemName,
       systemNameAr,
-      colorPrimary:  primaryColor,
-      colorAccent:   secondaryColor,
-      logoUrl:       logoUrl || null,
-      faviconUrl:    faviconUrl || null,
+      productTagline: productTagline || null,
+      colorPrimary,
+      colorPrimaryLight,
+      colorPrimaryDark,
+      colorAccent,
+      colorAccentDark,
+      colorBackground,
       fontFamily,
+      fontUrl: fontUrl || null,
+      logoUrl: logoUrl || null,
+      faviconUrl: faviconUrl || null,
     })
-    if (isValidHex(primaryColor)) {
-      apply({
-        primary:    primaryColor,
-        accent:     isValidHex(secondaryColor) ? secondaryColor : primaryColor,
-        fontFamily: fontFamily || null,
-      })
+    if (isValidHex(colorPrimary)) {
+      apply({ primary: colorPrimary, accent: isValidHex(colorAccent) ? colorAccent : colorPrimary })
     }
   }
 
@@ -99,23 +113,63 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
             <Label>{t("whiteLabel.systemNameAr")}</Label>
             <Input value={systemNameAr} onChange={(e) => setSystemNameAr(e.target.value)} dir="rtl" placeholder="عيادة كيركت" />
           </div>
-          <div className="space-y-2">
-            <Label>{t("settings.fontFamily")}</Label>
-            <Input value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} placeholder="IBM Plex Sans Arabic" />
+          <div className="space-y-2 sm:col-span-2">
+            <Label>{"الشعار الفرعي"}</Label>
+            <Input value={productTagline} onChange={(e) => setProductTagline(e.target.value)} placeholder="نحو رعاية أفضل" />
           </div>
+        </div>
 
+        <Separator />
+
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>{t("settings.primaryColor")}</Label>
             <div className="flex items-center gap-2">
               <ColorSwatchInput
-                value={isValidHex(primaryColor) ? primaryColor : null}
+                value={isValidHex(colorPrimary) ? colorPrimary : null}
                 onChange={handlePrimaryChange}
                 defaultColor="#354FD8"
               />
               <Input
-                value={primaryColor}
+                value={colorPrimary}
                 onChange={(e) => handlePrimaryChange(e.target.value)}
                 placeholder="#354FD8"
+                className="font-mono tabular-nums"
+                dir="ltr"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{"اللون الأساسي الفاتح"}</Label>
+            <div className="flex items-center gap-2">
+              <ColorSwatchInput
+                value={isValidHex(colorPrimaryLight) ? colorPrimaryLight : null}
+                onChange={setColorPrimaryLight}
+                defaultColor="#6B7FE3"
+              />
+              <Input
+                value={colorPrimaryLight}
+                onChange={(e) => setColorPrimaryLight(e.target.value)}
+                placeholder="#6B7FE3"
+                className="font-mono tabular-nums"
+                dir="ltr"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{"اللون الأساسي الداكن"}</Label>
+            <div className="flex items-center gap-2">
+              <ColorSwatchInput
+                value={isValidHex(colorPrimaryDark) ? colorPrimaryDark : null}
+                onChange={setColorPrimaryDark}
+                defaultColor="#1E3AB8"
+              />
+              <Input
+                value={colorPrimaryDark}
+                onChange={(e) => setColorPrimaryDark(e.target.value)}
+                placeholder="#1E3AB8"
                 className="font-mono tabular-nums"
                 dir="ltr"
               />
@@ -126,13 +180,13 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
             <Label>{t("settings.secondaryColor")}</Label>
             <div className="flex items-center gap-2">
               <ColorSwatchInput
-                value={isValidHex(secondaryColor) ? secondaryColor : null}
-                onChange={handleSecondaryChange}
+                value={isValidHex(colorAccent) ? colorAccent : null}
+                onChange={handleAccentChange}
                 defaultColor="#82CC17"
               />
               <Input
-                value={secondaryColor}
-                onChange={(e) => handleSecondaryChange(e.target.value)}
+                value={colorAccent}
+                onChange={(e) => handleAccentChange(e.target.value)}
                 placeholder="#82CC17"
                 className="font-mono tabular-nums"
                 dir="ltr"
@@ -141,16 +195,43 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>{t("settings.logoUrl")}</Label>
-            <Input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." />
+            <Label>{"لون التمييز الداكن"}</Label>
+            <div className="flex items-center gap-2">
+              <ColorSwatchInput
+                value={isValidHex(colorAccentDark) ? colorAccentDark : null}
+                onChange={setColorAccentDark}
+                defaultColor="#5A8F0F"
+              />
+              <Input
+                value={colorAccentDark}
+                onChange={(e) => setColorAccentDark(e.target.value)}
+                placeholder="#5A8F0F"
+                className="font-mono tabular-nums"
+                dir="ltr"
+              />
+            </div>
           </div>
+
           <div className="space-y-2">
-            <Label>{t("settings.faviconUrl")}</Label>
-            <Input value={faviconUrl} onChange={(e) => setFaviconUrl(e.target.value)} placeholder="https://..." />
+            <Label>{"لون الخلفية"}</Label>
+            <div className="flex items-center gap-2">
+              <ColorSwatchInput
+                value={isValidHex(colorBackground) ? colorBackground : null}
+                onChange={setColorBackground}
+                defaultColor="#F8F9FF"
+              />
+              <Input
+                value={colorBackground}
+                onChange={(e) => setColorBackground(e.target.value)}
+                placeholder="#F8F9FF"
+                className="font-mono tabular-nums"
+                dir="ltr"
+              />
+            </div>
           </div>
         </div>
 
-        {isValidHex(primaryColor) && (
+        {isValidHex(colorPrimary) && (
           <>
             <Separator />
             <div className="space-y-2">
@@ -158,24 +239,47 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
                 {t("settings.preview") ?? "Preview"}
               </Label>
               <div className="flex items-center gap-3">
-                <div
-                  className="size-10 rounded-lg shadow-sm"
-                  style={{ background: primaryColor }}
-                />
-                {isValidHex(secondaryColor) && (
-                  <div
-                    className="size-10 rounded-lg shadow-sm"
-                    style={{ background: secondaryColor }}
-                  />
+                <div className="size-10 rounded-lg shadow-sm" style={{ background: colorPrimary }} />
+                {isValidHex(colorPrimaryLight) && (
+                  <div className="size-10 rounded-lg shadow-sm" style={{ background: colorPrimaryLight }} />
                 )}
-                <span className="text-sm text-muted-foreground">
-                  {primaryColor}
-                  {isValidHex(secondaryColor) ? ` / ${secondaryColor}` : ""}
-                </span>
+                {isValidHex(colorPrimaryDark) && (
+                  <div className="size-10 rounded-lg shadow-sm" style={{ background: colorPrimaryDark }} />
+                )}
+                {isValidHex(colorAccent) && (
+                  <div className="size-10 rounded-lg shadow-sm" style={{ background: colorAccent }} />
+                )}
+                {isValidHex(colorAccentDark) && (
+                  <div className="size-10 rounded-lg shadow-sm" style={{ background: colorAccentDark }} />
+                )}
+                {isValidHex(colorBackground) && (
+                  <div className="size-10 rounded-lg border shadow-sm" style={{ background: colorBackground }} />
+                )}
               </div>
             </div>
           </>
         )}
+
+        <Separator />
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>{t("settings.fontFamily")}</Label>
+            <Input value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} placeholder="IBM Plex Sans Arabic" />
+          </div>
+          <div className="space-y-2">
+            <Label>{"رابط الخط"}</Label>
+            <Input value={fontUrl} onChange={(e) => setFontUrl(e.target.value)} placeholder="https://fonts.googleapis.com/..." dir="ltr" />
+          </div>
+          <div className="space-y-2">
+            <Label>{t("settings.logoUrl")}</Label>
+            <Input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." dir="ltr" />
+          </div>
+          <div className="space-y-2">
+            <Label>{t("settings.faviconUrl")}</Label>
+            <Input value={faviconUrl} onChange={(e) => setFaviconUrl(e.target.value)} placeholder="https://..." dir="ltr" />
+          </div>
+        </div>
 
         <Separator />
         <div className="flex justify-end">
