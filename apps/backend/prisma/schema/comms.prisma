@@ -1,2 +1,92 @@
-// Comms BC — notifications, chat messages, email templates.
-// Models added in Phase 9 (p9-t*).
+// Comms BC — notifications, chat, email templates.
+// Phase 9 (p9-t*).
+
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  BOOKING_REMINDER
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
+  WELCOME
+  GENERAL
+}
+
+enum RecipientType {
+  CLIENT
+  EMPLOYEE
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
+enum MessageSenderType {
+  CLIENT
+  EMPLOYEE
+  AI
+}
+
+model Notification {
+  id            String           @id @default(uuid())
+  tenantId      String
+  recipientId   String
+  recipientType RecipientType
+  type          NotificationType
+  title         String
+  body          String
+  metadata      Json?
+  isRead        Boolean          @default(false)
+  readAt        DateTime?
+  createdAt     DateTime         @default(now())
+
+  @@index([tenantId, recipientId])
+  @@index([tenantId, recipientId, isRead])
+}
+
+model ChatConversation {
+  id            String             @id @default(uuid())
+  tenantId      String
+  clientId      String
+  employeeId    String?
+  isAiChat      Boolean            @default(false)
+  status        ConversationStatus @default(OPEN)
+  lastMessageAt DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  messages      CommsChatMessage[]
+
+  @@index([tenantId, clientId])
+  @@index([tenantId, employeeId])
+}
+
+model CommsChatMessage {
+  id             String            @id @default(uuid())
+  tenantId       String
+  conversationId String
+  conversation   ChatConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderType     MessageSenderType
+  senderId       String?
+  body           String
+  isRead         Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+
+  @@index([tenantId, conversationId])
+}
+
+model EmailTemplate {
+  id        String   @id @default(uuid())
+  tenantId  String
+  slug      String
+  nameAr    String
+  nameEn    String?
+  subject   String
+  htmlBody  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
