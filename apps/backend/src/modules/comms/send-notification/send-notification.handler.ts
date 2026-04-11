@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { SendPushHandler } from '../send-push/send-push.handler';
 import { SendEmailHandler } from '../send-email/send-email.handler';
@@ -25,7 +26,7 @@ export class SendNotificationHandler {
         type: dto.type,
         title: dto.title,
         body: dto.body,
-        metadata: dto.metadata as never ?? undefined,
+        metadata: (dto.metadata as Prisma.InputJsonValue) ?? undefined,
       },
     });
 
