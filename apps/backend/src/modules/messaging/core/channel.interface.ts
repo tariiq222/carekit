@@ -8,7 +8,6 @@ export interface ChannelSendPayload {
   bodyEn: string;
   data?: Record<string, string>;
   event: MessagingEvent;
-  /** Direct recipient email — provided by dispatcher when resolved */
   recipientEmail?: string;
 }
 
