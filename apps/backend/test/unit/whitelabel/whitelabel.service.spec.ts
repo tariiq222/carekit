@@ -31,10 +31,18 @@ const mockConfigRow = {
   id: 'wl-uuid-1',
   systemName: 'CareKit Clinic',
   systemNameAr: 'عيادة كيركت',
+  productTagline: null,
   logoUrl: 'https://logo.png',
   faviconUrl: null,
-  primaryColor: '#354FD8',
-  secondaryColor: '#82CC17',
+  colorPrimary: '#354FD8',
+  colorPrimaryLight: '#5B72E8',
+  colorPrimaryDark: '#2438B0',
+  colorAccent: '#82CC17',
+  colorAccentDark: '#5A9010',
+  colorBackground: '#EEF1F8',
+  fontFamily: 'IBM Plex Sans Arabic',
+  fontUrl: null,
+  domain: null,
   clinicCanEdit: true,
   createdAt: new Date('2026-03-01'),
   updatedAt: new Date('2026-03-01'),
@@ -120,7 +128,8 @@ describe('WhitelabelService', () => {
       expect(result.systemName).toBe('CareKit Clinic');
       expect(result.systemNameAr).toBe('عيادة كيركت');
       expect(result.logoUrl).toBe('https://logo.png');
-      expect(result.primaryColor).toBe('#354FD8');
+      expect(result.colorPrimary).toBe('#354FD8');
+      expect(result.colorAccent).toBe('#82CC17');
       expect(mockCacheService.set).toHaveBeenCalled();
     });
   });
