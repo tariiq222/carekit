@@ -1,4 +1,13 @@
 export type { UserPayload, TokenPair, AuthResponse } from './auth.js'
+export type {
+  UserGender,
+  UserRole,
+  UserListItem,
+  UserListQuery,
+  UserListResponse,
+  CreateUserPayload,
+  UpdateUserPayload,
+} from './user.js'
 export type { WhitelabelConfig } from './whitelabel.js'
 export type { FeatureFlags } from './feature-flags.js'
 export { DEFAULT_FEATURE_FLAGS } from './feature-flags.js'
@@ -29,6 +38,17 @@ export type {
   PractitionerListResponse,
   CreatePractitionerPayload,
   UpdatePractitionerPayload,
+  PractitionerBreak,
+  BreakSlotInput,
+  SetBreaksPayload,
+  PractitionerVacation,
+  CreateVacationPayload,
+  PractitionerService,
+  PractitionerTypeConfig,
+  PractitionerDurationOption,
+  AssignPractitionerServicePayload,
+  UpdatePractitionerServicePayload,
+  PractitionerTypeConfigInput,
 } from './practitioner.js'
 export type {
   ServiceCategory,
