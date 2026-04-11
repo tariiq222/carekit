@@ -3,18 +3,29 @@
 // ──────────────────────────────────────────────
 
 model WhiteLabelConfig {
-  id             String   @id @default(uuid())
-  systemName     String   @default("CareKit Clinic") @map("system_name")
-  systemNameAr   String   @default("عيادة كيركت") @map("system_name_ar")
-  logoUrl        String?  @map("logo_url")
-  faviconUrl     String?  @map("favicon_url")
-  primaryColor   String   @default("#2563EB") @map("primary_color")
-  secondaryColor String   @default("#1E40AF") @map("secondary_color")
-  fontFamily     String   @default("Inter") @map("font_family")
-  domain         String   @default("localhost")
-  clinicCanEdit  Boolean  @default(false) @map("clinic_can_edit")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id                String   @id @default(uuid())
+  // Identity
+  systemName        String   @default("CareKit Clinic") @map("system_name")
+  systemNameAr      String   @default("عيادة كيركت") @map("system_name_ar")
+  productTagline    String?  @map("product_tagline")
+  // Assets
+  logoUrl           String?  @map("logo_url")
+  faviconUrl        String?  @map("favicon_url")
+  // Colors
+  colorPrimary      String   @default("#354FD8") @map("color_primary")
+  colorPrimaryLight String   @default("#5B72E8") @map("color_primary_light")
+  colorPrimaryDark  String   @default("#2438B0") @map("color_primary_dark")
+  colorAccent       String   @default("#82CC17") @map("color_accent")
+  colorAccentDark   String   @default("#5A9010") @map("color_accent_dark")
+  colorBackground   String   @default("#EEF1F8") @map("color_background")
+  // Typography
+  fontFamily        String   @default("IBM Plex Sans Arabic") @map("font_family")
+  fontUrl           String?  @map("font_url")
+  // Platform config (SaaS-level, not clinic-editable)
+  domain            String   @default("localhost")
+  clinicCanEdit     Boolean  @default(false) @map("clinic_can_edit")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
   @@map("white_label_config")
 }

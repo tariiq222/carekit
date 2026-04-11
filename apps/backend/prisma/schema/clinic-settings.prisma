@@ -37,7 +37,6 @@ model ClinicSettings {
   emailFooterYoutube    String?  @map("email_footer_youtube")
   sessionDuration       Int      @default(30) @map("session_duration")
   reminderBeforeMinutes Int      @default(60) @map("reminder_before_minutes")
-  theme                 Json?    // ClinicTheme — null = DEFAULT_THEME
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
