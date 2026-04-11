@@ -733,8 +733,9 @@
           "title": "ServiceDurationOption schema + migration",
           "detail": "model ServiceDurationOption { tenantId, serviceId, bookingType (nullable = ينطبق على كل الأنواع), label, labelAr, durationMins, price, currency, isDefault, sortOrder }. bookingType nullable يعطي مرونة: خيار لنوع حجز معين أو لكل الأنواع.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "organization"
+          "status": "done",
+          "bc": "organization",
+          "note": "migration 20260411234226_p11_t2_service_duration_options. FK serviceId Cascade, indexes (tenantId), (serviceId), (serviceId, bookingType). DROP INDEX for ivfflat removed manually from generated SQL — pgvector index preserved via prisma:hooks."
         },
         {
           "id": "p11-t3",
