@@ -11,7 +11,7 @@ export interface ProgressiveVisibility {
 }
 
 interface ProgressiveDisclosureInput {
-  practitionerId: string
+  employeeId: string
   serviceId: string
   type: string
   durationOptionId: string
@@ -21,7 +21,7 @@ interface ProgressiveDisclosureInput {
 }
 
 export function useProgressiveDisclosure({
-  practitionerId,
+  employeeId,
   serviceId,
   type,
   durationOptionId,
@@ -30,14 +30,14 @@ export function useProgressiveDisclosure({
   hasDurationOptions,
 }: ProgressiveDisclosureInput): ProgressiveVisibility {
   return useMemo(() => {
-    const showService = !!practitionerId
+    const showService = !!employeeId
     const showType = showService && !!serviceId
     const showDuration = showType && !!type && hasDurationOptions
     const showDatetime = showType && !!type && (!hasDurationOptions || !!durationOptionId)
     const showTime = showDatetime && !!date
     const showPayAtClinic = showTime && !!startTime
     const canSubmit =
-      !!practitionerId &&
+      !!employeeId &&
       !!serviceId &&
       !!type &&
       (!hasDurationOptions || !!durationOptionId) &&
@@ -53,5 +53,5 @@ export function useProgressiveDisclosure({
       showPayAtClinic,
       canSubmit,
     }
-  }, [practitionerId, serviceId, type, durationOptionId, date, startTime, hasDurationOptions])
+  }, [employeeId, serviceId, type, durationOptionId, date, startTime, hasDurationOptions])
 }

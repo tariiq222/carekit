@@ -11,8 +11,8 @@ export type WaitlistStatus =
 
 export interface WaitlistEntry {
   id: string
-  patientId: string
-  practitionerId: string
+  clientId: string
+  employeeId: string
   serviceId: string | null
   preferredDate: string | null
   preferredTime: string | null // "morning" | "afternoon" | "any"
@@ -21,14 +21,14 @@ export interface WaitlistEntry {
   bookedBookingId: string | null
   createdAt: string
   updatedAt: string
-  patient: {
+  client: {
     id: string
     firstName: string
     lastName: string
     email: string
     phone: string | null
   }
-  practitioner: {
+  employee: {
     id: string
     user: { firstName: string; lastName: string }
   }

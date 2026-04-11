@@ -1,24 +1,24 @@
 /**
- * CareKit Dashboard — Practitioners Page E2E Tests
+ * CareKit Dashboard — Employees Page E2E Tests
  *
- * Tests the /practitioners route:
+ * Tests the /employees route:
  *   - Page loads without auth redirect
  *   - Title "الأطباء" is visible
- *   - Add practitioner button is present
+ *   - Add employee button is present
  *   - Search input is accessible
- *   - Practitioner list or empty state renders
+ *   - Employee list or empty state renders
  */
 
 import { test, expect } from '../setup/fixtures';
 
-test.describe('Practitioners page', () => {
+test.describe('Employees page', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await goto('/practitioners');
+    await goto('/employees');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
   test('loads without being redirected to login', async ({ adminPage }) => {
-    await expect(adminPage).toHaveURL(/\/practitioners/);
+    await expect(adminPage).toHaveURL(/\/employees/);
     await expect(adminPage.locator('#email')).not.toBeVisible();
   });
 
@@ -26,7 +26,7 @@ test.describe('Practitioners page', () => {
     await expect(adminPage.getByText('الأطباء').first()).toBeVisible({ timeout: 12_000 });
   });
 
-  test('shows add practitioner button', async ({ adminPage }) => {
+  test('shows add employee button', async ({ adminPage }) => {
     await expect(adminPage.getByText('إضافة طبيب').first()).toBeVisible({ timeout: 12_000 });
   });
 
@@ -35,7 +35,7 @@ test.describe('Practitioners page', () => {
     await expect(searchInput.first()).toBeVisible({ timeout: 12_000 });
   });
 
-  test('renders practitioner list or empty state', async ({ adminPage }) => {
+  test('renders employee list or empty state', async ({ adminPage }) => {
     const table = adminPage.locator('table, [role="table"]');
     const cards = adminPage.locator('[class*="card"], [class*="grid"]');
     const hasContent = (await table.count() > 0) || (await cards.count() > 0);

@@ -18,7 +18,7 @@ import { useActivityLogs } from "@/hooks/use-activity-log"
 import { useLocale } from "@/components/locale-provider"
 
 const MODULES = [
-  "bookings", "users", "practitioners", "payments",
+  "bookings", "users", "employees", "payments",
   "invoices", "services", "roles", "whitelabel", "ratings",
 ]
 

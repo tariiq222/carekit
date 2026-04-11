@@ -77,7 +77,7 @@ Phase 9 — Testing & Delivery                       🔲 0%
 | 6.2.1 | الرئيسية (Landing) | hero + خدمات + أطباء مميزين + تقييمات + CTA | 🔲 |
 | 6.2.2 | من نحن (About) | تعريف العيادة + الرؤية + الفريق | 🔲 |
 | 6.2.3 | الخدمات (Services) | عرض كل الخدمات مع التفاصيل والأسعار | 🔲 |
-| 6.2.4 | الأطباء (Practitioners) | قائمة الأطباء مع التخصص والتقييمات + صفحة تفصيلية لكل طبيب | 🔲 |
+| 6.2.4 | الأطباء (Employees) | قائمة الأطباء مع التخصص والتقييمات + صفحة تفصيلية لكل طبيب | 🔲 |
 | 6.2.5 | احجز موعد (Book) | نموذج حجز مبسّط — أو redirect للتطبيق | 🔲 |
 | 6.2.6 | تواصل معنا (Contact) | نموذج تواصل + خريطة + معلومات الاتصال | 🔲 |
 | 6.2.7 | الأسئلة الشائعة (FAQ) | أسئلة وأجوبة من Knowledge Base | 🔲 |
@@ -89,7 +89,7 @@ Phase 9 — Testing & Delivery                       🔲 0%
 |---|--------|-------|--------|
 | 6.3.1 | Chatbot Widget | ويدجت المحادثة الذكية على الموقع | 🔲 |
 | 6.3.2 | Online Booking | حجز مواعيد مباشرة من الموقع (أو redirect للتطبيق) | 🔲 |
-| 6.3.3 | Practitioner Profiles | صفحات SEO-friendly لكل طبيب | 🔲 |
+| 6.3.3 | Employee Profiles | صفحات SEO-friendly لكل طبيب | 🔲 |
 | 6.3.4 | Blog/Articles | مقالات طبية (اختياري — حسب العميل) | 🔲 |
 | 6.3.5 | WhatsApp Integration | زر واتساب للتواصل المباشر | 🔲 |
 
@@ -128,8 +128,8 @@ Phase 9 — Testing & Delivery                       🔲 0%
 | 7.2.3 | Offline Support | تخزين مؤقت للبيانات الأساسية | 🔲 |
 | 7.2.4 | Biometric Auth | Face ID / Fingerprint لتسجيل الدخول | 🔲 |
 | 7.2.5 | Image Upload (Profile) | رفع صورة الملف الشخصي (MinIO) | 🔲 |
-| 7.2.6 | Practitioner Notifications | شاشة إشعارات الممارس | 🔲 |
-| 7.2.7 | Practitioner Settings | إعدادات الممارس (أوقات العمل، إجازات) | 🔲 |
+| 7.2.6 | Employee Notifications | شاشة إشعارات الممارس | 🔲 |
+| 7.2.7 | Employee Settings | إعدادات الممارس (أوقات العمل، إجازات) | 🔲 |
 
 ### 7.3 — App Store Submission
 

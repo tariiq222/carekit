@@ -13,16 +13,16 @@
  */
 
 import { bench, describe, expect } from "vitest"
-import type { Patient } from "@/lib/types/patient"
+import type { Client } from "@/lib/types/client"
 import type { Booking, BookingStatus, BookingType } from "@/lib/types/booking"
 import type { PaginatedResponse } from "@/lib/types/common"
 
 // ─── Fixture generators ───────────────────────────────────────────────────────
 
-function makePatient(i: number): Patient {
+function makeClient(i: number): Client {
   return {
-    id: `patient-${i}`,
-    email: `patient${i}@example.com`,
+    id: `client-${i}`,
+    email: `client${i}@example.com`,
     firstName: `First${i}`,
     lastName: `Last${i}`,
     phone: `+9665000${String(i).padStart(5, "0")}`,
@@ -40,10 +40,10 @@ function makeBooking(i: number): Booking {
   const types: BookingType[] = ["clinic_visit", "phone_consultation", "video_consultation"]
   return {
     id: `booking-${i}`,
-    patientId: `patient-${i}`,
-    practitionerId: `prac-${i}`,
+    clientId: `client-${i}`,
+    employeeId: `prac-${i}`,
     serviceId: `svc-${i}`,
-    practitionerServiceId: `ps-${i}`,
+    employeeServiceId: `ps-${i}`,
     date: new Date(Date.now() + i * 86_400_000).toISOString().slice(0, 10),
     startTime: "09:00",
     endTime: "09:30",
@@ -59,14 +59,14 @@ function makeBooking(i: number): Booking {
     cancelledAt: null,
     confirmedAt: null,
     completedAt: null,
-    patient: {
-      id: `patient-${i}`,
+    client: {
+      id: `client-${i}`,
       firstName: `First${i}`,
       lastName: `Last${i}`,
-      email: `patient${i}@example.com`,
+      email: `client${i}@example.com`,
       phone: null,
     },
-    practitioner: {
+    employee: {
       id: `prac-${i}`,
       userId: `user-${i}`,
       user: { firstName: "Dr", lastName: `Smith${i}` },
@@ -80,7 +80,7 @@ function makeBooking(i: number): Booking {
       price: 200,
       duration: 30,
     },
-    practitionerService: null,
+    employeeService: null,
     rescheduledFrom: null,
     payment: null,
     createdAt: new Date().toISOString(),
@@ -105,8 +105,8 @@ function makePaginatedResponse<T>(items: T[], total: number): PaginatedResponse<
 
 // ─── Pre-built payloads (serialised once, not inside bench loop) ──────────────
 
-const PATIENTS_20  = JSON.stringify({ success: true, data: makePaginatedResponse(Array.from({ length: 20 },  (_, i) => makePatient(i)),  200) })
-const PATIENTS_100 = JSON.stringify({ success: true, data: makePaginatedResponse(Array.from({ length: 100 }, (_, i) => makePatient(i)), 1000) })
+const CLIENTS_20  = JSON.stringify({ success: true, data: makePaginatedResponse(Array.from({ length: 20 },  (_, i) => makeClient(i)),  200) })
+const CLIENTS_100 = JSON.stringify({ success: true, data: makePaginatedResponse(Array.from({ length: 100 }, (_, i) => makeClient(i)), 1000) })
 const BOOKINGS_20  = JSON.stringify({ success: true, data: makePaginatedResponse(Array.from({ length: 20 },  (_, i) => makeBooking(i)),  300) })
 const BOOKINGS_50  = JSON.stringify({ success: true, data: makePaginatedResponse(Array.from({ length: 50 },  (_, i) => makeBooking(i)),  300) })
 
@@ -121,12 +121,12 @@ function unwrapApiResponse<T>(raw: unknown): T {
 
 // ─── JSON parsing benchmarks ──────────────────────────────────────────────────
 
-describe("JSON parsing — patients payload", () => {
+describe("JSON parsing — clients payload", () => {
   bench(
-    "parse 20 patients under 5ms",
+    "parse 20 clients under 5ms",
     () => {
       const start = performance.now()
-      JSON.parse(PATIENTS_20)
+      JSON.parse(CLIENTS_20)
       const duration = performance.now() - start
       expect(duration).toBeLessThan(15)
     },
@@ -134,10 +134,10 @@ describe("JSON parsing — patients payload", () => {
   )
 
   bench(
-    "parse 100 patients under 5ms",
+    "parse 100 clients under 5ms",
     () => {
       const start = performance.now()
-      JSON.parse(PATIENTS_100)
+      JSON.parse(CLIENTS_100)
       const duration = performance.now() - start
       expect(duration).toBeLessThan(15)
     },
@@ -147,7 +147,7 @@ describe("JSON parsing — patients payload", () => {
 
 describe("JSON parsing — bookings payload", () => {
   bench(
-    "parse 20 bookings (with nested patient/practitioner) under 5ms",
+    "parse 20 bookings (with nested client/employee) under 5ms",
     () => {
       const start = performance.now()
       JSON.parse(BOOKINGS_20)
@@ -173,11 +173,11 @@ describe("JSON parsing — bookings payload", () => {
 
 describe("ApiResponse envelope unwrap", () => {
   bench(
-    "unwrap patients list under 1ms",
+    "unwrap clients list under 1ms",
     () => {
-      const parsed = JSON.parse(PATIENTS_20)
+      const parsed = JSON.parse(CLIENTS_20)
       const start = performance.now()
-      const result = unwrapApiResponse<PaginatedResponse<Patient>>(parsed)
+      const result = unwrapApiResponse<PaginatedResponse<Client>>(parsed)
       const duration = performance.now() - start
       expect(result.items).toHaveLength(20)
       expect(duration).toBeLessThan(15)
@@ -237,11 +237,11 @@ describe("buildQuery serialisation", () => {
 
 describe("full pipeline (parse → unwrap → field access)", () => {
   bench(
-    "patients pipeline under 5ms",
+    "clients pipeline under 5ms",
     () => {
       const start = performance.now()
-      const raw = JSON.parse(PATIENTS_20)
-      const result = unwrapApiResponse<PaginatedResponse<Patient>>(raw)
+      const raw = JSON.parse(CLIENTS_20)
+      const result = unwrapApiResponse<PaginatedResponse<Client>>(raw)
       // Simulate what a component does — map to display strings
       result.items.map((p) => `${p.firstName} ${p.lastName}`)
       const duration = performance.now() - start
@@ -258,7 +258,7 @@ describe("full pipeline (parse → unwrap → field access)", () => {
       const result = unwrapApiResponse<PaginatedResponse<Booking>>(raw)
       result.items.map((b) => ({
         id: b.id,
-        patient: `${b.patient.firstName} ${b.patient.lastName}`,
+        client: `${b.client.firstName} ${b.client.lastName}`,
         status: b.status,
       }))
       const duration = performance.now() - start

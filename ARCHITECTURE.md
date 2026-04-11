@@ -101,9 +101,9 @@ The following 20 features represent the official domain boundaries of CareKit. E
 | 1 | Auth | `auth/` | `login/` | Email + OTP, JWT, refresh tokens |
 | 2 | Users | `users/` | `users/` | Staff accounts, invitations |
 | 3 | Roles & Permissions | `roles/`, `permissions/` | `users/roles/` | CASL dynamic RBAC |
-| 4 | Practitioners | `practitioners/` | `practitioners/` | Profiles, availability, specialties |
+| 4 | Employees | `employees/` | `employees/` | Profiles, availability, specialties |
 | 5 | Services | `services/`, `specialties/` | `services/` | Service catalog, pricing |
-| 6 | Patients | `patients/` | `patients/` | Patient profiles, walk-in registration |
+| 6 | Clients | `clients/` | `clients/` | Client profiles, walk-in registration |
 | 7 | Bookings | `bookings/` | `bookings/` | Scheduling, cancellation, expiry |
 | 8 | Payments | `payments/` | `payments/` | Moyasar, bank transfer, webhook |
 | 9 | Invoices | `invoices/` | `invoices/` | Invoice generation, PDF export |
@@ -111,7 +111,7 @@ The following 20 features represent the official domain boundaries of CareKit. E
 | 11 | Coupons | `coupons/` | `coupons/` | Discount codes, usage tracking |
 | 12 | Gift Cards | `gift-cards/` | `gift-cards/` | Prepaid gift cards |
 | 13 | Ratings | `ratings/` | `ratings/` | Star ratings, feedback collection |
-| 14 | Problem Reports | `problem-reports/` | `problem-reports/` | Patient complaints, admin alerts |
+| 14 | Problem Reports | `problem-reports/` | `problem-reports/` | Client complaints, admin alerts |
 | 15 | AI Chatbot | `chatbot/` | `chatbot/` | OpenRouter chatbot, knowledge base |
 | 16 | Intake Forms | `intake-forms/` | `intake-forms/` | Pre-visit medical questionnaires |
 | 17 | Notifications | `notifications/` | `notifications/` | FCM push, in-app, email |
@@ -228,7 +228,7 @@ app/(dashboard)/[feature]/page.tsx
 ### Authentication Flow
 
 ```
-Patient Login (Email OTP):
+Client Login (Email OTP):
   POST /api/v1/auth/request-otp → sends OTP to email
   POST /api/v1/auth/verify-otp → returns { accessToken, refreshToken }
 

@@ -5,8 +5,8 @@
  * Steps: service → datetime → auth → confirm → success
  *
  * flowOrder controls which entity is selected first:
- * - "practitioner_first": pick practitioner → see their services (original)
- * - "service_first": pick service → see practitioners offering it
+ * - "employee_first": pick employee → see their services (original)
+ * - "service_first": pick service → see employees offering it
  */
 
 "use client"
@@ -16,7 +16,7 @@ import { useMutation } from "@tanstack/react-query"
 import { widgetCreateBooking } from "@/lib/api/widget"
 import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
 import { useWidgetBookingQueries, useWidgetSlotsQuery } from "./use-widget-booking-queries"
-import type { Practitioner, PractitionerDurationOption, TimeSlot } from "@/lib/types/practitioner"
+import type { Employee, EmployeeDurationOption, TimeSlot } from "@/lib/types/employee"
 import type { Service } from "@/lib/types/service"
 import type { BookingType, Booking } from "@/lib/types/booking"
 import type { PublicBranch } from "@/lib/api/widget"
@@ -27,10 +27,10 @@ export type WizardStep = "branch" | "service" | "datetime" | "auth" | "confirm" 
 
 export interface WizardState {
   step: WizardStep
-  practitioner: Practitioner | null
+  employee: Employee | null
   service: Service | null
   bookingType: BookingType | null
-  durationOption: PractitionerDurationOption | null
+  durationOption: EmployeeDurationOption | null
   date: string
   slot: TimeSlot | null
   booking: Booking | null
@@ -45,14 +45,14 @@ export interface WizardState {
 /* ─── Hook ─── */
 
 export function useWidgetBooking(
-  initialPractitionerId?: string,
+  initialEmployeeId?: string,
   initialServiceId?: string,
   flowOrder: BookingFlowOrder = "service_first",
-  anyPractitioner = false,
+  anyEmployee = false,
 ) {
   const [state, setState] = useState<WizardState>({
     step: "service",
-    practitioner: null,
+    employee: null,
     service: null,
     bookingType: null,
     durationOption: null,
@@ -73,11 +73,11 @@ export function useWidgetBooking(
   const activeServiceType = serviceTypes.find(
     (st) => st.bookingType === state.bookingType && st.isActive,
   )
-  const durationOptions: PractitionerDurationOption[] =
+  const durationOptions: EmployeeDurationOption[] =
     activeServiceType?.durationOptions ?? []
 
   const canFetchSlots =
-    !!state.practitioner && !!state.date &&
+    !!state.employee && !!state.date &&
     (!durationOptions.length || !!state.durationOption)
 
   const resolvedDuration = state.durationOption?.durationMinutes ?? undefined
@@ -95,11 +95,11 @@ export function useWidgetBooking(
 
   /* ─── Navigation helpers ─── */
 
-  const selectPractitioner = useCallback((p: Practitioner) => {
+  const selectEmployee = useCallback((p: Employee) => {
     setState((s) => ({
       ...s,
-      practitioner: p,
-      service: flowOrder === "practitioner_first" ? null : s.service,
+      employee: p,
+      service: flowOrder === "employee_first" ? null : s.service,
       bookingType: null,
       durationOption: null,
       slot: null,
@@ -121,7 +121,7 @@ export function useWidgetBooking(
     setState((s) => ({
       ...s,
       service: svc,
-      practitioner: null,
+      employee: null,
       bookingType: null,
       durationOption: null,
       slot: null,
@@ -138,9 +138,9 @@ export function useWidgetBooking(
 
   const confirmBooking = useCallback(
     (notes?: string) => {
-      if (!state.practitioner || !state.service || !state.bookingType || !state.date || !state.slot) return
+      if (!state.employee || !state.service || !state.bookingType || !state.date || !state.slot) return
       createMut.mutate({
-        practitionerId: state.practitioner.id,
+        employeeId: state.employee.id,
         serviceId: state.service.id,
         type: state.bookingType,
         date: state.date,
@@ -182,16 +182,16 @@ export function useWidgetBooking(
       // Inside service step — handle sub-states first
       if ((s.step as string) === "service") {
         if (flowOrder === "service_first") {
-          // booking type shown → go back to practitioner list
-          if (s.practitioner && s.service) return { ...s, practitioner: null, bookingType: null, durationOption: null, slot: null }
-          // practitioner list shown → go back to service list
-          if (s.service && !s.practitioner) return { ...s, service: null, practitioner: null, bookingType: null, durationOption: null, slot: null }
+          // booking type shown → go back to employee list
+          if (s.employee && s.service) return { ...s, employee: null, bookingType: null, durationOption: null, slot: null }
+          // employee list shown → go back to service list
+          if (s.service && !s.employee) return { ...s, service: null, employee: null, bookingType: null, durationOption: null, slot: null }
         }
-        if (flowOrder === "practitioner_first") {
+        if (flowOrder === "employee_first") {
           // booking type shown → go back to service list
-          if (s.practitioner && s.service) return { ...s, service: null, bookingType: null, durationOption: null, slot: null }
-          // service list shown → go back to practitioner list
-          if (s.practitioner && !s.service) return { ...s, practitioner: null, bookingType: null, durationOption: null, slot: null }
+          if (s.employee && s.service) return { ...s, service: null, bookingType: null, durationOption: null, slot: null }
+          // service list shown → go back to employee list
+          if (s.employee && !s.service) return { ...s, employee: null, bookingType: null, durationOption: null, slot: null }
         }
       }
       // Going back from confirm → skip auth (user is already authenticated, auth useEffect
@@ -212,16 +212,16 @@ export function useWidgetBooking(
   }, [hasBranches, flowOrder])
 
   // Sub-step back helpers (used inside "service" step)
-  const clearPractitioner = useCallback(() => {
-    setState((s) => ({ ...s, practitioner: null, bookingType: null, durationOption: null, slot: null }))
+  const clearEmployee = useCallback(() => {
+    setState((s) => ({ ...s, employee: null, bookingType: null, durationOption: null, slot: null }))
   }, [])
 
-  // Clears service + practitioner (go back to first sub-step)
+  // Clears service + employee (go back to first sub-step)
   const clearService = useCallback(() => {
-    setState((s) => ({ ...s, service: null, practitioner: null, bookingType: null, durationOption: null, slot: null }))
+    setState((s) => ({ ...s, service: null, employee: null, bookingType: null, durationOption: null, slot: null }))
   }, [])
 
-  // Clears service only — keeps practitioner (practitioner_first: go back from booking-type to service list)
+  // Clears service only — keeps employee (employee_first: go back from booking-type to service list)
   const clearServiceOnly = useCallback(() => {
     setState((s) => ({ ...s, service: null, bookingType: null, durationOption: null, slot: null }))
   }, [])
@@ -269,7 +269,7 @@ export function useWidgetBooking(
     slots,
     slotsLoading,
     canFetchSlots,
-    selectPractitioner,
+    selectEmployee,
     selectService,
     selectServiceOnly,
     selectDateTime,
@@ -279,9 +279,9 @@ export function useWidgetBooking(
     universalBack,
     isConfirming: createMut.isPending,
     confirmError: createMut.error,
-    initialPractitionerId,
+    initialEmployeeId,
     initialServiceId,
-    clearPractitioner,
+    clearEmployee,
     clearService,
     clearServiceOnly,
     hasBranches,
@@ -292,6 +292,6 @@ export function useWidgetBooking(
     clearDiscount,
     selectPaymentMethod,
     dismissIntakePopup,
-    anyPractitioner,
+    anyEmployee,
   }
 }

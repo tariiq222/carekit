@@ -14,11 +14,11 @@
 
 | # | الثغرة | الملف | الأولوية |
 |---|--------|-------|---------|
-| A | سجل المريض عند الممارس = بيانات وهمية | `mobile/app/(practitioner)/patient/[id].tsx` | 🔴 عالية |
-| B | قائمة مرضى الممارس بدون API | `mobile/app/(practitioner)/(tabs)/patients.tsx` | 🟠 متوسطة |
-| C | أزرار Profile بدون وظائف | `mobile/app/(patient)/(tabs)/profile.tsx` | 🟡 متوسطة |
-| D | زر "احجز" في تفاصيل الممارس غير مربوط | `mobile/app/(patient)/practitioner/[id].tsx` | 🟡 متوسطة |
-| E | إدارة التوفر للممارس غير موجودة | `mobile/app/(practitioner)/(tabs)/calendar.tsx` | 🟡 متوسطة |
+| A | سجل المريض عند الممارس = بيانات وهمية | `mobile/app/(employee)/client/[id].tsx` | 🔴 عالية |
+| B | قائمة مرضى الممارس بدون API | `mobile/app/(employee)/(tabs)/clients.tsx` | 🟠 متوسطة |
+| C | أزرار Profile بدون وظائف | `mobile/app/(client)/(tabs)/profile.tsx` | 🟡 متوسطة |
+| D | زر "احجز" في تفاصيل الممارس غير مربوط | `mobile/app/(client)/employee/[id].tsx` | 🟡 متوسطة |
+| E | إدارة التوفر للممارس غير موجودة | `mobile/app/(employee)/(tabs)/calendar.tsx` | 🟡 متوسطة |
 | F | Specialties controller بدون `@ApiTags` | `backend/src/modules/specialties/specialties.controller.ts` | 🟢 منخفض |
 
 ---
@@ -27,13 +27,13 @@
 
 ```
 MODIFY:
-  mobile/app/(practitioner)/patient/[id].tsx          # Task A — ربط API
-  mobile/app/(practitioner)/(tabs)/patients.tsx        # Task B — ربط API
-  mobile/services/patients.ts                          # Task B — إضافة getPractitionerPatients (NEW FILE)
-  mobile/app/(patient)/(tabs)/profile.tsx              # Task C — ربط navigation
-  mobile/app/(patient)/practitioner/[id].tsx           # Task D — ربط زر الحجز
-  mobile/app/(practitioner)/(tabs)/calendar.tsx        # Task E — ربط إدارة التوفر
-  mobile/app/(practitioner)/availability.tsx           # Task E — شاشة جديدة
+  mobile/app/(employee)/client/[id].tsx          # Task A — ربط API
+  mobile/app/(employee)/(tabs)/clients.tsx        # Task B — ربط API
+  mobile/services/clients.ts                          # Task B — إضافة getEmployeeClients (NEW FILE)
+  mobile/app/(client)/(tabs)/profile.tsx              # Task C — ربط navigation
+  mobile/app/(client)/employee/[id].tsx           # Task D — ربط زر الحجز
+  mobile/app/(employee)/(tabs)/calendar.tsx        # Task E — ربط إدارة التوفر
+  mobile/app/(employee)/availability.tsx           # Task E — شاشة جديدة
   backend/src/modules/specialties/specialties.controller.ts  # Task F — @ApiTags
 ```
 
@@ -41,39 +41,39 @@ MODIFY:
 
 ## Task A: ربط شاشة سجل المريض بـ API
 
-**الملف:** `mobile/app/(practitioner)/patient/[id].tsx`
+**الملف:** `mobile/app/(employee)/client/[id].tsx`
 
 الشاشة تعرض حالياً بيانات hardcoded. المطلوب: جلب بيانات المريض الحقيقية من:
-- `GET /patients/:id` → بيانات المريض
-- `GET /bookings?patientId=:id` → تاريخ الزيارات
+- `GET /clients/:id` → بيانات المريض
+- `GET /bookings?clientId=:id` → تاريخ الزيارات
 
 **نمط API الموجود في المشروع:**
 ```typescript
 import api from '@/services/api';
 
-const response = await api.get<ApiResponse<Patient>>(`/patients/${id}`);
+const response = await api.get<ApiResponse<Client>>(`/clients/${id}`);
 return response.data;
 ```
 
-- [ ] **Step 1: إضافة دالة getById في patients service**
+- [ ] **Step 1: إضافة دالة getById في clients service**
 
-في `mobile/services/patients.ts` (أنشئ الملف إذا غير موجود أو عدّل الموجود):
+في `mobile/services/clients.ts` (أنشئ الملف إذا غير موجود أو عدّل الموجود):
 
 ```typescript
 import api from './api';
 import type { ApiResponse, PaginatedResponse } from '@/types/api';
-import type { Patient } from '@/types/patients';
+import type { Client } from '@/types/clients';
 import type { Booking } from '@/types/bookings';
 
-export const patientsService = {
+export const clientsService = {
   async getById(id: string) {
-    const response = await api.get<ApiResponse<Patient>>(`/patients/${id}`);
+    const response = await api.get<ApiResponse<Client>>(`/clients/${id}`);
     return response.data;
   },
 
-  async getPractitionerBookings(patientId: string) {
+  async getEmployeeBookings(clientId: string) {
     const response = await api.get<PaginatedResponse<Booking>>('/bookings', {
-      params: { patientId, limit: 50 },
+      params: { clientId, limit: 50 },
     });
     return response.data;
   },
@@ -82,18 +82,18 @@ export const patientsService = {
 
 - [ ] **Step 2: استبدال البيانات الوهمية بـ useEffect في [id].tsx**
 
-استبدل كتلة `const patient = { ... }` و `const visits: Visit[] = []` بـ:
+استبدل كتلة `const client = { ... }` و `const visits: Visit[] = []` بـ:
 
 ```typescript
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { patientsService } from '@/services/patients';
-import type { Patient } from '@/types/patients';
+import { clientsService } from '@/services/clients';
+import type { Client } from '@/types/clients';
 import type { Booking } from '@/types/bookings';
 
 // داخل المكوّن:
 const { id } = useLocalSearchParams<{ id: string }>();
-const [patient, setPatient] = useState<Patient | null>(null);
+const [client, setClient] = useState<Client | null>(null);
 const [visits, setVisits] = useState<Booking[]>([]);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState<string | null>(null);
@@ -102,11 +102,11 @@ useEffect(() => {
   if (!id) return;
   setLoading(true);
   Promise.allSettled([
-    patientsService.getById(id),
-    patientsService.getPractitionerBookings(id),
-  ]).then(([patientResult, bookingsResult]) => {
-    if (patientResult.status === 'fulfilled' && patientResult.value.success) {
-      setPatient(patientResult.value.data);
+    clientsService.getById(id),
+    clientsService.getEmployeeBookings(id),
+  ]).then(([clientResult, bookingsResult]) => {
+    if (clientResult.status === 'fulfilled' && clientResult.value.success) {
+      setClient(clientResult.value.data);
     } else {
       setError('تعذّر تحميل بيانات المريض');
     }
@@ -130,7 +130,7 @@ if (loading) {
     </SafeAreaView>
   );
 }
-if (error || !patient) {
+if (error || !client) {
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <ThemedText>{error ?? 'مريض غير موجود'}</ThemedText>
@@ -139,16 +139,16 @@ if (error || !patient) {
 }
 ```
 
-- [ ] **Step 4: تحديث عرض البيانات لاستخدام patient الحقيقي**
+- [ ] **Step 4: تحديث عرض البيانات لاستخدام client الحقيقي**
 
 حدّث عرض اسم المريض من:
 ```typescript
 // قديم
-<ThemedText>{patient.firstName} {patient.lastName}</ThemedText>
-<ThemedText>{patient.phone}</ThemedText>
-<ThemedText>{patient.email}</ThemedText>
+<ThemedText>{client.firstName} {client.lastName}</ThemedText>
+<ThemedText>{client.phone}</ThemedText>
+<ThemedText>{client.email}</ThemedText>
 ```
-إلى نفس الحقول ولكن مع النوع الصحيح من الـ API. تأكد أن حقول `patient` تتطابق مع نموذج `Patient` في `@/types/patients`.
+إلى نفس الحقول ولكن مع النوع الصحيح من الـ API. تأكد أن حقول `client` تتطابق مع نموذج `Client` في `@/types/clients`.
 
 - [ ] **Step 5: تحديث عرض الزيارات**
 
@@ -163,47 +163,47 @@ if (error || !patient) {
 - [ ] **Step 6: Commit**
 
 ```bash
-git add mobile/services/patients.ts mobile/app/\(practitioner\)/patient/\[id\].tsx
-git commit -m "feat(mobile/practitioner): wire patient record screen to real API"
+git add mobile/services/clients.ts mobile/app/\(employee\)/client/\[id\].tsx
+git commit -m "feat(mobile/employee): wire client record screen to real API"
 ```
 
 ---
 
 ## Task B: ربط قائمة مرضى الممارس بـ API
 
-**الملف:** `mobile/app/(practitioner)/(tabs)/patients.tsx`
+**الملف:** `mobile/app/(employee)/(tabs)/clients.tsx`
 
-الـ Backend لا يملك endpoint لمرضى ممارس محدد — يوجد `GET /patients` عام. نستخدمه مع تصفية بالبحث.
+الـ Backend لا يملك endpoint لمرضى ممارس محدد — يوجد `GET /clients` عام. نستخدمه مع تصفية بالبحث.
 
-- [ ] **Step 1: إضافة دالة getAll في patients service**
+- [ ] **Step 1: إضافة دالة getAll في clients service**
 
-في `mobile/services/patients.ts`، أضف:
+في `mobile/services/clients.ts`، أضف:
 
 ```typescript
 async getAll(params?: { search?: string; page?: number; limit?: number }) {
-  const response = await api.get<PaginatedResponse<Patient>>('/patients', { params });
+  const response = await api.get<PaginatedResponse<Client>>('/clients', { params });
   return response.data;
 },
 ```
 
 - [ ] **Step 2: استبدال الـ state الفارغ بـ useEffect مع API**
 
-في `patients.tsx`، احذف `const [patients, setPatients] = useState<PatientItem[]>([])` واستبدله بـ:
+في `clients.tsx`، احذف `const [clients, setClients] = useState<ClientItem[]>([])` واستبدله بـ:
 
 ```typescript
 import { useCallback, useEffect, useState } from 'react';
-import { patientsService } from '@/services/patients';
+import { clientsService } from '@/services/clients';
 
-const [patients, setPatients] = useState<PatientItem[]>([]);
+const [clients, setClients] = useState<ClientItem[]>([]);
 const [loading, setLoading] = useState(true);
 const [search, setSearch] = useState('');
 
-const fetchPatients = useCallback(async (searchTerm: string) => {
+const fetchClients = useCallback(async (searchTerm: string) => {
   setLoading(true);
   try {
-    const res = await patientsService.getAll({ search: searchTerm || undefined, limit: 50 });
+    const res = await clientsService.getAll({ search: searchTerm || undefined, limit: 50 });
     if (res.success) {
-      setPatients(
+      setClients(
         (res.data.items ?? []).map((p) => ({
           id: p.id,
           name: `${p.firstName} ${p.lastName}`,
@@ -219,13 +219,13 @@ const fetchPatients = useCallback(async (searchTerm: string) => {
 }, []);
 
 useEffect(() => {
-  fetchPatients('');
-}, [fetchPatients]);
+  fetchClients('');
+}, [fetchClients]);
 ```
 
 - [ ] **Step 3: ربط حقل البحث بـ API call**
 
-ابحث عن `setSearch` أو `onChangeText` في patients.tsx. عدّله ليستدعي `fetchPatients` بعد تأخير (debounce بسيط):
+ابحث عن `setSearch` أو `onChangeText` في clients.tsx. عدّله ليستدعي `fetchClients` بعد تأخير (debounce بسيط):
 
 ```typescript
 const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -233,7 +233,7 @@ const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 const handleSearch = (text: string) => {
   setSearch(text);
   if (searchTimeout.current) clearTimeout(searchTimeout.current);
-  searchTimeout.current = setTimeout(() => fetchPatients(text), 400);
+  searchTimeout.current = setTimeout(() => fetchClients(text), 400);
 };
 ```
 
@@ -242,7 +242,7 @@ const handleSearch = (text: string) => {
 - [ ] **Step 4: إضافة loading indicator**
 
 ```typescript
-{loading && patients.length === 0 && (
+{loading && clients.length === 0 && (
   <ActivityIndicator style={{ marginTop: 40 }} size="large" />
 )}
 ```
@@ -250,19 +250,19 @@ const handleSearch = (text: string) => {
 - [ ] **Step 5: Commit**
 
 ```bash
-git add mobile/services/patients.ts mobile/app/\(practitioner\)/\(tabs\)/patients.tsx
-git commit -m "feat(mobile/practitioner): wire patients list to real API with search"
+git add mobile/services/clients.ts mobile/app/\(employee\)/\(tabs\)/clients.tsx
+git commit -m "feat(mobile/employee): wire clients list to real API with search"
 ```
 
 ---
 
 ## Task C: ربط أزرار Profile بـ Navigation
 
-**الملف:** `mobile/app/(patient)/(tabs)/profile.tsx`
+**الملف:** `mobile/app/(client)/(tabs)/profile.tsx`
 
 الأزرار فارغة `onPress={() => {}}`. المطلوب ربطها بـ routes موجودة.
 
-**Routes الموجودة في `mobile/app/(patient)/`:**
+**Routes الموجودة في `mobile/app/(client)/`:**
 - `settings.tsx` → إعدادات المريض
 
 **ملاحظة:** بعض الشاشات (الدفع، الإشعارات، اللغة، الخصوصية، الشروط، FAQ) غير موجودة بعد → نتعامل معها بـ `Alert.alert('قريباً', 'هذه الميزة ستكون متاحة قريباً')`.
@@ -279,7 +279,7 @@ import { Alert } from 'react-native';
 - [ ] **Step 2: ربط "المعلومات الشخصية" بـ settings**
 
 ```typescript
-onPress={() => router.push('/(patient)/settings')}
+onPress={() => router.push('/(client)/settings')}
 ```
 
 - [ ] **Step 3: ربط الأزرار غير المكتملة بـ "قريباً"**
@@ -310,21 +310,21 @@ onPress={() => Alert.alert('قريباً', 'شروط الاستخدام ستكو
 - [ ] **Step 4: Commit**
 
 ```bash
-git add mobile/app/\(patient\)/\(tabs\)/profile.tsx
-git commit -m "feat(mobile/patient): connect profile menu buttons to routes and placeholders"
+git add mobile/app/\(client\)/\(tabs\)/profile.tsx
+git commit -m "feat(mobile/client): connect profile menu buttons to routes and placeholders"
 ```
 
 ---
 
 ## Task D: ربط زر "احجز" في تفاصيل الممارس
 
-**الملف:** `mobile/app/(patient)/practitioner/[id].tsx`
+**الملف:** `mobile/app/(client)/employee/[id].tsx`
 
-الزر يحتاج navigate إلى booking flow. الـ booking flow يبدأ من `/(patient)/booking/[serviceId]`.
+الزر يحتاج navigate إلى booking flow. الـ booking flow يبدأ من `/(client)/booking/[serviceId]`.
 
-لأن زر "احجز" هنا عام (غير مرتبط بخدمة محددة)، ننتقل إلى شاشة الممارس مع تمرير `practitionerId` — أو نفتح modal لاختيار الخدمة.
+لأن زر "احجز" هنا عام (غير مرتبط بخدمة محددة)، ننتقل إلى شاشة الممارس مع تمرير `employeeId` — أو نفتح modal لاختيار الخدمة.
 
-**الحل الأبسط (YAGNI):** نمرر `practitionerId` كـ param إلى أول خطوة في الـ booking flow.
+**الحل الأبسط (YAGNI):** نمرر `employeeId` كـ param إلى أول خطوة في الـ booking flow.
 
 - [ ] **Step 1: تحديث `onPress` لزر الحجز**
 
@@ -337,7 +337,7 @@ onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }}
 // جديد:
 onPress={() => {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  router.push({ pathname: '/(patient)/booking/[serviceId]', params: { serviceId: 'select', practitionerId: practitioner.id } });
+  router.push({ pathname: '/(client)/booking/[serviceId]', params: { serviceId: 'select', employeeId: employee.id } });
 }}
 ```
 
@@ -346,60 +346,60 @@ onPress={() => {
 import { router, useLocalSearchParams } from 'expo-router';
 ```
 
-- [ ] **Step 2: تحديث `booking/[serviceId].tsx` لقبول practitionerId**
+- [ ] **Step 2: تحديث `booking/[serviceId].tsx` لقبول employeeId**
 
-في `mobile/app/(patient)/booking/[serviceId].tsx`، تأكد من قراءة `practitionerId` من الـ params:
+في `mobile/app/(client)/booking/[serviceId].tsx`، تأكد من قراءة `employeeId` من الـ params:
 
 ```typescript
-const { serviceId, practitionerId } = useLocalSearchParams<{ serviceId: string; practitionerId?: string }>();
+const { serviceId, employeeId } = useLocalSearchParams<{ serviceId: string; employeeId?: string }>();
 ```
 
 إذا كان `serviceId === 'select'`، اعرض قائمة خدمات الممارس المحدد:
 
 ```typescript
 useEffect(() => {
-  if (serviceId === 'select' && practitionerId) {
+  if (serviceId === 'select' && employeeId) {
     // جلب خدمات الممارس
-    practitionersService.getById(practitionerId).then((res) => {
-      if (res.success) setPractitioner(res.data);
+    employeesService.getById(employeeId).then((res) => {
+      if (res.success) setEmployee(res.data);
     });
   }
-}, [serviceId, practitionerId]);
+}, [serviceId, employeeId]);
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add mobile/app/\(patient\)/practitioner/\[id\].tsx mobile/app/\(patient\)/booking/\[serviceId\].tsx
-git commit -m "feat(mobile/patient): connect book button to booking flow with practitionerId"
+git add mobile/app/\(client\)/employee/\[id\].tsx mobile/app/\(client\)/booking/\[serviceId\].tsx
+git commit -m "feat(mobile/client): connect book button to booking flow with employeeId"
 ```
 
 ---
 
 ## Task E: شاشة إدارة التوفر للممارس
 
-**الملف الجديد:** `mobile/app/(practitioner)/availability.tsx`  
-**الملف المعدّل:** `mobile/app/(practitioner)/(tabs)/calendar.tsx`
+**الملف الجديد:** `mobile/app/(employee)/availability.tsx`  
+**الملف المعدّل:** `mobile/app/(employee)/(tabs)/calendar.tsx`
 
 Backend endpoints متاحة:
-- `GET /practitioners/:id/availability` → جدول العمل الأسبوعي
-- `PUT /practitioners/:id/availability` → تحديث الجدول
+- `GET /employees/:id/availability` → جدول العمل الأسبوعي
+- `PUT /employees/:id/availability` → تحديث الجدول
 
-- [ ] **Step 1: إضافة practitioner availability service**
+- [ ] **Step 1: إضافة employee availability service**
 
-في `mobile/services/practitioners.ts` أضف:
+في `mobile/services/employees.ts` أضف:
 
 ```typescript
 async getAvailabilitySchedule(id: string) {
-  const response = await api.get<ApiResponse<PractitionerAvailability[]>>(
-    `/practitioners/${id}/availability`
+  const response = await api.get<ApiResponse<EmployeeAvailability[]>>(
+    `/employees/${id}/availability`
   );
   return response.data;
 },
 
-async updateAvailabilitySchedule(id: string, schedule: PractitionerAvailability[]) {
-  const response = await api.put<ApiResponse<PractitionerAvailability[]>>(
-    `/practitioners/${id}/availability`,
+async updateAvailabilitySchedule(id: string, schedule: EmployeeAvailability[]) {
+  const response = await api.put<ApiResponse<EmployeeAvailability[]>>(
+    `/employees/${id}/availability`,
     { schedule }
   );
   return response.data;
@@ -408,7 +408,7 @@ async updateAvailabilitySchedule(id: string, schedule: PractitionerAvailability[
 
 - [ ] **Step 2: إنشاء شاشة availability.tsx**
 
-أنشئ `mobile/app/(practitioner)/availability.tsx`:
+أنشئ `mobile/app/(employee)/availability.tsx`:
 
 ```typescript
 import { useCallback, useEffect, useState } from 'react';
@@ -416,7 +416,7 @@ import { View, ScrollView, Switch, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { useAppSelector } from '@/hooks/use-redux';
-import { practitionersService } from '@/services/practitioners';
+import { employeesService } from '@/services/employees';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedButton } from '@/components/themed-button';
 import { useTranslation } from 'react-i18next';
@@ -440,8 +440,8 @@ export default function AvailabilityScreen() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user?.practitionerId) return;
-    practitionersService.getAvailabilitySchedule(user.practitionerId).then((res) => {
+    if (!user?.employeeId) return;
+    employeesService.getAvailabilitySchedule(user.employeeId).then((res) => {
       if (res.success && res.data.length > 0) {
         setSchedule(
           DAYS_AR.map((_, i) => {
@@ -452,7 +452,7 @@ export default function AvailabilityScreen() {
       }
       setLoading(false);
     });
-  }, [user?.practitionerId]);
+  }, [user?.employeeId]);
 
   const toggleDay = useCallback((dayIndex: number) => {
     setSchedule((prev) =>
@@ -461,11 +461,11 @@ export default function AvailabilityScreen() {
   }, []);
 
   const handleSave = async () => {
-    if (!user?.practitionerId) return;
+    if (!user?.employeeId) return;
     setSaving(true);
     try {
-      const res = await practitionersService.updateAvailabilitySchedule(
-        user.practitionerId,
+      const res = await employeesService.updateAvailabilitySchedule(
+        user.employeeId,
         schedule.filter((d) => d.isWorking)
       );
       if (res.success) {
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
 
 - [ ] **Step 3: ربط زر "إدارة التوفر" في calendar.tsx**
 
-في `mobile/app/(practitioner)/(tabs)/calendar.tsx`، ابحث عن:
+في `mobile/app/(employee)/(tabs)/calendar.tsx`، ابحث عن:
 
 ```typescript
 <ThemedButton onPress={() => {}} variant="outline" size="md" full>
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
 غيّره إلى:
 
 ```typescript
-<ThemedButton onPress={() => router.push('/(practitioner)/availability')} variant="outline" size="md" full>
+<ThemedButton onPress={() => router.push('/(employee)/availability')} variant="outline" size="md" full>
 ```
 
 تأكد من استيراد `router` من `expo-router`.
@@ -535,8 +535,8 @@ const styles = StyleSheet.create({
 - [ ] **Step 4: Commit**
 
 ```bash
-git add mobile/app/\(practitioner\)/availability.tsx mobile/app/\(practitioner\)/\(tabs\)/calendar.tsx mobile/services/practitioners.ts
-git commit -m "feat(mobile/practitioner): add availability management screen and wire calendar button"
+git add mobile/app/\(employee\)/availability.tsx mobile/app/\(employee\)/\(tabs\)/calendar.tsx mobile/services/employees.ts
+git commit -m "feat(mobile/employee): add availability management screen and wire calendar button"
 ```
 
 ---
@@ -578,7 +578,7 @@ git commit -m "fix(backend/specialties): add @ApiTags decorator to Specialties c
 ```
 Task F  (5 دقائق)   → سريع ومستقل
 Task A  (30 دقيقة)  → أولوية عالية
-Task B  (20 دقيقة)  → يعتمد على patients service من Task A
+Task B  (20 دقيقة)  → يعتمد على clients service من Task A
 Task D  (15 دقيقة)  → مستقل
 Task C  (15 دقيقة)  → مستقل
 Task E  (45 دقيقة)  → الأكبر (شاشة جديدة)

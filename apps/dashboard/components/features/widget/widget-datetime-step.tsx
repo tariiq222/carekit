@@ -21,7 +21,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 import type { useWidgetBooking } from "@/hooks/use-widget-booking"
-import type { TimeSlot } from "@/lib/types/practitioner"
+import type { TimeSlot } from "@/lib/types/employee"
 import { useWidgetAvailableDatesQuery } from "@/hooks/use-widget-booking-queries"
 
 interface AvailableTimeSlot extends TimeSlot { available: boolean }
@@ -152,7 +152,7 @@ export function WidgetDatetimeStep({ locale, booking, maxAdvanceDays = 0 }: Prop
   const monthStr = format(calendarMonth, "yyyy-MM")
   const resolvedDuration = state.durationOption?.durationMinutes ?? undefined
   const { availableDates, availableDatesLoading } = useWidgetAvailableDatesQuery(
-    state.practitioner?.id, monthStr, resolvedDuration, state.branch?.id,
+    state.employee?.id, monthStr, resolvedDuration, state.branch?.id,
   )
 
   const availableDateSet = useMemo(() => new Set(availableDates), [availableDates])
@@ -180,7 +180,7 @@ export function WidgetDatetimeStep({ locale, booking, maxAdvanceDays = 0 }: Prop
       const maxDate = addDays(today, maxAdvanceDays)
       if (isAfter(d, maxDate)) return true
     }
-    if (!state.practitioner?.id || availableDatesLoading) return false
+    if (!state.employee?.id || availableDatesLoading) return false
     return !availableDateSet.has(format(d, "yyyy-MM-dd"))
   }
 
@@ -259,11 +259,11 @@ export function WidgetDatetimeStep({ locale, booking, maxAdvanceDays = 0 }: Prop
               </span>
             </div>
           )}
-          {state.practitioner && (
+          {state.employee && (
             <div className="flex items-start gap-1.5">
               <HugeiconsIcon icon={UserCircleIcon} size={12} className="text-primary shrink-0 mt-0.5" />
               <span className="text-xs text-foreground leading-tight">
-                {isRtl ? (state.practitioner.nameAr ?? state.practitioner.specialty) : state.practitioner.specialty}
+                {isRtl ? (state.employee.nameAr ?? state.employee.specialty) : state.employee.specialty}
               </span>
             </div>
           )}

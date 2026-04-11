@@ -1,15 +1,15 @@
 import type { PaginatedResponse, PaginationParams } from './api.js'
 
-export interface PractitionerRating {
+export interface EmployeeRating {
   id: string
   bookingId: string
-  patientId: string | null
-  practitionerId: string
+  clientId: string | null
+  employeeId: string
   stars: number
   comment: string | null
   createdAt: string
   updatedAt: string
-  patient: {
+  client: {
     firstName: string
     lastName: string
   } | null
@@ -35,4 +35,4 @@ export interface RatingListQuery extends PaginationParams {
   toDate?: string
 }
 
-export type RatingListResponse = PaginatedResponse<PractitionerRating>
+export type RatingListResponse = PaginatedResponse<EmployeeRating>

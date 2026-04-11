@@ -1,33 +1,33 @@
 import { apiRequest } from '../client.js'
 import { buildQueryString } from '../types/api.js'
 import type {
-  PatientListItem,
-  PatientListQuery,
-  PatientListResponse,
-  PatientStats,
+  ClientListItem,
+  ClientListQuery,
+  ClientListResponse,
+  ClientStats,
   CreateWalkInPayload,
-  UpdatePatientPayload,
-} from '../types/patient.js'
+  UpdateClientPayload,
+} from '../types/client.js'
 
-export async function list(query: PatientListQuery = {}): Promise<PatientListResponse> {
-  return apiRequest<PatientListResponse>(
-    `/patients${buildQueryString(query as Record<string, unknown>)}`,
+export async function list(query: ClientListQuery = {}): Promise<ClientListResponse> {
+  return apiRequest<ClientListResponse>(
+    `/clients${buildQueryString(query as Record<string, unknown>)}`,
   )
 }
 
-export async function stats(): Promise<PatientStats> {
-  return apiRequest<PatientStats>('/patients/list-stats')
+export async function stats(): Promise<ClientStats> {
+  return apiRequest<ClientStats>('/clients/list-stats')
 }
 
-export async function get(id: string): Promise<PatientListItem> {
-  return apiRequest<PatientListItem>(`/patients/${id}`)
+export async function get(id: string): Promise<ClientListItem> {
+  return apiRequest<ClientListItem>(`/clients/${id}`)
 }
 
 export async function update(
   id: string,
-  payload: UpdatePatientPayload,
-): Promise<PatientListItem> {
-  return apiRequest<PatientListItem>(`/patients/${id}`, {
+  payload: UpdateClientPayload,
+): Promise<ClientListItem> {
+  return apiRequest<ClientListItem>(`/clients/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
@@ -35,8 +35,8 @@ export async function update(
 
 export async function createWalkIn(
   payload: CreateWalkInPayload,
-): Promise<PatientListItem> {
-  return apiRequest<PatientListItem>('/patients/walk-in', {
+): Promise<ClientListItem> {
+  return apiRequest<ClientListItem>('/clients/walk-in', {
     method: 'POST',
     body: JSON.stringify(payload),
   })

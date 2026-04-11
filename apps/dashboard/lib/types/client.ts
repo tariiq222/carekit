@@ -1,21 +1,21 @@
 /**
- * Patient Types — CareKit Dashboard
+ * Client Types — CareKit Dashboard
  */
 
 import type { PaginatedQuery, UserGender } from "./common"
 
 /* ─── Entities ─── */
 
-export interface PatientBookingPreview {
+export interface ClientBookingPreview {
   id: string
   date: string
   status: string
   service: { nameAr: string; nameEn: string }
-  practitioner: { user: { firstName: string; lastName: string } }
+  employee: { user: { firstName: string; lastName: string } }
   payment: { totalAmount: number; status: string; method: string } | null
 }
 
-export interface Patient {
+export interface Client {
   id: string
   email: string
   firstName: string
@@ -42,7 +42,7 @@ export interface Patient {
   nextBooking?: { id: string; date: string; status: string } | null
 }
 
-export interface PatientStats {
+export interface ClientStats {
   totalBookings: number
   completedBookings: number
   cancelledBookings: number
@@ -55,7 +55,7 @@ export interface PatientStats {
 
 /* ─── Query ─── */
 
-export interface PatientListQuery extends PaginatedQuery {
+export interface ClientListQuery extends PaginatedQuery {
   search?: string
   isActive?: boolean
 }

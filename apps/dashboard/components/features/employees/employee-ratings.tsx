@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { format } from "date-fns"
 
 import { queryKeys } from "@/lib/query-keys"
-import { fetchPractitionerRatings } from "@/lib/api/practitioners"
+import { fetchEmployeeRatings } from "@/lib/api/employees"
 import type { Rating } from "@/lib/types/rating"
 
 /* ─── Helpers ─── */
@@ -20,19 +20,19 @@ function StarDisplay({ stars }: { stars: number }) {
 
 /* ─── Props ─── */
 
-interface PractitionerRatingsProps {
-  practitionerId: string
+interface EmployeeRatingsProps {
+  employeeId: string
 }
 
 /* ─── Component ─── */
 
-export function PractitionerRatings({
-  practitionerId,
-}: PractitionerRatingsProps) {
+export function EmployeeRatings({
+  employeeId,
+}: EmployeeRatingsProps) {
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.practitioners.ratings(practitionerId),
-    queryFn: () => fetchPractitionerRatings(practitionerId, { perPage: 10 }),
-    enabled: !!practitionerId,
+    queryKey: queryKeys.employees.ratings(employeeId),
+    queryFn: () => fetchEmployeeRatings(employeeId, { perPage: 10 }),
+    enabled: !!employeeId,
   })
 
   const ratings = data?.items ?? []
@@ -60,9 +60,9 @@ export function PractitionerRatings({
                   {format(new Date(r.createdAt), "MMM d, yyyy")}
                 </span>
               </div>
-              {r.patient && (
+              {r.client && (
                 <span className="text-xs text-muted-foreground">
-                  {r.patient.firstName} {r.patient.lastName}
+                  {r.client.firstName} {r.client.lastName}
                 </span>
               )}
               {r.comment && (

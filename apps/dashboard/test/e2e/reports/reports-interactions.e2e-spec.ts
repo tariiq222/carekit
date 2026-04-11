@@ -5,7 +5,7 @@
  *   - Tab navigation: الحجوزات, الأطباء
  *   - Export CSV button is clickable
  *   - Date range filter inputs accept values
- *   - Practitioner combobox opens on practitioners tab
+ *   - Employee combobox opens on employees tab
  *   - Reset filters button appears after filter change
  */
 
@@ -91,7 +91,7 @@ test.describe('Reports — date range filter', () => {
   });
 });
 
-test.describe('Reports — practitioner filter on Doctors tab', () => {
+test.describe('Reports — employee filter on Doctors tab', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
     await goto('/reports');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
@@ -102,7 +102,7 @@ test.describe('Reports — practitioner filter on Doctors tab', () => {
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
-  test('practitioner combobox opens when clicked', async ({ adminPage }) => {
+  test('employee combobox opens when clicked', async ({ adminPage }) => {
     const combobox = adminPage
       .locator('[role="combobox"], button[aria-haspopup="listbox"]')
       .first();

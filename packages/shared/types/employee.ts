@@ -1,4 +1,4 @@
-export interface Practitioner {
+export interface Employee {
   id: string;
   userId: string;
   specialtyId: string;
@@ -15,9 +15,9 @@ export interface Practitioner {
   deletedAt: string | null;
 }
 
-export interface PractitionerServicePricing {
+export interface EmployeeServicePricing {
   id: string;
-  practitionerId: string;
+  employeeId: string;
   serviceId: string;
   customDuration: number | null;
   bufferMinutes: number;
@@ -30,7 +30,7 @@ export interface PractitionerServicePricing {
   };
 }
 
-export interface PractitionerWithUser extends Practitioner {
+export interface EmployeeWithUser extends Employee {
   user: {
     id: string;
     firstName: string;
@@ -47,18 +47,18 @@ export interface PractitionerWithUser extends Practitioner {
   };
 }
 
-export interface PractitionerAvailability {
+export interface EmployeeAvailability {
   id: string;
-  practitionerId: string;
+  employeeId: string;
   dayOfWeek: number;
   startTime: string;
   endTime: string;
   isActive: boolean;
 }
 
-export interface PractitionerVacation {
+export interface EmployeeVacation {
   id: string;
-  practitionerId: string;
+  employeeId: string;
   startDate: string;
   endDate: string;
   reason: string | null;

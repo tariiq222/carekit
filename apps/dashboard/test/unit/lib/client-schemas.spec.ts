@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest"
-import { walkInPatientSchema } from "@/lib/schemas/booking.schema"
+import { walkInClientSchema } from "@/lib/schemas/booking.schema"
 import {
-  createPatientSchema,
-  editPatientSchema,
-} from "@/lib/schemas/patient.schema"
+  createClientSchema,
+  editClientSchema,
+} from "@/lib/schemas/client.schema"
 
-describe("patient schemas", () => {
+describe("client schemas", () => {
   it("accepts a valid walk-in payload with O_NEG blood type", () => {
-    const result = walkInPatientSchema.safeParse({
+    const result = walkInClientSchema.safeParse({
       firstName: "محمد",
       lastName: "السالم",
       phone: "+966501234567",
@@ -21,7 +21,7 @@ describe("patient schemas", () => {
   })
 
   it("rejects walk-in payloads without E.164 phone numbers", () => {
-    const result = walkInPatientSchema.safeParse({
+    const result = walkInClientSchema.safeParse({
       firstName: "محمد",
       lastName: "السالم",
       phone: "0501234567",
@@ -31,7 +31,7 @@ describe("patient schemas", () => {
   })
 
   it("rejects invalid emergency phone format", () => {
-    const result = walkInPatientSchema.safeParse({
+    const result = walkInClientSchema.safeParse({
       firstName: "محمد",
       lastName: "السالم",
       phone: "+966501234567",
@@ -42,7 +42,7 @@ describe("patient schemas", () => {
   })
 
   it("rejects unsupported blood type values", () => {
-    const result = walkInPatientSchema.safeParse({
+    const result = walkInClientSchema.safeParse({
       firstName: "محمد",
       lastName: "السالم",
       phone: "+966501234567",
@@ -53,7 +53,7 @@ describe("patient schemas", () => {
   })
 
   it("rejects allergies longer than 1000 chars", () => {
-    const result = walkInPatientSchema.safeParse({
+    const result = walkInClientSchema.safeParse({
       firstName: "محمد",
       lastName: "السالم",
       phone: "+966501234567",
@@ -64,7 +64,7 @@ describe("patient schemas", () => {
   })
 
   it("rejects chronicConditions longer than 1000 chars", () => {
-    const result = walkInPatientSchema.safeParse({
+    const result = walkInClientSchema.safeParse({
       firstName: "محمد",
       lastName: "السالم",
       phone: "+966501234567",
@@ -74,8 +74,8 @@ describe("patient schemas", () => {
     expect(result.success).toBe(false)
   })
 
-  it("rejects create-patient payloads with too-long first names", () => {
-    const result = createPatientSchema.safeParse({
+  it("rejects create-client payloads with too-long first names", () => {
+    const result = createClientSchema.safeParse({
       firstName: "أ".repeat(256),
       lastName: "السالم",
       phone: "+966501234567",
@@ -84,16 +84,16 @@ describe("patient schemas", () => {
     expect(result.success).toBe(false)
   })
 
-  it("rejects edit-patient payloads with too-long nationalId", () => {
-    const result = editPatientSchema.safeParse({
+  it("rejects edit-client payloads with too-long nationalId", () => {
+    const result = editClientSchema.safeParse({
       nationalId: "123456789012345678901",
     })
 
     expect(result.success).toBe(false)
   })
 
-  it("rejects edit-patient payloads with non-E.164 phone values", () => {
-    const result = editPatientSchema.safeParse({
+  it("rejects edit-client payloads with non-E.164 phone values", () => {
+    const result = editClientSchema.safeParse({
       phone: "0501234567",
     })
 

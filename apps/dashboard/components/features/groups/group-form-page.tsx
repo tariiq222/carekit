@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { GeneralInfoTab } from "@/components/features/groups/create/general-info-tab"
 import { SchedulingPriceTab } from "@/components/features/groups/create/scheduling-price-tab"
 import { SettingsTab } from "@/components/features/groups/create/settings-tab"
-import { ServicePractitionersTab } from "@/components/features/services/service-practitioners-tab"
+import { ServiceEmployeesTab } from "@/components/features/services/service-employees-tab"
 import {
   createGroupSchema,
   createGroupDefaults,
@@ -53,7 +53,7 @@ export function GroupFormPage(props: GroupFormPageProps) {
   const initialTab = searchParams.get("tab") ?? "general"
 
   /* ── Local state ── */
-  const [pendingPractitionerIds, setPendingPractitionerIds] = useState<string[]>([])
+  const [pendingEmployeeIds, setPendingEmployeeIds] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   /* ── Form ── */
@@ -64,7 +64,7 @@ export function GroupFormPage(props: GroupFormPageProps) {
       nameEn: "",
       descriptionAr: "",
       descriptionEn: "",
-      practitionerId: "",
+      employeeId: "",
       ...createGroupDefaults,
     },
   })
@@ -72,13 +72,13 @@ export function GroupFormPage(props: GroupFormPageProps) {
   /* ── Populate form in edit mode ── */
   useEffect(() => {
     if (!group || !isEdit) return
-    setPendingPractitionerIds(group.practitionerId ? [group.practitionerId] : [])
+    setPendingEmployeeIds(group.employeeId ? [group.employeeId] : [])
     form.reset({
       nameAr: group.nameAr,
       nameEn: group.nameEn,
       descriptionAr: group.descriptionAr ?? "",
       descriptionEn: group.descriptionEn ?? "",
-      practitionerId: group.practitionerId,
+      employeeId: group.employeeId,
       minParticipants: group.minParticipants,
       maxParticipants: group.maxParticipants,
       pricePerPersonHalalat: group.pricePerPersonHalalat,
@@ -99,20 +99,20 @@ export function GroupFormPage(props: GroupFormPageProps) {
 
   /* ── Submit ── */
   const handleSubmit = async (data: CreateGroupFormValues) => {
-    const practitionerId = pendingPractitionerIds[0]
-    if (!practitionerId) {
-      toast.error(t("groups.create.practitionerRequired"))
+    const employeeId = pendingEmployeeIds[0]
+    if (!employeeId) {
+      toast.error(t("groups.create.employeeRequired"))
       return
     }
 
     setIsSubmitting(true)
     try {
       if (isEdit && props.groupId) {
-        await updateGroupMut.mutateAsync({ id: props.groupId, ...data, practitionerId })
+        await updateGroupMut.mutateAsync({ id: props.groupId, ...data, employeeId })
         toast.success(t("groups.edit.success"))
         router.push(`/groups/${props.groupId}`)
       } else {
-        const created = await createGroupMut.mutateAsync({ ...data, practitionerId })
+        const created = await createGroupMut.mutateAsync({ ...data, employeeId })
         toast.success(t("groups.create.success"))
         router.push(`/groups/${created.id}`)
       }
@@ -180,8 +180,8 @@ export function GroupFormPage(props: GroupFormPageProps) {
               <TabsTrigger value="settings" className="text-xs sm:text-sm">
                 {t("groups.create.tabs.settings")}
               </TabsTrigger>
-              <TabsTrigger value="practitioners" className="text-xs sm:text-sm">
-                {t("groups.create.tabs.practitioners")}
+              <TabsTrigger value="employees" className="text-xs sm:text-sm">
+                {t("groups.create.tabs.employees")}
               </TabsTrigger>
             </TabsList>
           </div>
@@ -195,11 +195,11 @@ export function GroupFormPage(props: GroupFormPageProps) {
           <TabsContent value="settings" className="mt-4">
             <SettingsTab form={form} />
           </TabsContent>
-          <TabsContent value="practitioners" className="mt-4">
-            <ServicePractitionersTab
+          <TabsContent value="employees" className="mt-4">
+            <ServiceEmployeesTab
               isCreate={true}
-              pendingIds={pendingPractitionerIds}
-              onPendingChange={setPendingPractitionerIds}
+              pendingIds={pendingEmployeeIds}
+              onPendingChange={setPendingEmployeeIds}
             />
           </TabsContent>
         </Tabs>

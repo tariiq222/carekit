@@ -70,13 +70,13 @@ describe("useChatbotMutations", () => {
 
     act(() => {
       result.current.createSessionMut.mutate(
-        { patientId: "pat-1" } as Parameters<typeof createChatSession>[0],
+        { clientId: "pat-1" } as Parameters<typeof createChatSession>[0],
       )
     })
 
     await waitFor(() =>
       expect(createChatSession).toHaveBeenCalledWith(
-        expect.objectContaining({ patientId: "pat-1" }),
+        expect.objectContaining({ clientId: "pat-1" }),
         expect.anything(),
       ),
     )

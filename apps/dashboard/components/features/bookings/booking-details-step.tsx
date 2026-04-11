@@ -23,10 +23,10 @@ import {
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/ui/date-picker"
 
-import { usePractitioners } from "@/hooks/use-practitioners"
+import { useEmployees } from "@/hooks/use-employees"
 import { useCreateBookingSlots } from "@/components/features/bookings/use-booking-slots"
 import { useBookingCreateResets } from "@/components/features/bookings/use-booking-form-resets"
-import { BookingPractitionerSection } from "@/components/features/bookings/booking-practitioner-section"
+import { BookingEmployeeSection } from "@/components/features/bookings/booking-employee-section"
 import { useProgressiveDisclosure } from "@/components/features/bookings/use-progressive-disclosure"
 import { ProgressiveField } from "@/components/features/bookings/progressive-field"
 import { useLocale } from "@/components/locale-provider"
@@ -76,19 +76,19 @@ function FormField({
 /* ── Step 2: Booking details ── */
 
 interface BookingStepProps {
-  patientName: string
+  clientName: string
   onSubmit: (data: BookingFormData) => Promise<void>
   submitting: boolean
 }
 
-export function BookingStep({ patientName, onSubmit: onSubmitProp, submitting }: BookingStepProps) {
+export function BookingStep({ clientName, onSubmit: onSubmitProp, submitting }: BookingStepProps) {
   const { t } = useLocale()
-  const { practitioners, isLoading: practitionersLoading } = usePractitioners()
+  const { employees, isLoading: employeesLoading } = useEmployees()
 
   const form = useForm<BookingCreateFormData>({
     resolver: zodResolver(bookingCreateSchema),
     defaultValues: {
-      practitionerId: "",
+      employeeId: "",
       serviceId: "",
       type: "in_person" as const,
       durationOptionId: "",
@@ -99,19 +99,19 @@ export function BookingStep({ patientName, onSubmit: onSubmitProp, submitting }:
   })
 
   const [
-    watchedPractitionerId,
+    watchedEmployeeId,
     watchedServiceId,
     watchedType,
     watchedDurationOptionId,
     watchedDate,
     watchedStartTime,
-  ] = form.watch(["practitionerId", "serviceId", "type", "durationOptionId", "date", "startTime"])
+  ] = form.watch(["employeeId", "serviceId", "type", "durationOptionId", "date", "startTime"])
 
-  useBookingCreateResets(form, watchedPractitionerId, watchedServiceId, watchedType, watchedDate)
+  useBookingCreateResets(form, watchedEmployeeId, watchedServiceId, watchedType, watchedDate)
 
-  const { practitionerServices, practitionerServicesLoading, durationOptions, hasDurationOptions, canFetchSlots, serviceTypesLoading, canFetchServiceTypes, slots, slotsLoading } =
+  const { employeeServices, employeeServicesLoading, durationOptions, hasDurationOptions, canFetchSlots, serviceTypesLoading, canFetchServiceTypes, slots, slotsLoading } =
     useCreateBookingSlots({
-      practitionerId: watchedPractitionerId,
+      employeeId: watchedEmployeeId,
       serviceId: watchedServiceId,
       bookingType: watchedType,
       date: watchedDate,
@@ -119,10 +119,10 @@ export function BookingStep({ patientName, onSubmit: onSubmitProp, submitting }:
     })
 
   const availableTypes = React.useMemo(() => {
-    if (!watchedServiceId || !practitionerServices.length) return []
-    const ps = practitionerServices.find((s) => s.serviceId === watchedServiceId)
+    if (!watchedServiceId || !employeeServices.length) return []
+    const ps = employeeServices.find((s) => s.serviceId === watchedServiceId)
     return ps?.availableTypes ?? []
-  }, [watchedServiceId, practitionerServices])
+  }, [watchedServiceId, employeeServices])
 
   // Auto-select first available type, or clear if current type not in availableTypes
   React.useEffect(() => {
@@ -134,7 +134,7 @@ export function BookingStep({ patientName, onSubmit: onSubmitProp, submitting }:
   }, [availableTypes, watchedType, form])
 
   const visibility = useProgressiveDisclosure({
-    practitionerId: watchedPractitionerId,
+    employeeId: watchedEmployeeId,
     serviceId: watchedServiceId,
     type: watchedType,
     durationOptionId: watchedDurationOptionId ?? "",
@@ -144,7 +144,7 @@ export function BookingStep({ patientName, onSubmit: onSubmitProp, submitting }:
   })
 
   const slotPlaceholder = (() => {
-    if (!watchedPractitionerId || !watchedDate) return t("bookings.form.slot.selectPractitionerAndDate")
+    if (!watchedEmployeeId || !watchedDate) return t("bookings.form.slot.selectEmployeeAndDate")
     if (hasDurationOptions && !watchedDurationOptionId) return t("bookings.form.slot.selectDurationFirst")
     if (slotsLoading) return t("bookings.form.slot.loadingSlots")
     return t("bookings.form.placeholder.selectTime")
@@ -153,26 +153,26 @@ export function BookingStep({ patientName, onSubmit: onSubmitProp, submitting }:
   return (
     <form id="booking-form" onSubmit={form.handleSubmit(onSubmitProp)} className="flex flex-col gap-3">
 
-      {/* Selected patient indicator */}
+      {/* Selected client indicator */}
       <div className="flex items-center gap-2.5 rounded-xl border border-success/20 bg-success/10 px-4 py-2.5">
         <HugeiconsIcon icon={UserCircleIcon} size={16} className="shrink-0 text-success" />
-        <span className="text-sm font-medium text-success">{patientName}</span>
+        <span className="text-sm font-medium text-success">{clientName}</span>
       </div>
 
       {/* Unified card: all booking fields */}
       <div className={card}>
 
-        {/* Section 1: Practitioner + Service + Type + Duration */}
+        {/* Section 1: Employee + Service + Type + Duration */}
         <div className={sectionHeader}>
           <HugeiconsIcon icon={Stethoscope02Icon} size={13} className="text-muted-foreground shrink-0" />
-          <p className={sectionTitle}>{t("bookings.form.section.practitionerService")}</p>
+          <p className={sectionTitle}>{t("bookings.form.section.employeeService")}</p>
         </div>
-        <BookingPractitionerSection
+        <BookingEmployeeSection
           form={form}
-          practitioners={practitioners}
-          practitionerServices={practitionerServices}
-          practitionersLoading={practitionersLoading}
-          practitionerServicesLoading={practitionerServicesLoading}
+          employees={employees}
+          employeeServices={employeeServices}
+          employeesLoading={employeesLoading}
+          employeeServicesLoading={employeeServicesLoading}
           availableTypes={availableTypes}
           canFetchServiceTypes={canFetchServiceTypes}
           serviceTypesLoading={serviceTypesLoading}

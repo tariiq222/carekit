@@ -9,11 +9,11 @@ import type { WaitlistStatus } from "@/lib/types/waitlist"
 /* ─── Waitlist List ─── */
 
 export function useWaitlist() {
-  const [practitionerId, setPractitionerId] = useState<string | undefined>()
+  const [employeeId, setEmployeeId] = useState<string | undefined>()
   const [status, setStatus] = useState<WaitlistStatus | undefined>()
 
   const query = {
-    practitionerId,
+    employeeId,
     status,
   }
 
@@ -24,7 +24,7 @@ export function useWaitlist() {
   })
 
   const resetFilters = useCallback(() => {
-    setPractitionerId(undefined)
+    setEmployeeId(undefined)
     setStatus(undefined)
   }, [])
 
@@ -32,8 +32,8 @@ export function useWaitlist() {
     entries: data ?? [],
     isLoading,
     error: error?.message ?? null,
-    practitionerId,
-    setPractitionerId,
+    employeeId,
+    setEmployeeId,
     status,
     setStatus,
     resetFilters,

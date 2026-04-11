@@ -223,14 +223,14 @@ git commit -m "fix(settings): add onError toast to email template save and previ
 ثم ابحث عن:
 ```ts
   "settings.allowRecurring": "Allow Recurring Bookings",
-  "settings.allowRecurringDesc": "Allows patients to book a series of appointments on a fixed schedule — e.g. weekly sessions.",
+  "settings.allowRecurringDesc": "Allows clients to book a series of appointments on a fixed schedule — e.g. weekly sessions.",
 ```
 بعد هذين السطرين، أضف:
 ```ts
   "settings.maxRecurrences": "Max Recurrences",
   "settings.maxRecurrencesDesc": "Maximum number of appointments in a recurring series. Example: 12 = up to 12 sessions.",
   "settings.allowedRecurringPatterns": "Allowed Patterns",
-  "settings.allowedRecurringPatternsDesc": "Select which recurrence patterns patients can choose when booking a recurring series.",
+  "settings.allowedRecurringPatternsDesc": "Select which recurrence patterns clients can choose when booking a recurring series.",
   "settings.recurringPattern.daily": "Daily",
   "settings.recurringPattern.every_2_days": "Every 2 days",
   "settings.recurringPattern.every_3_days": "Every 3 days",
@@ -242,7 +242,7 @@ git commit -m "fix(settings): add onError toast to email template save and previ
 ثم ابحث عن:
 ```ts
   "settings.notifyRemindersDesc": "Send reminders before upcoming appointments",
-  "settings.notifyWaitlistDesc": "Notify patients when a waitlist slot becomes available",
+  "settings.notifyWaitlistDesc": "Notify clients when a waitlist slot becomes available",
 ```
 قبل `notifyRemindersDesc`، أضف:
 ```ts
@@ -254,7 +254,7 @@ git commit -m "fix(settings): add onError toast to email template save and previ
   "settings.notifyReminders": "Appointment Reminders",
   "settings.notifyRemindersDesc": "Send reminders before upcoming appointments",
   "settings.notifyWaitlist": "Waitlist Notifications",
-  "settings.notifyWaitlistDesc": "Notify patients when a waitlist slot becomes available",
+  "settings.notifyWaitlistDesc": "Notify clients when a waitlist slot becomes available",
 ```
 
 - [ ] **Step 2: typecheck**

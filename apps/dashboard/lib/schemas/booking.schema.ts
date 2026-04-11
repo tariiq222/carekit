@@ -1,14 +1,14 @@
 import { z } from "zod"
-import { BLOOD_TYPES } from "@/lib/schemas/patient.schema"
+import { BLOOD_TYPES } from "@/lib/schemas/client.schema"
 
-/* ─── Walk-in patient schema (booking-patient-step) ─── */
+/* ─── Walk-in client schema (booking-client-step) ─── */
 
 const phoneRegex = /^\+[1-9]\d{6,14}$/
 const requiredName = z.string().min(1).max(255)
 const optionalName = z.string().max(255).optional()
 const optionalMedicalText = z.string().max(1000).optional()
 
-export const walkInPatientSchema = z.object({
+export const walkInClientSchema = z.object({
   firstName: requiredName,
   middleName: optionalName,
   lastName: requiredName,
@@ -30,12 +30,12 @@ export const walkInPatientSchema = z.object({
   chronicConditions: optionalMedicalText,
 })
 
-export type WalkInPatientFormData = z.infer<typeof walkInPatientSchema>
+export type WalkInClientFormData = z.infer<typeof walkInClientSchema>
 
 /* ─── Booking create schema (booking-details-step) ─── */
 
 export const bookingCreateSchema = z.object({
-  practitionerId: z.string().min(1, "اختر الممارس"),
+  employeeId: z.string().min(1, "اختر الممارس"),
   serviceId: z.string().min(1, "اختر الخدمة"),
   type: z.enum([
     "in_person",

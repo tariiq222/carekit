@@ -8,41 +8,41 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { ServiceBookingType } from "@/lib/types/service"
-import type { PractitionerTypeConfigPayload } from "@/lib/types/practitioner"
+import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"
 
 /* ─── Key counter ─── */
 
 /* ─── Props ─── */
 
-interface PractitionerTypeRowProps {
-  config: PractitionerTypeConfigPayload
+interface EmployeeTypeRowProps {
+  config: EmployeeTypeConfigPayload
   serviceDefault: ServiceBookingType | null
   label: string
   t: (key: string) => string
-  onUpdate: (updates: Partial<PractitionerTypeConfigPayload>) => void
+  onUpdate: (updates: Partial<EmployeeTypeConfigPayload>) => void
   onRemove: () => void
 }
 
 /* ─── Component ─── */
 
-export function PractitionerTypeRow({
+export function EmployeeTypeRow({
   config,
   serviceDefault,
   label,
   t,
   onUpdate,
   onRemove,
-}: PractitionerTypeRowProps) {
+}: EmployeeTypeRowProps) {
   const defaultPrice = serviceDefault ? (serviceDefault.price / 100).toFixed(2) : ""
   const defaultDuration = serviceDefault ? String(serviceDefault.duration) : ""
   const hasDefault = !!serviceDefault
 
   const pricePlaceholder = hasDefault
-    ? `${t("practitioners.services.defaultPrice")}: ${defaultPrice} ${t("practitioners.services.sar")}`
-    : t("practitioners.services.required")
+    ? `${t("employees.services.defaultPrice")}: ${defaultPrice} ${t("employees.services.sar")}`
+    : t("employees.services.required")
   const durationPlaceholder = hasDefault
-    ? `${t("practitioners.services.defaultPrice")}: ${defaultDuration} ${t("practitioners.services.min")}`
-    : t("practitioners.services.required")
+    ? `${t("employees.services.defaultPrice")}: ${defaultDuration} ${t("employees.services.min")}`
+    : t("employees.services.required")
 
   const priceDisplay =
     config.price != null ? (config.price / 100).toFixed(2) : ""
@@ -112,7 +112,7 @@ export function PractitionerTypeRow({
           <span className="text-sm font-medium text-foreground">{label}</span>
           {hasDefault && (
             <span className="text-[10px] text-muted-foreground tabular-nums">
-              ({t("practitioners.services.defaultLabel")}: {defaultPrice} {t("practitioners.services.sar")} / {defaultDuration} {t("practitioners.services.min")})
+              ({t("employees.services.defaultLabel")}: {defaultPrice} {t("employees.services.sar")} / {defaultDuration} {t("employees.services.min")})
             </span>
           )}
         </div>
@@ -131,7 +131,7 @@ export function PractitionerTypeRow({
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
         <div className="flex flex-col gap-1">
           <Label className="text-xs">
-            {t("services.bookingTypes.price")} ({t("practitioners.services.sar")})
+            {t("services.bookingTypes.price")} ({t("employees.services.sar")})
           </Label>
           <Input
             type="number"
@@ -145,7 +145,7 @@ export function PractitionerTypeRow({
         </div>
         <div className="flex flex-col gap-1">
           <Label className="text-xs">
-            {t("services.bookingTypes.duration")} ({t("practitioners.services.min")})
+            {t("services.bookingTypes.duration")} ({t("employees.services.min")})
           </Label>
           <Input
             type="number"
@@ -161,7 +161,7 @@ export function PractitionerTypeRow({
       {/* Custom duration options toggle */}
       <div className="flex items-center justify-between rounded border border-border p-2">
         <Label className="text-xs cursor-pointer">
-          {t("practitioners.services.useCustomOptions")}
+          {t("employees.services.useCustomOptions")}
         </Label>
         <Switch
           checked={config.useCustomOptions ?? false}
@@ -173,7 +173,7 @@ export function PractitionerTypeRow({
       {config.useCustomOptions && (
         <div className="space-y-2 ps-3 border-s-2 border-border">
           {(config.durationOptions ?? []).map((opt, i) => (
-            <PractitionerDurationOptionRow
+            <EmployeeDurationOptionRow
               key={`${config.bookingType}-opt-${i}`}
               option={opt}
               t={t}
@@ -200,13 +200,13 @@ export function PractitionerTypeRow({
 /* ─── Duration Option Row ─── */
 
 interface DurOptProps {
-  option: NonNullable<PractitionerTypeConfigPayload["durationOptions"]>[number]
+  option: NonNullable<EmployeeTypeConfigPayload["durationOptions"]>[number]
   t: (key: string) => string
   onUpdate: (field: string, value: unknown) => void
   onRemove: () => void
 }
 
-function PractitionerDurationOptionRow({
+function EmployeeDurationOptionRow({
   option,
   t,
   onUpdate,
@@ -217,7 +217,7 @@ function PractitionerDurationOptionRow({
       <div className="flex flex-1 items-center gap-2">
         <div className="flex flex-col gap-0.5">
           <Label className="text-[10px] text-muted-foreground">
-            {t("practitioners.services.durationMin")}
+            {t("employees.services.durationMin")}
           </Label>
           <Input
             type="number"
@@ -229,7 +229,7 @@ function PractitionerDurationOptionRow({
         </div>
         <div className="flex flex-col gap-0.5">
           <Label className="text-[10px] text-muted-foreground">
-            {t("practitioners.services.priceSar")}
+            {t("employees.services.priceSar")}
           </Label>
           <Input
             type="number"

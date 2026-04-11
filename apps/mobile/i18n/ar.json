@@ -50,7 +50,7 @@
     "registerError": "فشل إنشاء الحساب. حاول مجدداً",
     "otpError": "الرمز غير صحيح. حاول مجدداً",
     "otpSent": "تم إرسال رمز التحقق بنجاح",
-    "practitionerNote": "الأطباء والموظفون يُسجَّلون من لوحة الإدارة"
+    "employeeNote": "الأطباء والموظفون يُسجَّلون من لوحة الإدارة"
   },
   "tabs": {
     "home": "الرئيسية",
@@ -59,7 +59,7 @@
     "profile": "حسابي",
     "today": "اليوم",
     "calendar": "التقويم",
-    "patients": "المرضى",
+    "clients": "المرضى",
     "assistant": "المساعد",
     "notifications": "الإشعارات"
   },
@@ -73,7 +73,7 @@
     "featured": "المعالجون المميزون",
     "services": "الخدمات",
     "bookAppointment": "احجز موعد",
-    "practitioners": "معالج",
+    "employees": "معالج",
     "inPerson": "حضوري",
     "online": "عن بُعد",
     "walkIn": "بدون حجز",
@@ -114,10 +114,10 @@
     "noShow": "لم يحضر",
     "expired": "منتهي"
   },
-  "practitioner": {
+  "employee": {
     "today": "مواعيد اليوم",
     "calendar": "التقويم",
-    "patients": "المرضى",
+    "clients": "المرضى",
     "profile": "الملف الشخصي",
     "about": "نبذة",
     "qualifications": "المؤهلات",
@@ -136,16 +136,16 @@
     "cancelledToday": "ملغاة",
     "noAppointmentsToday": "لا توجد مواعيد اليوم",
     "startMeeting": "بدء الاجتماع",
-    "callPatient": "اتصل بالمريض",
+    "callClient": "اتصل بالمريض",
     "markCompleted": "إنهاء الزيارة",
     "startSession": "بدء الجلسة",
     "cancelBooking": "إلغاء الحجز",
     "cancelConfirm": "هل أنت متأكد من إلغاء هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.",
-    "patientRecord": "سجل المريض",
+    "clientRecord": "سجل المريض",
     "visitHistory": "سجل الزيارات",
     "visits": "زيارات",
     "lastVisit": "آخر زيارة",
-    "searchPatients": "بحث بالاسم...",
+    "searchClients": "بحث بالاسم...",
     "ratingsReviews": "التقييمات والمراجعات",
     "manageAvailability": "إدارة المواعيد",
     "weeklySchedule": "الجدول الأسبوعي",
@@ -153,8 +153,8 @@
     "addVacation": "إضافة إجازة",
     "available": "متاح",
     "dayOff": "يوم إجازة",
-    "noPatients": "لا يوجد مرضى بعد",
-    "patientNotFound": "مريض غير موجود",
+    "noClients": "لا يوجد مرضى بعد",
+    "clientNotFound": "مريض غير موجود",
     "appVersion": "الإصدار"
   },
   "profile": {
@@ -177,7 +177,7 @@
     "privacyComingSoon": "سياسة الخصوصية ستكون متاحة قريباً.",
     "termsComingSoon": "شروط الاستخدام ستكون متاحة قريباً."
   },
-  "patient": {
+  "client": {
     "home": "الصفحة الرئيسية",
     "appointments": "مواعيدي",
     "chat": "المحادثة الذكية",

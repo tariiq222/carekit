@@ -25,8 +25,8 @@ psql $DATABASE_URL -f performance/db/analyze-queries.sql > /tmp/explain-output.t
 
 Before running, replace the UUID placeholders:
 - `BRANCH_UUID_PLACEHOLDER` — any valid `branches.id`
-- `PRACTITIONER_UUID_PLACEHOLDER` — any valid `practitioners.id`
-- `PATIENT_UUID_PLACEHOLDER` — any valid `users.id` with bookings
+- `EMPLOYEE_UUID_PLACEHOLDER` — any valid `employees.id`
+- `CLIENT_UUID_PLACEHOLDER` — any valid `users.id` with bookings
 
 ---
 
@@ -88,13 +88,13 @@ Log output example:
 
 | Table | Index | Covers |
 |-------|-------|--------|
-| `bookings` | `(practitioner_id, date)` | Today's schedule, availability check |
+| `bookings` | `(employee_id, date)` | Today's schedule, availability check |
 | `bookings` | `(status, date)` | Dashboard filters |
-| `bookings` | `(patient_id, status)` | Patient booking history |
+| `bookings` | `(client_id, status)` | Client booking history |
 | `bookings` | `(branch_id, date)` | Branch-scoped booking list |
 | `bookings` | `(recurring_group_id)` | Recurring group queries |
-| `practitioner_availabilities` | `(practitioner_id, day_of_week, is_active, branch_id)` | Slot computation |
-| `practitioner_vacations` | `(start_date, end_date)` | Vacation overlap check |
+| `employee_availabilities` | `(employee_id, day_of_week, is_active, branch_id)` | Slot computation |
+| `employee_vacations` | `(start_date, end_date)` | Vacation overlap check |
 | `payments` | `(status)` | Payment dashboard |
 | `users` | `email`, `phone` (unique) | Auth lookups |
 | `otp_codes` | `(user_id, type, used_at)` | OTP verification |
@@ -118,6 +118,6 @@ CREATE INDEX users_name_trgm_idx ON users
 | Paginated list with joins | < 100ms | Optimize includes, add composite index |
 | Aggregation / stats | < 200ms | Consider materialized view or cache |
 | Availability slot computation | < 50ms | Already batched; check availability table size |
-| Patient search (ILIKE) | < 200ms | Add pg_trgm index (see above) |
+| Client search (ILIKE) | < 200ms | Add pg_trgm index (see above) |
 
 The slow query logger thresholds are set slightly tighter than p95 targets (WARN at 100ms, ERROR at 500ms) so issues are caught in staging before reaching production.

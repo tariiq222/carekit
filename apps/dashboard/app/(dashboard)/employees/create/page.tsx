@@ -1,5 +1,5 @@
-import { PractitionerFormPage } from "@/components/features/practitioners/practitioner-form-page"
+import { EmployeeFormPage } from "@/components/features/employees/employee-form-page"
 
-export default function CreatePractitionerPage() {
-  return <PractitionerFormPage mode="create" />
+export default function CreateEmployeePage() {
+  return <EmployeeFormPage mode="create" />
 }

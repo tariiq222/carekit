@@ -22,10 +22,10 @@ describe("QuickActions", () => {
       color: "primary" as const,
     },
     {
-      titleKey: "actions.newPatient",
-      descriptionKey: "actions.newPatientDesc",
+      titleKey: "actions.newClient",
+      descriptionKey: "actions.newClientDesc",
       icon: UserAdd01Icon,
-      href: "/patients/create",
+      href: "/clients/create",
       color: "success" as const,
     },
   ]
@@ -33,13 +33,13 @@ describe("QuickActions", () => {
   it("renders all action titles via t()", () => {
     render(<QuickActions actions={actions} />)
     expect(screen.getByText("actions.newBooking")).toBeInTheDocument()
-    expect(screen.getByText("actions.newPatient")).toBeInTheDocument()
+    expect(screen.getByText("actions.newClient")).toBeInTheDocument()
   })
 
   it("renders all action descriptions via t()", () => {
     render(<QuickActions actions={actions} />)
     expect(screen.getByText("actions.newBookingDesc")).toBeInTheDocument()
-    expect(screen.getByText("actions.newPatientDesc")).toBeInTheDocument()
+    expect(screen.getByText("actions.newClientDesc")).toBeInTheDocument()
   })
 
   it("renders correct number of action links", () => {
@@ -52,7 +52,7 @@ describe("QuickActions", () => {
     render(<QuickActions actions={actions} />)
     const links = screen.getAllByRole("link")
     expect(links[0]).toHaveAttribute("href", "/bookings/create")
-    expect(links[1]).toHaveAttribute("href", "/patients/create")
+    expect(links[1]).toHaveAttribute("href", "/clients/create")
   })
 
   it("renders icons for each action", () => {

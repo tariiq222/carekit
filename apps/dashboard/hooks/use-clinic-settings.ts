@@ -146,7 +146,7 @@ export function usePaymentSettingsMutation() {
 
 export interface WidgetSettings {
   widgetShowPrice: boolean
-  widgetAnyPractitioner: boolean
+  widgetAnyEmployee: boolean
   widgetRedirectUrl: string | null
 }
 
@@ -155,7 +155,7 @@ export function useWidgetSettings() {
     queryKey: ["clinic-settings", "widget"],
     queryFn: () => fetchBookingSettings().then((s) => ({
       widgetShowPrice:          s.widgetShowPrice ?? true,
-      widgetAnyPractitioner:    s.widgetAnyPractitioner ?? false,
+      widgetAnyEmployee:    s.widgetAnyEmployee ?? false,
       widgetRedirectUrl:        s.widgetRedirectUrl ?? null,
     })),
     staleTime: 5 * 60 * 1000,

@@ -21,10 +21,10 @@ export interface Specialty {
   nameAr: string;
   nameEn: string;
   icon?: string;
-  practitionerCount?: number;
+  employeeCount?: number;
 }
 
-export interface Practitioner {
+export interface Employee {
   id: string;
   userId: string;
   user: {
@@ -43,7 +43,7 @@ export interface Practitioner {
   nextAvailableDate?: string;
 }
 
-export interface PractitionerAvailability {
+export interface EmployeeAvailability {
   id: string;
   dayOfWeek: number;
   startTime: string;
@@ -57,8 +57,8 @@ export interface TimeSlot {
 
 export interface Booking {
   id: string;
-  patientId: string;
-  patient?: {
+  clientId: string;
+  client?: {
     id: string;
     firstName: string;
     lastName: string;
@@ -66,8 +66,8 @@ export interface Booking {
     email: string;
     avatarUrl: string | null;
   };
-  practitionerId: string;
-  practitioner: Practitioner;
+  employeeId: string;
+  employee: Employee;
   serviceId?: string;
   type: BookingType;
   status: BookingStatus;
@@ -103,12 +103,12 @@ export interface Service {
 export interface Rating {
   id: string;
   bookingId: string;
-  patientId: string;
-  practitionerId: string;
+  clientId: string;
+  employeeId: string;
   stars: number;
   comment?: string;
   createdAt: string;
-  patient?: {
+  client?: {
     firstName: string;
     lastName: string;
   };
@@ -157,7 +157,7 @@ export interface Notification {
     | 'cancellation_rejected'
     | 'cancellation_requested'
     | 'no_show_review'
-    | 'patient_arrived'
+    | 'client_arrived'
     | 'receipt_rejected'
     | 'reminder'
     | 'payment_received'

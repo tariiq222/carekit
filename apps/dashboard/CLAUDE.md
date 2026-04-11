@@ -39,7 +39,7 @@ lib/utils.ts                           pure utilities
 
 ## Dashboard Routes (app/(dashboard)/)
 
-`bookings/`, `patients/`, `practitioners/`, `payments/`, `reports/`,
+`bookings/`, `clients/`, `employees/`, `payments/`, `reports/`,
 `services/`, `branches/`, `coupons/`, `chatbot/`,
 `intake-forms/`, `invoices/`, `ratings/`, `notifications/`,
 `activity-log/`, `users/`, `settings/`,

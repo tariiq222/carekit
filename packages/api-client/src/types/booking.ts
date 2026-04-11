@@ -25,13 +25,13 @@ export interface BookingListItem {
   notes: string | null
   adminNotes: string | null
   createdAt: string
-  patient: {
+  client: {
     id: string
     firstName: string
     lastName: string
     phone: string | null
   } | null
-  practitioner: {
+  employee: {
     id: string
     user: { firstName: string; lastName: string }
     specialty: { nameAr: string; nameEn: string }
@@ -51,19 +51,19 @@ export interface BookingStats {
 export interface BookingListQuery extends PaginationParams {
   status?: BookingStatus
   type?: BookingType
-  practitionerId?: string
-  patientId?: string
+  employeeId?: string
+  clientId?: string
   dateFrom?: string
   dateTo?: string
 }
 
 export interface CreateBookingPayload {
-  practitionerId: string
+  employeeId: string
   serviceId: string
   type: BookingType
   date: string
   startTime: string
-  patientId?: string
+  clientId?: string
   notes?: string
   branchId?: string
 }

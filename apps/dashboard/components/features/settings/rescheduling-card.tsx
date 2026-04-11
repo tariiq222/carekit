@@ -21,7 +21,7 @@ export function ReschedulingCard({ settings, onSave, isPending, t }: Props) {
   const [maxCount, setMaxCount] = useState("2")
 
   useEffect(() => {
-    setCanReschedule(settings.patientCanReschedule)
+    setCanReschedule(settings.clientCanReschedule)
     setBeforeHours(String(settings.rescheduleBeforeHours))
     setMaxCount(String(settings.maxReschedulesPerBooking))
   }, [settings])
@@ -34,8 +34,8 @@ export function ReschedulingCard({ settings, onSave, isPending, t }: Props) {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-foreground">{t("settings.patientCanReschedule")}</p>
-            <p className="text-xs text-muted-foreground">{t("settings.patientCanRescheduleDesc")}</p>
+            <p className="text-sm font-medium text-foreground">{t("settings.clientCanReschedule")}</p>
+            <p className="text-xs text-muted-foreground">{t("settings.clientCanRescheduleDesc")}</p>
           </div>
           <Switch checked={canReschedule} onCheckedChange={setCanReschedule} />
         </div>
@@ -67,7 +67,7 @@ export function ReschedulingCard({ settings, onSave, isPending, t }: Props) {
             size="sm"
             disabled={isPending}
             onClick={() => onSave({
-              patientCanReschedule: canReschedule,
+              clientCanReschedule: canReschedule,
               rescheduleBeforeHours: Number(beforeHours) || 12,
               maxReschedulesPerBooking: Number(maxCount) || 2,
             })}

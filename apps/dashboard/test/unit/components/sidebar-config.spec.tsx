@@ -55,8 +55,8 @@ describe("SidebarConfig — groups added", () => {
     expect(allHrefs).toContain("/groups")
     expect(allHrefs).toContain("/services")
     expect(allHrefs).toContain("/bookings")
-    expect(allHrefs).toContain("/patients")
-    expect(allHrefs).toContain("/practitioners")
+    expect(allHrefs).toContain("/clients")
+    expect(allHrefs).toContain("/employees")
     expect(allHrefs).toContain("/branches")
   })
 

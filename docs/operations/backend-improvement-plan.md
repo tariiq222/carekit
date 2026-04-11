@@ -184,7 +184,7 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
 
 ---
 
-### B-3: اختبارات الموديولات المتوسطة (bookings, invoices, chatbot, practitioners)
+### B-3: اختبارات الموديولات المتوسطة (bookings, invoices, chatbot, employees)
 - **الأولوية:** P1 🟠
 - **الجهد:** L (2-3 أيام)
 - **الخطر:** منخفض
@@ -205,7 +205,7 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
     - Session limits
     - RAG context building
     - Streaming error handling
-  - **Practitioners** — إضافة اختبارات:
+  - **Employees** — إضافة اختبارات:
     - Availability calculation edge cases
     - Vacation overlap detection
     - Break time conflicts
@@ -214,7 +214,7 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
   - `backend/test/unit/bookings/` — 2-3 ملفات spec جديدة
   - `backend/test/unit/invoices/` — 2-3 ملفات spec جديدة
   - `backend/test/unit/chatbot/` — 1-2 ملف spec جديد
-  - `backend/test/unit/practitioners/` — 1-2 ملف spec جديد
+  - `backend/test/unit/employees/` — 1-2 ملف spec جديد
 - **معيار الإتمام:** coverage ≥ 85% لكل هذه الموديولات
 
 ---
@@ -306,7 +306,7 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
     2. **Payment webhook edge cases** — duplicate webhooks, out-of-order delivery, invalid signature
     3. **RBAC cross-module** — receptionist لا يستطيع حذف users، accountant لا يستطيع تعديل bookings
     4. **Concurrent operations** — double booking prevention، double payment prevention
-    5. **Cancellation flow** — patient request → admin review → approve/reject
+    5. **Cancellation flow** — client request → admin review → approve/reject
     6. **Waitlist flow** — add to waitlist → slot opens → notification → booking
 - **الملفات المتأثرة:**
   - `backend/test/e2e/bookings/` — 2-3 ملفات جديدة
@@ -325,7 +325,7 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
     ```typescript
     // test/e2e/factories/
     createTestUser(role: UserRole): Promise<User>
-    createTestPractitioner(options?): Promise<Practitioner>
+    createTestEmployee(options?): Promise<Employee>
     createTestBooking(status: BookingStatus): Promise<Booking>
     createTestPayment(method: PaymentMethod): Promise<Payment>
     ```

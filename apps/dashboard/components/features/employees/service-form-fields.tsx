@@ -69,14 +69,14 @@ export function ServiceFormFields({
   }
 
   const durationPlaceholder = defaultDurationDisplay
-    ? `${t("practitioners.services.defaultPrice")}: ${defaultDurationDisplay} ${t("practitioners.services.minutes")}`
-    : t("practitioners.services.durationHint")
+    ? `${t("employees.services.defaultPrice")}: ${defaultDurationDisplay} ${t("employees.services.minutes")}`
+    : t("employees.services.durationHint")
 
   return (
     <>
       {/* Available Types */}
       <div className="flex flex-col gap-2">
-        <Label>{t("practitioners.services.availableTypes")}</Label>
+        <Label>{t("employees.services.availableTypes")}</Label>
         <div className="flex flex-wrap gap-2">
           {BOOKING_TYPES.map(({ value, key }) => (
             <Button
@@ -89,13 +89,13 @@ export function ServiceFormFields({
               className="h-8 text-xs"
               onClick={() => toggleType(value)}
             >
-              {t(`practitioners.services.${key}`)}
+              {t(`employees.services.${key}`)}
             </Button>
           ))}
         </div>
         {form.formState.errors.availableTypes && (
           <p className="text-xs text-destructive">
-            {t("practitioners.services.typesRequired")}
+            {t("employees.services.typesRequired")}
           </p>
         )}
       </div>
@@ -103,8 +103,8 @@ export function ServiceFormFields({
       {/* Duration */}
       <div className="flex flex-col gap-1.5">
         <Label>
-          {t("practitioners.services.customDuration")} (
-          {t("practitioners.services.minutes")})
+          {t("employees.services.customDuration")} (
+          {t("employees.services.minutes")})
         </Label>
         <Input
           type="number"
@@ -114,14 +114,14 @@ export function ServiceFormFields({
           {...form.register("customDuration")}
         />
         <p className="text-xs text-muted-foreground">
-          {t("practitioners.services.durationHint")}
+          {t("employees.services.durationHint")}
         </p>
       </div>
 
       {/* Buffer */}
       <div className="flex flex-col gap-1.5">
         <Label className="text-xs">
-          {t("practitioners.services.bufferMinutes")}
+          {t("employees.services.bufferMinutes")}
         </Label>
         <Input
           type="number"

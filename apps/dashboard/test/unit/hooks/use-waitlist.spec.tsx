@@ -40,7 +40,7 @@ describe("useWaitlist", () => {
   })
 
   it("fetches and returns waitlist entries", async () => {
-    const mockEntries = [{ id: "wl-1", patientId: "p-1" }]
+    const mockEntries = [{ id: "wl-1", clientId: "p-1" }]
     fetchWaitlist.mockResolvedValueOnce(mockEntries)
 
     const { result } = renderHook(() => useWaitlist(), {
@@ -53,7 +53,7 @@ describe("useWaitlist", () => {
     expect(result.current.error).toBeNull()
   })
 
-  it("calls fetchWaitlist with practitionerId filter when set", async () => {
+  it("calls fetchWaitlist with employeeId filter when set", async () => {
     fetchWaitlist.mockResolvedValue([])
 
     const { result } = renderHook(() => useWaitlist(), {
@@ -63,17 +63,17 @@ describe("useWaitlist", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     act(() => {
-      result.current.setPractitionerId("prac-1")
+      result.current.setEmployeeId("prac-1")
     })
 
     await waitFor(() =>
       expect(fetchWaitlist).toHaveBeenCalledWith(
-        expect.objectContaining({ practitionerId: "prac-1" }),
+        expect.objectContaining({ employeeId: "prac-1" }),
       ),
     )
   })
 
-  it("resetFilters clears practitionerId and status", async () => {
+  it("resetFilters clears employeeId and status", async () => {
     fetchWaitlist.mockResolvedValue([])
 
     const { result } = renderHook(() => useWaitlist(), {
@@ -81,7 +81,7 @@ describe("useWaitlist", () => {
     })
 
     act(() => {
-      result.current.setPractitionerId("prac-1")
+      result.current.setEmployeeId("prac-1")
       result.current.setStatus("WAITING" as Parameters<typeof result.current.setStatus>[0])
     })
 
@@ -89,7 +89,7 @@ describe("useWaitlist", () => {
       result.current.resetFilters()
     })
 
-    expect(result.current.practitionerId).toBeUndefined()
+    expect(result.current.employeeId).toBeUndefined()
     expect(result.current.status).toBeUndefined()
   })
 

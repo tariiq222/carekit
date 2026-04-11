@@ -9,7 +9,7 @@ This directory contains all UI/UX specifications, design guidelines, and compone
 | `design-system.md` | Design tokens, typography, colors, spacing, White Label theming |
 | `rtl-guidelines.md` | RTL-first layout rules, bidirectional component patterns |
 | `accessibility.md` | WCAG AA compliance, a11y checklist per component |
-| `mobile-screens-patient.md` | 24 patient screen specifications (mobile) |
+| `mobile-screens-client.md` | 24 client screen specifications (mobile) |
 | `mobile-screens-doctor.md` | 8 doctor screen specifications (mobile) |
 | `dashboard-pages.md` | 16 admin dashboard page specifications |
 | `component-specs.md` | Shared component specifications for all platforms |
@@ -21,7 +21,7 @@ This directory contains all UI/UX specifications, design guidelines, and compone
 1. **RTL-First** — Arabic is the primary language. Design starts in RTL, then adapts to LTR.
 2. **White Label Ready** — Every visual element must be themeable per client.
 3. **Accessibility** — WCAG AA minimum. Semantic HTML, keyboard nav, screen reader support.
-4. **Mobile-First** — Mobile app is the primary patient touchpoint.
+4. **Mobile-First** — Mobile app is the primary client touchpoint.
 5. **Consistency** — Shared design tokens across mobile, dashboard, and website.
 6. **Bilingual** — Every screen must work in Arabic and English without layout breaks.
 

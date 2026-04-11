@@ -38,8 +38,8 @@ export const enChatbotExtended: Record<string, string> = {
   "chatbot.analytics.noQuestions": "No questions recorded yet",
 
   // ─── Session Role Labels ───
-  "chatbot.role.user": "Patient",
-  "chatbot.role.patient": "Patient",
+  "chatbot.role.user": "Client",
+  "chatbot.role.client": "Client",
   "chatbot.role.assistant": "AI Bot",
   "chatbot.role.bot": "AI Bot",
   "chatbot.role.system": "System",
@@ -63,22 +63,22 @@ export const enChatbotExtended: Record<string, string> = {
 
   // ─── Intake Forms ───
   "intakeForms.title": "Intake Forms",
-  "intakeForms.description": "Manage forms filled by patients before and after sessions",
+  "intakeForms.description": "Manage forms filled by clients before and after sessions",
   "intakeForms.searchPlaceholder": "Search forms...",
   "intakeForms.newForm": "New Form",
   "intakeForms.stats.total": "Total Forms",
   "intakeForms.stats.active": "Active Forms",
   "intakeForms.stats.submissions": "Total Submissions",
   "intakeForms.empty.title": "No Forms Found",
-  "intakeForms.empty.description": "Create your first form to collect patient information",
+  "intakeForms.empty.description": "Create your first form to collect client information",
   "intakeForms.deleteSuccess": "Form deleted",
   "intakeForms.deleteError": "Failed to delete",
   "intakeForms.activateSuccess": "Form activated",
   "intakeForms.deactivateSuccess": "Form deactivated",
   "intakeForms.updateError": "Failed to update",
 
-  // ─── Reports — Practitioner Combobox ───
-  "reports.selectPractitioner": "Select a practitioner",
-  "reports.searchPractitioner": "Search practitioners...",
-  "reports.noPractitionerFound": "No practitioner found",
+  // ─── Reports — Employee Combobox ───
+  "reports.selectEmployee": "Select a employee",
+  "reports.searchEmployee": "Search employees...",
+  "reports.noEmployeeFound": "No employee found",
 }

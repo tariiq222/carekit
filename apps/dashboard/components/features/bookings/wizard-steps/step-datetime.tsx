@@ -3,14 +3,14 @@
 import { useMemo } from 'react'
 import { useLocale } from '@/components/locale-provider'
 import { useQuery } from '@tanstack/react-query'
-import { fetchSlots } from '@/lib/api/practitioners-schedule'
+import { fetchSlots } from '@/lib/api/employees-schedule'
 import { queryKeys } from '@/lib/query-keys'
 import { WizardCard } from '../wizard-card'
 import { cn } from '@/lib/utils'
-import type { TimeSlot } from '@/lib/types/practitioner'
+import type { TimeSlot } from '@/lib/types/employee'
 
 interface StepDatetimeProps {
-  practitionerId: string
+  employeeId: string
   durationOptionId: string | null
   selectedDate: string | null
   selectedTime: string | null
@@ -35,7 +35,7 @@ function build14Days(): Date[] {
 }
 
 export function StepDatetime({
-  practitionerId,
+  employeeId,
   durationOptionId,
   selectedDate,
   selectedTime,
@@ -54,11 +54,11 @@ export function StepDatetime({
   // If the slot query needs duration, the parent should pass durationMinutes instead.
   // For now: fetch without duration (matches pattern where duration may be optional).
 
-  const canFetch = !!practitionerId && !!selectedDate
+  const canFetch = !!employeeId && !!selectedDate
 
   const { data: slots = [], isLoading } = useQuery<TimeSlot[]>({
-    queryKey: [...queryKeys.practitioners.slots(practitionerId, selectedDate ?? ''), durationOptionId],
-    queryFn: () => fetchSlots(practitionerId, selectedDate!, undefined),
+    queryKey: [...queryKeys.employees.slots(employeeId, selectedDate ?? ''), durationOptionId],
+    queryFn: () => fetchSlots(employeeId, selectedDate!, undefined),
     enabled: canFetch,
     staleTime: 60_000,
   })

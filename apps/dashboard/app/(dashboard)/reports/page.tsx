@@ -11,12 +11,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { useLocale } from "@/components/locale-provider"
 import { FilterBar } from "@/components/features/filter-bar"
-import { PractitionerCombobox } from "@/components/features/reports/practitioner-combobox"
+import { EmployeeCombobox } from "@/components/features/reports/employee-combobox"
 
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { RevenueTab } from "@/components/features/reports/revenue-tab"
 import { BookingsTab } from "@/components/features/reports/bookings-tab"
-import { PractitionersTab } from "@/components/features/reports/practitioners-tab"
+import { EmployeesTab } from "@/components/features/reports/employees-tab"
 import { exportRevenueCsv, exportBookingsCsv } from "@/lib/api/reports"
 
 const today = format(new Date(), "yyyy-MM-dd")
@@ -27,7 +27,7 @@ export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState("revenue")
   const [dateFrom, setDateFrom] = useState(thirtyDaysAgo)
   const [dateTo, setDateTo] = useState(today)
-  const [selectedPractitionerId, setSelectedPractitionerId] = useState("")
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
 
   const handleExport = () => {
     if (!dateFrom || !dateTo) return
@@ -76,7 +76,7 @@ export default function ReportsPage() {
           <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="revenue">{t("reports.tabs.revenue")}</TabsTrigger>
             <TabsTrigger value="bookings">{t("reports.tabs.bookings")}</TabsTrigger>
-            <TabsTrigger value="practitioners">{t("reports.tabs.practitioners")}</TabsTrigger>
+            <TabsTrigger value="employees">{t("reports.tabs.employees")}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -88,16 +88,16 @@ export default function ReportsPage() {
           <BookingsTab dateFrom={dateFrom} dateTo={dateTo} />
         </TabsContent>
 
-        <TabsContent value="practitioners">
+        <TabsContent value="employees">
           <div className="flex flex-col gap-4 pt-2">
-            <PractitionerCombobox
-              value={selectedPractitionerId}
-              onChange={setSelectedPractitionerId}
+            <EmployeeCombobox
+              value={selectedEmployeeId}
+              onChange={setSelectedEmployeeId}
             />
-            <PractitionersTab
+            <EmployeesTab
               dateFrom={dateFrom}
               dateTo={dateTo}
-              practitionerId={selectedPractitionerId}
+              employeeId={selectedEmployeeId}
             />
           </div>
         </TabsContent>

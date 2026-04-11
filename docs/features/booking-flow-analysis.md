@@ -128,7 +128,7 @@
 4. **فصل مسارات الدفع** — Moyasar webhook + Bank Transfer AI + Admin
 5. **AI Tags (5 تصنيفات)** — human-in-the-loop دائماً
 6. **3 مسارات إلغاء** — مريض/إدارة/ممارس بقواعد مختلفة
-7. **cancelledBy tracking** — يُسجل من ألغى (patient/practitioner/admin/system)
+7. **cancelledBy tracking** — يُسجل من ألغى (client/employee/admin/system)
 8. **suggestedRefundType** — حساب تلقائي لنوع الاسترجاع المقترح
 9. **Waitlist Integration** — عند الإلغاء/expired/no_show
 10. **Walk-in مدعوم** — يتجاوز الدفع مباشرة
@@ -141,7 +141,7 @@
 17. **Auto-complete** — ✅ جديد: إنهاء الحجوزات المنتهية
 18. **Cancel timeout** — ✅ جديد: حماية المريض من انتظار لانهائي
 19. **Bot لا ينفذ الإلغاء** — يرسل طلب فقط
-20. **Practitioner Cancel = Full Refund** — قاعدة عادلة
+20. **Employee Cancel = Full Refund** — قاعدة عادلة
 
 ---
 

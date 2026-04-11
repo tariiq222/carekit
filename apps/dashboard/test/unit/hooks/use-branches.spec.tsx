@@ -8,17 +8,17 @@ const {
   createBranch,
   updateBranch,
   deleteBranch,
-  fetchBranchPractitioners,
-  assignBranchPractitioners,
-  removeBranchPractitioner,
+  fetchBranchEmployees,
+  assignBranchEmployees,
+  removeBranchEmployee,
 } = vi.hoisted(() => ({
   fetchBranches: vi.fn(),
   createBranch: vi.fn(),
   updateBranch: vi.fn(),
   deleteBranch: vi.fn(),
-  fetchBranchPractitioners: vi.fn(),
-  assignBranchPractitioners: vi.fn(),
-  removeBranchPractitioner: vi.fn(),
+  fetchBranchEmployees: vi.fn(),
+  assignBranchEmployees: vi.fn(),
+  removeBranchEmployee: vi.fn(),
 }))
 
 vi.mock("@/lib/api/branches", () => ({
@@ -26,16 +26,16 @@ vi.mock("@/lib/api/branches", () => ({
   createBranch,
   updateBranch,
   deleteBranch,
-  fetchBranchPractitioners,
-  assignBranchPractitioners,
-  removeBranchPractitioner,
+  fetchBranchEmployees,
+  assignBranchEmployees,
+  removeBranchEmployee,
 }))
 
 import {
   useBranches,
   useBranchMutations,
-  useBranchPractitioners,
-  useBranchPractitionerMutations,
+  useBranchEmployees,
+  useBranchEmployeeMutations,
 } from "@/hooks/use-branches"
 
 function makeWrapper() {
@@ -161,63 +161,63 @@ describe("useBranchMutations", () => {
   })
 })
 
-describe("useBranchPractitioners", () => {
+describe("useBranchEmployees", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetches practitioners for a branch", async () => {
-    const practitioners = [{ id: "pr-1", name: "Dr. Ali" }]
-    fetchBranchPractitioners.mockResolvedValueOnce(practitioners)
+  it("fetches employees for a branch", async () => {
+    const employees = [{ id: "pr-1", name: "Dr. Ali" }]
+    fetchBranchEmployees.mockResolvedValueOnce(employees)
 
     const { result } = renderHook(
-      () => useBranchPractitioners("b-1"),
+      () => useBranchEmployees("b-1"),
       { wrapper: makeWrapper() },
     )
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(fetchBranchPractitioners).toHaveBeenCalledWith("b-1")
-    expect(result.current.data).toEqual(practitioners)
+    expect(fetchBranchEmployees).toHaveBeenCalledWith("b-1")
+    expect(result.current.data).toEqual(employees)
   })
 
   it("does not fetch when branchId is null", () => {
-    renderHook(() => useBranchPractitioners(null), { wrapper: makeWrapper() })
-    expect(fetchBranchPractitioners).not.toHaveBeenCalled()
+    renderHook(() => useBranchEmployees(null), { wrapper: makeWrapper() })
+    expect(fetchBranchEmployees).not.toHaveBeenCalled()
   })
 })
 
-describe("useBranchPractitionerMutations", () => {
+describe("useBranchEmployeeMutations", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("assignMut calls assignBranchPractitioners with branchId and ids", async () => {
-    assignBranchPractitioners.mockResolvedValueOnce(undefined)
+  it("assignMut calls assignBranchEmployees with branchId and ids", async () => {
+    assignBranchEmployees.mockResolvedValueOnce(undefined)
 
     const { result } = renderHook(
-      () => useBranchPractitionerMutations(),
+      () => useBranchEmployeeMutations(),
       { wrapper: makeWrapper() },
     )
 
     act(() => {
-      result.current.assignMut.mutate({ branchId: "b-1", practitionerIds: ["pr-1", "pr-2"] })
+      result.current.assignMut.mutate({ branchId: "b-1", employeeIds: ["pr-1", "pr-2"] })
     })
 
     await waitFor(() =>
-      expect(assignBranchPractitioners).toHaveBeenCalledWith("b-1", ["pr-1", "pr-2"]),
+      expect(assignBranchEmployees).toHaveBeenCalledWith("b-1", ["pr-1", "pr-2"]),
     )
   })
 
-  it("removeMut calls removeBranchPractitioner with branchId and practitionerId", async () => {
-    removeBranchPractitioner.mockResolvedValueOnce(undefined)
+  it("removeMut calls removeBranchEmployee with branchId and employeeId", async () => {
+    removeBranchEmployee.mockResolvedValueOnce(undefined)
 
     const { result } = renderHook(
-      () => useBranchPractitionerMutations(),
+      () => useBranchEmployeeMutations(),
       { wrapper: makeWrapper() },
     )
 
     act(() => {
-      result.current.removeMut.mutate({ branchId: "b-1", practitionerId: "pr-1" })
+      result.current.removeMut.mutate({ branchId: "b-1", employeeId: "pr-1" })
     })
 
     await waitFor(() =>
-      expect(removeBranchPractitioner).toHaveBeenCalledWith("b-1", "pr-1"),
+      expect(removeBranchEmployee).toHaveBeenCalledWith("b-1", "pr-1"),
     )
   })
 })

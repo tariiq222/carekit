@@ -26,17 +26,17 @@ import { ThemedCard } from '@/theme/components/ThemedCard';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { useTheme } from '@/theme/useTheme';
-import { practitionersService } from '@/services/practitioners';
-import type { Practitioner, Rating } from '@/types/models';
+import { employeesService } from '@/services/employees';
+import type { Employee, Rating } from '@/types/models';
 
-export default function PractitionerDetailScreen() {
+export default function EmployeeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme, isRTL } = useTheme();
 
-  const [practitioner, setPractitioner] = useState<Practitioner | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,11 +44,11 @@ export default function PractitionerDetailScreen() {
     async function load() {
       try {
         const [pRes, rRes] = await Promise.allSettled([
-          practitionersService.getById(id ?? ''),
-          practitionersService.getRatings(id ?? '', 1, 3),
+          employeesService.getById(id ?? ''),
+          employeesService.getRatings(id ?? '', 1, 3),
         ]);
         if (pRes.status === 'fulfilled' && pRes.value.data)
-          setPractitioner(pRes.value.data);
+          setEmployee(pRes.value.data);
         if (rRes.status === 'fulfilled' && rRes.value.data)
           setRatings(rRes.value.data.items);
       } finally {
@@ -68,17 +68,17 @@ export default function PractitionerDetailScreen() {
     );
   }
 
-  if (!practitioner) return null;
+  if (!employee) return null;
 
-  const name = `${practitioner.user.firstName} ${practitioner.user.lastName}`;
+  const name = `${employee.user.firstName} ${employee.user.lastName}`;
   const specialtyName = isRTL
-    ? practitioner.specialty?.nameAr
-    : practitioner.specialty?.nameEn;
+    ? employee.specialty?.nameAr
+    : employee.specialty?.nameEn;
 
   const prices = [
-    { icon: Building2, label: t('home.clinicVisit'), price: practitioner.clinicPrice, color: theme.colors.primary[500] },
-    { icon: Phone, label: t('home.phoneConsult'), price: practitioner.phonePrice, color: theme.colors.success },
-    { icon: Video, label: t('home.videoConsult'), price: practitioner.videoPrice, color: theme.colors.purple },
+    { icon: Building2, label: t('home.clinicVisit'), price: employee.clinicPrice, color: theme.colors.primary[500] },
+    { icon: Phone, label: t('home.phoneConsult'), price: employee.phonePrice, color: theme.colors.success },
+    { icon: Video, label: t('home.videoConsult'), price: employee.videoPrice, color: theme.colors.purple },
   ];
 
   return (
@@ -97,7 +97,7 @@ export default function PractitionerDetailScreen() {
 
         {/* Header */}
         <View style={styles.profileHeader}>
-          <Avatar size={80} name={name} imageUrl={practitioner.user.avatarUrl} />
+          <Avatar size={80} name={name} imageUrl={employee.user.avatarUrl} />
           <ThemedText variant="heading" align="center">{name}</ThemedText>
           <ThemedText variant="bodySm" color={theme.colors.textSecondary} align="center">
             {specialtyName}
@@ -105,31 +105,31 @@ export default function PractitionerDetailScreen() {
           <View style={styles.ratingRow}>
             <Star size={16} fill="#F59E0B" color="#F59E0B" />
             <ThemedText variant="body" style={{ fontWeight: '600' }}>
-              {practitioner.averageRating}
+              {employee.averageRating}
             </ThemedText>
             <ThemedText variant="bodySm" color={theme.colors.textMuted}>
-              ({practitioner.totalRatings} {t('home.rating')})
+              ({employee.totalRatings} {t('home.rating')})
             </ThemedText>
           </View>
           <StatusPill
-            status={practitioner.isAvailableToday ? 'available' : 'pending'}
-            label={practitioner.isAvailableToday ? t('home.availableToday') : t('home.nextAvailable')}
+            status={employee.isAvailableToday ? 'available' : 'pending'}
+            label={employee.isAvailableToday ? t('home.availableToday') : t('home.nextAvailable')}
           />
         </View>
 
         {/* About */}
-        {practitioner.bio && (
+        {employee.bio && (
           <View style={styles.section}>
-            <ThemedText variant="subheading">{t('practitioner.about')}</ThemedText>
+            <ThemedText variant="subheading">{t('employee.about')}</ThemedText>
             <ThemedText variant="body" color={theme.colors.textSecondary}>
-              {isRTL ? (practitioner.bioAr ?? practitioner.bio) : practitioner.bio}
+              {isRTL ? (employee.bioAr ?? employee.bio) : employee.bio}
             </ThemedText>
           </View>
         )}
 
         {/* Prices */}
         <View style={styles.section}>
-          <ThemedText variant="subheading">{t('practitioner.prices')}</ThemedText>
+          <ThemedText variant="subheading">{t('employee.prices')}</ThemedText>
           <View style={styles.pricesGrid}>
             {prices.map((p) => (
               <ThemedCard key={p.label} style={styles.priceCard}>
@@ -151,10 +151,10 @@ export default function PractitionerDetailScreen() {
         {ratings.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHead}>
-              <ThemedText variant="subheading">{t('practitioner.reviews')}</ThemedText>
+              <ThemedText variant="subheading">{t('employee.reviews')}</ThemedText>
               <Pressable>
                 <ThemedText variant="bodySm" color={theme.colors.primary[500]} style={{ fontWeight: '600' }}>
-                  {t('practitioner.allReviews')}
+                  {t('employee.allReviews')}
                 </ThemedText>
               </Pressable>
             </View>
@@ -187,15 +187,15 @@ export default function PractitionerDetailScreen() {
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             router.push({
-              pathname: '/(patient)/booking/[serviceId]',
-              params: { serviceId: 'select', practitionerId: practitioner.id },
+              pathname: '/(client)/booking/[serviceId]',
+              params: { serviceId: 'select', employeeId: employee.id },
             });
           }}
           variant="primary"
           size="lg"
           full
         >
-          {t('practitioner.bookWith')} {practitioner.user.firstName}
+          {t('employee.bookWith')} {employee.user.firstName}
         </ThemedButton>
       </View>
     </View>

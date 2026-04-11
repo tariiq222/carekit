@@ -21,11 +21,11 @@ export function GroupAttendanceForm({ group, enrollments }: Props) {
   const confirmedEnrollments = enrollments.filter((e) => e.status === "confirmed")
   const [attended, setAttended] = useState<Set<string>>(new Set())
 
-  const togglePatient = (patientId: string) => {
+  const toggleClient = (clientId: string) => {
     setAttended((prev) => {
       const next = new Set(prev)
-      if (next.has(patientId)) next.delete(patientId)
-      else next.add(patientId)
+      if (next.has(clientId)) next.delete(clientId)
+      else next.add(clientId)
       return next
     })
   }
@@ -33,7 +33,7 @@ export function GroupAttendanceForm({ group, enrollments }: Props) {
   const handleComplete = async () => {
     await completeGroupMut.mutateAsync({
       id: group.id,
-      attendedPatientIds: Array.from(attended),
+      attendedClientIds: Array.from(attended),
     })
     toast.success(t("groups.groupCompleted"))
   }
@@ -46,13 +46,13 @@ export function GroupAttendanceForm({ group, enrollments }: Props) {
 
       <div className="flex flex-col gap-3">
         {confirmedEnrollments.map((enrollment) => {
-          const p = enrollment.patient
-          const name = p ? `${p.firstName} ${p.lastName}` : enrollment.patientId
+          const p = enrollment.client
+          const name = p ? `${p.firstName} ${p.lastName}` : enrollment.clientId
           return (
             <label key={enrollment.id} className="flex items-center gap-3 cursor-pointer">
               <Checkbox
-                checked={attended.has(enrollment.patientId)}
-                onCheckedChange={() => togglePatient(enrollment.patientId)}
+                checked={attended.has(enrollment.clientId)}
+                onCheckedChange={() => toggleClient(enrollment.clientId)}
               />
               <span className="text-sm">{name}</span>
             </label>

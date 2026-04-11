@@ -38,8 +38,8 @@ export const overviewNav: NavItem[] = [
 
 export const clinicNav: NavItem[] = [
   { titleKey: "nav.bookings", href: "/bookings", icon: Calendar03Icon },
-  { titleKey: "nav.patients", href: "/patients", icon: UserMultiple02Icon },
-  { titleKey: "nav.practitioners", href: "/practitioners", icon: Stethoscope02Icon },
+  { titleKey: "nav.clients", href: "/clients", icon: UserMultiple02Icon },
+  { titleKey: "nav.employees", href: "/employees", icon: Stethoscope02Icon },
   { titleKey: "nav.services", href: "/services", icon: GridIcon },
   { titleKey: "nav.branches", href: "/branches", icon: Building06Icon, featureFlag: "multi_branch" },
   { titleKey: "nav.intakeForms", href: "/intake-forms", icon: DocumentValidationIcon, featureFlag: "intake_forms" },

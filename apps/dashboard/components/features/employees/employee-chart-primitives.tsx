@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Chart primitives for Practitioner profile
+ * Chart primitives for Employee profile
  * — DonutChart, LineChart, PeriodSelector
  */
 

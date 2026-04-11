@@ -42,7 +42,7 @@ No sidebar changes needed. Task 11 is therefore a typecheck-only verification ta
 
 ```ts
 export type FormType = 'pre_booking' | 'pre_session' | 'post_session' | 'registration'
-export type FormScope = 'global' | 'service' | 'practitioner' | 'branch'
+export type FormScope = 'global' | 'service' | 'employee' | 'branch'
 
 export interface IntakeFormField {
   id: string
@@ -67,7 +67,7 @@ export interface IntakeFormListItem {
 
 export interface IntakeFormDetail extends IntakeFormListItem {
   serviceId?: string
-  practitionerId?: string
+  employeeId?: string
   branchId?: string
   fields: IntakeFormField[]
 }
@@ -87,7 +87,7 @@ export interface CreateIntakeFormPayload {
   type: FormType
   scope: FormScope
   serviceId?: string
-  practitionerId?: string
+  employeeId?: string
   branchId?: string
 }
 
@@ -126,8 +126,8 @@ export interface RevenueByMonth {
   bookings: number
 }
 
-export interface RevenueByPractitioner {
-  practitionerId: string
+export interface RevenueByEmployee {
+  employeeId: string
   name: string
   revenue: number
   bookings: number
@@ -146,7 +146,7 @@ export interface RevenueReport {
   paidBookings: number
   averagePerBooking: number
   byMonth: RevenueByMonth[]
-  byPractitioner: RevenueByPractitioner[]
+  byEmployee: RevenueByEmployee[]
   byService: RevenueByService[]
 }
 
@@ -170,8 +170,8 @@ export interface BookingReport {
 export interface DashboardStats {
   totalRevenue: number
   totalBookings: number
-  totalPatients: number
-  totalPractitioners: number
+  totalClients: number
+  totalEmployees: number
 }
 
 export interface ReportDateParams {
@@ -222,7 +222,7 @@ export interface GroupListItem {
   startDate: string
   endDate?: string
   service: { id: string; nameAr: string }
-  practitioner: { id: string; user: { firstName: string; lastName: string } }
+  employee: { id: string; user: { firstName: string; lastName: string } }
   createdAt: string
 }
 
@@ -335,8 +335,8 @@ export async function exportBookings(params: ReportDateParams = {}): Promise<Blo
   return apiRequest<Blob>(`/reports/bookings/export${buildQueryString(params as Record<string, unknown>)}`)
 }
 
-export async function exportPatients(): Promise<Blob> {
-  return apiRequest<Blob>('/reports/patients/export')
+export async function exportClients(): Promise<Blob> {
+  return apiRequest<Blob>('/reports/clients/export')
 }
 ```
 
@@ -414,7 +414,7 @@ export type {
 } from './notification.js'
 export type {
   RevenueByMonth,
-  RevenueByPractitioner,
+  RevenueByEmployee,
   RevenueByService,
   RevenueReport,
   BookingReport,
@@ -592,7 +592,7 @@ const TYPE_LABELS: Record<FormType, string> = {
 const SCOPE_LABELS: Record<FormScope, string> = {
   global: 'عام',
   service: 'خدمة',
-  practitioner: 'ممارس',
+  employee: 'ممارس',
   branch: 'فرع',
 }
 
@@ -827,7 +827,7 @@ function NewIntakeFormPage() {
   const scopeOptions: Array<{ value: FormScope; label: string }> = [
     { value: 'global', label: 'عام' },
     { value: 'service', label: 'خدمة' },
-    { value: 'practitioner', label: 'ممارس' },
+    { value: 'employee', label: 'ممارس' },
     { value: 'branch', label: 'فرع' },
   ]
 
@@ -905,14 +905,14 @@ function NewIntakeFormPage() {
             />
           </div>
         )}
-        {form.scope === 'practitioner' && (
+        {form.scope === 'employee' && (
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-[var(--fg)]">معرّف الممارس</label>
             <input
-              value={form.practitionerId ?? ''}
-              onChange={(e) => setForm((f) => ({ ...f, practitionerId: e.target.value || undefined }))}
+              value={form.employeeId ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, employeeId: e.target.value || undefined }))}
               className="w-full h-10 px-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/40"
-              placeholder="practitioner-id"
+              placeholder="employee-id"
               dir="ltr"
             />
           </div>
@@ -997,7 +997,7 @@ const TYPE_OPTIONS: Array<{ value: FormType; label: string }> = [
 const SCOPE_OPTIONS: Array<{ value: FormScope; label: string }> = [
   { value: 'global', label: 'عام' },
   { value: 'service', label: 'خدمة' },
-  { value: 'practitioner', label: 'ممارس' },
+  { value: 'employee', label: 'ممارس' },
   { value: 'branch', label: 'فرع' },
 ]
 
@@ -1020,7 +1020,7 @@ function EditIntakeFormPage() {
         scope: d.scope,
         isActive: d.isActive,
         serviceId: d.serviceId,
-        practitionerId: d.practitionerId,
+        employeeId: d.employeeId,
         branchId: d.branchId,
       })
     }
@@ -1690,7 +1690,7 @@ function RevenueBarChart({ data }: { data: RevenueByMonth[] }) {
 function ReportsPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [exporting, setExporting] = useState<'revenue' | 'bookings' | 'patients' | null>(null)
+  const [exporting, setExporting] = useState<'revenue' | 'bookings' | 'clients' | null>(null)
 
   const params = {
     dateFrom: dateFrom || undefined,
@@ -1710,11 +1710,11 @@ function ReportsPage() {
   const statCards = [
     { label: 'إجمالي الإيرادات', value: `${(dash?.totalRevenue ?? 0).toLocaleString('ar-SA')} ر.س`, icon: 'hgi-money-bag-02', variant: 'primary' as const },
     { label: 'إجمالي الحجوزات', value: dash?.totalBookings ?? 0, icon: 'hgi-calendar-03', variant: 'success' as const },
-    { label: 'المرضى', value: dash?.totalPatients ?? 0, icon: 'hgi-user-multiple-02', variant: 'accent' as const },
-    { label: 'الممارسون', value: dash?.totalPractitioners ?? 0, icon: 'hgi-doctor-01', variant: 'warning' as const },
+    { label: 'المرضى', value: dash?.totalClients ?? 0, icon: 'hgi-user-multiple-02', variant: 'accent' as const },
+    { label: 'الممارسون', value: dash?.totalEmployees ?? 0, icon: 'hgi-doctor-01', variant: 'warning' as const },
   ]
 
-  async function handleExport(type: 'revenue' | 'bookings' | 'patients') {
+  async function handleExport(type: 'revenue' | 'bookings' | 'clients') {
     setExporting(type)
     try {
       let blob: Blob
@@ -1726,8 +1726,8 @@ function ReportsPage() {
         blob = await reportsApi.exportBookings(params)
         filename = 'bookings-report.csv'
       } else {
-        blob = await reportsApi.exportPatients()
-        filename = 'patients-report.csv'
+        blob = await reportsApi.exportClients()
+        filename = 'clients-report.csv'
       }
       await downloadBlob(blob, filename)
     } finally {
@@ -1816,12 +1816,12 @@ function ReportsPage() {
         </div>
       )}
 
-      {revenue && revenue.byPractitioner.length > 0 && (
+      {revenue && revenue.byEmployee.length > 0 && (
         <div className="glass rounded-[var(--radius)] p-5 space-y-3">
           <h3 className="text-sm font-semibold text-[var(--fg)]">الإيرادات حسب الممارس</h3>
           <div className="space-y-2">
-            {revenue.byPractitioner.slice(0, 8).map((p) => (
-              <div key={p.practitionerId} className="flex items-center gap-3">
+            {revenue.byEmployee.slice(0, 8).map((p) => (
+              <div key={p.employeeId} className="flex items-center gap-3">
                 <p className="text-sm text-[var(--fg)] flex-1 truncate">{p.name}</p>
                 <span className="text-xs text-[var(--muted)]">{p.bookings} حجز</span>
                 <span className="text-sm font-medium text-[var(--fg)] w-28 text-end">{p.revenue.toLocaleString('ar-SA')} ر.س</span>
@@ -2026,11 +2026,11 @@ function GroupSessionsPage() {
       ),
     },
     {
-      key: 'practitioner',
+      key: 'employee',
       header: 'الممارس',
       render: (g: GroupListItem) => (
         <span className="text-sm text-[var(--fg-2)]">
-          {g.practitioner.user.firstName} {g.practitioner.user.lastName}
+          {g.employee.user.firstName} {g.employee.user.lastName}
         </span>
       ),
     },

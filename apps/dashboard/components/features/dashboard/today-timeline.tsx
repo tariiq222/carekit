@@ -74,9 +74,9 @@ export function TodayTimeline({ bookings }: TodayTimelineProps) {
       ) : (
         <div className="flex flex-col gap-3">
           {visible.map((b) => {
-            const patient = b.patient ? formatName(b.patient.firstName, b.patient.lastName) : "—"
-            const practitioner = b.practitioner?.user
-              ? formatName(b.practitioner.user.firstName, b.practitioner.user.lastName, "")
+            const client = b.client ? formatName(b.client.firstName, b.client.lastName) : "—"
+            const employee = b.employee?.user
+              ? formatName(b.employee.user.firstName, b.employee.user.lastName, "")
               : ""
             const time = b.startTime?.slice(0, 5) ?? "—"
             const color = statusColors[b.status] ?? "bg-muted-foreground"
@@ -92,9 +92,9 @@ export function TodayTimeline({ bookings }: TodayTimelineProps) {
                   </span>
                   <div className={cn("h-8 w-1 rounded-full", color)} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">{patient}</p>
-                    {practitioner && (
-                      <p className="truncate text-xs text-muted-foreground">{practitioner}</p>
+                    <p className="truncate text-sm font-medium text-foreground">{client}</p>
+                    {employee && (
+                      <p className="truncate text-xs text-muted-foreground">{employee}</p>
                     )}
                   </div>
                 </div>

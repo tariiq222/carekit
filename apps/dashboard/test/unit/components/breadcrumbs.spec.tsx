@@ -8,7 +8,7 @@ vi.mock("@/components/locale-provider", () => ({
     t: (k: string) => {
       const map: Record<string, string> = {
         "nav.dashboard": "الرئيسية",
-        "nav.patients": "المرضى",
+        "nav.clients": "المرضى",
         "nav.bookings": "الحجوزات",
         "nav.create": "إنشاء",
         "nav.edit": "تعديل",
@@ -20,7 +20,7 @@ vi.mock("@/components/locale-provider", () => ({
 }))
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/patients",
+  usePathname: () => "/clients",
 }))
 
 import { Breadcrumbs } from "@/components/features/breadcrumbs"

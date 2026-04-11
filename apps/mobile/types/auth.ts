@@ -2,7 +2,7 @@
  * Auth types — matches backend UserPayload + AuthResponse exactly
  */
 
-export type UserRole = 'patient' | 'practitioner' | 'super_admin' | 'receptionist' | 'accountant';
+export type UserRole = 'client' | 'employee' | 'super_admin' | 'receptionist' | 'accountant';
 
 export interface UserRoleItem {
   id: string;
@@ -27,9 +27,9 @@ export interface User {
 
 /** Derived primary role from roles[] array */
 export function getPrimaryRole(user: User): UserRole {
-  if (!user.roles.length) return 'patient';
+  if (!user.roles.length) return 'client';
   const slug = user.roles[0].slug;
-  return (slug as UserRole) ?? 'patient';
+  return (slug as UserRole) ?? 'client';
 }
 
 export interface AuthState {

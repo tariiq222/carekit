@@ -1,22 +1,22 @@
 /**
- * CareKit Dashboard — Patients Page Interaction Tests
+ * CareKit Dashboard — Clients Page Interaction Tests
  *
- * Verifies UI interactions on /patients:
- *   - "إضافة مريض" navigates to /patients/create
+ * Verifies UI interactions on /clients:
+ *   - "إضافة مريض" navigates to /clients/create
  *   - Create form renders input fields and back button works
  *   - Search input reflects typed value
- *   - Row click opens patient detail sheet
+ *   - Row click opens client detail sheet
  */
 
 import { test, expect } from '../setup/fixtures';
 
-test.describe('Patients — add patient navigation', () => {
+test.describe('Clients — add client navigation', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await goto('/patients');
+    await goto('/clients');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
-  test('clicking "إضافة مريض" navigates to /patients/create', async ({ adminPage }) => {
+  test('clicking "إضافة مريض" navigates to /clients/create', async ({ adminPage }) => {
     // Skip if auth expired (login form visible)
     const loginVisible = await adminPage.locator('#email').isVisible().catch(() => false);
     if (loginVisible) { test.skip(); return; }
@@ -26,15 +26,15 @@ test.describe('Patients — add patient navigation', () => {
     await addBtn.scrollIntoViewIfNeeded();
     await addBtn.click();
 
-    await adminPage.waitForURL(/\/patients\/create/, { timeout: 10_000 }).catch(() => {});
+    await adminPage.waitForURL(/\/clients\/create/, { timeout: 10_000 }).catch(() => {});
     const dialogVisible = await adminPage.locator('[role="dialog"]').first().isVisible().catch(() => false);
-    expect(adminPage.url().includes('/patients/create') || dialogVisible).toBeTruthy();
+    expect(adminPage.url().includes('/clients/create') || dialogVisible).toBeTruthy();
   });
 });
 
-test.describe('Patients — create form', () => {
+test.describe('Clients — create form', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await goto('/patients/create');
+    await goto('/clients/create');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
@@ -52,14 +52,14 @@ test.describe('Patients — create form', () => {
     await expect(submitBtn).toBeVisible();
   });
 
-  test('cancel button navigates back to patient list', async ({ adminPage }) => {
+  test('cancel button navigates back to client list', async ({ adminPage }) => {
     const cancelBtn = adminPage.getByRole('button', { name: /إلغاء|Cancel/ }).first();
     await expect(cancelBtn).toBeVisible({ timeout: 12_000 });
     await cancelBtn.click();
 
-    await adminPage.waitForURL(/\/patients(?!\/create)/, { timeout: 10_000 });
-    await expect(adminPage).toHaveURL(/\/patients/);
-    await expect(adminPage).not.toHaveURL(/\/patients\/create/);
+    await adminPage.waitForURL(/\/clients(?!\/create)/, { timeout: 10_000 });
+    await expect(adminPage).toHaveURL(/\/clients/);
+    await expect(adminPage).not.toHaveURL(/\/clients\/create/);
   });
 
   test('phone field exists and accepts input', async ({ adminPage }) => {
@@ -75,9 +75,9 @@ test.describe('Patients — create form', () => {
   });
 });
 
-test.describe('Patients — search interaction', () => {
+test.describe('Clients — search interaction', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await goto('/patients');
+    await goto('/clients');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
@@ -101,9 +101,9 @@ test.describe('Patients — search interaction', () => {
   });
 });
 
-test.describe('Patients — row click opens detail sheet', () => {
-  test('clicking a patient row opens the detail sheet', async ({ adminPage, goto }) => {
-    await goto('/patients');
+test.describe('Clients — row click opens detail sheet', () => {
+  test('clicking a client row opens the detail sheet', async ({ adminPage, goto }) => {
+    await goto('/clients');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
 
     const table = adminPage.locator('table, [role="table"]');
@@ -123,7 +123,7 @@ test.describe('Patients — row click opens detail sheet', () => {
       return;
     }
 
-    // Patients table uses a <button> in the first cell to trigger the detail sheet
+    // Clients table uses a <button> in the first cell to trigger the detail sheet
     const rowBtn = firstRow.locator('button').first();
     if (await rowBtn.count() === 0) {
       // Fall back to clicking the row itself

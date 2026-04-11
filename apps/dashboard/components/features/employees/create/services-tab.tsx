@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card"
 import { useLocale } from "@/components/locale-provider"
 import { useServices, useServiceBookingTypes } from "@/hooks/use-services"
-import type { PractitionerTypeConfigPayload } from "@/lib/types/practitioner"
+import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"
 import {
   addServiceSchema,
   nextDraftKey,
@@ -46,7 +46,7 @@ export function ServicesTab({
   const isAr = locale === "ar"
   const { services } = useServices()
   const [isAdding, setIsAdding] = useState(false)
-  const [typeConfigs, setTypeConfigs] = useState<PractitionerTypeConfigPayload[]>([])
+  const [typeConfigs, setTypeConfigs] = useState<EmployeeTypeConfigPayload[]>([])
 
   /* Filter out already-added services */
   const availableServices = useMemo(
@@ -129,15 +129,15 @@ export function ServicesTab({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("practitioners.create.tabs.services")}</CardTitle>
+        <CardTitle>{t("employees.create.tabs.services")}</CardTitle>
         <CardDescription>
-          {t("practitioners.create.servicesDescription")}
+          {t("employees.create.servicesDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {draftServices.length === 0 && !isAdding && (
           <p className="text-sm text-muted-foreground">
-            {t("practitioners.create.noServices")}
+            {t("employees.create.noServices")}
           </p>
         )}
 
@@ -169,7 +169,7 @@ export function ServicesTab({
             onClick={() => setIsAdding(true)}
           >
             <HugeiconsIcon icon={Add01Icon} size={16} />
-            {t("practitioners.create.addService")}
+            {t("employees.create.addService")}
           </Button>
         )}
       </CardContent>

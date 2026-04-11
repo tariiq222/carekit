@@ -18,25 +18,25 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { fetchPractitionerRatings } from "@/lib/api/practitioners"
+import { fetchEmployeeRatings } from "@/lib/api/employees"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
-import type { Practitioner } from "@/lib/types/practitioner"
+import type { Employee } from "@/lib/types/employee"
 
 interface AllRatingsTabProps {
-  practitioners: Practitioner[]
+  employees: Employee[]
 }
 
-export function AllRatingsTab({ practitioners }: AllRatingsTabProps) {
+export function AllRatingsTab({ employees }: AllRatingsTabProps) {
   const { t, locale } = useLocale()
-  const [selectedPractitioner, setSelectedPractitioner] = useState<string>("")
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("")
   const [page, setPage] = useState(1)
 
   const { data, isLoading } = useQuery({
-    queryKey: [...queryKeys.practitioners.ratings(selectedPractitioner), page],
+    queryKey: [...queryKeys.employees.ratings(selectedEmployee), page],
     queryFn: () =>
-      fetchPractitionerRatings(selectedPractitioner, { page, perPage: 20 }),
-    enabled: !!selectedPractitioner,
+      fetchEmployeeRatings(selectedEmployee, { page, perPage: 20 }),
+    enabled: !!selectedEmployee,
   })
 
   const ratings = data?.items ?? []
@@ -44,24 +44,24 @@ export function AllRatingsTab({ practitioners }: AllRatingsTabProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Practitioner Selector */}
+      {/* Employee Selector */}
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-2">
           <Label className="text-sm text-muted-foreground">
-            {t("ratings.selectPractitioner")}
+            {t("ratings.selectEmployee")}
           </Label>
           <Select
-            value={selectedPractitioner}
+            value={selectedEmployee}
             onValueChange={(v) => {
-              setSelectedPractitioner(v)
+              setSelectedEmployee(v)
               setPage(1)
             }}
           >
             <SelectTrigger className="w-full sm:w-64">
-              <SelectValue placeholder={t("ratings.choosePractitioner")} />
+              <SelectValue placeholder={t("ratings.chooseEmployee")} />
             </SelectTrigger>
             <SelectContent>
-              {practitioners.map((p) => (
+              {employees.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.user.firstName} {p.user.lastName}
                   {p.specialty
@@ -75,7 +75,7 @@ export function AllRatingsTab({ practitioners }: AllRatingsTabProps) {
       </div>
 
       {/* Content */}
-      {!selectedPractitioner ? (
+      {!selectedEmployee ? (
         <div className="flex flex-col items-center gap-4 py-16">
           <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
             <HugeiconsIcon icon={StarIcon} className="size-8 text-primary" />
@@ -137,8 +137,8 @@ export function AllRatingsTab({ practitioners }: AllRatingsTabProps) {
                       <p className="text-sm text-foreground">{r.comment}</p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      {r.patient
-                        ? `${r.patient.firstName} ${r.patient.lastName}`
+                      {r.client
+                        ? `${r.client.firstName} ${r.client.lastName}`
                         : t("ratings.anonymous")}
                       {" · "}
                       <span className="tabular-nums">

@@ -884,13 +884,13 @@ describe('IntakeFormsController', () => {
   });
 
   describe('submitResponse', () => {
-    it('should merge formId into dto and pass patientId from @CurrentUser', async () => {
+    it('should merge formId into dto and pass clientId from @CurrentUser', async () => {
       const dto = { answers: [{ fieldId: 'fld1', value: 'Yes' }] } as any;
       const result = { id: 'resp-1' };
       mockService.submitResponse.mockResolvedValue(result);
 
-      expect(await controller.submitResponse('f1', 'patient-1', dto)).toEqual(result);
-      expect(mockService.submitResponse).toHaveBeenCalledWith('patient-1', {
+      expect(await controller.submitResponse('f1', 'client-1', dto)).toEqual(result);
+      expect(mockService.submitResponse).toHaveBeenCalledWith('client-1', {
         ...dto,
         formId: 'f1',
       });
@@ -1251,7 +1251,7 @@ import { ServicesService } from '../../../src/modules/services/services.service.
 import { ServicesAvatarService } from '../../../src/modules/services/services-avatar.service.js';
 import { DurationOptionsService } from '../../../src/modules/services/duration-options.service.js';
 import { ServiceBookingTypeService } from '../../../src/modules/services/service-booking-type.service.js';
-import { ServicePractitionersService } from '../../../src/modules/services/service-practitioners.service.js';
+import { ServiceEmployeesService } from '../../../src/modules/services/service-employees.service.js';
 import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard.js';
 import { PermissionsGuard } from '../../../src/common/guards/permissions.guard.js';
 
@@ -1274,7 +1274,7 @@ const mockServices = {
 const mockAvatar = { uploadAvatar: jest.fn() };
 const mockDuration = { getDurationOptions: jest.fn(), setDurationOptions: jest.fn() };
 const mockBookingType = { getByService: jest.fn(), setBookingTypes: jest.fn() };
-const mockPractitioners = { getPractitionersForService: jest.fn() };
+const mockEmployees = { getEmployeesForService: jest.fn() };
 
 describe('ServicesController', () => {
   let controller: ServicesController;
@@ -1289,7 +1289,7 @@ describe('ServicesController', () => {
         { provide: ServicesAvatarService, useValue: mockAvatar },
         { provide: DurationOptionsService, useValue: mockDuration },
         { provide: ServiceBookingTypeService, useValue: mockBookingType },
-        { provide: ServicePractitionersService, useValue: mockPractitioners },
+        { provide: ServiceEmployeesService, useValue: mockEmployees },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -1445,21 +1445,21 @@ describe('ServicesController', () => {
     });
   });
 
-  // ── Practitioners ───────────────────────────────────────────────
+  // ── Employees ───────────────────────────────────────────────
 
-  describe('getPractitioners', () => {
+  describe('getEmployees', () => {
     it('should delegate with id and optional branchId', async () => {
-      const practitioners = [{ id: 'p1' }];
-      mockPractitioners.getPractitionersForService.mockResolvedValue(practitioners);
+      const employees = [{ id: 'p1' }];
+      mockEmployees.getEmployeesForService.mockResolvedValue(employees);
 
-      expect(await controller.getPractitioners('svc1', 'b1')).toEqual(practitioners);
-      expect(mockPractitioners.getPractitionersForService).toHaveBeenCalledWith('svc1', 'b1');
+      expect(await controller.getEmployees('svc1', 'b1')).toEqual(employees);
+      expect(mockEmployees.getEmployeesForService).toHaveBeenCalledWith('svc1', 'b1');
     });
 
     it('should work without branchId', async () => {
-      mockPractitioners.getPractitionersForService.mockResolvedValue([]);
-      await controller.getPractitioners('svc1', undefined);
-      expect(mockPractitioners.getPractitionersForService).toHaveBeenCalledWith('svc1', undefined);
+      mockEmployees.getEmployeesForService.mockResolvedValue([]);
+      await controller.getEmployees('svc1', undefined);
+      expect(mockEmployees.getEmployeesForService).toHaveBeenCalledWith('svc1', undefined);
     });
   });
 
@@ -1662,23 +1662,23 @@ describe('ClinicSettingsController', () => {
 
   describe('getBookingFlowOrder', () => {
     it('should wrap order in nested object', async () => {
-      mockSettings.getBookingFlowOrder.mockResolvedValue(['service', 'practitioner', 'time']);
+      mockSettings.getBookingFlowOrder.mockResolvedValue(['service', 'employee', 'time']);
 
       expect(await controller.getBookingFlowOrder()).toEqual({
         success: true,
-        data: { bookingFlowOrder: ['service', 'practitioner', 'time'] },
+        data: { bookingFlowOrder: ['service', 'employee', 'time'] },
       });
     });
   });
 
   describe('updateBookingFlowOrder', () => {
     it('should extract order from dto and wrap result', async () => {
-      const dto = { order: ['practitioner', 'service', 'time'] } as any;
-      mockSettings.updateBookingFlowOrder.mockResolvedValue(['practitioner', 'service', 'time']);
+      const dto = { order: ['employee', 'service', 'time'] } as any;
+      mockSettings.updateBookingFlowOrder.mockResolvedValue(['employee', 'service', 'time']);
 
       expect(await controller.updateBookingFlowOrder(dto)).toEqual({
         success: true,
-        data: { bookingFlowOrder: ['practitioner', 'service', 'time'] },
+        data: { bookingFlowOrder: ['employee', 'service', 'time'] },
       });
       expect(mockSettings.updateBookingFlowOrder).toHaveBeenCalledWith(dto.order);
     });
@@ -1750,7 +1750,7 @@ const mockStreamService = {
 };
 
 const adminUser = { id: 'admin-1', roles: [{ slug: 'super_admin' }] };
-const patientUser = { id: 'patient-1', roles: [{ slug: 'patient' }] };
+const clientUser = { id: 'client-1', roles: [{ slug: 'client' }] };
 
 describe('ChatbotController', () => {
   let controller: ChatbotController;
@@ -1779,8 +1779,8 @@ describe('ChatbotController', () => {
       const session = { id: 'sess-1' };
       mockChatbotService.createSession.mockResolvedValue(session);
 
-      expect(await controller.createSession(dto, patientUser)).toEqual(session);
-      expect(mockChatbotService.createSession).toHaveBeenCalledWith('patient-1', 'ar');
+      expect(await controller.createSession(dto, clientUser)).toEqual(session);
+      expect(mockChatbotService.createSession).toHaveBeenCalledWith('client-1', 'ar');
     });
   });
 
@@ -1789,10 +1789,10 @@ describe('ChatbotController', () => {
       const query = { page: '2', perPage: '10' } as any;
       mockChatbotService.listSessions.mockResolvedValue({ data: [], total: 0 });
 
-      await controller.listSessions(query, patientUser);
+      await controller.listSessions(query, clientUser);
 
       expect(mockChatbotService.listSessions).toHaveBeenCalledWith({
-        userId: 'patient-1',
+        userId: 'client-1',
         page: 2,
         perPage: 10,
         handedOff: undefined,
@@ -1819,8 +1819,8 @@ describe('ChatbotController', () => {
       const session = { id: 'sess-1', messages: [] };
       mockChatbotService.getSession.mockResolvedValue(session);
 
-      expect(await controller.getSession('sess-1', patientUser)).toEqual(session);
-      expect(mockChatbotService.getSession).toHaveBeenCalledWith('sess-1', 'patient-1');
+      expect(await controller.getSession('sess-1', clientUser)).toEqual(session);
+      expect(mockChatbotService.getSession).toHaveBeenCalledWith('sess-1', 'client-1');
     });
   });
 
@@ -1830,10 +1830,10 @@ describe('ChatbotController', () => {
       const result = { reply: 'من 8 صباحا...' };
       mockChatbotService.handleMessage.mockResolvedValue(result);
 
-      expect(await controller.sendMessage('sess-1', dto, patientUser)).toEqual(result);
+      expect(await controller.sendMessage('sess-1', dto, clientUser)).toEqual(result);
       expect(mockChatbotService.handleMessage).toHaveBeenCalledWith(
         'sess-1',
-        'patient-1',
+        'client-1',
         'ما هي مواعيد العمل؟',
       );
     });
@@ -1853,7 +1853,7 @@ describe('ChatbotController', () => {
       };
 
       // Start streaming (non-blocking since subscribe is sync)
-      await controller.streamMessage('sess-1', dto, patientUser, mockRes as any);
+      await controller.streamMessage('sess-1', dto, clientUser, mockRes as any);
 
       // Verify headers
       expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'text/event-stream');
@@ -1888,7 +1888,7 @@ describe('ChatbotController', () => {
         end: jest.fn(),
       };
 
-      await controller.streamMessage('sess-1', dto, patientUser, mockRes as any);
+      await controller.streamMessage('sess-1', dto, clientUser, mockRes as any);
 
       subject.error(new Error('LLM timeout'));
 
@@ -1904,8 +1904,8 @@ describe('ChatbotController', () => {
       const result = { ended: true };
       mockChatbotService.endSession.mockResolvedValue(result);
 
-      expect(await controller.endSession('sess-1', patientUser)).toEqual(result);
-      expect(mockChatbotService.endSession).toHaveBeenCalledWith('sess-1', 'patient-1');
+      expect(await controller.endSession('sess-1', clientUser)).toEqual(result);
+      expect(mockChatbotService.endSession).toHaveBeenCalledWith('sess-1', 'client-1');
     });
   });
 });
@@ -1947,7 +1947,7 @@ const mockCleanup = {
   cleanExpiredRefreshTokens: jest.fn(),
   cleanOldProcessedWebhooks: jest.fn(),
   archiveOldActivityLogs: jest.fn(),
-  repairPractitionerRatingCache: jest.fn(),
+  repairEmployeeRatingCache: jest.fn(),
   logTableGrowthSnapshot: jest.fn(),
 };
 
@@ -2004,7 +2004,7 @@ describe('TasksProcessor', () => {
     ['cleanup-tokens', () => mockCleanup.cleanExpiredRefreshTokens],
     ['cleanup-webhooks', () => mockCleanup.cleanOldProcessedWebhooks],
     ['archive-activity-logs', () => mockCleanup.archiveOldActivityLogs],
-    ['repair-rating-cache', () => mockCleanup.repairPractitionerRatingCache],
+    ['repair-rating-cache', () => mockCleanup.repairEmployeeRatingCache],
     ['db-snapshot', () => mockCleanup.logTableGrowthSnapshot],
     ['reminder-24h', () => mockReminder.sendDayBeforeReminders],
     ['reminder-1h', () => mockReminder.sendHourBeforeReminders],

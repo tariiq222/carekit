@@ -145,12 +145,12 @@ This document tracks maintenance cycles, known technical debt, and architectural
 
 **Context:** SMS costs are high and add vendor dependency. Target market (Saudi clinics) has reliable email access.
 
-**Decision:** Patient auth uses email OTP only. No SMS for any flow.
+**Decision:** Client auth uses email OTP only. No SMS for any flow.
 
 **Consequences:**
 - ✅ Zero SMS costs
 - ✅ No Twilio/SMS vendor dependency
-- ⚠️ Patients without email access cannot use the platform — accepted trade-off for B2B clinic context
+- ⚠️ Clients without email access cannot use the platform — accepted trade-off for B2B clinic context
 
 ---
 

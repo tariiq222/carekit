@@ -19,11 +19,11 @@
 - POST /branches يعيد 201 وليس 200
 - الصلاحيات تستخدم نقطتين: `branches:view` / `branches:create` / `branches:edit` / `branches:delete`
 - GET /branches يُعيد الفروع النشطة فقط (يستثني soft-deleted) مرتبة: isMain أولاً ثم createdAt
-- PATCH /branches/:id/practitioners يُضيف/يحدّث (upsert) ولا يستبدل الكل
-- DELETE /branches/:id/practitioners/:practitionerId يعيد `{ removed: true }` (داخل data wrapper)
+- PATCH /branches/:id/employees يُضيف/يحدّث (upsert) ولا يستبدل الكل
+- DELETE /branches/:id/employees/:employeeId يعيد `{ removed: true }` (داخل data wrapper)
 - سيناريوهات 401 و 403 مفقودة كلياً
-- PATCH /branches/:id/practitioners يقبل `practitionerIds` (مصفوفة)
-- خطأ تعيين طبيب غير موجود: 400 PRACTITIONER_NOT_FOUND (وليس 404)
+- PATCH /branches/:id/employees يقبل `employeeIds` (مصفوفة)
+- خطأ تعيين طبيب غير موجود: 400 EMPLOYEE_NOT_FOUND (وليس 404)
 
 ---
 
@@ -94,13 +94,13 @@
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 | --- | --- | --- | --- |
-| BR-PR1 | قراءة أطباء الفرع | GET /branches/:id/practitioners | 200 + { success: true, data: [...] } — isPrimary أولاً |
-| BR-PR2 | تعيين طبيب | PATCH /branches/:id/practitioners + { practitionerIds: ["uuid"] } | 200 + قائمة الأطباء المحدَّثة |
-| BR-PR3 | تعيين متعدد | practitionerIds=[uuid1, uuid2] | 200 + الطبيبان مُضافان (upsert) |
-| BR-PR4 | طبيب غير موجود | practitionerIds=[uuid-وهمي] | 400 PRACTITIONER_NOT_FOUND |
-| BR-PR5 | مصفوفة فارغة | practitionerIds=[] | 400 VALIDATION_ERROR (ArrayMinSize=1) |
+| BR-PR1 | قراءة أطباء الفرع | GET /branches/:id/employees | 200 + { success: true, data: [...] } — isPrimary أولاً |
+| BR-PR2 | تعيين طبيب | PATCH /branches/:id/employees + { employeeIds: ["uuid"] } | 200 + قائمة الأطباء المحدَّثة |
+| BR-PR3 | تعيين متعدد | employeeIds=[uuid1, uuid2] | 200 + الطبيبان مُضافان (upsert) |
+| BR-PR4 | طبيب غير موجود | employeeIds=[uuid-وهمي] | 400 EMPLOYEE_NOT_FOUND |
+| BR-PR5 | مصفوفة فارغة | employeeIds=[] | 400 VALIDATION_ERROR (ArrayMinSize=1) |
 | BR-PR6 | فرع وهمي | branchId غير موجود | 404 NOT_FOUND |
-| BR-PR7 | إزالة طبيب | DELETE /branches/:id/practitioners/:practitionerId | 200 + { success: true, data: { removed: true } } |
-| BR-PR8 | إزالة طبيب غير مُعيَّن | practitionerId غير مرتبط بهذا الفرع | 404 NOT_FOUND |
+| BR-PR7 | إزالة طبيب | DELETE /branches/:id/employees/:employeeId | 200 + { success: true, data: { removed: true } } |
+| BR-PR8 | إزالة طبيب غير مُعيَّن | employeeId غير مرتبط بهذا الفرع | 404 NOT_FOUND |
 | BR-PR9 | بدون صلاحية (قراءة) | مستخدم بدون branches:view | 403 FORBIDDEN |
 | BR-PR10 | بدون صلاحية (تعيين) | مستخدم بدون branches:edit | 403 FORBIDDEN |

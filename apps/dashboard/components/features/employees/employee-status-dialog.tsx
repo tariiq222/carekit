@@ -15,15 +15,15 @@ import { useLocale } from "@/components/locale-provider"
 interface Props {
   open: boolean
   targetStatus: boolean // true = activating, false = suspending
-  practitionerName: string
+  employeeName: string
   onConfirm: () => void
   onCancel: () => void
 }
 
-export function PractitionerStatusDialog({
+export function EmployeeStatusDialog({
   open,
   targetStatus,
-  practitionerName,
+  employeeName,
   onConfirm,
   onCancel,
 }: Props) {
@@ -35,13 +35,13 @@ export function PractitionerStatusDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>
             {targetStatus
-              ? t("practitioners.status.activateTitle")
-              : t("practitioners.status.suspendTitle")}
+              ? t("employees.status.activateTitle")
+              : t("employees.status.suspendTitle")}
           </AlertDialogTitle>
           <AlertDialogDescription>
             {targetStatus
-              ? t("practitioners.status.activateDesc").replace("{name}", practitionerName)
-              : t("practitioners.status.suspendDesc").replace("{name}", practitionerName)}
+              ? t("employees.status.activateDesc").replace("{name}", employeeName)
+              : t("employees.status.suspendDesc").replace("{name}", employeeName)}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -57,8 +57,8 @@ export function PractitionerStatusDialog({
             }
           >
             {targetStatus
-              ? t("practitioners.status.confirmActivate")
-              : t("practitioners.status.confirmSuspend")}
+              ? t("employees.status.confirmActivate")
+              : t("employees.status.confirmSuspend")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

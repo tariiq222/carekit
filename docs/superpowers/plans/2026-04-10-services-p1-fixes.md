@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fix three P1 bugs in the Services module: inactive practitioners returned in patient-facing endpoint, unbounded `perPage` (DoS vector), and active/inactive stats cards calculated from paginated data instead of totals.
+**Goal:** Fix three P1 bugs in the Services module: inactive employees returned in client-facing endpoint, unbounded `perPage` (DoS vector), and active/inactive stats cards calculated from paginated data instead of totals.
 
 **Architecture:** All surgical. No new files.
 
@@ -12,77 +12,77 @@
 
 ## Files
 
-- Modify: `backend/src/modules/services/service-practitioners.service.ts`
+- Modify: `backend/src/modules/services/service-employees.service.ts`
 - Modify: `backend/src/modules/services/dto/service-list-query.dto.ts`
 - Modify: `dashboard/components/features/services/services-tab-content.tsx`
 - Modify: `dashboard/hooks/use-services.ts` (add `listStats` query if needed)
-- Test: `backend/test/unit/services/service-practitioners.service.spec.ts`
+- Test: `backend/test/unit/services/service-employees.service.spec.ts`
 - Test: `backend/test/unit/services/services.service.spec.ts`
 
 ---
 
-## Task 1: Filter out inactive practitioners from `getPractitionersForService`
+## Task 1: Filter out inactive employees from `getEmployeesForService`
 
 **Files:**
-- Modify: `backend/src/modules/services/service-practitioners.service.ts`
-- Test: `backend/test/unit/services/service-practitioners.service.spec.ts`
+- Modify: `backend/src/modules/services/service-employees.service.ts`
+- Test: `backend/test/unit/services/service-employees.service.spec.ts`
 
-**Problem:** `getPractitionersForService` (lines 14-52) returns practitioners without filtering `isActive` or `deletedAt`. A soft-deleted or deactivated practitioner appears in the patient's booking list.
+**Problem:** `getEmployeesForService` (lines 14-52) returns employees without filtering `isActive` or `deletedAt`. A soft-deleted or deactivated employee appears in the client's booking list.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `backend/test/unit/services/service-practitioners.service.spec.ts`:
+Create `backend/test/unit/services/service-employees.service.spec.ts`:
 
 ```typescript
 import { Test } from '@nestjs/testing';
-import { ServicePractitionersService } from '../../../src/modules/services/service-practitioners.service.js';
+import { ServiceEmployeesService } from '../../../src/modules/services/service-employees.service.js';
 import { ServicesService } from '../../../src/modules/services/services.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 
-describe('ServicePractitionersService', () => {
-  let service: ServicePractitionersService;
+describe('ServiceEmployeesService', () => {
+  let service: ServiceEmployeesService;
   let prisma: jest.Mocked<PrismaService>;
   let servicesService: jest.Mocked<ServicesService>;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
-        ServicePractitionersService,
+        ServiceEmployeesService,
         {
           provide: ServicesService,
           useValue: { ensureExists: jest.fn().mockResolvedValue(undefined) },
         },
         {
           provide: PrismaService,
-          useValue: { practitionerService: { findMany: jest.fn() } },
+          useValue: { employeeService: { findMany: jest.fn() } },
         },
       ],
     }).compile();
 
-    service = module.get(ServicePractitionersService);
+    service = module.get(ServiceEmployeesService);
     prisma = module.get(PrismaService);
     servicesService = module.get(ServicesService);
   });
 
-  it('should only return active, non-deleted practitioners', async () => {
-    prisma.practitionerService.findMany.mockResolvedValue([
+  it('should only return active, non-deleted employees', async () => {
+    prisma.employeeService.findMany.mockResolvedValue([
       {
-        practitioner: { id: 'p-1', isActive: true, deletedAt: null, nameAr: 'طبيب', title: 'Dr', user: { firstName: 'Ahmad', lastName: 'Ali', avatarUrl: null } },
+        employee: { id: 'p-1', isActive: true, deletedAt: null, nameAr: 'طبيب', title: 'Dr', user: { firstName: 'Ahmad', lastName: 'Ali', avatarUrl: null } },
         serviceTypes: [],
       },
       {
-        practitioner: { id: 'p-2', isActive: false, deletedAt: null, nameAr: 'طبيب', title: 'Dr', user: { firstName: 'Khalid', lastName: 'Omar', avatarUrl: null } },
+        employee: { id: 'p-2', isActive: false, deletedAt: null, nameAr: 'طبيب', title: 'Dr', user: { firstName: 'Khalid', lastName: 'Omar', avatarUrl: null } },
         serviceTypes: [],
       },
     ] as never);
 
-    const result = await service.getPractitionersForService('service-1');
+    const result = await service.getEmployeesForService('service-1');
 
     // The query itself should include the isActive filter — not post-filter in JS
-    expect(prisma.practitionerService.findMany).toHaveBeenCalledWith(
+    expect(prisma.employeeService.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          practitioner: expect.objectContaining({
+          employee: expect.objectContaining({
             isActive: true,
             deletedAt: null,
           }),
@@ -97,20 +97,20 @@ describe('ServicePractitionersService', () => {
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit/backend
-npm run test -- --testPathPattern="service-practitioners" --no-coverage
+npm run test -- --testPathPattern="service-employees" --no-coverage
 ```
 
 Expected: FAIL — current query has no `isActive`/`deletedAt` filter.
 
 - [ ] **Step 3: Implement the fix**
 
-In `service-practitioners.service.ts`, update the `where` clause in `getPractitionersForService`:
+In `service-employees.service.ts`, update the `where` clause in `getEmployeesForService`:
 
 ```typescript
-const rows = await this.prisma.practitionerService.findMany({
+const rows = await this.prisma.employeeService.findMany({
   where: {
     serviceId,
-    practitioner: {
+    employee: {
       isActive: true,
       deletedAt: null,
       ...(branchId && {
@@ -119,7 +119,7 @@ const rows = await this.prisma.practitionerService.findMany({
     },
   },
   include: {
-    practitioner: {
+    employee: {
       select: {
         id: true,
         nameAr: true,
@@ -149,13 +149,13 @@ const rows = await this.prisma.practitionerService.findMany({
 });
 ```
 
-Note: The `branchId` condition moved inside the `practitioner` filter (previously it was at the top level alongside `serviceId`, which was logically correct but now we consolidate).
+Note: The `branchId` condition moved inside the `employee` filter (previously it was at the top level alongside `serviceId`, which was logically correct but now we consolidate).
 
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit/backend
-npm run test -- --testPathPattern="service-practitioners" --no-coverage
+npm run test -- --testPathPattern="service-employees" --no-coverage
 ```
 
 Expected: PASS
@@ -164,9 +164,9 @@ Expected: PASS
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit
-git add backend/src/modules/services/service-practitioners.service.ts \
-        backend/test/unit/services/service-practitioners.service.spec.ts
-git commit -m "fix(services): exclude inactive/deleted practitioners from getPractitionersForService
+git add backend/src/modules/services/service-employees.service.ts \
+        backend/test/unit/services/service-employees.service.spec.ts
+git commit -m "fix(services): exclude inactive/deleted employees from getEmployeesForService
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 ```

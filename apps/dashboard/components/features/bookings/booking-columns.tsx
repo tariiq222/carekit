@@ -55,10 +55,10 @@ export function getBookingColumns(
       ),
     },
     {
-      id: "patient",
+      id: "client",
       header: "المريض",
       cell: ({ row }) => {
-        const p = row.original.patient
+        const p = row.original.client
         if (!p) return <span className="text-muted-foreground">—</span>
         const name = `${p.firstName} ${p.lastName}`
         const grad = getGradient(name)
@@ -83,10 +83,10 @@ export function getBookingColumns(
       },
     },
     {
-      id: "practitioner",
+      id: "employee",
       header: "الممارس",
       cell: ({ row }) => {
-        const u = row.original.practitioner?.user
+        const u = row.original.employee?.user
         if (!u) return <span className="text-muted-foreground">—</span>
         return (
           <span className="text-sm font-medium text-foreground">

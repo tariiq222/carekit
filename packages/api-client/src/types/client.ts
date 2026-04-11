@@ -1,6 +1,6 @@
 import type { PaginatedResponse, PaginationParams } from './api.js'
 
-export interface PatientListItem {
+export interface ClientListItem {
   id: string
   firstName: string
   lastName: string
@@ -14,14 +14,14 @@ export interface PatientListItem {
   createdAt: string
 }
 
-export interface PatientStats {
+export interface ClientStats {
   total: number
   active: number
   walkIn: number
   newThisWeek: number
 }
 
-export interface PatientListQuery extends PaginationParams {
+export interface ClientListQuery extends PaginationParams {
   isActive?: boolean
   isWalkIn?: boolean
 }
@@ -34,7 +34,7 @@ export interface CreateWalkInPayload {
   dateOfBirth?: string
 }
 
-export interface UpdatePatientPayload {
+export interface UpdateClientPayload {
   firstName?: string
   lastName?: string
   phone?: string
@@ -44,4 +44,4 @@ export interface UpdatePatientPayload {
   isActive?: boolean
 }
 
-export type PatientListResponse = PaginatedResponse<PatientListItem>
+export type ClientListResponse = PaginatedResponse<ClientListItem>

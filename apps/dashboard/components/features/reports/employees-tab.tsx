@@ -3,7 +3,7 @@
 import { ErrorBanner } from "@/components/features/error-banner"
 import { useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchPractitionerReport } from "@/lib/api/reports"
+import { fetchEmployeeReport } from "@/lib/api/reports"
 import { useLocale } from "@/components/locale-provider"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 import { StatsGrid } from "@/components/features/stats-grid"
@@ -16,26 +16,26 @@ import {
   StarIcon,
 } from "@hugeicons/core-free-icons"
 
-interface PractitionersTabProps {
+interface EmployeesTabProps {
   dateFrom: string
   dateTo: string
-  practitionerId: string
+  employeeId: string
 }
 
-export function PractitionersTab({ dateFrom, dateTo, practitionerId }: PractitionersTabProps) {
+export function EmployeesTab({ dateFrom, dateTo, employeeId }: EmployeesTabProps) {
   const { t, locale } = useLocale()
 
   const { data, isLoading, error } = useQuery({
-    queryKey: queryKeys.reports.practitioner(practitionerId, { dateFrom, dateTo }),
-    queryFn: () => fetchPractitionerReport(practitionerId, { dateFrom, dateTo }),
-    enabled: !!practitionerId && !!dateFrom && !!dateTo,
+    queryKey: queryKeys.reports.employee(employeeId, { dateFrom, dateTo }),
+    queryFn: () => fetchEmployeeReport(employeeId, { dateFrom, dateTo }),
+    enabled: !!employeeId && !!dateFrom && !!dateTo,
   })
 
-  if (!practitionerId) {
+  if (!employeeId) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <p className="text-sm text-muted-foreground">
-          {t("reports.practitionerSearchHint") ?? "ابحث عن طبيب بالاسم أو ID لعرض تقريره"}
+          {t("reports.employeeSearchHint") ?? "ابحث عن طبيب بالاسم أو ID لعرض تقريره"}
         </p>
       </div>
     )
@@ -72,7 +72,7 @@ export function PractitionersTab({ dateFrom, dateTo, practitionerId }: Practitio
             iconColor="success"
           />
           <StatCard
-            title={t("practitioners.stats.avgRating")}
+            title={t("employees.stats.avgRating")}
             value={data.averageRating.toFixed(1)}
             icon={StarIcon}
             iconColor="warning"

@@ -12,9 +12,9 @@ import { fetchBookingFlowOrder } from "@/lib/api/clinic-settings"
 import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
 import { useWizardState } from "./use-wizard-state"
 import type { WizardStep } from "./use-wizard-state"
-import { PatientStep } from "./booking-patient-step"
+import { ClientStep } from "./booking-client-step"
 import { StepService } from "./wizard-steps/step-service"
-import { StepPractitioner } from "./wizard-steps/step-practitioner"
+import { StepEmployee } from "./wizard-steps/step-employee"
 import { StepChoosePath } from "./wizard-steps/step-choose-path"
 import type { BookingPath } from "./wizard-steps/step-choose-path"
 import { StepTypeDuration } from "./wizard-steps/step-type-duration"
@@ -63,7 +63,7 @@ function useStepTitle(
   // In "both" mode with no path chosen yet → show chooser title
   if (flowOrder === "both" && chosenPath === null) {
     const map: Record<WizardStep, string> = {
-      1: t("bookings.wizard.stepLabel.patient"),
+      1: t("bookings.wizard.stepLabel.client"),
       2: t("bookings.wizard.stepLabel.choosePath"),
       3: "",
       4: t("bookings.wizard.stepLabel.typeDuration"),
@@ -77,12 +77,12 @@ function useStepTitle(
   const effective = flowOrder === "both" && chosenPath ? chosenPath : flowOrder === "both" ? "service_first" : flowOrder
 
   const map: Record<WizardStep, string> = {
-    1: t("bookings.wizard.stepLabel.patient"),
+    1: t("bookings.wizard.stepLabel.client"),
     2: effective === "service_first"
       ? t("bookings.wizard.stepLabel.service")
-      : t("bookings.wizard.stepLabel.practitioner"),
+      : t("bookings.wizard.stepLabel.employee"),
     3: effective === "service_first"
-      ? t("bookings.wizard.stepLabel.practitioner")
+      ? t("bookings.wizard.stepLabel.employee")
       : t("bookings.wizard.stepLabel.service"),
     4: t("bookings.wizard.stepLabel.typeDuration"),
     5: t("bookings.wizard.stepLabel.datetime"),
@@ -111,9 +111,9 @@ function WizardInner({
 
   const handleSubmit = async () => {
     if (
-      !state.patientId ||
+      !state.clientId ||
       !state.serviceId ||
-      !state.practitionerId ||
+      !state.employeeId ||
       !state.type ||
       !state.date ||
       !state.startTime
@@ -122,8 +122,8 @@ function WizardInner({
 
     try {
       await createMut.mutateAsync({
-        patientId: state.patientId ?? undefined,
-        practitionerId: state.practitionerId,
+        clientId: state.clientId ?? undefined,
+        employeeId: state.employeeId,
         serviceId: state.serviceId,
         type: state.type,
         durationOptionId: state.durationOptionId ?? undefined,
@@ -164,7 +164,7 @@ function WizardInner({
           {stepTitle}
         </p>
 
-        {/* Right: change patient or spacer */}
+        {/* Right: change client or spacer */}
         {state.step > 1 ? (
           <Button
             variant="ghost"
@@ -174,7 +174,7 @@ function WizardInner({
             className="shrink-0 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
             <HugeiconsIcon icon={UserSwitchIcon} size={14} />
-            {t("bookings.wizard.changePatient")}
+            {t("bookings.wizard.changeClient")}
           </Button>
         ) : (
           <div className="w-[88px]" />
@@ -189,7 +189,7 @@ function WizardInner({
       {/* ── Step content ── */}
       <div className="px-5 pt-4 pb-6 min-h-[280px] overflow-y-auto max-h-[calc(90vh-140px)]">
         {state.step === 1 && (
-          <PatientStep onSelect={wizard.selectPatient} />
+          <ClientStep onSelect={wizard.selectClient} />
         )}
 
         {/* Step 2: path chooser (both mode) OR first selection step */}
@@ -201,27 +201,27 @@ function WizardInner({
           <StepService onSelect={wizard.selectService} />
         )}
 
-        {state.step === 2 && !showPathChooser && effectiveFlow === "practitioner_first" && (
-          <StepPractitioner
+        {state.step === 2 && !showPathChooser && effectiveFlow === "employee_first" && (
+          <StepEmployee
             serviceId={state.serviceId ?? ""}
-            onSelect={wizard.selectPractitioner}
+            onSelect={wizard.selectEmployee}
           />
         )}
 
         {state.step === 3 && effectiveFlow === "service_first" && (
-          <StepPractitioner
+          <StepEmployee
             serviceId={state.serviceId!}
-            onSelect={wizard.selectPractitioner}
+            onSelect={wizard.selectEmployee}
           />
         )}
 
-        {state.step === 3 && effectiveFlow === "practitioner_first" && (
+        {state.step === 3 && effectiveFlow === "employee_first" && (
           <StepService onSelect={wizard.selectService} />
         )}
 
         {state.step === 4 && (
           <StepTypeDuration
-            practitionerId={state.practitionerId!}
+            employeeId={state.employeeId!}
             serviceId={state.serviceId!}
             selectedType={state.type}
             selectedDurationOptionId={state.durationOptionId}
@@ -235,7 +235,7 @@ function WizardInner({
 
         {state.step === 5 && (
           <StepDatetime
-            practitionerId={state.practitionerId!}
+            employeeId={state.employeeId!}
             durationOptionId={state.durationOptionId}
             selectedDate={state.date}
             selectedTime={state.startTime}

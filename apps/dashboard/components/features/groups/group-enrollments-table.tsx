@@ -40,10 +40,10 @@ export function GroupEnrollmentsTable({ enrollments, groupId }: Props) {
 
   const columns: ColumnDef<GroupEnrollment>[] = [
     {
-      accessorKey: "patient",
-      header: t("groups.patient"),
+      accessorKey: "client",
+      header: t("groups.client"),
       cell: ({ row }) => {
-        const p = row.original.patient
+        const p = row.original.client
         return p ? `${p.firstName} ${p.lastName}` : "—"
       },
     },
@@ -108,7 +108,7 @@ export function GroupEnrollmentsTable({ enrollments, groupId }: Props) {
                     <HugeiconsIcon icon={Delete02Icon} size={16} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t("groups.removePatient")}</TooltipContent>
+                <TooltipContent>{t("groups.removeClient")}</TooltipContent>
               </Tooltip>
             )}
             {row.original.status === 'payment_requested' && (

@@ -90,7 +90,7 @@ Create `backend/prisma/schema/group-sessions.prisma`:
 model GroupOffering {
   id                    String    @id @default(uuid())
   clinicId              String    @map("clinic_id")
-  practitionerId        String    @map("practitioner_id")
+  employeeId        String    @map("employee_id")
   departmentId          String?   @map("department_id")
   nameAr                String    @map("name_ar")
   nameEn                String    @map("name_en")
@@ -106,12 +106,12 @@ model GroupOffering {
   deletedAt             DateTime? @map("deleted_at")
 
   clinic       Clinic       @relation(fields: [clinicId], references: [id], onDelete: Restrict)
-  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
   department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   sessions     GroupSession[]
 
   @@index([clinicId])
-  @@index([practitionerId])
+  @@index([employeeId])
   @@map("group_offerings")
 }
 
@@ -138,7 +138,7 @@ model GroupSession {
 model GroupEnrollment {
   id                String                @id @default(uuid())
   groupSessionId    String                @map("group_session_id")
-  patientId         String                @map("patient_id")
+  clientId         String                @map("client_id")
   paymentId         String?               @unique @map("payment_id")
   status            GroupEnrollmentStatus @default(registered) @map("status")
   paymentDeadlineAt DateTime?             @map("payment_deadline_at")
@@ -147,10 +147,10 @@ model GroupEnrollment {
   updatedAt         DateTime              @updatedAt @map("updated_at")
 
   groupSession GroupSession @relation(fields: [groupSessionId], references: [id], onDelete: Restrict)
-  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Restrict)
   payment      Payment?     @relation(fields: [paymentId], references: [id], onDelete: SetNull)
 
-  @@unique([groupSessionId, patientId])
+  @@unique([groupSessionId, clientId])
   @@index([status, paymentDeadlineAt])
   @@map("group_enrollments")
 }
@@ -161,7 +161,7 @@ model GroupEnrollment {
 Run: `cd backend && npx prisma validate`
 Expected: "The schemas are valid."
 
-Note: This will likely fail because `Clinic`, `Practitioner`, `Department`, `Patient`, and `Payment` models need reverse relation fields. Proceed to Task 3 to add them.
+Note: This will likely fail because `Clinic`, `Employee`, `Department`, `Client`, and `Payment` models need reverse relation fields. Proceed to Task 3 to add them.
 
 ---
 
@@ -169,11 +169,11 @@ Note: This will likely fail because `Clinic`, `Practitioner`, `Department`, `Pat
 
 **Files:**
 - Modify: `backend/prisma/schema/payments.prisma` (Payment model)
-- Modify: Other schema files that define `Clinic`, `Practitioner`, `Department`, `Patient`
+- Modify: Other schema files that define `Clinic`, `Employee`, `Department`, `Client`
 
 - [ ] **Step 1: Find which schema files define the related models**
 
-Run: `cd backend && grep -l "^model Clinic " prisma/schema/*.prisma && grep -l "^model Practitioner " prisma/schema/*.prisma && grep -l "^model Department " prisma/schema/*.prisma && grep -l "^model Patient " prisma/schema/*.prisma`
+Run: `cd backend && grep -l "^model Clinic " prisma/schema/*.prisma && grep -l "^model Employee " prisma/schema/*.prisma && grep -l "^model Department " prisma/schema/*.prisma && grep -l "^model Client " prisma/schema/*.prisma`
 
 - [ ] **Step 2: Add reverse relation to Payment model**
 
@@ -185,7 +185,7 @@ In `backend/prisma/schema/payments.prisma`, inside the `Payment` model, add afte
 
 Note: The FK is on `GroupEnrollment.paymentId` pointing to `Payment.id`, so `Payment` just needs the reverse relation field. No new column on `Payment` table.
 
-- [ ] **Step 3: Add reverse relations to Clinic, Practitioner, Department, Patient**
+- [ ] **Step 3: Add reverse relations to Clinic, Employee, Department, Client**
 
 In each model, add:
 
@@ -193,13 +193,13 @@ In each model, add:
 // On Clinic model:
   groupOfferings GroupOffering[]
 
-// On Practitioner model:
+// On Employee model:
   groupOfferings GroupOffering[]
 
 // On Department model:
   groupOfferings GroupOffering[]
 
-// On Patient model:
+// On Client model:
   groupEnrollments GroupEnrollment[]
 ```
 
@@ -281,7 +281,7 @@ export class CreateOfferingDto {
 
   @ApiProperty()
   @IsUUID()
-  practitionerId!: string;
+  employeeId!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -357,7 +357,7 @@ export class OfferingListQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsUUID()
-  practitionerId?: string;
+  employeeId?: string;
 }
 ```
 
@@ -441,7 +441,7 @@ describe('GroupSessionsService', () => {
       const dto = {
         nameAr: 'العلاج بالفن',
         nameEn: 'Art Therapy',
-        practitionerId: 'pract-1',
+        employeeId: 'pract-1',
         minParticipants: 2,
         maxParticipants: 5,
         pricePerPersonHalalat: 15000,
@@ -509,7 +509,7 @@ export class GroupSessionsService {
     const skip = (page - 1) * perPage;
 
     const where: Record<string, unknown> = { deletedAt: null };
-    if (query.practitionerId) where.practitionerId = query.practitionerId;
+    if (query.employeeId) where.employeeId = query.employeeId;
     if (query.search) {
       where.OR = [
         { nameAr: { contains: query.search, mode: 'insensitive' } },
@@ -521,7 +521,7 @@ export class GroupSessionsService {
       this.prisma.groupOffering.findMany({
         where,
         include: {
-          practitioner: { select: { id: true, nameAr: true, nameEn: true } },
+          employee: { select: { id: true, nameAr: true, nameEn: true } },
           _count: {
             select: {
               sessions: { where: { status: { in: ['open', 'confirmed', 'full'] } } },
@@ -554,7 +554,7 @@ export class GroupSessionsService {
     const offering = await this.prisma.groupOffering.findFirst({
       where: { id, deletedAt: null },
       include: {
-        practitioner: { select: { id: true, nameAr: true, nameEn: true } },
+        employee: { select: { id: true, nameAr: true, nameEn: true } },
         _count: {
           select: {
             sessions: { where: { status: { in: ['open', 'confirmed', 'full'] } } },
@@ -585,7 +585,7 @@ export class GroupSessionsService {
         nameEn: dto.nameEn,
         descriptionAr: dto.descriptionAr,
         descriptionEn: dto.descriptionEn,
-        practitionerId: dto.practitionerId,
+        employeeId: dto.employeeId,
         departmentId: dto.departmentId,
         minParticipants: dto.minParticipants,
         maxParticipants: dto.maxParticipants,
@@ -612,7 +612,7 @@ export class GroupSessionsService {
         nameEn: dto.nameEn,
         descriptionAr: dto.descriptionAr,
         descriptionEn: dto.descriptionEn,
-        practitionerId: dto.practitionerId,
+        employeeId: dto.employeeId,
         departmentId: dto.departmentId,
         minParticipants: dto.minParticipants,
         maxParticipants: dto.maxParticipants,
@@ -870,7 +870,7 @@ export class GroupSessionsSessionsService {
       },
       include: {
         groupOffering: {
-          select: { nameAr: true, nameEn: true, practitionerId: true },
+          select: { nameAr: true, nameEn: true, employeeId: true },
         },
       },
     });
@@ -895,7 +895,7 @@ export class GroupSessionsSessionsService {
               nameEn: true,
               maxParticipants: true,
               minParticipants: true,
-              practitioner: { select: { id: true, nameAr: true, nameEn: true } },
+              employee: { select: { id: true, nameAr: true, nameEn: true } },
             },
           },
         },
@@ -934,12 +934,12 @@ export class GroupSessionsSessionsService {
             pricePerPersonHalalat: true,
             durationMin: true,
             paymentDeadlineHours: true,
-            practitioner: { select: { id: true, nameAr: true, nameEn: true } },
+            employee: { select: { id: true, nameAr: true, nameEn: true } },
           },
         },
         enrollments: {
           include: {
-            patient: { select: { id: true, nameAr: true, nameEn: true, phone: true } },
+            client: { select: { id: true, nameAr: true, nameEn: true, phone: true } },
             payment: { select: { id: true, status: true } },
           },
           orderBy: { createdAt: 'asc' },
@@ -983,7 +983,7 @@ export class GroupSessionsSessionsService {
     for (const enrollment of session.enrollments) {
       if (['registered', 'confirmed'].includes(enrollment.status)) {
         this.notificationsService.createNotification({
-          userId: enrollment.patientId,
+          userId: enrollment.clientId,
           titleAr: 'تم إلغاء الجلسة',
           titleEn: 'Session Cancelled',
           bodyAr: `تم إلغاء جلسة "${session.groupOffering.nameAr}" من قبل الإدارة`,
@@ -997,7 +997,7 @@ export class GroupSessionsSessionsService {
     return { cancelled: true };
   }
 
-  async completeSession(id: string, attendedPatientIds: string[]) {
+  async completeSession(id: string, attendedClientIds: string[]) {
     const session = await this.findOneSession(id);
 
     if (session.status !== 'confirmed' && session.status !== 'full') {
@@ -1010,11 +1010,11 @@ export class GroupSessionsSessionsService {
         data: { status: 'completed' },
       });
 
-      if (attendedPatientIds.length > 0) {
+      if (attendedClientIds.length > 0) {
         await tx.groupEnrollment.updateMany({
           where: {
             groupSessionId: id,
-            patientId: { in: attendedPatientIds },
+            clientId: { in: attendedClientIds },
             status: 'confirmed',
           },
           data: { status: 'attended' },
@@ -1045,19 +1045,19 @@ git commit -m "feat(group-sessions): add sessions sub-service — schedule, list
 
 **Files:**
 - Create: `backend/src/modules/group-sessions/group-sessions-enrollments.service.ts`
-- Create: `backend/src/modules/group-sessions/dto/enroll-patient.dto.ts`
+- Create: `backend/src/modules/group-sessions/dto/enroll-client.dto.ts`
 - Create: `backend/src/modules/group-sessions/dto/mark-attendance.dto.ts`
 
-- [ ] **Step 1: Create enroll-patient.dto.ts**
+- [ ] **Step 1: Create enroll-client.dto.ts**
 
 ```typescript
 import { ApiProperty } from '@nestjs/swagger';
 import { IsUUID } from 'class-validator';
 
-export class EnrollPatientDto {
+export class EnrollClientDto {
   @ApiProperty()
   @IsUUID()
-  patientId!: string;
+  clientId!: string;
 }
 ```
 
@@ -1071,7 +1071,7 @@ export class MarkAttendanceDto {
   @ApiProperty({ type: [String] })
   @IsArray()
   @IsUUID('4', { each: true })
-  attendedPatientIds!: string[];
+  attendedClientIds!: string[];
 }
 ```
 
@@ -1130,7 +1130,7 @@ describe('GroupSessionsEnrollmentsService', () => {
       });
 
       await expect(
-        service.enroll('sess-1', 'patient-1'),
+        service.enroll('sess-1', 'client-1'),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -1144,7 +1144,7 @@ describe('GroupSessionsEnrollmentsService', () => {
       prisma.groupEnrollment.findFirst.mockResolvedValue({ id: 'enr-1' });
 
       await expect(
-        service.enroll('sess-1', 'patient-1'),
+        service.enroll('sess-1', 'client-1'),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -1158,7 +1158,7 @@ describe('GroupSessionsEnrollmentsService', () => {
       });
 
       await expect(
-        service.cancelEnrollment('enr-1', 'patient-1'),
+        service.cancelEnrollment('enr-1', 'client-1'),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -1193,7 +1193,7 @@ export class GroupSessionsEnrollmentsService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async enroll(sessionId: string, patientId: string) {
+  async enroll(sessionId: string, clientId: string) {
     const session = await this.prisma.groupSession.findFirst({
       where: { id: sessionId },
       include: {
@@ -1221,13 +1221,13 @@ export class GroupSessionsEnrollmentsService {
     const existing = await this.prisma.groupEnrollment.findFirst({
       where: {
         groupSessionId: sessionId,
-        patientId,
+        clientId,
         status: { notIn: ['cancelled', 'expired'] },
       },
     });
 
     if (existing) {
-      throw new BadRequestException('Patient is already enrolled in this session');
+      throw new BadRequestException('Client is already enrolled in this session');
     }
 
     const offering = session.groupOffering;
@@ -1237,7 +1237,7 @@ export class GroupSessionsEnrollmentsService {
       const enrollment = await tx.groupEnrollment.create({
         data: {
           groupSessionId: sessionId,
-          patientId,
+          clientId,
           status: isFree ? 'confirmed' : 'registered',
         },
       });
@@ -1264,7 +1264,7 @@ export class GroupSessionsEnrollmentsService {
 
     // Notification: enrollment created
     this.notificationsService.createNotification({
-      userId: patientId,
+      userId: clientId,
       titleAr: `تم تسجيلك في "${offering.nameAr}"`,
       titleEn: `You've been enrolled in "${offering.nameEn}"`,
       bodyAr: isFree ? 'تسجيلك مؤكد — لا يتطلب دفع' : 'سنبلغك عند تأكيد الجلسة للدفع',
@@ -1281,9 +1281,9 @@ export class GroupSessionsEnrollmentsService {
     return result.enrollment;
   }
 
-  async cancelEnrollment(enrollmentId: string, patientId: string) {
+  async cancelEnrollment(enrollmentId: string, clientId: string) {
     const enrollment = await this.prisma.groupEnrollment.findFirst({
-      where: { id: enrollmentId, patientId },
+      where: { id: enrollmentId, clientId },
     });
 
     if (!enrollment) {
@@ -1338,13 +1338,13 @@ export class GroupSessionsEnrollmentsService {
       throw new BadRequestException('Cannot remove a paid/attended enrollment');
     }
 
-    return this.cancelEnrollment(enrollmentId, enrollment.patientId);
+    return this.cancelEnrollment(enrollmentId, enrollment.clientId);
   }
 
   private async notifySessionConfirmed(sessionId: string, paymentDeadlineHours: number) {
     const enrollments = await this.prisma.groupEnrollment.findMany({
       where: { groupSessionId: sessionId, status: 'registered' },
-      select: { id: true, patientId: true },
+      select: { id: true, clientId: true },
     });
 
     const deadlineAt = new Date(Date.now() + paymentDeadlineHours * 60 * 60 * 1000);
@@ -1360,7 +1360,7 @@ export class GroupSessionsEnrollmentsService {
 
     for (const enrollment of enrollments) {
       this.notificationsService.createNotification({
-        userId: enrollment.patientId,
+        userId: enrollment.clientId,
         titleAr: 'الجلسة مؤكدة — أكمل الدفع',
         titleEn: 'Session Confirmed — Complete Payment',
         bodyAr: `الجلسة مؤكدة! أكمل الدفع خلال ${paymentDeadlineHours} ساعة للحفاظ على مكانك`,
@@ -1381,7 +1381,7 @@ Expected: PASS (all tests).
 - [ ] **Step 7: Commit**
 
 ```bash
-git add backend/src/modules/group-sessions/group-sessions-enrollments.service.ts backend/src/modules/group-sessions/dto/enroll-patient.dto.ts backend/src/modules/group-sessions/dto/mark-attendance.dto.ts backend/test/unit/group-sessions/
+git add backend/src/modules/group-sessions/group-sessions-enrollments.service.ts backend/src/modules/group-sessions/dto/enroll-client.dto.ts backend/src/modules/group-sessions/dto/mark-attendance.dto.ts backend/test/unit/group-sessions/
 git commit -m "feat(group-sessions): add enrollments sub-service — enroll, cancel, remove, state transitions"
 ```
 
@@ -1426,7 +1426,7 @@ import { UpdateOfferingDto } from './dto/update-offering.dto.js';
 import { OfferingListQueryDto } from './dto/offering-list-query.dto.js';
 import { CreateSessionDto } from './dto/create-session.dto.js';
 import { SessionListQueryDto } from './dto/session-list-query.dto.js';
-import { EnrollPatientDto } from './dto/enroll-patient.dto.js';
+import { EnrollClientDto } from './dto/enroll-client.dto.js';
 import { MarkAttendanceDto } from './dto/mark-attendance.dto.js';
 
 @ApiTags('Group Sessions')
@@ -1521,27 +1521,27 @@ export class GroupSessionsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: MarkAttendanceDto,
   ) {
-    return this.sessionsService.completeSession(id, dto.attendedPatientIds);
+    return this.sessionsService.completeSession(id, dto.attendedClientIds);
   }
 
   // ─── Enrollments ───
 
   @Post('sessions/:id/enroll')
-  @ApiOperation({ summary: 'Enroll a patient in a session' })
-  enrollPatient(
+  @ApiOperation({ summary: 'Enroll a client in a session' })
+  enrollClient(
     @Param('id', ParseUUIDPipe) sessionId: string,
-    @Body() dto: EnrollPatientDto,
+    @Body() dto: EnrollClientDto,
   ) {
-    return this.enrollmentsService.enroll(sessionId, dto.patientId);
+    return this.enrollmentsService.enroll(sessionId, dto.clientId);
   }
 
   @Patch('sessions/:sessionId/enrollments/:enrollmentId/cancel')
-  @ApiOperation({ summary: 'Patient cancels own enrollment (pre-payment only)' })
+  @ApiOperation({ summary: 'Client cancels own enrollment (pre-payment only)' })
   cancelEnrollment(
     @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
-    @Body() dto: EnrollPatientDto,
+    @Body() dto: EnrollClientDto,
   ) {
-    return this.enrollmentsService.cancelEnrollment(enrollmentId, dto.patientId);
+    return this.enrollmentsService.cancelEnrollment(enrollmentId, dto.clientId);
   }
 
   @Delete('sessions/:sessionId/enrollments/:enrollmentId')
@@ -1653,7 +1653,7 @@ export class GroupSessionAutomationService {
       },
       select: {
         id: true,
-        patientId: true,
+        clientId: true,
         groupSessionId: true,
         groupSession: {
           select: {
@@ -1698,7 +1698,7 @@ export class GroupSessionAutomationService {
         }, { isolationLevel: 'Serializable', timeout: 10000 });
 
         this.notificationsService.createNotification({
-          userId: enrollment.patientId,
+          userId: enrollment.clientId,
           titleAr: 'انتهت مهلة الدفع',
           titleEn: 'Payment Deadline Expired',
           bodyAr: 'انتهت مهلة الدفع — فقدت مكانك في الجلسة',
@@ -1727,7 +1727,7 @@ export class GroupSessionAutomationService {
         groupOffering: { select: { nameAr: true, nameEn: true } },
         enrollments: {
           where: { status: 'registered' },
-          select: { id: true, patientId: true },
+          select: { id: true, clientId: true },
         },
       },
     });
@@ -1748,7 +1748,7 @@ export class GroupSessionAutomationService {
 
         for (const enrollment of session.enrollments) {
           this.notificationsService.createNotification({
-            userId: enrollment.patientId,
+            userId: enrollment.clientId,
             titleAr: 'تم إلغاء الجلسة',
             titleEn: 'Session Cancelled',
             bodyAr: `تم إلغاء جلسة "${session.groupOffering.nameAr}" لعدم اكتمال العدد`,
@@ -1782,7 +1782,7 @@ export class GroupSessionAutomationService {
         groupOffering: { select: { nameAr: true, nameEn: true } },
         enrollments: {
           where: { status: 'confirmed' },
-          select: { patientId: true },
+          select: { clientId: true },
         },
       },
     });
@@ -1790,7 +1790,7 @@ export class GroupSessionAutomationService {
     for (const session of sessions) {
       for (const enrollment of session.enrollments) {
         this.notificationsService.createNotification({
-          userId: enrollment.patientId,
+          userId: enrollment.clientId,
           titleAr: 'تذكير: جلسة غداً',
           titleEn: 'Reminder: Session Tomorrow',
           bodyAr: `جلسة "${session.groupOffering.nameAr}" غداً`,
@@ -1892,7 +1892,7 @@ export interface GroupOffering {
   nameEn: string
   descriptionAr: string | null
   descriptionEn: string | null
-  practitionerId: string
+  employeeId: string
   departmentId: string | null
   minParticipants: number
   maxParticipants: number
@@ -1901,7 +1901,7 @@ export interface GroupOffering {
   paymentDeadlineHours: number
   createdAt: string
   updatedAt: string
-  practitioner?: { id: string; nameAr: string; nameEn: string }
+  employee?: { id: string; nameAr: string; nameEn: string }
   _count?: { sessions: number }
 }
 
@@ -1924,7 +1924,7 @@ export interface GroupSession {
     pricePerPersonHalalat: number
     durationMin: number
     paymentDeadlineHours: number
-    practitioner?: { id: string; nameAr: string; nameEn: string }
+    employee?: { id: string; nameAr: string; nameEn: string }
   }
   enrollments?: GroupEnrollment[]
 }
@@ -1932,14 +1932,14 @@ export interface GroupSession {
 export interface GroupEnrollment {
   id: string
   groupSessionId: string
-  patientId: string
+  clientId: string
   paymentId: string | null
   status: GroupEnrollmentStatus
   paymentDeadlineAt: string | null
   expiredAt: string | null
   createdAt: string
   updatedAt: string
-  patient?: { id: string; nameAr: string; nameEn: string; phone: string }
+  client?: { id: string; nameAr: string; nameEn: string; phone: string }
   payment?: { id: string; status: string } | null
 }
 
@@ -1947,7 +1947,7 @@ export interface OfferingListQuery {
   page?: number
   perPage?: number
   search?: string
-  practitionerId?: string
+  employeeId?: string
 }
 
 export interface SessionListQuery {
@@ -1962,7 +1962,7 @@ export interface CreateOfferingPayload {
   nameEn: string
   descriptionAr?: string
   descriptionEn?: string
-  practitionerId: string
+  employeeId: string
   departmentId?: string
   minParticipants: number
   maxParticipants: number
@@ -1979,7 +1979,7 @@ export interface CreateSessionPayload {
 }
 
 export interface MarkAttendancePayload {
-  attendedPatientIds: string[]
+  attendedClientIds: string[]
 }
 ```
 
@@ -2052,12 +2052,12 @@ export async function completeSession(id: string, payload: MarkAttendancePayload
 
 // ─── Enrollments ───
 
-export async function enrollPatient(sessionId: string, patientId: string): Promise<GroupEnrollment> {
-  return api.post(`/group-sessions/sessions/${sessionId}/enroll`, { patientId })
+export async function enrollClient(sessionId: string, clientId: string): Promise<GroupEnrollment> {
+  return api.post(`/group-sessions/sessions/${sessionId}/enroll`, { clientId })
 }
 
-export async function cancelEnrollment(sessionId: string, enrollmentId: string, patientId: string): Promise<void> {
-  return api.patch(`/group-sessions/sessions/${sessionId}/enrollments/${enrollmentId}/cancel`, { patientId })
+export async function cancelEnrollment(sessionId: string, enrollmentId: string, clientId: string): Promise<void> {
+  return api.patch(`/group-sessions/sessions/${sessionId}/enrollments/${enrollmentId}/cancel`, { clientId })
 }
 
 export async function removeEnrollment(sessionId: string, enrollmentId: string): Promise<void> {
@@ -2077,7 +2077,7 @@ export const createOfferingSchema = z.object({
   nameEn: z.string().min(1).max(255),
   descriptionAr: z.string().max(2000).optional(),
   descriptionEn: z.string().max(2000).optional(),
-  practitionerId: z.string().uuid(),
+  employeeId: z.string().uuid(),
   departmentId: z.string().uuid().optional(),
   minParticipants: z.number().int().min(1),
   maxParticipants: z.number().int().min(1),
@@ -2153,13 +2153,13 @@ import type { OfferingListQuery, SessionListQuery, GroupSessionStatus } from "@/
 export function useGroupOfferings() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
-  const [practitionerId, setPractitionerId] = useState<string | undefined>()
+  const [employeeId, setEmployeeId] = useState<string | undefined>()
 
   const query: OfferingListQuery = {
     page,
     perPage: 20,
     search: search || undefined,
-    practitionerId,
+    employeeId,
   }
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -2170,7 +2170,7 @@ export function useGroupOfferings() {
 
   const resetFilters = useCallback(() => {
     setSearch("")
-    setPractitionerId(undefined)
+    setEmployeeId(undefined)
     setPage(1)
   }, [])
 
@@ -2183,8 +2183,8 @@ export function useGroupOfferings() {
     setPage,
     search,
     setSearch: (s: string) => { setSearch(s); setPage(1) },
-    practitionerId,
-    setPractitionerId: (v: string | undefined) => { setPractitionerId(v); setPage(1) },
+    employeeId,
+    setEmployeeId: (v: string | undefined) => { setEmployeeId(v); setPage(1) },
     resetFilters,
     refetch,
   }
@@ -2256,7 +2256,7 @@ import {
   createSession,
   cancelSession,
   completeSession,
-  enrollPatient,
+  enrollClient,
   removeEnrollment,
 } from "@/lib/api/group-sessions"
 import type { UpdateOfferingPayload, CreateSessionPayload, MarkAttendancePayload } from "@/lib/types/group-sessions"
@@ -2300,9 +2300,9 @@ export function useGroupSessionsMutations() {
     onSuccess: invalidateAll,
   })
 
-  const enrollPatientMut = useMutation({
-    mutationFn: ({ sessionId, patientId }: { sessionId: string; patientId: string }) =>
-      enrollPatient(sessionId, patientId),
+  const enrollClientMut = useMutation({
+    mutationFn: ({ sessionId, clientId }: { sessionId: string; clientId: string }) =>
+      enrollClient(sessionId, clientId),
     onSuccess: invalidateAll,
   })
 
@@ -2319,7 +2319,7 @@ export function useGroupSessionsMutations() {
     createSessionMut,
     cancelSessionMut,
     completeSessionMut,
-    enrollPatientMut,
+    enrollClientMut,
     removeEnrollmentMut,
   }
 }
@@ -2458,11 +2458,11 @@ This component renders a grid of offering cards. Build it following the pattern 
 
 - [ ] **Step 2: Create offering-card.tsx**
 
-A card showing: name, practitioner, min/max participants, price, upcoming sessions count, and action buttons (edit, schedule session, disable).
+A card showing: name, employee, min/max participants, price, upcoming sessions count, and action buttons (edit, schedule session, disable).
 
 - [ ] **Step 3: Create create-offering-dialog.tsx**
 
-A dialog form using `react-hook-form` + `zodResolver` with `createOfferingSchema`. Fields: nameAr, nameEn, descriptionAr/En, practitioner select, min/max participants, price (with halalat conversion), duration, payment deadline hours.
+A dialog form using `react-hook-form` + `zodResolver` with `createOfferingSchema`. Fields: nameAr, nameEn, descriptionAr/En, employee select, min/max participants, price (with halalat conversion), duration, payment deadline hours.
 
 Follow the existing dialog patterns in `dashboard/components/features/` — check a similar dialog like `create-department-dialog.tsx` for the exact structure.
 
@@ -2520,7 +2520,7 @@ git commit -m "feat(group-sessions): add sessions tab — DataTable, schedule di
 - Create: `dashboard/components/features/group-sessions/session-detail-header.tsx`
 - Create: `dashboard/components/features/group-sessions/enrollments-table.tsx`
 - Create: `dashboard/components/features/group-sessions/attendance-form.tsx`
-- Create: `dashboard/components/features/group-sessions/enroll-patient-dialog.tsx`
+- Create: `dashboard/components/features/group-sessions/enroll-client-dialog.tsx`
 
 - [ ] **Step 1: Create the detail page**
 
@@ -2536,7 +2536,7 @@ import { useGroupSessionDetail } from "@/hooks/use-group-sessions"
 import { SessionDetailHeader } from "@/components/features/group-sessions/session-detail-header"
 import { EnrollmentsTable } from "@/components/features/group-sessions/enrollments-table"
 import { AttendanceForm } from "@/components/features/group-sessions/attendance-form"
-import { EnrollPatientDialog } from "@/components/features/group-sessions/enroll-patient-dialog"
+import { EnrollClientDialog } from "@/components/features/group-sessions/enroll-client-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function SessionDetailPage() {
@@ -2578,7 +2578,7 @@ export default function SessionDetailPage() {
         <AttendanceForm session={session} />
       )}
 
-      <EnrollPatientDialog
+      <EnrollClientDialog
         open={enrollOpen}
         onOpenChange={setEnrollOpen}
         sessionId={session.id}
@@ -2590,19 +2590,19 @@ export default function SessionDetailPage() {
 
 - [ ] **Step 2: Create session-detail-header.tsx**
 
-Shows: offering name, practitioner, date/time, duration, status badge, enrollment indicator ("3 enrolled, 2 paid, 1 awaiting"), and action buttons (Add Patient, Cancel Session, Complete Session).
+Shows: offering name, employee, date/time, duration, status badge, enrollment indicator ("3 enrolled, 2 paid, 1 awaiting"), and action buttons (Add Client, Cancel Session, Complete Session).
 
 - [ ] **Step 3: Create enrollments-table.tsx**
 
-DataTable with columns: patient name, enrollment status (with colored badges), payment status, payment deadline, actions (remove — only for pre-payment enrollments).
+DataTable with columns: client name, enrollment status (with colored badges), payment status, payment deadline, actions (remove — only for pre-payment enrollments).
 
 - [ ] **Step 4: Create attendance-form.tsx**
 
 Checkboxes for each confirmed enrollment. "Save Attendance & Complete Session" button calls `completeSessionMut`.
 
-- [ ] **Step 5: Create enroll-patient-dialog.tsx**
+- [ ] **Step 5: Create enroll-client-dialog.tsx**
 
-Dialog with a patient search/select field. Uses `enrollPatientMut`.
+Dialog with a client search/select field. Uses `enrollClientMut`.
 
 - [ ] **Step 6: Verify TypeScript**
 

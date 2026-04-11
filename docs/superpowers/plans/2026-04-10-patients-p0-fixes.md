@@ -1,10 +1,10 @@
-# Patients P0 Fixes Implementation Plan
+# Clients P0 Fixes Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fix three critical P0 bugs in the Patients module: missing Audit Log on all PHI-touching operations, unhandled phone uniqueness conflict returning 500, and IDOR allowing any user ID to be passed to `findOne`/`updatePatient`.
+**Goal:** Fix three critical P0 bugs in the Clients module: missing Audit Log on all PHI-touching operations, unhandled phone uniqueness conflict returning 500, and IDOR allowing any user ID to be passed to `findOne`/`updateClient`.
 
-**Architecture:** Surgical edits to `patients.service.ts` and `patients.module.ts`. No new files. `ActivityLogModule` already exports `ActivityLogService` — just needs to be imported into `PatientsModule`.
+**Architecture:** Surgical edits to `clients.service.ts` and `clients.module.ts`. No new files. `ActivityLogModule` already exports `ActivityLogService` — just needs to be imported into `ClientsModule`.
 
 **Tech Stack:** NestJS 11, Prisma 7, TypeScript strict, Jest
 
@@ -12,50 +12,50 @@
 
 ## Files
 
-- Modify: `backend/src/modules/patients/patients.module.ts`
-- Modify: `backend/src/modules/patients/patients.service.ts`
-- Test: `backend/test/unit/patients/patients.service.spec.ts`
+- Modify: `backend/src/modules/clients/clients.module.ts`
+- Modify: `backend/src/modules/clients/clients.service.ts`
+- Test: `backend/test/unit/clients/clients.service.spec.ts`
 
 ---
 
-## Task 1: Add ActivityLogModule import to PatientsModule and inject into PatientsService
+## Task 1: Add ActivityLogModule import to ClientsModule and inject into ClientsService
 
 **Files:**
-- Modify: `backend/src/modules/patients/patients.module.ts`
-- Modify: `backend/src/modules/patients/patients.service.ts`
+- Modify: `backend/src/modules/clients/clients.module.ts`
+- Modify: `backend/src/modules/clients/clients.service.ts`
 
-**Problem:** `PatientsService` has no reference to `ActivityLogService`. PHI edits (updatePatient, walk-in registration, claimAccount, activate/deactivate) leave no audit trail. PDPL requires it.
+**Problem:** `ClientsService` has no reference to `ActivityLogService`. PHI edits (updateClient, walk-in registration, claimAccount, activate/deactivate) leave no audit trail. PDPL requires it.
 
-- [ ] **Step 1: Update `patients.module.ts`**
+- [ ] **Step 1: Update `clients.module.ts`**
 
 Replace the file content with:
 
 ```typescript
 import { Module } from '@nestjs/common';
-import { PatientsController } from './patients.controller.js';
-import { PatientsService } from './patients.service.js';
-import { PatientWalkInService } from './patient-walk-in.service.js';
+import { ClientsController } from './clients.controller.js';
+import { ClientsService } from './clients.service.js';
+import { ClientWalkInService } from './client-walk-in.service.js';
 import { ActivityLogModule } from '../activity-log/activity-log.module.js';
 
 @Module({
   imports: [ActivityLogModule],
-  controllers: [PatientsController],
-  providers: [PatientsService, PatientWalkInService],
-  exports: [PatientsService, PatientWalkInService],
+  controllers: [ClientsController],
+  providers: [ClientsService, ClientWalkInService],
+  exports: [ClientsService, ClientWalkInService],
 })
-export class PatientsModule {}
+export class ClientsModule {}
 ```
 
-- [ ] **Step 2: Inject `ActivityLogService` into `PatientsService`**
+- [ ] **Step 2: Inject `ActivityLogService` into `ClientsService`**
 
-In `backend/src/modules/patients/patients.service.ts`, replace the imports and constructor:
+In `backend/src/modules/clients/clients.service.ts`, replace the imports and constructor:
 
 ```typescript
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { parsePaginationParams, buildPaginationMeta } from '../../common/helpers/pagination.helper.js';
-import { UpdatePatientDto } from './dto/update-patient.dto.js';
-import { PatientListQueryDto } from './dto/patient-list-query.dto.js';
+import { UpdateClientDto } from './dto/update-client.dto.js';
+import { ClientListQueryDto } from './dto/client-list-query.dto.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { Prisma } from '@prisma/client';
 ```
@@ -80,64 +80,64 @@ Expected: 0 errors
 
 ---
 
-## Task 2: Fix `updatePatient` — add phone conflict guard + role guard + audit log
+## Task 2: Fix `updateClient` — add phone conflict guard + role guard + audit log
 
 **Files:**
-- Modify: `backend/src/modules/patients/patients.service.ts` (lines 111-151)
-- Test: `backend/test/unit/patients/patients.service.spec.ts`
+- Modify: `backend/src/modules/clients/clients.service.ts` (lines 111-151)
+- Test: `backend/test/unit/clients/clients.service.spec.ts`
 
 **Problems fixed in this task:**
 1. P0.2: Phone update returns 500 (Prisma P2002) instead of 409 ConflictException
-2. P2.2: `findFirst` has no role filter — any user ID works, not just patients
+2. P2.2: `findFirst` has no role filter — any user ID works, not just clients
 3. P0.1 (partial): No audit log on profile changes
 
 - [ ] **Step 1: Write the failing tests**
 
-In `backend/test/unit/patients/patients.service.spec.ts`, add:
+In `backend/test/unit/clients/clients.service.spec.ts`, add:
 
 ```typescript
-describe('updatePatient', () => {
+describe('updateClient', () => {
   it('should throw ConflictException when phone is already taken', async () => {
-    const patientId = 'patient-uuid-1';
+    const clientId = 'client-uuid-1';
     const existingPhone = '+966501234567';
 
     prisma.user.findFirst
-      // First call: patient exists check (with role guard)
-      .mockResolvedValueOnce({ id: patientId })
+      // First call: client exists check (with role guard)
+      .mockResolvedValueOnce({ id: clientId })
       // Second call: phone conflict check — finds another user with same phone
       .mockResolvedValueOnce({ id: 'other-user-uuid' });
 
     await expect(
-      service.updatePatient(patientId, { phone: existingPhone }),
+      service.updateClient(clientId, { phone: existingPhone }),
     ).rejects.toThrow(ConflictException);
   });
 
-  it('should require patient role in findFirst', async () => {
+  it('should require client role in findFirst', async () => {
     const adminId = 'admin-uuid-1';
 
-    // Simulate admin user (no patient role)
+    // Simulate admin user (no client role)
     prisma.user.findFirst.mockResolvedValueOnce(null);
 
     await expect(
-      service.updatePatient(adminId, { firstName: 'Test' }),
+      service.updateClient(adminId, { firstName: 'Test' }),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('should call activityLog.log after successful update', async () => {
     prisma.user.findFirst
-      .mockResolvedValueOnce({ id: 'patient-1' }) // patient exists with role
+      .mockResolvedValueOnce({ id: 'client-1' }) // client exists with role
       .mockResolvedValueOnce(null);               // phone not taken
-    prisma.$transaction.mockResolvedValue([{ id: 'patient-1', firstName: 'Ahmad' }]);
+    prisma.$transaction.mockResolvedValue([{ id: 'client-1', firstName: 'Ahmad' }]);
 
     const logSpy = jest.spyOn(activityLogService, 'log').mockResolvedValue(undefined);
 
-    await service.updatePatient('patient-1', { firstName: 'Ahmad' });
+    await service.updateClient('client-1', { firstName: 'Ahmad' });
 
     expect(logSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'updated',
-        module: 'patients',
-        resourceId: 'patient-1',
+        module: 'clients',
+        resourceId: 'client-1',
       }),
     );
   });
@@ -148,30 +148,30 @@ describe('updatePatient', () => {
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit/backend
-npm run test -- --testPathPattern="patients.service" --no-coverage
+npm run test -- --testPathPattern="clients.service" --no-coverage
 ```
 
 Expected: 3 FAILs
 
-- [ ] **Step 3: Implement the fix — replace `updatePatient` method**
+- [ ] **Step 3: Implement the fix — replace `updateClient` method**
 
-In `patients.service.ts`, replace the `updatePatient` method (lines 111-151):
+In `clients.service.ts`, replace the `updateClient` method (lines 111-151):
 
 ```typescript
-async updatePatient(id: string, dto: UpdatePatientDto, actorId?: string) {
-  // Role guard: only allow actual patient records (prevents IDOR on non-patient users)
-  const patient = await this.prisma.user.findFirst({
+async updateClient(id: string, dto: UpdateClientDto, actorId?: string) {
+  // Role guard: only allow actual client records (prevents IDOR on non-client users)
+  const client = await this.prisma.user.findFirst({
     where: {
       id,
       deletedAt: null,
-      userRoles: { some: { role: { slug: 'patient' } } },
+      userRoles: { some: { role: { slug: 'client' } } },
     },
     select: { id: true, phone: true },
   });
-  if (!patient) throw new NotFoundException('Patient not found');
+  if (!client) throw new NotFoundException('Client not found');
 
   // Phone conflict guard — return 409 instead of letting Prisma throw P2002 → 500
-  if (dto.phone !== undefined && dto.phone !== patient.phone) {
+  if (dto.phone !== undefined && dto.phone !== client.phone) {
     const phoneOwner = await this.prisma.user.findFirst({
       where: { phone: dto.phone, deletedAt: null },
       select: { id: true },
@@ -209,7 +209,7 @@ async updatePatient(id: string, dto: UpdatePatientDto, actorId?: string) {
       select: { id: true, firstName: true, middleName: true, lastName: true, email: true, phone: true, gender: true, isActive: true, updatedAt: true },
     }),
     ...(Object.keys(profileFields).length > 0
-      ? [this.prisma.patientProfile.upsert({
+      ? [this.prisma.clientProfile.upsert({
           where: { userId: id },
           update: profileFields,
           create: { userId: id, ...profileFields },
@@ -222,9 +222,9 @@ async updatePatient(id: string, dto: UpdatePatientDto, actorId?: string) {
   this.activityLog.log({
     userId: actorId,
     action: 'updated',
-    module: 'patients',
+    module: 'clients',
     resourceId: id,
-    description: `Patient profile updated — fields: ${changedFields.join(', ')}`,
+    description: `Client profile updated — fields: ${changedFields.join(', ')}`,
     newValues: { updatedFields: changedFields }, // no PHI values in log
   }).catch(() => { /* non-blocking */ });
 
@@ -236,7 +236,7 @@ async updatePatient(id: string, dto: UpdatePatientDto, actorId?: string) {
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit/backend
-npm run test -- --testPathPattern="patients.service" --no-coverage
+npm run test -- --testPathPattern="clients.service" --no-coverage
 ```
 
 Expected: PASS
@@ -254,30 +254,30 @@ Expected: All passing
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit
-git add backend/src/modules/patients/patients.module.ts \
-        backend/src/modules/patients/patients.service.ts \
-        backend/test/unit/patients/patients.service.spec.ts
-git commit -m "fix(patients): add audit log, phone conflict 409, and patient role guard in updatePatient
+git add backend/src/modules/clients/clients.module.ts \
+        backend/src/modules/clients/clients.service.ts \
+        backend/test/unit/clients/clients.service.spec.ts
+git commit -m "fix(clients): add audit log, phone conflict 409, and client role guard in updateClient
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 ```
 
 ---
 
-## Task 3: Fix `findOne` — add patient role guard
+## Task 3: Fix `findOne` — add client role guard
 
 **Files:**
-- Modify: `backend/src/modules/patients/patients.service.ts` (lines 153-199)
-- Test: `backend/test/unit/patients/patients.service.spec.ts`
+- Modify: `backend/src/modules/clients/clients.service.ts` (lines 153-199)
+- Test: `backend/test/unit/clients/clients.service.spec.ts`
 
-**Problem (P2.3):** `findOne` uses `findFirst({ where: { id, deletedAt: null } })` with no role check. Any staff member with `patients:view` permission can pass an admin's UUID and receive their data including PHI fields from `patientProfile`.
+**Problem (P2.3):** `findOne` uses `findFirst({ where: { id, deletedAt: null } })` with no role check. Any staff member with `clients:view` permission can pass an admin's UUID and receive their data including PHI fields from `clientProfile`.
 
 - [ ] **Step 1: Write the failing test**
 
 ```typescript
 describe('findOne', () => {
-  it('should throw NotFoundException when id belongs to non-patient user', async () => {
-    // Simulate admin user — no patient role
+  it('should throw NotFoundException when id belongs to non-client user', async () => {
+    // Simulate admin user — no client role
     prisma.user.findFirst.mockResolvedValue(null);
 
     await expect(service.findOne('admin-uuid')).rejects.toThrow(NotFoundException);
@@ -286,7 +286,7 @@ describe('findOne', () => {
     expect(prisma.user.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          userRoles: { some: { role: { slug: 'patient' } } },
+          userRoles: { some: { role: { slug: 'client' } } },
         }),
       }),
     );
@@ -298,22 +298,22 @@ describe('findOne', () => {
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit/backend
-npm run test -- --testPathPattern="patients.service" --no-coverage
+npm run test -- --testPathPattern="clients.service" --no-coverage
 ```
 
 Expected: FAIL
 
 - [ ] **Step 3: Implement the fix in `findOne`**
 
-In `patients.service.ts`, replace the `findOne` method (lines 153-199). Change only the `where` clause to add the role guard:
+In `clients.service.ts`, replace the `findOne` method (lines 153-199). Change only the `where` clause to add the role guard:
 
 ```typescript
 async findOne(id: string) {
-  const patient = await this.prisma.user.findFirst({
+  const client = await this.prisma.user.findFirst({
     where: {
       id,
       deletedAt: null,
-      userRoles: { some: { role: { slug: 'patient' } } },
+      userRoles: { some: { role: { slug: 'client' } } },
     },
     select: {
       id: true,
@@ -329,20 +329,20 @@ async findOne(id: string) {
       avatarUrl: true,
       accountType: true,
       claimedAt: true,
-      patientProfile: {
+      clientProfile: {
         select: {
           nationalId: true, nationality: true, dateOfBirth: true,
           emergencyName: true, emergencyPhone: true,
           bloodType: true, allergies: true, chronicConditions: true,
         },
       },
-      bookingsAsPatient: {
+      bookingsAsClient: {
         where: { deletedAt: null },
         orderBy: { date: 'desc' },
         take: 10,
         include: {
           service: { select: { nameAr: true, nameEn: true } },
-          practitioner: {
+          employee: {
             select: { user: { select: { firstName: true, lastName: true } } },
           },
           payment: {
@@ -353,11 +353,11 @@ async findOne(id: string) {
     },
   });
 
-  if (!patient) {
-    throw new NotFoundException('Patient not found');
+  if (!client) {
+    throw new NotFoundException('Client not found');
   }
 
-  return patient;
+  return client;
 }
 ```
 
@@ -365,7 +365,7 @@ async findOne(id: string) {
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit/backend
-npm run test -- --testPathPattern="patients.service" --no-coverage
+npm run test -- --testPathPattern="clients.service" --no-coverage
 ```
 
 Expected: PASS
@@ -383,9 +383,9 @@ Expected: All passing
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit
-git add backend/src/modules/patients/patients.service.ts \
-        backend/test/unit/patients/patients.service.spec.ts
-git commit -m "fix(patients): add patient role guard to findOne to prevent IDOR on non-patient users
+git add backend/src/modules/clients/clients.service.ts \
+        backend/test/unit/clients/clients.service.spec.ts
+git commit -m "fix(clients): add client role guard to findOne to prevent IDOR on non-client users
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 ```

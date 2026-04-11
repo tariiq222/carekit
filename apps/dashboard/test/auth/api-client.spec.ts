@@ -66,7 +66,7 @@ describe('API Client (lib/api.ts)', () => {
       json: () => Promise.resolve({ success: true, data: { id: 1 } }),
     })
 
-    await api.get('/patients')
+    await api.get('/clients')
 
     const [, options] = fetchMock.mock.calls[0]
     expect((options.headers as Record<string, string>)['Authorization']).toBe('Bearer test-token-123')
@@ -116,11 +116,11 @@ describe('API Client (lib/api.ts)', () => {
       json: () => Promise.resolve({ success: true, data: [] }),
     })
 
-    await api.get('/patients')
+    await api.get('/clients')
 
     const [url] = fetchMock.mock.calls[0]
     expect(url).not.toMatch(/^\/api\/proxy/)
-    expect(url).toContain('/patients')
+    expect(url).toContain('/clients')
   })
 
   // =========================================================================
@@ -172,7 +172,7 @@ describe('API Client (lib/api.ts)', () => {
     })
 
     try {
-      await api.get('/patients')
+      await api.get('/clients')
       expect.fail('should have thrown')
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError)
@@ -202,11 +202,11 @@ describe('API Client (lib/api.ts)', () => {
       json: () => Promise.resolve({ data: { accessToken: 'new-token', expiresIn: 900 } }),
     })
     // Retry of original call succeeds
-    fetchMock.mockResolvedValueOnce(makeOkResponse({ id: 'patient-1' }))
+    fetchMock.mockResolvedValueOnce(makeOkResponse({ id: 'client-1' }))
 
-    const result = await api.get<{ id: string }>('/patients/1')
+    const result = await api.get<{ id: string }>('/clients/1')
 
-    expect(result).toEqual({ id: 'patient-1' })
+    expect(result).toEqual({ id: 'client-1' })
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
@@ -228,7 +228,7 @@ describe('API Client (lib/api.ts)', () => {
       json: () => Promise.resolve({}),
     })
 
-    await expect(api.get('/patients')).rejects.toThrow()
+    await expect(api.get('/clients')).rejects.toThrow()
     expect(getAccessToken()).toBeNull()
     expect(localStorage.getItem('carekit_user')).toBeNull()
   })
@@ -255,7 +255,7 @@ describe('API Client (lib/api.ts)', () => {
       .mockResolvedValueOnce(makeOkResponse({ a: 1 }))
       .mockResolvedValueOnce(makeOkResponse({ b: 2 }))
 
-    await Promise.all([api.get('/patients/1'), api.get('/patients/2')])
+    await Promise.all([api.get('/clients/1'), api.get('/clients/2')])
 
     // Only one refresh call (the deduplicated one)
     const refreshCalls = fetchMock.mock.calls.filter((call: string[]) =>

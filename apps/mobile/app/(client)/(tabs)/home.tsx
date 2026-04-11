@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedButton } from '@/theme/components/ThemedButton';
 import { ThemedCard } from '@/theme/components/ThemedCard';
-import { PractitionerCard } from '@/components/features/PractitionerCard';
+import { EmployeeCard } from '@/components/features/EmployeeCard';
 import { SpecialtyCard } from '@/components/features/SpecialtyCard';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Avatar } from '@/components/ui/Avatar';
@@ -23,11 +23,11 @@ import { useTheme } from '@/theme/useTheme';
 import { useAppSelector } from '@/hooks/use-redux';
 import { EmailVerificationBanner } from '@/components/ui/EmailVerificationBanner';
 import { specialtiesService } from '@/services/specialties';
-import { practitionersService } from '@/services/practitioners';
+import { employeesService } from '@/services/employees';
 import { bookingsService } from '@/services/bookings';
-import type { Specialty, Practitioner, Booking } from '@/types/models';
+import type { Specialty, Employee, Booking } from '@/types/models';
 
-export default function PatientHomeScreen() {
+export default function ClientHomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -36,19 +36,19 @@ export default function PatientHomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
-  const [featured, setFeatured] = useState<Practitioner[]>([]);
+  const [featured, setFeatured] = useState<Employee[]>([]);
   const [upcoming, setUpcoming] = useState<Booking | null>(null);
 
   const loadData = useCallback(async () => {
     const [specRes, featRes, upRes] = await Promise.allSettled([
       specialtiesService.getAll(),
-      practitionersService.getFeatured(),
+      employeesService.getFeatured(),
       bookingsService.getUpcoming(),
     ]);
     if (specRes.status === 'fulfilled' && specRes.value.data)
       setSpecialties(specRes.value.data as Specialty[]);
     if (featRes.status === 'fulfilled' && featRes.value.data)
-      setFeatured(featRes.value.data as Practitioner[]);
+      setFeatured(featRes.value.data as Employee[]);
     if (upRes.status === 'fulfilled' && upRes.value.data) {
       const list = upRes.value.data as Booking[];
       setUpcoming(list[0] ?? null);
@@ -94,7 +94,7 @@ export default function PatientHomeScreen() {
               </ThemedText>
             </View>
             <Pressable
-              onPress={() => router.push('/(patient)/(tabs)/notifications')}
+              onPress={() => router.push('/(client)/(tabs)/notifications')}
               style={styles.bellBtn}
             >
               <Bell size={22} strokeWidth={1.5} color="#FFF" />
@@ -114,12 +114,12 @@ export default function PatientHomeScreen() {
                 <View style={styles.upRow}>
                   <Avatar
                     size={44}
-                    name={`${upcoming.practitioner.user.firstName} ${upcoming.practitioner.user.lastName}`}
-                    imageUrl={upcoming.practitioner.user.avatarUrl}
+                    name={`${upcoming.employee.user.firstName} ${upcoming.employee.user.lastName}`}
+                    imageUrl={upcoming.employee.user.avatarUrl}
                   />
                   <View style={{ flex: 1, gap: 2 }}>
                     <ThemedText variant="subheading" numberOfLines={1}>
-                      {upcoming.practitioner.user.firstName} {upcoming.practitioner.user.lastName}
+                      {upcoming.employee.user.firstName} {upcoming.employee.user.lastName}
                     </ThemedText>
                     <ThemedText variant="caption" color={theme.colors.textSecondary}>
                       {new Date(upcoming.date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
@@ -152,16 +152,16 @@ export default function PatientHomeScreen() {
             </ScrollView>
           </View>
 
-          {/* Featured Practitioners */}
+          {/* Featured Employees */}
           <View style={styles.section}>
             <SectionHeader title={t('home.featured')} action={t('common.viewAll')} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
               {featured.map((p) => (
-                <PractitionerCard
+                <EmployeeCard
                   key={p.id}
-                  practitioner={p}
+                  employee={p}
                   compact
-                  onPress={(id) => router.push(`/(patient)/practitioner/${id}`)}
+                  onPress={(id) => router.push(`/(client)/employee/${id}`)}
                 />
               ))}
             </ScrollView>

@@ -113,7 +113,7 @@ export function RecentPayments() {
             <thead>
               <tr className="border-b border-border text-xs text-muted-foreground">
                 <th className="pb-3 text-start font-medium">
-                  {locale === "ar" ? "المريض" : "Patient"}
+                  {locale === "ar" ? "المريض" : "Client"}
                 </th>
                 <th className="pb-3 text-start font-medium">
                   {locale === "ar" ? "المبلغ" : "Amount"}
@@ -129,9 +129,9 @@ export function RecentPayments() {
             <tbody>
               {payments.map((p) => {
                 const s = statusConfig[p.status]
-                const patient = p.booking?.patient
-                const patientName = patient
-                  ? formatName(patient.firstName, patient.lastName, locale === "ar" ? "غير محدد" : "Unknown")
+                const client = p.booking?.client
+                const clientName = client
+                  ? formatName(client.firstName, client.lastName, locale === "ar" ? "غير محدد" : "Unknown")
                   : locale === "ar"
                   ? "غير محدد"
                   : "Unknown"
@@ -144,7 +144,7 @@ export function RecentPayments() {
                     className="border-b border-border/50 last:border-0"
                   >
                     <td className="py-3 font-medium text-foreground">
-                      {patientName}
+                      {clientName}
                     </td>
                     <td className="py-3 tabular-nums text-foreground">
                       {amountDisplay} {locale === "ar" ? "ر.س" : "SAR"}

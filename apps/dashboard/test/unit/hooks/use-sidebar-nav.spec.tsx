@@ -30,7 +30,7 @@ const { navGroups } = vi.hoisted(() => ({
       labelKey: "nav.main",
       items: [
         { titleKey: "nav.bookings", href: "/bookings", icon: {} },
-        { titleKey: "nav.patients", href: "/patients", icon: {}, permission: "patients:read" },
+        { titleKey: "nav.clients", href: "/clients", icon: {}, permission: "clients:read" },
         { titleKey: "nav.groups", href: "/groups", icon: {}, featureFlag: "groups" },
       ],
     },
@@ -166,11 +166,11 @@ describe("useSidebarNav", () => {
 
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
 
-    // bookings has no permission, patients has permission:read but user has none
+    // bookings has no permission, clients has permission:read but user has none
     expect(result.current.filteredGroups).toHaveLength(1)
     const items = result.current.filteredGroups[0].items
     expect(items.some((i) => i.href === "/bookings")).toBe(true)
-    expect(items.some((i) => i.href === "/patients")).toBe(false)
+    expect(items.some((i) => i.href === "/clients")).toBe(false)
   })
 
   it("includes permission-gated items when user has the permission", async () => {
@@ -179,7 +179,7 @@ describe("useSidebarNav", () => {
         firstName: "Ali",
         lastName: "Hassan",
         role: "ADMIN",
-        permissions: ["patients:read"] as string[],
+        permissions: ["clients:read"] as string[],
       },
     })
     fetchBookingStats.mockResolvedValue({ pending: 0, pendingCancellation: 0 })
@@ -187,7 +187,7 @@ describe("useSidebarNav", () => {
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
 
     const items = result.current.filteredGroups[0].items
-    expect(items.some((i) => i.href === "/patients")).toBe(true)
+    expect(items.some((i) => i.href === "/clients")).toBe(true)
   })
 
   it("fetches booking stats and exposes actionableBookings", async () => {
@@ -252,13 +252,13 @@ describe("useSidebarNav", () => {
   it("navigate pushes when on a sub-page of the same section", () => {
     fetchBookingStats.mockResolvedValue({})
     const push = vi.fn()
-    usePathname.mockReturnValue("/practitioners/new")
+    usePathname.mockReturnValue("/employees/new")
     useRouter.mockReturnValue({ prefetch: vi.fn(), push })
 
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
 
-    result.current.navigate("/practitioners")
-    expect(push).toHaveBeenCalledWith("/practitioners")
+    result.current.navigate("/employees")
+    expect(push).toHaveBeenCalledWith("/employees")
   })
 
   it("returns ?? for userInitials when user is null", async () => {

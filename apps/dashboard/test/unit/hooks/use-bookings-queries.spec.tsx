@@ -16,10 +16,10 @@ const {
   checkInBooking,
   startBooking,
   adminCancelBooking,
-  practitionerCancelBooking,
+  employeeCancelBooking,
   requestCancellation,
   createRecurringBooking,
-  patientReschedule,
+  clientReschedule,
 } = vi.hoisted(() => ({
   fetchBookings: vi.fn(),
   fetchBookingStats: vi.fn(),
@@ -33,10 +33,10 @@ const {
   checkInBooking: vi.fn(),
   startBooking: vi.fn(),
   adminCancelBooking: vi.fn(),
-  practitionerCancelBooking: vi.fn(),
+  employeeCancelBooking: vi.fn(),
   requestCancellation: vi.fn(),
   createRecurringBooking: vi.fn(),
-  patientReschedule: vi.fn(),
+  clientReschedule: vi.fn(),
 }))
 
 vi.mock("@/lib/api/bookings", () => ({
@@ -52,10 +52,10 @@ vi.mock("@/lib/api/bookings", () => ({
   checkInBooking,
   startBooking,
   adminCancelBooking,
-  practitionerCancelBooking,
+  employeeCancelBooking,
   requestCancellation,
   createRecurringBooking,
-  patientReschedule,
+  clientReschedule,
 }))
 
 import { useBookings, useBookingStats, useTodayBookings } from "@/hooks/use-bookings"
@@ -122,12 +122,12 @@ describe("useBookings", () => {
     const { result } = renderHook(() => useBookings(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    act(() => { result.current.setFilters({ status: "confirmed", practitionerId: "p-1" }) })
+    act(() => { result.current.setFilters({ status: "confirmed", employeeId: "p-1" }) })
     act(() => { result.current.resetFilters() })
 
     await waitFor(() => {
       expect(result.current.filters.status).toBe("all")
-      expect(result.current.filters.practitionerId).toBe("")
+      expect(result.current.filters.employeeId).toBe("")
       expect(result.current.hasFilters).toBe(false)
     })
   })

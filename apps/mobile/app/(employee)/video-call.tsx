@@ -1,9 +1,9 @@
 import { VideoCallScreen } from '@/components/features/VideoCallScreen';
 
 /**
- * Practitioner Video Call Screen
- * Route: /(practitioner)/video-call?bookingId=xxx
+ * Employee Video Call Screen
+ * Route: /(employee)/video-call?bookingId=xxx
  */
-export default function PractitionerVideoCallScreen() {
+export default function EmployeeVideoCallScreen() {
   return <VideoCallScreen />;
 }

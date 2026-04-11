@@ -23,47 +23,47 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useLocale } from "@/components/locale-provider"
-import { usePractitioner } from "@/hooks/use-practitioners"
+import { useEmployee } from "@/hooks/use-employees"
 import {
-  PractitionerRatingsSection,
-  PractitionerAvailabilitySection,
-  PractitionerVacationsSection,
-  PractitionerServicesSectionCard,
-} from "@/components/features/practitioners/practitioner-profile-sections"
+  EmployeeRatingsSection,
+  EmployeeAvailabilitySection,
+  EmployeeVacationsSection,
+  EmployeeServicesSectionCard,
+} from "@/components/features/employees/employee-profile-sections"
 import {
   ProfileSkeleton,
   CombinedInfoCard,
   PricingCard,
-} from "@/components/features/practitioners/practitioner-profile-helpers"
-import { PractitionerBookingsChart } from "@/components/features/practitioners/practitioner-bookings-chart"
+} from "@/components/features/employees/employee-profile-helpers"
+import { EmployeeBookingsChart } from "@/components/features/employees/employee-bookings-chart"
 
 interface Props {
-  practitionerId: string
+  employeeId: string
 }
 
-export function PractitionerDetailPage({ practitionerId }: Props) {
+export function EmployeeDetailPage({ employeeId }: Props) {
   const router = useRouter()
   const { locale } = useLocale()
   const isAr = locale === "ar"
 
-  const { data: practitioner, isLoading, error } = usePractitioner(practitionerId)
+  const { data: employee, isLoading, error } = useEmployee(employeeId)
 
   if (isLoading) return <ProfileSkeleton />
 
-  if (error || !practitioner) {
+  if (error || !employee) {
     return (
       <ListPageShell>
         <Breadcrumbs />
-        <ErrorBanner message={isAr ? "لم يتم العثور على الطبيب" : "Practitioner not found"} />
-        <Button variant="outline" onClick={() => router.push("/practitioners")}>
+        <ErrorBanner message={isAr ? "لم يتم العثور على الطبيب" : "Employee not found"} />
+        <Button variant="outline" onClick={() => router.push("/employees")}>
           <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
-          {isAr ? "العودة للأطباء" : "Back to Practitioners"}
+          {isAr ? "العودة للأطباء" : "Back to Employees"}
         </Button>
       </ListPageShell>
     )
   }
 
-  const p = practitioner
+  const p = employee
   const fullName =
     p.nameAr && isAr
       ? p.nameAr
@@ -80,7 +80,7 @@ export function PractitionerDetailPage({ practitionerId }: Props) {
       <PageHeader title={fullName} description={specialty ?? ""}>
         <Button
           className="gap-2 rounded-full px-5"
-          onClick={() => router.push(`/practitioners/${practitionerId}/edit`)}
+          onClick={() => router.push(`/employees/${employeeId}/edit`)}
         >
           <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
           {isAr ? "تعديل" : "Edit"}
@@ -179,7 +179,7 @@ export function PractitionerDetailPage({ practitionerId }: Props) {
         />
       </StatsGrid>
 
-      <PractitionerBookingsChart practitionerId={practitionerId} />
+      <EmployeeBookingsChart employeeId={employeeId} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
@@ -201,17 +201,17 @@ export function PractitionerDetailPage({ practitionerId }: Props) {
             locale={locale}
             isAr={isAr}
           />
-          <PractitionerRatingsSection
-            practitionerId={practitionerId}
+          <EmployeeRatingsSection
+            employeeId={employeeId}
             averageRating={p.averageRating}
             totalRatings={p._count?.ratings ?? 0}
           />
         </div>
 
         <div className="flex flex-col gap-4">
-          <PractitionerAvailabilitySection practitionerId={practitionerId} />
-          <PractitionerVacationsSection practitionerId={practitionerId} />
-          <PractitionerServicesSectionCard practitionerId={practitionerId} />
+          <EmployeeAvailabilitySection employeeId={employeeId} />
+          <EmployeeVacationsSection employeeId={employeeId} />
+          <EmployeeServicesSectionCard employeeId={employeeId} />
         </div>
       </div>
     </ListPageShell>

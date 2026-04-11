@@ -1,8 +1,8 @@
-# Practitioners Tests Redesign Implementation Plan
+# Employees Tests Redesign Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the broken `practitioners.service.spec.ts` with 6 focused spec files — one per service — so all practitioners tests pass.
+**Goal:** Replace the broken `employees.service.spec.ts` with 6 focused spec files — one per service — so all employees tests pass.
 
 **Architecture:** Delete the old monolithic spec. Write a fresh spec per sub-service, each mocking only its own dependencies. Tests follow TDD structure: mock setup → call method → assert result/error.
 
@@ -14,40 +14,40 @@
 
 | Action | File |
 |--------|------|
-| DELETE | `backend/src/modules/practitioners/tests/practitioners.service.spec.ts` |
-| CREATE | `backend/src/modules/practitioners/tests/practitioners.service.spec.ts` |
-| CREATE | `backend/src/modules/practitioners/tests/practitioner-availability.service.spec.ts` |
-| CREATE | `backend/src/modules/practitioners/tests/practitioner-vacation.service.spec.ts` |
-| CREATE | `backend/src/modules/practitioners/tests/practitioner-breaks.service.spec.ts` |
-| CREATE | `backend/src/modules/practitioners/tests/practitioner-service.service.spec.ts` |
-| CREATE | `backend/src/modules/practitioners/tests/practitioner-ratings.service.spec.ts` |
+| DELETE | `backend/src/modules/employees/tests/employees.service.spec.ts` |
+| CREATE | `backend/src/modules/employees/tests/employees.service.spec.ts` |
+| CREATE | `backend/src/modules/employees/tests/employee-availability.service.spec.ts` |
+| CREATE | `backend/src/modules/employees/tests/employee-vacation.service.spec.ts` |
+| CREATE | `backend/src/modules/employees/tests/employee-breaks.service.spec.ts` |
+| CREATE | `backend/src/modules/employees/tests/employee-service.service.spec.ts` |
+| CREATE | `backend/src/modules/employees/tests/employee-ratings.service.spec.ts` |
 
 ---
 
-## Task 1: Delete old spec + write PractitionersService spec
+## Task 1: Delete old spec + write EmployeesService spec
 
 **Files:**
-- Delete: `backend/src/modules/practitioners/tests/practitioners.service.spec.ts`
-- Create: `backend/src/modules/practitioners/tests/practitioners.service.spec.ts`
+- Delete: `backend/src/modules/employees/tests/employees.service.spec.ts`
+- Create: `backend/src/modules/employees/tests/employees.service.spec.ts`
 
 - [ ] **Step 1: Delete the old file**
 
 ```bash
-rm backend/src/modules/practitioners/tests/practitioners.service.spec.ts
+rm backend/src/modules/employees/tests/employees.service.spec.ts
 ```
 
 - [ ] **Step 2: Create the new spec**
 
-Create `backend/src/modules/practitioners/tests/practitioners.service.spec.ts`:
+Create `backend/src/modules/employees/tests/employees.service.spec.ts`:
 
 ```ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
-import { PractitionersService } from '../practitioners.service.js';
+import { EmployeesService } from '../employees.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 
 const mockPrisma = {
-  practitioner: {
+  employee: {
     create: jest.fn(),
     findUnique: jest.fn(),
     findFirst: jest.fn(),
@@ -74,7 +74,7 @@ const mockSpecialty = {
   nameAr: 'أمراض القلب',
 };
 
-const mockPractitioner = {
+const mockEmployee = {
   id: 'prac-1',
   userId: mockUser.id,
   specialtyId: mockSpecialty.id,
@@ -95,17 +95,17 @@ const mockPractitioner = {
   updatedAt: new Date('2026-01-01'),
 };
 
-describe('PractitionersService', () => {
-  let service: PractitionersService;
+describe('EmployeesService', () => {
+  let service: EmployeesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PractitionersService,
+        EmployeesService,
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
-    service = module.get(PractitionersService);
+    service = module.get(EmployeesService);
     jest.clearAllMocks();
   });
 
@@ -113,8 +113,8 @@ describe('PractitionersService', () => {
 
   describe('findAll', () => {
     it('returns paginated list with default page=1', async () => {
-      mockPrisma.practitioner.findMany.mockResolvedValue([mockPractitioner]);
-      mockPrisma.practitioner.count.mockResolvedValue(1);
+      mockPrisma.employee.findMany.mockResolvedValue([mockEmployee]);
+      mockPrisma.employee.count.mockResolvedValue(1);
 
       const result = await service.findAll({});
 
@@ -122,35 +122,35 @@ describe('PractitionersService', () => {
       expect(result.meta).toMatchObject({ page: 1, total: 1, totalPages: 1 });
     });
 
-    it('excludes soft-deleted practitioners', async () => {
-      mockPrisma.practitioner.findMany.mockResolvedValue([]);
-      mockPrisma.practitioner.count.mockResolvedValue(0);
+    it('excludes soft-deleted employees', async () => {
+      mockPrisma.employee.findMany.mockResolvedValue([]);
+      mockPrisma.employee.count.mockResolvedValue(0);
 
       await service.findAll({});
 
-      expect(mockPrisma.practitioner.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.employee.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ deletedAt: null }) }),
       );
     });
 
     it('filters by specialtyId', async () => {
-      mockPrisma.practitioner.findMany.mockResolvedValue([]);
-      mockPrisma.practitioner.count.mockResolvedValue(0);
+      mockPrisma.employee.findMany.mockResolvedValue([]);
+      mockPrisma.employee.count.mockResolvedValue(0);
 
       await service.findAll({ specialtyId: mockSpecialty.id });
 
-      expect(mockPrisma.practitioner.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.employee.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ specialtyId: mockSpecialty.id }) }),
       );
     });
 
     it('searches by user name', async () => {
-      mockPrisma.practitioner.findMany.mockResolvedValue([]);
-      mockPrisma.practitioner.count.mockResolvedValue(0);
+      mockPrisma.employee.findMany.mockResolvedValue([]);
+      mockPrisma.employee.count.mockResolvedValue(0);
 
       await service.findAll({ search: 'خالد' });
 
-      expect(mockPrisma.practitioner.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.employee.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             user: expect.objectContaining({ OR: expect.any(Array) }),
@@ -163,18 +163,18 @@ describe('PractitionersService', () => {
   // ── findOne ──────────────────────────────────────────────────
 
   describe('findOne', () => {
-    it('returns practitioner by id', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    it('returns employee by id', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
 
-      const result = await service.findOne(mockPractitioner.id);
+      const result = await service.findOne(mockEmployee.id);
 
-      expect(result.id).toBe(mockPractitioner.id);
+      expect(result.id).toBe(mockEmployee.id);
       // specialty should be remapped from specialtyRel
       expect(result).not.toHaveProperty('specialtyRel');
     });
 
     it('throws NotFoundException when not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(null);
+      mockPrisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(service.findOne('missing')).rejects.toThrow(NotFoundException);
     });
@@ -183,11 +183,11 @@ describe('PractitionersService', () => {
   // ── create ───────────────────────────────────────────────────
 
   describe('create', () => {
-    it('creates practitioner linked to existing user', async () => {
+    it('creates employee linked to existing user', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.specialty.findUnique.mockResolvedValue(mockSpecialty);
-      mockPrisma.practitioner.findFirst.mockResolvedValue(null);
-      mockPrisma.practitioner.create.mockResolvedValue({ ...mockPractitioner, id: 'new-1' });
+      mockPrisma.employee.findFirst.mockResolvedValue(null);
+      mockPrisma.employee.create.mockResolvedValue({ ...mockEmployee, id: 'new-1' });
 
       const result = await service.create({
         userId: mockUser.id,
@@ -195,7 +195,7 @@ describe('PractitionersService', () => {
       });
 
       expect(result.id).toBe('new-1');
-      expect(mockPrisma.practitioner.create).toHaveBeenCalled();
+      expect(mockPrisma.employee.create).toHaveBeenCalled();
     });
 
     it('throws NotFoundException when user does not exist', async () => {
@@ -211,10 +211,10 @@ describe('PractitionersService', () => {
       await expect(service.create({ userId: mockUser.id, specialtyId: 'bad' })).rejects.toThrow(NotFoundException);
     });
 
-    it('throws ConflictException when practitioner already has full profile', async () => {
+    it('throws ConflictException when employee already has full profile', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.specialty.findUnique.mockResolvedValue(mockSpecialty);
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
 
       await expect(service.create({ userId: mockUser.id, specialtyId: mockSpecialty.id })).rejects.toThrow(ConflictException);
     });
@@ -223,17 +223,17 @@ describe('PractitionersService', () => {
   // ── update ───────────────────────────────────────────────────
 
   describe('update', () => {
-    it('updates practitioner fields', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitioner.update.mockResolvedValue({ ...mockPractitioner, bio: 'Updated' });
+    it('updates employee fields', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employee.update.mockResolvedValue({ ...mockEmployee, bio: 'Updated' });
 
-      const result = await service.update(mockPractitioner.id, { bio: 'Updated' });
+      const result = await service.update(mockEmployee.id, { bio: 'Updated' });
 
       expect(result.bio).toBe('Updated');
     });
 
-    it('throws NotFoundException when practitioner not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(null);
+    it('throws NotFoundException when employee not found', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(service.update('missing', { bio: 'x' })).rejects.toThrow(NotFoundException);
     });
@@ -243,20 +243,20 @@ describe('PractitionersService', () => {
 
   describe('delete', () => {
     it('soft-deletes by setting deletedAt and isActive=false', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitioner.update.mockResolvedValue({});
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employee.update.mockResolvedValue({});
 
-      await service.delete(mockPractitioner.id);
+      await service.delete(mockEmployee.id);
 
-      expect(mockPrisma.practitioner.update).toHaveBeenCalledWith(
+      expect(mockPrisma.employee.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ deletedAt: expect.any(Date), isActive: false }),
         }),
       );
     });
 
-    it('throws NotFoundException when practitioner not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(null);
+    it('throws NotFoundException when employee not found', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(service.delete('missing')).rejects.toThrow(NotFoundException);
     });
@@ -267,7 +267,7 @@ describe('PractitionersService', () => {
 - [ ] **Step 3: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest practitioners.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employees.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -275,35 +275,35 @@ Expected: all tests pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add backend/src/modules/practitioners/tests/practitioners.service.spec.ts
-git commit -m "test(practitioners): rewrite PractitionersService spec — CRUD only"
+git add backend/src/modules/employees/tests/employees.service.spec.ts
+git commit -m "test(employees): rewrite EmployeesService spec — CRUD only"
 ```
 
 ---
 
-## Task 2: PractitionerAvailabilityService spec
+## Task 2: EmployeeAvailabilityService spec
 
 **Files:**
-- Create: `backend/src/modules/practitioners/tests/practitioner-availability.service.spec.ts`
+- Create: `backend/src/modules/employees/tests/employee-availability.service.spec.ts`
 
 - [ ] **Step 1: Create the spec**
 
 ```ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { PractitionerAvailabilityService } from '../practitioner-availability.service.js';
+import { EmployeeAvailabilityService } from '../employee-availability.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { BookingSettingsService } from '../../bookings/booking-settings.service.js';
 
 const mockPrisma = {
-  practitioner: { findFirst: jest.fn() },
-  practitionerAvailability: {
+  employee: { findFirst: jest.fn() },
+  employeeAvailability: {
     findMany: jest.fn(),
     deleteMany: jest.fn(),
     createMany: jest.fn(),
   },
-  practitionerVacation: { findFirst: jest.fn() },
-  practitionerBreak: { findMany: jest.fn() },
+  employeeVacation: { findFirst: jest.fn() },
+  employeeBreak: { findMany: jest.fn() },
   booking: { findMany: jest.fn() },
   $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
 };
@@ -312,7 +312,7 @@ const mockBookingSettings = {
   getForBranch: jest.fn().mockResolvedValue({ bufferMinutes: 0 }),
 };
 
-const mockPractitioner = {
+const mockEmployee = {
   id: 'prac-1',
   userId: 'user-1',
   isAcceptingBookings: true,
@@ -320,21 +320,21 @@ const mockPractitioner = {
 };
 
 const mockAvailability = [
-  { id: 'a1', practitionerId: 'prac-1', dayOfWeek: 0, startTime: '09:00', endTime: '12:00', isActive: true },
+  { id: 'a1', employeeId: 'prac-1', dayOfWeek: 0, startTime: '09:00', endTime: '12:00', isActive: true },
 ];
 
-describe('PractitionerAvailabilityService', () => {
-  let service: PractitionerAvailabilityService;
+describe('EmployeeAvailabilityService', () => {
+  let service: EmployeeAvailabilityService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PractitionerAvailabilityService,
+        EmployeeAvailabilityService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: BookingSettingsService, useValue: mockBookingSettings },
       ],
     }).compile();
-    service = module.get(PractitionerAvailabilityService);
+    service = module.get(EmployeeAvailabilityService);
     jest.clearAllMocks();
     mockBookingSettings.getForBranch.mockResolvedValue({ bufferMinutes: 0 });
   });
@@ -343,20 +343,20 @@ describe('PractitionerAvailabilityService', () => {
 
   describe('getAvailability', () => {
     it('returns active availability slots ordered by dayOfWeek then startTime', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue(mockAvailability);
 
       const result = await service.getAvailability('prac-1');
 
       expect(result).toHaveLength(1);
       expect(result[0].dayOfWeek).toBe(0);
-      expect(mockPrisma.practitionerAvailability.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.employeeAvailability.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ isActive: true }) }),
       );
     });
 
-    it('throws NotFoundException when practitioner not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(null);
+    it('throws NotFoundException when employee not found', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(service.getAvailability('missing')).rejects.toThrow(NotFoundException);
     });
@@ -366,23 +366,23 @@ describe('PractitionerAvailabilityService', () => {
 
   describe('setAvailability', () => {
     it('atomically replaces availability schedule', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.deleteMany.mockResolvedValue({ count: 1 });
-      mockPrisma.practitionerAvailability.createMany.mockResolvedValue({ count: 1 });
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.employeeAvailability.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue(mockAvailability);
 
       await service.setAvailability('prac-1', {
         schedule: [{ dayOfWeek: 0, startTime: '09:00', endTime: '12:00' }],
       });
 
-      expect(mockPrisma.practitionerAvailability.deleteMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { practitionerId: 'prac-1' } }),
+      expect(mockPrisma.employeeAvailability.deleteMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { employeeId: 'prac-1' } }),
       );
-      expect(mockPrisma.practitionerAvailability.createMany).toHaveBeenCalled();
+      expect(mockPrisma.employeeAvailability.createMany).toHaveBeenCalled();
     });
 
     it('rejects invalid dayOfWeek > 6', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
 
       await expect(
         service.setAvailability('prac-1', {
@@ -392,7 +392,7 @@ describe('PractitionerAvailabilityService', () => {
     });
 
     it('rejects invalid time format', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
 
       await expect(
         service.setAvailability('prac-1', {
@@ -402,7 +402,7 @@ describe('PractitionerAvailabilityService', () => {
     });
 
     it('rejects endTime <= startTime', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
 
       await expect(
         service.setAvailability('prac-1', {
@@ -412,7 +412,7 @@ describe('PractitionerAvailabilityService', () => {
     });
 
     it('rejects overlapping slots on same day', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
 
       await expect(
         service.setAvailability('prac-1', {
@@ -424,8 +424,8 @@ describe('PractitionerAvailabilityService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('throws NotFoundException when practitioner not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(null);
+    it('throws NotFoundException when employee not found', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(
         service.setAvailability('prac-1', { schedule: [{ dayOfWeek: 0, startTime: '09:00', endTime: '12:00' }] }),
@@ -437,13 +437,13 @@ describe('PractitionerAvailabilityService', () => {
 
   describe('getSlots', () => {
     it('returns slots with available flag for a given date', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
       // Sunday 2026-04-05 → dayOfWeek = 0
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue([
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue([
         { startTime: '09:00', endTime: '11:00' },
       ]);
-      mockPrisma.practitionerVacation.findFirst.mockResolvedValue(null);
-      mockPrisma.practitionerBreak.findMany.mockResolvedValue([]);
+      mockPrisma.employeeVacation.findFirst.mockResolvedValue(null);
+      mockPrisma.employeeBreak.findMany.mockResolvedValue([]);
       mockPrisma.booking.findMany.mockResolvedValue([]);
 
       const result = await service.getSlots('prac-1', '2026-04-05', 30);
@@ -453,10 +453,10 @@ describe('PractitionerAvailabilityService', () => {
       expect(result.date).toBe('2026-04-05');
     });
 
-    it('returns empty slots when practitioner is on vacation', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
-      mockPrisma.practitionerVacation.findFirst.mockResolvedValue({
+    it('returns empty slots when employee is on vacation', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.employeeVacation.findFirst.mockResolvedValue({
         id: 'v1',
         startDate: new Date('2026-04-01'),
         endDate: new Date('2026-04-10'),
@@ -468,12 +468,12 @@ describe('PractitionerAvailabilityService', () => {
     });
 
     it('marks booked slots as unavailable', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue([
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue([
         { startTime: '09:00', endTime: '10:00' },
       ]);
-      mockPrisma.practitionerVacation.findFirst.mockResolvedValue(null);
-      mockPrisma.practitionerBreak.findMany.mockResolvedValue([]);
+      mockPrisma.employeeVacation.findFirst.mockResolvedValue(null);
+      mockPrisma.employeeBreak.findMany.mockResolvedValue([]);
       mockPrisma.booking.findMany.mockResolvedValue([
         { startTime: '09:00', endTime: '09:30' },
       ]);
@@ -484,9 +484,9 @@ describe('PractitionerAvailabilityService', () => {
       expect(booked?.available).toBe(false);
     });
 
-    it('returns empty slots when practitioner is not accepting bookings', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue({
-        ...mockPractitioner,
+    it('returns empty slots when employee is not accepting bookings', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue({
+        ...mockEmployee,
         isAcceptingBookings: false,
       });
 
@@ -505,7 +505,7 @@ describe('PractitionerAvailabilityService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest practitioner-availability.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-availability.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -513,28 +513,28 @@ Expected: all tests pass.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add backend/src/modules/practitioners/tests/practitioner-availability.service.spec.ts
-git commit -m "test(practitioners): add PractitionerAvailabilityService spec"
+git add backend/src/modules/employees/tests/employee-availability.service.spec.ts
+git commit -m "test(employees): add EmployeeAvailabilityService spec"
 ```
 
 ---
 
-## Task 3: PractitionerVacationService spec
+## Task 3: EmployeeVacationService spec
 
 **Files:**
-- Create: `backend/src/modules/practitioners/tests/practitioner-vacation.service.spec.ts`
+- Create: `backend/src/modules/employees/tests/employee-vacation.service.spec.ts`
 
 - [ ] **Step 1: Create the spec**
 
 ```ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { PractitionerVacationService } from '../practitioner-vacation.service.js';
+import { EmployeeVacationService } from '../employee-vacation.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 
 const mockPrisma = {
-  practitioner: { findFirst: jest.fn() },
-  practitionerVacation: {
+  employee: { findFirst: jest.fn() },
+  employeeVacation: {
     findMany: jest.fn(),
     findUnique: jest.fn(),
     create: jest.fn(),
@@ -542,27 +542,27 @@ const mockPrisma = {
   },
 };
 
-const mockPractitioner = { id: 'prac-1', userId: 'user-1', deletedAt: null };
+const mockEmployee = { id: 'prac-1', userId: 'user-1', deletedAt: null };
 
 const mockVacation = {
   id: 'vac-1',
-  practitionerId: 'prac-1',
+  employeeId: 'prac-1',
   startDate: new Date('2026-04-10'),
   endDate: new Date('2026-04-15'),
   reason: 'إجازة',
 };
 
-describe('PractitionerVacationService', () => {
-  let service: PractitionerVacationService;
+describe('EmployeeVacationService', () => {
+  let service: EmployeeVacationService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PractitionerVacationService,
+        EmployeeVacationService,
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
-    service = module.get(PractitionerVacationService);
+    service = module.get(EmployeeVacationService);
     jest.clearAllMocks();
   });
 
@@ -570,19 +570,19 @@ describe('PractitionerVacationService', () => {
 
   describe('getVacations', () => {
     it('returns vacations ordered by startDate desc', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeVacation.findMany.mockResolvedValue([mockVacation]);
 
       const result = await service.getVacations('prac-1');
 
       expect(result).toHaveLength(1);
-      expect(mockPrisma.practitionerVacation.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.employeeVacation.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: { startDate: 'desc' } }),
       );
     });
 
-    it('throws NotFoundException when practitioner not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(null);
+    it('throws NotFoundException when employee not found', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(service.getVacations('missing')).rejects.toThrow(NotFoundException);
     });
@@ -592,9 +592,9 @@ describe('PractitionerVacationService', () => {
 
   describe('createVacation', () => {
     it('creates a vacation record', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerVacation.findMany.mockResolvedValue([]);
-      mockPrisma.practitionerVacation.create.mockResolvedValue(mockVacation);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeVacation.findMany.mockResolvedValue([]);
+      mockPrisma.employeeVacation.create.mockResolvedValue(mockVacation);
 
       const result = await service.createVacation('prac-1', {
         startDate: '2026-05-01',
@@ -605,7 +605,7 @@ describe('PractitionerVacationService', () => {
     });
 
     it('rejects when endDate <= startDate', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
 
       await expect(
         service.createVacation('prac-1', { startDate: '2026-05-05', endDate: '2026-05-01' }),
@@ -613,8 +613,8 @@ describe('PractitionerVacationService', () => {
     });
 
     it('rejects overlapping vacation dates', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerVacation.findMany.mockResolvedValue([mockVacation]);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeVacation.findMany.mockResolvedValue([mockVacation]);
 
       // mockVacation is 2026-04-10 → 2026-04-15, new one overlaps
       await expect(
@@ -622,8 +622,8 @@ describe('PractitionerVacationService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('throws NotFoundException when practitioner not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(null);
+    it('throws NotFoundException when employee not found', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(
         service.createVacation('missing', { startDate: '2026-05-01', endDate: '2026-05-05' }),
@@ -635,29 +635,29 @@ describe('PractitionerVacationService', () => {
 
   describe('deleteVacation', () => {
     it('deletes the vacation record', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerVacation.findUnique.mockResolvedValue(mockVacation);
-      mockPrisma.practitionerVacation.delete.mockResolvedValue(mockVacation);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeVacation.findUnique.mockResolvedValue(mockVacation);
+      mockPrisma.employeeVacation.delete.mockResolvedValue(mockVacation);
 
       await service.deleteVacation('prac-1', 'vac-1');
 
-      expect(mockPrisma.practitionerVacation.delete).toHaveBeenCalledWith(
+      expect(mockPrisma.employeeVacation.delete).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'vac-1' } }),
       );
     });
 
     it('throws NotFoundException when vacation not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerVacation.findUnique.mockResolvedValue(null);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeVacation.findUnique.mockResolvedValue(null);
 
       await expect(service.deleteVacation('prac-1', 'missing')).rejects.toThrow(NotFoundException);
     });
 
-    it('throws NotFoundException when vacation belongs to another practitioner', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerVacation.findUnique.mockResolvedValue({
+    it('throws NotFoundException when vacation belongs to another employee', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeVacation.findUnique.mockResolvedValue({
         ...mockVacation,
-        practitionerId: 'other-prac',
+        employeeId: 'other-prac',
       });
 
       await expect(service.deleteVacation('prac-1', 'vac-1')).rejects.toThrow(NotFoundException);
@@ -669,7 +669,7 @@ describe('PractitionerVacationService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest practitioner-vacation.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-vacation.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -677,57 +677,57 @@ Expected: all tests pass.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add backend/src/modules/practitioners/tests/practitioner-vacation.service.spec.ts
-git commit -m "test(practitioners): add PractitionerVacationService spec"
+git add backend/src/modules/employees/tests/employee-vacation.service.spec.ts
+git commit -m "test(employees): add EmployeeVacationService spec"
 ```
 
 ---
 
-## Task 4: PractitionerBreaksService spec
+## Task 4: EmployeeBreaksService spec
 
 **Files:**
-- Create: `backend/src/modules/practitioners/tests/practitioner-breaks.service.spec.ts`
+- Create: `backend/src/modules/employees/tests/employee-breaks.service.spec.ts`
 
 - [ ] **Step 1: Create the spec**
 
 ```ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { PractitionerBreaksService } from '../practitioner-breaks.service.js';
+import { EmployeeBreaksService } from '../employee-breaks.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 
 const mockPrisma = {
-  practitioner: { findFirst: jest.fn() },
-  practitionerBreak: {
+  employee: { findFirst: jest.fn() },
+  employeeBreak: {
     findMany: jest.fn(),
     deleteMany: jest.fn(),
     createMany: jest.fn(),
   },
-  practitionerAvailability: { findMany: jest.fn() },
+  employeeAvailability: { findMany: jest.fn() },
   $transaction: jest.fn(async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma)),
 };
 
-const mockPractitioner = { id: 'prac-1', userId: 'user-1', deletedAt: null };
+const mockEmployee = { id: 'prac-1', userId: 'user-1', deletedAt: null };
 
 const mockBreaks = [
-  { id: 'b1', practitionerId: 'prac-1', dayOfWeek: 1, startTime: '12:00', endTime: '13:00' },
+  { id: 'b1', employeeId: 'prac-1', dayOfWeek: 1, startTime: '12:00', endTime: '13:00' },
 ];
 
 const mockAvailability = [
-  { practitionerId: 'prac-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true },
+  { employeeId: 'prac-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true },
 ];
 
-describe('PractitionerBreaksService', () => {
-  let service: PractitionerBreaksService;
+describe('EmployeeBreaksService', () => {
+  let service: EmployeeBreaksService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PractitionerBreaksService,
+        EmployeeBreaksService,
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
-    service = module.get(PractitionerBreaksService);
+    service = module.get(EmployeeBreaksService);
     jest.clearAllMocks();
   });
 
@@ -735,16 +735,16 @@ describe('PractitionerBreaksService', () => {
 
   describe('getBreaks', () => {
     it('returns breaks ordered by dayOfWeek then startTime', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerBreak.findMany.mockResolvedValue(mockBreaks);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeBreak.findMany.mockResolvedValue(mockBreaks);
 
       const result = await service.getBreaks('prac-1');
 
       expect(result).toHaveLength(1);
     });
 
-    it('throws NotFoundException when practitioner not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(null);
+    it('throws NotFoundException when employee not found', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(service.getBreaks('missing')).rejects.toThrow(NotFoundException);
     });
@@ -754,23 +754,23 @@ describe('PractitionerBreaksService', () => {
 
   describe('setBreaks', () => {
     it('atomically replaces all breaks', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
-      mockPrisma.practitionerBreak.deleteMany.mockResolvedValue({ count: 1 });
-      mockPrisma.practitionerBreak.createMany.mockResolvedValue({ count: 1 });
-      mockPrisma.practitionerBreak.findMany.mockResolvedValue(mockBreaks);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.employeeBreak.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.employeeBreak.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.employeeBreak.findMany.mockResolvedValue(mockBreaks);
 
       const result = await service.setBreaks('prac-1', {
         breaks: [{ dayOfWeek: 1, startTime: '12:00', endTime: '13:00' }],
       });
 
-      expect(mockPrisma.practitionerBreak.deleteMany).toHaveBeenCalled();
+      expect(mockPrisma.employeeBreak.deleteMany).toHaveBeenCalled();
       expect(Array.isArray(result)).toBe(true);
     });
 
     it('rejects break outside working hours', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue(mockAvailability);
 
       // availability is 09:00-17:00 on day 1; break 18:00-19:00 is outside
       await expect(
@@ -781,8 +781,8 @@ describe('PractitionerBreaksService', () => {
     });
 
     it('rejects overlapping breaks on same day', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue(mockAvailability);
 
       await expect(
         service.setBreaks('prac-1', {
@@ -795,8 +795,8 @@ describe('PractitionerBreaksService', () => {
     });
 
     it('rejects invalid time format', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue(mockAvailability);
 
       await expect(
         service.setBreaks('prac-1', {
@@ -806,8 +806,8 @@ describe('PractitionerBreaksService', () => {
     });
 
     it('rejects endTime <= startTime', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue(mockAvailability);
 
       await expect(
         service.setBreaks('prac-1', {
@@ -817,10 +817,10 @@ describe('PractitionerBreaksService', () => {
     });
 
     it('returns empty array when breaks is []', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerAvailability.findMany.mockResolvedValue(mockAvailability);
-      mockPrisma.practitionerBreak.deleteMany.mockResolvedValue({ count: 0 });
-      mockPrisma.practitionerBreak.findMany.mockResolvedValue([]);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeAvailability.findMany.mockResolvedValue(mockAvailability);
+      mockPrisma.employeeBreak.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.employeeBreak.findMany.mockResolvedValue([]);
 
       const result = await service.setBreaks('prac-1', { breaks: [] });
 
@@ -833,7 +833,7 @@ describe('PractitionerBreaksService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest practitioner-breaks.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-breaks.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -841,29 +841,29 @@ Expected: all tests pass.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add backend/src/modules/practitioners/tests/practitioner-breaks.service.spec.ts
-git commit -m "test(practitioners): add PractitionerBreaksService spec"
+git add backend/src/modules/employees/tests/employee-breaks.service.spec.ts
+git commit -m "test(employees): add EmployeeBreaksService spec"
 ```
 
 ---
 
-## Task 5: PractitionerServiceService spec
+## Task 5: EmployeeServiceService spec
 
 **Files:**
-- Create: `backend/src/modules/practitioners/tests/practitioner-service.service.spec.ts`
+- Create: `backend/src/modules/employees/tests/employee-service.service.spec.ts`
 
 - [ ] **Step 1: Create the spec**
 
 ```ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
-import { PractitionerServiceService } from '../practitioner-service.service.js';
+import { EmployeeServiceService } from '../employee-service.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 
 const mockPrisma = {
-  practitioner: { findFirst: jest.fn() },
+  employee: { findFirst: jest.fn() },
   service: { findFirst: jest.fn() },
-  practitionerService: {
+  employeeService: {
     findUnique: jest.fn(),
     findMany: jest.fn(),
     findFirst: jest.fn(),
@@ -871,7 +871,7 @@ const mockPrisma = {
     update: jest.fn(),
     delete: jest.fn(),
   },
-  practitionerServiceType: {
+  employeeServiceType: {
     create: jest.fn(),
     findMany: jest.fn(),
     deleteMany: jest.fn(),
@@ -879,12 +879,12 @@ const mockPrisma = {
   booking: { count: jest.fn() },
 };
 
-const mockPractitioner = { id: 'prac-1', userId: 'user-1', deletedAt: null };
+const mockEmployee = { id: 'prac-1', userId: 'user-1', deletedAt: null };
 const mockService = { id: 'svc-1', nameEn: 'Consultation', nameAr: 'استشارة', deletedAt: null };
 
 const mockPS = {
   id: 'ps-1',
-  practitionerId: 'prac-1',
+  employeeId: 'prac-1',
   serviceId: 'svc-1',
   isActive: true,
   customDuration: null,
@@ -892,29 +892,29 @@ const mockPS = {
   availableTypes: ['in_person'],
 };
 
-describe('PractitionerServiceService', () => {
-  let service: PractitionerServiceService;
+describe('EmployeeServiceService', () => {
+  let service: EmployeeServiceService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PractitionerServiceService,
+        EmployeeServiceService,
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
-    service = module.get(PractitionerServiceService);
+    service = module.get(EmployeeServiceService);
     jest.clearAllMocks();
   });
 
   // ── assignService ─────────────────────────────────────────────
 
   describe('assignService', () => {
-    it('assigns a service to practitioner', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+    it('assigns a service to employee', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
       mockPrisma.service.findFirst.mockResolvedValue(mockService);
-      mockPrisma.practitionerService.findUnique.mockResolvedValue(null);
-      mockPrisma.practitionerService.create.mockResolvedValue(mockPS);
-      mockPrisma.practitionerService.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ ...mockPS, service: mockService, serviceTypes: [] });
+      mockPrisma.employeeService.findUnique.mockResolvedValue(null);
+      mockPrisma.employeeService.create.mockResolvedValue(mockPS);
+      mockPrisma.employeeService.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ ...mockPS, service: mockService, serviceTypes: [] });
 
       const result = await service.assignService('prac-1', {
         serviceId: 'svc-1',
@@ -925,7 +925,7 @@ describe('PractitionerServiceService', () => {
     });
 
     it('throws NotFoundException when service not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
       mockPrisma.service.findFirst.mockResolvedValue(null);
 
       await expect(
@@ -934,9 +934,9 @@ describe('PractitionerServiceService', () => {
     });
 
     it('throws ConflictException when service already assigned', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
       mockPrisma.service.findFirst.mockResolvedValue(mockService);
-      mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPS);
+      mockPrisma.employeeService.findUnique.mockResolvedValue(mockPS);
 
       await expect(
         service.assignService('prac-1', { serviceId: 'svc-1', availableTypes: ['in_person'] }),
@@ -947,14 +947,14 @@ describe('PractitionerServiceService', () => {
   // ── listServices ──────────────────────────────────────────────
 
   describe('listServices', () => {
-    it('returns active services for practitioner', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerService.findMany.mockResolvedValue([mockPS]);
+    it('returns active services for employee', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeService.findMany.mockResolvedValue([mockPS]);
 
       const result = await service.listServices('prac-1');
 
       expect(result).toHaveLength(1);
-      expect(mockPrisma.practitionerService.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.employeeService.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ isActive: true }) }),
       );
     });
@@ -963,11 +963,11 @@ describe('PractitionerServiceService', () => {
   // ── removeService ─────────────────────────────────────────────
 
   describe('removeService', () => {
-    it('deletes the practitioner-service assignment', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPS);
+    it('deletes the employee-service assignment', async () => {
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeService.findUnique.mockResolvedValue(mockPS);
       mockPrisma.booking.count.mockResolvedValue(0);
-      mockPrisma.practitionerService.delete.mockResolvedValue(mockPS);
+      mockPrisma.employeeService.delete.mockResolvedValue(mockPS);
 
       const result = await service.removeService('prac-1', 'svc-1');
 
@@ -975,16 +975,16 @@ describe('PractitionerServiceService', () => {
     });
 
     it('throws ConflictException when active bookings exist', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerService.findUnique.mockResolvedValue(mockPS);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeService.findUnique.mockResolvedValue(mockPS);
       mockPrisma.booking.count.mockResolvedValue(2);
 
       await expect(service.removeService('prac-1', 'svc-1')).rejects.toThrow(ConflictException);
     });
 
     it('throws NotFoundException when assignment not found', async () => {
-      mockPrisma.practitioner.findFirst.mockResolvedValue(mockPractitioner);
-      mockPrisma.practitionerService.findUnique.mockResolvedValue(null);
+      mockPrisma.employee.findFirst.mockResolvedValue(mockEmployee);
+      mockPrisma.employeeService.findUnique.mockResolvedValue(null);
 
       await expect(service.removeService('prac-1', 'svc-1')).rejects.toThrow(NotFoundException);
     });
@@ -995,7 +995,7 @@ describe('PractitionerServiceService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest practitioner-service.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-service.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -1003,63 +1003,63 @@ Expected: all tests pass.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add backend/src/modules/practitioners/tests/practitioner-service.service.spec.ts
-git commit -m "test(practitioners): add PractitionerServiceService spec"
+git add backend/src/modules/employees/tests/employee-service.service.spec.ts
+git commit -m "test(employees): add EmployeeServiceService spec"
 ```
 
 ---
 
-## Task 6: PractitionerRatingsService spec
+## Task 6: EmployeeRatingsService spec
 
 **Files:**
-- Create: `backend/src/modules/practitioners/tests/practitioner-ratings.service.spec.ts`
+- Create: `backend/src/modules/employees/tests/employee-ratings.service.spec.ts`
 
 - [ ] **Step 1: Create the spec**
 
 ```ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { PractitionerRatingsService } from '../practitioner-ratings.service.js';
+import { EmployeeRatingsService } from '../employee-ratings.service.js';
 import { PrismaService } from '../../../database/prisma.service.js';
 
 const mockPrisma = {
-  practitioner: { findUnique: jest.fn() },
+  employee: { findUnique: jest.fn() },
   rating: {
     findMany: jest.fn(),
     count: jest.fn(),
   },
 };
 
-const mockPractitioner = { id: 'prac-1', deletedAt: null };
+const mockEmployee = { id: 'prac-1', deletedAt: null };
 
 const mockRatings = [
   {
     id: 'r1',
-    practitionerId: 'prac-1',
+    employeeId: 'prac-1',
     score: 5,
     comment: 'ممتاز',
     createdAt: new Date('2026-03-01'),
-    patient: { firstName: 'أحمد', lastName: 'الغامدي' },
+    client: { firstName: 'أحمد', lastName: 'الغامدي' },
   },
 ];
 
-describe('PractitionerRatingsService', () => {
-  let service: PractitionerRatingsService;
+describe('EmployeeRatingsService', () => {
+  let service: EmployeeRatingsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PractitionerRatingsService,
+        EmployeeRatingsService,
         { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
-    service = module.get(PractitionerRatingsService);
+    service = module.get(EmployeeRatingsService);
     jest.clearAllMocks();
   });
 
   describe('getRatings', () => {
     it('returns paginated ratings', async () => {
-      mockPrisma.practitioner.findUnique.mockResolvedValue(mockPractitioner);
+      mockPrisma.employee.findUnique.mockResolvedValue(mockEmployee);
       mockPrisma.rating.findMany.mockResolvedValue(mockRatings);
       mockPrisma.rating.count.mockResolvedValue(1);
 
@@ -1069,30 +1069,30 @@ describe('PractitionerRatingsService', () => {
       expect(result.meta).toMatchObject({ page: 1, total: 1 });
     });
 
-    it('anonymizes patient last name to first initial + dot', async () => {
-      mockPrisma.practitioner.findUnique.mockResolvedValue(mockPractitioner);
+    it('anonymizes client last name to first initial + dot', async () => {
+      mockPrisma.employee.findUnique.mockResolvedValue(mockEmployee);
       mockPrisma.rating.findMany.mockResolvedValue(mockRatings);
       mockPrisma.rating.count.mockResolvedValue(1);
 
       const result = await service.getRatings('prac-1');
 
       // "الغامدي" → "ا."
-      expect(result.items[0].patient?.lastName).toBe('ا.');
-      expect(result.items[0].patient?.firstName).toBe('أحمد');
+      expect(result.items[0].client?.lastName).toBe('ا.');
+      expect(result.items[0].client?.firstName).toBe('أحمد');
     });
 
-    it('handles null patient gracefully', async () => {
-      mockPrisma.practitioner.findUnique.mockResolvedValue(mockPractitioner);
-      mockPrisma.rating.findMany.mockResolvedValue([{ ...mockRatings[0], patient: null }]);
+    it('handles null client gracefully', async () => {
+      mockPrisma.employee.findUnique.mockResolvedValue(mockEmployee);
+      mockPrisma.rating.findMany.mockResolvedValue([{ ...mockRatings[0], client: null }]);
       mockPrisma.rating.count.mockResolvedValue(1);
 
       const result = await service.getRatings('prac-1');
 
-      expect(result.items[0].patient).toBeNull();
+      expect(result.items[0].client).toBeNull();
     });
 
-    it('throws NotFoundException when practitioner not found', async () => {
-      mockPrisma.practitioner.findUnique.mockResolvedValue(null);
+    it('throws NotFoundException when employee not found', async () => {
+      mockPrisma.employee.findUnique.mockResolvedValue(null);
 
       await expect(service.getRatings('missing')).rejects.toThrow(NotFoundException);
     });
@@ -1103,7 +1103,7 @@ describe('PractitionerRatingsService', () => {
 - [ ] **Step 2: Run the spec**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest practitioner-ratings.service.spec --no-coverage 2>&1 | tail -15
+cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employee-ratings.service.spec --no-coverage 2>&1 | tail -15
 ```
 
 Expected: all tests pass.
@@ -1111,26 +1111,26 @@ Expected: all tests pass.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add backend/src/modules/practitioners/tests/practitioner-ratings.service.spec.ts
-git commit -m "test(practitioners): add PractitionerRatingsService spec"
+git add backend/src/modules/employees/tests/employee-ratings.service.spec.ts
+git commit -m "test(employees): add EmployeeRatingsService spec"
 ```
 
 ---
 
 ## Task 7: Final verification
 
-- [ ] **Step 1: Run all practitioners tests**
+- [ ] **Step 1: Run all employees tests**
 
 ```bash
-cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest practitioners --no-coverage 2>&1 | tail -20
+cd /Users/tariq/Documents/my_programs/CareKit/backend && npx jest employees --no-coverage 2>&1 | tail -20
 ```
 
-Expected: all suites pass, 0 failures in practitioners.
+Expected: all suites pass, 0 failures in employees.
 
 - [ ] **Step 2: Verify old file is gone**
 
 ```bash
-ls backend/src/modules/practitioners/tests/
+ls backend/src/modules/employees/tests/
 ```
 
 Expected: 6 files listed, old monolithic spec NOT present.

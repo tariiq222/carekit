@@ -29,7 +29,7 @@ export async function updateClinicSettings(
 
 /* ─── Booking Flow Order (legacy clinic/ endpoints) ─── */
 
-export type BookingFlowOrder = "service_first" | "practitioner_first" | "both"
+export type BookingFlowOrder = "service_first" | "employee_first" | "both"
 
 export async function fetchBookingFlowOrder(): Promise<BookingFlowOrder> {
   const res = await api.get<{ bookingFlowOrder: BookingFlowOrder }>("/clinic/settings/booking-flow")

@@ -22,12 +22,12 @@ import {
   updateIntakeForm,
   deleteIntakeForm,
   setIntakeFields,
-  fetchServicePractitioners,
+  fetchServiceEmployees,
   setServiceBranches,
   clearServiceBranches,
 } from "@/lib/api/services"
-import { assignService } from "@/lib/api/practitioners"
-import type { AssignServicePayload } from "@/lib/types/practitioner"
+import { assignService } from "@/lib/api/employees"
+import type { AssignServicePayload } from "@/lib/types/employee"
 import type {
   ServiceListQuery,
   SetServiceBranchesPayload,
@@ -251,27 +251,27 @@ export function useIntakeFormMutations(serviceId: string) {
   return { createMut, updateMut, deleteMut, setFieldsMut }
 }
 
-/* ─── Service Practitioners Hook ─── */
+/* ─── Service Employees Hook ─── */
 
-export function useServicePractitioners(serviceId: string) {
+export function useServiceEmployees(serviceId: string) {
   return useQuery({
-    queryKey: queryKeys.services.practitioners(serviceId),
-    queryFn: () => fetchServicePractitioners(serviceId),
+    queryKey: queryKeys.services.employees(serviceId),
+    queryFn: () => fetchServiceEmployees(serviceId),
     enabled: !!serviceId,
     staleTime: 5 * 60 * 1000,
   })
 }
 
-/* ─── Assign Practitioners to Service ─── */
+/* ─── Assign Employees to Service ─── */
 
-export function useAssignPractitionersToService(serviceId: string) {
+export function useAssignEmployeesToService(serviceId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (practitionerIds: string[]) =>
+    mutationFn: (employeeIds: string[]) =>
       Promise.all(
-        practitionerIds.map((practitionerId) =>
-          assignService(practitionerId, {
+        employeeIds.map((employeeId) =>
+          assignService(employeeId, {
             serviceId,
             availableTypes: ["in_person", "online"],
             isActive: true,
@@ -280,7 +280,7 @@ export function useAssignPractitionersToService(serviceId: string) {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.services.practitioners(serviceId),
+        queryKey: queryKeys.services.employees(serviceId),
       })
     },
   })

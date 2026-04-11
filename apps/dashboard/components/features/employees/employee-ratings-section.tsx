@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { fetchPractitionerRatings } from "@/lib/api/practitioners"
+import { fetchEmployeeRatings } from "@/lib/api/employees"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
 import { format } from "date-fns"
@@ -19,15 +19,15 @@ import { ar } from "date-fns/locale"
 /* ─── Props ─── */
 
 interface Props {
-  practitionerId: string
+  employeeId: string
   totalRatings?: number
   averageRating?: number
 }
 
 /* ─── Component ─── */
 
-export function PractitionerRatingsSection({
-  practitionerId,
+export function EmployeeRatingsSection({
+  employeeId,
   totalRatings = 0,
   averageRating,
 }: Props) {
@@ -36,9 +36,9 @@ export function PractitionerRatingsSection({
   const [page, setPage] = useState(1)
 
   const { data, isLoading } = useQuery({
-    queryKey: [...queryKeys.practitioners.ratings(practitionerId), page],
-    queryFn: () => fetchPractitionerRatings(practitionerId, { page, perPage: 5 }),
-    enabled: !!practitionerId,
+    queryKey: [...queryKeys.employees.ratings(employeeId), page],
+    queryFn: () => fetchEmployeeRatings(employeeId, { page, perPage: 5 }),
+    enabled: !!employeeId,
   })
 
   const ratings = data?.items ?? []
@@ -134,8 +134,8 @@ export function PractitionerRatingsSection({
                       <HugeiconsIcon icon={UserIcon} size={14} className="text-primary" />
                     </div>
                     <span className="text-sm font-medium text-foreground">
-                      {r.patient
-                        ? `${r.patient.firstName} ${r.patient.lastName}`
+                      {r.client
+                        ? `${r.client.firstName} ${r.client.lastName}`
                         : t("ratings.anonymous")}
                     </span>
                   </div>

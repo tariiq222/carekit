@@ -13,12 +13,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn, formatName, getInitials, getAvatarGradientStyle } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
-import type { Practitioner } from "@/lib/types/practitioner"
+import type { Employee } from "@/lib/types/employee"
 
-interface PractitionerCardProps {
-  practitioner: Practitioner
-  onView: (p: Practitioner) => void
-  onEdit: (p: Practitioner) => void
+interface EmployeeCardProps {
+  employee: Employee
+  onView: (p: Employee) => void
+  onEdit: (p: Employee) => void
 }
 
 
@@ -46,11 +46,11 @@ function _StarRating({ rating }: { rating: number }) {
   )
 }
 
-export function PractitionerCard({
-  practitioner: p,
+export function EmployeeCard({
+  employee: p,
   onView,
   onEdit,
-}: PractitionerCardProps) {
+}: EmployeeCardProps) {
   const { locale, t } = useLocale()
   const name = formatName(p.user.firstName, p.user.lastName)
   const initials = getInitials(p.user.firstName, p.user.lastName)
@@ -96,8 +96,8 @@ export function PractitionerCard({
             p.isActive ? "bg-success" : "bg-muted-foreground"
           )} />
           {p.isActive
-            ? t("practitioners.card.active")
-            : t("practitioners.card.inactive")}
+            ? t("employees.card.active")
+            : t("employees.card.inactive")}
         </Badge>
       </div>
 
@@ -117,7 +117,7 @@ export function PractitionerCard({
 
         {/* Bookings */}
         <div className="flex items-center gap-1.5 flex-1 justify-end">
-          <span className="text-xs text-muted-foreground">{t("practitioners.card.monthBookings")}</span>
+          <span className="text-xs text-muted-foreground">{t("employees.card.monthBookings")}</span>
           <span className="text-sm font-semibold tabular-nums text-foreground">{bookingsCount}</span>
         </div>
       </div>
@@ -131,13 +131,13 @@ export function PractitionerCard({
           onClick={() => onView(p)}
         >
           <HugeiconsIcon icon={ViewIcon} size={14} />
-          {t("practitioners.card.viewProfile")}
+          {t("employees.card.viewProfile")}
         </Button>
         <Button
           variant="outline"
           size="icon-sm"
           className="rounded-[10px] size-8"
-          title={t("practitioners.detail.edit")}
+          title={t("employees.detail.edit")}
           onClick={() => onEdit(p)}
         >
           <HugeiconsIcon icon={PencilEdit01Icon} size={14} />

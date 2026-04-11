@@ -1,6 +1,6 @@
-export interface PractitionerAvailability {
+export interface EmployeeAvailability {
   id: string
-  practitionerId: string
+  employeeId: string
   dayOfWeek: number
   startTime: string
   endTime: string
@@ -23,11 +23,11 @@ export interface SetAvailabilityPayload {
 }
 
 export interface GetAvailabilityResponse {
-  schedule: PractitionerAvailability[]
+  schedule: EmployeeAvailability[]
 }
 
 export interface SetAvailabilityResponse {
   success: boolean
-  data: { schedule: PractitionerAvailability[] }
+  data: { schedule: EmployeeAvailability[] }
   message: string
 }

@@ -110,7 +110,7 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
   const [lateRefund, setLateRefund] = useState(settings.lateCancelRefundType)
   const [latePercent, setLatePercent] = useState(String(settings.lateCancelRefundPercent))
   const [adminDirect, setAdminDirect] = useState(settings.adminCanDirectCancel)
-  const [patientPending, setPatientPending] = useState(settings.patientCanCancelPending)
+  const [clientPending, setClientPending] = useState(settings.clientCanCancelPending)
   const [reviewTimeout, setReviewTimeout] = useState(String(settings.cancellationReviewTimeoutHours))
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
     setLateRefund(settings.lateCancelRefundType)
     setLatePercent(String(settings.lateCancelRefundPercent))
     setAdminDirect(settings.adminCanDirectCancel)
-    setPatientPending(settings.patientCanCancelPending)
+    setClientPending(settings.clientCanCancelPending)
     setReviewTimeout(String(settings.cancellationReviewTimeoutHours))
   }, [settings])
 
@@ -127,7 +127,7 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
     lateCancelRefundType: lateRefund,
     lateCancelRefundPercent: Number(latePercent) || 0,
     adminCanDirectCancel: adminDirect,
-    patientCanCancelPending: patientPending,
+    clientCanCancelPending: clientPending,
     cancellationReviewTimeoutHours: Number(reviewTimeout) || 48,
   }
   const saved = {
@@ -135,7 +135,7 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
     lateCancelRefundType: settings.lateCancelRefundType,
     lateCancelRefundPercent: settings.lateCancelRefundPercent,
     adminCanDirectCancel: settings.adminCanDirectCancel,
-    patientCanCancelPending: settings.patientCanCancelPending,
+    clientCanCancelPending: settings.clientCanCancelPending,
     cancellationReviewTimeoutHours: settings.cancellationReviewTimeoutHours,
   }
   const { isDirty, scheduleSave, saveNow, saveNowBtn, dataRef } = useAutoSave(data, saved, onSave)
@@ -174,8 +174,8 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
             onChange={(v) => { setAdminDirect(v); saveNow({ ...dataRef.current, adminCanDirectCancel: v }) }} />
         </CardContent></Card>
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
-          <SwitchRow label={t("settings.patientCancelPending")} desc={t("settings.patientCancelPendingDesc")} checked={patientPending}
-            onChange={(v) => { setPatientPending(v); saveNow({ ...dataRef.current, patientCanCancelPending: v }) }} />
+          <SwitchRow label={t("settings.clientCancelPending")} desc={t("settings.clientCancelPendingDesc")} checked={clientPending}
+            onChange={(v) => { setClientPending(v); saveNow({ ...dataRef.current, clientCanCancelPending: v }) }} />
         </CardContent></Card>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -198,23 +198,23 @@ export function AdvancedCancellationPanel({ settings, onSave, isPending, t }: {
 export function ReschedulingPanel({ settings, onSave, isPending, t }: {
   settings: BookingSettings; onSave: (d: Record<string, unknown>) => void; isPending: boolean; t: (k: string) => string
 }) {
-  const [canReschedule, setCanReschedule] = useState(settings.patientCanReschedule)
+  const [canReschedule, setCanReschedule] = useState(settings.clientCanReschedule)
   const [beforeHours, setBeforeHours] = useState(String(settings.rescheduleBeforeHours))
   const [maxCount, setMaxCount] = useState(String(settings.maxReschedulesPerBooking))
 
   useEffect(() => {
-    setCanReschedule(settings.patientCanReschedule)
+    setCanReschedule(settings.clientCanReschedule)
     setBeforeHours(String(settings.rescheduleBeforeHours))
     setMaxCount(String(settings.maxReschedulesPerBooking))
   }, [settings])
 
   const data = {
-    patientCanReschedule: canReschedule,
+    clientCanReschedule: canReschedule,
     rescheduleBeforeHours: Number(beforeHours) || 12,
     maxReschedulesPerBooking: Number(maxCount) || 2,
   }
   const saved = {
-    patientCanReschedule: settings.patientCanReschedule,
+    clientCanReschedule: settings.clientCanReschedule,
     rescheduleBeforeHours: settings.rescheduleBeforeHours,
     maxReschedulesPerBooking: settings.maxReschedulesPerBooking,
   }
@@ -224,8 +224,8 @@ export function ReschedulingPanel({ settings, onSave, isPending, t }: {
     <div className="flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3">
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
-          <SwitchRow label={t("settings.patientCanReschedule")} desc={t("settings.patientCanRescheduleDesc")} checked={canReschedule}
-            onChange={(v) => { setCanReschedule(v); saveNow({ ...dataRef.current, patientCanReschedule: v }) }} />
+          <SwitchRow label={t("settings.clientCanReschedule")} desc={t("settings.clientCanRescheduleDesc")} checked={canReschedule}
+            onChange={(v) => { setCanReschedule(v); saveNow({ ...dataRef.current, clientCanReschedule: v }) }} />
         </CardContent></Card>
         <Card className="shadow-sm bg-surface"><CardContent className="pt-2 pb-2">
           <NumRow label={t("settings.rescheduleBeforeHours")} desc={t("settings.rescheduleBeforeHoursDesc")} value={beforeHours}

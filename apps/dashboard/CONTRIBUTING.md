@@ -86,11 +86,11 @@ app/  →  components/  →  hooks/  →  lib/
 
 ```ts
 // ❌ cross-feature import
-import { PractitionerCard } from "@/components/features/practitioners/practitioner-card"
+import { EmployeeCard } from "@/components/features/employees/employee-card"
 // داخل ملف في features/bookings/
 
 // ❌ lib تستورد من hooks
-import { usePatients } from "@/hooks/use-patients"
+import { useClients } from "@/hooks/use-clients"
 // داخل ملف في lib/
 
 // ❌ hooks تستورد UI
@@ -172,7 +172,7 @@ import { Button } from "@/components/ui/button"
 
 ```
 feat(bookings): add cancellation confirmation dialog
-fix(practitioners): correct availability overlap check
+fix(employees): correct availability overlap check
 refactor(hooks): move booking slots hook to feature dir
 chore(deps): upgrade tanstack-query to v5.95
 docs(arch): update hook ownership rules

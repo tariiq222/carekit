@@ -14,19 +14,19 @@
 
 | Agent | Task(s) | Files owned |
 |-------|---------|-------------|
-| **Agent 1** | Tasks 1–2 | patients, practitioners, users |
+| **Agent 1** | Tasks 1–2 | clients, employees, users |
 | **Agent 2** | Tasks 3–5 | invoices, payments, bookings/page.tsx |
 | **Agent 3** | Tasks 6–9 | gift-cards, coupons, branches, intake-forms |
 | **Lead** | Task 10 | review + typecheck |
 
 ---
 
-## Task 1: Patients — fix `hasFilters` to include search
+## Task 1: Clients — fix `hasFilters` to include search
 
 **Files:**
-- Modify: `dashboard/components/features/patients/patient-list-page.tsx:53`
+- Modify: `dashboard/components/features/clients/client-list-page.tsx:53`
 
-**Context:** Patients already has `FilterBar` with `search` prop (line 156). But `hasFilters` on line 53 is `isActive !== undefined` — it does NOT include `search.length > 0`. This means the Reset button won't show when only a search term is active.
+**Context:** Clients already has `FilterBar` with `search` prop (line 156). But `hasFilters` on line 53 is `isActive !== undefined` — it does NOT include `search.length > 0`. This means the Reset button won't show when only a search term is active.
 
 - [ ] **Step 1: Fix `hasFilters` on line 53**
 
@@ -57,8 +57,8 @@ Confirm `<PageHeader>` on line 84 has no `search` prop — it already doesn't. N
 - [ ] **Step 4: Commit**
 
 ```bash
-git add dashboard/components/features/patients/patient-list-page.tsx
-git commit -m "fix(patients): include search in hasFilters + fix onReset"
+git add dashboard/components/features/clients/client-list-page.tsx
+git commit -m "fix(clients): include search in hasFilters + fix onReset"
 ```
 
 ---
@@ -759,8 +759,8 @@ git commit -m "refactor(page-header): remove unused search prop"
 - [ ] **Step 5: Final verification checklist**
 
 Confirm for each page:
-- [ ] Patients: search in FilterBar, hasFilters includes search
-- [ ] Practitioners: search in FilterBar, hasFilters includes search
+- [ ] Clients: search in FilterBar, hasFilters includes search
+- [ ] Employees: search in FilterBar, hasFilters includes search
 - [ ] Users: search in FilterBar (users tab only), no search in PageHeader
 - [ ] Invoices: search in FilterBar, no search in PageHeader
 - [ ] Payments: search in FilterBar, no search in PageHeader

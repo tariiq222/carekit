@@ -38,7 +38,7 @@ describe("StatCard render performance", () => {
       const duration = measureRender(() => {
         render(
           React.createElement(StatCard, {
-            title: "Total Patients",
+            title: "Total Clients",
             value: "1,248",
           }),
         )
@@ -97,7 +97,7 @@ describe("EmptyState render performance", () => {
       const duration = measureRender(() => {
         render(
           React.createElement(EmptyState, {
-            title: "No patients yet",
+            title: "No clients yet",
           }),
         )
         cleanup()
@@ -135,8 +135,8 @@ describe("PageHeader render performance", () => {
       const duration = measureRender(() => {
         render(
           React.createElement(PageHeader, {
-            title: "Patients",
-            description: "Manage your clinic's patients",
+            title: "Clients",
+            description: "Manage your clinic's clients",
           }),
         )
         cleanup()

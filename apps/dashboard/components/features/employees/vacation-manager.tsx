@@ -32,9 +32,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
-  usePractitionerVacations,
+  useEmployeeVacations,
   useVacationMutations,
-} from "@/hooks/use-practitioners"
+} from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 
 /* ─── Types ─── */
@@ -48,19 +48,19 @@ type VacationFormData = {
 /* ─── Props ─── */
 
 interface VacationManagerProps {
-  practitionerId: string
+  employeeId: string
 }
 
 /* ─── Component ─── */
 
-export function VacationManager({ practitionerId }: VacationManagerProps) {
+export function VacationManager({ employeeId }: VacationManagerProps) {
   const { t } = useLocale()
   const [addOpen, setAddOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const { data: vacations, isLoading } =
-    usePractitionerVacations(practitionerId)
-  const { createMut, deleteMut } = useVacationMutations(practitionerId)
+    useEmployeeVacations(employeeId)
+  const { createMut, deleteMut } = useVacationMutations(employeeId)
 
   const vacationSchema = useMemo(
     () =>

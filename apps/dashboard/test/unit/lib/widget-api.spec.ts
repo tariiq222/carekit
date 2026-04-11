@@ -17,9 +17,9 @@ vi.mock("@/lib/api", () => ({
 
 import {
   fetchWidgetBranding,
-  fetchWidgetPractitioners,
-  fetchWidgetPractitioner,
-  fetchWidgetPractitionerServices,
+  fetchWidgetEmployees,
+  fetchWidgetEmployee,
+  fetchWidgetEmployeeServices,
   fetchWidgetServiceTypes,
   fetchWidgetSlots,
   fetchWidgetServices,
@@ -40,34 +40,34 @@ describe("widget api", () => {
     expect(getMock).toHaveBeenCalledWith("/whitelabel/public")
   })
 
-  it("fetchWidgetPractitioners calls /practitioners", async () => {
+  it("fetchWidgetEmployees calls /employees", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: {} })
-    await fetchWidgetPractitioners()
-    expect(getMock).toHaveBeenCalledWith("/practitioners", expect.objectContaining({ perPage: 20 }))
+    await fetchWidgetEmployees()
+    expect(getMock).toHaveBeenCalledWith("/employees", expect.objectContaining({ perPage: 20 }))
   })
 
-  it("fetchWidgetPractitioner calls /practitioners/:id", async () => {
+  it("fetchWidgetEmployee calls /employees/:id", async () => {
     getMock.mockResolvedValueOnce({ id: "p-1" })
-    await fetchWidgetPractitioner("p-1")
-    expect(getMock).toHaveBeenCalledWith("/practitioners/p-1")
+    await fetchWidgetEmployee("p-1")
+    expect(getMock).toHaveBeenCalledWith("/employees/p-1")
   })
 
-  it("fetchWidgetPractitionerServices calls /practitioners/:id/services", async () => {
+  it("fetchWidgetEmployeeServices calls /employees/:id/services", async () => {
     getMock.mockResolvedValueOnce([])
-    await fetchWidgetPractitionerServices("p-1")
-    expect(getMock).toHaveBeenCalledWith("/practitioners/p-1/services")
+    await fetchWidgetEmployeeServices("p-1")
+    expect(getMock).toHaveBeenCalledWith("/employees/p-1/services")
   })
 
-  it("fetchWidgetServiceTypes calls /practitioners/:pId/services/:sId/types", async () => {
+  it("fetchWidgetServiceTypes calls /employees/:pId/services/:sId/types", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchWidgetServiceTypes("p-1", "svc-1")
-    expect(getMock).toHaveBeenCalledWith("/practitioners/p-1/services/svc-1/types")
+    expect(getMock).toHaveBeenCalledWith("/employees/p-1/services/svc-1/types")
   })
 
-  it("fetchWidgetSlots calls /practitioners/:id/slots", async () => {
+  it("fetchWidgetSlots calls /employees/:id/slots", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchWidgetSlots("p-1", "2026-04-01")
-    expect(getMock).toHaveBeenCalledWith("/practitioners/p-1/slots", expect.objectContaining({ date: "2026-04-01" }))
+    expect(getMock).toHaveBeenCalledWith("/employees/p-1/slots", expect.objectContaining({ date: "2026-04-01" }))
   })
 
   it("fetchWidgetServices calls /services", async () => {

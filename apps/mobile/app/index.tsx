@@ -54,10 +54,10 @@ export default function IndexScreen() {
     }
 
     const role = getPrimaryRole(user);
-    if (role === 'practitioner') {
-      router.replace('/(practitioner)/(tabs)/today');
+    if (role === 'employee') {
+      router.replace('/(employee)/(tabs)/today');
     } else {
-      router.replace('/(patient)/(tabs)/home');
+      router.replace('/(client)/(tabs)/home');
     }
   }, [hydrating, token, user, router]);
 

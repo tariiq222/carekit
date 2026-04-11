@@ -82,7 +82,7 @@ interface CareKitTheme {
   sessionDuration: number;       // Default appointment duration in minutes
   reminderBeforeMinutes: number; // e.g., 60 = remind 1 hour before
 
-  // Bank transfer info (displayed to patients)
+  // Bank transfer info (displayed to clients)
   bankAccountName: string;
   bankAccountNumber: string;
   bankAccountIban: string;

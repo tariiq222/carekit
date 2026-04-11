@@ -16,13 +16,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import {
-  usePractitionerAvailability,
-  usePractitionerBreaks,
+  useEmployeeAvailability,
+  useEmployeeBreaks,
   useSetAvailability,
   useSetBreaks,
-} from "@/hooks/use-practitioners"
+} from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
-import type { AvailabilitySlot } from "@/lib/types/practitioner"
+import type { AvailabilitySlot } from "@/lib/types/employee"
 
 import {
   DAY_NAMES,
@@ -45,7 +45,7 @@ const DEFAULT_SCHEDULE: AvailabilitySlot[] = DAY_NAMES.map((_, i) => ({
 /* ─── Props ─── */
 
 interface ScheduleEditorProps {
-  practitionerId: string
+  employeeId: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -53,13 +53,13 @@ interface ScheduleEditorProps {
 /* ─── Component ─── */
 
 export function ScheduleEditor({
-  practitionerId,
+  employeeId,
   open,
   onOpenChange,
 }: ScheduleEditorProps) {
   const { t } = useLocale()
-  const { data: slots } = usePractitionerAvailability(practitionerId)
-  const { data: serverBreaks } = usePractitionerBreaks(practitionerId)
+  const { data: slots } = useEmployeeAvailability(employeeId)
+  const { data: serverBreaks } = useEmployeeBreaks(employeeId)
   const setAvailability = useSetAvailability()
   const setBreaksMutation = useSetBreaks()
 
@@ -141,11 +141,11 @@ export function ScheduleEditor({
       const activeSlots = data.schedule.filter((s) => s.isActive)
       await Promise.all([
         setAvailability.mutateAsync({
-          id: practitionerId,
+          id: employeeId,
           schedule: activeSlots,
         }),
         setBreaksMutation.mutateAsync({
-          id: practitionerId,
+          id: employeeId,
           breaks: breaks.map(({ dayOfWeek, startTime, endTime }) => ({
             dayOfWeek,
             startTime,

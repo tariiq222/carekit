@@ -1,37 +1,37 @@
 import { apiRequest } from '../client.js'
 import { buildQueryString } from '../types/api.js'
 import type {
-  PractitionerListItem,
-  PractitionerListQuery,
-  PractitionerListResponse,
-  PractitionerStats,
-  CreatePractitionerPayload,
-  UpdatePractitionerPayload,
-  PractitionerBreak,
+  EmployeeListItem,
+  EmployeeListQuery,
+  EmployeeListResponse,
+  EmployeeStats,
+  CreateEmployeePayload,
+  UpdateEmployeePayload,
+  EmployeeBreak,
   SetBreaksPayload,
-  PractitionerVacation,
+  EmployeeVacation,
   CreateVacationPayload,
-  PractitionerService,
-  AssignPractitionerServicePayload,
-  UpdatePractitionerServicePayload,
-} from '../types/practitioner.js'
+  EmployeeService,
+  AssignEmployeeServicePayload,
+  UpdateEmployeeServicePayload,
+} from '../types/employee.js'
 
 export async function list(
-  query: PractitionerListQuery = {},
-): Promise<PractitionerListResponse> {
-  return apiRequest<PractitionerListResponse>(
-    `/practitioners${buildQueryString(query as Record<string, unknown>)}`,
+  query: EmployeeListQuery = {},
+): Promise<EmployeeListResponse> {
+  return apiRequest<EmployeeListResponse>(
+    `/employees${buildQueryString(query as Record<string, unknown>)}`,
   )
 }
 
-export async function get(id: string): Promise<PractitionerListItem> {
-  return apiRequest<PractitionerListItem>(`/practitioners/${id}`)
+export async function get(id: string): Promise<EmployeeListItem> {
+  return apiRequest<EmployeeListItem>(`/employees/${id}`)
 }
 
 export async function create(
-  payload: CreatePractitionerPayload,
-): Promise<PractitionerListItem> {
-  return apiRequest<PractitionerListItem>('/practitioners', {
+  payload: CreateEmployeePayload,
+): Promise<EmployeeListItem> {
+  return apiRequest<EmployeeListItem>('/employees', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
@@ -39,29 +39,29 @@ export async function create(
 
 export async function update(
   id: string,
-  payload: UpdatePractitionerPayload,
-): Promise<PractitionerListItem> {
-  return apiRequest<PractitionerListItem>(`/practitioners/${id}`, {
+  payload: UpdateEmployeePayload,
+): Promise<EmployeeListItem> {
+  return apiRequest<EmployeeListItem>(`/employees/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
 }
 
 export async function remove(id: string): Promise<void> {
-  return apiRequest<void>(`/practitioners/${id}`, { method: 'DELETE' })
+  return apiRequest<void>(`/employees/${id}`, { method: 'DELETE' })
 }
 
 // ─── Breaks ────────────────────────────────────────────────────────────────
 
-export async function getBreaks(practitionerId: string): Promise<PractitionerBreak[]> {
-  return apiRequest<PractitionerBreak[]>(`/practitioners/${practitionerId}/breaks`)
+export async function getBreaks(employeeId: string): Promise<EmployeeBreak[]> {
+  return apiRequest<EmployeeBreak[]>(`/employees/${employeeId}/breaks`)
 }
 
 export async function setBreaks(
-  practitionerId: string,
+  employeeId: string,
   payload: SetBreaksPayload,
-): Promise<PractitionerBreak[]> {
-  return apiRequest<PractitionerBreak[]>(`/practitioners/${practitionerId}/breaks`, {
+): Promise<EmployeeBreak[]> {
+  return apiRequest<EmployeeBreak[]>(`/employees/${employeeId}/breaks`, {
     method: 'PUT',
     body: JSON.stringify(payload),
   })
@@ -69,52 +69,52 @@ export async function setBreaks(
 
 // ─── Vacations ─────────────────────────────────────────────────────────────
 
-export async function getVacations(practitionerId: string): Promise<PractitionerVacation[]> {
-  return apiRequest<PractitionerVacation[]>(`/practitioners/${practitionerId}/vacations`)
+export async function getVacations(employeeId: string): Promise<EmployeeVacation[]> {
+  return apiRequest<EmployeeVacation[]>(`/employees/${employeeId}/vacations`)
 }
 
 export async function createVacation(
-  practitionerId: string,
+  employeeId: string,
   payload: CreateVacationPayload,
-): Promise<PractitionerVacation> {
-  return apiRequest<PractitionerVacation>(`/practitioners/${practitionerId}/vacations`, {
+): Promise<EmployeeVacation> {
+  return apiRequest<EmployeeVacation>(`/employees/${employeeId}/vacations`, {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 }
 
 export async function deleteVacation(
-  practitionerId: string,
+  employeeId: string,
   vacationId: string,
 ): Promise<void> {
-  return apiRequest<void>(`/practitioners/${practitionerId}/vacations/${vacationId}`, {
+  return apiRequest<void>(`/employees/${employeeId}/vacations/${vacationId}`, {
     method: 'DELETE',
   })
 }
 
 // ─── Services ──────────────────────────────────────────────────────────────
 
-export async function listServices(practitionerId: string): Promise<PractitionerService[]> {
-  return apiRequest<PractitionerService[]>(`/practitioners/${practitionerId}/services`)
+export async function listServices(employeeId: string): Promise<EmployeeService[]> {
+  return apiRequest<EmployeeService[]>(`/employees/${employeeId}/services`)
 }
 
 export async function assignService(
-  practitionerId: string,
-  payload: AssignPractitionerServicePayload,
-): Promise<PractitionerService> {
-  return apiRequest<PractitionerService>(`/practitioners/${practitionerId}/services`, {
+  employeeId: string,
+  payload: AssignEmployeeServicePayload,
+): Promise<EmployeeService> {
+  return apiRequest<EmployeeService>(`/employees/${employeeId}/services`, {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 }
 
 export async function updateService(
-  practitionerId: string,
+  employeeId: string,
   serviceId: string,
-  payload: UpdatePractitionerServicePayload,
-): Promise<PractitionerService> {
-  return apiRequest<PractitionerService>(
-    `/practitioners/${practitionerId}/services/${serviceId}`,
+  payload: UpdateEmployeeServicePayload,
+): Promise<EmployeeService> {
+  return apiRequest<EmployeeService>(
+    `/employees/${employeeId}/services/${serviceId}`,
     {
       method: 'PATCH',
       body: JSON.stringify(payload),
@@ -123,17 +123,17 @@ export async function updateService(
 }
 
 export async function removeService(
-  practitionerId: string,
+  employeeId: string,
   serviceId: string,
 ): Promise<void> {
-  return apiRequest<void>(`/practitioners/${practitionerId}/services/${serviceId}`, {
+  return apiRequest<void>(`/employees/${employeeId}/services/${serviceId}`, {
     method: 'DELETE',
   })
 }
 
 // ─── Stats ─────────────────────────────────────────────────────────────────
 
-export async function stats(): Promise<PractitionerStats> {
+export async function stats(): Promise<EmployeeStats> {
   const [activeRes, allRes] = await Promise.all([
     list({ isActive: true, perPage: 1 }),
     list({ perPage: 1 }),

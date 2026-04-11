@@ -44,7 +44,7 @@ export default function CalendarScreen() {
       ]}
     >
       <ThemedText variant="displaySm" style={styles.title}>
-        {t('practitioner.calendar')}
+        {t('employee.calendar')}
       </ThemedText>
 
       <ThemedCard style={styles.calCard}>
@@ -93,7 +93,7 @@ export default function CalendarScreen() {
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <ThemedText variant="body" style={{ fontWeight: '500' }}>
-                  {item.patient ? `${item.patient.firstName} ${item.patient.lastName}` : t('doctor.patientRecord')}
+                  {item.client ? `${item.client.firstName} ${item.client.lastName}` : t('doctor.clientRecord')}
                 </ThemedText>
               </View>
               <StatusPill status={item.status} label={t('appointments.confirmed')} />
@@ -108,7 +108,7 @@ export default function CalendarScreen() {
       />
 
       <View style={styles.ctaWrap}>
-        <ThemedButton onPress={() => router.push('/(practitioner)/availability')} variant="outline" size="md" full>
+        <ThemedButton onPress={() => router.push('/(employee)/availability')} variant="outline" size="md" full>
           {t('doctor.manageAvailability')}
         </ThemedButton>
       </View>

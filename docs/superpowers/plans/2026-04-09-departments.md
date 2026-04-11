@@ -155,7 +155,7 @@ In `backend/prisma/seed.data.ts`, add `'departments'` to the `MODULES` array (af
 export const MODULES = [
   'users',
   'roles',
-  'practitioners',
+  'employees',
   'bookings',
   'services',
   'payments',
@@ -164,7 +164,7 @@ export const MODULES = [
   'notifications',
   'chatbot',
   'whitelabel',
-  'patients',
+  'clients',
   'ratings',
   'coupons',
   'branches',
@@ -202,12 +202,12 @@ For `Accountant` (add after `notifications` line):
       departments: ['view'],
 ```
 
-For `Practitioner` (add after `practitioners` line):
+For `Employee` (add after `employees` line):
 ```typescript
       departments: ['view'],
 ```
 
-For `Patient` (add after `services` line):
+For `Client` (add after `services` line):
 ```typescript
       departments: ['view'],
 ```

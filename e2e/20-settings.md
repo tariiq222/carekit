@@ -91,6 +91,6 @@
 |---|-------|-------|-----------------|
 | ET-P1 | معاينة عربي | POST /email-templates/:slug/preview + `lang: ar` | 200 + HTML عربي |
 | ET-P2 | معاينة إنجليزي | `lang: en` | 200 + HTML إنجليزي |
-| ET-P3 | مع context ديناميكي | `context: { patientName: "أحمد" }` | 200 + المتغيرات محلولة |
+| ET-P3 | مع context ديناميكي | `context: { clientName: "أحمد" }` | 200 + المتغيرات محلولة |
 | ET-P4 | lang غير صالح | `lang: "fr"` | 400 VALIDATION_ERROR |
 | ET-P5 | slug وهمي | slug غير موجود | 404 NOT_FOUND |

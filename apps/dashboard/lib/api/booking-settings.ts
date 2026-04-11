@@ -29,8 +29,8 @@ export interface BookingSettings {
   lateCancelRefundType: string
   lateCancelRefundPercent: number
   adminCanDirectCancel: boolean
-  patientCanCancelPending: boolean
-  patientCanReschedule: boolean
+  clientCanCancelPending: boolean
+  clientCanReschedule: boolean
   rescheduleBeforeHours: number
   maxReschedulesPerBooking: number
   allowWalkIn: boolean
@@ -59,7 +59,7 @@ export interface BookingSettings {
   adminCanBookOutsideHours: boolean
   // Widget settings
   widgetShowPrice: boolean
-  widgetAnyPractitioner: boolean
+  widgetAnyEmployee: boolean
   widgetRedirectUrl: string | null
   createdAt: string
   updatedAt: string

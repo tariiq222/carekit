@@ -1,8 +1,8 @@
 /** All system modules for RBAC permissions */
 export const MODULES = {
   USERS: 'users',
-  PRACTITIONERS: 'practitioners',
-  PATIENTS: 'patients',
+  EMPLOYEES: 'employees',
+  CLIENTS: 'clients',
   BOOKINGS: 'bookings',
   SERVICES: 'services',
   PAYMENTS: 'payments',

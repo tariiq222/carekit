@@ -11,12 +11,12 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { usePractitionerServices } from "@/hooks/use-practitioners"
+import { useEmployeeServices } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 import { AssignServiceSheet } from "./assign-service-sheet"
-import { EditPractitionerServiceSheet } from "./edit-practitioner-service-sheet"
+import { EditEmployeeServiceSheet } from "./edit-employee-service-sheet"
 import { RemoveServiceDialog } from "./remove-service-dialog"
-import type { PractitionerService } from "@/lib/types/practitioner"
+import type { EmployeeService } from "@/lib/types/employee"
 
 /* ─── Constants ─── */
 
@@ -29,21 +29,21 @@ const TYPE_LABEL_MAP: Record<string, string> = {
 /* ─── Props ─── */
 
 interface Props {
-  practitionerId: string
+  employeeId: string
 }
 
 /* ─── Component ─── */
 
-export function PractitionerServicesSection({ practitionerId }: Props) {
+export function EmployeeServicesSection({ employeeId }: Props) {
   const { locale, t } = useLocale()
   const { data: services, isLoading } =
-    usePractitionerServices(practitionerId)
+    useEmployeeServices(employeeId)
 
   const [assignOpen, setAssignOpen] = useState(false)
   const [editTarget, setEditTarget] =
-    useState<PractitionerService | null>(null)
+    useState<EmployeeService | null>(null)
   const [removeTarget, setRemoveTarget] =
-    useState<PractitionerService | null>(null)
+    useState<EmployeeService | null>(null)
 
   if (isLoading) {
     return (
@@ -60,7 +60,7 @@ export function PractitionerServicesSection({ practitionerId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("practitioners.services.title")}
+          {t("employees.services.title")}
           {services && services.length > 0 && ` (${services.length})`}
         </h4>
         <Button
@@ -70,14 +70,14 @@ export function PractitionerServicesSection({ practitionerId }: Props) {
           onClick={() => setAssignOpen(true)}
         >
           <HugeiconsIcon icon={Add01Icon} size={14} />
-          {t("practitioners.services.assign")}
+          {t("employees.services.assign")}
         </Button>
       </div>
 
       {/* Empty State */}
       {(!services || services.length === 0) && (
         <p className="text-sm text-muted-foreground">
-          {t("practitioners.services.noServices")}
+          {t("employees.services.noServices")}
         </p>
       )}
 
@@ -95,19 +95,19 @@ export function PractitionerServicesSection({ practitionerId }: Props) {
 
       {/* Sheets & Dialogs */}
       <AssignServiceSheet
-        practitionerId={practitionerId}
+        employeeId={employeeId}
         open={assignOpen}
         onOpenChange={setAssignOpen}
       />
-      <EditPractitionerServiceSheet
-        practitionerId={practitionerId}
-        practitionerService={editTarget}
+      <EditEmployeeServiceSheet
+        employeeId={employeeId}
+        employeeService={editTarget}
         open={!!editTarget}
         onOpenChange={(o) => !o && setEditTarget(null)}
       />
       <RemoveServiceDialog
-        practitionerId={practitionerId}
-        practitionerService={removeTarget}
+        employeeId={employeeId}
+        employeeService={removeTarget}
         open={!!removeTarget}
         onOpenChange={(o) => !o && setRemoveTarget(null)}
       />
@@ -118,7 +118,7 @@ export function PractitionerServicesSection({ practitionerId }: Props) {
 /* ─── Service Row ─── */
 
 interface ServiceRowProps {
-  ps: PractitionerService
+  ps: EmployeeService
   locale: string
   t: (key: string) => string
   onEdit: () => void
@@ -127,8 +127,8 @@ interface ServiceRowProps {
 
 function ServiceRow({ ps, locale, t, onEdit, onRemove }: ServiceRowProps) {
   const name = locale === "ar" ? ps.service.nameAr : ps.service.nameEn
-  const sarUnit = t("practitioners.services.sar")
-  const minUnit = t("practitioners.services.minutes")
+  const sarUnit = t("employees.services.sar")
+  const minUnit = t("employees.services.minutes")
 
   /* Per-type badges */
   const typeBadges = buildTypeBadges(ps, t, sarUnit, minUnit)
@@ -175,7 +175,7 @@ function ServiceRow({ ps, locale, t, onEdit, onRemove }: ServiceRowProps) {
       {/* Buffer info (only if non-zero) */}
       {ps.bufferMinutes > 0 && (
         <div className="text-xs text-muted-foreground tabular-nums">
-          {t("practitioners.services.bufferMinutes")}: {ps.bufferMinutes} {minUnit}
+          {t("employees.services.bufferMinutes")}: {ps.bufferMinutes} {minUnit}
         </div>
       )}
 
@@ -212,7 +212,7 @@ interface TypeBadgeInfo {
 }
 
 function buildTypeBadges(
-  ps: PractitionerService,
+  ps: EmployeeService,
   t: (key: string) => string,
   sarUnit: string,
   minUnit: string,
@@ -223,13 +223,13 @@ function buildTypeBadges(
       .filter((st) => st.isActive)
       .map((st) => {
         const key = TYPE_LABEL_MAP[st.bookingType]
-        const typeLabel = key ? t(`practitioners.services.${key}`) : st.bookingType
+        const typeLabel = key ? t(`employees.services.${key}`) : st.bookingType
         const price = st.price != null
           ? (st.price / 100).toFixed(0)
-          : t("practitioners.services.defaultPrice")
+          : t("employees.services.defaultPrice")
         const duration = st.duration != null
           ? String(st.duration)
-          : t("practitioners.services.defaultPrice")
+          : t("employees.services.defaultPrice")
         return {
           type: st.bookingType,
           label: `${typeLabel}: ${price} ${sarUnit} | ${duration}${minUnit}`,
@@ -240,7 +240,7 @@ function buildTypeBadges(
   /* Fallback: legacy availableTypes + single price display */
   return ps.availableTypes.map((type) => {
     const key = TYPE_LABEL_MAP[type]
-    const typeLabel = key ? t(`practitioners.services.${key}`) : type
+    const typeLabel = key ? t(`employees.services.${key}`) : type
     const duration = ps.customDuration ?? ps.service.duration
     const priceVal =
       type === "clinic_visit" && ps.priceClinic != null
@@ -249,7 +249,7 @@ function buildTypeBadges(
           ? (ps.pricePhone / 100).toFixed(0)
           : type === "video_consultation" && ps.priceVideo != null
             ? (ps.priceVideo / 100).toFixed(0)
-            : t("practitioners.services.defaultPrice")
+            : t("employees.services.defaultPrice")
 
     return {
       type,

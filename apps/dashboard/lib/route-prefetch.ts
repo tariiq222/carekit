@@ -14,8 +14,8 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchBookings } from "@/lib/api/bookings"
-import { fetchPatients } from "@/lib/api/patients"
-import { fetchPractitioners } from "@/lib/api/practitioners"
+import { fetchClients } from "@/lib/api/clients"
+import { fetchEmployees } from "@/lib/api/employees"
 import { fetchPayments } from "@/lib/api/payments"
 import { fetchInvoices } from "@/lib/api/invoices"
 import { fetchServices } from "@/lib/api/services"
@@ -51,13 +51,13 @@ export const ROUTE_PREFETCH: Record<string, PrefetchEntry> = {
     queryKeys.bookings.list({ page: 1, perPage: 20 }),
     () => fetchBookings({ page: 1, perPage: 20 }),
   ),
-  "/patients": entry(
-    queryKeys.patients.list({ page: 1, perPage: 20 }),
-    () => fetchPatients({ page: 1, perPage: 20 }),
+  "/clients": entry(
+    queryKeys.clients.list({ page: 1, perPage: 20 }),
+    () => fetchClients({ page: 1, perPage: 20 }),
   ),
-  "/practitioners": entry(
-    queryKeys.practitioners.list({ page: 1, perPage: 20 }),
-    () => fetchPractitioners({ page: 1, perPage: 20 }),
+  "/employees": entry(
+    queryKeys.employees.list({ page: 1, perPage: 20 }),
+    () => fetchEmployees({ page: 1, perPage: 20 }),
   ),
   "/payments": entry(
     queryKeys.payments.list({ page: 1, perPage: 20 }),

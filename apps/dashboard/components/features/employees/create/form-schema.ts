@@ -2,7 +2,7 @@ import { z } from "zod"
 
 /* ─── Zod Schema ─── */
 
-export const createPractitionerSchema = z.object({
+export const createEmployeeSchema = z.object({
   title: z.string().optional(),
   nameEn: z.string().min(1, "Full name (EN) is required").max(255),
   nameAr: z.string().min(1, "الاسم الكامل مطلوب").max(255),
@@ -19,11 +19,11 @@ export const createPractitionerSchema = z.object({
   isActive: z.boolean(),
 })
 
-export type CreatePractitionerFormData = z.infer<typeof createPractitionerSchema>
+export type CreateEmployeeFormData = z.infer<typeof createEmployeeSchema>
 
 /* ─── Default Values ─── */
 
-export const createPractitionerDefaults: CreatePractitionerFormData = {
+export const createEmployeeDefaults: CreateEmployeeFormData = {
   title: "",
   nameEn: "",
   nameAr: "",

@@ -3,8 +3,8 @@ import type { ProblemReportStatus, ProblemReportType } from '../enums/rating';
 export interface Rating {
   id: string;
   bookingId: string;
-  patientId: string | null;
-  practitionerId: string;
+  clientId: string | null;
+  employeeId: string;
   stars: number;
   comment: string | null;
   createdAt: string;
@@ -13,7 +13,7 @@ export interface Rating {
 export interface ProblemReport {
   id: string;
   bookingId: string;
-  patientId: string | null;
+  clientId: string | null;
   type: ProblemReportType;
   description: string | null;
   status: ProblemReportStatus;

@@ -50,7 +50,7 @@
     "registerError": "Registration failed. Please try again",
     "otpError": "Invalid code. Please try again",
     "otpSent": "Verification code sent successfully",
-    "practitionerNote": "Practitioners and staff are registered from the admin dashboard"
+    "employeeNote": "Employees and staff are registered from the admin dashboard"
   },
   "tabs": {
     "home": "Home",
@@ -59,7 +59,7 @@
     "profile": "Profile",
     "today": "Today",
     "calendar": "Calendar",
-    "patients": "Patients",
+    "clients": "Clients",
     "assistant": "Assistant",
     "notifications": "Notifications"
   },
@@ -70,10 +70,10 @@
     "bookNow": "Book your first appointment",
     "specialties": "Specialties",
     "seeAll": "See All",
-    "featured": "Featured Practitioners",
+    "featured": "Featured Employees",
     "services": "Services",
     "bookAppointment": "Book Appointment",
-    "practitioners": "practitioners",
+    "employees": "employees",
     "inPerson": "In-Person",
     "online": "Online",
     "walkIn": "Walk-in",
@@ -114,10 +114,10 @@
     "noShow": "No Show",
     "expired": "Expired"
   },
-  "practitioner": {
+  "employee": {
     "today": "Today's Schedule",
     "calendar": "Calendar",
-    "patients": "Patients",
+    "clients": "Clients",
     "profile": "Profile",
     "about": "About",
     "qualifications": "Qualifications",
@@ -136,16 +136,16 @@
     "cancelledToday": "Cancelled",
     "noAppointmentsToday": "No appointments today",
     "startMeeting": "Start Meeting",
-    "callPatient": "Call Patient",
+    "callClient": "Call Client",
     "markCompleted": "Mark Completed",
     "startSession": "Start Session",
     "cancelBooking": "Cancel Booking",
     "cancelConfirm": "Are you sure you want to cancel this booking? This action cannot be undone.",
-    "patientRecord": "Patient Record",
+    "clientRecord": "Client Record",
     "visitHistory": "Visit History",
     "visits": "visits",
     "lastVisit": "Last visit",
-    "searchPatients": "Search by name...",
+    "searchClients": "Search by name...",
     "ratingsReviews": "Ratings & Reviews",
     "manageAvailability": "Manage Availability",
     "weeklySchedule": "Weekly Schedule",
@@ -153,8 +153,8 @@
     "addVacation": "Add Vacation",
     "available": "Available",
     "dayOff": "Day Off",
-    "noPatients": "No patients yet",
-    "patientNotFound": "Patient not found",
+    "noClients": "No clients yet",
+    "clientNotFound": "Client not found",
     "appVersion": "Version"
   },
   "profile": {
@@ -177,7 +177,7 @@
     "privacyComingSoon": "Privacy Policy will be available soon.",
     "termsComingSoon": "Terms of Service will be available soon."
   },
-  "patient": {
+  "client": {
     "home": "Home",
     "appointments": "My Appointments",
     "chat": "AI Chat",
@@ -193,7 +193,7 @@
     "inPerson": "Clinic Visit",
     "inPersonDesc": "In-person visit at the clinic",
     "online": "Online Consultation",
-    "onlineDesc": "Video or phone — practitioner will confirm",
+    "onlineDesc": "Video or phone — employee will confirm",
     "walkIn": "Walk-in",
     "step": "Step",
     "of": "of",

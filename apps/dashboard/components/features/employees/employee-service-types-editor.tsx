@@ -6,15 +6,15 @@ import { Add01Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import type { ServiceBookingType } from "@/lib/types/service"
-import type { PractitionerTypeConfigPayload } from "@/lib/types/practitioner"
-import { PractitionerTypeRow } from "./practitioner-type-row"
+import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"
+import { EmployeeTypeRow } from "./employee-type-row"
 
 /* ─── Props ─── */
 
-interface PractitionerServiceTypesEditorProps {
+interface EmployeeServiceTypesEditorProps {
   serviceBookingTypes: ServiceBookingType[]
-  value: PractitionerTypeConfigPayload[]
-  onChange: (types: PractitionerTypeConfigPayload[]) => void
+  value: EmployeeTypeConfigPayload[]
+  onChange: (types: EmployeeTypeConfigPayload[]) => void
   t: (key: string) => string
   locale: string
 }
@@ -22,32 +22,32 @@ interface PractitionerServiceTypesEditorProps {
 /* ─── Constants ─── */
 
 const ALL_BOOKING_TYPES = [
-  { value: "in_person", labelKey: "practitioners.services.inPerson" },
-  { value: "online", labelKey: "practitioners.services.online" },
+  { value: "in_person", labelKey: "employees.services.inPerson" },
+  { value: "online", labelKey: "employees.services.online" },
 ] as const
 
 /* ─── Component ─── */
 
-export function PractitionerServiceTypesEditor({
+export function EmployeeServiceTypesEditor({
   serviceBookingTypes,
   value,
   onChange,
   t,
   // locale,
-}: PractitionerServiceTypesEditorProps) {
+}: EmployeeServiceTypesEditorProps) {
   const serviceTypeMap = new Map<string, ServiceBookingType>(
     serviceBookingTypes.map((st) => [st.bookingType, st]),
   )
   const enabledTypeValues = new Set(value.map((v) => v.bookingType))
 
-  /* Types available in the service but not yet added to practitioner */
+  /* Types available in the service but not yet added to employee */
   const additionalTypes = ALL_BOOKING_TYPES.filter(
     (bt) => !enabledTypeValues.has(bt.value),
   )
 
   const updateType = (
     bookingType: string,
-    updates: Partial<PractitionerTypeConfigPayload>,
+    updates: Partial<EmployeeTypeConfigPayload>,
   ) => {
     onChange(
       value.map((v) =>
@@ -78,7 +78,7 @@ export function PractitionerServiceTypesEditor({
   return (
     <div className="flex flex-col gap-3">
       <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {t("practitioners.services.types")}
+        {t("employees.services.types")}
       </Label>
 
       {value.length === 0 && (
@@ -93,7 +93,7 @@ export function PractitionerServiceTypesEditor({
           (bt) => bt.value === typeConfig.bookingType,
         )
         return (
-          <PractitionerTypeRow
+          <EmployeeTypeRow
             key={typeConfig.bookingType}
             config={typeConfig}
             serviceDefault={serviceDef ?? null}

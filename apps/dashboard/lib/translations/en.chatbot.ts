@@ -19,7 +19,7 @@ export const enChatbot: Record<string, string> = {
   "chatbot.sessionEnded": "Session ended successfully",
   "chatbot.sessionEndError": "Failed to end session",
   "chatbot.sendError": "Failed to send message",
-  "chatbot.staffReplyPlaceholder": "Type a reply to the patient...",
+  "chatbot.staffReplyPlaceholder": "Type a reply to the client...",
   "chatbot.sending": "Sending...",
   "chatbot.send": "Send",
   "chatbot.ending": "Ending...",
@@ -59,8 +59,8 @@ export const enChatbot: Record<string, string> = {
   "activityLog.empty.description": "No activity has been recorded yet.",
 
   // ─── Tab Keys ───
-  "practitioners.tabs.list": "Practitioners",
-  "practitioners.tabs.ratings": "Ratings & Reviews",
+  "employees.tabs.list": "Employees",
+  "employees.tabs.ratings": "Ratings & Reviews",
   "bookings.tabs.list": "Bookings",
   "bookings.tabs.waitlist": "Waitlist",
   "invoices.tabs.list": "Invoices",
@@ -71,11 +71,11 @@ export const enChatbot: Record<string, string> = {
 
   // ─── Ratings ───
   "ratings.title": "Ratings & Reviews",
-  "ratings.description": "View patient ratings for practitioners",
-  "ratings.selectPractitioner": "Select Practitioner",
-  "ratings.choosePractitioner": "Choose a practitioner",
-  "ratings.selectToView": "Select a practitioner to view their ratings",
-  "ratings.empty": "No ratings for this practitioner yet",
+  "ratings.description": "View client ratings for employees",
+  "ratings.selectEmployee": "Select Employee",
+  "ratings.chooseEmployee": "Choose a employee",
+  "ratings.selectToView": "Select a employee to view their ratings",
+  "ratings.empty": "No ratings for this employee yet",
   "ratings.totalRatings": "Total ratings",
   "ratings.anonymous": "Anonymous",
   "ratings.previous": "Previous",

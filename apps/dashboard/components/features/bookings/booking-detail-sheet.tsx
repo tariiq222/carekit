@@ -38,17 +38,17 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
 
   if (!booking) return null
 
-  const patientName = booking.patient
-    ? `${booking.patient.firstName} ${booking.patient.lastName}`
+  const clientName = booking.client
+    ? `${booking.client.firstName} ${booking.client.lastName}`
     : "—"
 
-  const practitionerName = booking.practitioner?.user
-    ? `${booking.practitioner.user.firstName} ${booking.practitioner.user.lastName}`
+  const employeeName = booking.employee?.user
+    ? `${booking.employee.user.firstName} ${booking.employee.user.lastName}`
     : "—"
 
   const specialty = (locale === "ar"
-    ? booking.practitioner?.specialtyAr
-    : booking.practitioner?.specialty) || "—"
+    ? booking.employee?.specialtyAr
+    : booking.employee?.specialty) || "—"
 
   const appointmentDate = formatDate(booking.date)
 
@@ -90,8 +90,8 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
               <TabsContent value="details" className="px-6 pt-4 pb-6 flex flex-col gap-6">
                 <DetailsBody
                   booking={booking}
-                  patientName={patientName}
-                  practitionerName={practitionerName}
+                  clientName={clientName}
+                  employeeName={employeeName}
                   specialty={specialty}
                   appointmentDate={appointmentDate}
                   t={t}
@@ -115,8 +115,8 @@ export function BookingDetailSheet({ booking, open, onOpenChange, onAction, defa
             <div className="px-6 pt-4 pb-6 flex flex-col gap-6">
               <DetailsBody
                 booking={booking}
-                patientName={patientName}
-                practitionerName={practitionerName}
+                clientName={clientName}
+                employeeName={employeeName}
                 specialty={specialty}
                 appointmentDate={appointmentDate}
                 t={t}

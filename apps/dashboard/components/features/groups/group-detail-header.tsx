@@ -40,7 +40,7 @@ export function GroupDetailHeader({ group, onEnrollClick, onSetDateClick }: Prop
   const { cancelGroupMut, triggerPaymentMut } = useGroupsMutations()
 
   const name = locale === "ar" ? group.nameAr : group.nameEn
-  const practitioner = group.practitioner?.nameAr ?? ""
+  const employee = group.employee?.nameAr ?? ""
 
   const dateDisplay = group.startTime
     ? new Date(group.startTime).toLocaleDateString(
@@ -58,7 +58,7 @@ export function GroupDetailHeader({ group, onEnrollClick, onSetDateClick }: Prop
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title={name} description={`${practitioner} — ${dateDisplay}`}>
+      <PageHeader title={name} description={`${employee} — ${dateDisplay}`}>
         {canAct && (
           <>
             {needsDate && group.currentEnrollment >= group.minParticipants && (
@@ -69,7 +69,7 @@ export function GroupDetailHeader({ group, onEnrollClick, onSetDateClick }: Prop
             )}
             <Button variant="outline" className="gap-2 rounded-full px-5" onClick={onEnrollClick}>
               <HugeiconsIcon icon={Add01Icon} size={16} />
-              {t("groups.addPatient")}
+              {t("groups.addClient")}
             </Button>
             {group.schedulingMode === 'on_capacity' && group.status === 'awaiting_payment' && (
               <Button

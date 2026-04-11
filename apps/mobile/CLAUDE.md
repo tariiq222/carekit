@@ -9,16 +9,16 @@ React Native 0.83, Expo SDK 55, Expo Router (file-based), Redux Toolkit + redux-
 ```
 app/
 ├── (auth)/               # Login, registration, OTP
-├── (patient)/            # Patient-facing flows
+├── (client)/            # Client-facing flows
 │   ├── (tabs)/           # Bottom tab navigator
 │   ├── appointment/      # Appointment detail, history
 │   ├── booking/          # Book appointment flow
-│   ├── practitioner/     # Practitioner profile
+│   ├── employee/     # Employee profile
 │   └── rate/             # Rating flow
-└── (practitioner)/       # Practitioner-facing flows
+└── (employee)/       # Employee-facing flows
     ├── (tabs)/           # Bottom tab navigator
     ├── appointment/      # Manage appointments
-    └── patient/          # Patient profile view
+    └── client/          # Client profile view
 ```
 
 ## Conventions
@@ -33,7 +33,7 @@ app/
 ## Service Files (`services/`)
 
 `api.ts` (base Axios instance), `auth.ts`, `bookings.ts`, `chatbot.ts`,
-`notifications.ts`, `payments.ts`, `practitioners.ts`, `specialties.ts`
+`notifications.ts`, `payments.ts`, `employees.ts`, `specialties.ts`
 
 ## Key Rules
 
@@ -41,7 +41,7 @@ app/
 - No hardcoded strings — use i18n keys
 - No hardcoded colors — use theme tokens
 - 350-line max per file
-- Patient and Practitioner routes must stay strictly separated
+- Client and Employee routes must stay strictly separated
 - Expo Secure Store for sensitive data (tokens), AsyncStorage for preferences
 
 ## Development

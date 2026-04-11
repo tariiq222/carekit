@@ -83,7 +83,7 @@ CareKit implements an 8-layer defense-in-depth model:
 
 - **Passwords:** bcrypt hashed, never stored or logged in plaintext
 - **Tokens:** SHA-256 hashed before database storage
-- **PII:** Soft deletes only — patient data is never hard deleted
+- **PII:** Soft deletes only — client data is never hard deleted
 - **File uploads:** MinIO on internal Docker network, not publicly accessible
 - **Secrets:** Environment variables only — no hardcoded credentials in source code
 - **Dev credentials:** Removed from codebase; `.env.example` contains placeholders only

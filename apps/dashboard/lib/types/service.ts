@@ -101,7 +101,7 @@ export interface IntakeResponse {
   id: string
   formId: string
   bookingId: string
-  patientId: string
+  clientId: string
   answers: Record<string, string>
   createdAt: string
   form?: IntakeForm
@@ -121,9 +121,9 @@ export interface SetServiceBranchesPayload {
   branchIds: string[]
 }
 
-/* ─── Service Practitioners ─── */
+/* ─── Service Employees ─── */
 
-export interface ServicePractitionerServiceType {
+export interface ServiceEmployeeServiceType {
   id: string
   bookingType: string
   price: number | null
@@ -131,9 +131,9 @@ export interface ServicePractitionerServiceType {
   isActive: boolean
 }
 
-export interface ServicePractitioner {
-  id: string // PractitionerService.id
-  practitioner: {
+export interface ServiceEmployee {
+  id: string // EmployeeService.id
+  employee: {
     id: string
     nameAr: string | null
     title: string | null
@@ -144,7 +144,7 @@ export interface ServicePractitioner {
       lastName: string
     }
   }
-  serviceTypes: ServicePractitionerServiceType[]
+  serviceTypes: ServiceEmployeeServiceType[]
   customDuration: number | null
   bufferMinutes: number
   availableTypes: string[]

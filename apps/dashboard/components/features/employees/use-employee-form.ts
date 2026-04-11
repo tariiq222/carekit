@@ -2,41 +2,41 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { UseFormReturn } from "react-hook-form"
-import type { CreatePractitionerFormData } from "@/components/features/practitioners/create/form-schema"
-import type { LocalBreak, LocalVacation } from "@/components/features/practitioners/create/schedule-tab"
-import type { DraftService } from "@/components/features/practitioners/create/services-tab"
-import type { AvailabilitySlot, PractitionerService } from "@/lib/types/practitioner"
+import type { CreateEmployeeFormData } from "@/components/features/employees/create/form-schema"
+import type { LocalBreak, LocalVacation } from "@/components/features/employees/create/schedule-tab"
+import type { DraftService } from "@/components/features/employees/create/services-tab"
+import type { AvailabilitySlot, EmployeeService } from "@/lib/types/employee"
 import {
   assignService,
-} from "@/lib/api/practitioners"
+} from "@/lib/api/employees"
 import {
-  usePractitionerMutations,
+  useEmployeeMutations,
   useSetAvailability,
   useSetBreaks,
   useVacationMutations,
-  usePractitionerServiceMutations,
-} from "@/hooks/use-practitioners"
+  useEmployeeServiceMutations,
+} from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 import { z } from "zod"
-import { createPractitionerSchema } from "@/components/features/practitioners/create/form-schema"
+import { createEmployeeSchema } from "@/components/features/employees/create/form-schema"
 
-const _editPractitionerSchema = createPractitionerSchema.partial().extend({
+const _editEmployeeSchema = createEmployeeSchema.partial().extend({
   isActive: z.boolean(),
 })
-type EditPractitionerFormData = z.infer<typeof _editPractitionerSchema>
+type EditEmployeeFormData = z.infer<typeof _editEmployeeSchema>
 
 const defaultSchedule: AvailabilitySlot[] = Array.from({ length: 7 }, (_, i) => ({
   dayOfWeek: i, startTime: "09:00", endTime: "17:00", isActive: i <= 4,
 }))
 
-interface UsePractitionerFormOptions {
+interface UseEmployeeFormOptions {
   isEdit: boolean
-  practitionerId: string | undefined
-  practitioner: { user: { firstName: string; lastName: string }; title?: string | null; nameAr?: string | null; specialty?: string | null; specialtyAr?: string | null; bio?: string | null; bioAr?: string | null; experience?: number | null; education?: string | null; educationAr?: string | null; avatarUrl?: string | null; isActive: boolean } | undefined
+  employeeId: string | undefined
+  employee: { user: { firstName: string; lastName: string }; title?: string | null; nameAr?: string | null; specialty?: string | null; specialtyAr?: string | null; bio?: string | null; bioAr?: string | null; experience?: number | null; education?: string | null; educationAr?: string | null; avatarUrl?: string | null; isActive: boolean } | undefined
   availability: AvailabilitySlot[] | undefined
   existingBreaks: { dayOfWeek: number; startTime: string; endTime: string }[] | undefined
-  existingServices: PractitionerService[] | undefined
-  form: UseFormReturn<CreatePractitionerFormData>
+  existingServices: EmployeeService[] | undefined
+  form: UseFormReturn<CreateEmployeeFormData>
   schedule: AvailabilitySlot[]
   setSchedule: (s: AvailabilitySlot[]) => void
   breaks: LocalBreak[]
@@ -47,10 +47,10 @@ interface UsePractitionerFormOptions {
   setIsSubmitting: (v: boolean) => void
 }
 
-export function usePractitionerForm({
+export function useEmployeeForm({
   isEdit,
-  practitionerId,
-  practitioner,
+  employeeId,
+  employee,
   availability,
   existingBreaks,
   existingServices,
@@ -63,33 +63,33 @@ export function usePractitionerForm({
   setDraftServices,
   vacation,
   setIsSubmitting,
-}: UsePractitionerFormOptions) {
+}: UseEmployeeFormOptions) {
   const router = useRouter()
   const { t } = useLocale()
-  const { onboardMutation, updateMutation } = usePractitionerMutations()
+  const { onboardMutation, updateMutation } = useEmployeeMutations()
   const setAvailabilityMut = useSetAvailability()
   const setBreaksMut = useSetBreaks()
-  // practitionerId may be undefined during create — hooks safe with empty string (won't invalidate wrong key)
-  const vacationMuts = useVacationMutations(practitionerId ?? "")
-  const serviceMuts = usePractitionerServiceMutations(practitionerId ?? "")
+  // employeeId may be undefined during create — hooks safe with empty string (won't invalidate wrong key)
+  const vacationMuts = useVacationMutations(employeeId ?? "")
+  const serviceMuts = useEmployeeServiceMutations(employeeId ?? "")
 
   useEffect(() => {
-    if (!practitioner) return
+    if (!employee) return
     form.reset({
-      title: practitioner.title ?? "",
-      nameEn: `${practitioner.user.firstName} ${practitioner.user.lastName}`.trim(),
-      nameAr: practitioner.nameAr ?? "",
-      specialty: practitioner.specialty ?? "",
-      specialtyAr: practitioner.specialtyAr ?? "",
-      bio: practitioner.bio ?? "",
-      bioAr: practitioner.bioAr ?? "",
-      experience: practitioner.experience ?? undefined,
-      education: practitioner.education ?? "",
-      educationAr: practitioner.educationAr ?? "",
-      avatarUrl: practitioner.avatarUrl ?? "",
-      isActive: practitioner.isActive,
+      title: employee.title ?? "",
+      nameEn: `${employee.user.firstName} ${employee.user.lastName}`.trim(),
+      nameAr: employee.nameAr ?? "",
+      specialty: employee.specialty ?? "",
+      specialtyAr: employee.specialtyAr ?? "",
+      bio: employee.bio ?? "",
+      bioAr: employee.bioAr ?? "",
+      experience: employee.experience ?? undefined,
+      education: employee.education ?? "",
+      educationAr: employee.educationAr ?? "",
+      avatarUrl: employee.avatarUrl ?? "",
+      isActive: employee.isActive,
     })
-  }, [practitioner, form])
+  }, [employee, form])
 
   useEffect(() => {
     if (!availability?.length) return
@@ -111,7 +111,7 @@ export function usePractitionerForm({
 
   useEffect(() => {
     if (!existingServices?.length) return
-    setDraftServices(existingServices.map((ps: PractitionerService) => ({
+    setDraftServices(existingServices.map((ps: EmployeeService) => ({
       key: ps.id, serviceId: ps.serviceId,
       serviceName: ps.service.nameAr || ps.service.nameEn,
       bufferMinutes: ps.bufferMinutes, isActive: ps.isActive,
@@ -123,8 +123,8 @@ export function usePractitionerForm({
     })))
   }, [existingServices, setDraftServices])
 
-  async function submitEdit(data: EditPractitionerFormData) {
-    const id = practitionerId!
+  async function submitEdit(data: EditEmployeeFormData) {
+    const id = employeeId!
     try {
       await updateMutation.mutateAsync({
         id,
@@ -169,16 +169,16 @@ export function usePractitionerForm({
           await assignService(id, { serviceId: ds.serviceId, ...payload })
         }
       }
-      toast.success(t("practitioners.edit.success"))
-      router.push("/practitioners")
+      toast.success(t("employees.edit.success"))
+      router.push("/employees")
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("practitioners.edit.error"))
+      toast.error(err instanceof Error ? err.message : t("employees.edit.error"))
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  async function submitCreate(data: CreatePractitionerFormData) {
+  async function submitCreate(data: CreateEmployeeFormData) {
     const stepErrors: string[] = []
     let newId: string
     try {
@@ -197,9 +197,9 @@ export function usePractitionerForm({
         avatarUrl: data.avatarUrl || undefined,
         isActive: data.isActive,
       })
-      newId = result.practitioner.id
+      newId = result.employee.id
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("practitioners.create.error"))
+      toast.error(err instanceof Error ? err.message : t("employees.create.error"))
       setIsSubmitting(false)
       return
     }
@@ -242,16 +242,16 @@ export function usePractitionerForm({
     if (stepErrors.length > 0) {
       toast.warning(`تم إنشاء الممارس الصحي، لكن فشل حفظ: ${stepErrors.join("، ")}`)
     } else {
-      toast.success(t("practitioners.create.success"))
+      toast.success(t("employees.create.success"))
     }
-    router.push("/practitioners")
+    router.push("/employees")
   }
 
   const onSubmit = form.handleSubmit(async (data) => {
     if (isEdit) {
-      await submitEdit(data as EditPractitionerFormData)
+      await submitEdit(data as EditEmployeeFormData)
     } else {
-      await submitCreate(data as CreatePractitionerFormData)
+      await submitCreate(data as CreateEmployeeFormData)
     }
   })
 

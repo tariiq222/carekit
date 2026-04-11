@@ -45,7 +45,7 @@ export interface CreateServicePayload {
   maxParticipants?: number
   minLeadMinutes?: number | null
   maxAdvanceDays?: number | null
-  practitionerIds?: string[]
+  employeeIds?: string[]
   branchIds?: string[]
 }
 

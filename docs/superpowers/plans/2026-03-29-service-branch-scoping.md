@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Allow services (and surface practitioners) to be restricted to specific branches, defaulting to all branches when no restriction is set.
+**Goal:** Allow services (and surface employees) to be restricted to specific branches, defaulting to all branches when no restriction is set.
 
-**Architecture:** A new `ServiceBranch` M2M join table follows the same pattern as `PractitionerBranch`. Empty = all branches; records present = restricted to those branches only. The same `OR [none, some]` filter is applied in every endpoint that accepts `branchId`.
+**Architecture:** A new `ServiceBranch` M2M join table follows the same pattern as `EmployeeBranch`. Empty = all branches; records present = restricted to those branches only. The same `OR [none, some]` filter is applied in every endpoint that accepts `branchId`.
 
 **Tech Stack:** NestJS 11, Prisma 7, PostgreSQL, class-validator, Jest
 
@@ -20,7 +20,7 @@
 | Modify | `backend/src/modules/services/dto/service-list-query.dto.ts` | Add optional `branchId` field |
 | Create | `backend/src/modules/services/dto/set-service-branches.dto.ts` | `{ branchIds: string[] }` |
 | Modify | `backend/src/modules/services/services.service.ts` | Add `branchId` filter to `queryServices`, add `setBranches` / `clearBranches` methods |
-| Modify | `backend/src/modules/services/service-practitioners.service.ts` | Add `branchId` filter when listing practitioners |
+| Modify | `backend/src/modules/services/service-employees.service.ts` | Add `branchId` filter when listing employees |
 | Modify | `backend/src/modules/services/services.controller.ts` | Add `PUT /:id/branches` and `DELETE /:id/branches` endpoints |
 | Modify | `backend/src/modules/bookings/booking-creation.service.ts` | Validate service available at booking's branch |
 | Modify | `backend/src/modules/services/tests/services.service.spec.ts` | Add tests for branch filtering, setBranches, clearBranches |
@@ -61,7 +61,7 @@ model ServiceBranch {
 
 - [ ] **Step 2: Add `services` relation to `Branch` model in `clinic.prisma`**
 
-Open `backend/prisma/schema/clinic.prisma`. In the `Branch` model relations block (it currently has `practitioners`, `intakeForms`, etc.), add:
+Open `backend/prisma/schema/clinic.prisma`. In the `Branch` model relations block (it currently has `employees`, `intakeForms`, etc.), add:
 ```prisma
   services                ServiceBranch[]
 ```
@@ -428,33 +428,33 @@ git commit -m "feat(services): expose PUT/DELETE /:id/branches endpoints"
 
 ---
 
-## Task 5: Practitioners endpoint — filter by branch
+## Task 5: Employees endpoint — filter by branch
 
 **Files:**
-- Modify: `backend/src/modules/services/service-practitioners.service.ts`
+- Modify: `backend/src/modules/services/service-employees.service.ts`
 - Modify: `backend/src/modules/services/services.controller.ts`
 
-- [ ] **Step 1: Add `branchId` param to `getPractitionersForService`**
+- [ ] **Step 1: Add `branchId` param to `getEmployeesForService`**
 
-Open `backend/src/modules/services/service-practitioners.service.ts`.
+Open `backend/src/modules/services/service-employees.service.ts`.
 
 Update the method signature and add branch filtering:
 
 ```typescript
-  async getPractitionersForService(serviceId: string, branchId?: string) {
+  async getEmployeesForService(serviceId: string, branchId?: string) {
     await this.services.ensureExists(serviceId);
 
-    return this.prisma.practitionerService.findMany({
+    return this.prisma.employeeService.findMany({
       where: {
         serviceId,
         ...(branchId && {
-          practitioner: {
+          employee: {
             branches: { some: { branchId } },
           },
         }),
       },
       include: {
-        practitioner: {
+        employee: {
           select: {
             id: true,
             nameAr: true,
@@ -486,16 +486,16 @@ Update the method signature and add branch filtering:
 
 - [ ] **Step 2: Pass `branchId` from the controller**
 
-Open `backend/src/modules/services/services.controller.ts`. Update the `getPractitioners` endpoint:
+Open `backend/src/modules/services/services.controller.ts`. Update the `getEmployees` endpoint:
 
 ```typescript
-  @Get(':id/practitioners')
+  @Get(':id/employees')
   @Public()
-  async getPractitioners(
+  async getEmployees(
     @Param('id', uuidPipe) id: string,
     @Query('branchId') branchId?: string,
   ) {
-    return this.practitionersService.getPractitionersForService(id, branchId);
+    return this.employeesService.getEmployeesForService(id, branchId);
   }
 ```
 
@@ -512,8 +512,8 @@ Expected: All PASS, no type errors.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add backend/src/modules/services/service-practitioners.service.ts backend/src/modules/services/services.controller.ts
-git commit -m "feat(services): filter practitioners by branchId on GET /:id/practitioners"
+git add backend/src/modules/services/service-employees.service.ts backend/src/modules/services/services.controller.ts
+git commit -m "feat(services): filter employees by branchId on GET /:id/employees"
 ```
 
 ---
@@ -529,7 +529,7 @@ Open `backend/src/modules/bookings/booking-creation.service.ts`. The service che
 
 ```typescript
     // Validate service is available at the booking's branch
-    const branchId = await this.resolveBranchContext(dto.practitionerId, dto.branchId);
+    const branchId = await this.resolveBranchContext(dto.employeeId, dto.branchId);
     const serviceBranchCount = await this.prisma.serviceBranch.count({
       where: { serviceId: dto.serviceId },
     });
@@ -677,7 +677,7 @@ git commit -m "feat(dashboard): add branch filter to services list and branch to
 | `GET /services?branchId=` filter | Task 3 |
 | `PUT /services/:id/branches` | Task 4 |
 | `DELETE /services/:id/branches` | Task 4 |
-| `GET /services/:id/practitioners?branchId=` | Task 5 |
+| `GET /services/:id/employees?branchId=` | Task 5 |
 | Booking creation validates service at branch | Task 6 |
 | Dashboard branch filter in list | Task 7 |
 | Dashboard branch toggle in form | Task 7 |

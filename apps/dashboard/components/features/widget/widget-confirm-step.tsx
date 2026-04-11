@@ -61,7 +61,7 @@ export function WidgetConfirmStep({ locale, booking, showPrice = true, redirectU
   const [isValidating, setIsValidating] = useState(false)
   const isRtl = locale === "ar"
 
-  const { practitioner, service, bookingType, date, slot, paymentMethod } = state
+  const { employee, service, bookingType, date, slot, paymentMethod } = state
   const price = getPrice(booking)
   const discount = state.discountAmount ?? 0
   const discountedPrice = Math.max(0, price - discount)
@@ -157,10 +157,10 @@ export function WidgetConfirmStep({ locale, booking, showPrice = true, redirectU
     <div className="space-y-4">
 {/* Summary card */}
       <div className="bg-muted/30 rounded-xl p-4 space-y-3 text-sm">
-        {practitioner && (
+        {employee && (
           <SummaryRow
-            label={isRtl ? "الطبيب" : "Practitioner"}
-            value={isRtl && practitioner.nameAr ? practitioner.nameAr : `${practitioner.user.firstName} ${practitioner.user.lastName}`}
+            label={isRtl ? "الطبيب" : "Employee"}
+            value={isRtl && employee.nameAr ? employee.nameAr : `${employee.user.firstName} ${employee.user.lastName}`}
           />
         )}
         {service && <SummaryRow label={isRtl ? "الخدمة" : "Service"} value={isRtl ? service.nameAr : service.nameEn} />}

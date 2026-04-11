@@ -12,7 +12,7 @@ import type {
   ServiceListQuery,
   IntakeForm,
   IntakeResponse,
-  ServicePractitioner,
+  ServiceEmployee,
   SetServiceBranchesPayload,
 } from "@/lib/types/service"
 import type {
@@ -232,12 +232,12 @@ export async function uploadServiceImage(serviceId: string, file: File): Promise
   return res.json() as Promise<Service>
 }
 
-/* ─── Service Practitioners ─── */
+/* ─── Service Employees ─── */
 
-export async function fetchServicePractitioners(
+export async function fetchServiceEmployees(
   serviceId: string,
-): Promise<ServicePractitioner[]> {
-  return api.get<ServicePractitioner[]>(`/services/${serviceId}/practitioners`)
+): Promise<ServiceEmployee[]> {
+  return api.get<ServiceEmployee[]>(`/services/${serviceId}/employees`)
 }
 
 /* ─── Service List Stats ─── */

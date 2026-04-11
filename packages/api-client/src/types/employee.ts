@@ -1,6 +1,6 @@
 import type { PaginatedResponse, PaginationParams } from './api.js'
 
-export interface PractitionerListItem {
+export interface EmployeeListItem {
   id: string
   isActive: boolean
   rating: number
@@ -25,19 +25,19 @@ export interface PractitionerListItem {
   }
 }
 
-export interface PractitionerStats {
+export interface EmployeeStats {
   total: number
   active: number
   inactive: number
   newThisMonth: number
 }
 
-export interface PractitionerListQuery extends PaginationParams {
+export interface EmployeeListQuery extends PaginationParams {
   isActive?: boolean
   specialtyId?: string
 }
 
-export interface CreatePractitionerPayload {
+export interface CreateEmployeePayload {
   userId: string
   specialtyId: string
   experience: number
@@ -45,7 +45,7 @@ export interface CreatePractitionerPayload {
   bioAr?: string
 }
 
-export interface UpdatePractitionerPayload {
+export interface UpdateEmployeePayload {
   specialtyId?: string
   experience?: number
   bio?: string
@@ -53,13 +53,13 @@ export interface UpdatePractitionerPayload {
   isActive?: boolean
 }
 
-export type PractitionerListResponse = PaginatedResponse<PractitionerListItem>
+export type EmployeeListResponse = PaginatedResponse<EmployeeListItem>
 
 // ─── Breaks ────────────────────────────────────────────────────────────────
 
-export interface PractitionerBreak {
+export interface EmployeeBreak {
   id: string
-  practitionerId: string
+  employeeId: string
   dayOfWeek: number
   startTime: string
   endTime: string
@@ -77,9 +77,9 @@ export interface SetBreaksPayload {
 
 // ─── Vacations ─────────────────────────────────────────────────────────────
 
-export interface PractitionerVacation {
+export interface EmployeeVacation {
   id: string
-  practitionerId: string
+  employeeId: string
   startDate: string
   endDate: string
   reason: string | null
@@ -92,9 +92,9 @@ export interface CreateVacationPayload {
   reason?: string
 }
 
-// ─── Practitioner Services ─────────────────────────────────────────────────
+// ─── Employee Services ─────────────────────────────────────────────────
 
-export interface PractitionerDurationOption {
+export interface EmployeeDurationOption {
   id: string
   label: string
   labelAr: string | null
@@ -104,19 +104,19 @@ export interface PractitionerDurationOption {
   sortOrder: number
 }
 
-export interface PractitionerTypeConfig {
+export interface EmployeeTypeConfig {
   id: string
   bookingType: 'in_person' | 'online'
   price: number | null
   duration: number | null
   useCustomOptions: boolean
   isActive: boolean
-  durationOptions: PractitionerDurationOption[]
+  durationOptions: EmployeeDurationOption[]
 }
 
-export interface PractitionerService {
+export interface EmployeeService {
   id: string
-  practitionerId: string
+  employeeId: string
   serviceId: string
   customDuration: number | null
   bufferMinutes: number
@@ -129,27 +129,27 @@ export interface PractitionerService {
     price: number
     duration: number
   }
-  types: PractitionerTypeConfig[]
+  types: EmployeeTypeConfig[]
 }
 
-export interface AssignPractitionerServicePayload {
+export interface AssignEmployeeServicePayload {
   serviceId: string
   customDuration?: number
   bufferMinutes?: number
   availableTypes: string[]
   isActive?: boolean
-  types?: PractitionerTypeConfigInput[]
+  types?: EmployeeTypeConfigInput[]
 }
 
-export interface UpdatePractitionerServicePayload {
+export interface UpdateEmployeeServicePayload {
   customDuration?: number | null
   bufferMinutes?: number
   availableTypes?: string[]
   isActive?: boolean
-  types?: PractitionerTypeConfigInput[]
+  types?: EmployeeTypeConfigInput[]
 }
 
-export interface PractitionerTypeConfigInput {
+export interface EmployeeTypeConfigInput {
   bookingType: 'in_person' | 'online'
   price?: number | null
   duration?: number | null

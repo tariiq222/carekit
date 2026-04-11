@@ -5,11 +5,11 @@
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
 | RPT-RV1 | تقرير بنطاق تاريخ | GET /reports/revenue + dateFrom + dateTo | 200 + بيانات الإيرادات |
-| RPT-RV2 | فلترة بالطبيب | `practitionerId=X` | إيرادات الطبيب X فقط |
+| RPT-RV2 | فلترة بالطبيب | `employeeId=X` | إيرادات الطبيب X فقط |
 | RPT-RV3 | فلترة بالفرع | `branchId=X` | إيرادات الفرع X فقط |
 | RPT-RV4 | بدون dateFrom | حقل إلزامي | 400 VALIDATION_ERROR |
 | RPT-RV5 | بدون dateTo | حقل إلزامي | 400 VALIDATION_ERROR |
-| RPT-RV6 | practitionerId وهمي | UUID غير صالح | 400 VALIDATION_ERROR |
+| RPT-RV6 | employeeId وهمي | UUID غير صالح | 400 VALIDATION_ERROR |
 
 ---
 
@@ -46,7 +46,7 @@
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
-| RPT-PT1 | تصدير كل المرضى | GET /reports/patients/export | ملف CSV بكل المرضى |
+| RPT-PT1 | تصدير كل المرضى | GET /reports/clients/export | ملف CSV بكل المرضى |
 
 ---
 
@@ -54,7 +54,7 @@
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
-| RPT-PR1 | تقرير طبيب محدد | GET /reports/practitioners/:id + dateFrom + dateTo | 200 + بيانات الطبيب |
+| RPT-PR1 | تقرير طبيب محدد | GET /reports/employees/:id + dateFrom + dateTo | 200 + بيانات الطبيب |
 | RPT-PR2 | بدون dateFrom | حقل إلزامي | 400 VALIDATION_ERROR |
-| RPT-PR3 | practitionerId وهمي | UUID غير موجود | 404 NOT_FOUND |
+| RPT-PR3 | employeeId وهمي | UUID غير موجود | 404 NOT_FOUND |
 | RPT-PR4 | UUID غير صالح | تنسيق خاطئ | 400 VALIDATION_ERROR |

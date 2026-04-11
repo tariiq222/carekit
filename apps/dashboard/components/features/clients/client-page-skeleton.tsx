@@ -2,7 +2,7 @@ import { ListPageShell } from "@/components/features/list-page-shell"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { Skeleton } from "@/components/ui/skeleton"
 
-export function PatientPageSkeleton() {
+export function ClientPageSkeleton() {
   return (
     <ListPageShell>
       <Breadcrumbs />

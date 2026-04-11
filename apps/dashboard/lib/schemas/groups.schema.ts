@@ -5,7 +5,7 @@ const baseGroupSchema = z.object({
   nameEn: z.string().min(1, "Required").max(255),
   descriptionAr: z.string().max(1000).optional(),
   descriptionEn: z.string().max(1000).optional(),
-  practitionerId: z.string().uuid("اختر ممارساً"),
+  employeeId: z.string().uuid("اختر ممارساً"),
   minParticipants: z.number().int().min(1),
   maxParticipants: z.number().int().min(1),
   pricePerPersonHalalat: z.number().int().min(0),

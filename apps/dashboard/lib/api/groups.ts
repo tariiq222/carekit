@@ -54,8 +54,8 @@ export async function confirmGroupSchedule(id: string, payload: ConfirmScheduleP
 
 // ─── Enrollments ───
 
-export async function enrollPatientInGroup(groupId: string, patientId: string): Promise<GroupEnrollment> {
-  return api.post(`/groups/${groupId}/enroll`, { patientId })
+export async function enrollClientInGroup(groupId: string, clientId: string): Promise<GroupEnrollment> {
+  return api.post(`/groups/${groupId}/enroll`, { clientId })
 }
 
 export async function removeGroupEnrollment(groupId: string, enrollmentId: string): Promise<void> {

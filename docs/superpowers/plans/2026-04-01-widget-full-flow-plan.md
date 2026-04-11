@@ -4,7 +4,7 @@
 
 **Goal:** Complete the embeddable booking widget with branch selection, coupons/gift cards, payment method selection (Moyasar + at-clinic), and intake form popup after booking.
 
-**Architecture:** Backend adds 3 new public/patient endpoints and 2 new `BookingSettings` columns. Dashboard widget gains 2 new step components (`widget-branch-step`, `widget-intake-popup`) and extends the confirm step. The hook and wizard become step-adaptive — branch step only renders when `branches.length > 1`. Intake popup fires post-booking when `intakeFormRequired && !intakeFormAlreadySubmitted`.
+**Architecture:** Backend adds 3 new public/client endpoints and 2 new `BookingSettings` columns. Dashboard widget gains 2 new step components (`widget-branch-step`, `widget-intake-popup`) and extends the confirm step. The hook and wizard become step-adaptive — branch step only renders when `branches.length > 1`. Intake popup fires post-booking when `intakeFormRequired && !intakeFormAlreadySubmitted`.
 
 **Tech Stack:** NestJS 11 + Prisma 7 (backend), Next.js 15 App Router + TanStack Query + shadcn/ui + Tailwind 4 (dashboard widget). Test runner: `cd backend && npm run test`, typecheck: `cd dashboard && npm run typecheck`.
 
@@ -19,7 +19,7 @@
 | `backend/src/modules/branches/branches.controller.ts` | Modify | Add `GET /branches/public` (no auth) |
 | `backend/src/modules/branches/branches.service.ts` | Modify | Add `getPublicBranches()` |
 | `backend/src/modules/coupons/dto/validate-coupon.dto.ts` | Create | DTO for widget coupon+gift-card validation |
-| `backend/src/modules/coupons/coupons.controller.ts` | Modify | Add `POST /coupons/validate` (patient JWT) |
+| `backend/src/modules/coupons/coupons.controller.ts` | Modify | Add `POST /coupons/validate` (client JWT) |
 | `backend/src/modules/coupons/coupons.service.ts` | Modify | Add `validateCode()` — handles coupon + gift card |
 | `backend/src/modules/clinic/clinic-settings.service.ts` | Modify | Add `getPaymentSettings()` + `updatePaymentSettings()` |
 | `backend/src/modules/clinic/clinic-settings.controller.ts` | Modify | Add `GET/PATCH /clinic/settings/payment` |
@@ -429,9 +429,9 @@ const intakeForm = await this.prisma.intakeForm.findFirst({
 });
 
 let intakeFormAlreadySubmitted = false;
-if (intakeForm && booking.patientId) {
+if (intakeForm && booking.clientId) {
   const existing = await this.prisma.intakeResponse.findFirst({
-    where: { formId: intakeForm.id, patientId: booking.patientId },
+    where: { formId: intakeForm.id, clientId: booking.clientId },
     select: { id: true },
   });
   intakeFormAlreadySubmitted = !!existing;
@@ -582,8 +582,8 @@ export async function validateWidgetCode(
 In `dashboard/lib/types/booking.ts`, extend `CreateBookingPayload`:
 ```typescript
 export interface CreateBookingPayload {
-  patientId?: string
-  practitionerId: string
+  clientId?: string
+  employeeId: string
   serviceId: string
   type: BookingType
   durationOptionId?: string
@@ -686,10 +686,10 @@ Add to `WizardState`:
 export interface WizardState {
   step: WizardStep
   branch: import("@/lib/api/widget").PublicBranch | null   // NEW
-  practitioner: Practitioner | null
+  employee: Employee | null
   service: Service | null
   bookingType: BookingType | null
-  durationOption: PractitionerDurationOption | null
+  durationOption: EmployeeDurationOption | null
   date: string
   slot: TimeSlot | null
   booking: Booking | null
@@ -707,7 +707,7 @@ Update initial state:
 const [state, setState] = useState<WizardState>({
   step: "service",  // will be overridden to "branch" when hasBranches
   branch: null,
-  practitioner: null,
+  employee: null,
   service: null,
   bookingType: null,
   durationOption: null,
@@ -773,9 +773,9 @@ Replace the existing `confirmBooking` callback:
 ```typescript
 const confirmBooking = useCallback(
   (notes?: string) => {
-    if (!state.practitioner || !state.service || !state.bookingType || !state.date || !state.slot) return
+    if (!state.employee || !state.service || !state.bookingType || !state.date || !state.slot) return
     createMut.mutate({
-      practitionerId: state.practitioner.id,
+      employeeId: state.employee.id,
       serviceId: state.service.id,
       type: state.bookingType,
       date: state.date,

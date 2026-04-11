@@ -1,5 +1,5 @@
 export type FormType = 'pre_booking' | 'pre_session' | 'post_session' | 'registration'
-export type FormScope = 'global' | 'service' | 'practitioner' | 'branch'
+export type FormScope = 'global' | 'service' | 'employee' | 'branch'
 
 export interface IntakeFormField {
   id: string
@@ -24,7 +24,7 @@ export interface IntakeFormListItem {
 
 export interface IntakeFormDetail extends IntakeFormListItem {
   serviceId?: string
-  practitionerId?: string
+  employeeId?: string
   branchId?: string
   fields: IntakeFormField[]
 }
@@ -44,7 +44,7 @@ export interface CreateIntakeFormPayload {
   type: FormType
   scope: FormScope
   serviceId?: string
-  practitionerId?: string
+  employeeId?: string
   branchId?: string
 }
 

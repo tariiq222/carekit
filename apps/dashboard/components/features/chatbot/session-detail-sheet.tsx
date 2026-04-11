@@ -44,7 +44,7 @@ function MessageBubble({
   const isSystem = message.role === "system"
 
   const roleBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-    user: { label: t("chatbot.role.patient"), variant: "default" },
+    user: { label: t("chatbot.role.client"), variant: "default" },
     assistant: { label: t("chatbot.role.bot"), variant: "secondary" },
     system: { label: t("chatbot.role.system"), variant: "outline" },
     staff: { label: t("chatbot.role.staff"), variant: "destructive" },

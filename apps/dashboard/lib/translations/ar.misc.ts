@@ -9,7 +9,7 @@ export const arMisc: Record<string, string> = {
   "reports.description": "تحليلات ومؤشرات الأداء",
   "reports.tabs.revenue": "الإيرادات",
   "reports.tabs.bookings": "الحجوزات",
-  "reports.tabs.practitioners": "الممارسون",
+  "reports.tabs.employees": "الممارسون",
   "reports.dateFrom": "من",
   "reports.dateTo": "إلى",
   "reports.revenue.total": "إجمالي الإيرادات",
@@ -18,8 +18,8 @@ export const arMisc: Record<string, string> = {
   "reports.bookings.byStatus": "حسب الحالة",
   "reports.bookings.byType": "حسب النوع",
   "reports.exportCsv": "تصدير CSV",
-  "reports.practitionerSearch": "ابحث عن ممارس بالاسم أو ID...",
-  "reports.practitionerSearchHint": "ابحث عن ممارس لعرض تقريره",
+  "reports.employeeSearch": "ابحث عن ممارس بالاسم أو ID...",
+  "reports.employeeSearchHint": "ابحث عن ممارس لعرض تقريره",
 
   // — Notifications —
   "notifications.title": "الإشعارات",
@@ -73,7 +73,7 @@ export const arMisc: Record<string, string> = {
   "chatbot.kb.fileDeleted": "تم حذف الملف",
   "chatbot.kb.filesTitle": "الملفات",
   "chatbot.kb.noFiles": "لا توجد ملفات مرفوعة",
-  "chatbot.role.patient": "مستفيد",
+  "chatbot.role.client": "مستفيد",
   "chatbot.role.bot": "بوت الذكاء الاصطناعي",
   "chatbot.role.system": "النظام",
   "chatbot.role.staff": "موظف",
@@ -91,8 +91,8 @@ export const arMisc: Record<string, string> = {
   "changePassword.error": "فشل تغيير كلمة المرور",
 
   // — Detail Sheet Labels —
-  "detail.patient": "المستفيد",
-  "detail.practitioner": "الممارس",
+  "detail.client": "المستفيد",
+  "detail.employee": "الممارس",
   "detail.appointment": "الموعد",
   "detail.payment": "الدفع",
   "detail.contact": "معلومات التواصل",
@@ -115,7 +115,7 @@ export const arMisc: Record<string, string> = {
   "detail.notes": "ملاحظات",
   "detail.cancellationReason": "سبب الإلغاء",
   "detail.cancelledBy": "تم الإلغاء بواسطة",
-  "detail.cancelledBy.patient": "المستفيد",
+  "detail.cancelledBy.client": "المستفيد",
   "detail.cancelledBy.admin": "المدير",
   "detail.cancelledBy.system": "النظام",
   "detail.suggestedRefund": "الاسترداد المقترح",
@@ -159,8 +159,8 @@ export const arMisc: Record<string, string> = {
   "detail.joinedAt": "تاريخ الانضمام",
 
   // — Ratings —
-  "ratings.selectPractitioner": "اختر الممارس",
-  "ratings.choosePractitioner": "اختر ممارساً",
+  "ratings.selectEmployee": "اختر الممارس",
+  "ratings.chooseEmployee": "اختر ممارساً",
   "ratings.selectToView": "اختر ممارساً لعرض تقييماته",
   "ratings.totalRatings": "إجمالي التقييمات",
   "ratings.empty": "لا توجد تقييمات بعد",

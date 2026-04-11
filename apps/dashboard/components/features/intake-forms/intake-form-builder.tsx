@@ -17,7 +17,7 @@ import { useLocale } from "@/components/locale-provider"
 import { FieldEditor } from "@/components/features/intake-forms/field-editor"
 import { FormInfoTab } from "@/components/features/intake-forms/form-info-tab"
 import { useServices } from "@/hooks/use-services"
-import { usePractitioners } from "@/hooks/use-practitioners"
+import { useEmployees } from "@/hooks/use-employees"
 import { useBranches } from "@/hooks/use-branches"
 import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import type {
@@ -67,7 +67,7 @@ export function IntakeFormBuilder({
   const isAr = locale === "ar"
 
   const { services } = useServices()
-  const { practitioners } = usePractitioners()
+  const { employees } = useEmployees()
   const { branches } = useBranches()
   const { isEnabled } = useFeatureFlagMap()
   const isMultiBranch = isEnabled("multi_branch")
@@ -123,8 +123,8 @@ export function IntakeFormBuilder({
 
   // Scopes available to the user — hide "branch" when multi_branch is disabled
   const availableScopes: FormScope[] = isMultiBranch
-    ? ["global", "service", "practitioner", "branch"]
-    : ["global", "service", "practitioner"]
+    ? ["global", "service", "employee", "branch"]
+    : ["global", "service", "employee"]
 
   const scopeOptions: { value: string; label: string }[] = (() => {
     if (draft.scope === "service") {
@@ -133,8 +133,8 @@ export function IntakeFormBuilder({
         label: isAr ? s.nameAr : s.nameEn,
       }))
     }
-    if (draft.scope === "practitioner") {
-      return practitioners.map((p) => ({
+    if (draft.scope === "employee") {
+      return employees.map((p) => ({
         value: p.id,
         label: isAr && p.nameAr ? p.nameAr : `${p.user.firstName} ${p.user.lastName}`,
       }))

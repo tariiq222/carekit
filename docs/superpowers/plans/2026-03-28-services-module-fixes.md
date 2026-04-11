@@ -450,18 +450,18 @@ git commit -m "perf(services): parallelise booking type creates inside transacti
 
 **The bug:** `$transaction([single_operation])` wraps one operation in an array-form transaction unnecessarily. A plain `prisma.service.create(...)` is atomic on its own.
 
-- [ ] **Step 1: Simplify the create with practitionerIds path**
+- [ ] **Step 1: Simplify the create with employeeIds path**
 
 In `services.service.ts`, find lines 152-164:
 
 ```typescript
-    if (dto.practitionerIds && dto.practitionerIds.length > 0) {
+    if (dto.employeeIds && dto.employeeIds.length > 0) {
       const [created] = await this.prisma.$transaction([
         this.prisma.service.create({
           data: {
             ...serviceData,
-            practitionerServices: {
-              create: dto.practitionerIds.map((practitionerId) => ({ practitionerId })),
+            employeeServices: {
+              create: dto.employeeIds.map((employeeId) => ({ employeeId })),
             },
           },
           include: { category: true },
@@ -482,9 +482,9 @@ Replace with:
     service = await this.prisma.service.create({
       data: {
         ...serviceData,
-        ...(dto.practitionerIds?.length && {
-          practitionerServices: {
-            create: dto.practitionerIds.map((practitionerId) => ({ practitionerId })),
+        ...(dto.employeeIds?.length && {
+          employeeServices: {
+            create: dto.employeeIds.map((employeeId) => ({ employeeId })),
           },
         }),
       },
@@ -527,7 +527,7 @@ git commit -m "refactor(services): remove unnecessary \$transaction array wrappe
 
 The affected endpoints:
 - `getIntakeForms` (line 115): wraps with `{ success: true, data }`
-- `getPractitioners` (line 143): wraps with `{ success: true, data }`
+- `getEmployees` (line 143): wraps with `{ success: true, data }`
 - `getBookingTypes` (line 154): wraps with `{ success: true, data }`
 - `setBookingTypes` (line 162): wraps with `{ success: true, data }`
 
@@ -542,12 +542,12 @@ Replace `getIntakeForms`:
   }
 ```
 
-Replace `getPractitioners`:
+Replace `getEmployees`:
 ```typescript
-  @Get(':id/practitioners')
+  @Get(':id/employees')
   @Public()
-  async getPractitioners(@Param('id', uuidPipe) id: string) {
-    return this.practitionersService.getPractitionersForService(id);
+  async getEmployees(@Param('id', uuidPipe) id: string) {
+    return this.employeesService.getEmployeesForService(id);
   }
 ```
 
@@ -587,7 +587,7 @@ grep -r "\.data" /Users/tariq/Documents/my_programs/CareKit/dashboard/lib/api/se
 grep -r "\.data" /Users/tariq/Documents/my_programs/CareKit/dashboard/hooks/use-services.ts
 ```
 
-If any call does `response.data` for practitioners, booking-types, or intake-forms endpoints, update those calls to use the response directly. The API functions in `dashboard/lib/api/services.ts` use axios which already returns `response.data` from the HTTP layer — so the question is whether the functions do an additional `.data` unwrap. If found, remove the extra `.data`.
+If any call does `response.data` for employees, booking-types, or intake-forms endpoints, update those calls to use the response directly. The API functions in `dashboard/lib/api/services.ts` use axios which already returns `response.data` from the HTTP layer — so the question is whether the functions do an additional `.data` unwrap. If found, remove the extra `.data`.
 
 - [ ] **Step 4: Commit**
 
@@ -910,7 +910,7 @@ import { ServicesService } from './services.service.js';
 import { ServiceCategoriesService } from './service-categories.service.js';
 import { DurationOptionsService } from './duration-options.service.js';
 import { ServiceBookingTypeService } from './service-booking-type.service.js';
-import { ServicePractitionersService } from './service-practitioners.service.js';
+import { ServiceEmployeesService } from './service-employees.service.js';
 import { IntakeFormsModule } from '../intake-forms/intake-forms.module.js';
 
 @Module({
@@ -921,14 +921,14 @@ import { IntakeFormsModule } from '../intake-forms/intake-forms.module.js';
     ServiceCategoriesService,
     DurationOptionsService,
     ServiceBookingTypeService,
-    ServicePractitionersService,
+    ServiceEmployeesService,
   ],
   exports: [
     ServicesService,
     ServiceCategoriesService,
     DurationOptionsService,
     ServiceBookingTypeService,
-    ServicePractitionersService,
+    ServiceEmployeesService,
   ],
 })
 export class ServicesModule {}

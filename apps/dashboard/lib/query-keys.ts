@@ -16,37 +16,37 @@ export const queryKeys = {
     statusLog: (id: string) => ["bookings", "status-log", id] as const,
   },
 
-  /* ─── Patients ─── */
-  patients: {
-    all: ["patients"] as const,
+  /* ─── Clients ─── */
+  clients: {
+    all: ["clients"] as const,
     list: (filters?: object) =>
-      ["patients", "list", filters] as const,
-    listStats: () => ["patients", "list-stats"] as const,
-    detail: (id: string) => ["patients", "detail", id] as const,
-    stats: (id: string) => ["patients", "stats", id] as const,
-    bookings: (id: string) => ["patients", "detail", id, "bookings"] as const,
+      ["clients", "list", filters] as const,
+    listStats: () => ["clients", "list-stats"] as const,
+    detail: (id: string) => ["clients", "detail", id] as const,
+    stats: (id: string) => ["clients", "stats", id] as const,
+    bookings: (id: string) => ["clients", "detail", id, "bookings"] as const,
   },
 
-  /* ─── Practitioners ─── */
-  practitioners: {
-    all: ["practitioners"] as const,
+  /* ─── Employees ─── */
+  employees: {
+    all: ["employees"] as const,
     list: (filters?: object) =>
-      ["practitioners", "list", filters] as const,
-    detail: (id: string) => ["practitioners", "detail", id] as const,
+      ["employees", "list", filters] as const,
+    detail: (id: string) => ["employees", "detail", id] as const,
     availability: (id: string) =>
-      ["practitioners", "availability", id] as const,
+      ["employees", "availability", id] as const,
     slots: (id: string, date: string) =>
-      ["practitioners", "slots", id, date] as const,
+      ["employees", "slots", id, date] as const,
     breaks: (id: string) =>
-      ["practitioners", "breaks", id] as const,
+      ["employees", "breaks", id] as const,
     vacations: (id: string) =>
-      ["practitioners", "vacations", id] as const,
+      ["employees", "vacations", id] as const,
     services: (id: string) =>
-      ["practitioners", "services", id] as const,
-    serviceTypes: (practitionerId: string, serviceId: string) =>
-      [...["practitioners"] as const, practitionerId, "service-types", serviceId] as const,
+      ["employees", "services", id] as const,
+    serviceTypes: (employeeId: string, serviceId: string) =>
+      [...["employees"] as const, employeeId, "service-types", serviceId] as const,
     ratings: (id: string) =>
-      ["practitioners", "ratings", id] as const,
+      ["employees", "ratings", id] as const,
   },
 
   /* ─── Services ─── */
@@ -65,8 +65,8 @@ export const queryKeys = {
       ["services", "intake-forms", serviceId] as const,
     intakeResponses: (bookingId: string) =>
       ["services", "intake-responses", bookingId] as const,
-    practitioners: (serviceId: string) =>
-      ["services", "practitioners", serviceId] as const,
+    employees: (serviceId: string) =>
+      ["services", "employees", serviceId] as const,
   },
 
   /* ─── Payments ─── */
@@ -124,8 +124,8 @@ export const queryKeys = {
       ["reports", "revenue", filters] as const,
     bookings: (filters?: object) =>
       ["reports", "bookings", filters] as const,
-    practitioner: (id: string, filters?: object) =>
-      ["reports", "practitioner", id, filters] as const,
+    employee: (id: string, filters?: object) =>
+      ["reports", "employee", id, filters] as const,
   },
 
   /* ─── Chatbot ─── */
@@ -181,8 +181,8 @@ export const queryKeys = {
     list: (filters?: object) =>
       ["branches", "list", filters] as const,
     detail: (id: string) => ["branches", "detail", id] as const,
-    practitioners: (id: string) =>
-      ["branches", "practitioners", id] as const,
+    employees: (id: string) =>
+      ["branches", "employees", id] as const,
   },
 
   /* ─── Departments ─── */

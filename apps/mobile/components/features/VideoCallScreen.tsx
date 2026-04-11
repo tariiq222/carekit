@@ -98,14 +98,14 @@ export function VideoCallScreen() {
     fetchBooking();
   };
 
-  const practitionerName = booking
-    ? `${booking.practitioner.user.firstName} ${booking.practitioner.user.lastName}`
+  const employeeName = booking
+    ? `${booking.employee.user.firstName} ${booking.employee.user.lastName}`
     : '';
 
   const specialtyName = booking
     ? isRTL
-      ? booking.practitioner.specialty.nameAr
-      : booking.practitioner.specialty.nameEn
+      ? booking.employee.specialty.nameAr
+      : booking.employee.specialty.nameEn
     : '';
 
   const formattedDate = booking
@@ -152,11 +152,11 @@ export function VideoCallScreen() {
               <View style={styles.practRow}>
                 <Avatar
                   size={48}
-                  name={practitionerName}
-                  imageUrl={booking.practitioner.user.avatarUrl}
+                  name={employeeName}
+                  imageUrl={booking.employee.user.avatarUrl}
                 />
                 <View style={{ flex: 1, gap: 2 }}>
-                  <ThemedText variant="subheading">{practitionerName}</ThemedText>
+                  <ThemedText variant="subheading">{employeeName}</ThemedText>
                   <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
                     {specialtyName}
                   </ThemedText>

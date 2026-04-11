@@ -17,9 +17,9 @@ import {
   createBranch,
   updateBranch,
   deleteBranch,
-  fetchBranchPractitioners,
-  assignBranchPractitioners,
-  removeBranchPractitioner,
+  fetchBranchEmployees,
+  assignBranchEmployees,
+  removeBranchEmployee,
 } from "@/lib/api/branches"
 
 describe("branches api", () => {
@@ -57,21 +57,21 @@ describe("branches api", () => {
     expect(deleteMock).toHaveBeenCalledWith("/branches/br-1")
   })
 
-  it("fetchBranchPractitioners calls /branches/:id/practitioners", async () => {
+  it("fetchBranchEmployees calls /branches/:id/employees", async () => {
     getMock.mockResolvedValueOnce([])
-    await fetchBranchPractitioners("br-1")
-    expect(getMock).toHaveBeenCalledWith("/branches/br-1/practitioners")
+    await fetchBranchEmployees("br-1")
+    expect(getMock).toHaveBeenCalledWith("/branches/br-1/employees")
   })
 
-  it("assignBranchPractitioners patches /branches/:id/practitioners", async () => {
+  it("assignBranchEmployees patches /branches/:id/employees", async () => {
     patchMock.mockResolvedValueOnce([])
-    await assignBranchPractitioners("br-1", ["p-1", "p-2"])
-    expect(patchMock).toHaveBeenCalledWith("/branches/br-1/practitioners", { practitionerIds: ["p-1", "p-2"] })
+    await assignBranchEmployees("br-1", ["p-1", "p-2"])
+    expect(patchMock).toHaveBeenCalledWith("/branches/br-1/employees", { employeeIds: ["p-1", "p-2"] })
   })
 
-  it("removeBranchPractitioner deletes /branches/:branchId/practitioners/:practitionerId", async () => {
+  it("removeBranchEmployee deletes /branches/:branchId/employees/:employeeId", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
-    await removeBranchPractitioner("br-1", "p-1")
-    expect(deleteMock).toHaveBeenCalledWith("/branches/br-1/practitioners/p-1")
+    await removeBranchEmployee("br-1", "p-1")
+    expect(deleteMock).toHaveBeenCalledWith("/branches/br-1/employees/p-1")
   })
 })

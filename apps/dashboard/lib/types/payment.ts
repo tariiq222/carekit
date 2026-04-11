@@ -27,8 +27,8 @@ export interface Payment {
     id: string
     date: string
     type: string
-    patient: { firstName: string; lastName: string; email: string } | null
-    practitioner: {
+    client: { firstName: string; lastName: string; email: string } | null
+    employee: {
       user: { firstName: string; lastName: string }
       specialty: { nameAr: string; nameEn: string } | null
     }

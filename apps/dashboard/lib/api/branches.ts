@@ -9,7 +9,7 @@ import type {
   BranchListQuery,
   CreateBranchPayload,
   UpdateBranchPayload,
-  PractitionerBranch,
+  EmployeeBranch,
 } from "@/lib/types/branch"
 
 /* ─── List ─── */
@@ -54,29 +54,29 @@ export async function deleteBranch(id: string): Promise<void> {
   await api.delete(`/branches/${id}`)
 }
 
-/* ─── Practitioners ─── */
+/* ─── Employees ─── */
 
-export async function fetchBranchPractitioners(
+export async function fetchBranchEmployees(
   branchId: string,
-): Promise<PractitionerBranch[]> {
-  return api.get<PractitionerBranch[]>(
-    `/branches/${branchId}/practitioners`,
+): Promise<EmployeeBranch[]> {
+  return api.get<EmployeeBranch[]>(
+    `/branches/${branchId}/employees`,
   )
 }
 
-export async function assignBranchPractitioners(
+export async function assignBranchEmployees(
   branchId: string,
-  practitionerIds: string[],
-): Promise<PractitionerBranch[]> {
-  return api.patch<PractitionerBranch[]>(
-    `/branches/${branchId}/practitioners`,
-    { practitionerIds },
+  employeeIds: string[],
+): Promise<EmployeeBranch[]> {
+  return api.patch<EmployeeBranch[]>(
+    `/branches/${branchId}/employees`,
+    { employeeIds },
   )
 }
 
-export async function removeBranchPractitioner(
+export async function removeBranchEmployee(
   branchId: string,
-  practitionerId: string,
+  employeeId: string,
 ): Promise<void> {
-  await api.delete(`/branches/${branchId}/practitioners/${practitionerId}`)
+  await api.delete(`/branches/${branchId}/employees/${employeeId}`)
 }

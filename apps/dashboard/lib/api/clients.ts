@@ -1,17 +1,17 @@
 /**
- * Patients API — CareKit Dashboard
+ * Clients API — CareKit Dashboard
  */
 
 import { api } from "@/lib/api"
 import type { PaginatedResponse } from "@/lib/types/common"
 import type {
-  Patient,
-  PatientStats,
-  PatientListQuery,
-  PatientBookingPreview,
-} from "@/lib/types/patient"
+  Client,
+  ClientStats,
+  ClientListQuery,
+  ClientBookingPreview,
+} from "@/lib/types/client"
 
-type PatientStatsResponse = Partial<PatientStats> & {
+type ClientStatsResponse = Partial<ClientStats> & {
   totalBookings: number
   byStatus?: Record<string, number>
   totalPaid?: number
@@ -29,7 +29,7 @@ function readStatusCount(
   return 0
 }
 
-function normalizePatientStats(stats: PatientStatsResponse): PatientStats {
+function normalizeClientStats(stats: ClientStatsResponse): ClientStats {
   const byStatus = stats.byStatus ?? {}
 
   return {
@@ -56,17 +56,17 @@ function normalizePatientStats(stats: PatientStatsResponse): PatientStats {
 
 /* ─── Queries ─── */
 
-export interface PatientListStats {
+export interface ClientListStats {
   total: number
   active: number
   inactive: number
   newThisMonth: number
 }
 
-export async function fetchPatients(
-  query: PatientListQuery = {}
-): Promise<PaginatedResponse<Patient>> {
-  return api.get<PaginatedResponse<Patient>>("/patients", {
+export async function fetchClients(
+  query: ClientListQuery = {}
+): Promise<PaginatedResponse<Client>> {
+  return api.get<PaginatedResponse<Client>>("/clients", {
     page: query.page,
     perPage: query.perPage,
     search: query.search,
@@ -74,17 +74,17 @@ export async function fetchPatients(
   })
 }
 
-export async function fetchPatientListStats(): Promise<PatientListStats> {
-  return api.get<PatientListStats>("/patients/list-stats")
+export async function fetchClientListStats(): Promise<ClientListStats> {
+  return api.get<ClientListStats>("/clients/list-stats")
 }
 
-export async function fetchPatient(id: string): Promise<Patient> {
-  return api.get<Patient>(`/patients/${id}`)
+export async function fetchClient(id: string): Promise<Client> {
+  return api.get<Client>(`/clients/${id}`)
 }
 
-export async function fetchPatientStats(id: string): Promise<PatientStats> {
-  const stats = await api.get<PatientStatsResponse>(`/patients/${id}/stats`)
-  return normalizePatientStats(stats)
+export async function fetchClientStats(id: string): Promise<ClientStats> {
+  const stats = await api.get<ClientStatsResponse>(`/clients/${id}/stats`)
+  return normalizeClientStats(stats)
 }
 
 /* ─── Mutations ─── */
@@ -105,18 +105,18 @@ export interface CreateWalkInPayload {
   chronicConditions?: string
 }
 
-export interface CreatePatientResponse {
+export interface CreateClientResponse {
   id: string
   isExisting?: boolean
 }
 
-export async function createWalkInPatient(
+export async function createWalkInClient(
   payload: CreateWalkInPayload
-): Promise<CreatePatientResponse> {
-  return api.post<CreatePatientResponse>("/patients/walk-in", payload)
+): Promise<CreateClientResponse> {
+  return api.post<CreateClientResponse>("/clients/walk-in", payload)
 }
 
-export interface UpdatePatientPayload {
+export interface UpdateClientPayload {
   firstName?: string
   middleName?: string
   lastName?: string
@@ -133,21 +133,21 @@ export interface UpdatePatientPayload {
   isActive?: boolean
 }
 
-export async function updatePatient(
+export async function updateClient(
   id: string,
-  payload: UpdatePatientPayload
-): Promise<Patient> {
-  return api.patch<Patient>(`/patients/${id}`, payload)
+  payload: UpdateClientPayload
+): Promise<Client> {
+  return api.patch<Client>(`/clients/${id}`, payload)
 }
 
-export async function activatePatient(id: string): Promise<Patient> {
-  return api.patch<Patient>(`/patients/${id}`, { isActive: true })
+export async function activateClient(id: string): Promise<Client> {
+  return api.patch<Client>(`/clients/${id}`, { isActive: true })
 }
 
-export async function deactivatePatient(id: string): Promise<Patient> {
-  return api.patch<Patient>(`/patients/${id}`, { isActive: false })
+export async function deactivateClient(id: string): Promise<Client> {
+  return api.patch<Client>(`/clients/${id}`, { isActive: false })
 }
 
-export async function fetchPatientBookings(id: string): Promise<PaginatedResponse<PatientBookingPreview>> {
-  return api.get<PaginatedResponse<PatientBookingPreview>>(`/patients/${id}/bookings`)
+export async function fetchClientBookings(id: string): Promise<PaginatedResponse<ClientBookingPreview>> {
+  return api.get<PaginatedResponse<ClientBookingPreview>>(`/clients/${id}/bookings`)
 }

@@ -16,10 +16,10 @@ import {
   checkInBooking,
   startBooking,
   adminCancelBooking,
-  practitionerCancelBooking,
+  employeeCancelBooking,
   requestCancellation,
   createRecurringBooking,
-  patientReschedule,
+  clientReschedule,
 } from "@/lib/api/bookings"
 import type {
   BookingStatus,
@@ -34,7 +34,7 @@ interface BookingFilters {
   type: BookingType | "all"
   dateFrom: string
   dateTo: string
-  practitionerId: string
+  employeeId: string
 }
 
 const defaultFilters: BookingFilters = {
@@ -42,7 +42,7 @@ const defaultFilters: BookingFilters = {
   type: "all",
   dateFrom: "",
   dateTo: "",
-  practitionerId: "",
+  employeeId: "",
 }
 
 /* ─── List Hook ─── */
@@ -56,7 +56,7 @@ export function useBookings() {
     filters.type !== "all" ||
     filters.dateFrom !== "" ||
     filters.dateTo !== "" ||
-    filters.practitionerId !== ""
+    filters.employeeId !== ""
 
   const query: BookingListQuery = {
     page,
@@ -65,7 +65,7 @@ export function useBookings() {
     type: filters.type !== "all" ? filters.type : undefined,
     dateFrom: filters.dateFrom || undefined,
     dateTo: filters.dateTo || undefined,
-    practitionerId: filters.practitionerId || undefined,
+    employeeId: filters.employeeId || undefined,
   }
 
   const {
@@ -194,9 +194,9 @@ export function useBookingMutations() {
     onSuccess: invalidate,
   })
 
-  const practitionerCancelMut = useMutation({
-    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof practitionerCancelBooking>[1]) =>
-      practitionerCancelBooking(id, payload),
+  const employeeCancelMut = useMutation({
+    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof employeeCancelBooking>[1]) =>
+      employeeCancelBooking(id, payload),
     onSuccess: invalidate,
   })
 
@@ -211,9 +211,9 @@ export function useBookingMutations() {
     onSuccess: invalidate,
   })
 
-  const patientRescheduleMut = useMutation({
-    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof patientReschedule>[1]) =>
-      patientReschedule(id, payload),
+  const clientRescheduleMut = useMutation({
+    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof clientReschedule>[1]) =>
+      clientReschedule(id, payload),
     onSuccess: invalidate,
   })
 
@@ -228,9 +228,9 @@ export function useBookingMutations() {
     checkInMut,
     startMut,
     adminCancelMut,
-    practitionerCancelMut,
+    employeeCancelMut,
     cancelRequestMut,
     recurringMut,
-    patientRescheduleMut,
+    clientRescheduleMut,
   }
 }

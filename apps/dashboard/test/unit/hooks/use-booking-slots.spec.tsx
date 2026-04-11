@@ -3,16 +3,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 
-const { fetchSlots, fetchPractitionerServiceTypes, fetchPractitionerServices } = vi.hoisted(() => ({
+const { fetchSlots, fetchEmployeeServiceTypes, fetchEmployeeServices } = vi.hoisted(() => ({
   fetchSlots: vi.fn(),
-  fetchPractitionerServiceTypes: vi.fn(),
-  fetchPractitionerServices: vi.fn(),
+  fetchEmployeeServiceTypes: vi.fn(),
+  fetchEmployeeServices: vi.fn(),
 }))
 
-vi.mock("@/lib/api/practitioners-schedule", () => ({
+vi.mock("@/lib/api/employees-schedule", () => ({
   fetchSlots,
-  fetchPractitionerServiceTypes,
-  fetchPractitionerServices,
+  fetchEmployeeServiceTypes,
+  fetchEmployeeServices,
 }))
 
 import { useCreateBookingSlots } from "@/components/features/bookings/use-booking-slots"
@@ -27,14 +27,14 @@ function makeWrapper() {
 }
 
 const baseOpts = {
-  practitionerId: "p-1",
+  employeeId: "p-1",
   serviceId: "svc-1",
   bookingType: "in_person",
   date: "2026-03-27",
   durationOptionId: "",
 }
 
-const mockPractitionerServices = [
+const mockEmployeeServices = [
   {
     id: "ps1",
     serviceId: "svc-1",
@@ -49,33 +49,33 @@ const mockPractitionerServices = [
 describe("useCreateBookingSlots", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetches practitioner services when practitionerId is provided", async () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([])
+  it("fetches employee services when employeeId is provided", async () => {
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([])
     fetchSlots.mockResolvedValue([])
 
     const { result } = renderHook(() => useCreateBookingSlots(baseOpts), {
       wrapper: makeWrapper(),
     })
 
-    await waitFor(() => expect(result.current.practitionerServicesLoading).toBe(false))
+    await waitFor(() => expect(result.current.employeeServicesLoading).toBe(false))
 
-    expect(fetchPractitionerServices).toHaveBeenCalledWith("p-1")
-    expect(result.current.practitionerServices).toEqual(mockPractitionerServices)
+    expect(fetchEmployeeServices).toHaveBeenCalledWith("p-1")
+    expect(result.current.employeeServices).toEqual(mockEmployeeServices)
   })
 
-  it("does not fetch practitioner services when practitionerId is empty", () => {
+  it("does not fetch employee services when employeeId is empty", () => {
     renderHook(
-      () => useCreateBookingSlots({ ...baseOpts, practitionerId: "" }),
+      () => useCreateBookingSlots({ ...baseOpts, employeeId: "" }),
       { wrapper: makeWrapper() },
     )
 
-    expect(fetchPractitionerServices).not.toHaveBeenCalled()
+    expect(fetchEmployeeServices).not.toHaveBeenCalled()
   })
 
-  it("fetches service types when practitionerId and serviceId are provided", async () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([])
+  it("fetches service types when employeeId and serviceId are provided", async () => {
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([])
     fetchSlots.mockResolvedValue([])
 
     const { result } = renderHook(() => useCreateBookingSlots(baseOpts), {
@@ -84,17 +84,17 @@ describe("useCreateBookingSlots", () => {
 
     await waitFor(() => expect(result.current.serviceTypesLoading).toBe(false))
 
-    expect(fetchPractitionerServiceTypes).toHaveBeenCalledWith("p-1", "svc-1")
+    expect(fetchEmployeeServiceTypes).toHaveBeenCalledWith("p-1", "svc-1")
     expect(result.current.canFetchServiceTypes).toBe(true)
   })
 
-  it("does not fetch service types when practitionerId is missing", () => {
+  it("does not fetch service types when employeeId is missing", () => {
     renderHook(
-      () => useCreateBookingSlots({ ...baseOpts, practitionerId: "" }),
+      () => useCreateBookingSlots({ ...baseOpts, employeeId: "" }),
       { wrapper: makeWrapper() },
     )
 
-    expect(fetchPractitionerServiceTypes).not.toHaveBeenCalled()
+    expect(fetchEmployeeServiceTypes).not.toHaveBeenCalled()
   })
 
   it("does not fetch service types when serviceId is missing", () => {
@@ -103,12 +103,12 @@ describe("useCreateBookingSlots", () => {
       { wrapper: makeWrapper() },
     )
 
-    expect(fetchPractitionerServiceTypes).not.toHaveBeenCalled()
+    expect(fetchEmployeeServiceTypes).not.toHaveBeenCalled()
   })
 
-  it("fetches slots when practitionerId and date are provided with no duration options", async () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([])
+  it("fetches slots when employeeId and date are provided with no duration options", async () => {
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([])
     fetchSlots.mockResolvedValue([{ startTime: "09:00", endTime: "09:30" }])
 
     const { result } = renderHook(() => useCreateBookingSlots(baseOpts), {
@@ -122,8 +122,8 @@ describe("useCreateBookingSlots", () => {
   })
 
   it("does not fetch slots when date is missing", () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([])
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([])
 
     renderHook(
       () => useCreateBookingSlots({ ...baseOpts, date: "" }),
@@ -135,8 +135,8 @@ describe("useCreateBookingSlots", () => {
 
   it("returns duration options from matching active service type", async () => {
     const durationOptions = [{ id: "d-1", durationMinutes: 30, label: "30m", labelAr: "٣٠", price: null, isDefault: true, sortOrder: 0 }]
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([
       { bookingType: "in_person", isActive: true, durationOptions },
     ])
     fetchSlots.mockResolvedValue([])
@@ -154,8 +154,8 @@ describe("useCreateBookingSlots", () => {
   })
 
   it("returns empty duration options for inactive service type", async () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([
       { bookingType: "in_person", isActive: false, durationOptions: [{ id: "d-1", durationMinutes: 30 }] },
     ])
     fetchSlots.mockResolvedValue([])
@@ -169,8 +169,8 @@ describe("useCreateBookingSlots", () => {
   })
 
   it("returns empty duration options when bookingType has no matching service type", async () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([
       { bookingType: "in_person", isActive: true, durationOptions: [] },
     ])
     fetchSlots.mockResolvedValue([])
@@ -186,8 +186,8 @@ describe("useCreateBookingSlots", () => {
   })
 
   it("blocks slot fetching when duration options exist but none selected", async () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([
       {
         bookingType: "in_person",
         isActive: true,
@@ -208,8 +208,8 @@ describe("useCreateBookingSlots", () => {
   })
 
   it("fetches slots with correct duration when option is selected", async () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([
       { bookingType: "in_person", isActive: true, durationOptions: [{ id: "d-1", durationMinutes: 45 }] },
     ])
     fetchSlots.mockResolvedValue([{ startTime: "09:00", endTime: "09:45" }])
@@ -225,9 +225,9 @@ describe("useCreateBookingSlots", () => {
     expect(result.current.canFetchSlots).toBe(true)
   })
 
-  it("handles fetchPractitionerServiceTypes error gracefully — returns empty types", async () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockRejectedValue(Object.assign(new Error("Not Found"), { status: 404 }))
+  it("handles fetchEmployeeServiceTypes error gracefully — returns empty types", async () => {
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockRejectedValue(Object.assign(new Error("Not Found"), { status: 404 }))
 
     const { result } = renderHook(
       () => useCreateBookingSlots({ ...baseOpts, serviceId: "unassigned-svc" }),
@@ -241,8 +241,8 @@ describe("useCreateBookingSlots", () => {
   })
 
   it("uses act to verify state stabilizes", async () => {
-    fetchPractitionerServices.mockResolvedValue(mockPractitionerServices)
-    fetchPractitionerServiceTypes.mockResolvedValue([])
+    fetchEmployeeServices.mockResolvedValue(mockEmployeeServices)
+    fetchEmployeeServiceTypes.mockResolvedValue([])
     fetchSlots.mockResolvedValue([])
 
     const { result } = renderHook(() => useCreateBookingSlots(baseOpts), {

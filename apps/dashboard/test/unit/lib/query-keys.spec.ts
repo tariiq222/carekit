@@ -21,33 +21,33 @@ describe("queryKeys", () => {
     })
   })
 
-  describe("patients", () => {
+  describe("clients", () => {
     it("detail includes id", () => {
-      expect(queryKeys.patients.detail("p-1")).toEqual(["patients", "detail", "p-1"])
+      expect(queryKeys.clients.detail("p-1")).toEqual(["clients", "detail", "p-1"])
     })
 
-    it("stats includes patient id", () => {
-      expect(queryKeys.patients.stats("p-1")).toEqual(["patients", "stats", "p-1"])
+    it("stats includes client id", () => {
+      expect(queryKeys.clients.stats("p-1")).toEqual(["clients", "stats", "p-1"])
     })
   })
 
-  describe("practitioners", () => {
+  describe("employees", () => {
     it("slots includes id and date", () => {
-      expect(queryKeys.practitioners.slots("pr-1", "2026-04-01")).toEqual(
-        ["practitioners", "slots", "pr-1", "2026-04-01"],
+      expect(queryKeys.employees.slots("pr-1", "2026-04-01")).toEqual(
+        ["employees", "slots", "pr-1", "2026-04-01"],
       )
     })
 
     it("serviceTypes includes both ids", () => {
-      const key = queryKeys.practitioners.serviceTypes("pr-1", "svc-1")
+      const key = queryKeys.employees.serviceTypes("pr-1", "svc-1")
       expect(key).toContain("pr-1")
       expect(key).toContain("svc-1")
       expect(key).toContain("service-types")
     })
 
-    it("availability includes practitioner id", () => {
-      expect(queryKeys.practitioners.availability("pr-1")).toEqual(
-        ["practitioners", "availability", "pr-1"],
+    it("availability includes employee id", () => {
+      expect(queryKeys.employees.availability("pr-1")).toEqual(
+        ["employees", "availability", "pr-1"],
       )
     })
   })
@@ -103,9 +103,9 @@ describe("queryKeys", () => {
   })
 
   describe("branches", () => {
-    it("practitioners includes branch id", () => {
-      expect(queryKeys.branches.practitioners("br-1")).toEqual(
-        ["branches", "practitioners", "br-1"],
+    it("employees includes branch id", () => {
+      expect(queryKeys.branches.employees("br-1")).toEqual(
+        ["branches", "employees", "br-1"],
       )
     })
   })

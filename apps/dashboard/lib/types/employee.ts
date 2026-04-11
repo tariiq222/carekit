@@ -1,12 +1,12 @@
 /**
- * Practitioner Types — CareKit Dashboard
+ * Employee Types — CareKit Dashboard
  */
 
 import type { SearchableQuery } from "./common"
 
 /* ─── Entities ─── */
 
-export interface Practitioner {
+export interface Employee {
   id: string
   userId: string
   title: string | null
@@ -55,7 +55,7 @@ export interface Vacation {
   createdAt: string
 }
 
-export interface PractitionerService {
+export interface EmployeeService {
   id: string
   serviceId: string
   customDuration: number | null
@@ -72,23 +72,23 @@ export interface PractitionerService {
     price: number
     duration: number
   }
-  serviceTypes?: PractitionerServiceType[]
+  serviceTypes?: EmployeeServiceType[]
 }
 
-export interface PractitionerServiceType {
+export interface EmployeeServiceType {
   id: string
-  practitionerServiceId: string
+  employeeServiceId: string
   bookingType: string
   price: number | null
   duration: number | null
   useCustomOptions: boolean
   isActive: boolean
-  durationOptions: PractitionerDurationOption[]
+  durationOptions: EmployeeDurationOption[]
 }
 
-export interface PractitionerDurationOption {
+export interface EmployeeDurationOption {
   id: string
-  practitionerServiceTypeId: string
+  employeeServiceTypeId: string
   label: string
   labelAr: string | null
   durationMinutes: number
@@ -97,7 +97,7 @@ export interface PractitionerDurationOption {
   sortOrder: number
 }
 
-export interface PractitionerTypeConfigPayload {
+export interface EmployeeTypeConfigPayload {
   bookingType: string
   price?: number | null
   duration?: number | null
@@ -127,7 +127,7 @@ export interface TimeSlot {
 
 /* ─── Query ─── */
 
-export interface PractitionerListQuery extends SearchableQuery {
+export interface EmployeeListQuery extends SearchableQuery {
   specialty?: string
   minRating?: number
   isActive?: boolean
@@ -135,7 +135,7 @@ export interface PractitionerListQuery extends SearchableQuery {
 
 /* ─── DTOs ─── */
 
-export interface CreatePractitionerPayload {
+export interface CreateEmployeePayload {
   userId: string
   specialty: string
   specialtyAr?: string
@@ -147,7 +147,7 @@ export interface CreatePractitionerPayload {
   avatarUrl?: string | null
 }
 
-export interface UpdatePractitionerPayload {
+export interface UpdateEmployeePayload {
   title?: string
   nameAr?: string
   specialty?: string
@@ -181,7 +181,7 @@ export interface AssignServicePayload {
   bufferMinutes?: number
   availableTypes: string[]
   isActive?: boolean
-  types?: PractitionerTypeConfigPayload[]
+  types?: EmployeeTypeConfigPayload[]
 }
 
 export interface UpdateServicePayload {
@@ -189,10 +189,10 @@ export interface UpdateServicePayload {
   bufferMinutes?: number
   availableTypes?: string[]
   isActive?: boolean
-  types?: PractitionerTypeConfigPayload[]
+  types?: EmployeeTypeConfigPayload[]
 }
 
-export interface OnboardPractitionerPayload {
+export interface OnboardEmployeePayload {
   title?: string
   nameEn: string
   nameAr: string
@@ -208,8 +208,8 @@ export interface OnboardPractitionerPayload {
   isActive?: boolean
 }
 
-export interface OnboardPractitionerResponse {
+export interface OnboardEmployeeResponse {
   success: boolean
   message: string
-  practitioner: Practitioner
+  employee: Employee
 }

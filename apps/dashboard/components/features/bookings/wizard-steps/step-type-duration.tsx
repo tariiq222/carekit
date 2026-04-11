@@ -14,14 +14,14 @@ import { WizardCard } from "@/components/features/bookings/wizard-card"
 import { useLocale } from "@/components/locale-provider"
 import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchPractitionerServiceTypes } from "@/lib/api/practitioners-schedule"
-import type { PractitionerServiceType, PractitionerDurationOption } from "@/lib/types/practitioner"
+import { fetchEmployeeServiceTypes } from "@/lib/api/employees-schedule"
+import type { EmployeeServiceType, EmployeeDurationOption } from "@/lib/types/employee"
 import type { BookingType } from "@/lib/types/booking"
 
 /* ─── Types ─── */
 
 interface StepTypeDurationProps {
-  practitionerId: string
+  employeeId: string
   serviceId: string
   selectedType: string | null
   selectedDurationOptionId: string | null
@@ -70,7 +70,7 @@ function TypeCard({
   onSelect,
   t,
 }: {
-  serviceType: PractitionerServiceType
+  serviceType: EmployeeServiceType
   selected: boolean
   onSelect: () => void
   t: (key: string) => string
@@ -108,7 +108,7 @@ function DurationCard({
   t,
   locale,
 }: {
-  option: PractitionerDurationOption
+  option: EmployeeDurationOption
   selected: boolean
   onSelect: () => void
   t: (key: string) => string
@@ -139,7 +139,7 @@ function DurationCard({
 /* ─── Main step ─── */
 
 export function StepTypeDuration({
-  practitionerId,
+  employeeId,
   serviceId,
   selectedType,
   selectedDurationOptionId,
@@ -150,10 +150,10 @@ export function StepTypeDuration({
   const { t, locale } = useLocale()
   const { isEnabled } = useFeatureFlagMap()
 
-  const { data: serviceTypes = [], isLoading } = useQuery<PractitionerServiceType[]>({
-    queryKey: queryKeys.practitioners.serviceTypes(practitionerId, serviceId),
-    queryFn: () => fetchPractitionerServiceTypes(practitionerId, serviceId),
-    enabled: !!practitionerId && !!serviceId,
+  const { data: serviceTypes = [], isLoading } = useQuery<EmployeeServiceType[]>({
+    queryKey: queryKeys.employees.serviceTypes(employeeId, serviceId),
+    queryFn: () => fetchEmployeeServiceTypes(employeeId, serviceId),
+    enabled: !!employeeId && !!serviceId,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -175,7 +175,7 @@ export function StepTypeDuration({
     ? activeTypes.find((st) => st.bookingType === selectedType)
     : undefined
 
-  const durationOptions: PractitionerDurationOption[] = useMemo(
+  const durationOptions: EmployeeDurationOption[] = useMemo(
     () => selectedServiceType?.durationOptions ?? [],
     [selectedServiceType]
   )

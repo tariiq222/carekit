@@ -8,16 +8,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 import { SectionHeader } from "@/components/features/section-header"
-import { BLOOD_TYPES, BLOOD_LABELS, type CreatePatientFormData, type EditPatientFormData } from "@/lib/schemas/patient.schema"
-import { Field } from "@/components/features/patients/patient-form"
+import { BLOOD_TYPES, BLOOD_LABELS, type CreateClientFormData, type EditClientFormData } from "@/lib/schemas/client.schema"
+import { Field } from "@/components/features/clients/client-form"
 
-interface PatientMedicalCardProps {
-  form: UseFormReturn<CreatePatientFormData> | UseFormReturn<EditPatientFormData>
+interface ClientMedicalCardProps {
+  form: UseFormReturn<CreateClientFormData> | UseFormReturn<EditClientFormData>
   isCreate: boolean
 }
 
-export function PatientMedicalCard({ form, isCreate }: PatientMedicalCardProps) {
-  const { control, register } = form as UseFormReturn<EditPatientFormData>
+export function ClientMedicalCard({ form, isCreate }: ClientMedicalCardProps) {
+  const { control, register } = form as UseFormReturn<EditClientFormData>
   const { t } = useLocale()
 
   return (
@@ -26,17 +26,17 @@ export function PatientMedicalCard({ form, isCreate }: PatientMedicalCardProps) 
         <SectionHeader
           icon={HeartCheckIcon}
           title={isCreate
-            ? t("patients.form.medicalBasics")
-            : t("patients.form.medicalInfo")}
-          description={isCreate ? t("patients.form.medicalBasicsDesc") : undefined}
+            ? t("clients.form.medicalBasics")
+            : t("clients.form.medicalInfo")}
+          description={isCreate ? t("clients.form.medicalBasicsDesc") : undefined}
         />
 
-        <Field label={t("patients.form.bloodType")}>
+        <Field label={t("clients.form.bloodType")}>
           <Controller
             control={control}
             name="bloodType"
             render={({ field }) => (
-              <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label={t("patients.form.bloodType")}>
+              <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label={t("clients.form.bloodType")}>
                 {BLOOD_TYPES.filter((b) => b !== "UNKNOWN").map((val) => (
                   <button
                     key={val}
@@ -59,18 +59,18 @@ export function PatientMedicalCard({ form, isCreate }: PatientMedicalCardProps) 
           />
         </Field>
 
-        <Field label={t("patients.form.allergies")}>
+        <Field label={t("clients.form.allergies")}>
           <Textarea
             {...register("allergies")}
-            placeholder={t("patients.form.allergiesPlaceholder")}
+            placeholder={t("clients.form.allergiesPlaceholder")}
             rows={3}
           />
         </Field>
 
-        <Field label={t("patients.form.chronicConditions")}>
+        <Field label={t("clients.form.chronicConditions")}>
           <Textarea
             {...register("chronicConditions")}
-            placeholder={t("patients.form.chronicPlaceholder")}
+            placeholder={t("clients.form.chronicPlaceholder")}
             rows={3}
           />
         </Field>

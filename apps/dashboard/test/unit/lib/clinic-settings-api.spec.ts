@@ -51,10 +51,10 @@ describe("clinic-settings api", () => {
   })
 
   it("updateBookingFlowOrder patches /clinic/settings/booking-flow", async () => {
-    patchMock.mockResolvedValueOnce({ bookingFlowOrder: "practitioner_first" })
-    const result = await updateBookingFlowOrder("practitioner_first")
-    expect(patchMock).toHaveBeenCalledWith("/clinic/settings/booking-flow", { order: "practitioner_first" })
-    expect(result).toBe("practitioner_first")
+    patchMock.mockResolvedValueOnce({ bookingFlowOrder: "employee_first" })
+    const result = await updateBookingFlowOrder("employee_first")
+    expect(patchMock).toHaveBeenCalledWith("/clinic/settings/booking-flow", { order: "employee_first" })
+    expect(result).toBe("employee_first")
   })
 
   it("fetchPaymentSettings calls /clinic/settings/payment", async () => {

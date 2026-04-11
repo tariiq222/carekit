@@ -22,8 +22,8 @@ vi.mock("@/components/locale-provider", () => ({
         "groups.create.tabs.general": "عام",
         "groups.create.tabs.scheduling": "الجدولة",
         "groups.create.tabs.settings": "الإعدادات",
-        "groups.create.tabs.practitioners": "الممارسون",
-        "groups.create.practitionerRequired": "يرجى اختيار ممارس أولاً",
+        "groups.create.tabs.employees": "الممارسون",
+        "groups.create.employeeRequired": "يرجى اختيار ممارس أولاً",
         "groups.create.formError": "يرجى التحقق من الحقول المطلوبة",
         "groups.create.success": "تم إنشاء المجموعة بنجاح",
         "groups.create.error": "فشل في إنشاء المجموعة",
@@ -56,8 +56,8 @@ vi.mock("@/components/features/groups/create/settings-tab", () => ({
   SettingsTab: () => <div data-testid="settings-tab" />,
 }))
 
-vi.mock("@/components/features/services/service-practitioners-tab", () => ({
-  ServicePractitionersTab: () => <div data-testid="practitioners-tab" />,
+vi.mock("@/components/features/services/service-employees-tab", () => ({
+  ServiceEmployeesTab: () => <div data-testid="employees-tab" />,
 }))
 
 vi.mock("@/components/features/list-page-shell", () => ({
@@ -100,7 +100,7 @@ describe("GroupFormPage", () => {
     mockCreateGroup.mockReset()
   })
 
-  it("renders all 4 tabs (general, scheduling, settings, practitioners)", () => {
+  it("renders all 4 tabs (general, scheduling, settings, employees)", () => {
     renderForm()
     expect(screen.getByText("عام")).toBeInTheDocument()
     expect(screen.getByText("الجدولة")).toBeInTheDocument()
@@ -140,8 +140,8 @@ describe("GroupFormPage", () => {
     })
   })
 
-  it("shows practitioner required error toast when no practitioner selected", async () => {
-    // Without a practitioner, createGroup should NOT be called
+  it("shows employee required error toast when no employee selected", async () => {
+    // Without a employee, createGroup should NOT be called
     mockCreateGroup.mockRejectedValue(new Error("should not be called"))
     renderForm()
 
@@ -166,11 +166,11 @@ describe("GroupFormPage", () => {
     expect(submitBtn).not.toBeDisabled()
   })
 
-  it("renders practitioners tab content when practitioners tab is active", async () => {
+  it("renders employees tab content when employees tab is active", async () => {
     renderForm()
     await userEvent.click(screen.getByText("الممارسون"))
     await waitFor(() => {
-      expect(screen.getByTestId("practitioners-tab")).toBeInTheDocument()
+      expect(screen.getByTestId("employees-tab")).toBeInTheDocument()
     })
   })
 })

@@ -32,7 +32,7 @@ describe("useChatSessions", () => {
   beforeEach(() => vi.clearAllMocks())
 
   it("fetches sessions list and returns items", async () => {
-    const items = [{ id: "s-1", patientName: "Ali" }]
+    const items = [{ id: "s-1", clientName: "Ali" }]
     fetchChatSessions.mockResolvedValueOnce({ items, meta: { total: 1 } })
 
     const { result } = renderHook(() => useChatSessions(), { wrapper: makeWrapper() })

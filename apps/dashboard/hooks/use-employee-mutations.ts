@@ -3,49 +3,49 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import {
-  createPractitioner,
-  onboardPractitioner,
-  updatePractitioner,
-  deletePractitioner,
+  createEmployee,
+  onboardEmployee,
+  updateEmployee,
+  deleteEmployee,
   setAvailability,
   setBreaks,
   createVacation,
   deleteVacation,
   assignService,
-  updatePractitionerService,
-  removePractitionerService,
-} from "@/lib/api/practitioners"
+  updateEmployeeService,
+  removeEmployeeService,
+} from "@/lib/api/employees"
 import type {
   AssignServicePayload,
   UpdateServicePayload,
-  OnboardPractitionerPayload,
-} from "@/lib/types/practitioner"
+  OnboardEmployeePayload,
+} from "@/lib/types/employee"
 
 /* ─── Core CRUD Mutations ─── */
 
-export function usePractitionerMutations() {
+export function useEmployeeMutations() {
   const queryClient = useQueryClient()
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: queryKeys.practitioners.all })
+    queryClient.invalidateQueries({ queryKey: queryKeys.employees.all })
 
   const createMutation = useMutation({
-    mutationFn: createPractitioner,
+    mutationFn: createEmployee,
     onSuccess: invalidate,
   })
 
   const onboardMutation = useMutation({
-    mutationFn: (payload: OnboardPractitionerPayload) => onboardPractitioner(payload),
+    mutationFn: (payload: OnboardEmployeePayload) => onboardEmployee(payload),
     onSuccess: invalidate,
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof updatePractitioner>[1]) =>
-      updatePractitioner(id, payload),
+    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof updateEmployee>[1]) =>
+      updateEmployee(id, payload),
     onSuccess: invalidate,
   })
 
   const deleteMutation = useMutation({
-    mutationFn: deletePractitioner,
+    mutationFn: deleteEmployee,
     onSuccess: invalidate,
   })
 
@@ -61,7 +61,7 @@ export function useSetAvailability() {
       setAvailability(id, payload),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.practitioners.availability(vars.id),
+        queryKey: queryKeys.employees.availability(vars.id),
       })
     },
   })
@@ -76,7 +76,7 @@ export function useSetBreaks() {
       setBreaks(id, payload),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.practitioners.breaks(vars.id),
+        queryKey: queryKeys.employees.breaks(vars.id),
       })
     },
   })
@@ -84,40 +84,40 @@ export function useSetBreaks() {
 
 /* ─── Vacation Mutations ─── */
 
-export function useVacationMutations(practitionerId: string) {
+export function useVacationMutations(employeeId: string) {
   const queryClient = useQueryClient()
   const invalidate = () =>
     queryClient.invalidateQueries({
-      queryKey: queryKeys.practitioners.vacations(practitionerId),
+      queryKey: queryKeys.employees.vacations(employeeId),
     })
 
   const createMut = useMutation({
     mutationFn: (payload: Parameters<typeof createVacation>[1]) =>
-      createVacation(practitionerId, payload),
+      createVacation(employeeId, payload),
     onSuccess: invalidate,
   })
 
   const deleteMut = useMutation({
     mutationFn: (vacationId: string) =>
-      deleteVacation(practitionerId, vacationId),
+      deleteVacation(employeeId, vacationId),
     onSuccess: invalidate,
   })
 
   return { createMut, deleteMut }
 }
 
-/* ─── Practitioner Service Mutations ─── */
+/* ─── Employee Service Mutations ─── */
 
-export function usePractitionerServiceMutations(practitionerId: string) {
+export function useEmployeeServiceMutations(employeeId: string) {
   const queryClient = useQueryClient()
   const invalidate = () =>
     queryClient.invalidateQueries({
-      queryKey: queryKeys.practitioners.services(practitionerId),
+      queryKey: queryKeys.employees.services(employeeId),
     })
 
   const assignMut = useMutation({
     mutationFn: (payload: AssignServicePayload) =>
-      assignService(practitionerId, payload),
+      assignService(employeeId, payload),
     onSuccess: invalidate,
   })
 
@@ -128,13 +128,13 @@ export function usePractitionerServiceMutations(practitionerId: string) {
     }: {
       serviceId: string
       payload: UpdateServicePayload
-    }) => updatePractitionerService(practitionerId, serviceId, payload),
+    }) => updateEmployeeService(employeeId, serviceId, payload),
     onSuccess: invalidate,
   })
 
   const removeMut = useMutation({
     mutationFn: (serviceId: string) =>
-      removePractitionerService(practitionerId, serviceId),
+      removeEmployeeService(employeeId, serviceId),
     onSuccess: invalidate,
   })
 

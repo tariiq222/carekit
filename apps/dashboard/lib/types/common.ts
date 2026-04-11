@@ -86,7 +86,7 @@ export type NotificationType =
   | "cancellation_rejected"
   | "cancellation_requested"
   | "no_show_review"
-  | "patient_arrived"
+  | "client_arrived"
   | "receipt_rejected"
   | "reminder"
   | "payment_received"

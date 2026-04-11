@@ -53,7 +53,7 @@ export const FORM_TYPE_LABELS: Record<FormType, { en: string; ar: string }> = {
 export const FORM_SCOPE_LABELS: Record<FormScope, { en: string; ar: string }> = {
   global: { en: "All Clinic", ar: "العيادة كلها" },
   service: { en: "Service", ar: "خدمة" },
-  practitioner: { en: "Practitioner", ar: "معالج" },
+  employee: { en: "Employee", ar: "معالج" },
   branch: { en: "Branch", ar: "فرع" },
 }
 

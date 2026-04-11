@@ -3,7 +3,7 @@
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { usePractitionerBreaks } from "@/hooks/use-practitioners"
+import { useEmployeeBreaks } from "@/hooks/use-employees"
 import { BreaksEditor } from "./breaks-editor"
 
 /* ─── Constants ─── */
@@ -21,14 +21,14 @@ const DAY_NAMES = [
 /* ─── Props ─── */
 
 interface BreaksSectionProps {
-  practitionerId: string
+  employeeId: string
 }
 
 /* ─── Component ─── */
 
-export function BreaksSection({ practitionerId }: BreaksSectionProps) {
+export function BreaksSection({ employeeId }: BreaksSectionProps) {
   const [editorOpen, setEditorOpen] = useState(false)
-  const { data: breaks, isLoading } = usePractitionerBreaks(practitionerId)
+  const { data: breaks, isLoading } = useEmployeeBreaks(employeeId)
 
   return (
     <div className="flex flex-col gap-2">
@@ -71,7 +71,7 @@ export function BreaksSection({ practitionerId }: BreaksSectionProps) {
       )}
 
       <BreaksEditor
-        practitionerId={practitionerId}
+        employeeId={employeeId}
         open={editorOpen}
         onOpenChange={setEditorOpen}
       />

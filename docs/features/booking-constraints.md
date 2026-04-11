@@ -11,7 +11,7 @@
 
 | العلاقة | الوصف | القيد |
 |---------|-------|-------|
-| **User ↔ Practitioner** | كل طبيب له حساب مستخدم واحد | `userId` UNIQUE on Practitioner |
+| **User ↔ Employee** | كل طبيب له حساب مستخدم واحد | `userId` UNIQUE on Employee |
 | **Booking ↔ Payment** | كل حجز له دفعة واحدة فقط | `bookingId` UNIQUE on Payment |
 | **Booking ↔ Rating** | كل حجز له تقييم واحد فقط | `bookingId` UNIQUE on Rating |
 | **Booking ↔ Booking (self-ref)** | حجز مُعاد جدولته يشير للأصلي | `rescheduledFromId` UNIQUE on Booking |
@@ -22,18 +22,18 @@
 
 | الطرف الواحد | الطرف المتعدد | الوصف |
 |-------------|-------------|-------|
-| **User (patient)** | **Booking[]** | مريض واحد ← حجوزات كثيرة |
-| **Practitioner** | **Booking[]** | طبيب واحد ← مواعيد كثيرة |
+| **User (client)** | **Booking[]** | مريض واحد ← حجوزات كثيرة |
+| **Employee** | **Booking[]** | طبيب واحد ← مواعيد كثيرة |
 | **Service** | **Booking[]** | خدمة واحدة ← حجوزات كثيرة |
-| **PractitionerService** | **Booking[]** | تسعيرة واحدة ← حجوزات كثيرة |
-| **Practitioner** | **PractitionerService[]** | طبيب واحد ← خدمات كثيرة |
-| **Service** | **PractitionerService[]** | خدمة واحدة ← أطباء كثيرون |
+| **EmployeeService** | **Booking[]** | تسعيرة واحدة ← حجوزات كثيرة |
+| **Employee** | **EmployeeService[]** | طبيب واحد ← خدمات كثيرة |
+| **Service** | **EmployeeService[]** | خدمة واحدة ← أطباء كثيرون |
 | **ServiceCategory** | **Service[]** | تصنيف واحد ← خدمات كثيرة |
-| **Practitioner** | **PractitionerAvailability[]** | طبيب واحد ← أوقات عمل كثيرة |
-| **Practitioner** | **PractitionerVacation[]** | طبيب واحد ← إجازات كثيرة |
-| **Practitioner** | **Rating[]** | طبيب واحد ← تقييمات كثيرة |
+| **Employee** | **EmployeeAvailability[]** | طبيب واحد ← أوقات عمل كثيرة |
+| **Employee** | **EmployeeVacation[]** | طبيب واحد ← إجازات كثيرة |
+| **Employee** | **Rating[]** | طبيب واحد ← تقييمات كثيرة |
 | **Booking** | **ProblemReport[]** | حجز واحد ← بلاغات كثيرة |
-| **Specialty** | **Practitioner[]** | تخصص واحد ← أطباء كثيرون |
+| **Specialty** | **Employee[]** | تخصص واحد ← أطباء كثيرون |
 | **User** | **ActivityLog[]** | مستخدم واحد ← سجلات كثيرة |
 | **User** | **Notification[]** | مستخدم واحد ← إشعارات كثيرة |
 | **User** | **BankTransferReceipt[]** | أدمن واحد ← مراجعات كثيرة |
@@ -48,13 +48,13 @@
 
 | الطرفان | الجدول الوسيط | الوصف |
 |---------|-------------|-------|
-| **Practitioner ↔ Service** | **PractitionerService** | كل طبيب يقدم خدمات محددة بأسعار مخصصة |
+| **Employee ↔ Service** | **EmployeeService** | كل طبيب يقدم خدمات محددة بأسعار مخصصة |
 | **User ↔ Role** | **UserRole** | RBAC — كل مستخدم له أدوار متعددة |
 | **Role ↔ Permission** | **RolePermission** | كل دور له صلاحيات محددة |
 
-> **PractitionerService** ليس مجرد جدول ربط — بل يحمل بيانات إضافية (أسعار مخصصة، مدة مخصصة، buffers، أنواع الحجز المتاحة).
+> **EmployeeService** ليس مجرد جدول ربط — بل يحمل بيانات إضافية (أسعار مخصصة، مدة مخصصة، buffers، أنواع الحجز المتاحة).
 >
-> **RBAC** — نظام صلاحيات ديناميكي: الأدمن يُنشئ أدوار مخصصة من الداشبورد ويعيّن صلاحيات (view/create/edit/delete) لكل موديول. 5 أدوار افتراضية: `super_admin`, `receptionist`, `accountant`, `practitioner`, `patient`.
+> **RBAC** — نظام صلاحيات ديناميكي: الأدمن يُنشئ أدوار مخصصة من الداشبورد ويعيّن صلاحيات (view/create/edit/delete) لكل موديول. 5 أدوار افتراضية: `super_admin`, `receptionist`, `accountant`, `employee`, `client`.
 
 ### علاقة ذاتية (Self-referential)
 
@@ -70,8 +70,8 @@
 
 | القيد | الجدول | الأعمدة | الغرض |
 |-------|--------|---------|-------|
-| **UNIQUE** | Practitioner | `userId` | حساب واحد لكل طبيب |
-| **UNIQUE** | PractitionerService | `[practitionerId, serviceId]` | لا يمكن تكرار نفس الخدمة لنفس الطبيب |
+| **UNIQUE** | Employee | `userId` | حساب واحد لكل طبيب |
+| **UNIQUE** | EmployeeService | `[employeeId, serviceId]` | لا يمكن تكرار نفس الخدمة لنفس الطبيب |
 | **UNIQUE** | Payment | `bookingId` | دفعة واحدة فقط لكل حجز |
 | **UNIQUE** | Rating | `bookingId` | تقييم واحد فقط لكل حجز |
 | **UNIQUE** | Booking | `rescheduledFromId` | حجز أصلي يُعاد جدولته مرة واحدة فقط |
@@ -81,26 +81,26 @@
 | **UNIQUE** | UserRole | `[userId, roleId]` | مستخدم لا يأخذ نفس الدور مرتين |
 | **UNIQUE** | RolePermission | `[roleId, permissionId]` | دور لا يأخذ نفس الصلاحية مرتين |
 | **UNIQUE** | Permission | `[module, action]` | صلاحية فريدة لكل موديول+فعل |
-| **INDEX** | Booking | `[practitionerId, date]` | تسريع فحص التوفر |
-| **INDEX** | Booking | `[patientId, status]` | تسريع قائمة حجوزات المريض |
+| **INDEX** | Booking | `[employeeId, date]` | تسريع فحص التوفر |
+| **INDEX** | Booking | `[clientId, status]` | تسريع قائمة حجوزات المريض |
 | **INDEX** | Booking | `[status]` | تسريع الفلترة |
-| **INDEX** | Booking | `[practitionerServiceId]` | تسريع البحث بالتسعيرة |
-| **INDEX** | Rating | `[practitionerId]` | تسريع حساب المعدل |
+| **INDEX** | Booking | `[employeeServiceId]` | تسريع البحث بالتسعيرة |
+| **INDEX** | Rating | `[employeeId]` | تسريع حساب المعدل |
 | **INDEX** | ProblemReport | `[bookingId]` | تسريع جلب البلاغات |
 | **INDEX** | ProblemReport | `[status]` | تسريع فلترة الحالة |
 | **INDEX** | ActivityLog | `[userId]`, `[module]`, `[action]`, `[createdAt]` | تسريع بحث السجلات |
 | **INDEX** | Notification | `[userId, isRead]` | تسريع جلب الإشعارات غير المقروءة |
-| **INDEX** | PractitionerAvailability | `[practitionerId, dayOfWeek]` | تسريع فحص الجدول |
+| **INDEX** | EmployeeAvailability | `[employeeId, dayOfWeek]` | تسريع فحص الجدول |
 
 ### قيود منطقية (Business Rules)
 
 | القاعدة | التفصيل |
 |---------|---------|
-| **المريض إلزامي عند الإنشاء** | `patientId` nullable في الـ schema فقط لـ `onDelete:SetNull` — الكود يفرض وجوده عند `create()` |
+| **المريض إلزامي عند الإنشاء** | `clientId` nullable في الـ schema فقط لـ `onDelete:SetNull` — الكود يفرض وجوده عند `create()` |
 | **الدفع المسبق إلزامي** | لا يمكن تأكيد الحجز بدون `payment.status === 'paid'` |
 | **منع الحجز المزدوج** | فحص التداخل الزمني مع مراعاة `bufferBefore` و `bufferAfter` |
-| **فحص جدول العمل** | الموعد يجب أن يكون ضمن `PractitionerAvailability` ليوم الحجز |
-| **فحص الإجازات** | لا حجز خلال فترة `PractitionerVacation` |
+| **فحص جدول العمل** | الموعد يجب أن يكون ضمن `EmployeeAvailability` ليوم الحجز |
+| **فحص الإجازات** | لا حجز خلال فترة `EmployeeVacation` |
 | **تاريخ مستقبلي فقط** | لا يمكن الحجز في تاريخ ماضٍ |
 | **Zoom فقط للمرئي** | `zoomMeetingId/joinUrl/hostUrl` تُنشأ فقط عندما `type = video_consultation` |
 | **الإلغاء يحتاج موافقة** | المريض يطلب ← الإدارة تقرر (استرداد كامل/جزئي/بدون) |
@@ -122,10 +122,10 @@
   ps?.priceClinic ?? pr?.priceClinic ?? service.price
 
 +---------------------------------------------------+
-| 1. PractitionerService.priceClinic/Phone/Video     | <-- الأعلى أولوية
+| 1. EmployeeService.priceClinic/Phone/Video     | <-- الأعلى أولوية
 |    (nullable — override per service)               |
 +---------------------------------------------------+
-| 2. Practitioner.priceClinic/Phone/Video            | <-- السعر العام للطبيب
+| 2. Employee.priceClinic/Phone/Video            | <-- السعر العام للطبيب
 |    (default 0 — fallback when PS is null)          |
 +---------------------------------------------------+
 | 3. Service.price                                   | <-- السعر الافتراضي للخدمة
@@ -134,7 +134,7 @@
 
 أولوية المدة (طبقتان):
 +---------------------------------------------------+
-| 1. PractitionerService.customDuration               | <-- الأعلى أولوية
+| 1. EmployeeService.customDuration               | <-- الأعلى أولوية
 +---------------------------------------------------+
 | 2. Service.duration                                 | <-- المدة الافتراضية
 +---------------------------------------------------+

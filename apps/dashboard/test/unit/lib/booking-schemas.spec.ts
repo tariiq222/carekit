@@ -6,7 +6,7 @@ import {
 
 describe("bookingCreateSchema", () => {
   const valid = {
-    practitionerId: "p-1",
+    employeeId: "p-1",
     serviceId: "svc-1",
     type: "in_person" as const,
     date: "2026-04-10",
@@ -36,14 +36,14 @@ describe("bookingCreateSchema", () => {
     expect(result.success).toBe(false)
   })
 
-  it("rejects missing practitionerId", () => {
-    const rest = (({ practitionerId: _p, ...r }) => r)(valid)
+  it("rejects missing employeeId", () => {
+    const rest = (({ employeeId: _p, ...r }) => r)(valid)
     const result = bookingCreateSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
 
-  it("rejects empty practitionerId", () => {
-    const result = bookingCreateSchema.safeParse({ ...valid, practitionerId: "" })
+  it("rejects empty employeeId", () => {
+    const result = bookingCreateSchema.safeParse({ ...valid, employeeId: "" })
     expect(result.success).toBe(false)
   })
 

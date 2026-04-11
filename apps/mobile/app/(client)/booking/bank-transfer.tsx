@@ -121,7 +121,7 @@ export default function BankTransferScreen() {
       if (res.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.replace({
-          pathname: '/(patient)/booking/success',
+          pathname: '/(client)/booking/success',
           params: {
             bookingId: params.bookingId,
             pendingApproval: 'true',

@@ -129,13 +129,13 @@ export default function TodayScreen() {
         renderItem={({ item }) => {
           const Icon = TYPE_ICON[item.type];
           const color = TYPE_COLOR[item.type];
-          const patientName = item.patient
-            ? `${item.patient.firstName} ${item.patient.lastName}`
-            : t('doctor.patientRecord');
+          const clientName = item.client
+            ? `${item.client.firstName} ${item.client.lastName}`
+            : t('doctor.clientRecord');
           return (
             <Pressable
               style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-              onPress={() => router.push(`/(practitioner)/appointment/${item.id}`)}
+              onPress={() => router.push(`/(employee)/appointment/${item.id}`)}
             >
               <ThemedCard style={styles.timelineCard}>
                 <View style={styles.timelineRow}>
@@ -144,7 +144,7 @@ export default function TodayScreen() {
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <ThemedText variant="subheading" numberOfLines={1}>
-                      {patientName || t('doctor.patientRecord')}
+                      {clientName || t('doctor.clientRecord')}
                     </ThemedText>
                     <View style={styles.timeRow}>
                       <Clock size={12} strokeWidth={1.5} color={theme.colors.textMuted} />

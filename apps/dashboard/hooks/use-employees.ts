@@ -4,33 +4,33 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { useState, useCallback } from "react"
 import { queryKeys } from "@/lib/query-keys"
 import {
-  fetchPractitioners,
-  fetchPractitioner,
+  fetchEmployees,
+  fetchEmployee,
   fetchAvailability,
   fetchBreaks,
   fetchVacations,
-  fetchPractitionerServices,
-  fetchPractitionerServiceTypes,
-} from "@/lib/api/practitioners"
-import type { PractitionerListQuery } from "@/lib/types/practitioner"
+  fetchEmployeeServices,
+  fetchEmployeeServiceTypes,
+} from "@/lib/api/employees"
+import type { EmployeeListQuery } from "@/lib/types/employee"
 
 // Re-export mutations from dedicated file for backward compatibility
 export {
-  usePractitionerMutations,
+  useEmployeeMutations,
   useSetAvailability,
   useSetBreaks,
   useVacationMutations,
-  usePractitionerServiceMutations,
-} from "./use-practitioner-mutations"
+  useEmployeeServiceMutations,
+} from "./use-employee-mutations"
 
 /* ─── List Hook ─── */
 
-export function usePractitioners() {
+export function useEmployees() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
   const [isActive, setIsActive] = useState<boolean | undefined>()
 
-  const query: PractitionerListQuery = {
+  const query: EmployeeListQuery = {
     page,
     perPage: 20,
     search: search || undefined,
@@ -38,8 +38,8 @@ export function usePractitioners() {
   }
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: queryKeys.practitioners.list(query),
-    queryFn: () => fetchPractitioners(query),
+    queryKey: queryKeys.employees.list(query),
+    queryFn: () => fetchEmployees(query),
     placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000, // 5 min
   })
@@ -55,7 +55,7 @@ export function usePractitioners() {
   const items = data?.items ?? []
 
   return {
-    practitioners: items,
+    employees: items,
     meta: data?.meta ?? null,
     isLoading,
     error: error?.message ?? null,
@@ -73,10 +73,10 @@ export function usePractitioners() {
 
 /* ─── Detail Hook ─── */
 
-export function usePractitioner(id: string | null) {
+export function useEmployee(id: string | null) {
   return useQuery({
-    queryKey: queryKeys.practitioners.detail(id!),
-    queryFn: () => fetchPractitioner(id!),
+    queryKey: queryKeys.employees.detail(id!),
+    queryFn: () => fetchEmployee(id!),
     enabled: !!id,
     staleTime: 10 * 60 * 1000, // 10 min
   })
@@ -84,9 +84,9 @@ export function usePractitioner(id: string | null) {
 
 /* ─── Availability Query ─── */
 
-export function usePractitionerAvailability(id: string | null) {
+export function useEmployeeAvailability(id: string | null) {
   return useQuery({
-    queryKey: queryKeys.practitioners.availability(id!),
+    queryKey: queryKeys.employees.availability(id!),
     queryFn: () => fetchAvailability(id!),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
@@ -95,9 +95,9 @@ export function usePractitionerAvailability(id: string | null) {
 
 /* ─── Breaks Query ─── */
 
-export function usePractitionerBreaks(id: string | null) {
+export function useEmployeeBreaks(id: string | null) {
   return useQuery({
-    queryKey: queryKeys.practitioners.breaks(id!),
+    queryKey: queryKeys.employees.breaks(id!),
     queryFn: () => fetchBreaks(id!),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
@@ -106,36 +106,36 @@ export function usePractitionerBreaks(id: string | null) {
 
 /* ─── Vacations Query ─── */
 
-export function usePractitionerVacations(id: string | null) {
+export function useEmployeeVacations(id: string | null) {
   return useQuery({
-    queryKey: queryKeys.practitioners.vacations(id!),
+    queryKey: queryKeys.employees.vacations(id!),
     queryFn: () => fetchVacations(id!),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
   })
 }
 
-/* ─── Practitioner Services Query ─── */
+/* ─── Employee Services Query ─── */
 
-export function usePractitionerServices(id: string | null) {
+export function useEmployeeServices(id: string | null) {
   return useQuery({
-    queryKey: queryKeys.practitioners.services(id!),
-    queryFn: () => fetchPractitionerServices(id!),
+    queryKey: queryKeys.employees.services(id!),
+    queryFn: () => fetchEmployeeServices(id!),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
   })
 }
 
-/* ─── Practitioner Service Types Query ─── */
+/* ─── Employee Service Types Query ─── */
 
-export function usePractitionerServiceTypes(
-  practitionerId: string | null,
+export function useEmployeeServiceTypes(
+  employeeId: string | null,
   serviceId: string | null,
 ) {
-  const enabled = !!practitionerId && !!serviceId
+  const enabled = !!employeeId && !!serviceId
   return useQuery({
-    queryKey: queryKeys.practitioners.serviceTypes(practitionerId ?? "", serviceId ?? ""),
-    queryFn: () => fetchPractitionerServiceTypes(practitionerId!, serviceId!),
+    queryKey: queryKeys.employees.serviceTypes(employeeId ?? "", serviceId ?? ""),
+    queryFn: () => fetchEmployeeServiceTypes(employeeId!, serviceId!),
     enabled,
   })
 }

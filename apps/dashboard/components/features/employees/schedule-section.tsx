@@ -5,9 +5,9 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  usePractitionerAvailability,
-  usePractitionerBreaks,
-} from "@/hooks/use-practitioners"
+  useEmployeeAvailability,
+  useEmployeeBreaks,
+} from "@/hooks/use-employees"
 import { ScheduleEditor } from "./schedule-editor"
 
 /* ─── Constants ─── */
@@ -19,17 +19,17 @@ const DAY_NAMES = [
 /* ─── Props ─── */
 
 interface ScheduleSectionProps {
-  practitionerId: string
+  employeeId: string
 }
 
 /* ─── Component ─── */
 
-export function ScheduleSection({ practitionerId }: ScheduleSectionProps) {
+export function ScheduleSection({ employeeId }: ScheduleSectionProps) {
   const [editorOpen, setEditorOpen] = useState(false)
   const { data: slots, isLoading: loadingSlots } =
-    usePractitionerAvailability(practitionerId)
+    useEmployeeAvailability(employeeId)
   const { data: breaks, isLoading: loadingBreaks } =
-    usePractitionerBreaks(practitionerId)
+    useEmployeeBreaks(employeeId)
 
   const isLoading = loadingSlots || loadingBreaks
 
@@ -115,7 +115,7 @@ export function ScheduleSection({ practitionerId }: ScheduleSectionProps) {
       )}
 
       <ScheduleEditor
-        practitionerId={practitionerId}
+        employeeId={employeeId}
         open={editorOpen}
         onOpenChange={setEditorOpen}
       />

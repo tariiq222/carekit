@@ -71,7 +71,7 @@ export default function AppointmentDetailScreen() {
 
   const meta = TYPE_META[booking.type] ?? TYPE_META.in_person;
   const TypeIcon = meta.icon;
-  const practName = `${booking.practitioner.user.firstName} ${booking.practitioner.user.lastName}`;
+  const practName = `${booking.employee.user.firstName} ${booking.employee.user.lastName}`;
   const statusLabels: Record<string, string> = {
     pending: t('appointments.pending'),
     confirmed: t('appointments.confirmed'),
@@ -119,14 +119,14 @@ export default function AppointmentDetailScreen() {
           <StatusPill status={booking.status} label={statusLabels[booking.status] ?? booking.status} />
         </View>
 
-        {/* Practitioner */}
+        {/* Employee */}
         <ThemedCard style={styles.practCard}>
           <View style={styles.practRow}>
-            <Avatar size={48} name={practName} imageUrl={booking.practitioner.user.avatarUrl} />
+            <Avatar size={48} name={practName} imageUrl={booking.employee.user.avatarUrl} />
             <View style={{ flex: 1, gap: 2 }}>
               <ThemedText variant="subheading">{practName}</ThemedText>
               <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
-                {booking.practitioner.specialty?.nameAr}
+                {booking.employee.specialty?.nameAr}
               </ThemedText>
             </View>
           </View>
@@ -152,7 +152,7 @@ export default function AppointmentDetailScreen() {
           )}
           {booking.status === 'completed' && (
             <ThemedButton
-              onPress={() => router.push(`/(patient)/rate/${booking.id}`)}
+              onPress={() => router.push(`/(client)/rate/${booking.id}`)}
               variant="secondary"
               size="lg"
               full

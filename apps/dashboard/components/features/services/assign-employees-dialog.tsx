@@ -34,9 +34,9 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
-import { fetchPractitioners } from "@/lib/api/practitioners"
+import { fetchEmployees } from "@/lib/api/employees"
 import { queryKeys } from "@/lib/query-keys"
-import { useAssignPractitionersToService } from "@/hooks/use-services"
+import { useAssignEmployeesToService } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 
 interface Props {
@@ -49,7 +49,7 @@ interface Props {
   onCreateAssign?: (ids: string[]) => void
 }
 
-export function AssignPractitionersDialog({
+export function AssignEmployeesDialog({
   open,
   onOpenChange,
   serviceId,
@@ -63,17 +63,17 @@ export function AssignPractitionersDialog({
   const [selected, setSelected] = useState<string[]>([])
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.practitioners.list({ perPage: 200, isActive: undefined }),
-    queryFn: () => fetchPractitioners({ perPage: 200 }),
+    queryKey: queryKeys.employees.list({ perPage: 200, isActive: undefined }),
+    queryFn: () => fetchEmployees({ perPage: 200 }),
     staleTime: 5 * 60 * 1000,
     enabled: open,
   })
-  const assignMut = useAssignPractitionersToService(serviceId)
+  const assignMut = useAssignEmployeesToService(serviceId)
 
   // Filter: exclude already-assigned, apply search
   const available = useMemo(() => {
-    const practitioners = data?.items ?? []
-    return practitioners.filter((p) => {
+    const employees = data?.items ?? []
+    return employees.filter((p) => {
       if (excludeIds.includes(p.id)) return false
       if (!search) return true
       const fullName = `${p.user.firstName} ${p.user.lastName}`.toLowerCase()
@@ -102,12 +102,12 @@ export function AssignPractitionersDialog({
 
     try {
       await assignMut.mutateAsync(selected)
-      toast.success(t("services.practitioners.assignSuccess"))
+      toast.success(t("services.employees.assignSuccess"))
       setSelected([])
       setSearch("")
       onOpenChange(false)
     } catch {
-      toast.error(t("services.practitioners.assignError"))
+      toast.error(t("services.employees.assignError"))
     }
   }
 
@@ -121,9 +121,9 @@ export function AssignPractitionersDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("services.practitioners.dialogTitle")}</DialogTitle>
+          <DialogTitle>{t("services.employees.dialogTitle")}</DialogTitle>
           <DialogDescription>
-            {t("services.practitioners.dialogDesc")}
+            {t("services.employees.dialogDesc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -136,7 +136,7 @@ export function AssignPractitionersDialog({
             className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"
           />
           <Input
-            placeholder={t("services.practitioners.searchPlaceholder")}
+            placeholder={t("services.employees.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="ps-9"
@@ -145,7 +145,7 @@ export function AssignPractitionersDialog({
 
         {/* List with scroll fade */}
         <div className="relative">
-          <div role="listbox" aria-multiselectable="true" aria-label={t("services.practitioners.dialogTitle")} className="max-h-72 overflow-y-auto space-y-1 -mx-1 px-1">
+          <div role="listbox" aria-multiselectable="true" aria-label={t("services.employees.dialogTitle")} className="max-h-72 overflow-y-auto space-y-1 -mx-1 px-1">
             {isLoading ? (
               <>
                 <Skeleton className="h-14 w-full rounded-lg" />
@@ -157,8 +157,8 @@ export function AssignPractitionersDialog({
                 <HugeiconsIcon icon={UserIcon} strokeWidth={1.5} className="size-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   {search
-                    ? t("services.practitioners.noResults")
-                    : t("services.practitioners.allAssigned")}
+                    ? t("services.employees.noResults")
+                    : t("services.employees.allAssigned")}
                 </p>
               </div>
             ) : (
@@ -250,8 +250,8 @@ export function AssignPractitionersDialog({
             onClick={handleSave}
           >
             {assignMut.isPending
-              ? t("services.practitioners.assigning")
-              : `${t("services.practitioners.assignBtn")}${selected.length > 0 ? ` (${selected.length})` : ""}`}
+              ? t("services.employees.assigning")
+              : `${t("services.employees.assignBtn")}${selected.length > 0 ? ` (${selected.length})` : ""}`}
           </Button>
         </DialogFooter>
       </DialogContent>

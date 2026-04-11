@@ -20,14 +20,14 @@ export interface Branch {
   updatedAt: string
 }
 
-export interface PractitionerBranch {
+export interface EmployeeBranch {
   id: string
-  practitionerId: string
+  employeeId: string
   branchId: string
   isPrimary: boolean
   createdAt: string
   updatedAt: string
-  practitioner: {
+  employee: {
     id: string
     rating: number
     isActive: boolean

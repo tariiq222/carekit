@@ -69,8 +69,8 @@ HTML reports are saved to `performance/lighthouse/results/`.
 |---|---|
 | `/` | Login / root redirect |
 | `/bookings` | Main booking list |
-| `/patients` | Patient directory |
-| `/practitioners` | Practitioner roster |
+| `/clients` | Client directory |
+| `/employees` | Employee roster |
 | `/services` | Service catalog |
 | `/users` | Staff user list |
 | `/reports` | Analytics dashboard |

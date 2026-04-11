@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Widget Auth Step — Inline patient login / register
+ * Widget Auth Step — Inline client login / register
  *
  * Uses the existing AuthProvider context.
  * If already authenticated, auto-advances to next step.

@@ -21,11 +21,11 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 
 import {
-  useBranchPractitioners,
-  useBranchPractitionerMutations,
+  useBranchEmployees,
+  useBranchEmployeeMutations,
 } from "@/hooks/use-branches"
 import { useLocale } from "@/components/locale-provider"
-import { fetchPractitioners } from "@/lib/api/practitioners"
+import { fetchEmployees } from "@/lib/api/employees"
 import { useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import type { Branch } from "@/lib/types/branch"
@@ -36,7 +36,7 @@ interface Props {
   onOpenChange: (open: boolean) => void
 }
 
-export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props) {
+export function BranchEmployeesDialog({ branch, open, onOpenChange }: Props) {
   const { t, locale } = useLocale()
   const [search, setSearch] = useState("")
   const [selected, setSelected] = useState<string[]>([])
@@ -44,22 +44,22 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
   const branchId = branch?.id ?? null
   const branchName = branch ? (locale === "ar" ? branch.nameAr : branch.nameEn) : ""
 
-  const { data: assigned, isLoading: loadingAssigned } = useBranchPractitioners(branchId)
-  const { assignMut, removeMut } = useBranchPractitionerMutations()
+  const { data: assigned, isLoading: loadingAssigned } = useBranchEmployees(branchId)
+  const { assignMut, removeMut } = useBranchEmployeeMutations()
 
-  const { data: allPractitioners, isLoading: loadingAll } = useQuery({
-    queryKey: queryKeys.practitioners.list({ perPage: 200 }),
-    queryFn: () => fetchPractitioners({ perPage: 200 }),
+  const { data: allEmployees, isLoading: loadingAll } = useQuery({
+    queryKey: queryKeys.employees.list({ perPage: 200 }),
+    queryFn: () => fetchEmployees({ perPage: 200 }),
     enabled: open,
   })
 
   const assignedIds = useMemo(
-    () => new Set((assigned ?? []).map((a) => a.practitionerId)),
+    () => new Set((assigned ?? []).map((a) => a.employeeId)),
     [assigned],
   )
 
   const unassigned = useMemo(() => {
-    const items = allPractitioners?.items ?? []
+    const items = allEmployees?.items ?? []
     return items.filter(
       (p) =>
         !assignedIds.has(p.id) &&
@@ -67,7 +67,7 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
           p.user.firstName.toLowerCase().includes(search.toLowerCase()) ||
           p.user.lastName.toLowerCase().includes(search.toLowerCase())),
     )
-  }, [allPractitioners, assignedIds, search])
+  }, [allEmployees, assignedIds, search])
 
   const toggleSelection = (id: string) => {
     setSelected((prev) =>
@@ -78,10 +78,10 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
   const handleAssign = () => {
     if (!branchId || selected.length === 0) return
     assignMut.mutate(
-      { branchId, practitionerIds: selected },
+      { branchId, employeeIds: selected },
       {
         onSuccess: () => {
-          toast.success(t("branches.practitioners.assigned"))
+          toast.success(t("branches.employees.assigned"))
           setSelected([])
           setSearch("")
         },
@@ -89,11 +89,11 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
     )
   }
 
-  const handleRemove = (practitionerId: string) => {
+  const handleRemove = (employeeId: string) => {
     if (!branchId) return
     removeMut.mutate(
-      { branchId, practitionerId },
-      { onSuccess: () => toast.success(t("branches.practitioners.removed")) },
+      { branchId, employeeId },
+      { onSuccess: () => toast.success(t("branches.employees.removed")) },
     )
   }
 
@@ -110,18 +110,18 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {t("branches.practitioners.title")} — {branchName}
+            {t("branches.employees.title")} — {branchName}
           </DialogTitle>
           <DialogDescription>
-            {t("branches.practitioners.description")}
+            {t("branches.employees.description")}
           </DialogDescription>
         </DialogHeader>
 
         <DialogBody className="flex flex-col gap-6">
-          {/* ── Assigned Practitioners ── */}
+          {/* ── Assigned Employees ── */}
           <div>
             <h4 className="mb-3 text-sm font-medium text-foreground">
-              {t("branches.practitioners.current")} ({assigned?.length ?? 0})
+              {t("branches.employees.current")} ({assigned?.length ?? 0})
             </h4>
             {loadingAssigned ? (
               <div className="space-y-2">
@@ -131,7 +131,7 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
               </div>
             ) : (assigned ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                {t("branches.practitioners.none")}
+                {t("branches.employees.none")}
               </p>
             ) : (
               <div className="space-y-2">
@@ -142,22 +142,22 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
                   >
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-foreground">
-                        {pb.practitioner.user.firstName} {pb.practitioner.user.lastName}
+                        {pb.employee.user.firstName} {pb.employee.user.lastName}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {pb.practitioner.specialty}
+                        {pb.employee.specialty}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {pb.isPrimary && (
                         <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-xs">
-                          {t("branches.practitioners.primary")}
+                          {t("branches.employees.primary")}
                         </Badge>
                       )}
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        onClick={() => handleRemove(pb.practitionerId)}
+                        onClick={() => handleRemove(pb.employeeId)}
                         disabled={removeMut.isPending}
                       >
                         <HugeiconsIcon icon={Delete02Icon} size={14} className="text-destructive" />
@@ -171,10 +171,10 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
 
           <Separator />
 
-          {/* ── Add Practitioners ── */}
+          {/* ── Add Employees ── */}
           <div>
             <h4 className="mb-3 text-sm font-medium text-foreground">
-              {t("branches.practitioners.add")}
+              {t("branches.employees.add")}
             </h4>
 
             <div className="relative mb-3">
@@ -186,7 +186,7 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("branches.practitioners.searchPlaceholder")}
+                placeholder={t("branches.employees.searchPlaceholder")}
                 className="ps-9"
               />
             </div>
@@ -199,7 +199,7 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
               </div>
             ) : unassigned.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                {t("branches.practitioners.allAssigned")}
+                {t("branches.employees.allAssigned")}
               </p>
             ) : (
               <div className="max-h-52 space-y-1 overflow-y-auto">
@@ -233,7 +233,7 @@ export function BranchPractitionersDialog({ branch, open, onOpenChange }: Props)
               >
                 {assignMut.isPending
                   ? t("common.saving")
-                  : `${t("branches.practitioners.assignSelected")} (${selected.length})`}
+                  : `${t("branches.employees.assignSelected")} (${selected.length})`}
               </Button>
             )}
           </div>

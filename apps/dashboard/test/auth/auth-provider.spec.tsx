@@ -49,7 +49,7 @@ const mockUser = {
   phone: null,
   gender: null,
   roles: [{ id: 'r1', name: 'Admin', slug: 'admin' }],
-  permissions: ['bookings:read', 'bookings:write', 'patients:*'],
+  permissions: ['bookings:read', 'bookings:write', 'clients:*'],
 }
 
 const mockAuthResponse = {
@@ -71,7 +71,7 @@ function TestConsumer() {
       <div data-testid="authenticated">{isAuthenticated ? 'yes' : 'no'}</div>
       <div data-testid="can-bookings-read">{canDo('bookings', 'read') ? 'yes' : 'no'}</div>
       <div data-testid="can-invoices-delete">{canDo('invoices', 'delete') ? 'yes' : 'no'}</div>
-      <div data-testid="can-patients-anything">{canDo('patients', 'anything') ? 'yes' : 'no'}</div>
+      <div data-testid="can-clients-anything">{canDo('clients', 'anything') ? 'yes' : 'no'}</div>
       <button onClick={() => login('test@test.com', 'Pass123!')}>Login</button>
       <button onClick={() => logout()}>Logout</button>
     </div>
@@ -255,10 +255,10 @@ describe('AuthProvider', () => {
       )
     })
 
-    it('should return true for wildcard module permission (patients:*)', async () => {
+    it('should return true for wildcard module permission (clients:*)', async () => {
       renderWithProvider()
       await waitFor(() =>
-        expect(screen.getByTestId('can-patients-anything').textContent).toBe('yes'),
+        expect(screen.getByTestId('can-clients-anything').textContent).toBe('yes'),
       )
     })
   })

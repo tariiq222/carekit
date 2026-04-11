@@ -41,9 +41,9 @@
 
 | Method | Path | الوظيفة |
 |--------|------|---------|
-| GET | `/bookings` | كل المواعيد — يدعم فلاتر: `status`, `type`, `practitionerId`, `patientId`, `dateFrom`, `dateTo`, `page`, `perPage` |
+| GET | `/bookings` | كل المواعيد — يدعم فلاتر: `status`, `type`, `employeeId`, `clientId`, `dateFrom`, `dateTo`, `page`, `perPage` |
 | GET | `/bookings/:id` | تفاصيل موعد واحد (مريض + ممارس + خدمة + دفع + تقييم) |
-| POST | `/bookings` | إنشاء موعد جديد — يحتاج: `patientId`, `practitionerServiceId`, `type`, `date`, `startTime`. يتحقق من عدم التعارض + ينشئ رابط Zoom لو video |
+| POST | `/bookings` | إنشاء موعد جديد — يحتاج: `clientId`, `employeeServiceId`, `type`, `date`, `startTime`. يتحقق من عدم التعارض + ينشئ رابط Zoom لو video |
 | PATCH | `/bookings/:id` | إعادة جدولة — يرسل `date` + `startTime` جديدة. ينشئ موعد جديد ويلغي القديم وينقل الدفع |
 | POST | `/bookings/:id/confirm` | تأكيد الموعد — يتحقق إن الدفع تم. يغير الحالة من pending → confirmed |
 | POST | `/bookings/:id/complete` | إكمال الموعد — يغير من confirmed → completed |
@@ -55,14 +55,14 @@
 ### بيانات الفورم تحتاج
 | Method | Path | الوظيفة |
 |--------|------|---------|
-| GET | `/patients?search=` | قائمة المرضى للاختيار |
-| GET | `/practitioners` | قائمة الممارسين للاختيار |
-| GET | `/practitioners/:id/services` | خدمات الممارس المحدد مع الأسعار |
-| GET | `/practitioners/:id/slots?date=` | الأوقات المتاحة في تاريخ محدد |
+| GET | `/clients?search=` | قائمة المرضى للاختيار |
+| GET | `/employees` | قائمة الممارسين للاختيار |
+| GET | `/employees/:id/services` | خدمات الممارس المحدد مع الأسعار |
+| GET | `/employees/:id/slots?date=` | الأوقات المتاحة في تاريخ محدد |
 
 ---
 
-## 3. الممارسون (Practitioners)
+## 3. الممارسون (Employees)
 
 ### البيانات المعروضة
 - جدول كل الممارسين مع فلاتر (تخصص، حالة، بحث)
@@ -73,21 +73,21 @@
 
 | Method | Path | الوظيفة |
 |--------|------|---------|
-| GET | `/practitioners` | كل الممارسين — فلاتر: `specialtyId`, `search`, `isActive`, `minRating` |
-| GET | `/practitioners/:id` | تفاصيل الممارس + user info + تخصص + تقييم متوسط |
-| POST | `/practitioners` | إنشاء ممارس — ينشئ user + practitioner + يربط بالتخصص |
-| PATCH | `/practitioners/:id` | تعديل بيانات الممارس (سيرة، تخصص، حالة) |
-| DELETE | `/practitioners/:id` | حذف ناعم |
-| GET | `/practitioners/:id/availability` | الجدول الأسبوعي (أيام + أوقات) |
-| PUT | `/practitioners/:id/availability` | تحديث الجدول الأسبوعي (يستبدل الكل) |
-| GET | `/practitioners/:id/vacations` | قائمة الإجازات |
-| POST | `/practitioners/:id/vacations` | إضافة إجازة — `startDate`, `endDate`, `reason` |
-| DELETE | `/practitioners/:id/vacations/:vacationId` | حذف إجازة |
-| GET | `/practitioners/:id/services` | الخدمات المعينة للممارس مع أسعاره |
-| POST | `/practitioners/:id/services` | تعيين خدمة — `serviceId`, `clinicVisitPrice`, `phonePrice`, `videoPrice`, `duration` |
-| PATCH | `/practitioners/:id/services/:serviceId` | تعديل سعر/مدة خدمة |
-| DELETE | `/practitioners/:id/services/:serviceId` | إلغاء تعيين خدمة |
-| GET | `/practitioners/:id/ratings` | تقييمات الممارس (مجهولة الهوية) |
+| GET | `/employees` | كل الممارسين — فلاتر: `specialtyId`, `search`, `isActive`, `minRating` |
+| GET | `/employees/:id` | تفاصيل الممارس + user info + تخصص + تقييم متوسط |
+| POST | `/employees` | إنشاء ممارس — ينشئ user + employee + يربط بالتخصص |
+| PATCH | `/employees/:id` | تعديل بيانات الممارس (سيرة، تخصص، حالة) |
+| DELETE | `/employees/:id` | حذف ناعم |
+| GET | `/employees/:id/availability` | الجدول الأسبوعي (أيام + أوقات) |
+| PUT | `/employees/:id/availability` | تحديث الجدول الأسبوعي (يستبدل الكل) |
+| GET | `/employees/:id/vacations` | قائمة الإجازات |
+| POST | `/employees/:id/vacations` | إضافة إجازة — `startDate`, `endDate`, `reason` |
+| DELETE | `/employees/:id/vacations/:vacationId` | حذف إجازة |
+| GET | `/employees/:id/services` | الخدمات المعينة للممارس مع أسعاره |
+| POST | `/employees/:id/services` | تعيين خدمة — `serviceId`, `clinicVisitPrice`, `phonePrice`, `videoPrice`, `duration` |
+| PATCH | `/employees/:id/services/:serviceId` | تعديل سعر/مدة خدمة |
+| DELETE | `/employees/:id/services/:serviceId` | إلغاء تعيين خدمة |
+| GET | `/employees/:id/ratings` | تقييمات الممارس (مجهولة الهوية) |
 
 ### بيانات الفورم تحتاج
 | Method | Path | الوظيفة |
@@ -97,7 +97,7 @@
 
 ---
 
-## 4. المرضى (Patients)
+## 4. المرضى (Clients)
 
 ### البيانات المعروضة
 - جدول كل المرضى مع بحث + server-side pagination
@@ -107,9 +107,9 @@
 
 | Method | Path | الوظيفة |
 |--------|------|---------|
-| GET | `/patients` | كل المرضى — فلاتر: `search`, `page`, `perPage`. يجيب المستخدمين بدور patient |
-| GET | `/patients/:id` | تفاصيل المريض + آخر 10 حجوزات |
-| GET | `/patients/:id/stats` | إحصائيات: عدد الحجوزات حسب الحالة + إجمالي المدفوعات |
+| GET | `/clients` | كل المرضى — فلاتر: `search`, `page`, `perPage`. يجيب المستخدمين بدور client |
+| GET | `/clients/:id` | تفاصيل المريض + آخر 10 حجوزات |
+| GET | `/clients/:id/stats` | إحصائيات: عدد الحجوزات حسب الحالة + إجمالي المدفوعات |
 | PATCH | `/users/:id` | تعديل بيانات المريض (الاسم، الجوال، الجنس، تاريخ الميلاد) |
 | PATCH | `/users/:id/activate` | تفعيل حساب المريض |
 | PATCH | `/users/:id/deactivate` | تعطيل حساب المريض |
@@ -196,7 +196,7 @@
 |--------|------|---------|
 | GET | `/users` | كل المستخدمين — فلاتر: `search`, `role`, `isActive`, `page`, `perPage` |
 | GET | `/users/:id` | تفاصيل مستخدم |
-| POST | `/users` | إنشاء مستخدم — `email`, `password`, `nameAr`, `nameEn`, `phone`, `roleSlug`. لو `roleSlug: 'practitioner'` ينشئ ممارس تلقائياً |
+| POST | `/users` | إنشاء مستخدم — `email`, `password`, `nameAr`, `nameEn`, `phone`, `roleSlug`. لو `roleSlug: 'employee'` ينشئ ممارس تلقائياً |
 | PATCH | `/users/:id` | تعديل بيانات المستخدم |
 | DELETE | `/users/:id` | حذف ناعم |
 | PATCH | `/users/:id/activate` | تفعيل |
@@ -233,9 +233,9 @@
 
 | Method | Path | الوظيفة |
 |--------|------|---------|
-| GET | `/reports/revenue?dateFrom=&dateTo=` | إيرادات: `total`, `byMonth[{month, total, count}]`, `byPractitioner[{name, total}]`, `byService[{name, total}]` |
+| GET | `/reports/revenue?dateFrom=&dateTo=` | إيرادات: `total`, `byMonth[{month, total, count}]`, `byEmployee[{name, total}]`, `byService[{name, total}]` |
 | GET | `/reports/bookings?dateFrom=&dateTo=` | حجوزات: `total`, `byStatus{pending, confirmed, completed, cancelled, pendingCancellation}`, `byType{clinic, phone, video}`, `byDay[{date, count}]` |
-| GET | `/reports/practitioners/:id?dateFrom=&dateTo=` | تقرير ممارس فردي |
+| GET | `/reports/employees/:id?dateFrom=&dateTo=` | تقرير ممارس فردي |
 
 ---
 
@@ -351,4 +351,4 @@ Production:  https://api.{domain}/api/v1
 - `POST /auth/login` + `/auth/register` + `/auth/login/otp/*`
 - `POST /auth/password/forgot` + `/auth/password/reset`
 - `POST /payments/moyasar/webhook`
-- `GET /practitioners` + `/practitioners/:id` + `/services` + `/specialties` (public)
+- `GET /employees` + `/employees/:id` + `/services` + `/specialties` (public)

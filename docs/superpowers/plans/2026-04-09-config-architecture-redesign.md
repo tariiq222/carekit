@@ -60,8 +60,8 @@
 | `backend/src/modules/tasks/booking-autocomplete.service.ts` | Rewire getTimezone() |
 | `backend/src/modules/tasks/booking-noshow.service.ts` | Rewire getTimezone() |
 | `backend/src/modules/tasks/reminder.service.ts` | Rewire getTimeFormat() |
-| `backend/src/modules/practitioners/practitioner-availability.service.ts` | Rewire getTimezone() |
-| `backend/src/modules/practitioners/practitioners.module.ts` | Import ClinicSettingsModule instead of WhitelabelModule |
+| `backend/src/modules/employees/employee-availability.service.ts` | Rewire getTimezone() |
+| `backend/src/modules/employees/employees.module.ts` | Import ClinicSettingsModule instead of WhitelabelModule |
 | `backend/src/modules/notifications/notifications.service.ts` | Rewire getConfigMap() |
 | `backend/src/modules/notifications/notifications.module.ts` | Import changes |
 | `backend/src/modules/email/email.processor.ts` | Rewire getLayoutConfig() to WhitelabelService + ClinicSettingsService |
@@ -1618,15 +1618,15 @@ In `backend/src/modules/tasks/tasks.module.ts`:
 // Replace WhitelabelModule import → ClinicSettingsModule
 ```
 
-- [ ] **Step 6: Rewire PractitionerAvailabilityService**
+- [ ] **Step 6: Rewire EmployeeAvailabilityService**
 
-In `backend/src/modules/practitioners/practitioner-availability.service.ts`:
+In `backend/src/modules/employees/employee-availability.service.ts`:
 ```typescript
 // Replace WhitelabelService → ClinicSettingsService
 // Replace this.whitelabelService.getTimezone() → this.clinicSettingsService.getTimezone()
 ```
 
-In `backend/src/modules/practitioners/practitioners.module.ts`:
+In `backend/src/modules/employees/employees.module.ts`:
 ```typescript
 // Replace WhitelabelModule import → ClinicSettingsModule
 ```
@@ -1714,7 +1714,7 @@ git commit -m "refactor: rewire all consumers to new config modules
 
 - ZatcaService reads from ClinicSettings + ClinicIntegrations
 - ChatbotContextService reads systemName from WhitelabelService
-- BookingCreationService, task services, practitioners read timezone from ClinicSettingsService
+- BookingCreationService, task services, employees read timezone from ClinicSettingsService
 - EmailProcessor reads branding from WhitelabelService, email config from ClinicSettingsService
 - Remove old ClinicSettingsService from clinic module"
 ```
@@ -1748,9 +1748,9 @@ Add the new modules to the MODULES array so permissions are seeded:
 
 ```typescript
 export const MODULES = [
-  'users', 'roles', 'practitioners', 'bookings', 'services',
+  'users', 'roles', 'employees', 'bookings', 'services',
   'payments', 'invoices', 'reports', 'notifications', 'chatbot',
-  'whitelabel', 'patients', 'ratings', 'coupons', 'branches',
+  'whitelabel', 'clients', 'ratings', 'coupons', 'branches',
   'intake_forms', 'gift-cards', 'activity-log',
   'license', 'clinic-settings', 'clinic-integrations', 'feature-flags',
 ];

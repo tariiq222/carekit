@@ -8,7 +8,7 @@
 |-------|---------|------|
 | [auth.md](auth.md) | المصادقة | تسجيل، دخول، OTP، refresh token، خروج، تغيير كلمة مرور، تحقق بريد |
 | [bookings.md](bookings.md) | الحجوزات | إنشاء، قراءة، متكرر، إعادة جدولة، دورة الحياة، إلغاء، قائمة الانتظار، إعدادات |
-| [patients.md](patients.md) | المرضى | قراءة، walk-in، claim، تعديل |
+| [clients.md](clients.md) | المرضى | قراءة، walk-in، claim، تعديل |
 | [payments.md](payments.md) | المدفوعات | Moyasar، webhook، bank transfer، استرداد، قراءة |
 | [users-roles-permissions.md](users-roles-permissions.md) | المستخدمون والأدوار والصلاحيات | CRUD مستخدمين، أدوار، صلاحيات، RBAC |
 
@@ -39,7 +39,7 @@
 |-------|---------|------|
 | [services.md](services.md) | الخدمات | إنشاء، تعديل، حذف، بحث، أنواع الحجز، خيارات المدة |
 | [categories.md](categories.md) | الفئات | إنشاء، تعديل، حذف، قراءة |
-| [practitioners.md](practitioners.md) | الأطباء | إنشاء، تعديل، حذف، قراءة، Onboarding، خدمات الطبيب، المتاحية، Slots، الاستراحات، الإجازات، Buffer |
+| [employees.md](employees.md) | الأطباء | إنشاء، تعديل، حذف، قراءة، Onboarding، خدمات الطبيب، المتاحية، Slots، الاستراحات، الإجازات، Buffer |
 | [ratings.md](ratings.md) | التقييمات | قراءة، pagination، متوسط |
 | [favorites.md](favorites.md) | المفضلة | إضافة، حذف، عزل بين المرضى |
 | [ui-reference.md](ui-reference.md) | مرجع UI | أزرار، حالات، Toasts، جداول، Badges |
@@ -53,7 +53,7 @@
 - **مشكلة الفئة في التعديل**: shadcn Select لا يعكس قيمة `form.reset()` بصرياً — يجب الرجوع لـ Tab 1 وإعادة اختيار الفئة يدوياً قبل الحفظ
 - **تحويل الأسعار**: Backend يحفظ هللات (cents)، Frontend يعرض ريال (÷ 100)
 - **الخدمات المحذوفة**: soft delete فقط — تبقى في DB وتمنع حذف الفئة
-- **هيكل الأسعار الاحتياطي**: 5 مستويات — PractitionerDurationOption → PractitionerServiceType → ServiceBookingType → practitioner.priceX → service.price
+- **هيكل الأسعار الاحتياطي**: 5 مستويات — EmployeeDurationOption → EmployeeServiceType → ServiceBookingType → employee.priceX → service.price
 - **Multi-branch Availability**: `branchId` اختياري في كل slot — null يعني "كل الفروع"
 - **الإجازات والحذف**: التحقق بعد الحذف عبر GET وليس `deletedAt` مباشرة
 - **manifest watcher**: Next.js dev server يُعيد تسمية `app-paths-manifest.json` — شغّل `/tmp/manifest_watch.sh` في الخلفية قبل الاختبارات

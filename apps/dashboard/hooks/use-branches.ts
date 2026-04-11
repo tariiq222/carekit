@@ -8,9 +8,9 @@ import {
   createBranch,
   updateBranch,
   deleteBranch,
-  fetchBranchPractitioners,
-  assignBranchPractitioners,
-  removeBranchPractitioner,
+  fetchBranchEmployees,
+  assignBranchEmployees,
+  removeBranchEmployee,
 } from "@/lib/api/branches"
 import type { BranchListQuery } from "@/lib/types/branch"
 
@@ -82,32 +82,32 @@ export function useBranchMutations() {
   return { createMut, updateMut, deleteMut }
 }
 
-/* ─── Branch Practitioners ─── */
+/* ─── Branch Employees ─── */
 
-export function useBranchPractitioners(branchId: string | null) {
+export function useBranchEmployees(branchId: string | null) {
   return useQuery({
-    queryKey: queryKeys.branches.practitioners(branchId ?? ""),
-    queryFn: () => fetchBranchPractitioners(branchId!),
+    queryKey: queryKeys.branches.employees(branchId ?? ""),
+    queryFn: () => fetchBranchEmployees(branchId!),
     enabled: !!branchId,
   })
 }
 
-export function useBranchPractitionerMutations() {
+export function useBranchEmployeeMutations() {
   const queryClient = useQueryClient()
 
   const assignMut = useMutation({
-    mutationFn: ({ branchId, practitionerIds }: { branchId: string; practitionerIds: string[] }) =>
-      assignBranchPractitioners(branchId, practitionerIds),
+    mutationFn: ({ branchId, employeeIds }: { branchId: string; employeeIds: string[] }) =>
+      assignBranchEmployees(branchId, employeeIds),
     onSuccess: (_data, { branchId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.branches.practitioners(branchId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.branches.employees(branchId) })
     },
   })
 
   const removeMut = useMutation({
-    mutationFn: ({ branchId, practitionerId }: { branchId: string; practitionerId: string }) =>
-      removeBranchPractitioner(branchId, practitionerId),
+    mutationFn: ({ branchId, employeeId }: { branchId: string; employeeId: string }) =>
+      removeBranchEmployee(branchId, employeeId),
     onSuccess: (_data, { branchId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.branches.practitioners(branchId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.branches.employees(branchId) })
     },
   })
 

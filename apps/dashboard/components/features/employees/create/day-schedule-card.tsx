@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useLocale } from "@/components/locale-provider"
-import type { AvailabilitySlot } from "@/lib/types/practitioner"
+import type { AvailabilitySlot } from "@/lib/types/employee"
 import type { LocalBreak } from "./schedule-types"
 
 interface DayScheduleCardProps {

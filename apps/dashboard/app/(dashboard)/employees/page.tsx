@@ -13,23 +13,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { exportPractitionersCsv, exportPractitionersExcel } from "@/lib/api/reports"
-import { PractitionersListContent } from "@/components/features/practitioners/practitioners-list-content"
+import { exportEmployeesCsv, exportEmployeesExcel } from "@/lib/api/reports"
+import { EmployeesListContent } from "@/components/features/employees/employees-list-content"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { PageHeader } from "@/components/features/page-header"
-import { usePractitioners } from "@/hooks/use-practitioners"
+import { useEmployees } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 
-export default function PractitionersPage() {
-  return <Suspense><PractitionersPageInner /></Suspense>
+export default function EmployeesPage() {
+  return <Suspense><EmployeesPageInner /></Suspense>
 }
 
-function PractitionersPageInner() {
+function EmployeesPageInner() {
   const router = useRouter()
   const { t } = useLocale()
 
   const {
-    practitioners,
+    employees,
     meta,
     isLoading,
     error,
@@ -39,15 +39,15 @@ function PractitionersPageInner() {
     setIsActive,
     hasFilters,
     resetFilters,
-  } = usePractitioners()
+  } = useEmployees()
 
   return (
     <ListPageShell>
       <Breadcrumbs />
 
       <PageHeader
-        title={t("practitioners.title")}
-        description={t("practitioners.description")}
+        title={t("employees.title")}
+        description={t("employees.description")}
       >
         <Button
           variant="outline"
@@ -55,34 +55,34 @@ function PractitionersPageInner() {
           onClick={() => router.push("/ratings")}
         >
           <HugeiconsIcon icon={StarIcon} size={16} />
-          {t("practitioners.tabs.ratings")}
+          {t("employees.tabs.ratings")}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-2 rounded-full px-5">
               <HugeiconsIcon icon={Download04Icon} size={16} />
-              {t("practitioners.export")}
+              {t("employees.export")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={exportPractitionersCsv}>
+            <DropdownMenuItem onClick={exportEmployeesCsv}>
               <HugeiconsIcon icon={Download04Icon} size={16} className="me-2 text-muted-foreground" />
-              {t("practitioners.exportCsv")}
+              {t("employees.exportCsv")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={exportPractitionersExcel}>
+            <DropdownMenuItem onClick={exportEmployeesExcel}>
               <HugeiconsIcon icon={GridIcon} size={16} className="me-2 text-muted-foreground" />
-              {t("practitioners.exportExcel")}
+              {t("employees.exportExcel")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/practitioners/create")}>
+        <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/employees/create")}>
           <HugeiconsIcon icon={Add01Icon} size={16} />
-          {t("practitioners.addPractitioner")}
+          {t("employees.addEmployee")}
         </Button>
       </PageHeader>
 
-      <PractitionersListContent
-        practitioners={practitioners}
+      <EmployeesListContent
+        employees={employees}
         meta={meta}
         isLoading={isLoading}
         error={error}

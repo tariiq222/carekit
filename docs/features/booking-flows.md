@@ -59,7 +59,7 @@ stateDiagram-v2
 
 ```mermaid
 sequenceDiagram
-    participant P as Patient/Admin
+    participant P as Client/Admin
     participant S as BookingsService
     participant DB as Database (Transaction)
 

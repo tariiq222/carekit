@@ -7,10 +7,10 @@ import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
-import type { Practitioner } from "@/lib/types/practitioner"
+import type { Employee } from "@/lib/types/employee"
 
 interface TopPerformersProps {
-  practitioners: Practitioner[]
+  employees: Employee[]
 }
 
 /* Rank decorative colors — gold/silver/bronze (exception: these are decorative, not semantic) */
@@ -29,10 +29,10 @@ const rankStyles = [
   },
 ]
 
-export function TopPerformers({ practitioners }: TopPerformersProps) {
+export function TopPerformers({ employees }: TopPerformersProps) {
   const { locale, t } = useLocale()
 
-  const top3 = [...practitioners]
+  const top3 = [...employees]
     .filter((p) => p.averageRating != null && p.averageRating > 0)
     .sort((a, b) => (b.averageRating ?? 0) - (a.averageRating ?? 0))
     .slice(0, 3)
@@ -45,7 +45,7 @@ export function TopPerformers({ practitioners }: TopPerformersProps) {
         <div className="flex items-center gap-2">
           <HugeiconsIcon icon={Award01Icon} size={18} className="text-warning" />
           <h3 className="text-base font-bold text-foreground">
-            {t("practitioners.topPerformersMonth")}
+            {t("employees.topPerformersMonth")}
           </h3>
         </div>
       </div>
@@ -102,7 +102,7 @@ export function TopPerformers({ practitioners }: TopPerformersProps) {
                     </span>
                   </div>
                   <span className="text-xs tabular-nums text-muted-foreground">
-                    {p._count?.bookings ?? 0} {t("practitioners.card.bookings")}
+                    {p._count?.bookings ?? 0} {t("employees.card.bookings")}
                   </span>
                 </div>
               </div>

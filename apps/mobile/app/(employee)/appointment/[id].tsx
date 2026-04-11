@@ -122,7 +122,7 @@ export default function DoctorAppointmentDetailScreen() {
     ]);
   };
 
-  const handlePractitionerCancel = () => {
+  const handleEmployeeCancel = () => {
     Alert.alert(t('doctor.cancelBooking'), t('doctor.cancelConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
@@ -130,7 +130,7 @@ export default function DoctorAppointmentDetailScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await bookingsService.practitionerCancel(booking.id);
+            await bookingsService.employeeCancel(booking.id);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             router.back();
           } catch {
@@ -211,7 +211,7 @@ export default function DoctorAppointmentDetailScreen() {
           )}
           {(booking.status === 'confirmed' || booking.status === 'checked_in') && (
             <ThemedButton
-              onPress={handlePractitionerCancel}
+              onPress={handleEmployeeCancel}
               variant="ghost"
               size="lg"
               full

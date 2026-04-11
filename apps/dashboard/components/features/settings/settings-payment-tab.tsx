@@ -269,8 +269,8 @@ export function SettingsPaymentTab() {
                         <div>
                           <p className="text-sm font-medium text-foreground">
                             {(paymentSettings?.paymentAtClinicEnabled ?? true)
-                              ? t("settings.payment.atClinicPatientOn")
-                              : t("settings.payment.atClinicPatientOff")}
+                              ? t("settings.payment.atClinicClientOn")
+                              : t("settings.payment.atClinicClientOff")}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">{t("settings.payment.atClinicToggleHint")}</p>
                         </div>

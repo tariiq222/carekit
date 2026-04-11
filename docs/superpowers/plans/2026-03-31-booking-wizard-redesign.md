@@ -4,7 +4,7 @@
 
 **Goal:** Convert the 2-step booking creation dialog into a 6-step card-selection wizard where each card click advances to the next step automatically.
 
-**Architecture:** A new `BookingWizard` component with a `useWizardState` hook manages a flat state object with cascade-reset logic. Six step components (patient, service, practitioner, type+duration, date+time, confirm+pay) are rendered conditionally inside the existing `BookingCreateDialog`. The clinic `bookingFlowOrder` setting controls whether steps 2 and 3 are service-first or practitioner-first.
+**Architecture:** A new `BookingWizard` component with a `useWizardState` hook manages a flat state object with cascade-reset logic. Six step components (client, service, employee, type+duration, date+time, confirm+pay) are rendered conditionally inside the existing `BookingCreateDialog`. The clinic `bookingFlowOrder` setting controls whether steps 2 and 3 are service-first or employee-first.
 
 **Tech Stack:** Next.js 15, React 19, TanStack Query v5, shadcn/ui, Tailwind 4, Framer Motion (already in dashboard), react-hook-form removed from booking step (replaced by direct wizard state), NestJS backend.
 
@@ -19,7 +19,7 @@
 | `dashboard/components/features/bookings/wizard-card.tsx` | Reusable card component — vertical list variant and grid variant |
 | `dashboard/components/features/bookings/booking-wizard.tsx` | Wizard orchestrator — renders step + animated transition |
 | `dashboard/components/features/bookings/wizard-steps/step-service.tsx` | Step: service card list with search |
-| `dashboard/components/features/bookings/wizard-steps/step-practitioner.tsx` | Step: practitioner card list |
+| `dashboard/components/features/bookings/wizard-steps/step-employee.tsx` | Step: employee card list |
 | `dashboard/components/features/bookings/wizard-steps/step-type-duration.tsx` | Step: booking type grid + duration grid |
 | `dashboard/components/features/bookings/wizard-steps/step-datetime.tsx` | Step: day strip + time slot grid |
 | `dashboard/components/features/bookings/wizard-steps/step-confirm.tsx` | Step: summary table + payment toggle + submit |
@@ -28,8 +28,8 @@
 | File | Change |
 |------|--------|
 | `dashboard/components/features/bookings/booking-create-dialog.tsx` | Replace `BookingStep` + progressive logic with `<BookingWizard>` |
-| `dashboard/lib/api/services.ts` | `fetchServicePractitioners` already exists — verify signature |
-| `dashboard/lib/query-keys.ts` | Add `services.practitioners(id)` key |
+| `dashboard/lib/api/services.ts` | `fetchServiceEmployees` already exists — verify signature |
+| `dashboard/lib/query-keys.ts` | Add `services.employees(id)` key |
 | `dashboard/lib/translations/ar.bookings.ts` | Add wizard translation keys |
 | `dashboard/lib/translations/en.bookings.ts` | Add wizard translation keys |
 
@@ -132,25 +132,25 @@ describe('ClinicSettingsService', () => {
 
     it('returns stored value when settings exist', async () => {
       prisma.bookingSettings.findFirst.mockResolvedValue({
-        bookingFlowOrder: 'practitioner_first',
+        bookingFlowOrder: 'employee_first',
       })
       const result = await service.getBookingFlowOrder()
-      expect(result).toBe('practitioner_first')
+      expect(result).toBe('employee_first')
     })
   })
 
   describe('updateBookingFlowOrder', () => {
     it('upserts the bookingFlowOrder value', async () => {
       prisma.bookingSettings.upsert.mockResolvedValue({
-        bookingFlowOrder: 'practitioner_first',
+        bookingFlowOrder: 'employee_first',
       })
-      const result = await service.updateBookingFlowOrder('practitioner_first')
+      const result = await service.updateBookingFlowOrder('employee_first')
       expect(prisma.bookingSettings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          update: { bookingFlowOrder: 'practitioner_first' },
+          update: { bookingFlowOrder: 'employee_first' },
         }),
       )
-      expect(result).toBe('practitioner_first')
+      expect(result).toBe('employee_first')
     })
   })
 })
@@ -173,7 +173,7 @@ Replace the full content of `backend/src/modules/clinic/clinic-settings.service.
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../../common/prisma/prisma.service'
 
-export type BookingFlowOrder = 'service_first' | 'practitioner_first'
+export type BookingFlowOrder = 'service_first' | 'employee_first'
 
 export interface PublicClinicSettings {
   bankName: string | null
@@ -229,8 +229,8 @@ Create `backend/src/modules/clinic/dto/update-clinic-settings.dto.ts`:
 import { IsIn } from 'class-validator'
 
 export class UpdateBookingFlowOrderDto {
-  @IsIn(['service_first', 'practitioner_first'])
-  order: 'service_first' | 'practitioner_first'
+  @IsIn(['service_first', 'employee_first'])
+  order: 'service_first' | 'employee_first'
 }
 ```
 
@@ -291,7 +291,7 @@ git commit -m "feat(backend/clinic): add booking flow order setting endpoint"
 
 ---
 
-## Task 3: Dashboard — API + query key for booking flow order + service practitioners
+## Task 3: Dashboard — API + query key for booking flow order + service employees
 
 **Files:**
 - Modify: `dashboard/lib/query-keys.ts`
@@ -304,7 +304,7 @@ In `dashboard/lib/query-keys.ts`, find the `services` section and add:
 
 ```typescript
 // Inside queryKeys.services object, add:
-practitioners: (serviceId: string) => ['services', serviceId, 'practitioners'] as const,
+employees: (serviceId: string) => ['services', serviceId, 'employees'] as const,
 ```
 
 Also add a new top-level `clinicSettings` section (find a good place, e.g. after `bookingSettings`):
@@ -315,20 +315,20 @@ clinicSettings: {
 },
 ```
 
-- [ ] **Step 2: Verify fetchServicePractitioners exists in services.ts**
+- [ ] **Step 2: Verify fetchServiceEmployees exists in services.ts**
 
-Read `dashboard/lib/api/services.ts` and confirm the function `fetchServicePractitioners(serviceId: string)` exists and calls `GET /services/:id/practitioners`. If it does NOT exist, add:
+Read `dashboard/lib/api/services.ts` and confirm the function `fetchServiceEmployees(serviceId: string)` exists and calls `GET /services/:id/employees`. If it does NOT exist, add:
 
 ```typescript
-export async function fetchServicePractitioners(serviceId: string) {
-  const { data } = await apiClient.get<PractitionerForService[]>(
-    `/services/${serviceId}/practitioners`,
+export async function fetchServiceEmployees(serviceId: string) {
+  const { data } = await apiClient.get<EmployeeForService[]>(
+    `/services/${serviceId}/employees`,
   )
   return data
 }
 ```
 
-Where `PractitionerForService` matches the backend response (id, nameAr, nameEn, avatar, specialty).
+Where `EmployeeForService` matches the backend response (id, nameAr, nameEn, avatar, specialty).
 
 - [ ] **Step 3: Create clinic-settings API client**
 
@@ -337,7 +337,7 @@ Create `dashboard/lib/api/clinic-settings.ts`:
 ```typescript
 import { apiClient } from './client'
 
-export type BookingFlowOrder = 'service_first' | 'practitioner_first'
+export type BookingFlowOrder = 'service_first' | 'employee_first'
 
 export async function fetchBookingFlowOrder(): Promise<BookingFlowOrder> {
   const { data } = await apiClient.get<BookingFlowOrder>(
@@ -373,7 +373,7 @@ Expected: no errors for the modified files.
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit
 git add dashboard/lib/api/clinic-settings.ts dashboard/lib/query-keys.ts dashboard/lib/api/services.ts
-git commit -m "feat(dashboard/api): add clinic booking flow order + service practitioners query"
+git commit -m "feat(dashboard/api): add clinic booking flow order + service employees query"
 ```
 
 ---
@@ -392,9 +392,9 @@ In `dashboard/lib/translations/ar.bookings.ts`, add inside the main object (find
 wizard: {
   title: 'حجز جديد',
   stepLabel: {
-    patient: 'المستفيد',
+    client: 'المستفيد',
     service: 'الخدمة',
-    practitioner: 'الممارس',
+    employee: 'الممارس',
     typeDuration: 'النوع والمدة',
     datetime: 'الموعد',
     confirm: 'التأكيد',
@@ -406,7 +406,7 @@ wizard: {
       priceFrom: 'يبدأ من',
       currency: 'ر.س',
     },
-    practitioner: {
+    employee: {
       title: 'اختر الممارس',
       availableToday: 'متاح اليوم',
       nextAvailable: 'أقرب موعد',
@@ -428,9 +428,9 @@ wizard: {
     confirm: {
       title: 'تأكيد الحجز',
       summaryTitle: 'ملخص الحجز',
-      patient: 'المستفيد',
+      client: 'المستفيد',
       service: 'الخدمة',
-      practitioner: 'الممارس',
+      employee: 'الممارس',
       type: 'النوع',
       datetime: 'الموعد',
       submit: 'إنشاء الحجز',
@@ -439,7 +439,7 @@ wizard: {
     },
   },
   back: 'رجوع',
-  changePatient: '← تغيير المستفيد',
+  changeClient: '← تغيير المستفيد',
 },
 ```
 
@@ -451,9 +451,9 @@ In `dashboard/lib/translations/en.bookings.ts`, add the matching section:
 wizard: {
   title: 'New Booking',
   stepLabel: {
-    patient: 'Patient',
+    client: 'Client',
     service: 'Service',
-    practitioner: 'Practitioner',
+    employee: 'Employee',
     typeDuration: 'Type & Duration',
     datetime: 'Appointment',
     confirm: 'Confirm',
@@ -465,8 +465,8 @@ wizard: {
       priceFrom: 'From',
       currency: 'SAR',
     },
-    practitioner: {
-      title: 'Choose a Practitioner',
+    employee: {
+      title: 'Choose a Employee',
       availableToday: 'Available today',
       nextAvailable: 'Next available',
     },
@@ -487,9 +487,9 @@ wizard: {
     confirm: {
       title: 'Confirm Booking',
       summaryTitle: 'Booking Summary',
-      patient: 'Patient',
+      client: 'Client',
       service: 'Service',
-      practitioner: 'Practitioner',
+      employee: 'Employee',
       type: 'Type',
       datetime: 'Appointment',
       submit: 'Create Booking',
@@ -498,7 +498,7 @@ wizard: {
     },
   },
   back: 'Back',
-  changePatient: '← Change Patient',
+  changeClient: '← Change Client',
 },
 ```
 
@@ -540,12 +540,12 @@ export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6
 
 export interface WizardState {
   step: WizardStep
-  patientId: string | null
-  patientName: string | null
+  clientId: string | null
+  clientName: string | null
   serviceId: string | null
   serviceName: string | null
-  practitionerId: string | null
-  practitionerName: string | null
+  employeeId: string | null
+  employeeName: string | null
   type: 'in_person' | 'online' | 'walk_in' | null
   durationOptionId: string | null
   durationLabel: string | null
@@ -556,12 +556,12 @@ export interface WizardState {
 
 const INITIAL_STATE: WizardState = {
   step: 1,
-  patientId: null,
-  patientName: null,
+  clientId: null,
+  clientName: null,
   serviceId: null,
   serviceName: null,
-  practitionerId: null,
-  practitionerName: null,
+  employeeId: null,
+  employeeName: null,
   type: null,
   durationOptionId: null,
   durationLabel: null,
@@ -573,9 +573,9 @@ const INITIAL_STATE: WizardState = {
 export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
   const [state, setState] = useState<WizardState>(INITIAL_STATE)
 
-  // Step 2 is service or practitioner depending on flowOrder
+  // Step 2 is service or employee depending on flowOrder
   const stepForService: WizardStep = flowOrder === 'service_first' ? 2 : 3
-  const stepForPractitioner: WizardStep = flowOrder === 'service_first' ? 3 : 2
+  const stepForEmployee: WizardStep = flowOrder === 'service_first' ? 3 : 2
 
   const reset = useCallback(() => setState(INITIAL_STATE), [])
 
@@ -583,17 +583,17 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
     setState((prev) => ({ ...prev, step }))
   }, [])
 
-  const selectPatient = useCallback(
-    (patientId: string, patientName: string) => {
+  const selectClient = useCallback(
+    (clientId: string, clientName: string) => {
       setState((prev) => ({
         ...prev,
-        patientId,
-        patientName,
+        clientId,
+        clientName,
         // cascade: clear everything downstream
         serviceId: null,
         serviceName: null,
-        practitionerId: null,
-        practitionerName: null,
+        employeeId: null,
+        employeeName: null,
         type: null,
         durationOptionId: null,
         durationLabel: null,
@@ -611,9 +611,9 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
         ...prev,
         serviceId,
         serviceName,
-        // cascade: clear practitioner and everything downstream
-        practitionerId: null,
-        practitionerName: null,
+        // cascade: clear employee and everything downstream
+        employeeId: null,
+        employeeName: null,
         type: null,
         durationOptionId: null,
         durationLabel: null,
@@ -625,12 +625,12 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
     [],
   )
 
-  const selectPractitioner = useCallback(
-    (practitionerId: string, practitionerName: string) => {
+  const selectEmployee = useCallback(
+    (employeeId: string, employeeName: string) => {
       setState((prev) => ({
         ...prev,
-        practitionerId,
-        practitionerName,
+        employeeId,
+        employeeName,
         // cascade: clear type and everything downstream
         type: null,
         durationOptionId: null,
@@ -721,16 +721,16 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
         if (targetStep <= stepForService) {
           next.serviceId = null
           next.serviceName = null
-          next.practitionerId = null
-          next.practitionerName = null
+          next.employeeId = null
+          next.employeeName = null
           next.type = null
           next.durationOptionId = null
           next.durationLabel = null
           next.date = null
           next.startTime = null
-        } else if (targetStep <= stepForPractitioner) {
-          next.practitionerId = null
-          next.practitionerName = null
+        } else if (targetStep <= stepForEmployee) {
+          next.employeeId = null
+          next.employeeName = null
           next.type = null
           next.durationOptionId = null
           next.durationLabel = null
@@ -749,20 +749,20 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
         return next
       })
     },
-    [stepForService, stepForPractitioner],
+    [stepForService, stepForEmployee],
   )
 
   return {
     state,
     stepForService,
-    stepForPractitioner,
+    stepForEmployee,
     reset,
     goToStep,
     goBack,
     jumpToStep,
-    selectPatient,
+    selectClient,
     selectService,
-    selectPractitioner,
+    selectEmployee,
     selectType,
     selectDuration,
     skipDuration,
@@ -819,7 +819,7 @@ interface WizardCardProps {
 /**
  * Base card for wizard steps. Click to select and advance.
  * Two layout variants:
- *   - Default (full-width): use for vertical lists (services, practitioners)
+ *   - Default (full-width): use for vertical lists (services, employees)
  *   - Grid: wrap in a CSS grid from parent, this card fills its cell
  */
 export function WizardCard({
@@ -1029,14 +1029,14 @@ git commit -m "feat(dashboard/bookings): add wizard step-service component"
 
 ---
 
-## Task 8: Dashboard — Step 2/3: Practitioner step
+## Task 8: Dashboard — Step 2/3: Employee step
 
 **Files:**
-- Create: `dashboard/components/features/bookings/wizard-steps/step-practitioner.tsx`
+- Create: `dashboard/components/features/bookings/wizard-steps/step-employee.tsx`
 
 - [ ] **Step 1: Create the step**
 
-Create `dashboard/components/features/bookings/wizard-steps/step-practitioner.tsx`:
+Create `dashboard/components/features/bookings/wizard-steps/step-employee.tsx`:
 
 ```typescript
 'use client'
@@ -1044,21 +1044,21 @@ Create `dashboard/components/features/bookings/wizard-steps/step-practitioner.ts
 import { useQuery } from '@tanstack/react-query'
 import { useLocale } from '@/hooks/use-locale'
 import { queryKeys } from '@/lib/query-keys'
-import { fetchServicePractitioners } from '@/lib/api/services'
+import { fetchServiceEmployees } from '@/lib/api/services'
 import { WizardCard } from '../wizard-card'
 import { UserCircleIcon } from '@hugeicons/react'
 
-interface StepPractitionerProps {
+interface StepEmployeeProps {
   serviceId: string
-  onSelect: (practitionerId: string, practitionerName: string) => void
+  onSelect: (employeeId: string, employeeName: string) => void
 }
 
-export function StepPractitioner({ serviceId, onSelect }: StepPractitionerProps) {
+export function StepEmployee({ serviceId, onSelect }: StepEmployeeProps) {
   const { t, locale } = useLocale()
 
-  const { data: practitioners = [], isLoading } = useQuery({
-    queryKey: queryKeys.services.practitioners(serviceId),
-    queryFn: () => fetchServicePractitioners(serviceId),
+  const { data: employees = [], isLoading } = useQuery({
+    queryKey: queryKeys.services.employees(serviceId),
+    queryFn: () => fetchServiceEmployees(serviceId),
     enabled: !!serviceId,
   })
 
@@ -1074,7 +1074,7 @@ export function StepPractitioner({ serviceId, onSelect }: StepPractitionerProps)
 
   return (
     <div className="flex flex-col gap-2">
-      {practitioners.map((p) => {
+      {employees.map((p) => {
         const name = locale === 'ar' ? p.nameAr : p.nameEn
         const specialty = locale === 'ar' ? p.specialty?.nameAr : p.specialty?.nameEn
 
@@ -1110,13 +1110,13 @@ export function StepPractitioner({ serviceId, onSelect }: StepPractitionerProps)
 }
 ```
 
-> **Note**: The `fetchServicePractitioners` return type needs to match. Check the actual backend response shape from `GET /services/:id/practitioners` and adjust field names (`nameAr`, `nameEn`, `avatarUrl`, `specialty`) accordingly.
+> **Note**: The `fetchServiceEmployees` return type needs to match. Check the actual backend response shape from `GET /services/:id/employees` and adjust field names (`nameAr`, `nameEn`, `avatarUrl`, `specialty`) accordingly.
 
 - [ ] **Step 2: Typecheck**
 
 ```bash
 cd dashboard
-npm run typecheck 2>&1 | grep "step-practitioner"
+npm run typecheck 2>&1 | grep "step-employee"
 ```
 
 Expected: no errors.
@@ -1125,8 +1125,8 @@ Expected: no errors.
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit
-git add dashboard/components/features/bookings/wizard-steps/step-practitioner.tsx
-git commit -m "feat(dashboard/bookings): add wizard step-practitioner component"
+git add dashboard/components/features/bookings/wizard-steps/step-employee.tsx
+git commit -m "feat(dashboard/bookings): add wizard step-employee component"
 ```
 
 ---
@@ -1147,7 +1147,7 @@ import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useLocale } from '@/hooks/use-locale'
 import { queryKeys } from '@/lib/query-keys'
-import { fetchPractitionerServiceTypes } from '@/lib/api/practitioners'
+import { fetchEmployeeServiceTypes } from '@/lib/api/employees'
 import { WizardCard } from '../wizard-card'
 import {
   Building04Icon,
@@ -1157,7 +1157,7 @@ import {
 import type { BookingType } from '@/lib/types/booking'
 
 interface StepTypeDurationProps {
-  practitionerId: string
+  employeeId: string
   serviceId: string
   selectedType: BookingType | null
   selectedDurationOptionId: string | null
@@ -1173,7 +1173,7 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
 }
 
 export function StepTypeDuration({
-  practitionerId,
+  employeeId,
   serviceId,
   selectedType,
   selectedDurationOptionId,
@@ -1184,10 +1184,10 @@ export function StepTypeDuration({
   const { t, locale } = useLocale()
 
   const { data: serviceTypes = [], isLoading } = useQuery({
-    queryKey: queryKeys.practitioners.serviceTypes(practitionerId, serviceId),
+    queryKey: queryKeys.employees.serviceTypes(employeeId, serviceId),
     queryFn: () =>
-      fetchPractitionerServiceTypes(practitionerId, serviceId),
-    enabled: !!practitionerId && !!serviceId,
+      fetchEmployeeServiceTypes(employeeId, serviceId),
+    enabled: !!employeeId && !!serviceId,
   })
 
   // Auto-select if only one type available
@@ -1293,7 +1293,7 @@ export function StepTypeDuration({
 }
 ```
 
-> **Note**: Check `fetchPractitionerServiceTypes` signature in `dashboard/lib/api/practitioners.ts`. It may be named differently. Also confirm `queryKeys.practitioners.serviceTypes(practitionerId, serviceId)` exists or add it to `query-keys.ts`.
+> **Note**: Check `fetchEmployeeServiceTypes` signature in `dashboard/lib/api/employees.ts`. It may be named differently. Also confirm `queryKeys.employees.serviceTypes(employeeId, serviceId)` exists or add it to `query-keys.ts`.
 
 - [ ] **Step 2: Typecheck**
 
@@ -1330,12 +1330,12 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useLocale } from '@/hooks/use-locale'
 import { queryKeys } from '@/lib/query-keys'
-import { fetchPractitionerSlots } from '@/lib/api/practitioners'
+import { fetchEmployeeSlots } from '@/lib/api/employees'
 import { WizardCard } from '../wizard-card'
 import { cn } from '@/lib/utils'
 
 interface StepDatetimeProps {
-  practitionerId: string
+  employeeId: string
   durationOptionId: string | null
   selectedDate: string | null
   selectedTime: string | null
@@ -1355,7 +1355,7 @@ function buildDayStrip(daysAhead = 14): Array<{ iso: string; label: string; dayN
 }
 
 export function StepDatetime({
-  practitionerId,
+  employeeId,
   durationOptionId,
   selectedDate,
   selectedTime,
@@ -1366,14 +1366,14 @@ export function StepDatetime({
   const days = useMemo(() => buildDayStrip(14), [])
 
   const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: queryKeys.practitioners.slots(practitionerId, selectedDate ?? '', durationOptionId ?? ''),
+    queryKey: queryKeys.employees.slots(employeeId, selectedDate ?? '', durationOptionId ?? ''),
     queryFn: () =>
-      fetchPractitionerSlots({
-        practitionerId,
+      fetchEmployeeSlots({
+        employeeId,
         date: selectedDate!,
         durationOptionId: durationOptionId ?? undefined,
       }),
-    enabled: !!practitionerId && !!selectedDate,
+    enabled: !!employeeId && !!selectedDate,
   })
 
   return (
@@ -1449,7 +1449,7 @@ export function StepDatetime({
 }
 ```
 
-> **Note**: Check `fetchPractitionerSlots` and `queryKeys.practitioners.slots` signatures — adjust parameter names and query key structure to match what already exists in `use-booking-slots.ts`.
+> **Note**: Check `fetchEmployeeSlots` and `queryKeys.employees.slots` signatures — adjust parameter names and query key structure to match what already exists in `use-booking-slots.ts`.
 
 - [ ] **Step 2: Typecheck**
 
@@ -1554,8 +1554,8 @@ export function StepConfirm({
       <div className="rounded-xl border border-border bg-surface">
         <div className="divide-y divide-border px-4">
           <SummaryRow
-            label={t('bookings.wizard.step.confirm.patient')}
-            value={state.patientName ?? '—'}
+            label={t('bookings.wizard.step.confirm.client')}
+            value={state.clientName ?? '—'}
             onEdit={() => onJump(1)}
           />
           <SummaryRow
@@ -1564,8 +1564,8 @@ export function StepConfirm({
             onEdit={() => onJump(2)}
           />
           <SummaryRow
-            label={t('bookings.wizard.step.confirm.practitioner')}
-            value={state.practitionerName ?? '—'}
+            label={t('bookings.wizard.step.confirm.employee')}
+            value={state.employeeName ?? '—'}
             onEdit={() => onJump(3)}
           />
           <SummaryRow
@@ -1669,9 +1669,9 @@ import { queryKeys } from '@/lib/query-keys'
 import { fetchBookingFlowOrder } from '@/lib/api/clinic-settings'
 import { useWizardState } from './use-wizard-state'
 import { useBookingMutations } from '@/hooks/use-booking-mutations'
-import { PatientStep } from './booking-patient-step'
+import { ClientStep } from './booking-client-step'
 import { StepService } from './wizard-steps/step-service'
-import { StepPractitioner } from './wizard-steps/step-practitioner'
+import { StepEmployee } from './wizard-steps/step-employee'
 import { StepTypeDuration } from './wizard-steps/step-type-duration'
 import { StepDatetime } from './wizard-steps/step-datetime'
 import { StepConfirm } from './wizard-steps/step-confirm'
@@ -1721,9 +1721,9 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
 
   const handleSubmit = useCallback(async () => {
     if (
-      !state.patientId ||
+      !state.clientId ||
       !state.serviceId ||
-      !state.practitionerId ||
+      !state.employeeId ||
       !state.type ||
       !state.date ||
       !state.startTime
@@ -1731,9 +1731,9 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
 
     try {
       await createMut.mutateAsync({
-        patientId: state.patientId,
+        clientId: state.clientId,
         serviceId: state.serviceId,
-        practitionerId: state.practitionerId,
+        employeeId: state.employeeId,
         type: state.type,
         durationOptionId: state.durationOptionId ?? undefined,
         date: state.date,
@@ -1747,12 +1747,12 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
   }, [state, createMut, onSuccess, t])
 
   const stepTitles: Record<WizardStep, string> = {
-    1: t('bookings.wizard.stepLabel.patient'),
+    1: t('bookings.wizard.stepLabel.client'),
     2: flowOrder === 'service_first'
       ? t('bookings.wizard.stepLabel.service')
-      : t('bookings.wizard.stepLabel.practitioner'),
+      : t('bookings.wizard.stepLabel.employee'),
     3: flowOrder === 'service_first'
-      ? t('bookings.wizard.stepLabel.practitioner')
+      ? t('bookings.wizard.stepLabel.employee')
       : t('bookings.wizard.stepLabel.service'),
     4: t('bookings.wizard.stepLabel.typeDuration'),
     5: t('bookings.wizard.stepLabel.datetime'),
@@ -1772,23 +1772,23 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
       {/* Step content */}
       <div className="min-h-[300px]">
         {state.step === 1 && (
-          <PatientStep onSelect={wizard.selectPatient} />
+          <ClientStep onSelect={wizard.selectClient} />
         )}
 
         {state.step === wizard.stepForService && (
           <StepService onSelect={wizard.selectService} />
         )}
 
-        {state.step === wizard.stepForPractitioner && state.serviceId && (
-          <StepPractitioner
+        {state.step === wizard.stepForEmployee && state.serviceId && (
+          <StepEmployee
             serviceId={state.serviceId}
-            onSelect={wizard.selectPractitioner}
+            onSelect={wizard.selectEmployee}
           />
         )}
 
-        {state.step === 4 && state.practitionerId && state.serviceId && (
+        {state.step === 4 && state.employeeId && state.serviceId && (
           <StepTypeDuration
-            practitionerId={state.practitionerId}
+            employeeId={state.employeeId}
             serviceId={state.serviceId}
             selectedType={state.type}
             selectedDurationOptionId={state.durationOptionId}
@@ -1798,9 +1798,9 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
           />
         )}
 
-        {state.step === 5 && state.practitionerId && (
+        {state.step === 5 && state.employeeId && (
           <StepDatetime
-            practitionerId={state.practitionerId}
+            employeeId={state.employeeId}
             durationOptionId={state.durationOptionId}
             selectedDate={state.date}
             selectedTime={state.startTime}
@@ -1820,7 +1820,7 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
         )}
       </div>
 
-      {/* Footer: back + change patient */}
+      {/* Footer: back + change client */}
       <div className="flex items-center justify-between border-t border-border pt-3">
         {state.step > 1 ? (
           <Button variant="ghost" size="sm" onClick={wizard.goBack}>
@@ -1831,9 +1831,9 @@ export function BookingWizard({ onSuccess, onClose }: BookingWizardProps) {
           <span />
         )}
 
-        {state.step > 1 && state.patientName && (
+        {state.step > 1 && state.clientName && (
           <Button variant="link" size="sm" onClick={() => wizard.jumpToStep(1)}>
-            {t('bookings.wizard.changePatient')}
+            {t('bookings.wizard.changeClient')}
           </Button>
         )}
       </div>
@@ -1875,10 +1875,10 @@ Read `dashboard/components/features/bookings/booking-create-dialog.tsx` and unde
 - [ ] **Step 2: Replace step 2 content with BookingWizard**
 
 The dialog currently renders:
-- Step 1: `<PatientStep onSelect={...} />`
-- Step 2: `<BookingStep patientName={...} onSubmit={...} submitting={...} />`
+- Step 1: `<ClientStep onSelect={...} />`
+- Step 2: `<BookingStep clientName={...} onSubmit={...} submitting={...} />`
 
-Replace the entire `DialogContent` body with the following. The wizard handles its own patient step now, so the outer dialog just needs to wrap it:
+Replace the entire `DialogContent` body with the following. The wizard handles its own client step now, so the outer dialog just needs to wrap it:
 
 ```typescript
 'use client'
@@ -1966,9 +1966,9 @@ Navigate to `http://localhost:5001/bookings` and click the "حجز جديد" but
 
 Verify the following flow:
 
-1. **Step 1 (Patient)**: Search for a patient. Clicking a patient row advances to step 2.
+1. **Step 1 (Client)**: Search for a client. Clicking a client row advances to step 2.
 2. **Step 2 (Service)**: Service cards appear. Search works. Clicking a service advances to step 3.
-3. **Step 3 (Practitioner)**: Only practitioners for the selected service appear. Clicking one advances to step 4.
+3. **Step 3 (Employee)**: Only employees for the selected service appear. Clicking one advances to step 4.
 4. **Step 4 (Type+Duration)**: Booking type grid appears. Selecting a type reveals duration grid if applicable. Selecting duration advances to step 5.
 5. **Step 5 (Date+Time)**: Day strip appears with 14 days. Clicking a day loads time slots. Clicking a slot advances to step 6.
 6. **Step 6 (Confirm)**: Summary shows all selections with edit icons. Each edit icon jumps to the correct step. "إنشاء الحجز" button creates the booking.
@@ -1977,7 +1977,7 @@ Verify the following flow:
 
 - [ ] **Step 3: Verify cascade reset**
 
-From step 6, click the edit icon next to "الخدمة". Confirm that practitioner, type, duration, date, and time are all cleared. Select a new service and confirm the downstream steps are blank.
+From step 6, click the edit icon next to "الخدمة". Confirm that employee, type, duration, date, and time are all cleared. Select a new service and confirm the downstream steps are blank.
 
 ---
 
@@ -1985,7 +1985,7 @@ From step 6, click the edit icon next to "الخدمة". Confirm that practition
 
 **Spec coverage check:**
 - ✅ 6-step wizard with card selection
-- ✅ Service-first / practitioner-first configurable order
+- ✅ Service-first / employee-first configurable order
 - ✅ Cascade reset on any upstream change
 - ✅ Auto-advance when single option available (type, duration)
 - ✅ Combined date+time step
@@ -1997,9 +1997,9 @@ From step 6, click the edit icon next to "الخدمة". Confirm that practition
 - ✅ Backend `bookingFlowOrder` setting endpoint
 
 **Notes / things to verify during implementation:**
-1. `fetchServicePractitioners` — already exists in `services.ts`, verify return type shape
-2. `queryKeys.practitioners.serviceTypes` — verify it takes `(practitionerId, serviceId)` in this order
-3. `queryKeys.practitioners.slots` — verify parameter count/order
+1. `fetchServiceEmployees` — already exists in `services.ts`, verify return type shape
+2. `queryKeys.employees.serviceTypes` — verify it takes `(employeeId, serviceId)` in this order
+3. `queryKeys.employees.slots` — verify parameter count/order
 4. `useBookingMutations` import path in `booking-wizard.tsx`
 5. `BookingSettings` upsert `where` clause — check how existing `booking-settings.service.ts` does global upsert (it may use `branchId: null`)
 6. `Button` component `loading` prop — confirm it exists in shadcn config or use `disabled={submitting}` only

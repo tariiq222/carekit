@@ -32,7 +32,7 @@ npm run dev:all
 |-----|------|-------------|
 | `apps/backend/` | NestJS 11 + Prisma 7 + PostgreSQL | API server, business logic, BullMQ jobs |
 | `apps/dashboard/` | Next.js 15 + React 19 + shadcn/ui | Admin dashboard for clinic staff |
-| `apps/mobile/` | React Native 0.83 (Expo SDK 55) | Patient + practitioner mobile app |
+| `apps/mobile/` | React Native 0.83 (Expo SDK 55) | Client + employee mobile app |
 | `packages/api-client/` | TypeScript | `@carekit/api-client` — typed fetch client shared by UIs |
 | `packages/shared/` | TypeScript | `@carekit/shared` — cross-app types, enums, i18n tokens |
 

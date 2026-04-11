@@ -1,5 +1,5 @@
 /**
- * Practitioners Schedule API — CareKit Dashboard
+ * Employees Schedule API — CareKit Dashboard
  * (availability, breaks, slots, vacations, services, ratings)
  */
 
@@ -12,12 +12,12 @@ import type {
   SetBreaksPayload,
   Vacation,
   CreateVacationPayload,
-  PractitionerService,
-  PractitionerServiceType,
+  EmployeeService,
+  EmployeeServiceType,
   AssignServicePayload,
   UpdateServicePayload,
   TimeSlot,
-} from "@/lib/types/practitioner"
+} from "@/lib/types/employee"
 import type { Rating } from "@/lib/types/rating"
 
 /* ─── Availability ─── */
@@ -26,7 +26,7 @@ export async function fetchAvailability(
   id: string,
 ): Promise<AvailabilitySlot[]> {
   const res = await api.get<{ schedule: AvailabilitySlot[] }>(
-    `/practitioners/${id}/availability`,
+    `/employees/${id}/availability`,
   )
   return res.schedule
 }
@@ -35,14 +35,14 @@ export async function setAvailability(
   id: string,
   payload: SetAvailabilityPayload,
 ): Promise<void> {
-  await api.put(`/practitioners/${id}/availability`, payload)
+  await api.put(`/employees/${id}/availability`, payload)
 }
 
 /* ─── Breaks ─── */
 
 export async function fetchBreaks(id: string): Promise<BreakSlot[]> {
   return api.get<BreakSlot[]>(
-    `/practitioners/${id}/breaks`,
+    `/employees/${id}/breaks`,
   )
 }
 
@@ -51,7 +51,7 @@ export async function setBreaks(
   payload: SetBreaksPayload,
 ): Promise<BreakSlot[]> {
   return api.put<BreakSlot[]>(
-    `/practitioners/${id}/breaks`,
+    `/employees/${id}/breaks`,
     payload,
   )
 }
@@ -64,7 +64,7 @@ export async function fetchSlots(
   duration?: number,
 ): Promise<TimeSlot[]> {
   const res = await api.get<TimeSlot[] | { slots: TimeSlot[] }>(
-    `/practitioners/${id}/slots`,
+    `/employees/${id}/slots`,
     { date, duration },
   )
   return Array.isArray(res) ? res : (res.slots ?? [])
@@ -74,7 +74,7 @@ export async function fetchSlots(
 
 export async function fetchVacations(id: string): Promise<Vacation[]> {
   return api.get<Vacation[]>(
-    `/practitioners/${id}/vacations`,
+    `/employees/${id}/vacations`,
   )
 }
 
@@ -83,79 +83,79 @@ export async function createVacation(
   payload: CreateVacationPayload,
 ): Promise<Vacation> {
   return api.post<Vacation>(
-    `/practitioners/${id}/vacations`,
+    `/employees/${id}/vacations`,
     payload,
   )
 }
 
 export async function deleteVacation(
-  practitionerId: string,
+  employeeId: string,
   vacationId: string,
 ): Promise<void> {
   await api.delete(
-    `/practitioners/${practitionerId}/vacations/${vacationId}`,
+    `/employees/${employeeId}/vacations/${vacationId}`,
   )
 }
 
-/* ─── Practitioner Services ─── */
+/* ─── Employee Services ─── */
 
-export async function fetchPractitionerServices(
+export async function fetchEmployeeServices(
   id: string,
-): Promise<PractitionerService[]> {
-  return api.get<PractitionerService[]>(
-    `/practitioners/${id}/services`,
+): Promise<EmployeeService[]> {
+  return api.get<EmployeeService[]>(
+    `/employees/${id}/services`,
   )
 }
 
 export async function assignService(
   id: string,
   payload: AssignServicePayload,
-): Promise<PractitionerService> {
-  return api.post<PractitionerService>(
-    `/practitioners/${id}/services`,
+): Promise<EmployeeService> {
+  return api.post<EmployeeService>(
+    `/employees/${id}/services`,
     payload,
   )
 }
 
-export async function updatePractitionerService(
-  practitionerId: string,
+export async function updateEmployeeService(
+  employeeId: string,
   serviceId: string,
   payload: UpdateServicePayload,
-): Promise<PractitionerService> {
-  return api.patch<PractitionerService>(
-    `/practitioners/${practitionerId}/services/${serviceId}`,
+): Promise<EmployeeService> {
+  return api.patch<EmployeeService>(
+    `/employees/${employeeId}/services/${serviceId}`,
     payload,
   )
 }
 
-export async function removePractitionerService(
-  practitionerId: string,
+export async function removeEmployeeService(
+  employeeId: string,
   serviceId: string,
 ): Promise<void> {
   await api.delete(
-    `/practitioners/${practitionerId}/services/${serviceId}`,
+    `/employees/${employeeId}/services/${serviceId}`,
   )
 }
 
-/* ─── Practitioner Service Types ─── */
+/* ─── Employee Service Types ─── */
 
-export async function fetchPractitionerServiceTypes(
-  practitionerId: string,
+export async function fetchEmployeeServiceTypes(
+  employeeId: string,
   serviceId: string,
-): Promise<PractitionerServiceType[]> {
-  return api.get<PractitionerServiceType[]>(
-    `/practitioners/${practitionerId}/services/${serviceId}/types`,
+): Promise<EmployeeServiceType[]> {
+  return api.get<EmployeeServiceType[]>(
+    `/employees/${employeeId}/services/${serviceId}/types`,
   )
 }
 
 /* ─── Ratings ─── */
 
-export async function fetchPractitionerRatings(
+export async function fetchEmployeeRatings(
   id: string,
   query: { page?: number; perPage?: number } = {},
 ): Promise<PaginatedResponse<Rating>> {
   return api.get<PaginatedResponse<Rating>>(
-    `/practitioners/${id}/ratings`,
+    `/employees/${id}/ratings`,
     { page: query.page, perPage: query.perPage },
   )
 }

@@ -12,26 +12,26 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
-import { usePractitioner } from "@/hooks/use-practitioners"
+import { useEmployee } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 import { ScheduleSection } from "./schedule-section"
 import { VacationManager } from "./vacation-manager"
-import { PractitionerServicesSection } from "./practitioner-services-section"
-import { PractitionerRatings } from "./practitioner-ratings"
+import { EmployeeServicesSection } from "./employee-services-section"
+import { EmployeeRatings } from "./employee-ratings"
 
 interface Props {
-  practitionerId: string | null
+  employeeId: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function PractitionerDetailSheet({
-  practitionerId,
+export function EmployeeDetailSheet({
+  employeeId,
   open,
   onOpenChange,
 }: Props) {
   const { locale, t } = useLocale()
-  const { data: p, isLoading } = usePractitioner(practitionerId)
+  const { data: p, isLoading } = useEmployee(employeeId)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -132,19 +132,19 @@ export function PractitionerDetailSheet({
 
                 <Separator />
 
-                <PractitionerServicesSection practitionerId={p.id} />
+                <EmployeeServicesSection employeeId={p.id} />
 
                 <Separator />
 
-                <ScheduleSection practitionerId={p.id} />
+                <ScheduleSection employeeId={p.id} />
 
                 <Separator />
 
-                <VacationManager practitionerId={p.id} />
+                <VacationManager employeeId={p.id} />
 
                 <Separator />
 
-                <PractitionerRatings practitionerId={p.id} />
+                <EmployeeRatings employeeId={p.id} />
               </div>
             </SheetBody>
           </>

@@ -10,7 +10,7 @@ export type PaymentStatus =
   | 'failed'
   | 'rejected'
 
-export interface PaymentBookingPatient {
+export interface PaymentBookingClient {
   id: string
   firstName: string
   lastName: string
@@ -21,7 +21,7 @@ export interface PaymentBooking {
   id: string
   date: string
   startTime: string
-  patient: PaymentBookingPatient | null
+  client: PaymentBookingClient | null
   service: { id: string; nameAr: string; nameEn: string } | null
 }
 

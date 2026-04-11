@@ -1,26 +1,26 @@
 /**
- * Practitioners API — CareKit Dashboard
+ * Employees API — CareKit Dashboard
  */
 
-export * from "./practitioners-schedule"
+export * from "./employees-schedule"
 
 import { api } from "@/lib/api"
 import type { PaginatedResponse } from "@/lib/types/common"
 import type {
-  Practitioner,
-  PractitionerListQuery,
-  CreatePractitionerPayload,
-  UpdatePractitionerPayload,
-  OnboardPractitionerPayload,
-  OnboardPractitionerResponse,
-} from "@/lib/types/practitioner"
+  Employee,
+  EmployeeListQuery,
+  CreateEmployeePayload,
+  UpdateEmployeePayload,
+  OnboardEmployeePayload,
+  OnboardEmployeeResponse,
+} from "@/lib/types/employee"
 
 /* ─── Queries ─── */
 
-export async function fetchPractitioners(
-  query: PractitionerListQuery = {},
-): Promise<PaginatedResponse<Practitioner>> {
-  const res = await api.get<PaginatedResponse<RawPractitioner>>("/practitioners", {
+export async function fetchEmployees(
+  query: EmployeeListQuery = {},
+): Promise<PaginatedResponse<Employee>> {
+  const res = await api.get<PaginatedResponse<RawEmployee>>("/employees", {
     page: query.page,
     perPage: query.perPage,
     sortBy: query.sortBy,
@@ -31,21 +31,21 @@ export async function fetchPractitioners(
     isActive: query.isActive,
   })
   return {
-    items: res.items.map(mapPractitioner),
+    items: res.items.map(mapEmployee),
     meta: res.meta,
   }
 }
 
 /** Backend returns specialty as plain text fields + rating/reviewCount */
-type RawPractitioner = Omit<Practitioner, "averageRating" | "_count"> & {
+type RawEmployee = Omit<Employee, "averageRating" | "_count"> & {
   rating?: number
   reviewCount?: number
-  _count?: Practitioner["_count"]
+  _count?: Employee["_count"]
   averageRating?: number
-  user: Practitioner["user"] & { avatarUrl?: string | null }
+  user: Employee["user"] & { avatarUrl?: string | null }
 }
 
-function mapPractitioner(raw: RawPractitioner): Practitioner {
+function mapEmployee(raw: RawEmployee): Employee {
   return {
     ...raw,
     specialty: raw.specialty ?? "",
@@ -59,32 +59,32 @@ function mapPractitioner(raw: RawPractitioner): Practitioner {
   }
 }
 
-export async function fetchPractitioner(id: string): Promise<Practitioner> {
-  const res = await api.get<RawPractitioner>(`/practitioners/${id}`)
-  return mapPractitioner(res)
+export async function fetchEmployee(id: string): Promise<Employee> {
+  const res = await api.get<RawEmployee>(`/employees/${id}`)
+  return mapEmployee(res)
 }
 
 /* ─── CRUD ─── */
 
-export async function createPractitioner(
-  payload: CreatePractitionerPayload,
-): Promise<Practitioner> {
-  return api.post<Practitioner>("/practitioners", payload)
+export async function createEmployee(
+  payload: CreateEmployeePayload,
+): Promise<Employee> {
+  return api.post<Employee>("/employees", payload)
 }
 
-export async function onboardPractitioner(
-  payload: OnboardPractitionerPayload,
-): Promise<OnboardPractitionerResponse> {
-  return api.post<OnboardPractitionerResponse>("/practitioners/onboard", payload)
+export async function onboardEmployee(
+  payload: OnboardEmployeePayload,
+): Promise<OnboardEmployeeResponse> {
+  return api.post<OnboardEmployeeResponse>("/employees/onboard", payload)
 }
 
-export async function updatePractitioner(
+export async function updateEmployee(
   id: string,
-  payload: UpdatePractitionerPayload,
-): Promise<Practitioner> {
-  return api.patch<Practitioner>(`/practitioners/${id}`, payload)
+  payload: UpdateEmployeePayload,
+): Promise<Employee> {
+  return api.patch<Employee>(`/employees/${id}`, payload)
 }
 
-export async function deletePractitioner(id: string): Promise<void> {
-  await api.delete(`/practitioners/${id}`)
+export async function deleteEmployee(id: string): Promise<void> {
+  await api.delete(`/employees/${id}`)
 }

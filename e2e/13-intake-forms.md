@@ -37,7 +37,7 @@
 | --- | --- | --- | --- |
 | IF-C1 | نموذج global | nameAr + nameEn + type=pre_booking + scope=global | 201 + { id, fields:[], submissionsCount:0, isActive:true } |
 | IF-C2 | نموذج service | scope=service + serviceId | 201 + serviceId محفوظ |
-| IF-C3 | نموذج practitioner | scope=practitioner + practitionerId | 201 + practitionerId محفوظ |
+| IF-C3 | نموذج employee | scope=employee + employeeId | 201 + employeeId محفوظ |
 | IF-C4 | نموذج branch | scope=branch + branchId | 201 + branchId محفوظ |
 | IF-C5 | scope=service بدون serviceId | serviceId مطلوب | 422 VALIDATION_ERROR |
 | IF-C6 | serviceId وهمي | UUID غير موجود | 404 NOT_FOUND |
@@ -117,7 +117,7 @@
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 | --- | --- | --- | --- |
-| IF-S1 | تقديم ناجح | bookingId + answers={fieldId: "قيمة"} | 201 + { id, formId, bookingId, patientId, answers } + submissionsCount++ |
+| IF-S1 | تقديم ناجح | bookingId + answers={fieldId: "قيمة"} | 201 + { id, formId, bookingId, clientId, answers } + submissionsCount++ |
 | IF-S2 | نموذج وهمي | formId غير موجود | 404 NOT_FOUND |
 | IF-S3 | بدون bookingId | حقل إلزامي | 400 VALIDATION_ERROR |
 | IF-S4 | بدون مصادقة | POST /intake-forms/:formId/responses بدون token | 401 Unauthorized |

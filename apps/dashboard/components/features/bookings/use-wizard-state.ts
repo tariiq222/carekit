@@ -5,29 +5,29 @@ export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6
 
 export interface WizardState {
   step: WizardStep
-  patientId: string | null
-  patientName: string | null
+  clientId: string | null
+  clientName: string | null
   serviceId: string | null
   serviceName: string | null
-  practitionerId: string | null
-  practitionerName: string | null
+  employeeId: string | null
+  employeeName: string | null
   type: 'in_person' | 'online' | 'walk_in' | null
   durationOptionId: string | null
   durationLabel: string | null
   date: string | null        // ISO date YYYY-MM-DD
   startTime: string | null   // HH:MM
   payAtClinic: boolean
-  chosenPath: 'service_first' | 'practitioner_first' | null
+  chosenPath: 'service_first' | 'employee_first' | null
 }
 
 const INITIAL_STATE: WizardState = {
   step: 1,
-  patientId: null,
-  patientName: null,
+  clientId: null,
+  clientName: null,
   serviceId: null,
   serviceName: null,
-  practitionerId: null,
-  practitionerName: null,
+  employeeId: null,
+  employeeName: null,
   type: null,
   durationOptionId: null,
   durationLabel: null,
@@ -41,14 +41,14 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
   const [state, setState] = useState<WizardState>(INITIAL_STATE)
 
   // When flowOrder is "both", use chosenPath (fallback to service_first for step calc)
-  const effectiveFlow: 'service_first' | 'practitioner_first' =
+  const effectiveFlow: 'service_first' | 'employee_first' =
     flowOrder === 'both'
       ? (state.chosenPath ?? 'service_first')
       : flowOrder
 
-  // Step 2 is service or practitioner depending on effectiveFlow
+  // Step 2 is service or employee depending on effectiveFlow
   const stepForService: WizardStep = effectiveFlow === 'service_first' ? 2 : 3
-  const stepForPractitioner: WizardStep = effectiveFlow === 'service_first' ? 3 : 2
+  const stepForEmployee: WizardStep = effectiveFlow === 'service_first' ? 3 : 2
 
   const reset = useCallback(() => setState(INITIAL_STATE), [])
 
@@ -57,22 +57,22 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
   }, [])
 
   const choosePath = useCallback(
-    (path: 'service_first' | 'practitioner_first') => {
+    (path: 'service_first' | 'employee_first') => {
       setState((prev) => ({ ...prev, chosenPath: path, step: 2 }))
     },
     [],
   )
 
-  const selectPatient = useCallback(
-    (patientId: string, patientName: string) => {
+  const selectClient = useCallback(
+    (clientId: string, clientName: string) => {
       setState((prev) => ({
         ...prev,
-        patientId,
-        patientName,
+        clientId,
+        clientName,
         serviceId: null,
         serviceName: null,
-        practitionerId: null,
-        practitionerName: null,
+        employeeId: null,
+        employeeName: null,
         type: null,
         durationOptionId: null,
         durationLabel: null,
@@ -91,8 +91,8 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
         ...prev,
         serviceId,
         serviceName,
-        practitionerId: null,
-        practitionerName: null,
+        employeeId: null,
+        employeeName: null,
         type: null,
         durationOptionId: null,
         durationLabel: null,
@@ -104,12 +104,12 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
     [],
   )
 
-  const selectPractitioner = useCallback(
-    (practitionerId: string, practitionerName: string) => {
+  const selectEmployee = useCallback(
+    (employeeId: string, employeeName: string) => {
       setState((prev) => ({
         ...prev,
-        practitionerId,
-        practitionerName,
+        employeeId,
+        employeeName,
         type: null,
         durationOptionId: null,
         durationLabel: null,
@@ -186,8 +186,8 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
         next.chosenPath = null
         next.serviceId = null
         next.serviceName = null
-        next.practitionerId = null
-        next.practitionerName = null
+        next.employeeId = null
+        next.employeeName = null
         next.type = null
         next.durationOptionId = null
         next.durationLabel = null
@@ -213,16 +213,16 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
         if (targetStep <= stepForService) {
           next.serviceId = null
           next.serviceName = null
-          next.practitionerId = null
-          next.practitionerName = null
+          next.employeeId = null
+          next.employeeName = null
           next.type = null
           next.durationOptionId = null
           next.durationLabel = null
           next.date = null
           next.startTime = null
-        } else if (targetStep <= stepForPractitioner) {
-          next.practitionerId = null
-          next.practitionerName = null
+        } else if (targetStep <= stepForEmployee) {
+          next.employeeId = null
+          next.employeeName = null
           next.type = null
           next.durationOptionId = null
           next.durationLabel = null
@@ -241,22 +241,22 @@ export function useWizardState(flowOrder: BookingFlowOrder = 'service_first') {
         return next
       })
     },
-    [stepForService, stepForPractitioner, flowOrder],
+    [stepForService, stepForEmployee, flowOrder],
   )
 
   return {
     state,
     effectiveFlow,
     stepForService,
-    stepForPractitioner,
+    stepForEmployee,
     reset,
     goToStep,
     goBack,
     jumpToStep,
     choosePath,
-    selectPatient,
+    selectClient,
     selectService,
-    selectPractitioner,
+    selectEmployee,
     selectType,
     selectDuration,
     skipDuration,

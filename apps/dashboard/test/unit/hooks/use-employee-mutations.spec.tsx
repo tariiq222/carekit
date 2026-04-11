@@ -4,60 +4,60 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 
 const {
-  createPractitioner,
-  onboardPractitioner,
-  updatePractitioner,
-  deletePractitioner,
+  createEmployee,
+  onboardEmployee,
+  updateEmployee,
+  deleteEmployee,
   setAvailability,
   setBreaks,
   createVacation,
   deleteVacation,
   assignService,
-  updatePractitionerService,
-  removePractitionerService,
+  updateEmployeeService,
+  removeEmployeeService,
 } = vi.hoisted(() => ({
-  createPractitioner: vi.fn(),
-  onboardPractitioner: vi.fn(),
-  updatePractitioner: vi.fn(),
-  deletePractitioner: vi.fn(),
+  createEmployee: vi.fn(),
+  onboardEmployee: vi.fn(),
+  updateEmployee: vi.fn(),
+  deleteEmployee: vi.fn(),
   setAvailability: vi.fn(),
   setBreaks: vi.fn(),
   createVacation: vi.fn(),
   deleteVacation: vi.fn(),
   assignService: vi.fn(),
-  updatePractitionerService: vi.fn(),
-  removePractitionerService: vi.fn(),
+  updateEmployeeService: vi.fn(),
+  removeEmployeeService: vi.fn(),
 }))
 
-vi.mock("@/lib/api/practitioners", () => ({
-  createPractitioner,
-  onboardPractitioner,
-  updatePractitioner,
-  deletePractitioner,
+vi.mock("@/lib/api/employees", () => ({
+  createEmployee,
+  onboardEmployee,
+  updateEmployee,
+  deleteEmployee,
   setAvailability,
   setBreaks,
   createVacation,
   deleteVacation,
   assignService,
-  updatePractitionerService,
-  removePractitionerService,
-  fetchPractitioners: vi.fn(),
-  fetchPractitioner: vi.fn(),
+  updateEmployeeService,
+  removeEmployeeService,
+  fetchEmployees: vi.fn(),
+  fetchEmployee: vi.fn(),
   fetchAvailability: vi.fn(),
   fetchBreaks: vi.fn(),
   fetchVacations: vi.fn(),
-  fetchPractitionerServices: vi.fn(),
-  fetchPractitionerServiceTypes: vi.fn(),
+  fetchEmployeeServices: vi.fn(),
+  fetchEmployeeServiceTypes: vi.fn(),
   fetchSlots: vi.fn(),
 }))
 
 import {
-  usePractitionerMutations,
+  useEmployeeMutations,
   useSetAvailability,
   useSetBreaks,
   useVacationMutations,
-  usePractitionerServiceMutations,
-} from "@/hooks/use-practitioner-mutations"
+  useEmployeeServiceMutations,
+} from "@/hooks/use-employee-mutations"
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -68,63 +68,63 @@ function makeWrapper() {
   return TestWrapper
 }
 
-describe("usePractitionerMutations", () => {
+describe("useEmployeeMutations", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("createMutation calls createPractitioner", async () => {
-    createPractitioner.mockResolvedValueOnce({ id: "p-new" })
+  it("createMutation calls createEmployee", async () => {
+    createEmployee.mockResolvedValueOnce({ id: "p-new" })
 
-    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployeeMutations(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.createMutation.mutate({ firstName: "Ali" } as Parameters<typeof createPractitioner>[0])
+      result.current.createMutation.mutate({ firstName: "Ali" } as Parameters<typeof createEmployee>[0])
     })
 
-    await waitFor(() => expect(createPractitioner).toHaveBeenCalled())
+    await waitFor(() => expect(createEmployee).toHaveBeenCalled())
   })
 
-  it("onboardMutation calls onboardPractitioner", async () => {
-    onboardPractitioner.mockResolvedValueOnce({ id: "p-1" })
+  it("onboardMutation calls onboardEmployee", async () => {
+    onboardEmployee.mockResolvedValueOnce({ id: "p-1" })
 
-    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployeeMutations(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.onboardMutation.mutate({ email: "ali@example.com" } as Parameters<typeof onboardPractitioner>[0])
+      result.current.onboardMutation.mutate({ email: "ali@example.com" } as Parameters<typeof onboardEmployee>[0])
     })
 
     await waitFor(() =>
-      expect(onboardPractitioner).toHaveBeenCalledWith(
+      expect(onboardEmployee).toHaveBeenCalledWith(
         expect.objectContaining({ email: "ali@example.com" }),
       ),
     )
   })
 
-  it("updateMutation calls updatePractitioner with id and payload", async () => {
-    updatePractitioner.mockResolvedValueOnce({ id: "p-1" })
+  it("updateMutation calls updateEmployee with id and payload", async () => {
+    updateEmployee.mockResolvedValueOnce({ id: "p-1" })
 
-    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployeeMutations(), { wrapper: makeWrapper() })
 
     act(() => {
       result.current.updateMutation.mutate({ id: "p-1", firstName: "Updated" } as Parameters<typeof result.current.updateMutation.mutate>[0])
     })
 
     await waitFor(() =>
-      expect(updatePractitioner).toHaveBeenCalledWith(
+      expect(updateEmployee).toHaveBeenCalledWith(
         "p-1",
         expect.objectContaining({ firstName: "Updated" }),
       ),
     )
   })
 
-  it("deleteMutation calls deletePractitioner with id", async () => {
-    deletePractitioner.mockResolvedValueOnce(undefined)
+  it("deleteMutation calls deleteEmployee with id", async () => {
+    deleteEmployee.mockResolvedValueOnce(undefined)
 
-    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployeeMutations(), { wrapper: makeWrapper() })
 
     act(() => { result.current.deleteMutation.mutate("p-1") })
 
     await waitFor(() =>
-      expect(deletePractitioner).toHaveBeenCalledWith("p-1", expect.anything()),
+      expect(deleteEmployee).toHaveBeenCalledWith("p-1", expect.anything()),
     )
   })
 })
@@ -180,7 +180,7 @@ describe("useSetBreaks", () => {
 describe("useVacationMutations", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("createMut calls createVacation with practitionerId and payload", async () => {
+  it("createMut calls createVacation with employeeId and payload", async () => {
     createVacation.mockResolvedValueOnce({ id: "vac-new" })
 
     const { result } = renderHook(
@@ -203,7 +203,7 @@ describe("useVacationMutations", () => {
     )
   })
 
-  it("deleteMut calls deleteVacation with practitionerId and vacationId", async () => {
+  it("deleteMut calls deleteVacation with employeeId and vacationId", async () => {
     deleteVacation.mockResolvedValueOnce(undefined)
 
     const { result } = renderHook(
@@ -219,14 +219,14 @@ describe("useVacationMutations", () => {
   })
 })
 
-describe("usePractitionerServiceMutations", () => {
+describe("useEmployeeServiceMutations", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("assignMut calls assignService with practitionerId and payload", async () => {
+  it("assignMut calls assignService with employeeId and payload", async () => {
     assignService.mockResolvedValueOnce({ id: "ps-new" })
 
     const { result } = renderHook(
-      () => usePractitionerServiceMutations("p-1"),
+      () => useEmployeeServiceMutations("p-1"),
       { wrapper: makeWrapper() },
     )
 
@@ -244,26 +244,26 @@ describe("usePractitionerServiceMutations", () => {
     )
   })
 
-  it("removeMut calls removePractitionerService with practitionerId and serviceId", async () => {
-    removePractitionerService.mockResolvedValueOnce(undefined)
+  it("removeMut calls removeEmployeeService with employeeId and serviceId", async () => {
+    removeEmployeeService.mockResolvedValueOnce(undefined)
 
     const { result } = renderHook(
-      () => usePractitionerServiceMutations("p-1"),
+      () => useEmployeeServiceMutations("p-1"),
       { wrapper: makeWrapper() },
     )
 
     act(() => { result.current.removeMut.mutate("svc-1") })
 
     await waitFor(() =>
-      expect(removePractitionerService).toHaveBeenCalledWith("p-1", "svc-1"),
+      expect(removeEmployeeService).toHaveBeenCalledWith("p-1", "svc-1"),
     )
   })
 
-  it("updateMut calls updatePractitionerService with practitionerId, serviceId, payload", async () => {
-    updatePractitionerService.mockResolvedValueOnce({ id: "ps-1" })
+  it("updateMut calls updateEmployeeService with employeeId, serviceId, payload", async () => {
+    updateEmployeeService.mockResolvedValueOnce({ id: "ps-1" })
 
     const { result } = renderHook(
-      () => usePractitionerServiceMutations("p-1"),
+      () => useEmployeeServiceMutations("p-1"),
       { wrapper: makeWrapper() },
     )
 
@@ -275,7 +275,7 @@ describe("usePractitionerServiceMutations", () => {
     })
 
     await waitFor(() =>
-      expect(updatePractitionerService).toHaveBeenCalledWith(
+      expect(updateEmployeeService).toHaveBeenCalledWith(
         "p-1",
         "svc-1",
         expect.objectContaining({ customDuration: 30 }),
@@ -284,16 +284,16 @@ describe("usePractitionerServiceMutations", () => {
   })
 })
 
-describe("usePractitionerMutations error handling", () => {
+describe("useEmployeeMutations error handling", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
   it("createMutation propagates error", async () => {
-    createPractitioner.mockRejectedValueOnce(new Error("Email already exists"))
+    createEmployee.mockRejectedValueOnce(new Error("Email already exists"))
 
-    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployeeMutations(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.createMutation.mutate({ email: "dup@clinic.com" } as Parameters<typeof createPractitioner>[0])
+      result.current.createMutation.mutate({ email: "dup@clinic.com" } as Parameters<typeof createEmployee>[0])
     })
 
     await waitFor(() => expect(result.current.createMutation.isError).toBe(true))
@@ -301,9 +301,9 @@ describe("usePractitionerMutations error handling", () => {
   })
 
   it("deleteMutation propagates error", async () => {
-    deletePractitioner.mockRejectedValueOnce(new Error("Has active bookings"))
+    deleteEmployee.mockRejectedValueOnce(new Error("Has active bookings"))
 
-    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployeeMutations(), { wrapper: makeWrapper() })
 
     act(() => { result.current.deleteMutation.mutate("p-1") })
 
@@ -312,12 +312,12 @@ describe("usePractitionerMutations error handling", () => {
   })
 
   it("onboardMutation resolves successfully", async () => {
-    onboardPractitioner.mockResolvedValueOnce({ id: "p-1" })
+    onboardEmployee.mockResolvedValueOnce({ id: "p-1" })
 
-    const { result } = renderHook(() => usePractitionerMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployeeMutations(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.onboardMutation.mutate({ email: "new@clinic.com" } as Parameters<typeof onboardPractitioner>[0])
+      result.current.onboardMutation.mutate({ email: "new@clinic.com" } as Parameters<typeof onboardEmployee>[0])
     })
 
     await waitFor(() => expect(result.current.onboardMutation.isSuccess).toBe(true))

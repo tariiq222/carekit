@@ -40,7 +40,7 @@ export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
     pending_cancellation: t('appointments.pendingCancellation'),
   };
 
-  const practName = `${booking.practitioner.user.firstName} ${booking.practitioner.user.lastName}`;
+  const practName = `${booking.employee.user.firstName} ${booking.employee.user.lastName}`;
   const date = new Date(booking.date);
   const formattedDate = date.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
     weekday: 'short',
@@ -70,7 +70,7 @@ export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
             {practName}
           </ThemedText>
           <ThemedText variant="bodySm" numberOfLines={1}>
-            {isRTL ? booking.practitioner.specialty?.nameAr : booking.practitioner.specialty?.nameEn}
+            {isRTL ? booking.employee.specialty?.nameAr : booking.employee.specialty?.nameEn}
           </ThemedText>
         </View>
         <StatusPill

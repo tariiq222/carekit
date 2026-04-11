@@ -319,7 +319,7 @@ export function BookingTab({ t }: Props) {
           {activeTab === "floworder" && (
             <div className="flex flex-col gap-3 h-full">
               <div className="grid grid-cols-2 gap-3">
-                {(["service_first", "practitioner_first", "both"] as const).map((val) => (
+                {(["service_first", "employee_first", "both"] as const).map((val) => (
                   <Card key={val} className={cn("shadow-sm cursor-pointer transition-all", flowOrderVal === val ? "ring-2 ring-primary bg-primary/5" : "bg-surface hover:bg-surface-muted")}
                     onClick={() => setFlowOrderVal(val)}>
                     <CardContent className="pt-2 pb-2">
@@ -328,8 +328,8 @@ export function BookingTab({ t }: Props) {
                           <RadioGroupItem value={val} />
                         </RadioGroup>
                         <div>
-                          <p className="text-sm font-medium text-foreground">{t(`settings.booking.flowOrder.${val === "service_first" ? "serviceFirst" : val === "practitioner_first" ? "practitionerFirst" : "both"}`)}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{t(`settings.booking.flowOrder.${val === "service_first" ? "serviceFirstDesc" : val === "practitioner_first" ? "practitionerFirstDesc" : "bothDesc"}`)}</p>
+                          <p className="text-sm font-medium text-foreground">{t(`settings.booking.flowOrder.${val === "service_first" ? "serviceFirst" : val === "employee_first" ? "employeeFirst" : "both"}`)}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t(`settings.booking.flowOrder.${val === "service_first" ? "serviceFirstDesc" : val === "employee_first" ? "employeeFirstDesc" : "bothDesc"}`)}</p>
                         </div>
                       </div>
                     </CardContent>

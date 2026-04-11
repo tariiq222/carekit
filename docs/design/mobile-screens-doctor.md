@@ -1,6 +1,6 @@
-# CareKit Mobile — Doctor (Practitioner) Screens Specification
+# CareKit Mobile — Doctor (Employee) Screens Specification
 
-8 screens for the practitioner experience. All screens support RTL-first (Arabic primary) and LTR (English).
+8 screens for the employee experience. All screens support RTL-first (Arabic primary) and LTR (English).
 
 ---
 
@@ -12,8 +12,8 @@
 | D02 | Appointment Detail (Doctor) | `/(doctor)/appointments/[id]` | Today |
 | D03 | Calendar View | `/(doctor)/calendar` | Calendar |
 | D04 | Availability Editor | `/(doctor)/availability` | Calendar |
-| D05 | Patient List | `/(doctor)/patients` | Patients |
-| D06 | Patient Record | `/(doctor)/patients/[id]` | Patients |
+| D05 | Client List | `/(doctor)/clients` | Clients |
+| D06 | Client Record | `/(doctor)/clients/[id]` | Clients |
 | D07 | Doctor Profile | `/(doctor)/profile` | Profile |
 | D08 | Ratings & Reviews | `/(doctor)/ratings` | Profile |
 
@@ -85,9 +85,9 @@
 3. **Timeline list:** Chronological appointments with time markers
 
 **Card variations:**
-- **Clinic visit:** Building icon, patient name, service, time, status
+- **Clinic visit:** Building icon, client name, service, time, status
 - **Video consultation:** Camera icon + "Start Meeting" button (links to Zoom)
-- **Phone consultation:** Phone icon + patient phone number displayed
+- **Phone consultation:** Phone icon + client phone number displayed
 - **Completed:** Checkmark overlay, muted styling
 - **Cancelled:** Strikethrough styling, grey text
 
@@ -137,7 +137,7 @@
 │  [اتصال بالمريض 📞]          │
 │                              │
 │──────────────────────────────│
-│  سجل المريض / Patient History │
+│  سجل المريض / Client History │
 │  ┌──────────────────────┐    │
 │  │ 15/02/2026 - حشو أسنان│   │
 │  │ 01/01/2026 - فحص شامل │    │
@@ -150,17 +150,17 @@
 ```
 
 **Doctor-specific features:**
-- Patient contact info visible (phone, email)
-- Patient visit history with this doctor
+- Client contact info visible (phone, email)
+- Client visit history with this doctor
 - "Mark as Completed" button (only for confirmed appointments)
 - "Start Zoom" for video appointments (deep link)
-- "Call Patient" for phone appointments (opens dialer)
+- "Call Client" for phone appointments (opens dialer)
 
 **Behavior:**
-- Mark completed → confirmation dialog → status updates → triggers rating prompt for patient
+- Mark completed → confirmation dialog → status updates → triggers rating prompt for client
 - Phone number tappable → opens dialer
 - Email tappable → opens mail app
-- Patient history shows previous appointments with this doctor only
+- Client history shows previous appointments with this doctor only
 
 ---
 
@@ -321,14 +321,14 @@
 
 ---
 
-## D05 — Patient List
+## D05 — Client List
 
-**Purpose:** Browse patients who have visited this doctor
+**Purpose:** Browse clients who have visited this doctor
 
 **Layout:**
 ```
 ┌──────────────────────────────┐
-│    المرضى / My Patients       │
+│    المرضى / My Clients       │
 │──────────────────────────────│
 │                              │
 │  ┌──────────────────────┐    │
@@ -357,18 +357,18 @@
 ```
 
 **Behavior:**
-- Shows only patients who have had appointments with this doctor
+- Shows only clients who have had appointments with this doctor
 - Search by name
 - Sorted by last visit date (most recent first)
 - Shows visit count and last visit date
 - Avatar: first letter of name with colored background
-- Tap → D06 (Patient Record)
+- Tap → D06 (Client Record)
 
 ---
 
-## D06 — Patient Record
+## D06 — Client Record
 
-**Purpose:** Patient details and visit history with this doctor
+**Purpose:** Client details and visit history with this doctor
 
 **Layout:**
 ```
@@ -409,7 +409,7 @@
 ```
 
 **Behavior:**
-- Patient contact info (phone tappable, email tappable)
+- Client contact info (phone tappable, email tappable)
 - Visit history: all appointments with this doctor, chronological (newest first)
 - Completed visits show rating if given
 - Tap visit → D02 (Appointment Detail)
@@ -453,7 +453,7 @@
 - Ratings & Reviews → D08
 - Language toggle
 - Notification settings
-- About clinic (same as patient)
+- About clinic (same as client)
 - Logout
 
 **Note:** Doctor cannot edit their own pricing, schedule display name, or specialty from the app — those are managed by admin via dashboard.
@@ -504,7 +504,7 @@
 **Behavior:**
 - Overall rating with star breakdown chart
 - Reviews list (newest first)
-- Patient name shown as first name + initial (privacy)
+- Client name shown as first name + initial (privacy)
 - Pagination / infinite scroll
 - No reply feature for doctor (out of scope for v1)
 

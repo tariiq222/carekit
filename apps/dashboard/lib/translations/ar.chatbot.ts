@@ -59,8 +59,8 @@ export const arChatbot: Record<string, string> = {
   "activityLog.empty.description": "لم يتم تسجيل أي نشاط بعد.",
 
   // ─── Tab Keys ───
-  "practitioners.tabs.list": "الممارسون",
-  "practitioners.tabs.ratings": "التقييمات والمراجعات",
+  "employees.tabs.list": "الممارسون",
+  "employees.tabs.ratings": "التقييمات والمراجعات",
   "bookings.tabs.list": "الحجوزات",
   "bookings.tabs.waitlist": "قائمة الانتظار",
   "invoices.tabs.list": "الفواتير",
@@ -72,8 +72,8 @@ export const arChatbot: Record<string, string> = {
   // ─── Ratings ───
   "ratings.title": "التقييمات والمراجعات",
   "ratings.description": "عرض تقييمات المستفيدين للممارسين",
-  "ratings.selectPractitioner": "اختر ممارساً",
-  "ratings.choosePractitioner": "اختر ممارساً",
+  "ratings.selectEmployee": "اختر ممارساً",
+  "ratings.chooseEmployee": "اختر ممارساً",
   "ratings.selectToView": "اختر ممارساً لعرض تقييماته",
   "ratings.empty": "لا توجد تقييمات لهذا الممارس بعد",
   "ratings.totalRatings": "إجمالي التقييمات",

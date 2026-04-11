@@ -4,12 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 
 const {
-  fetchServicePractitioners,
+  fetchServiceEmployees,
   assignService,
   setServiceBranches,
   clearServiceBranches,
 } = vi.hoisted(() => ({
-  fetchServicePractitioners: vi.fn(),
+  fetchServiceEmployees: vi.fn(),
   assignService: vi.fn(),
   setServiceBranches: vi.fn(),
   clearServiceBranches: vi.fn(),
@@ -33,18 +33,18 @@ vi.mock("@/lib/api/services", () => ({
   updateIntakeForm: vi.fn(),
   deleteIntakeForm: vi.fn(),
   setIntakeFields: vi.fn(),
-  fetchServicePractitioners,
+  fetchServiceEmployees,
   setServiceBranches,
   clearServiceBranches,
 }))
 
-vi.mock("@/lib/api/practitioners", () => ({
+vi.mock("@/lib/api/employees", () => ({
   assignService,
 }))
 
 import {
-  useServicePractitioners,
-  useAssignPractitionersToService,
+  useServiceEmployees,
+  useAssignEmployeesToService,
   useSetServiceBranches,
   useClearServiceBranches,
 } from "@/hooks/use-services"
@@ -58,42 +58,42 @@ function makeWrapper() {
   return TestWrapper
 }
 
-describe("useServicePractitioners", () => {
+describe("useServiceEmployees", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetches practitioners for a service", async () => {
-    const practitioners = [{ id: "p-1", name: "Dr. Ali" }]
-    fetchServicePractitioners.mockResolvedValueOnce(practitioners)
+  it("fetches employees for a service", async () => {
+    const employees = [{ id: "p-1", name: "Dr. Ali" }]
+    fetchServiceEmployees.mockResolvedValueOnce(employees)
 
     const { result } = renderHook(
-      () => useServicePractitioners("svc-1"),
+      () => useServiceEmployees("svc-1"),
       { wrapper: makeWrapper() },
     )
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(fetchServicePractitioners).toHaveBeenCalledWith("svc-1")
-    expect(result.current.data).toEqual(practitioners)
+    expect(fetchServiceEmployees).toHaveBeenCalledWith("svc-1")
+    expect(result.current.data).toEqual(employees)
   })
 
   it("does not fetch when serviceId is empty", () => {
     renderHook(
-      () => useServicePractitioners(""),
+      () => useServiceEmployees(""),
       { wrapper: makeWrapper() },
     )
 
-    expect(fetchServicePractitioners).not.toHaveBeenCalled()
+    expect(fetchServiceEmployees).not.toHaveBeenCalled()
   })
 })
 
-describe("useAssignPractitionersToService", () => {
+describe("useAssignEmployeesToService", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("calls assignService for each practitioner id", async () => {
+  it("calls assignService for each employee id", async () => {
     assignService.mockResolvedValue({})
 
     const { result } = renderHook(
-      () => useAssignPractitionersToService("svc-1"),
+      () => useAssignEmployeesToService("svc-1"),
       { wrapper: makeWrapper() },
     )
 
@@ -113,9 +113,9 @@ describe("useAssignPractitionersToService", () => {
     }))
   })
 
-  it("calls assignService with empty array when no practitioners", async () => {
+  it("calls assignService with empty array when no employees", async () => {
     const { result } = renderHook(
-      () => useAssignPractitionersToService("svc-1"),
+      () => useAssignEmployeesToService("svc-1"),
       { wrapper: makeWrapper() },
     )
 

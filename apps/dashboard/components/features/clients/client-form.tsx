@@ -19,15 +19,15 @@ import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 import { SectionHeader } from "@/components/features/section-header"
 import {
-  type CreatePatientFormData,
-  type EditPatientFormData,
-} from "@/lib/schemas/patient.schema"
-import { PatientMedicalCard } from "@/components/features/patients/patient-medical-card"
+  type CreateClientFormData,
+  type EditClientFormData,
+} from "@/lib/schemas/client.schema"
+import { ClientMedicalCard } from "@/components/features/clients/client-medical-card"
 
 /* ─── Internal helper types ─── */
 
-/** Union of both form schemas — allows PatientFormFields to accept create or edit forms. */
-type PatientFormData = CreatePatientFormData | EditPatientFormData
+/** Union of both form schemas — allows ClientFormFields to accept create or edit forms. */
+type ClientFormData = CreateClientFormData | EditClientFormData
 
 /* ─── Field ─── */
 
@@ -52,16 +52,16 @@ export function Field({ label, error, children, required, htmlFor: htmlForProp }
   )
 }
 
-/* ─── PatientFormFields ─── */
+/* ─── ClientFormFields ─── */
 
-interface PatientFormFieldsProps {
-  form: UseFormReturn<CreatePatientFormData> | UseFormReturn<EditPatientFormData>
-  errors: FieldErrors<PatientFormData>
+interface ClientFormFieldsProps {
+  form: UseFormReturn<CreateClientFormData> | UseFormReturn<EditClientFormData>
+  errors: FieldErrors<ClientFormData>
   mode: "create" | "edit"
 }
 
-export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps) {
-  const { control, register } = form as UseFormReturn<EditPatientFormData>
+export function ClientFormFields({ form, errors, mode }: ClientFormFieldsProps) {
+  const { control, register } = form as UseFormReturn<EditClientFormData>
   const { t, locale } = useLocale()
   const isCreate = mode === "create"
 
@@ -73,23 +73,23 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
         <CardContent className="pt-6 space-y-4">
           <SectionHeader
             icon={UserIcon}
-            title={t("patients.form.personalInfo")}
-            description={t("patients.form.personalInfoDesc")}
+            title={t("clients.form.personalInfo")}
+            description={t("clients.form.personalInfoDesc")}
           />
 
           <div className="grid grid-cols-3 gap-3">
             <Field
-              label={t("patients.form.firstName")}
+              label={t("clients.form.firstName")}
               error={errors.firstName?.message}
               required={isCreate}
             >
               <Input {...register("firstName")} />
             </Field>
-            <Field label={t("patients.form.middleName")}>
+            <Field label={t("clients.form.middleName")}>
               <Input {...register("middleName")} />
             </Field>
             <Field
-              label={t("patients.form.lastName")}
+              label={t("clients.form.lastName")}
               error={errors.lastName?.message}
               required={isCreate}
             >
@@ -97,12 +97,12 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
             </Field>
           </div>
 
-          <Field label={t("patients.form.gender")}>
+          <Field label={t("clients.form.gender")}>
             <Controller
               control={control}
               name="gender"
               render={({ field }) => (
-                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("patients.form.gender")}>
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("clients.form.gender")}>
                   {(["male", "female"] as const).map((val) => (
                     <button
                       key={val}
@@ -117,7 +117,7 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
                           : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
                       )}
                     >
-                      {val === "male" ? t("patients.form.male") : t("patients.form.female")}
+                      {val === "male" ? t("clients.form.male") : t("clients.form.female")}
                     </button>
                   ))}
                 </div>
@@ -126,7 +126,7 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label={t("patients.form.dateOfBirth")}>
+            <Field label={t("clients.form.dateOfBirth")}>
               <Controller
                 control={control}
                 name="dateOfBirth"
@@ -140,7 +140,7 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
                 )}
               />
             </Field>
-            <Field label={t("patients.form.nationality")}>
+            <Field label={t("clients.form.nationality")}>
               <Controller
                 control={control}
                 name="nationality"
@@ -156,7 +156,7 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
             </Field>
           </div>
 
-          <Field label={t("patients.form.nationalId")}>
+          <Field label={t("clients.form.nationalId")}>
             <Input
               {...register("nationalId")}
               placeholder="1XXXXXXXXX"
@@ -171,11 +171,11 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
               name="isActive"
               render={({ field }) => (
                 <div className="flex h-9 items-center justify-between rounded-lg border border-border px-3">
-                  <Label htmlFor="patient-active" className="cursor-pointer text-sm">
-                    {t("patients.form.accountActive")}
+                  <Label htmlFor="client-active" className="cursor-pointer text-sm">
+                    {t("clients.form.accountActive")}
                   </Label>
                   <Switch
-                    id="patient-active"
+                    id="client-active"
                     checked={field.value ?? true}
                     onCheckedChange={field.onChange}
                   />
@@ -191,12 +191,12 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
         <CardContent className="pt-6 space-y-4">
           <SectionHeader
             icon={SmartPhone01Icon}
-            title={t("patients.form.contactInfo")}
-            description={isCreate ? t("patients.form.phoneDesc") : undefined}
+            title={t("clients.form.contactInfo")}
+            description={isCreate ? t("clients.form.phoneDesc") : undefined}
           />
 
           <Field
-            label={t("patients.form.phone")}
+            label={t("clients.form.phone")}
             error={errors.phone?.message}
             required={isCreate}
           >
@@ -215,20 +215,20 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
 
           {isCreate && (
             <p className="text-xs text-muted-foreground rounded-lg bg-muted/50 px-3 py-2.5">
-              {t("patients.form.phoneHint")}
+              {t("clients.form.phoneHint")}
             </p>
           )}
 
           <SectionHeader
             icon={Alert02Icon}
-            title={t("patients.form.emergencyContact")}
-            description={isCreate ? t("patients.form.emergencyContactDesc") : undefined}
+            title={t("clients.form.emergencyContact")}
+            description={isCreate ? t("clients.form.emergencyContactDesc") : undefined}
           />
 
-          <Field label={t("patients.form.name")}>
+          <Field label={t("clients.form.name")}>
             <Input {...register("emergencyName")} />
           </Field>
-          <Field label={t("patients.form.phone")} error={errors.emergencyPhone?.message}>
+          <Field label={t("clients.form.phone")} error={errors.emergencyPhone?.message}>
             <Controller
               control={control}
               name="emergencyPhone"
@@ -245,7 +245,7 @@ export function PatientFormFields({ form, errors, mode }: PatientFormFieldsProps
       </Card>
 
       {/* ── Card 3: Medical ── */}
-      <PatientMedicalCard form={form} isCreate={isCreate} />
+      <ClientMedicalCard form={form} isCreate={isCreate} />
 
     </div>
   )

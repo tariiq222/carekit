@@ -11,7 +11,7 @@
 1. [Conventions](#conventions)
 2. [Auth Module](#1-auth-module)
 3. [Users Module](#2-users-module)
-4. [Practitioners Module](#3-practitioners-module)
+4. [Employees Module](#3-employees-module)
 5. [Specialties Module](#4-specialties-module)
 6. [Services Module](#5-services-module)
 7. [Bookings Module](#6-bookings-module)
@@ -49,7 +49,7 @@ Authorization: Bearer <jwt_token>
 | `JWT` | Any authenticated user |
 | `ROLE:<role>` | Specific role required |
 | `PERMISSION:<module>:<action>` | CASL permission check |
-| `OWNER` | Resource owner (e.g., patient's own booking) |
+| `OWNER` | Resource owner (e.g., client's own booking) |
 
 ### Success Response
 
@@ -121,7 +121,7 @@ All list endpoints accept: `?page=1&perPage=20&sortBy=createdAt&sortOrder=desc`
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/register` | PUBLIC | Register new patient account |
+| POST | `/register` | PUBLIC | Register new client account |
 | POST | `/login` | PUBLIC | Login with email + password |
 | POST | `/login/otp/send` | PUBLIC | Send OTP code to email |
 | POST | `/login/otp/verify` | PUBLIC | Verify OTP and get tokens |
@@ -136,12 +136,12 @@ All list endpoints accept: `?page=1&perPage=20&sortBy=createdAt&sortOrder=desc`
 
 ### `POST /register`
 
-Register a new patient account. Automatically assigns the `patient` role.
+Register a new client account. Automatically assigns the `client` role.
 
 **Request:**
 ```json
 {
-  "email": "patient@example.com",
+  "email": "client@example.com",
   "password": "StrongP@ss1",
   "firstName": "Ahmed",
   "lastName": "Al-Rashid",
@@ -157,7 +157,7 @@ Register a new patient account. Automatically assigns the `patient` role.
   "data": {
     "user": {
       "id": "uuid",
-      "email": "patient@example.com",
+      "email": "client@example.com",
       "firstName": "Ahmed",
       "lastName": "Al-Rashid",
       "phone": "+966501234567",
@@ -179,7 +179,7 @@ Register a new patient account. Automatically assigns the `patient` role.
 **Request:**
 ```json
 {
-  "email": "patient@example.com",
+  "email": "client@example.com",
   "password": "StrongP@ss1"
 }
 ```
@@ -191,10 +191,10 @@ Register a new patient account. Automatically assigns the `patient` role.
   "data": {
     "user": {
       "id": "uuid",
-      "email": "patient@example.com",
+      "email": "client@example.com",
       "firstName": "Ahmed",
       "lastName": "Al-Rashid",
-      "roles": ["patient"],
+      "roles": ["client"],
       "permissions": ["bookings:view", "bookings:create", "ratings:view", "ratings:create", "ratings:edit"]
     },
     "accessToken": "eyJhbGciOiJIUzI1NiIs...",
@@ -209,7 +209,7 @@ Register a new patient account. Automatically assigns the `patient` role.
 **Request:**
 ```json
 {
-  "email": "patient@example.com"
+  "email": "client@example.com"
 }
 ```
 
@@ -217,7 +217,7 @@ Register a new patient account. Automatically assigns the `patient` role.
 ```json
 {
   "success": true,
-  "message": "OTP sent to patient@example.com"
+  "message": "OTP sent to client@example.com"
 }
 ```
 
@@ -226,7 +226,7 @@ Register a new patient account. Automatically assigns the `patient` role.
 **Request:**
 ```json
 {
-  "email": "patient@example.com",
+  "email": "client@example.com",
   "code": "123456"
 }
 ```
@@ -279,7 +279,7 @@ Register a new patient account. Automatically assigns the `patient` role.
   "success": true,
   "data": {
     "id": "uuid",
-    "email": "patient@example.com",
+    "email": "client@example.com",
     "firstName": "Ahmed",
     "lastName": "Al-Rashid",
     "phone": "+966501234567",
@@ -290,8 +290,8 @@ Register a new patient account. Automatically assigns the `patient` role.
     "roles": [
       {
         "id": "uuid",
-        "name": "Patient",
-        "slug": "patient"
+        "name": "Client",
+        "slug": "client"
       }
     ],
     "permissions": ["bookings:view", "bookings:create", "ratings:view", "ratings:create", "ratings:edit"],
@@ -305,7 +305,7 @@ Register a new patient account. Automatically assigns the `patient` role.
 **Request:**
 ```json
 {
-  "email": "patient@example.com"
+  "email": "client@example.com"
 }
 ```
 
@@ -322,7 +322,7 @@ Register a new patient account. Automatically assigns the `patient` role.
 **Request:**
 ```json
 {
-  "email": "patient@example.com",
+  "email": "client@example.com",
   "code": "123456",
   "newPassword": "NewStr0ngP@ss"
 }
@@ -393,7 +393,7 @@ Register a new patient account. Automatically assigns the `patient` role.
 |--------|----------|------|-------------|
 | GET | `/` | PERMISSION:users:view | List users (paginated) |
 | GET | `/:id` | PERMISSION:users:view | Get user by ID |
-| POST | `/` | PERMISSION:users:create | Create user (staff/practitioner) |
+| POST | `/` | PERMISSION:users:create | Create user (staff/employee) |
 | PATCH | `/:id` | PERMISSION:users:edit | Update user |
 | DELETE | `/:id` | PERMISSION:users:delete | Soft delete user |
 | PATCH | `/:id/activate` | PERMISSION:users:edit | Activate user |
@@ -411,7 +411,7 @@ Register a new patient account. Automatically assigns the `patient` role.
 
 ### `POST /` (Create User)
 
-Admin creates staff or practitioner accounts. Password is set by admin, user can change later.
+Admin creates staff or employee accounts. Password is set by admin, user can change later.
 
 **Request:**
 ```json
@@ -422,7 +422,7 @@ Admin creates staff or practitioner accounts. Password is set by admin, user can
   "lastName": "Al-Fahad",
   "phone": "+966509876543",
   "gender": "male",
-  "roleSlug": "practitioner"
+  "roleSlug": "employee"
 }
 ```
 
@@ -435,7 +435,7 @@ Admin creates staff or practitioner accounts. Password is set by admin, user can
     "email": "doctor@clinic.com",
     "firstName": "Khalid",
     "lastName": "Al-Fahad",
-    "roles": ["practitioner"],
+    "roles": ["employee"],
     "isActive": true,
     "createdAt": "2026-04-01T09:00:00.000Z"
   },
@@ -462,26 +462,26 @@ Admin creates staff or practitioner accounts. Password is set by admin, user can
 
 ---
 
-## 3. Practitioners Module
+## 3. Employees Module
 
-**Base path:** `/api/v1/practitioners`
+**Base path:** `/api/v1/employees`
 
 ### Endpoints
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/` | PUBLIC | List practitioners (paginated) |
-| GET | `/:id` | PUBLIC | Get practitioner profile |
-| POST | `/` | PERMISSION:practitioners:create | Create practitioner profile |
-| PATCH | `/:id` | PERMISSION:practitioners:edit or OWNER | Update practitioner |
-| DELETE | `/:id` | PERMISSION:practitioners:delete | Soft delete |
+| GET | `/` | PUBLIC | List employees (paginated) |
+| GET | `/:id` | PUBLIC | Get employee profile |
+| POST | `/` | PERMISSION:employees:create | Create employee profile |
+| PATCH | `/:id` | PERMISSION:employees:edit or OWNER | Update employee |
+| DELETE | `/:id` | PERMISSION:employees:delete | Soft delete |
 | GET | `/:id/availability` | PUBLIC | Get availability schedule |
-| PUT | `/:id/availability` | PERMISSION:practitioners:edit or OWNER | Set availability |
+| PUT | `/:id/availability` | PERMISSION:employees:edit or OWNER | Set availability |
 | GET | `/:id/slots` | PUBLIC | Get available slots for a date |
-| POST | `/:id/vacations` | PERMISSION:practitioners:edit or OWNER | Add vacation |
-| GET | `/:id/vacations` | PERMISSION:practitioners:view or OWNER | List vacations |
-| DELETE | `/:id/vacations/:vacationId` | PERMISSION:practitioners:edit or OWNER | Remove vacation |
-| GET | `/:id/ratings` | PUBLIC | List practitioner ratings |
+| POST | `/:id/vacations` | PERMISSION:employees:edit or OWNER | Add vacation |
+| GET | `/:id/vacations` | PERMISSION:employees:view or OWNER | List vacations |
+| DELETE | `/:id/vacations/:vacationId` | PERMISSION:employees:edit or OWNER | Remove vacation |
+| GET | `/:id/ratings` | PUBLIC | List employee ratings |
 
 ### Query Parameters for `GET /`
 
@@ -492,9 +492,9 @@ Admin creates staff or practitioner accounts. Password is set by admin, user can
 | `isActive` | boolean | Filter by active status |
 | `search` | string | Search by name |
 
-### `POST /` (Create Practitioner)
+### `POST /` (Create Employee)
 
-Links a practitioner profile to an existing user account.
+Links a employee profile to an existing user account.
 
 **Request:**
 ```json
@@ -586,7 +586,7 @@ Returns available time slots for a specific date, accounting for existing bookin
   "success": true,
   "data": {
     "date": "2026-04-01",
-    "practitionerId": "uuid",
+    "employeeId": "uuid",
     "slots": [
       { "startTime": "09:00", "endTime": "09:30", "available": true },
       { "startTime": "09:30", "endTime": "10:00", "available": true },
@@ -633,9 +633,9 @@ Returns available time slots for a specific date, accounting for existing bookin
 |--------|----------|------|-------------|
 | GET | `/` | PUBLIC | List all specialties |
 | GET | `/:id` | PUBLIC | Get specialty by ID |
-| POST | `/` | PERMISSION:practitioners:create | Create specialty |
-| PATCH | `/:id` | PERMISSION:practitioners:edit | Update specialty |
-| DELETE | `/:id` | PERMISSION:practitioners:delete | Delete specialty |
+| POST | `/` | PERMISSION:employees:create | Create specialty |
+| PATCH | `/:id` | PERMISSION:employees:edit | Update specialty |
+| DELETE | `/:id` | PERMISSION:employees:delete | Delete specialty |
 
 ### `POST /` (Create Specialty)
 
@@ -706,15 +706,15 @@ Returns available time slots for a specific date, accounting for existing bookin
 |--------|----------|------|-------------|
 | GET | `/` | PERMISSION:bookings:view | List bookings (paginated) |
 | GET | `/:id` | PERMISSION:bookings:view or OWNER | Get booking details |
-| POST | `/` | PERMISSION:bookings:create or ROLE:patient | Create booking |
+| POST | `/` | PERMISSION:bookings:create or ROLE:client | Create booking |
 | PATCH | `/:id` | PERMISSION:bookings:edit | Update booking (reschedule) |
 | POST | `/:id/confirm` | PERMISSION:bookings:edit | Confirm booking |
 | POST | `/:id/complete` | PERMISSION:bookings:edit | Mark as completed |
-| POST | `/:id/cancel-request` | OWNER | Patient requests cancellation |
+| POST | `/:id/cancel-request` | OWNER | Client requests cancellation |
 | POST | `/:id/cancel/approve` | PERMISSION:bookings:edit | Approve cancellation |
 | POST | `/:id/cancel/reject` | PERMISSION:bookings:edit | Reject cancellation |
-| GET | `/my` | JWT (patient) | Patient's own bookings |
-| GET | `/today` | JWT (practitioner) | Today's bookings for practitioner |
+| GET | `/my` | JWT (client) | Client's own bookings |
+| GET | `/today` | JWT (employee) | Today's bookings for employee |
 
 ### Query Parameters for `GET /`
 
@@ -722,8 +722,8 @@ Returns available time slots for a specific date, accounting for existing bookin
 |-------|------|-------------|
 | `status` | string | Filter by status |
 | `type` | string | Filter by booking type |
-| `practitionerId` | string | Filter by practitioner |
-| `patientId` | string | Filter by patient |
+| `employeeId` | string | Filter by employee |
+| `clientId` | string | Filter by client |
 | `dateFrom` | string | Start date (YYYY-MM-DD) |
 | `dateTo` | string | End date (YYYY-MM-DD) |
 
@@ -734,7 +734,7 @@ Creates a booking with double-booking protection. For `video_consultation`, auto
 **Request:**
 ```json
 {
-  "practitionerId": "uuid",
+  "employeeId": "uuid",
   "serviceId": "uuid",
   "type": "video_consultation",
   "date": "2026-04-01",
@@ -749,12 +749,12 @@ Creates a booking with double-booking protection. For `video_consultation`, auto
   "success": true,
   "data": {
     "id": "uuid",
-    "patient": {
+    "client": {
       "id": "uuid",
       "firstName": "Ahmed",
       "lastName": "Al-Rashid"
     },
-    "practitioner": {
+    "employee": {
       "id": "uuid",
       "user": { "firstName": "Khalid", "lastName": "Al-Fahad" },
       "specialty": { "nameEn": "Cardiology", "nameAr": "أمراض القلب" }
@@ -782,14 +782,14 @@ Creates a booking with double-booking protection. For `video_consultation`, auto
   "success": false,
   "error": {
     "code": "BOOKING_CONFLICT",
-    "message": "Practitioner already has a booking at this time"
+    "message": "Employee already has a booking at this time"
   }
 }
 ```
 
 ### `POST /:id/cancel-request`
 
-Patient requests cancellation. Status changes to `pending_cancellation`.
+Client requests cancellation. Status changes to `pending_cancellation`.
 
 **Request:**
 ```json
@@ -1007,7 +1007,7 @@ Admin reviews AI verification result and makes final decision.
 ```json
 {
   "amount": 17250,
-  "reason": "Booking cancelled by patient"
+  "reason": "Booking cancelled by client"
 }
 ```
 
@@ -1046,8 +1046,8 @@ Admin reviews AI verification result and makes final decision.
     },
     "booking": {
       "id": "uuid",
-      "patient": { "firstName": "Ahmed", "lastName": "Al-Rashid" },
-      "practitioner": { "user": { "firstName": "Khalid", "lastName": "Al-Fahad" } },
+      "client": { "firstName": "Ahmed", "lastName": "Al-Rashid" },
+      "employee": { "user": { "firstName": "Khalid", "lastName": "Al-Fahad" } },
       "service": { "nameEn": "General Consultation" },
       "date": "2026-04-01T00:00:00.000Z"
     },
@@ -1069,7 +1069,7 @@ Admin reviews AI verification result and makes final decision.
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET | `/` | PERMISSION:ratings:view | List all ratings (paginated) |
-| POST | `/` | JWT (patient, OWNER of booking) | Create rating for completed booking |
+| POST | `/` | JWT (client, OWNER of booking) | Create rating for completed booking |
 | GET | `/:id` | PERMISSION:ratings:view | Get rating by ID |
 
 ### `POST /` (Create Rating)
@@ -1094,7 +1094,7 @@ Only allowed for completed bookings. One rating per booking.
     "bookingId": "uuid",
     "stars": 5,
     "comment": "Excellent doctor, very professional",
-    "practitioner": {
+    "employee": {
       "id": "uuid",
       "rating": 4.8,
       "reviewCount": 25
@@ -1115,7 +1115,7 @@ Only allowed for completed bookings. One rating per booking.
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | GET | `/` | PERMISSION:ratings:view | List reports (paginated) |
-| POST | `/` | JWT (patient, OWNER of booking) | Create problem report |
+| POST | `/` | JWT (client, OWNER of booking) | Create problem report |
 | PATCH | `/:id` | PERMISSION:ratings:edit | Update status |
 
 ### Query Parameters for `GET /`
@@ -1207,7 +1207,7 @@ When the chatbot executes a function (e.g., booking):
       "content": "I've found the following available slots for Dr. Khalid on April 2nd:",
       "functionCall": {
         "name": "getAvailableSlots",
-        "arguments": { "practitionerId": "uuid", "date": "2026-04-02" },
+        "arguments": { "employeeId": "uuid", "date": "2026-04-02" },
         "result": {
           "slots": [
             { "startTime": "09:00", "endTime": "09:30", "available": true },
@@ -1392,7 +1392,7 @@ Multipart form data. Uploads file to MinIO and updates the config value with the
 | GET | `/revenue` | PERMISSION:reports:view | Revenue report |
 | GET | `/bookings` | PERMISSION:reports:view | Booking statistics |
 | GET | `/ratings` | PERMISSION:reports:view | Ratings report |
-| GET | `/practitioners` | PERMISSION:reports:view | Practitioner performance |
+| GET | `/employees` | PERMISSION:reports:view | Employee performance |
 | GET | `/dashboard` | PERMISSION:reports:view | Dashboard summary |
 | GET | `/export/:type` | PERMISSION:reports:view | Export report |
 
@@ -1402,7 +1402,7 @@ Multipart form data. Uploads file to MinIO and updates the config value with the
 |-------|------|-------------|
 | `dateFrom` | string | Start date (YYYY-MM-DD) |
 | `dateTo` | string | End date (YYYY-MM-DD) |
-| `practitionerId` | string | Filter by practitioner |
+| `employeeId` | string | Filter by employee |
 
 ### `GET /revenue`
 
@@ -1442,7 +1442,7 @@ Multipart form data. Uploads file to MinIO and updates the config value with the
       "completedBookings": 8,
       "cancelledBookings": 1,
       "revenue": 360000,
-      "newPatients": 3
+      "newClients": 3
     },
     "thisMonth": {
       "totalBookings": 150,
@@ -1519,7 +1519,7 @@ Returns file download (`Content-Type: application/pdf` or `application/vnd.openx
 
 Full permission matrix showing default role assignments:
 
-| Module | Action | super_admin | receptionist | accountant | practitioner | patient |
+| Module | Action | super_admin | receptionist | accountant | employee | client |
 |--------|--------|:-----------:|:------------:|:----------:|:------------:|:-------:|
 | users | view | x | | | | |
 | users | create | x | | | | |
@@ -1529,10 +1529,10 @@ Full permission matrix showing default role assignments:
 | roles | create | x | | | | |
 | roles | edit | x | | | | |
 | roles | delete | x | | | | |
-| practitioners | view | x | x | | own | x |
-| practitioners | create | x | x | | | |
-| practitioners | edit | x | x | | own | |
-| practitioners | delete | x | | | | |
+| employees | view | x | x | | own | x |
+| employees | create | x | x | | | |
+| employees | edit | x | x | | own | |
+| employees | delete | x | | | | |
 | bookings | view | x | x | x | own | own |
 | bookings | create | x | x | | | x |
 | bookings | edit | x | x | | | |
@@ -1565,10 +1565,10 @@ Full permission matrix showing default role assignments:
 | whitelabel | create | x | | | | |
 | whitelabel | edit | x | | | | |
 | whitelabel | delete | x | | | | |
-| patients | view | x | x | | own | |
-| patients | create | x | x | | | |
-| patients | edit | x | x | | | |
-| patients | delete | x | | | | |
+| clients | view | x | x | | own | |
+| clients | create | x | x | | | |
+| clients | edit | x | x | | | |
+| clients | delete | x | | | | |
 | ratings | view | x | | | own | x |
 | ratings | create | x | | | | x |
 | ratings | edit | x | | | | x |
@@ -1619,7 +1619,7 @@ Standard error codes returned in the `error.code` field:
 | Code | HTTP | Description |
 |------|------|-------------|
 | `USER_NOT_FOUND` | 404 | User not found |
-| `PRACTITIONER_NOT_FOUND` | 404 | Practitioner not found |
+| `EMPLOYEE_NOT_FOUND` | 404 | Employee not found |
 | `SPECIALTY_NOT_FOUND` | 404 | Specialty not found |
 | `SERVICE_NOT_FOUND` | 404 | Service not found |
 | `BOOKING_NOT_FOUND` | 404 | Booking not found |
@@ -1633,10 +1633,10 @@ Standard error codes returned in the `error.code` field:
 
 | Code | HTTP | Description |
 |------|------|-------------|
-| `BOOKING_CONFLICT` | 409 | Time slot already booked for this practitioner |
+| `BOOKING_CONFLICT` | 409 | Time slot already booked for this employee |
 | `BOOKING_PAST_DATE` | 400 | Cannot book in the past |
-| `BOOKING_OUTSIDE_HOURS` | 400 | Time slot outside practitioner working hours |
-| `BOOKING_PRACTITIONER_ON_VACATION` | 400 | Practitioner on vacation for this date |
+| `BOOKING_OUTSIDE_HOURS` | 400 | Time slot outside employee working hours |
+| `BOOKING_EMPLOYEE_ON_VACATION` | 400 | Employee on vacation for this date |
 | `BOOKING_ALREADY_CANCELLED` | 400 | Booking is already cancelled |
 | `BOOKING_ALREADY_COMPLETED` | 400 | Booking is already completed |
 | `BOOKING_INVALID_STATUS_TRANSITION` | 400 | Invalid status transition |
@@ -1646,7 +1646,7 @@ Standard error codes returned in the `error.code` field:
 | `PAYMENT_REFUND_EXCEEDS_AMOUNT` | 400 | Refund amount exceeds original payment |
 | `RATING_ALREADY_EXISTS` | 409 | Rating already submitted for this booking |
 | `RATING_BOOKING_NOT_COMPLETED` | 400 | Can only rate completed bookings |
-| `SPECIALTY_HAS_PRACTITIONERS` | 400 | Cannot delete specialty with active practitioners |
+| `SPECIALTY_HAS_EMPLOYEES` | 400 | Cannot delete specialty with active employees |
 | `SERVICE_HAS_BOOKINGS` | 400 | Cannot delete service with active bookings |
 | `USER_EMAIL_EXISTS` | 409 | Email already registered |
 | `USER_HAS_ACTIVE_BOOKINGS` | 400 | Cannot delete user with active bookings |

@@ -26,7 +26,7 @@
 - BK-CX8: admin-cancel from `in_progress`, `completed`, `cancelled`, etc. returns `409 INVALID_STATUS_FOR_ADMIN_CANCEL` — missing scenario
 - BK-SET7: read-only permission requires `whitelabel:edit`, not `bookings:edit` — doc was silent on this
 - Walk-in confirmation: walk_in bookings get `status=confirmed` on creation — missing scenario
-- payAtClinic: only owner/admin/staff roles can use; patient calling returns 403 — missing scenario
+- payAtClinic: only owner/admin/staff roles can use; client calling returns 403 — missing scenario
 - No-show: only from `confirmed`, not from `checked_in` — missing forbidden transition
 - Missing all 401 unauthorized scenarios
 - Missing all state machine invalid transition scenarios
@@ -37,24 +37,24 @@
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
-| BK-C1 | حجز أساسي | POST /bookings — practitionerId + serviceId + type=clinic_visit + date + startTime (مريض مسجّل) | 201 + bookingId + status=pending + payment.status=awaiting |
+| BK-C1 | حجز أساسي | POST /bookings — employeeId + serviceId + type=clinic_visit + date + startTime (مريض مسجّل) | 201 + bookingId + status=pending + payment.status=awaiting |
 | BK-C2 | حجز مع ملاحظات | notes بحد أقصى 1000 حرف | 201 + notes محفوظة في الحجز |
-| BK-C3 | حجز لمريض آخر (admin) | patientId صريح من المدير | 201 + booking.patientId يساوي patientId المُرسَل |
+| BK-C3 | حجز لمريض آخر (admin) | clientId صريح من المدير | 201 + booking.clientId يساوي clientId المُرسَل |
 | BK-C4 | حجز مع فرع | branchId اختياري مع حجز عادي | 201 + booking.branchId محفوظ |
 | BK-C5 | payAtClinic — نجاح (admin) | payAtClinic=true من admin أو owner أو staff | 201 + status=confirmed + payment.method=cash + payment.status=paid |
 | BK-C6 | payAtClinic — ممنوع (مريض) | مريض يرسل payAtClinic=true | 403 FORBIDDEN |
 | BK-C7 | walk_in — نجاح | type=walk_in و allowWalkIn=true في الإعدادات | 201 + status=confirmed (مؤكد فوراً) |
-| BK-C8 | بدون practitionerId | حقل إلزامي مفقود | 400 VALIDATION_ERROR |
+| BK-C8 | بدون employeeId | حقل إلزامي مفقود | 400 VALIDATION_ERROR |
 | BK-C9 | بدون serviceId | حقل إلزامي مفقود | 400 VALIDATION_ERROR |
 | BK-C10 | بدون type | حقل إلزامي مفقود | 400 VALIDATION_ERROR |
 | BK-C11 | تاريخ في الماضي | date قبل اليوم | 400 VALIDATION_ERROR |
 | BK-C12 | صيغة تاريخ خاطئة | date="2026/03/27" (ليس YYYY-MM-DD) | 400 VALIDATION_ERROR |
 | BK-C13 | وقت غير صالح | startTime="25:00" | 400 VALIDATION_ERROR |
-| BK-C14 | طبيب غير موجود | practitionerId وهمي (UUID صالح لكن غير موجود) | 404 NOT_FOUND |
-| BK-C15 | طبيب لا يقبل الحجوزات | practitioner.isAcceptingBookings=false | 400 NOT_ACCEPTING_BOOKINGS |
+| BK-C14 | طبيب غير موجود | employeeId وهمي (UUID صالح لكن غير موجود) | 404 NOT_FOUND |
+| BK-C15 | طبيب لا يقبل الحجوزات | employee.isAcceptingBookings=false | 400 NOT_ACCEPTING_BOOKINGS |
 | BK-C16 | خدمة غير موجودة | serviceId وهمي | 404 NOT_FOUND |
-| BK-C17 | خدمة غير مقدَّمة من الطبيب | serviceId غير مرتبط بـ practitioner | 400 SERVICE_NOT_OFFERED |
-| BK-C18 | خدمة معطّلة | practitionerService.isActive=false | 400 SERVICE_INACTIVE |
+| BK-C17 | خدمة غير مقدَّمة من الطبيب | serviceId غير مرتبط بـ employee | 400 SERVICE_NOT_OFFERED |
+| BK-C18 | خدمة معطّلة | employeeService.isActive=false | 400 SERVICE_INACTIVE |
 | BK-C19 | نوع الحجز غير متاح للخدمة | type غير موجود في service.availableTypes | 400 TYPE_NOT_AVAILABLE |
 | BK-C20 | walk_in معطّل | type=walk_in و allowWalkIn=false في الإعدادات | 400 WALK_IN_NOT_ALLOWED |
 | BK-C21 | تعارض الموعد | الفترة الزمنية محجوزة مسبقاً للطبيب | 409 BOOKING_CONFLICT (+ alternatives إذا suggestAlternativesOnConflict=true) |
@@ -93,11 +93,11 @@
 | BK-L2 | حجوزات اليوم (طبيب) | GET /bookings/today | 200 + حجوزات اليوم للطبيب الحالي فقط |
 | BK-L3 | قراءة الكل (admin) | GET /bookings | 200 + مصفوفة + بيانات pagination (total, page, limit) |
 | BK-L4 | فلترة بالحالة | GET /bookings?status=confirmed | 200 + حجوزات بحالة confirmed فقط |
-| BK-L5 | فلترة بالطبيب | GET /bookings?practitionerId=X | 200 + حجوزات الطبيب X فقط |
+| BK-L5 | فلترة بالطبيب | GET /bookings?employeeId=X | 200 + حجوزات الطبيب X فقط |
 | BK-L6 | فلترة بنطاق تاريخ | GET /bookings?dateFrom=2026-04-01&dateTo=2026-04-30 | 200 + حجوزات ضمن الفترة فقط |
 | BK-L7 | فلترة بالفرع | GET /bookings?branchId=X | 200 + حجوزات الفرع X فقط |
 | BK-L8 | pagination الصفحة الثانية | GET /bookings?page=2&limit=10 | 200 + مجموعة مختلفة عن الصفحة الأولى |
-| BK-L9 | حجز بـ ID | GET /bookings/:id | 200 + تفاصيل كاملة (booking + payment + practitioner + service) |
+| BK-L9 | حجز بـ ID | GET /bookings/:id | 200 + تفاصيل كاملة (booking + payment + employee + service) |
 | BK-L10 | ID وهمي | GET /bookings/:uuid-غير-موجود | 404 NOT_FOUND |
 | BK-L11 | إحصائيات | GET /bookings/stats | 200 + أرقام ملخصة (total, byStatus, today, etc.) |
 | BK-L12 | حالة الدفع | GET /bookings/:id/payment-status | 200 + payment.status + payment.method + refundAmount |
@@ -111,15 +111,15 @@
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
 | BK-RS1 | إعادة جدولة (admin) | PATCH /bookings/:id بـ date و startTime جديدين | 200 + booking.date و startTime محدَّثان + rescheduleCount لا يتغير |
-| BK-RS2 | إعادة جدولة (مريض) — نجاح | POST /bookings/:id/patient-reschedule من صاحب الحجز | 200 + booking.date و startTime محدَّثان + rescheduleCount يزداد بـ 1 |
+| BK-RS2 | إعادة جدولة (مريض) — نجاح | POST /bookings/:id/client-reschedule من صاحب الحجز | 200 + booking.date و startTime محدَّثان + rescheduleCount يزداد بـ 1 |
 | BK-RS3 | بدون date أو startTime | إرسال body فارغ | 400 VALIDATION_ERROR |
-| BK-RS4 | مريض يعيد جدولة حجز غيره | patientId مختلف عن صاحب الطلب | 403 FORBIDDEN |
-| BK-RS5 | إعادة جدولة معطّلة | patientCanReschedule=false في الإعدادات | 400 RESCHEDULE_NOT_ALLOWED |
+| BK-RS4 | مريض يعيد جدولة حجز غيره | clientId مختلف عن صاحب الطلب | 403 FORBIDDEN |
+| BK-RS5 | إعادة جدولة معطّلة | clientCanReschedule=false في الإعدادات | 400 RESCHEDULE_NOT_ALLOWED |
 | BK-RS6 | تجاوز حد الإعادة | rescheduleCount >= maxReschedulesPerBooking | 400 RESCHEDULE_LIMIT_REACHED |
 | BK-RS7 | قريب جداً من الموعد | الوقت حتى الموعد أقل من rescheduleBeforeHours | 400 RESCHEDULE_TOO_LATE |
 | BK-RS8 | حالة لا تسمح | حجز بحالة completed أو cancelled أو no_show | 400 INVALID_STATUS_FOR_RESCHEDULE |
 | BK-RS9 | تعارض في الموعد الجديد | الفترة الجديدة محجوزة | 409 BOOKING_CONFLICT |
-| BK-RS10 | بدون مصادقة | POST /bookings/:id/patient-reschedule بدون token | 401 Unauthorized |
+| BK-RS10 | بدون مصادقة | POST /bookings/:id/client-reschedule بدون token | 401 Unauthorized |
 
 ---
 
@@ -159,8 +159,8 @@
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
 | BK-CX1 | طلب إلغاء (مريض) من confirmed | POST /bookings/:id/cancel-request | 200 + status=pending_cancellation + suggestedRefundType محفوظ |
-| BK-CX2 | طلب إلغاء من pending (مع patientCanCancelPending=true) | مريض يلغي حجز pending | 200 + status=cancelled مباشرة (بدون موافقة) |
-| BK-CX3 | طلب إلغاء من pending (مع patientCanCancelPending=false) | مريض يلغي حجز pending | 409 CONFLICT |
+| BK-CX2 | طلب إلغاء من pending (مع clientCanCancelPending=true) | مريض يلغي حجز pending | 200 + status=cancelled مباشرة (بدون موافقة) |
+| BK-CX3 | طلب إلغاء من pending (مع clientCanCancelPending=false) | مريض يلغي حجز pending | 409 CONFLICT |
 | BK-CX4 | طلب إلغاء من in_progress | POST /bookings/:id/cancel-request | 409 INVALID_STATUS_FOR_CANCELLATION |
 | BK-CX5 | طلب إلغاء من completed | POST /bookings/:id/cancel-request | 409 INVALID_STATUS_FOR_CANCELLATION |
 | BK-CX6 | طلب مع سبب | cancellationReason (max 1000) | 200 + cancellationReason محفوظ |
@@ -174,8 +174,8 @@
 | BK-CX14 | إلغاء مباشر (admin) — نجاح | POST /bookings/:id/admin-cancel + refundType=full | 200 + status=cancelled + cancelledBy=admin |
 | BK-CX15 | إلغاء admin من in_progress | POST /bookings/:id/admin-cancel على in_progress | 409 INVALID_STATUS_FOR_ADMIN_CANCEL |
 | BK-CX16 | إلغاء admin من completed | POST /bookings/:id/admin-cancel على completed | 409 INVALID_STATUS_FOR_ADMIN_CANCEL |
-| BK-CX17 | إلغاء من الطبيب — نجاح | POST /bookings/:id/practitioner-cancel من الطبيب المالك | 200 + status=cancelled + cancelledBy=practitioner + استرداد كامل تلقائي |
-| BK-CX18 | طبيب يلغي حجز طبيب آخر | practitioner غير مالك للحجز | 403 FORBIDDEN |
+| BK-CX17 | إلغاء من الطبيب — نجاح | POST /bookings/:id/employee-cancel من الطبيب المالك | 200 + status=cancelled + cancelledBy=employee + استرداد كامل تلقائي |
+| BK-CX18 | طبيب يلغي حجز طبيب آخر | employee غير مالك للحجز | 403 FORBIDDEN |
 
 ---
 
@@ -183,14 +183,14 @@
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
-| BK-WL1 | الانضمام للقائمة | POST /bookings/waitlist + practitionerId | 200 + waitlist entry بحالة waiting |
+| BK-WL1 | الانضمام للقائمة | POST /bookings/waitlist + employeeId | 200 + waitlist entry بحالة waiting |
 | BK-WL2 | مع تفضيل الوقت | preferredDate + preferredTime=morning | 200 + preferredDate و preferredTime محفوظان |
-| BK-WL3 | الانضمام مرتين لنفس الطبيب | نفس المريض + نفس practitionerId | 409 ALREADY_ON_WAITLIST |
+| BK-WL3 | الانضمام مرتين لنفس الطبيب | نفس المريض + نفس employeeId | 409 ALREADY_ON_WAITLIST |
 | BK-WL4 | Waitlist معطّلة | waitlistEnabled=false في الإعدادات | 400 WAITLIST_NOT_ENABLED |
 | BK-WL5 | القائمة ممتلئة | عدد الإدخالات وصل waitlistMaxPerSlot | 400 WAITLIST_FULL |
 | BK-WL6 | قراءة قائمتي (مريض) | GET /bookings/waitlist/my | 200 + إدخالات المريض الحالي فقط |
 | BK-WL7 | قراءة الكل (admin) | GET /bookings/waitlist | 200 + جميع الإدخالات + pagination |
-| BK-WL8 | فلترة بالطبيب | GET /bookings/waitlist?practitionerId=X | 200 + إدخالات الطبيب X فقط |
+| BK-WL8 | فلترة بالطبيب | GET /bookings/waitlist?employeeId=X | 200 + إدخالات الطبيب X فقط |
 | BK-WL9 | فلترة بالحالة | GET /bookings/waitlist?status=waiting | 200 + إدخالات waiting فقط |
 | BK-WL10 | مغادرة القائمة | DELETE /bookings/waitlist/:id | 200 + الإدخال يُحذف |
 | BK-WL11 | حذف ID وهمي | DELETE /bookings/waitlist/:uuid-غير-موجود | 404 NOT_FOUND |
@@ -223,7 +223,7 @@
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
-| BK-BND1 | UUID غير صالح | practitionerId="not-a-uuid" | 400 VALIDATION_ERROR |
+| BK-BND1 | UUID غير صالح | employeeId="not-a-uuid" | 400 VALIDATION_ERROR |
 | BK-BND2 | date="2026-02-30" | تاريخ غير موجود | 400 VALIDATION_ERROR |
 | BK-BND3 | notes بالضبط 1000 حرف | عند الحد المسموح | 201 — يُقبل |
 | BK-BND4 | completionNotes بالضبط 2000 حرف | عند الحد المسموح | 200 — يُقبل |

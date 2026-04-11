@@ -26,11 +26,11 @@
 
 ## 1. Executive Summary
 
-CareKit is a White Label smart clinic management platform built by WebVue Technology Solutions. It provides patient booking, payment processing, AI-powered chatbot assistance, ZATCA e-invoicing compliance, and multi-channel notifications for healthcare clinics in Saudi Arabia.
+CareKit is a White Label smart clinic management platform built by WebVue Technology Solutions. It provides client booking, payment processing, AI-powered chatbot assistance, ZATCA e-invoicing compliance, and multi-channel notifications for healthcare clinics in Saudi Arabia.
 
 Each deployment runs as an independent Docker stack with 7 services: **NestJS backend** (API + BullMQ workers), **PostgreSQL 16** with pgvector (33 models), **Redis 7** (caching, rate limiting, queues), **MinIO** (S3-compatible file storage), **Nginx** (reverse proxy with TLS, rate limiting, security headers), and two backup containers (PostgreSQL daily at 2:00 AM, MinIO daily at 2:30 AM).
 
-The backend exposes a REST API at `/api/v1/` with 25 controllers, 76+ services, and 33 registered NestJS modules. The **Dashboard** is a Next.js 14 app using shadcn/ui, Tailwind CSS, and Hugeicons (`@hugeicons/react`). The **Mobile App** is built with Expo SDK 54 (React Native) serving both patient and practitioner roles through role-based routing.
+The backend exposes a REST API at `/api/v1/` with 25 controllers, 76+ services, and 33 registered NestJS modules. The **Dashboard** is a Next.js 14 app using shadcn/ui, Tailwind CSS, and Hugeicons (`@hugeicons/react`). The **Mobile App** is built with Expo SDK 54 (React Native) serving both client and employee roles through role-based routing.
 
 All branding, payment keys, chatbot knowledge base, and clinic settings are configurable per deployment through the White Label admin dashboard. The platform supports Arabic and English (RTL-first) with i18n throughout all layers.
 
@@ -46,7 +46,7 @@ All branding, payment keys, chatbot knowledge base, and clinic settings are conf
 │   │  Mobile App  │     │  Dashboard   │     │   Moyasar    │     │  Prometheus  │   │
 │   │ (Expo RN)    │     │  (Next.js)   │     │  Webhooks    │     │  Scraper     │   │
 │   │              │     │              │     │              │     │  (internal)  │   │
-│   │ Patient View │     │ middleware.ts │     │ HMAC-SHA256  │     │              │   │
+│   │ Client View │     │ middleware.ts │     │ HMAC-SHA256  │     │              │   │
 │   │ Doctor View  │     │ → AuthGate   │     │ Verification │     │              │   │
 │   └──────┬───────┘     └──────┬───────┘     └──────┬───────┘     └──────┬───────┘   │
 │          │ HTTPS               │ HTTPS              │ HTTPS              │ Internal  │
@@ -92,7 +92,7 @@ All branding, payment keys, chatbot knowledge base, and clinic settings are conf
 | **[1]** | User Entry | Mobile (Expo RN) / Dashboard (Next.js) / Moyasar Webhook entry points |
 | **[2]** | Auth & RBAC | JWT access+refresh tokens, CASL permissions guard, rate limiting |
 | **[3]** | Request Pipeline | CorrelationId → helmet → CORS → ThrottlerGuard → Validation → Transform |
-| **[4]** | Business Logic (Sync) | Domain services — bookings, payments, invoices, users, practitioners |
+| **[4]** | Business Logic (Sync) | Domain services — bookings, payments, invoices, users, employees |
 | **[5]** | External APIs (Sync) | Moyasar, Zoom, OpenRouter — all wrapped in `resilientFetch` with circuit breakers |
 | **[6]** | Data Layer | PostgreSQL via Prisma ORM (33 models) + MinIO for files (receipts, KB docs) |
 | **[7]** | Background Jobs | BullMQ: `email`, `receipt-verification`, `zatca-submit`, `tasks` |
@@ -152,13 +152,13 @@ Every HTTP request passes through these layers in order:
 | **UsersModule** | `UsersService`, `UserRolesService` | `users` |
 | **RolesModule** | `RolesService` | `roles` |
 | **PermissionsModule** | `PermissionsService` | `permissions` |
-| **PractitionersModule** | `PractitionersService`, `AvailabilityService`, `VacationService`, `RatingsService`, `ServiceService`, `FavoritePractitionersService` | `practitioners` |
+| **EmployeesModule** | `EmployeesService`, `AvailabilityService`, `VacationService`, `RatingsService`, `ServiceService`, `FavoriteEmployeesService` | `employees` |
 | **BookingsModule** | `BookingsService`, `BookingQueryService`, `BookingStatusService`, `BookingCancellationService`, `BookingRecurringService`, `WaitlistService`, `BookingSettingsService` | `bookings`, `booking-settings`, `bookings/waitlist` |
 | **PaymentsModule** | `PaymentsService`, `MoyasarPaymentService`, `BankTransferService` | `payments` |
 | **InvoicesModule** | `InvoicesService`, `InvoiceCreatorService`, `InvoiceHtmlBuilder`, `InvoiceStatsService` | `invoices` |
 | **ServicesModule** | `ServicesService` | `services` |
 | **SpecialtiesModule** | `SpecialtiesService` | `specialties` |
-| **PatientsModule** | `PatientsService` | `patients` |
+| **ClientsModule** | `ClientsService` | `clients` |
 | **RatingsModule** | `RatingsService` | `ratings` |
 | **NotificationsModule** | `NotificationsService`, `PushService`, `SmsService` | `notifications` |
 | **ChatbotModule** | `ChatbotService`, `ChatbotAiService`, `ChatbotRagService`, `ChatbotToolsService`, `ChatbotStreamService`, `ChatbotStreamLoopService`, `ChatbotContextService`, `ChatbotConfigService`, `ChatbotFileService`, `ChatbotAnalyticsService` | `chatbot` (3 controllers) |
@@ -182,7 +182,7 @@ All endpoints are prefixed with `/api/v1/`. Auth column: `P` = Public, `A` = Aut
 ### Auth (`/auth`)
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/register` | P | Register new patient |
+| POST | `/register` | P | Register new client |
 | POST | `/login` | P | Email + password login |
 | POST | `/login/otp/send` | P | Send OTP to email |
 | POST | `/login/otp/verify` | P | Verify OTP code |
@@ -200,10 +200,10 @@ All endpoints are prefixed with `/api/v1/`. Auth column: `P` = Public, `A` = Aut
 |--------|------|------|
 | POST | `/` | A | GET | `/my` | A | GET | `/today` | A | GET | `/stats` | R |
 | POST | `/recurring` | R | GET | `/` | R | GET | `/:id` | A | PATCH | `/:id` | R |
-| POST | `/:id/patient-reschedule` | A | POST | `/:id/confirm` | R | POST | `/:id/check-in` | R |
+| POST | `/:id/client-reschedule` | A | POST | `/:id/confirm` | R | POST | `/:id/check-in` | R |
 | POST | `/:id/start` | R | POST | `/:id/complete` | R | POST | `/:id/no-show` | R |
 | POST | `/:id/cancel-request` | A | POST | `/:id/cancel/approve` | R | POST | `/:id/cancel/reject` | R |
-| POST | `/:id/admin-cancel` | R | POST | `/:id/practitioner-cancel` | R |
+| POST | `/:id/admin-cancel` | R | POST | `/:id/employee-cancel` | R |
 
 ### Payments (`/payments`)
 | Method | Path | Auth |
@@ -231,16 +231,16 @@ All endpoints are prefixed with `/api/v1/`. Auth column: `P` = Public, `A` = Aut
 | Controller | Base Path | Endpoints |
 |-----------|-----------|-----------|
 | Users | `/users` | CRUD + activate/deactivate + role assign/remove (9 endpoints) |
-| Practitioners | `/practitioners` | CRUD + availability + slots + vacations + services + ratings + favorites (16 endpoints) |
+| Employees | `/employees` | CRUD + availability + slots + vacations + services + ratings + favorites (16 endpoints) |
 | Services | `/services` | CRUD + categories CRUD (9 endpoints) |
 | Specialties | `/specialties` | CRUD (5 endpoints) |
 | Invoices | `/invoices` | List + stats + by-payment + create + HTML + send (7 endpoints) |
-| Ratings | `/ratings` | Create + by-practitioner + by-booking (3 endpoints) |
+| Ratings | `/ratings` | Create + by-employee + by-booking (3 endpoints) |
 | Notifications | `/notifications` | List + unread-count + mark-read + mark-all + FCM token register/unregister (6 endpoints) |
-| Reports | `/reports` | Revenue + bookings + patients + practitioner (6 endpoints with export) |
+| Reports | `/reports` | Revenue + bookings + clients + employee (6 endpoints with export) |
 | Roles | `/roles` | CRUD + permission assign/remove (5 endpoints) |
 | Permissions | `/permissions` | List all (1 endpoint) |
-| Patients | `/patients` | List + detail + stats (3 endpoints) |
+| Clients | `/clients` | List + detail + stats (3 endpoints) |
 | Problem Reports | `/problem-reports` | Create + list + detail + resolve (4 endpoints) |
 | Activity Log | `/activity-log` | List + detail (2 endpoints) |
 | White Label | `/whitelabel` | Public config + admin CRUD + map (6 endpoints) |
@@ -329,7 +329,7 @@ All external HTTP calls use `resilientFetch()` (`common/helpers/resilient-fetch.
 | Domain | Models |
 |--------|--------|
 | **Users & Auth** | `User`, `OtpCode`, `RefreshToken`, `Role`, `Permission`, `RolePermission`, `UserRole`, `FcmToken` |
-| **Practitioners** | `Practitioner`, `Specialty`, `PractitionerAvailability`, `PractitionerVacation`, `PractitionerService`, `FavoritePractitioner` |
+| **Employees** | `Employee`, `Specialty`, `EmployeeAvailability`, `EmployeeVacation`, `EmployeeService`, `FavoriteEmployee` |
 | **Services** | `ServiceCategory`, `Service` |
 | **Bookings** | `Booking`, `BookingSettings`, `WaitlistEntry` |
 | **Payments** | `Payment`, `BankTransferReceipt`, `ProcessedWebhook` |
@@ -439,7 +439,7 @@ Restore script available: `docker/scripts/restore.sh`.
 - **Data Tables:** TanStack Table for all list pages
 - **Charts:** Recharts for analytics/reports
 - **Forms:** react-hook-form + zod validation
-- **Pages:** Dashboard home, bookings, patients, practitioners, services, payments, invoices, ratings, notifications, chatbot, reports, problem-reports, activity-log, users, settings, ZATCA
+- **Pages:** Dashboard home, bookings, clients, employees, services, payments, invoices, ratings, notifications, chatbot, reports, problem-reports, activity-log, users, settings, ZATCA
 - **Design System:** `dashboard/DESIGN-SYSTEM.md` (strict rules), tokens in `dashboard/lib/ds.ts`
 
 ### 14.2 Mobile (Expo SDK 54)
@@ -449,7 +449,7 @@ Restore script available: `docker/scripts/restore.sh`.
 - **Forms:** react-hook-form + zod
 - **API:** axios with auth token interceptors
 - **Storage:** expo-secure-store for sensitive tokens
-- **Dual Role:** Single app, role-based routing — patient tabs vs. practitioner tabs
+- **Dual Role:** Single app, role-based routing — client tabs vs. employee tabs
 - **i18n:** i18next (Arabic + English, RTL-first)
 - **Structure:** `app/` (routes), `components/`, `services/`, `stores/`, `hooks/`, `theme/`, `i18n/`, `types/`
 

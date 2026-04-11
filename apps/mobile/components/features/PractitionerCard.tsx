@@ -8,33 +8,33 @@ import { ThemedButton } from '@/theme/components/ThemedButton';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
-import type { Practitioner } from '@/types/models';
+import type { Employee } from '@/types/models';
 
-interface PractitionerCardProps {
-  practitioner: Practitioner;
+interface EmployeeCardProps {
+  employee: Employee;
   onPress: (id: string) => void;
   onBook?: (id: string) => void;
   compact?: boolean;
 }
 
-export function PractitionerCard({
-  practitioner,
+export function EmployeeCard({
+  employee,
   onPress,
   onBook,
   compact,
-}: PractitionerCardProps) {
+}: EmployeeCardProps) {
   const { t } = useTranslation();
   const { theme, isRTL } = useTheme();
 
-  const name = `${practitioner.user.firstName} ${practitioner.user.lastName}`;
+  const name = `${employee.user.firstName} ${employee.user.lastName}`;
   const specialtyName = isRTL
-    ? practitioner.specialty?.nameAr
-    : practitioner.specialty?.nameEn;
+    ? employee.specialty?.nameAr
+    : employee.specialty?.nameEn;
 
   if (compact) {
     return (
       <Pressable
-        onPress={() => onPress(practitioner.id)}
+        onPress={() => onPress(employee.id)}
         style={({ pressed }) => [
           styles.compactCard,
           {
@@ -47,7 +47,7 @@ export function PractitionerCard({
           <Avatar
             size={36}
             name={name}
-            imageUrl={practitioner.user.avatarUrl}
+            imageUrl={employee.user.avatarUrl}
           />
           <View style={styles.compactInfo}>
             <ThemedText variant="bodySm" style={{ fontWeight: '600', color: theme.colors.textPrimary }}>
@@ -61,10 +61,10 @@ export function PractitionerCard({
         <View style={styles.compactFooter}>
           <View style={styles.ratingRow}>
             <Star size={12} fill="#F59E0B" color="#F59E0B" />
-            <ThemedText variant="caption">{practitioner.averageRating}</ThemedText>
+            <ThemedText variant="caption">{employee.averageRating}</ThemedText>
           </View>
           <ThemedText variant="caption" color="#1D4ED8" style={{ fontWeight: '700' }}>
-            {t('home.from')} {practitioner.clinicPrice} {t('home.sar')}
+            {t('home.from')} {employee.clinicPrice} {t('home.sar')}
           </ThemedText>
         </View>
       </Pressable>
@@ -73,7 +73,7 @@ export function PractitionerCard({
 
   return (
     <Pressable
-      onPress={() => onPress(practitioner.id)}
+      onPress={() => onPress(employee.id)}
       style={({ pressed }) => [
         styles.card,
         {
@@ -86,7 +86,7 @@ export function PractitionerCard({
         <Avatar
           size={48}
           name={name}
-          imageUrl={practitioner.user.avatarUrl}
+          imageUrl={employee.user.avatarUrl}
         />
         <View style={styles.info}>
           <ThemedText variant="subheading" numberOfLines={1}>
@@ -98,10 +98,10 @@ export function PractitionerCard({
           <View style={styles.ratingRow}>
             <Star size={13} fill="#F59E0B" color="#F59E0B" />
             <ThemedText variant="bodySm">
-              {practitioner.averageRating}
+              {employee.averageRating}
             </ThemedText>
             <ThemedText variant="caption" color={theme.colors.textMuted}>
-              ({practitioner.totalRatings} {t('home.rating')})
+              ({employee.totalRatings} {t('home.rating')})
             </ThemedText>
           </View>
         </View>
@@ -109,12 +109,12 @@ export function PractitionerCard({
 
       <View style={styles.priceRow}>
         <ThemedText variant="subheading" color="#1D4ED8">
-          {practitioner.clinicPrice} {t('home.sar')}
+          {employee.clinicPrice} {t('home.sar')}
         </ThemedText>
         <StatusPill
-          status={practitioner.isAvailableToday ? 'available' : 'pending'}
+          status={employee.isAvailableToday ? 'available' : 'pending'}
           label={
-            practitioner.isAvailableToday
+            employee.isAvailableToday
               ? t('home.availableToday')
               : t('home.nextAvailable')
           }
@@ -123,7 +123,7 @@ export function PractitionerCard({
 
       {onBook && (
         <ThemedButton
-          onPress={() => onBook(practitioner.id)}
+          onPress={() => onBook(employee.id)}
           variant="primary"
           size="sm"
           full

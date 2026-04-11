@@ -12,47 +12,47 @@ import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLocale } from "@/components/locale-provider"
-import { usePatient, usePatientMutations } from "@/hooks/use-patients"
-import { editPatientSchema, type EditPatientFormData } from "@/lib/schemas/patient.schema"
-import { PatientFormFields } from "@/components/features/patients/patient-form"
+import { useClient, useClientMutations } from "@/hooks/use-clients"
+import { editClientSchema, type EditClientFormData } from "@/lib/schemas/client.schema"
+import { ClientFormFields } from "@/components/features/clients/client-form"
 
-export default function EditPatientPage() {
+export default function EditClientPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const { t } = useLocale()
 
-  const { data: patient, isLoading } = usePatient(params.id)
-  const { updateMut } = usePatientMutations()
+  const { data: client, isLoading } = useClient(params.id)
+  const { updateMut } = useClientMutations()
 
-  const form = useForm<EditPatientFormData>({ resolver: zodResolver(editPatientSchema) })
+  const form = useForm<EditClientFormData>({ resolver: zodResolver(editClientSchema) })
 
   useEffect(() => {
-    if (!patient) return
+    if (!client) return
     form.reset({
-      firstName:         patient.firstName ?? "",
-      middleName:        patient.middleName ?? "",
-      lastName:          patient.lastName ?? "",
-      gender:            (patient.gender as "male" | "female") ?? undefined,
-      dateOfBirth:       patient.dateOfBirth ? patient.dateOfBirth.split("T")[0] : "",
-      nationality:       patient.nationality ?? "",
-      nationalId:        patient.nationalId ?? "",
-      phone:             patient.phone ?? "",
-      emergencyName:     patient.emergencyName ?? "",
-      emergencyPhone:    patient.emergencyPhone ?? "",
-      bloodType:         (patient.bloodType as EditPatientFormData["bloodType"]) ?? undefined,
-      allergies:         patient.allergies ?? "",
-      chronicConditions: patient.chronicConditions ?? "",
-      isActive:          patient.isActive ?? true,
+      firstName:         client.firstName ?? "",
+      middleName:        client.middleName ?? "",
+      lastName:          client.lastName ?? "",
+      gender:            (client.gender as "male" | "female") ?? undefined,
+      dateOfBirth:       client.dateOfBirth ? client.dateOfBirth.split("T")[0] : "",
+      nationality:       client.nationality ?? "",
+      nationalId:        client.nationalId ?? "",
+      phone:             client.phone ?? "",
+      emergencyName:     client.emergencyName ?? "",
+      emergencyPhone:    client.emergencyPhone ?? "",
+      bloodType:         (client.bloodType as EditClientFormData["bloodType"]) ?? undefined,
+      allergies:         client.allergies ?? "",
+      chronicConditions: client.chronicConditions ?? "",
+      isActive:          client.isActive ?? true,
     })
-  }, [patient, form])
+  }, [client, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       await updateMut.mutateAsync({ id: params.id, payload: data })
-      toast.success(t("patients.edit.changesSaved"))
-      router.push("/patients")
+      toast.success(t("clients.edit.changesSaved"))
+      router.push("/clients")
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("patients.edit.error"))
+      toast.error(err instanceof Error ? err.message : t("clients.edit.error"))
     }
   })
 
@@ -69,36 +69,36 @@ export default function EditPatientPage() {
     )
   }
 
-  const patientName = patient ? `${patient.firstName} ${patient.lastName}` : ""
+  const clientName = client ? `${client.firstName} ${client.lastName}` : ""
 
   return (
     <ListPageShell>
       <Breadcrumbs items={[
         { label: t("nav.dashboard"), href: "/" },
-        { label: t("nav.patients"), href: "/patients" },
-        { label: patientName, href: `/patients/${params.id}` },
+        { label: t("nav.clients"), href: "/clients" },
+        { label: clientName, href: `/clients/${params.id}` },
         { label: t("nav.edit") },
       ]} />
       <PageHeader
-        title={t("patients.edit.title")}
-        description={`${t("patients.edit.descriptionPrefix")} ${patientName}`}
+        title={t("clients.edit.title")}
+        description={`${t("clients.edit.descriptionPrefix")} ${clientName}`}
       />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <PatientFormFields
+        <ClientFormFields
           form={form}
           errors={form.formState.errors}
           mode="edit"
         />
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => router.push("/patients")}>
-            {t("patients.edit.cancel")}
+          <Button type="button" variant="outline" onClick={() => router.push("/clients")}>
+            {t("clients.edit.cancel")}
           </Button>
           <Button type="submit" disabled={updateMut.isPending}>
             {updateMut.isPending
-              ? t("patients.edit.saving")
-              : t("patients.edit.saveChanges")}
+              ? t("clients.edit.saving")
+              : t("clients.edit.saveChanges")}
           </Button>
         </div>
       </form>

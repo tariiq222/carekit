@@ -23,10 +23,10 @@ import { ThemedCard } from '@/theme/components/ThemedCard';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { useTheme } from '@/theme/useTheme';
-import { patientsService, type PatientRecord } from '@/services/patients';
+import { clientsService, type ClientRecord } from '@/services/clients';
 import type { Booking } from '@/types/models';
 
-export default function DoctorPatientRecordScreen() {
+export default function DoctorClientRecordScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function DoctorPatientRecordScreen() {
 
   const BackIcon = isRTL ? ChevronRight : ChevronLeft;
 
-  const [patient, setPatient] = useState<PatientRecord | null>(null);
+  const [client, setClient] = useState<ClientRecord | null>(null);
   const [visits, setVisits] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,11 +44,11 @@ export default function DoctorPatientRecordScreen() {
     if (!id) return;
     setLoading(true);
     Promise.allSettled([
-      patientsService.getById(id),
-      patientsService.getPractitionerBookings(id),
-    ]).then(([patientResult, bookingsResult]) => {
-      if (patientResult.status === 'fulfilled' && patientResult.value.success && patientResult.value.data) {
-        setPatient(patientResult.value.data);
+      clientsService.getById(id),
+      clientsService.getEmployeeBookings(id),
+    ]).then(([clientResult, bookingsResult]) => {
+      if (clientResult.status === 'fulfilled' && clientResult.value.success && clientResult.value.data) {
+        setClient(clientResult.value.data);
       } else {
         setError(t('common.error'));
       }
@@ -67,15 +67,15 @@ export default function DoctorPatientRecordScreen() {
     );
   }
 
-  if (error || !patient) {
+  if (error || !client) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.colors.surface }]}>
-        <ThemedText>{error ?? t('doctor.patientNotFound')}</ThemedText>
+        <ThemedText>{error ?? t('doctor.clientNotFound')}</ThemedText>
       </View>
     );
   }
 
-  const fullName = `${patient.firstName} ${patient.lastName}`;
+  const fullName = `${client.firstName} ${client.lastName}`;
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
@@ -88,29 +88,29 @@ export default function DoctorPatientRecordScreen() {
         </Pressable>
 
         <ThemedText variant="heading" style={styles.title}>
-          {t('doctor.patientRecord')}
+          {t('doctor.clientRecord')}
         </ThemedText>
 
-        {/* Patient Header */}
+        {/* Client Header */}
         <ThemedCard style={styles.profileCard}>
-          <Avatar size={56} name={fullName} imageUrl={patient.avatarUrl} />
+          <Avatar size={56} name={fullName} imageUrl={client.avatarUrl} />
           <View style={{ flex: 1, gap: 4 }}>
             <ThemedText variant="heading">{fullName}</ThemedText>
-            {patient.phone && (
+            {client.phone && (
               <Pressable
-                onPress={() => Linking.openURL(`tel:${patient.phone}`)}
+                onPress={() => Linking.openURL(`tel:${client.phone}`)}
                 style={styles.contactRow}
               >
                 <Phone size={14} strokeWidth={1.5} color={theme.colors.primary[500]} />
-                <ThemedText variant="bodySm" color={theme.colors.primary[500]}>{patient.phone}</ThemedText>
+                <ThemedText variant="bodySm" color={theme.colors.primary[500]}>{client.phone}</ThemedText>
               </Pressable>
             )}
             <Pressable
-              onPress={() => Linking.openURL(`mailto:${patient.email}`)}
+              onPress={() => Linking.openURL(`mailto:${client.email}`)}
               style={styles.contactRow}
             >
               <Mail size={14} strokeWidth={1.5} color={theme.colors.primary[500]} />
-              <ThemedText variant="bodySm" color={theme.colors.primary[500]}>{patient.email}</ThemedText>
+              <ThemedText variant="bodySm" color={theme.colors.primary[500]}>{client.email}</ThemedText>
             </Pressable>
           </View>
         </ThemedCard>
@@ -132,7 +132,7 @@ export default function DoctorPatientRecordScreen() {
             {visits.map((v) => (
               <Pressable
                 key={v.id}
-                onPress={() => router.push(`/(practitioner)/appointment/${v.id}`)}
+                onPress={() => router.push(`/(employee)/appointment/${v.id}`)}
               >
                 <ThemedCard style={styles.visitCard}>
                   <View style={styles.visitRow}>

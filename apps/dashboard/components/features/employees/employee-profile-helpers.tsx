@@ -3,7 +3,7 @@
 import type { ReactNode } from "react"
 
 /**
- * Practitioner Profile — Shared helper components
+ * Employee Profile — Shared helper components
  * (InfoRow, PricingRow, ProfileSkeleton, ContactCard, ProfessionalCard, PricingCard)
  */
 

@@ -35,7 +35,7 @@ export const enWhiteLabel: Record<string, string> = {
   "whiteLabel.terms": "Terms & Conditions",
   "whiteLabel.textAr": "Text (Arabic)",
   "whiteLabel.textEn": "Text (English)",
-  "whiteLabel.featuresHint": "Disabled features automatically disappear from the dashboard and patient app. They can be re-enabled at any time.",
+  "whiteLabel.featuresHint": "Disabled features automatically disappear from the dashboard and client app. They can be re-enabled at any time.",
   "whiteLabel.moduleFlags": "Feature Management",
   "whiteLabel.flagsModules": "Modules",
   "whiteLabel.flagsBooking": "Booking Features",

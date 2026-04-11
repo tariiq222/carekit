@@ -10,7 +10,7 @@ export interface InvoicePaymentInfo {
   method: string
   booking?: {
     id: string
-    patient?: {
+    client?: {
       id: string
       firstName: string
       lastName: string

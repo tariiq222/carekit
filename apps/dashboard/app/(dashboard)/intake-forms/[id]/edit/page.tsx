@@ -13,7 +13,7 @@ import type { IntakeFormApi } from "@/lib/types/intake-form-api"
 
 function mapToDraft(form: IntakeFormApi): Partial<IntakeFormDraft> {
   const scopeId =
-    form.serviceId ?? form.practitionerId ?? form.branchId ?? ""
+    form.serviceId ?? form.employeeId ?? form.branchId ?? ""
 
   return {
     nameEn: form.nameEn,

@@ -14,30 +14,30 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import type { Patient } from "@/lib/types/patient"
+import type { Client } from "@/lib/types/client"
 
-interface PatientColumnOptions {
-  onRowClick: (patient: Patient) => void
-  onViewClick: (patient: Patient) => void
-  onEditClick: (patient: Patient) => void
-  onToggleActive: (patient: Patient) => void
+interface ClientColumnOptions {
+  onRowClick: (client: Client) => void
+  onViewClick: (client: Client) => void
+  onEditClick: (client: Client) => void
+  onToggleActive: (client: Client) => void
   t: (key: string) => string
   locale?: "ar" | "en"
 }
 
-export function getPatientColumns({
+export function getClientColumns({
   onRowClick,
   onViewClick,
   onEditClick,
   onToggleActive,
   t,
   locale = "ar",
-}: PatientColumnOptions): ColumnDef<Patient>[] {
+}: ClientColumnOptions): ColumnDef<Client>[] {
   return [
     {
-      id: "patient",
+      id: "client",
       accessorFn: (row) => `${row.firstName} ${row.lastName}`,
-      header: t("patients.col.patient"),
+      header: t("clients.col.client"),
       enableSorting: true,
       sortingFn: (a, b) => {
         const nameA = `${a.original.firstName} ${a.original.lastName}`
@@ -64,7 +64,7 @@ export function getPatientColumns({
                 </p>
                 {p.accountType === "walk_in" && (
                   <span className="rounded-sm bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">
-                    {t("patients.detail.walkIn")}
+                    {t("clients.detail.walkIn")}
                   </span>
                 )}
                 {p.emailVerified && (
@@ -74,7 +74,7 @@ export function getPatientColumns({
                         <HugeiconsIcon icon={MailValidation01Icon} size={14} className="text-success" />
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent side="top">{t("patients.otpVerified")}</TooltipContent>
+                    <TooltipContent side="top">{t("clients.otpVerified")}</TooltipContent>
                   </Tooltip>
                 )}
               </div>
@@ -88,7 +88,7 @@ export function getPatientColumns({
     },
     {
       accessorKey: "phone",
-      header: t("patients.col.phone"),
+      header: t("clients.col.phone"),
       enableSorting: false,
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
@@ -98,7 +98,7 @@ export function getPatientColumns({
     },
     {
       accessorKey: "createdAt",
-      header: t("patients.col.joined"),
+      header: t("clients.col.joined"),
       enableSorting: true,
       // TODO: pass dateFormat from parent when columns accept config
       cell: ({ row }) => (
@@ -110,7 +110,7 @@ export function getPatientColumns({
     {
       id: "lastBooking",
       accessorFn: (row) => row.lastBooking?.date ?? "",
-      header: t("patients.col.lastBooking"),
+      header: t("clients.col.lastBooking"),
       enableSorting: true,
       sortingFn: (a, b) => {
         const dateA = a.original.lastBooking?.date ? new Date(a.original.lastBooking.date).getTime() : 0
@@ -130,7 +130,7 @@ export function getPatientColumns({
     {
       id: "nextBooking",
       accessorFn: (row) => row.nextBooking?.date ?? "",
-      header: t("patients.col.nextBooking"),
+      header: t("clients.col.nextBooking"),
       enableSorting: true,
       sortingFn: (a, b) => {
         const dateA = a.original.nextBooking?.date ? new Date(a.original.nextBooking.date).getTime() : 0
@@ -149,7 +149,7 @@ export function getPatientColumns({
     },
     {
       id: "status",
-      header: t("patients.col.status"),
+      header: t("clients.col.status"),
       enableSorting: true,
       sortingFn: (a, b) => Number(b.original.isActive) - Number(a.original.isActive),
       cell: ({ row }) => (
@@ -161,13 +161,13 @@ export function getPatientColumns({
               : "border-muted-foreground/30 bg-muted text-muted-foreground"
           }
         >
-          {row.original.isActive ? t("patients.status.active") : t("patients.status.inactive")}
+          {row.original.isActive ? t("clients.status.active") : t("clients.status.inactive")}
         </Badge>
       ),
     },
     {
       id: "actions",
-      header: t("patients.col.actions"),
+      header: t("clients.col.actions"),
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
@@ -175,33 +175,33 @@ export function getPatientColumns({
             <TooltipTrigger asChild>
               <button
                 onClick={() => onViewClick(row.original)}
-                aria-label={t("patients.col.view")}
+                aria-label={t("clients.col.view")}
                 className="flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:border-border hover:bg-muted hover:text-foreground"
               >
                 <HugeiconsIcon icon={ViewIcon} size={16} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top">{t("patients.col.view")}</TooltipContent>
+            <TooltipContent side="top">{t("clients.col.view")}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={() => onEditClick(row.original)}
-                aria-label={t("patients.col.edit")}
+                aria-label={t("clients.col.edit")}
                 className="flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:border-border hover:bg-muted hover:text-foreground"
               >
                 <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top">{t("patients.col.edit")}</TooltipContent>
+            <TooltipContent side="top">{t("clients.col.edit")}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={() => onToggleActive(row.original)}
-                aria-label={row.original.isActive ? t("patients.actions.deactivate") : t("patients.actions.activate")}
+                aria-label={row.original.isActive ? t("clients.actions.deactivate") : t("clients.actions.activate")}
                 className={`flex size-9 items-center justify-center rounded-sm border border-transparent transition-all duration-200 hover:border-border hover:bg-muted ${
                   row.original.isActive
                     ? "text-destructive hover:text-destructive"
@@ -215,7 +215,7 @@ export function getPatientColumns({
               </button>
             </TooltipTrigger>
             <TooltipContent side="top">
-              {row.original.isActive ? t("patients.actions.deactivate") : t("patients.actions.activate")}
+              {row.original.isActive ? t("clients.actions.deactivate") : t("clients.actions.activate")}
             </TooltipContent>
           </Tooltip>
         </div>

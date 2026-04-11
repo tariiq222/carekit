@@ -15,9 +15,9 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
-import { patientsService } from '@/services/patients';
+import { clientsService } from '@/services/clients';
 
-interface PatientItem {
+interface ClientItem {
   id: string;
   name: string;
   avatarUrl: string | null;
@@ -25,24 +25,24 @@ interface PatientItem {
   visitCount: number;
 }
 
-export default function PatientsScreen() {
+export default function ClientsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { theme, isRTL } = useTheme();
 
   const [search, setSearch] = useState('');
-  const [patients, setPatients] = useState<PatientItem[]>([]);
+  const [clients, setClients] = useState<ClientItem[]>([]);
   const [loading, setLoading] = useState(true);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fontFamily = isRTL ? 'IBM Plex Sans Arabic' : 'Inter';
 
-  const fetchPatients = useCallback(async (searchTerm: string) => {
+  const fetchClients = useCallback(async (searchTerm: string) => {
     setLoading(true);
     try {
-      const res = await patientsService.getAll({ search: searchTerm || undefined, limit: 50 });
+      const res = await clientsService.getAll({ search: searchTerm || undefined, limit: 50 });
       if (res.success) {
-        setPatients(
+        setClients(
           (res.data.items ?? []).map((p) => ({
             id: p.id,
             name: `${p.firstName} ${p.lastName}`,
@@ -58,13 +58,13 @@ export default function PatientsScreen() {
   }, []);
 
   useEffect(() => {
-    fetchPatients('');
-  }, [fetchPatients]);
+    fetchClients('');
+  }, [fetchClients]);
 
   const handleSearch = (text: string) => {
     setSearch(text);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => fetchPatients(text), 400);
+    searchTimeout.current = setTimeout(() => fetchClients(text), 400);
   };
 
   return (
@@ -75,7 +75,7 @@ export default function PatientsScreen() {
       ]}
     >
       <ThemedText variant="displaySm" style={styles.title}>
-        {t('practitioner.patients')}
+        {t('employee.clients')}
       </ThemedText>
 
       {/* Search */}
@@ -84,28 +84,28 @@ export default function PatientsScreen() {
         <TextInput
           value={search}
           onChangeText={handleSearch}
-          placeholder={t('doctor.searchPatients')}
+          placeholder={t('doctor.searchClients')}
           placeholderTextColor={theme.colors.textMuted}
           textAlign={isRTL ? 'right' : 'left'}
           style={[styles.searchInput, { color: theme.colors.textPrimary, fontFamily }]}
         />
       </View>
 
-      {loading && patients.length === 0 && (
+      {loading && clients.length === 0 && (
         <ActivityIndicator style={{ marginTop: 40 }} size="large" />
       )}
 
       {/* List */}
       <FlatList
-        data={patients}
+        data={clients}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
         renderItem={({ item }) => (
           <Pressable style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}>
-            <ThemedCard style={styles.patientCard}>
-              <View style={styles.patientRow}>
+            <ThemedCard style={styles.clientCard}>
+              <View style={styles.clientRow}>
                 <Avatar size={44} name={item.name} imageUrl={item.avatarUrl} />
                 <View style={{ flex: 1, gap: 2 }}>
                   <ThemedText variant="subheading" numberOfLines={1}>
@@ -137,7 +137,7 @@ export default function PatientsScreen() {
             <View style={styles.empty}>
               <UsersIcon size={48} strokeWidth={1} color={theme.colors.textMuted} />
               <ThemedText variant="body" color={theme.colors.textMuted} align="center">
-                {t('doctor.noPatients')}
+                {t('doctor.noClients')}
               </ThemedText>
             </View>
           ) : null
@@ -161,8 +161,8 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14, padding: 0 },
   list: { paddingBottom: 100 },
-  patientCard: { padding: 14 },
-  patientRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  clientCard: { padding: 14 },
+  clientRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   visitBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   empty: { alignItems: 'center', gap: 16, paddingTop: 80 },
 });

@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Allow admins to configure whether the booking widget shows services or practitioners first, saved in DB and overridable per embed via URL param.
+**Goal:** Allow admins to configure whether the booking widget shows services or employees first, saved in DB and overridable per embed via URL param.
 
-**Architecture:** Backend adds `serviceId` filter to `GET /practitioners`. Dashboard settings adds a RadioGroup card in `booking-tab.tsx`. Widget reads `flow` from URL (or falls back to API) and reverses the service-step UI and data-fetching logic accordingly.
+**Architecture:** Backend adds `serviceId` filter to `GET /employees`. Dashboard settings adds a RadioGroup card in `booking-tab.tsx`. Widget reads `flow` from URL (or falls back to API) and reverses the service-step UI and data-fetching logic accordingly.
 
 **Tech Stack:** NestJS + Prisma (backend), Next.js 15 App Router + TanStack Query + shadcn/ui (dashboard), React + useQuery (widget hook).
 
@@ -14,9 +14,9 @@
 
 | File | Action | Responsibility |
 |------|--------|---------------|
-| `backend/src/modules/practitioners/dto/get-practitioners-query.dto.ts` | Modify | Add `serviceId` optional field |
-| `backend/src/modules/practitioners/practitioners.service.ts` | Modify | Apply `serviceId` filter in `findAll` |
-| `backend/src/modules/practitioners/tests/practitioners.service.spec.ts` | Modify | Add test for `serviceId` filter |
+| `backend/src/modules/employees/dto/get-employees-query.dto.ts` | Modify | Add `serviceId` optional field |
+| `backend/src/modules/employees/employees.service.ts` | Modify | Apply `serviceId` filter in `findAll` |
+| `backend/src/modules/employees/tests/employees.service.spec.ts` | Modify | Add test for `serviceId` filter |
 | `dashboard/hooks/use-clinic-settings.ts` | Modify | Add `useBookingFlowOrder` query + mutation |
 | `dashboard/components/features/settings/booking-tab.tsx` | Modify | Add `FlowOrderCard` component |
 | `dashboard/components/features/settings/widget-tab.tsx` | Modify | Add `flow` param to configurator + URL builder |
@@ -27,26 +27,26 @@
 
 ---
 
-## Task 1: Backend — Add `serviceId` filter to practitioners query
+## Task 1: Backend — Add `serviceId` filter to employees query
 
 **Files:**
-- Modify: `backend/src/modules/practitioners/dto/get-practitioners-query.dto.ts`
-- Modify: `backend/src/modules/practitioners/practitioners.service.ts`
-- Modify: `backend/src/modules/practitioners/tests/practitioners.service.spec.ts`
+- Modify: `backend/src/modules/employees/dto/get-employees-query.dto.ts`
+- Modify: `backend/src/modules/employees/employees.service.ts`
+- Modify: `backend/src/modules/employees/tests/employees.service.spec.ts`
 
 - [ ] **Step 1: Write the failing test**
 
-Open `backend/src/modules/practitioners/tests/practitioners.service.spec.ts` and add this test inside the `findAll` describe block:
+Open `backend/src/modules/employees/tests/employees.service.spec.ts` and add this test inside the `findAll` describe block:
 
 ```typescript
-it('should filter practitioners by serviceId', async () => {
+it('should filter employees by serviceId', async () => {
   const mockServiceId = 'service-uuid-123';
-  mockPrisma.practitioner.findMany.mockResolvedValue([]);
-  mockPrisma.practitioner.count.mockResolvedValue(0);
+  mockPrisma.employee.findMany.mockResolvedValue([]);
+  mockPrisma.employee.count.mockResolvedValue(0);
 
   await service.findAll({ serviceId: mockServiceId });
 
-  expect(mockPrisma.practitioner.findMany).toHaveBeenCalledWith(
+  expect(mockPrisma.employee.findMany).toHaveBeenCalledWith(
     expect.objectContaining({
       where: expect.objectContaining({
         services: { some: { serviceId: mockServiceId } },
@@ -59,25 +59,25 @@ it('should filter practitioners by serviceId', async () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd backend && npm run test -- --testPathPattern="practitioners.service.spec" --verbose 2>&1 | tail -20
+cd backend && npm run test -- --testPathPattern="employees.service.spec" --verbose 2>&1 | tail -20
 ```
 
 Expected: FAIL — "serviceId" not in the params type.
 
 - [ ] **Step 3: Add `serviceId` to DTO**
 
-In `backend/src/modules/practitioners/dto/get-practitioners-query.dto.ts`, add after the `branchId` field:
+In `backend/src/modules/employees/dto/get-employees-query.dto.ts`, add after the `branchId` field:
 
 ```typescript
-@ApiPropertyOptional({ format: 'uuid', description: 'Filter practitioners who offer this service' })
+@ApiPropertyOptional({ format: 'uuid', description: 'Filter employees who offer this service' })
 @IsOptional()
 @IsUUID()
 serviceId?: string;
 ```
 
-- [ ] **Step 4: Apply filter in `practitioners.service.ts`**
+- [ ] **Step 4: Apply filter in `employees.service.ts`**
 
-In `practitioners.service.ts`, the `findAll` method signature currently ends with `branchId?: string`. Add `serviceId` to it:
+In `employees.service.ts`, the `findAll` method signature currently ends with `branchId?: string`. Add `serviceId` to it:
 
 ```typescript
 async findAll(params?: {
@@ -106,7 +106,7 @@ if (params?.serviceId) {
 - [ ] **Step 5: Run test to verify it passes**
 
 ```bash
-cd backend && npm run test -- --testPathPattern="practitioners.service.spec" --verbose 2>&1 | tail -20
+cd backend && npm run test -- --testPathPattern="employees.service.spec" --verbose 2>&1 | tail -20
 ```
 
 Expected: PASS
@@ -122,10 +122,10 @@ Expected: All passing, no regressions.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add backend/src/modules/practitioners/dto/get-practitioners-query.dto.ts \
-        backend/src/modules/practitioners/practitioners.service.ts \
-        backend/src/modules/practitioners/tests/practitioners.service.spec.ts
-git commit -m "feat(practitioners): add serviceId filter to GET /practitioners"
+git add backend/src/modules/employees/dto/get-employees-query.dto.ts \
+        backend/src/modules/employees/employees.service.ts \
+        backend/src/modules/employees/tests/employees.service.spec.ts
+git commit -m "feat(employees): add serviceId filter to GET /employees"
 ```
 
 ---
@@ -220,10 +220,10 @@ function FlowOrderCard({ t }: { t: (key: string) => string }) {
               </div>
             </label>
             <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-border/60 p-3 hover:bg-surface-muted transition-colors">
-              <RadioGroupItem value="practitioner_first" className="mt-0.5" />
+              <RadioGroupItem value="employee_first" className="mt-0.5" />
               <div>
-                <p className="text-sm font-medium">{t("settings.booking.flowOrder.practitionerFirst")}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.booking.flowOrder.practitionerFirstDesc")}</p>
+                <p className="text-sm font-medium">{t("settings.booking.flowOrder.employeeFirst")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("settings.booking.flowOrder.employeeFirstDesc")}</p>
               </div>
             </label>
           </RadioGroup>
@@ -266,8 +266,8 @@ Open `dashboard/lib/translations/ar.settings.ts` (or wherever settings translati
 "settings.booking.flowOrder.title": "ترتيب خطوات الحجز",
 "settings.booking.flowOrder.serviceFirst": "الخدمة أولاً",
 "settings.booking.flowOrder.serviceFirstDesc": "يختار المريض الخدمة ثم يرى المعالجين المتاحين لها",
-"settings.booking.flowOrder.practitionerFirst": "المعالج أولاً",
-"settings.booking.flowOrder.practitionerFirstDesc": "يختار المريض المعالج ثم يرى خدماته المتاحة",
+"settings.booking.flowOrder.employeeFirst": "المعالج أولاً",
+"settings.booking.flowOrder.employeeFirstDesc": "يختار المريض المعالج ثم يرى خدماته المتاحة",
 ```
 
 Open the English translations file and add:
@@ -275,9 +275,9 @@ Open the English translations file and add:
 ```typescript
 "settings.booking.flowOrder.title": "Booking Flow Order",
 "settings.booking.flowOrder.serviceFirst": "Service First",
-"settings.booking.flowOrder.serviceFirstDesc": "Patient picks a service, then sees available practitioners",
-"settings.booking.flowOrder.practitionerFirst": "Practitioner First",
-"settings.booking.flowOrder.practitionerFirstDesc": "Patient picks a practitioner, then sees their services",
+"settings.booking.flowOrder.serviceFirstDesc": "Client picks a service, then sees available employees",
+"settings.booking.flowOrder.employeeFirst": "Employee First",
+"settings.booking.flowOrder.employeeFirstDesc": "Client picks a employee, then sees their services",
 ```
 
 - [ ] **Step 6: Typecheck**
@@ -310,14 +310,14 @@ Open `widget-tab.tsx`. Update the `buildWidgetUrl` function params type and body
 
 ```typescript
 function buildWidgetUrl(params: {
-  practitioner?: string
+  employee?: string
   service?: string
   locale: string
   origin: string
-  flow?: "service_first" | "practitioner_first"
+  flow?: "service_first" | "employee_first"
 }) {
   const url = new URL(`${DASHBOARD_ORIGIN}/booking`)
-  if (params.practitioner) url.searchParams.set("practitioner", params.practitioner)
+  if (params.employee) url.searchParams.set("employee", params.employee)
   if (params.service) url.searchParams.set("service", params.service)
   url.searchParams.set("locale", params.locale)
   if (params.origin) url.searchParams.set("origin", params.origin)
@@ -331,14 +331,14 @@ function buildWidgetUrl(params: {
 In the `WidgetTab` function body, add alongside the other state:
 
 ```typescript
-const [flow, setFlow] = useState<"service_first" | "practitioner_first" | undefined>(undefined)
+const [flow, setFlow] = useState<"service_first" | "employee_first" | undefined>(undefined)
 ```
 
 Update `widgetUrl` call to pass flow:
 
 ```typescript
 const widgetUrl = buildWidgetUrl({
-  practitioner: practitioner || undefined,
+  employee: employee || undefined,
   service: service || undefined,
   locale,
   origin: embedOrigin,
@@ -348,14 +348,14 @@ const widgetUrl = buildWidgetUrl({
 
 - [ ] **Step 3: Add `flow` toggle UI**
 
-In the configurator `CardContent`, after the `sm:grid-cols-3` grid (locale/practitioner/service), add a new section:
+In the configurator `CardContent`, after the `sm:grid-cols-3` grid (locale/employee/service), add a new section:
 
 ```typescript
 {/* Flow Order */}
 <div className="space-y-1.5">
   <Label className="text-sm font-medium">{t("settings.widget.flowOrder")}</Label>
   <div className="flex gap-2">
-    {([undefined, "service_first", "practitioner_first"] as const).map((f) => (
+    {([undefined, "service_first", "employee_first"] as const).map((f) => (
       <button
         key={f ?? "default"}
         type="button"
@@ -371,7 +371,7 @@ In the configurator `CardContent`, after the `sm:grid-cols-3` grid (locale/pract
           ? (t("settings.widget.flowDefault"))
           : f === "service_first"
           ? (t("settings.widget.flowServiceFirst"))
-          : (t("settings.widget.flowPractitionerFirst"))}
+          : (t("settings.widget.flowEmployeeFirst"))}
       </button>
     ))}
   </div>
@@ -387,7 +387,7 @@ In the params reference card, add after the `service` ParamRow:
 <ParamRow
   name="flow"
   description={t("settings.widget.param.flow")}
-  example="service_first | practitioner_first"
+  example="service_first | employee_first"
 />
 ```
 
@@ -399,7 +399,7 @@ In the AR translations file, add:
 "settings.widget.flowOrder": "ترتيب الخطوات",
 "settings.widget.flowDefault": "افتراضي",
 "settings.widget.flowServiceFirst": "خدمة أولاً",
-"settings.widget.flowPractitionerFirst": "معالج أولاً",
+"settings.widget.flowEmployeeFirst": "معالج أولاً",
 "settings.widget.flowHint": "يتجاوز الإعداد المحفوظ في الحساب",
 "settings.widget.param.flow": "ترتيب خطوات الويدجت — يتجاوز إعداد الحساب",
 ```
@@ -410,7 +410,7 @@ In the EN translations file, add:
 "settings.widget.flowOrder": "Step Order",
 "settings.widget.flowDefault": "Default",
 "settings.widget.flowServiceFirst": "Service First",
-"settings.widget.flowPractitionerFirst": "Practitioner First",
+"settings.widget.flowEmployeeFirst": "Employee First",
 "settings.widget.flowHint": "Overrides the account-level setting",
 "settings.widget.param.flow": "Widget flow order — overrides account setting",
 ```
@@ -452,7 +452,7 @@ import { fetchBookingFlowOrder, type BookingFlowOrder } from "@/lib/api/clinic-s
 
 interface PageProps {
   searchParams: Promise<{
-    practitioner?: string
+    employee?: string
     service?: string
     locale?: string
     type?: string
@@ -466,7 +466,7 @@ export default async function WidgetBookPage({ searchParams }: PageProps) {
 
   // URL param takes priority; fall back to DB setting
   let flowOrder: BookingFlowOrder = "service_first"
-  if (params.flow === "service_first" || params.flow === "practitioner_first") {
+  if (params.flow === "service_first" || params.flow === "employee_first") {
     flowOrder = params.flow
   } else {
     try {
@@ -485,7 +485,7 @@ export default async function WidgetBookPage({ searchParams }: PageProps) {
       }
     >
       <BookingWizard
-        initialPractitionerId={params.practitioner}
+        initialEmployeeId={params.employee}
         initialServiceId={params.service}
         initialLocale={(params.locale as "ar" | "en") ?? "ar"}
         parentOrigin={params.origin}
@@ -502,21 +502,21 @@ Add `initialFlowOrder` to the props interface and pass it to `useWidgetBooking`:
 
 ```typescript
 interface BookingWizardProps {
-  initialPractitionerId?: string
+  initialEmployeeId?: string
   initialServiceId?: string
   initialLocale?: "ar" | "en"
   parentOrigin?: string
-  initialFlowOrder?: "service_first" | "practitioner_first"
+  initialFlowOrder?: "service_first" | "employee_first"
 }
 
 export function BookingWizard({
-  initialPractitionerId,
+  initialEmployeeId,
   initialServiceId,
   initialLocale = "ar",
   parentOrigin = "*",
   initialFlowOrder = "service_first",
 }: BookingWizardProps) {
-  const booking = useWidgetBooking(initialPractitionerId, initialServiceId, initialFlowOrder)
+  const booking = useWidgetBooking(initialEmployeeId, initialServiceId, initialFlowOrder)
 ```
 
 Also pass `flowOrder` to `WidgetServiceStep`:
@@ -562,8 +562,8 @@ Replace the entire `use-widget-booking.ts` file:
  * Steps: service → datetime → auth → confirm → success
  *
  * flowOrder controls which entity is selected first:
- * - "practitioner_first": pick practitioner → see their services (original)
- * - "service_first": pick service → see practitioners offering it
+ * - "employee_first": pick employee → see their services (original)
+ * - "service_first": pick service → see employees offering it
  */
 
 "use client"
@@ -571,29 +571,29 @@ Replace the entire `use-widget-booking.ts` file:
 import { useState, useCallback } from "react"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import {
-  fetchWidgetPractitioners,
-  fetchWidgetPractitionerServices,
+  fetchWidgetEmployees,
+  fetchWidgetEmployeeServices,
   fetchWidgetSlots,
   fetchWidgetServiceTypes,
   fetchWidgetServices,
   widgetCreateBooking,
 } from "@/lib/api/widget"
 import { queryKeys } from "@/lib/query-keys"
-import type { Practitioner, PractitionerDurationOption, TimeSlot } from "@/lib/types/practitioner"
+import type { Employee, EmployeeDurationOption, TimeSlot } from "@/lib/types/employee"
 import type { Service } from "@/lib/types/service"
 import type { BookingType, Booking } from "@/lib/types/booking"
 
 /* ─── Types ─── */
 
 export type WizardStep = "service" | "datetime" | "auth" | "confirm" | "success"
-export type BookingFlowOrder = "service_first" | "practitioner_first"
+export type BookingFlowOrder = "service_first" | "employee_first"
 
 export interface WizardState {
   step: WizardStep
-  practitioner: Practitioner | null
+  employee: Employee | null
   service: Service | null
   bookingType: BookingType | null
-  durationOption: PractitionerDurationOption | null
+  durationOption: EmployeeDurationOption | null
   date: string
   slot: TimeSlot | null
   booking: Booking | null
@@ -602,13 +602,13 @@ export interface WizardState {
 /* ─── Hook ─── */
 
 export function useWidgetBooking(
-  initialPractitionerId?: string,
+  initialEmployeeId?: string,
   initialServiceId?: string,
   flowOrder: BookingFlowOrder = "service_first",
 ) {
   const [state, setState] = useState<WizardState>({
     step: "service",
-    practitioner: null,
+    employee: null,
     service: null,
     bookingType: null,
     durationOption: null,
@@ -617,19 +617,19 @@ export function useWidgetBooking(
     booking: null,
   })
 
-  /* ─── practitioner_first: fetch all practitioners upfront ─── */
-  const { data: practitionersData, isLoading: practitionersLoading } = useQuery({
-    queryKey: queryKeys.practitioners.list({ isActive: true }),
-    queryFn: () => fetchWidgetPractitioners({ perPage: 20 }),
-    enabled: flowOrder === "practitioner_first",
+  /* ─── employee_first: fetch all employees upfront ─── */
+  const { data: employeesData, isLoading: employeesLoading } = useQuery({
+    queryKey: queryKeys.employees.list({ isActive: true }),
+    queryFn: () => fetchWidgetEmployees({ perPage: 20 }),
+    enabled: flowOrder === "employee_first",
     staleTime: 5 * 60 * 1000,
   })
 
-  /* ─── practitioner_first: fetch services for selected practitioner ─── */
+  /* ─── employee_first: fetch services for selected employee ─── */
   const { data: services = [], isLoading: servicesLoading } = useQuery({
-    queryKey: queryKeys.practitioners.services(state.practitioner?.id ?? ""),
-    queryFn: () => fetchWidgetPractitionerServices(state.practitioner!.id),
-    enabled: flowOrder === "practitioner_first" && !!state.practitioner,
+    queryKey: queryKeys.employees.services(state.employee?.id ?? ""),
+    queryFn: () => fetchWidgetEmployeeServices(state.employee!.id),
+    enabled: flowOrder === "employee_first" && !!state.employee,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -641,23 +641,23 @@ export function useWidgetBooking(
     staleTime: 5 * 60 * 1000,
   })
 
-  /* ─── service_first: fetch practitioners filtered by selected service ─── */
-  const { data: filteredPractitionersData, isLoading: filteredPractitionersLoading } = useQuery({
-    queryKey: queryKeys.practitioners.list({ isActive: true, serviceId: state.service?.id }),
-    queryFn: () => fetchWidgetPractitioners({ perPage: 20, serviceId: state.service!.id }),
+  /* ─── service_first: fetch employees filtered by selected service ─── */
+  const { data: filteredEmployeesData, isLoading: filteredEmployeesLoading } = useQuery({
+    queryKey: queryKeys.employees.list({ isActive: true, serviceId: state.service?.id }),
+    queryFn: () => fetchWidgetEmployees({ perPage: 20, serviceId: state.service!.id }),
     enabled: flowOrder === "service_first" && !!state.service,
     staleTime: 5 * 60 * 1000,
   })
 
   /* ─── Fetch service types (for booking type selection) ─── */
   const { data: serviceTypes = [] } = useQuery({
-    queryKey: queryKeys.practitioners.serviceTypes(
-      state.practitioner?.id ?? "",
+    queryKey: queryKeys.employees.serviceTypes(
+      state.employee?.id ?? "",
       state.service?.id ?? "",
     ),
     queryFn: () =>
-      fetchWidgetServiceTypes(state.practitioner!.id, state.service!.id),
-    enabled: !!state.practitioner && !!state.service,
+      fetchWidgetServiceTypes(state.employee!.id, state.service!.id),
+    enabled: !!state.employee && !!state.service,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -665,19 +665,19 @@ export function useWidgetBooking(
   const activeServiceType = serviceTypes.find(
     (st) => st.bookingType === state.bookingType && st.isActive,
   )
-  const durationOptions: PractitionerDurationOption[] =
+  const durationOptions: EmployeeDurationOption[] =
     activeServiceType?.durationOptions ?? []
 
   /* ─── Fetch slots ─── */
   const canFetchSlots =
-    !!state.practitioner && !!state.date &&
+    !!state.employee && !!state.date &&
     (!durationOptions.length || !!state.durationOption)
 
   const resolvedDuration = state.durationOption?.durationMinutes ?? undefined
 
   const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: [...queryKeys.practitioners.slots(state.practitioner?.id ?? "", state.date), resolvedDuration],
-    queryFn: () => fetchWidgetSlots(state.practitioner!.id, state.date, resolvedDuration),
+    queryKey: [...queryKeys.employees.slots(state.employee?.id ?? "", state.date), resolvedDuration],
+    queryFn: () => fetchWidgetSlots(state.employee!.id, state.date, resolvedDuration),
     enabled: canFetchSlots,
   })
 
@@ -691,11 +691,11 @@ export function useWidgetBooking(
 
   /* ─── Navigation helpers ─── */
 
-  const selectPractitioner = useCallback((p: Practitioner) => {
+  const selectEmployee = useCallback((p: Employee) => {
     setState((s) => ({
       ...s,
-      practitioner: p,
-      service: flowOrder === "practitioner_first" ? null : s.service,
+      employee: p,
+      service: flowOrder === "employee_first" ? null : s.service,
       bookingType: null,
       durationOption: null,
       slot: null,
@@ -717,7 +717,7 @@ export function useWidgetBooking(
     setState((s) => ({
       ...s,
       service: svc,
-      practitioner: null,
+      employee: null,
       bookingType: null,
       durationOption: null,
       slot: null,
@@ -734,9 +734,9 @@ export function useWidgetBooking(
 
   const confirmBooking = useCallback(
     (notes?: string) => {
-      if (!state.practitioner || !state.service || !state.bookingType || !state.date || !state.slot) return
+      if (!state.employee || !state.service || !state.bookingType || !state.date || !state.slot) return
       createMut.mutate({
-        practitionerId: state.practitioner.id,
+        employeeId: state.employee.id,
         serviceId: state.service.id,
         type: state.bookingType,
         date: state.date,
@@ -761,23 +761,23 @@ export function useWidgetBooking(
     state,
     setState,
     flowOrder,
-    // practitioner_first data
-    practitionersData,
-    practitionersLoading,
+    // employee_first data
+    employeesData,
+    employeesLoading,
     services,
     servicesLoading,
     // service_first data
     allServices: servicesData?.items ?? [],
     allServicesLoading,
-    filteredPractitionersData,
-    filteredPractitionersLoading,
+    filteredEmployeesData,
+    filteredEmployeesLoading,
     // shared
     serviceTypes,
     durationOptions,
     slots,
     slotsLoading,
     canFetchSlots,
-    selectPractitioner,
+    selectEmployee,
     selectService,
     selectServiceOnly,
     selectDateTime,
@@ -786,18 +786,18 @@ export function useWidgetBooking(
     goBack,
     isConfirming: createMut.isPending,
     confirmError: createMut.error,
-    initialPractitionerId,
+    initialEmployeeId,
     initialServiceId,
   }
 }
 ```
 
-- [ ] **Step 2: Add `serviceId` to `fetchWidgetPractitioners` query type**
+- [ ] **Step 2: Add `serviceId` to `fetchWidgetEmployees` query type**
 
-Open `dashboard/lib/api/widget.ts`. Update the `WidgetPractitionersQuery` interface:
+Open `dashboard/lib/api/widget.ts`. Update the `WidgetEmployeesQuery` interface:
 
 ```typescript
-interface WidgetPractitionersQuery {
+interface WidgetEmployeesQuery {
   page?: number
   perPage?: number
   search?: string
@@ -806,13 +806,13 @@ interface WidgetPractitionersQuery {
 }
 ```
 
-And in `fetchWidgetPractitioners`, pass `serviceId` to the API:
+And in `fetchWidgetEmployees`, pass `serviceId` to the API:
 
 ```typescript
-export async function fetchWidgetPractitioners(
-  query: WidgetPractitionersQuery = {},
-): Promise<PaginatedResponse<Practitioner>> {
-  const res = await api.get<PaginatedResponse<RawPractitioner>>("/practitioners", {
+export async function fetchWidgetEmployees(
+  query: WidgetEmployeesQuery = {},
+): Promise<PaginatedResponse<Employee>> {
+  const res = await api.get<PaginatedResponse<RawEmployee>>("/employees", {
     page: query.page,
     perPage: query.perPage ?? 20,
     search: query.search,
@@ -820,7 +820,7 @@ export async function fetchWidgetPractitioners(
     serviceId: query.serviceId,   // ← add this
     isActive: true,
   })
-  return { items: res.items.map(mapPractitioner), meta: res.meta }
+  return { items: res.items.map(mapEmployee), meta: res.meta }
 }
 ```
 
@@ -847,10 +847,10 @@ Replace the entire file:
 "use client"
 
 /**
- * Widget Service Step — Select practitioner+service+booking type
+ * Widget Service Step — Select employee+service+booking type
  * Supports two flow orders:
- *   practitioner_first: practitioners → services → booking type
- *   service_first:      services → practitioners → booking type
+ *   employee_first: employees → services → booking type
+ *   service_first:      services → employees → booking type
  */
 
 import { useState } from "react"
@@ -867,7 +867,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { useWidgetBooking } from "@/hooks/use-widget-booking"
 import type { BookingFlowOrder } from "@/hooks/use-widget-booking"
-import type { Practitioner } from "@/lib/types/practitioner"
+import type { Employee } from "@/lib/types/employee"
 import type { Service } from "@/lib/types/service"
 import type { BookingType } from "@/lib/types/booking"
 
@@ -899,17 +899,17 @@ interface Props {
 
 export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
   const {
-    practitionersData,
-    practitionersLoading,
+    employeesData,
+    employeesLoading,
     services,
     servicesLoading,
     allServices,
     allServicesLoading,
-    filteredPractitionersData,
-    filteredPractitionersLoading,
+    filteredEmployeesData,
+    filteredEmployeesLoading,
     serviceTypes,
     state,
-    selectPractitioner,
+    selectEmployee,
     selectService,
     selectServiceOnly,
   } = booking
@@ -928,27 +928,27 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
   }
 
   /* ══════════════════════════════════════════════
-     PRACTITIONER FIRST flow (original behavior)
+     EMPLOYEE FIRST flow (original behavior)
   ══════════════════════════════════════════════ */
 
-  if (flowOrder === "practitioner_first") {
-    /* Step 1: Select Practitioner */
-    if (!state.practitioner) {
+  if (flowOrder === "employee_first") {
+    /* Step 1: Select Employee */
+    if (!state.employee) {
       return (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            {isRtl ? "اختر الطبيب أو المعالج" : "Choose a practitioner"}
+            {isRtl ? "اختر الطبيب أو المعالج" : "Choose a employee"}
           </p>
-          {practitionersLoading ? (
+          {employeesLoading ? (
             <div className="flex justify-center py-8">
               <HugeiconsIcon icon={Loading03Icon} size={24} className="text-primary" />
             </div>
           ) : (
             <div className="space-y-2">
-              {(practitionersData?.items ?? []).map((p: Practitioner) => (
+              {(employeesData?.items ?? []).map((p: Employee) => (
                 <button
                   key={p.id}
-                  onClick={() => selectPractitioner(p)}
+                  onClick={() => selectEmployee(p)}
                   className={cn(
                     "w-full flex items-center gap-3 p-3 rounded-xl border border-border/60",
                     "hover:border-primary/60 hover:bg-primary/5 transition-all text-start",
@@ -981,7 +981,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
       )
     }
 
-    /* Step 2: Select Service (practitioner_first) */
+    /* Step 2: Select Service (employee_first) */
     if (!state.service) {
       return (
         <div className="space-y-3">
@@ -1057,23 +1057,23 @@ export function WidgetServiceStep({ locale, booking, flowOrder }: Props) {
       )
     }
 
-    /* Step 2: Select Practitioner (service_first — filtered) */
-    if (!state.practitioner) {
+    /* Step 2: Select Employee (service_first — filtered) */
+    if (!state.employee) {
       return (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            {isRtl ? "اختر الطبيب أو المعالج" : "Choose a practitioner"}
+            {isRtl ? "اختر الطبيب أو المعالج" : "Choose a employee"}
           </p>
-          {filteredPractitionersLoading ? (
+          {filteredEmployeesLoading ? (
             <div className="flex justify-center py-8">
               <HugeiconsIcon icon={Loading03Icon} size={24} className="text-primary" />
             </div>
           ) : (
             <div className="space-y-2">
-              {(filteredPractitionersData?.items ?? []).map((p: Practitioner) => (
+              {(filteredEmployeesData?.items ?? []).map((p: Employee) => (
                 <button
                   key={p.id}
-                  onClick={() => selectPractitioner(p)}
+                  onClick={() => selectEmployee(p)}
                   className={cn(
                     "w-full flex items-center gap-3 p-3 rounded-xl border border-border/60",
                     "hover:border-primary/60 hover:bg-primary/5 transition-all text-start",
@@ -1171,7 +1171,7 @@ git add dashboard/app/booking/page.tsx \
         dashboard/hooks/use-widget-booking.ts \
         dashboard/lib/api/widget.ts \
         dashboard/components/features/widget/widget-service-step.tsx
-git commit -m "feat(widget): support configurable booking flow order (service_first / practitioner_first)"
+git commit -m "feat(widget): support configurable booking flow order (service_first / employee_first)"
 ```
 
 ---
@@ -1188,5 +1188,5 @@ git commit -m "feat(widget): support configurable booking flow order (service_fi
 - [x] **No placeholders:** All steps have concrete code
 - [x] **Type consistency:** `BookingFlowOrder` defined in `use-widget-booking.ts` and imported by `booking-wizard.tsx` and `widget-service-step.tsx`
 - [x] **`selectServiceOnly`** defined in Task 5 hook and called in Task 6 UI
-- [x] **`fetchWidgetPractitioners` serviceId param** added in Task 5 step 2
+- [x] **`fetchWidgetEmployees` serviceId param** added in Task 5 step 2
 - [x] **File size check:** `widget-service-step.tsx` will be ~210 lines (under 350 limit)

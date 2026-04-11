@@ -109,12 +109,12 @@ function InvoiceDetailContent({ invoice }: { invoice: Invoice }) {
   const { locale, t } = useLocale()
   const isAr = locale === "ar"
 
-  const patientName = invoice.payment?.booking?.patient
-    ? `${invoice.payment.booking.patient.firstName} ${invoice.payment.booking.patient.lastName}`
+  const clientName = invoice.payment?.booking?.client
+    ? `${invoice.payment.booking.client.firstName} ${invoice.payment.booking.client.lastName}`
     : "\u2014"
 
-  const practitionerName = invoice.payment?.booking?.practitioner?.user
-    ? `${invoice.payment.booking.practitioner.user.firstName} ${invoice.payment.booking.practitioner.user.lastName}`
+  const employeeName = invoice.payment?.booking?.employee?.user
+    ? `${invoice.payment.booking.employee.user.firstName} ${invoice.payment.booking.employee.user.lastName}`
     : "\u2014"
 
   const serviceName = invoice.payment?.booking?.service
@@ -187,8 +187,8 @@ function InvoiceDetailContent({ invoice }: { invoice: Invoice }) {
 
       {/* Booking Info */}
       <DetailSection title={t("invoices.detail.booking")}>
-        <DetailRow label={t("invoices.detail.patient")} value={patientName} />
-        <DetailRow label={t("invoices.detail.practitioner")} value={practitionerName} />
+        <DetailRow label={t("invoices.detail.client")} value={clientName} />
+        <DetailRow label={t("invoices.detail.employee")} value={employeeName} />
         <DetailRow label={t("invoices.detail.service")} value={serviceName} />
         <DetailRow
           label={t("invoices.detail.date")}

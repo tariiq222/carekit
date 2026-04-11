@@ -13,8 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PractitionerServiceTypesEditor } from "../practitioner-service-types-editor"
-import type { PractitionerTypeConfigPayload } from "@/lib/types/practitioner"
+import { EmployeeServiceTypesEditor } from "../employee-service-types-editor"
+import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"
 import type { AddServiceFormData } from "./draft-service.types"
 
 /* ─── Props ─── */
@@ -23,8 +23,8 @@ interface AddServiceFormProps {
   form: ReturnType<typeof useForm<AddServiceFormData>>
   availableServices: { id: string; nameAr: string; nameEn: string }[]
   serviceBookingTypes: import("@/lib/types/service").ServiceBookingType[]
-  typeConfigs: PractitionerTypeConfigPayload[]
-  onTypeConfigsChange: (types: PractitionerTypeConfigPayload[]) => void
+  typeConfigs: EmployeeTypeConfigPayload[]
+  onTypeConfigsChange: (types: EmployeeTypeConfigPayload[]) => void
   onSubmit: () => void
   onCancel: () => void
   t: (key: string) => string
@@ -50,12 +50,12 @@ export function AddServiceForm({
   return (
     <div className="rounded-lg border border-border p-4 space-y-4">
       <Label className="text-sm font-semibold">
-        {t("practitioners.create.addService")}
+        {t("employees.create.addService")}
       </Label>
 
       {/* Service Select */}
       <div className="flex flex-col gap-1.5">
-        <Label className="text-xs">{t("practitioners.services.serviceLabel")}</Label>
+        <Label className="text-xs">{t("employees.services.serviceLabel")}</Label>
         <Controller
           control={form.control}
           name="serviceId"
@@ -63,7 +63,7 @@ export function AddServiceForm({
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger>
                 <SelectValue
-                  placeholder={t("practitioners.services.selectService")}
+                  placeholder={t("employees.services.selectService")}
                 />
               </SelectTrigger>
               <SelectContent>
@@ -85,7 +85,7 @@ export function AddServiceForm({
 
       {/* Per-type config */}
       {selectedServiceId && (
-        <PractitionerServiceTypesEditor
+        <EmployeeServiceTypesEditor
           serviceBookingTypes={serviceBookingTypes}
           value={typeConfigs}
           onChange={onTypeConfigsChange}
@@ -97,7 +97,7 @@ export function AddServiceForm({
       {/* Buffer */}
       <div className="flex flex-col gap-1.5">
         <Label className="text-xs">
-          {t("practitioners.services.bufferMinutes")}
+          {t("employees.services.bufferMinutes")}
         </Label>
         <Input
           type="number"
@@ -125,7 +125,7 @@ export function AddServiceForm({
           {t("common.cancel")}
         </Button>
         <Button type="button" size="sm" onClick={onSubmit}>
-          {t("practitioners.create.addService")}
+          {t("employees.create.addService")}
         </Button>
       </div>
     </div>

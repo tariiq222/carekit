@@ -10,7 +10,7 @@ import { ErrorBanner } from "@/components/features/error-banner"
 import { GroupDetailHeader } from "@/components/features/groups/group-detail-header"
 import { GroupEnrollmentsTable } from "@/components/features/groups/group-enrollments-table"
 import { GroupAttendanceForm } from "@/components/features/groups/group-attendance-form"
-import { EnrollPatientGroupDialog } from "@/components/features/groups/enroll-patient-group-dialog"
+import { EnrollClientGroupDialog } from "@/components/features/groups/enroll-client-group-dialog"
 import { SetGroupDateDialog } from "@/components/features/groups/set-group-date-dialog"
 import { useGroupDetail } from "@/hooks/use-groups"
 import { useLocale } from "@/components/locale-provider"
@@ -68,7 +68,7 @@ export default function GroupDetailPage() {
         />
       )}
 
-      <EnrollPatientGroupDialog
+      <EnrollClientGroupDialog
         open={enrollOpen}
         onClose={() => setEnrollOpen(false)}
         groupId={groupId}

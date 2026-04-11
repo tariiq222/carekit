@@ -17,11 +17,11 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedButton } from '@/theme/components/ThemedButton';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { useTheme } from '@/theme/useTheme';
-import { practitionersService } from '@/services/practitioners';
+import { employeesService } from '@/services/employees';
 
 export default function BookingScheduleScreen() {
-  const { practitionerId, type, serviceId, duration } = useLocalSearchParams<{
-    practitionerId: string;
+  const { employeeId, type, serviceId, duration } = useLocalSearchParams<{
+    employeeId: string;
     type: string;
     serviceId?: string;
     duration?: string;
@@ -40,9 +40,9 @@ export default function BookingScheduleScreen() {
   const gradientColors: [string, string] = [theme.colors.primaryDark ?? '#0037B0', theme.colors.primary ?? '#1D4ED8'];
 
   useEffect(() => {
-    if (selectedDate && practitionerId) {
-      practitionersService
-        .getAvailability(practitionerId, selectedDate, {
+    if (selectedDate && employeeId) {
+      employeesService
+        .getAvailability(employeeId, selectedDate, {
           duration: duration ? parseInt(duration, 10) : undefined,
           serviceId: serviceId ?? undefined,
           bookingType: type ?? undefined,
@@ -53,14 +53,14 @@ export default function BookingScheduleScreen() {
         })
         .catch(() => setSlots([]));
     }
-  }, [selectedDate, practitionerId, duration, serviceId, type]);
+  }, [selectedDate, employeeId, duration, serviceId, type]);
 
   const handleNext = () => {
     if (!selectedDate || !selectedSlot) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
-      pathname: '/(patient)/booking/confirm',
-      params: { practitionerId, type, date: selectedDate, time: selectedSlot },
+      pathname: '/(client)/booking/confirm',
+      params: { employeeId, type, date: selectedDate, time: selectedSlot },
     });
   };
 

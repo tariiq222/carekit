@@ -5,12 +5,12 @@ import type { UseFormReturn, FieldValues, Path } from "react-hook-form"
  * Resets downstream slot-selection fields when upstream booking selectors change.
  *
  * Used by create/page.tsx — clears durationOptionId + startTime whenever the
- * practitioner, service, or booking type changes, and clears startTime alone
+ * employee, service, or booking type changes, and clears startTime alone
  * when the date changes.
  */
 export function useBookingCreateResets<T extends FieldValues>(
   form: UseFormReturn<T>,
-  practitionerId: string,
+  employeeId: string,
   serviceId: string,
   bookingType: string,
   date: string,
@@ -19,7 +19,7 @@ export function useBookingCreateResets<T extends FieldValues>(
   useEffect(() => {
     form.setValue("durationOptionId" as Path<T>, "" as never)
     form.setValue("startTime" as Path<T>, "" as never)
-  }, [practitionerId, serviceId, bookingType, form])
+  }, [employeeId, serviceId, bookingType, form])
 
   // Reset time alone when date changes
   useEffect(() => {

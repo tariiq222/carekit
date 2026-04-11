@@ -7,8 +7,8 @@ import { Search01Icon, CheckmarkCircle01Icon } from "@hugeicons/core-free-icons"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
-import { usePatients } from "@/hooks/use-patients"
-import type { Patient } from "@/lib/types/patient"
+import { useClients } from "@/hooks/use-clients"
+import type { Client } from "@/lib/types/client"
 import { BookingWalkInForm } from "./booking-walkin-form"
 import { useLocale } from "@/components/locale-provider"
 
@@ -19,9 +19,9 @@ const cardHeader = "px-4 py-2.5 bg-surface border-b border-border"
 const cardTitle = "text-xs font-semibold text-muted-foreground uppercase tracking-wider"
 const cardBody = "px-4 py-4 flex flex-col gap-3"
 
-/* ── Patient search result row ── */
+/* ── Client search result row ── */
 
-function PatientRow({ patient, onSelect }: { patient: Patient; onSelect: () => void }) {
+function ClientRow({ client, onSelect }: { client: Client; onSelect: () => void }) {
   return (
     <button
       type="button"
@@ -29,13 +29,13 @@ function PatientRow({ patient, onSelect }: { patient: Patient; onSelect: () => v
       className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-start transition-colors hover:bg-primary/5 group"
     >
       <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
-        {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
+        {client.firstName.charAt(0)}{client.lastName.charAt(0)}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-foreground truncate">
-          {patient.firstName} {patient.lastName}
+          {client.firstName} {client.lastName}
         </p>
-        <p className="text-xs text-muted-foreground mt-0.5">{patient.phone}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
       </div>
       <HugeiconsIcon
         icon={CheckmarkCircle01Icon}
@@ -48,31 +48,31 @@ function PatientRow({ patient, onSelect }: { patient: Patient; onSelect: () => v
 
 /* ── Props ── */
 
-interface PatientStepProps {
-  onSelect: (patientId: string, name: string) => void
+interface ClientStepProps {
+  onSelect: (clientId: string, name: string) => void
 }
 
 /* ── Main component ── */
 
-export function PatientStep({ onSelect }: PatientStepProps) {
+export function ClientStep({ onSelect }: ClientStepProps) {
   const { t } = useLocale()
   const [mode, setMode] = useState<"search" | "create">("search")
-  const { patients, search, setSearch, isLoading } = usePatients()
+  const { clients, search, setSearch, isLoading } = useClients()
 
   return (
     <Tabs value={mode} onValueChange={(v) => setMode(v as "search" | "create")} className="flex flex-col gap-3">
 
       <div className="flex justify-center">
         <TabsList className="h-10 p-1 w-full">
-          <TabsTrigger value="search" className="flex-1 h-8 text-sm font-medium">{t("bookings.patient.tab.search")}</TabsTrigger>
-          <TabsTrigger value="create" className="flex-1 h-8 text-sm font-medium">{t("bookings.patient.tab.create")}</TabsTrigger>
+          <TabsTrigger value="search" className="flex-1 h-8 text-sm font-medium">{t("bookings.client.tab.search")}</TabsTrigger>
+          <TabsTrigger value="create" className="flex-1 h-8 text-sm font-medium">{t("bookings.client.tab.create")}</TabsTrigger>
         </TabsList>
       </div>
 
       {/* Search tab */}
       <TabsContent value="search">
         <div className={card}>
-          <div className={cardHeader}><p className={cardTitle}>{t("bookings.patient.search.header")}</p></div>
+          <div className={cardHeader}><p className={cardTitle}>{t("bookings.client.search.header")}</p></div>
           <div className={cardBody}>
             <div className="relative">
               <HugeiconsIcon
@@ -83,33 +83,33 @@ export function PatientStep({ onSelect }: PatientStepProps) {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("bookings.patient.search.placeholder")}
+                placeholder={t("bookings.client.search.placeholder")}
                 className="ps-9 bg-surface-muted"
               />
             </div>
             <div className="flex flex-col max-h-52 overflow-y-auto -mx-1 px-1">
               {isLoading && (
-                <p className="text-sm text-center text-muted-foreground py-6">{t("bookings.patient.search.loading")}</p>
+                <p className="text-sm text-center text-muted-foreground py-6">{t("bookings.client.search.loading")}</p>
               )}
-              {!isLoading && patients.length === 0 && !search && (
-                <p className="text-sm text-center text-muted-foreground py-6">{t("bookings.patient.search.startTyping")}</p>
+              {!isLoading && clients.length === 0 && !search && (
+                <p className="text-sm text-center text-muted-foreground py-6">{t("bookings.client.search.startTyping")}</p>
               )}
-              {!isLoading && patients.length === 0 && search && (
+              {!isLoading && clients.length === 0 && search && (
                 <p className="text-sm text-center text-muted-foreground py-6">
-                  {t("bookings.patient.search.noResults")}{" "}
+                  {t("bookings.client.search.noResults")}{" "}
                   <button
                     type="button"
                     className="text-primary underline underline-offset-2 hover:opacity-80"
                     onClick={() => setMode("create")}
                   >
-                    {t("bookings.patient.search.createNew")}
+                    {t("bookings.client.search.createNew")}
                   </button>
                 </p>
               )}
-              {patients.map((p) => (
-                <PatientRow
+              {clients.map((p) => (
+                <ClientRow
                   key={p.id}
-                  patient={p}
+                  client={p}
                   onSelect={() => onSelect(p.id, `${p.firstName} ${p.lastName}`)}
                 />
               ))}

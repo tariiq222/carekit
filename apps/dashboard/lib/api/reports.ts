@@ -6,7 +6,7 @@ import { api, getAccessToken } from "@/lib/api"
 import type {
   RevenueReport,
   BookingReport,
-  PractitionerReport,
+  EmployeeReport,
   RevenueReportQuery,
   ReportDateQuery,
 } from "@/lib/types/report"
@@ -19,7 +19,7 @@ export async function fetchRevenueReport(
   return api.get<RevenueReport>("/reports/revenue", {
     dateFrom: query.dateFrom,
     dateTo: query.dateTo,
-    practitionerId: query.practitionerId,
+    employeeId: query.employeeId,
   })
 }
 
@@ -32,12 +32,12 @@ export async function fetchBookingReport(
   })
 }
 
-export async function fetchPractitionerReport(
+export async function fetchEmployeeReport(
   id: string,
   query: ReportDateQuery,
-): Promise<PractitionerReport> {
-  return api.get<PractitionerReport>(
-    `/reports/practitioners/${id}`,
+): Promise<EmployeeReport> {
+  return api.get<EmployeeReport>(
+    `/reports/employees/${id}`,
     { dateFrom: query.dateFrom, dateTo: query.dateTo },
   )
 }
@@ -78,18 +78,18 @@ export function exportBookingsCsv(dateFrom: string, dateTo: string) {
   )
 }
 
-export function exportPatientsCsv() {
-  downloadCsv("/reports/patients/export?format=csv", "patients.csv")
+export function exportClientsCsv() {
+  downloadCsv("/reports/clients/export?format=csv", "clients.csv")
 }
 
-export function exportPatientsExcel() {
-  downloadCsv("/reports/patients/export?format=xlsx", "patients.xlsx")
+export function exportClientsExcel() {
+  downloadCsv("/reports/clients/export?format=xlsx", "clients.xlsx")
 }
 
-export function exportPractitionersCsv() {
-  downloadCsv("/reports/practitioners/export?format=csv", "practitioners.csv")
+export function exportEmployeesCsv() {
+  downloadCsv("/reports/employees/export?format=csv", "employees.csv")
 }
 
-export function exportPractitionersExcel() {
-  downloadCsv("/reports/practitioners/export?format=xlsx", "practitioners.xlsx")
+export function exportEmployeesExcel() {
+  downloadCsv("/reports/employees/export?format=xlsx", "employees.xlsx")
 }

@@ -19,28 +19,28 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { useLocale } from "@/components/locale-provider"
-import { usePractitioners } from "@/hooks/use-practitioners"
+import { useEmployees } from "@/hooks/use-employees"
 import { cn } from "@/lib/utils"
 
-interface PractitionerComboboxProps {
+interface EmployeeComboboxProps {
   value: string
   onChange: (id: string) => void
 }
 
-export function PractitionerCombobox({ value, onChange }: PractitionerComboboxProps) {
+export function EmployeeCombobox({ value, onChange }: EmployeeComboboxProps) {
   const { t, locale } = useLocale()
   const isAr = locale === "ar"
   const [open, setOpen] = useState(false)
 
-  const { practitioners } = usePractitioners()
+  const { employees } = useEmployees()
 
-  const selected = practitioners.find((p) => p.id === value)
+  const selected = employees.find((p) => p.id === value)
 
   const displayName = selected
     ? isAr && selected.nameAr
       ? selected.nameAr
       : `${selected.user.firstName} ${selected.user.lastName}`
-    : t("reports.selectPractitioner")
+    : t("reports.selectEmployee")
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -59,11 +59,11 @@ export function PractitionerCombobox({ value, onChange }: PractitionerComboboxPr
       </PopoverTrigger>
       <PopoverContent className="w-[min(320px,_calc(100vw-2rem))] p-0" align="start">
         <Command>
-          <CommandInput placeholder={t("reports.searchPractitioner")} />
+          <CommandInput placeholder={t("reports.searchEmployee")} />
           <CommandList>
-            <CommandEmpty>{t("reports.noPractitionerFound")}</CommandEmpty>
+            <CommandEmpty>{t("reports.noEmployeeFound")}</CommandEmpty>
             <CommandGroup>
-              {practitioners.map((p) => {
+              {employees.map((p) => {
                 const name = isAr && p.nameAr
                   ? p.nameAr
                   : `${p.user.firstName} ${p.user.lastName}`

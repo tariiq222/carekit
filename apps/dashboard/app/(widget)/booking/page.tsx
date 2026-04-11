@@ -6,7 +6,7 @@ import { fetchBookingFlowOrder, type BookingFlowOrder } from "@/lib/api/clinic-s
 
 interface PageProps {
   searchParams: Promise<{
-    practitioner?: string
+    employee?: string
     service?: string
     locale?: string
     origin?: string
@@ -24,7 +24,7 @@ export default async function WidgetBookingPage({ searchParams }: PageProps) {
   let flowOrder: BookingFlowOrder = "service_first"
   if (
     params.flow === "service_first" ||
-    params.flow === "practitioner_first" ||
+    params.flow === "employee_first" ||
     params.flow === "both"
   ) {
     flowOrder = params.flow
@@ -45,7 +45,7 @@ export default async function WidgetBookingPage({ searchParams }: PageProps) {
       }
     >
       <BookingWizard
-        initialPractitionerId={params.practitioner}
+        initialEmployeeId={params.employee}
         initialServiceId={params.service}
         initialLocale={locale}
         parentOrigin={parentOrigin}

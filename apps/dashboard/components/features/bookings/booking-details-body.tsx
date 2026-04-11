@@ -23,8 +23,8 @@ import type { Booking, CancelledBy } from "@/lib/types/booking"
 /* ── CancelledByBadge ── */
 
 const cancelledByStyles: Record<CancelledBy, string> = {
-  patient:      "border-warning/30 bg-warning/10 text-warning",
-  practitioner: "border-success/30 bg-success/10 text-success",
+  client:      "border-warning/30 bg-warning/10 text-warning",
+  employee: "border-success/30 bg-success/10 text-success",
   admin:        "border-primary/30 bg-primary/10 text-primary",
   system:       "border-border bg-surface-muted text-muted-foreground",
 }
@@ -71,14 +71,14 @@ function PaymentMethodBadge({ method, t }: { method: string; t: (key: string) =>
 
 interface DetailsBodyProps {
   booking: Booking
-  patientName: string
-  practitionerName: string
+  clientName: string
+  employeeName: string
   specialty: string
   appointmentDate: string
   t: (key: string) => string
 }
 
-export function DetailsBody({ booking, patientName, practitionerName, specialty, appointmentDate, t }: DetailsBodyProps) {
+export function DetailsBody({ booking, clientName, employeeName, specialty, appointmentDate, t }: DetailsBodyProps) {
   const card = "bg-surface rounded-xl border border-border shadow-sm overflow-hidden"
   const cardHeader = "px-4 py-2.5 bg-muted/50 border-b border-border"
   const cardTitle = "text-xs font-semibold text-muted-foreground uppercase tracking-wider"
@@ -88,18 +88,18 @@ export function DetailsBody({ booking, patientName, practitionerName, specialty,
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3">
         <div className={card}>
-          <div className={cardHeader}><p className={cardTitle}>{t("detail.patient")}</p></div>
+          <div className={cardHeader}><p className={cardTitle}>{t("detail.client")}</p></div>
           <div className={cardBody}>
-            <DetailRow label={t("detail.name")} value={patientName} icon={User03Icon} />
-            <DetailRow label={t("detail.phone")} value={booking.patient?.phone ?? "—"} numeric icon={Call02Icon} />
-            <DetailRow label={t("detail.email")} value={booking.patient?.email ?? "—"} icon={Mail01Icon} />
+            <DetailRow label={t("detail.name")} value={clientName} icon={User03Icon} />
+            <DetailRow label={t("detail.phone")} value={booking.client?.phone ?? "—"} numeric icon={Call02Icon} />
+            <DetailRow label={t("detail.email")} value={booking.client?.email ?? "—"} icon={Mail01Icon} />
           </div>
         </div>
 
         <div className={card}>
-          <div className={cardHeader}><p className={cardTitle}>{t("detail.practitioner")}</p></div>
+          <div className={cardHeader}><p className={cardTitle}>{t("detail.employee")}</p></div>
           <div className={cardBody}>
-            <DetailRow label={t("detail.name")} value={practitionerName} icon={User03Icon} />
+            <DetailRow label={t("detail.name")} value={employeeName} icon={User03Icon} />
             <DetailRow label={t("detail.specialty")} value={specialty} icon={Stethoscope02Icon} />
           </div>
         </div>

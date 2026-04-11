@@ -25,8 +25,8 @@ export enum WaitlistStatus {
 }
 
 export enum CancelledBy {
-  PATIENT = 'patient',
-  PRACTITIONER = 'practitioner',
+  CLIENT = 'client',
+  EMPLOYEE = 'employee',
   ADMIN = 'admin',
   SYSTEM = 'system',
 }
@@ -48,6 +48,6 @@ export enum RefundType {
 
 export enum BookingFlowOrder {
   SERVICE_FIRST = 'service_first',
-  PRACTITIONER_FIRST = 'practitioner_first',
+  EMPLOYEE_FIRST = 'employee_first',
   BOTH = 'both',
 }

@@ -61,10 +61,10 @@ export function getPaymentColumns(
       },
     },
     {
-      id: "patient",
-      header: t("payments.col.patient"),
+      id: "client",
+      header: t("payments.col.client"),
       cell: ({ row }) => {
-        const p = row.original.booking?.patient
+        const p = row.original.booking?.client
         return (
           <span className="text-sm text-foreground">
             {p ? `${p.firstName} ${p.lastName}` : "\u2014"}

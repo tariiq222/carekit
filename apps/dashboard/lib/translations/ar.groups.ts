@@ -14,7 +14,7 @@ export const arGroups: Record<string, string> = {
   "groups.noGroupsDesc": "ابدأ بإضافة مجموعة جديدة",
 
   "groups.name": "الاسم",
-  "groups.practitioner": "الممارس",
+  "groups.employee": "الممارس",
   "groups.deliveryMode": "طريقة التوصيل",
   "groups.date": "التاريخ",
   "groups.enrolled": "المسجلون",
@@ -28,13 +28,13 @@ export const arGroups: Record<string, string> = {
   "groups.filterByStatus": "فلتر بالحالة",
   "groups.filterByDelivery": "فلتر بطريقة التوصيل",
 
-  "groups.patient": "المريض",
-  "groups.patientId": "معرّف المريض",
-  "groups.patientIdPlaceholder": "أدخل UUID المريض",
-  "groups.addPatient": "إضافة مريض",
+  "groups.client": "المريض",
+  "groups.clientId": "معرّف المريض",
+  "groups.clientIdPlaceholder": "أدخل UUID المريض",
+  "groups.addClient": "إضافة مريض",
   "groups.enroll": "تسجيل",
-  "groups.patientEnrolled": "تم تسجيل المريض بنجاح",
-  "groups.removePatient": "إزالة المريض",
+  "groups.clientEnrolled": "تم تسجيل المريض بنجاح",
+  "groups.removeClient": "إزالة المريض",
   "groups.issueCertificate": "إصدار شهادة",
 
   "groups.cancelGroup": "إلغاء المجموعة",
@@ -56,13 +56,13 @@ export const arGroups: Record<string, string> = {
   "groups.create.success": "تم إنشاء المجموعة بنجاح",
   "groups.create.error": "فشل في إنشاء المجموعة",
   "groups.create.formError": "يرجى التحقق من الحقول المطلوبة",
-  "groups.create.practitionerRequired": "يرجى اختيار ممارس أولاً",
+  "groups.create.employeeRequired": "يرجى اختيار ممارس أولاً",
 
   /* ── Tabs ── */
   "groups.create.tabs.general": "المعلومات العامة",
   "groups.create.tabs.scheduling": "الجدولة والتسعير",
   "groups.create.tabs.settings": "الإعدادات",
-  "groups.create.tabs.practitioners": "الممارسون",
+  "groups.create.tabs.employees": "الممارسون",
 
   /* ── General Tab ── */
   "groups.create.nameAr": "الاسم (عربي)",

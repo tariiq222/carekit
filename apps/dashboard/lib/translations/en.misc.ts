@@ -9,7 +9,7 @@ export const enMisc: Record<string, string> = {
   "reports.description": "Analytics and performance insights",
   "reports.tabs.revenue": "Revenue",
   "reports.tabs.bookings": "Bookings",
-  "reports.tabs.practitioners": "Practitioners",
+  "reports.tabs.employees": "Employees",
   "reports.dateFrom": "From",
   "reports.dateTo": "To",
   "reports.revenue.total": "Total Revenue",
@@ -18,8 +18,8 @@ export const enMisc: Record<string, string> = {
   "reports.bookings.byStatus": "By Status",
   "reports.bookings.byType": "By Type",
   "reports.exportCsv": "Export CSV",
-  "reports.practitionerSearch": "Search practitioner by name or ID...",
-  "reports.practitionerSearchHint": "Search for a practitioner to view their report",
+  "reports.employeeSearch": "Search employee by name or ID...",
+  "reports.employeeSearchHint": "Search for a employee to view their report",
 
   // — Notifications —
   "notifications.title": "Notifications",
@@ -73,7 +73,7 @@ export const enMisc: Record<string, string> = {
   "chatbot.kb.fileDeleted": "File deleted",
   "chatbot.kb.filesTitle": "Files",
   "chatbot.kb.noFiles": "No files uploaded",
-  "chatbot.role.patient": "Patient",
+  "chatbot.role.client": "Client",
   "chatbot.role.bot": "AI Bot",
   "chatbot.role.system": "System",
   "chatbot.role.staff": "Staff",
@@ -91,8 +91,8 @@ export const enMisc: Record<string, string> = {
   "changePassword.error": "Failed to change password",
 
   // — Detail Sheet Labels —
-  "detail.patient": "Patient",
-  "detail.practitioner": "Practitioner",
+  "detail.client": "Client",
+  "detail.employee": "Employee",
   "detail.appointment": "Appointment",
   "detail.payment": "Payment",
   "detail.contact": "Contact",
@@ -115,7 +115,7 @@ export const enMisc: Record<string, string> = {
   "detail.notes": "Notes",
   "detail.cancellationReason": "Cancellation Reason",
   "detail.cancelledBy": "Cancelled By",
-  "detail.cancelledBy.patient": "Patient",
+  "detail.cancelledBy.client": "Client",
   "detail.cancelledBy.admin": "Admin",
   "detail.cancelledBy.system": "System",
   "detail.suggestedRefund": "Suggested Refund",
@@ -159,9 +159,9 @@ export const enMisc: Record<string, string> = {
   "detail.joinedAt": "Joined",
 
   // — Ratings —
-  "ratings.selectPractitioner": "Select Practitioner",
-  "ratings.choosePractitioner": "Choose a practitioner",
-  "ratings.selectToView": "Select a practitioner to view their ratings",
+  "ratings.selectEmployee": "Select Employee",
+  "ratings.chooseEmployee": "Choose a employee",
+  "ratings.selectToView": "Select a employee to view their ratings",
   "ratings.totalRatings": "Total Ratings",
   "ratings.empty": "No reviews yet",
   "ratings.anonymous": "Anonymous",
@@ -174,14 +174,14 @@ export const enMisc: Record<string, string> = {
 
   // — Intake Forms —
   "intakeForms.title": "Intake Forms",
-  "intakeForms.description": "Manage forms filled by patients before and after sessions",
+  "intakeForms.description": "Manage forms filled by clients before and after sessions",
   "intakeForms.searchPlaceholder": "Search forms...",
   "intakeForms.newForm": "New Form",
   "intakeForms.stats.total": "Total Forms",
   "intakeForms.stats.active": "Active Forms",
   "intakeForms.stats.submissions": "Total Submissions",
   "intakeForms.empty.title": "No Forms Found",
-  "intakeForms.empty.description": "Create your first form to collect patient information",
+  "intakeForms.empty.description": "Create your first form to collect client information",
   "intakeForms.deleteSuccess": "Form deleted",
   "intakeForms.deleteError": "Failed to delete form",
   "intakeForms.activateSuccess": "Form activated",

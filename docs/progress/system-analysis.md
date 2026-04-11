@@ -20,8 +20,8 @@
   - [طبقة الـ API](#طبقة-الـ-api)
   - [إحصائيات الداشبورد](#إحصائيات-الداشبورد)
 - [Mobile — تحليل التطبيق](#mobile--تحليل-التطبيق)
-  - [شاشات المريض](#شاشات-المريض-patient)
-  - [شاشات الممارس](#شاشات-الممارس-practitioner)
+  - [شاشات المريض](#شاشات-المريض-client)
+  - [شاشات الممارس](#شاشات-الممارس-employee)
   - [الترابط بالباكند](#الترابط-بالباكند-من-الموبايل)
   - [إحصائيات الموبايل](#إحصائيات-الموبايل)
 - [خريطة الترابط بين الموديولات](#خريطة-الترابط-بين-الموديولات)
@@ -109,16 +109,16 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 
 | # | الموديول | النضج | الملفات | الـ Endpoints | Unit Tests | E2E Tests | الاعتماديات |
 |---|---------|-------|---------|--------------|------------|-----------|------------|
-| 1 | **auth** | 🟢 مكتمل | 28 | 12 | 8 | 4 | email, patients, activity-log |
+| 1 | **auth** | 🟢 مكتمل | 28 | 12 | 8 | 4 | email, clients, activity-log |
 | 2 | **bookings** | 🟢 مكتمل | 35 | 24 | 16 | 8 | notifications, zoom, clinic, activity-log |
 | 3 | **payments** | 🟢 مكتمل | 20 | 11 | 7 | 2 | invoices, bookings, notifications, activity-log |
-| 4 | **practitioners** | 🟢 مكتمل | 24 | 22 | 1 | 5 | bookings, auth, email |
-| 5 | **chatbot** | 🟢 مكتمل | 28 | 20 | 5 | 6 | bookings, services, practitioners |
+| 4 | **employees** | 🟢 مكتمل | 24 | 22 | 1 | 5 | bookings, auth, email |
+| 5 | **chatbot** | 🟢 مكتمل | 28 | 20 | 5 | 6 | bookings, services, employees |
 | 6 | **services** | 🟢 مكتمل | 18 | 18 | 7 | 3 | intake-forms |
 | 7 | **zatca** | 🟢 مكتمل | 16 | 5 | 5 | 1 | BullMQ, Config |
 | 8 | **invoices** | 🟢 مكتمل | 10 | 7 | 3 | 1 | zatca, BullMQ |
-| 9 | **patients** | 🟢 مكتمل | 8 | 8 | 0 | 2 | — |
-| 10 | **users** | 🟢 مكتمل | 8 | 10 | 2 | 2 | practitioners, auth, activity-log |
+| 9 | **clients** | 🟢 مكتمل | 8 | 8 | 0 | 2 | — |
+| 10 | **users** | 🟢 مكتمل | 8 | 10 | 2 | 2 | employees, auth, activity-log |
 | 11 | **notifications** | 🟢 مكتمل | 11 | 7 | 3 | 2 | whitelabel |
 | 12 | **branches** | 🟢 مكتمل | 7 | 8 | 1 | 4 | — |
 | 13 | **reports** | 🟢 مكتمل | 8 | 7 | 4 | 2 | — |
@@ -220,7 +220,7 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 
 ---
 
-#### 4. PRACTITIONERS — 🟢 مكتمل
+#### 4. EMPLOYEES — 🟢 مكتمل
 
 **الملفات (24):**
 - 2 controllers + 8 services + 1 helper + 10 DTOs
@@ -229,8 +229,8 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 
 | Controller | العدد | المسارات الرئيسية |
 |------------|-------|------------------|
-| PractitionersController | 19 | CRUD، التوفر (قراءة/تعيين)، الفترات، الاستراحات، الإجازات، الخدمات (قائمة/تعيين/تحديث/إزالة)، التقييمات |
-| FavoritePractitionersController | 3 | المفضلة، إضافة/إزالة مفضل |
+| EmployeesController | 19 | CRUD، التوفر (قراءة/تعيين)، الفترات، الاستراحات، الإجازات، الخدمات (قائمة/تعيين/تحديث/إزالة)، التقييمات |
+| FavoriteEmployeesController | 3 | المفضلة، إضافة/إزالة مفضل |
 
 ---
 
@@ -270,7 +270,7 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 | الموديول | الـ Endpoints | الوصف |
 |---------|--------------|-------|
 | **invoices** | 7 | فواتير مع تكامل ZATCA وبناء HTML |
-| **patients** | 8 | ملفات المرضى مع walk-in وclaim |
+| **clients** | 8 | ملفات المرضى مع walk-in وclaim |
 | **users** | 10 | إدارة المستخدمين مع RBAC |
 | **notifications** | 7 | إشعارات متعددة القنوات (in-app, FCM, SMS) |
 | **branches** | 8 | دعم متعدد الفروع |
@@ -327,8 +327,8 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 |--------|-------|---------|---------|-----------|----------|-------|--------|---------|
 | **الرئيسية** | 🟢 | 8 | 3 | 0 | bookings, notifications | booking, notification | — | AR+EN |
 | **الحجوزات** | 🟢 | 25 | 3 | 14 | bookings, waitlist, problem-reports | booking, waitlist, problem-report | booking | AR+EN |
-| **المرضى** | 🟢 | 10 | 5 | 4 | patients | patient | patient | AR+EN |
-| **الممارسين** | 🟢 | 35+ | 7 | 11 | practitioners, schedule | practitioner | practitioner | AR+EN |
+| **المرضى** | 🟢 | 10 | 5 | 4 | clients | client | client | AR+EN |
+| **الممارسين** | 🟢 | 35+ | 7 | 11 | employees, schedule | employee | employee | AR+EN |
 | **الخدمات** | 🟢 | 15+ | 6 | 13+ | services | service, service-payloads | service | AR+EN |
 | **المدفوعات** | 🟢 | 6 | 2 | 4 | payments | payment, common | payment | AR+EN |
 | **الفواتير** | 🟢 | 5 | 2 | 2 | invoices, zatca | invoice, zatca | invoice | AR+EN |
@@ -352,7 +352,7 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 | `/activity-log` | `/users?tab=activityLog` | مُدمج في صفحة المستخدمين |
 | `/zatca` | `/invoices?tab=zatca` | مُدمج في صفحة الفواتير |
 | `/problem-reports` | `/bookings?tab=problemReports` | مُدمج في صفحة الحجوزات |
-| `/ratings` | `/practitioners?tab=ratings` | مُدمج في صفحة الممارسين |
+| `/ratings` | `/employees?tab=ratings` | مُدمج في صفحة الممارسين |
 
 ---
 
@@ -361,9 +361,9 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 | ملف الـ Hook | Queries | Mutations | الاتصال بالـ API |
 |-------------|---------|-----------|-----------------|
 | `use-bookings.ts` | 3 | 14 | `lib/api/bookings.ts` |
-| `use-patients.ts` | 5 | 4 | `lib/api/patients.ts` |
-| `use-practitioners.ts` | 7 | — | `lib/api/practitioners.ts` |
-| `use-practitioner-mutations.ts` | — | 11 | `lib/api/practitioners.ts` |
+| `use-clients.ts` | 5 | 4 | `lib/api/clients.ts` |
+| `use-employees.ts` | 7 | — | `lib/api/employees.ts` |
+| `use-employee-mutations.ts` | — | 11 | `lib/api/employees.ts` |
 | `use-services.ts` | 6 | 13+ | `lib/api/services.ts` |
 | `use-payments.ts` | 2 | 4 | `lib/api/payments.ts` |
 | `use-invoices.ts` | 2 | 2 | `lib/api/invoices.ts` |
@@ -384,7 +384,7 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 | `use-waitlist.ts` | 1 | 1 | `lib/api/waitlist.ts` |
 | `use-clinic-settings.ts` | 3 | 5 | `lib/api/clinic.ts`, `lib/api/booking-settings.ts` |
 | `use-email-templates.ts` | 1 | 2 | `lib/api/email-templates.ts` |
-| `use-booking-slots.ts` | 2 | 0 | `lib/api/practitioners.ts` |
+| `use-booking-slots.ts` | 2 | 0 | `lib/api/employees.ts` |
 
 ---
 
@@ -398,7 +398,7 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 
 **27 ملف API module** تغطي كل الموديولات:
 
-`auth` • `bookings` • `booking-settings` • `patients` • `practitioners` • `practitioners-schedule` • `services` • `payments` • `invoices` • `branches` • `users` • `gift-cards` • `coupons` • `intake-forms` • `notifications` • `whitelabel` • `chatbot` • `chatbot-kb` • `zatca` • `reports` • `clinic` • `email-templates` • `activity-log` • `problem-reports` • `waitlist` • `widget` • `feature-flags`
+`auth` • `bookings` • `booking-settings` • `clients` • `employees` • `employees-schedule` • `services` • `payments` • `invoices` • `branches` • `users` • `gift-cards` • `coupons` • `intake-forms` • `notifications` • `whitelabel` • `chatbot` • `chatbot-kb` • `zatca` • `reports` • `clinic` • `email-templates` • `activity-log` • `problem-reports` • `waitlist` • `widget` • `feature-flags`
 
 ---
 
@@ -439,15 +439,15 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 
 ---
 
-### شاشات المريض (Patient)
+### شاشات المريض (Client)
 
 | الشاشة | النضج | الترابط بالباكند |
 |--------|-------|----------------|
-| Home (dashboard) | 🟢 مكتمل | ✅ 3 APIs متزامنة (bookings, specialties, practitioners) |
+| Home (dashboard) | 🟢 مكتمل | ✅ 3 APIs متزامنة (bookings, specialties, employees) |
 | Appointments (list) | 🟢 مكتمل | ✅ bookings API مع فلتر الحالة |
 | Appointment Detail | 🟢 مكتمل | ✅ booking + cancel + rate + Zoom |
 | Booking Step 1 (نوع الزيارة) | 🟢 مكتمل | ✅ services API |
-| Booking Step 2 (الجدول) | 🟢 مكتمل | ✅ practitioner availability API |
+| Booking Step 2 (الجدول) | 🟢 مكتمل | ✅ employee availability API |
 | Booking Step 3 (التأكيد) | 🟢 مكتمل | ✅ bookings.create API |
 | Booking Step 4 (الدفع) | 🟢 مكتمل | ✅ payments/moyasar + payments/bank-transfer |
 | Bank Transfer | 🟢 مكتمل | ✅ clinic settings + FormData upload |
@@ -458,11 +458,11 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 | Video Call | 🟢 مكتمل | ✅ Zoom link |
 | Settings | 🟢 مكتمل | ✅ language + push toggle |
 | Profile | 🟡 وظيفي | ⚠️ UI كامل لكن أزرار القائمة بدون وظائف (`onPress={() => {}}`) |
-| Practitioner Detail | 🟡 وظيفي | ⚠️ زر "احجز" غير مربوط بالتنقل |
+| Employee Detail | 🟡 وظيفي | ⚠️ زر "احجز" غير مربوط بالتنقل |
 
 ---
 
-### شاشات الممارس (Practitioner)
+### شاشات الممارس (Employee)
 
 | الشاشة | النضج | الترابط بالباكند |
 |--------|-------|----------------|
@@ -471,8 +471,8 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 | Video Call | 🟢 مكتمل | ✅ Zoom link |
 | Calendar | 🟡 وظيفي | ⚠️ "إدارة التوفر" بدون وظيفة |
 | Profile | 🟡 وظيفي | ⚠️ بيانات ثابتة (hardcoded rating "4.8") |
-| Patients List | 🟠 جزئي | ❌ لا يوجد استدعاء API — القائمة فارغة دائماً |
-| Patient Record | 🔴 Stub | ❌ بيانات وهمية ثابتة ("Ahmed Al-Shamri") |
+| Clients List | 🟠 جزئي | ❌ لا يوجد استدعاء API — القائمة فارغة دائماً |
+| Client Record | 🔴 Stub | ❌ بيانات وهمية ثابتة ("Ahmed Al-Shamri") |
 
 ---
 
@@ -494,12 +494,12 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 | | POST | `/bookings/:id/cancel-request` | تفاصيل موعد المريض |
 | | POST | `/bookings/:id/complete` | تفاصيل موعد الممارس |
 | | POST | `/bookings/:id/start` | تفاصيل موعد الممارس |
-| | POST | `/bookings/:id/practitioner-cancel` | تفاصيل موعد الممارس |
+| | POST | `/bookings/:id/employee-cancel` | تفاصيل موعد الممارس |
 | | GET | `/bookings/today` | لوحة اليوم للممارس |
-| **Practitioners** | GET | `/practitioners` | الرئيسية (المميزين) |
-| | GET | `/practitioners/:id` | تفاصيل الممارس |
-| | GET | `/practitioners/:id/availability` | جدولة الحجز |
-| | GET | `/practitioners/:id/ratings` | تفاصيل الممارس |
+| **Employees** | GET | `/employees` | الرئيسية (المميزين) |
+| | GET | `/employees/:id` | تفاصيل الممارس |
+| | GET | `/employees/:id/availability` | جدولة الحجز |
+| | GET | `/employees/:id/ratings` | تفاصيل الممارس |
 | **Payments** | POST | `/payments/moyasar` | شاشة الدفع |
 | | POST | `/payments/bank-transfer` | التحويل البنكي (multipart) |
 | **Specialties** | GET | `/specialties` | الشاشة الرئيسية |
@@ -541,7 +541,7 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
                     └──────┬──────────┬───────────┬───────────┘
                            │          │           │
                     ┌──────▼──┐ ┌─────▼────┐ ┌───▼──────────┐
-                    │  AUTH   │ │ PATIENTS │ │ PRACTITIONERS│
+                    │  AUTH   │ │ CLIENTS │ │ EMPLOYEES│
                     │ (12 EP) │ │ (8 EP)   │ │ (22 EP)      │
                     └──┬──┬──┘ └──────────┘ └──┬───────────┘
                        │  │                     │
@@ -578,13 +578,13 @@ Phase 5 (✅) ──► Phase 6 (Website) ──► Phase 7 (Mobile + Store)
 ### سلاسل الاعتماديات
 
 ```
-auth ──────────► email, patients, activity-log
+auth ──────────► email, clients, activity-log
 bookings ──────► notifications, zoom (integrations), clinic, activity-log
-chatbot ───────► bookings, services, practitioners (via ports)
+chatbot ───────► bookings, services, employees (via ports)
 payments ──────► invoices, bookings, notifications, activity-log
 invoices ──────► zatca
-practitioners ─► bookings, auth, email
-users ─────────► practitioners (forwardRef), auth, activity-log
+employees ─► bookings, auth, email
+users ─────────► employees (forwardRef), auth, activity-log
 roles ─────────► auth
 tasks ─────────► notifications, bookings, payments, activity-log
 services ──────► intake-forms
@@ -624,7 +624,7 @@ Backend (215 EP) ◄──────────────► Mobile (27 end
 الموبايل يستخدم فقط الـ endpoints الضرورية لتجربة المريض والممارس:
 - Auth: 8 endpoints
 - Bookings: 8 endpoints
-- Practitioners: 4 endpoints
+- Employees: 4 endpoints
 - Payments: 2 endpoints
 - Notifications: 6 endpoints
 - Chatbot: 2 endpoints
@@ -652,7 +652,7 @@ Dashboard ◄─── shared/ ───► Mobile
 | النموذج | الحقول | الوصف |
 |---------|--------|-------|
 | **User** | 41 | الكيان المركزي؛ قابل للحذف الناعم |
-| **PatientProfile** | 12 | 1:1 مع User (معلومات طبية) |
+| **ClientProfile** | 12 | 1:1 مع User (معلومات طبية) |
 | **OtpCode** | 8 | رموز OTP مع فهرس مركب |
 | **RefreshToken** | 6 | رموز التجديد مع فهارس |
 | **Role** | 10 | أدوار النظام + مخصصة |
@@ -665,14 +665,14 @@ Dashboard ◄─── shared/ ───► Mobile
 | النموذج | الحقول | الوصف |
 |---------|--------|-------|
 | **Specialty** | 9 | التخصصات الطبية (AR/EN) |
-| **Practitioner** | 29 | تقييم/عدد مراجعات مخزنة مؤقتاً |
-| **PractitionerAvailability** | 10 | متعدد الفروع، dayOfWeek 0-6 |
-| **PractitionerVacation** | 6 | إجازات بنطاق تاريخ |
-| **PractitionerBreak** | 7 | استراحات خلال اليوم |
+| **Employee** | 29 | تقييم/عدد مراجعات مخزنة مؤقتاً |
+| **EmployeeAvailability** | 10 | متعدد الفروع، dayOfWeek 0-6 |
+| **EmployeeVacation** | 6 | إجازات بنطاق تاريخ |
+| **EmployeeBreak** | 7 | استراحات خلال اليوم |
 | **ClinicWorkingHours** | 6 | فريد `[dayOfWeek, branchId]` |
 | **ClinicHoliday** | 5 | يدعم العطل المتكررة |
 | **Branch** | 17 | متعدد الفروع؛ قابل للحذف الناعم |
-| **PractitionerBranch** | 7 | جدول ربط: Practitioner ↔ Branch |
+| **EmployeeBranch** | 7 | جدول ربط: Employee ↔ Branch |
 
 #### bookings.prisma (8 نماذج)
 
@@ -681,7 +681,7 @@ Dashboard ◄─── shared/ ───► Mobile
 | **Booking** | 45 | 12 فهرس أداء؛ سلسلة إعادة جدولة ذاتية |
 | **BookingSettings** | 31 | نمط تجاوز متعدد الفروع |
 | **WaitlistEntry** | 13 | قائمة انتظار لكل ممارس/خدمة |
-| **FavoritePractitioner** | 6 | فريد `[patientId, practitionerId]` |
+| **FavoriteEmployee** | 6 | فريد `[clientId, employeeId]` |
 | **BookingStatusLog** | 8 | سجل تدقيق كامل لتحولات الحالة |
 | **IntakeForm** | 15 | محدد النطاق (خدمة/ممارس/فرع) |
 | **IntakeField** | 9 | خيارات/شروط JSON للنماذج الديناميكية |
@@ -696,9 +696,9 @@ Dashboard ◄─── shared/ ───► Mobile
 | **ServiceBranch** | 6 | جدول ربط: Service ↔ Branch |
 | **ServiceBookingType** | 8 | تسعير حسب نوع الحجز |
 | **ServiceDurationOption** | 10 | خيارات تسعير حسب المدة |
-| **PractitionerService** | 12 | ربط ممارس بخدمة مع تجاوزات |
-| **PractitionerServiceType** | 10 | تسعير نوع الحجز لكل ممارس |
-| **PractitionerDurationOption** | 8 | أدق مستوى تسعير |
+| **EmployeeService** | 12 | ربط ممارس بخدمة مع تجاوزات |
+| **EmployeeServiceType** | 10 | تسعير نوع الحجز لكل ممارس |
+| **EmployeeDurationOption** | 8 | أدق مستوى تسعير |
 
 #### payments.prisma (9 نماذج)
 
@@ -750,8 +750,8 @@ User (المحور المركزي)
   ├── 1:N → OtpCode
   ├── 1:N → RefreshToken
   ├── 1:N → UserRole → Role → RolePermission → Permission
-  ├── 1:1 → Practitioner
-  ├── 1:1 → PatientProfile
+  ├── 1:1 → Employee
+  ├── 1:1 → ClientProfile
   ├── 1:N → Booking (كمريض)
   ├── 1:N → Rating (كمريض)
   ├── 1:N → ProblemReport (كمريض ومُحلّ)
@@ -762,32 +762,32 @@ User (المحور المركزي)
   ├── 1:N → ActivityLog
   ├── 1:N → KnowledgeBaseFile
   ├── 1:N → WaitlistEntry
-  ├── 1:N → FavoritePractitioner
+  ├── 1:N → FavoriteEmployee
   ├── 1:N → CouponRedemption
   └── 1:N → GiftCard (كمشتري ومستخدم)
 
-Practitioner
+Employee
   ├── 1:1 ← User
   ├── N:1 → Specialty
-  ├── 1:N → PractitionerAvailability → Branch?
-  ├── 1:N → PractitionerVacation
-  ├── 1:N → PractitionerBreak
-  ├── 1:N → PractitionerService → Service
-  │         ├── 1:N → PractitionerServiceType
-  │         │         └── 1:N → PractitionerDurationOption
+  ├── 1:N → EmployeeAvailability → Branch?
+  ├── 1:N → EmployeeVacation
+  ├── 1:N → EmployeeBreak
+  ├── 1:N → EmployeeService → Service
+  │         ├── 1:N → EmployeeServiceType
+  │         │         └── 1:N → EmployeeDurationOption
   │         └── 1:N → Booking
   ├── 1:N → Booking
   ├── 1:N → Rating
   ├── 1:N → WaitlistEntry
-  ├── 1:N → FavoritePractitioner
-  ├── 1:N → PractitionerBranch → Branch
+  ├── 1:N → FavoriteEmployee
+  ├── 1:N → EmployeeBranch → Branch
   └── 1:N → IntakeForm
 
 Service
   ├── N:1 → ServiceCategory
   ├── 1:N → ServiceBookingType → ServiceDurationOption
   ├── 1:N → ServiceDurationOption
-  ├── 1:N → PractitionerService
+  ├── 1:N → EmployeeService
   ├── 1:N → Booking
   ├── 1:N → WaitlistEntry
   ├── 1:N → IntakeForm
@@ -797,9 +797,9 @@ Service
 Booking (الكيان المعاملاتي المركزي)
   ├── N:1 → User (مريض)
   ├── N:1 → Branch?
-  ├── N:1 → Practitioner
+  ├── N:1 → Employee
   ├── N:1 → Service
-  ├── N:1 → PractitionerService
+  ├── N:1 → EmployeeService
   ├── 1:1 ↔ Booking (سلسلة إعادة جدولة — مرجع ذاتي)
   ├── 1:1 → Payment → BankTransferReceipt
   │                 → Invoice
@@ -810,8 +810,8 @@ Booking (الكيان المعاملاتي المركزي)
   └── 1:N ← WaitlistEntry (تحويل)
 
 Branch
-  ├── 1:N → PractitionerBranch
-  ├── 1:N → PractitionerAvailability
+  ├── 1:N → EmployeeBranch
+  ├── 1:N → EmployeeAvailability
   ├── 1:N → BookingSettings
   ├── 1:N → Booking
   ├── 1:N → IntakeForm
@@ -858,7 +858,7 @@ GiftCard
 | 1 | Mar 21 | إنشاء المخطط الأولي |
 | 2 | Mar 22 | حقول ZATCA للفواتير |
 | 3 | Mar 22 | إعدادات الشات بوت + معالجة ملفات KB |
-| 4 | Mar 22 | نموذج PractitionerService + مبلغ الاسترداد |
+| 4 | Mar 22 | نموذج EmployeeService + مبلغ الاسترداد |
 | 5 | Mar 25 | Init نظيف (موحد) |
 | 6-7 | Mar 26 | سلامة البيانات + فهارس الأداء |
 | 8 | Mar 26 | توحيد الـ Enums |
@@ -896,7 +896,7 @@ GiftCard
 | `booking.ts` | `Booking`, `BookingWithRelations`, `CreateBookingRequest` |
 | `notification.ts` | `Notification` |
 | `payment.ts` | `Payment`, `BankTransferReceipt`, `Invoice` |
-| `practitioner.ts` | `Practitioner`, `PractitionerServicePricing`, `PractitionerWithUser`, `PractitionerAvailability`, `PractitionerVacation` |
+| `employee.ts` | `Employee`, `EmployeeServicePricing`, `EmployeeWithUser`, `EmployeeAvailability`, `EmployeeVacation` |
 | `rating.ts` | `Rating`, `ProblemReport`, `CreateRatingRequest`, `CreateProblemReportRequest` |
 | `service.ts` | `ServiceCategory`, `Service`, `ServiceWithCategory`, `ServiceDurationOption`, `ServiceBookingType` |
 
@@ -906,7 +906,7 @@ GiftCard
 |-------|----------------|
 | `config.ts` | `VAT_RATE` (1500), `VAT_PERCENTAGE` (15), `DEFAULT_PER_PAGE` (20), `ACCESS_TOKEN_EXPIRY` ("15m"), `REFRESH_TOKEN_EXPIRY` ("7d"), `OTP_LENGTH` (6), `MAX_FILE_SIZE` (10MB) |
 | `modules.ts` | `MODULES` (13 وحدة نظام لـ RBAC), `ACTIONS` (view/create/edit/delete) |
-| `roles.ts` | `SYSTEM_ROLES` (super_admin, receptionist, accountant, practitioner, patient) |
+| `roles.ts` | `SYSTEM_ROLES` (super_admin, receptionist, accountant, employee, client) |
 
 ### توكنات التصميم المشتركة
 
@@ -929,12 +929,12 @@ GiftCard
 | # | الفجوة | الموقع | الأولوية |
 |---|--------|--------|---------|
 | 1 | **لا توجد اختبارات في الموبايل** | `mobile/` | 🔴 عالية |
-| 2 | **شاشة سجل المريض (Practitioner) = بيانات وهمية** | `mobile/(practitioner)/patient/[id]` | 🔴 عالية |
-| 3 | **قائمة مرضى الممارس بدون API** | `mobile/(practitioner)/patients` | 🟠 متوسطة |
-| 4 | **Patients module بدون unit tests** | `backend/patients` | 🟡 متوسطة |
-| 5 | **أزرار Profile بدون وظائف** | `mobile/(patient)/profile` | 🟡 متوسطة |
-| 6 | **زر "احجز" في تفاصيل الممارس غير مربوط** | `mobile/(patient)/practitioner/[id]` | 🟡 متوسطة |
-| 7 | **"إدارة التوفر" للممارس غير موجودة** | `mobile/(practitioner)/calendar` | 🟡 متوسطة |
+| 2 | **شاشة سجل المريض (Employee) = بيانات وهمية** | `mobile/(employee)/client/[id]` | 🔴 عالية |
+| 3 | **قائمة مرضى الممارس بدون API** | `mobile/(employee)/clients` | 🟠 متوسطة |
+| 4 | **Clients module بدون unit tests** | `backend/clients` | 🟡 متوسطة |
+| 5 | **أزرار Profile بدون وظائف** | `mobile/(client)/profile` | 🟡 متوسطة |
+| 6 | **زر "احجز" في تفاصيل الممارس غير مربوط** | `mobile/(client)/employee/[id]` | 🟡 متوسطة |
+| 7 | **"إدارة التوفر" للممارس غير موجودة** | `mobile/(employee)/calendar` | 🟡 متوسطة |
 | 8 | **Specialties controller بدون @ApiTags** | `backend/specialties` | 🟢 منخفضة |
 | 9 | **4 service methods معرّفة لكن غير مستخدمة** | `mobile/services/` | 🟢 منخفضة |
 

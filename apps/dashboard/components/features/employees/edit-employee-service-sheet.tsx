@@ -21,48 +21,48 @@ import { Switch } from "@/components/ui/switch"
 import { useLocale } from "@/components/locale-provider"
 import { useServiceBookingTypes } from "@/hooks/use-services"
 import {
-  usePractitionerServiceMutations,
-  usePractitionerServiceTypes,
-} from "@/hooks/use-practitioners"
-import { PractitionerServiceTypesEditor } from "./practitioner-service-types-editor"
-import type { PractitionerService, PractitionerTypeConfigPayload } from "@/lib/types/practitioner"
+  useEmployeeServiceMutations,
+  useEmployeeServiceTypes,
+} from "@/hooks/use-employees"
+import { EmployeeServiceTypesEditor } from "./employee-service-types-editor"
+import type { EmployeeService, EmployeeTypeConfigPayload } from "@/lib/types/employee"
 import {
-  editPractitionerServiceSchema,
-  type EditPractitionerServiceFormData,
-} from "@/lib/schemas/practitioner.schema"
+  editEmployeeServiceSchema,
+  type EditEmployeeServiceFormData,
+} from "@/lib/schemas/employee.schema"
 
 /* ─── Props ─── */
 
-interface EditPractitionerServiceSheetProps {
-  practitionerId: string
-  practitionerService: PractitionerService | null
+interface EditEmployeeServiceSheetProps {
+  employeeId: string
+  employeeService: EmployeeService | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 /* ─── Component ─── */
 
-export function EditPractitionerServiceSheet({
-  practitionerId,
-  practitionerService: ps,
+export function EditEmployeeServiceSheet({
+  employeeId,
+  employeeService: ps,
   open,
   onOpenChange,
-}: EditPractitionerServiceSheetProps) {
+}: EditEmployeeServiceSheetProps) {
   const { locale, t } = useLocale()
-  const { updateMut } = usePractitionerServiceMutations(practitionerId)
+  const { updateMut } = useEmployeeServiceMutations(employeeId)
 
   /* Types state managed outside react-hook-form */
-  const [typeConfigs, setTypeConfigs] = useState<PractitionerTypeConfigPayload[]>([])
+  const [typeConfigs, setTypeConfigs] = useState<EmployeeTypeConfigPayload[]>([])
 
   const serviceId = ps?.serviceId ?? null
   const { data: serviceBookingTypes } = useServiceBookingTypes(serviceId)
-  const { data: existingTypes } = usePractitionerServiceTypes(
-    practitionerId,
+  const { data: existingTypes } = useEmployeeServiceTypes(
+    employeeId,
     serviceId,
   )
 
-  const form = useForm<EditPractitionerServiceFormData>({
-    resolver: zodResolver(editPractitionerServiceSchema),
+  const form = useForm<EditEmployeeServiceFormData>({
+    resolver: zodResolver(editEmployeeServiceSchema),
     defaultValues: {
       bufferMinutes: 0,
       isActive: true,
@@ -78,7 +78,7 @@ export function EditPractitionerServiceSheet({
     })
   }, [ps, open, form])
 
-  /* Populate type configs from existing practitioner service types */
+  /* Populate type configs from existing employee service types */
   useEffect(() => {
     if (!existingTypes || !open) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -124,7 +124,7 @@ export function EditPractitionerServiceSheet({
       : ps.service.nameEn
     : ""
 
-  const onSubmit = form.handleSubmit(async (data: EditPractitionerServiceFormData) => {
+  const onSubmit = form.handleSubmit(async (data: EditEmployeeServiceFormData) => {
     if (!ps) return
     try {
       await updateMut.mutateAsync({
@@ -136,7 +136,7 @@ export function EditPractitionerServiceSheet({
           types: typeConfigs,
         },
       })
-      toast.success(t("practitioners.services.updateSuccess"))
+      toast.success(t("employees.services.updateSuccess"))
       onOpenChange(false)
     } catch (err) {
       toast.error(
@@ -151,19 +151,19 @@ export function EditPractitionerServiceSheet({
         <SheetHeader>
           <SheetTitle>{serviceName}</SheetTitle>
           <SheetDescription>
-            {t("practitioners.services.editDesc")}
+            {t("employees.services.editDesc")}
           </SheetDescription>
         </SheetHeader>
 
         <SheetBody>
           <form
-            id="edit-practitioner-service-form"
+            id="edit-employee-service-form"
             onSubmit={onSubmit}
             className="flex flex-col gap-5"
           >
             {/* Per-type config */}
             {serviceBookingTypes && (
-              <PractitionerServiceTypesEditor
+              <EmployeeServiceTypesEditor
                 serviceBookingTypes={serviceBookingTypes}
                 value={typeConfigs}
                 onChange={setTypeConfigs}
@@ -175,7 +175,7 @@ export function EditPractitionerServiceSheet({
             {/* Buffer */}
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs">
-                {t("practitioners.services.bufferMinutes")}
+                {t("employees.services.bufferMinutes")}
               </Label>
               <Input
                 type="number"
@@ -212,11 +212,11 @@ export function EditPractitionerServiceSheet({
           </Button>
           <Button
             type="submit"
-            form="edit-practitioner-service-form"
+            form="edit-employee-service-form"
             disabled={updateMut.isPending}
           >
             {updateMut.isPending
-              ? t("practitioners.services.saving")
+              ? t("employees.services.saving")
               : t("common.save")}
           </Button>
         </SheetFooter>

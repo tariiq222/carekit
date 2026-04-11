@@ -6,7 +6,7 @@ export type DeliveryMode = "in_person" | "online"
 
 export interface Group {
   id: string
-  practitionerId: string
+  employeeId: string
   nameAr: string
   nameEn: string
   descriptionAr: string | null
@@ -34,14 +34,14 @@ export interface Group {
   createdAt: string
   updatedAt: string
   deletedAt: string | null
-  practitioner?: { id: string; nameAr: string | null }
+  employee?: { id: string; nameAr: string | null }
   enrollments?: GroupEnrollment[]
 }
 
 export interface GroupEnrollment {
   id: string
   groupId: string
-  patientId: string
+  clientId: string
   paymentId: string | null
   status: GroupEnrollmentStatus
   paymentDeadlineAt: string | null
@@ -50,7 +50,7 @@ export interface GroupEnrollment {
   attendedAt: string | null
   createdAt: string
   updatedAt: string
-  patient?: { id: string; firstName: string; lastName: string; phone: string | null }
+  client?: { id: string; firstName: string; lastName: string; phone: string | null }
   payment?: { id: string; status: string } | null
 }
 
@@ -58,7 +58,7 @@ export interface GroupCertificate {
   id: string
   enrollmentId: string
   groupId: string
-  patientId: string
+  clientId: string
   issuedAt: string
 }
 
@@ -66,7 +66,7 @@ export interface GroupListQuery {
   page?: number
   perPage?: number
   search?: string
-  practitionerId?: string
+  employeeId?: string
   status?: GroupStatus
   deliveryMode?: DeliveryMode
   visibility?: "published" | "draft"
@@ -77,7 +77,7 @@ export interface CreateGroupPayload {
   nameEn: string
   descriptionAr?: string
   descriptionEn?: string
-  practitionerId: string
+  employeeId: string
   minParticipants: number
   maxParticipants: number
   pricePerPersonHalalat: number
@@ -99,7 +99,7 @@ export interface CreateGroupPayload {
 export type UpdateGroupPayload = Partial<CreateGroupPayload>
 
 export interface BulkAttendancePayload {
-  attendedPatientIds: string[]
+  attendedClientIds: string[]
 }
 
 export interface ConfirmSchedulePayload {

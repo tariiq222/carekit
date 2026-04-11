@@ -8,7 +8,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { useLocale } from "@/components/locale-provider"
-import type { AvailabilitySlot } from "@/lib/types/practitioner"
+import type { AvailabilitySlot } from "@/lib/types/employee"
 import { DAY_NAMES_EN, DAY_NAMES_AR } from "./schedule-types"
 import type { LocalBreak, LocalVacation } from "./schedule-types"
 import { nextBreakKey } from "./schedule-types"
@@ -94,7 +94,7 @@ export function ScheduleTab({
         {...(vacation.enabled ? { inert: true } : {})}
       >
         <CardHeader>
-          <CardTitle>{t("practitioners.create.scheduleSection")}</CardTitle>
+          <CardTitle>{t("employees.create.scheduleSection")}</CardTitle>
           <CardDescription>
             {vacation.enabled
               ? t("schedule.suspended")
@@ -109,7 +109,7 @@ export function ScheduleTab({
                 slot={slot}
                 dayName={dayNames[index]}
                 dayBreaks={breaksByDay[index]}
-                addBreakLabel={t("practitioners.create.addBreak")}
+                addBreakLabel={t("employees.create.addBreak")}
                 onSlotChange={(field, value) => updateSlot(index, field, value)}
                 onAddBreak={() => addBreak(index)}
                 onRemoveBreak={removeBreak}

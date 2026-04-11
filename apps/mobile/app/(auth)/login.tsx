@@ -25,10 +25,10 @@ import { authService } from '@/services/auth';
 import { getPrimaryRole } from '@/types/auth';
 
 /**
- * Login Screen — unified for patients + practitioners.
+ * Login Screen — unified for clients + employees.
  * No role selection — backend detects role automatically.
  * Two options: password login OR OTP login.
- * Register link = patients only (practitioners added from dashboard).
+ * Register link = clients only (employees added from dashboard).
  */
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -75,10 +75,10 @@ export default function LoginScreen() {
   const navigateByRole = useCallback(
     (user: { roles: Array<{ slug: string }> }) => {
       const role = getPrimaryRole(user as Parameters<typeof getPrimaryRole>[0]);
-      if (role === 'practitioner') {
-        router.replace('/(practitioner)/(tabs)/today');
+      if (role === 'employee') {
+        router.replace('/(employee)/(tabs)/today');
       } else {
-        router.replace('/(patient)/(tabs)/home');
+        router.replace('/(client)/(tabs)/home');
       }
     },
     [router],
@@ -247,7 +247,7 @@ export default function LoginScreen() {
             </ThemedButton>
           </View>
 
-          {/* Register — patients only */}
+          {/* Register — clients only */}
           <View style={styles.bottomRow}>
             <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
               {t('auth.noAccount')}{' '}
@@ -264,14 +264,14 @@ export default function LoginScreen() {
             </Pressable>
           </View>
 
-          {/* Note: practitioners are added from dashboard */}
+          {/* Note: employees are added from dashboard */}
           <ThemedText
             variant="caption"
             color={theme.colors.textMuted}
             align="center"
             style={styles.note}
           >
-            {t('auth.practitionerNote')}
+            {t('auth.employeeNote')}
           </ThemedText>
         </ScrollView>
       </KeyboardAvoidingView>

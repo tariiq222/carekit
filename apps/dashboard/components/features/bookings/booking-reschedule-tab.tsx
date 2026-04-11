@@ -43,7 +43,7 @@ export function BookingRescheduleTab({ booking, onSuccess }: BookingRescheduleTa
   useBookingEditDateReset(form, watchedDate, booking.date)
 
   const { slots, slotsLoading, canFetchSlots } = useCreateBookingSlots({
-    practitionerId:   booking.practitionerId,
+    employeeId:   booking.employeeId,
     serviceId:        booking.serviceId,
     bookingType:      booking.type,
     date:             watchedDate,

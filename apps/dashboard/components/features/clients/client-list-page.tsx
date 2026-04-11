@@ -22,7 +22,7 @@ import { ErrorBanner } from "@/components/features/error-banner"
 import { StatCard } from "@/components/features/stat-card"
 import { StatsGrid } from "@/components/features/stats-grid"
 import { FilterBar } from "@/components/features/filter-bar"
-import { getPatientColumns } from "@/components/features/patients/patient-columns"
+import { getClientColumns } from "@/components/features/clients/client-columns"
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription,
@@ -36,43 +36,43 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
-import { usePatients, usePatientMutations, usePatientListStats } from "@/hooks/use-patients"
+import { useClients, useClientMutations, useClientListStats } from "@/hooks/use-clients"
 import { useLocale } from "@/components/locale-provider"
-import { exportPatientsCsv, exportPatientsExcel } from "@/lib/api/reports"
-import type { Patient } from "@/lib/types/patient"
+import { exportClientsCsv, exportClientsExcel } from "@/lib/api/reports"
+import type { Client } from "@/lib/types/client"
 
-export function PatientListPage() {
+export function ClientListPage() {
   const router = useRouter()
   const { t, locale } = useLocale()
-  const { patients, meta, isLoading, error, search, setSearch, isActive, setIsActive, resetSearch } = usePatients()
-  const { activateMut, deactivateMut } = usePatientMutations()
-  const { data: listStats, isLoading: statsLoading } = usePatientListStats()
+  const { clients, meta, isLoading, error, search, setSearch, isActive, setIsActive, resetSearch } = useClients()
+  const { activateMut, deactivateMut } = useClientMutations()
+  const { data: listStats, isLoading: statsLoading } = useClientListStats()
 
-  const [confirmPatient, setConfirmPatient] = useState<Patient | null>(null)
+  const [confirmClient, setConfirmClient] = useState<Client | null>(null)
 
   const hasFilters = isActive !== undefined || search.length > 0
 
   const handleConfirmToggle = () => {
-    if (!confirmPatient) return
-    if (confirmPatient.isActive) {
-      deactivateMut.mutate(confirmPatient.id, {
-        onSuccess: () => toast.success(t("patients.deactivated")),
-        onError: (err) => toast.error(err instanceof Error ? err.message : t("patients.deactivateError")),
+    if (!confirmClient) return
+    if (confirmClient.isActive) {
+      deactivateMut.mutate(confirmClient.id, {
+        onSuccess: () => toast.success(t("clients.deactivated")),
+        onError: (err) => toast.error(err instanceof Error ? err.message : t("clients.deactivateError")),
       })
     } else {
-      activateMut.mutate(confirmPatient.id, {
-        onSuccess: () => toast.success(t("patients.activated")),
-        onError: (err) => toast.error(err instanceof Error ? err.message : t("patients.activateError")),
+      activateMut.mutate(confirmClient.id, {
+        onSuccess: () => toast.success(t("clients.activated")),
+        onError: (err) => toast.error(err instanceof Error ? err.message : t("clients.activateError")),
       })
     }
-    setConfirmPatient(null)
+    setConfirmClient(null)
   }
 
-  const columns = getPatientColumns({
-    onRowClick: (p) => router.push(`/patients/${p.id}`),
-    onViewClick: (p) => router.push(`/patients/${p.id}`),
-    onEditClick: (p) => router.push(`/patients/${p.id}/edit`),
-    onToggleActive: setConfirmPatient,
+  const columns = getClientColumns({
+    onRowClick: (p) => router.push(`/clients/${p.id}`),
+    onViewClick: (p) => router.push(`/clients/${p.id}`),
+    onEditClick: (p) => router.push(`/clients/${p.id}/edit`),
+    onToggleActive: setConfirmClient,
     t,
     locale,
   })
@@ -82,30 +82,30 @@ export function PatientListPage() {
       <Breadcrumbs />
 
       <PageHeader
-        title={t("patients.title")}
-        description={t("patients.description")}
+        title={t("clients.title")}
+        description={t("clients.description")}
       >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-2 rounded-full px-5">
               <HugeiconsIcon icon={Download04Icon} size={16} />
-              {t("patients.export")}
+              {t("clients.export")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={exportPatientsCsv}>
+            <DropdownMenuItem onClick={exportClientsCsv}>
               <HugeiconsIcon icon={Download04Icon} size={16} className="me-2 text-muted-foreground" />
-              {t("patients.exportCsv")}
+              {t("clients.exportCsv")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={exportPatientsExcel}>
+            <DropdownMenuItem onClick={exportClientsExcel}>
               <HugeiconsIcon icon={GridIcon} size={16} className="me-2 text-muted-foreground" />
-              {t("patients.exportExcel")}
+              {t("clients.exportExcel")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/patients/create")}>
+        <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/clients/create")}>
           <HugeiconsIcon icon={Add01Icon} size={16} />
-          {t("patients.addPatient")}
+          {t("clients.addClient")}
         </Button>
       </PageHeader>
 
@@ -121,30 +121,30 @@ export function PatientListPage() {
       ) : (
         <StatsGrid>
           <StatCard
-            title={t("patients.stats.total")}
+            title={t("clients.stats.total")}
             value={listStats?.total ?? 0}
-            description={t("patients.stats.allPatients")}
+            description={t("clients.stats.allClients")}
             icon={UserMultiple02Icon}
             iconColor="primary"
           />
           <StatCard
-            title={t("patients.stats.active")}
+            title={t("clients.stats.active")}
             value={listStats?.active ?? 0}
-            description={t("patients.stats.activeDesc")}
+            description={t("clients.stats.activeDesc")}
             icon={UserCheck01Icon}
             iconColor="success"
           />
           <StatCard
-            title={t("patients.stats.inactive")}
+            title={t("clients.stats.inactive")}
             value={listStats?.inactive ?? 0}
-            description={t("patients.stats.inactiveDesc")}
+            description={t("clients.stats.inactiveDesc")}
             icon={UserBlock01Icon}
             iconColor="warning"
           />
           <StatCard
-            title={t("patients.stats.newThisMonth")}
+            title={t("clients.stats.newThisMonth")}
             value={listStats?.newThisMonth ?? 0}
-            description={t("patients.stats.newDesc")}
+            description={t("clients.stats.newDesc")}
             icon={UserAdd01Icon}
             iconColor="accent"
           />
@@ -153,19 +153,19 @@ export function PatientListPage() {
 
       {/* Filter bar */}
       <FilterBar
-        search={{ value: search, onChange: setSearch, placeholder: t("patients.searchPlaceholder") }}
+        search={{ value: search, onChange: setSearch, placeholder: t("clients.searchPlaceholder") }}
         hasFilters={hasFilters}
         onReset={() => { resetSearch(); setIsActive(undefined) }}
-        resultCount={meta && !isLoading ? `${meta.total} ${t("patients.stats.total")}` : undefined}
+        resultCount={meta && !isLoading ? `${meta.total} ${t("clients.stats.total")}` : undefined}
         selects={[
           {
             key: "status",
             value: isActive === undefined ? "all" : isActive ? "active" : "inactive",
-            placeholder: t("patients.filter.allStatuses"),
+            placeholder: t("clients.filter.allStatuses"),
             options: [
-              { value: "all", label: t("patients.filter.allStatuses") },
-              { value: "active", label: t("patients.status.active") },
-              { value: "inactive", label: t("patients.status.inactive") },
+              { value: "all", label: t("clients.filter.allStatuses") },
+              { value: "active", label: t("clients.status.active") },
+              { value: "inactive", label: t("clients.status.inactive") },
             ],
             onValueChange: (v) => setIsActive(v === "all" ? undefined : v === "active"),
           },
@@ -173,7 +173,7 @@ export function PatientListPage() {
       />
 
       {/* Table */}
-      {isLoading && patients.length === 0 ? (
+      {isLoading && clients.length === 0 ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-12 rounded-lg" />
@@ -182,30 +182,30 @@ export function PatientListPage() {
       ) : (
         <DataTable
           columns={columns}
-          data={patients}
-          emptyTitle={t("patients.empty.title")}
-          emptyDescription={t("patients.empty.description")}
-          emptyAction={{ label: t("patients.addPatient"), onClick: () => router.push("/patients/create") }}
+          data={clients}
+          emptyTitle={t("clients.empty.title")}
+          emptyDescription={t("clients.empty.description")}
+          emptyAction={{ label: t("clients.addClient"), onClick: () => router.push("/clients/create") }}
         />
       )}
 
-      <AlertDialog open={!!confirmPatient} onOpenChange={(o) => !o && setConfirmPatient(null)}>
+      <AlertDialog open={!!confirmClient} onOpenChange={(o) => !o && setConfirmClient(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmPatient?.isActive ? t("patients.confirm.deactivateTitle") : t("patients.confirm.activateTitle")}
+              {confirmClient?.isActive ? t("clients.confirm.deactivateTitle") : t("clients.confirm.activateTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmPatient?.isActive ? t("patients.confirm.deactivateDesc") : t("patients.confirm.activateDesc")}
+              {confirmClient?.isActive ? t("clients.confirm.deactivateDesc") : t("clients.confirm.activateDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmToggle}
-              className={confirmPatient?.isActive ? "bg-destructive hover:bg-destructive/90" : ""}
+              className={confirmClient?.isActive ? "bg-destructive hover:bg-destructive/90" : ""}
             >
-              {confirmPatient?.isActive ? t("patients.actions.deactivate") : t("patients.actions.activate")}
+              {confirmClient?.isActive ? t("clients.actions.deactivate") : t("clients.actions.activate")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

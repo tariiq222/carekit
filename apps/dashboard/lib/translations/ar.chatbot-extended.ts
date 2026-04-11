@@ -39,7 +39,7 @@ export const arChatbotExtended: Record<string, string> = {
 
   // ─── تسميات الأدوار ───
   "chatbot.role.user": "المستفيد",
-  "chatbot.role.patient": "المستفيد",
+  "chatbot.role.client": "المستفيد",
   "chatbot.role.assistant": "الذكاء الاصطناعي",
   "chatbot.role.bot": "الذكاء الاصطناعي",
   "chatbot.role.system": "النظام",
@@ -78,7 +78,7 @@ export const arChatbotExtended: Record<string, string> = {
   "intakeForms.updateError": "فشل التحديث",
 
   // ─── التقارير — اختيار الممارس ───
-  "reports.selectPractitioner": "اختر ممارساً",
-  "reports.searchPractitioner": "ابحث عن ممارس...",
-  "reports.noPractitionerFound": "لم يُعثر على ممارس",
+  "reports.selectEmployee": "اختر ممارساً",
+  "reports.searchEmployee": "ابحث عن ممارس...",
+  "reports.noEmployeeFound": "لم يُعثر على ممارس",
 }

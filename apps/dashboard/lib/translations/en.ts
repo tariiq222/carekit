@@ -8,8 +8,8 @@
 import { enNav } from "./en.nav"
 import { enDashboard } from "./en.dashboard"
 import { enBookings } from "./en.bookings"
-import { enPatients } from "./en.patients"
-import { enPractitioners } from "./en.practitioners"
+import { enClients } from "./en.clients"
+import { enEmployees } from "./en.employees"
 import { enServices } from "./en.services"
 import { enFinance } from "./en.finance"
 import { enUsers } from "./en.users"
@@ -25,8 +25,8 @@ export const en: Record<string, string> = {
   ...enNav,
   ...enDashboard,
   ...enBookings,
-  ...enPatients,
-  ...enPractitioners,
+  ...enClients,
+  ...enEmployees,
   ...enServices,
   ...enFinance,
   ...enUsers,

@@ -1,7 +1,7 @@
 export interface FeatureFlags {
   bookings: boolean
-  patients: boolean
-  practitioners: boolean
+  clients: boolean
+  employees: boolean
   services: boolean
   branches: boolean
   reports: boolean
@@ -25,8 +25,8 @@ export interface FeatureFlags {
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   bookings: true,
-  patients: true,
-  practitioners: true,
+  clients: true,
+  employees: true,
   services: true,
   branches: true,
   reports: true,

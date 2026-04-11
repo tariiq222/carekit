@@ -1,9 +1,9 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import { PatientDetailPage } from "@/components/features/patients/patient-detail-page"
+import { ClientDetailPage } from "@/components/features/clients/client-detail-page"
 
-export default function PatientDetailRoute() {
+export default function ClientDetailRoute() {
   const { id } = useParams<{ id: string }>()
-  return <PatientDetailPage patientId={id} />
+  return <ClientDetailPage clientId={id} />
 }

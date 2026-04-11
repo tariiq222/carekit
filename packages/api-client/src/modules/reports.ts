@@ -35,6 +35,6 @@ export async function exportBookings(params: ReportDateParams = {}): Promise<Blo
   )
 }
 
-export async function exportPatients(): Promise<Blob> {
-  return apiRequest<Blob>('/reports/patients/export')
+export async function exportClients(): Promise<Blob> {
+  return apiRequest<Blob>('/reports/clients/export')
 }

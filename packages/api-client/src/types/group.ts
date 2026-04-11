@@ -10,7 +10,7 @@ export interface GroupListItem {
   startDate: string
   endDate?: string
   service: { id: string; nameAr: string }
-  practitioner: { id: string; user: { firstName: string; lastName: string } }
+  employee: { id: string; user: { firstName: string; lastName: string } }
   createdAt: string
 }
 

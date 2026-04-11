@@ -18,9 +18,9 @@ const makeCtx = (user: object | undefined, permissions: RequiredPermission[]) =>
 
 describe('buildAbilityFor', () => {
   it('grants declared permissions', () => {
-    const ability = buildAbilityFor({ permissions: [{ action: 'read', subject: 'Patient' }] });
-    expect(ability.can('read', 'Patient')).toBe(true);
-    expect(ability.can('delete', 'Patient')).toBe(false);
+    const ability = buildAbilityFor({ permissions: [{ action: 'read', subject: 'Client' }] });
+    expect(ability.can('read', 'Client')).toBe(true);
+    expect(ability.can('delete', 'Client')).toBe(false);
   });
 
   it('grants manage as wildcard', () => {

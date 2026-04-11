@@ -139,7 +139,7 @@ grep -r "setState.*fetch\|fetch.*setState" components/ --include="*.tsx"
 ### Phase 3 — Contract Unification (2026-03-26)
 - ✅ إنشاء `lib/types/intake-form-shared.ts` كمصدر واحد للـ enums
 - ✅ توحيد `BookingStatus` بين `booking.ts` و `ds.ts`
-- ✅ cascade updates على `status-badge.tsx`, `booking-actions.tsx`, `practitioner-bookings-chart.tsx`
+- ✅ cascade updates على `status-badge.tsx`, `booking-actions.tsx`, `employee-bookings-chart.tsx`
 
 ### Phase 4 — Separation of Concerns (2026-03-26)
 - ✅ إنشاء `hooks/use-clinic-settings.ts` (7 hooks)
@@ -153,7 +153,7 @@ grep -r "setState.*fetch\|fetch.*setState" components/ --include="*.tsx"
 - ✅ ESLint architectural boundary rules (19 features)
 
 ### Phase 6 — Performance (2026-03-26)
-- ✅ `useMemo` على computed values في `use-practitioners.ts`, `use-patients.ts`
+- ✅ `useMemo` على computed values في `use-employees.ts`, `use-clients.ts`
 - ✅ `staleTime` على semi-static queries (categories, clinic settings, email templates, zatca)
 - ✅ `staleTime` على list queries (5 min) وdetail queries (10 min)
 - ✅ استبدال raw `<select>` و `<input type="checkbox">` بـ shadcn في `form-preview-dialog.tsx`

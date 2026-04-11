@@ -27,7 +27,7 @@ export function getBranchColumns(
   onEdit?: (b: Branch) => void,
   onDelete?: (b: Branch) => void,
   t?: TFn,
-  onManagePractitioners?: (b: Branch) => void,
+  onManageEmployees?: (b: Branch) => void,
 ): ColumnDef<Branch>[] {
   const label = (key: string, fallback: string) => t?.(key) ?? fallback
 
@@ -120,9 +120,9 @@ export function getBranchColumns(
               <TooltipContent side="top">{label("common.actions", "Actions")}</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="end" className="glass-solid">
-              <DropdownMenuItem onClick={() => onManagePractitioners?.(b)}>
+              <DropdownMenuItem onClick={() => onManageEmployees?.(b)}>
                 <HugeiconsIcon icon={UserGroupIcon} size={14} />
-                {label("branches.action.practitioners", "Practitioners")}
+                {label("branches.action.employees", "Employees")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit?.(b)}>
                 <HugeiconsIcon icon={PencilEdit01Icon} size={14} />

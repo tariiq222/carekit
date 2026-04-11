@@ -12,64 +12,64 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { usePractitionerMutations } from "@/hooks/use-practitioners"
+import { useEmployeeMutations } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
-import type { Practitioner } from "@/lib/types/practitioner"
+import type { Employee } from "@/lib/types/employee"
 
 /* ─── Props ─── */
 
-interface DeletePractitionerDialogProps {
-  practitioner: Practitioner | null
+interface DeleteEmployeeDialogProps {
+  employee: Employee | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 /* ─── Component ─── */
 
-export function DeletePractitionerDialog({
-  practitioner,
+export function DeleteEmployeeDialog({
+  employee,
   open,
   onOpenChange,
-}: DeletePractitionerDialogProps) {
-  const { deleteMutation } = usePractitionerMutations()
+}: DeleteEmployeeDialogProps) {
+  const { deleteMutation } = useEmployeeMutations()
   const { t } = useLocale()
 
   const handleDelete = async () => {
-    if (!practitioner) return
+    if (!employee) return
     try {
-      await deleteMutation.mutateAsync(practitioner.id)
-      toast.success(t("practitioners.delete.success"))
+      await deleteMutation.mutateAsync(employee.id)
+      toast.success(t("employees.delete.success"))
       onOpenChange(false)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("practitioners.delete.error"))
+      toast.error(err instanceof Error ? err.message : t("employees.delete.error"))
     }
   }
 
-  const name = practitioner
-    ? `${practitioner.user.firstName} ${practitioner.user.lastName}`
+  const name = employee
+    ? `${employee.user.firstName} ${employee.user.lastName}`
     : ""
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t("practitioners.delete.title")}</AlertDialogTitle>
+          <AlertDialogTitle>{t("employees.delete.title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t("practitioners.delete.descriptionPrefix")}{" "}
+            {t("employees.delete.descriptionPrefix")}{" "}
             <strong>{name}</strong>
-            {t("practitioners.delete.descriptionSuffix")}
+            {t("employees.delete.descriptionSuffix")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={deleteMutation.isPending}>
-            {t("practitioners.delete.cancel")}
+            {t("employees.delete.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={deleteMutation.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {deleteMutation.isPending ? t("practitioners.delete.submitting") : t("practitioners.delete.submit")}
+            {deleteMutation.isPending ? t("employees.delete.submitting") : t("employees.delete.submit")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

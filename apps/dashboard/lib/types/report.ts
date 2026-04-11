@@ -10,7 +10,7 @@ export interface ReportDateQuery {
 }
 
 export interface RevenueReportQuery extends ReportDateQuery {
-  practitionerId?: string
+  employeeId?: string
 }
 
 /* ─── Response ─── */
@@ -30,8 +30,8 @@ export interface BookingReport {
   byDay: { date: string; count: number }[]
 }
 
-export interface PractitionerReport {
-  practitionerId: string
+export interface EmployeeReport {
+  employeeId: string
   totalBookings: number
   completedBookings: number
   totalRevenue: number

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { fetchPractitioners } from "@/lib/api/practitioners"
+import { fetchEmployees } from "@/lib/api/employees"
 import { fetchServices } from "@/lib/api/services"
 import { fetchBranches } from "@/lib/api/branches"
 import { useRouter } from "next/navigation"
@@ -73,10 +73,10 @@ export function IntakeFormPage({ mode, initialDraft, onSave, isSaving, isLoading
 
   /* ─── Scope Options — real API data ─── */
 
-  const { data: practitionersData } = useQuery({
-    queryKey: ["practitioners", "scope-select"],
-    queryFn: () => fetchPractitioners({ page: 1, perPage: 100 }),
-    enabled: draft.scope === "practitioner",
+  const { data: employeesData } = useQuery({
+    queryKey: ["employees", "scope-select"],
+    queryFn: () => fetchEmployees({ page: 1, perPage: 100 }),
+    enabled: draft.scope === "employee",
   })
 
   const { data: servicesData } = useQuery({
@@ -123,8 +123,8 @@ export function IntakeFormPage({ mode, initialDraft, onSave, isSaving, isLoading
   }
 
   const scopeOptions = useMemo(() => {
-    if (draft.scope === "practitioner") {
-      return (practitionersData?.items ?? []).map((p) => ({
+    if (draft.scope === "employee") {
+      return (employeesData?.items ?? []).map((p) => ({
         value: p.id,
         label: `${p.user.firstName} ${p.user.lastName}`,
       }))
@@ -142,7 +142,7 @@ export function IntakeFormPage({ mode, initialDraft, onSave, isSaving, isLoading
       }))
     }
     return []
-  }, [draft.scope, practitionersData, servicesData, branchesData, isAr, isMultiBranch])
+  }, [draft.scope, employeesData, servicesData, branchesData, isAr, isMultiBranch])
 
   const isEdit = mode === "edit"
 
@@ -175,8 +175,8 @@ export function IntakeFormPage({ mode, initialDraft, onSave, isSaving, isLoading
             draft={draft}
             scopeOptions={scopeOptions}
             availableScopes={isMultiBranch
-              ? ["global", "service", "practitioner", "branch"]
-              : ["global", "service", "practitioner"]
+              ? ["global", "service", "employee", "branch"]
+              : ["global", "service", "employee"]
             }
             onUpdate={update}
             onScopeChange={handleScopeChange}

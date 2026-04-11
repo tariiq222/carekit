@@ -28,7 +28,7 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
   const { locale } = useLocale()
 
   const todayBookings = stats?.total ?? 0
-  const newPatients = stats?.confirmed ?? 0
+  const newClients = stats?.confirmed ?? 0
   const pendingCount = stats?.pending ?? 0
 
   return (
@@ -40,8 +40,8 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
         iconColor="primary"
       />
       <StatCard
-        title={locale === "ar" ? "مرضى جدد" : "New Patients"}
-        value={newPatients}
+        title={locale === "ar" ? "مرضى جدد" : "New Clients"}
+        value={newClients}
         icon={UserMultiple02Icon}
         iconColor="success"
       />

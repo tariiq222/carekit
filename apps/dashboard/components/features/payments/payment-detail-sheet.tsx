@@ -113,12 +113,12 @@ function PaymentDetailBody({
   const { formatDate } = useClinicConfig()
   const { locale, t } = useLocale()
 
-  const patientName = payment.booking?.patient
-    ? `${payment.booking.patient.firstName} ${payment.booking.patient.lastName}`
+  const clientName = payment.booking?.client
+    ? `${payment.booking.client.firstName} ${payment.booking.client.lastName}`
     : "\u2014"
 
-  const practitionerName = payment.booking?.practitioner?.user
-    ? `${payment.booking.practitioner.user.firstName} ${payment.booking.practitioner.user.lastName}`
+  const employeeName = payment.booking?.employee?.user
+    ? `${payment.booking.employee.user.firstName} ${payment.booking.employee.user.lastName}`
     : "\u2014"
 
   return (
@@ -155,8 +155,8 @@ function PaymentDetailBody({
 
           {/* Booking */}
           <DetailSection title={t("nav.bookings")}>
-            <DetailRow label={t("detail.patient")} value={patientName} />
-            <DetailRow label={t("detail.practitioner")} value={practitionerName} />
+            <DetailRow label={t("detail.client")} value={clientName} />
+            <DetailRow label={t("detail.employee")} value={employeeName} />
             <DetailRow
               label={t("detail.service")}
               value={payment.booking?.service?.nameEn ?? "\u2014"}

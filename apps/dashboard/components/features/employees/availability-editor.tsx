@@ -20,10 +20,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import {
-  usePractitionerAvailability,
+  useEmployeeAvailability,
   useSetAvailability,
-} from "@/hooks/use-practitioners"
-import type { AvailabilitySlot } from "@/lib/types/practitioner"
+} from "@/hooks/use-employees"
+import type { AvailabilitySlot } from "@/lib/types/employee"
 
 /* ─── Constants ─── */
 
@@ -62,7 +62,7 @@ type FormData = z.infer<typeof scheduleSchema>
 /* ─── Props ─── */
 
 interface AvailabilityEditorProps {
-  practitionerId: string
+  employeeId: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -70,11 +70,11 @@ interface AvailabilityEditorProps {
 /* ─── Component ─── */
 
 export function AvailabilityEditor({
-  practitionerId,
+  employeeId,
   open,
   onOpenChange,
 }: AvailabilityEditorProps) {
-  const { data: slots } = usePractitionerAvailability(practitionerId)
+  const { data: slots } = useEmployeeAvailability(employeeId)
   const setAvailability = useSetAvailability()
 
   const form = useForm<FormData>({
@@ -101,7 +101,7 @@ export function AvailabilityEditor({
     try {
       const activeSlots = data.schedule.filter((s) => s.isActive)
       await setAvailability.mutateAsync({
-        id: practitionerId,
+        id: employeeId,
         schedule: activeSlots,
       })
       toast.success("Schedule updated successfully")

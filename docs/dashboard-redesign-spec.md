@@ -11,8 +11,8 @@
 | 1 | **Authentication** | Login | ✅ موجود |
 | 2 | **Dashboard Overview** | لوحة التحكم | 🔄 إعادة تصميم |
 | 3 | **Bookings** | الحجوزات, تفاصيل الحجز, إنشاء/تعديل | 📋 مخطط |
-| 4 | **Patients** | قائمة المرضى, تفاصيل المريض, إنشاء | 📋 مخطط |
-| 5 | **Practitioners** | قائمة الممارسين, الجدول, الإعدادات | 📋 مخطط |
+| 4 | **Clients** | قائمة المرضى, تفاصيل المريض, إنشاء | 📋 مخطط |
+| 5 | **Employees** | قائمة الممارسين, الجدول, الإعدادات | 📋 مخطط |
 | 6 | **Services** | الخدمات, الفئات, التسعير | 📋 مخطط |
 | 7 | **Payments** | المدفوعات, الفواتير, الاسترداد | 📋 مخطط |
 | 8 | **Reports** | التقارير, الإحصائيات, التصدير | 📋 مخطط |
@@ -78,7 +78,7 @@ States: idle | loading | error
 |--------|---------|------|
 | GET | `/api/v1/dashboard/stats` | إحصائيات عامة |
 | GET | `/api/v1/bookings?date=today&limit=10` | آخر الحجوزات |
-| GET | `/api/v1/patients?limit=5&sort=createdAt` | آخر المرضى |
+| GET | `/api/v1/clients?limit=5&sort=createdAt` | آخر المرضى |
 
 #### Response: Dashboard Stats
 ```typescript
@@ -93,14 +93,14 @@ States: idle | loading | error
       cancelledBookings: number,
       noShowBookings: number,
       totalRevenue: number,        // halalat
-      totalPatients: number,
+      totalClients: number,
     },
     weekStats: {
       bookingsChange: number,        // percentage
       revenueChange: number,
     },
     upcomingAppointments: BookingWithRelations[],
-    recentPatients: Patient[],
+    recentClients: Client[],
     popularServices: { service: Service, count: number }[],
   }
 }
@@ -118,7 +118,7 @@ States: idle | loading | error
 │             │                                                  │
 │             │  Stats Grid (4 columns)                         │
 │             │  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐     │
-│             │  │Today's│ │Revenue│ │Pending│ │Patients│     │
+│             │  │Today's│ │Revenue│ │Pending│ │Clients│     │
 │             │  │ Bookings│ │ Today │ │Count  │ │ Today │     │
 │             │  └───────┘ └───────┘ └───────┘ └───────┘     │
 │             │                                                  │
@@ -129,7 +129,7 @@ States: idle | loading | error
 │             │  │ (list)        │ │           │            │
 │             │  └────────────────┘ └────────────┘            │
 │             │                                                  │
-│             │  Recent Patients Table                         │
+│             │  Recent Clients Table                         │
 │             │  ┌─────────────────────────────────────────┐  │
 │             │  │ Name | ID | Phone | Date | Actions      │  │
 │             │  └─────────────────────────────────────────┘  │
@@ -150,7 +150,7 @@ States: idle | loading | error
 | `DashboardStats` | StatsGrid with 4 StatCards |
 | `RecentAppointments` | List of today's appointments |
 | `QuickStats` | Side panel with quick metrics |
-| `RecentPatients` | Table of recently registered patients |
+| `RecentClients` | Table of recently registered clients |
 
 ---
 
@@ -180,12 +180,12 @@ GET /api/v1/bookings?
   limit=20
   status=pending,confirmed
   type=in_person,online
-  practitionerId=uuid
+  employeeId=uuid
   serviceId=uuid
   branchId=uuid
   dateFrom=2026-04-01
   dateTo=2026-04-30
-  search=patientName
+  search=clientName
 ```
 
 #### Response: Paginated Bookings
@@ -315,24 +315,24 @@ enum BookingStatus {
 ---
 
 ## ════════════════════════════════════════════════════════════════
-# المرحلة 4: Patients
+# المرحلة 4: Clients
 ## ════════════════════════════════════════════════════════════════
 
-### 📄 قائمة المرضى (`/patients`)
+### 📄 قائمة المرضى (`/clients`)
 
 #### API Endpoints
 | Method | Endpoint | الوصف |
 |--------|---------|------|
-| GET | `/api/v1/patients` | قائمة المرضى (paginated) |
-| GET | `/api/v1/patients/:id` | تفاصيل المريض |
-| POST | `/api/v1/patients` | إنشاء مريض جديد |
-| PATCH | `/api/v1/patients/:id` | تعديل بيانات المريض |
-| DELETE | `/api/v1/patients/:id` | حذف المريض (soft delete) |
-| GET | `/api/v1/patients/:id/bookings` | حجوزات المريض |
+| GET | `/api/v1/clients` | قائمة المرضى (paginated) |
+| GET | `/api/v1/clients/:id` | تفاصيل المريض |
+| POST | `/api/v1/clients` | إنشاء مريض جديد |
+| PATCH | `/api/v1/clients/:id` | تعديل بيانات المريض |
+| DELETE | `/api/v1/clients/:id` | حذف المريض (soft delete) |
+| GET | `/api/v1/clients/:id/bookings` | حجوزات المريض |
 
-#### Patient Type
+#### Client Type
 ```typescript
-interface Patient {
+interface Client {
   id: string;
   firstName: string;
   lastName: string;
@@ -368,7 +368,7 @@ interface Patient {
 │  │ 1,234   │ │   156   │ │ 1,189   │ │ 96.3%  │              │
 │  └─────────┘ └─────────┘ └─────────┘ └─────────┘              │
 │                                                                 │
-│  Patients Table                                                 │
+│  Clients Table                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
 │  │ المريض │الجنس│الهاتف│الحجوزات│آخر زيارة│ الإجراءات │    │
 │  ├────────────────────────────────────────────────────────────┤ │
@@ -381,34 +381,34 @@ interface Patient {
 #### Components Required
 | Component | الوصف |
 |-----------|------|
-| `PatientsTable` | جدول المرضى |
-| `PatientFilters` | فلاتر البحث |
-| `PatientStats` | إحصائيات المرضى |
-| `CreatePatientDialog` | Dialog إنشاء مريض |
-| `PatientDetailsDrawer` | عرض تفاصيل المريض |
+| `ClientsTable` | جدول المرضى |
+| `ClientFilters` | فلاتر البحث |
+| `ClientStats` | إحصائيات المرضى |
+| `CreateClientDialog` | Dialog إنشاء مريض |
+| `ClientDetailsDrawer` | عرض تفاصيل المريض |
 
 ---
 
 ## ════════════════════════════════════════════════════════════════
-# المرحلة 5: Practitioners
+# المرحلة 5: Employees
 ## ════════════════════════════════════════════════════════════════
 
-### 📄 قائمة الممارسين (`/practitioners`)
+### 📄 قائمة الممارسين (`/employees`)
 
 #### API Endpoints
 | Method | Endpoint | الوصف |
 |--------|---------|------|
-| GET | `/api/v1/practitioners` | قائمة الممارسين |
-| GET | `/api/v1/practitioners/:id` | تفاصيل الممارس |
-| POST | `/api/v1/practitioners` | إضافة ممارس |
-| PATCH | `/api/v1/practitioners/:id` | تعديل الممارس |
-| GET | `/api/v1/practitioners/:id/schedule` | جدول الممارس |
-| GET | `/api/v1/practitioners/:id/vacations` | إجازات الممارس |
-| POST | `/api/v1/practitioners/:id/vacations` | إضافة إجازة |
+| GET | `/api/v1/employees` | قائمة الممارسين |
+| GET | `/api/v1/employees/:id` | تفاصيل الممارس |
+| POST | `/api/v1/employees` | إضافة ممارس |
+| PATCH | `/api/v1/employees/:id` | تعديل الممارس |
+| GET | `/api/v1/employees/:id/schedule` | جدول الممارس |
+| GET | `/api/v1/employees/:id/vacations` | إجازات الممارس |
+| POST | `/api/v1/employees/:id/vacations` | إضافة إجازة |
 
-#### Practitioner Type
+#### Employee Type
 ```typescript
-interface PractitionerWithUser {
+interface EmployeeWithUser {
   id: string;
   user: {
     id: string;
@@ -444,7 +444,7 @@ interface PractitionerWithUser {
 │  │ 🔍 بحث  │ │ التخصص ▼ │ │ الحالة ▼ │                       │
 │  └──────────┘ └──────────┘ └──────────┘                       │
 │                                                                 │
-│  Practitioners Grid (Cards)                                      │
+│  Employees Grid (Cards)                                      │
 │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐        │
 │  │  🖼️ د. أحمد   │ │  🖼️ د. سارة   │ │  🖼️ د. خالد   │        │
 │  │  طب أسنان     │ │  تقويم        │ │  جراحة        │        │
@@ -453,7 +453,7 @@ interface PractitionerWithUser {
 │  │  [الجدول]     │ │  [الجدول]     │ │  [الجدول]     │        │
 │  └───────────────┘ └───────────────┘ └───────────────┘        │
 │                                                                 │
-│  Practitioner Card States:                                      │
+│  Employee Card States:                                      │
 │  - Active: border-success                                       │
 │  - On Vacation: border-warning + badge                         │
 │  - Inactive: opacity-60                                       │
@@ -462,13 +462,13 @@ interface PractitionerWithUser {
 
 ---
 
-### 📄 جدول الممارس (`/practitioners/[id]/schedule`)
+### 📄 جدول الممارس (`/employees/[id]/schedule`)
 
 #### API Endpoints
 | Method | Endpoint | الوصف |
 |--------|---------|------|
-| GET | `/api/v1/practitioners/:id/availability` | ساعات العمل |
-| GET | `/api/v1/practitioners/:id/bookings?date=YYYY-MM-DD` | حجوزات يوم معين |
+| GET | `/api/v1/employees/:id/availability` | ساعات العمل |
+| GET | `/api/v1/employees/:id/bookings?date=YYYY-MM-DD` | حجوزات يوم معين |
 
 #### التصميم
 
@@ -660,7 +660,7 @@ enum PaymentStatus {
 |--------|---------|------|
 | GET | `/api/v1/reports/bookings` | تقرير الحجوزات |
 | GET | `/api/v1/reports/revenue` | تقرير الإيرادات |
-| GET | `/api/v1/reports/practitioners` | تقرير الممارسين |
+| GET | `/api/v1/reports/employees` | تقرير الممارسين |
 | GET | `/api/v1/reports/services` | تقرير الخدمات |
 
 #### Report Types
@@ -668,9 +668,9 @@ enum PaymentStatus {
 |--------|-------|
 | Bookings Report | الحجوزات اليومية/الشهرية |
 | Revenue Report | الإيرادات مفصلة |
-| Practitioner Performance | أداء الممارسين |
+| Employee Performance | أداء الممارسين |
 | Service Popularity | الخدمات الأكثر طلباً |
-| Patient Analytics | تحليل المرضى |
+| Client Analytics | تحليل المرضى |
 
 #### التصميم
 
@@ -851,17 +851,17 @@ components/
     │   ├── BookingDetailsDrawer.tsx
     │   └── CreateBookingDialog.tsx
     │
-    ├── patients/
-    │   ├── PatientsTable.tsx
-    │   ├── PatientFilters.tsx
-    │   ├── PatientStats.tsx
-    │   └── CreatePatientDialog.tsx
+    ├── clients/
+    │   ├── ClientsTable.tsx
+    │   ├── ClientFilters.tsx
+    │   ├── ClientStats.tsx
+    │   └── CreateClientDialog.tsx
     │
-    ├── practitioners/
-    │   ├── PractitionersGrid.tsx
-    │   ├── PractitionerCard.tsx
-    │   ├── PractitionerSchedule.tsx
-    │   └── CreatePractitionerDialog.tsx
+    ├── employees/
+    │   ├── EmployeesGrid.tsx
+    │   ├── EmployeeCard.tsx
+    │   ├── EmployeeSchedule.tsx
+    │   └── CreateEmployeeDialog.tsx
     │
     ├── services/
     │   ├── ServicesGrid.tsx
@@ -888,8 +888,8 @@ components/
 ```
 hooks/
 ├── useBookings.ts              # TanStack Query hooks
-├── usePatients.ts
-├── usePractitioners.ts
+├── useClients.ts
+├── useEmployees.ts
 ├── useServices.ts
 ├── usePayments.ts
 ├── useAuth.ts
@@ -898,7 +898,7 @@ hooks/
     ├── useCreateBooking.ts
     ├── useUpdateBooking.ts
     ├── useCancelBooking.ts
-    ├── useCreatePatient.ts
+    ├── useCreateClient.ts
     └── ...
 ```
 
@@ -913,8 +913,8 @@ lib/
 ├── api/
 │   ├── client.ts              # Axios instance
 │   ├── bookings.ts            # Booking API calls
-│   ├── patients.ts
-│   ├── practitioners.ts
+│   ├── clients.ts
+│   ├── employees.ts
 │   ├── services.ts
 │   ├── payments.ts
 │   └── auth.ts
@@ -924,7 +924,7 @@ lib/
 │
 ├── schemas/
 │   ├── booking.schema.ts      # Zod schemas
-│   ├── patient.schema.ts
+│   ├── client.schema.ts
 │   └── ...
 │
 └── query-keys.ts             # TanStack Query keys
@@ -1015,8 +1015,8 @@ lib/
 | 1 | Login | ✅ | ✅ | ✅ | ✅ | ⏳ |
 | 2 | Dashboard | 🔄 | 🔄 | 🔄 | 🔄 | ⏳ |
 | 3 | Bookings | 📋 | 📋 | 📋 | 📋 | ⏳ |
-| 4 | Patients | 📋 | 📋 | 📋 | 📋 | ⏳ |
-| 5 | Practitioners | 📋 | 📋 | 📋 | 📋 | ⏳ |
+| 4 | Clients | 📋 | 📋 | 📋 | 📋 | ⏳ |
+| 5 | Employees | 📋 | 📋 | 📋 | 📋 | ⏳ |
 | 6 | Services | 📋 | 📋 | 📋 | 📋 | ⏳ |
 | 7 | Payments | 📋 | 📋 | 📋 | 📋 | ⏳ |
 | 8 | Reports | 📋 | 📋 | 📋 | ⏳ |

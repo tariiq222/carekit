@@ -8,8 +8,8 @@
 import { arNav } from "./ar.nav"
 import { arDashboard } from "./ar.dashboard"
 import { arBookings } from "./ar.bookings"
-import { arPatients } from "./ar.patients"
-import { arPractitioners } from "./ar.practitioners"
+import { arClients } from "./ar.clients"
+import { arEmployees } from "./ar.employees"
 import { arServices } from "./ar.services"
 import { arFinance } from "./ar.finance"
 import { arUsers } from "./ar.users"
@@ -25,8 +25,8 @@ export const ar: Record<string, string> = {
   ...arNav,
   ...arDashboard,
   ...arBookings,
-  ...arPatients,
-  ...arPractitioners,
+  ...arClients,
+  ...arEmployees,
   ...arServices,
   ...arFinance,
   ...arUsers,

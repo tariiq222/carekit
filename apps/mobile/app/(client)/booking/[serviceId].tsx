@@ -28,7 +28,7 @@ import type { BookingType } from '@/types/models';
 
 /**
  * Booking Flow — Step 1: Select Visit Type
- * Route: /(patient)/booking/[serviceId]
+ * Route: /(client)/booking/[serviceId]
  *
  * 2 booking types: in_person, online
  * Each shown as a selectable card with icon, name, and description.
@@ -43,7 +43,7 @@ interface TypeOption {
 }
 
 export default function BookingTypeScreen() {
-  const { serviceId, practitionerId } = useLocalSearchParams<{ serviceId: string; practitionerId?: string }>();
+  const { serviceId, employeeId } = useLocalSearchParams<{ serviceId: string; employeeId?: string }>();
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -76,10 +76,10 @@ export default function BookingTypeScreen() {
     if (!requireEmailVerification(user, t)) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
-      pathname: '/(patient)/booking/schedule',
+      pathname: '/(client)/booking/schedule',
       params: {
         serviceId,
-        practitionerId: practitionerId ?? '',
+        employeeId: employeeId ?? '',
         type: selected,
       },
     });

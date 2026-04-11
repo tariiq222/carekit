@@ -51,7 +51,7 @@ erDiagram
         UUID roleId FK "M:1 → Role"
     }
 
-    Practitioner {
+    Employee {
         UUID id PK
         UUID userId FK UK "1:1 → User"
         UUID specialtyId FK "M:1 → Specialty"
@@ -91,9 +91,9 @@ erDiagram
         datetime deletedAt "soft delete"
     }
 
-    PractitionerService {
+    EmployeeService {
         UUID id PK
-        UUID practitionerId FK "M:1 → Practitioner"
+        UUID employeeId FK "M:1 → Employee"
         UUID serviceId FK "M:1 → Service"
         int priceClinic "nullable — override"
         int pricePhone "nullable — override"
@@ -105,18 +105,18 @@ erDiagram
         boolean isActive
     }
 
-    PractitionerAvailability {
+    EmployeeAvailability {
         UUID id PK
-        UUID practitionerId FK "M:1 → Practitioner"
+        UUID employeeId FK "M:1 → Employee"
         int dayOfWeek "0=أحد ... 6=سبت"
         string startTime "HH:mm"
         string endTime "HH:mm"
         boolean isActive
     }
 
-    PractitionerVacation {
+    EmployeeVacation {
         UUID id PK
-        UUID practitionerId FK "M:1 → Practitioner"
+        UUID employeeId FK "M:1 → Employee"
         datetime startDate
         datetime endDate
         string reason
@@ -128,10 +128,10 @@ erDiagram
 
     Booking {
         UUID id PK
-        UUID patientId FK "M:1 → User — nullable for onDelete:SetNull only"
-        UUID practitionerId FK "M:1 → Practitioner"
+        UUID clientId FK "M:1 → User — nullable for onDelete:SetNull only"
+        UUID employeeId FK "M:1 → Employee"
         UUID serviceId FK "M:1 → Service"
-        UUID practitionerServiceId FK "M:1 → PractitionerService"
+        UUID employeeServiceId FK "M:1 → EmployeeService"
         UUID rescheduledFromId FK UK "1:1 → Booking (self-ref, nullable)"
         BookingType type "clinic_visit | phone | video"
         datetime date
@@ -210,8 +210,8 @@ erDiagram
     Rating {
         UUID id PK
         UUID bookingId FK UK "1:1 → Booking"
-        UUID patientId FK "M:1 → User (nullable — onDelete:SetNull)"
-        UUID practitionerId FK "M:1 → Practitioner"
+        UUID clientId FK "M:1 → User (nullable — onDelete:SetNull)"
+        UUID employeeId FK "M:1 → Employee"
         int stars "1-5"
         string comment
         datetime createdAt
@@ -220,7 +220,7 @@ erDiagram
     ProblemReport {
         UUID id PK
         UUID bookingId FK "M:1 → Booking"
-        UUID patientId FK "M:1 → User (nullable — onDelete:SetNull)"
+        UUID clientId FK "M:1 → User (nullable — onDelete:SetNull)"
         ProblemReportType type "no_call | late | technical | other"
         string description
         ProblemReportStatus status "open | reviewing | resolved"
@@ -276,26 +276,26 @@ erDiagram
     Role ||--o{ RolePermission : "has permissions"
     Permission ||--o{ RolePermission : "granted to roles"
 
-    %% --- User & Practitioner ---
-    User ||--o| Practitioner : "has profile (optional)"
-    Practitioner }o--|| Specialty : "belongs to"
+    %% --- User & Employee ---
+    User ||--o| Employee : "has profile (optional)"
+    Employee }o--|| Specialty : "belongs to"
 
     %% --- Service & Category ---
     ServiceCategory ||--o{ Service : "categorizes"
 
-    %% --- PractitionerService (M:N with payload) ---
-    Practitioner ||--o{ PractitionerService : "offers services"
-    Service ||--o{ PractitionerService : "offered by practitioners"
+    %% --- EmployeeService (M:N with payload) ---
+    Employee ||--o{ EmployeeService : "offers services"
+    Service ||--o{ EmployeeService : "offered by employees"
 
-    %% --- Practitioner Schedule ---
-    Practitioner ||--o{ PractitionerAvailability : "has schedule"
-    Practitioner ||--o{ PractitionerVacation : "has vacations"
+    %% --- Employee Schedule ---
+    Employee ||--o{ EmployeeAvailability : "has schedule"
+    Employee ||--o{ EmployeeVacation : "has vacations"
 
     %% --- Booking Relations (المحور) ---
-    User ||--o{ Booking : "books as patient"
-    Practitioner ||--o{ Booking : "receives bookings"
+    User ||--o{ Booking : "books as client"
+    Employee ||--o{ Booking : "receives bookings"
     Service ||--o{ Booking : "booked service"
-    PractitionerService ||--o{ Booking : "pricing source"
+    EmployeeService ||--o{ Booking : "pricing source"
     Booking ||--o| Booking : "rescheduledFrom (self-ref)"
 
     %% --- Payment Chain ---
@@ -306,8 +306,8 @@ erDiagram
 
     %% --- Post-Appointment ---
     Booking ||--o| Rating : "has rating"
-    Rating }o--|| Practitioner : "rates practitioner"
-    User ||--o{ Rating : "rates as patient"
+    Rating }o--|| Employee : "rates employee"
+    User ||--o{ Rating : "rates as client"
 
     Booking ||--o{ ProblemReport : "has problems"
     User ||--o{ ProblemReport : "reports problem"

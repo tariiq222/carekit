@@ -49,7 +49,7 @@ Used in: Home screen (mobile), Today's schedule (doctor), Dashboard home.
 ┌──────────────────────────────────────┐
 │  [Status Badge]                      │
 │                                      │
-│  [Type Icon]  اسم الطبيب / Patient    │
+│  [Type Icon]  اسم الطبيب / Client    │
 │               التخصص / Service        │
 │               التاريخ • الوقت         │
 │                                      │
@@ -62,7 +62,7 @@ Used in: Home screen (mobile), Today's schedule (doctor), Dashboard home.
 ```typescript
 interface AppointmentCardProps {
   id: string;
-  patientName: string;        // or practitionerName (context-dependent)
+  clientName: string;        // or employeeName (context-dependent)
   serviceName: string;         // localized
   specialtyName: string;       // localized
   date: string;                // formatted to locale
@@ -71,7 +71,7 @@ interface AppointmentCardProps {
   type: 'clinic_visit' | 'phone_consultation' | 'video_consultation';
   status: BookingStatus;
   zoomJoinUrl?: string;        // for video
-  patientPhone?: string;       // for phone (doctor view)
+  clientPhone?: string;       // for phone (doctor view)
   onPress?: () => void;
 }
 ```
@@ -91,9 +91,9 @@ interface AppointmentCardProps {
 
 ---
 
-## 3. Practitioner Card
+## 3. Employee Card
 
-Used in: Practitioner List (mobile), Home featured practitioners.
+Used in: Employee List (mobile), Home featured employees.
 
 ### Layout (RTL)
 
@@ -109,7 +109,7 @@ Used in: Practitioner List (mobile), Home featured practitioners.
 ### Props
 
 ```typescript
-interface PractitionerCardProps {
+interface EmployeeCardProps {
   id: string;
   name: string;
   avatarUrl?: string;
@@ -157,7 +157,7 @@ interface SpecialtyCardProps {
   nameAr: string;
   nameEn: string;
   iconUrl?: string;
-  practitionerCount: number;
+  employeeCount: number;
   onPress?: () => void;
 }
 ```
@@ -253,9 +253,9 @@ interface NotificationItemProps {
 
 ## 7. Rating Component
 
-Used in: Appointment detail (after completion), Practitioner profile, Rating screen.
+Used in: Appointment detail (after completion), Employee profile, Rating screen.
 
-### Input Mode (Patient submits rating)
+### Input Mode (Client submits rating)
 
 ```
 ┌──────────────────────────────────────┐
@@ -448,7 +448,7 @@ Used across all list screens when no data exists.
 |---------|-----------|-----------|-----|
 | Appointments | لا توجد مواعيد | No appointments | Book Appointment |
 | Notifications | لا توجد إشعارات | No notifications | - |
-| Patients (doctor) | لا يوجد مرضى | No patients yet | - |
+| Clients (doctor) | لا يوجد مرضى | No clients yet | - |
 | Chat | ابدأ محادثة | Start a conversation | Send a message |
 | Search | لا توجد نتائج | No results found | Try different search |
 

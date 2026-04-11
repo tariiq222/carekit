@@ -1,6 +1,6 @@
 "use client"
 
-// Widget Service Step — supports practitioner_first and service_first flows
+// Widget Service Step — supports employee_first and service_first flows
 
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { useWidgetBooking } from "@/hooks/use-widget-booking"
 import type { BookingFlowOrder } from "@/lib/api/clinic-settings"
-import type { Practitioner } from "@/lib/types/practitioner"
+import type { Employee } from "@/lib/types/employee"
 import type { Service } from "@/lib/types/service"
 import type { BookingType } from "@/lib/types/booking"
 
@@ -44,26 +44,26 @@ interface Props {
   locale: "ar" | "en"
   booking: ReturnType<typeof useWidgetBooking>
   flowOrder: BookingFlowOrder
-  anyPractitioner?: boolean
+  anyEmployee?: boolean
   onNext?: (type: BookingType) => void
 }
 
-export function WidgetServiceStep({ locale, booking, flowOrder, anyPractitioner = false, onNext }: Props) {
+export function WidgetServiceStep({ locale, booking, flowOrder, anyEmployee = false, onNext }: Props) {
   const {
-    practitionersData,
-    practitionersLoading,
+    employeesData,
+    employeesLoading,
     services,
     servicesLoading,
     allServices,
     allServicesLoading,
-    filteredPractitionersData,
-    filteredPractitionersLoading,
+    filteredEmployeesData,
+    filteredEmployeesLoading,
     serviceTypes,
     state,
-    selectPractitioner,
+    selectEmployee,
     selectService,
     selectServiceOnly,
-    clearPractitioner,
+    clearEmployee,
     clearService,
     clearServiceOnly,
   } = booking
@@ -81,12 +81,12 @@ export function WidgetServiceStep({ locale, booking, flowOrder, anyPractitioner 
     selectService(svc, selectedType)
   }
 
-  function renderPractitionerList(practitioners: Practitioner[], loading: boolean) {
+  function renderEmployeeList(employees: Employee[], loading: boolean) {
     if (loading) return <div className="flex justify-center py-8"><HugeiconsIcon icon={Loading03Icon} size={24} className="text-primary" /></div>
     return (
       <div className="space-y-2">
-        {practitioners.map((p) => (
-          <button key={p.id} onClick={() => selectPractitioner(p)} className={cn("w-full flex items-center gap-3 p-3 rounded-xl border border-border/60", "hover:border-primary/60 hover:bg-primary/5 transition-all text-start")}>
+        {employees.map((p) => (
+          <button key={p.id} onClick={() => selectEmployee(p)} className={cn("w-full flex items-center gap-3 p-3 rounded-xl border border-border/60", "hover:border-primary/60 hover:bg-primary/5 transition-all text-start")}>
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
               {p.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -106,19 +106,19 @@ export function WidgetServiceStep({ locale, booking, flowOrder, anyPractitioner 
     )
   }
 
-  /* ─── practitioner_first flow ─── */
+  /* ─── employee_first flow ─── */
 
-  if (flowOrder === "practitioner_first") {
-    /* Step 1: Select Practitioner */
-    if (!state.practitioner) {
+  if (flowOrder === "employee_first") {
+    /* Step 1: Select Employee */
+    if (!state.employee) {
       return (
         <div className="space-y-3">
-{renderPractitionerList(practitionersData?.items ?? [], practitionersLoading)}
+{renderEmployeeList(employeesData?.items ?? [], employeesLoading)}
         </div>
       )
     }
 
-    /* Step 2: Select Service (practitioner_first) */
+    /* Step 2: Select Service (employee_first) */
     if (!state.service) {
       return (
         <div className="space-y-3">
@@ -182,25 +182,25 @@ export function WidgetServiceStep({ locale, booking, flowOrder, anyPractitioner 
       )
     }
 
-    /* Step 2: Select Practitioner (service_first — filtered) */
-    if (!state.practitioner) {
+    /* Step 2: Select Employee (service_first — filtered) */
+    if (!state.employee) {
       return (
         <div className="space-y-3">
-{anyPractitioner && (
+{anyEmployee && (
             <button
-              onClick={() => selectPractitioner({ id: "any", user: { firstName: isRtl ? "أي" : "Any", lastName: isRtl ? "معالج" : "Practitioner" } } as Parameters<typeof selectPractitioner>[0])}
+              onClick={() => selectEmployee({ id: "any", user: { firstName: isRtl ? "أي" : "Any", lastName: isRtl ? "معالج" : "Employee" } } as Parameters<typeof selectEmployee>[0])}
               className="w-full flex items-center gap-3 p-3 rounded-xl border border-primary/40 bg-primary/5 hover:bg-primary/10 transition-all text-start"
             >
               <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
                 <span className="text-primary font-bold text-lg">✦</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-primary">{isRtl ? "أي معالج متاح" : "Any available practitioner"}</p>
+                <p className="font-medium text-sm text-primary">{isRtl ? "أي معالج متاح" : "Any available employee"}</p>
                 <p className="text-xs text-muted-foreground">{isRtl ? "أقرب موعد متاح" : "Earliest available slot"}</p>
               </div>
             </button>
           )}
-          {renderPractitionerList(filteredPractitionersData?.items ?? [], filteredPractitionersLoading)}
+          {renderEmployeeList(filteredEmployeesData?.items ?? [], filteredEmployeesLoading)}
         </div>
       )
     }
@@ -208,7 +208,7 @@ export function WidgetServiceStep({ locale, booking, flowOrder, anyPractitioner 
 
   /* ─── Shared: booking type selection (both flows) ─── */
 
-  const handleBookingTypeBack = flowOrder === "service_first" ? clearPractitioner : clearServiceOnly
+  const handleBookingTypeBack = flowOrder === "service_first" ? clearEmployee : clearServiceOnly
 
   return (
     <div className="space-y-3">

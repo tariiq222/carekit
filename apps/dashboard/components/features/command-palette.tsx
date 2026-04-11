@@ -36,15 +36,15 @@ type CommandEntry = {
 
 const QUICK_ACTIONS: CommandEntry[] = [
   { id: "new-booking", labelEn: "New Booking", labelAr: "حجز جديد", href: "/bookings?new=1", icon: Add01Icon, shortcut: "⌘N" },
-  { id: "search-patients", labelEn: "Search Patients", labelAr: "البحث عن مرضى", href: "/patients", icon: UserMultiple02Icon },
+  { id: "search-clients", labelEn: "Search Clients", labelAr: "البحث عن مرضى", href: "/clients", icon: UserMultiple02Icon },
   { id: "today-schedule", labelEn: "Today's Schedule", labelAr: "جدول اليوم", href: "/bookings?tab=today", icon: Calendar03Icon },
 ]
 
 const NAV_COMMANDS: CommandEntry[] = [
   { id: "nav-dashboard", labelEn: "Dashboard", labelAr: "لوحة التحكم", href: "/", icon: Home01Icon },
   { id: "nav-bookings", labelEn: "Bookings", labelAr: "الحجوزات", href: "/bookings", icon: Calendar03Icon },
-  { id: "nav-patients", labelEn: "Patients", labelAr: "المرضى", href: "/patients", icon: UserMultiple02Icon },
-  { id: "nav-practitioners", labelEn: "Practitioners", labelAr: "الأطباء", href: "/practitioners", icon: Stethoscope02Icon },
+  { id: "nav-clients", labelEn: "Clients", labelAr: "المرضى", href: "/clients", icon: UserMultiple02Icon },
+  { id: "nav-employees", labelEn: "Employees", labelAr: "الأطباء", href: "/employees", icon: Stethoscope02Icon },
   { id: "nav-reports", labelEn: "Reports", labelAr: "التقارير", href: "/reports", icon: AnalyticsUpIcon },
   { id: "nav-settings", labelEn: "Settings", labelAr: "الإعدادات", href: "/settings", icon: Settings02Icon },
 ]

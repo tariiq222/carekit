@@ -1,9 +1,9 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import { PractitionerDetailPage } from "@/components/features/practitioners/practitioner-detail-page"
+import { EmployeeDetailPage } from "@/components/features/employees/employee-detail-page"
 
-export default function PractitionerDetailRoute() {
+export default function EmployeeDetailRoute() {
   const { id } = useParams<{ id: string }>()
-  return <PractitionerDetailPage practitionerId={id} />
+  return <EmployeeDetailPage employeeId={id} />
 }

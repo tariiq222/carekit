@@ -71,15 +71,15 @@ export default function BookingSuccessScreen() {
       {/* Actions */}
       <View style={styles.actions}>
         <ThemedButton
-          onPress={() => router.replace('/(patient)/(tabs)/appointments')}
+          onPress={() => router.replace('/(client)/(tabs)/appointments')}
           variant="primary"
           size="lg"
           full
         >
-          {t('patient.appointments')}
+          {t('client.appointments')}
         </ThemedButton>
         <ThemedButton
-          onPress={() => router.replace('/(patient)/(tabs)/home')}
+          onPress={() => router.replace('/(client)/(tabs)/home')}
           variant="ghost"
           size="lg"
           full

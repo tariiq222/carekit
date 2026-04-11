@@ -20,7 +20,7 @@ export default function CreateIntakeFormPage() {
         type: draft.type,
         scope: draft.scope,
         ...(draft.scope === "service" && { serviceId: draft.scopeId }),
-        ...(draft.scope === "practitioner" && { practitionerId: draft.scopeId }),
+        ...(draft.scope === "employee" && { employeeId: draft.scopeId }),
         ...(draft.scope === "branch" && { branchId: draft.scopeId }),
         isActive: draft.isActive,
       })

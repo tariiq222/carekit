@@ -20,7 +20,7 @@ import {
 } from "@/lib/types/intake-form"
 
 const FORM_TYPES: FormType[] = ["pre_booking", "pre_session", "post_session", "registration"]
-const ALL_FORM_SCOPES: FormScope[] = ["global", "service", "practitioner", "branch"]
+const ALL_FORM_SCOPES: FormScope[] = ["global", "service", "employee", "branch"]
 
 interface FormInfoPanelProps {
   draft: IntakeFormDraft

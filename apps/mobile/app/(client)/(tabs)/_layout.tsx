@@ -11,7 +11,7 @@ import { BlurView } from 'expo-blur';
 import { ThemedText } from '@/theme/components/ThemedText';
 import { notificationsService } from '@/services/notifications';
 
-export default function PatientTabsLayout() {
+export default function ClientTabsLayout() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -90,7 +90,7 @@ export default function PatientTabsLayout() {
             <Pressable
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push('/(patient)/(tabs)/chat');
+                router.push('/(client)/(tabs)/chat');
               }}
               style={styles.aiButton}
             >

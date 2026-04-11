@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Practitioner Profile — Secondary sections
+ * Employee Profile — Secondary sections
  * (Availability, Vacations, Services card wrapper)
  */
 
@@ -17,14 +17,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
-  usePractitionerAvailability,
-  usePractitionerVacations,
-} from "@/hooks/use-practitioners"
+  useEmployeeAvailability,
+  useEmployeeVacations,
+} from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
-import { PractitionerServicesSection } from "./practitioner-services-section"
+import { EmployeeServicesSection } from "./employee-services-section"
 
 /* ─── Re-export Ratings so page imports from one place ─── */
-export { PractitionerRatingsSection } from "./practitioner-ratings-section"
+export { EmployeeRatingsSection } from "./employee-ratings-section"
 
 /* ─── Constants ─── */
 
@@ -33,12 +33,12 @@ const DAY_NAMES_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 /* ─── Availability Section ─── */
 
-interface WithId { practitionerId: string }
+interface WithId { employeeId: string }
 
-export function PractitionerAvailabilitySection({ practitionerId }: WithId) {
+export function EmployeeAvailabilitySection({ employeeId }: WithId) {
   const { locale } = useLocale()
   const isAr = locale === "ar"
-  const { data: schedule, isLoading } = usePractitionerAvailability(practitionerId)
+  const { data: schedule, isLoading } = useEmployeeAvailability(employeeId)
 
   const activeSlots = schedule?.filter((s) => s.isActive) ?? []
   const dayNames = isAr ? DAY_NAMES_AR : DAY_NAMES_EN
@@ -88,10 +88,10 @@ export function PractitionerAvailabilitySection({ practitionerId }: WithId) {
 
 /* ─── Vacations Section ─── */
 
-export function PractitionerVacationsSection({ practitionerId }: WithId) {
+export function EmployeeVacationsSection({ employeeId }: WithId) {
   const { locale } = useLocale()
   const isAr = locale === "ar"
-  const { data: vacations, isLoading } = usePractitionerVacations(practitionerId)
+  const { data: vacations, isLoading } = useEmployeeVacations(employeeId)
 
   const upcoming = (vacations ?? []).filter((v) => new Date(v.endDate) >= new Date())
 
@@ -148,7 +148,7 @@ export function PractitionerVacationsSection({ practitionerId }: WithId) {
 
 /* ─── Services Card Wrapper ─── */
 
-export function PractitionerServicesSectionCard({ practitionerId }: WithId) {
+export function EmployeeServicesSectionCard({ employeeId }: WithId) {
   const { locale } = useLocale()
   const isAr = locale === "ar"
 
@@ -163,7 +163,7 @@ export function PractitionerServicesSectionCard({ practitionerId }: WithId) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <PractitionerServicesSection practitionerId={practitionerId} />
+        <EmployeeServicesSection employeeId={employeeId} />
       </CardContent>
     </Card>
   )

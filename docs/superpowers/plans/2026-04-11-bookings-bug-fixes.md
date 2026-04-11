@@ -43,8 +43,8 @@ import { checkDoubleBooking } from '../../../src/modules/bookings/booking-valida
 
 function makeBookingFinder(existing: Array<{ startTime: string; endTime: string }>) {
   return {
-    practitionerVacation: {} as never,
-    practitionerAvailability: {} as never,
+    employeeVacation: {} as never,
+    employeeAvailability: {} as never,
     booking: {
       findMany: async () => existing,
     },
@@ -220,7 +220,7 @@ In `backend/src/modules/tasks/booking-autocomplete.service.ts`, replace lines 28
       },
       select: {
         id: true,
-        patientId: true,
+        clientId: true,
         date: true,
         endTime: true,
         status: true,
@@ -303,7 +303,7 @@ That approach is overly complex. Use a simpler pattern consistent with how `book
       },
       select: {
         id: true,
-        patientId: true,
+        clientId: true,
         date: true,
         endTime: true,
         status: true,
@@ -366,7 +366,7 @@ Replace lines 28–55 in `booking-autocomplete.service.ts` with:
       },
       select: {
         id: true,
-        patientId: true,
+        clientId: true,
         date: true,
         endTime: true,
         status: true,
@@ -419,7 +419,7 @@ git commit -m "fix(tasks): remove hardcoded UTC+3 in auto-complete, use clinic t
 In `booking-cancellation-timeout.service.ts`, replace line 38:
 
 ```typescript
-      select: { id: true, patientId: true, practitionerId: true, date: true },
+      select: { id: true, clientId: true, employeeId: true, date: true },
 ```
 
 With:
@@ -427,8 +427,8 @@ With:
 ```typescript
       select: {
         id: true,
-        patientId: true,
-        practitionerId: true,
+        clientId: true,
+        employeeId: true,
         date: true,
         suggestedRefundType: true,
       },
@@ -507,7 +507,7 @@ And replace the Moyasar block after the transaction (lines 103–130):
         }
 ```
 
-Update the patient notification body to reflect actual refund type:
+Update the client notification body to reflect actual refund type:
 
 ```typescript
           const refundMsg =
@@ -518,7 +518,7 @@ Update the patient notification body to reflect actual refund type:
                 : { ar: 'مع استرداد كامل', en: 'with a full refund' };
 
           await this.notificationsService.createNotification({
-            userId: booking.patientId,
+            userId: booking.clientId,
             titleAr: 'تمت الموافقة على إلغاء موعدك',
             titleEn: 'Cancellation Auto-Approved',
             bodyAr: `تمت الموافقة تلقائياً على طلب إلغاء موعدك ${refundMsg.ar}`,
@@ -583,7 +583,7 @@ In the constructor, add:
 Replace the `checkAndNotify` method body (lines 158–209):
 
 ```typescript
-  async checkAndNotify(practitionerId: string, date: Date) {
+  async checkAndNotify(employeeId: string, date: Date) {
     const [settings, clinicTz] = await Promise.all([
       this.bookingSettingsService.get(),
       this.clinicSettingsService.getTimezone(),
@@ -609,7 +609,7 @@ Replace the `checkAndNotify` method body (lines 158–209):
 
     const entries = await this.prisma.waitlistEntry.findMany({
       where: {
-        practitionerId,
+        employeeId,
         status: 'waiting',
         OR: [
           { preferredDate: { gte: dayStart, lte: dayEnd } },
@@ -617,7 +617,7 @@ Replace the `checkAndNotify` method body (lines 158–209):
         ],
       },
       include: {
-        practitioner: {
+        employee: {
           include: {
             user: { select: { firstName: true, lastName: true } },
           },
@@ -628,7 +628,7 @@ Replace the `checkAndNotify` method body (lines 158–209):
     });
 
     for (const entry of entries) {
-      const docName = `${entry.practitioner.user.firstName} ${entry.practitioner.user.lastName}`;
+      const docName = `${entry.employee.user.firstName} ${entry.employee.user.lastName}`;
 
       await this.prisma.waitlistEntry.update({
         where: { id: entry.id },
@@ -636,18 +636,18 @@ Replace the `checkAndNotify` method body (lines 158–209):
       });
 
       await this.notificationsService.createNotification({
-        userId: entry.patientId,
+        userId: entry.clientId,
         ...NOTIF.WAITLIST_SLOT_AVAILABLE,
         bodyAr: `تحرّر موعد مع د. ${docName} بتاريخ ${dateStr}. احجز الآن!`,
         bodyEn: `A slot opened with Dr. ${docName} on ${dateStr}. Book now!`,
         type: 'waitlist_slot_available',
-        data: { practitionerId, date: dateStr },
+        data: { employeeId, date: dateStr },
       });
     }
 
     if (entries.length > 0) {
       this.logger.log(
-        `Notified ${entries.length} waitlist entries for practitioner ${practitionerId}`,
+        `Notified ${entries.length} waitlist entries for employee ${employeeId}`,
       );
     }
   }

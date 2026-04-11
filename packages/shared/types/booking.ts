@@ -2,11 +2,11 @@ import type { BookingStatus, BookingType, CancelledBy, RecurringPattern, RefundT
 
 export interface Booking {
   id: string;
-  patientId: string | null;
+  clientId: string | null;
   branchId: string | null;
-  practitionerId: string;
+  employeeId: string;
   serviceId: string;
-  practitionerServiceId: string;
+  employeeServiceId: string;
   type: BookingType;
   date: string;
   startTime: string;
@@ -41,15 +41,15 @@ export interface Booking {
 }
 
 export interface BookingWithRelations extends Booking {
-  patient?: { id: string; firstName: string; lastName: string; phone: string | null };
-  practitioner?: { id: string; user: { firstName: string; lastName: string }; specialty: { nameAr: string; nameEn: string } };
+  client?: { id: string; firstName: string; lastName: string; phone: string | null };
+  employee?: { id: string; user: { firstName: string; lastName: string }; specialty: { nameAr: string; nameEn: string } };
   service?: { nameAr: string; nameEn: string; price: number; duration: number };
   payment?: { status: string; totalAmount: number };
   rating?: { stars: number; comment: string | null };
 }
 
 export interface CreateBookingRequest {
-  practitionerId: string;
+  employeeId: string;
   serviceId: string;
   type: BookingType;
   date: string;

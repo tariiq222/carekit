@@ -45,7 +45,7 @@ const optionalMedicalText = z.string().max(1000).optional()
 
 /* ─── Create Schema ─── */
 
-export const createPatientSchema = z.object({
+export const createClientSchema = z.object({
   firstName: nameField,
   middleName: optionalNameField,
   lastName: nameField,
@@ -65,7 +65,7 @@ export const createPatientSchema = z.object({
 
 /* ─── Edit Schema ─── */
 
-export const editPatientSchema = z.object({
+export const editClientSchema = z.object({
   firstName: nameField.optional(),
   middleName: optionalNameField,
   lastName: nameField.optional(),
@@ -84,5 +84,5 @@ export const editPatientSchema = z.object({
 
 /* ─── Types ─── */
 
-export type CreatePatientFormData = z.infer<typeof createPatientSchema>
-export type EditPatientFormData = z.infer<typeof editPatientSchema>
+export type CreateClientFormData = z.infer<typeof createClientSchema>
+export type EditClientFormData = z.infer<typeof editClientSchema>

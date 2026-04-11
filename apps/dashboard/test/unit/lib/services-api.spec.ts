@@ -34,7 +34,7 @@ import {
   deleteIntakeForm,
   setIntakeFields,
   fetchIntakeResponses,
-  fetchServicePractitioners,
+  fetchServiceEmployees,
   setServiceBranches,
   clearServiceBranches,
 } from "@/lib/api/services"
@@ -188,11 +188,11 @@ describe("services api", () => {
     })
   })
 
-  describe("fetchServicePractitioners", () => {
-    it("calls /services/:id/practitioners", async () => {
+  describe("fetchServiceEmployees", () => {
+    it("calls /services/:id/employees", async () => {
       getMock.mockResolvedValueOnce([{ id: "p-1", name: "Dr. Ali" }])
-      await fetchServicePractitioners("svc-1")
-      expect(getMock).toHaveBeenCalledWith("/services/svc-1/practitioners")
+      await fetchServiceEmployees("svc-1")
+      expect(getMock).toHaveBeenCalledWith("/services/svc-1/employees")
     })
   })
 

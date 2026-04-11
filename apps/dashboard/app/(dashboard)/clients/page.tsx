@@ -1,7 +1,7 @@
 "use client"
 
-import { PatientListPage } from "@/components/features/patients/patient-list-page"
+import { ClientListPage } from "@/components/features/clients/client-list-page"
 
-export default function PatientsRoute() {
-  return <PatientListPage />
+export default function ClientsRoute() {
+  return <ClientListPage />
 }

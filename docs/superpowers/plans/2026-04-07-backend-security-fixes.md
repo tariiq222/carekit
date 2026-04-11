@@ -434,9 +434,9 @@ describe('sendDayBeforeReminders', () => {
           id: 'b-1',
           date: new Date(),
           startTime: '10:00',
-          patientId: 'patient-1',
-          practitionerId: 'pract-1',
-          practitioner: { userId: 'user-pract-1' },
+          clientId: 'client-1',
+          employeeId: 'pract-1',
+          employee: { userId: 'user-pract-1' },
         },
       ]),
     };
@@ -450,7 +450,7 @@ describe('sendDayBeforeReminders', () => {
     resolveNotif();
     await sendPromise;
 
-    expect(notificationsServiceMock.createNotification).toHaveBeenCalledTimes(2); // patient + practitioner
+    expect(notificationsServiceMock.createNotification).toHaveBeenCalledTimes(2); // client + employee
   });
 });
 ```
@@ -475,11 +475,11 @@ await Promise.all(
 
     const timePromise = this.formatTimeForNotification(booking.startTime);
 
-    if (booking.patientId) {
+    if (booking.clientId) {
       notifications.push(
         timePromise.then((timeStr) =>
           this.notificationsService.createNotification({
-            userId: booking.patientId!,
+            userId: booking.clientId!,
             titleAr: 'تذكير بموعدك غداً',
             titleEn: 'Appointment Reminder — Tomorrow',
             bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
@@ -491,11 +491,11 @@ await Promise.all(
       );
     }
 
-    if (booking.practitioner?.userId) {
+    if (booking.employee?.userId) {
       notifications.push(
         timePromise.then((timeStr) =>
           this.notificationsService.createNotification({
-            userId: booking.practitioner!.userId,
+            userId: booking.employee!.userId,
             titleAr: 'تذكير بموعد غداً',
             titleEn: 'Appointment Reminder — Tomorrow',
             bodyAr: `لديك موعد غداً ${dateStr} الساعة ${timeStr}`,
@@ -522,11 +522,11 @@ await Promise.all(
     const notifications: Promise<unknown>[] = [];
     const timePromise = this.formatTimeForNotification(booking.startTime);
 
-    if (booking.patientId) {
+    if (booking.clientId) {
       notifications.push(
         timePromise.then((timeStr) =>
           this.notificationsService.createNotification({
-            userId: booking.patientId!,
+            userId: booking.clientId!,
             titleAr: 'موعدك بعد ساعتين',
             titleEn: 'Appointment in 2 Hours',
             bodyAr: `تذكير: موعدك بعد ساعتين الساعة ${timeStr}`,
@@ -538,11 +538,11 @@ await Promise.all(
       );
     }
 
-    if (booking.practitioner?.userId) {
+    if (booking.employee?.userId) {
       notifications.push(
         timePromise.then((timeStr) =>
           this.notificationsService.createNotification({
-            userId: booking.practitioner!.userId,
+            userId: booking.employee!.userId,
             titleAr: 'موعدك بعد ساعتين',
             titleEn: 'Appointment in 2 Hours',
             bodyAr: `تذكير: لديك موعد بعد ساعتين الساعة ${timeStr}`,
@@ -658,10 +658,10 @@ async autoNoShow(): Promise<void> {
     select: {
       id: true,
       startTime: true,
-      patientId: true,
-      practitionerId: true,
+      clientId: true,
+      employeeId: true,
       date: true,
-      practitioner: { select: { userId: true } },
+      employee: { select: { userId: true } },
     },
   });
 
@@ -996,9 +996,9 @@ try {
       },
     });
 
-    if (patientRole) {
+    if (clientRole) {
       await tx.userRole.create({
-        data: { userId: created.id, roleId: patientRole.id },
+        data: { userId: created.id, roleId: clientRole.id },
       });
     }
 

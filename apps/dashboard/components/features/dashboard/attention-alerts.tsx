@@ -31,7 +31,7 @@ const alerts = [
     titleAr: "طلبات إلغاء",
     titleEn: "Cancellation Requests",
     descAr: "مرضى يطلبون إلغاء حجوزاتهم",
-    descEn: "Patients requesting cancellation",
+    descEn: "Clients requesting cancellation",
     icon: CancelCircleIcon,
     severity: "error" as const,
     href: "/bookings",

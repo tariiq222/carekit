@@ -14,7 +14,7 @@ export const enGroups: Record<string, string> = {
   "groups.noGroupsDesc": "Start by adding a new group",
 
   "groups.name": "Name",
-  "groups.practitioner": "Practitioner",
+  "groups.employee": "Employee",
   "groups.deliveryMode": "Delivery Mode",
   "groups.date": "Date",
   "groups.enrolled": "Enrolled",
@@ -28,13 +28,13 @@ export const enGroups: Record<string, string> = {
   "groups.filterByStatus": "Filter by status",
   "groups.filterByDelivery": "Filter by delivery",
 
-  "groups.patient": "Patient",
-  "groups.patientId": "Patient ID",
-  "groups.patientIdPlaceholder": "Enter patient UUID",
-  "groups.addPatient": "Add Patient",
+  "groups.client": "Client",
+  "groups.clientId": "Client ID",
+  "groups.clientIdPlaceholder": "Enter client UUID",
+  "groups.addClient": "Add Client",
   "groups.enroll": "Enroll",
-  "groups.patientEnrolled": "Patient enrolled successfully",
-  "groups.removePatient": "Remove Patient",
+  "groups.clientEnrolled": "Client enrolled successfully",
+  "groups.removeClient": "Remove Client",
   "groups.issueCertificate": "Issue Certificate",
 
   "groups.cancelGroup": "Cancel Group",
@@ -45,7 +45,7 @@ export const enGroups: Record<string, string> = {
   "groups.dateSet": "Date set successfully",
 
   "groups.noEnrollments": "No enrollments",
-  "groups.noEnrollmentsDesc": "No patients have been enrolled yet",
+  "groups.noEnrollmentsDesc": "No clients have been enrolled yet",
 
   /* ── Create Page ── */
   "groups.create.pageTitle": "Create New Group",
@@ -56,13 +56,13 @@ export const enGroups: Record<string, string> = {
   "groups.create.success": "Group created successfully",
   "groups.create.error": "Failed to create group",
   "groups.create.formError": "Please check the required fields",
-  "groups.create.practitionerRequired": "Please select a practitioner first",
+  "groups.create.employeeRequired": "Please select a employee first",
 
   /* ── Tabs ── */
   "groups.create.tabs.general": "General Info",
   "groups.create.tabs.scheduling": "Scheduling & Pricing",
   "groups.create.tabs.settings": "Settings",
-  "groups.create.tabs.practitioners": "Practitioners",
+  "groups.create.tabs.employees": "Employees",
 
   /* ── General Tab ── */
   "groups.create.nameAr": "Name (AR)",

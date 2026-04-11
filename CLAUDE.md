@@ -79,9 +79,9 @@ carekit/
 │   │   ├── components/       # ui/ (shadcn) + features/
 │   │   ├── hooks/            # TanStack Query hooks
 │   │   └── lib/              # api/, schemas/, types/, utils
-│   └── mobile/           # Expo — Patient + Practitioner apps
-│       ├── app/(patient)/      # Patient flows (booking, appointments, chat)
-│       ├── app/(practitioner)/ # Practitioner flows
+│   └── mobile/           # Expo — Client + Employee apps
+│       ├── app/(client)/      # Client flows (booking, appointments, chat)
+│       ├── app/(employee)/ # Employee flows
 │       ├── services/           # Axios API clients
 │       └── stores/             # Redux Toolkit slices
 ├── packages/
@@ -105,10 +105,10 @@ See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 |--------|---------------|-----------------|-------|
 | Auth | `auth/` | — | JWT + refresh tokens, CASL RBAC |
 | Bookings | `bookings/` | `bookings/` | Recurring, waitlist, walk-in |
-| Patients | `patients/` | `patients/` | Walk-in support |
-| Practitioners | `practitioners/` | `practitioners/` | Availability scheduler |
+| Clients | `clients/` | `clients/` | Walk-in support |
+| Employees | `employees/` | `employees/` | Availability scheduler |
 | Services | `services/` | `services/` | Clinic service catalog |
-| Specialties | `specialties/` | `specialties/` | Practitioner specialties |
+| Specialties | `specialties/` | `specialties/` | Employee specialties |
 | Branches | `branches/` | `branches/` | Multi-branch support |
 | Payments | `payments/` | `payments/` | Moyasar webhook, owner-only |
 | ZATCA | `zatca/` | `zatca/` | Saudi e-invoicing, regulated |
@@ -119,7 +119,7 @@ See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 | AI | `ai/` | — | pgvector embeddings, knowledge base |
 | Reports | `reports/` | `reports/` | Revenue, activity, exports |
 | Notifications | `notifications/` | `notifications/` | FCM push + in-app |
-| Ratings | `ratings/` | `ratings/` | Practitioner ratings |
+| Ratings | `ratings/` | `ratings/` | Employee ratings |
 | Intake Forms | `intake-forms/` | `intake-forms/` | Pre-appointment forms |
 | Whitelabel | `whitelabel/` | `settings/` | Clinic branding config |
 | Roles | `roles/` | `settings/` | Custom roles |
@@ -143,7 +143,7 @@ See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 
 ### Users
 
-**Primary**: Receptionists (daily, all-day use) and clinic admins/owners (oversight and configuration). Context: busy clinic environment — phone ringing, patients waiting, multiple tabs open. Speed and clarity are survival requirements.
+**Primary**: Receptionists (daily, all-day use) and clinic admins/owners (oversight and configuration). Context: busy clinic environment — phone ringing, clients waiting, multiple tabs open. Speed and clarity are survival requirements.
 
 **Job to be done**: Complete operational tasks fast, without friction. The UI gets out of the way.
 
@@ -151,7 +151,7 @@ See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 
 **Three words**: Modern. Elegant. Efficient.
 
-CareKit should feel like it belongs in a well-designed Apple environment, not a hospital IT department. Clinic owners should feel proud to show it to patients and partners.
+CareKit should feel like it belongs in a well-designed Apple environment, not a hospital IT department. Clinic owners should feel proud to show it to clients and partners.
 
 **Emotional goals** (priority order):
 

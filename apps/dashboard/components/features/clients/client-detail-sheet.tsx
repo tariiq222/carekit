@@ -12,29 +12,29 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
-import { usePatient, usePatientStats } from "@/hooks/use-patients"
+import { useClient, useClientStats } from "@/hooks/use-clients"
 import { useLocale } from "@/components/locale-provider"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 
-interface PatientDetailSheetProps {
-  patientId: string | null
+interface ClientDetailSheetProps {
+  clientId: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function PatientDetailSheet({
-  patientId,
+export function ClientDetailSheet({
+  clientId,
   open,
   onOpenChange,
-}: PatientDetailSheetProps) {
+}: ClientDetailSheetProps) {
   const { t, locale } = useLocale()
-  const { data: patient, isLoading } = usePatient(patientId)
-  const { data: stats, isLoading: statsLoading } = usePatientStats(patientId)
+  const { data: client, isLoading } = useClient(clientId)
+  const { data: stats, isLoading: statsLoading } = useClientStats(clientId)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left">
-        {isLoading || !patient ? (
+        {isLoading || !client ? (
           <SheetBody>
             <div className="flex flex-col gap-4">
               <Skeleton className="h-8 w-48" />
@@ -49,20 +49,20 @@ export function PatientDetailSheet({
           <>
             <SheetHeader>
               <SheetTitle>
-                {patient.firstName} {patient.lastName}
+                {client.firstName} {client.lastName}
               </SheetTitle>
               <SheetDescription className="flex items-center gap-2">
                 <Badge
                   variant="outline"
                   className={
-                    patient.isActive
+                    client.isActive
                       ? "border-success/30 bg-success/10 text-success"
                       : "border-muted-foreground/30 bg-muted text-muted-foreground"
                   }
                 >
-                  {patient.isActive
-                    ? t("patients.status.active")
-                    : t("patients.status.inactive")}
+                  {client.isActive
+                    ? t("clients.status.active")
+                    : t("clients.status.inactive")}
                 </Badge>
               </SheetDescription>
             </SheetHeader>
@@ -70,26 +70,26 @@ export function PatientDetailSheet({
             <SheetBody>
               <div className="flex flex-col gap-6">
                 {/* Contact Info */}
-                <DetailSection title={t("patients.detail.contactInfo")}>
+                <DetailSection title={t("clients.detail.contactInfo")}>
                   <DetailRow
-                    label={t("patients.detail.email")}
-                    value={patient.email}
+                    label={t("clients.detail.email")}
+                    value={client.email}
                   />
                   <DetailRow
-                    label={t("patients.detail.phone")}
-                    value={patient.phone ?? "—"}
+                    label={t("clients.detail.phone")}
+                    value={client.phone ?? "—"}
                   />
                   <DetailRow
-                    label={t("patients.detail.gender")}
+                    label={t("clients.detail.gender")}
                     value={
-                      patient.gender
-                        ? t(`patients.create.${patient.gender}`)
+                      client.gender
+                        ? t(`clients.create.${client.gender}`)
                         : "—"
                     }
                   />
                   <DetailRow
-                    label={t("patients.detail.joined")}
-                    value={new Date(patient.createdAt).toLocaleDateString()}
+                    label={t("clients.detail.joined")}
+                    value={new Date(client.createdAt).toLocaleDateString()}
                     numeric
                   />
                 </DetailSection>
@@ -97,7 +97,7 @@ export function PatientDetailSheet({
                 <Separator />
 
                 {/* Stats */}
-                <DetailSection title={t("patients.detail.statistics")}>
+                <DetailSection title={t("clients.detail.statistics")}>
                   {statsLoading || !stats ? (
                     <div className="flex flex-col gap-2">
                       {Array.from({ length: 4 }).map((_, i) => (
@@ -107,27 +107,27 @@ export function PatientDetailSheet({
                   ) : (
                     <>
                       <DetailRow
-                        label={t("patients.detail.totalBookings")}
+                        label={t("clients.detail.totalBookings")}
                         value={String(stats.totalBookings)}
                         numeric
                       />
                       <DetailRow
-                        label={t("patients.detail.completed")}
+                        label={t("clients.detail.completed")}
                         value={String(stats.completedBookings)}
                         numeric
                       />
                       <DetailRow
-                        label={t("patients.detail.cancelled")}
+                        label={t("clients.detail.cancelled")}
                         value={String(stats.cancelledBookings)}
                         numeric
                       />
                       <DetailRow
-                        label={t("patients.detail.totalSpent")}
+                        label={t("clients.detail.totalSpent")}
                         value={<FormattedCurrency amount={stats.totalSpent} locale={locale} decimals={2} />}
                         numeric
                       />
                       <DetailRow
-                        label={t("patients.detail.lastVisit")}
+                        label={t("clients.detail.lastVisit")}
                         value={
                           stats.lastVisit
                             ? new Date(stats.lastVisit).toLocaleDateString()

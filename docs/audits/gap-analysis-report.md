@@ -49,11 +49,11 @@ These were excluded from the gap inventory. The remaining 18 + 14 are genuine ga
 
 - **Stage**: [4] Data Integrity
 - **Severity**: Critical
-- **Description**: The booking creation flow checked for conflicts (`validateAvailability` + `checkDoubleBooking`) outside of a database transaction. Two concurrent requests for the same practitioner/slot could both pass the check and both create bookings.
-- **Impact**: Double-bookings in production, practitioner schedule corruption, patient trust damage.
+- **Description**: The booking creation flow checked for conflicts (`validateAvailability` + `checkDoubleBooking`) outside of a database transaction. Two concurrent requests for the same employee/slot could both pass the check and both create bookings.
+- **Impact**: Double-bookings in production, employee schedule corruption, client trust damage.
 - **Fix Applied**:
   1. Wrapped availability check + conflict check + `booking.create` inside a `$transaction` with `isolationLevel: 'Serializable'` and `timeout: 10000ms`.
-  2. Added a partial unique index at the database level: `CREATE UNIQUE INDEX "bookings_practitioner_slot_unique" ON "bookings" ("practitioner_id", "date", "start_time") WHERE "status" IN ('pending', 'confirmed', 'checked_in', 'in_progress') AND "deleted_at" IS NULL`.
+  2. Added a partial unique index at the database level: `CREATE UNIQUE INDEX "bookings_employee_slot_unique" ON "bookings" ("employee_id", "date", "start_time") WHERE "status" IN ('pending', 'confirmed', 'checked_in', 'in_progress') AND "deleted_at" IS NULL`.
   3. Moved Zoom meeting creation outside the transaction (external API call must not hold a serializable lock).
   4. Applied the same serializable transaction pattern to the reschedule flow.
   5. Updated `booking-validation.helper.ts` to accept a `PrismaLike` type (both `PrismaClient` and transaction delegate) instead of `PrismaService` directly.
@@ -87,8 +87,8 @@ These were excluded from the gap inventory. The remaining 18 + 14 are genuine ga
 
 - **Stage**: [10] Infrastructure
 - **Severity**: Critical
-- **Description**: PostgreSQL had a backup script (`docker/scripts/backup.sh`), but MinIO (storing patient receipts, documents, profile photos) had no backup mechanism. A MinIO disk failure would result in permanent file loss.
-- **Impact**: Permanent loss of patient documents, payment receipts, profile photos — unrecoverable without backup.
+- **Description**: PostgreSQL had a backup script (`docker/scripts/backup.sh`), but MinIO (storing client receipts, documents, profile photos) had no backup mechanism. A MinIO disk failure would result in permanent file loss.
+- **Impact**: Permanent loss of client documents, payment receipts, profile photos — unrecoverable without backup.
 - **Fix Applied**:
   1. Created `docker/scripts/backup-minio.sh` — mirrors the entire MinIO bucket to local storage using `mc mirror`, with configurable retention (default 30 days) and old backup cleanup.
   2. Added `minio-backup` service to `docker-compose.prod.yml` — runs a daily cron at 02:30 using the `minio/mc` image, with a dedicated `minio_backup_data` volume.
@@ -166,7 +166,7 @@ These were excluded from the gap inventory. The remaining 18 + 14 are genuine ga
 - **Stage**: [8] Feature Completeness
 - **Severity**: High
 - **Description**: The notification system only supported in-app notifications and FCM push. No SMS channel existed for critical notifications (appointment reminders, booking confirmations, cancellation updates).
-- **Impact**: Patients who disable push notifications or uninstall the app receive no time-sensitive alerts.
+- **Impact**: Clients who disable push notifications or uninstall the app receive no time-sensitive alerts.
 - **Fix Applied**:
   1. Created `sms.service.ts` — provider-agnostic SMS service supporting Unifonic and Twilio, configured via `SMS_PROVIDER`, `SMS_API_KEY`, `SMS_SENDER_ID` environment variables. Uses `resilientFetch` with circuit breaker.
   2. Integrated SMS into `notifications.service.ts` — fire-and-forget SMS for critical notification types: `reminder`, `booking_confirmed`, `booking_cancelled`, `cancellation_rejected`.
@@ -224,7 +224,7 @@ These were excluded from the gap inventory. The remaining 18 + 14 are genuine ga
 - **Description**: Approximately 80 string fields across 46 DTOs had no `@MaxLength` constraint. A malicious client could send megabytes of data in any string field, bypassing Nest's body size limit by distributing the payload across many fields.
 - **Impact**: Memory exhaustion attacks; oversized database writes; potential downstream issues with SMS/email bodies.
 - **Fix Applied**: Added `@MaxLength()` decorators to all unprotected string fields across 46 DTO files. Typical limits: 128 for passwords, 255 for names/identifiers, 1000 for notes/descriptions, 5000 for long text.
-- **Files Modified**: 46 DTO files across `auth`, `bookings`, `chatbot`, `notifications`, `payments`, `practitioners`, `problem-reports`, `ratings`, `roles`, `services`, `specialties`, `users`, `whitelabel`, `zatca` modules.
+- **Files Modified**: 46 DTO files across `auth`, `bookings`, `chatbot`, `notifications`, `payments`, `employees`, `problem-reports`, `ratings`, `roles`, `services`, `specialties`, `users`, `whitelabel`, `zatca` modules.
 - **Verification**: Any string exceeding its `@MaxLength` is rejected with a 400 validation error before reaching the service layer.
 
 #### M3 — Embedding Vector Injection via `$queryRawUnsafe`
@@ -245,7 +245,7 @@ These were excluded from the gap inventory. The remaining 18 + 14 are genuine ga
 - **Description**: The global throttler provided a baseline rate limit, but high-value endpoints (booking creation, payment initiation, chatbot messaging) had no per-endpoint limits. An attacker could abuse these endpoints at the global rate.
 - **Impact**: Booking spam, payment abuse, chatbot cost exhaustion.
 - **Fix Applied**: Added `@Throttle()` decorators to critical endpoints:
-  - `bookings.controller.ts`: `create` (10/min), `reschedule` (5/min), `patientReschedule` (5/min)
+  - `bookings.controller.ts`: `create` (10/min), `reschedule` (5/min), `clientReschedule` (5/min)
   - `chatbot.controller.ts`: `createSession` (5/min), `sendMessage` (20/min), `streamMessage` (20/min)
   - `payments.controller.ts`: `createMoyasarPayment` (5/min), `bankTransfer` (5/min)
 - **Files Modified**:

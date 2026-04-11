@@ -44,7 +44,7 @@ export function postToHost(msg: WidgetMessage, targetOrigin: string) {
 /* ─── Props ─── */
 
 interface BookingWizardProps {
-  initialPractitionerId?: string
+  initialEmployeeId?: string
   initialServiceId?: string
   initialLocale?: "ar" | "en"
   /** The origin of the parent page embedding this widget. Required for postMessage. */
@@ -53,7 +53,7 @@ interface BookingWizardProps {
 }
 
 export function BookingWizard({
-  initialPractitionerId,
+  initialEmployeeId,
   initialServiceId,
   initialLocale = "ar",
   parentOrigin = "",
@@ -80,7 +80,7 @@ export function BookingWizard({
 
   /* ─── Widget settings from branding ─── */
   const widgetShowPrice         = branding?.widget_show_price ?? true
-  const widgetAnyPractitioner   = branding?.widget_any_practitioner ?? false
+  const widgetAnyEmployee   = branding?.widget_any_employee ?? false
   const widgetRedirectUrl       = branding?.widget_redirect_url ?? null
   const widgetMaxAdvanceDays    = typeof branding?.widget_max_advance_days === 'number'
     ? branding.widget_max_advance_days
@@ -88,10 +88,10 @@ export function BookingWizard({
 
   /* ─── Booking state machine ─── */
   const booking = useWidgetBooking(
-    initialPractitionerId,
+    initialEmployeeId,
     initialServiceId,
     initialFlowOrder,
-    widgetAnyPractitioner,
+    widgetAnyEmployee,
   )
   const { state, hasBranches, universalBack } = booking
   const isRtl = initialLocale === "ar"
@@ -169,8 +169,8 @@ export function BookingWizard({
   const canGoBack = !isSuccess && !(
     // First real step with no sub-state
     (state.step === "branch") ||
-    (state.step === "service" && !state.practitioner && !state.service && !hasBranches) ||
-    (state.step === "service" && !state.service && !state.practitioner && hasBranches && !state.branch)
+    (state.step === "service" && !state.employee && !state.service && !hasBranches) ||
+    (state.step === "service" && !state.service && !state.employee && hasBranches && !state.branch)
   )
 
   return (
@@ -217,7 +217,7 @@ export function BookingWizard({
                 locale={initialLocale}
                 booking={booking}
                 flowOrder={initialFlowOrder}
-                anyPractitioner={widgetAnyPractitioner}
+                anyEmployee={widgetAnyEmployee}
               />
             )}
 
@@ -260,7 +260,7 @@ export function BookingWizard({
               )}
 
               {/* Next button — second in DOM = left in RTL; only on service booking-type sub-state */}
-              {state.step === "service" && state.practitioner && state.service ? (
+              {state.step === "service" && state.employee && state.service ? (
                 <Button
                   onClick={() => {
                     if (state.bookingType && state.service) {

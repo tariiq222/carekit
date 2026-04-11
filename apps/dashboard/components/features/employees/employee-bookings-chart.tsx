@@ -12,7 +12,7 @@ import type { Booking, BookingStatus, BookingType } from "@/lib/types/booking"
 import {
   DonutChart, LineChart, PeriodSelector,
   type Period, type LinePoint,
-} from "./practitioner-chart-primitives"
+} from "./employee-chart-primitives"
 
 /* ─── Constants ─── */
 
@@ -78,9 +78,9 @@ function fmtRevenue(halalat: number, locale: string): string {
 
 /* ─── Main ─── */
 
-interface Props { practitionerId: string }
+interface Props { employeeId: string }
 
-export function PractitionerBookingsChart({ practitionerId }: Props) {
+export function EmployeeBookingsChart({ employeeId }: Props) {
   const { locale } = useLocale()
   const isAr = locale === "ar"
 
@@ -89,19 +89,19 @@ export function PractitionerBookingsChart({ practitionerId }: Props) {
   const [linePeriod, setLinePeriod] = useState<Period>("1m")
 
   const { data: donutData, isLoading: donutLoading } = useQuery({
-    queryKey: ["pbc-donut", practitionerId, donutPeriod],
-    queryFn: () => fetchBookings({ practitionerId, ...getRange(donutPeriod), perPage: 500 }),
-    enabled: !!practitionerId,
+    queryKey: ["pbc-donut", employeeId, donutPeriod],
+    queryFn: () => fetchBookings({ employeeId, ...getRange(donutPeriod), perPage: 500 }),
+    enabled: !!employeeId,
   })
   const { data: barData, isLoading: barLoading } = useQuery({
-    queryKey: ["pbc-bar", practitionerId, barPeriod],
-    queryFn: () => fetchBookings({ practitionerId, ...getRange(barPeriod), perPage: 500 }),
-    enabled: !!practitionerId,
+    queryKey: ["pbc-bar", employeeId, barPeriod],
+    queryFn: () => fetchBookings({ employeeId, ...getRange(barPeriod), perPage: 500 }),
+    enabled: !!employeeId,
   })
   const { data: lineData, isLoading: lineLoading } = useQuery({
-    queryKey: ["pbc-line", practitionerId, linePeriod],
-    queryFn: () => fetchBookings({ practitionerId, ...getRange(linePeriod), perPage: 500 }),
-    enabled: !!practitionerId,
+    queryKey: ["pbc-line", employeeId, linePeriod],
+    queryFn: () => fetchBookings({ employeeId, ...getRange(linePeriod), perPage: 500 }),
+    enabled: !!employeeId,
   })
 
   const donutBookings = donutData?.items ?? []

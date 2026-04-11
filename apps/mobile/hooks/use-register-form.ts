@@ -81,7 +81,7 @@ export function useRegisterForm() {
       if (response.success && response.data) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         dispatch(setCredentials(response.data));
-        router.replace('/(patient)/(tabs)/home');
+        router.replace('/(client)/(tabs)/home');
       }
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

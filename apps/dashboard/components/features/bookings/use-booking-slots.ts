@@ -1,12 +1,12 @@
 import React from "react"
 import { useQuery } from "@tanstack/react-query"
-import { fetchSlots, fetchPractitionerServiceTypes } from "@/lib/api/practitioners-schedule"
-import { fetchPractitionerServices } from "@/lib/api/practitioners-schedule"
+import { fetchSlots, fetchEmployeeServiceTypes } from "@/lib/api/employees-schedule"
+import { fetchEmployeeServices } from "@/lib/api/employees-schedule"
 import { queryKeys } from "@/lib/query-keys"
-import type { PractitionerDurationOption, PractitionerService } from "@/lib/types/practitioner"
+import type { EmployeeDurationOption, EmployeeService } from "@/lib/types/employee"
 
 interface UseBookingSlotsOptions {
-  practitionerId: string
+  employeeId: string
   serviceId: string
   bookingType: string
   date: string
@@ -14,28 +14,28 @@ interface UseBookingSlotsOptions {
 }
 
 export function useCreateBookingSlots({
-  practitionerId,
+  employeeId,
   serviceId,
   bookingType,
   date,
   durationOptionId,
 }: UseBookingSlotsOptions) {
-  // Fetch services that belong to this practitioner
-  const { data: practitionerServices = [], isLoading: practitionerServicesLoading } = useQuery<PractitionerService[]>({
-    queryKey: queryKeys.practitioners.services(practitionerId),
-    queryFn: () => fetchPractitionerServices(practitionerId),
-    enabled: !!practitionerId,
+  // Fetch services that belong to this employee
+  const { data: employeeServices = [], isLoading: employeeServicesLoading } = useQuery<EmployeeService[]>({
+    queryKey: queryKeys.employees.services(employeeId),
+    queryFn: () => fetchEmployeeServices(employeeId),
+    enabled: !!employeeId,
   })
 
-  const canFetchServiceTypes = !!practitionerId && !!serviceId
+  const canFetchServiceTypes = !!employeeId && !!serviceId
 
   const { data: serviceTypes = [], isLoading: serviceTypesLoading } = useQuery({
-    queryKey: queryKeys.practitioners.serviceTypes(practitionerId, serviceId),
-    queryFn: () => fetchPractitionerServiceTypes(practitionerId, serviceId),
+    queryKey: queryKeys.employees.serviceTypes(employeeId, serviceId),
+    queryFn: () => fetchEmployeeServiceTypes(employeeId, serviceId),
     enabled: canFetchServiceTypes,
   })
 
-  const durationOptions = React.useMemo((): PractitionerDurationOption[] => {
+  const durationOptions = React.useMemo((): EmployeeDurationOption[] => {
     if (!serviceTypes.length || !bookingType) return []
     const pst = serviceTypes.find((st) => st.bookingType === bookingType)
     if (!pst || !pst.isActive) return []
@@ -50,18 +50,18 @@ export function useCreateBookingSlots({
     return opt?.durationMinutes
   }, [hasDurationOptions, durationOptions, durationOptionId])
 
-  const canFetchSlots = !!practitionerId && !!date &&
+  const canFetchSlots = !!employeeId && !!date &&
     (!hasDurationOptions || !!selectedDuration)
 
   const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: [...queryKeys.practitioners.slots(practitionerId, date), selectedDuration],
-    queryFn: () => fetchSlots(practitionerId, date, selectedDuration),
+    queryKey: [...queryKeys.employees.slots(employeeId, date), selectedDuration],
+    queryFn: () => fetchSlots(employeeId, date, selectedDuration),
     enabled: canFetchSlots,
   })
 
   return {
-    practitionerServices,
-    practitionerServicesLoading,
+    employeeServices,
+    employeeServicesLoading,
     durationOptions,
     hasDurationOptions,
     selectedDuration,

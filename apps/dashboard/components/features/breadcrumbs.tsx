@@ -59,8 +59,8 @@ function generateBreadcrumbs(pathname: string, t: (key: string) => string): Brea
 
   const routeLabels: Record<string, string> = {
     bookings: t("nav.bookings"),
-    patients: t("nav.patients"),
-    practitioners: t("nav.practitioners"),
+    clients: t("nav.clients"),
+    employees: t("nav.employees"),
     services: t("nav.services"),
     payments: t("nav.payments"),
     invoices: t("nav.invoices"),

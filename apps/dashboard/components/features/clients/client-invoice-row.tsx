@@ -1,14 +1,14 @@
 import { Badge } from "@/components/ui/badge"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
-import type { PatientBookingPreview } from "@/lib/types/patient"
+import type { ClientBookingPreview } from "@/lib/types/client"
 
 interface Props {
-  booking: PatientBookingPreview
+  booking: ClientBookingPreview
   locale: "ar" | "en"
   t: (k: string) => string
 }
 
-export function PatientInvoiceRow({ booking, locale, t }: Props) {
+export function ClientInvoiceRow({ booking, locale, t }: Props) {
   if (!booking.payment) return null
 
   const serviceName = locale === "ar" ? booking.service.nameAr : booking.service.nameEn
@@ -29,7 +29,7 @@ export function PatientInvoiceRow({ booking, locale, t }: Props) {
           <FormattedCurrency amount={booking.payment.totalAmount} locale={locale} decimals={2} />
         </span>
         <Badge variant="outline" className={paidStyle}>
-          {t(`patients.dialog.paymentStatus.${booking.payment.status}`) || booking.payment.status}
+          {t(`clients.dialog.paymentStatus.${booking.payment.status}`) || booking.payment.status}
         </Badge>
       </div>
     </div>

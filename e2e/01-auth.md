@@ -243,7 +243,7 @@
 | DA-AP-7 | logout() يستدعي logoutApi | `mockLogoutApi` استُدعي مرة واحدة |
 | DA-AP-8 | canDo() — تطابق صريح | `canDo('bookings', 'read') === true` |
 | DA-AP-9 | canDo() — صلاحية غير موجودة | `canDo('invoices', 'delete') === false` |
-| DA-AP-10 | canDo() — wildcard (`patients:*`) | `canDo('patients', 'anything') === true` |
+| DA-AP-10 | canDo() — wildcard (`clients:*`) | `canDo('clients', 'anything') === true` |
 | DA-AP-11 | scheduleRefresh يستدعي refresh بعد 780 ثانية | `mockRefreshToken` استُدعي مرتين |
 | DA-AP-12 | scheduleRefresh فاشل يمسح user | `user === null` بعد انتهاء المؤقت |
 

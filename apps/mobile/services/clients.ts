@@ -2,7 +2,7 @@ import api from './api';
 import type { ApiResponse, PaginatedResponse } from '@/types/api';
 import type { Booking } from '@/types/models';
 
-export interface PatientRecord {
+export interface ClientRecord {
   id: string;
   firstName: string;
   lastName: string;
@@ -11,21 +11,21 @@ export interface PatientRecord {
   avatarUrl: string | null;
 }
 
-export const patientsService = {
+export const clientsService = {
   async getById(id: string) {
-    const response = await api.get<ApiResponse<PatientRecord>>(`/patients/${id}`);
+    const response = await api.get<ApiResponse<ClientRecord>>(`/clients/${id}`);
     return response.data;
   },
 
-  async getPractitionerBookings(patientId: string) {
+  async getEmployeeBookings(clientId: string) {
     const response = await api.get<PaginatedResponse<Booking>>('/bookings', {
-      params: { patientId, limit: 50 },
+      params: { clientId, limit: 50 },
     });
     return response.data;
   },
 
   async getAll(params?: { search?: string; page?: number; limit?: number }) {
-    const response = await api.get<PaginatedResponse<PatientRecord>>('/patients', { params });
+    const response = await api.get<PaginatedResponse<ClientRecord>>('/clients', { params });
     return response.data;
   },
 };

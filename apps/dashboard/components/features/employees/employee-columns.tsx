@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import type { Practitioner } from "@/lib/types/practitioner"
+import type { Employee } from "@/lib/types/employee"
 
 
 function RatingDisplay({ value }: { value: number | null | undefined }) {
@@ -32,19 +32,19 @@ function RatingDisplay({ value }: { value: number | null | undefined }) {
   )
 }
 
-export function getPractitionerColumns(
-  onRowClick: (p: Practitioner) => void,
+export function getEmployeeColumns(
+  onRowClick: (p: Employee) => void,
   locale: "en" | "ar" = "en",
-  onEdit?: (p: Practitioner) => void,
-  onDelete?: (p: Practitioner) => void,
+  onEdit?: (p: Employee) => void,
+  onDelete?: (p: Employee) => void,
   t?: (key: string) => string,
-  onPreview?: (p: Practitioner) => void,
-): ColumnDef<Practitioner>[] {
+  onPreview?: (p: Employee) => void,
+): ColumnDef<Employee>[] {
   return [
     {
-      id: "practitioner",
+      id: "employee",
       accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
-      header: t?.("practitioners.col.practitioner") ?? "Practitioner",
+      header: t?.("employees.col.employee") ?? "Employee",
       enableSorting: true,
       sortingFn: (a, b) => {
         const nameA = `${a.original.user.firstName} ${a.original.user.lastName}`
@@ -82,7 +82,7 @@ export function getPractitionerColumns(
     },
     {
       id: "email",
-      header: t?.("practitioners.col.email") ?? "Email",
+      header: t?.("employees.col.email") ?? "Email",
       enableSorting: false,
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
@@ -92,7 +92,7 @@ export function getPractitionerColumns(
     },
     {
       accessorKey: "experience",
-      header: t?.("practitioners.col.experience") ?? "Experience",
+      header: t?.("employees.col.experience") ?? "Experience",
       enableSorting: true,
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-foreground">
@@ -104,13 +104,13 @@ export function getPractitionerColumns(
     },
     {
       accessorKey: "averageRating",
-      header: t?.("practitioners.col.rating") ?? "Rating",
+      header: t?.("employees.col.rating") ?? "Rating",
       enableSorting: true,
       cell: ({ row }) => <RatingDisplay value={row.original.averageRating} />,
     },
     {
       id: "status",
-      header: t?.("practitioners.col.status") ?? "Status",
+      header: t?.("employees.col.status") ?? "Status",
       enableSorting: true,
       sortingFn: (a, b) => Number(b.original.isActive) - Number(a.original.isActive),
       cell: ({ row }) => {
@@ -125,14 +125,14 @@ export function getPractitionerColumns(
             }
           >
             <span className={`me-1.5 inline-block size-1.5 rounded-full ${active ? "bg-success" : "bg-muted-foreground"}`} />
-            {active ? (t?.("practitioners.status.active") ?? "Active") : (t?.("practitioners.status.suspended") ?? "Suspended")}
+            {active ? (t?.("employees.status.active") ?? "Active") : (t?.("employees.status.suspended") ?? "Suspended")}
           </Badge>
         )
       },
     },
     {
       id: "actions",
-      header: t?.("practitioners.col.actions") ?? "Actions",
+      header: t?.("employees.col.actions") ?? "Actions",
       enableSorting: false,
       cell: ({ row }) => {
         const p = row.original

@@ -11,7 +11,7 @@ export enum NotificationType {
   CANCELLATION_REJECTED = 'cancellation_rejected',
   CANCELLATION_REQUESTED = 'cancellation_requested',
   NO_SHOW_REVIEW = 'no_show_review',
-  PATIENT_ARRIVED = 'patient_arrived',
+  CLIENT_ARRIVED = 'client_arrived',
   RECEIPT_REJECTED = 'receipt_rejected',
   REMINDER = 'reminder',
   PAYMENT_RECEIVED = 'payment_received',

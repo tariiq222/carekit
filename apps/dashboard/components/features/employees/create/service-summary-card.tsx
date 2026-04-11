@@ -45,7 +45,7 @@ export function ServiceSummaryCard({ draft, onRemove }: ServiceSummaryCardProps)
         </div>
         {draft.bufferMinutes > 0 && (
           <span className="text-[10px] text-muted-foreground tabular-nums">
-            {t("practitioners.services.buffer").replace("{minutes}", String(draft.bufferMinutes))}
+            {t("employees.services.buffer").replace("{minutes}", String(draft.bufferMinutes))}
           </span>
         )}
       </div>

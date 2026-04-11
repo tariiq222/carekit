@@ -21,18 +21,18 @@ interface Props {
   groupId: string
 }
 
-export function EnrollPatientGroupDialog({ open, onClose, groupId }: Props) {
+export function EnrollClientGroupDialog({ open, onClose, groupId }: Props) {
   const { t } = useLocale()
-  const { enrollPatientMut } = useGroupsMutations()
-  const [patientId, setPatientId] = useState("")
+  const { enrollClientMut } = useGroupsMutations()
+  const [clientId, setClientId] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!patientId.trim()) return
+    if (!clientId.trim()) return
     try {
-      await enrollPatientMut.mutateAsync({ groupId, patientId: patientId.trim() })
-      toast.success(t("groups.patientEnrolled"))
-      setPatientId("")
+      await enrollClientMut.mutateAsync({ groupId, clientId: clientId.trim() })
+      toast.success(t("groups.clientEnrolled"))
+      setClientId("")
       onClose()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("common.error"))
@@ -43,16 +43,16 @@ export function EnrollPatientGroupDialog({ open, onClose, groupId }: Props) {
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("groups.addPatient")}</DialogTitle>
+          <DialogTitle>{t("groups.addClient")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="space-y-2">
-            <Label>{t("groups.patientId")}</Label>
+            <Label>{t("groups.clientId")}</Label>
             <Input
-              value={patientId}
-              onChange={(e) => setPatientId(e.target.value)}
-              placeholder={t("groups.patientIdPlaceholder")}
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              placeholder={t("groups.clientIdPlaceholder")}
             />
           </div>
         </form>
@@ -61,9 +61,9 @@ export function EnrollPatientGroupDialog({ open, onClose, groupId }: Props) {
           <Button variant="outline" onClick={onClose}>{t("common.cancel")}</Button>
           <Button
             onClick={handleSubmit}
-            disabled={enrollPatientMut.isPending || !patientId.trim()}
+            disabled={enrollClientMut.isPending || !clientId.trim()}
           >
-            {enrollPatientMut.isPending ? t("common.saving") : t("groups.enroll")}
+            {enrollClientMut.isPending ? t("common.saving") : t("groups.enroll")}
           </Button>
         </DialogFooter>
       </DialogContent>

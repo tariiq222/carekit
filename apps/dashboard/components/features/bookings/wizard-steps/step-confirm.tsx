@@ -135,8 +135,8 @@ export function StepConfirm({
       </p>
       <div className="rounded-xl border border-border bg-surface px-4">
         <SummaryRow
-          label={t("bookings.wizard.step.confirm.patient")}
-          value={state.patientName ?? "—"}
+          label={t("bookings.wizard.step.confirm.client")}
+          value={state.clientName ?? "—"}
           onEdit={() => onJump(1)}
         />
         <div className="border-t border-border/60" />
@@ -147,8 +147,8 @@ export function StepConfirm({
         />
         <div className="border-t border-border/60" />
         <SummaryRow
-          label={t("bookings.wizard.step.confirm.practitioner")}
-          value={state.practitionerName ?? "—"}
+          label={t("bookings.wizard.step.confirm.employee")}
+          value={state.employeeName ?? "—"}
           onEdit={() => onJump(3)}
         />
         <div className="border-t border-border/60" />

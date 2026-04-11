@@ -3,17 +3,17 @@
 import { useQuery, useQueryClient, useMutation, keepPreviousData } from "@tanstack/react-query"
 import { useState, useCallback } from "react"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchPatients, fetchPatient, fetchPatientStats, fetchPatientBookings, fetchPatientListStats, updatePatient, createWalkInPatient, activatePatient, deactivatePatient } from "@/lib/api/patients"
-import type { PatientListQuery } from "@/lib/types/patient"
+import { fetchClients, fetchClient, fetchClientStats, fetchClientBookings, fetchClientListStats, updateClient, createWalkInClient, activateClient, deactivateClient } from "@/lib/api/clients"
+import type { ClientListQuery } from "@/lib/types/client"
 
 /* ─── List Hook ─── */
 
-export function usePatients() {
+export function useClients() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
   const [isActive, setIsActive] = useState<boolean | undefined>()
 
-  const query: PatientListQuery = {
+  const query: ClientListQuery = {
     page,
     perPage: 20,
     search: search || undefined,
@@ -21,8 +21,8 @@ export function usePatients() {
   }
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: queryKeys.patients.list(query),
-    queryFn: () => fetchPatients(query),
+    queryKey: queryKeys.clients.list(query),
+    queryFn: () => fetchClients(query),
     placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000, // 5 min
   })
@@ -36,7 +36,7 @@ export function usePatients() {
   const items = data?.items ?? []
 
   return {
-    patients: items,
+    clients: items,
     meta: data?.meta ?? null,
     isLoading,
     error: error?.message ?? null,
@@ -53,10 +53,10 @@ export function usePatients() {
 
 /* ─── Detail Hook ─── */
 
-export function usePatient(id: string | null) {
+export function useClient(id: string | null) {
   return useQuery({
-    queryKey: queryKeys.patients.detail(id!),
-    queryFn: () => fetchPatient(id!),
+    queryKey: queryKeys.clients.detail(id!),
+    queryFn: () => fetchClient(id!),
     enabled: !!id,
     staleTime: 10 * 60 * 1000, // 10 min
   })
@@ -64,44 +64,44 @@ export function usePatient(id: string | null) {
 
 /* ─── Stats Hook ─── */
 
-export function usePatientStats(id: string | null) {
+export function useClientStats(id: string | null) {
   return useQuery({
-    queryKey: queryKeys.patients.stats(id!),
-    queryFn: () => fetchPatientStats(id!),
+    queryKey: queryKeys.clients.stats(id!),
+    queryFn: () => fetchClientStats(id!),
     enabled: !!id,
   })
 }
 
 /* ─── Mutations ─── */
 
-export function usePatientMutations() {
+export function useClientMutations() {
   const queryClient = useQueryClient()
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: queryKeys.patients.all })
+    queryClient.invalidateQueries({ queryKey: queryKeys.clients.all })
 
   const createMut = useMutation({
-    mutationFn: createWalkInPatient,
+    mutationFn: createWalkInClient,
     onSuccess: () => invalidate(),
   })
 
   const updateMut = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: Parameters<typeof updatePatient>[1] }) =>
-      updatePatient(id, payload),
+    mutationFn: ({ id, payload }: { id: string; payload: Parameters<typeof updateClient>[1] }) =>
+      updateClient(id, payload),
     onSuccess: () => invalidate(),
   })
 
-  const activateMut = useMutation({ mutationFn: activatePatient, onSuccess: invalidate })
-  const deactivateMut = useMutation({ mutationFn: deactivatePatient, onSuccess: invalidate })
+  const activateMut = useMutation({ mutationFn: activateClient, onSuccess: invalidate })
+  const deactivateMut = useMutation({ mutationFn: deactivateClient, onSuccess: invalidate })
 
   return { createMut, updateMut, activateMut, deactivateMut }
 }
 
 /* ─── Bookings Hook ─── */
 
-export function usePatientBookings(id: string | null) {
+export function useClientBookings(id: string | null) {
   return useQuery({
-    queryKey: queryKeys.patients.bookings(id!),
-    queryFn: () => fetchPatientBookings(id!),
+    queryKey: queryKeys.clients.bookings(id!),
+    queryFn: () => fetchClientBookings(id!),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
   })
@@ -109,17 +109,17 @@ export function usePatientBookings(id: string | null) {
 
 /* ─── List Stats Hook ─── */
 
-export function usePatientListStats() {
+export function useClientListStats() {
   return useQuery({
-    queryKey: queryKeys.patients.listStats(),
-    queryFn: fetchPatientListStats,
+    queryKey: queryKeys.clients.listStats(),
+    queryFn: fetchClientListStats,
     staleTime: 2 * 60 * 1000, // 2 min — changes more frequently than detail data
   })
 }
 
 /* ─── Invalidation ─── */
 
-export function useInvalidatePatients() {
+export function useInvalidateClients() {
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: queryKeys.patients.all })
+  return () => queryClient.invalidateQueries({ queryKey: queryKeys.clients.all })
 }

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Allow branch selection during service creation so branches are saved atomically with the service, matching the practitioner selection pattern.
+**Goal:** Allow branch selection during service creation so branches are saved atomically with the service, matching the employee selection pattern.
 
 **Architecture:** Add `branchIds` to the backend `CreateServiceDto` and handle it inside `services.service.ts` `create()` using a Prisma nested write (same transaction). On the frontend, add a new form-state-only `ServiceBranchesPicker` component, wire it into the create form schema and `basic-info-tab`, and pass `branchIds` in the create payload.
 
@@ -30,7 +30,7 @@
 
 - [ ] **Step 1: Add the field**
 
-Open `backend/src/modules/services/dto/create-service.dto.ts`. After the `practitionerIds` field (currently the last field, lines 144–148), add:
+Open `backend/src/modules/services/dto/create-service.dto.ts`. After the `employeeIds` field (currently the last field, lines 144–148), add:
 
 ```ts
   @ApiPropertyOptional({ type: [String], description: 'Branch UUIDs to restrict this service atomically on create' })
@@ -72,9 +72,9 @@ In `services.service.ts`, find the `prisma.service.create()` call inside `create
 const service = await this.prisma.service.create({
   data: {
     ...serviceData,
-    ...(dto.practitionerIds?.length && {
-      practitionerServices: {
-        create: dto.practitionerIds.map((practitionerId) => ({ practitionerId })),
+    ...(dto.employeeIds?.length && {
+      employeeServices: {
+        create: dto.employeeIds.map((employeeId) => ({ employeeId })),
       },
     }),
   },
@@ -88,9 +88,9 @@ Replace it with:
 const service = await this.prisma.service.create({
   data: {
     ...serviceData,
-    ...(dto.practitionerIds?.length && {
-      practitionerServices: {
-        create: dto.practitionerIds.map((practitionerId) => ({ practitionerId })),
+    ...(dto.employeeIds?.length && {
+      employeeServices: {
+        create: dto.employeeIds.map((employeeId) => ({ employeeId })),
       },
     }),
     ...(dto.branchIds?.length && {
@@ -136,7 +136,7 @@ git commit -m "feat(backend/services): create serviceBranches atomically on serv
 
 - [ ] **Step 1: Add `branchIds` to `CreateServicePayload`**
 
-In `dashboard/lib/types/service-payloads.ts`, find `CreateServicePayload`. After the `practitionerIds?: string[]` line (currently last field), add:
+In `dashboard/lib/types/service-payloads.ts`, find `CreateServicePayload`. After the `employeeIds?: string[]` line (currently last field), add:
 
 ```ts
   branchIds?: string[]
@@ -457,7 +457,7 @@ git commit -m "feat(dashboard/services): wire ServiceBranchesPicker into create 
 
 The submit payload is built in two files:
 - `dashboard/components/features/services/service-form-helpers.ts` — `buildPayload()` builds the core payload from `CreateServiceFormData`
-- `dashboard/components/features/services/service-form-page.tsx` line 159 — calls `createMut.mutateAsync({ ...buildPayload(data), practitionerIds: ... })`
+- `dashboard/components/features/services/service-form-page.tsx` line 159 — calls `createMut.mutateAsync({ ...buildPayload(data), employeeIds: ... })`
 
 `branchIds` should be added to `buildPayload()` so it's included automatically.
 
@@ -510,7 +510,7 @@ Note: `undefined` = no restriction = available in all branches. On update (`isEd
 ```ts
 const created = await createMut.mutateAsync({
   ...buildPayload(data),
-  practitionerIds: pendingPractitionerIds.length > 0 ? pendingPractitionerIds : undefined,
+  employeeIds: pendingEmployeeIds.length > 0 ? pendingEmployeeIds : undefined,
   branchIds: data.branchIds?.length ? data.branchIds : undefined,
 })
 ```

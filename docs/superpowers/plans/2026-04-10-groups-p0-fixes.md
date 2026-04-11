@@ -48,7 +48,7 @@ it('should not allow overbooking when two enrollments race', async () => {
     paymentDeadlineHours: 48,
     nameAr: 'مجموعة',
     nameEn: 'Group',
-    practitionerId: 'p-1',
+    employeeId: 'p-1',
     deletedAt: null,
   };
 
@@ -59,7 +59,7 @@ it('should not allow overbooking when two enrollments race', async () => {
   let txUpdateCallCount = 0;
   const mockTx = {
     groupEnrollment: {
-      create: jest.fn().mockResolvedValue({ id: 'enroll-1', groupId: 'group-1', patientId: 'patient-1', status: 'registered' }),
+      create: jest.fn().mockResolvedValue({ id: 'enroll-1', groupId: 'group-1', clientId: 'client-1', status: 'registered' }),
       findFirst: jest.fn().mockResolvedValue(null),
     },
     group: {
@@ -76,7 +76,7 @@ it('should not allow overbooking when two enrollments race', async () => {
   prisma.group.findFirst.mockResolvedValue(group); // outer findFirst (for existence check)
   prisma.groupEnrollment.findFirst.mockResolvedValue(null); // no existing enrollment
 
-  await service.enroll('group-1', 'patient-1');
+  await service.enroll('group-1', 'client-1');
 
   expect(txUpdateCallCount).toBe(1);
   expect(mockTx.group.findFirst).toHaveBeenCalledWith({
@@ -99,7 +99,7 @@ Expected: FAIL — the current `enroll()` reads group outside tx, so `mockTx.gro
 Replace the `enroll` method (lines 20–106). The change: remove outer `group` read from lines 21-27, move it inside `$transaction` with `isolationLevel: 'Serializable'`, and re-validate `blockedStatuses` inside tx.
 
 ```typescript
-async enroll(groupId: string, patientId: string) {
+async enroll(groupId: string, clientId: string) {
   // Validate group existence first (light check, no isolation needed)
   const groupExists = await this.prisma.group.findFirst({
     where: { id: groupId, deletedAt: null },
@@ -111,11 +111,11 @@ async enroll(groupId: string, patientId: string) {
   }
 
   const existing = await this.prisma.groupEnrollment.findFirst({
-    where: { groupId, patientId, status: { notIn: ['cancelled', 'expired'] } },
+    where: { groupId, clientId, status: { notIn: ['cancelled', 'expired'] } },
   });
 
   if (existing) {
-    throw new BadRequestException('Patient is already enrolled in this group');
+    throw new BadRequestException('Client is already enrolled in this group');
   }
 
   const result = await this.prisma.$transaction(
@@ -138,7 +138,7 @@ async enroll(groupId: string, patientId: string) {
       const enrollment = await tx.groupEnrollment.create({
         data: {
           groupId,
-          patientId,
+          clientId,
           status: isFree ? 'confirmed' : 'registered',
         },
       });
@@ -167,7 +167,7 @@ async enroll(groupId: string, patientId: string) {
 
   // Notifications fire outside transaction (fire-and-forget)
   this.notificationsService.createNotification({
-    userId: patientId,
+    userId: clientId,
     titleAr: `تم تسجيلك في "${result.group.nameAr}"`,
     titleEn: `You've been enrolled in "${result.group.nameEn}"`,
     bodyAr: result.isFree ? 'تسجيلك مؤكد' : 'سنبلغك عند تأكيد الجلسة للدفع',
@@ -188,7 +188,7 @@ async enroll(groupId: string, patientId: string) {
     result.group.currentEnrollment < result.group.minParticipants
   ) {
     this.notificationsService.createNotification({
-      userId: result.group.practitionerId,
+      userId: result.group.employeeId,
       titleAr: `اكتمل الحد الأدنى — حدد موعد "${result.group.nameAr}"`,
       titleEn: `Minimum reached — schedule "${result.group.nameEn}"`,
       bodyAr: `وصل عدد المسجلين ${result.newCount}. حدد موعد الجلسة`,
@@ -241,7 +241,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 
 **Problem:** `triggerPaymentRequest` updates enrollment status to `payment_requested` but never creates a `GroupPayment` record. The Moyasar webhook at line 40 searches `prisma.groupPayment.findFirst({ where: { moyasarPaymentId: dto.id } })` and finds nothing, so payments are never confirmed.
 
-Note: The `GroupPayment` record needs a `moyasarPaymentId` at creation time only if we have the Moyasar payment link. The actual flow is: we create the `GroupPayment` with `status: 'pending'` and `moyasarPaymentId: null` here, then the patient initiates payment from their mobile which calls a separate create-payment-link endpoint (to be confirmed). For now, we create the record with required fields so the webhook can find it when payment completes.
+Note: The `GroupPayment` record needs a `moyasarPaymentId` at creation time only if we have the Moyasar payment link. The actual flow is: we create the `GroupPayment` with `status: 'pending'` and `moyasarPaymentId: null` here, then the client initiates payment from their mobile which calls a separate create-payment-link endpoint (to be confirmed). For now, we create the record with required fields so the webhook can find it when payment completes.
 
 First, check the `GroupPayment` schema fields that are required:
 - `enrollmentId` (String, unique) ✅ we have it
@@ -251,7 +251,7 @@ First, check the `GroupPayment` schema fields that are required:
 - `remainingAmount` (Int) — equals totalAmount initially
 - `method` (PaymentMethod) — we don't know yet at this point; use `online` as default
 - `status` (PaymentStatus) — `pending`
-- `moyasarPaymentId` — null until patient initiates payment
+- `moyasarPaymentId` — null until client initiates payment
 
 - [ ] **Step 1: Write the failing test**
 
@@ -274,8 +274,8 @@ describe('triggerPaymentRequest', () => {
     };
 
     const enrollments = [
-      { id: 'enroll-1', patientId: 'patient-1' },
-      { id: 'enroll-2', patientId: 'patient-2' },
+      { id: 'enroll-1', clientId: 'client-1' },
+      { id: 'enroll-2', clientId: 'client-2' },
     ];
 
     prisma.group.findFirst.mockResolvedValue(group);
@@ -334,7 +334,7 @@ const enrollments = await this.prisma.$transaction(async (tx) => {
 
   const registered = await tx.groupEnrollment.findMany({
     where: { groupId, status: 'registered' },
-    select: { id: true, patientId: true },
+    select: { id: true, clientId: true },
   });
 
   if (registered.length > 0) {
@@ -344,7 +344,7 @@ const enrollments = await this.prisma.$transaction(async (tx) => {
     });
 
     // Create a GroupPayment record per enrollment so the Moyasar webhook can find it.
-    // moyasarPaymentId is null until the patient initiates the payment link.
+    // moyasarPaymentId is null until the client initiates the payment link.
     const requiredAmount = this.getRequiredAmount(group);
     await tx.groupPayment.createMany({
       data: registered.map((e) => ({
@@ -413,7 +413,7 @@ it('should save remainingDueDate when paymentType is DEPOSIT', async () => {
   const dto = {
     nameAr: 'مجموعة',
     nameEn: 'Group',
-    practitionerId: 'p-1',
+    employeeId: 'p-1',
     minParticipants: 2,
     maxParticipants: 10,
     pricePerPersonHalalat: 10000,
@@ -426,7 +426,7 @@ it('should save remainingDueDate when paymentType is DEPOSIT', async () => {
     deliveryMode: 'in_person' as const,
   };
 
-  prisma.practitioner.findFirst.mockResolvedValue({ id: 'p-1', deletedAt: null });
+  prisma.employee.findFirst.mockResolvedValue({ id: 'p-1', deletedAt: null });
   prisma.group.create.mockResolvedValue({ id: 'group-new', ...dto });
 
   await service.create(dto);

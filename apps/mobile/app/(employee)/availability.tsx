@@ -15,10 +15,10 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedButton } from '@/theme/components/ThemedButton';
 import { useTheme } from '@/theme/useTheme';
 import { useAppSelector } from '@/hooks/use-redux';
-import { practitionersService } from '@/services/practitioners';
-import type { PractitionerAvailability } from '@/services/practitioners';
+import { employeesService } from '@/services/employees';
+import type { EmployeeAvailability } from '@/services/employees';
 
-type DaySchedule = PractitionerAvailability;
+type DaySchedule = EmployeeAvailability;
 
 const DEFAULT_SCHEDULE: DaySchedule[] = Array.from({ length: 7 }, (_, i) => ({
   dayOfWeek: i,
@@ -36,12 +36,12 @@ export default function AvailabilityScreen() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const pid = user?.practitionerId;
+    const pid = user?.employeeId;
     if (!pid) {
       setLoading(false);
       return;
     }
-    practitionersService.getAvailabilitySchedule(pid).then((res) => {
+    employeesService.getAvailabilitySchedule(pid).then((res) => {
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
         setSchedule(
           DEFAULT_SCHEDULE.map((def) => {
@@ -52,7 +52,7 @@ export default function AvailabilityScreen() {
       }
       setLoading(false);
     });
-  }, [user?.practitionerId]);
+  }, [user?.employeeId]);
 
   const toggleDay = useCallback((dayIndex: number) => {
     setSchedule((prev) =>
@@ -63,11 +63,11 @@ export default function AvailabilityScreen() {
   }, []);
 
   const handleSave = async () => {
-    const pid = user?.practitionerId;
+    const pid = user?.employeeId;
     if (!pid) return;
     setSaving(true);
     try {
-      const res = await practitionersService.updateAvailabilitySchedule(
+      const res = await employeesService.updateAvailabilitySchedule(
         pid,
         schedule.filter((d) => d.isWorking),
       );

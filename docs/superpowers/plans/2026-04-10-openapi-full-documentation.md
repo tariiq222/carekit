@@ -51,9 +51,9 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('Users', 'Staff user management')
     .addTag('Roles', 'Custom role definitions')
     .addTag('Permissions', 'Permission catalog (read-only)')
-    .addTag('Patients', 'Patient profiles and walk-in registration')
-    .addTag('Practitioners', 'Practitioner profiles, availability, and services')
-    .addTag('Favorite Practitioners', 'Patient favourite practitioners')
+    .addTag('Clients', 'Client profiles and walk-in registration')
+    .addTag('Employees', 'Employee profiles, availability, and services')
+    .addTag('Favorite Employees', 'Client favourite employees')
     .addTag('Specialties', 'Medical specialties catalog')
     .addTag('Services', 'Clinic service catalog')
     .addTag('Branches', 'Multi-branch management (requires multi_branch feature)')
@@ -67,7 +67,7 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('Gift Cards', 'Gift card management (requires gift_cards feature)')
     .addTag('Groups', 'Group session management (requires groups feature)')
     .addTag('Intake Forms', 'Pre-appointment intake forms (requires intake_forms feature)')
-    .addTag('Ratings', 'Practitioner ratings (requires ratings feature)')
+    .addTag('Ratings', 'Employee ratings (requires ratings feature)')
     .addTag('Notifications', 'In-app and push notifications')
     .addTag('Chatbot', 'AI chatbot sessions and knowledge base (requires chatbot feature)')
     .addTag('Activity Log', 'Audit trail of system events')
@@ -557,21 +557,21 @@ import { ApiStandardResponses } from '../../common/swagger/api-responses.decorat
 
 ```typescript
   @Get('my')
-  @ApiOperation({ summary: "List current patient's waitlist entries" })
+  @ApiOperation({ summary: "List current client's waitlist entries" })
   @ApiResponse({ status: 200, description: 'Waitlist entries returned' })
   @ApiStandardResponses()
   async findMyEntries(...) { ... }
 
   @Get()
   @ApiOperation({ summary: 'List all waitlist entries (admin view, with filters)' })
-  @ApiQuery({ name: 'practitionerId', required: false, description: 'Filter by practitioner UUID' })
+  @ApiQuery({ name: 'employeeId', required: false, description: 'Filter by employee UUID' })
   @ApiQuery({ name: 'status', required: false, description: 'Filter by status' })
   @ApiResponse({ status: 200, description: 'Waitlist returned' })
   @ApiStandardResponses()
   async findAll(...) { ... }
 
   @Post()
-  @ApiOperation({ summary: 'Join the waitlist for a practitioner' })
+  @ApiOperation({ summary: 'Join the waitlist for a employee' })
   @ApiResponse({ status: 201, description: 'Added to waitlist' })
   @ApiStandardResponses()
   async join(...) { ... }
@@ -641,14 +641,14 @@ git commit -m "docs(backend/notifications): add @ApiOperation + @ApiResponse to 
 
 ---
 
-## Task 4: `@ApiOperation` + `@ApiResponse` — Practitioners & Specialties
+## Task 4: `@ApiOperation` + `@ApiResponse` — Employees & Specialties
 
 **Files:**
-- Modify: `backend/src/modules/practitioners/practitioners.controller.ts`
-- Modify: `backend/src/modules/practitioners/favorite-practitioners.controller.ts`
+- Modify: `backend/src/modules/employees/employees.controller.ts`
+- Modify: `backend/src/modules/employees/favorite-employees.controller.ts`
 - Modify: `backend/src/modules/specialties/specialties.controller.ts`
 
-- [ ] **Step 1: Update `practitioners.controller.ts`**
+- [ ] **Step 1: Update `employees.controller.ts`**
 
 Add imports:
 ```typescript
@@ -660,115 +660,115 @@ Add to each method (full list):
 ```typescript
   @Get()
   @Public()
-  @ApiOperation({ summary: 'List practitioners with filters (public)' })
-  @ApiResponse({ status: 200, description: 'Practitioner list returned' })
+  @ApiOperation({ summary: 'List employees with filters (public)' })
+  @ApiResponse({ status: 200, description: 'Employee list returned' })
 
   @Get(':id')
   @Public()
-  @ApiOperation({ summary: 'Get practitioner profile (public)' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
-  @ApiResponse({ status: 200, description: 'Practitioner returned' })
-  @ApiResponse({ status: 404, description: 'Practitioner not found' })
+  @ApiOperation({ summary: 'Get employee profile (public)' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
+  @ApiResponse({ status: 200, description: 'Employee returned' })
+  @ApiResponse({ status: 404, description: 'Employee not found' })
 
   @Post()
-  @ApiOperation({ summary: 'Create a practitioner profile' })
-  @ApiResponse({ status: 201, description: 'Practitioner created' })
+  @ApiOperation({ summary: 'Create a employee profile' })
+  @ApiResponse({ status: 201, description: 'Employee created' })
   @ApiStandardResponses()
 
   @Post('onboard')
-  @ApiOperation({ summary: 'Onboard practitioner with user account creation' })
-  @ApiResponse({ status: 201, description: 'Practitioner onboarded' })
+  @ApiOperation({ summary: 'Onboard employee with user account creation' })
+  @ApiResponse({ status: 201, description: 'Employee onboarded' })
   @ApiStandardResponses()
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update practitioner profile' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
-  @ApiResponse({ status: 200, description: 'Practitioner updated' })
+  @ApiOperation({ summary: 'Update employee profile' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
+  @ApiResponse({ status: 200, description: 'Employee updated' })
   @ApiStandardResponses()
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete practitioner (soft delete)' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
-  @ApiResponse({ status: 200, description: 'Practitioner deleted' })
+  @ApiOperation({ summary: 'Delete employee (soft delete)' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
+  @ApiResponse({ status: 200, description: 'Employee deleted' })
   @ApiStandardResponses()
 
   @Get(':id/availability')
   @Public()
-  @ApiOperation({ summary: 'Get practitioner availability schedule (public)' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Get employee availability schedule (public)' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Availability schedule returned' })
 
   @Put(':id/availability')
-  @ApiOperation({ summary: 'Set practitioner availability schedule' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Set employee availability schedule' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Availability updated' })
   @ApiStandardResponses()
 
   @Get(':id/slots')
   @Public()
   @ApiOperation({ summary: 'Get available booking time slots for a date (public)' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Available slots returned' })
 
   @Get(':id/available-dates')
   @Public()
   @ApiOperation({ summary: 'Get available dates in a month (public)' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Available dates returned' })
 
   @Get(':id/breaks')
-  @ApiOperation({ summary: 'Get practitioner break schedule' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Get employee break schedule' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Breaks returned' })
   @ApiStandardResponses()
 
   @Put(':id/breaks')
-  @ApiOperation({ summary: 'Set practitioner break schedule' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Set employee break schedule' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Breaks updated' })
   @ApiStandardResponses()
 
   @Get(':id/vacations')
-  @ApiOperation({ summary: 'Get practitioner vacation periods' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Get employee vacation periods' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Vacations returned' })
   @ApiStandardResponses()
 
   @Post(':id/vacations')
-  @ApiOperation({ summary: 'Create a vacation period for practitioner' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Create a vacation period for employee' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 201, description: 'Vacation created' })
   @ApiStandardResponses()
 
   @Delete(':id/vacations/:vacationId')
-  @ApiOperation({ summary: 'Delete a practitioner vacation period' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Delete a employee vacation period' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiParam({ name: 'vacationId', description: 'Vacation UUID' })
   @ApiResponse({ status: 200, description: 'Vacation deleted' })
   @ApiStandardResponses()
 
   @Get(':id/services')
   @Public()
-  @ApiOperation({ summary: 'List services offered by practitioner with pricing (public)' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'List services offered by employee with pricing (public)' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Services returned' })
 
   @Post(':id/services')
-  @ApiOperation({ summary: 'Assign a service to practitioner with pricing override' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Assign a service to employee with pricing override' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 201, description: 'Service assigned' })
   @ApiStandardResponses()
 
   @Patch(':id/services/:serviceId')
-  @ApiOperation({ summary: 'Update practitioner service pricing' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Update employee service pricing' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiParam({ name: 'serviceId', description: 'Service UUID' })
   @ApiResponse({ status: 200, description: 'Service pricing updated' })
   @ApiStandardResponses()
 
   @Delete(':id/services/:serviceId')
-  @ApiOperation({ summary: 'Remove a service from practitioner' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Remove a service from employee' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiParam({ name: 'serviceId', description: 'Service UUID' })
   @ApiResponse({ status: 200, description: 'Service removed' })
   @ApiStandardResponses()
@@ -776,18 +776,18 @@ Add to each method (full list):
   @Get(':id/services/:serviceId/types')
   @Public()
   @ApiOperation({ summary: 'Get service types and duration options for booking (public)' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiParam({ name: 'serviceId', description: 'Service UUID' })
   @ApiResponse({ status: 200, description: 'Service types returned' })
 
   @Get(':id/ratings')
   @Public()
-  @ApiOperation({ summary: 'Get aggregated ratings for a practitioner (public, paginated)' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Get aggregated ratings for a employee (public, paginated)' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Ratings returned' })
 ```
 
-- [ ] **Step 2: Update `favorite-practitioners.controller.ts`**
+- [ ] **Step 2: Update `favorite-employees.controller.ts`**
 
 Add imports:
 ```typescript
@@ -797,19 +797,19 @@ import { ApiStandardResponses } from '../../common/swagger/api-responses.decorat
 
 ```typescript
   @Get('favorites')
-  @ApiOperation({ summary: "List current patient's favourite practitioners" })
+  @ApiOperation({ summary: "List current client's favourite employees" })
   @ApiResponse({ status: 200, description: 'Favourites returned' })
   @ApiStandardResponses()
 
   @Post(':id/favorite')
-  @ApiOperation({ summary: 'Add a practitioner to favourites' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Add a employee to favourites' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 201, description: 'Added to favourites' })
   @ApiStandardResponses()
 
   @Delete(':id/favorite')
-  @ApiOperation({ summary: 'Remove a practitioner from favourites' })
-  @ApiParam({ name: 'id', description: 'Practitioner UUID' })
+  @ApiOperation({ summary: 'Remove a employee from favourites' })
+  @ApiParam({ name: 'id', description: 'Employee UUID' })
   @ApiResponse({ status: 200, description: 'Removed from favourites' })
   @ApiStandardResponses()
 ```
@@ -868,10 +868,10 @@ Expected: no errors.
 ```bash
 cd backend
 git add \
-  src/modules/practitioners/practitioners.controller.ts \
-  src/modules/practitioners/favorite-practitioners.controller.ts \
+  src/modules/employees/employees.controller.ts \
+  src/modules/employees/favorite-employees.controller.ts \
   src/modules/specialties/specialties.controller.ts
-git commit -m "docs(backend/practitioners): add @ApiOperation + @ApiResponse to practitioners and specialties controllers"
+git commit -m "docs(backend/employees): add @ApiOperation + @ApiResponse to employees and specialties controllers"
 ```
 
 ---
@@ -925,23 +925,23 @@ import { ApiStandardResponses } from '../../common/swagger/api-responses.decorat
   @ApiResponse({ status: 200, description: 'Branch deleted' })
   @ApiStandardResponses()
 
-  @Get(':id/practitioners')
-  @ApiOperation({ summary: 'Get practitioners assigned to a branch' })
+  @Get(':id/employees')
+  @ApiOperation({ summary: 'Get employees assigned to a branch' })
   @ApiParam({ name: 'id', description: 'Branch UUID' })
-  @ApiResponse({ status: 200, description: 'Practitioner list returned' })
+  @ApiResponse({ status: 200, description: 'Employee list returned' })
   @ApiStandardResponses()
 
-  @Patch(':id/practitioners')
-  @ApiOperation({ summary: 'Assign practitioners to a branch (replaces existing)' })
+  @Patch(':id/employees')
+  @ApiOperation({ summary: 'Assign employees to a branch (replaces existing)' })
   @ApiParam({ name: 'id', description: 'Branch UUID' })
   @ApiResponse({ status: 200, description: 'Assignments updated' })
   @ApiStandardResponses()
 
-  @Delete(':id/practitioners/:practitionerId')
-  @ApiOperation({ summary: 'Remove a practitioner from a branch' })
+  @Delete(':id/employees/:employeeId')
+  @ApiOperation({ summary: 'Remove a employee from a branch' })
   @ApiParam({ name: 'id', description: 'Branch UUID' })
-  @ApiParam({ name: 'practitionerId', description: 'Practitioner UUID' })
-  @ApiResponse({ status: 200, description: 'Practitioner removed from branch' })
+  @ApiParam({ name: 'employeeId', description: 'Employee UUID' })
+  @ApiResponse({ status: 200, description: 'Employee removed from branch' })
   @ApiStandardResponses()
 ```
 
@@ -1239,7 +1239,7 @@ import { ApiStandardResponses } from '../../common/swagger/api-responses.decorat
   @ApiStandardResponses()
 
   @Get('sessions')
-  @ApiOperation({ summary: 'List chatbot sessions (admin sees all, patient sees own)' })
+  @ApiOperation({ summary: 'List chatbot sessions (admin sees all, client sees own)' })
   @ApiResponse({ status: 200, description: 'Session list returned' })
   @ApiStandardResponses()
 
@@ -1407,7 +1407,7 @@ git commit -m "docs(backend/chatbot): add @ApiOperation + @ApiResponse to all 3 
 
 ## Task 8: `@ApiResponse` on Already-Documented Controllers
 
-The 15 controllers that already have `@ApiOperation` are missing `@ApiResponse` entirely. Add responses to: `auth`, `bookings`, `booking-actions`, `services`, `practitioners` (already done in Task 4), `groups`, `payments`, `invoices`, `reports`, `departments`, `patients`, `problem-reports`, `roles`, `activity-log`, `zatca`, `ratings`.
+The 15 controllers that already have `@ApiOperation` are missing `@ApiResponse` entirely. Add responses to: `auth`, `bookings`, `booking-actions`, `services`, `employees` (already done in Task 4), `groups`, `payments`, `invoices`, `reports`, `departments`, `clients`, `problem-reports`, `roles`, `activity-log`, `zatca`, `ratings`.
 
 **Files:**
 - Modify: `backend/src/modules/auth/auth.controller.ts`
@@ -1419,7 +1419,7 @@ The 15 controllers that already have `@ApiOperation` are missing `@ApiResponse` 
 - Modify: `backend/src/modules/invoices/invoices.controller.ts`
 - Modify: `backend/src/modules/reports/reports.controller.ts`
 - Modify: `backend/src/modules/departments/departments.controller.ts`
-- Modify: `backend/src/modules/patients/patients.controller.ts`
+- Modify: `backend/src/modules/clients/clients.controller.ts`
 - Modify: `backend/src/modules/problem-reports/problem-reports.controller.ts`
 - Modify: `backend/src/modules/roles/roles.controller.ts`
 - Modify: `backend/src/modules/activity-log/activity-log.controller.ts`
@@ -1461,7 +1461,7 @@ git add \
 git commit -m "docs(backend/core): add @ApiResponse to auth, bookings, services, groups controllers"
 ```
 
-- [ ] **Step 3: Add `@ApiResponse` to payments, invoices, reports, departments, patients (5 files)**
+- [ ] **Step 3: Add `@ApiResponse` to payments, invoices, reports, departments, clients (5 files)**
 
 For `payments.controller.ts`: 11 endpoints. Note webhook endpoint is `@Public()` so no `@ApiStandardResponses()`. Bank transfer upload gets `@ApiConsumes('multipart/form-data')`.
 
@@ -1471,7 +1471,7 @@ For `reports.controller.ts`: 7 endpoints — all are GET, all `@ApiStandardRespo
 
 For `departments.controller.ts`: 6 endpoints — standard pattern.
 
-For `patients.controller.ts`: 8 endpoints — standard pattern.
+For `clients.controller.ts`: 8 endpoints — standard pattern.
 
 - [ ] **Step 4: Run lint + typecheck, then commit second 5 files**
 
@@ -1482,8 +1482,8 @@ git add \
   src/modules/invoices/invoices.controller.ts \
   src/modules/reports/reports.controller.ts \
   src/modules/departments/departments.controller.ts \
-  src/modules/patients/patients.controller.ts
-git commit -m "docs(backend/payments): add @ApiResponse to payments, invoices, reports, departments, patients"
+  src/modules/clients/clients.controller.ts
+git commit -m "docs(backend/payments): add @ApiResponse to payments, invoices, reports, departments, clients"
 ```
 
 - [ ] **Step 5: Add `@ApiResponse` to problem-reports, roles, activity-log, zatca, ratings (5 files)**
@@ -1513,7 +1513,7 @@ git commit -m "docs(backend/misc): add @ApiResponse to problem-reports, roles, a
 
 ---
 
-## Task 9: `@ApiProperty` on DTOs — Auth, Users, Roles, Patients, Specialties
+## Task 9: `@ApiProperty` on DTOs — Auth, Users, Roles, Clients, Specialties
 
 **Files (11 DTO files):**
 - Modify: `backend/src/modules/auth/dto/change-password.dto.ts`
@@ -1524,7 +1524,7 @@ git commit -m "docs(backend/misc): add @ApiResponse to problem-reports, roles, a
 - Modify: `backend/src/modules/auth/dto/verify-email.dto.ts`
 - Modify: `backend/src/modules/users/dto/create-user.dto.ts` (UpdateUserDto + AssignRoleDto inside same file)
 - Modify: `backend/src/modules/roles/dto/create-role.dto.ts`
-- Modify: `backend/src/modules/patients/dto/patient-list-query.dto.ts`
+- Modify: `backend/src/modules/clients/dto/client-list-query.dto.ts`
 - Modify: `backend/src/modules/specialties/dto/create-specialty.dto.ts`
 - Modify: `backend/src/modules/specialties/dto/update-specialty.dto.ts`
 
@@ -1562,13 +1562,13 @@ export class RegisterDto {
 
 Apply same pattern to `change-password.dto.ts`, `otp.dto.ts`, `refresh-token.dto.ts`, `reset-password.dto.ts`, `verify-email.dto.ts`.
 
-- [ ] **Step 2: Add `@ApiProperty` to users + roles + patients + specialties DTOs (5 files)**
+- [ ] **Step 2: Add `@ApiProperty` to users + roles + clients + specialties DTOs (5 files)**
 
 `users/dto/create-user.dto.ts` — `CreateUserDto`, `UpdateUserDto`, `AssignRoleDto` all in same file. Add `@ApiProperty`/`@ApiPropertyOptional` to all fields.
 
 `roles/dto/create-role.dto.ts` — read the file and add properties.
 
-`patients/dto/patient-list-query.dto.ts` — all query params get `@ApiPropertyOptional`.
+`clients/dto/client-list-query.dto.ts` — all query params get `@ApiPropertyOptional`.
 
 `specialties/dto/create-specialty.dto.ts` and `update-specialty.dto.ts` — all fields.
 
@@ -1593,33 +1593,33 @@ git add \
   src/modules/auth/dto/verify-email.dto.ts \
   src/modules/users/dto/create-user.dto.ts \
   src/modules/roles/dto/create-role.dto.ts \
-  src/modules/patients/dto/patient-list-query.dto.ts \
+  src/modules/clients/dto/client-list-query.dto.ts \
   src/modules/specialties/dto/create-specialty.dto.ts \
   src/modules/specialties/dto/update-specialty.dto.ts
-git commit -m "docs(backend/auth): add @ApiProperty to auth, users, roles, patients, specialties DTOs"
+git commit -m "docs(backend/auth): add @ApiProperty to auth, users, roles, clients, specialties DTOs"
 ```
 
 ---
 
-## Task 10: `@ApiProperty` on DTOs — Practitioners
+## Task 10: `@ApiProperty` on DTOs — Employees
 
 **Files (9 DTO files):**
-- Modify: `backend/src/modules/practitioners/dto/assign-practitioner-service.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/create-practitioner.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/create-vacation.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/get-available-dates-query.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/get-practitioners-query.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/get-slots-query.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/onboard-practitioner.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/set-availability.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/set-breaks.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/update-practitioner-service.dto.ts`
-- Modify: `backend/src/modules/practitioners/dto/update-practitioner.dto.ts`
+- Modify: `backend/src/modules/employees/dto/assign-employee-service.dto.ts`
+- Modify: `backend/src/modules/employees/dto/create-employee.dto.ts`
+- Modify: `backend/src/modules/employees/dto/create-vacation.dto.ts`
+- Modify: `backend/src/modules/employees/dto/get-available-dates-query.dto.ts`
+- Modify: `backend/src/modules/employees/dto/get-employees-query.dto.ts`
+- Modify: `backend/src/modules/employees/dto/get-slots-query.dto.ts`
+- Modify: `backend/src/modules/employees/dto/onboard-employee.dto.ts`
+- Modify: `backend/src/modules/employees/dto/set-availability.dto.ts`
+- Modify: `backend/src/modules/employees/dto/set-breaks.dto.ts`
+- Modify: `backend/src/modules/employees/dto/update-employee-service.dto.ts`
+- Modify: `backend/src/modules/employees/dto/update-employee.dto.ts`
 
-- [ ] **Step 1: Read all 11 practitioner DTO files**
+- [ ] **Step 1: Read all 11 employee DTO files**
 
 ```bash
-cat backend/src/modules/practitioners/dto/*.dto.ts
+cat backend/src/modules/employees/dto/*.dto.ts
 ```
 
 - [ ] **Step 2: Add `@ApiProperty`/`@ApiPropertyOptional` to every field in each file**
@@ -1636,8 +1636,8 @@ cd backend && npm run lint && npx tsc --noEmit
 
 ```bash
 cd backend
-git add src/modules/practitioners/dto/
-git commit -m "docs(backend/practitioners): add @ApiProperty to all practitioner DTOs"
+git add src/modules/employees/dto/
+git commit -m "docs(backend/employees): add @ApiProperty to all employee DTOs"
 ```
 
 ---
@@ -1727,7 +1727,7 @@ git commit -m "docs(backend/payments): add @ApiProperty to all payment and invoi
 - Modify: `backend/src/modules/services/dto/set-booking-types.dto.ts`
 - Modify: `backend/src/modules/services/dto/update-category.dto.ts` (already has some `@ApiPropertyOptional`)
 - Modify: `backend/src/modules/services/dto/update-service.dto.ts`
-- Modify: `backend/src/modules/branches/dto/assign-practitioners.dto.ts`
+- Modify: `backend/src/modules/branches/dto/assign-employees.dto.ts`
 - Modify: `backend/src/modules/branches/dto/branch-filter.dto.ts`
 - Modify: `backend/src/modules/branches/dto/update-branch.dto.ts`
 - Modify: `backend/src/modules/departments/dto/department-list-query.dto.ts` (already has some)
@@ -1766,12 +1766,12 @@ git commit -m "docs(backend/services): add @ApiProperty to services, branches, d
 
 ---
 
-## Task 14: `@ApiProperty` on DTOs — Patients, Notifications, Intake Forms, Ratings, Activity Log, Problem Reports, Chatbot
+## Task 14: `@ApiProperty` on DTOs — Clients, Notifications, Intake Forms, Ratings, Activity Log, Problem Reports, Chatbot
 
 **Files (12 DTO files):**
-- Modify: `backend/src/modules/patients/dto/claim-account.dto.ts`
-- Modify: `backend/src/modules/patients/dto/create-walk-in-patient.dto.ts`
-- Modify: `backend/src/modules/patients/dto/update-patient.dto.ts`
+- Modify: `backend/src/modules/clients/dto/claim-account.dto.ts`
+- Modify: `backend/src/modules/clients/dto/create-walk-in-client.dto.ts`
+- Modify: `backend/src/modules/clients/dto/update-client.dto.ts`
 - Modify: `backend/src/modules/notifications/dto/create-notification.dto.ts`
 - Modify: `backend/src/modules/notifications/dto/notification-list-query.dto.ts`
 - Modify: `backend/src/modules/notifications/dto/register-fcm-token.dto.ts`
@@ -1787,9 +1787,9 @@ git commit -m "docs(backend/services): add @ApiProperty to services, branches, d
 - [ ] **Step 1: Read all DTO files**
 
 ```bash
-cat backend/src/modules/patients/dto/claim-account.dto.ts \
-    backend/src/modules/patients/dto/create-walk-in-patient.dto.ts \
-    backend/src/modules/patients/dto/update-patient.dto.ts \
+cat backend/src/modules/clients/dto/claim-account.dto.ts \
+    backend/src/modules/clients/dto/create-walk-in-client.dto.ts \
+    backend/src/modules/clients/dto/update-client.dto.ts \
     backend/src/modules/notifications/dto/*.dto.ts \
     backend/src/modules/intake-forms/dto/create-intake-form.dto.ts \
     backend/src/modules/intake-forms/dto/submit-response.dto.ts \
@@ -1813,9 +1813,9 @@ cd backend && npm run lint && npx tsc --noEmit
 ```bash
 cd backend
 git add \
-  src/modules/patients/dto/claim-account.dto.ts \
-  src/modules/patients/dto/create-walk-in-patient.dto.ts \
-  src/modules/patients/dto/update-patient.dto.ts \
+  src/modules/clients/dto/claim-account.dto.ts \
+  src/modules/clients/dto/create-walk-in-client.dto.ts \
+  src/modules/clients/dto/update-client.dto.ts \
   src/modules/notifications/dto/ \
   src/modules/intake-forms/dto/create-intake-form.dto.ts \
   src/modules/intake-forms/dto/submit-response.dto.ts \
@@ -1824,7 +1824,7 @@ git add \
   src/modules/chatbot/dto/create-session.dto.ts \
   src/modules/chatbot/dto/send-message.dto.ts \
   src/modules/chatbot/dto/session-list-query.dto.ts
-git commit -m "docs(backend/patients): add @ApiProperty to patients, notifications, intake-forms, ratings, chatbot DTOs"
+git commit -m "docs(backend/clients): add @ApiProperty to clients, notifications, intake-forms, ratings, chatbot DTOs"
 ```
 
 ---
@@ -1912,7 +1912,7 @@ Then open `http://localhost:5100/api/docs` in browser and verify:
 Verify these specifically (cover public + auth + complex DTOs):
 1. `GET /api/v1/health` — should show 200 + 503 responses
 2. `POST /api/v1/auth/login` — should show request body schema with all fields
-3. `GET /api/v1/practitioners/{id}/slots` — should show query params
+3. `GET /api/v1/employees/{id}/slots` — should show query params
 4. `POST /api/v1/chatbot/sessions/{id}/messages/stream` — should show SSE content type
 5. `POST /api/v1/payments/moyasar/webhook` — should be marked Public (no Bearer requirement)
 

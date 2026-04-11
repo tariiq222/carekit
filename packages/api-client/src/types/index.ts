@@ -24,32 +24,32 @@ export type {
   UpdateBookingPayload,
 } from './booking.js'
 export type {
-  PatientListItem,
-  PatientStats,
-  PatientListQuery,
-  PatientListResponse,
+  ClientListItem,
+  ClientStats,
+  ClientListQuery,
+  ClientListResponse,
   CreateWalkInPayload,
-  UpdatePatientPayload,
-} from './patient.js'
+  UpdateClientPayload,
+} from './client.js'
 export type {
-  PractitionerListItem,
-  PractitionerStats,
-  PractitionerListQuery,
-  PractitionerListResponse,
-  CreatePractitionerPayload,
-  UpdatePractitionerPayload,
-  PractitionerBreak,
+  EmployeeListItem,
+  EmployeeStats,
+  EmployeeListQuery,
+  EmployeeListResponse,
+  CreateEmployeePayload,
+  UpdateEmployeePayload,
+  EmployeeBreak,
   BreakSlotInput,
   SetBreaksPayload,
-  PractitionerVacation,
+  EmployeeVacation,
   CreateVacationPayload,
-  PractitionerService,
-  PractitionerTypeConfig,
-  PractitionerDurationOption,
-  AssignPractitionerServicePayload,
-  UpdatePractitionerServicePayload,
-  PractitionerTypeConfigInput,
-} from './practitioner.js'
+  EmployeeService,
+  EmployeeTypeConfig,
+  EmployeeDurationOption,
+  AssignEmployeeServicePayload,
+  UpdateEmployeeServicePayload,
+  EmployeeTypeConfigInput,
+} from './employee.js'
 export type {
   ServiceCategory,
   ServiceListItem,
@@ -79,14 +79,14 @@ export type {
   UpdateSpecialtyPayload,
 } from './specialty.js'
 export type {
-  PractitionerAvailability,
+  EmployeeAvailability,
   AvailabilitySlotInput,
   SetAvailabilityPayload,
   GetAvailabilityResponse,
   SetAvailabilityResponse,
 } from './availability.js'
 export type {
-  PractitionerRating,
+  EmployeeRating,
   RatingDistribution,
   RatingStats,
   RatingListQuery,
@@ -95,7 +95,7 @@ export type {
 export type {
   PaymentMethod,
   PaymentStatus,
-  PaymentBookingPatient,
+  PaymentBookingClient,
   PaymentBooking,
   PaymentInvoice,
   PaymentListItem,
@@ -138,7 +138,7 @@ export type {
 } from './notification.js'
 export type {
   RevenueByMonth,
-  RevenueByPractitioner,
+  RevenueByEmployee,
   RevenueByService,
   RevenueReport,
   BookingReport,

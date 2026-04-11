@@ -14,7 +14,7 @@ import { useLocale } from "@/components/locale-provider"
 
 const actions = [
   { titleKey: "actions.newBooking", icon: Calendar03Icon, href: "/bookings", color: "primary" as const },
-  { titleKey: "actions.addPatient", icon: UserAdd01Icon, href: "/patients", color: "success" as const },
+  { titleKey: "actions.addClient", icon: UserAdd01Icon, href: "/clients", color: "success" as const },
   { titleKey: "actions.viewCalendar", icon: Clock01Icon, href: "/bookings", color: "warning" as const },
   { titleKey: "actions.reports", icon: AnalyticsUpIcon, href: "/reports", color: "info" as const },
 ]

@@ -116,7 +116,7 @@ export default function AppointmentsScreen() {
         renderItem={({ item }) => (
           <AppointmentCard
             booking={item}
-            onPress={(id) => router.push(`/(patient)/appointment/${id}`)}
+            onPress={(id) => router.push(`/(client)/appointment/${id}`)}
           />
         )}
         contentContainerStyle={styles.list}

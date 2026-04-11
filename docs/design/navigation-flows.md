@@ -27,15 +27,15 @@ App Launch
   │                 │     ├─→ Enter email → [OTP Verification Screen]
   │                 │     └─→ OTP verified → check role → route
   │                 │
-  │                 └─→ [Register] (patients only)
+  │                 └─→ [Register] (clients only)
   │                       │
   │                       └─→ Fill form → verify email OTP → logged in
 ```
 
-### 1.2 Patient Tab Navigator
+### 1.2 Client Tab Navigator
 
 ```
-Patient Tabs (Bottom Navigation — 4 tabs):
+Client Tabs (Bottom Navigation — 4 tabs):
 ┌──────────┬──────────┬──────────┬──────────┐
 │  Home    │Bookings  │  Chat    │ Profile  │
 │ الرئيسية │ المواعيد  │ المحادثة │ الملف    │
@@ -44,19 +44,19 @@ Patient Tabs (Bottom Navigation — 4 tabs):
 Tab 1: Home
   ├─→ [Home Screen]
   │     ├─→ Upcoming appointment card → [Appointment Detail]
-  │     ├─→ Browse specialties → [Specialty List] → [Practitioner List] → [Practitioner Profile]
+  │     ├─→ Browse specialties → [Specialty List] → [Employee List] → [Employee Profile]
   │     ├─→ Browse services → [Service List] → [Service Detail]
   │     ├─→ Quick book CTA → [Booking Flow]
   │     └─→ Notification bell → [Notifications]
   │
   ├─→ [Specialty List]
-  │     └─→ [Practitioner List]
-  │           └─→ [Practitioner Profile]
+  │     └─→ [Employee List]
+  │           └─→ [Employee Profile]
   │                 └─→ Book button → [Booking Flow]
   │
   └─→ [Booking Flow] (modal/stack)
         ├─→ Step 1: Select type (clinic/phone/video)
-        ├─→ Step 2: Select practitioner (if not pre-selected)
+        ├─→ Step 2: Select employee (if not pre-selected)
         ├─→ Step 3: Select date
         ├─→ Step 4: Select time slot
         ├─→ Step 5: Confirm details
@@ -69,7 +69,7 @@ Tab 2: Bookings (المواعيد)
   ├─→ [Appointments List] (tabs: upcoming / past / cancelled)
   │     └─→ [Appointment Detail]
   │           ├─→ View Zoom link (video) → opens Zoom
-  │           ├─→ View practitioner phone (phone consultation)
+  │           ├─→ View employee phone (phone consultation)
   │           ├─→ Request cancellation → [Cancellation Request Form]
   │           ├─→ Modify appointment → [Modify Booking Flow]
   │           ├─→ View invoice → [Invoice Detail]
@@ -101,12 +101,12 @@ Tab 4: Profile (الملف الشخصي)
   │     └─→ Logout → confirm → [Auth Screen]
 ```
 
-### 1.3 Practitioner (Doctor) Tab Navigator
+### 1.3 Employee (Doctor) Tab Navigator
 
 ```
 Doctor Tabs (Bottom Navigation — 4 tabs):
 ┌──────────┬──────────┬──────────┬──────────┐
-│  Today   │ Calendar │ Patients │ Profile  │
+│  Today   │ Calendar │ Clients │ Profile  │
 │  اليوم   │ التقويم  │ المرضى   │ الملف    │
 └──────────┴──────────┴──────────┴──────────┘
 
@@ -114,11 +114,11 @@ Tab 1: Today (اليوم)
   └─→ [Today's Schedule]
         ├─→ List of today's appointments (chronological)
         │     └─→ [Appointment Detail — Doctor View]
-        │           ├─→ View patient info
-        │           ├─→ View patient phone (phone consultation)
+        │           ├─→ View client info
+        │           ├─→ View client phone (phone consultation)
         │           ├─→ Start Zoom call (video) → opens Zoom
         │           ├─→ Mark as completed
-        │           └─→ View patient history
+        │           └─→ View client history
         └─→ Stats: total today, completed, remaining
 
 Tab 2: Calendar (التقويم)
@@ -130,12 +130,12 @@ Tab 2: Calendar (التقويم)
               ├─→ Set weekly schedule (day + start/end time)
               └─→ Set vacation dates
 
-Tab 3: Patients (المرضى)
-  └─→ [Patient List]
+Tab 3: Clients (المرضى)
+  └─→ [Client List]
         ├─→ Search by name
-        └─→ [Patient Record]
-              ├─→ Patient info (name, phone, email)
-              ├─→ Visit history (all appointments with this patient)
+        └─→ [Client Record]
+              ├─→ Client info (name, phone, email)
+              ├─→ Visit history (all appointments with this client)
               └─→ Tap visit → [Appointment Detail]
 
 Tab 4: Profile (الملف الشخصي)
@@ -164,9 +164,9 @@ Dashboard Sidebar (RTL — right side):
 │ 📋 المواعيد          │
 │    (Appointments)    │
 │ 👨‍⚕️ الأطباء          │
-│    (Practitioners)   │
+│    (Employees)   │
 │ 👥 المرضى           │
-│    (Patients)        │
+│    (Clients)        │
 │ 🏥 الخدمات          │
 │    (Services)        │
 │─────────────────────│
@@ -207,7 +207,7 @@ Home (Dashboard)
 
 Appointments
   ├─→ Calendar view (day/week/month) ← toggle
-  ├─→ Table view with filters (status, practitioner, date range, type)
+  ├─→ Table view with filters (status, employee, date range, type)
   ├─→ Click appointment → Appointment Detail (slide-over panel)
   │     ├─→ View full details
   │     ├─→ Change status
@@ -215,10 +215,10 @@ Appointments
   │     └─→ Process cancellation (if pending_cancellation)
   └─→ Create appointment button → Create Appointment Form (modal)
 
-Practitioners
+Employees
   ├─→ Table: name, specialty, status, rating, actions
-  ├─→ Add practitioner → Create Practitioner Form (modal/page)
-  ├─→ Click practitioner → Practitioner Detail (page)
+  ├─→ Add employee → Create Employee Form (modal/page)
+  ├─→ Click employee → Employee Detail (page)
   │     ├─→ Profile info (edit)
   │     ├─→ Schedule editor (weekly availability grid)
   │     ├─→ Vacation manager
@@ -226,15 +226,15 @@ Practitioners
   │     └─→ Ratings & reviews
   └─→ Filter by specialty, status
 
-Patients
+Clients
   ├─→ Table: name, email, phone, total visits, last visit, actions
   ├─→ Search by name/email/phone
-  ├─→ Click patient → Patient Detail (page)
+  ├─→ Click client → Client Detail (page)
   │     ├─→ Profile info
   │     ├─→ Visit history
   │     ├─→ Payment history
   │     └─→ Ratings given
-  └─→ Export patient list
+  └─→ Export client list
 
 Services
   ├─→ Categories (accordion or tabs)
@@ -245,7 +245,7 @@ Services
   └─→ Drag to reorder (sort order)
 
 Payments
-  ├─→ Table: invoice #, patient, amount, method, status, date
+  ├─→ Table: invoice #, client, amount, method, status, date
   ├─→ Filter by: status, method, date range
   ├─→ Bank transfer tab → pending transfers
   │     └─→ Click transfer → Transfer Verification Panel
@@ -256,15 +256,15 @@ Payments
   └─→ Click payment → Payment Detail
 
 Invoices
-  ├─→ Table: invoice #, patient, amount, date, sent status
+  ├─→ Table: invoice #, client, amount, date, sent status
   ├─→ Click invoice → Invoice Detail
   │     ├─→ View PDF
-  │     └─→ Resend to patient email
+  │     └─→ Resend to client email
   └─→ Export invoices (date range)
 
 Financial Reports
   ├─→ Revenue overview chart (line/bar)
-  ├─→ Revenue by practitioner (table)
+  ├─→ Revenue by employee (table)
   ├─→ Revenue by service (table)
   ├─→ Payment method breakdown (pie chart)
   ├─→ Date range selector
@@ -327,18 +327,18 @@ Notifications
 
 ## 3. Key User Journeys
 
-### 3.1 Patient Books Appointment (Happy Path)
+### 3.1 Client Books Appointment (Happy Path)
 
 ```
-1. Patient opens app → Home screen
+1. Client opens app → Home screen
 2. Taps specialty (e.g., "Dentistry" / "طب الأسنان")
-3. Sees list of practitioners in that specialty
-4. Taps practitioner → sees profile, rating, prices
+3. Sees list of employees in that specialty
+4. Taps employee → sees profile, rating, prices
 5. Taps "Book Appointment" / "حجز موعد"
 6. Selects type: Clinic Visit
 7. Selects date from available calendar
 8. Selects time slot from available slots
-9. Reviews booking summary (practitioner, date, time, price)
+9. Reviews booking summary (employee, date, time, price)
 10. Confirms → redirected to payment
 11. Pays via Moyasar (Mada) → payment confirmed
 12. Sees confirmation screen with booking details
@@ -346,10 +346,10 @@ Notifications
 14. Booking appears in "My Appointments" / "مواعيدي"
 ```
 
-### 3.2 Patient Cancels Appointment
+### 3.2 Client Cancels Appointment
 
 ```
-1. Patient opens Bookings tab
+1. Client opens Bookings tab
 2. Taps upcoming appointment
 3. Taps "Request Cancellation" / "طلب إلغاء"
 4. Fills cancellation reason
@@ -357,14 +357,14 @@ Notifications
 6. Sees message: "Your cancellation request is under review"
 7. Admin receives notification in dashboard
 8. Admin reviews and approves/rejects with refund decision
-9. Patient receives notification with result
+9. Client receives notification with result
 10. If approved: booking status → cancelled, refund processed
 ```
 
 ### 3.3 Bank Transfer Payment
 
 ```
-1. Patient reaches payment step in booking flow
+1. Client reaches payment step in booking flow
 2. Selects "Bank Transfer" / "تحويل بنكي"
 3. Sees bank account details (from White Label config)
 4. Makes transfer via their bank app
@@ -376,8 +376,8 @@ Notifications
 10. Status: pending review
 11. Admin sees transfer in dashboard with AI tags
 12. Admin reviews receipt + AI analysis
-13. Admin approves → booking confirmed, patient notified
-    OR Admin rejects → patient notified to re-upload or contact support
+13. Admin approves → booking confirmed, client notified
+    OR Admin rejects → client notified to re-upload or contact support
 ```
 
 ### 3.4 Doctor's Daily Workflow
@@ -386,8 +386,8 @@ Notifications
 1. Doctor opens app → Today tab
 2. Sees today's schedule: 8 appointments
 3. First appointment: clinic visit at 9:00 AM
-4. Taps appointment → sees patient info
-5. Patient arrives → doctor conducts visit
+4. Taps appointment → sees client info
+5. Client arrives → doctor conducts visit
 6. Doctor marks appointment as "completed"
 7. Next: video consultation at 10:00 AM
 8. Taps appointment → taps "Start Zoom" → opens Zoom app
@@ -395,7 +395,7 @@ Notifications
 10. Returns to app → marks as completed
 11. At end of day: checks tomorrow's schedule in Calendar tab
 12. Notices a conflict → contacts admin
-13. Checks Patients tab → reviews patient history before next day
+13. Checks Clients tab → reviews client history before next day
 ```
 
 ### 3.5 Admin Manages Cancellation
@@ -405,11 +405,11 @@ Notifications
 2. Sees notification: "New cancellation request" on Home
 3. Clicks → goes to Appointments page, filtered to pending_cancellation
 4. Opens appointment detail panel
-5. Reviews: patient name, appointment date, cancellation reason
+5. Reviews: client name, appointment date, cancellation reason
 6. Reviews payment: amount paid, payment method
-7. Decides: full refund (patient had valid reason)
+7. Decides: full refund (client had valid reason)
 8. Clicks "Approve Cancellation" → selects "Full Refund"
 9. System processes refund via original payment method
-10. Patient receives notification: "Cancellation approved, full refund processed"
+10. Client receives notification: "Cancellation approved, full refund processed"
 11. Booking status → cancelled
 ```

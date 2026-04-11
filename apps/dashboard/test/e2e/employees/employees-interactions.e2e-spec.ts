@@ -1,8 +1,8 @@
 /**
- * CareKit Dashboard — Practitioners Page Interaction Tests
+ * CareKit Dashboard — Employees Page Interaction Tests
  *
- * Verifies UI interactions on /practitioners:
- *   - "إضافة طبيب" navigates to /practitioners/create
+ * Verifies UI interactions on /employees:
+ *   - "إضافة طبيب" navigates to /employees/create
  *   - Ratings tab navigation works
  *   - Search input reflects typed value
  *   - Status filter dropdown is interactable
@@ -11,13 +11,13 @@
 
 import { test, expect } from '../setup/fixtures';
 
-test.describe('Practitioners — add practitioner navigation', () => {
+test.describe('Employees — add employee navigation', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await goto('/practitioners');
+    await goto('/employees');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
-  test('clicking "إضافة طبيب" navigates to /practitioners/create', async ({ adminPage }) => {
+  test('clicking "إضافة طبيب" navigates to /employees/create', async ({ adminPage }) => {
     // Skip if auth expired (login form visible)
     const loginVisible = await adminPage.locator('#email').isVisible().catch(() => false);
     if (loginVisible) { test.skip(); return; }
@@ -26,9 +26,9 @@ test.describe('Practitioners — add practitioner navigation', () => {
     await expect(addBtn).toBeVisible({ timeout: 8_000 });
     await addBtn.click();
 
-    await adminPage.waitForURL(/\/practitioners\/create/, { timeout: 10_000 }).catch(() => {});
+    await adminPage.waitForURL(/\/employees\/create/, { timeout: 10_000 }).catch(() => {});
     const dialogVisible = await adminPage.locator('[role="dialog"]').first().isVisible().catch(() => false);
-    const navigated = adminPage.url().includes('/practitioners/create');
+    const navigated = adminPage.url().includes('/employees/create');
 
     if (!navigated && !dialogVisible) {
       // Button click had no effect — likely RBAC restriction in this environment
@@ -40,9 +40,9 @@ test.describe('Practitioners — add practitioner navigation', () => {
   });
 });
 
-test.describe('Practitioners — ratings navigation', () => {
+test.describe('Employees — ratings navigation', () => {
   test('ratings button in header navigates to /ratings', async ({ adminPage, goto }) => {
-    await goto('/practitioners');
+    await goto('/employees');
 
     // Skip if auth expired (login form visible)
     const loginVisible = await adminPage.locator('#email').isVisible().catch(() => false);
@@ -56,9 +56,9 @@ test.describe('Practitioners — ratings navigation', () => {
   });
 });
 
-test.describe('Practitioners — search interaction', () => {
+test.describe('Employees — search interaction', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await goto('/practitioners');
+    await goto('/employees');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
@@ -82,9 +82,9 @@ test.describe('Practitioners — search interaction', () => {
   });
 });
 
-test.describe('Practitioners — filter bar interactions', () => {
+test.describe('Employees — filter bar interactions', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await goto('/practitioners');
+    await goto('/employees');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
@@ -119,14 +119,14 @@ test.describe('Practitioners — filter bar interactions', () => {
 
     // They may or may not exist depending on data; just verify page is stable
     const hasBtns = (await gridBtn.count() > 0) || (await listBtn.count() > 0);
-    // Not asserting hasBtns — filter bar only renders when there are practitioners
+    // Not asserting hasBtns — filter bar only renders when there are employees
     expect(typeof hasBtns).toBe('boolean');
   });
 });
 
-test.describe('Practitioners — create form', () => {
+test.describe('Employees — create form', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await goto('/practitioners/create');
+    await goto('/employees/create');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
@@ -136,7 +136,7 @@ test.describe('Practitioners — create form', () => {
     expect(await inputs.count()).toBeGreaterThan(0);
   });
 
-  test('back/cancel button navigates back to practitioners list', async ({ adminPage }) => {
+  test('back/cancel button navigates back to employees list', async ({ adminPage }) => {
     const backBtn = adminPage
       .getByRole('button', { name: /إلغاء|رجوع|Cancel|Back/ })
       .first();
@@ -147,8 +147,8 @@ test.describe('Practitioners — create form', () => {
       const breadcrumb = adminPage.locator('[aria-label*="breadcrumb"] a, nav a').first();
       if (await breadcrumb.count() > 0) {
         await breadcrumb.click();
-        await adminPage.waitForURL(/\/practitioners(?!\/create)/, { timeout: 10_000 });
-        await expect(adminPage).toHaveURL(/\/practitioners/);
+        await adminPage.waitForURL(/\/employees(?!\/create)/, { timeout: 10_000 });
+        await expect(adminPage).toHaveURL(/\/employees/);
         return;
       }
       test.skip();
@@ -156,8 +156,8 @@ test.describe('Practitioners — create form', () => {
     }
 
     await backBtn.click();
-    await adminPage.waitForURL(/\/practitioners(?!\/create)/, { timeout: 10_000 });
-    await expect(adminPage).toHaveURL(/\/practitioners/);
-    await expect(adminPage).not.toHaveURL(/\/practitioners\/create/);
+    await adminPage.waitForURL(/\/employees(?!\/create)/, { timeout: 10_000 });
+    await expect(adminPage).toHaveURL(/\/employees/);
+    await expect(adminPage).not.toHaveURL(/\/employees\/create/);
   });
 });

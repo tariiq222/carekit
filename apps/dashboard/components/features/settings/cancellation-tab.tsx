@@ -60,7 +60,7 @@ function CancellationPolicyPanel({ settings, onSave, isPending, t }: {
       <div className="grid grid-cols-2 gap-3">
         <Card className="shadow-sm bg-surface"><CardContent className="space-y-2 pt-3 pb-2">
           <Label>{t("settings.policyTextEn")}</Label>
-          <Textarea value={policyEn} rows={3} placeholder="Cancellation policy displayed to patients..."
+          <Textarea value={policyEn} rows={3} placeholder="Cancellation policy displayed to clients..."
             onChange={(e) => { setPolicyEn(e.target.value); scheduleSave() }} />
         </CardContent></Card>
         <Card className="shadow-sm bg-surface"><CardContent className="space-y-2 pt-3 pb-2">
@@ -108,7 +108,7 @@ export function CancellationTab({ t }: Props) {
   const tabs: { id: TabId; label: string; desc: string }[] = [
     { id: "policy",       label: t("settings.cancellationPolicy"),   desc: t("settings.cancellationDesc") },
     { id: "advanced",     label: t("settings.advancedCancellation"), desc: t("settings.freeRefundTypeDesc") },
-    { id: "rescheduling", label: t("settings.rescheduling"),         desc: t("settings.patientCanRescheduleDesc") },
+    { id: "rescheduling", label: t("settings.rescheduling"),         desc: t("settings.clientCanRescheduleDesc") },
     { id: "noshow",       label: t("settings.noShow"),               desc: t("settings.autoCompleteAfterDesc") },
   ]
 

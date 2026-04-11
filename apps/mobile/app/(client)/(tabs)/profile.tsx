@@ -72,7 +72,7 @@ function MenuItem({ icon: Icon, label, value, danger, onPress }: MenuItemProps) 
   );
 }
 
-export default function PatientProfileScreen() {
+export default function ClientProfileScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -126,7 +126,7 @@ export default function PatientProfileScreen() {
           <MenuItem
             icon={User}
             label={t('profile.personalInfo')}
-            onPress={() => router.push('/(patient)/settings')}
+            onPress={() => router.push('/(client)/settings')}
           />
           <MenuItem
             icon={CreditCard}
@@ -141,7 +141,7 @@ export default function PatientProfileScreen() {
           <MenuItem
             icon={Settings}
             label={t('settings.title')}
-            onPress={() => router.push('/(patient)/settings')}
+            onPress={() => router.push('/(client)/settings')}
           />
           <MenuItem
             icon={Globe}

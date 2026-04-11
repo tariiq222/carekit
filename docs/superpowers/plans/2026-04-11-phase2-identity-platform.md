@@ -76,8 +76,8 @@ enum UserRole {
   ADMIN
   RECEPTIONIST
   ACCOUNTANT
-  PRACTITIONER
-  PATIENT
+  EMPLOYEE
+  CLIENT
 }
 
 enum UserGender {
@@ -1057,15 +1057,15 @@ describe('CaslAbilityFactory', () => {
   it('grants specific permissions from custom role', () => {
     const ability = factory.buildForUser({
       role: 'RECEPTIONIST',
-      customRole: { permissions: [{ action: 'create', subject: 'Booking' }, { action: 'read', subject: 'Patient' }] },
+      customRole: { permissions: [{ action: 'create', subject: 'Booking' }, { action: 'read', subject: 'Client' }] },
     });
     expect(ability.can('create', 'Booking')).toBe(true);
-    expect(ability.can('read', 'Patient')).toBe(true);
+    expect(ability.can('read', 'Client')).toBe(true);
     expect(ability.can('delete', 'Booking')).toBe(false);
   });
 
-  it('grants read on own domain for PRACTITIONER', () => {
-    const ability = factory.buildForUser({ role: 'PRACTITIONER', customRole: null });
+  it('grants read on own domain for EMPLOYEE', () => {
+    const ability = factory.buildForUser({ role: 'EMPLOYEE', customRole: null });
     expect(ability.can('read', 'Booking')).toBe(true);
     expect(ability.can('delete', 'Invoice')).toBe(false);
   });
@@ -1130,7 +1130,7 @@ describe('Roles handlers', () => {
     await assignPerms.execute({
       tenantId: 'tenant-1',
       customRoleId: 'role-1',
-      permissions: [{ action: 'create', subject: 'Booking' }, { action: 'read', subject: 'Patient' }],
+      permissions: [{ action: 'create', subject: 'Booking' }, { action: 'read', subject: 'Client' }],
     });
     expect(prisma.permission.deleteMany).toHaveBeenCalledWith(expect.objectContaining({ where: { customRoleId: 'role-1' } }));
     expect(prisma.permission.createMany).toHaveBeenCalled();
@@ -1161,8 +1161,8 @@ const BUILT_IN: Record<string, Array<{ action: string; subject: string }>> = {
   ADMIN: [
     { action: 'manage', subject: 'User' },
     { action: 'manage', subject: 'Booking' },
-    { action: 'manage', subject: 'Patient' },
-    { action: 'manage', subject: 'Practitioner' },
+    { action: 'manage', subject: 'Client' },
+    { action: 'manage', subject: 'Employee' },
     { action: 'manage', subject: 'Invoice' },
     { action: 'manage', subject: 'Payment' },
     { action: 'manage', subject: 'Report' },
@@ -1170,8 +1170,8 @@ const BUILT_IN: Record<string, Array<{ action: string; subject: string }>> = {
   ],
   RECEPTIONIST: [
     { action: 'manage', subject: 'Booking' },
-    { action: 'manage', subject: 'Patient' },
-    { action: 'read', subject: 'Practitioner' },
+    { action: 'manage', subject: 'Client' },
+    { action: 'read', subject: 'Employee' },
     { action: 'read', subject: 'Invoice' },
   ],
   ACCOUNTANT: [
@@ -1180,12 +1180,12 @@ const BUILT_IN: Record<string, Array<{ action: string; subject: string }>> = {
     { action: 'read', subject: 'Booking' },
     { action: 'read', subject: 'Report' },
   ],
-  PRACTITIONER: [
+  EMPLOYEE: [
     { action: 'read', subject: 'Booking' },
-    { action: 'read', subject: 'Patient' },
+    { action: 'read', subject: 'Client' },
     { action: 'update', subject: 'Booking' },
   ],
-  PATIENT: [
+  CLIENT: [
     { action: 'read', subject: 'Booking' },
     { action: 'create', subject: 'Booking' },
     { action: 'read', subject: 'Invoice' },
@@ -1744,9 +1744,9 @@ export interface LicenseInfo {
 }
 
 export const TIER_FEATURES: Record<string, string[]> = {
-  Basic: ['BOOKINGS', 'PATIENTS', 'PRACTITIONERS', 'PAYMENTS', 'INVOICES', 'NOTIFICATIONS'],
-  Pro: ['BOOKINGS', 'PATIENTS', 'PRACTITIONERS', 'PAYMENTS', 'INVOICES', 'NOTIFICATIONS', 'GROUPS', 'WAITLIST', 'INTAKE_FORMS', 'RATINGS', 'REPORTS', 'GIFT_CARDS'],
-  Enterprise: ['BOOKINGS', 'PATIENTS', 'PRACTITIONERS', 'PAYMENTS', 'INVOICES', 'NOTIFICATIONS', 'GROUPS', 'WAITLIST', 'INTAKE_FORMS', 'RATINGS', 'REPORTS', 'GIFT_CARDS', 'AI_CHATBOT', 'ZATCA', 'CUSTOM_ROLES', 'INTEGRATIONS', 'ACTIVITY_LOG'],
+  Basic: ['BOOKINGS', 'CLIENTS', 'EMPLOYEES', 'PAYMENTS', 'INVOICES', 'NOTIFICATIONS'],
+  Pro: ['BOOKINGS', 'CLIENTS', 'EMPLOYEES', 'PAYMENTS', 'INVOICES', 'NOTIFICATIONS', 'GROUPS', 'WAITLIST', 'INTAKE_FORMS', 'RATINGS', 'REPORTS', 'GIFT_CARDS'],
+  Enterprise: ['BOOKINGS', 'CLIENTS', 'EMPLOYEES', 'PAYMENTS', 'INVOICES', 'NOTIFICATIONS', 'GROUPS', 'WAITLIST', 'INTAKE_FORMS', 'RATINGS', 'REPORTS', 'GIFT_CARDS', 'AI_CHATBOT', 'ZATCA', 'CUSTOM_ROLES', 'INTEGRATIONS', 'ACTIVITY_LOG'],
 };
 ```
 

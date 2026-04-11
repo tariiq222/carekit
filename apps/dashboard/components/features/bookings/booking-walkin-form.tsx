@@ -25,12 +25,12 @@ import { PhoneInput } from "@/components/ui/phone-input"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Textarea } from "@/components/ui/textarea"
 
-import { createWalkInPatient } from "@/lib/api/patients"
+import { createWalkInClient } from "@/lib/api/clients"
 import { cn } from "@/lib/utils"
-import { BLOOD_TYPES, BLOOD_LABELS } from "@/lib/schemas/patient.schema"
+import { BLOOD_TYPES, BLOOD_LABELS } from "@/lib/schemas/client.schema"
 import {
-  walkInPatientSchema,
-  type WalkInPatientFormData,
+  walkInClientSchema,
+  type WalkInClientFormData,
 } from "@/lib/schemas/booking.schema"
 
 /* ── Card styles ── */
@@ -105,7 +105,7 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
 /* ── Props ── */
 
 interface BookingWalkInFormProps {
-  onSelect: (patientId: string, name: string) => void
+  onSelect: (clientId: string, name: string) => void
 }
 
 /* ── Step 1 fields for partial validation ── */
@@ -115,7 +115,7 @@ const step1Fields = ["firstName", "lastName", "phone"] as const
 /* ── Main form ── */
 
 export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
-  const form = useForm<WalkInPatientFormData>({ resolver: zodResolver(walkInPatientSchema) })
+  const form = useForm<WalkInClientFormData>({ resolver: zodResolver(walkInClientSchema) })
   const [step, setStep] = useState<1 | 2>(1)
   const [creating, setCreating] = useState(false)
 
@@ -129,7 +129,7 @@ export function BookingWalkInForm({ onSelect }: BookingWalkInFormProps) {
   const handleCreate = form.handleSubmit(async (data) => {
     setCreating(true)
     try {
-      const res = await createWalkInPatient(data)
+      const res = await createWalkInClient(data)
       toast.success(res.isExisting ? "تم العثور على المريض" : "تم إنشاء حساب المريض")
       onSelect(res.id, `${data.firstName} ${data.lastName}`)
     } catch (err) {

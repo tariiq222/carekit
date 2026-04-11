@@ -7,8 +7,8 @@
 
 import { useQuery } from "@tanstack/react-query"
 import {
-  fetchWidgetPractitioners,
-  fetchWidgetPractitionerServices,
+  fetchWidgetEmployees,
+  fetchWidgetEmployeeServices,
   fetchWidgetSlots,
   fetchWidgetServiceTypes,
   fetchWidgetServices,
@@ -24,17 +24,17 @@ const STALE_5M = 5 * 60 * 1000
 const STALE_1M = 60 * 1000
 
 export function useWidgetBookingQueries(state: WizardState, flowOrder: BookingFlowOrder) {
-  const { data: practitionersData, isLoading: practitionersLoading } = useQuery({
-    queryKey: queryKeys.practitioners.list({ isActive: true }),
-    queryFn: () => fetchWidgetPractitioners({ perPage: 20 }),
-    enabled: flowOrder === "practitioner_first",
+  const { data: employeesData, isLoading: employeesLoading } = useQuery({
+    queryKey: queryKeys.employees.list({ isActive: true }),
+    queryFn: () => fetchWidgetEmployees({ perPage: 20 }),
+    enabled: flowOrder === "employee_first",
     staleTime: STALE_5M,
   })
 
   const { data: services = [], isLoading: servicesLoading } = useQuery({
-    queryKey: queryKeys.practitioners.services(state.practitioner?.id ?? ""),
-    queryFn: () => fetchWidgetPractitionerServices(state.practitioner!.id),
-    enabled: flowOrder === "practitioner_first" && !!state.practitioner,
+    queryKey: queryKeys.employees.services(state.employee?.id ?? ""),
+    queryFn: () => fetchWidgetEmployeeServices(state.employee!.id),
+    enabled: flowOrder === "employee_first" && !!state.employee,
     staleTime: STALE_5M,
   })
 
@@ -45,9 +45,9 @@ export function useWidgetBookingQueries(state: WizardState, flowOrder: BookingFl
     staleTime: STALE_5M,
   })
 
-  const { data: filteredPractitionersData, isLoading: filteredPractitionersLoading, isFetching: filteredPractitionersFetching } = useQuery({
-    queryKey: queryKeys.practitioners.list({ isActive: true, serviceId: state.service?.id }),
-    queryFn: () => fetchWidgetPractitioners({ perPage: 20, serviceId: state.service!.id }),
+  const { data: filteredEmployeesData, isLoading: filteredEmployeesLoading, isFetching: filteredEmployeesFetching } = useQuery({
+    queryKey: queryKeys.employees.list({ isActive: true, serviceId: state.service?.id }),
+    queryFn: () => fetchWidgetEmployees({ perPage: 20, serviceId: state.service!.id }),
     enabled: flowOrder === "service_first" && !!state.service,
     staleTime: STALE_5M,
   })
@@ -59,24 +59,24 @@ export function useWidgetBookingQueries(state: WizardState, flowOrder: BookingFl
   })
 
   const { data: serviceTypes = [] } = useQuery({
-    queryKey: queryKeys.practitioners.serviceTypes(
-      state.practitioner?.id ?? "",
+    queryKey: queryKeys.employees.serviceTypes(
+      state.employee?.id ?? "",
       state.service?.id ?? "",
     ),
-    queryFn: () => fetchWidgetServiceTypes(state.practitioner!.id, state.service!.id),
-    enabled: !!state.practitioner && !!state.service,
+    queryFn: () => fetchWidgetServiceTypes(state.employee!.id, state.service!.id),
+    enabled: !!state.employee && !!state.service,
     staleTime: STALE_5M,
   })
 
   return {
-    practitionersData,
-    practitionersLoading,
+    employeesData,
+    employeesLoading,
     services,
     servicesLoading,
     allServices: servicesData?.items ?? [],
     allServicesLoading,
-    filteredPractitionersData,
-    filteredPractitionersLoading: filteredPractitionersLoading || filteredPractitionersFetching,
+    filteredEmployeesData,
+    filteredEmployeesLoading: filteredEmployeesLoading || filteredEmployeesFetching,
     serviceTypes,
     branches,
     branchesLoading,
@@ -91,8 +91,8 @@ export function useWidgetSlotsQuery(
   resolvedDuration: number | undefined,
 ) {
   const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: [...queryKeys.practitioners.slots(state.practitioner?.id ?? "", state.date), resolvedDuration],
-    queryFn: () => fetchWidgetSlots(state.practitioner!.id, state.date, resolvedDuration),
+    queryKey: [...queryKeys.employees.slots(state.employee?.id ?? "", state.date), resolvedDuration],
+    queryFn: () => fetchWidgetSlots(state.employee!.id, state.date, resolvedDuration),
     enabled: canFetchSlots,
     staleTime: STALE_1M,
   })
@@ -100,15 +100,15 @@ export function useWidgetSlotsQuery(
 }
 
 export function useWidgetAvailableDatesQuery(
-  practitionerId: string | undefined,
+  employeeId: string | undefined,
   month: string,
   duration: number | undefined,
   branchId?: string,
 ) {
   const { data: availableDates = [], isLoading: availableDatesLoading } = useQuery({
-    queryKey: ["widget", "available-dates", practitionerId, month, duration, branchId],
-    queryFn: () => fetchWidgetAvailableDates(practitionerId!, month, duration, branchId),
-    enabled: !!practitionerId && !!month,
+    queryKey: ["widget", "available-dates", employeeId, month, duration, branchId],
+    queryFn: () => fetchWidgetAvailableDates(employeeId!, month, duration, branchId),
+    enabled: !!employeeId && !!month,
     staleTime: STALE_1M,
   })
   return { availableDates, availableDatesLoading }

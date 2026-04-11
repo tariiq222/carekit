@@ -35,7 +35,7 @@ const TYPE_META: Record<string, { icon: React.ElementType; color: string }> = {
 
 export default function BookingConfirmScreen() {
   const params = useLocalSearchParams<{
-    practitionerId: string;
+    employeeId: string;
     type: string;
     date: string;
     time: string;
@@ -74,7 +74,7 @@ export default function BookingConfirmScreen() {
     setLoading(true);
     try {
       const res = await bookingsService.create({
-        practitionerId: params.practitionerId ?? '',
+        employeeId: params.employeeId ?? '',
         type: (params.type ?? 'in_person') as BookingType,
         date: params.date ?? '',
         startTime: params.time ?? '',
@@ -83,7 +83,7 @@ export default function BookingConfirmScreen() {
       if (res.success) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.push({
-          pathname: '/(patient)/booking/payment',
+          pathname: '/(client)/booking/payment',
           params: {
             bookingId: res.data?.id ?? '',
             total: String(total),

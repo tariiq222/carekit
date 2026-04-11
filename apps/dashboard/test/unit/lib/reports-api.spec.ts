@@ -16,10 +16,10 @@ vi.mock("@/lib/api", () => ({
 import {
   fetchRevenueReport,
   fetchBookingReport,
-  fetchPractitionerReport,
+  fetchEmployeeReport,
   exportRevenueCsv,
   exportBookingsCsv,
-  exportPatientsCsv,
+  exportClientsCsv,
 } from "@/lib/api/reports"
 
 // Minimal fetch stub for downloadCsv
@@ -55,11 +55,11 @@ describe("reports api", () => {
     )
   })
 
-  it("fetchPractitionerReport calls /reports/practitioners/:id", async () => {
+  it("fetchEmployeeReport calls /reports/employees/:id", async () => {
     getMock.mockResolvedValueOnce({})
-    await fetchPractitionerReport("p-1", { dateFrom: "2026-01-01", dateTo: "2026-01-31" })
+    await fetchEmployeeReport("p-1", { dateFrom: "2026-01-01", dateTo: "2026-01-31" })
     expect(getMock).toHaveBeenCalledWith(
-      "/reports/practitioners/p-1",
+      "/reports/employees/p-1",
       expect.objectContaining({ dateFrom: "2026-01-01" }),
     )
   })
@@ -80,10 +80,10 @@ describe("reports api", () => {
     )
   })
 
-  it("exportPatientsCsv triggers a fetch to patients export endpoint", () => {
-    exportPatientsCsv()
+  it("exportClientsCsv triggers a fetch to clients export endpoint", () => {
+    exportClientsCsv()
     expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("/reports/patients/export"),
+      expect.stringContaining("/reports/clients/export"),
       expect.anything(),
     )
   })

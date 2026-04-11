@@ -4,8 +4,8 @@ export interface RevenueByMonth {
   bookings: number
 }
 
-export interface RevenueByPractitioner {
-  practitionerId: string
+export interface RevenueByEmployee {
+  employeeId: string
   name: string
   revenue: number
   bookings: number
@@ -24,7 +24,7 @@ export interface RevenueReport {
   paidBookings: number
   averagePerBooking: number
   byMonth: RevenueByMonth[]
-  byPractitioner: RevenueByPractitioner[]
+  byEmployee: RevenueByEmployee[]
   byService: RevenueByService[]
 }
 
@@ -48,8 +48,8 @@ export interface BookingReport {
 export interface DashboardStats {
   totalRevenue: number
   totalBookings: number
-  totalPatients: number
-  totalPractitioners: number
+  totalClients: number
+  totalEmployees: number
 }
 
 export interface ReportDateParams {

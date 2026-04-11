@@ -12,8 +12,8 @@
 | المنطقة | التحليل السابق | الآن | التغيير |
 |---------|---------------|------|---------|
 | Service (الخدمة) | 96% | **99%** ✅ | +Duration Options UI + Booking Types Editor |
-| Practitioner (المعالج) | 94% | **97%** ✅ | +Service Types Editor + Breaks Editor |
-| PractitionerService | 92% | **96%** ✅ | +Types + Duration per type |
+| Employee (المعالج) | 94% | **97%** ✅ | +Service Types Editor + Breaks Editor |
+| EmployeeService | 92% | **96%** ✅ | +Types + Duration per type |
 | Booking (الحجز) | 56% | **78%** ✅ | +Payment details + Rescheduled tracking |
 | BookingSettings | **29%** 🔴 | **85%** ✅ | +Booking tab + Cancellation tab + Cards |
 | Payment | **31%** 🔴 | **88%** ✅ | +صفحة كاملة + Detail + Bank Transfer Review |
@@ -37,7 +37,7 @@
 | Tab | الحالة | التفاصيل |
 |-----|--------|----------|
 | **Booking Tab** | ✅ | paymentTimeout + leadTime + buffer + Rescheduling Card + NoShow Card + Reminders Card |
-| **Cancellation Tab** | ✅ | Policy text (AR/EN) + freeCancelRefundType + lateCancelRefundType + adminCanDirectCancel + patientCanCancelPending + cancellationReviewTimeout |
+| **Cancellation Tab** | ✅ | Policy text (AR/EN) + freeCancelRefundType + lateCancelRefundType + adminCanDirectCancel + clientCanCancelPending + cancellationReviewTimeout |
 | **Working Hours Tab** | ✅ | Clinic-wide hours (7 days) |
 | **Features Tab** | ✅ | Feature flags (waitlist, coupons, gift cards) |
 | **ZATCA Tab** | ✅ | Tax registration + test mode |
@@ -49,11 +49,11 @@
 | `ClinicWorkingHours` | ساعات عمل العيادة (per day) |
 | `ClinicHoliday` | عطلات رسمية (recurring support) |
 | `ServiceBookingType` | نوع حجز per خدمة (price + duration per type) |
-| `PractitionerServiceType` | نوع حجز per معالج-خدمة (override price/duration) |
-| `PractitionerDurationOption` | مدد مخصصة per معالج-خدمة-نوع |
+| `EmployeeServiceType` | نوع حجز per معالج-خدمة (override price/duration) |
+| `EmployeeDurationOption` | مدد مخصصة per معالج-خدمة-نوع |
 | `IntakeForm` + `IntakeField` + `IntakeResponse` | نماذج استقبال |
 | `Coupon` + `CouponRedemption` | كوبونات خصم |
-| `Branch` + `PractitionerBranch` | فروع العيادة |
+| `Branch` + `EmployeeBranch` | فروع العيادة |
 | `GiftCard` + `GiftCardTransaction` | بطاقات هدايا |
 | `FeatureFlag` | أعلام الميزات |
 | `EmailTemplate` | قوالب البريد |
@@ -64,7 +64,7 @@
 |-----------|--------|
 | `booking-types-editor.tsx` | إدارة أنواع الحجز per خدمة (clinic/phone/video) |
 | `duration-options-editor.tsx` | مدد متعددة بأسعار مختلفة per نوع |
-| `practitioner-service-types-editor.tsx` | تخصيص أنواع الحجز per معالج-خدمة |
+| `employee-service-types-editor.tsx` | تخصيص أنواع الحجز per معالج-خدمة |
 | `payment-detail-sheet.tsx` | تفاصيل الدفع + إيصال بنكي + AI Tags |
 | `payment-actions.tsx` | Refund + Bank Transfer Verify |
 | `invoice-detail-sheet.tsx` | تفاصيل الفاتورة + ZATCA + QR |
@@ -109,9 +109,9 @@ BookingSettings API و WhiteLabel Config كانا مصدرين منفصلين ل
 ```
 Service.price (السعر الأساسي)
   └→ ServiceBookingType.price (سعر per نوع حجز) ← NEW ✅
-      └→ PractitionerService.price[Type] (override per معالج)
-          └→ PractitionerServiceType.price (override per معالج + نوع) ← NEW ✅
-              └→ PractitionerDurationOption.price (override per مدة مخصصة) ← NEW ✅
+      └→ EmployeeService.price[Type] (override per معالج)
+          └→ EmployeeServiceType.price (override per معالج + نوع) ← NEW ✅
+              └→ EmployeeDurationOption.price (override per مدة مخصصة) ← NEW ✅
 ```
 
 ### Dashboard Coverage:
@@ -121,9 +121,9 @@ Service.price (السعر الأساسي)
 | Service base price | ✅ | ✅ Create/Edit | ✅ |
 | ServiceBookingType (per type) | ✅ | ✅ `booking-types-editor` | ✅ NEW |
 | ServiceDurationOption (per duration) | ✅ | ✅ `duration-options-editor` | ✅ NEW |
-| PractitionerService override | ✅ | ✅ Assign/Edit sheets | ✅ |
-| PractitionerServiceType (per type per practitioner) | ✅ | ✅ `practitioner-service-types-editor` | ✅ NEW |
-| PractitionerDurationOption | ✅ | 🟡 | ⚠️ Model exists, UI coverage unclear |
+| EmployeeService override | ✅ | ✅ Assign/Edit sheets | ✅ |
+| EmployeeServiceType (per type per employee) | ✅ | ✅ `employee-service-types-editor` | ✅ NEW |
+| EmployeeDurationOption | ✅ | 🟡 | ⚠️ Model exists, UI coverage unclear |
 
 ### الفجوة المتبقية:
 
@@ -143,9 +143,9 @@ Service.price (السعر الأساسي)
 Service.duration (المدة الأساسية — 30 دقيقة)
   └→ ServiceBookingType.duration (per نوع حجز) ← NEW ✅
       └→ ServiceDurationOption (مدد متعددة اختيارية) ← NEW ✅
-          └→ PractitionerService.customDuration (override per معالج)
-              └→ PractitionerServiceType.duration (per معالج + نوع) ← NEW ✅
-                  └→ PractitionerDurationOption (مدد مخصصة per معالج) ← NEW ✅
+          └→ EmployeeService.customDuration (override per معالج)
+              └→ EmployeeServiceType.duration (per معالج + نوع) ← NEW ✅
+                  └→ EmployeeDurationOption (مدد مخصصة per معالج) ← NEW ✅
 ```
 
 ### Dashboard Coverage:
@@ -155,9 +155,9 @@ Service.duration (المدة الأساسية — 30 دقيقة)
 | Service.duration | ✅ Create form | ✅ |
 | ServiceBookingType.duration | ✅ booking-types-editor | ✅ NEW |
 | ServiceDurationOption | ✅ duration-options-editor (label, price, isDefault) | ✅ NEW |
-| PractitionerService.customDuration | ✅ Edit sheet | ✅ |
-| PractitionerServiceType.duration | ✅ practitioner-service-types-editor | ✅ NEW |
-| PractitionerDurationOption | ✅ (within types editor) | ✅ NEW |
+| EmployeeService.customDuration | ✅ Edit sheet | ✅ |
+| EmployeeServiceType.duration | ✅ employee-service-types-editor | ✅ NEW |
+| EmployeeDurationOption | ✅ (within types editor) | ✅ NEW |
 
 **النتيجة: Duration hierarchy مغطاة بالكامل ✅**
 
@@ -204,9 +204,9 @@ Service.duration (المدة الأساسية — 30 دقيقة)
 | lateCancelRefundType | ❌ | ✅ | Cancellation Tab |
 | lateCancelRefundPercent | ❌ | ✅ | Cancellation Tab |
 | adminCanDirectCancel | ❌ | ✅ | Cancellation Tab |
-| patientCanCancelPending | ❌ | ✅ | Cancellation Tab |
+| clientCanCancelPending | ❌ | ✅ | Cancellation Tab |
 | cancellationReviewTimeoutHours | ❌ | ✅ | Cancellation Tab |
-| patientCanReschedule | ❌ | ✅ | Rescheduling Card |
+| clientCanReschedule | ❌ | ✅ | Rescheduling Card |
 | rescheduleBeforeHours | ❌ | ✅ | Rescheduling Card |
 | maxReschedulesPerBooking | ❌ | ✅ | Rescheduling Card |
 | allowWalkIn | ❌ | ❌ | 🔴 مفقود |
@@ -310,7 +310,7 @@ Service.duration (المدة الأساسية — 30 دقيقة)
 | 11 | Branches management page | 8h |
 | 12 | Service Edit page (حالياً create فقط) | 4h |
 | 13 | adminCanBookOutsideHours toggle | 1h |
-| 14 | Practitioner isHidden field | 1h |
+| 14 | Employee isHidden field | 1h |
 | 15 | Bulk service assignment للمعالجين | 4h |
 
 ### 🟢 Tier 3 — مستقبلي:

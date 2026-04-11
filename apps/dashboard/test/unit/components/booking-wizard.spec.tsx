@@ -30,8 +30,8 @@ vi.mock("@/components/features/widget/widget-header", () => ({
 }))
 
 vi.mock("@/lib/api/widget", () => ({
-  fetchWidgetPractitioners: vi.fn().mockResolvedValue({ items: [], meta: { total: 0 } }),
-  fetchWidgetPractitionerServices: vi.fn().mockResolvedValue([]),
+  fetchWidgetEmployees: vi.fn().mockResolvedValue({ items: [], meta: { total: 0 } }),
+  fetchWidgetEmployeeServices: vi.fn().mockResolvedValue([]),
   fetchWidgetServiceTypes: vi.fn().mockResolvedValue([]),
   fetchWidgetSlots: vi.fn().mockResolvedValue([]),
   fetchWidgetServices: vi.fn().mockResolvedValue({ items: [], meta: { total: 0 } }),
@@ -43,7 +43,7 @@ vi.mock("@/lib/api/widget", () => ({
     payment_moyasar_enabled: 'false',
     payment_at_clinic_enabled: 'true',
     widget_show_price: true,
-    widget_any_practitioner: false,
+    widget_any_employee: false,
     widget_redirect_url: null,
     widget_max_advance_days: 0,
   }),

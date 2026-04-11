@@ -7,7 +7,7 @@
 
 export type FormType = "pre_booking" | "pre_session" | "post_session" | "registration"
 
-export type FormScope = "global" | "service" | "practitioner" | "branch"
+export type FormScope = "global" | "service" | "employee" | "branch"
 
 export type FieldType =
   | "text"

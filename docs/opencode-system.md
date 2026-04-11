@@ -35,10 +35,10 @@ An AI-assisted development workflow built on top of OpenCode, specialized for Ca
 CareKit is a large, multi-surface monorepo:
 - **Backend** — 30+ NestJS modules
 - **Dashboard** — Next.js App Router (RTL, Arabic-first)
-- **Mobile** — Expo React Native (patient + practitioner apps)
+- **Mobile** — Expo React Native (client + employee apps)
 - **Database** — PostgreSQL with Prisma, split schemas, immutable migrations
 
-The core business is appointment scheduling. Bugs in booking logic can break clinic operations directly. A mistake in a migration can corrupt real patient records. A skipped auth guard can expose financial data.
+The core business is appointment scheduling. Bugs in booking logic can break clinic operations directly. A mistake in a migration can corrupt real client records. A skipped auth guard can expose financial data.
 
 A simple "write code and ship" approach is not safe at this scale and with this sensitivity. The system enforces:
 - Structured analysis before any code is written
@@ -1010,7 +1010,7 @@ If you only need one stage:
 
 ## 11. Full Example — Bug Fix Scenario
 
-**Task:** Patients with an unresolved no-show can still book walk-in appointments.
+**Task:** Clients with an unresolved no-show can still book walk-in appointments.
 
 ---
 
@@ -1049,7 +1049,7 @@ implementation_plan:
   2. Ensure no-show check runs before walk-in path returns
 
 required_tests:
-  regression: Walk-in booking blocked when patient has unresolved no-show
+  regression: Walk-in booking blocked when client has unresolved no-show
   unit: BookingsService.create() — walk-in with no-show → throws ConflictException
   unit: BookingsService.create() — walk-in without no-show → succeeds
 
@@ -1145,7 +1145,7 @@ TEST ENGINEER DELIVERY
 ======================
 tests_written:
   - backend/src/modules/bookings/tests/bookings.service.spec.ts:
-      regression — walk-in booking blocked when patient has unresolved no-show
+      regression — walk-in booking blocked when client has unresolved no-show
   - backend/src/modules/bookings/tests/bookings.service.spec.ts:
       unit — walk-in without no-show succeeds
 

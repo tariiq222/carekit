@@ -24,7 +24,7 @@ function makeFormValues(overrides: Partial<CreateGroupFormValues> = {}): CreateG
     nameEn: "",
     descriptionAr: "",
     descriptionEn: "",
-    practitionerId: "123e4567-e89b-12d3-a456-426614174000",
+    employeeId: "123e4567-e89b-12d3-a456-426614174000",
     minParticipants: 2,
     maxParticipants: 10,
     pricePerPersonHalalat: 0,

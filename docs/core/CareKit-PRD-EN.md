@@ -30,7 +30,7 @@ The product consists of two layers:
 
 ### 1.4 Product Goals
 
-- Provide a complete digital experience for patients (booking + payment + consultations + AI chat)
+- Provide a complete digital experience for clients (booking + payment + consultations + AI chat)
 - Enable centers to manage all operations from a single dashboard
 - Sell the product to multiple clients as a White Label product
 - Offer custom website design as an additional revenue stream
@@ -39,86 +39,86 @@ The product consists of two layers:
 
 ## 2. Core Components
 
-### 2.1 Mobile App (Patients + Doctors)
+### 2.1 Mobile App (Clients + Doctors)
 
 Single app with dual roles running on iOS and Android via React Native (Expo). The system detects the user's role at login and displays the appropriate interface automatically.
 
-- **Patient:** Browses services and practitioners, books appointments, pays, communicates with AI chatbot
-- **Practitioner:** Views their schedule, manages availability, views patient records, receives notifications
+- **Client:** Browses services and employees, books appointments, pays, communicates with AI chatbot
+- **Employee:** Views their schedule, manages availability, views client records, receives notifications
 
 ### 2.2 Website (Custom Design Per Client)
 
-Professional website designed from scratch for each client with a completely different identity and design. Connects to the same API, pulling services, practitioners, booking, and chatbot data automatically.
+Professional website designed from scratch for each client with a completely different identity and design. Connects to the same API, pulling services, employees, booking, and chatbot data automatically.
 
 ### 2.3 Admin Dashboard
 
-Comprehensive dashboard for managing appointments, doctors, patients, invoices, services, reports, notifications, White Label settings, and a flexible permissions system.
+Comprehensive dashboard for managing appointments, doctors, clients, invoices, services, reports, notifications, White Label settings, and a flexible permissions system.
 
 ### 2.4 AI Assistant (Chatbot)
 
-Smart chatbot that reads from the center's database directly, answers patient inquiries 24/7, and books appointments as a complete booking channel. Works in Arabic and English.
+Smart chatbot that reads from the center's database directly, answers client inquiries 24/7, and books appointments as a complete booking channel. Works in Arabic and English.
 
 ---
 
 ## 3. User Flows
 
-### 3.1 Patient — Content Browsing + Manual Booking
+### 3.1 Client — Content Browsing + Manual Booking
 
-1. Open app — Home screen shows center services, featured practitioners, latest offers
-2. Browse content — Services, practitioner profiles, about the center, prices (no login required)
+1. Open app — Home screen shows center services, featured employees, latest offers
+2. Browse content — Services, employee profiles, about the center, prices (no login required)
 3. Sign in / Sign up — When ready to book: email + password or email + OTP (code sent to email)
-4. Select specialty and practitioner — Browse specialties → choose practitioner by rating and availability
+4. Select specialty and employee — Browse specialties → choose employee by rating and availability
 5. Select booking type — Clinic visit or phone/video consultation
 6. Select appointment — Calendar showing available slots only
 7. Payment — Moyasar (Mada, Apple Pay, card) or bank transfer (upload receipt)
 8. Confirmation — Instant confirmation + Push notification + email + calendar add
 
-### 3.2 Patient — AI Chatbot Booking
+### 3.2 Client — AI Chatbot Booking
 
 1. Open chat — From app or website
 2. Describe need — "I want to book a psychology appointment" or "I have a question about your services"
-3. Bot reads center data — Shows available services, suitable practitioners, open time slots
-4. Suggestion and confirmation — Bot suggests a practitioner and time
-5. Patient confirms — Bot creates the booking automatically
+3. Bot reads center data — Shows available services, suitable employees, open time slots
+4. Suggestion and confirmation — Bot suggests a employee and time
+5. Client confirms — Bot creates the booking automatically
 6. Redirect to payment — Moyasar link or bank account details for transfer
 7. Follow-up or handoff — Bot answers further questions. Complex issues → Live Chat or contact number (per client settings)
 
 ### 3.3 Phone Consultation
 
 1. Select "Phone Consultation" at booking
-2. Select practitioner and appointment
+2. Select employee and appointment
 3. Payment — Moyasar or bank transfer
 4. Confirmation + reminder via Push + email
-5. Practitioner calls patient — Call happens outside the platform. System shows patient's phone number to practitioner
+5. Employee calls client — Call happens outside the platform. System shows client's phone number to employee
 6. Rating and Feedback — Stars + notes + problem report
 
 ### 3.4 Video Consultation (Zoom)
 
 1. Select "Video Consultation" at booking
-2. Select practitioner and appointment
+2. Select employee and appointment
 3. Payment
 4. Receive Zoom link — System generates link automatically and sends to both parties
 5. Join via Zoom — Opens directly
 6. Rating and Feedback
 
-### 3.5 Practitioner / Doctor
+### 3.5 Employee / Doctor
 
 1. Login — Email + password (account created by admin)
 2. View schedule — Daily/weekly
 3. Manage availability — Working hours, vacations, break periods
-4. Remote consultations — Phone: patient's number displayed. Video: Zoom link
-5. View patient records — Visit history
+4. Remote consultations — Phone: client's number displayed. Video: Zoom link
+5. View client records — Visit history
 6. Receive notifications — New bookings, cancellations, modifications
 
 ### 3.6 System Admin
 
-Manages all operations from the dashboard: appointments, doctors, patients, services, invoices, payments, reports, notifications, chatbot, permissions, White Label settings.
+Manages all operations from the dashboard: appointments, doctors, clients, services, invoices, payments, reports, notifications, chatbot, permissions, White Label settings.
 
 ---
 
 ## 4. App Screens
 
-### 4.1 Patient Screens (24 screens)
+### 4.1 Client Screens (24 screens)
 
 **Browsing & Content (no login required — synced with website):**
 
@@ -126,11 +126,11 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 |--------|-------------|-------|
 | Splash Screen | Loading screen with clinic logo | White Label |
 | Onboarding | 3 introductory screens | First time only |
-| Home | Banner + services + featured practitioners + offers | Main tab |
+| Home | Banner + services + featured employees + offers | Main tab |
 | Services | All center services with detailed pricing | Synced with website |
 | Specialties | Specialty list with icons | Filter and search |
-| Practitioners List | Practitioners by specialty with rating and price | Advanced filtering |
-| Practitioner Profile | Photo, specialty, experience, ratings, available times | Book + chat buttons |
+| Employees List | Employees by specialty with rating and price | Advanced filtering |
+| Employee Profile | Photo, specialty, experience, ratings, available times | Book + chat buttons |
 | About the Center | Center info, vision, mission | White Label |
 | FAQ | FAQ with search | Also feeds chatbot |
 
@@ -146,7 +146,7 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 | Payment | Moyasar or bank transfer + receipt upload | Transfer: pending confirmation |
 | Payment Confirmation | Success message + reference number | Add to calendar |
 | My Appointments | Upcoming + past + cancelled | Cancel/modify |
-| Appointment Details | Details + Zoom link (video) or practitioner number (phone) | By consultation type |
+| Appointment Details | Details + Zoom link (video) or employee number (phone) | By consultation type |
 | Rating + Feedback | Stars + notes + problem report | After every appointment |
 
 **AI Chat:**
@@ -163,16 +163,16 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 | Profile | My info + edit |
 | Settings | Language, notifications, privacy |
 
-### 4.2 Practitioner Screens (8 screens)
+### 4.2 Employee Screens (8 screens)
 
 | Screen | Description | Notes |
 |--------|-------------|-------|
-| Practitioner Login | Email + password | Account from admin |
-| Home (Practitioner) | Today's summary: appointment count, next up, stats | Main tab |
+| Employee Login | Email + password | Account from admin |
+| Home (Employee) | Today's summary: appointment count, next up, stats | Main tab |
 | Today's Schedule | All today's appointments in order + status | Color-coded status |
 | Weekly/Monthly Calendar | All appointments on calendar | Week/month navigation |
-| Appointment Details | Patient data + phone number (phone) or Zoom link (video) | By type |
-| Patient Records | Patient list + visit history | Search by name or number |
+| Appointment Details | Client data + phone number (phone) or Zoom link (video) | By type |
+| Client Records | Client list + visit history | Search by name or number |
 | Availability Management | Working hours + vacations + breaks | Affects booking availability |
 | Earnings Summary | Session count + earnings | Optional |
 
@@ -180,9 +180,9 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 
 | Module | Description |
 |--------|-------------|
-| Consultation Link | Auto Zoom (video) or patient number (phone) |
+| Consultation Link | Auto Zoom (video) or client number (phone) |
 | Notifications | Push — content varies by role |
-| Chat | Patient with bot. Practitioner receives handoffs |
+| Chat | Client with bot. Employee receives handoffs |
 | Profile | Fields vary by role |
 | Settings | Unified |
 | About Center | White Label |
@@ -195,9 +195,9 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 
 | Page | Description | Notes |
 |------|-------------|-------|
-| Home | Hero + services + practitioners + testimonials + CTA | Unique design per client |
+| Home | Hero + services + employees + testimonials + CTA | Unique design per client |
 | Our Services | All services with pricing | Data from API |
-| Our Practitioners | List + detailed profiles | Data from API |
+| Our Employees | List + detailed profiles | Data from API |
 | Book Appointment | Embedded booking system | Shared Booking Widget |
 | About Us | Center story, vision, mission | Custom content |
 | Contact Us | Form + map + contact info | Google Maps |
@@ -218,13 +218,13 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 | General Calendar | Full calendar — daily/weekly/monthly | All |
 | Appointment Management | Table + filter + search + edit + cancel | Admin, Reception |
 | Doctor Management | Add/edit/delete + work schedules + vacations | Admin |
-| Patient Management | Records + visit history + search | Admin, Reception |
+| Client Management | Records + visit history + search | Admin, Reception |
 | Service Management | Services and prices + categories | Admin |
 | Invoices | Create + track payment + send | Admin, Accountant |
 | Payments | Payment log (Moyasar + transfers) + reports | Admin, Accountant |
 | Bank Transfer Verification | Uploaded receipts + AI Tags (matched/different/suspicious) + approve/reject | Admin, Accountant |
 | Reports | Bookings, revenue, doctor performance + export | Admin |
-| Ratings & Feedback | Patient ratings + notes + problem reports | Admin |
+| Ratings & Feedback | Client ratings + notes + problem reports | Admin |
 | Notifications | Send group or individual Push notifications | Admin |
 | Chatbot Settings | Knowledge base + auto-replies + conversation log | Admin |
 | Users & Permissions | 5 default roles + custom roles + granular permissions (view, create, edit, delete) per section | Admin only |
@@ -237,7 +237,7 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 
 ### 7.1 Advanced Booking System
 
-- Book clinic appointments with specialty, practitioner, day, and time selection
+- Book clinic appointments with specialty, employee, day, and time selection
 - Book phone and video consultations
 - Smart calendar showing available slots only
 - Automatic double-booking protection
@@ -248,10 +248,10 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 
 ### 7.2 Remote Consultations
 
-- Phone consultation = appointment booking only — practitioner calls outside the platform
+- Phone consultation = appointment booking only — employee calls outside the platform
 - Video consultation = booking + automatic Zoom link generation
 - System generates Zoom link and sends to both parties (Push + email)
-- System shows patient's phone number to practitioner (for phone consultations)
+- System shows client's phone number to employee (for phone consultations)
 - Automatic reminders before appointment for both parties
 - Prepayment required for both types
 - Zoom account provided by client — API keys entered in dashboard
@@ -263,7 +263,7 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 - Modify appointment (change time)
 - Show upcoming appointments
 - Request cancellation — does NOT execute, sends request to admin (involves refund)
-- Answer questions about services, prices, and practitioners
+- Answer questions about services, prices, and employees
 
 **Fallback:**
 - Handoff to Live Chat or provide contact number (per client settings)
@@ -278,7 +278,7 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 ### 7.4 Invoicing & Payments
 
 - Electronic payment via Moyasar (Mada, Apple Pay, Visa/MC)
-- Manual bank transfer — patient uploads receipt photo
+- Manual bank transfer — client uploads receipt photo
 - AI receipt verification via Vision API (OpenRouter):
   - Matched (green) — receipt amount = booking amount
   - Amount differs (orange) — discrepancy in amount
@@ -293,21 +293,21 @@ Manages all operations from the dashboard: appointments, doctors, patients, serv
 
 ### 7.5 Rating & Feedback
 
-- Star rating (1-5) after every appointment — shown on practitioner profile, affects ranking
+- Star rating (1-5) after every appointment — shown on employee profile, affects ranking
 - Optional text feedback — visible to admin
-- Problem report (practitioner didn't call, late, technical issue) — instant alert to admin
-- Patient satisfaction reports in dashboard
+- Problem report (employee didn't call, late, technical issue) — instant alert to admin
+- Client satisfaction reports in dashboard
 
 ### 7.6 Cancellation & Refund Policy
 
-- Each client sets their own policy from dashboard (text shown to patient)
-- No automatic rules — patient requests cancellation → goes to admin → admin decides: full/partial/no refund
+- Each client sets their own policy from dashboard (text shown to client)
+- No automatic rules — client requests cancellation → goes to admin → admin decides: full/partial/no refund
 - Chatbot requests cancellation but does not execute it
 
 ### 7.7 Permissions System (Dynamic RBAC)
 
 - Permission-based flexible system
-- 5 default roles: System Admin, Receptionist, Accountant, Practitioner/Doctor, Patient/Client
+- 5 default roles: System Admin, Receptionist, Accountant, Employee/Doctor, Client/Client
 - Client can create custom roles from dashboard
 - Set permissions per role (view, create, edit, delete) for each section
 - User management and role assignment
@@ -454,8 +454,8 @@ docker compose up -d
 | # | Decision | Result | Reason |
 |---|----------|--------|--------|
 | 1 | Product name | CareKit (internal) | Short, expresses toolkit |
-| 2 | Patient login | Email + password and Email + OTP (email) | Simpler — no SMS needed |
-| 3 | Practitioner login | Email + password (from admin) | Role-based routing |
+| 2 | Client login | Email + password and Email + OTP (email) | Simpler — no SMS needed |
+| 3 | Employee login | Email + password (from admin) | Role-based routing |
 | 4 | Payment gateway | Moyasar + manual bank transfer | Moyasar most popular + transfer covers the rest |
 | 5 | Transfer verification | AI Vision + Tags + admin decision | Assists without replacing humans |
 | 6 | Phone consultation | Call outside platform | Simplest |

@@ -1,9 +1,9 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import { PractitionerFormPage } from "@/components/features/practitioners/practitioner-form-page"
+import { EmployeeFormPage } from "@/components/features/employees/employee-form-page"
 
-export default function EditPractitionerPage() {
+export default function EditEmployeePage() {
   const { id } = useParams<{ id: string }>()
-  return <PractitionerFormPage mode="edit" practitionerId={id} />
+  return <EmployeeFormPage mode="edit" employeeId={id} />
 }

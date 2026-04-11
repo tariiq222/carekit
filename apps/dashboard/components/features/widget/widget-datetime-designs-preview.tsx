@@ -37,7 +37,7 @@ const MOCK_SLOTS = [
 ]
 const MOCK_SUMMARY = {
   branch: "فرع الرياض", service: "استشارة عامة",
-  practitioner: "د. أحمد الشمري", duration: "30 دقيقة", price: "150 ر.س",
+  employee: "د. أحمد الشمري", duration: "30 دقيقة", price: "150 ر.س",
 }
 const CAL_CLASSES = {
   day_selected: "bg-primary text-primary-foreground hover:bg-primary",
@@ -105,7 +105,7 @@ function Design1() {
           {[
             { icon: Location04Icon, val: MOCK_SUMMARY.branch },
             { icon: Calendar01Icon, val: MOCK_SUMMARY.service },
-            { icon: UserCircleIcon, val: MOCK_SUMMARY.practitioner },
+            { icon: UserCircleIcon, val: MOCK_SUMMARY.employee },
             { icon: Time01Icon, val: MOCK_SUMMARY.duration },
             { icon: Money01Icon, val: MOCK_SUMMARY.price },
           ].map(({ icon, val }) => (
@@ -194,7 +194,7 @@ function Design2() {
         </div>
       )}
       <div className="flex items-center gap-2 flex-wrap bg-surface-muted rounded-lg px-3 py-2">
-        {[MOCK_SUMMARY.branch, MOCK_SUMMARY.service, MOCK_SUMMARY.practitioner, MOCK_SUMMARY.price].map((v, i) => (
+        {[MOCK_SUMMARY.branch, MOCK_SUMMARY.service, MOCK_SUMMARY.employee, MOCK_SUMMARY.price].map((v, i) => (
           <span key={v} className="flex items-center gap-1 text-xs text-muted-foreground">
             {i > 0 && <span className="text-border">•</span>}{v}
           </span>
@@ -260,7 +260,7 @@ function Design3() {
       <div className="flex gap-1.5 flex-wrap">
         {[
           { icon: Location04Icon, val: MOCK_SUMMARY.branch },
-          { icon: UserCircleIcon, val: MOCK_SUMMARY.practitioner },
+          { icon: UserCircleIcon, val: MOCK_SUMMARY.employee },
           { icon: Money01Icon, val: MOCK_SUMMARY.price },
         ].map(({ icon, val }) => (
           <span key={val} className="flex items-center gap-1 text-xs bg-surface-muted border border-border rounded-full px-2.5 py-1 text-foreground">

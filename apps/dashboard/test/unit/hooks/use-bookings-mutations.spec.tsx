@@ -16,10 +16,10 @@ const {
   checkInBooking,
   startBooking,
   adminCancelBooking,
-  practitionerCancelBooking,
+  employeeCancelBooking,
   requestCancellation,
   createRecurringBooking,
-  patientReschedule,
+  clientReschedule,
 } = vi.hoisted(() => ({
   fetchBookings: vi.fn(),
   fetchBookingStats: vi.fn(),
@@ -33,10 +33,10 @@ const {
   checkInBooking: vi.fn(),
   startBooking: vi.fn(),
   adminCancelBooking: vi.fn(),
-  practitionerCancelBooking: vi.fn(),
+  employeeCancelBooking: vi.fn(),
   requestCancellation: vi.fn(),
   createRecurringBooking: vi.fn(),
-  patientReschedule: vi.fn(),
+  clientReschedule: vi.fn(),
 }))
 
 vi.mock("@/lib/api/bookings", () => ({
@@ -52,10 +52,10 @@ vi.mock("@/lib/api/bookings", () => ({
   checkInBooking,
   startBooking,
   adminCancelBooking,
-  practitionerCancelBooking,
+  employeeCancelBooking,
   requestCancellation,
   createRecurringBooking,
-  patientReschedule,
+  clientReschedule,
 }))
 
 import { useBookingMutations } from "@/hooks/use-bookings"
@@ -156,7 +156,7 @@ describe("useBookingMutations", () => {
 
     act(() => {
       result.current.createMut.mutate({
-        practitionerId: "p-1",
+        employeeId: "p-1",
         serviceId: "svc-1",
         date: "2026-04-01",
         startTime: "09:00",
@@ -166,7 +166,7 @@ describe("useBookingMutations", () => {
 
     await waitFor(() =>
       expect(createBooking).toHaveBeenCalledWith(
-        expect.objectContaining({ practitionerId: "p-1" }),
+        expect.objectContaining({ employeeId: "p-1" }),
         expect.anything(),
       ),
     )

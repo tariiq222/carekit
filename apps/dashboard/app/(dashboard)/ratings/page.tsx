@@ -3,22 +3,22 @@
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { PageHeader } from "@/components/features/page-header"
-import { AllRatingsTab } from "@/components/features/practitioners/all-ratings-tab"
-import { usePractitioners } from "@/hooks/use-practitioners"
+import { AllRatingsTab } from "@/components/features/employees/all-ratings-tab"
+import { useEmployees } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 
 export default function RatingsPage() {
   const { t } = useLocale()
-  const { practitioners } = usePractitioners()
+  const { employees } = useEmployees()
 
   return (
     <ListPageShell>
       <Breadcrumbs />
       <PageHeader
-        title={t("practitioners.ratings.title")}
-        description={t("practitioners.ratings.description")}
+        title={t("employees.ratings.title")}
+        description={t("employees.ratings.description")}
       />
-      <AllRatingsTab practitioners={practitioners} />
+      <AllRatingsTab employees={employees} />
     </ListPageShell>
   )
 }

@@ -73,8 +73,8 @@
 | `src/modules/groups/groups-payment.service.ts` | Replace call |
 | `src/modules/problem-reports/problem-reports.module.ts` | Replace `NotificationsModule` with `MessagingModule` |
 | `src/modules/problem-reports/problem-reports.service.ts` | Replace call |
-| `src/modules/practitioners/practitioners.module.ts` | Replace `EmailModule` with `MessagingModule` |
-| `src/modules/practitioners/practitioner-onboarding.service.ts` | Replace `emailService.sendPractitionerWelcome()` |
+| `src/modules/employees/employees.module.ts` | Replace `EmailModule` with `MessagingModule` |
+| `src/modules/employees/employee-onboarding.service.ts` | Replace `emailService.sendEmployeeWelcome()` |
 | `src/modules/auth/auth.module.ts` | Replace `EmailModule` with `MessagingModule` |
 | `src/modules/auth/auth.service.ts` | Replace 3 email calls with `dispatch()` |
 
@@ -97,7 +97,7 @@ src/modules/email-templates/
 | #3 | `refactor(messaging): move push channel` | push.service + fcm-tokens + channel adapter |
 | #4 | `refactor(messaging): move sms + email + email-templates channels` | All three channels moved |
 | #5 | `feat(messaging): wire dispatcher + preferences` | Full dispatch() logic |
-| #6a | `refactor(messaging): migrate non-auth consumers` | bookings, tasks, groups, payments, problem-reports, practitioners |
+| #6a | `refactor(messaging): migrate non-auth consumers` | bookings, tasks, groups, payments, problem-reports, employees |
 | #6b | `refactor(messaging): migrate auth consumers` | auth.service (Owner-tier) |
 | #7 | `refactor(messaging): remove legacy modules` | Delete old dirs, clean app.module |
 
@@ -198,7 +198,7 @@ describe('TEMPLATES registry', () => {
 
   it('BOOKING_CONFIRMED renders Arabic title', () => {
     const tpl = TEMPLATES[MessagingEvent.BOOKING_CONFIRMED];
-    const result = tpl.render({ date: '2026-05-01', time: '10:00', practitionerName: 'أحمد', serviceName: 'استشارة' });
+    const result = tpl.render({ date: '2026-05-01', time: '10:00', employeeName: 'أحمد', serviceName: 'استشارة' });
     expect(result.titleAr).toBe('تأكيد الموعد');
     expect(result.bodyAr).toContain('أحمد');
   });
@@ -209,7 +209,7 @@ describe('TEMPLATES registry', () => {
 
   it('every template render returns all 4 string fields', () => {
     const minCtx = {
-      date: 'd', time: 't', practitionerName: 'p', serviceName: 's',
+      date: 'd', time: 't', employeeName: 'p', serviceName: 's',
       code: '1234', firstName: 'علي', otpCode: '5678',
       bookingId: 'b1', amount: '100',
     };
@@ -273,25 +273,25 @@ export enum MessagingEvent {
   // Auth
   OTP_REQUESTED = 'auth.otp_requested',
   WELCOME = 'auth.welcome',
-  PRACTITIONER_WELCOME = 'auth.practitioner_welcome',
+  EMPLOYEE_WELCOME = 'auth.employee_welcome',
 
   // Bookings
   BOOKING_CONFIRMED = 'booking.confirmed',
-  BOOKING_CONFIRMED_PRACTITIONER = 'booking.confirmed_practitioner',
+  BOOKING_CONFIRMED_EMPLOYEE = 'booking.confirmed_employee',
   BOOKING_REMINDER = 'booking.reminder',
   BOOKING_REMINDER_URGENT = 'booking.reminder_urgent',
   BOOKING_CANCELLED = 'booking.cancelled',
-  BOOKING_CANCELLED_BY_PRACTITIONER = 'booking.cancelled_by_practitioner',
+  BOOKING_CANCELLED_BY_EMPLOYEE = 'booking.cancelled_by_employee',
   BOOKING_CANCELLATION_REQUESTED = 'booking.cancellation_requested',
   BOOKING_CANCELLATION_REJECTED = 'booking.cancellation_rejected',
   BOOKING_RESCHEDULED = 'booking.rescheduled',
-  BOOKING_RESCHEDULED_PRACTITIONER = 'booking.rescheduled_practitioner',
+  BOOKING_RESCHEDULED_EMPLOYEE = 'booking.rescheduled_employee',
   BOOKING_COMPLETED = 'booking.completed',
   BOOKING_EXPIRED = 'booking.expired',
   BOOKING_NOSHOW = 'booking.noshow',
   BOOKING_NOSHOW_REVIEW = 'booking.noshow_review',
   BOOKING_AUTOCOMPLETED = 'booking.autocompleted',
-  PATIENT_ARRIVED = 'booking.patient_arrived',
+  CLIENT_ARRIVED = 'booking.client_arrived',
   WAITLIST_SLOT_AVAILABLE = 'booking.waitlist_slot_available',
 
   // Payments
@@ -335,10 +335,10 @@ export interface EventTemplate<TCtx = Record<string, string>> {
   render: (ctx: TCtx) => RenderedMessage;
 }
 
-type BookingCtx = { date: string; time: string; practitionerName: string; serviceName: string };
+type BookingCtx = { date: string; time: string; employeeName: string; serviceName: string };
 type OtpCtx = { code: string; firstName?: string; otpType?: string };
 type WelcomeCtx = { firstName: string };
-type PractitionerWelcomeCtx = { firstName: string; otpCode: string };
+type EmployeeWelcomeCtx = { firstName: string; otpCode: string };
 type AmountCtx = { amount: string };
 type GenericCtx = Record<string, string>;
 
@@ -369,10 +369,10 @@ export const TEMPLATES: Record<MessagingEvent, EventTemplate<never>> = {
     }),
   } as EventTemplate<never>,
 
-  [MessagingEvent.PRACTITIONER_WELCOME]: {
+  [MessagingEvent.EMPLOYEE_WELCOME]: {
     category: 'auth',
     defaultChannels: ['email'],
-    render: (ctx: PractitionerWelcomeCtx) => ({
+    render: (ctx: EmployeeWelcomeCtx) => ({
       titleAr: 'مرحباً بك',
       titleEn: 'Welcome',
       bodyAr: `مرحباً ${ctx.firstName}، رمز كلمة المرور المؤقت: ${ctx.otpCode}`,
@@ -388,13 +388,13 @@ export const TEMPLATES: Record<MessagingEvent, EventTemplate<never>> = {
     render: (ctx: BookingCtx) => ({
       titleAr: 'تأكيد الموعد',
       titleEn: 'Booking Confirmed',
-      bodyAr: `تم تأكيد موعدك مع ${ctx.practitionerName} بتاريخ ${ctx.date} الساعة ${ctx.time}`,
-      bodyEn: `Your appointment with ${ctx.practitionerName} on ${ctx.date} at ${ctx.time} is confirmed`,
+      bodyAr: `تم تأكيد موعدك مع ${ctx.employeeName} بتاريخ ${ctx.date} الساعة ${ctx.time}`,
+      bodyEn: `Your appointment with ${ctx.employeeName} on ${ctx.date} at ${ctx.time} is confirmed`,
       notificationType: 'booking_confirmed',
     }),
   } as EventTemplate<never>,
 
-  [MessagingEvent.BOOKING_CONFIRMED_PRACTITIONER]: {
+  [MessagingEvent.BOOKING_CONFIRMED_EMPLOYEE]: {
     category: 'booking',
     defaultChannels: ['push'],
     render: (ctx: BookingCtx) => ({
@@ -412,8 +412,8 @@ export const TEMPLATES: Record<MessagingEvent, EventTemplate<never>> = {
     render: (ctx: BookingCtx) => ({
       titleAr: 'تذكير بموعدك',
       titleEn: 'Appointment Reminder',
-      bodyAr: `تذكير: موعدك مع ${ctx.practitionerName} غداً الساعة ${ctx.time}`,
-      bodyEn: `Reminder: Your appointment with ${ctx.practitionerName} is tomorrow at ${ctx.time}`,
+      bodyAr: `تذكير: موعدك مع ${ctx.employeeName} غداً الساعة ${ctx.time}`,
+      bodyEn: `Reminder: Your appointment with ${ctx.employeeName} is tomorrow at ${ctx.time}`,
       notificationType: 'booking_reminder',
     }),
   } as EventTemplate<never>,
@@ -424,8 +424,8 @@ export const TEMPLATES: Record<MessagingEvent, EventTemplate<never>> = {
     render: (ctx: BookingCtx) => ({
       titleAr: 'موعدك قريب',
       titleEn: 'Appointment Soon',
-      bodyAr: `موعدك مع ${ctx.practitionerName} خلال ساعة الساعة ${ctx.time}`,
-      bodyEn: `Your appointment with ${ctx.practitionerName} is in 1 hour at ${ctx.time}`,
+      bodyAr: `موعدك مع ${ctx.employeeName} خلال ساعة الساعة ${ctx.time}`,
+      bodyEn: `Your appointment with ${ctx.employeeName} is in 1 hour at ${ctx.time}`,
       notificationType: 'booking_reminder_urgent',
     }),
   } as EventTemplate<never>,
@@ -436,21 +436,21 @@ export const TEMPLATES: Record<MessagingEvent, EventTemplate<never>> = {
     render: (ctx: BookingCtx) => ({
       titleAr: 'تم إلغاء الموعد',
       titleEn: 'Booking Cancelled',
-      bodyAr: `تم إلغاء موعدك مع ${ctx.practitionerName} بتاريخ ${ctx.date}`,
-      bodyEn: `Your booking with ${ctx.practitionerName} on ${ctx.date} has been cancelled`,
+      bodyAr: `تم إلغاء موعدك مع ${ctx.employeeName} بتاريخ ${ctx.date}`,
+      bodyEn: `Your booking with ${ctx.employeeName} on ${ctx.date} has been cancelled`,
       notificationType: 'booking_cancelled',
     }),
   } as EventTemplate<never>,
 
-  [MessagingEvent.BOOKING_CANCELLED_BY_PRACTITIONER]: {
+  [MessagingEvent.BOOKING_CANCELLED_BY_EMPLOYEE]: {
     category: 'booking',
     defaultChannels: ['push', 'sms'],
     render: (ctx: BookingCtx) => ({
       titleAr: 'تم إلغاء موعدك من قبل الطبيب',
-      titleEn: 'Your Booking Was Cancelled by Practitioner',
-      bodyAr: `أعتذر، تم إلغاء موعدك بتاريخ ${ctx.date} من قبل ${ctx.practitionerName}`,
-      bodyEn: `Your booking on ${ctx.date} was cancelled by ${ctx.practitionerName}`,
-      notificationType: 'booking_practitioner_cancelled',
+      titleEn: 'Your Booking Was Cancelled by Employee',
+      bodyAr: `أعتذر، تم إلغاء موعدك بتاريخ ${ctx.date} من قبل ${ctx.employeeName}`,
+      bodyEn: `Your booking on ${ctx.date} was cancelled by ${ctx.employeeName}`,
+      notificationType: 'booking_employee_cancelled',
     }),
   } as EventTemplate<never>,
 
@@ -484,13 +484,13 @@ export const TEMPLATES: Record<MessagingEvent, EventTemplate<never>> = {
     render: (ctx: BookingCtx) => ({
       titleAr: 'إعادة جدولة الموعد',
       titleEn: 'Booking Rescheduled',
-      bodyAr: `تم إعادة جدولة موعدك مع ${ctx.practitionerName} إلى ${ctx.date} الساعة ${ctx.time}`,
-      bodyEn: `Your booking with ${ctx.practitionerName} has been rescheduled to ${ctx.date} at ${ctx.time}`,
+      bodyAr: `تم إعادة جدولة موعدك مع ${ctx.employeeName} إلى ${ctx.date} الساعة ${ctx.time}`,
+      bodyEn: `Your booking with ${ctx.employeeName} has been rescheduled to ${ctx.date} at ${ctx.time}`,
       notificationType: 'booking_rescheduled',
     }),
   } as EventTemplate<never>,
 
-  [MessagingEvent.BOOKING_RESCHEDULED_PRACTITIONER]: {
+  [MessagingEvent.BOOKING_RESCHEDULED_EMPLOYEE]: {
     category: 'booking',
     defaultChannels: ['push'],
     render: (_ctx: GenericCtx) => ({
@@ -562,15 +562,15 @@ export const TEMPLATES: Record<MessagingEvent, EventTemplate<never>> = {
     }),
   } as EventTemplate<never>,
 
-  [MessagingEvent.PATIENT_ARRIVED]: {
+  [MessagingEvent.CLIENT_ARRIVED]: {
     category: 'booking',
     defaultChannels: ['push'],
     render: (_ctx: GenericCtx) => ({
       titleAr: 'وصول المريض',
-      titleEn: 'Patient Arrived',
+      titleEn: 'Client Arrived',
       bodyAr: 'المريض وصل وجاهز للموعد',
-      bodyEn: 'Patient has arrived and is ready',
-      notificationType: 'patient_arrived',
+      bodyEn: 'Client has arrived and is ready',
+      notificationType: 'client_arrived',
     }),
   } as EventTemplate<never>,
 
@@ -580,8 +580,8 @@ export const TEMPLATES: Record<MessagingEvent, EventTemplate<never>> = {
     render: (ctx: BookingCtx) => ({
       titleAr: 'موعد متاح!',
       titleEn: 'Slot Available!',
-      bodyAr: `أصبح هناك موعد متاح مع ${ctx.practitionerName} بتاريخ ${ctx.date}`,
-      bodyEn: `A slot is now available with ${ctx.practitionerName} on ${ctx.date}`,
+      bodyAr: `أصبح هناك موعد متاح مع ${ctx.employeeName} بتاريخ ${ctx.date}`,
+      bodyEn: `A slot is now available with ${ctx.employeeName} on ${ctx.date}`,
       notificationType: 'waitlist_slot_available',
     }),
   } as EventTemplate<never>,
@@ -630,8 +630,8 @@ export const TEMPLATES: Record<MessagingEvent, EventTemplate<never>> = {
     render: (ctx: BookingCtx) => ({
       titleAr: 'تذكير بالجلسة الجماعية',
       titleEn: 'Group Session Reminder',
-      bodyAr: `جلستك الجماعية مع ${ctx.practitionerName} غداً الساعة ${ctx.time}`,
-      bodyEn: `Your group session with ${ctx.practitionerName} is tomorrow at ${ctx.time}`,
+      bodyAr: `جلستك الجماعية مع ${ctx.employeeName} غداً الساعة ${ctx.time}`,
+      bodyEn: `Your group session with ${ctx.employeeName} is tomorrow at ${ctx.time}`,
       notificationType: 'booking_reminder',
     }),
   } as EventTemplate<never>,
@@ -1426,7 +1426,7 @@ describe('MessagingDispatcherService', () => {
     await service.dispatch({
       event: MessagingEvent.BOOKING_CONFIRMED,
       recipientUserId: 'user-1',
-      context: { date: '2026-05-01', time: '10:00', practitionerName: 'أحمد', serviceName: 'استشارة' },
+      context: { date: '2026-05-01', time: '10:00', employeeName: 'أحمد', serviceName: 'استشارة' },
     });
     expect(mockPrisma.notification.create).toHaveBeenCalledTimes(1);
   });
@@ -1435,7 +1435,7 @@ describe('MessagingDispatcherService', () => {
     await service.dispatch({
       event: MessagingEvent.BOOKING_CONFIRMED,
       recipientUserId: 'user-1',
-      context: { date: '2026-05-01', time: '10:00', practitionerName: 'أحمد', serviceName: 'استشارة' },
+      context: { date: '2026-05-01', time: '10:00', employeeName: 'أحمد', serviceName: 'استشارة' },
     });
     expect(mockPushChannel.send).toHaveBeenCalledTimes(1);
     expect(mockSmsChannel.send).toHaveBeenCalledTimes(1);
@@ -1461,7 +1461,7 @@ describe('MessagingDispatcherService', () => {
     await service.dispatch({
       event: MessagingEvent.BOOKING_CONFIRMED,
       recipientUserId: 'user-1',
-      context: { date: '2026-05-01', time: '10:00', practitionerName: 'أحمد', serviceName: 'استشارة' },
+      context: { date: '2026-05-01', time: '10:00', employeeName: 'أحمد', serviceName: 'استشارة' },
     });
     expect(mockSmsChannel.send).not.toHaveBeenCalled();
     expect(mockPushChannel.send).toHaveBeenCalledTimes(1);
@@ -1473,7 +1473,7 @@ describe('MessagingDispatcherService', () => {
       service.dispatch({
         event: MessagingEvent.BOOKING_CONFIRMED,
         recipientUserId: 'user-1',
-        context: { date: '2026-05-01', time: '10:00', practitionerName: 'أحمد', serviceName: 'استشارة' },
+        context: { date: '2026-05-01', time: '10:00', employeeName: 'أحمد', serviceName: 'استشارة' },
       }),
     ).resolves.not.toThrow();
   });
@@ -1761,7 +1761,7 @@ git commit -m "feat(messaging): register MessagingModule in app (parallel with l
 
 Migrate all consumers except `auth.service.ts`. Each consumer: inject `MessagingDispatcherService`, replace `createNotification` / `emailService.*` call with `dispatch()`.
 
-**Files:** bookings (5 files), tasks (6 files), groups (4 files), payments (1 file), problem-reports (1 file), practitioners (1 file), and their respective `.module.ts` files.
+**Files:** bookings (5 files), tasks (6 files), groups (4 files), payments (1 file), problem-reports (1 file), employees (1 file), and their respective `.module.ts` files.
 
 - [ ] **Step 1: Update module files to import MessagingModule**
 
@@ -1774,7 +1774,7 @@ For each module file listed below, replace `NotificationsModule` / `EmailModule`
 // apps/backend/src/modules/groups/groups.module.ts
 // apps/backend/src/modules/payments/payments.module.ts
 // apps/backend/src/modules/problem-reports/problem-reports.module.ts
-// apps/backend/src/modules/practitioners/practitioners.module.ts
+// apps/backend/src/modules/employees/employees.module.ts
 
 // Change:
 import { NotificationsModule } from '../notifications/notifications.module.js';
@@ -1782,7 +1782,7 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
 import { MessagingModule } from '../messaging/messaging.module.js';
 
 // In imports array: replace NotificationsModule with MessagingModule
-// (same for EmailModule in practitioners)
+// (same for EmailModule in employees)
 ```
 
 - [ ] **Step 2: Update booking-creation.service.ts**
@@ -1806,9 +1806,9 @@ Replace the `createNotification` call (around line 390):
 ```typescript
 // Before:
 await this.notificationsService.createNotification({
-  userId: practitioner.userId,
+  userId: employee.userId,
   type: 'booking_confirmed',
-  ...NOTIF.BOOKING_NEW_FOR_PRACTITIONER,
+  ...NOTIF.BOOKING_NEW_FOR_EMPLOYEE,
   bodyAr: `لديك حجز جديد بتاريخ ${d} الساعة ${dto.startTime}`,
   bodyEn: `You have a new booking on ${d} at ${dto.startTime}`,
   data: { bookingId: booking.id },
@@ -1816,12 +1816,12 @@ await this.notificationsService.createNotification({
 
 // After:
 await this.messagingDispatcher.dispatch({
-  event: MessagingEvent.BOOKING_CONFIRMED_PRACTITIONER,
-  recipientUserId: practitioner.userId,
+  event: MessagingEvent.BOOKING_CONFIRMED_EMPLOYEE,
+  recipientUserId: employee.userId,
   context: {
     date: d,
     time: dto.startTime,
-    practitionerName: '',
+    employeeName: '',
     serviceName: '',
   },
 });
@@ -1838,15 +1838,15 @@ The file has 3 `createNotification` calls. Replace each:
 await this.messagingDispatcher.dispatch({
   event: MessagingEvent.BOOKING_CONFIRMED,
   recipientUserId: userId,  // use whatever userId variable is in scope
-  context: { date: bookingDate, time: bookingTime, practitionerName, serviceName },
+  context: { date: bookingDate, time: bookingTime, employeeName, serviceName },
 });
 ```
 
-**Call 2 (~line 138) — PATIENT_ARRIVED:**
+**Call 2 (~line 138) — CLIENT_ARRIVED:**
 ```typescript
 await this.messagingDispatcher.dispatch({
-  event: MessagingEvent.PATIENT_ARRIVED,
-  recipientUserId: practitionerUserId,
+  event: MessagingEvent.CLIENT_ARRIVED,
+  recipientUserId: employeeUserId,
   context: {},
 });
 ```
@@ -1889,16 +1889,16 @@ Apply the same pattern to all `createNotification` calls in:
 - `groups-lifecycle.service.ts` → `GROUP_SESSION_CONFIRMED`
 - `groups-payment.service.ts` → `GROUP_PAYMENT_CONFIRMED`
 
-- [ ] **Step 7: Update payments + problem-reports + practitioners**
+- [ ] **Step 7: Update payments + problem-reports + employees**
 
 - `bank-transfer.service.ts` → `BANK_TRANSFER_SUBMITTED` (provide `amount` in context)
 - `problem-reports.service.ts` → `PROBLEM_REPORT_RESOLVED`
-- `practitioner-onboarding.service.ts` → replace `emailService.sendPractitionerWelcome(email, firstName, otpCode)` with:
+- `employee-onboarding.service.ts` → replace `emailService.sendEmployeeWelcome(email, firstName, otpCode)` with:
 
 ```typescript
 await this.messagingDispatcher.dispatch({
-  event: MessagingEvent.PRACTITIONER_WELCOME,
-  recipientUserId: practitioner.userId,
+  event: MessagingEvent.EMPLOYEE_WELCOME,
+  recipientUserId: employee.userId,
   context: { firstName, otpCode },
   recipientEmail: email,
 });
@@ -1917,7 +1917,7 @@ Expected: all tests pass.
 
 ```bash
 cd apps/backend
-git add src/modules/bookings/ src/modules/tasks/ src/modules/groups/ src/modules/payments/bank-transfer.service.ts src/modules/problem-reports/ src/modules/practitioners/
+git add src/modules/bookings/ src/modules/tasks/ src/modules/groups/ src/modules/payments/bank-transfer.service.ts src/modules/problem-reports/ src/modules/employees/
 git commit -m "refactor(messaging): migrate all non-auth consumers to MessagingDispatcherService"
 ```
 

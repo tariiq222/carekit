@@ -10,7 +10,7 @@ import {
   completeGroup,
   triggerGroupPayment,
   confirmGroupSchedule,
-  enrollPatientInGroup,
+  enrollClientInGroup,
   removeGroupEnrollment,
   bulkConfirmGroupAttendance,
   issueGroupCertificate,
@@ -63,9 +63,9 @@ export function useGroupsMutations() {
     onSuccess: invalidateAll,
   })
 
-  const enrollPatientMut = useMutation({
-    mutationFn: ({ groupId, patientId }: { groupId: string; patientId: string }) =>
-      enrollPatientInGroup(groupId, patientId),
+  const enrollClientMut = useMutation({
+    mutationFn: ({ groupId, clientId }: { groupId: string; clientId: string }) =>
+      enrollClientInGroup(groupId, clientId),
     onSuccess: invalidateAll,
   })
 
@@ -107,7 +107,7 @@ export function useGroupsMutations() {
     completeGroupMut,
     triggerPaymentMut,
     confirmScheduleMut,
-    enrollPatientMut,
+    enrollClientMut,
     removeEnrollmentMut,
     bulkAttendanceMut,
     issueCertificateMut,

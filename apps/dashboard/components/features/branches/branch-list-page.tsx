@@ -14,7 +14,7 @@ import { DataTable } from "@/components/features/data-table"
 import { ErrorBanner } from "@/components/features/error-banner"
 import { getBranchColumns } from "@/components/features/branches/branch-columns"
 import { DeleteBranchDialog } from "@/components/features/branches/delete-branch-dialog"
-import { BranchPractitionersDialog } from "@/components/features/branches/branch-practitioners-dialog"
+import { BranchEmployeesDialog } from "@/components/features/branches/branch-employees-dialog"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FilterBar } from "@/components/features/filter-bar"
@@ -28,7 +28,7 @@ export function BranchListPage() {
   const { branches, meta, isLoading, error, search, setSearch, isActive, setIsActive, page, setPage } = useBranches()
 
   const [deleteTarget, setDeleteTarget] = useState<Branch | null>(null)
-  const [practitionersTarget, setPractitionersTarget] = useState<Branch | null>(null)
+  const [employeesTarget, setEmployeesTarget] = useState<Branch | null>(null)
 
   const activeCount = branches.filter((b) => b.isActive).length
   const inactiveCount = branches.filter((b) => !b.isActive).length
@@ -39,7 +39,7 @@ export function BranchListPage() {
     (b) => router.push(`/branches/${b.id}/edit`),
     (b) => setDeleteTarget(b),
     t,
-    (b) => setPractitionersTarget(b),
+    (b) => setEmployeesTarget(b),
   )
 
   return (
@@ -110,7 +110,7 @@ export function BranchListPage() {
       )}
 
       <DeleteBranchDialog branch={deleteTarget} open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null) }} />
-      <BranchPractitionersDialog branch={practitionersTarget} open={!!practitionersTarget} onOpenChange={(o) => { if (!o) setPractitionersTarget(null) }} />
+      <BranchEmployeesDialog branch={employeesTarget} open={!!employeesTarget} onOpenChange={(o) => { if (!o) setEmployeesTarget(null) }} />
     </ListPageShell>
   )
 }

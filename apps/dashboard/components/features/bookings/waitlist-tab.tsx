@@ -129,8 +129,8 @@ export function WaitlistTab() {
         <div className="flex flex-col gap-3">
           {entries.map((entry) => {
             const st = statusStyles[entry.status] ?? statusStyles.waiting
-            const doctorName = `${entry.practitioner.user.firstName} ${entry.practitioner.user.lastName}`
-            const patientName = `${entry.patient.firstName} ${entry.patient.lastName}`
+            const doctorName = `${entry.employee.user.firstName} ${entry.employee.user.lastName}`
+            const clientName = `${entry.client.firstName} ${entry.client.lastName}`
             const serviceName = entry.service
               ? locale === "ar" ? entry.service.nameAr : entry.service.nameEn
               : null
@@ -151,7 +151,7 @@ export function WaitlistTab() {
                       )}
                     </div>
                     <p className="text-sm font-medium text-foreground">
-                      {patientName}
+                      {clientName}
                     </p>
                   </div>
                   {entry.status === "waiting" && (
@@ -196,9 +196,9 @@ export function WaitlistTab() {
                   )}
                 </div>
 
-                {entry.patient.phone && (
+                {entry.client.phone && (
                   <p className="text-xs text-muted-foreground tabular-nums">
-                    {t("waitlist.phone")}: {entry.patient.phone}
+                    {t("waitlist.phone")}: {entry.client.phone}
                   </p>
                 )}
               </div>

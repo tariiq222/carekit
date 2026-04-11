@@ -12,10 +12,10 @@
 | A02 | Dashboard Home | `/` | Home |
 | A03 | Appointments | `/appointments` | Main |
 | A04 | Appointment Detail | `/appointments/[id]` | Main |
-| A05 | Practitioners | `/practitioners` | Main |
-| A06 | Practitioner Detail | `/practitioners/[id]` | Main |
-| A07 | Patients | `/patients` | Main |
-| A08 | Patient Detail | `/patients/[id]` | Main |
+| A05 | Employees | `/employees` | Main |
+| A06 | Employee Detail | `/employees/[id]` | Main |
+| A07 | Clients | `/clients` | Main |
+| A08 | Client Detail | `/clients/[id]` | Main |
 | A09 | Services | `/services` | Main |
 | A10 | Payments | `/payments` | Finance |
 | A11 | Invoices | `/invoices` | Finance |
@@ -88,7 +88,7 @@
 │ 👨‍⚕️ Docs │  │ مواعيد اليوم│ │  الإيرادات │ │ مرضى جدد  │ │ إجراء مطلوب│                 │
 │ 👥 Pts  │  │    12     │ │ 5,400 ر.س│ │    3     │ │    5     │                 │
 │ 🏥 Svcs │  │  Today's  │ │ Revenue  │ │   New    │ │ Pending  │                 │
-│         │  │  Bookings │ │  Today   │ │ Patients │ │ Actions  │                 │
+│         │  │  Bookings │ │  Today   │ │ Clients │ │ Actions  │                 │
 │ 💰 Fin  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘                 │
 │  ├ Pay  │                                                                       │
 │  ├ Inv  │  ┌──────────────────────────┐ ┌──────────────────────────┐            │
@@ -120,7 +120,7 @@
 **Stats cards:**
 1. Today's bookings count
 2. Today's revenue (SAR)
-3. New patients this week
+3. New clients this week
 4. Pending actions (cancellations + bank transfers)
 
 **Sections:**
@@ -191,8 +191,8 @@
 - Export to CSV/Excel
 
 **Create Appointment Modal:**
-- Patient selector (search by name/email)
-- Practitioner selector
+- Client selector (search by name/email)
+- Employee selector
 - Service selector
 - Type selector
 - Date/time picker
@@ -208,11 +208,11 @@ Opens as a slide-over panel from the right (RTL: left) when clicking an appointm
 
 **Content:**
 - Booking ID, status badge
-- Patient info: name, email, phone
-- Practitioner info: name, specialty
+- Client info: name, email, phone
+- Employee info: name, specialty
 - Service, type, date, time
 - Payment status + method + amount
-- Patient notes
+- Client notes
 - Timeline: created → confirmed → completed/cancelled
 
 **Admin Actions:**
@@ -225,14 +225,14 @@ Opens as a slide-over panel from the right (RTL: left) when clicking an appointm
 
 ---
 
-## A05 — Practitioners
+## A05 — Employees
 
-**Purpose:** Manage practitioners
+**Purpose:** Manage employees
 
 **Layout:**
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│  الأطباء / Practitioners                          [+ إضافة طبيب]    │
+│  الأطباء / Employees                          [+ إضافة طبيب]    │
 │──────────────────────────────────────────────────────────────────────│
 │                                                                      │
 │  ┌──────────────────────────────────────────┐                        │
@@ -253,11 +253,11 @@ Opens as a slide-over panel from the right (RTL: left) when clicking an appointm
 
 **Behavior:**
 - TanStack Table with search, filters, sorting, pagination
-- View → A06 (Practitioner Detail page)
+- View → A06 (Employee Detail page)
 - Edit → inline or modal
-- Add → multi-step form (creates User account + Practitioner profile)
+- Add → multi-step form (creates User account + Employee profile)
 
-**Add Practitioner Form:**
+**Add Employee Form:**
 - Personal info: name, email, phone, password
 - Professional: specialty, bio, qualifications, experience years
 - Pricing: clinic visit, phone, video (in SAR, stored as halalat)
@@ -266,14 +266,14 @@ Opens as a slide-over panel from the right (RTL: left) when clicking an appointm
 
 ---
 
-## A06 — Practitioner Detail
+## A06 — Employee Detail
 
-**Purpose:** Full practitioner profile with schedule management
+**Purpose:** Full employee profile with schedule management
 
 **Tabs:** Profile | Schedule | Appointments | Ratings
 
 **Profile Tab:**
-- View/edit all practitioner info
+- View/edit all employee info
 - Photo, bio, qualifications, pricing
 - Toggle active/inactive status
 
@@ -284,25 +284,25 @@ Opens as a slide-over panel from the right (RTL: left) when clicking an appointm
 - View conflicts (bookings during proposed off-time)
 
 **Appointments Tab:**
-- Table of all appointments for this practitioner
+- Table of all appointments for this employee
 - Filter by status, date range
 - Same columns as A03 table
 
 **Ratings Tab:**
 - Overall rating with distribution chart
-- Reviews list with patient name (first + initial)
+- Reviews list with client name (first + initial)
 - Problem reports section
 
 ---
 
-## A07 — Patients
+## A07 — Clients
 
-**Purpose:** View and manage patient records
+**Purpose:** View and manage client records
 
 **Layout:**
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│  المرضى / Patients                                [تصدير / Export]   │
+│  المرضى / Clients                                [تصدير / Export]   │
 │──────────────────────────────────────────────────────────────────────│
 │                                                                      │
 │  ┌──────────────────────────────────────────┐                        │
@@ -324,34 +324,34 @@ Opens as a slide-over panel from the right (RTL: left) when clicking an appointm
 **Behavior:**
 - Search by name, email, or phone
 - Sortable columns
-- Click row → A08 (Patient Detail)
+- Click row → A08 (Client Detail)
 - Export to CSV/Excel
-- No "Add Patient" (patients self-register via mobile app)
+- No "Add Client" (clients self-register via mobile app)
 
 ---
 
-## A08 — Patient Detail
+## A08 — Client Detail
 
-**Purpose:** Full patient profile with history
+**Purpose:** Full client profile with history
 
 **Tabs:** Profile | Appointments | Payments | Ratings Given
 
 **Profile Tab:**
 - Name, email, phone, registration date, status
-- Deactivate/reactivate patient account
+- Deactivate/reactivate client account
 
 **Appointments Tab:**
-- All appointments for this patient
-- Filter by status, practitioner, date range
+- All appointments for this client
+- Filter by status, employee, date range
 
 **Payments Tab:**
-- All payments by this patient
+- All payments by this client
 - Total spent
 - Payment method breakdown
 
 **Ratings Given Tab:**
-- All ratings this patient has given
-- Useful for identifying problematic patients
+- All ratings this client has given
+- Useful for identifying problematic clients
 
 ---
 
@@ -479,7 +479,7 @@ When clicking a pending bank transfer, a side panel opens:
 **Purpose:** View and manage invoices
 
 **Layout:** Standard TanStack Table with:
-- Invoice number, patient name, amount, date, sent status
+- Invoice number, client name, amount, date, sent status
 - Click invoice → view PDF (in-page or new tab)
 - "Resend" button to re-email invoice
 - Filter by date range, sent status
@@ -513,7 +513,7 @@ When clicking a pending bank transfer, a side panel opens:
 │                                                                      │
 │  ┌──────────────────────────┐ ┌──────────────────────────┐          │
 │  │ طرق الدفع / Payment     │ │ الإيرادات حسب الطبيب      │          │
-│  │ Methods                  │ │ Revenue by Practitioner    │          │
+│  │ Methods                  │ │ Revenue by Employee    │          │
 │  │                          │ │                          │          │
 │  │ [Recharts pie chart]     │ │ ┌────────┬──────┬─────┐  │          │
 │  │  مدى: 60%               │ │ │ الطبيب  │ الحجوزات│المبلغ│  │          │
@@ -541,7 +541,7 @@ When clicking a pending bank transfer, a side panel opens:
 **Charts (Recharts):**
 1. Revenue by day (bar chart)
 2. Payment method breakdown (pie chart)
-3. Revenue by practitioner (table or horizontal bar)
+3. Revenue by employee (table or horizontal bar)
 4. Revenue by service (table)
 
 **Export:** Excel and PDF for the selected date range.
@@ -660,11 +660,11 @@ When clicking a pending bank transfer, a side panel opens:
 ```
 
 **Modules for permissions:**
-bookings, practitioners, patients, services, payments, invoices, reports, chatbot, users, roles, whitelabel, notifications
+bookings, employees, clients, services, payments, invoices, reports, chatbot, users, roles, whitelabel, notifications
 
 **Actions:** view, create, edit, delete
 
-**System roles** (super_admin, receptionist, accountant, practitioner, patient) cannot be deleted but their permissions can be adjusted (except super_admin which always has full access).
+**System roles** (super_admin, receptionist, accountant, employee, client) cannot be deleted but their permissions can be adjusted (except super_admin which always has full access).
 
 ---
 
@@ -685,7 +685,7 @@ See `white-label-theming.md` for full specification of this page's sections:
 
 **Layout:**
 - List of notifications grouped by date
-- Types: new booking, cancellation request, bank transfer pending, problem report, new patient registration
+- Types: new booking, cancellation request, bank transfer pending, problem report, new client registration
 - Mark as read / mark all as read
 - Click → navigate to relevant page
 - Real-time updates (WebSocket or polling)

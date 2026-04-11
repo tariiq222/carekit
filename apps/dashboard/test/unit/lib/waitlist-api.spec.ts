@@ -18,8 +18,8 @@ describe("waitlist api", () => {
 
   it("fetchWaitlist calls GET /bookings/waitlist with query", async () => {
     getMock.mockResolvedValueOnce([{ id: "1", status: "waiting" }])
-    await fetchWaitlist({ practitionerId: "p1", status: "waiting" })
-    expect(getMock).toHaveBeenCalledWith("/bookings/waitlist", { practitionerId: "p1", status: "waiting" })
+    await fetchWaitlist({ employeeId: "p1", status: "waiting" })
+    expect(getMock).toHaveBeenCalledWith("/bookings/waitlist", { employeeId: "p1", status: "waiting" })
   })
 
   it("fetchWaitlist works without query", async () => {

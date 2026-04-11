@@ -1,2 +1,36 @@
-// People BC — patients, practitioners, availability, onboarding.
+// People BC — clients, employees, availability, onboarding.
 // Models added in Phase 4 (p4-t*).
+
+// Gender is redeclared here independently — no cross-BC Prisma relations.
+// The generated enum name is `ClientGender` to avoid collision with `UserGender`.
+enum ClientGender {
+  MALE
+  FEMALE
+}
+
+enum ClientSource {
+  WALK_IN
+  ONLINE
+  REFERRAL
+}
+
+model Client {
+  id          String        @id @default(uuid())
+  tenantId    String
+  userId      String?
+  name        String
+  phone       String?
+  email       String?
+  gender      ClientGender?
+  dateOfBirth DateTime?
+  avatarUrl   String?
+  notes       String?
+  source      ClientSource  @default(WALK_IN)
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([tenantId, phone])
+  @@index([tenantId])
+  @@index([userId])
+}

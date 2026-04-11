@@ -15,10 +15,10 @@ import type {
   CancelApprovePayload,
   CancelRejectPayload,
   AdminCancelPayload,
-  PractitionerCancelPayload,
+  EmployeeCancelPayload,
   CancelRequestPayload,
   CreateRecurringPayload,
-  PatientReschedulePayload,
+  ClientReschedulePayload,
 } from "@/lib/types/booking"
 
 /* ─── Queries ─── */
@@ -31,8 +31,8 @@ export async function fetchBookings(
     perPage: query.perPage,
     status: query.status,
     type: query.type,
-    practitionerId: query.practitionerId,
-    patientId: query.patientId,
+    employeeId: query.employeeId,
+    clientId: query.clientId,
     dateFrom: query.dateFrom,
     dateTo: query.dateTo,
   })
@@ -111,12 +111,12 @@ export async function adminCancelBooking(
   )
 }
 
-export async function practitionerCancelBooking(
+export async function employeeCancelBooking(
   id: string,
-  payload: PractitionerCancelPayload,
+  payload: EmployeeCancelPayload,
 ): Promise<Booking> {
   return api.post<Booking>(
-    `/bookings/${id}/practitioner-cancel`,
+    `/bookings/${id}/employee-cancel`,
     payload,
   )
 }
@@ -140,12 +140,12 @@ export async function createRecurringBooking(
   )
 }
 
-export async function patientReschedule(
+export async function clientReschedule(
   id: string,
-  payload: PatientReschedulePayload,
+  payload: ClientReschedulePayload,
 ): Promise<Booking> {
   return api.post<Booking>(
-    `/bookings/${id}/patient-reschedule`,
+    `/bookings/${id}/client-reschedule`,
     payload,
   )
 }

@@ -3,7 +3,7 @@ import type { ApiResponse, PaginatedResponse } from '@/types/api';
 import type { Booking, BookingStatus, BookingType } from '@/types/models';
 
 interface CreateBookingData {
-  practitionerId: string;
+  employeeId: string;
   type: BookingType;
   date: string;
   startTime: string;
@@ -64,9 +64,9 @@ export const bookingsService = {
     return response.data;
   },
 
-  async practitionerCancel(id: string, reason?: string) {
+  async employeeCancel(id: string, reason?: string) {
     const response = await api.post<ApiResponse<Booking>>(
-      `/bookings/${id}/practitioner-cancel`,
+      `/bookings/${id}/employee-cancel`,
       { reason },
     );
     return response.data;

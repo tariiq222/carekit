@@ -17,7 +17,7 @@ import {
 import { useLocale } from "@/components/locale-provider"
 import type { UseFormReturn } from "react-hook-form"
 import type { BookingCreateFormData } from "@/lib/schemas/booking.schema"
-import type { Practitioner, PractitionerDurationOption, PractitionerService } from "@/lib/types/practitioner"
+import type { Employee, EmployeeDurationOption, EmployeeService } from "@/lib/types/employee"
 import type { ProgressiveVisibility } from "@/components/features/bookings/use-progressive-disclosure"
 import { ProgressiveField } from "@/components/features/bookings/progressive-field"
 
@@ -48,50 +48,50 @@ function FormField({
   )
 }
 
-interface BookingPractitionerSectionProps {
+interface BookingEmployeeSectionProps {
   form: UseFormReturn<BookingCreateFormData>
-  practitioners: Practitioner[]
-  practitionerServices: PractitionerService[]
-  practitionersLoading: boolean
-  practitionerServicesLoading: boolean
+  employees: Employee[]
+  employeeServices: EmployeeService[]
+  employeesLoading: boolean
+  employeeServicesLoading: boolean
   availableTypes: string[]
   canFetchServiceTypes: boolean
   serviceTypesLoading: boolean
   hasDurationOptions: boolean
-  durationOptions: PractitionerDurationOption[]
+  durationOptions: EmployeeDurationOption[]
   visibility: ProgressiveVisibility
 }
 
-export function BookingPractitionerSection({
+export function BookingEmployeeSection({
   form,
-  practitioners,
-  practitionerServices,
-  practitionersLoading,
-  practitionerServicesLoading,
+  employees,
+  employeeServices,
+  employeesLoading,
+  employeeServicesLoading,
   availableTypes,
   canFetchServiceTypes,
   serviceTypesLoading,
   hasDurationOptions: _hasDurationOptions,
   durationOptions,
   visibility,
-}: BookingPractitionerSectionProps) {
+}: BookingEmployeeSectionProps) {
   const { t } = useLocale()
 
   return (
     <div className="px-4 py-4 flex flex-col gap-3">
-      {/* Practitioner — always visible */}
+      {/* Employee — always visible */}
       <FormField
-        label={t("bookings.form.label.practitioner")}
+        label={t("bookings.form.label.employee")}
         icon={<HugeiconsIcon icon={Stethoscope02Icon} size={13} className="shrink-0" />}
-        error={form.formState.errors.practitionerId?.message}
+        error={form.formState.errors.employeeId?.message}
       >
-        <Controller control={form.control} name="practitionerId" render={({ field }) => (
+        <Controller control={form.control} name="employeeId" render={({ field }) => (
           <Select value={field.value} onValueChange={field.onChange}>
             <SelectTrigger className="bg-surface-muted border-border">
-              <SelectValue placeholder={practitionersLoading ? t("bookings.form.placeholder.loading") : t("bookings.form.placeholder.selectPractitioner")} />
+              <SelectValue placeholder={employeesLoading ? t("bookings.form.placeholder.loading") : t("bookings.form.placeholder.selectEmployee")} />
             </SelectTrigger>
             <SelectContent>
-              {practitioners.map((p) => (
+              {employees.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   د. {p.user.firstName} {p.user.lastName}
                 </SelectItem>
@@ -111,10 +111,10 @@ export function BookingPractitionerSection({
           <Controller control={form.control} name="serviceId" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="bg-surface-muted border-border">
-                <SelectValue placeholder={practitionerServicesLoading ? t("bookings.form.placeholder.loading") : t("bookings.form.placeholder.selectService")} />
+                <SelectValue placeholder={employeeServicesLoading ? t("bookings.form.placeholder.loading") : t("bookings.form.placeholder.selectService")} />
               </SelectTrigger>
               <SelectContent>
-                {practitionerServices.map((ps) => (
+                {employeeServices.map((ps) => (
                   <SelectItem key={ps.serviceId} value={ps.serviceId}>{ps.service.nameAr}</SelectItem>
                 ))}
               </SelectContent>
@@ -123,7 +123,7 @@ export function BookingPractitionerSection({
         </FormField>
       </ProgressiveField>
 
-      {/* Booking Type — filtered to what this practitioner+service supports */}
+      {/* Booking Type — filtered to what this employee+service supports */}
       <ProgressiveField show={visibility.showType}>
         <FormField label={t("bookings.form.label.bookingType")}>
           <Controller control={form.control} name="type" render={({ field }) => (

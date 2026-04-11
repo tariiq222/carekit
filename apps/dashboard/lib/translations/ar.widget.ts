@@ -17,7 +17,7 @@ export const arWidget: Record<string, string> = {
   "widget.nav.close": "إغلاق",
 
   // Service step
-  "widget.service.select_practitioner": "اختر الممارس",
+  "widget.service.select_employee": "اختر الممارس",
   "widget.service.select_service": "اختر الخدمة",
   "widget.service.select_type": "اختر نوع الزيارة",
   "widget.service.min": "دقيقة",
@@ -48,7 +48,7 @@ export const arWidget: Record<string, string> = {
 
   // Confirm step
   "widget.confirm.title": "مراجعة تفاصيل الحجز",
-  "widget.confirm.practitioner": "الممارس",
+  "widget.confirm.employee": "الممارس",
   "widget.confirm.service": "الخدمة",
   "widget.confirm.type": "نوع الزيارة",
   "widget.confirm.date": "التاريخ",

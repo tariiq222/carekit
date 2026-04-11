@@ -17,7 +17,7 @@ import { BasicInfoTab } from "@/components/features/services/create/basic-info-t
 import { PricingTab } from "@/components/features/services/create/pricing-tab"
 import { BookingSettingsTab } from "@/components/features/services/create/booking-settings-tab"
 import { IntakeFormsTab } from "@/components/features/services/intake-forms-tab"
-import { ServicePractitionersTab } from "@/components/features/services/service-practitioners-tab"
+import { ServiceEmployeesTab } from "@/components/features/services/service-employees-tab"
 import {
   createServiceSchema,
   createServiceDefaults,
@@ -83,7 +83,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
   /* ── Local state ── */
   const [bookingTypes, setBookingTypes] = useState<DraftBookingType[]>(EMPTY_BOOKING_TYPES)
   const [bookingTypesDirty, setBookingTypesDirty] = useState(false)
-  const [pendingPractitionerIds, setPendingPractitionerIds] = useState<string[]>([])
+  const [pendingEmployeeIds, setPendingEmployeeIds] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const pendingAvatarFile = useRef<File | null>(null)
 
@@ -159,7 +159,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
         const created = await createMut.mutateAsync({
           ...buildPayload(data),
           categoryId: data.categoryId ?? "",
-          practitionerIds: pendingPractitionerIds.length > 0 ? pendingPractitionerIds : undefined,
+          employeeIds: pendingEmployeeIds.length > 0 ? pendingEmployeeIds : undefined,
           branchIds: data.branchIds?.length ? data.branchIds : undefined,
         })
 
@@ -253,7 +253,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
               <TabsTrigger value="basic" className="text-xs sm:text-sm">{t("services.create.tabs.basic")}</TabsTrigger>
               <TabsTrigger value="pricing" className="text-xs sm:text-sm">{t("services.create.tabs.pricing")}</TabsTrigger>
               <TabsTrigger value="booking" className="text-xs sm:text-sm">{t("services.create.tabs.booking")}</TabsTrigger>
-              <TabsTrigger value="practitioners" className="text-xs sm:text-sm">{t("services.tabs.practitioners")}</TabsTrigger>
+              <TabsTrigger value="employees" className="text-xs sm:text-sm">{t("services.tabs.employees")}</TabsTrigger>
               <TabsTrigger value="intake" className="text-xs sm:text-sm">
                 {t("services.tabs.intake")}
               </TabsTrigger>
@@ -280,12 +280,12 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
             <BookingSettingsTab form={form} />
           </TabsContent>
 
-          <TabsContent value="practitioners" className="pt-4">
-            <ServicePractitionersTab
+          <TabsContent value="employees" className="pt-4">
+            <ServiceEmployeesTab
               serviceId={serviceId}
               isCreate={!isEdit}
-              pendingIds={pendingPractitionerIds}
-              onPendingChange={setPendingPractitionerIds}
+              pendingIds={pendingEmployeeIds}
+              onPendingChange={setPendingEmployeeIds}
             />
           </TabsContent>
 

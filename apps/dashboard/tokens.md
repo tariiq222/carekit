@@ -204,7 +204,7 @@ These are **not** part of the semantic system. Do not use for UI states or brand
 
 ### Rank colors (leaderboard/top-performers only)
 
-Used by [`components/features/practitioners/top-performers.tsx`](./components/features/practitioners/top-performers.tsx).
+Used by [`components/features/employees/top-performers.tsx`](./components/features/employees/top-performers.tsx).
 
 | Rank | From | To | Border | Badge |
 |------|------|----|--------|----|

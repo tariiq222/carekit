@@ -1,13 +1,13 @@
 /**
  * Widget API — CareKit Embeddable Booking Widget
  *
- * Public + patient-facing API calls for the booking widget.
+ * Public + client-facing API calls for the booking widget.
  * Uses the same api client (proxy + token injection) as the dashboard.
  */
 
 import { api, setAccessToken } from "@/lib/api"
 import type { PaginatedResponse } from "@/lib/types/common"
-import type { Practitioner, TimeSlot, PractitionerServiceType } from "@/lib/types/practitioner"
+import type { Employee, TimeSlot, EmployeeServiceType } from "@/lib/types/employee"
 import type { Service, ServiceBookingType } from "@/lib/types/service"
 import type { Booking, CreateBookingPayload } from "@/lib/types/booking"
 import type { AuthUser } from "@/lib/api/auth"
@@ -40,7 +40,7 @@ export interface WidgetBranding {
   bank_accounts: WidgetBankAccount[]
   // Widget behaviour settings
   widget_show_price: boolean
-  widget_any_practitioner: boolean
+  widget_any_employee: boolean
   widget_redirect_url: string | null
   widget_max_advance_days: number
 }
@@ -70,7 +70,7 @@ export async function fetchWidgetBranding(): Promise<WidgetBranding> {
     bank_transfer_enabled:     raw.bank_transfer_enabled === "true" || raw.bank_transfer_enabled === true,
     bank_accounts:             parseBankAccounts(raw.bank_accounts),
     widget_show_price:          raw.widget_show_price !== false,
-    widget_any_practitioner:    raw.widget_any_practitioner === true,
+    widget_any_employee:    raw.widget_any_employee === true,
     widget_redirect_url:        raw.widget_redirect_url ? String(raw.widget_redirect_url) : null,
     widget_max_advance_days:    typeof raw.widget_max_advance_days === "number"
       ? raw.widget_max_advance_days
@@ -114,9 +114,9 @@ export async function validateWidgetCode(
   return res.data
 }
 
-/* ─── Practitioners ─── */
+/* ─── Employees ─── */
 
-export interface WidgetPractitionersQuery {
+export interface WidgetEmployeesQuery {
   search?: string
   specialty?: string
   page?: number
@@ -124,59 +124,59 @@ export interface WidgetPractitionersQuery {
   serviceId?: string
 }
 
-export async function fetchWidgetPractitioners(
-  query: WidgetPractitionersQuery = {},
-): Promise<PaginatedResponse<Practitioner>> {
-  const res = await api.get<PaginatedResponse<RawPractitioner>>("/practitioners", {
+export async function fetchWidgetEmployees(
+  query: WidgetEmployeesQuery = {},
+): Promise<PaginatedResponse<Employee>> {
+  const res = await api.get<PaginatedResponse<RawEmployee>>("/employees", {
     page: query.page,
     perPage: query.perPage ?? 20,
     search: query.search,
     specialty: query.specialty,
     serviceId: query.serviceId,
   })
-  return { items: res.items.map(mapPractitioner), meta: res.meta }
+  return { items: res.items.map(mapEmployee), meta: res.meta }
 }
 
-export async function fetchWidgetPractitioner(id: string): Promise<Practitioner> {
-  const res = await api.get<RawPractitioner>(`/practitioners/${id}`)
-  return mapPractitioner(res)
+export async function fetchWidgetEmployee(id: string): Promise<Employee> {
+  const res = await api.get<RawEmployee>(`/employees/${id}`)
+  return mapEmployee(res)
 }
 
-export async function fetchWidgetPractitionerServices(
-  practitionerId: string,
+export async function fetchWidgetEmployeeServices(
+  employeeId: string,
 ): Promise<Service[]> {
-  return api.get<Service[]>(`/practitioners/${practitionerId}/services`)
+  return api.get<Service[]>(`/employees/${employeeId}/services`)
 }
 
 export async function fetchWidgetServiceTypes(
-  practitionerId: string,
+  employeeId: string,
   serviceId: string,
-): Promise<PractitionerServiceType[]> {
-  return api.get<PractitionerServiceType[]>(
-    `/practitioners/${practitionerId}/services/${serviceId}/types`,
+): Promise<EmployeeServiceType[]> {
+  return api.get<EmployeeServiceType[]>(
+    `/employees/${employeeId}/services/${serviceId}/types`,
   )
 }
 
 export async function fetchWidgetSlots(
-  practitionerId: string,
+  employeeId: string,
   date: string,
   duration?: number,
 ): Promise<TimeSlot[]> {
   const res = await api.get<TimeSlot[] | { slots: TimeSlot[] }>(
-    `/practitioners/${practitionerId}/slots`,
+    `/employees/${employeeId}/slots`,
     { date, duration },
   )
   return Array.isArray(res) ? res : (res.slots ?? [])
 }
 
 export async function fetchWidgetAvailableDates(
-  practitionerId: string,
+  employeeId: string,
   month: string,
   duration?: number,
   branchId?: string,
 ): Promise<string[]> {
   const res = await api.get<{ availableDates: string[] }>(
-    `/practitioners/${practitionerId}/available-dates`,
+    `/employees/${employeeId}/available-dates`,
     { month, duration, branchId },
   )
   return res.availableDates
@@ -194,7 +194,7 @@ export async function fetchWidgetServiceBookingTypes(
   return api.get<ServiceBookingType[]>(`/services/${serviceId}/booking-types`)
 }
 
-/* ─── Auth (patient-facing) ─── */
+/* ─── Auth (client-facing) ─── */
 
 interface RegisterPayload {
   firstName: string
@@ -249,14 +249,14 @@ export async function widgetCreateBooking(
 
 /* ─── Internal ─── */
 
-type RawPractitioner = Omit<Practitioner, "averageRating" | "_count"> & {
+type RawEmployee = Omit<Employee, "averageRating" | "_count"> & {
   rating?: number
   reviewCount?: number
-  _count?: Practitioner["_count"]
+  _count?: Employee["_count"]
   averageRating?: number
 }
 
-function mapPractitioner(raw: RawPractitioner): Practitioner {
+function mapEmployee(raw: RawEmployee): Employee {
   return {
     ...raw,
     averageRating: raw.averageRating ?? raw.rating ?? undefined,

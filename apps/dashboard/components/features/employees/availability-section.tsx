@@ -4,7 +4,7 @@ import { useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { usePractitionerAvailability } from "@/hooks/use-practitioners"
+import { useEmployeeAvailability } from "@/hooks/use-employees"
 import { AvailabilityEditor } from "./availability-editor"
 
 /* ─── Constants ─── */
@@ -22,17 +22,17 @@ const DAY_NAMES = [
 /* ─── Props ─── */
 
 interface AvailabilitySectionProps {
-  practitionerId: string
+  employeeId: string
 }
 
 /* ─── Component ─── */
 
 export function AvailabilitySection({
-  practitionerId,
+  employeeId,
 }: AvailabilitySectionProps) {
   const [editorOpen, setEditorOpen] = useState(false)
   const { data: slots, isLoading } =
-    usePractitionerAvailability(practitionerId)
+    useEmployeeAvailability(employeeId)
 
   return (
     <div className="flex flex-col gap-2">
@@ -87,7 +87,7 @@ export function AvailabilitySection({
       )}
 
       <AvailabilityEditor
-        practitionerId={practitionerId}
+        employeeId={employeeId}
         open={editorOpen}
         onOpenChange={setEditorOpen}
       />

@@ -5,8 +5,8 @@
  *   - Navigation from list page
  *   - Sidebar tabs rendering (المعلومات الأساسية / الإعدادات / الجدولة)
  *   - Tab switching
- *   - Info tab: name fields, description grid, practitioner dropdown
- *   - Practitioner select: opens dropdown, shows items, selects one, shows card
+ *   - Info tab: name fields, description grid, employee dropdown
+ *   - Employee select: opens dropdown, shows items, selects one, shows card
  *   - Settings tab: participant & price fields
  *   - Scheduling tab: radio group RTL, switch row, date input
  *   - Footer: cancel navigates back, submit shows validation errors
@@ -134,7 +134,7 @@ test.describe('Group Sessions Create — info tab fields', () => {
     }
   })
 
-  test('shows practitioner label and dropdown trigger', async ({ adminPage }) => {
+  test('shows employee label and dropdown trigger', async ({ adminPage }) => {
     await expect(adminPage.getByText('الممارس').first()).toBeVisible({ timeout: 12_000 })
     const trigger = adminPage.getByRole('combobox').first()
     await expect(trigger).toBeVisible({ timeout: 8_000 })
@@ -155,13 +155,13 @@ test.describe('Group Sessions Create — info tab fields', () => {
   })
 })
 
-test.describe('Group Sessions Create — practitioner select', () => {
+test.describe('Group Sessions Create — employee select', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
     await goto('/group-sessions/create')
     await adminPage.waitForLoadState('networkidle').catch(() => {})
   })
 
-  test('practitioner dropdown opens on click', async ({ adminPage }) => {
+  test('employee dropdown opens on click', async ({ adminPage }) => {
     const trigger = adminPage.getByRole('combobox').first()
     await expect(trigger).toBeVisible({ timeout: 8_000 })
     await trigger.click()
@@ -171,7 +171,7 @@ test.describe('Group Sessions Create — practitioner select', () => {
     await expect(popover).toBeVisible({ timeout: 6_000 })
   })
 
-  test('practitioner dropdown has search input', async ({ adminPage }) => {
+  test('employee dropdown has search input', async ({ adminPage }) => {
     const trigger = adminPage.getByRole('combobox').first()
     await trigger.click()
 
@@ -179,7 +179,7 @@ test.describe('Group Sessions Create — practitioner select', () => {
     await expect(search).toBeVisible({ timeout: 6_000 })
   })
 
-  test('selecting practitioner shows card below dropdown', async ({ adminPage }) => {
+  test('selecting employee shows card below dropdown', async ({ adminPage }) => {
     const trigger = adminPage.getByRole('combobox').first()
     await trigger.click()
 
@@ -188,21 +188,21 @@ test.describe('Group Sessions Create — practitioner select', () => {
     const count = await items.count()
 
     if (count === 0) {
-      // No practitioners seeded — verify empty state shows
+      // No employees seeded — verify empty state shows
       const empty = adminPage.getByText(/لا يوجد ممارس/).first()
       await expect(empty).toBeVisible({ timeout: 6_000 })
       return
     }
 
-    // Click first practitioner
+    // Click first employee
     await items.first().click()
 
-    // Selected practitioner card appears — identified by Avatar inside it
+    // Selected employee card appears — identified by Avatar inside it
     const avatarInCard = adminPage.locator('[data-slot="avatar"]').first()
     await expect(avatarInCard).toBeVisible({ timeout: 6_000 })
   })
 
-  test('remove button clears practitioner selection', async ({ adminPage }) => {
+  test('remove button clears employee selection', async ({ adminPage }) => {
     const trigger = adminPage.getByRole('combobox').first()
     await trigger.click()
 

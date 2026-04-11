@@ -27,7 +27,7 @@ import type { IntakeFormApi } from "@/lib/types/intake-form-api"
 /* ─── Map API shape → frontend shape ─── */
 
 function mapApiForm(f: IntakeFormApi): IntakeForm {
-  const scopeId = f.serviceId ?? f.practitionerId ?? f.branchId ?? ""
+  const scopeId = f.serviceId ?? f.employeeId ?? f.branchId ?? ""
   return {
     id: f.id,
     nameEn: f.nameEn,

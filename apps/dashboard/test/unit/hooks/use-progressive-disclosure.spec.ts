@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { useProgressiveDisclosure } from "@/components/features/bookings/use-progressive-disclosure"
 
 const base = {
-  practitionerId: "",
+  employeeId: "",
   serviceId: "",
   type: "",
   durationOptionId: "",
@@ -14,7 +14,7 @@ const base = {
 
 describe("useProgressiveDisclosure", () => {
   describe("initial state — nothing selected", () => {
-    it("hides everything except practitioner", () => {
+    it("hides everything except employee", () => {
       const { result } = renderHook(() => useProgressiveDisclosure(base))
       expect(result.current.showService).toBe(false)
       expect(result.current.showType).toBe(false)
@@ -26,10 +26,10 @@ describe("useProgressiveDisclosure", () => {
     })
   })
 
-  describe("after practitioner selected", () => {
+  describe("after employee selected", () => {
     it("shows service only", () => {
       const { result } = renderHook(() =>
-        useProgressiveDisclosure({ ...base, practitionerId: "p1" })
+        useProgressiveDisclosure({ ...base, employeeId: "p1" })
       )
       expect(result.current.showService).toBe(true)
       expect(result.current.showType).toBe(false)
@@ -37,12 +37,12 @@ describe("useProgressiveDisclosure", () => {
     })
   })
 
-  describe("after practitioner + service selected (no duration options)", () => {
+  describe("after employee + service selected (no duration options)", () => {
     it("shows type and datetime", () => {
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
           ...base,
-          practitionerId: "p1",
+          employeeId: "p1",
           serviceId: "s1",
           type: "in_person",
           hasDurationOptions: false,
@@ -60,7 +60,7 @@ describe("useProgressiveDisclosure", () => {
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
           ...base,
-          practitionerId: "p1",
+          employeeId: "p1",
           serviceId: "s1",
           type: "in_person",
           hasDurationOptions: true,
@@ -75,7 +75,7 @@ describe("useProgressiveDisclosure", () => {
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
           ...base,
-          practitionerId: "p1",
+          employeeId: "p1",
           serviceId: "s1",
           type: "in_person",
           hasDurationOptions: true,
@@ -92,7 +92,7 @@ describe("useProgressiveDisclosure", () => {
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
           ...base,
-          practitionerId: "p1",
+          employeeId: "p1",
           serviceId: "s1",
           type: "in_person",
           date: "2026-03-17",
@@ -108,7 +108,7 @@ describe("useProgressiveDisclosure", () => {
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
           ...base,
-          practitionerId: "p1",
+          employeeId: "p1",
           serviceId: "s1",
           type: "in_person",
           date: "2026-03-17",
@@ -124,7 +124,7 @@ describe("useProgressiveDisclosure", () => {
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
           ...base,
-          practitionerId: "p1",
+          employeeId: "p1",
           serviceId: "s1",
           type: "in_person",
           date: "2026-03-17",
@@ -138,7 +138,7 @@ describe("useProgressiveDisclosure", () => {
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
           ...base,
-          practitionerId: "p1",
+          employeeId: "p1",
           serviceId: "s1",
           type: "in_person",
           date: "2026-03-17",
@@ -153,7 +153,7 @@ describe("useProgressiveDisclosure", () => {
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
           ...base,
-          practitionerId: "p1",
+          employeeId: "p1",
           serviceId: "s1",
           type: "in_person",
           date: "2026-03-17",
@@ -169,7 +169,7 @@ describe("useProgressiveDisclosure", () => {
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
           ...base,
-          practitionerId: "p1",
+          employeeId: "p1",
           serviceId: "s1",
           type: "in_person",
           date: "2026-03-17",
@@ -183,11 +183,11 @@ describe("useProgressiveDisclosure", () => {
   })
 
   describe("cascading reset simulation", () => {
-    it("when practitioner cleared — all downstream hidden", () => {
-      // Simulate user had everything filled then changed practitioner to ""
+    it("when employee cleared — all downstream hidden", () => {
+      // Simulate user had everything filled then changed employee to ""
       const { result } = renderHook(() =>
         useProgressiveDisclosure({
-          practitionerId: "",
+          employeeId: "",
           serviceId: "s1",   // stale — would be cleared by useBookingCreateResets
           type: "in_person",
           date: "2026-03-17",
@@ -196,7 +196,7 @@ describe("useProgressiveDisclosure", () => {
           hasDurationOptions: false,
         })
       )
-      // Progressive disclosure only checks practitionerId, so everything collapses
+      // Progressive disclosure only checks employeeId, so everything collapses
       expect(result.current.showService).toBe(false)
       expect(result.current.showType).toBe(false)
       expect(result.current.showDatetime).toBe(false)

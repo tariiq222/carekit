@@ -33,9 +33,9 @@ npm run dev:backend  # NestJS on :5000
 |---|---|---|
 | `K6_EMAIL` | `admin@carekit.sa` | Admin login email |
 | `K6_PASSWORD` | `Password123!` | Admin password |
-| `K6_PRACTITIONER_ID` | `1` | Practitioner ID for slot/rating tests |
+| `K6_EMPLOYEE_ID` | `1` | Employee ID for slot/rating tests |
 | `K6_SERVICE_ID` | `1` | Service ID for booking creation |
-| `K6_PATIENT_ID` | `1` | Patient ID for detail/stats tests |
+| `K6_CLIENT_ID` | `1` | Client ID for detail/stats tests |
 
 ## Running Tests
 
@@ -55,11 +55,11 @@ k6 run scenarios/auth.load.js
 # Bookings endpoints
 k6 run scenarios/bookings.load.js
 
-# Practitioners (public endpoints)
-k6 run scenarios/practitioners.load.js
+# Employees (public endpoints)
+k6 run scenarios/employees.load.js
 
-# Patients endpoints
-k6 run scenarios/patients.load.js
+# Clients endpoints
+k6 run scenarios/clients.load.js
 ```
 
 ### Override ENV variables
@@ -67,8 +67,8 @@ k6 run scenarios/patients.load.js
 ```bash
 K6_EMAIL=doctor@clinic.sa \
 K6_PASSWORD=MyPass123! \
-K6_PRACTITIONER_ID=42 \
-k6 run scenarios/practitioners.load.js
+K6_EMPLOYEE_ID=42 \
+k6 run scenarios/employees.load.js
 ```
 
 ### Output to JSON for analysis
@@ -87,8 +87,8 @@ Each scenario enforces these thresholds — if violated, k6 exits with code 99:
 | Auth `/auth/me` | < 200ms | < 1% |
 | Bookings (read) | < 500ms | < 1% |
 | Bookings (create) | < 800ms | < 1% |
-| Practitioners | < 400ms | < 1% |
-| Patients | < 500ms | < 1% |
+| Employees | < 400ms | < 1% |
+| Clients | < 500ms | < 1% |
 
 ## Stage Configs
 
@@ -100,7 +100,7 @@ Each scenario enforces these thresholds — if violated, k6 exits with code 99:
 | Spike | 100 | 30s | Simulate sudden burst |
 
 Auth and Bookings tests use smoke + load stages.
-Practitioners use a higher VU count (50) since they are unauthenticated public endpoints.
+Employees use a higher VU count (50) since they are unauthenticated public endpoints.
 
 ## Interpreting Results
 
@@ -124,8 +124,8 @@ results/
   20260327_143000/
     auth.json
     bookings.json
-    practitioners.json
-    patients.json
+    employees.json
+    clients.json
     summary.json    ← pass/fail manifest
 ```
 

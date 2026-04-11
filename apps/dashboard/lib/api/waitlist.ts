@@ -7,7 +7,7 @@ import type { WaitlistEntry } from "@/lib/types/waitlist"
 
 interface WaitlistQuery {
   [key: string]: string | number | boolean | undefined
-  practitionerId?: string
+  employeeId?: string
   status?: string
 }
 

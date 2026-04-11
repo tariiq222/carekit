@@ -18,12 +18,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { AvatarUpload } from "@/components/ui/avatar-upload"
 import { useLocale } from "@/components/locale-provider"
 import type { UseFormReturn } from "react-hook-form"
-import type { CreatePractitionerFormData } from "./form-schema"
+import type { CreateEmployeeFormData } from "./form-schema"
 
 /* ─── Props ─── */
 
 interface BasicInfoTabProps {
-  form: UseFormReturn<CreatePractitionerFormData>
+  form: UseFormReturn<CreateEmployeeFormData>
 }
 
 /* ─── Section Header ─── */
@@ -142,7 +142,7 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
             {/* Specialty EN (50%) + AR (50%) */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label>{t("practitioners.create.specialty")} *</Label>
+                <Label>{t("employees.create.specialty")} *</Label>
                 <Input
                   {...form.register("specialty")}
                   placeholder={isAr ? "مثال: معالج إدمان" : "e.g. Addiction Counselor"}
@@ -154,7 +154,7 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label>{t("practitioners.create.specialty")} (AR)</Label>
+                <Label>{t("employees.create.specialty")} (AR)</Label>
                 <Input
                   {...form.register("specialtyAr")}
                   placeholder="مثال: معالج إدمان"
@@ -177,7 +177,7 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5">
-              <Label>{t("practitioners.create.experience")}</Label>
+              <Label>{t("employees.create.experience")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -186,11 +186,11 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>{t("practitioners.create.educationEn")}</Label>
+              <Label>{t("employees.create.educationEn")}</Label>
               <Input {...form.register("education")} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>{t("practitioners.create.educationAr")}</Label>
+              <Label>{t("employees.create.educationAr")}</Label>
               <Input {...form.register("educationAr")} dir="rtl" />
             </div>
           </div>
@@ -215,14 +215,14 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
                   className="h-4 w-4 text-muted-foreground"
                 />
                 <Label
-                  htmlFor="create-practitioner-active"
+                  htmlFor="create-employee-active"
                   className="cursor-pointer text-sm"
                 >
                   {t("common.active")}
                 </Label>
               </div>
               <Switch
-                id="create-practitioner-active"
+                id="create-employee-active"
                 checked={form.watch("isActive")}
                 onCheckedChange={(v) => form.setValue("isActive", v)}
               />
@@ -237,16 +237,16 @@ export function BasicInfoTab({ form }: BasicInfoTabProps) {
           <SectionHeader
             icon={TextAlignLeftIcon}
             title={isAr ? "النبذة التعريفية" : "Bio"}
-            description={isAr ? "وصف مختصر عن الممارس" : "Short description about the practitioner"}
+            description={isAr ? "وصف مختصر عن الممارس" : "Short description about the employee"}
           />
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <Label>{t("practitioners.create.bioEn")}</Label>
+              <Label>{t("employees.create.bioEn")}</Label>
               <Textarea {...form.register("bio")} rows={3} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>{t("practitioners.create.bioAr")}</Label>
+              <Label>{t("employees.create.bioAr")}</Label>
               <Textarea {...form.register("bioAr")} rows={3} dir="rtl" />
             </div>
           </div>

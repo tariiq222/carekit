@@ -34,7 +34,7 @@ export interface IntakeFormApi {
   type: FormType
   scope: FormScope
   serviceId: string | null
-  practitionerId: string | null
+  employeeId: string | null
   branchId: string | null
   isActive: boolean
   submissionsCount: number
@@ -47,7 +47,7 @@ export interface IntakeResponseApi {
   id: string
   formId: string
   bookingId: string
-  patientId: string
+  clientId: string
   answers: Record<string, string | string[]>
   createdAt: string
   form: IntakeFormApi
@@ -59,7 +59,7 @@ export interface IntakeFormListQuery {
   scope?: FormScope
   type?: FormType
   serviceId?: string
-  practitionerId?: string
+  employeeId?: string
   branchId?: string
   isActive?: boolean
 }
@@ -72,7 +72,7 @@ export interface CreateIntakeFormApiPayload {
   type: FormType
   scope: FormScope
   serviceId?: string
-  practitionerId?: string
+  employeeId?: string
   branchId?: string
   isActive?: boolean
 }

@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest"
 import {
-  editPractitionerServiceSchema,
+  editEmployeeServiceSchema,
   assignServiceSchema,
-} from "@/lib/schemas/practitioner.schema"
+} from "@/lib/schemas/employee.schema"
 
-describe("editPractitionerServiceSchema", () => {
+describe("editEmployeeServiceSchema", () => {
   it("accepts valid buffer and active flag", () => {
-    const result = editPractitionerServiceSchema.safeParse({ bufferMinutes: 10, isActive: true })
+    const result = editEmployeeServiceSchema.safeParse({ bufferMinutes: 10, isActive: true })
     expect(result.success).toBe(true)
   })
 
   it("accepts zero buffer", () => {
-    const result = editPractitionerServiceSchema.safeParse({ bufferMinutes: 0, isActive: false })
+    const result = editEmployeeServiceSchema.safeParse({ bufferMinutes: 0, isActive: false })
     expect(result.success).toBe(true)
   })
 
   it("rejects negative buffer", () => {
-    const result = editPractitionerServiceSchema.safeParse({ bufferMinutes: -1, isActive: true })
+    const result = editEmployeeServiceSchema.safeParse({ bufferMinutes: -1, isActive: true })
     expect(result.success).toBe(false)
   })
 })

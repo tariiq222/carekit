@@ -15,13 +15,13 @@ import { StatCard } from "@/components/features/stat-card"
 import { DataTable } from "@/components/features/data-table"
 import { FilterBar } from "@/components/features/filter-bar"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getPractitionerColumns } from "@/components/features/practitioners/practitioner-columns"
-import { DeletePractitionerDialog } from "@/components/features/practitioners/delete-practitioner-dialog"
+import { getEmployeeColumns } from "@/components/features/employees/employee-columns"
+import { DeleteEmployeeDialog } from "@/components/features/employees/delete-employee-dialog"
 import { useLocale } from "@/components/locale-provider"
-import type { Practitioner } from "@/lib/types/practitioner"
+import type { Employee } from "@/lib/types/employee"
 
-interface PractitionersListContentProps {
-  practitioners: Practitioner[]
+interface EmployeesListContentProps {
+  employees: Employee[]
   meta: { total: number } | null
   isLoading: boolean
   error: string | null
@@ -33,8 +33,8 @@ interface PractitionersListContentProps {
   resetFilters: () => void
 }
 
-export function PractitionersListContent({
-  practitioners,
+export function EmployeesListContent({
+  employees,
   meta,
   isLoading,
   error,
@@ -44,23 +44,23 @@ export function PractitionersListContent({
   setIsActive,
   hasFilters,
   resetFilters,
-}: PractitionersListContentProps) {
+}: EmployeesListContentProps) {
   const router = useRouter()
   const { t, locale } = useLocale()
 
-  const [deleteTarget, setDeleteTarget] = useState<Practitioner | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null)
 
-  const handleEdit = (p: Practitioner) => router.push(`/practitioners/${p.id}/edit`)
-  const handleDelete = (p: Practitioner) => setDeleteTarget(p)
-  const handlePreview = (p: Practitioner) => router.push(`/practitioners/${p.id}`)
+  const handleEdit = (p: Employee) => router.push(`/employees/${p.id}/edit`)
+  const handleDelete = (p: Employee) => setDeleteTarget(p)
+  const handlePreview = (p: Employee) => router.push(`/employees/${p.id}`)
 
-  const activeCount = useMemo(() => practitioners.filter((p) => p.isActive).length, [practitioners])
-  const inactiveCount = useMemo(() => practitioners.filter((p) => !p.isActive).length, [practitioners])
+  const activeCount = useMemo(() => employees.filter((p) => p.isActive).length, [employees])
+  const inactiveCount = useMemo(() => employees.filter((p) => !p.isActive).length, [employees])
   const avgRating = useMemo(() => {
-    const rated = practitioners.filter((p) => p.averageRating != null)
+    const rated = employees.filter((p) => p.averageRating != null)
     if (rated.length === 0) return null
     return (rated.reduce((sum, p) => sum + (p.averageRating ?? 0), 0) / rated.length).toFixed(1)
-  }, [practitioners])
+  }, [employees])
 
   const statusFilter = isActive === true ? "active" : isActive === false ? "inactive" : "all"
   const handleStatusChange = (v: string) => {
@@ -72,7 +72,7 @@ export function PractitionersListContent({
   const hasActiveFilters = hasFilters || search.length > 0
   const handleReset = () => { resetFilters(); setSearch("") }
 
-  const columns = getPractitionerColumns(handleEdit, locale, handleEdit, handleDelete, t, handlePreview)
+  const columns = getEmployeeColumns(handleEdit, locale, handleEdit, handleDelete, t, handlePreview)
 
   return (
     <div className="flex flex-col gap-6">
@@ -86,25 +86,25 @@ export function PractitionersListContent({
       ) : (
         <StatsGrid>
           <StatCard
-            title={t("practitioners.stats.total")}
-            value={meta?.total ?? practitioners.length}
+            title={t("employees.stats.total")}
+            value={meta?.total ?? employees.length}
             icon={Stethoscope02Icon}
             iconColor="primary"
           />
           <StatCard
-            title={t("practitioners.stats.active")}
+            title={t("employees.stats.active")}
             value={activeCount}
             icon={UserCheck01Icon}
             iconColor="success"
           />
           <StatCard
-            title={t("practitioners.card.inactive")}
+            title={t("employees.card.inactive")}
             value={inactiveCount}
             icon={UserBlock01Icon}
             iconColor="warning"
           />
           <StatCard
-            title={t("practitioners.stats.avgRating")}
+            title={t("employees.stats.avgRating")}
             value={avgRating ?? "—"}
             icon={StarIcon}
             iconColor="accent"
@@ -114,29 +114,29 @@ export function PractitionersListContent({
 
       {/* Filter bar */}
       <FilterBar
-        search={{ value: search, onChange: setSearch, placeholder: t("practitioners.searchPlaceholder") }}
+        search={{ value: search, onChange: setSearch, placeholder: t("employees.searchPlaceholder") }}
         selects={[
           {
             key: "status",
             value: statusFilter,
-            placeholder: t("practitioners.filters.status"),
+            placeholder: t("employees.filters.status"),
             options: [
-              { value: "all", label: t("practitioners.filters.allStatuses") },
-              { value: "active", label: t("practitioners.card.active") },
-              { value: "inactive", label: t("practitioners.card.inactive") },
+              { value: "all", label: t("employees.filters.allStatuses") },
+              { value: "active", label: t("employees.card.active") },
+              { value: "inactive", label: t("employees.card.inactive") },
             ],
             onValueChange: handleStatusChange,
           },
         ]}
         hasFilters={hasActiveFilters}
         onReset={handleReset}
-        resultCount={meta && !isLoading ? `${meta.total} ${t("practitioners.stats.total")}` : undefined}
+        resultCount={meta && !isLoading ? `${meta.total} ${t("employees.stats.total")}` : undefined}
       />
 
       {error && <ErrorBanner message={error} />}
 
       {/* Table */}
-      {isLoading && practitioners.length === 0 ? (
+      {isLoading && employees.length === 0 ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-12 rounded-lg" />
@@ -145,14 +145,14 @@ export function PractitionersListContent({
       ) : (
         <DataTable
           columns={columns}
-          data={practitioners}
-          emptyTitle={t("practitioners.empty.title")}
-          emptyDescription={t("practitioners.empty.description")}
+          data={employees}
+          emptyTitle={t("employees.empty.title")}
+          emptyDescription={t("employees.empty.description")}
         />
       )}
 
-      <DeletePractitionerDialog
-        practitioner={deleteTarget}
+      <DeleteEmployeeDialog
+        employee={deleteTarget}
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
       />

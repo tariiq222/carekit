@@ -9,7 +9,7 @@ const baseCourseSchema = z.object({
   nameEn: z.string().min(1, "Required").max(255),
   descriptionAr: z.string().max(2000).optional().or(z.literal("")),
   descriptionEn: z.string().max(2000).optional().or(z.literal("")),
-  practitionerId: z.string().uuid("اختر ممارساً"),
+  employeeId: z.string().uuid("اختر ممارساً"),
   totalSessions: z.number().int().min(1).max(52),
   durationPerSessionMin: z.number().int().min(15).max(480),
   frequency: z.enum(["weekly", "biweekly", "monthly"]),
@@ -30,7 +30,7 @@ export type CourseWizardStep = 1 | 2 | 3 | 4
 export type CourseFormValues = z.infer<typeof baseCourseSchema>
 
 export const stepFields: Record<CourseWizardStep, (keyof CourseFormValues)[]> = {
-  1: ["nameAr", "nameEn", "descriptionAr", "descriptionEn", "practitionerId"],
+  1: ["nameAr", "nameEn", "descriptionAr", "descriptionEn", "employeeId"],
   2: ["totalSessions", "durationPerSessionMin", "frequency", "startDate"],
   3: ["priceHalalat", "isGroup", "maxParticipants", "deliveryMode", "location"],
   4: [],
@@ -45,7 +45,7 @@ export const courseStep1Schema = baseCourseSchema.pick({
   nameEn: true,
   descriptionAr: true,
   descriptionEn: true,
-  practitionerId: true,
+  employeeId: true,
 })
 
 export const courseStep2Schema = baseCourseSchema.pick({
@@ -91,11 +91,11 @@ export const createCourseSchema = baseCourseSchema
   )
 
 // ---------------------------------------------------------------------------
-// Enroll patient schema
+// Enroll client schema
 // ---------------------------------------------------------------------------
 
-export const enrollPatientSchema = z.object({
-  patientId: z.string().uuid("اختر مستفيداً"),
+export const enrollClientSchema = z.object({
+  clientId: z.string().uuid("اختر مستفيداً"),
 })
 
-export type EnrollPatientFormValues = z.infer<typeof enrollPatientSchema>
+export type EnrollClientFormValues = z.infer<typeof enrollClientSchema>

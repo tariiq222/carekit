@@ -9,7 +9,7 @@ import type { GroupListQuery, GroupStatus, DeliveryMode } from "@/lib/types/grou
 export function useGroups() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
-  const [practitionerId, setPractitionerId] = useState<string | undefined>()
+  const [employeeId, setEmployeeId] = useState<string | undefined>()
   const [status, setStatus] = useState<GroupStatus | undefined>()
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode | undefined>()
   const [visibility, setVisibility] = useState<"published" | "draft" | undefined>()
@@ -18,7 +18,7 @@ export function useGroups() {
     page,
     perPage: 20,
     search: search || undefined,
-    practitionerId,
+    employeeId,
     status,
     deliveryMode,
     visibility,
@@ -32,7 +32,7 @@ export function useGroups() {
 
   const resetFilters = useCallback(() => {
     setSearch("")
-    setPractitionerId(undefined)
+    setEmployeeId(undefined)
     setStatus(undefined)
     setDeliveryMode(undefined)
     setVisibility(undefined)
@@ -48,8 +48,8 @@ export function useGroups() {
     setPage,
     search,
     setSearch: (s: string) => { setSearch(s); setPage(1) },
-    practitionerId,
-    setPractitionerId: (v: string | undefined) => { setPractitionerId(v); setPage(1) },
+    employeeId,
+    setEmployeeId: (v: string | undefined) => { setEmployeeId(v); setPage(1) },
     status,
     setStatus: (v: GroupStatus | undefined) => { setStatus(v); setPage(1) },
     deliveryMode,

@@ -57,7 +57,7 @@ function MenuItem({ icon: Icon, label, value, danger, onPress }: MenuItemProps) 
   );
 }
 
-export default function PractitionerProfileScreen() {
+export default function EmployeeProfileScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -87,7 +87,7 @@ export default function PractitionerProfileScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.surface, paddingTop: insets.top + 16 }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <ThemedText variant="displaySm" style={styles.title}>
-          {t('practitioner.profile')}
+          {t('employee.profile')}
         </ThemedText>
 
         {/* Profile Card */}

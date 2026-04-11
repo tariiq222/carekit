@@ -6,7 +6,7 @@ import { Home, Calendar, Users, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 
-export default function PractitionerTabsLayout() {
+export default function EmployeeTabsLayout() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
@@ -61,9 +61,9 @@ export default function PractitionerTabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="patients"
+        name="clients"
         options={{
-          title: t('tabs.patients'),
+          title: t('tabs.clients'),
           tabBarIcon: ({ color, focused }) => (
             <Users size={22} strokeWidth={focused ? 2 : 1.5} color={color} />
           ),

@@ -17,7 +17,7 @@ export const enWidget: Record<string, string> = {
   "widget.nav.close": "Close",
 
   // Service step
-  "widget.service.select_practitioner": "Choose a practitioner",
+  "widget.service.select_employee": "Choose a employee",
   "widget.service.select_service": "Choose a service",
   "widget.service.select_type": "Choose visit type",
   "widget.service.min": "min",
@@ -48,7 +48,7 @@ export const enWidget: Record<string, string> = {
 
   // Confirm step
   "widget.confirm.title": "Review booking details",
-  "widget.confirm.practitioner": "Practitioner",
+  "widget.confirm.employee": "Employee",
   "widget.confirm.service": "Service",
   "widget.confirm.type": "Visit Type",
   "widget.confirm.date": "Date",
@@ -57,7 +57,7 @@ export const enWidget: Record<string, string> = {
   "widget.confirm.vat": "VAT (15%)",
   "widget.confirm.total": "Total",
   "widget.confirm.notes": "Notes (optional)",
-  "widget.confirm.notes_placeholder": "Any notes for the practitioner...",
+  "widget.confirm.notes_placeholder": "Any notes for the employee...",
   "widget.confirm.button": "Confirm Booking",
   "widget.confirm.error": "Booking failed. Please try again.",
 

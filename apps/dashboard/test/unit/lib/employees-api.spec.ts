@@ -12,27 +12,27 @@ vi.mock("@/lib/api", () => ({
 }))
 
 import {
-  fetchPractitioners,
-  fetchPractitioner,
-  createPractitioner,
-  onboardPractitioner,
-  updatePractitioner,
-  deletePractitioner,
-} from "@/lib/api/practitioners"
+  fetchEmployees,
+  fetchEmployee,
+  createEmployee,
+  onboardEmployee,
+  updateEmployee,
+  deleteEmployee,
+} from "@/lib/api/employees"
 
-describe("practitioners api", () => {
+describe("employees api", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  describe("fetchPractitioners", () => {
-    it("sends all query params to /practitioners", async () => {
+  describe("fetchEmployees", () => {
+    it("sends all query params to /employees", async () => {
       getMock.mockResolvedValueOnce({
         items: [],
         meta: { total: 0, page: 1, perPage: 20 },
       })
 
-      await fetchPractitioners({
+      await fetchEmployees({
         page: 2,
         perPage: 15,
         search: "سارة",
@@ -43,7 +43,7 @@ describe("practitioners api", () => {
         sortOrder: "asc",
       })
 
-      expect(getMock).toHaveBeenCalledWith("/practitioners", {
+      expect(getMock).toHaveBeenCalledWith("/employees", {
         page: 2,
         perPage: 15,
         search: "سارة",
@@ -57,8 +57,8 @@ describe("practitioners api", () => {
 
     it("defaults to empty query object", async () => {
       getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
-      await fetchPractitioners()
-      expect(getMock).toHaveBeenCalledWith("/practitioners", expect.any(Object))
+      await fetchEmployees()
+      expect(getMock).toHaveBeenCalledWith("/employees", expect.any(Object))
     })
 
     it("maps backend rating field to averageRating", async () => {
@@ -67,7 +67,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].averageRating).toBe(4.5)
       expect(result.items[0]._count!.ratings).toBe(12)
@@ -79,7 +79,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].averageRating).toBe(3.8)
     })
@@ -90,7 +90,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0]!._count!.bookings).toBe(0)
     })
@@ -101,96 +101,96 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0]._count).toEqual({ bookings: 10, ratings: 6 })
     })
   })
 
-  describe("fetchPractitioner", () => {
-    it("calls /practitioners/:id", async () => {
+  describe("fetchEmployee", () => {
+    it("calls /employees/:id", async () => {
       getMock.mockResolvedValueOnce({ id: "p-1", rating: 4.2, reviewCount: 8 })
 
-      await fetchPractitioner("p-1")
+      await fetchEmployee("p-1")
 
-      expect(getMock).toHaveBeenCalledWith("/practitioners/p-1")
+      expect(getMock).toHaveBeenCalledWith("/employees/p-1")
     })
 
     it("maps backend shape before returning", async () => {
       getMock.mockResolvedValueOnce({ id: "p-1", rating: 4.2, reviewCount: 8 })
 
-      const result = await fetchPractitioner("p-1")
+      const result = await fetchEmployee("p-1")
 
       expect(result.averageRating).toBe(4.2)
       expect(result._count!.ratings).toBe(8)
     })
   })
 
-  describe("createPractitioner", () => {
-    it("posts to /practitioners with payload", async () => {
+  describe("createEmployee", () => {
+    it("posts to /employees with payload", async () => {
       postMock.mockResolvedValueOnce({ id: "p-2" })
 
-      await createPractitioner({
+      await createEmployee({
         userId: "u-1",
         specialty: "General",
         firstName: "فاطمة",
         lastName: "الزهراني",
         email: "fatima@clinic.com",
-      } as Parameters<typeof createPractitioner>[0])
+      } as Parameters<typeof createEmployee>[0])
 
       expect(postMock).toHaveBeenCalledWith(
-        "/practitioners",
+        "/employees",
         expect.objectContaining({ firstName: "فاطمة" }),
       )
     })
   })
 
-  describe("onboardPractitioner", () => {
-    it("posts to /practitioners/onboard", async () => {
-      postMock.mockResolvedValueOnce({ practitionerId: "p-3", inviteUrl: "https://..." })
+  describe("onboardEmployee", () => {
+    it("posts to /employees/onboard", async () => {
+      postMock.mockResolvedValueOnce({ employeeId: "p-3", inviteUrl: "https://..." })
 
-      await onboardPractitioner({
+      await onboardEmployee({
         email: "new@clinic.com",
-      } as Parameters<typeof onboardPractitioner>[0])
+      } as Parameters<typeof onboardEmployee>[0])
 
       expect(postMock).toHaveBeenCalledWith(
-        "/practitioners/onboard",
+        "/employees/onboard",
         expect.objectContaining({ email: "new@clinic.com" }),
       )
     })
   })
 
-  describe("updatePractitioner", () => {
-    it("patches /practitioners/:id with payload", async () => {
+  describe("updateEmployee", () => {
+    it("patches /employees/:id with payload", async () => {
       patchMock.mockResolvedValueOnce({ id: "p-1" })
 
-      await updatePractitioner("p-1", { bio: "متخصص في أمراض القلب" })
+      await updateEmployee("p-1", { bio: "متخصص في أمراض القلب" })
 
       expect(patchMock).toHaveBeenCalledWith(
-        "/practitioners/p-1",
+        "/employees/p-1",
         { bio: "متخصص في أمراض القلب" },
       )
     })
   })
 
-  describe("deletePractitioner", () => {
-    it("calls DELETE /practitioners/:id", async () => {
+  describe("deleteEmployee", () => {
+    it("calls DELETE /employees/:id", async () => {
       deleteMock.mockResolvedValueOnce(undefined)
 
-      await deletePractitioner("p-1")
+      await deleteEmployee("p-1")
 
-      expect(deleteMock).toHaveBeenCalledWith("/practitioners/p-1")
+      expect(deleteMock).toHaveBeenCalledWith("/employees/p-1")
     })
   })
 
-  describe("mapPractitioner edge cases", () => {
+  describe("mapEmployee edge cases", () => {
     it("preserves specialty as-is when it is already a string", async () => {
       getMock.mockResolvedValueOnce({
         items: [{ id: "p-1", specialty: "Orthopedics" }],
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].specialty).toBe("Orthopedics")
     })
@@ -201,7 +201,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].specialty).toBe("")
     })
@@ -212,7 +212,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].specialtyAr).toBe("عظام")
     })
@@ -223,7 +223,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].specialtyAr).toBeNull()
     })
@@ -234,7 +234,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].specialtyAr).toBeNull()
     })
@@ -245,7 +245,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].avatarUrl).toBe("https://img.url/pic.jpg")
     })
@@ -256,7 +256,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].avatarUrl).toBe("fallback.jpg")
     })
@@ -267,7 +267,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].avatarUrl).toBeNull()
     })
@@ -278,7 +278,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0].averageRating).toBeUndefined()
     })
@@ -289,7 +289,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0]._count).toEqual({ bookings: 0, ratings: 0 })
     })
@@ -300,7 +300,7 @@ describe("practitioners api", () => {
         meta: { total: 1 },
       })
 
-      const result = await fetchPractitioners()
+      const result = await fetchEmployees()
 
       expect(result.items[0]!._count!.ratings).toBe(7)
       expect(result.items[0]!._count!.bookings).toBe(0)

@@ -83,9 +83,9 @@ export function GroupsListContent({
       cell: ({ row }) => locale === "ar" ? row.original.nameAr : row.original.nameEn,
     },
     {
-      accessorKey: "practitioner",
-      header: t("groups.practitioner"),
-      cell: ({ row }) => row.original.practitioner?.nameAr ?? "—",
+      accessorKey: "employee",
+      header: t("groups.employee"),
+      cell: ({ row }) => row.original.employee?.nameAr ?? "—",
     },
     {
       accessorKey: "deliveryMode",

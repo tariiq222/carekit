@@ -91,7 +91,7 @@ Modals and dialogs must trap focus within them:
 |-----------|--------------|--------------|--------------|
 | Icon-only button | `aria-label` | `aria-label="Close"` | `aria-label="إغلاق"` |
 | Navigation | `aria-label` | `aria-label="Main navigation"` | `aria-label="القائمة الرئيسية"` |
-| Search input | `aria-label` | `aria-label="Search patients"` | `aria-label="بحث المرضى"` |
+| Search input | `aria-label` | `aria-label="Search clients"` | `aria-label="بحث المرضى"` |
 | Status badge | `aria-label` | `aria-label="Status: Confirmed"` | `aria-label="الحالة: مؤكد"` |
 | Data table | `aria-label` | `aria-label="Appointments table"` | `aria-label="جدول المواعيد"` |
 | Loading state | `aria-live="polite"` | `aria-label="Loading..."` | `aria-label="جاري التحميل..."` |
@@ -112,7 +112,7 @@ Modals and dialogs must trap focus within them:
 
 // Images need:
 <Image
-  accessibilityLabel={t('practitioner.photo', { name: doctor.name })}
+  accessibilityLabel={t('employee.photo', { name: doctor.name })}
 />
 
 // Status indicators:

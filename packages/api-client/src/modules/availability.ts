@@ -3,24 +3,24 @@ import type {
   GetAvailabilityResponse,
   SetAvailabilityPayload,
   SetAvailabilityResponse,
-  PractitionerAvailability,
+  EmployeeAvailability,
 } from '../types/availability.js'
 
 export async function get(
-  practitionerId: string,
-): Promise<PractitionerAvailability[]> {
+  employeeId: string,
+): Promise<EmployeeAvailability[]> {
   const res = await apiRequest<GetAvailabilityResponse>(
-    `/practitioners/${practitionerId}/availability`,
+    `/employees/${employeeId}/availability`,
   )
   return res.schedule
 }
 
 export async function update(
-  practitionerId: string,
+  employeeId: string,
   payload: SetAvailabilityPayload,
-): Promise<PractitionerAvailability[]> {
+): Promise<EmployeeAvailability[]> {
   const res = await apiRequest<SetAvailabilityResponse>(
-    `/practitioners/${practitionerId}/availability`,
+    `/employees/${employeeId}/availability`,
     {
       method: 'PUT',
       body: JSON.stringify(payload),

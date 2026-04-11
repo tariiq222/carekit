@@ -13,12 +13,12 @@ export function BookingInfoCard({ booking }: BookingInfoCardProps) {
   const { t, locale } = useLocale()
   const isAr = locale === "ar"
 
-  const patientName = booking.patient
-    ? `${booking.patient.firstName} ${booking.patient.lastName}`
+  const clientName = booking.client
+    ? `${booking.client.firstName} ${booking.client.lastName}`
     : "—"
 
-  const practitionerName = booking.practitioner?.user
-    ? `${t("bookings.info.drPrefix")} ${booking.practitioner.user.firstName} ${booking.practitioner.user.lastName}`
+  const employeeName = booking.employee?.user
+    ? `${t("bookings.info.drPrefix")} ${booking.employee.user.firstName} ${booking.employee.user.lastName}`
     : "—"
 
   const serviceName = isAr ? booking.service?.nameAr : booking.service?.nameEn
@@ -33,12 +33,12 @@ export function BookingInfoCard({ booking }: BookingInfoCardProps) {
         />
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{t("bookings.info.patient")}</span>
-            <span className="text-sm font-medium text-foreground">{patientName}</span>
+            <span className="text-sm text-muted-foreground">{t("bookings.info.client")}</span>
+            <span className="text-sm font-medium text-foreground">{clientName}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{t("bookings.info.practitioner")}</span>
-            <span className="text-sm font-medium text-foreground">{practitionerName}</span>
+            <span className="text-sm text-muted-foreground">{t("bookings.info.employee")}</span>
+            <span className="text-sm font-medium text-foreground">{employeeName}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{t("bookings.info.service")}</span>

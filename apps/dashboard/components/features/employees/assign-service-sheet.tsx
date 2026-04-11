@@ -28,20 +28,20 @@ import {
 import { useLocale } from "@/components/locale-provider"
 import { useServices, useServiceBookingTypes } from "@/hooks/use-services"
 import {
-  usePractitionerServices,
-  usePractitionerServiceMutations,
-} from "@/hooks/use-practitioners"
-import { PractitionerServiceTypesEditor } from "./practitioner-service-types-editor"
-import type { PractitionerService, PractitionerTypeConfigPayload } from "@/lib/types/practitioner"
+  useEmployeeServices,
+  useEmployeeServiceMutations,
+} from "@/hooks/use-employees"
+import { EmployeeServiceTypesEditor } from "./employee-service-types-editor"
+import type { EmployeeService, EmployeeTypeConfigPayload } from "@/lib/types/employee"
 import {
   assignServiceSchema,
   type AssignServiceFormData,
-} from "@/lib/schemas/practitioner.schema"
+} from "@/lib/schemas/employee.schema"
 
 /* ─── Props ─── */
 
 interface AssignServiceSheetProps {
-  practitionerId: string
+  employeeId: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -49,23 +49,23 @@ interface AssignServiceSheetProps {
 /* ─── Component ─── */
 
 export function AssignServiceSheet({
-  practitionerId,
+  employeeId,
   open,
   onOpenChange,
 }: AssignServiceSheetProps) {
   const { locale, t } = useLocale()
   const { services } = useServices()
   const { data: assignedServices } =
-    usePractitionerServices(practitionerId)
-  const { assignMut } = usePractitionerServiceMutations(practitionerId)
+    useEmployeeServices(employeeId)
+  const { assignMut } = useEmployeeServiceMutations(employeeId)
 
   /* Types state managed outside of react-hook-form */
-  const [typeConfigs, setTypeConfigs] = useState<PractitionerTypeConfigPayload[]>([])
+  const [typeConfigs, setTypeConfigs] = useState<EmployeeTypeConfigPayload[]>([])
 
   const availableServices = useMemo(() => {
     const assignedIds = new Set(
       (assignedServices ?? []).map(
-        (ps: PractitionerService) => ps.serviceId,
+        (ps: EmployeeService) => ps.serviceId,
       ),
     )
     return (services ?? []).filter((s) => !assignedIds.has(s.id))
@@ -121,7 +121,7 @@ export function AssignServiceSheet({
         isActive: data.isActive,
         types: typeConfigs,
       })
-      toast.success(t("practitioners.services.assignSuccess"))
+      toast.success(t("employees.services.assignSuccess"))
       onOpenChange(false)
     } catch (err) {
       toast.error(
@@ -134,9 +134,9 @@ export function AssignServiceSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left">
         <SheetHeader>
-          <SheetTitle>{t("practitioners.services.assign")}</SheetTitle>
+          <SheetTitle>{t("employees.services.assign")}</SheetTitle>
           <SheetDescription>
-            {t("practitioners.services.assignDesc")}
+            {t("employees.services.assignDesc")}
           </SheetDescription>
         </SheetHeader>
 
@@ -160,7 +160,7 @@ export function AssignServiceSheet({
                     <SelectTrigger>
                       <SelectValue
                         placeholder={t(
-                          "practitioners.services.selectService",
+                          "employees.services.selectService",
                         )}
                       />
                     </SelectTrigger>
@@ -183,7 +183,7 @@ export function AssignServiceSheet({
 
             {/* Per-type config */}
             {selectedServiceId && serviceBookingTypes && (
-              <PractitionerServiceTypesEditor
+              <EmployeeServiceTypesEditor
                 serviceBookingTypes={serviceBookingTypes}
                 value={typeConfigs}
                 onChange={setTypeConfigs}
@@ -195,7 +195,7 @@ export function AssignServiceSheet({
             {/* Buffer */}
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs">
-                {t("practitioners.services.bufferMinutes")}
+                {t("employees.services.bufferMinutes")}
               </Label>
               <Input
                 type="number"
@@ -236,7 +236,7 @@ export function AssignServiceSheet({
             disabled={assignMut.isPending}
           >
             {assignMut.isPending
-              ? t("practitioners.services.saving")
+              ? t("employees.services.saving")
               : t("common.save")}
           </Button>
         </SheetFooter>

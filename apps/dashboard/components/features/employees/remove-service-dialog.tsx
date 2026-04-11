@@ -13,14 +13,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useLocale } from "@/components/locale-provider"
-import { usePractitionerServiceMutations } from "@/hooks/use-practitioners"
-import type { PractitionerService } from "@/lib/types/practitioner"
+import { useEmployeeServiceMutations } from "@/hooks/use-employees"
+import type { EmployeeService } from "@/lib/types/employee"
 
 /* ─── Props ─── */
 
 interface RemoveServiceDialogProps {
-  practitionerId: string
-  practitionerService: PractitionerService | null
+  employeeId: string
+  employeeService: EmployeeService | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -28,13 +28,13 @@ interface RemoveServiceDialogProps {
 /* ─── Component ─── */
 
 export function RemoveServiceDialog({
-  practitionerId,
-  practitionerService: ps,
+  employeeId,
+  employeeService: ps,
   open,
   onOpenChange,
 }: RemoveServiceDialogProps) {
   const { locale, t } = useLocale()
-  const { removeMut } = usePractitionerServiceMutations(practitionerId)
+  const { removeMut } = useEmployeeServiceMutations(employeeId)
 
   const serviceName = ps
     ? locale === "ar"
@@ -46,7 +46,7 @@ export function RemoveServiceDialog({
     if (!ps) return
     try {
       await removeMut.mutateAsync(ps.serviceId)
-      toast.success(t("practitioners.services.removeSuccess"))
+      toast.success(t("employees.services.removeSuccess"))
       onOpenChange(false)
     } catch (err) {
       toast.error(
@@ -60,12 +60,12 @@ export function RemoveServiceDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {t("practitioners.services.remove")} — {serviceName}
+            {t("employees.services.remove")} — {serviceName}
           </AlertDialogTitle>
           <AlertDialogDescription className="flex flex-col gap-2">
-            <span>{t("practitioners.services.removeConfirm")}</span>
+            <span>{t("employees.services.removeConfirm")}</span>
             <span className="text-xs text-muted-foreground">
-              {t("practitioners.services.removeWarning")}
+              {t("employees.services.removeWarning")}
             </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -79,7 +79,7 @@ export function RemoveServiceDialog({
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {removeMut.isPending
-              ? t("practitioners.services.saving")
+              ? t("employees.services.saving")
               : t("common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>

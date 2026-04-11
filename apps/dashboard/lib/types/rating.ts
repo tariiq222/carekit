@@ -12,7 +12,7 @@ export interface Rating {
   stars: number
   comment: string | null
   createdAt: string
-  patient?: {
+  client?: {
     firstName: string
     lastName: string
   } | null

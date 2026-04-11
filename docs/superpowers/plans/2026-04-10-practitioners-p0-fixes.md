@@ -1,12 +1,12 @@
-# Practitioners P0 Fixes Implementation Plan
+# Employees P0 Fixes Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fix three critical P0 bugs in the Practitioners module: clinic holidays not excluded from available slots/dates (patient sees slots then gets rejected at booking), rating aggregate computed outside transaction (race condition corrupts denormalized rating), and mobile schedule screen not passing `duration`/`serviceId` to slot query.
+**Goal:** Fix three critical P0 bugs in the Employees module: clinic holidays not excluded from available slots/dates (client sees slots then gets rejected at booking), rating aggregate computed outside transaction (race condition corrupts denormalized rating), and mobile schedule screen not passing `duration`/`serviceId` to slot query.
 
 **Architecture:** 
-- Holiday fix: import `ClinicModule` into `PractitionersModule` and inject `ClinicHolidaysService` into `PractitionerAvailabilityService`. Call `isHoliday()` before slot generation in both `resolveSlots` and `getAvailableDates`.
-- Rating fix: wrap `rating.create` + `updatePractitionerRating` in a single `$transaction`.
+- Holiday fix: import `ClinicModule` into `EmployeesModule` and inject `ClinicHolidaysService` into `EmployeeAvailabilityService`. Call `isHoliday()` before slot generation in both `resolveSlots` and `getAvailableDates`.
+- Rating fix: wrap `rating.create` + `updateEmployeeRating` in a single `$transaction`.
 - Mobile fix: read `serviceId` and `duration` from route params and pass them to `getAvailability`.
 
 **Tech Stack:** NestJS 11, Prisma 7, TypeScript strict, Jest, React Native / Expo
@@ -15,12 +15,12 @@
 
 ## Files
 
-- Modify: `backend/src/modules/practitioners/practitioners.module.ts`
-- Modify: `backend/src/modules/practitioners/practitioner-availability.service.ts`
+- Modify: `backend/src/modules/employees/employees.module.ts`
+- Modify: `backend/src/modules/employees/employee-availability.service.ts`
 - Modify: `backend/src/modules/ratings/ratings.service.ts`
-- Modify: `mobile/app/(patient)/booking/schedule.tsx`
-- Modify: `mobile/services/practitioners.ts`
-- Test: `backend/test/unit/practitioners/practitioner-availability.service.spec.ts`
+- Modify: `mobile/app/(client)/booking/schedule.tsx`
+- Modify: `mobile/services/employees.ts`
+- Test: `backend/test/unit/employees/employee-availability.service.spec.ts`
 - Test: `backend/test/unit/ratings/ratings.service.spec.ts`
 
 ---
@@ -28,28 +28,28 @@
 ## Task 1: Inject ClinicHolidaysService and exclude holidays from `resolveSlots` and `getAvailableDates`
 
 **Files:**
-- Modify: `backend/src/modules/practitioners/practitioners.module.ts`
-- Modify: `backend/src/modules/practitioners/practitioner-availability.service.ts`
-- Test: `backend/test/unit/practitioners/practitioner-availability.service.spec.ts`
+- Modify: `backend/src/modules/employees/employees.module.ts`
+- Modify: `backend/src/modules/employees/employee-availability.service.ts`
+- Test: `backend/test/unit/employees/employee-availability.service.spec.ts`
 
-**Problem:** `resolveSlots` (single date) and `getAvailableDates` (monthly calendar) never check `ClinicHoliday`. `BookingValidationHelper.validateClinicHoliday()` does check — so the patient sees an available date, tries to book, and gets rejected.
+**Problem:** `resolveSlots` (single date) and `getAvailableDates` (monthly calendar) never check `ClinicHoliday`. `BookingValidationHelper.validateClinicHoliday()` does check — so the client sees an available date, tries to book, and gets rejected.
 
-- [ ] **Step 1: Add `ClinicModule` import to `practitioners.module.ts`**
+- [ ] **Step 1: Add `ClinicModule` import to `employees.module.ts`**
 
-Replace `practitioners.module.ts`:
+Replace `employees.module.ts`:
 
 ```typescript
 import { Module } from '@nestjs/common';
-import { FavoritePractitionersController } from './favorite-practitioners.controller.js';
-import { PractitionersController } from './practitioners.controller.js';
-import { PractitionersService } from './practitioners.service.js';
-import { PractitionerAvailabilityService } from './practitioner-availability.service.js';
-import { PractitionerVacationService } from './practitioner-vacation.service.js';
-import { PractitionerServiceService } from './practitioner-service.service.js';
-import { PractitionerRatingsService } from './practitioner-ratings.service.js';
-import { PractitionerBreaksService } from './practitioner-breaks.service.js';
-import { FavoritePractitionersService } from './favorite-practitioners.service.js';
-import { PractitionerOnboardingService } from './practitioner-onboarding.service.js';
+import { FavoriteEmployeesController } from './favorite-employees.controller.js';
+import { EmployeesController } from './employees.controller.js';
+import { EmployeesService } from './employees.service.js';
+import { EmployeeAvailabilityService } from './employee-availability.service.js';
+import { EmployeeVacationService } from './employee-vacation.service.js';
+import { EmployeeServiceService } from './employee-service.service.js';
+import { EmployeeRatingsService } from './employee-ratings.service.js';
+import { EmployeeBreaksService } from './employee-breaks.service.js';
+import { FavoriteEmployeesService } from './favorite-employees.service.js';
+import { EmployeeOnboardingService } from './employee-onboarding.service.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { EmailModule } from '../email/email.module.js';
@@ -58,38 +58,38 @@ import { ClinicModule } from '../clinic/clinic.module.js';
 
 @Module({
   imports: [BookingsModule, AuthModule, EmailModule, ClinicSettingsModule, ClinicModule],
-  controllers: [FavoritePractitionersController, PractitionersController],
+  controllers: [FavoriteEmployeesController, EmployeesController],
   providers: [
-    PractitionersService,
-    PractitionerAvailabilityService,
-    PractitionerVacationService,
-    PractitionerBreaksService,
-    PractitionerServiceService,
-    PractitionerRatingsService,
-    FavoritePractitionersService,
-    PractitionerOnboardingService,
+    EmployeesService,
+    EmployeeAvailabilityService,
+    EmployeeVacationService,
+    EmployeeBreaksService,
+    EmployeeServiceService,
+    EmployeeRatingsService,
+    FavoriteEmployeesService,
+    EmployeeOnboardingService,
   ],
-  exports: [PractitionersService, PractitionerServiceService],
+  exports: [EmployeesService, EmployeeServiceService],
 })
-export class PractitionersModule {}
+export class EmployeesModule {}
 ```
 
 - [ ] **Step 2: Write failing tests for holiday exclusion**
 
-In `backend/test/unit/practitioners/practitioner-availability.service.spec.ts`, add:
+In `backend/test/unit/employees/employee-availability.service.spec.ts`, add:
 
 ```typescript
 describe('getAvailableDates — holiday exclusion', () => {
   it('should exclude a day that is a clinic holiday', async () => {
-    // Practitioner is accepting, has availability every Monday
-    prisma.practitioner.findFirst.mockResolvedValue({
+    // Employee is accepting, has availability every Monday
+    prisma.employee.findFirst.mockResolvedValue({
       id: 'p-1', isAcceptingBookings: true, deletedAt: null,
     });
-    prisma.practitionerAvailability.findMany.mockResolvedValue([
-      { practitionerId: 'p-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true, branchId: null },
+    prisma.employeeAvailability.findMany.mockResolvedValue([
+      { employeeId: 'p-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true, branchId: null },
     ]);
-    prisma.practitionerVacation.findMany.mockResolvedValue([]);
-    prisma.practitionerBreak.findMany.mockResolvedValue([]);
+    prisma.employeeVacation.findMany.mockResolvedValue([]);
+    prisma.employeeBreak.findMany.mockResolvedValue([]);
     prisma.booking.findMany.mockResolvedValue([]);
     bookingSettingsService.getForBranch.mockResolvedValue({ bufferMinutes: 0 });
     clinicSettingsService.getTimezone.mockResolvedValue('Asia/Riyadh');
@@ -107,13 +107,13 @@ describe('getAvailableDates — holiday exclusion', () => {
 
 describe('getSlots — holiday exclusion', () => {
   it('should return empty slots for a holiday date', async () => {
-    prisma.practitioner.findFirst.mockResolvedValue({
+    prisma.employee.findFirst.mockResolvedValue({
       id: 'p-1', isAcceptingBookings: true, deletedAt: null,
     });
-    prisma.practitionerAvailability.findMany.mockResolvedValue([
-      { practitionerId: 'p-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true, branchId: null },
+    prisma.employeeAvailability.findMany.mockResolvedValue([
+      { employeeId: 'p-1', dayOfWeek: 1, startTime: '09:00', endTime: '17:00', isActive: true, branchId: null },
     ]);
-    prisma.practitionerVacation.findFirst.mockResolvedValue(null);
+    prisma.employeeVacation.findFirst.mockResolvedValue(null);
 
     clinicHolidaysService.isHoliday.mockResolvedValue(true);
 
@@ -128,14 +128,14 @@ describe('getSlots — holiday exclusion', () => {
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit/backend
-npm run test -- --testPathPattern="practitioner-availability" --no-coverage
+npm run test -- --testPathPattern="employee-availability" --no-coverage
 ```
 
 Expected: FAIL — `clinicHolidaysService.isHoliday` is not injected yet.
 
-- [ ] **Step 4: Inject `ClinicHolidaysService` into `PractitionerAvailabilityService`**
+- [ ] **Step 4: Inject `ClinicHolidaysService` into `EmployeeAvailabilityService`**
 
-In `practitioner-availability.service.ts`, update imports and constructor:
+In `employee-availability.service.ts`, update imports and constructor:
 
 ```typescript
 import { ClinicHolidaysService } from '../clinic/clinic-holidays.service.js';
@@ -159,7 +159,7 @@ In `resolveSlots`, after the vacation check (after line 264 `if (vacation) retur
 ```typescript
 // Exclude clinic holidays — same rule as booking-validation.helper.ts
 const isHoliday = await this.clinicHolidaysService.isHoliday(normalizedDate);
-if (isHoliday) return { date, practitionerId, slots: [] };
+if (isHoliday) return { date, employeeId, slots: [] };
 ```
 
 - [ ] **Step 6: Add holiday check in `getAvailableDates` loop**
@@ -190,7 +190,7 @@ Remove the `await this.clinicSettingsService.getTimezone()` call from inside the
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit/backend
-npm run test -- --testPathPattern="practitioner-availability" --no-coverage
+npm run test -- --testPathPattern="employee-availability" --no-coverage
 ```
 
 Expected: PASS
@@ -217,10 +217,10 @@ Expected: All passing
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit
-git add backend/src/modules/practitioners/practitioners.module.ts \
-        backend/src/modules/practitioners/practitioner-availability.service.ts \
-        backend/test/unit/practitioners/practitioner-availability.service.spec.ts
-git commit -m "fix(practitioners): exclude clinic holidays from available slots and dates
+git add backend/src/modules/employees/employees.module.ts \
+        backend/src/modules/employees/employee-availability.service.ts \
+        backend/test/unit/employees/employee-availability.service.spec.ts
+git commit -m "fix(employees): exclude clinic holidays from available slots and dates
 
 Also fixes N+1: getTimezone() moved outside daily loop in getAvailableDates
 
@@ -229,13 +229,13 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 
 ---
 
-## Task 2: Fix Rating race condition — wrap `create` + `updatePractitionerRating` in transaction
+## Task 2: Fix Rating race condition — wrap `create` + `updateEmployeeRating` in transaction
 
 **Files:**
 - Modify: `backend/src/modules/ratings/ratings.service.ts`
 - Test: `backend/test/unit/ratings/ratings.service.spec.ts`
 
-**Problem (lines 52-69):** `rating.create` then `updatePractitionerRating` (which calls `rating.aggregate` + `practitioner.update`) run as three separate DB operations. Two concurrent ratings can both read the same aggregate count and write the same (stale) average.
+**Problem (lines 52-69):** `rating.create` then `updateEmployeeRating` (which calls `rating.aggregate` + `employee.update`) run as three separate DB operations. Two concurrent ratings can both read the same aggregate count and write the same (stale) average.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -243,11 +243,11 @@ In `backend/test/unit/ratings/ratings.service.spec.ts`, add:
 
 ```typescript
 describe('create rating', () => {
-  it('should call updatePractitionerRating inside the same transaction', async () => {
+  it('should call updateEmployeeRating inside the same transaction', async () => {
     const booking = {
       id: 'booking-1',
       status: 'completed',
-      practitionerId: 'p-1',
+      employeeId: 'p-1',
       rating: null,
     };
 
@@ -261,7 +261,7 @@ describe('create rating', () => {
           create: jest.fn().mockResolvedValue({ id: 'rating-1', stars: 5 }),
           aggregate: jest.fn().mockResolvedValue({ _avg: { stars: 4.5 }, _count: { id: 2 } }),
         },
-        practitioner: {
+        employee: {
           update: jest.fn().mockResolvedValue({}),
         },
       };
@@ -270,7 +270,7 @@ describe('create rating', () => {
 
     await service.create({
       bookingId: 'booking-1',
-      patientId: 'patient-1',
+      clientId: 'client-1',
       stars: 5,
     });
 
@@ -288,15 +288,15 @@ npm run test -- --testPathPattern="ratings" --no-coverage
 
 Expected: FAIL — current code does NOT use `$transaction` for rating creation.
 
-- [ ] **Step 3: Implement the fix — wrap create + updatePractitionerRating in $transaction**
+- [ ] **Step 3: Implement the fix — wrap create + updateEmployeeRating in $transaction**
 
 In `ratings.service.ts`, replace the `create` method (lines 27-71):
 
 ```typescript
 async create(dto: CreateRatingDto) {
   const booking = await this.prisma.booking.findFirst({
-    where: { id: dto.bookingId, patientId: dto.patientId, deletedAt: null },
-    select: { id: true, status: true, practitionerId: true, rating: true },
+    where: { id: dto.bookingId, clientId: dto.clientId, deletedAt: null },
+    select: { id: true, status: true, employeeId: true, rating: true },
   });
 
   if (!booking) {
@@ -321,8 +321,8 @@ async create(dto: CreateRatingDto) {
       const newRating = await tx.rating.create({
         data: {
           bookingId: dto.bookingId,
-          patientId: dto.patientId,
-          practitionerId: booking.practitionerId,
+          clientId: dto.clientId,
+          employeeId: booking.employeeId,
           stars: dto.stars,
           comment: dto.comment,
         },
@@ -331,13 +331,13 @@ async create(dto: CreateRatingDto) {
       // Compute and update aggregate inside same transaction — prevents race condition
       // where two concurrent ratings both read stale count and write stale average.
       const stats = await tx.rating.aggregate({
-        where: { practitionerId: booking.practitionerId, deletedAt: null },
+        where: { employeeId: booking.employeeId, deletedAt: null },
         _avg: { stars: true },
         _count: { id: true },
       });
 
-      await tx.practitioner.update({
-        where: { id: booking.practitionerId },
+      await tx.employee.update({
+        where: { id: booking.employeeId },
         data: {
           rating: stats._avg.stars ?? 0,
           reviewCount: stats._count.id,
@@ -357,7 +357,7 @@ async create(dto: CreateRatingDto) {
 }
 ```
 
-Remove the `updatePractitionerRating` standalone method call from `create` (it's now inlined). Keep `updatePractitionerRating` as a public method since it may be called from other places (e.g., soft-delete rating in the future).
+Remove the `updateEmployeeRating` standalone method call from `create` (it's now inlined). Keep `updateEmployeeRating` as a public method since it may be called from other places (e.g., soft-delete rating in the future).
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -393,21 +393,21 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 ## Task 3: Fix Mobile — pass `serviceId` and `duration` to slot query
 
 **Files:**
-- Modify: `mobile/services/practitioners.ts`
-- Modify: `mobile/app/(patient)/booking/schedule.tsx`
+- Modify: `mobile/services/employees.ts`
+- Modify: `mobile/app/(client)/booking/schedule.tsx`
 
-**Problem:** `schedule.tsx` calls `practitionersService.getAvailability(practitionerId, selectedDate)` with no `duration` or `serviceId`. Backend defaults to `duration=30`. If the booked service has a different duration (e.g., 60 min), the displayed slots don't match what the backend will compute for the actual booking, resulting in false availability.
+**Problem:** `schedule.tsx` calls `employeesService.getAvailability(employeeId, selectedDate)` with no `duration` or `serviceId`. Backend defaults to `duration=30`. If the booked service has a different duration (e.g., 60 min), the displayed slots don't match what the backend will compute for the actual booking, resulting in false availability.
 
 The route params already carry `type` (bookingType string). We need `serviceId` and `duration` passed from the previous screen.
 
-- [ ] **Step 1: Update `mobile/services/practitioners.ts` — add params to `getAvailability`**
+- [ ] **Step 1: Update `mobile/services/employees.ts` — add params to `getAvailability`**
 
 Replace the `getAvailability` method:
 
 ```typescript
 async getAvailability(id: string, date: string, options?: { duration?: number; serviceId?: string; bookingType?: string }) {
   const response = await api.get<ApiResponse<{ slots: Array<{ startTime: string; endTime: string; available: boolean }> }>>(
-    `/practitioners/${id}/slots`,
+    `/employees/${id}/slots`,
     {
       params: {
         date,
@@ -421,13 +421,13 @@ async getAvailability(id: string, date: string, options?: { duration?: number; s
 },
 ```
 
-- [ ] **Step 2: Update `mobile/app/(patient)/booking/schedule.tsx` — read `serviceId` + `duration` from params and pass them**
+- [ ] **Step 2: Update `mobile/app/(client)/booking/schedule.tsx` — read `serviceId` + `duration` from params and pass them**
 
 Change the `useLocalSearchParams` destructure to include the new params:
 
 ```typescript
-const { practitionerId, type, serviceId, duration } = useLocalSearchParams<{
-  practitionerId: string;
+const { employeeId, type, serviceId, duration } = useLocalSearchParams<{
+  employeeId: string;
   type: string;
   serviceId?: string;
   duration?: string;
@@ -438,9 +438,9 @@ Change the `useEffect` that fetches slots:
 
 ```typescript
 useEffect(() => {
-  if (selectedDate && practitionerId) {
-    practitionersService
-      .getAvailability(practitionerId, selectedDate, {
+  if (selectedDate && employeeId) {
+    employeesService
+      .getAvailability(employeeId, selectedDate, {
         duration: duration ? parseInt(duration, 10) : undefined,
         serviceId: serviceId ?? undefined,
         bookingType: type ?? undefined,
@@ -451,7 +451,7 @@ useEffect(() => {
       })
       .catch(() => setSlots([]));
   }
-}, [selectedDate, practitionerId, duration, serviceId, type]);
+}, [selectedDate, employeeId, duration, serviceId, type]);
 ```
 
 - [ ] **Step 3: Fix hardcoded gradient colors (white-label violation)**
@@ -480,8 +480,8 @@ Expected: 0 errors
 
 ```bash
 cd /Users/tariq/Documents/my_programs/CareKit
-git add mobile/services/practitioners.ts \
-        mobile/app/(patient)/booking/schedule.tsx
+git add mobile/services/employees.ts \
+        mobile/app/(client)/booking/schedule.tsx
 git commit -m "fix(mobile): pass serviceId and duration to slot query — prevents false availability display
 
 Also removes hardcoded gradient colors in favor of theme tokens

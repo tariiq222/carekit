@@ -4,40 +4,40 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 
 const {
-  fetchPatients,
-  fetchPatient,
-  fetchPatientStats,
-  updatePatient,
-  createWalkInPatient,
-  activatePatient,
-  deactivatePatient,
+  fetchClients,
+  fetchClient,
+  fetchClientStats,
+  updateClient,
+  createWalkInClient,
+  activateClient,
+  deactivateClient,
 } = vi.hoisted(() => ({
-  fetchPatients: vi.fn(),
-  fetchPatient: vi.fn(),
-  fetchPatientStats: vi.fn(),
-  updatePatient: vi.fn(),
-  createWalkInPatient: vi.fn(),
-  activatePatient: vi.fn(),
-  deactivatePatient: vi.fn(),
+  fetchClients: vi.fn(),
+  fetchClient: vi.fn(),
+  fetchClientStats: vi.fn(),
+  updateClient: vi.fn(),
+  createWalkInClient: vi.fn(),
+  activateClient: vi.fn(),
+  deactivateClient: vi.fn(),
 }))
 
-vi.mock("@/lib/api/patients", () => ({
-  fetchPatients,
-  fetchPatient,
-  fetchPatientStats,
-  updatePatient,
-  createWalkInPatient,
-  activatePatient,
-  deactivatePatient,
+vi.mock("@/lib/api/clients", () => ({
+  fetchClients,
+  fetchClient,
+  fetchClientStats,
+  updateClient,
+  createWalkInClient,
+  activateClient,
+  deactivateClient,
 }))
 
 import {
-  usePatients,
-  usePatient,
-  usePatientStats,
-  usePatientMutations,
-  useInvalidatePatients,
-} from "@/hooks/use-patients"
+  useClients,
+  useClient,
+  useClientStats,
+  useClientMutations,
+  useInvalidateClients,
+} from "@/hooks/use-clients"
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -48,53 +48,53 @@ function makeWrapper() {
   return TestWrapper
 }
 
-describe("usePatients", () => {
+describe("useClients", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetches patients and returns items", async () => {
+  it("fetches clients and returns items", async () => {
     const items = [{ id: "p-1", name: "Ahmed" }]
-    fetchPatients.mockResolvedValueOnce({ items, meta: { total: 1 } })
+    fetchClients.mockResolvedValueOnce({ items, meta: { total: 1 } })
 
-    const { result } = renderHook(() => usePatients(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClients(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(fetchPatients).toHaveBeenCalledWith(
+    expect(fetchClients).toHaveBeenCalledWith(
       expect.objectContaining({ page: 1, perPage: 20 }),
     )
-    expect(result.current.patients).toEqual(items)
+    expect(result.current.clients).toEqual(items)
     expect(result.current.meta).toEqual({ total: 1 })
   })
 
   it("returns loading state initially", () => {
-    fetchPatients.mockReturnValueOnce(new Promise(() => undefined))
+    fetchClients.mockReturnValueOnce(new Promise(() => undefined))
 
-    const { result } = renderHook(() => usePatients(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClients(), { wrapper: makeWrapper() })
 
     expect(result.current.isLoading).toBe(true)
-    expect(result.current.patients).toEqual([])
+    expect(result.current.clients).toEqual([])
   })
 
-  it("returns empty patients when api returns no items", async () => {
-    fetchPatients.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
+  it("returns empty clients when api returns no items", async () => {
+    fetchClients.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePatients(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClients(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(result.current.patients).toEqual([])
+    expect(result.current.clients).toEqual([])
   })
 
   it("passes search filter to api and resets page", async () => {
-    fetchPatients.mockResolvedValue({ items: [], meta: { total: 0 } })
+    fetchClients.mockResolvedValue({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePatients(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClients(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     act(() => { result.current.setSearch("sara") })
 
     await waitFor(() =>
-      expect(fetchPatients).toHaveBeenCalledWith(
+      expect(fetchClients).toHaveBeenCalledWith(
         expect.objectContaining({ search: "sara", page: 1 }),
       ),
     )
@@ -102,9 +102,9 @@ describe("usePatients", () => {
   })
 
   it("resetSearch clears search and resets page", async () => {
-    fetchPatients.mockResolvedValue({ items: [], meta: { total: 0 } })
+    fetchClients.mockResolvedValue({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePatients(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClients(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -117,100 +117,100 @@ describe("usePatients", () => {
   })
 })
 
-describe("usePatient", () => {
+describe("useClient", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetches a single patient by id", async () => {
-    const patient = { id: "p-1", name: "Ahmed" }
-    fetchPatient.mockResolvedValueOnce(patient)
+  it("fetches a single client by id", async () => {
+    const client = { id: "p-1", name: "Ahmed" }
+    fetchClient.mockResolvedValueOnce(client)
 
-    const { result } = renderHook(() => usePatient("p-1"), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClient("p-1"), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(fetchPatient).toHaveBeenCalledWith("p-1")
-    expect(result.current.data).toEqual(patient)
+    expect(fetchClient).toHaveBeenCalledWith("p-1")
+    expect(result.current.data).toEqual(client)
   })
 
   it("does not fetch when id is null", () => {
-    const { result } = renderHook(() => usePatient(null), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClient(null), { wrapper: makeWrapper() })
 
-    expect(fetchPatient).not.toHaveBeenCalled()
+    expect(fetchClient).not.toHaveBeenCalled()
     expect(result.current.fetchStatus).toBe("idle")
   })
 })
 
-describe("usePatientStats", () => {
+describe("useClientStats", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetches stats for a given patient id", async () => {
+  it("fetches stats for a given client id", async () => {
     const stats = { totalBookings: 5, totalSpend: 1500 }
-    fetchPatientStats.mockResolvedValueOnce(stats)
+    fetchClientStats.mockResolvedValueOnce(stats)
 
-    const { result } = renderHook(() => usePatientStats("p-1"), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClientStats("p-1"), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(fetchPatientStats).toHaveBeenCalledWith("p-1")
+    expect(fetchClientStats).toHaveBeenCalledWith("p-1")
     expect(result.current.data).toEqual(stats)
   })
 
   it("does not fetch when id is null", () => {
-    renderHook(() => usePatientStats(null), { wrapper: makeWrapper() })
-    expect(fetchPatientStats).not.toHaveBeenCalled()
+    renderHook(() => useClientStats(null), { wrapper: makeWrapper() })
+    expect(fetchClientStats).not.toHaveBeenCalled()
   })
 })
 
-describe("usePatientMutations", () => {
+describe("useClientMutations", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("createMut calls createWalkInPatient", async () => {
-    createWalkInPatient.mockResolvedValueOnce({ id: "p-new" })
-    fetchPatients.mockResolvedValue({ items: [], meta: { total: 0 } })
+  it("createMut calls createWalkInClient", async () => {
+    createWalkInClient.mockResolvedValueOnce({ id: "p-new" })
+    fetchClients.mockResolvedValue({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePatientMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClientMutations(), { wrapper: makeWrapper() })
 
     act(() => {
-      result.current.createMut.mutate({ name: "Walk-in" } as Parameters<typeof createWalkInPatient>[0])
+      result.current.createMut.mutate({ name: "Walk-in" } as Parameters<typeof createWalkInClient>[0])
     })
 
-    await waitFor(() => expect(createWalkInPatient).toHaveBeenCalled())
+    await waitFor(() => expect(createWalkInClient).toHaveBeenCalled())
   })
 
-  it("updateMut calls updatePatient with id and payload", async () => {
-    updatePatient.mockResolvedValueOnce({ id: "p-1" })
+  it("updateMut calls updateClient with id and payload", async () => {
+    updateClient.mockResolvedValueOnce({ id: "p-1" })
 
-    const { result } = renderHook(() => usePatientMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClientMutations(), { wrapper: makeWrapper() })
 
     act(() => {
       result.current.updateMut.mutate({ id: "p-1", payload: { name: "Updated" } } as Parameters<typeof result.current.updateMut.mutate>[0])
     })
 
-    await waitFor(() => expect(updatePatient).toHaveBeenCalledWith("p-1", expect.objectContaining({ name: "Updated" })))
+    await waitFor(() => expect(updateClient).toHaveBeenCalledWith("p-1", expect.objectContaining({ name: "Updated" })))
   })
 
-  it("activateMut calls activatePatient", async () => {
-    activatePatient.mockResolvedValueOnce({ id: "p-1" })
+  it("activateMut calls activateClient", async () => {
+    activateClient.mockResolvedValueOnce({ id: "p-1" })
 
-    const { result } = renderHook(() => usePatientMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClientMutations(), { wrapper: makeWrapper() })
 
     act(() => { result.current.activateMut.mutate("p-1") })
 
-    await waitFor(() => expect(activatePatient).toHaveBeenCalledWith("p-1", expect.anything()))
+    await waitFor(() => expect(activateClient).toHaveBeenCalledWith("p-1", expect.anything()))
   })
 
-  it("deactivateMut calls deactivatePatient", async () => {
-    deactivatePatient.mockResolvedValueOnce({ id: "p-1" })
+  it("deactivateMut calls deactivateClient", async () => {
+    deactivateClient.mockResolvedValueOnce({ id: "p-1" })
 
-    const { result } = renderHook(() => usePatientMutations(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useClientMutations(), { wrapper: makeWrapper() })
 
     act(() => { result.current.deactivateMut.mutate("p-1") })
 
-    await waitFor(() => expect(deactivatePatient).toHaveBeenCalledWith("p-1", expect.anything()))
+    await waitFor(() => expect(deactivateClient).toHaveBeenCalledWith("p-1", expect.anything()))
   })
 })
 
-describe("useInvalidatePatients", () => {
+describe("useInvalidateClients", () => {
   it("returns a callable invalidation function", () => {
-    const { result } = renderHook(() => useInvalidatePatients(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useInvalidateClients(), { wrapper: makeWrapper() })
     expect(typeof result.current).toBe("function")
   })
 })

@@ -12,7 +12,7 @@ import { ErrorBanner } from "@/components/features/error-banner"
 import { getBookingColumns } from "@/components/features/bookings/booking-columns"
 import { AdminCancelDialog } from "@/components/features/bookings/cancel-dialogs"
 import { useBookings, useBookingMutations } from "@/hooks/use-bookings"
-import { usePractitioners } from "@/hooks/use-practitioners"
+import { useEmployees } from "@/hooks/use-employees"
 import { useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
@@ -32,7 +32,7 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
   const queryClient = useQueryClient()
   const { bookings, stats, meta, loading, statsLoading, error, filters, setFilters, resetFilters, hasFilters, setPage } = useBookings()
   const { confirmMut, noShowMut, adminCancelMut } = useBookingMutations()
-  const { practitioners } = usePractitioners()
+  const { employees } = useEmployees()
   const [activeTimeTab, setActiveTimeTab] = useState("all")
   const [search, setSearch] = useState("")
 
@@ -136,17 +136,17 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
             onValueChange: (v) => setFilters({ type: v as typeof filters.type }),
           },
           {
-            key: "practitionerId",
-            value: filters.practitionerId || "all",
-            placeholder: t("bookings.filters.practitioner"),
+            key: "employeeId",
+            value: filters.employeeId || "all",
+            placeholder: t("bookings.filters.employee"),
             options: [
-              { value: "all", label: t("bookings.filters.allPractitioners") },
-              ...practitioners.map((p) => ({
+              { value: "all", label: t("bookings.filters.allEmployees") },
+              ...employees.map((p) => ({
                 value: p.id,
                 label: `${p.user.firstName} ${p.user.lastName}`,
               })),
             ],
-            onValueChange: (v) => setFilters({ practitionerId: v === "all" ? "" : v }),
+            onValueChange: (v) => setFilters({ employeeId: v === "all" ? "" : v }),
           },
           {
             key: "status",

@@ -10,8 +10,8 @@ import type { IconSvgElement } from "@hugeicons/react"
 export interface TimelineAppointment {
   id: string
   time: string
-  patientName: string
-  practitionerName: string
+  clientName: string
+  employeeName: string
   type: "in_person" | "online"
   status: "confirmed" | "pending" | "completed" | "cancelled"
   typeIcon: IconSvgElement
@@ -43,8 +43,8 @@ export function TodayTimeline({ appointments, className }: TodayTimelineProps) {
               <HugeiconsIcon icon={appt.typeIcon} size={16} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{appt.patientName}</p>
-              <p className="truncate text-xs text-muted-foreground">{appt.practitionerName}</p>
+              <p className="truncate text-sm font-medium">{appt.clientName}</p>
+              <p className="truncate text-xs text-muted-foreground">{appt.employeeName}</p>
             </div>
             <StatusBadge status={appt.status} />
           </div>

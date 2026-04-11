@@ -434,7 +434,7 @@ describe('Services Extensions (e2e)', () => {
 
   let superAdmin: AuthResult;
   let receptionist: AuthResult;
-  let patient: AuthResult;
+  let client: AuthResult;
 
   let categoryId: string;
   let serviceId: string;
@@ -456,28 +456,28 @@ describe('Services Extensions (e2e)', () => {
       'receptionist',
     );
 
-    // Register patient
-    const patientRes = await request(httpServer)
+    // Register client
+    const clientRes = await request(httpServer)
       .post(`${API_PREFIX}/auth/register`)
       .send({
         firstName: 'أحمد',
         lastName: 'الراشد',
         phone: '+966501000005',
-        email: 'patient@carekit-test.com',
+        email: 'client@carekit-test.com',
         password: 'P@tientP@ss1',
         gender: 'male',
       });
 
     const token =
-      patientRes.status === 201
-        ? patientRes.body.data.accessToken
+      clientRes.status === 201
+        ? clientRes.body.data.accessToken
         : (
             await request(httpServer)
               .post(`${API_PREFIX}/auth/login`)
-              .send({ email: 'patient@carekit-test.com', password: 'P@tientP@ss1' })
+              .send({ email: 'client@carekit-test.com', password: 'P@tientP@ss1' })
           ).body.data.accessToken;
 
-    patient = { accessToken: token } as AuthResult;
+    client = { accessToken: token } as AuthResult;
 
     // Create category
     const catRes = await request(httpServer)
@@ -545,10 +545,10 @@ describe('Services Extensions (e2e)', () => {
       expectSuccessResponse(res.body);
     });
 
-    it('should reject setting duration options by patient (403)', async () => {
+    it('should reject setting duration options by client (403)', async () => {
       const res = await request(httpServer)
         .put(`${SERVICES_URL}/${serviceId}/duration-options`)
-        .set(getAuthHeaders(patient.accessToken))
+        .set(getAuthHeaders(client.accessToken))
         .send(validOptions)
         .expect(403);
 
@@ -663,10 +663,10 @@ describe('Services Extensions (e2e)', () => {
       expectSuccessResponse(res.body);
     });
 
-    it('should reject by patient (403)', async () => {
+    it('should reject by client (403)', async () => {
       const res = await request(httpServer)
         .put(`${SERVICES_URL}/${serviceId}/booking-types`)
-        .set(getAuthHeaders(patient.accessToken))
+        .set(getAuthHeaders(client.accessToken))
         .send(validBookingTypes)
         .expect(403);
 

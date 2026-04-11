@@ -28,7 +28,7 @@ export function VacationCard({ vacation, onVacationChange }: VacationCardProps) 
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base">
-                {t("vacation.practitionerVacation")}
+                {t("vacation.employeeVacation")}
               </CardTitle>
               <CardDescription className="mt-1">
                 {t("vacation.vacationDescription")}

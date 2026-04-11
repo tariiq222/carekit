@@ -128,10 +128,10 @@ export default function OtpVerifyScreen() {
         dispatch(setCredentials(response.data));
         // OTP verification also auto-verifies email on backend
         const role = getPrimaryRole(response.data.user);
-        if (role === 'practitioner') {
-          router.replace('/(practitioner)/(tabs)/today');
+        if (role === 'employee') {
+          router.replace('/(employee)/(tabs)/today');
         } else {
-          router.replace('/(patient)/(tabs)/home');
+          router.replace('/(client)/(tabs)/home');
         }
       }
     } catch {

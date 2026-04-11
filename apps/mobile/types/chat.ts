@@ -18,7 +18,7 @@ export interface ActionCard {
     | 'booking_created'
     | 'bookings_list'
     | 'services_list'
-    | 'practitioners_list'
+    | 'employees_list'
     | 'slots_list'
     | 'cancellation_requested'
     | 'handoff';

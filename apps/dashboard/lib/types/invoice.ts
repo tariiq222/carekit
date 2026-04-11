@@ -26,8 +26,8 @@ export interface Invoice {
     booking?: {
       id: string
       date: string
-      patient: { firstName: string; lastName: string } | null
-      practitioner: {
+      client: { firstName: string; lastName: string } | null
+      employee: {
         user: { firstName: string; lastName: string }
       }
       service: { nameAr: string; nameEn: string }

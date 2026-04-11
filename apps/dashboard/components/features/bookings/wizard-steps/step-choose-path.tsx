@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 
 /* ─── Types ─── */
 
-export type BookingPath = "service_first" | "practitioner_first"
+export type BookingPath = "service_first" | "employee_first"
 
 interface StepChoosePathProps {
   onSelect: (path: BookingPath) => void
@@ -62,9 +62,9 @@ export function StepChoosePath({ onSelect }: StepChoosePathProps) {
       />
       <PathCard
         icon={UserIcon}
-        title={t("bookings.wizard.step.choosePath.byPractitioner")}
-        description={t("bookings.wizard.step.choosePath.byPractitionerDesc")}
-        onClick={() => onSelect("practitioner_first")}
+        title={t("bookings.wizard.step.choosePath.byEmployee")}
+        description={t("bookings.wizard.step.choosePath.byEmployeeDesc")}
+        onClick={() => onSelect("employee_first")}
       />
     </div>
   )

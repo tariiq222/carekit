@@ -5,11 +5,11 @@ import type {
   RatingListResponse,
 } from '../types/rating.js'
 
-export async function listForPractitioner(
-  practitionerId: string,
+export async function listForEmployee(
+  employeeId: string,
   query: RatingListQuery = {},
 ): Promise<RatingListResponse> {
   return apiRequest<RatingListResponse>(
-    `/practitioners/${practitionerId}/ratings${buildQueryString(query as Record<string, unknown>)}`,
+    `/employees/${employeeId}/ratings${buildQueryString(query as Record<string, unknown>)}`,
   )
 }

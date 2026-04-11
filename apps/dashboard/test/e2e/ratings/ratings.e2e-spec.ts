@@ -1,7 +1,7 @@
 /**
  * CareKit Dashboard — Ratings E2E Tests
  *
- * /ratings is a standalone page showing practitioner ratings.
+ * /ratings is a standalone page showing employee ratings.
  * It uses AllRatingsTab with the PageHeader + Breadcrumbs layout.
  */
 

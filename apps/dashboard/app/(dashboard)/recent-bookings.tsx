@@ -10,18 +10,18 @@ import type { Booking } from "@/lib/types/booking"
 
 const columns: ColumnDef<Booking>[] = [
   {
-    id: "patient",
-    header: "Patient",
+    id: "client",
+    header: "Client",
     cell: ({ row }) => {
-      const p = row.original.patient
+      const p = row.original.client
       return p ? `${p.firstName} ${p.lastName}` : "—"
     },
   },
   {
-    id: "practitioner",
-    header: "Practitioner",
+    id: "employee",
+    header: "Employee",
     cell: ({ row }) => {
-      const u = row.original.practitioner?.user
+      const u = row.original.employee?.user
       return u ? `${u.firstName} ${u.lastName}` : "—"
     },
   },

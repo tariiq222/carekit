@@ -57,14 +57,14 @@ function BehaviourPanel({ t }: { t: (key: string) => string }) {
   const mutation = useWidgetSettingsMutation()
 
   const [showPrice, setShowPrice] = useState(() => data?.widgetShowPrice ?? true)
-  const [anyPractitioner, setAnyPractitioner] = useState(() => data?.widgetAnyPractitioner ?? false)
+  const [anyEmployee, setAnyEmployee] = useState(() => data?.widgetAnyEmployee ?? false)
   const [redirectUrl, setRedirectUrl] = useState(() => data?.widgetRedirectUrl ?? "")
 
   const dataKey = data ? JSON.stringify(data) : null
   useEffect(() => {
     if (!data) return
     setShowPrice(data.widgetShowPrice)
-    setAnyPractitioner(data.widgetAnyPractitioner)
+    setAnyEmployee(data.widgetAnyEmployee)
     setRedirectUrl(data.widgetRedirectUrl ?? "")
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataKey])
@@ -86,10 +86,10 @@ function BehaviourPanel({ t }: { t: (key: string) => string }) {
           </div>
           <div className="flex items-center justify-between py-3 gap-4">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground">{t("settings.widget.anyPractitioner")}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{t("settings.widget.anyPractitionerDesc")}</p>
+              <p className="text-sm font-medium text-foreground">{t("settings.widget.anyEmployee")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("settings.widget.anyEmployeeDesc")}</p>
             </div>
-            <Switch checked={anyPractitioner} onCheckedChange={setAnyPractitioner} />
+            <Switch checked={anyEmployee} onCheckedChange={setAnyEmployee} />
           </div>
         </CardContent>
       </Card>
@@ -103,7 +103,7 @@ function BehaviourPanel({ t }: { t: (key: string) => string }) {
       </Card>
       <div className="flex justify-end mt-auto pt-2">
         <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate(
-          { widgetShowPrice: showPrice, widgetAnyPractitioner: anyPractitioner, widgetRedirectUrl: redirectUrl.trim() || undefined },
+          { widgetShowPrice: showPrice, widgetAnyEmployee: anyEmployee, widgetRedirectUrl: redirectUrl.trim() || undefined },
           { onSuccess: () => toast.success(t("settings.saved")), onError: (err: Error) => toast.error(err.message) }
         )}>
           {t("settings.save")}

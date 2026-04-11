@@ -25,49 +25,49 @@ POST   /auth/reset-password     → { token, newPassword } → { success }
 
 ### 1.2 Bookings (`/api/v1/bookings`)
 ```
-GET    /bookings                → Query: { page, limit, status?, patientId?, practitionerId?, dateFrom?, dateTo?, branchId? } → { data: Booking[], meta: PaginationMeta }
+GET    /bookings                → Query: { page, limit, status?, clientId?, employeeId?, dateFrom?, dateTo?, branchId? } → { data: Booking[], meta: PaginationMeta }
 GET    /bookings/:id            → {} → { booking: Booking }
 POST   /bookings                → CreateBookingDto → { booking: Booking }
 PATCH  /bookings/:id            → UpdateBookingDto → { booking: Booking }
 DELETE /bookings/:id            → {} → { success }
 POST   /bookings/:id/cancel     → { reason?, cancellationFee? } → { booking: Booking }
-POST   /bookings/:id/reschedule → { newDate, newTime, newPractitionerId? } → { booking: Booking }
+POST   /bookings/:id/reschedule → { newDate, newTime, newEmployeeId? } → { booking: Booking }
 POST   /bookings/:id/check-in   → {} → { booking: Booking }
 POST   /bookings/:id/no-show    → {} → { booking: Booking }
 GET    /bookings/:id/history    → {} → { history: BookingHistory[] }
-GET    /bookings/slots          → Query: { practitionerId, serviceId, date, branchId } → { slots: TimeSlot[] }
+GET    /bookings/slots          → Query: { employeeId, serviceId, date, branchId } → { slots: TimeSlot[] }
 GET    /bookings/walk-in        → Query: { branchId, date } → { bookings: Booking[] }
 ```
 
-### 1.3 Patients (`/api/v1/patients`)
+### 1.3 Clients (`/api/v1/clients`)
 ```
-GET    /patients                → Query: { page, limit, search?, status?, branchId? } → { data: Patient[], meta: PaginationMeta }
-GET    /patients/:id            → {} → { patient: Patient }
-POST   /patients                → CreatePatientDto → { patient: Patient }
-PATCH  /patients/:id            → UpdatePatientDto → { patient: Patient }
-DELETE /patients/:id            → {} → { success }
-GET    /patients/:id/bookings   → Query: { page, limit, status? } → { data: Booking[], meta: PaginationMeta }
-GET    /patients/:id/payments    → Query: { page, limit } → { data: Payment[], meta: PaginationMeta }
-GET    /patients/:id/balance     → {} → { balance: number }
-POST   /patients/:id/balance    → { amount, type: 'add'|'subtract', reason } → { balance: number }
-GET    /patients/:id/documents   → {} → { documents: Document[] }
-POST   /patients/:id/documents   → FormData → { document: Document }
-DELETE /patients/:id/documents/:docId → {} → { success }
+GET    /clients                → Query: { page, limit, search?, status?, branchId? } → { data: Client[], meta: PaginationMeta }
+GET    /clients/:id            → {} → { client: Client }
+POST   /clients                → CreateClientDto → { client: Client }
+PATCH  /clients/:id            → UpdateClientDto → { client: Client }
+DELETE /clients/:id            → {} → { success }
+GET    /clients/:id/bookings   → Query: { page, limit, status? } → { data: Booking[], meta: PaginationMeta }
+GET    /clients/:id/payments    → Query: { page, limit } → { data: Payment[], meta: PaginationMeta }
+GET    /clients/:id/balance     → {} → { balance: number }
+POST   /clients/:id/balance    → { amount, type: 'add'|'subtract', reason } → { balance: number }
+GET    /clients/:id/documents   → {} → { documents: Document[] }
+POST   /clients/:id/documents   → FormData → { document: Document }
+DELETE /clients/:id/documents/:docId → {} → { success }
 ```
 
-### 1.4 Practitioners (`/api/v1/practitioners`)
+### 1.4 Employees (`/api/v1/employees`)
 ```
-GET    /practitioners                    → Query: { page, limit, search?, specialtyId?, branchId?, status? } → { data: Practitioner[], meta: PaginationMeta }
-GET    /practitioners/:id               → {} → { practitioner: Practitioner }
-POST   /practitioners                   → CreatePractitionerDto → { practitioner: Practitioner }
-PATCH  /practitioners/:id               → UpdatePractitionerDto → { practitioner: Practitioner }
-DELETE /practitioners/:id               → {} → { success }
-GET    /practitioners/:id/schedule      → Query: { dateFrom, dateTo } → { schedule: ScheduleBlock[] }
-POST   /practitioners/:id/schedule      → { blocks: ScheduleBlock[] } → { schedule: ScheduleBlock[] }
-GET    /practitioners/:id/availability   → Query: { serviceId, date } → { slots: TimeSlot[] }
-GET    /practitioners/:id/bookings       → Query: { page, limit, dateFrom?, dateTo?, status? } → { data: Booking[], meta: PaginationMeta }
-GET    /practitioners/:id/ratings        → Query: { page, limit } → { data: Rating[], meta: PaginationMeta }
-GET    /practitioners/:id/stats         → Query: { period? } → { stats: PractitionerStats }
+GET    /employees                    → Query: { page, limit, search?, specialtyId?, branchId?, status? } → { data: Employee[], meta: PaginationMeta }
+GET    /employees/:id               → {} → { employee: Employee }
+POST   /employees                   → CreateEmployeeDto → { employee: Employee }
+PATCH  /employees/:id               → UpdateEmployeeDto → { employee: Employee }
+DELETE /employees/:id               → {} → { success }
+GET    /employees/:id/schedule      → Query: { dateFrom, dateTo } → { schedule: ScheduleBlock[] }
+POST   /employees/:id/schedule      → { blocks: ScheduleBlock[] } → { schedule: ScheduleBlock[] }
+GET    /employees/:id/availability   → Query: { serviceId, date } → { slots: TimeSlot[] }
+GET    /employees/:id/bookings       → Query: { page, limit, dateFrom?, dateTo?, status? } → { data: Booking[], meta: PaginationMeta }
+GET    /employees/:id/ratings        → Query: { page, limit } → { data: Rating[], meta: PaginationMeta }
+GET    /employees/:id/stats         → Query: { period? } → { stats: EmployeeStats }
 ```
 
 ### 1.5 Services (`/api/v1/services`)
@@ -85,7 +85,7 @@ DELETE /services/categories/:id        → {} → { success }
 
 ### 1.6 Payments (`/api/v1/payments`)
 ```
-GET    /payments                       → Query: { page, limit, status?, method?, bookingId?, patientId?, dateFrom?, dateTo? } → { data: Payment[], meta: PaginationMeta }
+GET    /payments                       → Query: { page, limit, status?, method?, bookingId?, clientId?, dateFrom?, dateTo? } → { data: Payment[], meta: PaginationMeta }
 GET    /payments/:id                   → {} → { payment: Payment }
 POST   /payments                       → CreatePaymentDto → { payment: Payment }
 POST   /ayments/:id/refund             → { amount?, reason? } → { payment: Payment }
@@ -95,7 +95,7 @@ POST   /payments/webhook/moyasar       → MoyasarWebhookPayload → { received:
 
 ### 1.7 Invoices (`/api/v1/invoices`)
 ```
-GET    /invoices                       → Query: { page, limit, status?, patientId?, bookingId? } → { data: Invoice[], meta: PaginationMeta }
+GET    /invoices                       → Query: { page, limit, status?, clientId?, bookingId? } → { data: Invoice[], meta: PaginationMeta }
 GET    /invoices/:id                   → {} → { invoice: Invoice }
 GET    /invoices/:id/pdf               → {} → PDF
 POST   /invoices/:id/send              → { email? } → { success }
@@ -135,9 +135,9 @@ DELETE /specialties/:id                → {} → { success }
 
 ### 1.11 Ratings (`/api/v1/ratings`)
 ```
-GET    /ratings                        → Query: { page, limit, practitionerId?, bookingId?, rating? } → { data: Rating[], meta: PaginationMeta }
+GET    /ratings                        → Query: { page, limit, employeeId?, bookingId?, rating? } → { data: Rating[], meta: PaginationMeta }
 POST   /ratings                        → { bookingId, rating, comment? } → { rating: Rating }
-GET    /ratings/practitioner/:id       → Query: { period? } → { average: number, distribution: number[], total: number }
+GET    /ratings/employee/:id       → Query: { period? } → { average: number, distribution: number[], total: number }
 ```
 
 ### 1.12 Notifications (`/api/v1/notifications`)
@@ -159,8 +159,8 @@ GET    /activity-log/:entityType/:id   → {} → { logs: ActivityLogEntry[] }
 ```
 GET    /reports/revenue                → Query: { dateFrom, dateTo, branchId?, groupBy: 'day'|'week'|'month' } → { data: RevenueReportItem[] }
 GET    /reports/appointments          → Query: { dateFrom, dateTo, branchId?, status? } → { data: AppointmentReportItem[] }
-GET    /reports/practitioners          → Query: { dateFrom, dateTo, branchId? } → { data: PractitionerReportItem[] }
-GET    /reports/patients              → Query: { dateFrom, dateTo, branchId? } → { data: PatientReportItem[] }
+GET    /reports/employees          → Query: { dateFrom, dateTo, branchId? } → { data: EmployeeReportItem[] }
+GET    /reports/clients              → Query: { dateFrom, dateTo, branchId? } → { data: ClientReportItem[] }
 GET    /reports/services               → Query: { dateFrom, dateTo, branchId? } → { data: ServiceReportItem[] }
 GET    /reports/no-shows               → Query: { dateFrom, dateTo, branchId? } → { data: NoShowReportItem[] }
 POST   /reports/export                 → { reportType, format: 'pdf'|'excel', filters } → { downloadUrl: string }
@@ -239,8 +239,8 @@ GET    /intake-forms/:id                → {} → { form: IntakeForm }
 POST   /intake-forms                    → CreateIntakeFormDto → { form: IntakeForm }
 PATCH  /intake-forms/:id               → UpdateIntakeFormDto → { form: IntakeForm }
 DELETE /intake-forms/:id               → {} → { success }
-GET    /intake-forms/:id/submissions    → Query: { page, limit, patientId? } → { data: IntakeFormSubmission[], meta: PaginationMeta }
-POST   /intake-forms/:id/submit         → { patientId, answers } → { submission: IntakeFormSubmission }
+GET    /intake-forms/:id/submissions    → Query: { page, limit, clientId? } → { data: IntakeFormSubmission[], meta: PaginationMeta }
+POST   /intake-forms/:id/submit         → { clientId, answers } → { submission: IntakeFormSubmission }
 ```
 
 ### 1.22 ZATCA (`/api/v1/zatca`)
@@ -321,7 +321,7 @@ export function usePermissions() {
     isOwner: user?.role === 'OWNER',
     isAdmin: user?.role === 'ADMIN',
     isReceptionist: user?.role === 'RECEPTIONIST',
-    isPractitioner: user?.role === 'PRACTITIONER',
+    isEmployee: user?.role === 'EMPLOYEE',
   };
 }
 ```
@@ -372,8 +372,8 @@ export function useCancelBooking() {
 
 export function useRescheduleBooking() {
   return useMutation({
-    mutationFn: ({ id, newDate, newTime, newPractitionerId }: RescheduleDto) => 
-      api.post(`/bookings/${id}/reschedule`, { newDate, newTime, newPractitionerId }).then(r => r.data),
+    mutationFn: ({ id, newDate, newTime, newEmployeeId }: RescheduleDto) => 
+      api.post(`/bookings/${id}/reschedule`, { newDate, newTime, newEmployeeId }).then(r => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       toast.success('تم إعادة جدولة الحجز');
@@ -381,69 +381,69 @@ export function useRescheduleBooking() {
   });
 }
 
-export function useAvailableSlots(practitionerId: string, serviceId: string, date: string) {
+export function useAvailableSlots(employeeId: string, serviceId: string, date: string) {
   return useQuery({
-    queryKey: ['bookings', 'slots', practitionerId, serviceId, date],
+    queryKey: ['bookings', 'slots', employeeId, serviceId, date],
     queryFn: () => api.get<TimeSlot[]>(`/bookings/slots`, { 
-      params: { practitionerId, serviceId, date, branchId: activeBranchId } 
+      params: { employeeId, serviceId, date, branchId: activeBranchId } 
     }).then(r => r.data),
-    enabled: !!practitionerId && !!serviceId && !!date,
+    enabled: !!employeeId && !!serviceId && !!date,
   });
 }
 ```
 
-### 2.3 Patients Hooks
+### 2.3 Clients Hooks
 ```typescript
-// hooks/usePatients.ts
-export function usePatients(filters: PatientFilters) {
+// hooks/useClients.ts
+export function useClients(filters: ClientFilters) {
   return useQuery({
-    queryKey: ['patients', filters],
-    queryFn: () => api.get<Patient[]>('/patients', { params: filters }).then(r => r.data),
+    queryKey: ['clients', filters],
+    queryFn: () => api.get<Client[]>('/clients', { params: filters }).then(r => r.data),
   });
 }
 
-export function usePatient(id: string) {
+export function useClient(id: string) {
   return useQuery({
-    queryKey: ['patients', id],
-    queryFn: () => api.get<Patient>(`/patients/${id}`).then(r => r.data),
+    queryKey: ['clients', id],
+    queryFn: () => api.get<Client>(`/clients/${id}`).then(r => r.data),
     enabled: !!id,
   });
 }
 
-export function usePatientBookings(patientId: string, filters?: PaginationFilters) {
+export function useClientBookings(clientId: string, filters?: PaginationFilters) {
   return useQuery({
-    queryKey: ['patients', patientId, 'bookings', filters],
-    queryFn: () => api.get<Booking[]>(`/patients/${patientId}/bookings`, { params: filters }).then(r => r.data),
-    enabled: !!patientId,
+    queryKey: ['clients', clientId, 'bookings', filters],
+    queryFn: () => api.get<Booking[]>(`/clients/${clientId}/bookings`, { params: filters }).then(r => r.data),
+    enabled: !!clientId,
   });
 }
 
-export function usePatientBalance(patientId: string) {
+export function useClientBalance(clientId: string) {
   return useQuery({
-    queryKey: ['patients', patientId, 'balance'],
-    queryFn: () => api.get<{ balance: number }>(`/patients/${patientId}/balance`).then(r => r.data),
-    enabled: !!patientId,
+    queryKey: ['clients', clientId, 'balance'],
+    queryFn: () => api.get<{ balance: number }>(`/clients/${clientId}/balance`).then(r => r.data),
+    enabled: !!clientId,
   });
 }
 
-// hooks/usePatientMutations.ts
-export function useCreatePatient() {
+// hooks/useClientMutations.ts
+export function useCreateClient() {
   return useMutation({
-    mutationFn: (data: CreatePatientDto) => 
-      api.post<Patient>('/patients', data).then(r => r.data),
+    mutationFn: (data: CreateClientDto) => 
+      api.post<Client>('/clients', data).then(r => r.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
       toast.success('تم إضافة المريض بنجاح');
     },
   });
 }
 
-export function useUpdatePatient() {
+export function useUpdateClient() {
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdatePatientDto }) => 
-      api.patch<Patient>(`/patients/${id}`, data).then(r => r.data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateClientDto }) => 
+      api.patch<Client>(`/clients/${id}`, data).then(r => r.data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['patients', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['clients', data.id] });
       toast.success('تم تحديث بيانات المريض');
     },
   });
@@ -451,61 +451,61 @@ export function useUpdatePatient() {
 
 export function useAdjustBalance() {
   return useMutation({
-    mutationFn: ({ patientId, amount, type, reason }: AdjustBalanceDto) => 
-      api.post(`/patients/${patientId}/balance`, { amount, type, reason }).then(r => r.data),
+    mutationFn: ({ clientId, amount, type, reason }: AdjustBalanceDto) => 
+      api.post(`/clients/${clientId}/balance`, { amount, type, reason }).then(r => r.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
       toast.success('تم تعديل الرصيد');
     },
   });
 }
 ```
 
-### 2.4 Practitioners Hooks
+### 2.4 Employees Hooks
 ```typescript
-// hooks/usePractitioners.ts
-export function usePractitioners(filters: PractitionerFilters) {
+// hooks/useEmployees.ts
+export function useEmployees(filters: EmployeeFilters) {
   return useQuery({
-    queryKey: ['practitioners', filters],
-    queryFn: () => api.get<Practitioner[]>('/practitioners', { params: filters }).then(r => r.data),
+    queryKey: ['employees', filters],
+    queryFn: () => api.get<Employee[]>('/employees', { params: filters }).then(r => r.data),
   });
 }
 
-export function usePractitioner(id: string) {
+export function useEmployee(id: string) {
   return useQuery({
-    queryKey: ['practitioners', id],
-    queryFn: () => api.get<Practitioner>(`/practitioners/${id}`).then(r => r.data),
+    queryKey: ['employees', id],
+    queryFn: () => api.get<Employee>(`/employees/${id}`).then(r => r.data),
     enabled: !!id,
   });
 }
 
-export function usePractitionerSchedule(practitionerId: string, dateFrom: string, dateTo: string) {
+export function useEmployeeSchedule(employeeId: string, dateFrom: string, dateTo: string) {
   return useQuery({
-    queryKey: ['practitioners', practitionerId, 'schedule', dateFrom, dateTo],
-    queryFn: () => api.get<ScheduleBlock[]>(`/practitioners/${practitionerId}/schedule`, {
+    queryKey: ['employees', employeeId, 'schedule', dateFrom, dateTo],
+    queryFn: () => api.get<ScheduleBlock[]>(`/employees/${employeeId}/schedule`, {
       params: { dateFrom, dateTo }
     }).then(r => r.data),
-    enabled: !!practitionerId && !!dateFrom && !!dateTo,
+    enabled: !!employeeId && !!dateFrom && !!dateTo,
   });
 }
 
-export function usePractitionerAvailability(practitionerId: string, serviceId: string, date: string) {
+export function useEmployeeAvailability(employeeId: string, serviceId: string, date: string) {
   return useQuery({
-    queryKey: ['practitioners', practitionerId, 'availability', serviceId, date],
-    queryFn: () => api.get<TimeSlot[]>(`/practitioners/${practitionerId}/availability`, {
+    queryKey: ['employees', employeeId, 'availability', serviceId, date],
+    queryFn: () => api.get<TimeSlot[]>(`/employees/${employeeId}/availability`, {
       params: { serviceId, date }
     }).then(r => r.data),
-    enabled: !!practitionerId && !!serviceId && !!date,
+    enabled: !!employeeId && !!serviceId && !!date,
   });
 }
 
-export function usePractitionerStats(practitionerId: string, period?: string) {
+export function useEmployeeStats(employeeId: string, period?: string) {
   return useQuery({
-    queryKey: ['practitioners', practitionerId, 'stats', period],
-    queryFn: () => api.get<PractitionerStats>(`/practitioners/${practitionerId}/stats`, {
+    queryKey: ['employees', employeeId, 'stats', period],
+    queryFn: () => api.get<EmployeeStats>(`/employees/${employeeId}/stats`, {
       params: { period }
     }).then(r => r.data),
-    enabled: !!practitionerId,
+    enabled: !!employeeId,
   });
 }
 ```
@@ -607,10 +607,10 @@ export function useAppointmentsReport(filters: ReportFilters) {
   });
 }
 
-export function usePractitionersReport(filters: ReportFilters) {
+export function useEmployeesReport(filters: ReportFilters) {
   return useQuery({
-    queryKey: ['reports', 'practitioners', filters],
-    queryFn: () => api.get<PractitionerReportItem[]>('/reports/practitioners', { params: filters }).then(r => r.data),
+    queryKey: ['reports', 'employees', filters],
+    queryFn: () => api.get<EmployeeReportItem[]>('/reports/employees', { params: filters }).then(r => r.data),
   });
 }
 
@@ -894,8 +894,8 @@ api.interceptors.response.use(
               ┌───────────────┼───────────────┐
               ▼               ▼               ▼
         Step 1           Step 2           Step 3
-      Patient ID       Service +         Time Slot
-      validation      Practitioner      Selection
+      Client ID       Service +         Time Slot
+      validation      Employee      Selection
                               │
                               ▼
                     useCreateBooking mutation
@@ -969,11 +969,11 @@ app/(dashboard)/[module]/page.tsx          # ≤120 lines - orchestration only
 | Type | Naming | Example |
 |------|--------|---------|
 | Pages | `page.tsx` | `bookings/page.tsx` |
-| Feature Components | `kebab-case` | `booking-list.tsx`, `patient-form.tsx` |
-| Hooks | `use[kebab-case].ts` | `use-bookings.ts`, `use-patient-mutations.ts` |
-| API Layer | `[kebab-case].ts` | `bookings.ts`, `patients.ts` |
-| Schemas | `[kebab-case].schema.ts` | `booking.schema.ts`, `patient.schema.ts` |
-| Types | `[kebab-case].ts` | `booking.types.ts`, `patient.types.ts` |
+| Feature Components | `kebab-case` | `booking-list.tsx`, `client-form.tsx` |
+| Hooks | `use[kebab-case].ts` | `use-bookings.ts`, `use-client-mutations.ts` |
+| API Layer | `[kebab-case].ts` | `bookings.ts`, `clients.ts` |
+| Schemas | `[kebab-case].schema.ts` | `booking.schema.ts`, `client.schema.ts` |
+| Types | `[kebab-case].ts` | `booking.types.ts`, `client.types.ts` |
 | Translations | `[lang].[module].ts` | `ar.bookings.ts`, `en.bookings.ts` |
 
 ### 5.3 Component Props Pattern
@@ -1074,10 +1074,10 @@ interface PaginatedResponse<T> {
 // Booking
 interface Booking {
   id: string;
-  patientId: string;
-  patient: Patient;
-  practitionerId: string;
-  practitioner: Practitioner;
+  clientId: string;
+  client: Client;
+  employeeId: string;
+  employee: Employee;
   serviceId: string;
   service: Service;
   branchId: string;
@@ -1111,8 +1111,8 @@ enum BookingType {
   WALK_IN = 'walk_in',
 }
 
-// Patient
-interface Patient {
+// Client
+interface Client {
   id: string;
   firstName: string;
   lastName: string;
@@ -1128,8 +1128,8 @@ interface Patient {
   updatedAt: string;
 }
 
-// Practitioner
-interface Practitioner {
+// Employee
+interface Employee {
   id: string;
   userId: string;
   user: User;
@@ -1169,8 +1169,8 @@ interface Payment {
   id: string;
   bookingId: string;
   booking?: Booking;
-  patientId: string;
-  patient: Patient;
+  clientId: string;
+  client: Client;
   amount: number; // halalat
   method: PaymentMethod;
   status: PaymentStatus;
@@ -1317,8 +1317,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
 ```typescript
 // schemas/booking.schema.ts
 export const createBookingSchema = z.object({
-  patientId: z.string().min(1, 'المريض مطلوب'),
-  practitionerId: z.string().min(1, 'الطبيب مطلوب'),
+  clientId: z.string().min(1, 'المريض مطلوب'),
+  employeeId: z.string().min(1, 'الطبيب مطلوب'),
   serviceId: z.string().min(1, 'الخدمة مطلوبة'),
   branchId: z.string().min(1, 'الفرع مطلوب'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'التاريخ غير صحيح'),
@@ -1330,14 +1330,14 @@ export const createBookingSchema = z.object({
 export const rescheduleBookingSchema = z.object({
   newDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   newTime: z.string().regex(/^\d{2}:\d{2}$/),
-  newPractitionerId: z.string().optional(),
+  newEmployeeId: z.string().optional(),
 });
 
 export type CreateBookingDto = z.infer<typeof createBookingSchema>;
 export type RescheduleBookingDto = z.infer<typeof rescheduleBookingSchema>;
 
-// schemas/patient.schema.ts
-export const createPatientSchema = z.object({
+// schemas/client.schema.ts
+export const createClientSchema = z.object({
   firstName: z.string().min(1, 'الاسم الأول مطلوب').max(100),
   lastName: z.string().min(1, 'اسم العائلة مطلوب').max(100),
   email: z.string().email('البريد الإلكتروني غير صحيح').optional().or(z.literal('')),
@@ -1348,7 +1348,7 @@ export const createPatientSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type CreatePatientDto = z.infer<typeof createPatientSchema>;
+export type CreateClientDto = z.infer<typeof createClientSchema>;
 ```
 
 ---
@@ -1358,12 +1358,12 @@ export type CreatePatientDto = z.infer<typeof createPatientSchema>;
 ### 9.1 Infinite Query (Load More)
 
 ```typescript
-// hooks/usePatientsInfinite.ts
-export function usePatientsInfinite(filters: PatientFilters) {
+// hooks/useClientsInfinite.ts
+export function useClientsInfinite(filters: ClientFilters) {
   return useInfiniteQuery({
-    queryKey: ['patients', 'infinite', filters],
+    queryKey: ['clients', 'infinite', filters],
     queryFn: ({ pageParam = 1 }) => 
-      api.get<Patient[]>('/patients', { 
+      api.get<Client[]>('/clients', { 
         params: { ...filters, page: pageParam, limit: 20 } 
       }).then(r => r.data),
     initialPageParam: 1,
@@ -1375,12 +1375,12 @@ export function usePatientsInfinite(filters: PatientFilters) {
 }
 
 // Component usage
-const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = usePatientsInfinite(filters);
+const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useClientsInfinite(filters);
 
 return (
   <>
-    {data.pages.flatMap(page => page.data).map(patient => (
-      <PatientRow key={patient.id} patient={patient} />
+    {data.pages.flatMap(page => page.data).map(client => (
+      <ClientRow key={client.id} client={client} />
     ))}
     {hasNextPage && (
       <Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
@@ -1471,11 +1471,11 @@ export function useServiceOptions(branchId: string | null) {
   });
 }
 
-// Practitioner options depend on selected service
-export function usePractitionerOptions(serviceId: string | null, branchId: string | null) {
+// Employee options depend on selected service
+export function useEmployeeOptions(serviceId: string | null, branchId: string | null) {
   return useQuery({
-    queryKey: ['practitioners', 'by-service', serviceId, branchId],
-    queryFn: () => api.get<Practitioner[]>('/practitioners', {
+    queryKey: ['employees', 'by-service', serviceId, branchId],
+    queryFn: () => api.get<Employee[]>('/employees', {
       params: { serviceId, branchId, status: 'available' }
     }).then(r => r.data),
     enabled: !!serviceId && !!branchId, // Won't run until both are set
@@ -1495,8 +1495,8 @@ lib/api/
 │
 ├── auth.ts                # Auth API calls
 ├── bookings.ts            # Booking API calls
-├── patients.ts            # Patient API calls
-├── practitioners.ts       # Practitioner API calls
+├── clients.ts            # Client API calls
+├── employees.ts       # Employee API calls
 ├── services.ts            # Service API calls
 ├── payments.ts            # Payment API calls
 ├── invoices.ts            # Invoice API calls

@@ -1,6 +1,6 @@
-# CareKit Mobile — Patient Screens Specification
+# CareKit Mobile — Client Screens Specification
 
-24 screens for the patient experience. All screens support RTL-first (Arabic primary) and LTR (English).
+24 screens for the client experience. All screens support RTL-first (Arabic primary) and LTR (English).
 
 ---
 
@@ -15,23 +15,23 @@
 | P05 | OTP Verification | `/auth/verify-otp` | - |
 | P06 | Register | `/auth/register` | - |
 | P07 | Forgot Password | `/auth/forgot-password` | - |
-| P08 | Home | `/(patient)/home` | Home |
-| P09 | Notifications | `/(patient)/notifications` | - |
-| P10 | Specialty List | `/(patient)/specialties` | Home |
-| P11 | Practitioner List | `/(patient)/practitioners` | Home |
-| P12 | Practitioner Profile | `/(patient)/practitioners/[id]` | Home |
-| P13 | Service List | `/(patient)/services` | Home |
-| P14 | Booking - Type | `/(patient)/booking/type` | Home |
-| P15 | Booking - Date & Time | `/(patient)/booking/schedule` | Home |
-| P16 | Booking - Confirm | `/(patient)/booking/confirm` | Home |
-| P17 | Payment | `/(patient)/booking/payment` | Home |
-| P18 | Bank Transfer Upload | `/(patient)/booking/bank-transfer` | Home |
-| P19 | Booking Confirmation | `/(patient)/booking/success` | Home |
-| P20 | My Appointments | `/(patient)/appointments` | Bookings |
-| P21 | Appointment Detail | `/(patient)/appointments/[id]` | Bookings |
-| P22 | Chat (AI) | `/(patient)/chat` | Chat |
-| P23 | Profile | `/(patient)/profile` | Profile |
-| P24 | About & FAQ | `/(patient)/about` | Profile |
+| P08 | Home | `/(client)/home` | Home |
+| P09 | Notifications | `/(client)/notifications` | - |
+| P10 | Specialty List | `/(client)/specialties` | Home |
+| P11 | Employee List | `/(client)/employees` | Home |
+| P12 | Employee Profile | `/(client)/employees/[id]` | Home |
+| P13 | Service List | `/(client)/services` | Home |
+| P14 | Booking - Type | `/(client)/booking/type` | Home |
+| P15 | Booking - Date & Time | `/(client)/booking/schedule` | Home |
+| P16 | Booking - Confirm | `/(client)/booking/confirm` | Home |
+| P17 | Payment | `/(client)/booking/payment` | Home |
+| P18 | Bank Transfer Upload | `/(client)/booking/bank-transfer` | Home |
+| P19 | Booking Confirmation | `/(client)/booking/success` | Home |
+| P20 | My Appointments | `/(client)/appointments` | Bookings |
+| P21 | Appointment Detail | `/(client)/appointments/[id]` | Bookings |
+| P22 | Chat (AI) | `/(client)/chat` | Chat |
+| P23 | Profile | `/(client)/profile` | Profile |
+| P24 | About & FAQ | `/(client)/about` | Profile |
 
 ---
 
@@ -230,7 +230,7 @@
 
 ## P06 — Register
 
-**Purpose:** New patient registration
+**Purpose:** New client registration
 
 **Layout:**
 ```
@@ -335,7 +335,7 @@ Then after OTP verification, show new password form:
 
 ## P08 — Home
 
-**Purpose:** Patient landing page with quick actions and overview
+**Purpose:** Client landing page with quick actions and overview
 
 **Layout:**
 ```
@@ -384,7 +384,7 @@ Then after OTP verification, show new password form:
 2. **Next appointment card:** (if exists) Shows next upcoming appointment with quick view
 3. **Book appointment CTA:** Prominent button
 4. **Specialties carousel:** Horizontal scroll of specialty icons
-5. **Featured practitioners:** Top-rated practitioners
+5. **Featured employees:** Top-rated employees
 6. **Services preview:** Popular services with prices
 
 **Data:** All from API. Pull-to-refresh supported.
@@ -395,7 +395,7 @@ Then after OTP verification, show new password form:
 
 ## P09 — Notifications
 
-**Purpose:** All notifications for the patient
+**Purpose:** All notifications for the client
 
 **Layout:**
 ```
@@ -478,19 +478,19 @@ Then after OTP verification, show new password form:
 **Behavior:**
 - Grid layout (2 columns)
 - Search filters by name (Arabic or English)
-- Tap specialty → P11 (Practitioner List filtered by specialty)
-- Shows practitioner count per specialty
+- Tap specialty → P11 (Employee List filtered by specialty)
+- Shows employee count per specialty
 
 ---
 
-## P11 — Practitioner List
+## P11 — Employee List
 
-**Purpose:** Browse practitioners (filtered by specialty or all)
+**Purpose:** Browse employees (filtered by specialty or all)
 
 **Layout:**
 ```
 ┌──────────────────────────────┐
-│ ←    الأطباء / Practitioners  │
+│ ←    الأطباء / Employees  │
 │──────────────────────────────│
 │ [فلتر: طب أسنان ×]           │
 │                              │
@@ -522,15 +522,15 @@ Then after OTP verification, show new password form:
 - Sort options: rating, name, price
 - Filter chip for active specialty filter (removable)
 - Shows prices for all consultation types
-- Tap practitioner → P12
+- Tap employee → P12
 
 **Prices:** Displayed in halalat converted to SAR (ر.س). Three price tags for clinic/phone/video.
 
 ---
 
-## P12 — Practitioner Profile
+## P12 — Employee Profile
 
-**Purpose:** Detailed practitioner info + book button
+**Purpose:** Detailed employee info + book button
 
 **Layout:**
 ```
@@ -578,7 +578,7 @@ Then after OTP verification, show new password form:
 - Scrollable content
 - Fixed "Book Appointment" button at bottom
 - Reviews section shows latest 3, with "View all" link
-- Tap "Book" → P14 with practitioner pre-selected
+- Tap "Book" → P14 with employee pre-selected
 
 ---
 
@@ -662,7 +662,7 @@ Then after OTP verification, show new password form:
 ```
 
 **Behavior:**
-- If practitioner is pre-selected, show their prices
+- If employee is pre-selected, show their prices
 - Selection highlights card with primary color border
 - Tapping a card → navigate to P15
 - Progress bar: step 1 of 4
@@ -709,9 +709,9 @@ Then after OTP verification, show new password form:
 
 **Behavior:**
 - Calendar: past dates disabled, unavailable dates grayed out
-- Time slots: fetched based on practitioner availability - existing bookings
+- Time slots: fetched based on employee availability - existing bookings
 - Booked slots hidden or disabled
-- Practitioner vacation days disabled
+- Employee vacation days disabled
 - Selected date highlighted with primary color
 - Selected time slot highlighted
 - "Next" enabled only when both date and time selected
@@ -917,7 +917,7 @@ Then after OTP verification, show new password form:
 
 ## P20 — My Appointments
 
-**Purpose:** View all patient appointments
+**Purpose:** View all client appointments
 
 **Layout:**
 ```
@@ -952,7 +952,7 @@ Then after OTP verification, show new password form:
 
 **Behavior:**
 - 3 tabs: upcoming (default), past, cancelled
-- Each card shows: type icon, practitioner, specialty, date/time, status badge
+- Each card shows: type icon, employee, specialty, date/time, status badge
 - Tap → P21 (Appointment Detail)
 - Pull-to-refresh
 - Empty state with CTA to book
@@ -1001,7 +1001,7 @@ Then after OTP verification, show new password form:
 
 **Conditional elements:**
 - **Video booking:** Show "Join Zoom" button (opens Zoom via deep link)
-- **Phone booking:** Show practitioner phone number
+- **Phone booking:** Show employee phone number
 - **Completed:** Show "Rate" button (if not yet rated)
 - **Pending cancellation:** Show "Cancellation under review" message
 - **Cancelled:** Show cancellation reason + refund status
@@ -1063,7 +1063,7 @@ Then after OTP verification, show new password form:
 
 ## P23 — Profile
 
-**Purpose:** Patient profile and settings
+**Purpose:** Client profile and settings
 
 **Layout:**
 ```

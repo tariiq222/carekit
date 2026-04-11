@@ -4,63 +4,63 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 
 const {
-  fetchPractitioners,
-  fetchPractitioner,
+  fetchEmployees,
+  fetchEmployee,
   fetchAvailability,
   fetchBreaks,
   fetchVacations,
-  fetchPractitionerServices,
-  fetchPractitionerServiceTypes,
+  fetchEmployeeServices,
+  fetchEmployeeServiceTypes,
 } = vi.hoisted(() => ({
-  fetchPractitioners: vi.fn(),
-  fetchPractitioner: vi.fn(),
+  fetchEmployees: vi.fn(),
+  fetchEmployee: vi.fn(),
   fetchAvailability: vi.fn(),
   fetchBreaks: vi.fn(),
   fetchVacations: vi.fn(),
-  fetchPractitionerServices: vi.fn(),
-  fetchPractitionerServiceTypes: vi.fn(),
+  fetchEmployeeServices: vi.fn(),
+  fetchEmployeeServiceTypes: vi.fn(),
 }))
 
-vi.mock("@/lib/api/practitioners", () => ({
-  fetchPractitioners,
-  fetchPractitioner,
+vi.mock("@/lib/api/employees", () => ({
+  fetchEmployees,
+  fetchEmployee,
   fetchAvailability,
   fetchBreaks,
   fetchVacations,
-  fetchPractitionerServices,
-  fetchPractitionerServiceTypes,
+  fetchEmployeeServices,
+  fetchEmployeeServiceTypes,
   // mutation fns — not used by query hooks but must be present for the module
-  createPractitioner: vi.fn(),
-  onboardPractitioner: vi.fn(),
-  updatePractitioner: vi.fn(),
-  deletePractitioner: vi.fn(),
+  createEmployee: vi.fn(),
+  onboardEmployee: vi.fn(),
+  updateEmployee: vi.fn(),
+  deleteEmployee: vi.fn(),
   setAvailability: vi.fn(),
   setBreaks: vi.fn(),
   createVacation: vi.fn(),
   deleteVacation: vi.fn(),
   assignService: vi.fn(),
-  updatePractitionerService: vi.fn(),
-  removePractitionerService: vi.fn(),
+  updateEmployeeService: vi.fn(),
+  removeEmployeeService: vi.fn(),
   fetchSlots: vi.fn(),
 }))
 
-vi.mock("@/hooks/use-practitioner-mutations", () => ({
-  usePractitionerMutations: vi.fn(() => ({})),
+vi.mock("@/hooks/use-employee-mutations", () => ({
+  useEmployeeMutations: vi.fn(() => ({})),
   useSetAvailability: vi.fn(() => ({})),
   useSetBreaks: vi.fn(() => ({})),
   useVacationMutations: vi.fn(() => ({})),
-  usePractitionerServiceMutations: vi.fn(() => ({})),
+  useEmployeeServiceMutations: vi.fn(() => ({})),
 }))
 
 import {
-  usePractitioners,
-  usePractitioner,
-  usePractitionerAvailability,
-  usePractitionerBreaks,
-  usePractitionerVacations,
-  usePractitionerServices,
-  usePractitionerServiceTypes,
-} from "@/hooks/use-practitioners"
+  useEmployees,
+  useEmployee,
+  useEmployeeAvailability,
+  useEmployeeBreaks,
+  useEmployeeVacations,
+  useEmployeeServices,
+  useEmployeeServiceTypes,
+} from "@/hooks/use-employees"
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -71,58 +71,58 @@ function makeWrapper() {
   return TestWrapper
 }
 
-describe("usePractitioners", () => {
+describe("useEmployees", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetches practitioners and returns items", async () => {
+  it("fetches employees and returns items", async () => {
     const items = [{ id: "p-1", firstName: "Ali", lastName: "Hassan" }]
-    fetchPractitioners.mockResolvedValueOnce({ items, meta: { total: 1 } })
+    fetchEmployees.mockResolvedValueOnce({ items, meta: { total: 1 } })
 
-    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployees(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(fetchPractitioners).toHaveBeenCalledWith(
+    expect(fetchEmployees).toHaveBeenCalledWith(
       expect.objectContaining({ page: 1, perPage: 20 }),
     )
-    expect(result.current.practitioners).toEqual(items)
+    expect(result.current.employees).toEqual(items)
     expect(result.current.meta).toEqual({ total: 1 })
   })
 
   it("setSearch resets page to 1 and passes search to api", async () => {
-    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+    fetchEmployees.mockResolvedValue({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployees(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     act(() => { result.current.setSearch("Dr. Ali") })
 
     await waitFor(() =>
-      expect(fetchPractitioners).toHaveBeenCalledWith(
+      expect(fetchEmployees).toHaveBeenCalledWith(
         expect.objectContaining({ search: "Dr. Ali", page: 1 }),
       ),
     )
   })
 
   it("setIsActive resets page to 1", async () => {
-    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+    fetchEmployees.mockResolvedValue({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployees(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     act(() => { result.current.setIsActive(true) })
 
     await waitFor(() =>
-      expect(fetchPractitioners).toHaveBeenCalledWith(
+      expect(fetchEmployees).toHaveBeenCalledWith(
         expect.objectContaining({ isActive: true, page: 1 }),
       ),
     )
   })
 
   it("resetFilters clears search, isActive, and resets page", async () => {
-    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+    fetchEmployees.mockResolvedValue({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployees(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     act(() => {
@@ -140,9 +140,9 @@ describe("usePractitioners", () => {
   })
 
   it("hasFilters is true when search is set", async () => {
-    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+    fetchEmployees.mockResolvedValue({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployees(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(result.current.hasFilters).toBe(false)
@@ -153,9 +153,9 @@ describe("usePractitioners", () => {
   })
 
   it("hasFilters is true when isActive is set", async () => {
-    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+    fetchEmployees.mockResolvedValue({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployees(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     act(() => { result.current.setIsActive(false) })
@@ -164,9 +164,9 @@ describe("usePractitioners", () => {
   })
 
   it("returns error message when fetch fails", async () => {
-    fetchPractitioners.mockRejectedValueOnce(new Error("Network error"))
+    fetchEmployees.mockRejectedValueOnce(new Error("Network error"))
 
-    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployees(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -174,49 +174,49 @@ describe("usePractitioners", () => {
   })
 
   it("returns null meta when no data", () => {
-    fetchPractitioners.mockReturnValueOnce(new Promise(() => undefined))
+    fetchEmployees.mockReturnValueOnce(new Promise(() => undefined))
 
-    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployees(), { wrapper: makeWrapper() })
 
     expect(result.current.meta).toBeNull()
-    expect(result.current.practitioners).toEqual([])
+    expect(result.current.employees).toEqual([])
   })
 
   it("passes undefined search when search is empty string", async () => {
-    fetchPractitioners.mockResolvedValue({ items: [], meta: { total: 0 } })
+    fetchEmployees.mockResolvedValue({ items: [], meta: { total: 0 } })
 
-    const { result } = renderHook(() => usePractitioners(), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployees(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(fetchPractitioners).toHaveBeenCalledWith(
+    expect(fetchEmployees).toHaveBeenCalledWith(
       expect.objectContaining({ search: undefined }),
     )
   })
 })
 
-describe("usePractitioner", () => {
+describe("useEmployee", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetches practitioner by id", async () => {
-    const practitioner = { id: "p-1", firstName: "Ali" }
-    fetchPractitioner.mockResolvedValueOnce(practitioner)
+  it("fetches employee by id", async () => {
+    const employee = { id: "p-1", firstName: "Ali" }
+    fetchEmployee.mockResolvedValueOnce(employee)
 
-    const { result } = renderHook(() => usePractitioner("p-1"), { wrapper: makeWrapper() })
+    const { result } = renderHook(() => useEmployee("p-1"), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(fetchPractitioner).toHaveBeenCalledWith("p-1")
-    expect(result.current.data).toEqual(practitioner)
+    expect(fetchEmployee).toHaveBeenCalledWith("p-1")
+    expect(result.current.data).toEqual(employee)
   })
 
   it("does not fetch when id is null", () => {
-    renderHook(() => usePractitioner(null), { wrapper: makeWrapper() })
+    renderHook(() => useEmployee(null), { wrapper: makeWrapper() })
 
-    expect(fetchPractitioner).not.toHaveBeenCalled()
+    expect(fetchEmployee).not.toHaveBeenCalled()
   })
 })
 
-describe("usePractitionerAvailability", () => {
+describe("useEmployeeAvailability", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
   it("fetches availability when id is provided", async () => {
@@ -224,7 +224,7 @@ describe("usePractitionerAvailability", () => {
     fetchAvailability.mockResolvedValueOnce(availability)
 
     const { result } = renderHook(
-      () => usePractitionerAvailability("p-1"),
+      () => useEmployeeAvailability("p-1"),
       { wrapper: makeWrapper() },
     )
 
@@ -235,19 +235,19 @@ describe("usePractitionerAvailability", () => {
   })
 
   it("does not fetch when id is null", () => {
-    renderHook(() => usePractitionerAvailability(null), { wrapper: makeWrapper() })
+    renderHook(() => useEmployeeAvailability(null), { wrapper: makeWrapper() })
     expect(fetchAvailability).not.toHaveBeenCalled()
   })
 })
 
-describe("usePractitionerBreaks", () => {
+describe("useEmployeeBreaks", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
   it("fetches breaks when id is provided", async () => {
     fetchBreaks.mockResolvedValueOnce([{ id: "br-1" }])
 
     const { result } = renderHook(
-      () => usePractitionerBreaks("p-1"),
+      () => useEmployeeBreaks("p-1"),
       { wrapper: makeWrapper() },
     )
 
@@ -256,19 +256,19 @@ describe("usePractitionerBreaks", () => {
   })
 
   it("does not fetch when id is null", () => {
-    renderHook(() => usePractitionerBreaks(null), { wrapper: makeWrapper() })
+    renderHook(() => useEmployeeBreaks(null), { wrapper: makeWrapper() })
     expect(fetchBreaks).not.toHaveBeenCalled()
   })
 })
 
-describe("usePractitionerVacations", () => {
+describe("useEmployeeVacations", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
   it("fetches vacations when id is provided", async () => {
     fetchVacations.mockResolvedValueOnce([{ id: "vac-1" }])
 
     const { result } = renderHook(
-      () => usePractitionerVacations("p-1"),
+      () => useEmployeeVacations("p-1"),
       { wrapper: makeWrapper() },
     )
 
@@ -277,52 +277,52 @@ describe("usePractitionerVacations", () => {
   })
 
   it("does not fetch when id is null", () => {
-    renderHook(() => usePractitionerVacations(null), { wrapper: makeWrapper() })
+    renderHook(() => useEmployeeVacations(null), { wrapper: makeWrapper() })
     expect(fetchVacations).not.toHaveBeenCalled()
   })
 })
 
-describe("usePractitionerServices", () => {
+describe("useEmployeeServices", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
   it("fetches services when id is provided", async () => {
-    fetchPractitionerServices.mockResolvedValueOnce([{ id: "svc-1" }])
+    fetchEmployeeServices.mockResolvedValueOnce([{ id: "svc-1" }])
 
     const { result } = renderHook(
-      () => usePractitionerServices("p-1"),
+      () => useEmployeeServices("p-1"),
       { wrapper: makeWrapper() },
     )
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(fetchPractitionerServices).toHaveBeenCalledWith("p-1")
+    expect(fetchEmployeeServices).toHaveBeenCalledWith("p-1")
   })
 
   it("does not fetch when id is null", () => {
-    renderHook(() => usePractitionerServices(null), { wrapper: makeWrapper() })
-    expect(fetchPractitionerServices).not.toHaveBeenCalled()
+    renderHook(() => useEmployeeServices(null), { wrapper: makeWrapper() })
+    expect(fetchEmployeeServices).not.toHaveBeenCalled()
   })
 })
 
-describe("usePractitionerServiceTypes", () => {
+describe("useEmployeeServiceTypes", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
   it("fetches service types when both ids are provided", async () => {
-    fetchPractitionerServiceTypes.mockResolvedValueOnce([{ bookingType: "IN_PERSON" }])
+    fetchEmployeeServiceTypes.mockResolvedValueOnce([{ bookingType: "IN_PERSON" }])
 
     const { result } = renderHook(
-      () => usePractitionerServiceTypes("p-1", "svc-1"),
+      () => useEmployeeServiceTypes("p-1", "svc-1"),
       { wrapper: makeWrapper() },
     )
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(fetchPractitionerServiceTypes).toHaveBeenCalledWith("p-1", "svc-1")
+    expect(fetchEmployeeServiceTypes).toHaveBeenCalledWith("p-1", "svc-1")
   })
 
   it("does not fetch when either id is null", () => {
     renderHook(
-      () => usePractitionerServiceTypes(null, "svc-1"),
+      () => useEmployeeServiceTypes(null, "svc-1"),
       { wrapper: makeWrapper() },
     )
-    expect(fetchPractitionerServiceTypes).not.toHaveBeenCalled()
+    expect(fetchEmployeeServiceTypes).not.toHaveBeenCalled()
   })
 })

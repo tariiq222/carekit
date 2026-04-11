@@ -13,17 +13,17 @@
 |--------|-----------|-----------------|
 | **Auth** | تسجيل دخول JWT + OTP بالإيميل، refresh tokens، تسجيل مستخدم جديد، CASL للصلاحيات الديناميكية | `auth.service.ts`, `otp.service.ts`, `token.service.ts`, `casl-ability.factory.ts` (26 ملف) |
 | **Users** | إدارة المستخدمين + ربط الأدوار + تعديل الملف الشخصي | `users.service.ts`, `user-roles.service.ts` (7 ملفات) |
-| **Roles** | أدوار ديناميكية (super_admin, receptionist, accountant, practitioner, patient) + أدوار مخصصة | `roles.service.ts`, `roles.controller.ts` (4 ملفات) |
+| **Roles** | أدوار ديناميكية (super_admin, receptionist, accountant, employee, client) + أدوار مخصصة | `roles.service.ts`, `roles.controller.ts` (4 ملفات) |
 | **Permissions** | صلاحيات دقيقة (view, create, edit, delete) لكل module عبر CASL | `permissions.controller.ts` (2 ملف) |
-| **Practitioners** | إدارة الأطباء: ملف شخصي، أوقات العمل، الإجازات، خدمات الممارس مع تسعير 3 مستويات | `practitioners.service.ts`, `practitioner-availability.service.ts`, `practitioner-vacation.service.ts`, `practitioner-service.service.ts` (14 ملف) |
+| **Employees** | إدارة الأطباء: ملف شخصي، أوقات العمل، الإجازات، خدمات الممارس مع تسعير 3 مستويات | `employees.service.ts`, `employee-availability.service.ts`, `employee-vacation.service.ts`, `employee-service.service.ts` (14 ملف) |
 | **Specialties** | التخصصات الطبية (CRUD) | `specialties.service.ts` (6 ملفات) |
 | **Services** | كتالوج الخدمات الطبية مع فئات + أسعار + فلترة isActive | `services.service.ts` (10 ملفات) |
 | **Bookings** | نظام حجز كامل: 3 أنواع (عيادة/هاتف/فيديو)، حماية من الحجز المزدوج، إلغاء بموافقة الأدمن، buffer times، pagination | `bookings.service.ts`, `booking-cancellation.service.ts`, `booking-validation.helper.ts`, `zoom.service.ts` (15 ملف) |
-| **Payments** | Moyasar (Mada/Apple Pay/Visa) + تحويل بنكي مع AI للتحقق من الإيصالات + تسعير 3 مستويات (PractitionerService → Practitioner → Service) | `payments.service.ts`, `moyasar-payment.service.ts`, `bank-transfer.service.ts`, `payments.helpers.ts` (17 ملف) |
+| **Payments** | Moyasar (Mada/Apple Pay/Visa) + تحويل بنكي مع AI للتحقق من الإيصالات + تسعير 3 مستويات (EmployeeService → Employee → Service) | `payments.service.ts`, `moyasar-payment.service.ts`, `bank-transfer.service.ts`, `payments.helpers.ts` (17 ملف) |
 | **Invoices** | إنشاء فواتير تلقائي مع ZATCA، إحصائيات، ثوابت ضريبية | `invoices.service.ts`, `invoice-creator.service.ts`, `invoice-stats.service.ts` (11 ملف) |
 | **Notifications** | إشعارات داخلية + FCM push، إشعارات تلقائية عند تأكيد/إتمام/إلغاء الحجز + إشعار الممارس | `notifications.service.ts` (9 ملفات) |
 | **WhiteLabel** | إعدادات العلامة البيضاء: لوقو، ألوان، خطوط، مفاتيح الدفع، Zoom، قوالب البريد، سياسة الإلغاء | `whitelabel.service.ts` (7 ملفات) |
-| **Patients** | إدارة المرضى + بحث بالاسم + ملف طبي | `patients.service.ts` (4 ملفات) |
+| **Clients** | إدارة المرضى + بحث بالاسم + ملف طبي | `clients.service.ts` (4 ملفات) |
 | **Ratings** | تقييم نجوم (1-5) + ملاحظات + بلاغات مشاكل + إخفاء اسم المريض في التقييمات العامة | `ratings.service.ts` (5 ملفات) |
 | **Reports** | تقارير الإيرادات + الحجوزات مع فلترة بالتاريخ | `reports.service.ts` (4 ملفات) |
 | **AI (Receipt)** | التحقق من إيصالات التحويل البنكي بالذكاء الاصطناعي (OpenRouter Vision API) → tags: matched/amount_differs/suspicious | `receipt-verification.service.ts`, `receipt-verification.processor.ts` (5 ملفات) |
@@ -32,7 +32,7 @@
 
 ### Database Schema — Prisma
 
-- **29 Model**: User, Practitioner, PractitionerService, PractitionerAvailability, PractitionerVacation, Specialty, ServiceCategory, Service, Booking, Payment, BankTransferReceipt, Invoice, Rating, ProblemReport, ChatSession, ChatMessage, KnowledgeBase, KnowledgeBaseFile, ChatbotConfig, WhiteLabelConfig, Role, Permission, Notification, FcmToken, ActivityLog, OtpCode, RefreshToken...
+- **29 Model**: User, Employee, EmployeeService, EmployeeAvailability, EmployeeVacation, Specialty, ServiceCategory, Service, Booking, Payment, BankTransferReceipt, Invoice, Rating, ProblemReport, ChatSession, ChatMessage, KnowledgeBase, KnowledgeBaseFile, ChatbotConfig, WhiteLabelConfig, Role, Permission, Notification, FcmToken, ActivityLog, OtpCode, RefreshToken...
 - **13 Enum**: BookingType, BookingStatus, PaymentMethod, PaymentStatus, TransferVerificationStatus, NotificationType, ProblemReportType, ProblemReportStatus, ChatRole, HandoffType, ConfigValueType, UserGender, ZatcaStatus
 - **Migrations**: 5 migration files مُطبقة
 
@@ -64,8 +64,8 @@
 | **Login** | تسجيل دخول بالبريد + كلمة المرور |
 | **Dashboard Home** | إحصائيات عامة: حجوزات اليوم، إيرادات، مدفوعات معلقة، نشاط حديث |
 | **Appointments** | جدول المواعيد مع فلترة بالحالة والتاريخ والممارس |
-| **Practitioners** | قائمة الأطباء + تفاصيل كل طبيب (ملف، جدول، تقييمات، خدمات) |
-| **Patients** | قائمة المرضى + تفاصيل (سجل المواعيد، المدفوعات) |
+| **Employees** | قائمة الأطباء + تفاصيل كل طبيب (ملف، جدول، تقييمات، خدمات) |
+| **Clients** | قائمة المرضى + تفاصيل (سجل المواعيد، المدفوعات) |
 | **Services** | كتالوج الخدمات الطبية مع الفئات والأسعار |
 | **Invoices + ZATCA** | الفواتير مع حالة ZATCA + إحصائيات |
 | **Payments** | المدفوعات + مراجعة إيصالات التحويل البنكي |
@@ -85,7 +85,7 @@
 
 ### Unit Tests — 455 test في 21 suite
 
-تغطية: ZATCA (5 suites, 85 test)، Invoices (18 test)، Patients (16 test)، Ratings (15 test)، وغيرها
+تغطية: ZATCA (5 suites, 85 test)، Invoices (18 test)، Clients (16 test)، Ratings (15 test)، وغيرها
 
 ---
 
@@ -104,7 +104,7 @@
 - Booking Flow (5 شاشات): اختيار خدمة → جدول → تأكيد → دفع → نجاح
 - Payment: اختيار طريقة الدفع (Moyasar/تحويل بنكي)
 - Bank Transfer: رفع إيصال التحويل
-- Practitioner Detail: ملف الطبيب + تقييمات + حجز
+- Employee Detail: ملف الطبيب + تقييمات + حجز
 - Appointment Detail: تفاصيل الموعد + إلغاء
 - Rating: تقييم بعد الموعد (نجوم + ملاحظات + بلاغ)
 - Chat: محادثة ذكاء اصطناعي (GiftedChat + Quick Actions + Typing Indicator)
@@ -116,14 +116,14 @@
 **شاشات الممارس (8 شاشات):**
 - Today: جدول اليوم
 - Calendar: عرض تقويمي
-- Patients: قائمة المرضى
+- Clients: قائمة المرضى
 - Appointment Detail: تفاصيل الموعد (عرض الطبيب)
-- Patient Detail: ملف المريض (عرض الطبيب)
+- Client Detail: ملف المريض (عرض الطبيب)
 - Video Call: مكالمة فيديو
 - Profile: الملف الشخصي
 
 **البنية التقنية:**
-- 8 API services (api, auth, bookings, practitioners, specialties, payments, notifications, chatbot)
+- 8 API services (api, auth, bookings, employees, specialties, payments, notifications, chatbot)
 - 10 components (3 UI + 5 Feature + 2 Chat)
 - Redux Toolkit + Persist (2 slices: auth, chat)
 - 4 type files (models, api, auth, chat)
@@ -171,16 +171,16 @@
 1. **Availability validation**: التحقق من جدول الممارس والإجازات عند الحجز
 2. **Date filter**: فلترة السلوتات بالتاريخ بدل تحميل الكل
 3. **Slot overlap**: عرض السلوتات المحجوزة كـ unavailable
-4. **PractitionerService join**: ربط ممارس-خدمة مع تحقق عند الحجز
+4. **EmployeeService join**: ربط ممارس-خدمة مع تحقق عند الحجز
 5. **Partial refund**: دعم استرداد جزئي بمبلغ محدد (بدل full فقط)
 6. **Category delete**: حساب الخدمات المحذوفة soft عند حذف الفئة
 7. **Zoom stub**: تحذير واضح أن Zoom لا يزال stub
 8. **Notifications**: إشعارات تلقائية عند تأكيد/إتمام/إلغاء الحجز
-9. **Patient anonymization**: إخفاء اسم العائلة في التقييمات العامة ("أحمد م.")
+9. **Client anonymization**: إخفاء اسم العائلة في التقييمات العامة ("أحمد م.")
 
 ### Pricing Refactor — تسعير 3 مستويات
 
-نقل الأسعار من `Practitioner` إلى `PractitionerService`:
+نقل الأسعار من `Employee` إلى `EmployeeService`:
 - كل ممارس × خدمة = أسعار مستقلة (clinic/phone/video) + مدة مخصصة + buffer
 - `availableTypes`: منع حجز نوع غير مدعوم (مثلاً: تنظيف أسنان عن بُعد)
 - 4 endpoints جديدة: CRUD لخدمات الممارس

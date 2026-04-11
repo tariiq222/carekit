@@ -16,9 +16,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  usePractitionerBreaks,
+  useEmployeeBreaks,
   useSetBreaks,
-} from "@/hooks/use-practitioners"
+} from "@/hooks/use-employees"
 
 /* ─── Constants ─── */
 
@@ -48,7 +48,7 @@ function nextKey() {
 /* ─── Props ─── */
 
 interface BreaksEditorProps {
-  practitionerId: string
+  employeeId: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -56,11 +56,11 @@ interface BreaksEditorProps {
 /* ─── Component ─── */
 
 export function BreaksEditor({
-  practitionerId,
+  employeeId,
   open,
   onOpenChange,
 }: BreaksEditorProps) {
-  const { data: serverBreaks } = usePractitionerBreaks(practitionerId)
+  const { data: serverBreaks } = useEmployeeBreaks(employeeId)
   const setBreaks = useSetBreaks()
   const [breaks, setLocalBreaks] = useState<LocalBreak[]>([])
 
@@ -106,7 +106,7 @@ export function BreaksEditor({
 
     try {
       await setBreaks.mutateAsync({
-        id: practitionerId,
+        id: employeeId,
         breaks: breaks.map(({ dayOfWeek, startTime, endTime }) => ({
           dayOfWeek,
           startTime,

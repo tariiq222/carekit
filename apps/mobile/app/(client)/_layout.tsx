@@ -4,7 +4,7 @@ import { useAppSelector } from '@/hooks/use-redux';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { getPrimaryRole } from '@/types/auth';
 
-export default function PatientLayout() {
+export default function ClientLayout() {
   const { token, user } = useAppSelector((state) => state.auth);
 
   usePushNotifications(!!token);
@@ -13,8 +13,8 @@ export default function PatientLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (user && getPrimaryRole(user) === 'practitioner') {
-    return <Redirect href="/(practitioner)/(tabs)/today" />;
+  if (user && getPrimaryRole(user) === 'employee') {
+    return <Redirect href="/(employee)/(tabs)/today" />;
   }
 
   return <Slot />;

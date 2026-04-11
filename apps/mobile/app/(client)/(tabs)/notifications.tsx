@@ -55,7 +55,7 @@ export default function NotificationsScreen() {
       }
 
       if (BOOKING_TYPES.includes(notification.type)) {
-        router.push('/(patient)/(tabs)/appointments');
+        router.push('/(client)/(tabs)/appointments');
       }
     },
     [sections, markAsRead, router],

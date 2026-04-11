@@ -30,11 +30,11 @@ export type BookingStatus =
 
 export type RefundType = "full" | "partial" | "none"
 
-export type CancelledBy = "patient" | "practitioner" | "admin" | "system"
+export type CancelledBy = "client" | "employee" | "admin" | "system"
 
 /* ─── Entities ─── */
 
-export interface BookingPatient {
+export interface BookingClient {
   id: string
   firstName: string
   lastName: string
@@ -42,7 +42,7 @@ export interface BookingPatient {
   phone: string | null
 }
 
-export interface BookingPractitioner {
+export interface BookingEmployee {
   id: string
   userId: string
   user: { firstName: string; lastName: string }
@@ -76,10 +76,10 @@ export interface RescheduledFrom {
 
 export interface Booking {
   id: string
-  patientId: string | null
-  practitionerId: string
+  clientId: string | null
+  employeeId: string
   serviceId: string
-  practitionerServiceId: string
+  employeeServiceId: string
   type: BookingType
   date: string
   startTime: string
@@ -97,10 +97,10 @@ export interface Booking {
   completedAt: string | null
   createdAt: string
   updatedAt: string
-  patient: BookingPatient | null
-  practitioner: BookingPractitioner
+  client: BookingClient | null
+  employee: BookingEmployee
   service: BookingService
-  practitionerService: { id: string } | null
+  employeeService: { id: string } | null
   rescheduledFrom: RescheduledFrom | null
   payment: BookingPayment | null
   intakeFormId: string | null
@@ -114,15 +114,15 @@ export interface BookingListQuery {
   perPage?: number
   status?: BookingStatus
   type?: BookingType
-  practitionerId?: string
-  patientId?: string
+  employeeId?: string
+  clientId?: string
   dateFrom?: string
   dateTo?: string
 }
 
 export interface CreateBookingPayload {
-  patientId?: string
-  practitionerId: string
+  clientId?: string
+  employeeId: string
   serviceId: string
   type: BookingType
   durationOptionId?: string
@@ -156,7 +156,7 @@ export interface AdminCancelPayload {
   adminNotes?: string
 }
 
-export interface PractitionerCancelPayload {
+export interface EmployeeCancelPayload {
   reason: string
 }
 
@@ -165,7 +165,7 @@ export interface CancelRequestPayload {
 }
 
 export interface CreateRecurringPayload {
-  practitionerId: string
+  employeeId: string
   serviceId: string
   type: BookingType
   date: string
@@ -175,7 +175,7 @@ export interface CreateRecurringPayload {
   repeatCount: number
 }
 
-export interface PatientReschedulePayload {
+export interface ClientReschedulePayload {
   date?: string
   startTime?: string
 }

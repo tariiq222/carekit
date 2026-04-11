@@ -61,7 +61,7 @@ export default function PaymentScreen() {
 
     if (selectedMethod === 'bank_transfer') {
       router.push({
-        pathname: '/(patient)/booking/bank-transfer',
+        pathname: '/(client)/booking/bank-transfer',
         params: { bookingId: params.bookingId, total: params.total },
       });
       return;
@@ -83,7 +83,7 @@ export default function PaymentScreen() {
         if (result.type === 'success') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           router.replace({
-            pathname: '/(patient)/booking/success',
+            pathname: '/(client)/booking/success',
             params: { bookingId: params.bookingId },
           });
         }

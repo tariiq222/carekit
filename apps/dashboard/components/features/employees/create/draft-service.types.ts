@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { PractitionerTypeConfigPayload } from "@/lib/types/practitioner"
+import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"
 
 /* ─── Draft service entry ─── */
 
@@ -10,7 +10,7 @@ export interface DraftService {
   bufferMinutes: number
   isActive: boolean
   availableTypes: string[]
-  types: PractitionerTypeConfigPayload[]
+  types: EmployeeTypeConfigPayload[]
 }
 
 /* ─── Schema for add-service form ─── */
