@@ -70,13 +70,20 @@
     --color-avatar-8-from: var(--avatar-8-from);
     --color-avatar-8-to: var(--avatar-8-to);
 
-    /* Rank colors */
+    /* Rank colors — decorative tokens for leaderboard/top-performers.
+       Not semantic. Do not use for UI states. */
     --color-rank-gold-from: var(--rank-gold-from);
     --color-rank-gold-to: var(--rank-gold-to);
     --color-rank-gold-border: var(--rank-gold-border);
     --color-rank-gold-badge-from: var(--rank-gold-badge-from);
     --color-rank-gold-badge-to: var(--rank-gold-badge-to);
     --color-rank-gold-badge-text: var(--rank-gold-badge-text);
+    --color-rank-silver-from: var(--rank-silver-from);
+    --color-rank-silver-to: var(--rank-silver-to);
+    --color-rank-silver-border: var(--rank-silver-border);
+    --color-rank-silver-badge-from: var(--rank-silver-badge-from);
+    --color-rank-silver-badge-to: var(--rank-silver-badge-to);
+    --color-rank-silver-badge-text: var(--rank-silver-badge-text);
     --color-rank-bronze-from: var(--rank-bronze-from);
     --color-rank-bronze-to: var(--rank-bronze-to);
     --color-rank-bronze-border: var(--rank-bronze-border);
@@ -121,7 +128,8 @@
     --surface-muted: #F7F9FC;
     --muted: #F1F4F8;
     --muted-foreground: #667085;
-    --card: rgba(255, 255, 255, 0.72);
+    /* --card is a shadcn-compat alias of --surface. Do not diverge. */
+    --card: var(--surface);
     --card-foreground: #1B2026;
     --popover: rgba(255, 255, 255, 0.92);
     --popover-foreground: #1B2026;
@@ -132,10 +140,13 @@
     --input: #D0D5DD;
     --ring: rgba(53, 79, 216, 0.28);
     --overlay: rgba(27, 32, 38, 0.6);
-    --destructive: #DC2626;
+    /* State colors.
+       `--error` is the semantic source of truth for destructive/error states.
+       `--destructive` exists as a shadcn-compat alias and MUST always mirror --error. */
     --success: #16A34A;
     --warning: #D97706;
     --error: #DC2626;
+    --destructive: var(--error);
     --info: #2563EB;
     --refunded: #7C3AED;
     --chart-1: #16A34A;
@@ -174,7 +185,7 @@
     --avatar-8-from: #14B8A6;
     --avatar-8-to: #5EEAD4;
 
-    /* Rank colors — gold / silver / bronze */
+    /* Rank colors — gold / silver / bronze (decorative, leaderboard only) */
     --rank-gold-from: #FFFBEB;
     --rank-gold-to: #FEF3C7;
     --rank-gold-border: rgba(252, 211, 77, 0.3);
@@ -182,6 +193,13 @@
     --rank-gold-badge-to: #EAB308;
     --rank-gold-badge-text: #78350F;
     --rank-gold-shadow: rgba(255, 193, 7, 0.3);
+    --rank-silver-from: #F8FAFC;
+    --rank-silver-to: #E2E8F0;
+    --rank-silver-border: rgba(148, 163, 184, 0.35);
+    --rank-silver-badge-from: #94A3B8;
+    --rank-silver-badge-to: #64748B;
+    --rank-silver-badge-text: #1E293B;
+    --rank-silver-shadow: rgba(100, 116, 139, 0.3);
     --rank-bronze-from: #FFF7ED;
     --rank-bronze-to: #FFEDD5;
     --rank-bronze-border: rgba(251, 146, 60, 0.3);
@@ -202,7 +220,8 @@
     --surface-muted: #252B33;
     --muted: #252B33;
     --muted-foreground: #98A2B3;
-    --card: rgba(27, 32, 38, 0.72);
+    /* --card is a shadcn-compat alias of --surface. Do not diverge. */
+    --card: var(--surface);
     --card-foreground: #F1F4F8;
     --popover: rgba(27, 32, 38, 0.92);
     --popover-foreground: #F1F4F8;
@@ -212,10 +231,12 @@
     --border-strong: rgba(255, 255, 255, 0.12);
     --input: rgba(255, 255, 255, 0.08);
     --overlay: rgba(0, 0, 0, 0.60);
-    --destructive: #F87171;
+    /* State colors — dark theme.
+       `--destructive` alias must mirror --error (see :root for rationale). */
     --success: #4ADE80;
     --warning: #FBBF24;
     --error: #F87171;
+    --destructive: var(--error);
     --info: #60A5FA;
     --refunded: #A78BFA;
     --chart-1: #4ADE80;
@@ -256,6 +277,13 @@
     --rank-gold-badge-to: #F59E0B;
     --rank-gold-badge-text: #78350F;
     --rank-gold-shadow: rgba(251, 191, 36, 0.3);
+    --rank-silver-from: rgba(148, 163, 184, 0.12);
+    --rank-silver-to: rgba(148, 163, 184, 0.06);
+    --rank-silver-border: rgba(148, 163, 184, 0.2);
+    --rank-silver-badge-from: #CBD5E1;
+    --rank-silver-badge-to: #94A3B8;
+    --rank-silver-badge-text: #0F172A;
+    --rank-silver-shadow: rgba(148, 163, 184, 0.3);
     --rank-bronze-from: rgba(251, 146, 60, 0.12);
     --rank-bronze-to: rgba(251, 146, 60, 0.06);
     --rank-bronze-border: rgba(251, 146, 60, 0.2);

@@ -20,8 +20,8 @@ const rankStyles = [
     badge: "bg-gradient-to-br from-rank-gold-badge-from to-rank-gold-badge-to text-rank-gold-badge-text shadow-[0_2px_8px_var(--rank-gold-shadow)]",
   },
   {
-    card: "bg-muted/60 border-border",
-    badge: "bg-muted-foreground/20 text-muted-foreground shadow-sm",
+    card: "bg-gradient-to-br from-rank-silver-from to-rank-silver-to border-rank-silver-border",
+    badge: "bg-gradient-to-br from-rank-silver-badge-from to-rank-silver-badge-to text-rank-silver-badge-text shadow-[0_2px_8px_var(--rank-silver-shadow)]",
   },
   {
     card: "bg-gradient-to-br from-rank-bronze-from to-rank-bronze-to border-rank-bronze-border",

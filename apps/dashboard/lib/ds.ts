@@ -6,12 +6,17 @@
  * هذا الملف يوفر type-safe references + style mappings.
  */
 
-/* ─── Radius — iOS-inspired roundness ─── */
+/* ─── Radius — iOS-inspired roundness ───
+ * Values defined in globals.css `@theme` block.
+ * Keep this map in sync with --radius-* custom properties.
+ */
 export const radius = {
-  sm: "rounded-sm",    // 8px  — chips, small pills
+  sm: "rounded-sm",    // 8px  — chips, small pills, table action buttons
   md: "rounded-md",    // 12px — inputs, buttons
-  lg: "rounded-lg",    // 16px — cards
+  lg: "rounded-lg",    // 16px — cards, data tables
   xl: "rounded-xl",    // 20px — modals, large surfaces
+  "2xl": "rounded-2xl", // 24px — hero surfaces, feature cards
+  "3xl": "rounded-3xl", // 28px — decorative shells
 } as const
 
 /* ─── Shadows — frosted layered depth ─── */
@@ -105,9 +110,9 @@ export const bookingStatusStyles = {
     border: "border-accent/20",
   },
   cancelled: {
-    bg: "bg-destructive/10",
-    text: "text-destructive",
-    border: "border-destructive/20",
+    bg: "bg-error/10",
+    text: "text-error",
+    border: "border-error/20",
   },
   pending_cancellation: {
     bg: "bg-warning/10",
@@ -130,9 +135,9 @@ export const bookingStatusStyles = {
     border: "border-accent/20",
   },
   expired: {
-    bg: "bg-muted/10",
+    bg: "bg-muted",
     text: "text-muted-foreground",
-    border: "border-muted/20",
+    border: "border-border",
   },
 } as const
 
