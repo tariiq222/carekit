@@ -9,9 +9,10 @@
   "p7_completed": "2026-04-12",
   "p8_completed": "2026-04-12",
   "p10_completed": "2026-04-12",
+  "p14_completed": "2026-04-12",
   "gaps_identified": "2026-04-12",
   "gap_analysis_source": "comparison with refactor/monorepo-structure branch (old system)",
-  "lastCommit": "08ea0085",
+  "lastCommit": "ae5c6ceb",
   "phases": [
     {
       "id": "p1",
@@ -874,8 +875,9 @@
           "title": "send-push + send-email + send-sms slices",
           "detail": "Core communication commands. Each wraps its infrastructure adapter",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "comms"
+          "status": "done",
+          "bc": "comms",
+          "note": "Delivered in commit 6c199a37 + fixes bc02f3fb/682b810e/08ea0085. 4 slices in modules/comms/ (send-push, send-sms, send-email, send-notification aggregator). Tests in comms.handler.spec.ts."
         },
         {
           "id": "p14-t2",
@@ -884,8 +886,9 @@
           "title": "notifications slice",
           "detail": "In-app notification entity: create, list, mark-read. FCM push via send-push",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "comms"
+          "status": "done",
+          "bc": "comms",
+          "note": "Delivered in commit 51ad759f. 3 handlers in modules/comms/notifications/ (create, list, mark-read) with unreadOnly filter and optional notificationId for single-record marking."
         },
         {
           "id": "p14-t3",
@@ -894,8 +897,9 @@
           "title": "create-chat-message + list-conversations slices",
           "detail": "In-app messaging between client and clinic",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "comms"
+          "status": "done",
+          "bc": "comms",
+          "note": "Delivered in commit 91bb71c0. 3 handlers in modules/comms/chat/ (create-conversation with dedup + AI chat support, create-chat-message updating lastMessageAt, list-conversations with most-recent-message include)."
         },
         {
           "id": "p14-t4",
@@ -904,8 +908,9 @@
           "title": "email-templates CRUD slices",
           "detail": "Editable templates with variable substitution",
           "complexity": "CRUD",
-          "status": "todo",
-          "bc": "comms"
+          "status": "done",
+          "bc": "comms",
+          "note": "Delivered in commit 295fdc06. 4 handlers in modules/comms/email-templates/ (create/update/get/list) + dedicated email-templates.handler.spec.ts (9/9 passing). DTO uses subjectAr + subjectEn? to match schema. Wired in CommsModule (commit ae5c6ceb)."
         },
         {
           "id": "p14-t5",
@@ -914,8 +919,9 @@
           "title": "Comms event handlers",
           "detail": "on-booking-cancelled, on-reminder-due, on-payment-failed, on-client-enrolled",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "comms"
+          "status": "done",
+          "bc": "comms",
+          "note": "Delivered in commit 1fabb105. 4 handlers in modules/comms/events/ (on-booking-cancelled, on-booking-reminder, on-payment-failed, on-client-enrolled) + comms.events.handler.spec.ts. Registered via CommsModule.onModuleInit() in commit ae5c6ceb."
         }
       ]
     },
