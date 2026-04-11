@@ -1,87 +1,198 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────
+   Tailwind 4 theme tokens
+   Every token defined here is picked up as a utility:
+     --color-primary        → bg-primary / text-primary / border-primary
+     --radius-sm            → rounded-sm
+     --font-sans            → font-sans
+   Brand tokens (--color-primary, --color-accent) are overridden
+   at runtime by the whitelabel applier on <html>.
+   ───────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Brand ──────────────────────────────────── */
+  --color-primary:          #354FD8;
+  --color-primary-light:    #5B72E8;
+  --color-primary-dark:     #2438B0;
+  --color-primary-ultra:    rgba(53,79,216,0.08);
+  --color-primary-glow:     rgba(53,79,216,0.35);
+
+  --color-accent:           #82CC17;
+  --color-accent-dark:      #5A9010;
+  --color-accent-ultra:     rgba(130,204,23,0.10);
+  --color-accent-glow:      rgba(130,204,23,0.3);
+
+  /* Surfaces & background ─────────────────── */
+  --color-background:       #EEF1F8;
+  --color-surface:          rgba(255,255,255,0.75);
+  --color-surface-solid:    #FFFFFF;
+  --color-surface-hover:    rgba(255,255,255,0.92);
+  --color-glass-border:     rgba(255,255,255,0.55);
+
+  /* Text ──────────────────────────────────── */
+  --color-foreground:       #1B2026;
+  --color-foreground-2:     #3D4754;
+  --color-muted:            #F3F4F6;
+  --color-muted-foreground: #667085;
+  --color-muted-light:      #98A2B3;
+
+  /* Semantic ──────────────────────────────── */
+  --color-success:            #16A34A;
+  --color-success-bg:         rgba(22,163,74,0.09);
+  --color-success-border:     rgba(22,163,74,0.22);
+  --color-success-foreground: #FFFFFF;
+
+  --color-warning:            #D97706;
+  --color-warning-bg:         rgba(217,119,6,0.09);
+  --color-warning-border:     rgba(217,119,6,0.22);
+  --color-warning-foreground: #FFFFFF;
+
+  --color-error:              #DC2626;
+  --color-error-bg:            rgba(220,38,38,0.09);
+  --color-error-border:        rgba(220,38,38,0.22);
+  --color-error-foreground:    #FFFFFF;
+
+  --color-info:               #2563EB;
+  --color-info-bg:            rgba(37,99,235,0.09);
+  --color-info-border:        rgba(37,99,235,0.22);
+
+  /* shadcn/ui compatibility aliases ────────── */
+  --color-primary-foreground:  #FFFFFF;
+  --color-secondary:           #F3F4F6;
+  --color-secondary-foreground: #1B2026;
+  --color-accent-foreground:   #FFFFFF;
+  --color-destructive:         #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+  --color-card:                #FFFFFF;
+  --color-card-foreground:     #1B2026;
+  --color-popover:             #FFFFFF;
+  --color-popover-foreground:  #1B2026;
+  --color-border:              rgba(0,0,0,0.07);
+  --color-border-soft:         rgba(0,0,0,0.07);
+  --color-border-mid:          rgba(0,0,0,0.13);
+  --color-border-strong:       rgba(0,0,0,0.22);
+  --color-input:               rgba(0,0,0,0.13);
+  --color-ring:                #354FD8;
+
+  /* Radii ─────────────────────────────────── */
+  --radius:     14px;
+  --radius-sm:  9px;
+  --radius-lg:  18px;
+
+  /* Layout ────────────────────────────────── */
+  --spacing-sidebar:           252px;
+  --spacing-sidebar-collapsed: 68px;
+  --spacing-topbar:            60px;
+
+  /* Typography ────────────────────────────── */
+  --font-sans: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Legacy CSS custom property aliases
+   The existing codebase uses `var(--fg)`, `var(--primary)`,
+   `var(--surface)`, etc. via arbitrary values (e.g.
+   `text-[var(--fg)]`). We keep those names as runtime CSS
+   variables that point at the Tailwind 4 theme tokens, so:
+     1) Existing code using `var(--fg)` keeps working.
+     2) New code can use `text-foreground` directly.
+     3) Whitelabel runtime override only needs to patch
+        --color-primary / --color-accent at :root, and the
+        aliases below follow automatically.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --primary:         var(--color-primary);
+  --primary-light:   var(--color-primary-light);
+  --primary-dark:    var(--color-primary-dark);
+  --primary-ultra:   var(--color-primary-ultra);
+  --primary-glow:    var(--color-primary-glow);
+  --primary-bg:      var(--color-primary-ultra);
+
+  --accent:          var(--color-accent);
+  --accent-dark:     var(--color-accent-dark);
+  --accent-ultra:    var(--color-accent-ultra);
+  --accent-glow:     var(--color-accent-glow);
+
+  --bg:              var(--color-background);
+  --surface:         var(--color-surface);
+  --surface-solid:   var(--color-surface-solid);
+  --surface-hover:   var(--color-surface-hover);
+  --glass-border:    var(--color-glass-border);
+  --glass-border2:   rgba(255,255,255,0.3);
+
+  --fg:              var(--color-foreground);
+  --fg-2:            var(--color-foreground-2);
+  --muted:           var(--color-muted-foreground);
+  --muted-light:     var(--color-muted-light);
+
+  --success:         var(--color-success);
+  --success-bg:      var(--color-success-bg);
+  --success-border:  var(--color-success-border);
+  --warning:         var(--color-warning);
+  --warning-bg:      var(--color-warning-bg);
+  --warning-border:  var(--color-warning-border);
+  --error:           var(--color-error);
+  --error-bg:        var(--color-error-bg);
+  --error-border:    var(--color-error-border);
+  --info:            var(--color-info);
+  --info-bg:         var(--color-info-bg);
+  --info-border:     var(--color-info-border);
+
+  --sidebar-w:            252px;
+  --sidebar-w-collapsed:  68px;
+  --topbar-h:             60px;
+
+  --border-soft:    var(--color-border-soft);
+  --border-mid:     var(--color-border-mid);
+  --border-strong:  var(--color-border-strong);
+  --track:          rgba(0,0,0,0.08);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Base layer
+   ───────────────────────────────────────────────────────────── */
+
 @layer base {
-  :root {
-    --primary:        #354FD8;
-    --primary-light:  #5B72E8;
-    --primary-dark:   #2438B0;
-    --primary-glow:   rgba(53,79,216,0.35);
-    --primary-ultra:  rgba(53,79,216,0.08);
-    --accent:         #82CC17;
-    --accent-dark:    #5A9010;
-    --accent-glow:    rgba(130,204,23,0.3);
-    --accent-ultra:   rgba(130,204,23,0.10);
-
-    --bg:             #EEF1F8;
-    --surface:        rgba(255,255,255,0.75);
-    --surface-solid:  #FFFFFF;
-    --surface-hover:  rgba(255,255,255,0.92);
-    --glass-border:   rgba(255,255,255,0.55);
-    --glass-border2:  rgba(255,255,255,0.3);
-
-    --fg:             #1B2026;
-    --fg-2:           #3D4754;
-    --muted:          #667085;
-    --muted-light:    #98A2B3;
-
-    --success:        #16A34A;
-    --success-bg:     rgba(22,163,74,0.09);
-    --success-border: rgba(22,163,74,0.22);
-    --warning:        #D97706;
-    --warning-bg:     rgba(217,119,6,0.09);
-    --warning-border: rgba(217,119,6,0.22);
-    --error:          #DC2626;
-    --error-bg:       rgba(220,38,38,0.09);
-    --error-border:   rgba(220,38,38,0.22);
-    --info:           #2563EB;
-    --info-bg:        rgba(37,99,235,0.09);
-    --info-border:    rgba(37,99,235,0.22);
-
-    --sidebar-w:             252px;
-    --sidebar-w-collapsed:   68px;
-    --topbar-h:              60px;
-    --radius:                14px;
-    --radius-sm:             9px;
-    --radius-lg:             18px;
-
-    --border-soft:   rgba(0,0,0,0.07);
-    --border-mid:    rgba(0,0,0,0.13);
-    --border-strong: rgba(0,0,0,0.22);
-    --track:         rgba(0,0,0,0.08);
-  }
-
   html {
     font-size: 14px;
-    font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+    font-family: var(--font-sans);
   }
 
   body {
-    background: var(--bg);
-    color: var(--fg);
+    background: var(--color-background);
+    color: var(--color-foreground);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Component layer — glass surfaces + animated background
+   These are hand-written CSS, not Tailwind utilities, because
+   backdrop-filter + animated blobs are outside utility scope.
+   ───────────────────────────────────────────────────────────── */
+
 @layer components {
   .glass {
-    background: var(--surface);
+    background: var(--color-surface);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--color-glass-border);
   }
 
   .glass-solid {
-    background: var(--surface-solid);
-    border: 1px solid var(--border-soft);
+    background: var(--color-surface-solid);
+    border: 1px solid var(--color-border-soft);
   }
 
   .glass-strong {
     background: rgba(255,255,255,0.88);
     backdrop-filter: blur(32px);
     -webkit-backdrop-filter: blur(32px);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--color-glass-border);
   }
 
   .bg-scene {
@@ -114,7 +225,7 @@
 
   @keyframes blobDrift {
     0%, 100% { transform: translate(0, 0) scale(1); }
-    33%       { transform: translate(30px, -20px) scale(1.05); }
-    66%       { transform: translate(-20px, 30px) scale(0.97); }
+    33%      { transform: translate(30px, -20px) scale(1.05); }
+    66%      { transform: translate(-20px, 30px) scale(0.97); }
   }
 }
