@@ -66,8 +66,8 @@ function ChatbotAdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(configQuery.data ?? []).map((c, i) => (
-                    <tr key={i} className="border-b border-[var(--border-soft)] last:border-b-0">
+                  {(configQuery.data ?? []).map((c) => (
+                    <tr key={`${c.category}:${c.key}`} className="border-b border-[var(--border-soft)] last:border-b-0">
                       <td className="py-2 px-3 text-[var(--fg-2)]">{c.category}</td>
                       <td className="py-2 px-3 font-mono text-xs text-[var(--fg-2)]">{c.key}</td>
                       <td className="py-2 px-3 text-[var(--fg)]">{c.value}</td>
@@ -89,7 +89,7 @@ function ChatbotAdminPage() {
             <ol className="space-y-2">
               {(questionsQuery.data ?? []).slice(0, 10).map((q, i) => (
                 <li
-                  key={i}
+                  key={q.question}
                   className="flex items-center gap-3 py-2 border-b border-[var(--border-soft)] last:border-b-0"
                 >
                   <span className="text-xs font-bold text-[var(--muted)] w-5 shrink-0">{i + 1}</span>

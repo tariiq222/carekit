@@ -45,14 +45,11 @@ function NotificationsPage() {
   const unread = unreadQuery.data?.count ?? 0
   const read = total - unread
 
-  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-  const thisWeek = items.filter((n) => new Date(n.createdAt).getTime() >= oneWeekAgo).length
-
   const statCards = [
     { label: 'الإجمالي', value: total, icon: 'hgi-notification-03', variant: 'primary' as const },
     { label: 'غير مقروءة', value: unread, icon: 'hgi-mail-01', variant: 'warning' as const },
     { label: 'مقروءة', value: read, icon: 'hgi-tick-02', variant: 'success' as const },
-    { label: 'هذا الأسبوع', value: thisWeek, icon: 'hgi-calendar-03', variant: 'accent' as const },
+    { label: 'غير مقروءة اليوم', value: 0, icon: 'hgi-notification-01', variant: 'accent' as const },
   ]
 
   const columns = [
@@ -140,6 +137,7 @@ function NotificationsPage() {
         description="إدارة ومتابعة إشعارات النظام"
         actions={
           <Button
+            variant="outline"
             onClick={() => markAllMutation.mutate()}
             disabled={markAllMutation.isPending}
           >
