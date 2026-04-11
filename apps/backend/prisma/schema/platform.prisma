@@ -1,2 +1,55 @@
-// Platform BC — license validation, feature flags, problem reports,
-// integrations. Models added in Phase 3 (p3-t*).
+// Platform BC — license validation, feature flags, problem reports, integrations.
+
+enum ProblemReportStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum ProblemReportType {
+  BUG
+  FEATURE_REQUEST
+  OTHER
+}
+
+model LicenseCache {
+  id            String   @id @default(uuid())
+  tenantId      String   @unique
+  licenseKey    String
+  tier          String
+  features      String[]
+  expiresAt     DateTime
+  lastCheckedAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ProblemReport {
+  id          String              @id @default(uuid())
+  tenantId    String
+  reporterId  String
+  type        ProblemReportType
+  title       String
+  description String
+  status      ProblemReportStatus @default(OPEN)
+  resolution  String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+model Integration {
+  id        String   @id @default(uuid())
+  tenantId  String
+  provider  String
+  config    Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, provider])
+  @@index([tenantId])
+}

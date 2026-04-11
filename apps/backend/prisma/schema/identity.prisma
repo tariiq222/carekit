@@ -1,2 +1,76 @@
 // Identity BC — auth, users, roles, permissions.
-// Models added in Phase 2 (p2-t*). Intentionally empty until then.
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  RECEPTIONIST
+  ACCOUNTANT
+  PRACTITIONER
+  PATIENT
+}
+
+enum UserGender {
+  MALE
+  FEMALE
+}
+
+model User {
+  id            String      @id @default(uuid())
+  tenantId      String
+  email         String
+  passwordHash  String
+  name          String
+  phone         String?
+  gender        UserGender?
+  avatarUrl     String?
+  isActive      Boolean     @default(true)
+  role          UserRole    @default(RECEPTIONIST)
+  customRoleId  String?
+  customRole    CustomRole? @relation(fields: [customRoleId], references: [id])
+  refreshTokens RefreshToken[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tenantId  String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tenantId])
+}
+
+model CustomRole {
+  id          String       @id @default(uuid())
+  tenantId    String
+  name        String
+  permissions Permission[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+model Permission {
+  id           String     @id @default(uuid())
+  tenantId     String
+  customRoleId String
+  customRole   CustomRole @relation(fields: [customRoleId], references: [id], onDelete: Cascade)
+  action       String
+  subject      String
+  createdAt    DateTime   @default(now())
+
+  @@unique([customRoleId, action, subject])
+  @@index([tenantId])
+}
