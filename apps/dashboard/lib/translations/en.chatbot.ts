@@ -29,6 +29,8 @@ export const enChatbot: Record<string, string> = {
   "chatbot.kb.uploadFile": "Upload File",
   "chatbot.kb.empty": "No knowledge base entries",
   "chatbot.kb.deleteEntry": "Delete entry",
+  "chatbot.kb.deleteTitle": "Delete Entry",
+  "chatbot.kb.deleteConfirm": "Are you sure you want to delete this entry? This action cannot be undone.",
   "chatbot.analytics.totalSessions": "Total Sessions",
   "chatbot.analytics.activeSessions": "Active Sessions",
   "chatbot.analytics.avgDuration": "Avg Duration",

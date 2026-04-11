@@ -77,4 +77,6 @@ export const arIntakeForms: Record<string, string> = {
   // — Field Input —
   "intakeForms.input.selectPlaceholder": "اختر...",
   "intakeForms.input.fileUpload": "انقر لرفع ملف (معاينة فقط)",
+  "intakeForms.delete.title": "حذف النموذج",
+  "intakeForms.delete.confirm": "هل أنت متأكد من حذف هذا النموذج؟ لا يمكن التراجع عن هذا الإجراء.",
 }

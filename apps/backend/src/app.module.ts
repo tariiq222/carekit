@@ -39,18 +39,15 @@ import { WhitelabelModule } from './modules/whitelabel/whitelabel.module.js';
 import { ChatbotModule } from './modules/chatbot/chatbot.module.js';
 import { RatingsModule } from './modules/ratings/ratings.module.js';
 import { PatientsModule } from './modules/patients/patients.module.js';
-import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { AiModule } from './modules/ai/ai.module.js';
 import { ZatcaModule } from './modules/zatca/zatca.module.js';
 import { HealthModule } from './modules/health/health.module.js';
-import { EmailModule } from './modules/email/email.module.js';
 import { ActivityLogModule } from './modules/activity-log/activity-log.module.js';
 import { TasksModule } from './modules/tasks/tasks.module.js';
 import { ClinicModule } from './modules/clinic/clinic.module.js';
 import { CouponsModule } from './modules/coupons/coupons.module.js';
 import { IntakeFormsModule } from './modules/intake-forms/intake-forms.module.js';
 import { BranchesModule } from './modules/branches/branches.module.js';
-import { EmailTemplatesModule } from './modules/email-templates/email-templates.module.js';
 import { IntegrationsModule } from './modules/integrations/integrations.module.js';
 import { FeatureFlagsModule } from './modules/feature-flags/feature-flags.module.js';
 import { LicenseModule } from './modules/license/license.module.js';
@@ -100,7 +97,6 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     AiServiceModule,
     CacheModule,
     QueueModule,
-    EmailModule,
     ActivityLogModule,
     AuthModule,
     RolesModule,
@@ -116,7 +112,6 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     ChatbotModule,
     RatingsModule,
     PatientsModule,
-    NotificationsModule,
     AiModule,
     ZatcaModule,
     HealthModule,
@@ -126,7 +121,6 @@ import { MetricsInterceptor } from './common/metrics/metrics.interceptor.js';
     CouponsModule,
     IntakeFormsModule,
     BranchesModule,
-    EmailTemplatesModule,
     IntegrationsModule,
     FeatureFlagsModule,
     LicenseModule,

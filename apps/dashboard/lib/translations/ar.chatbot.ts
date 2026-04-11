@@ -29,6 +29,8 @@ export const arChatbot: Record<string, string> = {
   "chatbot.kb.uploadFile": "رفع ملف",
   "chatbot.kb.empty": "لا توجد مدخلات في قاعدة المعرفة",
   "chatbot.kb.deleteEntry": "حذف المدخل",
+  "chatbot.kb.deleteTitle": "حذف المدخل",
+  "chatbot.kb.deleteConfirm": "هل أنت متأكد من حذف هذا المدخل؟ لا يمكن التراجع عن هذا الإجراء.",
   "chatbot.analytics.totalSessions": "إجمالي المحادثات",
   "chatbot.analytics.activeSessions": "محادثات نشطة",
   "chatbot.analytics.avgDuration": "متوسط المدة",

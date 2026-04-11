@@ -109,4 +109,8 @@ export const enGroups: Record<string, string> = {
   "groups.edit.submitting": "Saving...",
   "groups.edit.success": "Group updated successfully",
   "groups.edit.error": "Failed to update group",
+  "groups.delete.title": "Delete Group",
+  "groups.delete.confirm": "Are you sure you want to delete this group? This action cannot be undone.",
+  "groups.cancel.title": "Cancel Group",
+  "groups.cancel.confirm": "Are you sure you want to cancel this group? All enrolled participants will be notified.",
 }

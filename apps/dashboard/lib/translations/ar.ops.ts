@@ -85,6 +85,7 @@ export const arOps: Record<string, string> = {
   "branches.stats.total": "إجمالي الفروع",
   "branches.stats.active": "نشط",
   "branches.stats.inactive": "غير نشط",
+  "branches.stats.main": "الفروع الرئيسية",
   "branches.empty.title": "لا توجد فروع",
   "branches.empty.description": "لا توجد فروع للعرض.",
   "branches.col.name": "الاسم",

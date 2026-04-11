@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../../modules/notifications/notifications.service.js';
+import { NotificationsInboxService } from '../../modules/messaging/inbox/notifications-inbox.service.js';
 import { MetricsService } from '../metrics/metrics.service.js';
 import { ADMIN_ROLE_SLUGS } from '../../config/constants/roles.js';
 
@@ -10,7 +10,7 @@ export class QueueFailureService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly notificationsInboxService: NotificationsInboxService,
     private readonly metricsService: MetricsService,
   ) {}
 
@@ -67,18 +67,13 @@ export class QueueFailureService {
       const truncatedError = error.message.slice(0, 200);
       const results = await Promise.allSettled(
         admins.map((admin) =>
-          this.notificationsService.createNotification({
+          this.notificationsInboxService.createSystemAlert({
             userId: admin.id,
-            type: 'system_alert',
             titleAr: `فشل مهمة في الخلفية: ${queueName}`,
             titleEn: `Background job failed: ${queueName}`,
             bodyAr: `فشلت المهمة "${jobName}" بشكل نهائي بعد استنفاد جميع المحاولات. الخطأ: ${truncatedError}`,
             bodyEn: `Job "${jobName}" permanently failed after exhausting all retries. Error: ${truncatedError}`,
-            data: {
-              queueName,
-              jobName,
-              jobId: jobId ?? 'unknown',
-            },
+            data: { queueName, jobName, jobId: jobId ?? 'unknown' },
           }),
         ),
       );

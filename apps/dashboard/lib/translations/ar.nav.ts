@@ -55,6 +55,7 @@ export const arNav: Record<string, string> = {
   "common.inactive": "غير نشط",
   "common.loading": "جاري التحميل...",
   "common.cancel": "إلغاء",
+  "common.actions": "الإجراءات",
   "common.save": "حفظ",
   "common.delete": "حذف",
   "common.edit": "تعديل",
@@ -71,4 +72,8 @@ export const arNav: Record<string, string> = {
   "common.errorLoading": "تعذّر تحميل البيانات",
   "table.previous": "السابق",
   "table.next": "التالي",
+  "table.pagination.page": "الصفحة",
+  "table.pagination.of": "من",
+  "table.pagination.previous": "السابق",
+  "table.pagination.next": "التالي",
 }

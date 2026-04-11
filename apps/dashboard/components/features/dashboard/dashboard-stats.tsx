@@ -38,28 +38,24 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
         value={todayBookings}
         icon={Calendar03Icon}
         iconColor="primary"
-        trend={{ value: "+12%", positive: true }}
       />
       <StatCard
         title={locale === "ar" ? "مرضى جدد" : "New Patients"}
         value={newPatients}
         icon={UserMultiple02Icon}
         iconColor="success"
-        trend={{ value: "+8%", positive: true }}
       />
       <StatCard
         title={locale === "ar" ? "بانتظار الموافقة" : "Awaiting Approval"}
         value={pendingCount}
         icon={Clock01Icon}
         iconColor="warning"
-        trend={{ value: "-3%", positive: false }}
       />
       <StatCard
         title={locale === "ar" ? "إيرادات اليوم" : "Today's Revenue"}
         value="—"
         icon={MoneyReceiveSquareIcon}
         iconColor="accent"
-        trend={{ value: "+15%", positive: true }}
         description={locale === "ar" ? "ر.س" : "SAR"}
       />
     </StatsGrid>

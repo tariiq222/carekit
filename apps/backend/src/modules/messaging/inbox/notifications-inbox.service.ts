@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import type { DevicePlatform } from '@prisma/client';
+import type { DevicePlatform, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../database/prisma.service.js';
 import {
   parsePaginationParams,
@@ -71,5 +71,26 @@ export class NotificationsInboxService {
 
   async unregisterFcmToken(userId: string, token: string): Promise<void> {
     await this.prisma.fcmToken.deleteMany({ where: { userId, token } });
+  }
+
+  async createSystemAlert(input: {
+    userId: string;
+    titleAr: string;
+    titleEn: string;
+    bodyAr: string;
+    bodyEn: string;
+    data?: Prisma.InputJsonValue;
+  }): Promise<void> {
+    await this.prisma.notification.create({
+      data: {
+        userId: input.userId,
+        titleAr: input.titleAr,
+        titleEn: input.titleEn,
+        bodyAr: input.bodyAr,
+        bodyEn: input.bodyEn,
+        type: 'system_alert',
+        data: input.data ?? {},
+      },
+    });
   }
 }

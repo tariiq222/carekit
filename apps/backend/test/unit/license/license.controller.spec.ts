@@ -74,6 +74,7 @@ describe('LicenseController', () => {
     });
 
     it('passes partial update correctly', async () => {
+      const dto = { hasCoupons: false };
       mockService.update.mockResolvedValue({ ...baseLicense, ...dto });
 
       await controller.update(dto);

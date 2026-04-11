@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { PushService } from './channels/push/push.service.js';
 import { PushChannel } from './channels/push/push.channel.js';
@@ -24,8 +26,23 @@ import { DEFAULT_JOB_OPTIONS, QUEUE_EMAIL } from '../../config/constants/queues.
     WhitelabelModule,
     ClinicSettingsModule,
     BullModule.registerQueue({ name: QUEUE_EMAIL, defaultJobOptions: DEFAULT_JOB_OPTIONS }),
-    // MailerModule is already registered globally by the legacy EmailModule —
-    // do not call forRootAsync here to avoid duplicate registration.
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        transport: {
+          host: config.get<string>('MAIL_HOST', 'localhost'),
+          port: Number(config.get<string>('MAIL_PORT', '587')),
+          auth: {
+            user: config.get<string>('MAIL_USER', ''),
+            pass: config.get<string>('MAIL_PASSWORD', ''),
+          },
+        },
+        defaults: {
+          from: config.get<string>('MAIL_FROM', '"CareKit" <noreply@carekit.app>'),
+        },
+      }),
+    }),
   ],
   controllers: [NotificationsController, EmailTemplatesController],
   providers: [

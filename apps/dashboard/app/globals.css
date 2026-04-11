@@ -105,11 +105,11 @@
     --shadow-primary: 0 4px 12px var(--shadow-primary-color);
     --shadow-primary-hover: 0 6px 20px var(--shadow-primary-hover-color);
 
-    /* Glassmorphism */
-    --glass-blur: 24px;
-    --glass-bg: rgba(255, 255, 255, 0.72);
-    --glass-bg-solid: rgba(255, 255, 255, 0.88);
-    --glass-border: rgba(0, 0, 0, 0.06);
+    /* Glassmorphism — light mode uses solid white for maximum contrast */
+    --glass-blur: 0px;
+    --glass-bg: #FFFFFF;
+    --glass-bg-solid: #FFFFFF;
+    --glass-border: #E4E7EC;
 }
 
 /* ─── Light Theme ─── */
@@ -123,7 +123,7 @@
     --accent-ultra-light: rgba(130, 204, 23, 0.10);
     --background: #F2F4F8;
     --foreground: #1B2026;
-    --surface: rgba(255, 255, 255, 0.72);
+    --surface: #FFFFFF;
     --surface-solid: #FFFFFF;
     --surface-muted: #F7F9FC;
     --muted: #F1F4F8;
@@ -131,11 +131,11 @@
     /* --card is a shadcn-compat alias of --surface. Do not diverge. */
     --card: var(--surface);
     --card-foreground: #1B2026;
-    --popover: rgba(255, 255, 255, 0.92);
+    --popover: #FFFFFF;
     --popover-foreground: #1B2026;
     --secondary: #F1F4F8;
     --secondary-foreground: #1B2026;
-    --border: rgba(0, 0, 0, 0.06);
+    --border: #E4E7EC;
     --border-strong: #D0D5DD;
     --input: #D0D5DD;
     --ring: rgba(53, 79, 216, 0.28);
@@ -143,24 +143,24 @@
     /* State colors.
        `--error` is the semantic source of truth for destructive/error states.
        `--destructive` exists as a shadcn-compat alias and MUST always mirror --error. */
-    --success: #16A34A;
-    --warning: #D97706;
-    --error: #DC2626;
+    --success: #166534;
+    --warning: #B45309;
+    --error: #B91C1C;
     --destructive: var(--error);
     --info: #2563EB;
     --refunded: #7C3AED;
-    --chart-1: #16A34A;
+    --chart-1: #166534;
     --chart-2: #2563EB;
-    --chart-3: #D97706;
+    --chart-3: #92400E;
     --chart-4: #7C3AED;
     --chart-5: #EC4899;
-    --sidebar: rgba(255, 255, 255, 0.72);
+    --sidebar: #FFFFFF;
     --sidebar-foreground: #1B2026;
     --sidebar-primary: #354FD8;
     --sidebar-primary-foreground: #FFFFFF;
     --sidebar-accent: rgba(53, 79, 216, 0.08);
     --sidebar-accent-foreground: #354FD8;
-    --sidebar-border: rgba(0, 0, 0, 0.06);
+    --sidebar-border: #E4E7EC;
     --sidebar-ring: rgba(53, 79, 216, 0.28);
     --shadow-primary-color: rgba(53, 79, 216, 0.25);
     --shadow-primary-hover-color: rgba(53, 79, 216, 0.3);
@@ -191,7 +191,7 @@
     --rank-gold-border: rgba(252, 211, 77, 0.3);
     --rank-gold-badge-from: #F59E0B;
     --rank-gold-badge-to: #EAB308;
-    --rank-gold-badge-text: #78350F;
+    --rank-gold-badge-text: #451A03;
     --rank-gold-shadow: rgba(255, 193, 7, 0.3);
     --rank-silver-from: #F8FAFC;
     --rank-silver-to: #E2E8F0;

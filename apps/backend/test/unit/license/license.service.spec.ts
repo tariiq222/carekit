@@ -37,6 +37,7 @@ const flagCoupons = {
   updatedAt: new Date(),
 };
 const flagGifts = {
+  key: 'gift_cards',
   enabled: true,
   nameAr: 'بطاقات الهدايا',
   nameEn: 'Gift Cards',
@@ -241,8 +242,9 @@ describe('LicenseService', () => {
           nameEn: 'Coupons',
         },
         {
-          licensed: false,
-          enabled: false,
+          key: 'gift_cards',
+          licensed: true,
+          enabled: true,
           nameAr: 'بطاقات الهدايا',
           nameEn: 'Gift Cards',
         },
@@ -261,14 +263,15 @@ describe('LicenseService', () => {
       expect(result[0].enabled).toBe(false);
     });
 
-    it('enabled is false when licensed=false even if flag.enabled=true', async () => {
+    it('enabled is false when flag.enabled=false even if licensed=true', async () => {
+      const disabledFlag = { ...flagGifts, enabled: false };
       mockCache.get.mockResolvedValue(null);
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense);
-      mockPrisma.featureFlag.findMany.mockResolvedValue([flagGifts]);
+      mockPrisma.featureFlag.findMany.mockResolvedValue([disabledFlag]);
 
       const result = await service.getFeaturesWithStatus();
 
-      expect(result[0].licensed).toBe(false);
+      expect(result[0].licensed).toBe(true);
       expect(result[0].enabled).toBe(false);
     });
 
@@ -361,16 +364,19 @@ describe('LicenseService', () => {
     });
 
     it('enabling license does not affect other license fields', async () => {
+      const enabled = { ...baseLicense, hasCoupons: true };
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense);
-      mockPrisma.licenseConfig.update.mockResolvedValue(updated);
+      mockPrisma.licenseConfig.update.mockResolvedValue(enabled);
 
+      const result = await service.update({ hasCoupons: true });
 
-      expect(result.hasCoupons).toBe(baseLicense.hasCoupons);
       expect(result.hasRatings).toBe(baseLicense.hasRatings);
+      expect(result.hasMultiBranch).toBe(baseLicense.hasMultiBranch);
       expect(result.hasZatca).toBe(baseLicense.hasZatca);
     });
 
     it('multiple fields can be toggled in a single update', async () => {
+      const dto = { hasCoupons: false, hasZoom: true };
       const updated = { ...baseLicense, ...dto };
       mockPrisma.licenseConfig.findFirstOrThrow.mockResolvedValue(baseLicense);
       mockPrisma.licenseConfig.update.mockResolvedValue(updated);

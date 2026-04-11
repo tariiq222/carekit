@@ -4,7 +4,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QueueFailureService } from '../../../src/common/queue/queue-failure.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { NotificationsInboxService } from '../../../src/modules/messaging/inbox/notifications-inbox.service.js';
 import { MetricsService } from '../../../src/common/metrics/metrics.service.js';
 
 const mockPrisma: any = {
@@ -14,7 +14,7 @@ const mockPrisma: any = {
 };
 
 const mockNotifications: any = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+  createSystemAlert: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockMetrics: any = {
@@ -31,14 +31,14 @@ describe('QueueFailureService', () => {
       providers: [
         QueueFailureService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: NotificationsInboxService, useValue: mockNotifications },
         { provide: MetricsService, useValue: mockMetrics },
       ],
     }).compile();
 
     service = module.get<QueueFailureService>(QueueFailureService);
     jest.clearAllMocks();
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockNotifications.createSystemAlert.mockResolvedValue(undefined);
   });
 
   describe('notifyAdminsOfFailure', () => {
@@ -75,7 +75,7 @@ describe('QueueFailureService', () => {
         error,
       );
 
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockNotifications.createSystemAlert).not.toHaveBeenCalled();
     });
 
     it('should notify all found admins', async () => {
@@ -92,9 +92,9 @@ describe('QueueFailureService', () => {
         error,
       );
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledTimes(2);
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'admin-1', type: 'system_alert' }),
+      expect(mockNotifications.createSystemAlert).toHaveBeenCalledTimes(2);
+      expect(mockNotifications.createSystemAlert).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 'admin-1' }),
       );
     });
 
@@ -114,7 +114,7 @@ describe('QueueFailureService', () => {
 
     it('should not throw when a notification fails', async () => {
       mockPrisma.user.findMany.mockResolvedValue([{ id: 'admin-1' }]);
-      mockNotifications.createNotification.mockRejectedValue(
+      mockNotifications.createSystemAlert.mockRejectedValue(
         new Error('FCM error'),
       );
 

@@ -10,6 +10,7 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,12 +82,17 @@ export function getDepartmentColumns(
         const d = row.original
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm">
-                <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
-                <span className="sr-only">Actions</span>
-              </Button>
-            </DropdownMenuTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon-sm">
+                    <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
+                    <span className="sr-only">{label("common.actions", "Actions")}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top">{label("common.actions", "Actions")}</TooltipContent>
+            </Tooltip>
             <DropdownMenuContent align="end" className="glass-solid">
               <DropdownMenuItem onClick={() => onEdit?.(d)}>
                 <HugeiconsIcon icon={PencilEdit01Icon} size={14} />

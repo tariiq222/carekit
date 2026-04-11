@@ -55,6 +55,7 @@ export const enNav: Record<string, string> = {
   "common.inactive": "Inactive",
   "common.loading": "Loading...",
   "common.cancel": "Cancel",
+  "common.actions": "Actions",
   "common.save": "Save",
   "common.delete": "Delete",
   "common.edit": "Edit",
@@ -71,4 +72,8 @@ export const enNav: Record<string, string> = {
   "common.errorLoading": "Failed to load data",
   "table.previous": "Previous",
   "table.next": "Next",
+  "table.pagination.page": "Page",
+  "table.pagination.of": "of",
+  "table.pagination.previous": "Previous",
+  "table.pagination.next": "Next",
 }

@@ -94,11 +94,11 @@ export function CouponListPage() {
       )}
 
       {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground tabular-nums">{page} / {meta.totalPages}</p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t("table.previous")}</Button>
-            <Button variant="outline" size="sm" disabled={page >= meta.totalPages} onClick={() => setPage(page + 1)}>{t("table.next")}</Button>
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>{t("table.pagination.page")} {meta.page} {t("table.pagination.of")} {meta.totalPages}</span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={!meta.hasPreviousPage} onClick={() => setPage(meta.page - 1)}>{t("table.pagination.previous")}</Button>
+            <Button variant="outline" size="sm" disabled={!meta.hasNextPage} onClick={() => setPage(meta.page + 1)}>{t("table.pagination.next")}</Button>
           </div>
         </div>
       )}

@@ -26,6 +26,9 @@ export default async function globalSetup(): Promise<void> {
   const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
 
+  // Debug: log prisma available models
+  console.log('Prisma keys:', Object.keys(prisma).filter(k => !k.startsWith('_')).slice(0, 30));
+
   try {
     // Delete test-created module data (order matters due to foreign keys)
 

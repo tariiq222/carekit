@@ -8,9 +8,25 @@ import { Button } from "@/components/ui/button"
 import { ColorSwatchInput } from "@/components/features/shared/color-swatch-input"
 import { Separator } from "@/components/ui/separator"
 import { useBranding } from "@/components/providers/branding-provider"
-import { isValidHex } from "@/lib/color-utils"
+import { isValidHex, hexToRgb, contrastRatio, pickForeground } from "@/lib/color-utils"
 import { useLocale } from "@/components/locale-provider"
 import type { WhiteLabelConfig, UpdateWhitelabelPayload } from "@/lib/types/whitelabel"
+
+function ContrastBadge({ ratio, label }: { ratio: number; label?: string }) {
+  const pass = ratio >= 4.5
+  const large = ratio >= 3
+  const grade = ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA Large" : "Fail"
+  const color = pass ? "var(--success)" : large ? "var(--warning)" : "var(--error)"
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-mono tabular-nums"
+      style={{ borderColor: color, color }}
+      title={label}
+    >
+      {ratio.toFixed(1)}:1 · {grade}
+    </span>
+  )
+}
 
 interface Props {
   whitelabel: WhiteLabelConfig | null
@@ -234,27 +250,63 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
         {isValidHex(colorPrimary) && (
           <>
             <Separator />
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-xs text-muted-foreground">
-                {t("settings.preview") ?? "Preview"}
+                {t("settings.preview") ?? "معاينة"}
               </Label>
-              <div className="flex items-center gap-3">
-                <div className="size-10 rounded-lg shadow-sm" style={{ background: colorPrimary }} />
-                {isValidHex(colorPrimaryLight) && (
-                  <div className="size-10 rounded-lg shadow-sm" style={{ background: colorPrimaryLight }} />
-                )}
-                {isValidHex(colorPrimaryDark) && (
-                  <div className="size-10 rounded-lg shadow-sm" style={{ background: colorPrimaryDark }} />
-                )}
+
+              {/* Color swatches row */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorPrimary }} title={colorPrimary} />
+                {isValidHex(colorPrimaryLight) && <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorPrimaryLight }} title={colorPrimaryLight} />}
+                {isValidHex(colorPrimaryDark) && <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorPrimaryDark }} title={colorPrimaryDark} />}
+                {isValidHex(colorAccent) && <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorAccent }} title={colorAccent} />}
+                {isValidHex(colorAccentDark) && <div className="size-8 rounded-md shadow-sm ring-1 ring-border" style={{ background: colorAccentDark }} title={colorAccentDark} />}
+                {isValidHex(colorBackground) && <div className="size-8 rounded-md border shadow-sm ring-1 ring-border" style={{ background: colorBackground }} title={colorBackground} />}
+              </div>
+
+              {/* Live UI preview with contrast indicators */}
+              <div
+                className="rounded-lg border p-4 space-y-3"
+                style={{ background: isValidHex(colorBackground) ? colorBackground : "#F2F4F8" }}
+              >
+                {/* Primary button preview */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium shadow-sm"
+                    style={{
+                      background: colorPrimary,
+                      color: pickForeground(colorPrimary),
+                    }}
+                  >
+                    {systemName || "CareKit"}
+                  </div>
+                  <ContrastBadge ratio={contrastRatio(colorPrimary, isValidHex(colorBackground) ? colorBackground : "#F2F4F8")} />
+                </div>
+
+                {/* Accent badge preview */}
                 {isValidHex(colorAccent) && (
-                  <div className="size-10 rounded-lg shadow-sm" style={{ background: colorAccent }} />
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium"
+                      style={{
+                        background: colorAccent,
+                        color: pickForeground(colorAccent),
+                      }}
+                    >
+                      Badge
+                    </div>
+                    <ContrastBadge ratio={contrastRatio(colorAccent, isValidHex(colorBackground) ? colorBackground : "#F2F4F8")} label="Accent على الخلفية" />
+                  </div>
                 )}
-                {isValidHex(colorAccentDark) && (
-                  <div className="size-10 rounded-lg shadow-sm" style={{ background: colorAccentDark }} />
-                )}
-                {isValidHex(colorBackground) && (
-                  <div className="size-10 rounded-lg border shadow-sm" style={{ background: colorBackground }} />
-                )}
+
+                {/* Foreground text preview */}
+                <div className="flex items-center gap-3">
+                  <p className="text-sm font-medium" style={{ color: "#1B2026" }}>
+                    نص أساسي — Primary text
+                  </p>
+                  <ContrastBadge ratio={contrastRatio("#1B2026", isValidHex(colorBackground) ? colorBackground : "#F2F4F8")} label="نص على الخلفية" />
+                </div>
               </div>
             </div>
           </>

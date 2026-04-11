@@ -1,11 +1,11 @@
 import { Global, Module } from '@nestjs/common';
-import { NotificationsModule } from '../../modules/notifications/notifications.module.js';
+import { MessagingModule } from '../../modules/messaging/messaging.module.js';
 import { MetricsModule } from '../metrics/metrics.module.js';
 import { QueueFailureService } from './queue-failure.service.js';
 
 @Global()
 @Module({
-  imports: [NotificationsModule, MetricsModule],
+  imports: [MessagingModule, MetricsModule],
   providers: [QueueFailureService],
   exports: [QueueFailureService],
 })

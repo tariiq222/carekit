@@ -85,6 +85,7 @@ export const enOps: Record<string, string> = {
   "branches.stats.total": "Total Branches",
   "branches.stats.active": "Active",
   "branches.stats.inactive": "Inactive",
+  "branches.stats.main": "Main Branches",
   "branches.empty.title": "No branches found",
   "branches.empty.description": "There are no branches to display.",
   "branches.col.name": "Name",
