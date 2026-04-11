@@ -2,30 +2,11 @@
 // Clinic — Practitioners & Schedule
 // ──────────────────────────────────────────────
 
-model Specialty {
-  id            String   @id @default(uuid())
-  nameEn        String   @unique @map("name_en")
-  nameAr        String   @map("name_ar")
-  descriptionEn String?  @map("description_en")
-  descriptionAr String?  @map("description_ar")
-  iconUrl       String?  @map("icon_url")
-  sortOrder     Int      @default(0) @map("sort_order")
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-
-  practitioners Practitioner[]
-
-  @@index([isActive, sortOrder])
-  @@map("specialties")
-}
-
 model Practitioner {
   id                  String    @id @default(uuid())
   userId              String    @unique @map("user_id")
   title               String?   @map("title")
   nameAr              String?   @map("name_ar")
-  specialtyId         String?   @map("specialty_id")
   specialty           String    @default("") @map("specialty")
   specialtyAr         String    @default("") @map("specialty_ar")
   bio                 String?
@@ -45,7 +26,6 @@ model Practitioner {
   deletedAt           DateTime? @map("deleted_at")
 
   user                 User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  specialtyRel         Specialty?                 @relation(fields: [specialtyId], references: [id], onDelete: SetNull)
   availabilities       PractitionerAvailability[]
   vacations            PractitionerVacation[]
   breaks               PractitionerBreak[]
