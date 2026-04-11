@@ -38,31 +38,14 @@ function GroupSessionsPage() {
   const groups = listQuery.data?.items ?? []
   const meta = listQuery.data?.meta
 
+  const totalEnrolled = groups.reduce((sum, g) => sum + g.enrolledCount, 0)
+  const totalCapacity = groups.reduce((sum, g) => sum + g.maxCapacity, 0)
+
   const statCards = [
-    {
-      label: 'إجمالي المجموعات',
-      value: meta?.total ?? 0,
-      icon: 'hgi-user-group',
-      variant: 'primary' as const,
-    },
-    {
-      label: 'نشطة',
-      value: groups.filter((g) => g.status === 'active').length,
-      icon: 'hgi-checkmark-circle-02',
-      variant: 'success' as const,
-    },
-    {
-      label: 'مكتملة',
-      value: groups.filter((g) => g.status === 'completed').length,
-      icon: 'hgi-tick-02',
-      variant: 'accent' as const,
-    },
-    {
-      label: 'ملغاة',
-      value: groups.filter((g) => g.status === 'cancelled').length,
-      icon: 'hgi-cancel-circle',
-      variant: 'warning' as const,
-    },
+    { label: 'إجمالي المجموعات', value: meta?.total ?? 0, icon: 'hgi-user-group', variant: 'primary' as const },
+    { label: 'نشطة (هذه الصفحة)', value: groups.filter(g => g.status === 'active').length, icon: 'hgi-checkmark-circle-02', variant: 'success' as const },
+    { label: 'المسجّلون', value: totalEnrolled, icon: 'hgi-user-multiple-02', variant: 'accent' as const },
+    { label: 'السعة الكلية', value: totalCapacity, icon: 'hgi-hierarchy-01', variant: 'warning' as const },
   ]
 
   const formatDate = (date: string | undefined) =>

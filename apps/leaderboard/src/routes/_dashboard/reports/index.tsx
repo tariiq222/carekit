@@ -69,6 +69,7 @@ function BookingStatusBreakdown({ data }: { data: BookingReport }) {
 
 function ReportsPage() {
   const [params, setParams] = useState<ReportDateParams>({})
+  const [exportError, setExportError] = useState<string | null>(null)
 
   const revenueQuery = useRevenueReport(params)
   const bookingQuery = useBookingReport(params)
@@ -109,21 +110,23 @@ function ReportsPage() {
   ]
 
   async function handleExport(type: 'revenue' | 'bookings' | 'patients') {
+    setExportError(null)
     try {
-      const blob =
-        type === 'revenue'
-          ? await reportsApi.exportRevenue(params)
-          : type === 'bookings'
-            ? await reportsApi.exportBookings(params)
-            : await reportsApi.exportPatients()
+      const blob = type === 'revenue'
+        ? await reportsApi.exportRevenue(params)
+        : type === 'bookings'
+          ? await reportsApi.exportBookings(params)
+          : await reportsApi.exportPatients()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
       a.download = `${type}-report.csv`
+      document.body.appendChild(a)
       a.click()
+      document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch {
-      // Export failed silently — user can retry
+      setExportError('حدث خطأ أثناء التصدير. حاول مرة أخرى.')
     }
   }
 
@@ -195,6 +198,9 @@ function ReportsPage() {
             تصدير المرضى (CSV)
           </Button>
         </div>
+        {exportError && (
+          <p className="text-sm text-[var(--danger)] mt-2">{exportError}</p>
+        )}
       </div>
     </div>
   )
