@@ -5,7 +5,7 @@ import type {
   PaymentListQuery,
   PaymentMethod,
   PaymentStatus,
-} from '@carekit/api-client/types/payment'
+} from '@carekit/api-client'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatsGrid } from '@/components/shared/stats-grid'
 import { FilterBar } from '@/components/shared/filter-bar'

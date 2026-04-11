@@ -3,7 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import type {
   InvoiceListItem,
   InvoiceListQuery,
-} from '@carekit/api-client/types/invoice'
+} from '@carekit/api-client'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatsGrid } from '@/components/shared/stats-grid'
 import { FilterBar } from '@/components/shared/filter-bar'

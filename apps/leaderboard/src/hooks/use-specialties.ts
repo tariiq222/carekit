@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { specialtiesApi } from '@carekit/api-client'
 import type {
+  SpecialtyListItem,
   CreateSpecialtyPayload,
   UpdateSpecialtyPayload,
 } from '@carekit/api-client'
 import { QUERY_KEYS } from '@/lib/query-keys'
 
 export function useSpecialties() {
-  return useQuery({
-    queryKey: QUERY_KEYS.specialties.list,
+  return useQuery<SpecialtyListItem[]>({
+    queryKey: QUERY_KEYS.specialties.all,
     queryFn: () => specialtiesApi.list(),
   })
 }

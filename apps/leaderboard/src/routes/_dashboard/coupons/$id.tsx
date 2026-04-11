@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { UpdateCouponPayload } from '@carekit/api-client/types/coupon'
+import type { UpdateCouponPayload } from '@carekit/api-client'
 import { useCoupon, useUpdateCoupon } from '@/hooks/use-coupons'
 import {
   couponFormSchema,

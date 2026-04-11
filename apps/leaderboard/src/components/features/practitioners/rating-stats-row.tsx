@@ -1,5 +1,5 @@
 import { RatingStars } from './rating-stars'
-import type { RatingStats } from '../../../../../../packages/api-client/src/types/rating.js'
+import type { RatingStats } from '@carekit/api-client'
 
 interface Props {
   stats: RatingStats

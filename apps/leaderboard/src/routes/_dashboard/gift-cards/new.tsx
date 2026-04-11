@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { CreateGiftCardPayload } from '@carekit/api-client/types/gift-card'
+import type { CreateGiftCardPayload } from '@carekit/api-client'
 import { useCreateGiftCard } from '@/hooks/use-gift-cards'
 import {
   giftCardFormSchema,

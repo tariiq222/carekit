@@ -1,4 +1,4 @@
-import type { PaymentStatus } from '@carekit/api-client/types/payment'
+import type { PaymentStatus } from '@carekit/api-client'
 
 type Variant = 'primary' | 'success' | 'warning' | 'error' | 'muted'
 

@@ -1,4 +1,4 @@
-import type { InvoiceListItem } from '@carekit/api-client/types/invoice'
+import type { InvoiceListItem } from '@carekit/api-client'
 
 type Variant = 'primary' | 'success' | 'warning' | 'muted'
 

@@ -7,7 +7,7 @@ import { PaymentStatusBadge } from '@/components/features/payments/payment-statu
 import type {
   PaymentListItem,
   PaymentMethod,
-} from '@carekit/api-client/types/payment'
+} from '@carekit/api-client'
 
 export const Route = createFileRoute('/_dashboard/payments/$id')({
   component: PaymentDetailPage,

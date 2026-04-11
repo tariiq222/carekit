@@ -11,7 +11,7 @@ import type {
   RatingListQuery,
   RatingStats,
   PractitionerRating,
-} from '../../../../../../packages/api-client/src/types/rating.js'
+} from '@carekit/api-client'
 
 export const Route = createFileRoute('/_dashboard/practitioners/$id/ratings')({
   component: PractitionerRatingsPage,

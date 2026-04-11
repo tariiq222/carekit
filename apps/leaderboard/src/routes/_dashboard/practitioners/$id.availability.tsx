@@ -18,7 +18,7 @@ import { AvailabilityDayRow } from '@/components/features/practitioners/availabi
 import type {
   PractitionerAvailability,
   AvailabilitySlotInput,
-} from '../../../../../../packages/api-client/src/types/availability.js'
+} from '@carekit/api-client'
 
 export const Route = createFileRoute('/_dashboard/practitioners/$id/availability')({
   component: PractitionerAvailabilityPage,
