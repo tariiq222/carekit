@@ -15,12 +15,12 @@ Each feature lives in `src/modules/[name]/` with:
 dto/                      # Request/response DTOs (class-validator)
 ```
 
-## Active Modules (36)
+## Active Modules (34)
 
 `activity-log`, `ai`, `auth`, `bookings`, `branches`, `chatbot`, `clinic`,
-`clinic-integrations`, `clinic-settings`, `coupons`, `departments`, `email`,
-`email-templates`, `feature-flags`, `group-sessions`, `health`,
-`intake-forms`, `integrations`, `invoices`, `license`, `notifications`,
+`clinic-integrations`, `clinic-settings`, `coupons`, `departments`,
+`feature-flags`, `group-sessions`, `health`,
+`intake-forms`, `integrations`, `invoices`, `license`, `messaging`,
 `patients`, `payments`, `permissions`, `practitioners`,
 `ratings`, `reports`, `roles`, `services`, `specialties`, `tasks`, `users`,
 `whitelabel`, `zatca`
