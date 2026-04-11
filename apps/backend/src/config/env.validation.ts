@@ -59,10 +59,14 @@ export const envValidationSchema = Joi.object({
   SMTP_PASS: Joi.string().allow('').optional(),
   SMTP_FROM: Joi.string().email().allow('').optional(),
 
-  // OpenAI (AI BC) — optional until Phase 11
+  // OpenAI (AI BC — embeddings only) — optional until Phase 11
   OPENAI_API_KEY: Joi.string().allow('').optional(),
   OPENAI_EMBEDDING_MODEL: Joi.string().default('text-embedding-3-small'),
-  OPENAI_CHAT_MODEL: Joi.string().default('gpt-4o-mini'),
+
+  // OpenRouter (AI BC — chat/completion) — optional until Phase 11
+  OPENROUTER_API_KEY: Joi.string().allow('').optional(),
+  OPENROUTER_BASE_URL: Joi.string().uri().default('https://openrouter.ai/api/v1'),
+  OPENROUTER_CHAT_MODEL: Joi.string().default('anthropic/claude-3.5-haiku'),
 
   // Moyasar (Finance BC) — optional until Phase 7
   MOYASAR_API_KEY: Joi.string().allow('').optional(),
