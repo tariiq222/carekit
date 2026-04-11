@@ -610,15 +610,25 @@
       "title": "Bookings BC — Critical Fixes",
       "titleAr": "إصلاحات حرجة — الحجوزات",
       "order": 9,
-      "description": "ثغرات حرجة في check-availability و create-booking اكتُشفت بمقارنة النظام القديم — لا تحتاج migration جديد",
-      "parallelNote": "t1+t2+t3 متوازية كلها.",
+      "description": "ثغرات حرجة في check-availability و create-booking. الـ schema الحالي لا يدعم نموذج وقت الموظف الحقيقي (فترتين في اليوم + يوم off أسبوعي + إجازة سنوية ممتدة) — يحتاج migration واحد.",
+      "parallelNote": "t0 أولاً (schema). بعدها t1+t2+t3 متوازية.",
       "tasks": [
+        {
+          "id": "p9-t0",
+          "seq": "0",
+          "parallel": false,
+          "title": "Migration: توسيع EmployeeAvailability + EmployeeAvailabilityException",
+          "detail": "نموذج وقت الموظف الحقيقي: (1) فترات متعددة في اليوم (9-1 ثم 4-9) — إزالة @@unique([employeeId, dayOfWeek]) من EmployeeAvailability. (2) يوم off أسبوعي = غياب أي صف لذلك dayOfWeek. (3) إجازة سنوية ممتدة — تحويل EmployeeAvailabilityException من date مفرد إلى نطاق (startDate, endDate) وحذف startTime/endTime (تنظيف).",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "bookings"
+        },
         {
           "id": "p9-t1",
           "seq": "1a",
           "parallel": true,
-          "title": "إصلاح check-availability — إضافة EmployeeAvailability",
-          "detail": "CheckAvailabilityHandler يتجاهل EmployeeAvailability حالياً. يجب التحقق من: (1) جدول الموظف الأسبوعي عبر EmployeeAvailability، (2) EmployeeAvailabilityException للإجازات، (3) Holiday على البرانش. الـ schema موجود — فقط handler يحتاج تعديل.",
+          "title": "إصلاح check-availability — دعم فترات متعددة + exceptions + holidays",
+          "detail": "CheckAvailabilityHandler يتجاهل EmployeeAvailability حالياً. بعد p9-t0: (1) جلب كل shifts اليوم من EmployeeAvailability (قد تكون فترتين)، (2) التحقق من EmployeeAvailabilityException كنطاق تاريخي للإجازات، (3) Holiday على البرانش، (4) توليد slots ضمن كل نافذة منفصلة (الاستراحة = فجوة بين الفترات). يعتمد على p9-t0.",
           "complexity": "COMPLEX",
           "status": "todo",
           "bc": "bookings"
@@ -712,8 +722,9 @@
           "title": "Department + ServiceCategory schema + migration",
           "detail": "model Department { tenantId, nameAr, nameEn, isVisible (false = يخفي القسم ويعرض الفئات مباشرة), sortOrder, isActive }. model ServiceCategory { tenantId, departmentId (nullable), nameAr, nameEn, sortOrder, isActive }. تعديل model Service لإضافة categoryId FK + migration.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "organization"
+          "status": "done",
+          "bc": "organization",
+          "note": "migration 20260411232519_p11_t1_departments_categories. ملاحظة: Prisma diff حاولت DROP INDEX للـ ivfflat — أُزيل السطر يدوياً مع تعليق توضيحي."
         },
         {
           "id": "p11-t2",
