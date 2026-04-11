@@ -74,7 +74,7 @@ jobs:
           JWT_SECRET: ci-test-secret-32chars-minimum!!
           JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
 
-  leadboard:
+  leaderboard:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,13 +85,13 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
       - name: Typecheck
-        working-directory: apps/leadboard
+        working-directory: apps/leaderboard
         run: npm run typecheck
       - name: Lint
-        working-directory: apps/leadboard
+        working-directory: apps/leaderboard
         run: npm run lint
       - name: Build
-        working-directory: apps/leadboard
+        working-directory: apps/leaderboard
         run: npm run build
 
   mobile:

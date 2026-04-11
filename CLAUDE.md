@@ -59,7 +59,7 @@ carekit/
 │   │   ├── prisma/schema/    # Split schemas (one per domain, immutable migrations)
 │   │   ├── src/common/       # Guards, filters, interceptors, decorators, pipes
 │   │   └── src/modules/      # Feature modules (25+ domains)
-│   ├── leadboard/        # Vite + React admin dashboard (replaces Next.js dashboard)
+│   ├── leaderboard/        # Vite + React admin dashboard (replaces Next.js dashboard)
 │   │   └── src/          # routes/, components/, hooks/, lib/
 │   └── mobile/           # Expo — Patient + Practitioner apps
 │       ├── app/(patient)/      # Patient flows (booking, appointments, chat)
@@ -76,7 +76,7 @@ carekit/
 ## Module Map
 
 See `apps/backend/CLAUDE.md` for NestJS module conventions.
-See `apps/leadboard/CLAUDE.md` for dashboard layer rules (if present).
+See `apps/leaderboard/CLAUDE.md` for dashboard layer rules (if present).
 See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 
 ## Key Domains

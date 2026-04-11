@@ -64,6 +64,9 @@ dashboard/out/
 pic-test/
 docs/screenshots/
 
+# Performance test artifacts
+performance/k6/results/
+
 # Claude Code local config (not for repo)
 .claude/
 

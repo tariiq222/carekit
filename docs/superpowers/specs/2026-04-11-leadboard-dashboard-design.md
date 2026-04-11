@@ -42,16 +42,16 @@ The dashboard must support white-label visual identity per clinic, feature flags
 ```
 CareKit/
 ├── apps/
-│   ├── leadboard/              ← this project
+│   ├── leaderboard/              ← this project
 │   └── (mobile — Expo, future)
 ├── packages/
 │   ├── shared/                 ← existing: types, enums, i18n tokens
 │   └── api-client/             ← new: Axios client shared with Expo
 ├── backend/
-└── dashboard/                  ← keep until leadboard is stable, then delete
+└── dashboard/                  ← keep until leaderboard is stable, then delete
 ```
 
-The `packages/api-client/` package extracts all HTTP logic so it can be consumed by both leadboard and Expo without duplication.
+The `packages/api-client/` package extracts all HTTP logic so it can be consumed by both leaderboard and Expo without duplication.
 
 > **Note:** Uses a fetch-based wrapper (not Axios) to ensure React Native compatibility. Axios works in RN but is not native — fetch is universal.
 
@@ -255,7 +255,7 @@ Recent activity feed `[activityLog]`
 ## File Structure
 
 ```
-apps/leadboard/
+apps/leaderboard/
 ├── src/
 │   ├── routes/
 │   │   ├── __root.tsx           # root layout
