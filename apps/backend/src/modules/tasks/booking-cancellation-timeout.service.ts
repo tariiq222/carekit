@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CancelledBy } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../bookings/booking-status-log.service.js';
@@ -14,7 +15,7 @@ export class BookingCancellationTimeoutService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly activityLogService: ActivityLogService,
     private readonly bookingSettingsService: BookingSettingsService,
     private readonly statusLogService: BookingStatusLogService,
@@ -143,21 +144,10 @@ export class BookingCancellationTimeoutService {
         }
 
         if (booking.patientId) {
-          const refundMsg =
-            refundType === 'none'
-              ? { ar: 'بدون استرداد وفق سياسة الإلغاء', en: 'No refund per cancellation policy' }
-              : refundType === 'partial'
-                ? { ar: 'مع استرداد جزئي', en: 'with a partial refund' }
-                : { ar: 'مع استرداد كامل', en: 'with a full refund' };
-
-          await this.notificationsService.createNotification({
-            userId: booking.patientId,
-            titleAr: 'تمت الموافقة على إلغاء موعدك',
-            titleEn: 'Cancellation Auto-Approved',
-            bodyAr: `تمت الموافقة تلقائياً على طلب إلغاء موعدك ${refundMsg.ar}`,
-            bodyEn: `Your cancellation request was auto-approved ${refundMsg.en}`,
-            type: 'booking_cancelled',
-            data: { bookingId: booking.id },
+          await this.messagingDispatcher.dispatch({
+            event: MessagingEvent.BOOKING_CANCELLATION_REJECTED,
+            recipientUserId: booking.patientId,
+            context: {},
           });
         }
 

@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { NoShowPolicy } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../bookings/booking-status-log.service.js';
@@ -15,7 +16,7 @@ export class BookingNoShowService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly activityLogService: ActivityLogService,
     private readonly bookingSettingsService: BookingSettingsService,
     private readonly statusLogService: BookingStatusLogService,
@@ -145,14 +146,10 @@ export class BookingNoShowService {
                 .then((adminRoles) =>
                   Promise.all(
                     adminRoles.map(({ userId }) =>
-                      this.notificationsService.createNotification({
-                        userId,
-                        titleAr: 'فشل الاسترداد التلقائي — مراجعة يدوية مطلوبة',
-                        titleEn: 'Auto-Refund Failed — Manual Review Required',
-                        bodyAr: `فشل استرداد جزء من مبلغ حجز رقم ${booking.id}. يرجى المراجعة اليدوية.`,
-                        bodyEn: `Partial refund for no-show booking ${booking.id} failed. Manual action required.`,
-                        type: 'system_alert',
-                        data: { bookingId: booking.id, paymentId: payment.id },
+                      this.messagingDispatcher.dispatch({
+                        event: MessagingEvent.BOOKING_NOSHOW_REVIEW,
+                        recipientUserId: userId,
+                        context: { date: booking.date.toISOString().split('T')[0] },
                       }),
                     ),
                   ),
@@ -179,26 +176,18 @@ export class BookingNoShowService {
           );
 
         if (booking.practitioner?.userId) {
-          await this.notificationsService.createNotification({
-            userId: booking.practitioner.userId,
-            titleAr: 'لم يحضر المريض',
-            titleEn: 'Patient No-Show',
-            bodyAr: `لم يحضر المريض لموعد الساعة ${booking.startTime}`,
-            bodyEn: `Patient did not show up for the ${booking.startTime} appointment`,
-            type: 'booking_no_show',
-            data: { bookingId: booking.id },
+          await this.messagingDispatcher.dispatch({
+            event: MessagingEvent.BOOKING_NOSHOW,
+            recipientUserId: booking.practitioner.userId,
+            context: { date: booking.date.toISOString().split('T')[0] },
           });
         }
 
         if (booking.patientId) {
-          await this.notificationsService.createNotification({
-            userId: booking.patientId,
-            titleAr: 'تم تسجيل عدم حضورك',
-            titleEn: 'No-Show Recorded',
-            bodyAr: `لم يتم تسجيل حضورك لموعد الساعة ${booking.startTime}`,
-            bodyEn: `You were marked as no-show for the ${booking.startTime} appointment`,
-            type: 'booking_no_show',
-            data: { bookingId: booking.id },
+          await this.messagingDispatcher.dispatch({
+            event: MessagingEvent.BOOKING_NOSHOW,
+            recipientUserId: booking.patientId,
+            context: { date: booking.date.toISOString().split('T')[0] },
           });
         }
 
@@ -281,14 +270,10 @@ export class BookingNoShowService {
       .then((adminRoles) =>
         Promise.all(
           adminRoles.map(({ userId }) =>
-            this.notificationsService.createNotification({
-              userId,
-              titleAr: 'مراجعة مالية — عدم حضور',
-              titleEn: 'No-Show Financial Review',
-              bodyAr: 'مريض لم يحضر لموعده. يرجى تحديد سياسة الاسترجاع',
-              bodyEn: 'A patient no-showed. Please decide on the refund policy',
-              type: 'no_show_review',
-              data: { bookingId },
+            this.messagingDispatcher.dispatch({
+              event: MessagingEvent.BOOKING_NOSHOW_REVIEW,
+              recipientUserId: userId,
+              context: { date: '' },
             }),
           ),
         ),

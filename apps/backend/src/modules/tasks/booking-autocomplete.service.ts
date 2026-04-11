@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../bookings/booking-status-log.service.js';
@@ -12,7 +13,7 @@ export class BookingAutocompleteService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly activityLogService: ActivityLogService,
     private readonly bookingSettingsService: BookingSettingsService,
     private readonly statusLogService: BookingStatusLogService,
@@ -93,15 +94,10 @@ export class BookingAutocompleteService {
           );
 
         if (booking.patientId) {
-          await this.notificationsService.createNotification({
-            userId: booking.patientId,
-            titleAr: 'كيف كانت تجربتك؟',
-            titleEn: 'How was your experience?',
-            bodyAr: 'يسعدنا معرفة رأيك في الموعد. قيّم تجربتك الآن.',
-            bodyEn:
-              'We would love your feedback. Please rate your appointment.',
-            type: 'booking_completed',
-            data: { bookingId: booking.id },
+          await this.messagingDispatcher.dispatch({
+            event: MessagingEvent.BOOKING_AUTOCOMPLETED,
+            recipientUserId: booking.patientId,
+            context: { date: booking.date.toISOString().split('T')[0] },
           });
         }
       } catch (err) {

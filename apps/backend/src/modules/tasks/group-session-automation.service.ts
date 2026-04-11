@@ -72,15 +72,11 @@ export class GroupAutomationService {
           { isolationLevel: 'Serializable', timeout: 10000 },
         );
 
-        this.notificationsService
-          .createNotification({
-            userId: enrollment.patientId,
-            titleAr: 'انتهت مهلة الدفع',
-            titleEn: 'Payment Deadline Expired',
-            bodyAr: 'انتهت مهلة الدفع — فقدت مكانك في الجلسة',
-            bodyEn: 'Payment deadline has passed — you lost your spot',
-            type: NotificationType.group_enrollment_expired,
-            data: { groupId: enrollment.groupId },
+        this.messagingDispatcher
+          .dispatch({
+            event: MessagingEvent.GROUP_SESSION_CONFIRMED,
+            recipientUserId: enrollment.patientId,
+            context: { serviceName: '', date: '' },
           })
           .catch((err) =>
             this.logger.warn('Notification failed', {
@@ -128,15 +124,11 @@ export class GroupAutomationService {
         });
 
         for (const enrollment of group.enrollments) {
-          this.notificationsService
-            .createNotification({
-              userId: enrollment.patientId,
-              titleAr: 'تم إلغاء الجلسة',
-              titleEn: 'Session Cancelled',
-              bodyAr: `تم إلغاء جلسة "${group.nameAr}" لعدم اكتمال العدد`,
-              bodyEn: `"${group.nameEn}" cancelled due to insufficient enrollment`,
-              type: NotificationType.group_session_cancelled,
-              data: { groupId: group.id },
+          this.messagingDispatcher
+            .dispatch({
+              event: MessagingEvent.GROUP_CAPACITY_REACHED,
+              recipientUserId: enrollment.patientId,
+              context: { serviceName: group.nameEn ?? '' },
             })
             .catch((err) =>
               this.logger.warn('Notification failed', {
@@ -176,15 +168,11 @@ export class GroupAutomationService {
 
     for (const group of groups) {
       for (const enrollment of group.enrollments) {
-        this.notificationsService
-          .createNotification({
-            userId: enrollment.patientId,
-            titleAr: 'تذكير: جلسة غداً',
-            titleEn: 'Reminder: Session Tomorrow',
-            bodyAr: `جلسة "${group.nameAr}" غداً`,
-            bodyEn: `"${group.nameEn}" session is tomorrow`,
-            type: NotificationType.group_session_reminder,
-            data: { groupId: group.id },
+        this.messagingDispatcher
+          .dispatch({
+            event: MessagingEvent.GROUP_SESSION_REMINDER,
+            recipientUserId: enrollment.patientId,
+            context: { practitionerName: '', time: '' },
           })
           .catch((err) =>
             this.logger.warn('Notification failed', {

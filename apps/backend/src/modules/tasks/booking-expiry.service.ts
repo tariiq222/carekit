@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CancelledBy } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../bookings/booking-status-log.service.js';
@@ -13,7 +14,7 @@ export class BookingExpiryService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly activityLogService: ActivityLogService,
     private readonly bookingSettingsService: BookingSettingsService,
     private readonly statusLogService: BookingStatusLogService,
@@ -86,14 +87,10 @@ export class BookingExpiryService {
           );
 
         if (booking.patientId) {
-          await this.notificationsService.createNotification({
-            userId: booking.patientId,
-            titleAr: 'انتهت صلاحية الحجز',
-            titleEn: 'Booking Expired',
-            bodyAr: 'انتهت صلاحية حجزك بسبب عدم إتمام الدفع',
-            bodyEn: 'Your booking has expired due to incomplete payment',
-            type: 'booking_expired',
-            data: { bookingId: booking.id },
+          await this.messagingDispatcher.dispatch({
+            event: MessagingEvent.BOOKING_EXPIRED,
+            recipientUserId: booking.patientId,
+            context: { date: booking.date.toISOString().split('T')[0] },
           });
         }
 
