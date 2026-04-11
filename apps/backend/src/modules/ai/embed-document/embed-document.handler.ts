@@ -45,29 +45,39 @@ export class EmbedDocumentHandler {
     try {
       const vectors = await this.embedding.embed(chunks);
 
-      await this.prisma.documentChunk.createMany({
-        data: chunks.map((content, i) => ({
-          tenantId: dto.tenantId,
-          documentId: doc.id,
-          content,
-          chunkIndex: i,
-          tokenCount: Math.ceil(content.length / 4),
-        })),
-      });
+      await this.prisma.$transaction(async (tx) => {
+        await tx.documentChunk.createMany({
+          data: chunks.map((content, i) => ({
+            tenantId: dto.tenantId,
+            documentId: doc.id,
+            content,
+            chunkIndex: i,
+            tokenCount: Math.ceil(content.length / 4),
+          })),
+        });
 
-      for (let i = 0; i < chunks.length; i++) {
-        const vector = `[${vectors[i].join(',')}]`;
-        await this.prisma.$executeRawUnsafe(
-          `UPDATE "DocumentChunk" SET embedding = $1::vector WHERE "documentId" = $2 AND "chunkIndex" = $3`,
-          vector,
+        // Batch-update all embeddings in one round-trip using UNNEST
+        const indices = chunks.map((_, i) => i);
+        const vectorLiterals = vectors.map((v) => `[${v.join(',')}]`);
+
+        await tx.$executeRawUnsafe(
+          `UPDATE "DocumentChunk" dc
+           SET embedding = vals.vec::vector
+           FROM (
+             SELECT UNNEST($1::int[]) AS idx,
+                    UNNEST($2::text[]) AS vec
+           ) vals
+           WHERE dc."documentId" = $3
+             AND dc."chunkIndex" = vals.idx`,
+          indices,
+          vectorLiterals,
           doc.id,
-          i,
         );
-      }
 
-      await this.prisma.knowledgeDocument.update({
-        where: { id: doc.id },
-        data: { status: 'EMBEDDED' },
+        await tx.knowledgeDocument.update({
+          where: { id: doc.id },
+          data: { status: 'EMBEDDED' },
+        });
       });
 
       return { documentId: doc.id, chunks: chunks.length };

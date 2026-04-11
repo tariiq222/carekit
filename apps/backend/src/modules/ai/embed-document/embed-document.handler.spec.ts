@@ -2,16 +2,28 @@ import { EmbedDocumentHandler } from './embed-document.handler';
 
 const futureDoc = { id: 'doc-1', tenantId: 't1', title: 'Test', status: 'PENDING' };
 
-const mockPrisma = () => ({
-  knowledgeDocument: {
-    create: jest.fn().mockResolvedValue(futureDoc),
-    update: jest.fn().mockResolvedValue({ ...futureDoc, status: 'EMBEDDED' }),
-  },
-  documentChunk: {
-    createMany: jest.fn().mockResolvedValue({ count: 2 }),
-  },
-  $executeRawUnsafe: jest.fn().mockResolvedValue(1),
-});
+type MockPrisma = {
+  knowledgeDocument: { create: jest.Mock; update: jest.Mock };
+  documentChunk: { createMany: jest.Mock };
+  $executeRawUnsafe: jest.Mock;
+  $transaction: jest.Mock;
+};
+
+const mockPrisma = (): MockPrisma => {
+  const p: MockPrisma = {
+    knowledgeDocument: {
+      create: jest.fn().mockResolvedValue(futureDoc),
+      update: jest.fn().mockResolvedValue({ ...futureDoc, status: 'EMBEDDED' }),
+    },
+    documentChunk: {
+      createMany: jest.fn().mockResolvedValue({ count: 2 }),
+    },
+    $executeRawUnsafe: jest.fn().mockResolvedValue(1),
+    $transaction: jest.fn(),
+  };
+  p.$transaction.mockImplementation(async (fn: (tx: MockPrisma) => Promise<unknown>) => fn(p));
+  return p;
+};
 
 const mockEmbedding = () => ({
   isAvailable: jest.fn().mockReturnValue(true),
