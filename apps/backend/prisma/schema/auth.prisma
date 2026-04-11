@@ -27,8 +27,6 @@ model User {
   practitioner          Practitioner?
   bookingsAsPatient     Booking[]              @relation("PatientBookings")
   ratingsAsPatient      Rating[]               @relation("PatientRatings")
-  problemReports        ProblemReport[]        @relation("PatientProblemReports")
-  resolvedReports       ProblemReport[]        @relation("ResolvedByUser")
   reviewedReceipts      BankTransferReceipt[]  @relation("ReviewedByUser")
   chatSessions          ChatSession[]
   notifications         Notification[]

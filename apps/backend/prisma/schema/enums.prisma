@@ -76,7 +76,6 @@ enum NotificationType {
   reminder
   payment_received
   new_rating
-  problem_report
   waitlist_slot_available
   system_alert
   group_enrollment_created
@@ -100,28 +99,6 @@ enum WaitlistStatus {
   cancelled
 
   @@map("waitlist_status")
-}
-
-enum ProblemReportType {
-  wait_time
-  staff_behavior
-  cleanliness
-  billing
-  no_call
-  late
-  technical
-  other
-
-  @@map("problem_report_type")
-}
-
-enum ProblemReportStatus {
-  open
-  in_review
-  resolved
-  dismissed
-
-  @@map("problem_report_status")
 }
 
 enum ChatRole {

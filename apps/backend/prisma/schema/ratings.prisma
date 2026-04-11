@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────
-// Ratings & Problem Reports
+// Ratings
 // ──────────────────────────────────────────────
 
 model Rating {
@@ -21,25 +21,3 @@ model Rating {
   @@map("ratings")
 }
 
-model ProblemReport {
-  id           String              @id @default(uuid())
-  bookingId    String              @map("booking_id")
-  patientId    String?             @map("patient_id")
-  type         ProblemReportType
-  description  String
-  status       ProblemReportStatus @default(open)
-  adminNotes   String?             @map("admin_notes")
-  resolvedById String?             @map("resolved_by_id")
-  resolvedAt   DateTime?           @map("resolved_at")
-  createdAt    DateTime            @default(now()) @map("created_at")
-  updatedAt    DateTime            @updatedAt @map("updated_at")
-
-  booking    Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  patient    User?   @relation("PatientProblemReports", fields: [patientId], references: [id], onDelete: SetNull)
-  resolvedBy User?   @relation("ResolvedByUser", fields: [resolvedById], references: [id], onDelete: SetNull)
-
-  @@index([bookingId])
-  @@index([patientId])
-  @@index([status])
-  @@map("problem_reports")
-}

@@ -21,7 +21,7 @@ dto/                      # Request/response DTOs (class-validator)
 `clinic-integrations`, `clinic-settings`, `coupons`, `departments`, `email`,
 `email-templates`, `feature-flags`, `group-sessions`, `health`,
 `intake-forms`, `integrations`, `invoices`, `license`, `notifications`,
-`patients`, `payments`, `permissions`, `practitioners`, `problem-reports`,
+`patients`, `payments`, `permissions`, `practitioners`,
 `ratings`, `reports`, `roles`, `services`, `specialties`, `tasks`, `users`,
 `whitelabel`, `zatca`
 

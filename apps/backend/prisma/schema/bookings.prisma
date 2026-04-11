@@ -84,7 +84,6 @@ model Booking {
   rescheduledTo       Booking?            @relation("RescheduleChain")
   payment             Payment?
   rating              Rating?
-  problemReports      ProblemReport[]
   statusLogs          BookingStatusLog[]
   intakeResponses     IntakeResponse[]
   waitlistConversions WaitlistEntry[]     @relation("WaitlistBooking")
