@@ -1,0 +1,3 @@
+// AI BC — knowledge base, embeddings (pgvector), RAG chat sessions.
+// Models added in Phase 11 (p11-t*). Uses the `vector` type from the
+// pgvector extension declared in main.prisma.
