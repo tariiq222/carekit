@@ -131,7 +131,7 @@ export class EmailProcessor extends WorkerHost implements OnModuleInit {
       clinicName: branding.systemName || 'CareKit',
       clinicNameAr: branding.systemNameAr || branding.systemName || 'CareKit',
       logoUrl: branding.logoUrl || '',
-      primaryColor: branding.primaryColor || '#2563EB',
+      primaryColor: branding.colorPrimary || '#2563EB',
       showLogo: settings.emailHeaderShowLogo,
       showName: settings.emailHeaderShowName,
       footerPhone: settings.emailFooterPhone || '',
