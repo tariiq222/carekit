@@ -19,9 +19,9 @@ export class SemanticSearchHandler {
     const [vector] = await this.embedding.embed([dto.query]);
     const vectorLiteral = `[${vector.join(',')}]`;
 
-    const docFilter = dto.documentId
-      ? `AND dc."documentId" = '${dto.documentId}'`
-      : '';
+    const docFilter = dto.documentId ? `AND dc."documentId" = $4` : '';
+    const params: unknown[] = [vectorLiteral, dto.tenantId, topK];
+    if (dto.documentId) params.push(dto.documentId);
 
     const rows = await this.prisma.$queryRawUnsafe<
       Array<{ id: string; documentId: string; content: string; chunkIndex: number; similarity: number }>
@@ -33,9 +33,7 @@ export class SemanticSearchHandler {
          AND dc.embedding IS NOT NULL
        ORDER BY dc.embedding <=> $1::vector
        LIMIT $3`,
-      vectorLiteral,
-      dto.tenantId,
-      topK,
+      ...params,
     );
 
     return rows.map((r) => ({
