@@ -1,5 +1,5 @@
 // Import from shared and adapt for React Native
-import { colors, typography, spacing, radius, rnShadows, animations } from '../../shared/tokens';
+import { colors, typography, spacing, radius, rnShadows, animations } from '@carekit/shared/tokens';
 
 export const theme = {
   colors,

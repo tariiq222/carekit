@@ -18,6 +18,7 @@
     ]
   },
   "dependencies": {
+    "@carekit/shared": "*",
     "@expo/metro-runtime": "~55.0.6",
     "@hookform/resolvers": "^5.2.2",
     "@react-native-async-storage/async-storage": "^3.0.1",
