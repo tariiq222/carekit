@@ -669,11 +669,12 @@
           "id": "p10-t1",
           "seq": "1a",
           "parallel": true,
-          "title": "Cron task slices (5 jobs)",
-          "detail": "booking-autocomplete, booking-expiry, booking-noshow, appointment-reminders, group-session-automation",
+          "title": "Cron task slices (5 jobs + refresh-token cleanup)",
+          "detail": "booking-autocomplete, booking-expiry, booking-noshow, appointment-reminders, group-session-automation. PRIORITY: add refresh-token-cleanup job — deletes expired/revoked tokens older than 30d. Without it, RefreshTokenHandler does O(n) bcrypt compare across all tokens ever issued per user, degrading login refresh to seconds at scale.",
           "complexity": "MEDIUM",
           "status": "todo",
-          "bc": "ops"
+          "bc": "ops",
+          "priorityNote": "refresh-token-cleanup is HIGH priority — performance impact is proportional to uncleared token accumulation"
         },
         {
           "id": "p10-t2",

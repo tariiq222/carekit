@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { asPrismaJson } from '../../../common/prisma-json';
 
 export interface UpsertIntegrationCommand {
   tenantId: string;
@@ -15,10 +16,8 @@ export class UpsertIntegrationHandler {
   async execute(cmd: UpsertIntegrationCommand) {
     return this.prisma.integration.upsert({
       where: { tenantId_provider: { tenantId: cmd.tenantId, provider: cmd.provider } },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      create: { tenantId: cmd.tenantId, provider: cmd.provider, config: cmd.config as any, isActive: cmd.isActive ?? true },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      update: { config: cmd.config as any, isActive: cmd.isActive ?? true },
+      create: { tenantId: cmd.tenantId, provider: cmd.provider, config: asPrismaJson(cmd.config), isActive: cmd.isActive ?? true },
+      update: { config: asPrismaJson(cmd.config), isActive: cmd.isActive ?? true },
     });
   }
 }
