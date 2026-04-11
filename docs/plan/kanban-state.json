@@ -2,6 +2,8 @@
   "project": "CareKit Backend — Rebuild from Scratch",
   "spec": "docs/superpowers/specs/2026-04-11-backend-architecture-design.md",
   "lastUpdated": "2026-04-11",
+  "p2_completed": "2026-04-11",
+  "p3_completed": "2026-04-11",
   "phases": [
     {
       "id": "p1",
@@ -119,7 +121,7 @@
           "title": "login slice",
           "detail": "LoginCommand + handler + dto + spec. JWT access + refresh tokens",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "identity"
         },
         {
@@ -129,7 +131,7 @@
           "title": "refresh-token + logout slices",
           "detail": "Token rotation, blacklist in Redis",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "identity"
         },
         {
@@ -139,7 +141,7 @@
           "title": "get-current-user slice",
           "detail": "GetCurrentUserQuery + handler",
           "complexity": "CRUD",
-          "status": "todo",
+          "status": "done",
           "bc": "identity"
         },
         {
@@ -149,7 +151,7 @@
           "title": "users CRUD slices",
           "detail": "create-user, update-user, list-users, deactivate-user",
           "complexity": "CRUD",
-          "status": "todo",
+          "status": "done",
           "bc": "identity"
         },
         {
@@ -159,17 +161,17 @@
           "title": "create-role + assign-permissions slices",
           "detail": "CASL permission sets, role assignment",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "identity"
         },
         {
           "id": "p2-t6",
           "seq": "4",
           "parallel": false,
-          "title": "CaslAbilityFactory",
-          "detail": "Core RBAC engine — builds ability from user roles + permissions",
+          "title": "CaslAbilityFactory + JwtStrategy + IdentityModule",
+          "detail": "Core RBAC engine — builds ability from user roles + permissions; JwtStrategy; IdentityModule wiring",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "identity"
         }
       ]
@@ -189,7 +191,7 @@
           "title": "validate-license slice",
           "detail": "License key validation on startup + periodic re-check against License Server",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "platform"
         },
         {
@@ -199,7 +201,7 @@
           "title": "check-feature slice",
           "detail": "CheckFeatureQuery — reads active features from license",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "platform"
         },
         {
@@ -209,8 +211,9 @@
           "title": "@RequiresFeature() decorator wiring",
           "detail": "Connects to check-feature, throws 403 if feature not in license",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "platform"
+          "status": "done",
+          "bc": "platform",
+          "note": "FeatureGuard already wired in p1; Platform BC provides check-feature service it delegates to"
         },
         {
           "id": "p3-t4",
@@ -219,7 +222,7 @@
           "title": "problem-reports + integrations slices",
           "detail": "CRUD slices, مستقلة — تشتغل بالتوازي مع t1",
           "complexity": "CRUD",
-          "status": "todo",
+          "status": "done",
           "bc": "platform"
         }
       ]
