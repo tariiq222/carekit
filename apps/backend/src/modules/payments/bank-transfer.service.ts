@@ -14,7 +14,8 @@ import { MinioService } from '../../common/services/minio.service.js';
 import { InvoiceCreatorService } from '../invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../bookings/booking-status.service.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { UploadReceiptDto } from './dto/upload-receipt.dto.js';
 import {
   paymentInclude,
@@ -22,7 +23,6 @@ import {
   calculateAmounts,
 } from './payments.helpers.js';
 import { correlationStorage } from '../../common/middleware/correlation-id.middleware.js';
-import { NOTIF } from '../../common/constants/notification-messages.js';
 
 const MINIO_BUCKET = 'carekit';
 
@@ -36,7 +36,7 @@ export class BankTransferService {
     private readonly invoicesService: InvoiceCreatorService,
     private readonly bookingStatusService: BookingStatusService,
     private readonly activityLogService: ActivityLogService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     @Optional()
     @InjectQueue('receipt-verification')
     private readonly receiptQueue?: Queue,
@@ -321,14 +321,10 @@ export class BankTransferService {
 
     if (!patientId) return;
 
-    const reasonText = reason ? ` (${reason})` : '';
-    await this.notificationsService.createNotification({
-      userId: patientId,
-      ...NOTIF.RECEIPT_REJECTED,
-      bodyAr: `تم رفض إيصال التحويل البنكي${reasonText}. يرجى إنشاء حجز جديد أو التواصل مع العيادة`,
-      bodyEn: `Your bank transfer receipt was rejected${reasonText}. Please create a new booking or contact the clinic`,
-      type: 'receipt_rejected',
-      data: { bookingId },
+    await this.messagingDispatcher.dispatch({
+      event: MessagingEvent.RECEIPT_REJECTED,
+      recipientUserId: patientId,
+      context: {},
     });
   }
 }

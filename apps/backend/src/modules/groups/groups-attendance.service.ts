@@ -4,9 +4,9 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ConfirmAttendanceDto } from './dto/confirm-attendance.dto.js';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class GroupsAttendanceService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
   ) {}
 
   async confirmAttendance(dto: ConfirmAttendanceDto) {
@@ -122,15 +122,11 @@ export class GroupsAttendanceService {
     });
 
     // Fire-and-forget notification
-    this.notificationsService
-      .createNotification({
-        userId: enrollment.patientId,
-        titleAr: `تم إصدار شهادة إتمام "${enrollment.group.nameAr}"`,
-        titleEn: `Completion certificate issued for "${enrollment.group.nameEn}"`,
-        bodyAr: 'يمكنك عرض شهادتك من قسم الشهادات',
-        bodyEn: 'You can view your certificate from the certificates section',
-        type: NotificationType.group_certificate_issued,
-        data: { groupId: enrollment.groupId, certificateId: certificate.id },
+    this.messagingDispatcher
+      .dispatch({
+        event: MessagingEvent.GROUP_ATTENDANCE_MARKED,
+        recipientUserId: enrollment.patientId,
+        context: {},
       })
       .catch((err) =>
         this.logger.warn('Certificate notification failed', {

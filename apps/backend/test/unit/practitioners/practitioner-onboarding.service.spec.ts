@@ -6,7 +6,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { PractitionerOnboardingService } from '../../../src/modules/practitioners/practitioner-onboarding.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { OtpService } from '../../../src/modules/auth/otp.service.js';
-import { EmailService } from '../../../src/modules/email/email.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 
 const mockRole = { id: 'role-uuid-1', slug: 'practitioner' };
 const mockUser = {
@@ -35,8 +35,8 @@ const mockOtpService: any = {
   generateOtp: jest.fn().mockResolvedValue('123456'),
 };
 
-const mockEmailService: any = {
-  sendPractitionerWelcome: jest.fn().mockResolvedValue(undefined),
+const mockMessagingDispatcher: any = {
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const onboardDto = {
@@ -56,7 +56,7 @@ describe('PractitionerOnboardingService', () => {
         PractitionerOnboardingService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: OtpService, useValue: mockOtpService },
-        { provide: EmailService, useValue: mockEmailService },
+        { provide: MessagingDispatcherService, useValue: mockMessagingDispatcher },
       ],
     }).compile();
 
@@ -81,10 +81,11 @@ describe('PractitionerOnboardingService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
-      expect(mockEmailService.sendPractitionerWelcome).toHaveBeenCalledWith(
-        'ali@example.com',
-        'Ali',
-        '123456',
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'auth.practitioner_welcome',
+          recipientEmail: 'ali@example.com',
+        }),
       );
     });
 
@@ -169,7 +170,7 @@ describe('PractitionerOnboardingService', () => {
         mockUser.id,
         'reset_password',
       );
-      expect(mockEmailService.sendPractitionerWelcome).toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalled();
     });
   });
 });

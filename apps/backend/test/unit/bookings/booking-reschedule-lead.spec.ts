@@ -8,7 +8,7 @@ import { BookingRescheduleService } from '../../../src/modules/bookings/booking-
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
 import { ZoomService } from '../../../src/modules/integrations/zoom/zoom.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 import { BookingQueryService } from '../../../src/modules/bookings/booking-query.service.js';
 
@@ -90,10 +90,8 @@ describe('BookingRescheduleService — minBookingLeadMinutes', () => {
           useValue: { createMeeting: jest.fn(), deleteMeeting: jest.fn() },
         },
         {
-          provide: NotificationsService,
-          useValue: {
-            createNotification: jest.fn().mockResolvedValue(undefined),
-          },
+          provide: MessagingDispatcherService,
+          useValue: { dispatch: jest.fn().mockResolvedValue(undefined) },
         },
         {
           provide: ActivityLogService,

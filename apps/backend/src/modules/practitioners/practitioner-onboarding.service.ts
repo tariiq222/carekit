@@ -7,7 +7,8 @@ import { Prisma } from '@prisma/client';
 import type { User, Practitioner } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { OtpService } from '../auth/otp.service.js';
-import { EmailService } from '../email/email.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { OtpType } from '../auth/enums/otp-type.enum.js';
 import { OnboardPractitionerDto } from './dto/onboard-practitioner.dto.js';
 
@@ -16,7 +17,7 @@ export class PractitionerOnboardingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly otpService: OtpService,
-    private readonly emailService: EmailService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
   ) {}
 
   async onboard(dto: OnboardPractitionerDto): Promise<{
@@ -119,11 +120,12 @@ export class PractitionerOnboardingService {
       createdUserId,
       OtpType.RESET_PASSWORD,
     );
-    await this.emailService.sendPractitionerWelcome(
-      normalizedEmail,
-      firstName,
-      otpCode,
-    );
+    await this.messagingDispatcher.dispatch({
+      event: MessagingEvent.PRACTITIONER_WELCOME,
+      recipientUserId: createdUserId,
+      context: { firstName, otpCode },
+      recipientEmail: normalizedEmail,
+    });
 
     return {
       success: true,

@@ -11,7 +11,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { GroupsEnrollmentsService } from '../../../src/modules/groups/groups-enrollments.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 
 const baseGroup: any = {
   id: 'grp-1',
@@ -43,7 +43,7 @@ const mockPrisma: any = {
 };
 
 const mockNotifications: any = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 describe('GroupsEnrollmentsService', () => {
@@ -51,13 +51,13 @@ describe('GroupsEnrollmentsService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockNotifications.dispatch.mockResolvedValue(undefined);
 
     const module = await Test.createTestingModule({
       providers: [
         GroupsEnrollmentsService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockNotifications },
       ],
     }).compile();
 

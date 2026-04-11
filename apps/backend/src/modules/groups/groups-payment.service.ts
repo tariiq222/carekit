@@ -4,9 +4,10 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { NotificationType, PaymentMethod, PaymentStatus } from '@prisma/client';
+import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 
 @Injectable()
@@ -15,7 +16,7 @@ export class GroupsPaymentService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly activityLogService: ActivityLogService,
   ) {}
 
@@ -91,19 +92,11 @@ export class GroupsPaymentService {
     const requiredAmountHalalat = this.getRequiredAmount(group);
 
     for (const enrollment of enrollments) {
-      this.notificationsService
-        .createNotification({
-          userId: enrollment.patientId,
-          titleAr: 'طلب إكمال الدفع',
-          titleEn: 'Complete Your Payment',
-          bodyAr: `أكمل الدفع (${requiredAmountHalalat} هللة) خلال ${group.paymentDeadlineHours} ساعة للحفاظ على مكانك`,
-          bodyEn: `Pay ${requiredAmountHalalat} halalat within ${group.paymentDeadlineHours} hours to keep your spot`,
-          type: NotificationType.group_session_confirmed,
-          data: {
-            groupId,
-            enrollmentId: enrollment.id,
-            deadlineAt: deadlineAt.toISOString(),
-          },
+      this.messagingDispatcher
+        .dispatch({
+          event: MessagingEvent.GROUP_SESSION_CONFIRMED,
+          recipientUserId: enrollment.patientId,
+          context: { serviceName: '', date: '' },
         })
         .catch((err) =>
           this.logger.warn('Notification failed', {
@@ -166,19 +159,11 @@ export class GroupsPaymentService {
       },
     );
 
-    this.notificationsService
-      .createNotification({
-        userId: enrollment.patientId,
-        titleAr: 'تذكير: أكمل دفعك',
-        titleEn: 'Reminder: Complete Your Payment',
-        bodyAr: `تذكير: أكمل الدفع (${requiredAmountHalalat} هللة) قبل انتهاء المهلة`,
-        bodyEn: `Reminder: Pay ${requiredAmountHalalat} halalat before the deadline`,
-        type: NotificationType.group_session_confirmed,
-        data: {
-          groupId,
-          enrollmentId,
-          deadlineAt: enrollment.paymentDeadlineAt?.toISOString(),
-        },
+    this.messagingDispatcher
+      .dispatch({
+        event: MessagingEvent.GROUP_SESSION_CONFIRMED,
+        recipientUserId: enrollment.patientId,
+        context: { serviceName: '', date: '' },
       })
       .catch((err) =>
         this.logger.warn('Resend notification failed', {
@@ -218,15 +203,11 @@ export class GroupsPaymentService {
       data: { status: 'confirmed' },
     });
 
-    this.notificationsService
-      .createNotification({
-        userId: enrollment.patientId,
-        titleAr: 'تم تأكيد تسجيلك في المجموعة',
-        titleEn: 'Your group enrollment has been confirmed',
-        bodyAr: 'تم تأكيد تسجيلك. شكراً لك.',
-        bodyEn: 'Your enrollment is confirmed. Thank you.',
-        type: NotificationType.group_payment_confirmed,
-        data: { groupId: enrollment.groupId, enrollmentId: enrollment.id },
+    this.messagingDispatcher
+      .dispatch({
+        event: MessagingEvent.GROUP_PAYMENT_CONFIRMED,
+        recipientUserId: enrollment.patientId,
+        context: { amount: '' },
       })
       .catch((err: unknown) =>
         this.logger.warn('Confirmation notification failed', {

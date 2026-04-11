@@ -4,7 +4,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BookingCancellationTimeoutService } from '../../../src/modules/tasks/booking-cancellation-timeout.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../../../src/modules/messaging/core/messaging-events.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../../../src/modules/bookings/booking-status-log.service.js';
@@ -28,8 +29,8 @@ const mockPrisma: any = {
   $transaction: jest.fn(),
 };
 
-const mockNotifications = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+const mockMessagingDispatcher = {
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockActivityLog = {
@@ -60,7 +61,7 @@ describe('BookingCancellationTimeoutService', () => {
       providers: [
         BookingCancellationTimeoutService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockMessagingDispatcher },
         { provide: ActivityLogService, useValue: mockActivityLog },
         { provide: BookingSettingsService, useValue: mockSettings },
         { provide: BookingStatusLogService, useValue: mockStatusLog },
@@ -79,7 +80,7 @@ describe('BookingCancellationTimeoutService', () => {
     mockPrisma.booking.update.mockResolvedValue({});
     mockPrisma.payment.findUnique.mockResolvedValue(null);
     mockPrisma.payment.update.mockResolvedValue({});
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockMessagingDispatcher.dispatch.mockResolvedValue(undefined);
     mockActivityLog.log.mockResolvedValue(undefined);
     mockWaitlist.checkAndNotify.mockResolvedValue(undefined);
     mockStatusLog.log.mockResolvedValue(undefined);
@@ -177,10 +178,10 @@ describe('BookingCancellationTimeoutService', () => {
 
       await service.autoExpirePendingCancellations();
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'patient-4',
-          type: 'booking_cancelled',
+          recipientUserId: 'patient-4',
+          event: MessagingEvent.BOOKING_CANCELLATION_REJECTED,
         }),
       );
     });
@@ -215,7 +216,7 @@ describe('BookingCancellationTimeoutService', () => {
 
       await service.autoExpirePendingCancellations();
 
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 });

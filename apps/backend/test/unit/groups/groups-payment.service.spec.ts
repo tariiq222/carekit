@@ -6,7 +6,7 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { GroupsPaymentService } from '../../../src/modules/groups/groups-payment.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 
 const mockPrisma: any = {
@@ -17,7 +17,7 @@ const mockPrisma: any = {
 };
 
 const mockNotifications: any = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockActivityLog: any = {
@@ -29,14 +29,14 @@ describe('GroupsPaymentService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockNotifications.dispatch.mockResolvedValue(undefined);
     mockActivityLog.log.mockResolvedValue(undefined);
 
     const module = await Test.createTestingModule({
       providers: [
         GroupsPaymentService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockNotifications },
         { provide: ActivityLogService, useValue: mockActivityLog },
       ],
     }).compile();

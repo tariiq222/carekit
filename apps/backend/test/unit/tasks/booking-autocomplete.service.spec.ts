@@ -4,7 +4,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BookingAutocompleteService } from '../../../src/modules/tasks/booking-autocomplete.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../../../src/modules/messaging/core/messaging-events.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../../../src/modules/bookings/booking-status-log.service.js';
@@ -23,8 +24,8 @@ const mockPrisma: any = {
   $transaction: jest.fn(),
 };
 
-const mockNotifications = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+const mockMessagingDispatcher = {
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockActivityLog = {
@@ -47,7 +48,7 @@ describe('BookingAutocompleteService', () => {
       providers: [
         BookingAutocompleteService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockMessagingDispatcher },
         { provide: ActivityLogService, useValue: mockActivityLog },
         { provide: BookingSettingsService, useValue: mockSettings },
         { provide: BookingStatusLogService, useValue: mockStatusLog },
@@ -66,7 +67,7 @@ describe('BookingAutocompleteService', () => {
     // Re-check guard: findFirst returns truthy by default
     mockPrisma.booking.findFirst.mockResolvedValue({ id: 'stub' });
     mockPrisma.booking.update.mockResolvedValue({});
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockMessagingDispatcher.dispatch.mockResolvedValue(undefined);
     mockActivityLog.log.mockResolvedValue(undefined);
     mockStatusLog.log.mockResolvedValue(undefined);
     // Default: execute transaction callback with same mock as tx context
@@ -126,10 +127,10 @@ describe('BookingAutocompleteService', () => {
           data: expect.objectContaining({ status: 'completed' }),
         }),
       );
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'patient-2',
-          type: 'booking_completed',
+          recipientUserId: 'patient-2',
+          event: MessagingEvent.BOOKING_AUTOCOMPLETED,
         }),
       );
     });
@@ -148,7 +149,7 @@ describe('BookingAutocompleteService', () => {
       await service.autoCompleteBookings();
 
       expect(mockPrisma.booking.update).toHaveBeenCalled();
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should skip already-transitioned booking when re-check returns null', async () => {
@@ -167,7 +168,7 @@ describe('BookingAutocompleteService', () => {
       await service.autoCompleteBookings();
 
       expect(mockPrisma.booking.update).not.toHaveBeenCalled();
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 });

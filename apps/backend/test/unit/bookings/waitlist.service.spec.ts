@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { WaitlistService } from '../../../src/modules/bookings/waitlist.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { ClinicSettingsService } from '../../../src/modules/clinic-settings/clinic-settings.service.js';
 
@@ -44,7 +44,7 @@ const mockPrisma: any = {
 };
 
 const mockNotifications: any = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockSettings: any = {
@@ -63,7 +63,7 @@ describe('WaitlistService', () => {
       providers: [
         WaitlistService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockNotifications },
         { provide: BookingSettingsService, useValue: mockSettings },
         { provide: ClinicSettingsService, useValue: mockClinicSettings },
       ],
@@ -72,7 +72,7 @@ describe('WaitlistService', () => {
     service = module.get<WaitlistService>(WaitlistService);
     jest.clearAllMocks();
     mockSettings.get.mockResolvedValue(defaultSettings);
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockNotifications.dispatch.mockResolvedValue(undefined);
   });
 
   describe('join', () => {
@@ -221,10 +221,10 @@ describe('WaitlistService', () => {
           data: { status: 'notified', notifiedAt: expect.any(Date) },
         }),
       );
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockNotifications.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: patientId,
-          type: 'waitlist_slot_available',
+          recipientUserId: patientId,
+          event: 'booking.waitlist_slot_available',
         }),
       );
     });

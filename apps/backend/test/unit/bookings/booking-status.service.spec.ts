@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { BookingStatusService } from '../../../src/modules/bookings/booking-status.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 import { BookingStatusLogService } from '../../../src/modules/bookings/booking-status-log.service.js';
 
@@ -48,7 +48,7 @@ const mockPrisma: any = {
 };
 
 const mockNotifications: any = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockActivityLog: any = {
@@ -67,7 +67,7 @@ describe('BookingStatusService', () => {
       providers: [
         BookingStatusService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockNotifications },
         { provide: ActivityLogService, useValue: mockActivityLog },
         { provide: BookingStatusLogService, useValue: mockStatusLog },
       ],
@@ -146,10 +146,10 @@ describe('BookingStatusService', () => {
 
       await service.confirm(bookingId);
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockNotifications.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: patientId,
-          type: 'booking_confirmed',
+          recipientUserId: patientId,
+          event: 'booking.confirmed',
         }),
       );
     });

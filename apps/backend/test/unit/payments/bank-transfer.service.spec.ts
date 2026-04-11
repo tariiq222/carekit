@@ -16,7 +16,7 @@ import { MinioService } from '../../../src/common/services/minio.service.js';
 import { InvoiceCreatorService } from '../../../src/modules/invoices/invoice-creator.service.js';
 import { BookingStatusService } from '../../../src/modules/bookings/booking-status.service.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 
 // Mock transaction proxy
 const mockTx = {
@@ -57,7 +57,7 @@ const mockBookingStatusService: any = { confirm: jest.fn() };
 const mockActivityLog: any = { log: jest.fn().mockResolvedValue(undefined) };
 
 const mockNotifications: any = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 // Test data
@@ -119,7 +119,7 @@ describe('BankTransferService', () => {
         { provide: InvoiceCreatorService, useValue: mockInvoices },
         { provide: BookingStatusService, useValue: mockBookingStatusService },
         { provide: ActivityLogService, useValue: mockActivityLog },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockNotifications },
       ],
     }).compile();
     service = module.get<BankTransferService>(BankTransferService);
@@ -316,8 +316,8 @@ describe('BankTransferService', () => {
           where: { bookingId, status: { in: ['pending', 'failed'] } },
         }),
       );
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'receipt_rejected', userId }),
+      expect(mockNotifications.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ event: 'payment.receipt_rejected', recipientUserId: userId }),
       );
       expect(mockActivityLog.log).toHaveBeenCalledWith(
         expect.objectContaining({ action: 'receipt_rejected' }),
@@ -405,8 +405,8 @@ describe('BankTransferService', () => {
       expect(mockTx.payment.update).not.toHaveBeenCalled();
       expect(mockBookingStatusService.confirm).not.toHaveBeenCalled();
       expect(mockTx.payment.updateMany).toHaveBeenCalled();
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'receipt_rejected' }),
+      expect(mockNotifications.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ event: 'payment.receipt_rejected' }),
       );
     });
 

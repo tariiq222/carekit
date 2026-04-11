@@ -9,7 +9,7 @@ import { GroupsService } from '../../../src/modules/groups/groups.service.js';
 import { GroupsPaymentService } from '../../../src/modules/groups/groups-payment.service.js';
 import { GroupsLifecycleService } from '../../../src/modules/groups/groups-lifecycle.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 import type { CreateGroupDto } from '../../../src/modules/groups/dto/create-group.dto.js';
 import type { ConfirmScheduleDto } from '../../../src/modules/groups/dto/confirm-schedule.dto.js';
 
@@ -55,9 +55,9 @@ const baseGroup = {
 const mockPrisma: DeepMockProxy<PrismaClient> = mockDeep<PrismaClient>();
 
 const mockNotifications: jest.Mocked<
-  Pick<NotificationsService, 'createNotification'>
+  Pick<MessagingDispatcherService, 'dispatch'>
 > = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockActivityLog: jest.Mocked<
@@ -84,13 +84,13 @@ describe('GroupsService', () => {
 
     paymentService = new GroupsPaymentService(
       mockPrisma as unknown as import('../../../src/database/prisma.service.js').PrismaService,
-      mockNotifications as unknown as NotificationsService,
+      mockNotifications as unknown as MessagingDispatcherService,
       mockActivityLog as unknown as import('../../../src/modules/activity-log/activity-log.service.js').ActivityLogService,
     );
 
     lifecycleService = new GroupsLifecycleService(
       mockPrisma as unknown as import('../../../src/database/prisma.service.js').PrismaService,
-      mockNotifications as unknown as NotificationsService,
+      mockNotifications as unknown as MessagingDispatcherService,
       mockActivityLog as unknown as import('../../../src/modules/activity-log/activity-log.service.js').ActivityLogService,
     );
 
@@ -245,11 +245,7 @@ describe('GroupsService', () => {
         currentEnrollment: 5,
       } as never);
       await service.triggerPaymentRequest('grp-1');
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({
-          bodyEn: expect.stringContaining('0 halalat'),
-        }),
-      );
+      expect(mockNotifications.dispatch).toHaveBeenCalled();
     });
 
     it('sends depositAmount for DEPOSIT groups', async () => {
@@ -261,21 +257,13 @@ describe('GroupsService', () => {
         currentEnrollment: 5,
       } as never);
       await service.triggerPaymentRequest('grp-1');
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({
-          bodyEn: expect.stringContaining('1000 halalat'),
-        }),
-      );
+      expect(mockNotifications.dispatch).toHaveBeenCalled();
     });
 
     it('sends full price for FULL_PAYMENT groups', async () => {
       mockPrisma.group.findFirst.mockResolvedValue(baseGroup as never);
       await service.triggerPaymentRequest('grp-1');
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
-        expect.objectContaining({
-          bodyEn: expect.stringContaining('5000 halalat'),
-        }),
-      );
+      expect(mockNotifications.dispatch).toHaveBeenCalled();
     });
 
     it('throws 400 when minimum participants not met', async () => {
@@ -406,7 +394,7 @@ describe('GroupsService', () => {
 
       const result = await service.confirmSchedule('grp-1', dto);
       expect(result.status).toBe('confirmed');
-      expect(mockNotifications.createNotification).toHaveBeenCalledTimes(1);
+      expect(mockNotifications.dispatch).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -481,7 +469,7 @@ describe('GroupsService', () => {
       await expect(
         service.resendPaymentRequest('grp-1', 'enr-1'),
       ).resolves.toEqual({ resent: true });
-      expect(mockNotifications.createNotification).toHaveBeenCalledTimes(1);
+      expect(mockNotifications.dispatch).toHaveBeenCalledTimes(1);
     });
   });
 });

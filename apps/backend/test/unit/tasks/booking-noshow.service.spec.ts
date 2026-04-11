@@ -4,7 +4,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BookingNoShowService } from '../../../src/modules/tasks/booking-noshow.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../../../src/modules/messaging/core/messaging-events.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../../../src/modules/bookings/booking-status-log.service.js';
@@ -35,8 +36,8 @@ const mockPrisma: any = {
   $transaction: jest.fn(),
 };
 
-const mockNotifications = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+const mockMessagingDispatcher = {
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockActivityLog = {
@@ -71,7 +72,7 @@ describe('BookingNoShowService', () => {
       providers: [
         BookingNoShowService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockMessagingDispatcher },
         { provide: ActivityLogService, useValue: mockActivityLog },
         { provide: BookingSettingsService, useValue: mockSettings },
         { provide: BookingStatusLogService, useValue: mockStatusLog },
@@ -90,7 +91,7 @@ describe('BookingNoShowService', () => {
     mockPrisma.payment.findUnique.mockResolvedValue(null);
     mockPrisma.payment.update.mockResolvedValue({});
     mockPrisma.userRole.findMany.mockResolvedValue([]);
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockMessagingDispatcher.dispatch.mockResolvedValue(undefined);
     mockActivityLog.log.mockResolvedValue(undefined);
     mockWaitlist.checkAndNotify.mockResolvedValue(undefined);
     mockStatusLog.log.mockResolvedValue(undefined);
@@ -165,10 +166,10 @@ describe('BookingNoShowService', () => {
 
       await service.autoNoShow();
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'user-pract-3',
-          type: 'booking_no_show',
+          recipientUserId: 'user-pract-3',
+          event: MessagingEvent.BOOKING_NOSHOW,
         }),
       );
     });
@@ -186,10 +187,10 @@ describe('BookingNoShowService', () => {
 
       await service.autoNoShow();
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'patient-4',
-          type: 'booking_no_show',
+          recipientUserId: 'patient-4',
+          event: MessagingEvent.BOOKING_NOSHOW,
         }),
       );
     });
@@ -282,7 +283,7 @@ describe('BookingNoShowService', () => {
 
       await service.autoNoShow();
 
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 });

@@ -4,7 +4,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BookingExpiryService } from '../../../src/modules/tasks/booking-expiry.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../../../src/modules/messaging/core/messaging-events.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { BookingStatusLogService } from '../../../src/modules/bookings/booking-status-log.service.js';
@@ -28,8 +29,8 @@ const mockPrisma: any = {
   $transaction: jest.fn(),
 };
 
-const mockNotifications = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+const mockMessagingDispatcher = {
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockActivityLog = {
@@ -56,7 +57,7 @@ describe('BookingExpiryService', () => {
       providers: [
         BookingExpiryService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockMessagingDispatcher },
         { provide: ActivityLogService, useValue: mockActivityLog },
         { provide: BookingSettingsService, useValue: mockSettings },
         { provide: BookingStatusLogService, useValue: mockStatusLog },
@@ -73,7 +74,7 @@ describe('BookingExpiryService', () => {
     mockPrisma.payment.findMany.mockResolvedValue([]);
     mockPrisma.payment.deleteMany.mockResolvedValue({});
     mockPrisma.booking.update.mockResolvedValue({});
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockMessagingDispatcher.dispatch.mockResolvedValue(undefined);
     mockActivityLog.log.mockResolvedValue(undefined);
     mockWaitlist.checkAndNotify.mockResolvedValue(undefined);
     mockStatusLog.log.mockResolvedValue(undefined);
@@ -125,7 +126,7 @@ describe('BookingExpiryService', () => {
       await service.expirePendingBookings();
 
       expect(mockPrisma.booking.update).not.toHaveBeenCalled();
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should expire booking and notify patient', async () => {
@@ -147,10 +148,10 @@ describe('BookingExpiryService', () => {
           data: expect.objectContaining({ status: 'expired' }),
         }),
       );
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'patient-1',
-          type: 'booking_expired',
+          recipientUserId: 'patient-1',
+          event: MessagingEvent.BOOKING_EXPIRED,
         }),
       );
     });
@@ -169,7 +170,7 @@ describe('BookingExpiryService', () => {
       await service.expirePendingBookings();
 
       expect(mockPrisma.booking.update).toHaveBeenCalled();
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('should skip bookings that have an active payment', async () => {
@@ -224,7 +225,7 @@ describe('BookingExpiryService', () => {
 
       await service.expirePendingBookings();
 
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 });

@@ -8,7 +8,7 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 import { BookingCancellationService } from '../../../src/modules/bookings/booking-cancellation.service.js';
 import { BookingQueryService } from '../../../src/modules/bookings/booking-query.service.js';
 import { ZoomService } from '../../../src/modules/integrations/zoom/zoom.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { BookingStatusService } from '../../../src/modules/bookings/booking-status.service.js';
 import { BookingRescheduleService } from '../../../src/modules/bookings/booking-reschedule.service.js';
@@ -86,7 +86,7 @@ export async function createBookingsTestModule(): Promise<BookingsTestContext> {
         useValue: mockCancellationService,
       },
       { provide: BookingQueryService, useValue: mockQueryService },
-      { provide: NotificationsService, useValue: mockNotificationsService },
+      { provide: MessagingDispatcherService, useValue: mockNotificationsService },
       { provide: BookingSettingsService, useValue: mockBookingSettingsService },
       {
         provide: BookingStatusService,

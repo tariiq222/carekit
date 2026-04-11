@@ -5,9 +5,10 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import { NotificationType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 
 @Injectable()
 export class GroupsEnrollmentsService {
@@ -15,7 +16,7 @@ export class GroupsEnrollmentsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
   ) {}
 
   async enroll(groupId: string, patientId: string) {
@@ -108,17 +109,11 @@ export class GroupsEnrollmentsService {
       throw err;
     }
 
-    this.notificationsService
-      .createNotification({
-        userId: patientId,
-        titleAr: `تم تسجيلك في "${result.group.nameAr}"`,
-        titleEn: `You've been enrolled in "${result.group.nameEn}"`,
-        bodyAr: result.isFree ? 'تسجيلك مؤكد' : 'سنبلغك عند تأكيد الجلسة للدفع',
-        bodyEn: result.isFree
-          ? 'Your enrollment is confirmed'
-          : "We'll notify you when the session is confirmed for payment",
-        type: NotificationType.group_enrollment_created,
-        data: { groupId },
+    this.messagingDispatcher
+      .dispatch({
+        event: MessagingEvent.GROUP_ENROLLMENT_CONFIRMED,
+        recipientUserId: patientId,
+        context: { serviceName: result.group.nameEn ?? '' },
       })
       .catch((err) =>
         this.logger.warn('Notification failed', {
@@ -138,15 +133,11 @@ export class GroupsEnrollmentsService {
       result.newCount >= result.group.minParticipants &&
       result.group.currentEnrollment < result.group.minParticipants
     ) {
-      this.notificationsService
-        .createNotification({
-          userId: result.group.practitionerId,
-          titleAr: `اكتمل الحد الأدنى — حدد موعد "${result.group.nameAr}"`,
-          titleEn: `Minimum reached — schedule "${result.group.nameEn}"`,
-          bodyAr: `وصل عدد المسجلين ${result.newCount}. حدد موعد الجلسة`,
-          bodyEn: `${result.newCount} enrolled. Set a date for this session`,
-          type: NotificationType.group_capacity_reached,
-          data: { groupId },
+      this.messagingDispatcher
+        .dispatch({
+          event: MessagingEvent.GROUP_CAPACITY_REACHED,
+          recipientUserId: result.group.practitionerId,
+          context: { serviceName: result.group.nameEn ?? '' },
         })
         .catch((err) =>
           this.logger.warn('Notification failed', {
@@ -238,15 +229,11 @@ export class GroupsEnrollmentsService {
     });
 
     for (const enrollment of enrollments) {
-      this.notificationsService
-        .createNotification({
-          userId: enrollment.patientId,
-          titleAr: 'الجلسة مؤكدة — أكمل الدفع',
-          titleEn: 'Session Confirmed — Complete Payment',
-          bodyAr: `أكمل الدفع خلال ${paymentDeadlineHours} ساعة للحفاظ على مكانك`,
-          bodyEn: `Pay within ${paymentDeadlineHours} hours to keep your spot`,
-          type: NotificationType.group_session_confirmed,
-          data: { groupId, enrollmentId: enrollment.id },
+      this.messagingDispatcher
+        .dispatch({
+          event: MessagingEvent.GROUP_SESSION_CONFIRMED,
+          recipientUserId: enrollment.patientId,
+          context: { serviceName: '', date: '' },
         })
         .catch((err) =>
           this.logger.warn('Notification failed', {

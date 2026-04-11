@@ -4,9 +4,9 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
-import { NotificationsService } from '../notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../messaging/core/messaging-events.js';
 import { ActivityLogService } from '../activity-log/activity-log.service.js';
 import { ConfirmScheduleDto } from './dto/confirm-schedule.dto.js';
 
@@ -16,7 +16,7 @@ export class GroupsLifecycleService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
+    private readonly messagingDispatcher: MessagingDispatcherService,
     private readonly activityLogService: ActivityLogService,
   ) {}
 
@@ -63,15 +63,11 @@ export class GroupsLifecycleService {
 
     for (const enrollment of group.enrollments) {
       if (['registered', 'confirmed'].includes(enrollment.status)) {
-        this.notificationsService
-          .createNotification({
-            userId: enrollment.patientId,
-            titleAr: 'تم إلغاء الجلسة',
-            titleEn: 'Session Cancelled',
-            bodyAr: `تم إلغاء جلسة "${group.nameAr}" من قبل الإدارة`,
-            bodyEn: `"${group.nameEn}" session has been cancelled by admin`,
-            type: NotificationType.group_session_cancelled_admin,
-            data: { groupId: id },
+        this.messagingDispatcher
+          .dispatch({
+            event: MessagingEvent.GROUP_SESSION_CONFIRMED,
+            recipientUserId: enrollment.patientId,
+            context: { serviceName: group.nameEn ?? '', date: '' },
           })
           .catch((err) =>
             this.logger.warn('Notification failed', {
@@ -196,15 +192,14 @@ export class GroupsLifecycleService {
     });
 
     for (const enrollment of confirmedEnrollments) {
-      this.notificationsService
-        .createNotification({
-          userId: enrollment.patientId,
-          titleAr: 'تم تحديد موعد جلستك',
-          titleEn: 'Session Scheduled',
-          bodyAr: `تم تحديد موعد جلسة "${group.nameAr}" بتاريخ ${startTime.toLocaleDateString('ar-SA')}`,
-          bodyEn: `"${group.nameEn}" has been scheduled for ${startTime.toLocaleDateString('en-US', { dateStyle: 'medium' })}`,
-          type: NotificationType.group_session_confirmed,
-          data: { groupId, startTime: startTime.toISOString() },
+      this.messagingDispatcher
+        .dispatch({
+          event: MessagingEvent.GROUP_SESSION_CONFIRMED,
+          recipientUserId: enrollment.patientId,
+          context: {
+            serviceName: group.nameEn ?? '',
+            date: startTime.toISOString().split('T')[0],
+          },
         })
         .catch((err) =>
           this.logger.warn('Schedule notification failed', {
@@ -259,15 +254,11 @@ export class GroupsLifecycleService {
       });
 
       for (const enrollment of enrollments) {
-        this.notificationsService
-          .createNotification({
-            userId: enrollment.patientId,
-            titleAr: 'تم تحديد موعد الجلسة — أكمل الدفع',
-            titleEn: 'Session Scheduled — Complete Payment',
-            bodyAr: `أكمل الدفع خلال ${paymentDeadlineHours} ساعة للحفاظ على مكانك`,
-            bodyEn: `Pay within ${paymentDeadlineHours} hours to keep your spot`,
-            type: NotificationType.group_session_confirmed,
-            data: { groupId, enrollmentId: enrollment.id },
+        this.messagingDispatcher
+          .dispatch({
+            event: MessagingEvent.GROUP_SESSION_CONFIRMED,
+            recipientUserId: enrollment.patientId,
+            context: { serviceName: '', date: '' },
           })
           .catch((err) =>
             this.logger.warn('Notification failed', {

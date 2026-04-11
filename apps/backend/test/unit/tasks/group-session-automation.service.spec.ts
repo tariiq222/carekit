@@ -4,7 +4,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GroupAutomationService } from '../../../src/modules/tasks/group-session-automation.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../../../src/modules/messaging/core/messaging-events.js';
 
 const makeGroup = (overrides = {}) => ({
   id: 'group-1',
@@ -42,8 +43,8 @@ const mockPrisma: any = {
   ),
 };
 
-const mockNotifications: any = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+const mockMessagingDispatcher = {
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 describe('GroupAutomationService', () => {
@@ -54,7 +55,7 @@ describe('GroupAutomationService', () => {
       providers: [
         GroupAutomationService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockMessagingDispatcher },
       ],
     }).compile();
 
@@ -68,7 +69,7 @@ describe('GroupAutomationService', () => {
     mockTx.groupEnrollment.updateMany.mockResolvedValue({ count: 1 });
     mockTx.group.update.mockResolvedValue({});
     mockPrisma.group.update.mockResolvedValue({});
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockMessagingDispatcher.dispatch.mockResolvedValue(undefined);
   });
 
   // ─── expireUnpaidEnrollments ─────────────────────────────────────────────
@@ -80,7 +81,7 @@ describe('GroupAutomationService', () => {
       await service.expireUnpaidEnrollments();
 
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('expires enrollment and decrements group count', async () => {
@@ -110,10 +111,10 @@ describe('GroupAutomationService', () => {
 
       await service.expireUnpaidEnrollments();
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: enrollment.patientId,
-          type: 'group_enrollment_expired',
+          recipientUserId: enrollment.patientId,
+          event: MessagingEvent.GROUP_SESSION_CONFIRMED,
         }),
       );
     });
@@ -199,7 +200,7 @@ describe('GroupAutomationService', () => {
       await service.cancelExpiredSessions();
 
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
     it('cancels group and its registered enrollments', async () => {
@@ -234,17 +235,17 @@ describe('GroupAutomationService', () => {
 
       await service.cancelExpiredSessions();
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledTimes(2);
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledTimes(2);
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'p1',
-          type: 'group_session_cancelled',
+          recipientUserId: 'p1',
+          event: MessagingEvent.GROUP_CAPACITY_REACHED,
         }),
       );
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'p2',
-          type: 'group_session_cancelled',
+          recipientUserId: 'p2',
+          event: MessagingEvent.GROUP_CAPACITY_REACHED,
         }),
       );
     });
@@ -279,7 +280,7 @@ describe('GroupAutomationService', () => {
 
       await service.sendSessionReminders();
 
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockPrisma.group.update).not.toHaveBeenCalled();
     });
 
@@ -292,11 +293,11 @@ describe('GroupAutomationService', () => {
 
       await service.sendSessionReminders();
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledTimes(2);
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledTimes(2);
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'p1',
-          type: 'group_session_reminder',
+          recipientUserId: 'p1',
+          event: MessagingEvent.GROUP_SESSION_REMINDER,
         }),
       );
     });
@@ -321,7 +322,7 @@ describe('GroupAutomationService', () => {
 
       await service.sendSessionReminders();
 
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockPrisma.group.update).toHaveBeenCalled(); // still marks reminderSent
     });
   });

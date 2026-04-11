@@ -15,7 +15,7 @@ import { PrismaService } from '../../../src/database/prisma.service.js';
 import { BookingCancellationService } from '../../../src/modules/bookings/booking-cancellation.service.js';
 import { BookingQueryService } from '../../../src/modules/bookings/booking-query.service.js';
 import { ZoomService } from '../../../src/modules/integrations/zoom/zoom.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 import { BookingSettingsService } from '../../../src/modules/bookings/booking-settings.service.js';
 import { BookingStatusService } from '../../../src/modules/bookings/booking-status.service.js';
 import { ActivityLogService } from '../../../src/modules/activity-log/activity-log.service.js';
@@ -70,7 +70,7 @@ const mockQueryService = {
   getNextAvailableSlots: jest.fn().mockResolvedValue([]),
 };
 const mockNotificationsService = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 const mockActivityLogService = { log: jest.fn().mockResolvedValue(undefined) };
 
@@ -154,7 +154,7 @@ describe('BookingsService — Guard Tests', () => {
           useValue: mockCancellationService,
         },
         { provide: BookingQueryService, useValue: mockQueryService },
-        { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: MessagingDispatcherService, useValue: mockNotificationsService },
         { provide: BookingSettingsService, useValue: mockSettingsService },
         {
           provide: BookingStatusService,

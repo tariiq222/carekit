@@ -202,7 +202,7 @@ export function createMockQueryService() {
 }
 
 export function createMockNotificationsService() {
-  return { createNotification: jest.fn().mockResolvedValue(undefined) };
+  return { dispatch: jest.fn().mockResolvedValue(undefined) };
 }
 
 export function createMockBookingStatusService(

@@ -6,7 +6,7 @@ import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { GroupsAttendanceService } from '../../../src/modules/groups/groups-attendance.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
 import type { ConfirmAttendanceDto } from '../../../src/modules/groups/dto/confirm-attendance.dto.js';
 
 const baseEnrollment: any = {
@@ -39,7 +39,7 @@ const mockPrisma: any = {
 };
 
 const mockNotifications: any = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 describe('GroupsAttendanceService', () => {
@@ -47,13 +47,13 @@ describe('GroupsAttendanceService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockNotifications.dispatch.mockResolvedValue(undefined);
 
     const module = await Test.createTestingModule({
       providers: [
         GroupsAttendanceService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockNotifications },
       ],
     }).compile();
 
@@ -242,11 +242,10 @@ describe('GroupsAttendanceService', () => {
 
       await service.issueCertificate('enr-1');
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledTimes(1);
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockNotifications.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockNotifications.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'pat-1',
-          data: expect.objectContaining({ certificateId: 'cert-1' }),
+          recipientUserId: 'pat-1',
         }),
       );
     });
@@ -260,7 +259,7 @@ describe('GroupsAttendanceService', () => {
 
       await service.issueCertificate('enr-1');
 
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockNotifications.dispatch).not.toHaveBeenCalled();
     });
   });
 });

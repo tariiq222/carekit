@@ -6,7 +6,8 @@ import { BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BookingCancelHelpersService } from '../../../src/modules/bookings/booking-cancel-helpers.service.js';
 import { PrismaService } from '../../../src/database/prisma.service.js';
-import { NotificationsService } from '../../../src/modules/notifications/notifications.service.js';
+import { MessagingDispatcherService } from '../../../src/modules/messaging/core/messaging-dispatcher.service.js';
+import { MessagingEvent } from '../../../src/modules/messaging/core/messaging-events.js';
 import { ZoomService } from '../../../src/modules/integrations/zoom/zoom.service.js';
 
 const bookingId = 'booking-uuid-1';
@@ -27,8 +28,8 @@ const mockPrisma: any = {
   userRole: { findMany: jest.fn().mockResolvedValue([]) },
 };
 
-const mockNotifications: any = {
-  createNotification: jest.fn().mockResolvedValue(undefined),
+const mockMessagingDispatcher = {
+  dispatch: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockZoom: any = {
@@ -47,7 +48,7 @@ describe('BookingCancelHelpersService', () => {
       providers: [
         BookingCancelHelpersService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: NotificationsService, useValue: mockNotifications },
+        { provide: MessagingDispatcherService, useValue: mockMessagingDispatcher },
         { provide: ZoomService, useValue: mockZoom },
         { provide: ConfigService, useValue: mockConfig },
       ],
@@ -57,7 +58,7 @@ describe('BookingCancelHelpersService', () => {
       BookingCancelHelpersService,
     );
     jest.clearAllMocks();
-    mockNotifications.createNotification.mockResolvedValue(undefined);
+    mockMessagingDispatcher.dispatch.mockResolvedValue(undefined);
   });
 
   describe('calculateSuggestedRefund', () => {
@@ -226,10 +227,10 @@ describe('BookingCancelHelpersService', () => {
         { patientId, id: bookingId },
         'admin',
       );
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: patientId,
-          type: 'booking_cancelled',
+          recipientUserId: patientId,
+          event: MessagingEvent.BOOKING_CANCELLED,
         }),
       );
     });
@@ -239,7 +240,7 @@ describe('BookingCancelHelpersService', () => {
         { patientId: null, id: bookingId },
         'admin',
       );
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 
@@ -251,10 +252,10 @@ describe('BookingCancelHelpersService', () => {
         startTime: '10:00',
         id: bookingId,
       });
-      expect(mockNotifications.createNotification).toHaveBeenCalledWith(
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'pract-user-id',
-          type: 'booking_cancelled',
+          recipientUserId: 'pract-user-id',
+          event: MessagingEvent.BOOKING_CANCELLED,
         }),
       );
     });
@@ -266,7 +267,7 @@ describe('BookingCancelHelpersService', () => {
         startTime: '10:00',
         id: bookingId,
       });
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 
@@ -286,13 +287,13 @@ describe('BookingCancelHelpersService', () => {
         {},
       );
 
-      expect(mockNotifications.createNotification).toHaveBeenCalledTimes(2);
+      expect(mockMessagingDispatcher.dispatch).toHaveBeenCalledTimes(2);
     });
 
     it('should skip when no admins found', async () => {
       mockPrisma.userRole.findMany.mockResolvedValue([]);
       await service.notifyAdmins('t', 'e', 'b', 'e', 'event', {});
-      expect(mockNotifications.createNotification).not.toHaveBeenCalled();
+      expect(mockMessagingDispatcher.dispatch).not.toHaveBeenCalled();
     });
   });
 
