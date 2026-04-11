@@ -6,6 +6,8 @@
   "p3_completed": "2026-04-11",
   "p5_completed": "2026-04-12",
   "p6_completed": "2026-04-12",
+  "p7_completed": "2026-04-12",
+  "p8_completed": "2026-04-12",
   "phases": [
     {
       "id": "p1",
@@ -474,7 +476,7 @@
           "title": "zatca-submit slice",
           "detail": "Saudi e-invoicing compliance. مستقلة تبدأ مع t1",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "finance"
         },
         {
@@ -484,7 +486,7 @@
           "title": "get-invoice + list-payments slices",
           "detail": "Read queries with filters",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "finance"
         },
         {
@@ -494,7 +496,7 @@
           "title": "Finance event handlers",
           "detail": "on-booking-confirmed creates invoice. Emits: PaymentCompleted, PaymentFailed",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "finance"
         }
       ]
@@ -514,7 +516,7 @@
           "title": "Booking schema + check-availability slice",
           "detail": "Complex: considers clinic hours, employee schedule, existing bookings",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings"
         },
         {
@@ -524,7 +526,7 @@
           "title": "create-booking slice",
           "detail": "CreateBookingCommand + handler. Emits BookingConfirmedEvent",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings"
         },
         {
@@ -534,7 +536,7 @@
           "title": "cancel-booking slice",
           "detail": "CancelBookingCommand. Emits BookingCancelledEvent",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings"
         },
         {
@@ -544,7 +546,7 @@
           "title": "reschedule-booking slice",
           "detail": "Validates new slot availability, updates booking",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings"
         },
         {
@@ -554,7 +556,7 @@
           "title": "confirm-booking slice",
           "detail": "Manual confirmation by receptionist",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings"
         },
         {
@@ -564,7 +566,7 @@
           "title": "get-booking + list-bookings slices",
           "detail": "Read queries — مستقلة تبدأ مع t1",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings"
         },
         {
@@ -574,7 +576,7 @@
           "title": "waitlist schema + add/promote slices",
           "detail": "Waitlist schema + add-to-waitlist + promote-from-waitlist. Auto-promote on cancellation",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings"
         },
         {
@@ -584,7 +586,7 @@
           "title": "create-group-session + enroll-in-group slices",
           "detail": "Capacity management, enrollment rules",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings"
         },
         {
@@ -594,7 +596,7 @@
           "title": "Booking event handlers",
           "detail": "on-payment-completed updates booking status",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings"
         }
       ]
@@ -831,5 +833,5 @@
       ]
     }
   ],
-  "p7_partial": "2026-04-12"
+  "lastCommit": "e1aacc61"
 }
