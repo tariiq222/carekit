@@ -3,15 +3,15 @@
   "private": true,
   "packageManager": "npm@11.6.2",
   "workspaces": [
-    "backend",
-    "mobile",
+    "apps/backend",
+    "apps/mobile",
     "apps/leadboard",
-    "shared",
-    "api-client"
+    "packages/shared",
+    "packages/api-client"
   ],
   "scripts": {
     "dev:backend": "turbo run dev --filter=backend",
-    "dev:mobile": "turbo run dev --filter=mobile",
+    "dev:mobile": "turbo run dev --filter=carekit-mobile",
     "dev:leadboard": "turbo run dev --filter=leadboard",
     "dev:all": "turbo run dev",
     "build": "turbo run build",

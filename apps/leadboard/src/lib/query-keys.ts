@@ -11,16 +11,19 @@ export const QUERY_KEYS = {
   bookings: {
     all: ['bookings'] as const,
     list: (params: Record<string, unknown>) => ['bookings', 'list', params] as const,
+    stats: ['bookings', 'stats'] as const,
     detail: (id: string) => ['bookings', id] as const,
   },
   patients: {
     all: ['patients'] as const,
     list: (params: Record<string, unknown>) => ['patients', 'list', params] as const,
+    stats: ['patients', 'stats'] as const,
     detail: (id: string) => ['patients', id] as const,
   },
   practitioners: {
     all: ['practitioners'] as const,
     list: (params: Record<string, unknown>) => ['practitioners', 'list', params] as const,
+    stats: ['practitioners', 'stats'] as const,
     detail: (id: string) => ['practitioners', id] as const,
   },
   services: {

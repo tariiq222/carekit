@@ -54,30 +54,30 @@ npm run test              # Jest + jest-expo
 
 ```
 carekit/
-├── backend/              # NestJS API — all business logic
-│   ├── prisma/schema/    # Split schemas (one per domain, immutable migrations)
-│   ├── src/common/       # Guards, filters, interceptors, decorators, pipes
-│   └── src/modules/      # Feature modules (25+ domains)
-├── dashboard/            # Next.js admin dashboard (RTL-first, Frosted Glass DS)
-│   ├── app/(dashboard)/  # Route pages (orchestration only, ≤120 lines)
-│   ├── components/       # ui/ (shadcn) + features/ (domain components)
-│   ├── hooks/            # TanStack Query hooks
-│   └── lib/              # api/, types/, schemas/, translations/
-├── mobile/               # Expo — Patient + Practitioner apps
-│   ├── app/(patient)/    # Patient flows (booking, appointments, chat)
-│   ├── app/(practitioner)/ # Practitioner flows
-│   ├── services/         # Axios API clients
-│   └── stores/           # Redux Toolkit slices
-├── shared/               # Cross-app types, enums, i18n
+├── apps/
+│   ├── backend/          # NestJS API — all business logic
+│   │   ├── prisma/schema/    # Split schemas (one per domain, immutable migrations)
+│   │   ├── src/common/       # Guards, filters, interceptors, decorators, pipes
+│   │   └── src/modules/      # Feature modules (25+ domains)
+│   ├── leadboard/        # Vite + React admin dashboard (replaces Next.js dashboard)
+│   │   └── src/          # routes/, components/, hooks/, lib/
+│   └── mobile/           # Expo — Patient + Practitioner apps
+│       ├── app/(patient)/      # Patient flows (booking, appointments, chat)
+│       ├── app/(practitioner)/ # Practitioner flows
+│       ├── services/           # Axios API clients
+│       └── stores/             # Redux Toolkit slices
+├── packages/
+│   ├── api-client/       # @carekit/api-client — typed fetch client shared by UIs
+│   └── shared/           # @carekit/shared — cross-app types, enums, i18n tokens
 ├── docker/               # docker-compose.yml + Nginx config
 └── docs/                 # Architecture, audits, feature specs
 ```
 
 ## Module Map
 
-See `backend/CLAUDE.md` for NestJS module conventions.
-See `dashboard/CLAUDE.md` for Next.js layer rules.
-See `mobile/CLAUDE.md` for Expo Router conventions.
+See `apps/backend/CLAUDE.md` for NestJS module conventions.
+See `apps/leadboard/CLAUDE.md` for dashboard layer rules (if present).
+See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 
 ## Key Domains
 

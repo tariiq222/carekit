@@ -12,6 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteRouteImport } from './routes/_dashboard/route'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as DashboardPractitionersIndexRouteImport } from './routes/_dashboard/practitioners/index'
+import { Route as DashboardPatientsIndexRouteImport } from './routes/_dashboard/patients/index'
+import { Route as DashboardBookingsIndexRouteImport } from './routes/_dashboard/bookings/index'
+import { Route as DashboardPractitionersNewRouteImport } from './routes/_dashboard/practitioners/new'
+import { Route as DashboardPractitionersIdRouteImport } from './routes/_dashboard/practitioners/$id'
+import { Route as DashboardPatientsNewRouteImport } from './routes/_dashboard/patients/new'
+import { Route as DashboardPatientsIdRouteImport } from './routes/_dashboard/patients/$id'
+import { Route as DashboardBookingsNewRouteImport } from './routes/_dashboard/bookings/new'
+import { Route as DashboardBookingsIdRouteImport } from './routes/_dashboard/bookings/$id'
 
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/_dashboard',
@@ -27,27 +36,137 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardPractitionersIndexRoute =
+  DashboardPractitionersIndexRouteImport.update({
+    id: '/practitioners/',
+    path: '/practitioners/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardPatientsIndexRoute = DashboardPatientsIndexRouteImport.update({
+  id: '/patients/',
+  path: '/patients/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardBookingsIndexRoute = DashboardBookingsIndexRouteImport.update({
+  id: '/bookings/',
+  path: '/bookings/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardPractitionersNewRoute =
+  DashboardPractitionersNewRouteImport.update({
+    id: '/practitioners/new',
+    path: '/practitioners/new',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardPractitionersIdRoute =
+  DashboardPractitionersIdRouteImport.update({
+    id: '/practitioners/$id',
+    path: '/practitioners/$id',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardPatientsNewRoute = DashboardPatientsNewRouteImport.update({
+  id: '/patients/new',
+  path: '/patients/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardPatientsIdRoute = DashboardPatientsIdRouteImport.update({
+  id: '/patients/$id',
+  path: '/patients/$id',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardBookingsNewRoute = DashboardBookingsNewRouteImport.update({
+  id: '/bookings/new',
+  path: '/bookings/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardBookingsIdRoute = DashboardBookingsIdRouteImport.update({
+  id: '/bookings/$id',
+  path: '/bookings/$id',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
   '/login': typeof AuthLoginRoute
+  '/bookings/$id': typeof DashboardBookingsIdRoute
+  '/bookings/new': typeof DashboardBookingsNewRoute
+  '/patients/$id': typeof DashboardPatientsIdRoute
+  '/patients/new': typeof DashboardPatientsNewRoute
+  '/practitioners/$id': typeof DashboardPractitionersIdRoute
+  '/practitioners/new': typeof DashboardPractitionersNewRoute
+  '/bookings/': typeof DashboardBookingsIndexRoute
+  '/patients/': typeof DashboardPatientsIndexRoute
+  '/practitioners/': typeof DashboardPractitionersIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/': typeof DashboardIndexRoute
+  '/bookings/$id': typeof DashboardBookingsIdRoute
+  '/bookings/new': typeof DashboardBookingsNewRoute
+  '/patients/$id': typeof DashboardPatientsIdRoute
+  '/patients/new': typeof DashboardPatientsNewRoute
+  '/practitioners/$id': typeof DashboardPractitionersIdRoute
+  '/practitioners/new': typeof DashboardPractitionersNewRoute
+  '/bookings': typeof DashboardBookingsIndexRoute
+  '/patients': typeof DashboardPatientsIndexRoute
+  '/practitioners': typeof DashboardPractitionersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_dashboard': typeof DashboardRouteRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_dashboard/': typeof DashboardIndexRoute
+  '/_dashboard/bookings/$id': typeof DashboardBookingsIdRoute
+  '/_dashboard/bookings/new': typeof DashboardBookingsNewRoute
+  '/_dashboard/patients/$id': typeof DashboardPatientsIdRoute
+  '/_dashboard/patients/new': typeof DashboardPatientsNewRoute
+  '/_dashboard/practitioners/$id': typeof DashboardPractitionersIdRoute
+  '/_dashboard/practitioners/new': typeof DashboardPractitionersNewRoute
+  '/_dashboard/bookings/': typeof DashboardBookingsIndexRoute
+  '/_dashboard/patients/': typeof DashboardPatientsIndexRoute
+  '/_dashboard/practitioners/': typeof DashboardPractitionersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/bookings/$id'
+    | '/bookings/new'
+    | '/patients/$id'
+    | '/patients/new'
+    | '/practitioners/$id'
+    | '/practitioners/new'
+    | '/bookings/'
+    | '/patients/'
+    | '/practitioners/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/'
-  id: '__root__' | '/_dashboard' | '/_auth/login' | '/_dashboard/'
+  to:
+    | '/login'
+    | '/'
+    | '/bookings/$id'
+    | '/bookings/new'
+    | '/patients/$id'
+    | '/patients/new'
+    | '/practitioners/$id'
+    | '/practitioners/new'
+    | '/bookings'
+    | '/patients'
+    | '/practitioners'
+  id:
+    | '__root__'
+    | '/_dashboard'
+    | '/_auth/login'
+    | '/_dashboard/'
+    | '/_dashboard/bookings/$id'
+    | '/_dashboard/bookings/new'
+    | '/_dashboard/patients/$id'
+    | '/_dashboard/patients/new'
+    | '/_dashboard/practitioners/$id'
+    | '/_dashboard/practitioners/new'
+    | '/_dashboard/bookings/'
+    | '/_dashboard/patients/'
+    | '/_dashboard/practitioners/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,15 +197,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_dashboard/practitioners/': {
+      id: '/_dashboard/practitioners/'
+      path: '/practitioners'
+      fullPath: '/practitioners/'
+      preLoaderRoute: typeof DashboardPractitionersIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/patients/': {
+      id: '/_dashboard/patients/'
+      path: '/patients'
+      fullPath: '/patients/'
+      preLoaderRoute: typeof DashboardPatientsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/bookings/': {
+      id: '/_dashboard/bookings/'
+      path: '/bookings'
+      fullPath: '/bookings/'
+      preLoaderRoute: typeof DashboardBookingsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/practitioners/new': {
+      id: '/_dashboard/practitioners/new'
+      path: '/practitioners/new'
+      fullPath: '/practitioners/new'
+      preLoaderRoute: typeof DashboardPractitionersNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/practitioners/$id': {
+      id: '/_dashboard/practitioners/$id'
+      path: '/practitioners/$id'
+      fullPath: '/practitioners/$id'
+      preLoaderRoute: typeof DashboardPractitionersIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/patients/new': {
+      id: '/_dashboard/patients/new'
+      path: '/patients/new'
+      fullPath: '/patients/new'
+      preLoaderRoute: typeof DashboardPatientsNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/patients/$id': {
+      id: '/_dashboard/patients/$id'
+      path: '/patients/$id'
+      fullPath: '/patients/$id'
+      preLoaderRoute: typeof DashboardPatientsIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/bookings/new': {
+      id: '/_dashboard/bookings/new'
+      path: '/bookings/new'
+      fullPath: '/bookings/new'
+      preLoaderRoute: typeof DashboardBookingsNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/bookings/$id': {
+      id: '/_dashboard/bookings/$id'
+      path: '/bookings/$id'
+      fullPath: '/bookings/$id'
+      preLoaderRoute: typeof DashboardBookingsIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
   }
 }
 
 interface DashboardRouteRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardBookingsIdRoute: typeof DashboardBookingsIdRoute
+  DashboardBookingsNewRoute: typeof DashboardBookingsNewRoute
+  DashboardPatientsIdRoute: typeof DashboardPatientsIdRoute
+  DashboardPatientsNewRoute: typeof DashboardPatientsNewRoute
+  DashboardPractitionersIdRoute: typeof DashboardPractitionersIdRoute
+  DashboardPractitionersNewRoute: typeof DashboardPractitionersNewRoute
+  DashboardBookingsIndexRoute: typeof DashboardBookingsIndexRoute
+  DashboardPatientsIndexRoute: typeof DashboardPatientsIndexRoute
+  DashboardPractitionersIndexRoute: typeof DashboardPractitionersIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardBookingsIdRoute: DashboardBookingsIdRoute,
+  DashboardBookingsNewRoute: DashboardBookingsNewRoute,
+  DashboardPatientsIdRoute: DashboardPatientsIdRoute,
+  DashboardPatientsNewRoute: DashboardPatientsNewRoute,
+  DashboardPractitionersIdRoute: DashboardPractitionersIdRoute,
+  DashboardPractitionersNewRoute: DashboardPractitionersNewRoute,
+  DashboardBookingsIndexRoute: DashboardBookingsIndexRoute,
+  DashboardPatientsIndexRoute: DashboardPatientsIndexRoute,
+  DashboardPractitionersIndexRoute: DashboardPractitionersIndexRoute,
 }
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(

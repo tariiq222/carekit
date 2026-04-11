@@ -6,6 +6,11 @@ dist/
 .next/
 .expo/
 out/
+*.tsbuildinfo
+
+# Legacy / archived (do not track)
+_archived_dashboard/
+/dashboard/
 
 # Turborepo
 .turbo/

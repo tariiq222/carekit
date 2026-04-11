@@ -6,7 +6,7 @@ services:
   migrate:
     build:
       context: ..
-      dockerfile: backend/Dockerfile
+      dockerfile: apps/backend/Dockerfile
     command: ["sh", "-c", "npx prisma migrate deploy"]
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
