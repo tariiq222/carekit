@@ -424,7 +424,7 @@
           "title": "Invoice schema + create-invoice slice",
           "detail": "Triggered by BookingConfirmedEvent. CreateInvoiceCommand + handler",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "finance"
         },
         {
@@ -434,7 +434,7 @@
           "title": "process-payment slice",
           "detail": "ProcessPaymentCommand, integrates with Moyasar",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "finance"
         },
         {
@@ -444,7 +444,7 @@
           "title": "moyasar-webhook slice",
           "detail": "Validates webhook signature, emits PaymentCompletedEvent or PaymentFailedEvent",
           "complexity": "COMPLEX",
-          "status": "todo",
+          "status": "done",
           "bc": "finance"
         },
         {
@@ -454,7 +454,7 @@
           "title": "bank-transfer-upload slice",
           "detail": "Upload receipt — pending manual approval",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "finance"
         },
         {
@@ -464,7 +464,7 @@
           "title": "apply-coupon slice",
           "detail": "Discount calculation — gift cards محذوفة من النطاق",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "finance"
         },
         {
@@ -830,5 +830,6 @@
         }
       ]
     }
-  ]
+  ],
+  "p7_partial": "2026-04-12"
 }
