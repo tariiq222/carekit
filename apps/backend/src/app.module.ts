@@ -11,6 +11,7 @@ import { PlatformModule } from './modules/platform/platform.module';
 import { PeopleModule } from './modules/people/people.module';
 import { MediaModule } from './modules/media/media.module';
 import { OrganizationModule } from './modules/organization/organization.module';
+import { FinanceModule } from './modules/finance/finance.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { OrganizationModule } from './modules/organization/organization.module';
     PeopleModule,
     MediaModule,
     OrganizationModule,
+    FinanceModule,
   ],
 })
 export class AppModule implements NestModule {
