@@ -9,6 +9,9 @@ const config: Config = {
   },
   collectCoverageFrom: ['src/**/*.(t|j)s'],
   coverageDirectory: './coverage',
+  // TODO(coverage): raise thresholds to 80/80/80/80 after Phase 7 (Finance BC).
+  // Placeholder values — intentionally low during early scaffold phases when
+  // most of the code is infrastructure plumbing with little to assert on.
   coverageThreshold: {
     global: {
       branches: 40,
