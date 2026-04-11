@@ -6,6 +6,8 @@ import { MessagingModule } from './infrastructure/messaging.module';
 import { StorageModule } from './infrastructure/storage';
 import { MailModule } from './infrastructure/mail';
 import { TenantMiddleware } from './common/tenant';
+import { IdentityModule } from './modules/identity/identity.module';
+import { PlatformModule } from './modules/platform/platform.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { TenantMiddleware } from './common/tenant';
     MessagingModule,
     StorageModule,
     MailModule,
+    IdentityModule,
+    PlatformModule,
   ],
 })
 export class AppModule implements NestModule {
