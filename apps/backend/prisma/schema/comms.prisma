@@ -39,9 +39,10 @@ model Notification {
   isRead        Boolean          @default(false)
   readAt        DateTime?
   createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   @@index([tenantId, recipientId])
-  @@index([tenantId, recipientId, isRead])
+  @@index([tenantId, recipientId, createdAt])
 }
 
 model ChatConversation {
@@ -59,6 +60,7 @@ model ChatConversation {
 
   @@index([tenantId, clientId])
   @@index([tenantId, employeeId])
+  @@index([tenantId, status, lastMessageAt])
 }
 
 model CommsChatMessage {
@@ -72,7 +74,7 @@ model CommsChatMessage {
   isRead         Boolean           @default(false)
   createdAt      DateTime          @default(now())
 
-  @@index([tenantId, conversationId])
+  @@index([tenantId, conversationId, createdAt])
 }
 
 model EmailTemplate {
@@ -81,7 +83,8 @@ model EmailTemplate {
   slug      String
   nameAr    String
   nameEn    String?
-  subject   String
+  subjectAr String
+  subjectEn String?
   htmlBody  String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
