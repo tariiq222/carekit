@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useBookings } from '@/hooks/use-bookings'
+import { HIcon } from '@/components/shared/hicon'
 import { BookingStatusBadge } from '@/components/features/bookings/booking-status-badge'
 import type { BookingListItem } from '@carekit/api-client'
 
@@ -91,7 +92,7 @@ export function OverviewTimeline() {
             to="/bookings/new"
             className="text-xs font-semibold text-white bg-[var(--primary)] px-3 py-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--primary-dark)] transition-colors"
           >
-            <i className="hgi hgi-add-01 text-xs ml-1" />
+            <HIcon name="hgi-add-01" size={16} className="ml-1" />
             حجز جديد
           </Link>
         </div>
@@ -155,7 +156,7 @@ export function OverviewTimeline() {
         </ol>
       ) : (
         <div className="text-center py-12 text-sm text-[var(--muted)]">
-          <i className="hgi hgi-calendar-remove-02 text-2xl mb-3 block opacity-50" />
+          <HIcon name="hgi-calendar-remove-02" size={24} className="mb-3 block opacity-50" />
           <p className="font-medium">لا توجد حجوزات اليوم</p>
           <p className="text-[11px] mt-1 opacity-70">ستظهر حجوزات اليوم هنا فور إنشائها</p>
         </div>

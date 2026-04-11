@@ -7,6 +7,14 @@ import type {
 } from '@carekit/api-client'
 import { QUERY_KEYS } from '@/lib/query-keys'
 
+export function useServiceCategories() {
+  return useQuery({
+    queryKey: QUERY_KEYS.services.categories,
+    queryFn: () => servicesApi.listCategories(),
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export function useServiceStats() {
   return useQuery({
     queryKey: QUERY_KEYS.services.stats,

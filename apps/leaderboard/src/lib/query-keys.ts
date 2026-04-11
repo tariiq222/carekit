@@ -26,6 +26,9 @@ export const QUERY_KEYS = {
     stats: ['practitioners', 'stats'] as const,
     detail: (id: string) => ['practitioners', id] as const,
     availability: (id: string) => ['practitioners', id, 'availability'] as const,
+    breaks: (id: string) => ['practitioners', id, 'breaks'] as const,
+    vacations: (id: string) => ['practitioners', id, 'vacations'] as const,
+    practitionerServices: (id: string) => ['practitioners', id, 'services'] as const,
     ratings: (id: string, params: Record<string, unknown>) =>
       ['practitioners', id, 'ratings', params] as const,
   },
@@ -34,6 +37,7 @@ export const QUERY_KEYS = {
     list: (params: Record<string, unknown>) => ['services', 'list', params] as const,
     stats: ['services', 'stats'] as const,
     detail: (id: string) => ['services', id] as const,
+    categories: ['services', 'categories'] as const,
   },
   branches: {
     all: ['branches'] as const,
@@ -101,5 +105,13 @@ export const QUERY_KEYS = {
     all: ['groups'] as const,
     list: (params: Record<string, unknown>) => ['groups', 'list', params] as const,
     detail: (id: string) => ['groups', id] as const,
+  },
+  users: {
+    all: ['users'] as const,
+    list: (params: Record<string, unknown>) => ['users', 'list', params] as const,
+    detail: (id: string) => ['users', id] as const,
+  },
+  clinicSettings: {
+    detail: ['clinic-settings'] as const,
   },
 } as const

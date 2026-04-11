@@ -1,6 +1,7 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { initApiClient } from '@/lib/api-client-init'
+import { ThemeProvider } from '@/providers/ThemeProvider'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,6 +17,7 @@ initApiClient(import.meta.env.VITE_API_URL ?? '/api')
 export const Route = createRootRoute({
   component: () => (
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <div className="bg-scene">
         <div className="bg-mesh" />
         <div className="blob blob-1" />
@@ -23,6 +25,7 @@ export const Route = createRootRoute({
         <div className="blob blob-3" />
       </div>
       <Outlet />
+      </ThemeProvider>
     </QueryClientProvider>
   ),
 })

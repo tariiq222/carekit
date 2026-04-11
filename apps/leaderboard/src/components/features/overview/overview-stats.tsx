@@ -1,4 +1,5 @@
 import { useBookingStats } from '@/hooks/use-bookings'
+import { HIcon } from '@/components/shared/hicon'
 import { usePatientStats } from '@/hooks/use-patients'
 import { useAuthStore } from '@/lib/stores/auth.store'
 
@@ -10,35 +11,71 @@ interface StatCard {
   sub?: string
 }
 
-const variantStyles: Record<StatCard['variant'], { icon: string; value: string }> = {
-  primary: { icon: 'bg-[var(--primary-ultra)] text-[var(--primary)]', value: 'text-[var(--primary)]' },
-  success: { icon: 'bg-[var(--success-bg)] text-[var(--success)]',   value: 'text-[var(--success)]' },
-  warning: { icon: 'bg-[var(--warning-bg)] text-[var(--warning)]',   value: 'text-[var(--warning)]' },
-  accent:  { icon: 'bg-[var(--accent-ultra)] text-[var(--accent-dark)]', value: 'text-[var(--accent-dark)]' },
+const variantStyles: Record<
+  StatCard['variant'],
+  { icon: string; value: string; glow: string; shimmer: string }
+> = {
+  primary: {
+    icon: 'bg-[var(--primary-ultra)] text-[var(--primary)]',
+    value: 'text-[var(--primary)]',
+    glow: 'rgba(53,79,216,0.06)',
+    shimmer: 'rgba(53,79,216,0.04)',
+  },
+  success: {
+    icon: 'bg-[var(--success-bg)] text-[var(--success)]',
+    value: 'text-[var(--success)]',
+    glow: 'rgba(22,163,74,0.06)',
+    shimmer: 'rgba(22,163,74,0.03)',
+  },
+  warning: {
+    icon: 'bg-[var(--warning-bg)] text-[var(--warning)]',
+    value: 'text-[var(--warning)]',
+    glow: 'rgba(217,119,6,0.06)',
+    shimmer: 'rgba(217,119,6,0.03)',
+  },
+  accent: {
+    icon: 'bg-[var(--accent-ultra)] text-[var(--accent-dark)]',
+    value: 'text-[var(--accent-dark)]',
+    glow: 'rgba(130,204,23,0.07)',
+    shimmer: 'rgba(130,204,23,0.03)',
+  },
 }
 
 function StatCardView({ card }: { card: StatCard }) {
+  const styles = variantStyles[card.variant]
+
   return (
-    <div className="glass rounded-[var(--radius)] p-5 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+    <div
+      className="stat-card-ck"
+      style={{
+        background: `linear-gradient(135deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.72) 100%), radial-gradient(circle at 0% 0%, ${styles.glow} 0%, transparent 60%)`,
+      }}
+    >
+      {/* Shimmer top line */}
+      <div className="stat-card-shimmer" />
+
+      {/* Top row */}
+      <div className="flex items-start justify-between mb-4">
         <div
           className={[
-            'w-11 h-11 rounded-[var(--radius-sm)] flex items-center justify-center',
-            variantStyles[card.variant].icon,
+            'w-11 h-11 rounded-[var(--radius-sm)] flex items-center justify-center flex-shrink-0',
+            styles.icon,
           ].join(' ')}
         >
-          <i className={`hgi ${card.icon} text-lg`} />
+          <HIcon name={card.icon} size={20} />
         </div>
       </div>
-      <div>
-        <p className={`text-[32px] font-extrabold leading-none tracking-tight ${variantStyles[card.variant].value}`}>
-          {card.value}
-        </p>
-        <p className="text-xs text-[var(--muted)] mt-2 font-medium">{card.label}</p>
-        {card.sub && (
-          <p className="text-[11px] text-[var(--muted)] mt-1 opacity-80">{card.sub}</p>
-        )}
-      </div>
+
+      {/* Value */}
+      <p className={`text-[32px] font-extrabold leading-none tracking-tight mb-2 ${styles.value}`}>
+        {card.value}
+      </p>
+
+      {/* Label + sub */}
+      <p className="text-[13px] font-semibold text-[var(--fg-2)] leading-tight">{card.label}</p>
+      {card.sub && (
+        <p className="text-[11.5px] text-[var(--muted)] mt-1.5 leading-relaxed">{card.sub}</p>
+      )}
     </div>
   )
 }
@@ -47,7 +84,7 @@ function StatsSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-[140px] glass rounded-[var(--radius)] animate-pulse" />
+        <div key={i} className="h-[148px] glass rounded-[var(--radius)] animate-pulse" />
       ))}
     </div>
   )

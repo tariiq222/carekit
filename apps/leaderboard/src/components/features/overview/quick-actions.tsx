@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useAuthStore } from '@/lib/stores/auth.store'
 import type { FeatureFlags } from '@carekit/api-client'
+import { HIcon } from '@/components/shared/hicon'
 
 type RouteTo = '/bookings/new' | '/patients/new'
 
@@ -30,28 +31,30 @@ const ACTIONS: Action[] = [
 
 function ActionCard({ action }: { action: Action }) {
   const inner = (
-    <>
+    <div className="flex items-center gap-3 w-full">
       <div
         className={[
-          'w-11 h-11 rounded-[var(--radius-sm)] flex items-center justify-center border border-[var(--border-soft)]',
+          'w-10 h-10 rounded-[var(--radius-sm)] flex items-center justify-center flex-shrink-0',
           variantStyles[action.variant],
         ].join(' ')}
       >
-        <i className={`hgi ${action.icon} text-lg`} />
+        <HIcon name={action.icon} size={18} />
       </div>
-      <span className="text-[13px] font-semibold text-[var(--fg-2)]">{action.label}</span>
-      <span className="text-[11px] text-[var(--muted)] mt-0.5 text-center leading-tight">{action.sub}</span>
-    </>
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="text-[13px] font-semibold text-[var(--fg)] leading-tight">{action.label}</span>
+        <span className="text-[11px] text-[var(--muted)] leading-tight truncate">{action.sub}</span>
+      </div>
+    </div>
   )
 
   const classes =
-    'flex flex-col items-center justify-center gap-2 p-5 rounded-[var(--radius-sm)] border border-[var(--border-soft)] transition-all hover:-translate-y-0.5 transition-transform duration-150'
+    'flex items-center p-3.5 rounded-[var(--radius-sm)] border border-[rgba(0,0,0,0.08)] bg-[rgba(255,255,255,0.55)] transition-all hover:-translate-y-0.5 hover:shadow-md hover:bg-[rgba(255,255,255,0.88)] duration-150 cursor-pointer'
 
   if (action.to) {
     return (
       <Link
         to={action.to}
-        className={`${classes} hover:border-[color:var(--primary)]/30 hover:bg-[var(--surface)]`}
+        className={`${classes} hover:border-[color:var(--primary)]/25`}
       >
         {inner}
       </Link>
@@ -79,7 +82,7 @@ export function QuickActions() {
   return (
     <section className="glass rounded-[var(--radius)] p-5 flex flex-col gap-4">
       <h2 className="text-base font-bold text-[var(--fg)]">إجراءات سريعة</h2>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex flex-col gap-2">
         {visible.map((action) => (
           <ActionCard key={action.label} action={action} />
         ))}

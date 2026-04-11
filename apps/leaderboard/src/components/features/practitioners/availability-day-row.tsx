@@ -1,4 +1,5 @@
 import { useFieldArray, type Control, type UseFormRegister, type FieldErrors } from 'react-hook-form'
+import { HIcon } from '@/components/shared/hicon'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { WeeklyScheduleFormValues } from '@/lib/schemas/availability.schema'
@@ -60,7 +61,7 @@ export function AvailabilityDayRow({
             size="sm"
             onClick={() => append({ startTime: '09:00', endTime: '17:00' })}
           >
-            <i className="hgi hgi-add-01 me-1" />
+            <HIcon name="hgi-add-01" className="me-1" />
             إضافة فترة
           </Button>
         )}
@@ -99,7 +100,7 @@ export function AvailabilityDayRow({
                   onClick={() => remove(slotIdx)}
                   aria-label="حذف الفترة"
                 >
-                  <i className="hgi hgi-delete-02" />
+                  <HIcon name="hgi-delete-02" />
                 </Button>
                 {(startErr || endErr) && (
                   <p className="text-xs text-[var(--error,#dc2626)] basis-full">

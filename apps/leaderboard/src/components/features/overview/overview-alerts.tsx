@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useBookingStats } from '@/hooks/use-bookings'
+import { HIcon } from '@/components/shared/hicon'
 
 interface Alert {
   title: string
@@ -46,14 +47,14 @@ export function OverviewAlerts() {
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-[var(--fg)]">تنبيهات</h2>
         {alerts.length > 0 && (
-          <span className="text-[11px] font-medium text-[var(--muted)]">{alerts.length}</span>
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--warning-bg)] text-[var(--warning)]">{alerts.length}</span>
         )}
       </div>
 
       {alerts.length === 0 ? (
         <div className="text-center py-6 text-xs text-[var(--muted)]">
           <div className="w-10 h-10 rounded-[var(--radius-sm)] bg-[var(--success-bg)] flex items-center justify-center mx-auto mb-3">
-            <i className="hgi hgi-tick-02 text-xl text-[var(--success)]" />
+            <HIcon name="hgi-tick-02" size={20} className="text-[var(--success)]" />
           </div>
           لا توجد تنبيهات
         </div>
@@ -70,7 +71,7 @@ export function OverviewAlerts() {
                 <span
                   className={`w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center flex-shrink-0 ${tone.text}`}
                 >
-                  <i className={`hgi ${alert.icon} text-base`} />
+                  <HIcon name={alert.icon} size={18} />
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className={`text-[13px] font-bold ${tone.text}`}>{alert.title}</p>

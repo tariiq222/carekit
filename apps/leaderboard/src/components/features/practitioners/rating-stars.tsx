@@ -13,8 +13,8 @@ export function RatingStars({ value, size = 'md' }: Props) {
           key={n}
           className={
             n <= value
-              ? 'hgi hgi-star-solid text-[var(--warning,#f59e0b)]'
-              : 'hgi hgi-star text-[var(--muted)]'
+              ? 'hgi-stroke hgi-star-solid text-[var(--warning,#f59e0b)]'
+              : 'hgi-stroke hgi-star text-[var(--muted)]'
           }
         />
       ))}

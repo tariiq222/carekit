@@ -1,4 +1,5 @@
 import { RatingStars } from './rating-stars'
+import { HIcon } from '@/components/shared/hicon'
 
 interface RatingCardProps {
   stars: number
@@ -33,7 +34,7 @@ export function RatingCard({ stars, comment, patientName, createdAt }: RatingCar
       )}
       <div className="flex items-center gap-2 pt-2 border-t border-[var(--border-soft)]">
         <span className="inline-flex items-center justify-center size-7 rounded-full bg-[var(--surface-solid)] text-[var(--muted)]">
-          <i className="hgi hgi-user" />
+          <HIcon name="hgi-user" />
         </span>
         <span className="text-xs text-[var(--muted)]">{patientName}</span>
       </div>
