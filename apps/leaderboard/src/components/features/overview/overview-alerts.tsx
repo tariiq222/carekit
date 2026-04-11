@@ -52,7 +52,9 @@ export function OverviewAlerts() {
 
       {alerts.length === 0 ? (
         <div className="text-center py-6 text-xs text-[var(--muted)]">
-          <i className="hgi hgi-tick-02 text-2xl mb-1 block opacity-60" />
+          <div className="w-10 h-10 rounded-[var(--radius-sm)] bg-[var(--success-bg)] flex items-center justify-center mx-auto mb-3">
+            <i className="hgi hgi-tick-02 text-xl text-[var(--success)]" />
+          </div>
           لا توجد تنبيهات
         </div>
       ) : (
@@ -66,12 +68,12 @@ export function OverviewAlerts() {
                 className={`flex items-start gap-3 p-3 rounded-[var(--radius-sm)] border ${tone.border} ${tone.bg} hover:opacity-90 transition-opacity`}
               >
                 <span
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${tone.text}`}
+                  className={`w-8 h-8 rounded-[var(--radius-sm)] flex items-center justify-center flex-shrink-0 ${tone.text}`}
                 >
                   <i className={`hgi ${alert.icon} text-base`} />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-bold ${tone.text}`}>{alert.title}</p>
+                  <p className={`text-[13px] font-bold ${tone.text}`}>{alert.title}</p>
                   <p className="text-[11px] text-[var(--muted)] mt-0.5">{alert.desc}</p>
                 </div>
               </Link>

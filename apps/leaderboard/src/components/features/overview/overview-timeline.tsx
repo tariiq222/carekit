@@ -24,6 +24,34 @@ function formatTime(value: string) {
   }
 }
 
+function isCurrent(startTime: string): boolean {
+  const now = new Date()
+  let target: Date
+  if (/^\d{2}:\d{2}/.test(startTime)) {
+    target = new Date()
+    const [h, min] = startTime.split(':').map(Number) as [number, number]
+    target.setHours(h, min, 0, 0)
+  } else {
+    try { target = new Date(startTime) } catch { return false }
+  }
+  const diff = (target.getTime() - now.getTime()) / 60000
+  return diff >= -5 && diff <= 15
+}
+
+function dotClass(status: BookingListItem['status']): string {
+  switch (status) {
+    case 'confirmed':
+    case 'completed':
+      return 'w-2.5 h-2.5 rounded-full bg-[var(--success)]'
+    case 'pending':
+      return 'w-2.5 h-2.5 rounded-full bg-[var(--warning)]'
+    case 'cancelled':
+      return 'w-2.5 h-2.5 rounded-full bg-[#98A2B3]'
+    default:
+      return 'w-2.5 h-2.5 rounded-full bg-[var(--primary)] ring-2 ring-[color:var(--primary)]/25'
+  }
+}
+
 function patientName(b: BookingListItem) {
   if (!b.patient) return 'بدون موعد'
   return `${b.patient.firstName} ${b.patient.lastName}`.trim()
@@ -52,18 +80,34 @@ export function OverviewTimeline() {
             {data?.meta?.total ?? 0} حجز
           </p>
         </div>
-        <Link
-          to="/bookings"
-          className="text-xs font-medium text-[var(--primary)] hover:underline"
-        >
-          عرض الكل
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/bookings"
+            className="text-xs font-medium text-[var(--primary)] hover:underline"
+          >
+            عرض الكل
+          </Link>
+          <Link
+            to="/bookings/new"
+            className="text-xs font-semibold text-white bg-[var(--primary)] px-3 py-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--primary-dark)] transition-colors"
+          >
+            <i className="hgi hgi-add-01 text-xs ml-1" />
+            حجز جديد
+          </Link>
+        </div>
       </header>
 
       {isLoading ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-14 rounded-[var(--radius-sm)] bg-[var(--surface)] animate-pulse" />
+        <div className="flex flex-col">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-4 py-3">
+              <div className="w-14 h-4 rounded bg-[var(--border-soft)] animate-pulse shrink-0" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[var(--border-soft)] animate-pulse shrink-0 mt-1" />
+              <div className="flex-1 flex flex-col gap-2">
+                <div className="h-4 w-2/3 rounded bg-[var(--border-soft)] animate-pulse" />
+                <div className="h-3 w-1/2 rounded bg-[var(--border-soft)] animate-pulse" />
+              </div>
+            </div>
           ))}
         </div>
       ) : data?.items && data.items.length > 0 ? (
@@ -73,11 +117,19 @@ export function OverviewTimeline() {
               key={b.id}
               className="flex items-start gap-4 py-3 border-b border-[var(--border-soft)] last:border-b-0"
             >
-              <div className="w-14 flex-shrink-0 text-sm font-semibold text-[var(--fg-2)] tabular-nums pt-0.5">
-                {formatTime(b.startTime)}
+              <div className="w-14 shrink-0 tabular-nums pt-0.5">
+                {isCurrent(b.startTime) ? (
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--primary)] text-white">
+                    {formatTime(b.startTime)}
+                  </span>
+                ) : (
+                  <span className="text-sm font-semibold text-[var(--fg-2)]">
+                    {formatTime(b.startTime)}
+                  </span>
+                )}
               </div>
-              <div className="relative flex flex-col items-center flex-shrink-0 pt-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-[var(--primary)]" />
+              <div className="flex flex-col items-center shrink-0 pt-2">
+                <div className={dotClass(b.status)} />
                 {idx < data.items.length - 1 && (
                   <div className="w-px flex-1 bg-[var(--border-soft)] mt-1" style={{ minHeight: 28 }} />
                 )}
@@ -102,9 +154,10 @@ export function OverviewTimeline() {
           ))}
         </ol>
       ) : (
-        <div className="text-center py-10 text-sm text-[var(--muted)]">
-          <i className="hgi hgi-calendar-remove-02 text-3xl mb-2 block opacity-60" />
-          لا توجد حجوزات اليوم
+        <div className="text-center py-12 text-sm text-[var(--muted)]">
+          <i className="hgi hgi-calendar-remove-02 text-2xl mb-3 block opacity-50" />
+          <p className="font-medium">لا توجد حجوزات اليوم</p>
+          <p className="text-[11px] mt-1 opacity-70">ستظهر حجوزات اليوم هنا فور إنشائها</p>
         </div>
       )}
     </section>
