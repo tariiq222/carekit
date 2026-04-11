@@ -7,7 +7,7 @@ Next.js 15 (App Router), React 19, TanStack Query v5, shadcn/ui, Tailwind 4, nex
 ## Layer Rules (strict — no exceptions)
 
 ```
-app/(dashboard)/[feature]/page.tsx     ≤120 lines — orchestration only
+app/(dashboard)/[feature]/page.tsx     ≤150 lines — orchestration only
     ↓ imports from
 components/features/[feature]/         ≤300 lines per file
 components/features/shared/            shared across 3+ features
@@ -45,6 +45,12 @@ lib/utils.ts                           pure utilities
 `activity-log/`, `users/`, `settings/`,
 `white-label/`, `zatca/`
 
+## Real-time Updates
+
+- **No WebSockets** — use `refetchInterval` in TanStack Query (30s default for notifications/booking status)
+- `socket.io-client` removed 2026-04-12 — revisit only if live queue board or chat dashboard is required
+- `@xyflow/react` removed 2026-04-12 — no current use case; re-add when flow diagrams are specced
+
 ## i18n
 
 - Provider: `next-intl` with `locale-provider.tsx`
@@ -66,7 +72,7 @@ lib/utils.ts                           pure utilities
 
 | Type | Max lines |
 |------|-----------|
-| Page (app/) | 120 |
+| Page (app/) | 150 (add `// EXCEPTION: <reason>, approved <date>` comment if exceeded) |
 | Feature component | 300 |
 | Hook | 200 |
 | API function | 200 |
