@@ -22,6 +22,8 @@ export const arPractitioners: Record<string, string> = {
   "practitioners.stats.specialties": "التخصصات",
   "practitioners.tabs.list": "القائمة",
   "practitioners.tabs.ratings": "التقييمات",
+  "practitioners.ratings.title": "تقييمات الممارسين",
+  "practitioners.ratings.description": "استعرض وحلّل التقييمات والملاحظات لجميع الممارسين.",
   "practitioners.topPerformers": "أفضل الممارسين أداءً",
   "practitioners.topPerformersMonth": "أفضل الممارسين هذا الشهر",
   "practitioners.activeCount": "{count} ممارسين نشطين",

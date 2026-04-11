@@ -22,6 +22,8 @@ export const enPractitioners: Record<string, string> = {
   "practitioners.stats.specialties": "Specialties",
   "practitioners.tabs.list": "List",
   "practitioners.tabs.ratings": "Ratings",
+  "practitioners.ratings.title": "Practitioner Ratings",
+  "practitioners.ratings.description": "Browse and analyze ratings and feedback across all practitioners.",
   "practitioners.topPerformers": "Top Performers",
   "practitioners.topPerformersMonth": "Top Performers This Month",
   "practitioners.activeCount": "{count} active practitioners",
