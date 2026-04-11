@@ -1,7 +1,7 @@
 {
   "project": "CareKit Backend — Rebuild from Scratch",
   "spec": "docs/superpowers/specs/2026-04-11-backend-architecture-design.md",
-  "lastUpdated": "2026-04-11T22:56",
+  "lastUpdated": "2026-04-11",
   "phases": [
     {
       "id": "p1",
@@ -49,7 +49,7 @@
           "title": "MinIO storage adapter",
           "detail": "minio.service.ts in infrastructure/storage/",
           "complexity": "CRUD",
-          "status": "todo",
+          "status": "done",
           "bc": "foundation"
         },
         {
@@ -59,7 +59,7 @@
           "title": "FCM + SMTP adapters",
           "detail": "fcm.service.ts, smtp.service.ts",
           "complexity": "CRUD",
-          "status": "todo",
+          "status": "done",
           "bc": "foundation"
         },
         {
