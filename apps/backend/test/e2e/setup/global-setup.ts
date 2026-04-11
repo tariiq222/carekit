@@ -172,19 +172,8 @@ export default async function globalSetup(): Promise<void> {
     await prisma.serviceCategory.deleteMany({});
 
     // Delete test-created specialties (keep only canonical seed specialties)
-    const seedSpecialtyNames = [
-      'General Medicine',
-      'Dermatology',
-      'Pediatrics',
-      'Dentistry',
-      'Cardiology',
-      'Orthopedics',
-      'Ophthalmology',
-      'Psychiatry',
-    ];
-    await prisma.specialty.deleteMany({
-      where: { nameEn: { notIn: seedSpecialtyNames } },
-    });
+    // NOTE: Specialty model was removed from schema - specialty is now a string field on Practitioner
+    // The seedSpecialtyNames filtering is no longer applicable
 
     // Clean admin's refresh tokens too
     await prisma.refreshToken.deleteMany({});
