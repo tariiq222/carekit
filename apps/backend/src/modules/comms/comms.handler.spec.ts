@@ -5,6 +5,7 @@ import { SendNotificationHandler } from './send-notification/send-notification.h
 import type { FcmService } from '../../infrastructure/mail';
 import type { SmtpService } from '../../infrastructure/mail';
 import type { PrismaService } from '../../infrastructure/database';
+import { NotificationType, RecipientType } from '@prisma/client';
 
 const mockTemplate = {
   id: 'tpl-1',
@@ -130,8 +131,8 @@ describe('SendNotificationHandler', () => {
     ).execute({
       tenantId: 'tenant-1',
       recipientId: 'client-1',
-      recipientType: 'CLIENT' as never,
-      type: 'BOOKING_CONFIRMED' as never,
+      recipientType: RecipientType.CLIENT,
+      type: NotificationType.BOOKING_CONFIRMED,
       title: 'تم تأكيد الحجز',
       body: 'تم تأكيد موعدك',
       channels: ['push', 'in-app'],
