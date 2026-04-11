@@ -12,15 +12,39 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteRouteImport } from './routes/_dashboard/route'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as DashboardSpecialtiesIndexRouteImport } from './routes/_dashboard/specialties/index'
+import { Route as DashboardServicesIndexRouteImport } from './routes/_dashboard/services/index'
 import { Route as DashboardPractitionersIndexRouteImport } from './routes/_dashboard/practitioners/index'
+import { Route as DashboardPaymentsIndexRouteImport } from './routes/_dashboard/payments/index'
 import { Route as DashboardPatientsIndexRouteImport } from './routes/_dashboard/patients/index'
+import { Route as DashboardInvoicesIndexRouteImport } from './routes/_dashboard/invoices/index'
+import { Route as DashboardGiftCardsIndexRouteImport } from './routes/_dashboard/gift-cards/index'
+import { Route as DashboardDepartmentsIndexRouteImport } from './routes/_dashboard/departments/index'
+import { Route as DashboardCouponsIndexRouteImport } from './routes/_dashboard/coupons/index'
+import { Route as DashboardBranchesIndexRouteImport } from './routes/_dashboard/branches/index'
 import { Route as DashboardBookingsIndexRouteImport } from './routes/_dashboard/bookings/index'
+import { Route as DashboardSpecialtiesNewRouteImport } from './routes/_dashboard/specialties/new'
+import { Route as DashboardSpecialtiesIdRouteImport } from './routes/_dashboard/specialties/$id'
+import { Route as DashboardServicesNewRouteImport } from './routes/_dashboard/services/new'
+import { Route as DashboardServicesIdRouteImport } from './routes/_dashboard/services/$id'
 import { Route as DashboardPractitionersNewRouteImport } from './routes/_dashboard/practitioners/new'
 import { Route as DashboardPractitionersIdRouteImport } from './routes/_dashboard/practitioners/$id'
+import { Route as DashboardPaymentsIdRouteImport } from './routes/_dashboard/payments/$id'
 import { Route as DashboardPatientsNewRouteImport } from './routes/_dashboard/patients/new'
 import { Route as DashboardPatientsIdRouteImport } from './routes/_dashboard/patients/$id'
+import { Route as DashboardInvoicesIdRouteImport } from './routes/_dashboard/invoices/$id'
+import { Route as DashboardGiftCardsNewRouteImport } from './routes/_dashboard/gift-cards/new'
+import { Route as DashboardGiftCardsIdRouteImport } from './routes/_dashboard/gift-cards/$id'
+import { Route as DashboardDepartmentsNewRouteImport } from './routes/_dashboard/departments/new'
+import { Route as DashboardDepartmentsIdRouteImport } from './routes/_dashboard/departments/$id'
+import { Route as DashboardCouponsNewRouteImport } from './routes/_dashboard/coupons/new'
+import { Route as DashboardCouponsIdRouteImport } from './routes/_dashboard/coupons/$id'
+import { Route as DashboardBranchesNewRouteImport } from './routes/_dashboard/branches/new'
+import { Route as DashboardBranchesIdRouteImport } from './routes/_dashboard/branches/$id'
 import { Route as DashboardBookingsNewRouteImport } from './routes/_dashboard/bookings/new'
 import { Route as DashboardBookingsIdRouteImport } from './routes/_dashboard/bookings/$id'
+import { Route as DashboardPractitionersIdRatingsRouteImport } from './routes/_dashboard/practitioners/$id.ratings'
+import { Route as DashboardPractitionersIdAvailabilityRouteImport } from './routes/_dashboard/practitioners/$id.availability'
 
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/_dashboard',
@@ -36,20 +60,82 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardSpecialtiesIndexRoute =
+  DashboardSpecialtiesIndexRouteImport.update({
+    id: '/specialties/',
+    path: '/specialties/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardServicesIndexRoute = DashboardServicesIndexRouteImport.update({
+  id: '/services/',
+  path: '/services/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardPractitionersIndexRoute =
   DashboardPractitionersIndexRouteImport.update({
     id: '/practitioners/',
     path: '/practitioners/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardPaymentsIndexRoute = DashboardPaymentsIndexRouteImport.update({
+  id: '/payments/',
+  path: '/payments/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardPatientsIndexRoute = DashboardPatientsIndexRouteImport.update({
   id: '/patients/',
   path: '/patients/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardInvoicesIndexRoute = DashboardInvoicesIndexRouteImport.update({
+  id: '/invoices/',
+  path: '/invoices/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardGiftCardsIndexRoute = DashboardGiftCardsIndexRouteImport.update({
+  id: '/gift-cards/',
+  path: '/gift-cards/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardDepartmentsIndexRoute =
+  DashboardDepartmentsIndexRouteImport.update({
+    id: '/departments/',
+    path: '/departments/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardCouponsIndexRoute = DashboardCouponsIndexRouteImport.update({
+  id: '/coupons/',
+  path: '/coupons/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardBranchesIndexRoute = DashboardBranchesIndexRouteImport.update({
+  id: '/branches/',
+  path: '/branches/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardBookingsIndexRoute = DashboardBookingsIndexRouteImport.update({
   id: '/bookings/',
   path: '/bookings/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSpecialtiesNewRoute = DashboardSpecialtiesNewRouteImport.update({
+  id: '/specialties/new',
+  path: '/specialties/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSpecialtiesIdRoute = DashboardSpecialtiesIdRouteImport.update({
+  id: '/specialties/$id',
+  path: '/specialties/$id',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardServicesNewRoute = DashboardServicesNewRouteImport.update({
+  id: '/services/new',
+  path: '/services/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardServicesIdRoute = DashboardServicesIdRouteImport.update({
+  id: '/services/$id',
+  path: '/services/$id',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardPractitionersNewRoute =
@@ -64,6 +150,11 @@ const DashboardPractitionersIdRoute =
     path: '/practitioners/$id',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardPaymentsIdRoute = DashboardPaymentsIdRouteImport.update({
+  id: '/payments/$id',
+  path: '/payments/$id',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardPatientsNewRoute = DashboardPatientsNewRouteImport.update({
   id: '/patients/new',
   path: '/patients/new',
@@ -72,6 +163,51 @@ const DashboardPatientsNewRoute = DashboardPatientsNewRouteImport.update({
 const DashboardPatientsIdRoute = DashboardPatientsIdRouteImport.update({
   id: '/patients/$id',
   path: '/patients/$id',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardInvoicesIdRoute = DashboardInvoicesIdRouteImport.update({
+  id: '/invoices/$id',
+  path: '/invoices/$id',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardGiftCardsNewRoute = DashboardGiftCardsNewRouteImport.update({
+  id: '/gift-cards/new',
+  path: '/gift-cards/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardGiftCardsIdRoute = DashboardGiftCardsIdRouteImport.update({
+  id: '/gift-cards/$id',
+  path: '/gift-cards/$id',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardDepartmentsNewRoute = DashboardDepartmentsNewRouteImport.update({
+  id: '/departments/new',
+  path: '/departments/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardDepartmentsIdRoute = DashboardDepartmentsIdRouteImport.update({
+  id: '/departments/$id',
+  path: '/departments/$id',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCouponsNewRoute = DashboardCouponsNewRouteImport.update({
+  id: '/coupons/new',
+  path: '/coupons/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardCouponsIdRoute = DashboardCouponsIdRouteImport.update({
+  id: '/coupons/$id',
+  path: '/coupons/$id',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardBranchesNewRoute = DashboardBranchesNewRouteImport.update({
+  id: '/branches/new',
+  path: '/branches/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardBranchesIdRoute = DashboardBranchesIdRouteImport.update({
+  id: '/branches/$id',
+  path: '/branches/$id',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardBookingsNewRoute = DashboardBookingsNewRouteImport.update({
@@ -84,32 +220,92 @@ const DashboardBookingsIdRoute = DashboardBookingsIdRouteImport.update({
   path: '/bookings/$id',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardPractitionersIdRatingsRoute =
+  DashboardPractitionersIdRatingsRouteImport.update({
+    id: '/ratings',
+    path: '/ratings',
+    getParentRoute: () => DashboardPractitionersIdRoute,
+  } as any)
+const DashboardPractitionersIdAvailabilityRoute =
+  DashboardPractitionersIdAvailabilityRouteImport.update({
+    id: '/availability',
+    path: '/availability',
+    getParentRoute: () => DashboardPractitionersIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
   '/login': typeof AuthLoginRoute
   '/bookings/$id': typeof DashboardBookingsIdRoute
   '/bookings/new': typeof DashboardBookingsNewRoute
+  '/branches/$id': typeof DashboardBranchesIdRoute
+  '/branches/new': typeof DashboardBranchesNewRoute
+  '/coupons/$id': typeof DashboardCouponsIdRoute
+  '/coupons/new': typeof DashboardCouponsNewRoute
+  '/departments/$id': typeof DashboardDepartmentsIdRoute
+  '/departments/new': typeof DashboardDepartmentsNewRoute
+  '/gift-cards/$id': typeof DashboardGiftCardsIdRoute
+  '/gift-cards/new': typeof DashboardGiftCardsNewRoute
+  '/invoices/$id': typeof DashboardInvoicesIdRoute
   '/patients/$id': typeof DashboardPatientsIdRoute
   '/patients/new': typeof DashboardPatientsNewRoute
-  '/practitioners/$id': typeof DashboardPractitionersIdRoute
+  '/payments/$id': typeof DashboardPaymentsIdRoute
+  '/practitioners/$id': typeof DashboardPractitionersIdRouteWithChildren
   '/practitioners/new': typeof DashboardPractitionersNewRoute
+  '/services/$id': typeof DashboardServicesIdRoute
+  '/services/new': typeof DashboardServicesNewRoute
+  '/specialties/$id': typeof DashboardSpecialtiesIdRoute
+  '/specialties/new': typeof DashboardSpecialtiesNewRoute
   '/bookings/': typeof DashboardBookingsIndexRoute
+  '/branches/': typeof DashboardBranchesIndexRoute
+  '/coupons/': typeof DashboardCouponsIndexRoute
+  '/departments/': typeof DashboardDepartmentsIndexRoute
+  '/gift-cards/': typeof DashboardGiftCardsIndexRoute
+  '/invoices/': typeof DashboardInvoicesIndexRoute
   '/patients/': typeof DashboardPatientsIndexRoute
+  '/payments/': typeof DashboardPaymentsIndexRoute
   '/practitioners/': typeof DashboardPractitionersIndexRoute
+  '/services/': typeof DashboardServicesIndexRoute
+  '/specialties/': typeof DashboardSpecialtiesIndexRoute
+  '/practitioners/$id/availability': typeof DashboardPractitionersIdAvailabilityRoute
+  '/practitioners/$id/ratings': typeof DashboardPractitionersIdRatingsRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/': typeof DashboardIndexRoute
   '/bookings/$id': typeof DashboardBookingsIdRoute
   '/bookings/new': typeof DashboardBookingsNewRoute
+  '/branches/$id': typeof DashboardBranchesIdRoute
+  '/branches/new': typeof DashboardBranchesNewRoute
+  '/coupons/$id': typeof DashboardCouponsIdRoute
+  '/coupons/new': typeof DashboardCouponsNewRoute
+  '/departments/$id': typeof DashboardDepartmentsIdRoute
+  '/departments/new': typeof DashboardDepartmentsNewRoute
+  '/gift-cards/$id': typeof DashboardGiftCardsIdRoute
+  '/gift-cards/new': typeof DashboardGiftCardsNewRoute
+  '/invoices/$id': typeof DashboardInvoicesIdRoute
   '/patients/$id': typeof DashboardPatientsIdRoute
   '/patients/new': typeof DashboardPatientsNewRoute
-  '/practitioners/$id': typeof DashboardPractitionersIdRoute
+  '/payments/$id': typeof DashboardPaymentsIdRoute
+  '/practitioners/$id': typeof DashboardPractitionersIdRouteWithChildren
   '/practitioners/new': typeof DashboardPractitionersNewRoute
+  '/services/$id': typeof DashboardServicesIdRoute
+  '/services/new': typeof DashboardServicesNewRoute
+  '/specialties/$id': typeof DashboardSpecialtiesIdRoute
+  '/specialties/new': typeof DashboardSpecialtiesNewRoute
   '/bookings': typeof DashboardBookingsIndexRoute
+  '/branches': typeof DashboardBranchesIndexRoute
+  '/coupons': typeof DashboardCouponsIndexRoute
+  '/departments': typeof DashboardDepartmentsIndexRoute
+  '/gift-cards': typeof DashboardGiftCardsIndexRoute
+  '/invoices': typeof DashboardInvoicesIndexRoute
   '/patients': typeof DashboardPatientsIndexRoute
+  '/payments': typeof DashboardPaymentsIndexRoute
   '/practitioners': typeof DashboardPractitionersIndexRoute
+  '/services': typeof DashboardServicesIndexRoute
+  '/specialties': typeof DashboardSpecialtiesIndexRoute
+  '/practitioners/$id/availability': typeof DashboardPractitionersIdAvailabilityRoute
+  '/practitioners/$id/ratings': typeof DashboardPractitionersIdRatingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -118,13 +314,37 @@ export interface FileRoutesById {
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/bookings/$id': typeof DashboardBookingsIdRoute
   '/_dashboard/bookings/new': typeof DashboardBookingsNewRoute
+  '/_dashboard/branches/$id': typeof DashboardBranchesIdRoute
+  '/_dashboard/branches/new': typeof DashboardBranchesNewRoute
+  '/_dashboard/coupons/$id': typeof DashboardCouponsIdRoute
+  '/_dashboard/coupons/new': typeof DashboardCouponsNewRoute
+  '/_dashboard/departments/$id': typeof DashboardDepartmentsIdRoute
+  '/_dashboard/departments/new': typeof DashboardDepartmentsNewRoute
+  '/_dashboard/gift-cards/$id': typeof DashboardGiftCardsIdRoute
+  '/_dashboard/gift-cards/new': typeof DashboardGiftCardsNewRoute
+  '/_dashboard/invoices/$id': typeof DashboardInvoicesIdRoute
   '/_dashboard/patients/$id': typeof DashboardPatientsIdRoute
   '/_dashboard/patients/new': typeof DashboardPatientsNewRoute
-  '/_dashboard/practitioners/$id': typeof DashboardPractitionersIdRoute
+  '/_dashboard/payments/$id': typeof DashboardPaymentsIdRoute
+  '/_dashboard/practitioners/$id': typeof DashboardPractitionersIdRouteWithChildren
   '/_dashboard/practitioners/new': typeof DashboardPractitionersNewRoute
+  '/_dashboard/services/$id': typeof DashboardServicesIdRoute
+  '/_dashboard/services/new': typeof DashboardServicesNewRoute
+  '/_dashboard/specialties/$id': typeof DashboardSpecialtiesIdRoute
+  '/_dashboard/specialties/new': typeof DashboardSpecialtiesNewRoute
   '/_dashboard/bookings/': typeof DashboardBookingsIndexRoute
+  '/_dashboard/branches/': typeof DashboardBranchesIndexRoute
+  '/_dashboard/coupons/': typeof DashboardCouponsIndexRoute
+  '/_dashboard/departments/': typeof DashboardDepartmentsIndexRoute
+  '/_dashboard/gift-cards/': typeof DashboardGiftCardsIndexRoute
+  '/_dashboard/invoices/': typeof DashboardInvoicesIndexRoute
   '/_dashboard/patients/': typeof DashboardPatientsIndexRoute
+  '/_dashboard/payments/': typeof DashboardPaymentsIndexRoute
   '/_dashboard/practitioners/': typeof DashboardPractitionersIndexRoute
+  '/_dashboard/services/': typeof DashboardServicesIndexRoute
+  '/_dashboard/specialties/': typeof DashboardSpecialtiesIndexRoute
+  '/_dashboard/practitioners/$id/availability': typeof DashboardPractitionersIdAvailabilityRoute
+  '/_dashboard/practitioners/$id/ratings': typeof DashboardPractitionersIdRatingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -133,26 +353,74 @@ export interface FileRouteTypes {
     | '/login'
     | '/bookings/$id'
     | '/bookings/new'
+    | '/branches/$id'
+    | '/branches/new'
+    | '/coupons/$id'
+    | '/coupons/new'
+    | '/departments/$id'
+    | '/departments/new'
+    | '/gift-cards/$id'
+    | '/gift-cards/new'
+    | '/invoices/$id'
     | '/patients/$id'
     | '/patients/new'
+    | '/payments/$id'
     | '/practitioners/$id'
     | '/practitioners/new'
+    | '/services/$id'
+    | '/services/new'
+    | '/specialties/$id'
+    | '/specialties/new'
     | '/bookings/'
+    | '/branches/'
+    | '/coupons/'
+    | '/departments/'
+    | '/gift-cards/'
+    | '/invoices/'
     | '/patients/'
+    | '/payments/'
     | '/practitioners/'
+    | '/services/'
+    | '/specialties/'
+    | '/practitioners/$id/availability'
+    | '/practitioners/$id/ratings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/'
     | '/bookings/$id'
     | '/bookings/new'
+    | '/branches/$id'
+    | '/branches/new'
+    | '/coupons/$id'
+    | '/coupons/new'
+    | '/departments/$id'
+    | '/departments/new'
+    | '/gift-cards/$id'
+    | '/gift-cards/new'
+    | '/invoices/$id'
     | '/patients/$id'
     | '/patients/new'
+    | '/payments/$id'
     | '/practitioners/$id'
     | '/practitioners/new'
+    | '/services/$id'
+    | '/services/new'
+    | '/specialties/$id'
+    | '/specialties/new'
     | '/bookings'
+    | '/branches'
+    | '/coupons'
+    | '/departments'
+    | '/gift-cards'
+    | '/invoices'
     | '/patients'
+    | '/payments'
     | '/practitioners'
+    | '/services'
+    | '/specialties'
+    | '/practitioners/$id/availability'
+    | '/practitioners/$id/ratings'
   id:
     | '__root__'
     | '/_dashboard'
@@ -160,13 +428,37 @@ export interface FileRouteTypes {
     | '/_dashboard/'
     | '/_dashboard/bookings/$id'
     | '/_dashboard/bookings/new'
+    | '/_dashboard/branches/$id'
+    | '/_dashboard/branches/new'
+    | '/_dashboard/coupons/$id'
+    | '/_dashboard/coupons/new'
+    | '/_dashboard/departments/$id'
+    | '/_dashboard/departments/new'
+    | '/_dashboard/gift-cards/$id'
+    | '/_dashboard/gift-cards/new'
+    | '/_dashboard/invoices/$id'
     | '/_dashboard/patients/$id'
     | '/_dashboard/patients/new'
+    | '/_dashboard/payments/$id'
     | '/_dashboard/practitioners/$id'
     | '/_dashboard/practitioners/new'
+    | '/_dashboard/services/$id'
+    | '/_dashboard/services/new'
+    | '/_dashboard/specialties/$id'
+    | '/_dashboard/specialties/new'
     | '/_dashboard/bookings/'
+    | '/_dashboard/branches/'
+    | '/_dashboard/coupons/'
+    | '/_dashboard/departments/'
+    | '/_dashboard/gift-cards/'
+    | '/_dashboard/invoices/'
     | '/_dashboard/patients/'
+    | '/_dashboard/payments/'
     | '/_dashboard/practitioners/'
+    | '/_dashboard/services/'
+    | '/_dashboard/specialties/'
+    | '/_dashboard/practitioners/$id/availability'
+    | '/_dashboard/practitioners/$id/ratings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,11 +489,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_dashboard/specialties/': {
+      id: '/_dashboard/specialties/'
+      path: '/specialties'
+      fullPath: '/specialties/'
+      preLoaderRoute: typeof DashboardSpecialtiesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/services/': {
+      id: '/_dashboard/services/'
+      path: '/services'
+      fullPath: '/services/'
+      preLoaderRoute: typeof DashboardServicesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/_dashboard/practitioners/': {
       id: '/_dashboard/practitioners/'
       path: '/practitioners'
       fullPath: '/practitioners/'
       preLoaderRoute: typeof DashboardPractitionersIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/payments/': {
+      id: '/_dashboard/payments/'
+      path: '/payments'
+      fullPath: '/payments/'
+      preLoaderRoute: typeof DashboardPaymentsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/_dashboard/patients/': {
@@ -211,11 +524,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPatientsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/_dashboard/invoices/': {
+      id: '/_dashboard/invoices/'
+      path: '/invoices'
+      fullPath: '/invoices/'
+      preLoaderRoute: typeof DashboardInvoicesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/gift-cards/': {
+      id: '/_dashboard/gift-cards/'
+      path: '/gift-cards'
+      fullPath: '/gift-cards/'
+      preLoaderRoute: typeof DashboardGiftCardsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/departments/': {
+      id: '/_dashboard/departments/'
+      path: '/departments'
+      fullPath: '/departments/'
+      preLoaderRoute: typeof DashboardDepartmentsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/coupons/': {
+      id: '/_dashboard/coupons/'
+      path: '/coupons'
+      fullPath: '/coupons/'
+      preLoaderRoute: typeof DashboardCouponsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/branches/': {
+      id: '/_dashboard/branches/'
+      path: '/branches'
+      fullPath: '/branches/'
+      preLoaderRoute: typeof DashboardBranchesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/_dashboard/bookings/': {
       id: '/_dashboard/bookings/'
       path: '/bookings'
       fullPath: '/bookings/'
       preLoaderRoute: typeof DashboardBookingsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/specialties/new': {
+      id: '/_dashboard/specialties/new'
+      path: '/specialties/new'
+      fullPath: '/specialties/new'
+      preLoaderRoute: typeof DashboardSpecialtiesNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/specialties/$id': {
+      id: '/_dashboard/specialties/$id'
+      path: '/specialties/$id'
+      fullPath: '/specialties/$id'
+      preLoaderRoute: typeof DashboardSpecialtiesIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/services/new': {
+      id: '/_dashboard/services/new'
+      path: '/services/new'
+      fullPath: '/services/new'
+      preLoaderRoute: typeof DashboardServicesNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/services/$id': {
+      id: '/_dashboard/services/$id'
+      path: '/services/$id'
+      fullPath: '/services/$id'
+      preLoaderRoute: typeof DashboardServicesIdRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/_dashboard/practitioners/new': {
@@ -232,6 +608,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPractitionersIdRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/_dashboard/payments/$id': {
+      id: '/_dashboard/payments/$id'
+      path: '/payments/$id'
+      fullPath: '/payments/$id'
+      preLoaderRoute: typeof DashboardPaymentsIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/_dashboard/patients/new': {
       id: '/_dashboard/patients/new'
       path: '/patients/new'
@@ -244,6 +627,69 @@ declare module '@tanstack/react-router' {
       path: '/patients/$id'
       fullPath: '/patients/$id'
       preLoaderRoute: typeof DashboardPatientsIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/invoices/$id': {
+      id: '/_dashboard/invoices/$id'
+      path: '/invoices/$id'
+      fullPath: '/invoices/$id'
+      preLoaderRoute: typeof DashboardInvoicesIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/gift-cards/new': {
+      id: '/_dashboard/gift-cards/new'
+      path: '/gift-cards/new'
+      fullPath: '/gift-cards/new'
+      preLoaderRoute: typeof DashboardGiftCardsNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/gift-cards/$id': {
+      id: '/_dashboard/gift-cards/$id'
+      path: '/gift-cards/$id'
+      fullPath: '/gift-cards/$id'
+      preLoaderRoute: typeof DashboardGiftCardsIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/departments/new': {
+      id: '/_dashboard/departments/new'
+      path: '/departments/new'
+      fullPath: '/departments/new'
+      preLoaderRoute: typeof DashboardDepartmentsNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/departments/$id': {
+      id: '/_dashboard/departments/$id'
+      path: '/departments/$id'
+      fullPath: '/departments/$id'
+      preLoaderRoute: typeof DashboardDepartmentsIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/coupons/new': {
+      id: '/_dashboard/coupons/new'
+      path: '/coupons/new'
+      fullPath: '/coupons/new'
+      preLoaderRoute: typeof DashboardCouponsNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/coupons/$id': {
+      id: '/_dashboard/coupons/$id'
+      path: '/coupons/$id'
+      fullPath: '/coupons/$id'
+      preLoaderRoute: typeof DashboardCouponsIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/branches/new': {
+      id: '/_dashboard/branches/new'
+      path: '/branches/new'
+      fullPath: '/branches/new'
+      preLoaderRoute: typeof DashboardBranchesNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/branches/$id': {
+      id: '/_dashboard/branches/$id'
+      path: '/branches/$id'
+      fullPath: '/branches/$id'
+      preLoaderRoute: typeof DashboardBranchesIdRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/_dashboard/bookings/new': {
@@ -260,33 +706,108 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBookingsIdRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/_dashboard/practitioners/$id/ratings': {
+      id: '/_dashboard/practitioners/$id/ratings'
+      path: '/ratings'
+      fullPath: '/practitioners/$id/ratings'
+      preLoaderRoute: typeof DashboardPractitionersIdRatingsRouteImport
+      parentRoute: typeof DashboardPractitionersIdRoute
+    }
+    '/_dashboard/practitioners/$id/availability': {
+      id: '/_dashboard/practitioners/$id/availability'
+      path: '/availability'
+      fullPath: '/practitioners/$id/availability'
+      preLoaderRoute: typeof DashboardPractitionersIdAvailabilityRouteImport
+      parentRoute: typeof DashboardPractitionersIdRoute
+    }
   }
 }
+
+interface DashboardPractitionersIdRouteChildren {
+  DashboardPractitionersIdAvailabilityRoute: typeof DashboardPractitionersIdAvailabilityRoute
+  DashboardPractitionersIdRatingsRoute: typeof DashboardPractitionersIdRatingsRoute
+}
+
+const DashboardPractitionersIdRouteChildren: DashboardPractitionersIdRouteChildren =
+  {
+    DashboardPractitionersIdAvailabilityRoute:
+      DashboardPractitionersIdAvailabilityRoute,
+    DashboardPractitionersIdRatingsRoute: DashboardPractitionersIdRatingsRoute,
+  }
+
+const DashboardPractitionersIdRouteWithChildren =
+  DashboardPractitionersIdRoute._addFileChildren(
+    DashboardPractitionersIdRouteChildren,
+  )
 
 interface DashboardRouteRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardBookingsIdRoute: typeof DashboardBookingsIdRoute
   DashboardBookingsNewRoute: typeof DashboardBookingsNewRoute
+  DashboardBranchesIdRoute: typeof DashboardBranchesIdRoute
+  DashboardBranchesNewRoute: typeof DashboardBranchesNewRoute
+  DashboardCouponsIdRoute: typeof DashboardCouponsIdRoute
+  DashboardCouponsNewRoute: typeof DashboardCouponsNewRoute
+  DashboardDepartmentsIdRoute: typeof DashboardDepartmentsIdRoute
+  DashboardDepartmentsNewRoute: typeof DashboardDepartmentsNewRoute
+  DashboardGiftCardsIdRoute: typeof DashboardGiftCardsIdRoute
+  DashboardGiftCardsNewRoute: typeof DashboardGiftCardsNewRoute
+  DashboardInvoicesIdRoute: typeof DashboardInvoicesIdRoute
   DashboardPatientsIdRoute: typeof DashboardPatientsIdRoute
   DashboardPatientsNewRoute: typeof DashboardPatientsNewRoute
-  DashboardPractitionersIdRoute: typeof DashboardPractitionersIdRoute
+  DashboardPaymentsIdRoute: typeof DashboardPaymentsIdRoute
+  DashboardPractitionersIdRoute: typeof DashboardPractitionersIdRouteWithChildren
   DashboardPractitionersNewRoute: typeof DashboardPractitionersNewRoute
+  DashboardServicesIdRoute: typeof DashboardServicesIdRoute
+  DashboardServicesNewRoute: typeof DashboardServicesNewRoute
+  DashboardSpecialtiesIdRoute: typeof DashboardSpecialtiesIdRoute
+  DashboardSpecialtiesNewRoute: typeof DashboardSpecialtiesNewRoute
   DashboardBookingsIndexRoute: typeof DashboardBookingsIndexRoute
+  DashboardBranchesIndexRoute: typeof DashboardBranchesIndexRoute
+  DashboardCouponsIndexRoute: typeof DashboardCouponsIndexRoute
+  DashboardDepartmentsIndexRoute: typeof DashboardDepartmentsIndexRoute
+  DashboardGiftCardsIndexRoute: typeof DashboardGiftCardsIndexRoute
+  DashboardInvoicesIndexRoute: typeof DashboardInvoicesIndexRoute
   DashboardPatientsIndexRoute: typeof DashboardPatientsIndexRoute
+  DashboardPaymentsIndexRoute: typeof DashboardPaymentsIndexRoute
   DashboardPractitionersIndexRoute: typeof DashboardPractitionersIndexRoute
+  DashboardServicesIndexRoute: typeof DashboardServicesIndexRoute
+  DashboardSpecialtiesIndexRoute: typeof DashboardSpecialtiesIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardBookingsIdRoute: DashboardBookingsIdRoute,
   DashboardBookingsNewRoute: DashboardBookingsNewRoute,
+  DashboardBranchesIdRoute: DashboardBranchesIdRoute,
+  DashboardBranchesNewRoute: DashboardBranchesNewRoute,
+  DashboardCouponsIdRoute: DashboardCouponsIdRoute,
+  DashboardCouponsNewRoute: DashboardCouponsNewRoute,
+  DashboardDepartmentsIdRoute: DashboardDepartmentsIdRoute,
+  DashboardDepartmentsNewRoute: DashboardDepartmentsNewRoute,
+  DashboardGiftCardsIdRoute: DashboardGiftCardsIdRoute,
+  DashboardGiftCardsNewRoute: DashboardGiftCardsNewRoute,
+  DashboardInvoicesIdRoute: DashboardInvoicesIdRoute,
   DashboardPatientsIdRoute: DashboardPatientsIdRoute,
   DashboardPatientsNewRoute: DashboardPatientsNewRoute,
-  DashboardPractitionersIdRoute: DashboardPractitionersIdRoute,
+  DashboardPaymentsIdRoute: DashboardPaymentsIdRoute,
+  DashboardPractitionersIdRoute: DashboardPractitionersIdRouteWithChildren,
   DashboardPractitionersNewRoute: DashboardPractitionersNewRoute,
+  DashboardServicesIdRoute: DashboardServicesIdRoute,
+  DashboardServicesNewRoute: DashboardServicesNewRoute,
+  DashboardSpecialtiesIdRoute: DashboardSpecialtiesIdRoute,
+  DashboardSpecialtiesNewRoute: DashboardSpecialtiesNewRoute,
   DashboardBookingsIndexRoute: DashboardBookingsIndexRoute,
+  DashboardBranchesIndexRoute: DashboardBranchesIndexRoute,
+  DashboardCouponsIndexRoute: DashboardCouponsIndexRoute,
+  DashboardDepartmentsIndexRoute: DashboardDepartmentsIndexRoute,
+  DashboardGiftCardsIndexRoute: DashboardGiftCardsIndexRoute,
+  DashboardInvoicesIndexRoute: DashboardInvoicesIndexRoute,
   DashboardPatientsIndexRoute: DashboardPatientsIndexRoute,
+  DashboardPaymentsIndexRoute: DashboardPaymentsIndexRoute,
   DashboardPractitionersIndexRoute: DashboardPractitionersIndexRoute,
+  DashboardServicesIndexRoute: DashboardServicesIndexRoute,
+  DashboardSpecialtiesIndexRoute: DashboardSpecialtiesIndexRoute,
 }
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
