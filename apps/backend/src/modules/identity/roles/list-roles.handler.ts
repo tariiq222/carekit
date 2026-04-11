@@ -1,0 +1,15 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../../infrastructure/database';
+
+@Injectable()
+export class ListRolesHandler {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async execute(tenantId: string) {
+    return this.prisma.customRole.findMany({
+      where: { tenantId },
+      include: { permissions: true },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+}
