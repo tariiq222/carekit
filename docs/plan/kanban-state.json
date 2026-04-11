@@ -310,9 +310,9 @@
     {
       "id": "p5",
       "title": "Organization BC",
-      "titleAr": "إعدادات العيادة",
+      "titleAr": "إعدادات المنظمة",
       "order": 5,
-      "description": "Branches, services, hours, whitelabel — متوازية مع p4 و p6",
+      "description": "Branches, services, business-hours, branding — متوازية مع p4 و p6",
       "parallelNote": "p4+p5+p6 متوازية. داخلياً: t1+t2 متوازية. t3+t4+t5 متوازية بعدها.",
       "tasks": [
         {
@@ -349,8 +349,8 @@
           "id": "p5-t4",
           "seq": "2b",
           "parallel": true,
-          "title": "whitelabel-config slice",
-          "detail": "Branding: logo, colors, fonts — serves /whitelabel/public endpoint",
+          "title": "branding-config slice",
+          "detail": "Branding: logo, colors, fonts — serves /branding/public endpoint",
           "complexity": "MEDIUM",
           "status": "todo",
           "bc": "organization"
