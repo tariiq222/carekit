@@ -1,0 +1,42 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { ClientGender, ClientSource } from '@prisma/client';
+import { PrismaService } from '../../../infrastructure/database';
+
+export interface UpdateClientCommand {
+  clientId: string;
+  tenantId: string;
+  name?: string;
+  phone?: string | null;
+  email?: string | null;
+  gender?: ClientGender;
+  dateOfBirth?: string | null;
+  avatarUrl?: string | null;
+  notes?: string | null;
+  source?: ClientSource;
+  isActive?: boolean;
+}
+
+@Injectable()
+export class UpdateClientHandler {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async execute(cmd: UpdateClientCommand) {
+    const client = await this.prisma.client.findUnique({ where: { id: cmd.clientId } });
+    if (!client || client.tenantId !== cmd.tenantId) throw new NotFoundException('Client not found');
+
+    return this.prisma.client.update({
+      where: { id: cmd.clientId },
+      data: {
+        name: cmd.name,
+        phone: cmd.phone,
+        email: cmd.email,
+        gender: cmd.gender,
+        dateOfBirth: cmd.dateOfBirth !== undefined ? (cmd.dateOfBirth ? new Date(cmd.dateOfBirth) : null) : undefined,
+        avatarUrl: cmd.avatarUrl,
+        notes: cmd.notes,
+        source: cmd.source,
+        isActive: cmd.isActive,
+      },
+    });
+  }
+}
