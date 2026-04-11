@@ -30,7 +30,11 @@ async function doRefresh(): Promise<string> {
     config.onAuthFailure()
     throw new Error('Refresh failed')
   }
-  const data = (await res.json()) as { accessToken: string; refreshToken: string }
+  const raw = (await res.json()) as unknown
+  const data =
+    raw && typeof raw === 'object' && 'success' in raw && 'data' in raw
+      ? ((raw as { data: { accessToken: string; refreshToken: string } }).data)
+      : (raw as { accessToken: string; refreshToken: string })
   config.onTokenRefreshed(data.accessToken, data.refreshToken)
   return data.accessToken
 }
@@ -71,7 +75,18 @@ export async function apiRequest<T>(
   }
 
   if (res.status === 204) return undefined as T
-  return res.json() as Promise<T>
+  const json = (await res.json()) as unknown
+  // Backend wraps every response as { success: true, data: T }.
+  // Unwrap transparently so callers receive the raw T.
+  if (
+    json &&
+    typeof json === 'object' &&
+    'success' in json &&
+    'data' in json
+  ) {
+    return (json as { data: T }).data
+  }
+  return json as T
 }
 
 export class ApiError extends Error {

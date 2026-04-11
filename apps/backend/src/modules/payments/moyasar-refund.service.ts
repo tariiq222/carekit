@@ -40,10 +40,12 @@ export class MoyasarRefundService {
       });
     }
 
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: payment.bookingId },
-      select: { status: true },
-    });
+    const booking = payment.bookingId
+      ? await this.prisma.booking.findUnique({
+          where: { id: payment.bookingId },
+          select: { status: true },
+        })
+      : null;
     if (booking && !['cancelled', 'no_show'].includes(booking.status)) {
       throw new BadRequestException({
         statusCode: 400,
