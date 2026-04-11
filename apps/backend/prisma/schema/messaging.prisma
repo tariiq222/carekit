@@ -1,0 +1,21 @@
+// apps/backend/prisma/schema/messaging.prisma
+
+model MessagingPreference {
+  id     String @id @default(uuid())
+  userId String @unique @map("user_id")
+
+  pushEnabled  Boolean @default(true) @map("push_enabled")
+  emailEnabled Boolean @default(true) @map("email_enabled")
+  smsEnabled   Boolean @default(true) @map("sms_enabled")
+
+  // JSON shape: { "booking": { push: true, email: true, sms: true } }
+  categories Json @default("{}") @map("categories")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("messaging_preferences")
+}

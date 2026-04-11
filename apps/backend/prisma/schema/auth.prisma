@@ -39,6 +39,7 @@ model User {
   couponRedemptions     CouponRedemption[]
   groupEnrollments      GroupEnrollment[]      @relation("PatientGroupEnrollments")
   groupCertificates     GroupCertificate[]     @relation("PatientGroupCertificates")
+  messagingPreference   MessagingPreference?
 
   @@map("users")
 }
