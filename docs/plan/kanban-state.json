@@ -8,7 +8,7 @@
       "description": "Project scaffold, infrastructure adapters, cross-cutting concerns",
       "parallelNote": "t1→t2→t3 متتابعة. t4+t5 متوازية بعد t1. t6→t7→t8→t9 متتابعة بعد t1.",
       "tasks": [
-        { "id": "p1-t1", "seq": "1", "parallel": false, "title": "Scaffold NestJS project structure", "detail": "apps/backend-v2/ with src/common, infrastructure, api, modules folders", "complexity": "MEDIUM", "status": "todo", "bc": "foundation" },
+        { "id": "p1-t1", "seq": "1", "parallel": false, "title": "Scaffold NestJS project structure", "detail": "apps/backend/ with src/common, infrastructure, api, modules folders", "complexity": "MEDIUM", "status": "done", "bc": "foundation", "commit": "40e2bd5" },
         { "id": "p1-t2", "seq": "2", "parallel": false, "title": "Prisma setup + split schema strategy", "detail": "One schema file per BC, prisma.service.ts, pgvector extension", "complexity": "MEDIUM", "status": "todo", "bc": "foundation" },
         { "id": "p1-t3", "seq": "3", "parallel": false, "title": "Redis + BullMQ infrastructure adapters", "detail": "redis.service.ts, bull-mq.service.ts, event-bus.service.ts", "complexity": "MEDIUM", "status": "todo", "bc": "foundation" },
         { "id": "p1-t4", "seq": "4a", "parallel": true, "title": "MinIO storage adapter", "detail": "minio.service.ts in infrastructure/storage/", "complexity": "CRUD", "status": "todo", "bc": "foundation" },
