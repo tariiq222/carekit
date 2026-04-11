@@ -99,7 +99,7 @@
           "title": "Event Contract base class",
           "detail": "BaseEvent with eventId, correlationId, tenantId, source, version, occurredAt",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "common"
         }
       ]
