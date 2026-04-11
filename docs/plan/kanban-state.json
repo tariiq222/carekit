@@ -1,9 +1,10 @@
 {
   "project": "CareKit Backend — Rebuild from Scratch",
   "spec": "docs/superpowers/specs/2026-04-11-backend-architecture-design.md",
-  "lastUpdated": "2026-04-11",
+  "lastUpdated": "2026-04-12",
   "p2_completed": "2026-04-11",
   "p3_completed": "2026-04-11",
+  "p6_completed": "2026-04-12",
   "phases": [
     {
       "id": "p1",
@@ -382,7 +383,7 @@
           "title": "upload-file slice",
           "detail": "UploadFileCommand + handler + dto, streams to MinIO, returns fileId",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "media"
         },
         {
@@ -392,7 +393,7 @@
           "title": "get-file + delete-file slices",
           "detail": "GetFileQuery, DeleteFileCommand",
           "complexity": "CRUD",
-          "status": "todo",
+          "status": "done",
           "bc": "media"
         },
         {
@@ -402,7 +403,7 @@
           "title": "generate-presigned-url slice",
           "detail": "Time-limited direct access URLs for mobile",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "media"
         }
       ]
