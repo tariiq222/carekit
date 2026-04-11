@@ -37,7 +37,6 @@ export interface WizardState {
   branch: PublicBranch | null
   couponCode: string | null
   couponId: string | null
-  giftCardId: string | null
   discountAmount: number
   paymentMethod: "moyasar" | "at_clinic" | "bank_transfer" | null
   showIntakePopup: boolean
@@ -63,7 +62,6 @@ export function useWidgetBooking(
     branch: null,
     couponCode: null,
     couponId: null,
-    giftCardId: null,
     discountAmount: 0,
     paymentMethod: null,
     showIntakePopup: false,
@@ -236,14 +234,12 @@ export function useWidgetBooking(
     code: string,
     discountAmount: number,
     couponId?: string,
-    giftCardId?: string,
   ) => {
     setState((s) => ({
       ...s,
       couponCode: code,
       discountAmount,
       couponId: couponId ?? null,
-      giftCardId: giftCardId ?? null,
     }))
   }, [])
 
@@ -253,7 +249,6 @@ export function useWidgetBooking(
       couponCode: null,
       discountAmount: 0,
       couponId: null,
-      giftCardId: null,
     }))
   }, [])
 

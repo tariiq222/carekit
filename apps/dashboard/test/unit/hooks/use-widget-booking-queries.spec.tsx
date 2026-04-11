@@ -48,7 +48,6 @@ const emptyState = {
   branch: null,
   couponCode: null,
   couponId: null,
-  giftCardId: null,
   discountAmount: 0,
   paymentMethod: null,
   showIntakePopup: false,

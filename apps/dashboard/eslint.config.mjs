@@ -23,7 +23,6 @@ const FEATURES = [
   "users",
   "branches",
   "coupons",
-  "gift-cards",
   "intake-forms",
   "chatbot",
   "notifications",

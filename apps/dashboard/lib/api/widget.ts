@@ -105,7 +105,6 @@ export interface ValidateCodeResult {
   discountAmount: number
   type: "coupon" | "gift_card"
   couponId?: string
-  giftCardId?: string
 }
 
 export async function validateWidgetCode(

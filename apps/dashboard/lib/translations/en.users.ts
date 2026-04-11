@@ -58,7 +58,6 @@ export const enUsers: Record<string, string> = {
   "users.roles.modules.coupons": "Coupons",
   "users.roles.modules.branches": "Branches",
   "users.roles.modules.intake_forms": "Intake Forms",
-  "users.roles.modules.gift-cards": "Gift Cards",
   "users.roles.modules.activity-log": "Activity Log",
   "users.roles.action.update": "Update",
   "users.roles.action.use": "Use",

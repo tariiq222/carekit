@@ -132,7 +132,6 @@ export interface CreateBookingPayload {
   payAtClinic?: boolean
   branchId?: string
   couponCode?: string
-  giftCardCode?: string
 }
 
 export interface ReschedulePayload {

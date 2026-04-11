@@ -12,7 +12,6 @@ import {
   AiChat02Icon,
   Notification03Icon,
   Coupon01Icon,
-  Ticket02Icon,
   Building06Icon,
   DocumentValidationIcon,
   PaintBrush01Icon,
@@ -51,7 +50,6 @@ export const financeNav: NavItem[] = [
   { titleKey: "nav.payments", href: "/payments", icon: MoneyBag02Icon },
   { titleKey: "nav.invoices", href: "/invoices", icon: Invoice02Icon },
   { titleKey: "nav.coupons", href: "/coupons", icon: Coupon01Icon, featureFlag: "coupons" },
-  { titleKey: "nav.giftCards", href: "/gift-cards", icon: Ticket02Icon, featureFlag: "gift_cards" },
   { titleKey: "nav.reports", href: "/reports", icon: AnalyticsUpIcon, featureFlag: "reports" },
 ]
 

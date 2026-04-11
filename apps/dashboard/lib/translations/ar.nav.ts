@@ -21,7 +21,6 @@ export const arNav: Record<string, string> = {
   "nav.knowledge": "قاعدة المعرفة",
   "nav.branches": "الفروع",
   "nav.coupons": "الكوبونات",
-  "nav.giftCards": "بطاقات الهدايا",
   "nav.reports": "التقارير",
   "nav.notifications": "الإشعارات",
   "nav.chatbot": "مساعد الذكاء الاصطناعي",

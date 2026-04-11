@@ -46,11 +46,9 @@ app/(dashboard)/practitioners/      @tariq
 components/features/payments/       @tariq
 components/features/invoices/       @tariq
 components/features/coupons/        @tariq
-components/features/gift-cards/     @tariq
 app/(dashboard)/payments/           @tariq
 app/(dashboard)/invoices/           @tariq
 app/(dashboard)/coupons/            @tariq
-app/(dashboard)/gift-cards/         @tariq
 
 # ── Compliance ───────────────────────────────────────
 # ZATCA — امتثال ضريبي، لا تعديل بدون مراجعة

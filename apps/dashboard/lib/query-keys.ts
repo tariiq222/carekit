@@ -175,14 +175,6 @@ export const queryKeys = {
     holidays: (year?: number) => ["clinic-holidays", year] as const,
   },
 
-  /* ─── Gift Cards ─── */
-  giftCards: {
-    all: ["gift-cards"] as const,
-    list: (filters?: object) =>
-      ["gift-cards", "list", filters] as const,
-    detail: (id: string) => ["gift-cards", "detail", id] as const,
-  },
-
   /* ─── Coupons ─── */
   coupons: {
     all: ["coupons"] as const,

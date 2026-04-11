@@ -5,7 +5,6 @@
 export interface LicenseConfig {
   id: string
   hasCoupons: boolean
-  hasGiftCards: boolean
   hasIntakeForms: boolean
   hasChatbot: boolean
   hasRatings: boolean

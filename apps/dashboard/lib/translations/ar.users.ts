@@ -58,7 +58,6 @@ export const arUsers: Record<string, string> = {
   "users.roles.modules.coupons": "الكوبونات",
   "users.roles.modules.branches": "الفروع",
   "users.roles.modules.intake_forms": "نماذج الاستقبال",
-  "users.roles.modules.gift-cards": "بطاقات الهدايا",
   "users.roles.modules.activity-log": "سجل النشاط",
   "users.roles.action.update": "تحديث",
   "users.roles.action.use": "استخدام",

@@ -72,7 +72,6 @@ function generateBreadcrumbs(pathname: string, t: (key: string) => string): Brea
     zatca: t("nav.zatca"),
     "activity-log": t("nav.activityLog"),
     coupons: t("nav.coupons"),
-    "gift-cards": t("nav.giftCards"),
     branches: t("nav.branches"),
     users: t("nav.users"),
     settings: t("nav.settings"),

@@ -9,14 +9,13 @@ import { describe, expect, it } from "vitest"
 import { FEATURE_FLAG_KEYS, type FeatureFlagKey } from "@carekit/shared/constants"
 
 describe("FEATURE_FLAG_KEYS", () => {
-  it("contains exactly 14 keys", () => {
-    expect(FEATURE_FLAG_KEYS).toHaveLength(14)
+  it("contains exactly 13 keys", () => {
+    expect(FEATURE_FLAG_KEYS).toHaveLength(13)
   })
 
   it("contains all required keys", () => {
     const required = [
       "coupons",
-      "gift_cards",
       "intake_forms",
       "chatbot",
       "ratings",
