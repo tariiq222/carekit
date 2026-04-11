@@ -1,0 +1,828 @@
+{
+  "project": "CareKit Backend — Rebuild from Scratch",
+  "spec": "docs/superpowers/specs/2026-04-11-backend-architecture-design.md",
+  "lastUpdated": "2026-04-11",
+  "phases": [
+    {
+      "id": "p1",
+      "title": "Foundation",
+      "titleAr": "الأساس",
+      "order": 1,
+      "description": "Project scaffold, infrastructure adapters, cross-cutting concerns",
+      "parallelNote": "t1→t2→t3 متتابعة. t4+t5 متوازية بعد t1. t6→t7→t8→t9 متتابعة بعد t1.",
+      "tasks": [
+        {
+          "id": "p1-t1",
+          "seq": "1",
+          "parallel": false,
+          "title": "Scaffold NestJS project structure",
+          "detail": "apps/backend/ with src/common, infrastructure, api, modules folders",
+          "complexity": "MEDIUM",
+          "status": "done",
+          "bc": "foundation",
+          "commit": "40e2bd5"
+        },
+        {
+          "id": "p1-t2",
+          "seq": "2",
+          "parallel": false,
+          "title": "Prisma setup + split schema strategy",
+          "detail": "One schema file per BC, prisma.service.ts, pgvector extension",
+          "complexity": "MEDIUM",
+          "status": "done",
+          "bc": "foundation"
+        },
+        {
+          "id": "p1-t3",
+          "seq": "3",
+          "parallel": false,
+          "title": "Redis + BullMQ infrastructure adapters",
+          "detail": "redis.service.ts, bull-mq.service.ts, event-bus.service.ts",
+          "complexity": "MEDIUM",
+          "status": "done",
+          "bc": "foundation"
+        },
+        {
+          "id": "p1-t4",
+          "seq": "4a",
+          "parallel": true,
+          "title": "MinIO storage adapter",
+          "detail": "minio.service.ts in infrastructure/storage/",
+          "complexity": "CRUD",
+          "status": "done",
+          "bc": "foundation"
+        },
+        {
+          "id": "p1-t5",
+          "seq": "4b",
+          "parallel": true,
+          "title": "FCM + SMTP adapters",
+          "detail": "fcm.service.ts, smtp.service.ts",
+          "complexity": "CRUD",
+          "status": "done",
+          "bc": "foundation"
+        },
+        {
+          "id": "p1-t6",
+          "seq": "5",
+          "parallel": false,
+          "title": "TenantMiddleware + RequestContext",
+          "detail": "common/tenant/: middleware, decorator, AsyncLocalStorage context",
+          "complexity": "MEDIUM",
+          "status": "done",
+          "bc": "common"
+        },
+        {
+          "id": "p1-t7",
+          "seq": "6",
+          "parallel": false,
+          "title": "Guards: JWT + CASL + RequiresFeature",
+          "detail": "common/guards/: jwt.guard, casl.guard, feature.guard",
+          "complexity": "MEDIUM",
+          "status": "done",
+          "bc": "common"
+        },
+        {
+          "id": "p1-t8",
+          "seq": "7",
+          "parallel": false,
+          "title": "Global interceptors, filters, pipes",
+          "detail": "Logging interceptor, exception filter, validation pipe",
+          "complexity": "MEDIUM",
+          "status": "done",
+          "bc": "common"
+        },
+        {
+          "id": "p1-t9",
+          "seq": "8",
+          "parallel": false,
+          "title": "Event Contract base class",
+          "detail": "BaseEvent with eventId, correlationId, tenantId, source, version, occurredAt",
+          "complexity": "MEDIUM",
+          "status": "done",
+          "bc": "common"
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "title": "Identity BC",
+      "titleAr": "الهوية والصلاحيات",
+      "order": 2,
+      "description": "Auth, roles, permissions, users — everything else depends on this",
+      "parallelNote": "t1+t2 متوازية. t3+t4 متوازية بعدها. t5→t6 متتابعة.",
+      "tasks": [
+        {
+          "id": "p2-t1",
+          "seq": "1a",
+          "parallel": true,
+          "title": "login slice",
+          "detail": "LoginCommand + handler + dto + spec. JWT access + refresh tokens",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "identity"
+        },
+        {
+          "id": "p2-t2",
+          "seq": "1b",
+          "parallel": true,
+          "title": "refresh-token + logout slices",
+          "detail": "Token rotation, blacklist in Redis",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "identity"
+        },
+        {
+          "id": "p2-t3",
+          "seq": "2a",
+          "parallel": true,
+          "title": "get-current-user slice",
+          "detail": "GetCurrentUserQuery + handler",
+          "complexity": "CRUD",
+          "status": "todo",
+          "bc": "identity"
+        },
+        {
+          "id": "p2-t4",
+          "seq": "2b",
+          "parallel": true,
+          "title": "users CRUD slices",
+          "detail": "create-user, update-user, list-users, deactivate-user",
+          "complexity": "CRUD",
+          "status": "todo",
+          "bc": "identity"
+        },
+        {
+          "id": "p2-t5",
+          "seq": "3",
+          "parallel": false,
+          "title": "create-role + assign-permissions slices",
+          "detail": "CASL permission sets, role assignment",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "identity"
+        },
+        {
+          "id": "p2-t6",
+          "seq": "4",
+          "parallel": false,
+          "title": "CaslAbilityFactory",
+          "detail": "Core RBAC engine — builds ability from user roles + permissions",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "identity"
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "title": "Platform BC",
+      "titleAr": "المنصة والترخيص",
+      "order": 3,
+      "description": "License validation + feature gating — must be ready before premium features",
+      "parallelNote": "t1→t2→t3 متتابعة. t4 مستقلة تماماً (CRUD).",
+      "tasks": [
+        {
+          "id": "p3-t1",
+          "seq": "1",
+          "parallel": false,
+          "title": "validate-license slice",
+          "detail": "License key validation on startup + periodic re-check against License Server",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "platform"
+        },
+        {
+          "id": "p3-t2",
+          "seq": "2",
+          "parallel": false,
+          "title": "check-feature slice",
+          "detail": "CheckFeatureQuery — reads active features from license",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "platform"
+        },
+        {
+          "id": "p3-t3",
+          "seq": "3",
+          "parallel": false,
+          "title": "@RequiresFeature() decorator wiring",
+          "detail": "Connects to check-feature, throws 403 if feature not in license",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "platform"
+        },
+        {
+          "id": "p3-t4",
+          "seq": "1*",
+          "parallel": true,
+          "title": "problem-reports + integrations slices",
+          "detail": "CRUD slices, مستقلة — تشتغل بالتوازي مع t1",
+          "complexity": "CRUD",
+          "status": "todo",
+          "bc": "platform"
+        }
+      ]
+    },
+    {
+      "id": "p4",
+      "title": "People BC",
+      "titleAr": "المرضى والممارسين",
+      "order": 4,
+      "description": "Patient and practitioner domain entities — متوازية مع p5 و p6",
+      "parallelNote": "p4+p5+p6 كلها متوازية مع بعض. داخلياً: t1→t2→t3 متتابعة. t4→t5+t6 ثم t7.",
+      "tasks": [
+        {
+          "id": "p4-t1",
+          "seq": "1",
+          "parallel": false,
+          "title": "Patient schema + create-patient slice",
+          "detail": "Prisma schema, CreatePatientCommand + handler + dto + spec",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "people"
+        },
+        {
+          "id": "p4-t2",
+          "seq": "2",
+          "parallel": false,
+          "title": "update-patient + list-patients + get-patient slices",
+          "detail": "CRUD + list with filters",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "people"
+        },
+        {
+          "id": "p4-t3",
+          "seq": "3",
+          "parallel": false,
+          "title": "PatientEnrolledEvent",
+          "detail": "Emits on first patient creation — Comms sends welcome message",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "people"
+        },
+        {
+          "id": "p4-t4",
+          "seq": "4",
+          "parallel": false,
+          "title": "Practitioner schema + create-practitioner slice",
+          "detail": "Complex: specialties, branches, services linkage",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "people"
+        },
+        {
+          "id": "p4-t5",
+          "seq": "5a",
+          "parallel": true,
+          "title": "update-availability slice",
+          "detail": "Availability windows, recurring schedule, exceptions",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "people"
+        },
+        {
+          "id": "p4-t6",
+          "seq": "5b",
+          "parallel": true,
+          "title": "practitioner-onboarding slice",
+          "detail": "Multi-step onboarding flow",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "people"
+        },
+        {
+          "id": "p4-t7",
+          "seq": "6",
+          "parallel": false,
+          "title": "list-practitioners + get-practitioner slices",
+          "detail": "With availability projection",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "people"
+        }
+      ]
+    },
+    {
+      "id": "p5",
+      "title": "Clinic BC",
+      "titleAr": "إعدادات العيادة",
+      "order": 5,
+      "description": "Branches, services, hours, whitelabel — متوازية مع p4 و p6",
+      "parallelNote": "p4+p5+p6 متوازية. داخلياً: t1+t2 متوازية. t3+t4+t5 متوازية بعدها.",
+      "tasks": [
+        {
+          "id": "p5-t1",
+          "seq": "1a",
+          "parallel": true,
+          "title": "Branches CRUD slices",
+          "detail": "create-branch, update-branch, list-branches, get-branch",
+          "complexity": "CRUD",
+          "status": "todo",
+          "bc": "clinic"
+        },
+        {
+          "id": "p5-t2",
+          "seq": "1b",
+          "parallel": true,
+          "title": "Services CRUD slices",
+          "detail": "create-service, update-service, list-services, archive-service",
+          "complexity": "CRUD",
+          "status": "todo",
+          "bc": "clinic"
+        },
+        {
+          "id": "p5-t3",
+          "seq": "2a",
+          "parallel": true,
+          "title": "clinic-hours + holidays slices",
+          "detail": "Working hours per branch, holiday calendar",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "clinic"
+        },
+        {
+          "id": "p5-t4",
+          "seq": "2b",
+          "parallel": true,
+          "title": "whitelabel-config slice",
+          "detail": "Branding: logo, colors, fonts — serves /whitelabel/public endpoint",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "clinic"
+        },
+        {
+          "id": "p5-t5",
+          "seq": "2c",
+          "parallel": true,
+          "title": "intake-forms + ratings slices",
+          "detail": "Form builder config, rating submission",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "clinic"
+        }
+      ]
+    },
+    {
+      "id": "p6",
+      "title": "Media BC",
+      "titleAr": "الملفات والوسائط",
+      "order": 6,
+      "description": "Centralized file upload/download via MinIO — متوازية مع p4 و p5",
+      "parallelNote": "p4+p5+p6 متوازية. داخلياً: t1→t2+t3 متتابعة ثم متوازية.",
+      "tasks": [
+        {
+          "id": "p6-t1",
+          "seq": "1",
+          "parallel": false,
+          "title": "upload-file slice",
+          "detail": "UploadFileCommand + handler + dto, streams to MinIO, returns fileId",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "media"
+        },
+        {
+          "id": "p6-t2",
+          "seq": "2a",
+          "parallel": true,
+          "title": "get-file + delete-file slices",
+          "detail": "GetFileQuery, DeleteFileCommand",
+          "complexity": "CRUD",
+          "status": "todo",
+          "bc": "media"
+        },
+        {
+          "id": "p6-t3",
+          "seq": "2b",
+          "parallel": true,
+          "title": "generate-presigned-url slice",
+          "detail": "Time-limited direct access URLs for mobile",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "media"
+        }
+      ]
+    },
+    {
+      "id": "p7",
+      "title": "Finance BC",
+      "titleAr": "المالية",
+      "order": 7,
+      "description": "Payments, invoices, coupons, ZATCA — يبدأ بعد p4+p5",
+      "parallelNote": "t1→t2→t3 متتابعة (core flow). t4+t5 متوازية بعد t1. t6 مستقلة. t7+t8 متوازية في النهاية.",
+      "tasks": [
+        {
+          "id": "p7-t1",
+          "seq": "1",
+          "parallel": false,
+          "title": "Invoice schema + create-invoice slice",
+          "detail": "Triggered by BookingConfirmedEvent. CreateInvoiceCommand + handler",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "finance"
+        },
+        {
+          "id": "p7-t2",
+          "seq": "2",
+          "parallel": false,
+          "title": "process-payment slice",
+          "detail": "ProcessPaymentCommand, integrates with Moyasar",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "finance"
+        },
+        {
+          "id": "p7-t3",
+          "seq": "3",
+          "parallel": false,
+          "title": "moyasar-webhook slice",
+          "detail": "Validates webhook signature, emits PaymentCompletedEvent or PaymentFailedEvent",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "finance"
+        },
+        {
+          "id": "p7-t4",
+          "seq": "2a",
+          "parallel": true,
+          "title": "bank-transfer-upload slice",
+          "detail": "Upload receipt — pending manual approval",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "finance"
+        },
+        {
+          "id": "p7-t5",
+          "seq": "2b",
+          "parallel": true,
+          "title": "apply-coupon slice",
+          "detail": "Discount calculation — gift cards محذوفة من النطاق",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "finance"
+        },
+        {
+          "id": "p7-t6",
+          "seq": "1*",
+          "parallel": true,
+          "title": "zatca-submit slice",
+          "detail": "Saudi e-invoicing compliance. مستقلة تبدأ مع t1",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "finance"
+        },
+        {
+          "id": "p7-t7",
+          "seq": "4a",
+          "parallel": true,
+          "title": "get-invoice + list-payments slices",
+          "detail": "Read queries with filters",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "finance"
+        },
+        {
+          "id": "p7-t8",
+          "seq": "4b",
+          "parallel": true,
+          "title": "Finance event handlers",
+          "detail": "on-booking-confirmed creates invoice. Emits: PaymentCompleted, PaymentFailed",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "finance"
+        }
+      ]
+    },
+    {
+      "id": "p8",
+      "title": "Bookings BC",
+      "titleAr": "الحجوزات",
+      "order": 8,
+      "description": "Core domain — scheduling, waitlist, groups — يبدأ بعد p4+p5+p7",
+      "parallelNote": "t1→t2 متتابعة (أساس). t3+t4+t5 متوازية بعد t2. t6 مستقلة. t7+t8 متوازية. t9 في النهاية.",
+      "tasks": [
+        {
+          "id": "p8-t1",
+          "seq": "1",
+          "parallel": false,
+          "title": "Booking schema + check-availability slice",
+          "detail": "Complex: considers clinic hours, practitioner schedule, existing bookings",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "bookings"
+        },
+        {
+          "id": "p8-t2",
+          "seq": "2",
+          "parallel": false,
+          "title": "create-booking slice",
+          "detail": "CreateBookingCommand + handler. Emits BookingConfirmedEvent",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "bookings"
+        },
+        {
+          "id": "p8-t3",
+          "seq": "3a",
+          "parallel": true,
+          "title": "cancel-booking slice",
+          "detail": "CancelBookingCommand. Emits BookingCancelledEvent",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "bookings"
+        },
+        {
+          "id": "p8-t4",
+          "seq": "3b",
+          "parallel": true,
+          "title": "reschedule-booking slice",
+          "detail": "Validates new slot availability, updates booking",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "bookings"
+        },
+        {
+          "id": "p8-t5",
+          "seq": "3c",
+          "parallel": true,
+          "title": "confirm-booking slice",
+          "detail": "Manual confirmation by receptionist",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "bookings"
+        },
+        {
+          "id": "p8-t6",
+          "seq": "1*",
+          "parallel": true,
+          "title": "get-booking + list-bookings slices",
+          "detail": "Read queries — مستقلة تبدأ مع t1",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "bookings"
+        },
+        {
+          "id": "p8-t7",
+          "seq": "4a",
+          "parallel": true,
+          "title": "waitlist schema + add/promote slices",
+          "detail": "Waitlist schema + add-to-waitlist + promote-from-waitlist. Auto-promote on cancellation",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "bookings"
+        },
+        {
+          "id": "p8-t8",
+          "seq": "4b",
+          "parallel": true,
+          "title": "create-group-session + enroll-in-group slices",
+          "detail": "Capacity management, enrollment rules",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "bookings"
+        },
+        {
+          "id": "p8-t9",
+          "seq": "5",
+          "parallel": false,
+          "title": "Booking event handlers",
+          "detail": "on-payment-completed updates booking status",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "bookings"
+        }
+      ]
+    },
+    {
+      "id": "p9",
+      "title": "Comms BC",
+      "titleAr": "التواصل والإشعارات",
+      "order": 9,
+      "description": "All outbound communication — متوازية مع p7+p8",
+      "parallelNote": "p9 كلها متوازية مع p7+p8. داخلياً: t1→t2+t3+t4 ثم t5.",
+      "tasks": [
+        {
+          "id": "p9-t1",
+          "seq": "1",
+          "parallel": false,
+          "title": "send-push + send-email + send-sms slices",
+          "detail": "Core communication commands. Each wraps its infrastructure adapter",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "comms"
+        },
+        {
+          "id": "p9-t2",
+          "seq": "2a",
+          "parallel": true,
+          "title": "notifications slice",
+          "detail": "In-app notification entity: create, list, mark-read. FCM push via send-push",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "comms"
+        },
+        {
+          "id": "p9-t3",
+          "seq": "2b",
+          "parallel": true,
+          "title": "create-chat-message + list-conversations slices",
+          "detail": "In-app messaging between patient and clinic",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "comms"
+        },
+        {
+          "id": "p9-t4",
+          "seq": "2c",
+          "parallel": true,
+          "title": "email-templates CRUD slices",
+          "detail": "Editable templates with variable substitution",
+          "complexity": "CRUD",
+          "status": "todo",
+          "bc": "comms"
+        },
+        {
+          "id": "p9-t5",
+          "seq": "3",
+          "parallel": false,
+          "title": "Comms event handlers",
+          "detail": "on-booking-cancelled, on-reminder-due, on-payment-failed, on-patient-enrolled",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "comms"
+        }
+      ]
+    },
+    {
+      "id": "p10",
+      "title": "Ops BC",
+      "titleAr": "العمليات والتقارير",
+      "order": 10,
+      "description": "Cron jobs, activity log, reports, health — يبدأ بعد p8",
+      "parallelNote": "t1+t2+t4 متوازية. t3 (reports) مستقلة تبدأ بالتوازي بعد p8.",
+      "tasks": [
+        {
+          "id": "p10-t1",
+          "seq": "1a",
+          "parallel": true,
+          "title": "Cron task slices (5 jobs)",
+          "detail": "booking-autocomplete, booking-expiry, booking-noshow, appointment-reminders, group-session-automation",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "ops"
+        },
+        {
+          "id": "p10-t2",
+          "seq": "1b",
+          "parallel": true,
+          "title": "log-activity slice",
+          "detail": "Audit trail — logs all mutations from all BCs via event subscription",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "ops"
+        },
+        {
+          "id": "p10-t3",
+          "seq": "1c",
+          "parallel": true,
+          "title": "generate-report slice",
+          "detail": "Revenue reports, activity reports, exports (PDF/Excel)",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "ops"
+        },
+        {
+          "id": "p10-t4",
+          "seq": "1d",
+          "parallel": true,
+          "title": "health-check slice",
+          "detail": "Terminus health checks: DB, Redis, BullMQ, MinIO",
+          "complexity": "CRUD",
+          "status": "todo",
+          "bc": "ops"
+        }
+      ]
+    },
+    {
+      "id": "p11",
+      "title": "AI BC",
+      "titleAr": "الذكاء الاصطناعي",
+      "order": 11,
+      "description": "Chatbot, knowledge base, RAG — Enterprise tier — متوازية مع p7-p10",
+      "parallelNote": "p11 مستقلة تماماً بعد p1+p2. تشتغل بالتوازي مع p7-p10. داخلياً: t1→t2→t3+t4.",
+      "tasks": [
+        {
+          "id": "p11-t1",
+          "seq": "1",
+          "parallel": false,
+          "title": "Knowledge base schema + embed-document slice",
+          "detail": "pgvector storage, OpenAI embeddings, chunking strategy",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "ai"
+        },
+        {
+          "id": "p11-t2",
+          "seq": "2",
+          "parallel": false,
+          "title": "semantic-search slice",
+          "detail": "Vector similarity search with filters",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "ai"
+        },
+        {
+          "id": "p11-t3",
+          "seq": "3a",
+          "parallel": true,
+          "title": "chat-completion slice",
+          "detail": "RAG pipeline: retrieve, augment, generate. Streaming response",
+          "complexity": "COMPLEX",
+          "status": "todo",
+          "bc": "ai"
+        },
+        {
+          "id": "p11-t4",
+          "seq": "3b",
+          "parallel": true,
+          "title": "manage-knowledge-base slice",
+          "detail": "Add/remove/update documents in the knowledge base",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "ai"
+        }
+      ]
+    },
+    {
+      "id": "p12",
+      "title": "Presentation Layer",
+      "titleAr": "طبقة العرض",
+      "order": 12,
+      "description": "Dashboard API + Mobile API + BFF Portal — يبدأ بعد كل البنية",
+      "parallelNote": "t1+t2+t6 متوازية أولاً. t3+t4+t5 متوازية بعدها.",
+      "tasks": [
+        {
+          "id": "p12-t1",
+          "seq": "1a",
+          "parallel": true,
+          "title": "api/dashboard/ controllers",
+          "detail": "One controller per BC: bookings, finance, people, clinic, comms, ops, platform, ai, media",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "api"
+        },
+        {
+          "id": "p12-t2",
+          "seq": "1b",
+          "parallel": true,
+          "title": "api/mobile/patient/ controllers",
+          "detail": "bookings/, profile/, history/, payments/ — lightweight single-BC responses",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "api"
+        },
+        {
+          "id": "p12-t3",
+          "seq": "2a",
+          "parallel": true,
+          "title": "api/mobile/patient/portal/home",
+          "detail": "BFF: aggregates bookings + invoices + messages + profile in 1 call",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "api"
+        },
+        {
+          "id": "p12-t4",
+          "seq": "2b",
+          "parallel": true,
+          "title": "api/mobile/patient/portal/upcoming + summary",
+          "detail": "Lightweight composite endpoints per screen",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "api"
+        },
+        {
+          "id": "p12-t5",
+          "seq": "2c",
+          "parallel": true,
+          "title": "api/mobile/practitioner/ controllers",
+          "detail": "schedule/, patients/, earnings/",
+          "complexity": "MEDIUM",
+          "status": "todo",
+          "bc": "api"
+        },
+        {
+          "id": "p12-t6",
+          "seq": "1c",
+          "parallel": true,
+          "title": "api/public/ controllers",
+          "detail": "No-auth endpoints for landing page data",
+          "complexity": "CRUD",
+          "status": "todo",
+          "bc": "api"
+        }
+      ]
+    }
+  ]
+}

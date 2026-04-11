@@ -76,4 +76,4 @@ lib/translations/              ← i18n strings (ar + en)
 | Config | settings, white-label |
 | Users | users |
 | AI & Comms | chatbot, notifications |
-| Operations | reports, ratings, activity-log, problem-reports |
+| Operations | reports, ratings, activity-log |

@@ -1,8 +1,7 @@
 node_modules
-dist/
-coverage/
-
-# Keep environment variables out of version control
+dist
+coverage
 .env
-
-/generated/prisma
+.env.local
+*.log
+.DS_Store

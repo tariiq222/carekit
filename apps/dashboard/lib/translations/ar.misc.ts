@@ -171,28 +171,6 @@ export const arMisc: Record<string, string> = {
   "ratings.reviews": "تقييم",
 
   // — Problem Reports —
-  "problemReports.allStatuses": "جميع الحالات",
-  "problemReports.clear": "مسح",
-  "problemReports.resolve": "حل",
-  "problemReports.patient": "المستفيد",
-  "problemReports.booking": "الموعد",
-  "problemReports.reported": "تاريخ البلاغ",
-  "problemReports.resolvedBy": "حُلّ بواسطة",
-  "problemReports.notes": "ملاحظات",
-  "problemReports.status.open": "مفتوح",
-  "problemReports.status.inReview": "قيد المراجعة",
-  "problemReports.status.resolved": "محلول",
-  "problemReports.status.dismissed": "مرفوض",
-  "problemReports.empty.title": "لا توجد بلاغات",
-  "problemReports.empty.description": "لم يتم تقديم أي بلاغات حتى الآن",
-  "problemReports.type.waitTime": "وقت الانتظار",
-  "problemReports.type.staffBehavior": "سلوك الموظفين",
-  "problemReports.type.cleanliness": "النظافة",
-  "problemReports.type.billing": "الفواتير",
-  "problemReports.type.noCall": "عدم الاتصال",
-  "problemReports.type.late": "التأخير",
-  "problemReports.type.technical": "مشكلة تقنية",
-  "problemReports.type.other": "أخرى",
 
   // — Intake Forms —
   "intakeForms.title": "نماذج المعلومات",

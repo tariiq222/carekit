@@ -1,9 +1,9 @@
 "use client"
 
 import { Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon, Download04Icon, GridIcon } from "@hugeicons/core-free-icons"
+import { Add01Icon, Download04Icon, GridIcon, StarIcon } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { Button } from "@/components/ui/button"
@@ -13,9 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { exportPractitionersCsv, exportPractitionersExcel } from "@/lib/api/reports"
-import { AllRatingsTab } from "@/components/features/practitioners/all-ratings-tab"
 import { PractitionersListContent } from "@/components/features/practitioners/practitioners-list-content"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { PageHeader } from "@/components/features/page-header"
@@ -28,8 +26,6 @@ export default function PractitionersPage() {
 
 function PractitionersPageInner() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const defaultTab = searchParams.get("tab") === "ratings" ? "ratings" : "list"
   const { t } = useLocale()
 
   const {
@@ -53,6 +49,14 @@ function PractitionersPageInner() {
         title={t("practitioners.title")}
         description={t("practitioners.description")}
       >
+        <Button
+          variant="outline"
+          className="gap-2 rounded-full px-5"
+          onClick={() => router.push("/ratings")}
+        >
+          <HugeiconsIcon icon={StarIcon} size={16} />
+          {t("practitioners.tabs.ratings")}
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-2 rounded-full px-5">
@@ -77,31 +81,18 @@ function PractitionersPageInner() {
         </Button>
       </PageHeader>
 
-      <Tabs defaultValue={defaultTab}>
-        <TabsList>
-          <TabsTrigger value="list">{t("practitioners.tabs.list")}</TabsTrigger>
-          <TabsTrigger value="ratings">{t("practitioners.tabs.ratings")}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="list" className="mt-6">
-          <PractitionersListContent
-            practitioners={practitioners}
-            meta={meta}
-            isLoading={isLoading}
-            error={error}
-            search={search}
-            setSearch={setSearch}
-            isActive={isActive}
-            setIsActive={setIsActive}
-            hasFilters={hasFilters}
-            resetFilters={resetFilters}
-          />
-        </TabsContent>
-
-        <TabsContent value="ratings" className="mt-6">
-          <AllRatingsTab practitioners={practitioners} />
-        </TabsContent>
-      </Tabs>
+      <PractitionersListContent
+        practitioners={practitioners}
+        meta={meta}
+        isLoading={isLoading}
+        error={error}
+        search={search}
+        setSearch={setSearch}
+        isActive={isActive}
+        setIsActive={setIsActive}
+        hasFilters={hasFilters}
+        resetFilters={resetFilters}
+      />
     </ListPageShell>
   )
 }

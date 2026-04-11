@@ -109,4 +109,8 @@ export const arGroups: Record<string, string> = {
   "groups.edit.submitting": "جاري الحفظ...",
   "groups.edit.success": "تم تحديث المجموعة بنجاح",
   "groups.edit.error": "فشل تحديث المجموعة",
+  "groups.delete.title": "حذف المجموعة",
+  "groups.delete.confirm": "هل أنت متأكد من حذف هذه المجموعة؟ لا يمكن التراجع عن هذا الإجراء.",
+  "groups.cancel.title": "إلغاء المجموعة",
+  "groups.cancel.confirm": "هل أنت متأكد من إلغاء هذه المجموعة؟ سيتم إشعار جميع المسجلين.",
 }

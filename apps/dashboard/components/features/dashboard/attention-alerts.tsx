@@ -6,14 +6,12 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   InvoiceIcon,
   CancelCircleIcon,
-  Alert02Icon,
 } from "@hugeicons/core-free-icons"
 import { useLocale } from "@/components/locale-provider"
 
 interface AttentionAlertsProps {
   pendingPayments: number
   cancelRequests: number
-  problemReports: number
 }
 
 const alerts = [
@@ -38,17 +36,6 @@ const alerts = [
     severity: "error" as const,
     href: "/bookings",
     countKey: "cancelRequests" as const,
-  },
-  {
-    key: "reports",
-    titleAr: "بلاغات مرضى",
-    titleEn: "Problem Reports",
-    descAr: "بلاغات جديدة من المرضى",
-    descEn: "New reports from patients",
-    icon: Alert02Icon,
-    severity: "info" as const,
-    href: "/bookings?tab=problemReports",
-    countKey: "problemReports" as const,
   },
 ]
 

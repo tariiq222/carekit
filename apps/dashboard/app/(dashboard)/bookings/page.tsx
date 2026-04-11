@@ -12,7 +12,6 @@ import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { PageHeader } from "@/components/features/page-header"
 import { BookingDetailSheet } from "@/components/features/bookings/booking-detail-sheet"
 import { BookingCreateDialog } from "@/components/features/bookings/booking-create-dialog"
-import { ProblemReportsTab } from "@/components/features/bookings/problem-reports-tab"
 import { WaitlistTab } from "@/components/features/bookings/waitlist-tab"
 import { BookingsTabContent } from "@/components/features/bookings/bookings-tab-content"
 import { useQueryClient, useQuery } from "@tanstack/react-query"
@@ -28,7 +27,7 @@ export default function BookingsPage() {
 function BookingsPageInner() {
   const searchParams = useSearchParams()
   const tabParam = searchParams.get("tab")
-  const defaultTab = tabParam === "problemReports" ? "problemReports" : tabParam === "waitlist" ? "waitlist" : "bookings"
+  const defaultTab = tabParam === "waitlist" ? "waitlist" : "bookings"
   const { t } = useLocale()
   const queryClient = useQueryClient()
 
@@ -76,7 +75,6 @@ function BookingsPageInner() {
       <Tabs defaultValue={defaultTab}>
         <TabsList>
           <TabsTrigger value="bookings">{t("bookings.tabs.list")}</TabsTrigger>
-          <TabsTrigger value="problemReports">{t("bookings.tabs.problemReports")}</TabsTrigger>
           {bookingSettings?.waitlistEnabled && (
             <TabsTrigger value="waitlist">{t("bookings.tabs.waitlist")}</TabsTrigger>
           )}
@@ -84,10 +82,6 @@ function BookingsPageInner() {
 
         <TabsContent value="bookings" className="mt-4">
           <BookingsTabContent onRowClick={handleRowClick} onEditClick={handleEditClick} />
-        </TabsContent>
-
-        <TabsContent value="problemReports" className="mt-4">
-          <ProblemReportsTab />
         </TabsContent>
 
         {bookingSettings?.waitlistEnabled && (

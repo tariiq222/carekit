@@ -40,6 +40,7 @@ export const useBranding = () => useContext(BrandingContext)
 /* ─── CSS var injection ─── */
 
 const DARK_STYLE_ID = "carekit-dark-theme"
+const FONT_STYLE_ID = "carekit-font"
 
 function injectLightVars(vars: CSSVarMap) {
   const root = document.documentElement
@@ -62,12 +63,43 @@ function injectDarkVars(vars: CSSVarMap) {
   el.textContent = css
 }
 
+function injectFont(fontFamily: string | null | undefined, fontUrl: string | null | undefined) {
+  const root = document.documentElement
+  if (fontFamily) {
+    root.style.setProperty("--font-family", fontFamily)
+  }
+  if (!fontUrl) return
+  let el = document.getElementById(FONT_STYLE_ID) as HTMLLinkElement | null
+  if (!el) {
+    el = document.createElement("link")
+    el.id = FONT_STYLE_ID
+    el.rel = "stylesheet"
+    document.head.appendChild(el)
+  }
+  el.href = fontUrl
+}
+
+function injectBackground(colorBackground: string | null | undefined) {
+  if (!colorBackground) return
+  document.documentElement.style.setProperty("--background", colorBackground)
+}
+
 function _clearAllVars(lightVars: CSSVarMap) {
   const root = document.documentElement
   for (const key of Object.keys(lightVars)) {
     root.style.removeProperty(key)
   }
   document.getElementById(DARK_STYLE_ID)?.remove()
+}
+
+/* ─── Apply all branding including extras ─── */
+
+function applyBranding(colors: BrandingColors) {
+  const { light, dark } = deriveCssVars(colors)
+  injectLightVars(light)
+  injectDarkVars(dark)
+  injectBackground(colors.background)
+  injectFont(colors.fontFamily, colors.fontUrl)
 }
 
 /* ─── Fetch public branding (no auth needed) ─── */
@@ -91,8 +123,8 @@ async function fetchBranding(): Promise<BrandingColors | null> {
     const body = await res.json()
     const data = body.data ?? body
 
-    const primary = data.primaryColor ?? data.primary_color
-    const accent = data.secondaryColor ?? data.secondary_color
+    const primary = data.colorPrimary ?? data.primaryColor ?? data.primary_color
+    const accent = data.colorAccent ?? data.secondaryColor ?? data.secondary_color
 
     if (!primary || !isValidHex(primary)) {
       brandingCache = { colors: null, ts: Date.now() }
@@ -100,7 +132,10 @@ async function fetchBranding(): Promise<BrandingColors | null> {
     }
     const colors: BrandingColors = {
       primary,
-      accent: accent && isValidHex(accent) ? accent : primary,
+      accent:     accent && isValidHex(accent) ? accent : primary,
+      background: typeof data.colorBackground === "string" ? data.colorBackground : undefined,
+      fontFamily: typeof data.fontFamily === "string" ? data.fontFamily : undefined,
+      fontUrl:    typeof data.fontUrl === "string" ? data.fontUrl : undefined,
     }
     brandingCache = { colors, ts: Date.now() }
     return colors
@@ -125,9 +160,7 @@ export function BrandingProvider({ children }: Props) {
     fetchBranding().then((colors) => {
       if (colors) {
         setSavedColors(colors)
-        const { light, dark } = deriveCssVars(colors)
-        injectLightVars(light)
-        injectDarkVars(dark)
+        applyBranding(colors)
       }
     })
   }, [])
@@ -137,17 +170,13 @@ export function BrandingProvider({ children }: Props) {
 
   useEffect(() => {
     if (!activeColors) return
-    const { light, dark } = deriveCssVars(activeColors)
-    injectLightVars(light)
-    injectDarkVars(dark)
+    applyBranding(activeColors)
   }, [activeColors])
 
   const preview = useCallback((colors: BrandingColors) => {
     if (isValidHex(colors.primary)) {
       setPreviewColors(colors)
-      const { light, dark } = deriveCssVars(colors)
-      injectLightVars(light)
-      injectDarkVars(dark)
+      applyBranding(colors)
     }
   }, [])
 
@@ -158,9 +187,7 @@ export function BrandingProvider({ children }: Props) {
   const apply = useCallback((colors: BrandingColors) => {
     setSavedColors(colors)
     setPreviewColors(null)
-    const { light, dark } = deriveCssVars(colors)
-    injectLightVars(light)
-    injectDarkVars(dark)
+    applyBranding(colors)
   }, [])
 
   return (

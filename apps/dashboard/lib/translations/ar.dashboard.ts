@@ -34,8 +34,6 @@ export const arDashboard: Record<string, string> = {
   "alerts.pendingPaymentsDesc": "تحويلات بنكية بانتظار المراجعة",
   "alerts.cancelRequests": "طلبات إلغاء",
   "alerts.cancelRequestsDesc": "مستفيدون يطلبون إلغاء حجوزاتهم",
-  "alerts.problemReports": "بلاغات مشاكل",
-  "alerts.problemReportsDesc": "بلاغات جديدة من المستفيدين",
   "activity.newBooking": "حجز جديد — سارة أحمد مع د. خالد",
   "activity.paymentReceived": "دفعة مستلمة — 350 ر.س من عمر علي",
   "activity.cancelRequest": "طلب إلغاء — نورة حسن",

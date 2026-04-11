@@ -11,13 +11,12 @@ import { toast } from "sonner"
 import type { FeatureWithStatus } from "@/lib/types/license"
 import type { UpdateLicensePayload } from "@/lib/types/license"
 
-const MODULE_FLAGS = ["coupons", "gift_cards", "intake_forms", "chatbot", "ratings", "multi_branch", "reports"]
+const MODULE_FLAGS = ["coupons", "intake_forms", "chatbot", "ratings", "multi_branch", "reports"]
 const BOOKING_FLAGS = ["recurring", "walk_in", "waitlist", "zoom"]
 const COMPLIANCE_FLAGS = ["zatca"]
 
 const LICENSE_KEY_MAP: Record<string, keyof UpdateLicensePayload> = {
   coupons: "hasCoupons",
-  gift_cards: "hasGiftCards",
   intake_forms: "hasIntakeForms",
   chatbot: "hasChatbot",
   ratings: "hasRatings",

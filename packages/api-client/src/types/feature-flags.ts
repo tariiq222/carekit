@@ -12,7 +12,6 @@ export interface FeatureFlags {
   payments: boolean
   invoices: boolean
   coupons: boolean
-  giftCards: boolean
   zatca: boolean
   intakeForms: boolean
   chatbot: boolean
@@ -38,7 +37,6 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   payments: true,
   invoices: true,
   coupons: true,
-  giftCards: true,
   zatca: true,
   intakeForms: true,
   chatbot: true,

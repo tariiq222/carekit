@@ -73,10 +73,6 @@ describe("SidebarConfig — groups added", () => {
     const coupons = financeNav.find((i) => i.href === "/coupons")
     expect(coupons?.featureFlag).toBe("coupons")
 
-    // gift-cards → gift_cards
-    const giftCards = financeNav.find((i) => i.href === "/gift-cards")
-    expect(giftCards?.featureFlag).toBe("gift_cards")
-
     // reports → reports
     const reports = financeNav.find((i) => i.href === "/reports")
     expect(reports?.featureFlag).toBe("reports")

@@ -36,7 +36,6 @@ test.describe('Service create page — branch UI visibility', () => {
             intake_forms: true,
             reports: true,
             coupons: true,
-            gift_cards: true,
           },
         }),
       });
@@ -68,7 +67,6 @@ test.describe('Service create page — branch UI visibility', () => {
             intake_forms: true,
             reports: true,
             coupons: true,
-            gift_cards: true,
           },
         }),
       });

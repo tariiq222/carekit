@@ -160,27 +160,11 @@ export const queryKeys = {
     },
   },
 
-  /* ─── Problem Reports ─── */
-  problemReports: {
-    all: ["problem-reports"] as const,
-    list: (filters?: object) =>
-      ["problem-reports", "list", filters] as const,
-    detail: (id: string) => ["problem-reports", "detail", id] as const,
-  },
-
   /* ─── Clinic ─── */
   clinic: {
     all: ["clinic"] as const,
     hours: () => ["clinic-hours"] as const,
     holidays: (year?: number) => ["clinic-holidays", year] as const,
-  },
-
-  /* ─── Gift Cards ─── */
-  giftCards: {
-    all: ["gift-cards"] as const,
-    list: (filters?: object) =>
-      ["gift-cards", "list", filters] as const,
-    detail: (id: string) => ["gift-cards", "detail", id] as const,
   },
 
   /* ─── Coupons ─── */

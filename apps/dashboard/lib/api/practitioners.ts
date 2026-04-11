@@ -36,9 +36,8 @@ export async function fetchPractitioners(
   }
 }
 
-/** Backend returns specialty as object {id, nameEn, nameAr} + rating/reviewCount fields */
-type RawPractitioner = Omit<Practitioner, "averageRating" | "_count" | "specialty"> & {
-  specialty: { id: string; nameEn: string; nameAr: string } | string | null
+/** Backend returns specialty as plain text fields + rating/reviewCount */
+type RawPractitioner = Omit<Practitioner, "averageRating" | "_count"> & {
   rating?: number
   reviewCount?: number
   _count?: Practitioner["_count"]
@@ -47,22 +46,10 @@ type RawPractitioner = Omit<Practitioner, "averageRating" | "_count" | "specialt
 }
 
 function mapPractitioner(raw: RawPractitioner): Practitioner {
-  const specialty =
-    raw.specialty == null
-      ? ""
-      : typeof raw.specialty === "string"
-        ? raw.specialty
-        : raw.specialty.nameEn
-
-  const specialtyAr =
-    raw.specialty == null || typeof raw.specialty === "string"
-      ? (raw.specialtyAr ?? null)
-      : (raw.specialty.nameAr ?? null)
-
   return {
     ...raw,
-    specialty,
-    specialtyAr,
+    specialty: raw.specialty ?? "",
+    specialtyAr: raw.specialtyAr ?? null,
     avatarUrl: raw.user?.avatarUrl ?? raw.avatarUrl ?? null,
     averageRating: raw.averageRating ?? raw.rating ?? undefined,
     _count: raw._count ?? {

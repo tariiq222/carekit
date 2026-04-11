@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useGroupsMutations } from "@/hooks/use-groups-mutations"
 import { useLocale } from "@/components/locale-provider"
 import { DataTable } from "@/components/features/data-table"
@@ -7,6 +8,16 @@ import { FilterBar } from "@/components/features/filter-bar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Cancel01Icon, ViewIcon, Delete02Icon, Edit02Icon } from "@hugeicons/core-free-icons"
@@ -61,6 +72,9 @@ export function GroupsListContent({
   const { t, locale } = useLocale()
   const router = useRouter()
   const { cancelGroupMut, deleteGroupMut } = useGroupsMutations()
+
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null)
 
   const columns: ColumnDef<Group>[] = [
     {
@@ -151,7 +165,7 @@ export function GroupsListContent({
                     variant="ghost"
                     size="icon"
                     className="size-9 rounded-sm text-destructive"
-                    onClick={() => cancelGroupMut.mutate(row.original.id)}
+                    onClick={() => setCancelTarget(row.original.id)}
                   >
                     <HugeiconsIcon icon={Cancel01Icon} size={16} />
                   </Button>
@@ -165,7 +179,7 @@ export function GroupsListContent({
                   variant="ghost"
                   size="icon"
                   className="size-9 rounded-sm text-destructive"
-                  onClick={() => deleteGroupMut.mutate(row.original.id)}
+                  onClick={() => setDeleteTarget(row.original.id)}
                 >
                   <HugeiconsIcon icon={Delete02Icon} size={16} />
                 </Button>
@@ -233,6 +247,42 @@ export function GroupsListContent({
         emptyTitle={t("groups.noGroups")}
         emptyDescription={t("groups.noGroupsDesc")}
       />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("groups.delete.title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("groups.delete.confirm")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (deleteTarget) deleteGroupMut.mutate(deleteTarget); setDeleteTarget(null) }}
+            >
+              {t("common.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!cancelTarget} onOpenChange={(o) => { if (!o) setCancelTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("groups.cancel.title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("groups.cancel.confirm")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (cancelTarget) cancelGroupMut.mutate(cancelTarget); setCancelTarget(null) }}
+            >
+              {t("groups.cancelGroup")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

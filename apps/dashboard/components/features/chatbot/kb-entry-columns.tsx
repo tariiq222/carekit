@@ -1,9 +1,69 @@
+"use client"
+
+import { useState } from "react"
 import { type ColumnDef } from "@tanstack/react-table"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import type { KnowledgeBaseEntry } from "@/lib/types/chatbot"
+
+function DeleteEntryCell({
+  id,
+  onDelete,
+  t,
+}: {
+  id: string
+  onDelete: (id: string) => void
+  t: (key: string) => string
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className="flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:border-destructive/20 hover:text-destructive"
+            onClick={() => setOpen(true)}
+            aria-label={t("chatbot.kb.deleteEntry")}
+          >
+            <HugeiconsIcon icon={Delete02Icon} size={16} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">{t("chatbot.kb.deleteEntry")}</TooltipContent>
+      </Tooltip>
+
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("chatbot.kb.deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("chatbot.kb.deleteConfirm")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { setOpen(false); onDelete(id) }}
+            >
+              {t("chatbot.kb.deleteEntry")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
+}
 
 export function getEntryColumns(
   onDelete: (id: string) => void,
@@ -51,13 +111,7 @@ export function getEntryColumns(
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <button
-          className="flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:border-destructive/20 hover:text-destructive"
-          onClick={() => onDelete(row.original.id)}
-          aria-label={t("chatbot.kb.deleteEntry")}
-        >
-          <HugeiconsIcon icon={Delete02Icon} size={16} />
-        </button>
+        <DeleteEntryCell id={row.original.id} onDelete={onDelete} t={t} />
       ),
     },
   ]

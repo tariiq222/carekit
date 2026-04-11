@@ -23,7 +23,6 @@ const FEATURES = [
   "users",
   "branches",
   "coupons",
-  "gift-cards",
   "intake-forms",
   "chatbot",
   "notifications",
@@ -33,7 +32,6 @@ const FEATURES = [
   "white-label",
   "zatca",
   "activity-log",
-  "problem-reports",
   "groups",
 ]
 

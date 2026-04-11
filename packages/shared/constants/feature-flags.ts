@@ -4,7 +4,6 @@
  */
 export const FEATURE_FLAG_KEYS = [
   "coupons",
-  "gift_cards",
   "intake_forms",
   "chatbot",
   "ratings",

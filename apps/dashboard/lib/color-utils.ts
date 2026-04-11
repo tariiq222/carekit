@@ -108,8 +108,11 @@ function contrastForeground(bg: RGB): string {
 /* ─── Derive all CSS variables from 2 colors ─── */
 
 export interface BrandingColors {
-  primary: string // hex
-  accent: string  // hex
+  primary:     string        // hex
+  accent:      string        // hex
+  background?: string | null
+  fontFamily?: string | null
+  fontUrl?:    string | null
 }
 
 export type CSSVarMap = Record<string, string>
@@ -192,4 +195,21 @@ export function buildStyleFromVars(vars: CSSVarMap): React.CSSProperties {
 /** Validate hex color */
 export function isValidHex(color: string): boolean {
   return /^#[0-9a-fA-F]{6}$/.test(color)
+}
+
+/** Export hexToRgb for external contrast calculations */
+export { hexToRgb }
+
+/** WCAG contrast ratio between two hex colors (higher = more contrast) */
+export function contrastRatio(hex1: string, hex2: string): number {
+  const l1 = luminance(hexToRgb(hex1))
+  const l2 = luminance(hexToRgb(hex2))
+  const lighter = Math.max(l1, l2)
+  const darker = Math.min(l1, l2)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+/** Returns white or dark text color that passes WCAG AA on the given background */
+export function pickForeground(bg: string): string {
+  return contrastForeground(hexToRgb(bg))
 }

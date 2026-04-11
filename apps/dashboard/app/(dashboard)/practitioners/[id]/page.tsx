@@ -1,15 +1,9 @@
 "use client"
 
-import { useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
+import { PractitionerDetailPage } from "@/components/features/practitioners/practitioner-detail-page"
 
 export default function PractitionerDetailRoute() {
   const { id } = useParams<{ id: string }>()
-  const router = useRouter()
-
-  useEffect(() => {
-    router.replace(`/practitioners/${id}/edit`)
-  }, [id, router])
-
-  return null
+  return <PractitionerDetailPage practitionerId={id} />
 }

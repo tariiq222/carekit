@@ -122,16 +122,6 @@ export type {
   CouponStats,
 } from './coupon.js'
 export type {
-  GiftCardStatusFilter,
-  GiftCardTransaction,
-  GiftCardListItem,
-  GiftCardListQuery,
-  CreateGiftCardPayload,
-  UpdateGiftCardPayload,
-  GiftCardListResponse,
-  GiftCardStats,
-} from './gift-card.js'
-export type {
   FormType,
   FormScope,
   IntakeFormField,

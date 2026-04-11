@@ -40,34 +40,19 @@ test.describe('Practitioners — add practitioner navigation', () => {
   });
 });
 
-test.describe('Practitioners — ratings tab navigation', () => {
-  test('navigating to ?tab=ratings shows ratings content', async ({ adminPage, goto }) => {
-    await goto('/practitioners?tab=ratings');
+test.describe('Practitioners — ratings navigation', () => {
+  test('ratings button in header navigates to /ratings', async ({ adminPage, goto }) => {
+    await goto('/practitioners');
 
     // Skip if auth expired (login form visible)
     const loginVisible = await adminPage.locator('#email').isVisible().catch(() => false);
     if (loginVisible) { test.skip(); return; }
 
-    // The tab label includes full text "التقييمات والمراجعات"
-    const ratingsTab = adminPage.getByRole('tab', { name: /التقييمات/ });
-    await expect(ratingsTab).toBeVisible({ timeout: 12_000 });
+    const ratingsButton = adminPage.getByRole('button', { name: /التقييمات/ });
+    await expect(ratingsButton).toBeVisible({ timeout: 12_000 });
+    await ratingsButton.click();
 
-    const isSelected = await ratingsTab.getAttribute('data-state').catch(() => null);
-    expect(isSelected).toBe('active');
-  });
-
-  test('clicking ratings tab activates it', async ({ adminPage, goto }) => {
-    await goto('/practitioners');
-
-    // Skip if auth expired and login form is shown
-    const loginVisible = await adminPage.locator('#email').isVisible().catch(() => false);
-    if (loginVisible) { test.skip(); return; }
-
-    const ratingsTab = adminPage.getByRole('tab', { name: /التقييمات/ });
-    await expect(ratingsTab).toBeVisible({ timeout: 12_000 });
-    await ratingsTab.click();
-
-    await expect(ratingsTab).toHaveAttribute('data-state', 'active');
+    await expect(adminPage).toHaveURL(/\/ratings/);
   });
 });
 

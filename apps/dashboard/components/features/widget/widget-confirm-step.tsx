@@ -104,7 +104,7 @@ export function WidgetConfirmStep({ locale, booking, showPrice = true, redirectU
         amount: price,
       })
       if (result.valid) {
-        applyDiscount(codeInput.trim(), result.discountAmount, result.couponId, result.giftCardId)
+        applyDiscount(codeInput.trim(), result.discountAmount, result.couponId)
       } else {
         setCodeError(isRtl ? "الكود غير صالح أو منتهي الصلاحية" : "Invalid or expired code")
       }

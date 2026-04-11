@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon, Building06Icon, CheckmarkCircle02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
+import { Add01Icon, Building06Icon, CheckmarkCircle02Icon, Cancel01Icon, StarIcon } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
@@ -32,6 +32,7 @@ export function BranchListPage() {
 
   const activeCount = branches.filter((b) => b.isActive).length
   const inactiveCount = branches.filter((b) => !b.isActive).length
+  const mainCount = branches.filter((b) => b.isMain).length
 
   const columns = getBranchColumns(
     locale,
@@ -56,14 +57,15 @@ export function BranchListPage() {
       </PageHeader>
 
       {isLoading && !meta ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
       ) : (
         <StatsGrid>
           <StatCard title={t("branches.stats.total")} value={meta?.total ?? 0} icon={Building06Icon} iconColor="primary" />
           <StatCard title={t("branches.stats.active")} value={activeCount} icon={CheckmarkCircle02Icon} iconColor="success" />
           <StatCard title={t("branches.stats.inactive")} value={inactiveCount} icon={Cancel01Icon} iconColor="warning" />
+          <StatCard title={t("branches.stats.main")} value={mainCount} icon={StarIcon} iconColor="accent" />
         </StatsGrid>
       )}
 
@@ -98,11 +100,11 @@ export function BranchListPage() {
       )}
 
       {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground tabular-nums">{page} / {meta.totalPages}</p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t("table.previous")}</Button>
-            <Button variant="outline" size="sm" disabled={page >= meta.totalPages} onClick={() => setPage(page + 1)}>{t("table.next")}</Button>
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>{t("table.pagination.page")} {meta.page} {t("table.pagination.of")} {meta.totalPages}</span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={!meta.hasPreviousPage} onClick={() => setPage(meta.page - 1)}>{t("table.pagination.previous")}</Button>
+            <Button variant="outline" size="sm" disabled={!meta.hasNextPage} onClick={() => setPage(meta.page + 1)}>{t("table.pagination.next")}</Button>
           </div>
         </div>
       )}

@@ -17,7 +17,6 @@ import { FilterBar } from "@/components/features/filter-bar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getPractitionerColumns } from "@/components/features/practitioners/practitioner-columns"
 import { DeletePractitionerDialog } from "@/components/features/practitioners/delete-practitioner-dialog"
-import { PractitionerDetailDialog } from "@/components/features/practitioners/practitioner-detail-dialog"
 import { useLocale } from "@/components/locale-provider"
 import type { Practitioner } from "@/lib/types/practitioner"
 
@@ -50,11 +49,10 @@ export function PractitionersListContent({
   const { t, locale } = useLocale()
 
   const [deleteTarget, setDeleteTarget] = useState<Practitioner | null>(null)
-  const [previewId, setPreviewId] = useState<string | null>(null)
 
   const handleEdit = (p: Practitioner) => router.push(`/practitioners/${p.id}/edit`)
   const handleDelete = (p: Practitioner) => setDeleteTarget(p)
-  const handlePreview = (p: Practitioner) => setPreviewId(p.id)
+  const handlePreview = (p: Practitioner) => router.push(`/practitioners/${p.id}`)
 
   const activeCount = useMemo(() => practitioners.filter((p) => p.isActive).length, [practitioners])
   const inactiveCount = useMemo(() => practitioners.filter((p) => !p.isActive).length, [practitioners])
@@ -157,12 +155,6 @@ export function PractitionersListContent({
         practitioner={deleteTarget}
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
-      />
-
-      <PractitionerDetailDialog
-        practitionerId={previewId}
-        open={!!previewId}
-        onOpenChange={(open) => { if (!open) setPreviewId(null) }}
       />
     </div>
   )

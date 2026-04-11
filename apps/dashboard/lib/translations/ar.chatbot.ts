@@ -1,6 +1,6 @@
 /**
  * Arabic translations — Extended A
- * (chatbot, table, activityLog, tab keys, problemReports, ratings, zatca)
+ * (chatbot, table, activityLog, tab keys, ratings, zatca)
  */
 
 export const arChatbot: Record<string, string> = {
@@ -29,6 +29,8 @@ export const arChatbot: Record<string, string> = {
   "chatbot.kb.uploadFile": "رفع ملف",
   "chatbot.kb.empty": "لا توجد مدخلات في قاعدة المعرفة",
   "chatbot.kb.deleteEntry": "حذف المدخل",
+  "chatbot.kb.deleteTitle": "حذف المدخل",
+  "chatbot.kb.deleteConfirm": "هل أنت متأكد من حذف هذا المدخل؟ لا يمكن التراجع عن هذا الإجراء.",
   "chatbot.analytics.totalSessions": "إجمالي المحادثات",
   "chatbot.analytics.activeSessions": "محادثات نشطة",
   "chatbot.analytics.avgDuration": "متوسط المدة",
@@ -60,27 +62,12 @@ export const arChatbot: Record<string, string> = {
   "practitioners.tabs.list": "الممارسون",
   "practitioners.tabs.ratings": "التقييمات والمراجعات",
   "bookings.tabs.list": "الحجوزات",
-  "bookings.tabs.problemReports": "بلاغات المشاكل",
   "bookings.tabs.waitlist": "قائمة الانتظار",
   "invoices.tabs.list": "الفواتير",
   "invoices.tabs.zatca": "التوافق مع فاتورة",
   "users.tabs.activityLog": "سجل النشاط",
 
   // ─── Problem Reports ───
-  "problemReports.allStatuses": "جميع الحالات",
-  "problemReports.status.open": "مفتوح",
-  "problemReports.status.inReview": "قيد المراجعة",
-  "problemReports.status.resolved": "تم الحل",
-  "problemReports.status.dismissed": "مرفوض",
-  "problemReports.clear": "مسح",
-  "problemReports.resolve": "حل",
-  "problemReports.patient": "المستفيد",
-  "problemReports.booking": "الحجز",
-  "problemReports.reported": "تاريخ البلاغ",
-  "problemReports.resolvedBy": "حُل بواسطة",
-  "problemReports.notes": "ملاحظات",
-  "problemReports.empty.title": "لا توجد بلاغات",
-  "problemReports.empty.description": "لا توجد بلاغات تطابق الفلتر.",
 
   // ─── Ratings ───
   "ratings.title": "التقييمات والمراجعات",

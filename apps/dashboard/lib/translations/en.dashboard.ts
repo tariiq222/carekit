@@ -34,8 +34,6 @@ export const enDashboard: Record<string, string> = {
   "alerts.pendingPaymentsDesc": "Bank transfers awaiting review",
   "alerts.cancelRequests": "Cancellation Requests",
   "alerts.cancelRequestsDesc": "Patients requesting cancellation",
-  "alerts.problemReports": "Problem Reports",
-  "alerts.problemReportsDesc": "New problem reports from patients",
   "activity.newBooking": "New booking — Sarah Ahmed with Dr. Khalid",
   "activity.paymentReceived": "Payment received — SAR 350 from Omar Ali",
   "activity.cancelRequest": "Cancellation request — Nora Hassan",

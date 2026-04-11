@@ -184,28 +184,6 @@ describe("practitioners api", () => {
   })
 
   describe("mapPractitioner edge cases", () => {
-    it("maps specialty object to nameEn string", async () => {
-      getMock.mockResolvedValueOnce({
-        items: [{ id: "p-1", specialty: { id: "sp-1", nameEn: "Cardiology", nameAr: "قلب" } }],
-        meta: { total: 1 },
-      })
-
-      const result = await fetchPractitioners()
-
-      expect(result.items[0].specialty).toBe("Cardiology")
-    })
-
-    it("maps specialty object and sets specialtyAr", async () => {
-      getMock.mockResolvedValueOnce({
-        items: [{ id: "p-1", specialty: { id: "sp-1", nameEn: "Cardiology", nameAr: "أمراض القلب" } }],
-        meta: { total: 1 },
-      })
-
-      const result = await fetchPractitioners()
-
-      expect(result.items[0].specialtyAr).toBe("أمراض القلب")
-    })
-
     it("preserves specialty as-is when it is already a string", async () => {
       getMock.mockResolvedValueOnce({
         items: [{ id: "p-1", specialty: "Orthopedics" }],

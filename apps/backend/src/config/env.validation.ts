@@ -1,240 +1,70 @@
-import { plainToInstance } from 'class-transformer';
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  MinLength,
-  validateSync,
-} from 'class-validator';
-import { Logger } from '@nestjs/common';
+import * as Joi from 'joi';
 
-interface CriticalKey {
-  key: string;
-  feature: string;
-}
+/**
+ * Boot-time validation for process.env.
+ *
+ * Rules:
+ * - Only variables declared here are trusted. Unknown keys pass through
+ *   but are not validated.
+ * - NestJS ConfigModule calls this schema once at startup and aborts the
+ *   app if any required variable is missing or malformed.
+ * - Keep this file flat: one Joi schema, no typed getters. Typed config
+ *   namespaces are added per bounded context when that BC is implemented.
+ *
+ * Spec reference: apps/backend/.env.example
+ */
+export const envValidationSchema = Joi.object({
+  // Runtime
+  NODE_ENV: Joi.string()
+    .valid('development', 'test', 'staging', 'production')
+    .default('development'),
+  PORT: Joi.number().port().default(5100),
 
-const CRITICAL_OPTIONAL_KEYS: CriticalKey[] = [
-  { key: 'OPENROUTER_API_KEY', feature: 'AI Chatbot & Receipt Verification' },
-  { key: 'MOYASAR_API_KEY', feature: 'Electronic Payments (Moyasar)' },
-  { key: 'MOYASAR_WEBHOOK_SECRET', feature: 'Payment Webhook Verification' },
-  { key: 'MINIO_ENDPOINT', feature: 'File Storage (MinIO)' },
-  { key: 'MINIO_ACCESS_KEY', feature: 'File Storage (MinIO)' },
-  { key: 'MINIO_SECRET_KEY', feature: 'File Storage (MinIO)' },
-  { key: 'MAIL_HOST', feature: 'Email Sending' },
-  { key: 'MAIL_USER', feature: 'Email Sending' },
-  { key: 'MAIL_PASSWORD', feature: 'Email Sending' },
-  { key: 'ZOOM_ACCOUNT_ID', feature: 'Video Consultations (Zoom)' },
-  { key: 'ZOOM_CLIENT_ID', feature: 'Video Consultations (Zoom)' },
-  { key: 'ZOOM_CLIENT_SECRET', feature: 'Video Consultations (Zoom)' },
-  { key: 'FIREBASE_PROJECT_ID', feature: 'Push Notifications (FCM)' },
-  { key: 'FIREBASE_CLIENT_EMAIL', feature: 'Push Notifications (FCM)' },
-  { key: 'FIREBASE_PRIVATE_KEY', feature: 'Push Notifications (FCM)' },
-  { key: 'SMS_PROVIDER', feature: 'SMS Notifications' },
-  { key: 'SMS_API_KEY', feature: 'SMS Notifications' },
-  {
-    key: 'METRICS_TOKEN',
-    feature: 'Prometheus Metrics Endpoint (access will be blocked without it)',
-  },
-];
+  // Database (Prisma)
+  DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }).required(),
 
-export function logMissingOptionalKeys(config: Record<string, unknown>): void {
-  const missing = CRITICAL_OPTIONAL_KEYS.filter(({ key }) => !config[key]);
-  if (missing.length === 0) return;
+  // Redis (BullMQ + cache + token blacklist)
+  REDIS_HOST: Joi.string().hostname().required(),
+  REDIS_PORT: Joi.number().port().required(),
+  REDIS_PASSWORD: Joi.string().allow('').optional(),
+  REDIS_DB: Joi.number().integer().min(0).max(15).default(0),
 
-  const logger = new Logger('EnvValidation');
-  logger.warn('=== Missing Optional Environment Variables ===');
-  for (const { key, feature } of missing) {
-    logger.warn(`  ${key} — required for: ${feature}`);
-  }
-  logger.warn('These features will fail at runtime until configured.');
-  logger.warn('===============================================');
+  // MinIO (object storage)
+  MINIO_ENDPOINT: Joi.string().hostname().required(),
+  MINIO_PORT: Joi.number().port().required(),
+  MINIO_ACCESS_KEY: Joi.string().required(),
+  MINIO_SECRET_KEY: Joi.string().required(),
+  MINIO_BUCKET: Joi.string().required(),
+  MINIO_USE_SSL: Joi.boolean().default(false),
 
-  // In production, if Moyasar payments are enabled but webhook secret is missing,
-  // all webhooks will fail silently — block startup to prevent money loss
-  if (
-    config['NODE_ENV'] === 'production' &&
-    config['MOYASAR_API_KEY'] &&
-    !config['MOYASAR_WEBHOOK_SECRET']
-  ) {
-    throw new Error(
-      'FATAL: MOYASAR_API_KEY is set but MOYASAR_WEBHOOK_SECRET is missing. ' +
-        'All payment webhooks will be rejected. Set the webhook secret or remove the API key.',
-    );
-  }
+  // JWT (Identity BC)
+  JWT_ACCESS_SECRET: Joi.string().min(16).required(),
+  JWT_REFRESH_SECRET: Joi.string().min(16).required(),
+  JWT_ACCESS_TTL: Joi.string().default('15m'),
+  JWT_REFRESH_TTL: Joi.string().default('30d'),
 
-  // In production, missing METRICS_TOKEN means the /metrics endpoint is permanently blocked.
-  // Prometheus scraping will silently fail, alerting and monitoring will be dark.
-  if (config['NODE_ENV'] === 'production' && !config['METRICS_TOKEN']) {
-    throw new Error(
-      'FATAL: METRICS_TOKEN is not set in production. ' +
-        'The /metrics endpoint will be permanently blocked and Prometheus cannot scrape. ' +
-        'Set METRICS_TOKEN to enable observability.',
-    );
-  }
-}
+  // License Server (Platform BC) — optional until Phase 3
+  LICENSE_SERVER_URL: Joi.string().uri().allow('').optional(),
+  LICENSE_KEY: Joi.string().allow('').optional(),
 
-export class EnvironmentVariables {
-  @IsString()
-  @IsNotEmpty()
-  DATABASE_URL!: string;
+  // FCM (Comms BC) — optional until Phase 9
+  FCM_PROJECT_ID: Joi.string().allow('').optional(),
+  FCM_CLIENT_EMAIL: Joi.string().email().allow('').optional(),
+  FCM_PRIVATE_KEY: Joi.string().allow('').optional(),
 
-  @IsString()
-  @IsNotEmpty()
-  REDIS_URL!: string;
+  // SMTP (Comms BC) — optional until Phase 9
+  SMTP_HOST: Joi.string().hostname().allow('').optional(),
+  SMTP_PORT: Joi.number().port().default(587),
+  SMTP_USER: Joi.string().allow('').optional(),
+  SMTP_PASS: Joi.string().allow('').optional(),
+  SMTP_FROM: Joi.string().email().allow('').optional(),
 
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(32)
-  JWT_SECRET!: string;
+  // OpenAI (AI BC) — optional until Phase 11
+  OPENAI_API_KEY: Joi.string().allow('').optional(),
+  OPENAI_EMBEDDING_MODEL: Joi.string().default('text-embedding-3-small'),
+  OPENAI_CHAT_MODEL: Joi.string().default('gpt-4o-mini'),
 
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(32)
-  JWT_REFRESH_SECRET!: string;
-
-  @IsString()
-  @IsOptional()
-  JWT_EXPIRATION?: string;
-
-  @IsString()
-  @IsOptional()
-  JWT_REFRESH_EXPIRATION?: string;
-
-  @IsString()
-  @IsOptional()
-  MINIO_ENDPOINT?: string;
-
-  @IsString()
-  @IsOptional()
-  MINIO_ACCESS_KEY?: string;
-
-  @IsString()
-  @IsOptional()
-  MINIO_SECRET_KEY?: string;
-
-  @IsString()
-  @IsOptional()
-  MINIO_BUCKET?: string;
-
-  @IsString()
-  @IsOptional()
-  MAIL_HOST?: string;
-
-  @IsString()
-  @IsOptional()
-  MAIL_PORT?: string;
-
-  @IsString()
-  @IsOptional()
-  MAIL_USER?: string;
-
-  @IsString()
-  @IsOptional()
-  MAIL_PASSWORD?: string;
-
-  @IsString()
-  @IsOptional()
-  MAIL_FROM?: string;
-
-  @IsString()
-  @IsOptional()
-  OPENROUTER_API_KEY?: string;
-
-  @IsString()
-  @IsOptional()
-  MOYASAR_API_KEY?: string;
-
-  @IsString()
-  @IsOptional()
-  MOYASAR_WEBHOOK_SECRET?: string;
-
-  @IsString()
-  @IsOptional()
-  BACKEND_URL?: string;
-
-  @IsString()
-  @IsOptional()
-  ALLOWED_ORIGINS?: string;
-
-  @IsString()
-  @IsOptional()
-  NODE_ENV?: string;
-
-  @IsString()
-  @IsOptional()
-  MINIO_PORT?: string;
-
-  @IsString()
-  @IsOptional()
-  MINIO_USE_SSL?: string;
-
-  @IsString()
-  @IsOptional()
-  FIREBASE_PROJECT_ID?: string;
-
-  @IsString()
-  @IsOptional()
-  FIREBASE_CLIENT_EMAIL?: string;
-
-  @IsString()
-  @IsOptional()
-  FIREBASE_PRIVATE_KEY?: string;
-
-  @IsString()
-  @IsOptional()
-  ZOOM_ACCOUNT_ID?: string;
-
-  @IsString()
-  @IsOptional()
-  ZOOM_CLIENT_ID?: string;
-
-  @IsString()
-  @IsOptional()
-  ZOOM_CLIENT_SECRET?: string;
-
-  @IsString()
-  @IsOptional()
-  COOKIE_DOMAIN?: string;
-
-  @IsString()
-  @IsOptional()
-  SENTRY_DSN?: string;
-
-  @IsString()
-  @IsOptional()
-  SMS_PROVIDER?: string;
-
-  @IsString()
-  @IsOptional()
-  SMS_API_KEY?: string;
-
-  @IsString()
-  @IsOptional()
-  SMS_SENDER_ID?: string;
-
-  @IsString()
-  @IsOptional()
-  METRICS_TOKEN?: string;
-}
-
-export function validate(
-  config: Record<string, unknown>,
-): EnvironmentVariables {
-  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
-    enableImplicitConversion: true,
-  });
-
-  const errors = validateSync(validatedConfig, {
-    skipMissingProperties: false,
-  });
-
-  if (errors.length > 0) {
-    throw new Error(
-      `Environment validation failed:\n${errors.map((e) => Object.values(e.constraints ?? {}).join(', ')).join('\n')}`,
-    );
-  }
-
-  logMissingOptionalKeys(config);
-
-  return validatedConfig;
-}
+  // Moyasar (Finance BC) — optional until Phase 7
+  MOYASAR_API_KEY: Joi.string().allow('').optional(),
+  MOYASAR_WEBHOOK_SECRET: Joi.string().allow('').optional(),
+}).unknown(true);

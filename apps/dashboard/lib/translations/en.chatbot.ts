@@ -1,6 +1,6 @@
 /**
  * English translations — Extended A
- * (chatbot, table, activityLog, tab keys, problemReports, ratings, zatca)
+ * (chatbot, table, activityLog, tab keys, ratings, zatca)
  */
 
 export const enChatbot: Record<string, string> = {
@@ -29,6 +29,8 @@ export const enChatbot: Record<string, string> = {
   "chatbot.kb.uploadFile": "Upload File",
   "chatbot.kb.empty": "No knowledge base entries",
   "chatbot.kb.deleteEntry": "Delete entry",
+  "chatbot.kb.deleteTitle": "Delete Entry",
+  "chatbot.kb.deleteConfirm": "Are you sure you want to delete this entry? This action cannot be undone.",
   "chatbot.analytics.totalSessions": "Total Sessions",
   "chatbot.analytics.activeSessions": "Active Sessions",
   "chatbot.analytics.avgDuration": "Avg Duration",
@@ -60,27 +62,12 @@ export const enChatbot: Record<string, string> = {
   "practitioners.tabs.list": "Practitioners",
   "practitioners.tabs.ratings": "Ratings & Reviews",
   "bookings.tabs.list": "Bookings",
-  "bookings.tabs.problemReports": "Problem Reports",
   "bookings.tabs.waitlist": "Waitlist",
   "invoices.tabs.list": "Invoices",
   "invoices.tabs.zatca": "ZATCA Compliance",
   "users.tabs.activityLog": "Activity Log",
 
   // ─── Problem Reports ───
-  "problemReports.allStatuses": "All Statuses",
-  "problemReports.status.open": "Open",
-  "problemReports.status.inReview": "In Review",
-  "problemReports.status.resolved": "Resolved",
-  "problemReports.status.dismissed": "Dismissed",
-  "problemReports.clear": "Clear",
-  "problemReports.resolve": "Resolve",
-  "problemReports.patient": "Patient",
-  "problemReports.booking": "Booking",
-  "problemReports.reported": "Reported",
-  "problemReports.resolvedBy": "Resolved by",
-  "problemReports.notes": "Notes",
-  "problemReports.empty.title": "No Problem Reports",
-  "problemReports.empty.description": "No problem reports matching your filters.",
 
   // ─── Ratings ───
   "ratings.title": "Ratings & Reviews",

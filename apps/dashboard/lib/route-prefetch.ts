@@ -22,7 +22,6 @@ import { fetchServices } from "@/lib/api/services"
 import { fetchUsers } from "@/lib/api/users"
 import { fetchBranches } from "@/lib/api/branches"
 import { fetchCoupons } from "@/lib/api/coupons"
-import { fetchGiftCards } from "@/lib/api/gift-cards"
 import { fetchIntakeForms } from "@/lib/api/intake-forms"
 import { fetchNotifications } from "@/lib/api/notifications"
 import { fetchChatSessions } from "@/lib/api/chatbot"
@@ -83,10 +82,6 @@ export const ROUTE_PREFETCH: Record<string, PrefetchEntry> = {
   "/coupons": entry(
     queryKeys.coupons.list({ page: 1, perPage: 20 }),
     () => fetchCoupons({ page: 1, perPage: 20 }),
-  ),
-  "/gift-cards": entry(
-    queryKeys.giftCards.list({ page: 1, perPage: 20 }),
-    () => fetchGiftCards({ page: 1, perPage: 20 }),
   ),
   "/intake-forms": entry(
     queryKeys.intakeForms.list({}),

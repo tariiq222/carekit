@@ -77,4 +77,6 @@ export const enIntakeForms: Record<string, string> = {
   // — Field Input —
   "intakeForms.input.selectPlaceholder": "Select...",
   "intakeForms.input.fileUpload": "Click to upload (preview only)",
+  "intakeForms.delete.title": "Delete Form",
+  "intakeForms.delete.confirm": "Are you sure you want to delete this form? This action cannot be undone.",
 }

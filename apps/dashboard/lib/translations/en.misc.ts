@@ -171,28 +171,6 @@ export const enMisc: Record<string, string> = {
   "ratings.reviews": "reviews",
 
   // — Problem Reports —
-  "problemReports.allStatuses": "All Statuses",
-  "problemReports.clear": "Clear",
-  "problemReports.resolve": "Resolve",
-  "problemReports.patient": "Patient",
-  "problemReports.booking": "Booking",
-  "problemReports.reported": "Reported",
-  "problemReports.resolvedBy": "Resolved by",
-  "problemReports.notes": "Notes",
-  "problemReports.status.open": "Open",
-  "problemReports.status.inReview": "In Review",
-  "problemReports.status.resolved": "Resolved",
-  "problemReports.status.dismissed": "Dismissed",
-  "problemReports.empty.title": "No Problem Reports",
-  "problemReports.empty.description": "No problem reports have been submitted yet",
-  "problemReports.type.waitTime": "Wait Time",
-  "problemReports.type.staffBehavior": "Staff Behavior",
-  "problemReports.type.cleanliness": "Cleanliness",
-  "problemReports.type.billing": "Billing",
-  "problemReports.type.noCall": "No Call",
-  "problemReports.type.late": "Late",
-  "problemReports.type.technical": "Technical",
-  "problemReports.type.other": "Other",
 
   // — Intake Forms —
   "intakeForms.title": "Intake Forms",

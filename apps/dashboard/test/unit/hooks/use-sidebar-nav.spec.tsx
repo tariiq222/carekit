@@ -137,7 +137,6 @@ describe("useSidebarNav", () => {
     )
   })
 
-  // ── regression: /coupons, /gift-cards, /reports, /branches still hide ─
   it("hides /coupons when featureFlagMap[coupons] = false", async () => {
     fetchFeatureFlagMap.mockResolvedValue({ coupons: false })
     fetchLicenseFeatures.mockResolvedValue([{ key: "coupons", licensed: true }])

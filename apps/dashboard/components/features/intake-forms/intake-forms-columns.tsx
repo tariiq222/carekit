@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -9,6 +10,17 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import type { IntakeForm, FormType } from "@/lib/types/intake-form"
 import { FORM_TYPE_LABELS, FORM_SCOPE_LABELS } from "@/lib/types/intake-form"
@@ -27,6 +39,77 @@ interface ColumnCallbacks {
   onDelete: (form: IntakeForm) => void
   onPreview: (form: IntakeForm) => void
   onToggleActive: (form: IntakeForm, value: boolean) => void
+}
+
+function IntakeFormActionsCell({
+  form,
+  t,
+  onEdit,
+  onDelete,
+  onPreview,
+}: {
+  form: IntakeForm
+  t: (key: string) => string
+  onEdit: (form: IntakeForm) => void
+  onDelete: (form: IntakeForm) => void
+  onPreview: (form: IntakeForm) => void
+}) {
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const btnBase =
+    "flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:bg-muted hover:border-border hover:text-foreground"
+
+  return (
+    <>
+      <div className="flex items-center gap-1 justify-end">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className={btnBase} onClick={() => onPreview(form)} aria-label={t("intakeForms.col.preview")}>
+              <HugeiconsIcon icon={EyeIcon} size={16} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">{t("intakeForms.col.preview")}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className={btnBase} onClick={() => onEdit(form)} aria-label={t("intakeForms.col.edit")}>
+              <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">{t("intakeForms.col.edit")}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className={cn(btnBase, "hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20")}
+              onClick={() => setDeleteOpen(true)}
+              aria-label={t("intakeForms.col.delete")}
+            >
+              <HugeiconsIcon icon={Delete02Icon} size={16} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">{t("intakeForms.col.delete")}</TooltipContent>
+        </Tooltip>
+      </div>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("intakeForms.delete.title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("intakeForms.delete.confirm")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { setDeleteOpen(false); onDelete(form) }}
+            >
+              {t("intakeForms.col.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
 }
 
 export function getIntakeFormsColumns({
@@ -130,35 +213,15 @@ export function getIntakeFormsColumns({
     {
       id: "actions",
       header: "",
-      cell: ({ row }) => {
-        const form = row.original
-        const btnBase = "flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:bg-muted hover:border-border hover:text-foreground"
-        return (
-          <div className="flex items-center gap-1 justify-end">
-            <button
-              className={btnBase}
-              onClick={() => onPreview(form)}
-              aria-label={t("intakeForms.col.preview")}
-            >
-              <HugeiconsIcon icon={EyeIcon} size={16} />
-            </button>
-            <button
-              className={btnBase}
-              onClick={() => onEdit(form)}
-              aria-label={t("intakeForms.col.edit")}
-            >
-              <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
-            </button>
-            <button
-              className={`${btnBase} hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20`}
-              onClick={() => onDelete(form)}
-              aria-label={t("intakeForms.col.delete")}
-            >
-              <HugeiconsIcon icon={Delete02Icon} size={16} />
-            </button>
-          </div>
-        )
-      },
+      cell: ({ row }) => (
+        <IntakeFormActionsCell
+          form={row.original}
+          t={t}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onPreview={onPreview}
+        />
+      ),
     },
   ]
 }
