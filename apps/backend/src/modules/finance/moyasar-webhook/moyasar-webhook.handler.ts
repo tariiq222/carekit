@@ -1,0 +1,92 @@
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { createHmac } from 'crypto';
+import { PaymentMethod, PaymentStatus } from '@prisma/client';
+import { PrismaService } from '../../../infrastructure/database';
+import { EventBusService } from '../../../infrastructure/events';
+import { PaymentCompletedEvent } from '../events/payment-completed.event';
+
+export interface MoyasarWebhookPayload {
+  id: string;           // Moyasar payment id
+  status: 'paid' | 'failed' | 'refunded';
+  amount: number;       // in halalas (×100)
+  currency: string;
+  metadata?: { invoiceId?: string; tenantId?: string };
+  message?: string;
+}
+
+/**
+ * Processes Moyasar webhook events.
+ * Idempotent: if a Payment with the same gatewayRef already exists in COMPLETED status, skips silently.
+ * Signature verification uses HMAC-SHA256 with MOYASAR_SECRET_KEY env var.
+ */
+@Injectable()
+export class MoyasarWebhookHandler {
+  private readonly logger = new Logger(MoyasarWebhookHandler.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
+
+  verifySignature(rawBody: string, signature: string, secret: string): void {
+    const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
+    if (expected !== signature) {
+      throw new BadRequestException('Invalid Moyasar webhook signature');
+    }
+  }
+
+  async execute(payload: MoyasarWebhookPayload): Promise<{ skipped?: boolean }> {
+    const { invoiceId, tenantId } = payload.metadata ?? {};
+    if (!invoiceId || !tenantId) {
+      this.logger.warn(`Moyasar webhook missing metadata: ${payload.id}`);
+      return { skipped: true };
+    }
+
+    const existing = await this.prisma.payment.findFirst({
+      where: { gatewayRef: payload.id, status: PaymentStatus.COMPLETED },
+    });
+    if (existing) return { skipped: true };
+
+    const invoice = await this.prisma.invoice.findUnique({ where: { id: invoiceId } });
+    if (!invoice || invoice.tenantId !== tenantId) return { skipped: true };
+
+    const amountSar = payload.amount / 100;
+    const status: PaymentStatus = payload.status === 'paid' ? PaymentStatus.COMPLETED : PaymentStatus.FAILED;
+
+    const payment = await this.prisma.payment.upsert({
+      where: { idempotencyKey: `moyasar:${payload.id}` },
+      update: { status, processedAt: new Date(), failureReason: payload.message },
+      create: {
+        tenantId,
+        invoiceId,
+        amount: amountSar,
+        currency: payload.currency,
+        method: PaymentMethod.ONLINE_CARD,
+        status,
+        gatewayRef: payload.id,
+        idempotencyKey: `moyasar:${payload.id}`,
+        processedAt: status === PaymentStatus.COMPLETED ? new Date() : undefined,
+        failureReason: payload.message,
+      },
+    });
+
+    if (status === PaymentStatus.COMPLETED) {
+      await this.prisma.invoice.update({
+        where: { id: invoiceId },
+        data: { status: 'PAID', paidAt: new Date() },
+      });
+
+      const event = new PaymentCompletedEvent(tenantId, {
+        paymentId: payment.id,
+        invoiceId: invoice.id,
+        bookingId: invoice.bookingId,
+        tenantId,
+        amount: amountSar,
+        currency: invoice.currency,
+      });
+      await this.eventBus.publish(event.eventName, event.toEnvelope());
+    }
+
+    return {};
+  }
+}
