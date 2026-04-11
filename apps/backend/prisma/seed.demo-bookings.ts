@@ -42,7 +42,7 @@ export async function seedBookings(
     const existing = await prisma.booking.findUnique({ where: { id: b.id as string } });
     if (existing) continue;
 
-    const { _payMethod, _rating, _problemReport, _receiptStatus, ...bookingData } = b;
+    const { _payMethod, _rating, _receiptStatus, ...bookingData } = b;
 
     const booking = await prisma.booking.create({ data: bookingData });
 
@@ -99,17 +99,6 @@ export async function seedBookings(
       });
     }
 
-    if (_problemReport) {
-      await prisma.problemReport.create({
-        data: {
-          bookingId: booking.id,
-          patientId: bookingData.patientId!,
-          type: _problemReport.type as any,
-          description: _problemReport.description,
-          status: _problemReport.status as any,
-        },
-      });
-    }
   }
 
   console.log(`  Created ${bookingDefs.length} bookings with payments, invoices, ratings`);
@@ -140,8 +129,8 @@ function buildBookingDefs(
     { id: BOOKING_IDS.BK06, patientId: patientIds[5], practitionerId: practitionerIds[1], serviceId: serviceIds[5], practitionerServiceId: psIds[3], type: 'in_person' as const, date: d(-5), startTime: '10:00', endTime: '10:45', status: 'completed' as const, bookedPrice: 80000, bookedDuration: 45, completedAt: d(-5), _payMethod: 'moyasar' as const, _rating: { stars: 4, comment: 'Very good laser session' } },
     { id: BOOKING_IDS.BK07, patientId: patientIds[6], practitionerId: practitionerIds[3], serviceId: serviceIds[6], practitionerServiceId: psIds[6], type: 'in_person' as const, date: d(-7), startTime: '11:00', endTime: '11:30', status: 'completed' as const, bookedPrice: 25000, bookedDuration: 30, completedAt: d(-7), _payMethod: 'bank_transfer' as const, _receiptStatus: 'approved' as const, _rating: { stars: 3, comment: 'جيد لكن وقت الانتظار طويل' } },
 
-    // ── Completed with problem report
-    { id: BOOKING_IDS.BK08, patientId: patientIds[7], practitionerId: practitionerIds[2], serviceId: serviceIds[3], practitionerServiceId: psIds[5], type: 'in_person' as const, date: d(-2), startTime: '15:00', endTime: '16:00', status: 'completed' as const, bookedPrice: 40000, bookedDuration: 60, completedAt: d(-2), _payMethod: 'moyasar' as const, _rating: { stars: 2, comment: 'انتظرت طويلاً' }, _problemReport: { type: 'wait_time', description: 'انتظرت أكثر من 45 دقيقة', status: 'in_review' } },
+    // ── Completed (low rating)
+    { id: BOOKING_IDS.BK08, patientId: patientIds[7], practitionerId: practitionerIds[2], serviceId: serviceIds[3], practitionerServiceId: psIds[5], type: 'in_person' as const, date: d(-2), startTime: '15:00', endTime: '16:00', status: 'completed' as const, bookedPrice: 40000, bookedDuration: 60, completedAt: d(-2), _payMethod: 'moyasar' as const, _rating: { stars: 2, comment: 'انتظرت طويلاً' } },
 
     // ── Cancelled
     { id: BOOKING_IDS.BK09, patientId: patientIds[8], practitionerId: practitionerIds[0], serviceId: serviceIds[0], practitionerServiceId: psIds[0], type: 'online' as const, date: d(-1), startTime: '13:00', endTime: '13:30', status: 'cancelled' as const, bookedPrice: 15000, bookedDuration: 30, cancelledAt: d(-1), cancellationReason: 'ظرف طارئ', cancelledBy: CancelledBy.patient, _payMethod: 'moyasar' as const },
@@ -185,7 +174,6 @@ export async function seedNotifications(
     { userId: patientIds[2], titleAr: 'تم إلغاء الحجز', titleEn: 'Booking Cancelled', bodyAr: 'تم إلغاء حجزك وسيتم إرجاع المبلغ', bodyEn: 'Your booking is cancelled and refund is processing', type: 'booking_cancelled' as const, isRead: false },
     { userId: patientIds[3], titleAr: 'تم استلام الدفع', titleEn: 'Payment Received', bodyAr: 'تم استلام دفعتك بنجاح — 250 ر.س', bodyEn: 'Payment of 250 SAR received successfully', type: 'payment_received' as const, isRead: true },
     { userId: patientIds[4], titleAr: 'تقييم جديد', titleEn: 'New Rating', bodyAr: 'شكراً لتقييمك! رأيك يساعدنا', bodyEn: 'Thanks for your rating! Your feedback helps us', type: 'new_rating' as const, isRead: false },
-    { userId: patientIds[5], titleAr: 'بلاغ مشكلة', titleEn: 'Problem Report', bodyAr: 'تم استلام بلاغك وسيتم مراجعته', bodyEn: 'Your report has been received and is under review', type: 'problem_report' as const, isRead: false },
     { userId: patientIds[0], titleAr: 'تنبيه النظام', titleEn: 'System Alert', bodyAr: 'تم تحديث سياسة الإلغاء', bodyEn: 'Cancellation policy has been updated', type: 'system_alert' as const, isRead: false },
     { userId: patientIds[8], titleAr: 'طلب إلغاء مرفوض', titleEn: 'Cancellation Rejected', bodyAr: 'تم رفض طلب إلغاء حجزك', bodyEn: 'Your cancellation request was rejected', type: 'cancellation_rejected' as const, isRead: false },
     { userId: patientIds[6], titleAr: 'تم إكمال الحجز', titleEn: 'Booking Completed', bodyAr: 'اكتمل موعدك بنجاح. يسعدنا تقييمك', bodyEn: 'Your appointment is completed. We would love your feedback', type: 'booking_completed' as const, isRead: false },

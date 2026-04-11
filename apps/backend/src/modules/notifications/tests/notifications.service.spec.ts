@@ -12,7 +12,7 @@
  *
  * NotificationType enum values:
  *   booking_confirmed, booking_cancelled, reminder,
- *   payment_received, new_rating, problem_report
+ *   payment_received, new_rating
  *
  * PrismaService is mocked so tests run without a database.
  * These tests will FAIL until backend-dev implements NotificationsService.

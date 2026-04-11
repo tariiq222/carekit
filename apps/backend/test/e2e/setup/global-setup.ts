@@ -55,7 +55,6 @@ export default async function globalSetup(): Promise<void> {
     await prisma.branch.deleteMany({ where: { isMain: false } });
     await prisma.clinicWorkingHours.deleteMany({});
     await prisma.clinicHoliday.deleteMany({});
-    await prisma.problemReport.deleteMany({});
     await prisma.activityLog.deleteMany({});
 
     // Delete test users (not the seeded super_admin)

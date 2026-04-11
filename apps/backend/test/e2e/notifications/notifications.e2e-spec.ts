@@ -233,7 +233,6 @@ describe('Notifications Module (e2e)', () => {
         'reminder',
         'payment_received',
         'new_rating',
-        'problem_report',
         'waitlist_slot_available',
         'system_alert',
       ];

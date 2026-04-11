@@ -218,7 +218,6 @@ describe('Notifications Module (e2e)', () => {
         'reminder',
         'payment_received',
         'new_rating',
-        'problem_report',
       ];
 
       const res = await request(httpServer)
