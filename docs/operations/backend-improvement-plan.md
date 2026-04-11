@@ -300,7 +300,7 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
 - **الجهد:** L (2-3 أيام)
 - **الخطر:** منخفض
 - **الوصف:**
-  - مقارنة الـ e2e tests الموجودة مع الـ scenarios في `e2e سيناريو/` (23 ملف markdown)
+  - مقارنة الـ e2e tests الموجودة مع الـ scenarios في `e2e/` (23 ملف markdown)
   - **أولوية التكملة:**
     1. **Bookings state machine** — كل الانتقالات: pending → confirmed → checked_in → in_progress → completed → no_show
     2. **Payment webhook edge cases** — duplicate webhooks, out-of-order delivery, invalid signature
@@ -312,7 +312,7 @@ Phase F — Production Readiness   ████████ الأسابيع 6-7
   - `backend/test/e2e/bookings/` — 2-3 ملفات جديدة
   - `backend/test/e2e/payments/` — 1-2 ملف جديد
   - `backend/test/e2e/rbac/` — 1-2 ملف جديد
-- **معيار الإتمام:** تغطية ≥ 90% من الـ scenarios في `e2e سيناريو/`
+- **معيار الإتمام:** تغطية ≥ 90% من الـ scenarios في `e2e/`
 
 ---
 
