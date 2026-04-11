@@ -10,7 +10,7 @@ Answer the user's question based ONLY on the following context.
 If the context doesn't contain the answer, say you don't have that information.
 
 Context:
-${context}
+${context || '(No relevant information found in the knowledge base for this question.)'}
 `.trim();
 
 @Injectable()
