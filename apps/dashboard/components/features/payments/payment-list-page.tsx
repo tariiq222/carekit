@@ -49,7 +49,7 @@ export function PaymentListPage() {
         <StatsGrid>
           <StatCard title={t("payments.stats.total")} value={<FormattedCurrency amount={stats.totalAmount ?? 0} locale={locale} />} description={`${stats.total ?? 0} ${t("payments.stats.transactions")}`} icon={MoneyBag02Icon} iconColor="primary" />
           <StatCard title={t("payments.stats.pending")} value={stats.pending ?? 0} description={<FormattedCurrency amount={stats.pendingAmount ?? 0} locale={locale} />} icon={TimeQuarterPassIcon} iconColor="warning" />
-          <StatCard title={t("payments.stats.paid")} value={stats.paid ?? 0} description={<FormattedCurrency amount={stats.paidAmount ?? 0} locale={locale} />} icon={CheckmarkCircle02Icon} iconColor="success" />
+          <StatCard title={t("payments.stats.paid")} value={stats.completed ?? 0} description={<FormattedCurrency amount={stats.completedAmount ?? 0} locale={locale} />} icon={CheckmarkCircle02Icon} iconColor="success" />
           <StatCard title={t("payments.stats.refunded")} value={stats.refunded ?? 0} description={<FormattedCurrency amount={stats.refundedAmount ?? 0} locale={locale} />} icon={ArrowTurnBackwardIcon} iconColor="warning" />
         </StatsGrid>
       ) : null}
