@@ -5,5 +5,12 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "globalSetup": "./setup/global-setup.ts",
+  "globalTeardown": "./setup/global-teardown.ts",
+  "testTimeout": 30000,
+  "maxWorkers": 1,
+  "moduleNameMapper": {
+    "^@carekit/shared$": "<rootDir>/../../packages/shared/src/index.ts"
   }
 }

@@ -1,0 +1,141 @@
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
+
+export async function seedUser(
+  prisma: PrismaClient,
+  tenantId: string,
+  overrides: Partial<{
+    email: string;
+    password: string;
+    role: string;
+    name: string;
+    isActive: boolean;
+  }> = {},
+) {
+  const email = overrides.email ?? `user-${Date.now()}@test.com`;
+  const password = overrides.password ?? 'Test@1234';
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  return prisma.user.create({
+    data: {
+      tenantId,
+      email,
+      passwordHash,
+      name: overrides.name ?? 'Test User',
+      role: (overrides.role as never) ?? 'RECEPTIONIST',
+      isActive: overrides.isActive ?? true,
+    },
+  });
+}
+
+export async function seedClient(
+  prisma: PrismaClient,
+  tenantId: string,
+  overrides: Partial<{ name: string; phone: string; isActive: boolean }> = {},
+) {
+  return prisma.client.create({
+    data: {
+      tenantId,
+      name: overrides.name ?? 'Test Client',
+      phone: overrides.phone ?? `+9665${Date.now().toString().slice(-8)}`,
+      isActive: overrides.isActive ?? true,
+      source: 'WALK_IN',
+    },
+  });
+}
+
+export async function seedEmployee(
+  prisma: PrismaClient,
+  tenantId: string,
+  overrides: Partial<{ name: string; isActive: boolean }> = {},
+) {
+  return prisma.employee.create({
+    data: {
+      tenantId,
+      name: overrides.name ?? 'Test Employee',
+      isActive: overrides.isActive ?? true,
+      employmentType: 'FULL_TIME',
+    },
+  });
+}
+
+export async function seedService(
+  prisma: PrismaClient,
+  tenantId: string,
+  overrides: Partial<{ nameAr: string; nameEn: string; durationMins: number; price: number }> = {},
+) {
+  return prisma.service.create({
+    data: {
+      tenantId,
+      nameAr: overrides.nameAr ?? 'Test Service',
+      nameEn: overrides.nameEn,
+      durationMins: overrides.durationMins ?? 60,
+      price: overrides.price ?? 200,
+      currency: 'SAR',
+      isActive: true,
+    },
+  });
+}
+
+export async function seedBranch(
+  prisma: PrismaClient,
+  tenantId: string,
+  overrides: Partial<{ nameAr: string; nameEn: string }> = {},
+) {
+  return prisma.branch.create({
+    data: {
+      tenantId,
+      nameAr: overrides.nameAr ?? 'Main Branch',
+      nameEn: overrides.nameEn,
+      isActive: true,
+    },
+  });
+}
+
+export async function seedEmployeeService(
+  prisma: PrismaClient,
+  tenantId: string,
+  employeeId: string,
+  serviceId: string,
+) {
+  return prisma.employeeService.create({
+    data: {
+      tenantId,
+      employeeId,
+      serviceId,
+    },
+  });
+}
+
+export async function seedBooking(
+  prisma: PrismaClient,
+  tenantId: string,
+  opts: {
+    clientId: string;
+    employeeId: string;
+    serviceId: string;
+    branchId: string;
+    scheduledAt?: Date;
+    status?: string;
+  },
+) {
+  const scheduledAt = opts.scheduledAt ?? new Date(Date.now() + 86_400_000);
+  const endsAt = new Date(scheduledAt.getTime() + 3_600_000);
+
+  return prisma.booking.create({
+    data: {
+      tenantId,
+      clientId: opts.clientId,
+      employeeId: opts.employeeId,
+      serviceId: opts.serviceId,
+      branchId: opts.branchId,
+      scheduledAt,
+      endsAt,
+      durationMins: 60,
+      price: 200,
+      currency: 'SAR',
+      status: (opts.status as never) ?? 'PENDING',
+      bookingType: 'INDIVIDUAL',
+    },
+  });
+}
