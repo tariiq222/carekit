@@ -151,3 +151,19 @@ model GroupEnrollment {
   @@index([tenantId])
   @@index([clientId])
 }
+
+// ─── BookingStatusLog ─────────────────────────────────────────────────────────
+
+model BookingStatusLog {
+  id         String         @id @default(uuid())
+  tenantId   String
+  bookingId  String
+  fromStatus BookingStatus?
+  toStatus   BookingStatus
+  changedBy  String
+  reason     String?
+  createdAt  DateTime       @default(now())
+
+  @@index([bookingId])
+  @@index([tenantId, createdAt])
+}
