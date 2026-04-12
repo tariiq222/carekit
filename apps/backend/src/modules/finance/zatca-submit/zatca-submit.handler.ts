@@ -88,16 +88,36 @@ export class ZatcaSubmitHandler {
     return submission;
   }
 
+  /**
+   * Escapes the five XML predefined entities so interpolated field values
+   * cannot break out of their element and inject sibling XML. Mandatory for
+   * any field that originates from user input or arbitrary DB content.
+   */
+  private escapeXml(value: string | number | null | undefined): string {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
   // TODO(zatca-xml): Replace stub with full UBL 2.1 / ZATCA Phase-2 XML builder.
   // Tracked in: https://github.com/carekit-hq/carekit/issues/ZATCA-XML
   // Owner: @tariq — do NOT modify XML structure without compliance review.
   private buildInvoiceXml(invoice: { id: string; tenantId: string; total: unknown; vatAmt: unknown; issuedAt: Date | null }): string {
+    const id = this.escapeXml(invoice.id);
+    const vatAmt = this.escapeXml(String(invoice.vatAmt ?? '0'));
+    const total = this.escapeXml(String(invoice.total ?? '0'));
+    const issueDate = this.escapeXml(
+      (invoice.issuedAt ?? new Date()).toISOString().split('T')[0],
+    );
     return `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
-  <ID>${invoice.id}</ID>
-  <TaxTotal><TaxAmount>${invoice.vatAmt}</TaxAmount></TaxTotal>
-  <LegalMonetaryTotal><TaxInclusiveAmount>${invoice.total}</TaxInclusiveAmount></LegalMonetaryTotal>
-  <IssueDate>${(invoice.issuedAt ?? new Date()).toISOString().split('T')[0]}</IssueDate>
+  <ID>${id}</ID>
+  <TaxTotal><TaxAmount>${vatAmt}</TaxAmount></TaxTotal>
+  <LegalMonetaryTotal><TaxInclusiveAmount>${total}</TaxInclusiveAmount></LegalMonetaryTotal>
+  <IssueDate>${issueDate}</IssueDate>
 </Invoice>`;
   }
 
