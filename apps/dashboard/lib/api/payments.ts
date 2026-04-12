@@ -20,7 +20,7 @@ export async function refundPayment(
 
 export async function verifyPayment(
   id: string,
-  payload: { transferRef?: string },
+  payload: { action: 'approve' | 'reject'; transferRef?: string },
 ): Promise<Payment> {
   return api.patch<Payment>(`/dashboard/finance/payments/${id}/verify`, payload)
 }

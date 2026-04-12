@@ -58,6 +58,7 @@ export function VerifyDialog({
     try {
       await verifyMut.mutateAsync({
         id: paymentId,
+        action: data.action,
         transferRef: data.adminNotes || undefined,
       })
       toast.success(

@@ -34,8 +34,8 @@ export function usePaymentMutations() {
   })
 
   const verifyMut = useMutation({
-    mutationFn: ({ id, transferRef }: { id: string; transferRef?: string }) =>
-      verifyPayment(id, { transferRef }),
+    mutationFn: ({ id, action, transferRef }: { id: string; action: 'approve' | 'reject'; transferRef?: string }) =>
+      verifyPayment(id, { action, transferRef }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.all })
     },
