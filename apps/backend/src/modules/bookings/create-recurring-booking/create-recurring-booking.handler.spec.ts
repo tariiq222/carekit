@@ -75,6 +75,18 @@ describe('CreateRecurringBookingHandler', () => {
         handler.execute({ ...baseDto, frequency: RecurringFrequency.WEEKLY, occurrences: 0 }),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('throws BadRequestException when intervalDays is 0', async () => {
+      const handler = new CreateRecurringBookingHandler(buildPrisma() as never);
+      await expect(
+        handler.execute({
+          ...baseDto,
+          frequency: RecurringFrequency.DAILY,
+          intervalDays: 0,
+          until: new Date(Date.now() + 7 * 86400_000),
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('WEEKLY recurrence', () => {

@@ -4,6 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { RecurringFrequency } from '@prisma/client';
+import type { Booking } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { randomUUID } from 'crypto';
 import type { CreateRecurringBookingDto } from './create-recurring-booking.dto';
@@ -17,7 +18,7 @@ export class CreateRecurringBookingHandler {
 
     const dates = this.resolveDates(dto);
     const recurringGroupId = randomUUID();
-    const created: Awaited<ReturnType<typeof this.prisma.booking.create>>[] = [];
+    const created: Booking[] = [];
 
     for (const scheduledAt of dates) {
       const endsAt = new Date(scheduledAt.getTime() + dto.durationMins * 60_000);
@@ -91,6 +92,9 @@ export class CreateRecurringBookingHandler {
     }
     if (hasOccurrences && dto.occurrences! < 1) {
       throw new BadRequestException('occurrences must be at least 1');
+    }
+    if (dto.intervalDays !== undefined && dto.intervalDays < 1) {
+      throw new BadRequestException('intervalDays must be at least 1');
     }
   }
 
