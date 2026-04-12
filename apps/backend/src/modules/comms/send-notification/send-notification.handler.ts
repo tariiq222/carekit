@@ -4,7 +4,9 @@ import { PrismaService } from '../../../infrastructure/database';
 import { SendPushHandler } from '../send-push/send-push.handler';
 import { SendEmailHandler } from '../send-email/send-email.handler';
 import { SendSmsHandler } from '../send-sms/send-sms.handler';
-import type { SendNotificationDto } from './send-notification.dto';
+import { SendNotificationDto } from './send-notification.dto';
+
+export type SendNotificationCommand = SendNotificationDto & { tenantId: string };
 
 @Injectable()
 export class SendNotificationHandler {
@@ -17,7 +19,7 @@ export class SendNotificationHandler {
     private readonly sms: SendSmsHandler,
   ) {}
 
-  async execute(dto: SendNotificationDto): Promise<void> {
+  async execute(dto: SendNotificationCommand): Promise<void> {
     try {
       await this.prisma.notification.create({
         data: {

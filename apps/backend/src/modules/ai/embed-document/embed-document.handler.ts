@@ -2,7 +2,9 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EmbeddingAdapter } from '../../../infrastructure/ai';
-import type { EmbedDocumentDto } from './embed-document.dto';
+import { EmbedDocumentDto } from './embed-document.dto';
+
+export type EmbedDocumentCommand = EmbedDocumentDto & { tenantId: string };
 
 const CHUNK_SIZE = 2000;
 const CHUNK_OVERLAP = 100;
@@ -25,7 +27,7 @@ export class EmbedDocumentHandler {
     private readonly embedding: EmbeddingAdapter,
   ) {}
 
-  async execute(dto: EmbedDocumentDto) {
+  async execute(dto: EmbedDocumentCommand) {
     if (!this.embedding.isAvailable()) {
       throw new BadRequestException('EmbeddingAdapter is not available — set OPENAI_API_KEY');
     }

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { FcmService } from '../../../infrastructure/mail';
-import type { SendPushDto } from './send-push.dto';
+import { SendPushDto } from './send-push.dto';
 
 @Injectable()
 export class SendPushHandler {

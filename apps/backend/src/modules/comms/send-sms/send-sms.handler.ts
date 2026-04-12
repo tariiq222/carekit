@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { SendSmsDto } from './send-sms.dto';
+import { SendSmsDto } from './send-sms.dto';
 
 @Injectable()
 export class SendSmsHandler {

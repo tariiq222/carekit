@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { SmtpService } from '../../../infrastructure/mail';
-import type { SendEmailDto } from './send-email.dto';
+import { SendEmailDto } from './send-email.dto';
+
+export type SendEmailCommand = SendEmailDto & { tenantId: string };
 
 @Injectable()
 export class SendEmailHandler {
@@ -12,7 +14,7 @@ export class SendEmailHandler {
     private readonly prisma: PrismaService,
   ) {}
 
-  async execute(dto: SendEmailDto): Promise<void> {
+  async execute(dto: SendEmailCommand): Promise<void> {
     if (!this.smtp.isAvailable()) {
       this.logger.warn('SMTP not available — skipping email');
       return;

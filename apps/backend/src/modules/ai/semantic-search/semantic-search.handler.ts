@@ -1,7 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { EmbeddingAdapter } from '../../../infrastructure/ai';
-import type { SemanticSearchDto, SemanticSearchResult } from './semantic-search.dto';
+import { SemanticSearchDto, SemanticSearchResult } from './semantic-search.dto';
+
+export type SemanticSearchQuery = SemanticSearchDto & { tenantId: string };
 
 @Injectable()
 export class SemanticSearchHandler {
@@ -10,7 +12,7 @@ export class SemanticSearchHandler {
     private readonly embedding: EmbeddingAdapter,
   ) {}
 
-  async execute(dto: SemanticSearchDto): Promise<SemanticSearchResult[]> {
+  async execute(dto: SemanticSearchQuery): Promise<SemanticSearchResult[]> {
     if (!this.embedding.isAvailable()) {
       throw new BadRequestException('EmbeddingAdapter is not available — set OPENAI_API_KEY');
     }
