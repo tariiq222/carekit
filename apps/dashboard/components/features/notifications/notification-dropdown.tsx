@@ -92,7 +92,7 @@ export function NotificationDropdown() {
   const { locale, t } = useLocale()
   const { notifications, isLoading } = useNotifications()
   const { data: unreadCount } = useUnreadCount()
-  const { markAllMut, markOneMut } = useNotificationMutations()
+  const { markAllMut } = useNotificationMutations()
 
   // Show latest 5 notifications in dropdown
   const recentNotifications = notifications.slice(0, 5)
@@ -166,7 +166,7 @@ export function NotificationDropdown() {
                   key={notification.id}
                   notification={notification}
                   locale={locale}
-                  onMarkRead={(id) => markOneMut.mutate(id)}
+                  onMarkRead={() => markAllMut.mutate()}
                 />
               ))
             )}

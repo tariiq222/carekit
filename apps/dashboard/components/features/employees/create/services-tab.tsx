@@ -15,7 +15,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { useLocale } from "@/components/locale-provider"
-import { useServices, useServiceBookingTypes } from "@/hooks/use-services"
+import { useServices } from "@/hooks/use-services"
 import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"
 import {
   addServiceSchema,
@@ -63,37 +63,17 @@ export function ServicesTab({
   })
 
   const selectedServiceId = form.watch("serviceId")
-  const { data: serviceBookingTypes } = useServiceBookingTypes(
-    selectedServiceId || null,
-  )
 
-  /* Initialize type configs when service booking types load */
   useEffect(() => {
     if (!selectedServiceId) {
       setTypeConfigs([])
       return
     }
-    if (serviceBookingTypes && serviceBookingTypes.length > 0) {
-      setTypeConfigs(
-        serviceBookingTypes
-          .filter((bt) => bt.isActive)
-          .map((bt) => ({
-            bookingType: bt.bookingType,
-            price: null,
-            duration: null,
-            useCustomOptions: false,
-            isActive: true,
-            durationOptions: [],
-          })),
-      )
-    } else if (serviceBookingTypes !== undefined) {
-      // Service has no booking type records — fall back to both types as defaults
-      setTypeConfigs([
-        { bookingType: "in_person", price: null, duration: null, useCustomOptions: false, isActive: true, durationOptions: [] },
-        { bookingType: "online", price: null, duration: null, useCustomOptions: false, isActive: true, durationOptions: [] },
-      ])
-    }
-  }, [serviceBookingTypes, selectedServiceId])
+    setTypeConfigs([
+      { bookingType: "in_person", price: null, duration: null, useCustomOptions: false, isActive: true, durationOptions: [] },
+      { bookingType: "online", price: null, duration: null, useCustomOptions: false, isActive: true, durationOptions: [] },
+    ])
+  }, [selectedServiceId])
 
   const handleAddService = form.handleSubmit((data) => {
     const svc = services?.find((s) => s.id === data.serviceId)
@@ -153,7 +133,7 @@ export function ServicesTab({
           <AddServiceForm
             form={form}
             availableServices={availableServices}
-            serviceBookingTypes={serviceBookingTypes ?? []}
+            serviceBookingTypes={[]}
             typeConfigs={typeConfigs}
             onTypeConfigsChange={setTypeConfigs}
             onSubmit={handleAddService}

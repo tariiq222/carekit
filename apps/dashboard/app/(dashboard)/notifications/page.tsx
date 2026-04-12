@@ -22,14 +22,10 @@ export default function NotificationsPage() {
   const { t } = useLocale()
   const { notifications, isLoading, error } = useNotifications()
   const { data: unreadCount, isLoading: unreadLoading } = useUnreadCount()
-  const { markAllMut, markOneMut } = useNotificationMutations()
+  const { markAllMut } = useNotificationMutations()
 
   const handleMarkAllRead = () => {
     markAllMut.mutate()
-  }
-
-  const handleMarkOneRead = (id: string) => {
-    markOneMut.mutate(id)
   }
 
   const totalCount = notifications.length
@@ -98,7 +94,7 @@ export default function NotificationsPage() {
             <NotificationCard
               key={notification.id}
               notification={notification}
-              onMarkRead={handleMarkOneRead}
+              onMarkRead={() => { handleMarkAllRead() }}
             />
           ))}
         </div>

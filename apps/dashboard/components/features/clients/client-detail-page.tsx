@@ -4,23 +4,14 @@ import { useRouter } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PencilEdit01Icon,
-  Calendar01Icon,
-  MoneyBag01Icon,
-  CheckmarkCircle01Icon,
-  Cancel01Icon,
   ArrowLeft01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
-import { StatsGrid } from "@/components/features/stats-grid"
-import { StatCard } from "@/components/features/stat-card"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
 import { ErrorBanner } from "@/components/features/error-banner"
-import { ClientBookingRow } from "@/components/features/clients/client-booking-row"
-import { ClientInvoiceRow } from "@/components/features/clients/client-invoice-row"
 import { ClientPageSkeleton } from "@/components/features/clients/client-page-skeleton"
-import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -30,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLocale } from "@/components/locale-provider"
 import { useOrganizationConfig } from "@/hooks/use-organization-config"
-import { useClient, useClientStats, useClientBookings } from "@/hooks/use-clients"
+import { useClient } from "@/hooks/use-clients"
 
 /* ─── Props ─── */
 
@@ -46,10 +37,6 @@ export function ClientDetailPage({ clientId }: Props) {
   const { formatDate } = useOrganizationConfig()
 
   const { data: client, isLoading, error } = useClient(clientId)
-  const { data: stats, isLoading: statsLoading } = useClientStats(clientId)
-  const { data: bookingsData, isLoading: bookingsLoading } = useClientBookings(clientId)
-
-  const allBookings = bookingsData?.items ?? []
 
   if (isLoading) return <ClientPageSkeleton />
 
@@ -214,21 +201,9 @@ export function ClientDetailPage({ clientId }: Props) {
         <TabsContent value="bookings" className="pt-4">
           <Card>
             <CardContent className="pt-6">
-              {bookingsLoading ? (
-                <div className="flex flex-col gap-3">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-14 rounded-lg" />
-                  ))}
-                </div>
-              ) : allBookings.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  {t("clients.dialog.noBookings")}
-                </p>
-              ) : (
-                allBookings.map((b) => (
-                  <ClientBookingRow key={b.id} booking={b} locale={locale} t={t} />
-                ))
-              )}
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {t("clients.dialog.noBookings")}
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -237,61 +212,18 @@ export function ClientDetailPage({ clientId }: Props) {
         <TabsContent value="invoices" className="pt-4">
           <Card>
             <CardContent className="pt-6">
-              {bookingsLoading ? (
-                <div className="flex flex-col gap-3">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-14 rounded-lg" />
-                  ))}
-                </div>
-              ) : allBookings.filter((b) => b.payment !== null).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  {t("clients.dialog.noInvoices")}
-                </p>
-              ) : (
-                allBookings.filter((b) => b.payment !== null).map((b) => (
-                  <ClientInvoiceRow key={b.id} booking={b} locale={locale} t={t} />
-                ))
-              )}
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {t("clients.dialog.noInvoices")}
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* ── Tab 4: الإحصائيات ── */}
         <TabsContent value="stats" className="pt-4">
-          {statsLoading || !stats ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-[130px] rounded-xl" />
-              ))}
-            </div>
-          ) : (
-            <StatsGrid>
-              <StatCard
-                title={t("clients.detail.totalBookings")}
-                value={stats.totalBookings}
-                icon={Calendar01Icon}
-                iconColor="primary"
-              />
-              <StatCard
-                title={t("clients.detail.completed")}
-                value={stats.byStatus?.["completed"] ?? stats.completedBookings ?? 0}
-                icon={CheckmarkCircle01Icon}
-                iconColor="success"
-              />
-              <StatCard
-                title={t("clients.detail.cancelled")}
-                value={stats.byStatus?.["cancelled"] ?? stats.cancelledBookings ?? 0}
-                icon={Cancel01Icon}
-                iconColor="warning"
-              />
-              <StatCard
-                title={t("clients.detail.totalPaid")}
-                value={<FormattedCurrency amount={stats.totalPaid ?? stats.totalSpent ?? 0} locale={locale} decimals={2} />}
-                icon={MoneyBag01Icon}
-                iconColor="accent"
-              />
-            </StatsGrid>
-          )}
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            {t("clients.dialog.noBookings")}
+          </div>
         </TabsContent>
       </Tabs>
     </ListPageShell>

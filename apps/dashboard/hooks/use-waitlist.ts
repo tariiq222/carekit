@@ -1,45 +1,9 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState, useCallback } from "react"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchWaitlist, removeWaitlistEntry } from "@/lib/api/waitlist"
-import type { WaitlistStatus } from "@/lib/types/waitlist"
-
-/* ─── Waitlist List ─── */
-
-export function useWaitlist() {
-  const [employeeId, setEmployeeId] = useState<string | undefined>()
-  const [status, setStatus] = useState<WaitlistStatus | undefined>()
-
-  const query = {
-    employeeId,
-    status,
-  }
-
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: queryKeys.waitlist.list(query),
-    queryFn: () => fetchWaitlist(query),
-    staleTime: 30_000,
-  })
-
-  const resetFilters = useCallback(() => {
-    setEmployeeId(undefined)
-    setStatus(undefined)
-  }, [])
-
-  return {
-    entries: data ?? [],
-    isLoading,
-    error: error?.message ?? null,
-    employeeId,
-    setEmployeeId,
-    status,
-    setStatus,
-    resetFilters,
-    refetch,
-  }
-}
+import { addToWaitlist } from "@/lib/api/waitlist"
+import type { AddToWaitlistPayload } from "@/lib/api/waitlist"
 
 /* ─── Waitlist Mutations ─── */
 
@@ -48,10 +12,10 @@ export function useWaitlistMutations() {
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: queryKeys.waitlist.all })
 
-  const removeMut = useMutation({
-    mutationFn: removeWaitlistEntry,
+  const addMut = useMutation({
+    mutationFn: (payload: AddToWaitlistPayload) => addToWaitlist(payload),
     onSuccess: invalidate,
   })
 
-  return { removeMut }
+  return { addMut }
 }

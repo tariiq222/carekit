@@ -4,17 +4,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 
-const { fetchWaitlist, removeWaitlistEntry } = vi.hoisted(() => ({
-  fetchWaitlist: vi.fn(),
-  removeWaitlistEntry: vi.fn(),
+const { addToWaitlist } = vi.hoisted(() => ({
+  addToWaitlist: vi.fn(),
 }))
 
 vi.mock("@/lib/api/waitlist", () => ({
-  fetchWaitlist,
-  removeWaitlistEntry,
+  addToWaitlist,
 }))
 
-import { useWaitlist, useWaitlistMutations } from "@/hooks/use-waitlist"
+import { useWaitlistMutations } from "@/hooks/use-waitlist"
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -27,110 +25,32 @@ function makeWrapper() {
   return TestWrapper
 }
 
-describe("useWaitlist", () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it("returns empty entries while loading", () => {
-    fetchWaitlist.mockReturnValue(new Promise(() => {}))
-    const { result } = renderHook(() => useWaitlist(), {
-      wrapper: makeWrapper(),
-    })
-    expect(result.current.entries).toEqual([])
-    expect(result.current.isLoading).toBe(true)
-  })
-
-  it("fetches and returns waitlist entries", async () => {
-    const mockEntries = [{ id: "wl-1", clientId: "p-1" }]
-    fetchWaitlist.mockResolvedValueOnce(mockEntries)
-
-    const { result } = renderHook(() => useWaitlist(), {
-      wrapper: makeWrapper(),
-    })
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-
-    expect(result.current.entries).toEqual(mockEntries)
-    expect(result.current.error).toBeNull()
-  })
-
-  it("calls fetchWaitlist with employeeId filter when set", async () => {
-    fetchWaitlist.mockResolvedValue([])
-
-    const { result } = renderHook(() => useWaitlist(), {
-      wrapper: makeWrapper(),
-    })
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-
-    act(() => {
-      result.current.setEmployeeId("prac-1")
-    })
-
-    await waitFor(() =>
-      expect(fetchWaitlist).toHaveBeenCalledWith(
-        expect.objectContaining({ employeeId: "prac-1" }),
-      ),
-    )
-  })
-
-  it("resetFilters clears employeeId and status", async () => {
-    fetchWaitlist.mockResolvedValue([])
-
-    const { result } = renderHook(() => useWaitlist(), {
-      wrapper: makeWrapper(),
-    })
-
-    act(() => {
-      result.current.setEmployeeId("prac-1")
-      result.current.setStatus("WAITING" as Parameters<typeof result.current.setStatus>[0])
-    })
-
-    act(() => {
-      result.current.resetFilters()
-    })
-
-    expect(result.current.employeeId).toBeUndefined()
-    expect(result.current.status).toBeUndefined()
-  })
-
-  it("surfaces error message on fetch failure", async () => {
-    fetchWaitlist.mockRejectedValueOnce(new Error("timeout"))
-
-    const { result } = renderHook(() => useWaitlist(), {
-      wrapper: makeWrapper(),
-    })
-
-    await waitFor(() => expect(result.current.error).toBe("timeout"))
-  })
-})
-
 describe("useWaitlistMutations", () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it("removeMut calls removeWaitlistEntry with the given id", async () => {
-    removeWaitlistEntry.mockResolvedValueOnce(undefined)
+  it("addMut calls addToWaitlist", async () => {
+    addToWaitlist.mockResolvedValueOnce(undefined)
 
     const { result } = renderHook(() => useWaitlistMutations(), {
       wrapper: makeWrapper(),
     })
 
     await act(async () => {
-      await result.current.removeMut.mutateAsync("wl-42")
+      await result.current.addMut.mutateAsync({} as Parameters<typeof addToWaitlist>[0])
     })
 
-    expect(removeWaitlistEntry).toHaveBeenCalledWith("wl-42", expect.anything())
+    expect(addToWaitlist).toHaveBeenCalled()
   })
 
-  it("removeMut is idle before being called", () => {
+  it("addMut is idle before being called", () => {
     const { result } = renderHook(() => useWaitlistMutations(), {
       wrapper: makeWrapper(),
     })
-    expect(result.current.removeMut.isPending).toBe(false)
+    expect(result.current.addMut.isPending).toBe(false)
   })
 
-  it("invalidates waitlist queries after successful removal", async () => {
-    removeWaitlistEntry.mockResolvedValueOnce(undefined)
-    fetchWaitlist.mockResolvedValue([])
+  it("invalidates waitlist queries after successful add", async () => {
+    addToWaitlist.mockResolvedValueOnce(undefined)
 
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
@@ -144,7 +64,7 @@ describe("useWaitlistMutations", () => {
     const { result } = renderHook(() => useWaitlistMutations(), { wrapper })
 
     await act(async () => {
-      await result.current.removeMut.mutateAsync("wl-1")
+      await result.current.addMut.mutateAsync({} as Parameters<typeof addToWaitlist>[0])
     })
 
     expect(invalidateSpy).toHaveBeenCalledWith(

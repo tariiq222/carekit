@@ -1,12 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar03Icon, Tick02Icon, Clock01Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/features/data-table"
-import { StatsGrid } from "@/components/features/stats-grid"
-import { StatCard } from "@/components/features/stat-card"
 import { FilterBar } from "@/components/features/filter-bar"
 import { ErrorBanner } from "@/components/features/error-banner"
 import { getBookingColumns } from "@/components/features/bookings/booking-columns"
@@ -30,7 +27,7 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
   const { weekStartDayNumber } = useOrganizationConfig()
   const { isEnabled } = useFeatureFlagMap()
   const queryClient = useQueryClient()
-  const { bookings, stats, meta, loading, statsLoading, error, filters, setFilters, resetFilters, hasFilters, setPage } = useBookings()
+  const { bookings, meta, loading, error, filters, setFilters, resetFilters, hasFilters, setPage } = useBookings()
   const { confirmMut, noShowMut, adminCancelMut } = useBookingMutations()
   const { employees } = useEmployees()
   const [activeTimeTab, setActiveTimeTab] = useState("all")
@@ -91,22 +88,6 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
 
   return (
     <div className="flex flex-col gap-5">
-      {statsLoading && !stats ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[100px] rounded-lg" />
-          ))}
-        </div>
-      ) : stats ? (
-        <StatsGrid>
-          <StatCard title={t("bookings.stats.total")} value={stats.total ?? 0} icon={Calendar03Icon} iconColor="primary" />
-          <StatCard title={t("bookings.stats.confirmed")} value={stats.confirmed ?? 0} icon={Tick02Icon} iconColor="success" />
-          <StatCard title={t("bookings.stats.pending")} value={stats.pending ?? 0} icon={Clock01Icon} iconColor="warning" />
-          <StatCard title={t("bookings.stats.cancelRequests")} value={stats.pendingCancellation ?? 0} icon={Cancel01Icon} iconColor="warning" />
-        </StatsGrid>
-      ) : null}
-
-      {/* Filter + table grouped tightly — they're operationally coupled */}
       <div className="flex flex-col gap-3">
       <FilterBar
         search={{ value: search, onChange: setSearch, placeholder: t("bookings.searchPlaceholder") ?? "بحث بالاسم، رقم الحجز..." }}

@@ -17,7 +17,6 @@ import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { RevenueTab } from "@/components/features/reports/revenue-tab"
 import { BookingsTab } from "@/components/features/reports/bookings-tab"
 import { EmployeesTab } from "@/components/features/reports/employees-tab"
-import { exportRevenueCsv, exportBookingsCsv } from "@/lib/api/reports"
 
 const today = format(new Date(), "yyyy-MM-dd")
 const thirtyDaysAgo = format(subDays(new Date(), 30), "yyyy-MM-dd")
@@ -30,12 +29,10 @@ export default function ReportsPage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
 
   const handleExport = () => {
-    if (!dateFrom || !dateTo) return
-    if (activeTab === "revenue") exportRevenueCsv(dateFrom, dateTo)
-    if (activeTab === "bookings") exportBookingsCsv(dateFrom, dateTo)
+    // TODO: re-implement export when backend adds report export endpoints
   }
 
-  const showExport = activeTab === "revenue" || activeTab === "bookings"
+  const showExport = false
 
   return (
     <ListPageShell>

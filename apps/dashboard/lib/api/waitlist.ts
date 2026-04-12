@@ -21,7 +21,20 @@ export async function fetchWaitlist(
   )
 }
 
+/** Admin: add to waitlist — POST /dashboard/bookings/waitlist */
+export interface AddToWaitlistPayload {
+  clientId: string
+  serviceId: string
+  employeeId?: string
+  branchId?: string
+  preferredDate?: string
+}
+
+export async function addToWaitlist(payload: AddToWaitlistPayload): Promise<WaitlistEntry> {
+  return api.post<WaitlistEntry>("/dashboard/bookings/waitlist", payload)
+}
+
 /** Admin: remove a waitlist entry */
 export async function removeWaitlistEntry(id: string): Promise<void> {
-  await api.delete(`/bookings/waitlist/${id}`)
+  await api.delete(`/dashboard/bookings/waitlist/${id}`)
 }

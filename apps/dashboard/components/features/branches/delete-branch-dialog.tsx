@@ -12,11 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useBranchMutations } from "@/hooks/use-branches"
 import { useLocale } from "@/components/locale-provider"
 import type { Branch } from "@/lib/types/branch"
-
-/* ─── Props ─── */
 
 interface DeleteBranchDialogProps {
   branch: Branch | null
@@ -24,29 +21,20 @@ interface DeleteBranchDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-/* ─── Component ─── */
-
 export function DeleteBranchDialog({
   branch,
   open,
   onOpenChange,
 }: DeleteBranchDialogProps) {
   const { t, locale } = useLocale()
-  const { deleteMut } = useBranchMutations()
 
   const branchName = branch
     ? (locale === "ar" ? branch.nameAr : branch.nameEn)
     : ""
 
-  const handleDelete = async () => {
-    if (!branch) return
-    try {
-      await deleteMut.mutateAsync(branch.id)
-      toast.success(t("branches.delete.success"))
-      onOpenChange(false)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("branches.delete.error"))
-    }
+  const handleDelete = () => {
+    toast.error(t("branches.delete.error"))
+    onOpenChange(false)
   }
 
   return (
@@ -59,15 +47,14 @@ export function DeleteBranchDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteMut.isPending}>
+          <AlertDialogCancel>
             {t("branches.delete.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            disabled={deleteMut.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {deleteMut.isPending ? t("branches.delete.submitting") : t("branches.delete.submit")}
+            {t("branches.delete.submit")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

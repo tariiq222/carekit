@@ -34,7 +34,7 @@ const BOOKING_SETTINGS_KEY = ["booking-settings"] as const
 export function useOrganizationHours() {
   return useQuery({
     queryKey: ORGANIZATION_HOURS_KEY,
-    queryFn: fetchOrganizationHours,
+    queryFn: () => fetchOrganizationHours(),
     staleTime: 30 * 60 * 1000, // 30 min — hours rarely change
   })
 }

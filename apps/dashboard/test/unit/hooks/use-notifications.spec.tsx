@@ -3,18 +3,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 
-const { fetchNotifications, fetchUnreadCount, markAllAsRead, markAsRead } = vi.hoisted(() => ({
+const { fetchNotifications, fetchUnreadCount, markAllAsRead } = vi.hoisted(() => ({
   fetchNotifications: vi.fn(),
   fetchUnreadCount: vi.fn(),
   markAllAsRead: vi.fn(),
-  markAsRead: vi.fn(),
 }))
 
 vi.mock("@/lib/api/notifications", () => ({
   fetchNotifications,
   fetchUnreadCount,
   markAllAsRead,
-  markAsRead,
 }))
 
 import {
@@ -98,13 +96,4 @@ describe("useNotificationMutations", () => {
     await waitFor(() => expect(markAllAsRead).toHaveBeenCalled())
   })
 
-  it("markOneMut calls markAsRead with id", async () => {
-    markAsRead.mockResolvedValueOnce(undefined)
-
-    const { result } = renderHook(() => useNotificationMutations(), { wrapper: makeWrapper() })
-
-    act(() => { result.current.markOneMut.mutate("n-1") })
-
-    await waitFor(() => expect(markAsRead).toHaveBeenCalledWith("n-1", expect.anything()))
-  })
 })

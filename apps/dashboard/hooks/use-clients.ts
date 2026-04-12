@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient, useMutation, keepPreviousData } from "@tanstack/react-query"
 import { useState, useCallback } from "react"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchClients, fetchClient, fetchClientStats, fetchClientBookings, fetchClientListStats, updateClient, createWalkInClient, activateClient, deactivateClient } from "@/lib/api/clients"
+import { fetchClients, fetchClient, updateClient, createWalkInClient } from "@/lib/api/clients"
 import type { ClientListQuery } from "@/lib/types/client"
 
 /* ─── List Hook ─── */
@@ -24,7 +24,7 @@ export function useClients() {
     queryKey: queryKeys.clients.list(query),
     queryFn: () => fetchClients(query),
     placeholderData: keepPreviousData,
-    staleTime: 5 * 60 * 1000, // 5 min
+    staleTime: 5 * 60 * 1000,
   })
 
   const resetSearch = useCallback(() => {
@@ -58,17 +58,7 @@ export function useClient(id: string | null) {
     queryKey: queryKeys.clients.detail(id!),
     queryFn: () => fetchClient(id!),
     enabled: !!id,
-    staleTime: 10 * 60 * 1000, // 10 min
-  })
-}
-
-/* ─── Stats Hook ─── */
-
-export function useClientStats(id: string | null) {
-  return useQuery({
-    queryKey: queryKeys.clients.stats(id!),
-    queryFn: () => fetchClientStats(id!),
-    enabled: !!id,
+    staleTime: 10 * 60 * 1000,
   })
 }
 
@@ -90,31 +80,7 @@ export function useClientMutations() {
     onSuccess: () => invalidate(),
   })
 
-  const activateMut = useMutation({ mutationFn: activateClient, onSuccess: invalidate })
-  const deactivateMut = useMutation({ mutationFn: deactivateClient, onSuccess: invalidate })
-
-  return { createMut, updateMut, activateMut, deactivateMut }
-}
-
-/* ─── Bookings Hook ─── */
-
-export function useClientBookings(id: string | null) {
-  return useQuery({
-    queryKey: queryKeys.clients.bookings(id!),
-    queryFn: () => fetchClientBookings(id!),
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-/* ─── List Stats Hook ─── */
-
-export function useClientListStats() {
-  return useQuery({
-    queryKey: queryKeys.clients.listStats(),
-    queryFn: fetchClientListStats,
-    staleTime: 2 * 60 * 1000, // 2 min — changes more frequently than detail data
-  })
+  return { createMut, updateMut }
 }
 
 /* ─── Invalidation ─── */

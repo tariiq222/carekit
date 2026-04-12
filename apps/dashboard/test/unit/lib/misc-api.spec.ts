@@ -22,7 +22,6 @@ import {
 
 import {
   fetchActivityLogs,
-  fetchActivityLog,
 } from "@/lib/api/activity-log"
 
 import {
@@ -79,11 +78,6 @@ describe("activity-log api", () => {
     expect(getMock).toHaveBeenCalledWith("/activity-log", expect.anything())
   })
 
-  it("fetchActivityLog calls /activity-log/:id", async () => {
-    getMock.mockResolvedValueOnce({})
-    await fetchActivityLog("al-1")
-    expect(getMock).toHaveBeenCalledWith("/activity-log/al-1")
-  })
 })
 
 describe("waitlist api", () => {

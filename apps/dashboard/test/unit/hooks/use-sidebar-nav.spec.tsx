@@ -190,25 +190,6 @@ describe("useSidebarNav", () => {
     expect(items.some((i) => i.href === "/clients")).toBe(true)
   })
 
-  it("fetches booking stats and exposes actionableBookings", async () => {
-    fetchBookingStats.mockResolvedValue({ pending: 3, pendingCancellation: 2 })
-
-    const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
-
-    await waitFor(() =>
-      expect(result.current.actionableBookings).toBe(5),
-    )
-    expect(fetchBookingStats).toHaveBeenCalled()
-  })
-
-  it("actionableBookings is undefined before stats load", () => {
-    fetchBookingStats.mockReturnValue(new Promise(() => undefined))
-
-    const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
-
-    expect(result.current.actionableBookings).toBeUndefined()
-  })
-
   it("returns user display info from auth", async () => {
     fetchBookingStats.mockResolvedValue({})
 

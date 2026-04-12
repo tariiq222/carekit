@@ -8,7 +8,7 @@ vi.mock("@/lib/api", () => ({
   api: { get: getMock },
 }))
 
-import { fetchActivityLogs, fetchActivityLog } from "@/lib/api/activity-log"
+import { fetchActivityLogs } from "@/lib/api/activity-log"
 
 describe("activity-log api", () => {
   beforeEach(() => {
@@ -47,9 +47,4 @@ describe("activity-log api", () => {
     })
   })
 
-  it("fetchActivityLog calls /activity-log/:id", async () => {
-    getMock.mockResolvedValueOnce({ id: "1", action: "CREATE" })
-    await fetchActivityLog("1")
-    expect(getMock).toHaveBeenCalledWith("/activity-log/1")
-  })
 })

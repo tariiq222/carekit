@@ -5,11 +5,9 @@ import { queryKeys } from "@/lib/query-keys"
 import {
   fetchEmailTemplates,
   updateEmailTemplate,
-  previewEmailTemplate,
 } from "@/lib/api/email-templates"
 import type {
   UpdateEmailTemplatePayload,
-  TemplatePreviewPayload,
 } from "@/lib/types/email-template"
 
 /* ─── List ─── */
@@ -18,7 +16,7 @@ export function useEmailTemplates() {
   return useQuery({
     queryKey: queryKeys.emailTemplates.list(),
     queryFn: fetchEmailTemplates,
-    staleTime: 30 * 60 * 1000, // 30 min — templates rarely change
+    staleTime: 30 * 60 * 1000,
   })
 }
 
@@ -35,9 +33,11 @@ export function useEmailTemplateMutations() {
     onSuccess: invalidate,
   })
 
+  // previewMut stub — TODO: no backend endpoint for email preview
   const previewMut = useMutation({
-    mutationFn: ({ slug, ...payload }: { slug: string } & TemplatePreviewPayload) =>
-      previewEmailTemplate(slug, payload),
+    mutationFn: async (_args: { slug: string; context: Record<string, string>; lang: "ar" | "en" }) => {
+      return null as unknown as { subject: string; body: string }
+    },
   })
 
   return { updateMut, previewMut }

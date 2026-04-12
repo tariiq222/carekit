@@ -5,60 +5,39 @@ import type { ReactNode } from "react"
 
 const {
   fetchBookings,
-  fetchBookingStats,
   createBooking,
   rescheduleBooking,
   confirmBooking,
   completeBooking,
   markNoShow,
-  approveCancellation,
-  rejectCancellation,
   checkInBooking,
-  startBooking,
   adminCancelBooking,
-  employeeCancelBooking,
-  requestCancellation,
   createRecurringBooking,
-  clientReschedule,
 } = vi.hoisted(() => ({
   fetchBookings: vi.fn(),
-  fetchBookingStats: vi.fn(),
   createBooking: vi.fn(),
   rescheduleBooking: vi.fn(),
   confirmBooking: vi.fn(),
   completeBooking: vi.fn(),
   markNoShow: vi.fn(),
-  approveCancellation: vi.fn(),
-  rejectCancellation: vi.fn(),
   checkInBooking: vi.fn(),
-  startBooking: vi.fn(),
   adminCancelBooking: vi.fn(),
-  employeeCancelBooking: vi.fn(),
-  requestCancellation: vi.fn(),
   createRecurringBooking: vi.fn(),
-  clientReschedule: vi.fn(),
 }))
 
 vi.mock("@/lib/api/bookings", () => ({
   fetchBookings,
-  fetchBookingStats,
   createBooking,
   rescheduleBooking,
   confirmBooking,
   completeBooking,
   markNoShow,
-  approveCancellation,
-  rejectCancellation,
   checkInBooking,
-  startBooking,
   adminCancelBooking,
-  employeeCancelBooking,
-  requestCancellation,
   createRecurringBooking,
-  clientReschedule,
 }))
 
-import { useBookings, useBookingStats, useTodayBookings } from "@/hooks/use-bookings"
+import { useBookings, useTodayBookings } from "@/hooks/use-bookings"
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -75,7 +54,6 @@ describe("useBookings", () => {
   it("fetches bookings and returns items", async () => {
     const items = [{ id: "bk-1", status: "PENDING" }]
     fetchBookings.mockResolvedValue({ items, meta: { total: 1 } })
-    fetchBookingStats.mockResolvedValue({ pending: 2 })
 
     const { result } = renderHook(() => useBookings(), { wrapper: makeWrapper() })
 
@@ -90,7 +68,6 @@ describe("useBookings", () => {
 
   it("returns empty bookings initially", () => {
     fetchBookings.mockReturnValueOnce(new Promise(() => undefined))
-    fetchBookingStats.mockReturnValueOnce(new Promise(() => undefined))
 
     const { result } = renderHook(() => useBookings(), { wrapper: makeWrapper() })
 
@@ -101,7 +78,6 @@ describe("useBookings", () => {
 
   it("setFilters applies status filter and resets page", async () => {
     fetchBookings.mockResolvedValue({ items: [], meta: { total: 0 } })
-    fetchBookingStats.mockResolvedValue({})
 
     const { result } = renderHook(() => useBookings(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -117,7 +93,6 @@ describe("useBookings", () => {
 
   it("resetFilters clears all filters", async () => {
     fetchBookings.mockResolvedValue({ items: [], meta: { total: 0 } })
-    fetchBookingStats.mockResolvedValue({})
 
     const { result } = renderHook(() => useBookings(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -132,30 +107,6 @@ describe("useBookings", () => {
     })
   })
 
-  it("exposes stats from booking stats query", async () => {
-    fetchBookings.mockResolvedValue({ items: [], meta: { total: 0 } })
-    fetchBookingStats.mockResolvedValue({ pending: 5, pendingCancellation: 2 })
-
-    const { result } = renderHook(() => useBookings(), { wrapper: makeWrapper() })
-    await waitFor(() => expect(result.current.statsLoading).toBe(false))
-
-    expect(result.current.stats).toEqual({ pending: 5, pendingCancellation: 2 })
-  })
-})
-
-describe("useBookingStats", () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it("fetches booking stats", async () => {
-    fetchBookingStats.mockResolvedValueOnce({ pending: 3, confirmed: 10 })
-
-    const { result } = renderHook(() => useBookingStats(), { wrapper: makeWrapper() })
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-
-    expect(fetchBookingStats).toHaveBeenCalled()
-    expect(result.current.data).toEqual({ pending: 3, confirmed: 10 })
-  })
 })
 
 describe("useTodayBookings", () => {

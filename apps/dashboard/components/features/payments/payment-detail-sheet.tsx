@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
-import { fetchPayment } from "@/lib/api/payments"
+import { fetchPayments } from "@/lib/api/payments"
 import { queryKeys } from "@/lib/query-keys"
 import { useLocale } from "@/components/locale-provider"
 import { useOrganizationConfig } from "@/hooks/use-organization-config"
@@ -62,7 +62,10 @@ export function PaymentDetailSheet({
   const { t } = useLocale()
   const { data: payment, isLoading } = useQuery({
     queryKey: queryKeys.payments.detail(paymentId ?? ""),
-    queryFn: () => fetchPayment(paymentId!),
+    queryFn: async () => {
+      const res = await fetchPayments({ page: 1, perPage: 1 })
+      return res.items.find((p) => p.id === paymentId) ?? null
+    },
     enabled: !!paymentId && open,
   })
 

@@ -7,10 +7,6 @@ import {
   fetchBranches,
   createBranch,
   updateBranch,
-  deleteBranch,
-  fetchBranchEmployees,
-  assignBranchEmployees,
-  removeBranchEmployee,
 } from "@/lib/api/branches"
 import type { BranchListQuery } from "@/lib/types/branch"
 
@@ -31,7 +27,7 @@ export function useBranches() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.branches.list(query),
     queryFn: () => fetchBranches(query),
-    staleTime: 5 * 60 * 1000, // 5 min
+    staleTime: 5 * 60 * 1000,
   })
 
   const resetFilters = useCallback(() => {
@@ -74,42 +70,5 @@ export function useBranchMutations() {
     onSuccess: invalidate,
   })
 
-  const deleteMut = useMutation({
-    mutationFn: deleteBranch,
-    onSuccess: invalidate,
-  })
-
-  return { createMut, updateMut, deleteMut }
-}
-
-/* ─── Branch Employees ─── */
-
-export function useBranchEmployees(branchId: string | null) {
-  return useQuery({
-    queryKey: queryKeys.branches.employees(branchId ?? ""),
-    queryFn: () => fetchBranchEmployees(branchId!),
-    enabled: !!branchId,
-  })
-}
-
-export function useBranchEmployeeMutations() {
-  const queryClient = useQueryClient()
-
-  const assignMut = useMutation({
-    mutationFn: ({ branchId, employeeIds }: { branchId: string; employeeIds: string[] }) =>
-      assignBranchEmployees(branchId, employeeIds),
-    onSuccess: (_data, { branchId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.branches.employees(branchId) })
-    },
-  })
-
-  const removeMut = useMutation({
-    mutationFn: ({ branchId, employeeId }: { branchId: string; employeeId: string }) =>
-      removeBranchEmployee(branchId, employeeId),
-    onSuccess: (_data, { branchId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.branches.employees(branchId) })
-    },
-  })
-
-  return { assignMut, removeMut }
+  return { createMut, updateMut }
 }

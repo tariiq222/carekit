@@ -8,17 +8,10 @@ import Image from "next/image"
 import { WizardCard } from "@/components/features/bookings/wizard-card"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchServiceEmployees } from "@/lib/api/services"
 import { fetchEmployees } from "@/lib/api/employees"
-import type { ServiceEmployee } from "@/lib/types/service"
 import type { Employee } from "@/lib/types/employee"
 
 /* ─── Helpers ─── */
-
-function getEmployeeName(p: ServiceEmployee, locale: string): string {
-  if (locale === "ar" && p.employee.nameAr) return p.employee.nameAr
-  return `${p.employee.user.firstName} ${p.employee.user.lastName}`.trim()
-}
 
 function getEmployeeNameFromFull(p: Employee, locale: string): string {
   if (locale === "ar" && p.nameAr) return p.nameAr
@@ -73,75 +66,17 @@ interface StepEmployeeProps {
   onSelect: (employeeId: string, employeeName: string) => void
 }
 
-export function StepEmployee({ serviceId, onSelect }: StepEmployeeProps) {
+export function StepEmployee({ serviceId: _serviceId, onSelect }: StepEmployeeProps) {
   const { t, locale } = useLocale()
-  const hasService = serviceId.length > 0
 
-  /* ── Mode A: service already selected → fetch employees for that service ── */
-  const { data: serviceEmployees, isLoading: loadingService } = useQuery({
-    queryKey: queryKeys.services.employees(serviceId),
-    queryFn: () => fetchServiceEmployees(serviceId),
-    staleTime: 5 * 60 * 1000,
-    enabled: hasService,
-  })
-
-  /* ── Mode B: no service yet (employee_first) → fetch all active employees ── */
   const { data: allEmployees, isLoading: loadingAll } = useQuery({
     queryKey: queryKeys.employees.list({ isActive: true, perPage: 100 }),
     queryFn: () => fetchEmployees({ isActive: true, perPage: 100 }),
     staleTime: 5 * 60 * 1000,
-    enabled: !hasService,
   })
 
-  const isLoading = hasService ? loadingService : loadingAll
+  if (loadingAll) return <StepEmployeeSkeleton />
 
-  if (isLoading) return <StepEmployeeSkeleton />
-
-  /* ── Render Mode A: ServiceEmployee list ── */
-  if (hasService) {
-    const employees = (serviceEmployees ?? []).filter(
-      (p) => p.isActive && p.employee.isActive,
-    )
-
-    return (
-      <div className="flex flex-col gap-2">
-        {employees.map((p) => {
-          const name = getEmployeeName(p, locale)
-          const title = p.employee.title ?? ""
-
-          return (
-            <WizardCard
-              key={p.id}
-              onClick={() => onSelect(p.employee.id, name)}
-              className="py-3 px-5"
-            >
-              <div className="flex items-center gap-3">
-                <EmployeeAvatar avatarUrl={p.employee.avatarUrl} name={name} />
-                <div className="flex flex-col items-start gap-0.5 min-w-0">
-                  <span className="text-base font-semibold text-foreground leading-tight truncate w-full">
-                    {name}
-                  </span>
-                  {title && (
-                    <span className="text-sm text-muted-foreground truncate w-full">
-                      {title}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </WizardCard>
-          )
-        })}
-
-        {employees.length === 0 && (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            {t("bookings.wizard.noEmployees")}
-          </p>
-        )}
-      </div>
-    )
-  }
-
-  /* ── Render Mode B: full Employee list ── */
   const employees = (allEmployees?.items ?? []).filter((p) => p.isActive)
 
   return (

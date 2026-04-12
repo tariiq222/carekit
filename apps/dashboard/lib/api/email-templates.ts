@@ -13,13 +13,13 @@ import type {
 /* ─── List ─── */
 
 export async function fetchEmailTemplates(): Promise<EmailTemplate[]> {
-  return api.get<EmailTemplate[]>("/email-templates")
+  return api.get<EmailTemplate[]>("/dashboard/comms/email-templates")
 }
 
 /* ─── Detail ─── */
 
-export async function fetchEmailTemplate(slug: string): Promise<EmailTemplate> {
-  return api.get<EmailTemplate>(`/email-templates/${slug}`)
+export async function fetchEmailTemplate(id: string): Promise<EmailTemplate> {
+  return api.get<EmailTemplate>(`/dashboard/comms/email-templates/${id}`)
 }
 
 /* ─── Update ─── */
@@ -29,19 +29,7 @@ export async function updateEmailTemplate(
   payload: UpdateEmailTemplatePayload,
 ): Promise<EmailTemplate> {
   return api.patch<EmailTemplate>(
-    `/email-templates/${id}`,
-    payload,
-  )
-}
-
-/* ─── Preview ─── */
-
-export async function previewEmailTemplate(
-  slug: string,
-  payload: TemplatePreviewPayload,
-): Promise<TemplatePreviewResult> {
-  return api.post<TemplatePreviewResult>(
-    `/email-templates/${slug}/preview`,
+    `/dashboard/comms/email-templates/${id}`,
     payload,
   )
 }

@@ -53,7 +53,7 @@ export async function fetchMe(): Promise<AuthUser> {
 
 export async function refreshToken(): Promise<AuthResponse> {
   // Cookie is sent automatically via credentials: 'include'
-  const data = await api.post<AuthResponse>("/auth/refresh-token")
+  const data = await api.post<AuthResponse>("/auth/refresh")
 
   setAccessToken(data.accessToken)
   return data

@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchBookingStatusLog } from "@/lib/api/bookings"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLocale } from "@/components/locale-provider"
 import { format } from "date-fns"
@@ -30,8 +29,7 @@ export function BookingStatusLog({ bookingId }: BookingStatusLogProps) {
 
   const { data: logs, isLoading } = useQuery({
     queryKey: queryKeys.bookings.statusLog(bookingId),
-    queryFn: () => fetchBookingStatusLog(bookingId),
-    staleTime: 30_000,
+    enabled: false,
   })
 
   if (isLoading) {
@@ -44,7 +42,7 @@ export function BookingStatusLog({ bookingId }: BookingStatusLogProps) {
     )
   }
 
-  if (!logs?.length) {
+  if (!logs || !Array.isArray(logs) || !logs.length) {
     return (
       <p className="text-sm text-muted-foreground py-4 text-center">
         {t("bookings.statusLog.empty")}

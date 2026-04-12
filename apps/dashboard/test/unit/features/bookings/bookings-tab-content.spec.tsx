@@ -122,8 +122,9 @@ describe("BookingsTabContent — walk_in feature flag guard", () => {
   it("includes walk_in filter option when isEnabled('walk_in') = true", () => {
     useFeatureFlagMap.mockReturnValue({
       map: { walk_in: true },
-      isEnabled: (key: string) => key === "walk_in",
-    })
+      isEnabled: vi.fn((_key: string) => _key === "walk_in"),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any)
 
     render(<BookingsTabContent onRowClick={vi.fn()} onEditClick={vi.fn()} />, {
       wrapper: makeWrapper(),
@@ -135,8 +136,9 @@ describe("BookingsTabContent — walk_in feature flag guard", () => {
   it("excludes walk_in filter option when isEnabled('walk_in') = false", () => {
     useFeatureFlagMap.mockReturnValue({
       map: { walk_in: false },
-      isEnabled: (key: string) => key === "walk_in" ? false : true,
-    })
+      isEnabled: vi.fn((_key: string) => _key === "walk_in" ? false : true),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any)
 
     render(<BookingsTabContent onRowClick={vi.fn()} onEditClick={vi.fn()} />, {
       wrapper: makeWrapper(),

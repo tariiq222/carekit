@@ -19,7 +19,7 @@ const API_BASE_URL =
 const PROXY_BASE_URL = "/api/proxy"
 
 // Auth endpoints that carry httpOnly cookies — must go through same-origin proxy
-const COOKIE_ENDPOINTS = ["/auth/login", "/auth/logout", "/auth/refresh-token"]
+const COOKIE_ENDPOINTS = ["/auth/login", "/auth/logout", "/auth/refresh"]
 
 function resolveUrl(endpoint: string): string {
   if (typeof window !== "undefined" && COOKIE_ENDPOINTS.some((p) => endpoint.startsWith(p))) {

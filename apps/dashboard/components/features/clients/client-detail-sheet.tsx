@@ -12,9 +12,8 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
-import { useClient, useClientStats } from "@/hooks/use-clients"
+import { useClient } from "@/hooks/use-clients"
 import { useLocale } from "@/components/locale-provider"
-import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 
 interface ClientDetailSheetProps {
   clientId: string | null
@@ -29,7 +28,6 @@ export function ClientDetailSheet({
 }: ClientDetailSheetProps) {
   const { t, locale } = useLocale()
   const { data: client, isLoading } = useClient(clientId)
-  const { data: stats, isLoading: statsLoading } = useClientStats(clientId)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -98,45 +96,9 @@ export function ClientDetailSheet({
 
                 {/* Stats */}
                 <DetailSection title={t("clients.detail.statistics")}>
-                  {statsLoading || !stats ? (
-                    <div className="flex flex-col gap-2">
-                      {Array.from({ length: 4 }).map((_, i) => (
-                        <Skeleton key={i} className="h-5 w-full" />
-                      ))}
-                    </div>
-                  ) : (
-                    <>
-                      <DetailRow
-                        label={t("clients.detail.totalBookings")}
-                        value={String(stats.totalBookings)}
-                        numeric
-                      />
-                      <DetailRow
-                        label={t("clients.detail.completed")}
-                        value={String(stats.completedBookings)}
-                        numeric
-                      />
-                      <DetailRow
-                        label={t("clients.detail.cancelled")}
-                        value={String(stats.cancelledBookings)}
-                        numeric
-                      />
-                      <DetailRow
-                        label={t("clients.detail.totalSpent")}
-                        value={<FormattedCurrency amount={stats.totalSpent} locale={locale} decimals={2} />}
-                        numeric
-                      />
-                      <DetailRow
-                        label={t("clients.detail.lastVisit")}
-                        value={
-                          stats.lastVisit
-                            ? new Date(stats.lastVisit).toLocaleDateString()
-                            : "—"
-                        }
-                        numeric
-                      />
-                    </>
-                  )}
+                  <p className="text-sm text-muted-foreground">
+                    —
+                  </p>
                 </DetailSection>
               </div>
             </SheetBody>

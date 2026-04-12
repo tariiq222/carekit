@@ -7,7 +7,6 @@ import {
   fetchNotifications,
   fetchUnreadCount,
   markAllAsRead,
-  markAsRead,
 } from "@/lib/api/notifications"
 import type { NotificationListQuery } from "@/lib/types/notification"
 
@@ -66,10 +65,5 @@ export function useNotificationMutations() {
     onSuccess: invalidate,
   })
 
-  const markOneMut = useMutation({
-    mutationFn: markAsRead,
-    onSuccess: invalidate,
-  })
-
-  return { markAllMut, markOneMut }
+  return { markAllMut }
 }

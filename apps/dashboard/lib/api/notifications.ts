@@ -15,7 +15,7 @@ import type {
 export async function fetchNotifications(
   query: NotificationListQuery = {},
 ): Promise<PaginatedResponse<Notification>> {
-  return api.get<PaginatedResponse<Notification>>("/notifications", {
+  return api.get<PaginatedResponse<Notification>>("/dashboard/comms/notifications", {
     page: query.page,
     perPage: query.perPage,
   })
@@ -23,7 +23,7 @@ export async function fetchNotifications(
 
 export async function fetchUnreadCount(): Promise<number> {
   const res = await api.get<UnreadCount>(
-    "/notifications/unread-count",
+    "/dashboard/comms/notifications/unread-count",
   )
   return res.count
 }
@@ -31,9 +31,5 @@ export async function fetchUnreadCount(): Promise<number> {
 /* ─── Mutations ─── */
 
 export async function markAllAsRead(): Promise<void> {
-  await api.patch("/notifications/read-all")
-}
-
-export async function markAsRead(id: string): Promise<void> {
-  await api.patch(`/notifications/${id}/read`)
+  await api.patch("/dashboard/comms/notifications/mark-read")
 }

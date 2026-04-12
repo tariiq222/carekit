@@ -16,7 +16,6 @@ import {
   fetchNotifications,
   fetchUnreadCount,
   markAllAsRead,
-  markAsRead,
 } from "@/lib/api/notifications"
 
 describe("notifications api", () => {
@@ -41,9 +40,4 @@ describe("notifications api", () => {
     expect(patchMock).toHaveBeenCalledWith("/notifications/read-all")
   })
 
-  it("markAsRead patches /notifications/:id/read", async () => {
-    patchMock.mockResolvedValueOnce(undefined)
-    await markAsRead("n-1")
-    expect(patchMock).toHaveBeenCalledWith("/notifications/n-1/read")
-  })
 })

@@ -128,13 +128,4 @@ describe("useDepartmentMutations", () => {
     await waitFor(() => expect(updateDepartment).toHaveBeenCalledWith("d-1", expect.objectContaining({ nameAr: "updated" })))
   })
 
-  it("deleteMut calls deleteDepartment with id", async () => {
-    deleteDepartment.mockResolvedValueOnce(undefined)
-
-    const { result } = renderHook(() => useDepartmentMutations(), { wrapper: createWrapper() })
-
-    act(() => { result.current.deleteMut.mutate("d-1") })
-
-    await waitFor(() => expect(deleteDepartment).toHaveBeenCalledWith("d-1", expect.anything()))
-  })
 })

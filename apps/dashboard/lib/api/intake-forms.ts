@@ -17,11 +17,11 @@ import type {
 export async function fetchIntakeForms(
   query?: IntakeFormListQuery,
 ): Promise<IntakeFormApi[]> {
-  return api.get<IntakeFormApi[]>("/intake-forms", query as Record<string, string | boolean | undefined>)
+  return api.get<IntakeFormApi[]>("/dashboard/organization/intake-forms", query as Record<string, string | boolean | undefined>)
 }
 
 export async function fetchIntakeForm(formId: string): Promise<IntakeFormApi> {
-  return api.get<IntakeFormApi>(`/intake-forms/${formId}`)
+  return api.get<IntakeFormApi>(`/dashboard/organization/intake-forms/${formId}`)
 }
 
 /* ─── Create / Update / Delete ─── */
@@ -29,18 +29,14 @@ export async function fetchIntakeForm(formId: string): Promise<IntakeFormApi> {
 export async function createIntakeForm(
   payload: CreateIntakeFormApiPayload,
 ): Promise<IntakeFormApi> {
-  return api.post<IntakeFormApi>("/intake-forms", payload)
+  return api.post<IntakeFormApi>("/dashboard/organization/intake-forms", payload)
 }
 
 export async function updateIntakeForm(
   formId: string,
   payload: UpdateIntakeFormApiPayload,
 ): Promise<IntakeFormApi> {
-  return api.patch<IntakeFormApi>(`/intake-forms/${formId}`, payload)
-}
-
-export async function deleteIntakeForm(formId: string): Promise<void> {
-  return api.delete(`/intake-forms/${formId}`)
+  return api.patch<IntakeFormApi>(`/dashboard/organization/intake-forms/${formId}`, payload)
 }
 
 /* ─── Fields ─── */
@@ -49,7 +45,12 @@ export async function setIntakeFields(
   formId: string,
   payload: SetFieldsApiPayload,
 ): Promise<IntakeFormApi["fields"]> {
-  return api.put<IntakeFormApi["fields"]>(`/intake-forms/${formId}/fields`, payload)
+  return api.put<IntakeFormApi["fields"]>(`/dashboard/organization/intake-forms/${formId}/fields`, payload)
+}
+
+/** TODO: no backend endpoint — kept for type safety */
+export async function deleteIntakeForm(_formId: string): Promise<void> {
+  // no-op stub — backend does not expose DELETE /intake-forms/:id
 }
 
 /* ─── Responses ─── */
@@ -57,5 +58,5 @@ export async function setIntakeFields(
 export async function fetchIntakeResponses(
   bookingId: string,
 ): Promise<IntakeResponseApi[]> {
-  return api.get<IntakeResponseApi[]>(`/intake-forms/responses/${bookingId}`)
+  return api.get<IntakeResponseApi[]>(`/dashboard/organization/intake-forms/responses/${bookingId}`)
 }

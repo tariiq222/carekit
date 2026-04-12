@@ -13,21 +13,14 @@ vi.mock("@/lib/api", () => ({
 import {
   fetchBookings,
   fetchBooking,
-  fetchBookingStats,
   createBooking,
   rescheduleBooking,
   confirmBooking,
   completeBooking,
   markNoShow,
-  approveCancellation,
-  rejectCancellation,
   checkInBooking,
-  startBooking,
   adminCancelBooking,
-  employeeCancelBooking,
-  requestCancellation,
   createRecurringBooking,
-  clientReschedule,
 } from "@/lib/api/bookings"
 
 describe("bookings api", () => {
@@ -45,12 +38,6 @@ describe("bookings api", () => {
     getMock.mockResolvedValueOnce({ id: "bk-1" })
     await fetchBooking("bk-1")
     expect(getMock).toHaveBeenCalledWith("/bookings/bk-1")
-  })
-
-  it("fetchBookingStats calls /bookings/stats", async () => {
-    getMock.mockResolvedValueOnce({})
-    await fetchBookingStats()
-    expect(getMock).toHaveBeenCalledWith("/bookings/stats")
   })
 
   it("createBooking posts to /bookings", async () => {
@@ -83,28 +70,10 @@ describe("bookings api", () => {
     expect(postMock).toHaveBeenCalledWith("/bookings/bk-1/no-show")
   })
 
-  it("approveCancellation posts to /bookings/:id/cancel/approve", async () => {
-    postMock.mockResolvedValueOnce({ id: "bk-1" })
-    await approveCancellation("bk-1", {} as Parameters<typeof approveCancellation>[1])
-    expect(postMock).toHaveBeenCalledWith("/bookings/bk-1/cancel/approve", expect.anything())
-  })
-
-  it("rejectCancellation posts to /bookings/:id/cancel/reject", async () => {
-    postMock.mockResolvedValueOnce({ id: "bk-1" })
-    await rejectCancellation("bk-1", {} as Parameters<typeof rejectCancellation>[1])
-    expect(postMock).toHaveBeenCalledWith("/bookings/bk-1/cancel/reject", expect.anything())
-  })
-
   it("checkInBooking posts to /bookings/:id/check-in", async () => {
     postMock.mockResolvedValueOnce({ id: "bk-1" })
     await checkInBooking("bk-1")
     expect(postMock).toHaveBeenCalledWith("/bookings/bk-1/check-in")
-  })
-
-  it("startBooking posts to /bookings/:id/start", async () => {
-    postMock.mockResolvedValueOnce({ id: "bk-1" })
-    await startBooking("bk-1")
-    expect(postMock).toHaveBeenCalledWith("/bookings/bk-1/start")
   })
 
   it("adminCancelBooking posts to /bookings/:id/admin-cancel", async () => {
@@ -113,27 +82,10 @@ describe("bookings api", () => {
     expect(postMock).toHaveBeenCalledWith("/bookings/bk-1/admin-cancel", expect.anything())
   })
 
-  it("employeeCancelBooking posts to /bookings/:id/employee-cancel", async () => {
-    postMock.mockResolvedValueOnce({ id: "bk-1" })
-    await employeeCancelBooking("bk-1", {} as Parameters<typeof employeeCancelBooking>[1])
-    expect(postMock).toHaveBeenCalledWith("/bookings/bk-1/employee-cancel", expect.anything())
-  })
-
-  it("requestCancellation posts to /bookings/:id/cancel-request", async () => {
-    postMock.mockResolvedValueOnce({ id: "bk-1" })
-    await requestCancellation("bk-1", {} as Parameters<typeof requestCancellation>[1])
-    expect(postMock).toHaveBeenCalledWith("/bookings/bk-1/cancel-request", expect.anything())
-  })
-
   it("createRecurringBooking posts to /bookings/recurring", async () => {
     postMock.mockResolvedValueOnce([])
     await createRecurringBooking({} as Parameters<typeof createRecurringBooking>[0])
     expect(postMock).toHaveBeenCalledWith("/bookings/recurring", expect.anything())
   })
 
-  it("clientReschedule posts to /bookings/:id/client-reschedule", async () => {
-    postMock.mockResolvedValueOnce({ id: "bk-1" })
-    await clientReschedule("bk-1", {} as Parameters<typeof clientReschedule>[1])
-    expect(postMock).toHaveBeenCalledWith("/bookings/bk-1/client-reschedule", expect.anything())
-  })
 })

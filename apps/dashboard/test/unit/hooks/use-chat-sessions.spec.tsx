@@ -71,7 +71,7 @@ describe("useChatSessions", () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    result.current.setFilters({ language: "ar" })
+    ;(result.current.setFilters as (_f: unknown) => void)({ language: "ar" })
 
     await waitFor(() =>
       expect(fetchChatSessions).toHaveBeenCalledWith(

@@ -8,11 +8,11 @@ import type { WhiteLabelConfig, UpdateWhitelabelPayload, PublicBranding } from "
 /* ─── Queries ─── */
 
 export async function fetchWhitelabel(): Promise<WhiteLabelConfig> {
-  return api.get<WhiteLabelConfig>("/whitelabel")
+  return api.get<WhiteLabelConfig>("/dashboard/organization/branding")
 }
 
 export async function fetchPublicBranding(): Promise<PublicBranding> {
-  return api.get<PublicBranding>("/whitelabel/public")
+  return api.get<PublicBranding>("/public/branding")
 }
 
 /* ─── Mutations ─── */
@@ -20,5 +20,5 @@ export async function fetchPublicBranding(): Promise<PublicBranding> {
 export async function updateWhitelabel(
   data: UpdateWhitelabelPayload,
 ): Promise<WhiteLabelConfig> {
-  return api.put<WhiteLabelConfig>("/whitelabel", data)
+  return api.post<WhiteLabelConfig>("/dashboard/organization/branding", data)
 }

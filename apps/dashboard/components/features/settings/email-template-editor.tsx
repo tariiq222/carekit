@@ -73,7 +73,7 @@ export function EmailTemplateEditor({ template, onBack }: Props) {
     previewMut.mutate(
       { slug: template.slug, context: sampleContext, lang: locale as "ar" | "en" },
       {
-        onSuccess: (data) => setPreview(data),
+        onSuccess: (data: { subject: string; body: string } | null) => { if (data) setPreview(data) },
         onError: () => toast.error(t("settings.error")),
       },
     )

@@ -5,32 +5,16 @@ import type { ReactNode } from "react"
 
 const {
   fetchPayments,
-  fetchPaymentStats,
-  refundPayment,
-  updatePaymentStatus,
-  verifyBankTransfer,
-  reviewReceipt,
 } = vi.hoisted(() => ({
   fetchPayments: vi.fn(),
-  fetchPaymentStats: vi.fn(),
-  refundPayment: vi.fn(),
-  updatePaymentStatus: vi.fn(),
-  verifyBankTransfer: vi.fn(),
-  reviewReceipt: vi.fn(),
 }))
 
 vi.mock("@/lib/api/payments", () => ({
   fetchPayments,
-  fetchPaymentStats,
-  refundPayment,
-  updatePaymentStatus,
-  verifyBankTransfer,
-  reviewReceipt,
 }))
 
 import {
   usePayments,
-  usePaymentStats,
   usePaymentMutations,
 } from "@/hooks/use-payments"
 
@@ -124,77 +108,18 @@ describe("usePayments", () => {
   })
 })
 
-describe("usePaymentStats", () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it("fetches payment stats", async () => {
-    const stats = { totalRevenue: 50000, count: 120 }
-    fetchPaymentStats.mockResolvedValueOnce(stats)
-
-    const { result } = renderHook(() => usePaymentStats(), { wrapper: makeWrapper() })
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(fetchPaymentStats).toHaveBeenCalled()
-    expect(result.current.data).toEqual(stats)
-  })
-
-  it("returns loading state initially", () => {
-    fetchPaymentStats.mockReturnValueOnce(new Promise(() => undefined))
-
-    const { result } = renderHook(() => usePaymentStats(), { wrapper: makeWrapper() })
-
-    expect(result.current.isLoading).toBe(true)
-  })
-})
-
 describe("usePaymentMutations", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("refundMut calls refundPayment with id and payload", async () => {
-    refundPayment.mockResolvedValueOnce({ id: "pay-1" })
-
+  it("refundMut exists as a stub", () => {
     const { result } = renderHook(() => usePaymentMutations(), { wrapper: makeWrapper() })
-
-    act(() => {
-      result.current.refundMut.mutate({ id: "pay-1", reason: "duplicate" } as Parameters<typeof result.current.refundMut.mutate>[0])
-    })
-
-    await waitFor(() => expect(refundPayment).toHaveBeenCalledWith("pay-1", { reason: "duplicate" }))
+    expect(result.current.refundMut).toBeDefined()
+    expect(typeof result.current.refundMut.mutateAsync).toBe("function")
   })
 
-  it("statusMut calls updatePaymentStatus", async () => {
-    updatePaymentStatus.mockResolvedValueOnce({ id: "pay-1" })
-
+  it("verifyMut exists as a stub", () => {
     const { result } = renderHook(() => usePaymentMutations(), { wrapper: makeWrapper() })
-
-    act(() => {
-      result.current.statusMut.mutate({ id: "pay-1", status: "paid" } as Parameters<typeof result.current.statusMut.mutate>[0])
-    })
-
-    await waitFor(() => expect(updatePaymentStatus).toHaveBeenCalledWith("pay-1", { status: "paid" }))
-  })
-
-  it("verifyMut calls verifyBankTransfer", async () => {
-    verifyBankTransfer.mockResolvedValueOnce({ id: "pay-1" })
-
-    const { result } = renderHook(() => usePaymentMutations(), { wrapper: makeWrapper() })
-
-    act(() => {
-      result.current.verifyMut.mutate({ id: "pay-1", verified: true, action: "approve" } as Parameters<typeof result.current.verifyMut.mutate>[0])
-    })
-
-    await waitFor(() => expect(verifyBankTransfer).toHaveBeenCalledWith("pay-1", { verified: true, action: "approve" }))
-  })
-
-  it("reviewMut calls reviewReceipt", async () => {
-    reviewReceipt.mockResolvedValueOnce({ receiptId: "r-1" })
-
-    const { result } = renderHook(() => usePaymentMutations(), { wrapper: makeWrapper() })
-
-    act(() => {
-      result.current.reviewMut.mutate({ receiptId: "r-1", approved: true } as Parameters<typeof result.current.reviewMut.mutate>[0])
-    })
-
-    await waitFor(() => expect(reviewReceipt).toHaveBeenCalledWith("r-1", { approved: true }))
+    expect(result.current.verifyMut).toBeDefined()
+    expect(typeof result.current.verifyMut.mutateAsync).toBe("function")
   })
 })

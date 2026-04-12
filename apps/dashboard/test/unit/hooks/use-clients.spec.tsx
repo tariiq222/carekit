@@ -6,35 +6,25 @@ import type { ReactNode } from "react"
 const {
   fetchClients,
   fetchClient,
-  fetchClientStats,
   updateClient,
   createWalkInClient,
-  activateClient,
-  deactivateClient,
 } = vi.hoisted(() => ({
   fetchClients: vi.fn(),
   fetchClient: vi.fn(),
-  fetchClientStats: vi.fn(),
   updateClient: vi.fn(),
   createWalkInClient: vi.fn(),
-  activateClient: vi.fn(),
-  deactivateClient: vi.fn(),
 }))
 
 vi.mock("@/lib/api/clients", () => ({
   fetchClients,
   fetchClient,
-  fetchClientStats,
   updateClient,
   createWalkInClient,
-  activateClient,
-  deactivateClient,
 }))
 
 import {
   useClients,
   useClient,
-  useClientStats,
   useClientMutations,
   useInvalidateClients,
 } from "@/hooks/use-clients"
@@ -139,26 +129,6 @@ describe("useClient", () => {
   })
 })
 
-describe("useClientStats", () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it("fetches stats for a given client id", async () => {
-    const stats = { totalBookings: 5, totalSpend: 1500 }
-    fetchClientStats.mockResolvedValueOnce(stats)
-
-    const { result } = renderHook(() => useClientStats("p-1"), { wrapper: makeWrapper() })
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(fetchClientStats).toHaveBeenCalledWith("p-1")
-    expect(result.current.data).toEqual(stats)
-  })
-
-  it("does not fetch when id is null", () => {
-    renderHook(() => useClientStats(null), { wrapper: makeWrapper() })
-    expect(fetchClientStats).not.toHaveBeenCalled()
-  })
-})
-
 describe("useClientMutations", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
@@ -187,25 +157,6 @@ describe("useClientMutations", () => {
     await waitFor(() => expect(updateClient).toHaveBeenCalledWith("p-1", expect.objectContaining({ name: "Updated" })))
   })
 
-  it("activateMut calls activateClient", async () => {
-    activateClient.mockResolvedValueOnce({ id: "p-1" })
-
-    const { result } = renderHook(() => useClientMutations(), { wrapper: makeWrapper() })
-
-    act(() => { result.current.activateMut.mutate("p-1") })
-
-    await waitFor(() => expect(activateClient).toHaveBeenCalledWith("p-1", expect.anything()))
-  })
-
-  it("deactivateMut calls deactivateClient", async () => {
-    deactivateClient.mockResolvedValueOnce({ id: "p-1" })
-
-    const { result } = renderHook(() => useClientMutations(), { wrapper: makeWrapper() })
-
-    act(() => { result.current.deactivateMut.mutate("p-1") })
-
-    await waitFor(() => expect(deactivateClient).toHaveBeenCalledWith("p-1", expect.anything()))
-  })
 })
 
 describe("useInvalidateClients", () => {

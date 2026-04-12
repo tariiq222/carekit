@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 // ── Mock next/navigation — must include ALL exports Breadcrumbs uses ──────────
 vi.mock("next/navigation", async (importOriginal) => {
-  const actual = await importOriginal()
+  const actual = await importOriginal<Record<string, unknown>>()
   return {
     ...actual,
     useRouter: vi.fn(() => ({ push: mockPush, prefetch: vi.fn() })),

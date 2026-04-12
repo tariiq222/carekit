@@ -39,7 +39,6 @@ export function AppSidebar() {
 
   const {
     filteredGroups,
-    actionableBookings,
     isItemActive,
     navigate,
     prefetchItem,
@@ -95,9 +94,8 @@ export function AppSidebar() {
                         >
                           <HugeiconsIcon icon={item.icon} size={18} />
                           <span className="flex-1">{t(item.titleKey)}</span>
-                          {item.href === "/bookings" && actionableBookings != null && actionableBookings > 0 && (
+                          {item.href === "/bookings" && false && (
                             <span className="flex size-5 items-center justify-center rounded-full text-[11px] font-bold tabular-nums bg-accent text-accent-foreground">
-                              {actionableBookings}
                             </span>
                           )}
                         </SidebarMenuButton>

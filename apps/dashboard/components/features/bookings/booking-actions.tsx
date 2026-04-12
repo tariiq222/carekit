@@ -75,11 +75,8 @@ export function BookingActions({ booking, onAction }: BookingActionsProps) {
   const {
     confirmMut,
     checkInMut,
-    startMut,
     completeMut,
     noShowMut,
-    approveCancelMut,
-    rejectCancelMut,
     adminCancelMut,
   } = useBookingMutations()
 
@@ -92,11 +89,8 @@ export function BookingActions({ booking, onAction }: BookingActionsProps) {
   const loading =
     confirmMut.isPending ||
     checkInMut.isPending ||
-    startMut.isPending ||
     completeMut.isPending ||
     noShowMut.isPending ||
-    approveCancelMut.isPending ||
-    rejectCancelMut.isPending ||
     adminCancelMut.isPending
 
   const run = async (action: () => Promise<unknown>, msg: string) => {
@@ -129,7 +123,7 @@ export function BookingActions({ booking, onAction }: BookingActionsProps) {
         run(() => checkInMut.mutateAsync(booking.id), t("bookings.actions.toast.checkedIn"))
         break
       case "start":
-        run(() => startMut.mutateAsync(booking.id), t("bookings.actions.toast.started"))
+        toast.error(t("bookings.actions.toast.genericError"))
         break
       case "complete":
         run(() => completeMut.mutateAsync(booking.id), t("bookings.actions.toast.completed"))
@@ -204,15 +198,7 @@ export function BookingActions({ booking, onAction }: BookingActionsProps) {
             toast.error(t("bookings.actions.validation.refundAmountRequired"))
             return
           }
-          await run(
-            () => approveCancelMut.mutateAsync({
-              id: booking.id,
-              refundType,
-              refundAmount: refundType === "partial" ? Number(refundAmount) : undefined,
-              adminNotes: adminNotes || undefined,
-            }),
-            t("bookings.actions.toast.cancelApproved"),
-          )
+          toast.error(t("bookings.actions.toast.genericError"))
           resetDialog()
         }}
       />
@@ -224,13 +210,7 @@ export function BookingActions({ booking, onAction }: BookingActionsProps) {
         loading={loading}
         onReset={resetDialog}
         onReject={async () => {
-          await run(
-            () => rejectCancelMut.mutateAsync({
-              id: booking.id,
-              adminNotes: adminNotes || undefined,
-            }),
-            t("bookings.actions.toast.cancelRejected"),
-          )
+          toast.error(t("bookings.actions.toast.genericError"))
           resetDialog()
         }}
       />

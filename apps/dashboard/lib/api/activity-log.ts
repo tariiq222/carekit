@@ -11,7 +11,7 @@ import type { ActivityLog, ActivityLogQuery } from "@/lib/types/activity-log"
 export async function fetchActivityLogs(
   query: ActivityLogQuery = {},
 ): Promise<PaginatedResponse<ActivityLog>> {
-  return api.get<PaginatedResponse<ActivityLog>>("/activity-log", {
+  return api.get<PaginatedResponse<ActivityLog>>("/dashboard/ops/activity", {
     page: query.page,
     perPage: query.perPage,
     sortBy: query.sortBy,
@@ -22,10 +22,4 @@ export async function fetchActivityLogs(
     dateFrom: query.dateFrom,
     dateTo: query.dateTo,
   })
-}
-
-export async function fetchActivityLog(id: string): Promise<ActivityLog> {
-  return api.get<ActivityLog>(
-    `/activity-log/${id}`,
-  )
 }

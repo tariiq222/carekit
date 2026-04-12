@@ -15,7 +15,7 @@ import { ErrorBanner } from "@/components/features/error-banner"
 import { SectionHeader } from "@/components/features/section-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FlashIcon, Analytics01Icon } from "@hugeicons/core-free-icons"
-import { useBookingStats, useTodayBookings } from "@/hooks/use-bookings"
+import { useTodayBookings } from "@/hooks/use-bookings"
 import { useDashboardNotifications } from "@/hooks/use-notifications"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useLocale } from "@/components/locale-provider"
@@ -32,13 +32,6 @@ export default function DashboardPage() {
   )
 
   const {
-    data: stats,
-    isLoading: statsLoading,
-    error: statsError,
-    refetch: refetchStats,
-  } = useBookingStats()
-
-  const {
     data: todayBookings,
     isLoading: bookingsLoading,
     error: bookingsError,
@@ -53,7 +46,6 @@ export default function DashboardPage() {
   } = useDashboardNotifications()
 
   const userName = user ? `${user.firstName}` : "—"
-  const todayCount = stats?.total ?? 0
 
   return (
     <div className="flex flex-col gap-12">
@@ -62,22 +54,10 @@ export default function DashboardPage() {
         <GreetingHeader
           userName={userName}
           dateLabel={dateLabel}
-          bookingsCount={todayCount}
+          bookingsCount={0}
         />
 
-        {statsLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-[130px] rounded-xl" />
-            ))}
-          </div>
-        ) : statsError ? (
-          <ErrorBanner message={t("dashboard.error.stats")} onRetry={() => refetchStats()} />
-        ) : (
-          <DashboardStats stats={stats} />
-        )}
-
-        <AttentionAlerts pendingPayments={0} cancelRequests={stats?.pendingCancellation ?? 0} />
+        <AttentionAlerts pendingPayments={0} cancelRequests={0} />
       </section>
 
       {/* Group 2: Quick Actions */}

@@ -5,21 +5,14 @@ import { useState, useCallback } from "react"
 import { queryKeys } from "@/lib/query-keys"
 import {
   fetchBookings,
-  fetchBookingStats,
   createBooking,
   rescheduleBooking,
   confirmBooking,
   completeBooking,
   markNoShow,
-  approveCancellation,
-  rejectCancellation,
   checkInBooking,
-  startBooking,
   adminCancelBooking,
-  employeeCancelBooking,
-  requestCancellation,
   createRecurringBooking,
-  clientReschedule,
 } from "@/lib/api/bookings"
 import type {
   BookingStatus,
@@ -78,15 +71,6 @@ export function useBookings() {
     placeholderData: keepPreviousData,
   })
 
-  const {
-    data: stats,
-    isLoading: statsLoading,
-  } = useQuery({
-    queryKey: queryKeys.bookings.stats(),
-    queryFn: fetchBookingStats,
-    staleTime: 60_000,
-  })
-
   const setFilters = useCallback((partial: Partial<BookingFilters>) => {
     setFiltersState((prev) => ({ ...prev, ...partial }))
     setPage(1)
@@ -100,9 +84,7 @@ export function useBookings() {
   return {
     bookings: bookingsData?.items ?? [],
     meta: bookingsData?.meta ?? null,
-    stats: stats ?? null,
     loading: bookingsLoading,
-    statsLoading,
     error: bookingsError?.message ?? null,
     filters,
     setFilters,
@@ -110,16 +92,6 @@ export function useBookings() {
     setPage,
     hasFilters,
   }
-}
-
-/* ─── Stats Hook ─── */
-
-export function useBookingStats() {
-  return useQuery({
-    queryKey: queryKeys.bookings.stats(),
-    queryFn: fetchBookingStats,
-    staleTime: 60_000,
-  })
 }
 
 /* ─── Today's Bookings Hook ─── */
@@ -166,25 +138,8 @@ export function useBookingMutations() {
     onSuccess: invalidate,
   })
 
-  const approveCancelMut = useMutation({
-    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof approveCancellation>[1]) =>
-      approveCancellation(id, payload),
-    onSuccess: invalidate,
-  })
-
-  const rejectCancelMut = useMutation({
-    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof rejectCancellation>[1]) =>
-      rejectCancellation(id, payload),
-    onSuccess: invalidate,
-  })
-
   const checkInMut = useMutation({
     mutationFn: checkInBooking,
-    onSuccess: invalidate,
-  })
-
-  const startMut = useMutation({
-    mutationFn: startBooking,
     onSuccess: invalidate,
   })
 
@@ -194,26 +149,8 @@ export function useBookingMutations() {
     onSuccess: invalidate,
   })
 
-  const employeeCancelMut = useMutation({
-    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof employeeCancelBooking>[1]) =>
-      employeeCancelBooking(id, payload),
-    onSuccess: invalidate,
-  })
-
-  const cancelRequestMut = useMutation({
-    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof requestCancellation>[1]) =>
-      requestCancellation(id, payload),
-    onSuccess: invalidate,
-  })
-
   const recurringMut = useMutation({
     mutationFn: createRecurringBooking,
-    onSuccess: invalidate,
-  })
-
-  const clientRescheduleMut = useMutation({
-    mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof clientReschedule>[1]) =>
-      clientReschedule(id, payload),
     onSuccess: invalidate,
   })
 
@@ -223,14 +160,8 @@ export function useBookingMutations() {
     confirmMut,
     completeMut,
     noShowMut,
-    approveCancelMut,
-    rejectCancelMut,
     checkInMut,
-    startMut,
     adminCancelMut,
-    employeeCancelMut,
-    cancelRequestMut,
     recurringMut,
-    clientRescheduleMut,
   }
 }

@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useLocale } from "@/components/locale-provider"
-import { useServices, useServiceBookingTypes } from "@/hooks/use-services"
+import { useServices } from "@/hooks/use-services"
 import {
   useEmployeeServices,
   useEmployeeServiceMutations,
@@ -88,29 +88,13 @@ export function AssignServiceSheet({
   }, [open, form])
 
   const selectedServiceId = form.watch("serviceId")
-  const { data: serviceBookingTypes } = useServiceBookingTypes(
-    selectedServiceId || null,
-  )
 
-  /* Initialize type configs when service booking types load */
   useEffect(() => {
-    if (serviceBookingTypes && serviceBookingTypes.length > 0) {
-      setTypeConfigs(
-        serviceBookingTypes
-          .filter((bt) => bt.isActive)
-          .map((bt) => ({
-            bookingType: bt.bookingType,
-            price: null,
-            duration: null,
-            useCustomOptions: false,
-            isActive: true,
-            durationOptions: [],
-          })),
-      )
-    } else {
-      setTypeConfigs([])
-    }
-  }, [serviceBookingTypes])
+    setTypeConfigs([
+      { bookingType: "in_person", price: null, duration: null, useCustomOptions: false, isActive: true, durationOptions: [] },
+      { bookingType: "online", price: null, duration: null, useCustomOptions: false, isActive: true, durationOptions: [] },
+    ])
+  }, [selectedServiceId])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
@@ -182,9 +166,9 @@ export function AssignServiceSheet({
             </div>
 
             {/* Per-type config */}
-            {selectedServiceId && serviceBookingTypes && (
+            {selectedServiceId && typeConfigs.length > 0 && (
               <EmployeeServiceTypesEditor
-                serviceBookingTypes={serviceBookingTypes}
+                serviceBookingTypes={[]}
                 value={typeConfigs}
                 onChange={setTypeConfigs}
                 t={t}

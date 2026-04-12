@@ -56,14 +56,14 @@ export function exportServicesExcel() {
 /* ─── Categories ─── */
 
 export async function fetchCategories(): Promise<ServiceCategory[]> {
-  return api.get<ServiceCategory[]>("/services/categories")
+  return api.get<ServiceCategory[]>("/dashboard/organization/categories")
 }
 
 export async function createCategory(
   payload: CreateCategoryPayload,
 ): Promise<ServiceCategory> {
   return api.post<ServiceCategory>(
-    "/services/categories",
+    "/dashboard/organization/categories",
     payload,
   )
 }
@@ -79,7 +79,7 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(id: string): Promise<void> {
-  await api.delete(`/services/categories/${id}`)
+  await api.delete(`/dashboard/organization/categories/${id}`)
 }
 
 /* ─── Services ─── */

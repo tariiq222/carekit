@@ -60,10 +60,11 @@ describe("WaitlistTab — feature flag guard", () => {
   })
 
   it("returns null when isEnabled('waitlist') = false", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useFeatureFlagMap.mockReturnValue({
       map: { waitlist: false },
-      isEnabled: (key: string) => key === "waitlist" ? false : true,
-    })
+      isEnabled: vi.fn((_key: string) => _key === "waitlist" ? false : true),
+    } as any)
 
     const { container } = render(<WaitlistTab />, { wrapper: makeWrapper() })
     // When waitlist is disabled the component returns null — container is empty
@@ -71,10 +72,11 @@ describe("WaitlistTab — feature flag guard", () => {
   })
 
   it("renders normally when isEnabled('waitlist') = true", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useFeatureFlagMap.mockReturnValue({
       map: { waitlist: true },
-      isEnabled: (key: string) => key === "waitlist" ? true : false,
-    })
+      isEnabled: vi.fn((_key: string) => _key === "waitlist" ? true : false),
+    } as any)
     // Mock non-empty entries so the component renders the list instead of empty state
     useWaitlist.mockReturnValue({
       entries: [],

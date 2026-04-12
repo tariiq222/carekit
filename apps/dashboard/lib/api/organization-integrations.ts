@@ -11,7 +11,7 @@ import type {
 /* ─── Queries ─── */
 
 export async function fetchOrganizationIntegrations(): Promise<OrganizationIntegrations> {
-  return api.get<OrganizationIntegrations>("/organization-integrations")
+  return api.get<OrganizationIntegrations>("/dashboard/platform/integrations")
 }
 
 /* ─── Mutations ─── */
@@ -19,5 +19,5 @@ export async function fetchOrganizationIntegrations(): Promise<OrganizationInteg
 export async function updateOrganizationIntegrations(
   data: UpdateOrganizationIntegrationsPayload,
 ): Promise<OrganizationIntegrations> {
-  return api.put<OrganizationIntegrations>("/organization-integrations", data)
+  return api.post<OrganizationIntegrations>("/dashboard/platform/integrations", data)
 }

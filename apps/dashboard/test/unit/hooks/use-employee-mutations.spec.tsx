@@ -116,17 +116,6 @@ describe("useEmployeeMutations", () => {
     )
   })
 
-  it("deleteMutation calls deleteEmployee with id", async () => {
-    deleteEmployee.mockResolvedValueOnce(undefined)
-
-    const { result } = renderHook(() => useEmployeeMutations(), { wrapper: makeWrapper() })
-
-    act(() => { result.current.deleteMutation.mutate("p-1") })
-
-    await waitFor(() =>
-      expect(deleteEmployee).toHaveBeenCalledWith("p-1", expect.anything()),
-    )
-  })
 })
 
 describe("useSetAvailability", () => {
@@ -298,17 +287,6 @@ describe("useEmployeeMutations error handling", () => {
 
     await waitFor(() => expect(result.current.createMutation.isError).toBe(true))
     expect(result.current.createMutation.error?.message).toBe("Email already exists")
-  })
-
-  it("deleteMutation propagates error", async () => {
-    deleteEmployee.mockRejectedValueOnce(new Error("Has active bookings"))
-
-    const { result } = renderHook(() => useEmployeeMutations(), { wrapper: makeWrapper() })
-
-    act(() => { result.current.deleteMutation.mutate("p-1") })
-
-    await waitFor(() => expect(result.current.deleteMutation.isError).toBe(true))
-    expect(result.current.deleteMutation.error?.message).toBe("Has active bookings")
   })
 
   it("onboardMutation resolves successfully", async () => {

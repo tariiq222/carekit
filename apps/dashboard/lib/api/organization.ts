@@ -27,14 +27,17 @@ export interface OrganizationHoliday {
 
 /* ─── Working Hours ─── */
 
-export async function fetchOrganizationHours(): Promise<OrganizationHour[]> {
-  return api.get<OrganizationHour[]>("/organization/hours")
+export async function fetchOrganizationHours(branchId?: string): Promise<OrganizationHour[]> {
+  const path = branchId
+    ? `/dashboard/organization/hours/${branchId}`
+    : `/dashboard/organization/hours`
+  return api.get<OrganizationHour[]>(path)
 }
 
 export async function updateOrganizationHours(
   hours: Omit<OrganizationHour, "id">[],
 ): Promise<OrganizationHour[]> {
-  return api.put<OrganizationHour[]>("/organization/hours", {
+  return api.post<OrganizationHour[]>("/dashboard/organization/hours", {
     hours,
   })
 }
@@ -46,7 +49,7 @@ export async function fetchOrganizationHolidays(
 ): Promise<OrganizationHoliday[]> {
   const params = year ? { year } : undefined
   return api.get<OrganizationHoliday[]>(
-    "/organization/holidays",
+    "/dashboard/organization/holidays",
     params,
   )
 }
@@ -58,11 +61,11 @@ export async function createOrganizationHoliday(data: {
   isRecurring?: boolean
 }): Promise<OrganizationHoliday> {
   return api.post<OrganizationHoliday>(
-    "/organization/holidays",
+    "/dashboard/organization/holidays",
     data,
   )
 }
 
 export async function deleteOrganizationHoliday(id: string): Promise<void> {
-  await api.delete(`/organization/holidays/${id}`)
+  await api.delete(`/dashboard/organization/holidays/${id}`)
 }

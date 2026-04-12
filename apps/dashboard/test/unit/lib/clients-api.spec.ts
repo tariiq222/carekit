@@ -15,12 +15,9 @@ vi.mock("@/lib/api", () => ({
 }))
 
 import {
-  activateClient,
   createWalkInClient,
-  deactivateClient,
   fetchClient,
   fetchClients,
-  fetchClientStats,
   updateClient,
 } from "@/lib/api/clients"
 
@@ -47,29 +44,6 @@ describe("clients api", () => {
     await fetchClient("client-1")
 
     expect(getMock).toHaveBeenCalledWith("/clients/client-1")
-  })
-
-  it("normalizes stats from backend scenario shape", async () => {
-    getMock.mockResolvedValueOnce({
-      totalBookings: 12,
-      byStatus: { COMPLETED: 8, CANCELLED: 2 },
-      totalPaid: 420,
-      completedPayments: 7,
-    })
-
-    const result = await fetchClientStats("client-1")
-
-    expect(getMock).toHaveBeenCalledWith("/clients/client-1/stats")
-    expect(result).toEqual({
-      totalBookings: 12,
-      completedBookings: 8,
-      cancelledBookings: 2,
-      totalSpent: 420,
-      totalPaid: 420,
-      completedPayments: 7,
-      lastVisit: null,
-      byStatus: { COMPLETED: 8, CANCELLED: 2 },
-    })
   })
 
   it("posts walk-in client payload to the correct endpoint", async () => {
@@ -108,17 +82,4 @@ describe("clients api", () => {
     })
   })
 
-  it("toggles client activity state through patch requests", async () => {
-    patchMock.mockResolvedValue({ id: "client-1" })
-
-    await activateClient("client-1")
-    await deactivateClient("client-1")
-
-    expect(patchMock).toHaveBeenNthCalledWith(1, "/clients/client-1", {
-      isActive: true,
-    })
-    expect(patchMock).toHaveBeenNthCalledWith(2, "/clients/client-1", {
-      isActive: false,
-    })
-  })
 })

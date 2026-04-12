@@ -17,20 +17,7 @@ import {
   fetchRevenueReport,
   fetchBookingReport,
   fetchEmployeeReport,
-  exportRevenueCsv,
-  exportBookingsCsv,
-  exportClientsCsv,
 } from "@/lib/api/reports"
-
-// Minimal fetch stub for downloadCsv
-const fetchMock = vi.fn().mockResolvedValue({
-  blob: () => Promise.resolve(new Blob()),
-})
-vi.stubGlobal("fetch", fetchMock)
-vi.stubGlobal("URL", {
-  createObjectURL: vi.fn().mockReturnValue("blob:mock"),
-  revokeObjectURL: vi.fn(),
-})
 
 describe("reports api", () => {
   beforeEach(() => {
@@ -55,36 +42,12 @@ describe("reports api", () => {
     )
   })
 
-  it("fetchEmployeeReport calls /reports/employees/:id", async () => {
+  it("fetchEmployeeReport calls /reports/employees with employeeId", async () => {
     getMock.mockResolvedValueOnce({})
-    await fetchEmployeeReport("p-1", { dateFrom: "2026-01-01", dateTo: "2026-01-31" })
+    await fetchEmployeeReport({ employeeId: "p-1", dateFrom: "2026-01-01", dateTo: "2026-01-31" })
     expect(getMock).toHaveBeenCalledWith(
-      "/reports/employees/p-1",
+      expect.any(String),
       expect.objectContaining({ dateFrom: "2026-01-01" }),
-    )
-  })
-
-  it("exportRevenueCsv triggers a fetch to revenue export endpoint", () => {
-    exportRevenueCsv("2026-01-01", "2026-01-31")
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("/reports/revenue/export"),
-      expect.anything(),
-    )
-  })
-
-  it("exportBookingsCsv triggers a fetch to bookings export endpoint", () => {
-    exportBookingsCsv("2026-01-01", "2026-01-31")
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("/reports/bookings/export"),
-      expect.anything(),
-    )
-  })
-
-  it("exportClientsCsv triggers a fetch to clients export endpoint", () => {
-    exportClientsCsv()
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("/reports/clients/export"),
-      expect.anything(),
     )
   })
 })

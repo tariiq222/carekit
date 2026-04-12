@@ -16,7 +16,6 @@ import {
   fetchEmailTemplates,
   fetchEmailTemplate,
   updateEmailTemplate,
-  previewEmailTemplate,
 } from "@/lib/api/email-templates"
 
 describe("email-templates api", () => {
@@ -40,9 +39,4 @@ describe("email-templates api", () => {
     expect(patchMock).toHaveBeenCalledWith("/email-templates/tpl-1", expect.anything())
   })
 
-  it("previewEmailTemplate posts to /email-templates/:slug/preview", async () => {
-    postMock.mockResolvedValueOnce({ html: "<p>test</p>" })
-    await previewEmailTemplate("booking-confirmed", {} as Parameters<typeof previewEmailTemplate>[1])
-    expect(postMock).toHaveBeenCalledWith("/email-templates/booking-confirmed/preview", expect.anything())
-  })
 })

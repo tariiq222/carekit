@@ -6,7 +6,6 @@ import {
   createEmployee,
   onboardEmployee,
   updateEmployee,
-  deleteEmployee,
   setAvailability,
   setBreaks,
   createVacation,
@@ -44,12 +43,7 @@ export function useEmployeeMutations() {
     onSuccess: invalidate,
   })
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteEmployee,
-    onSuccess: invalidate,
-  })
-
-  return { createMutation, onboardMutation, updateMutation, deleteMutation }
+  return { createMutation, onboardMutation, updateMutation }
 }
 
 /* ─── Availability Mutation ─── */

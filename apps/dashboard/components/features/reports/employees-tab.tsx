@@ -27,7 +27,7 @@ export function EmployeesTab({ dateFrom, dateTo, employeeId }: EmployeesTabProps
 
   const { data, isLoading, error } = useQuery({
     queryKey: queryKeys.reports.employee(employeeId, { dateFrom, dateTo }),
-    queryFn: () => fetchEmployeeReport(employeeId, { dateFrom, dateTo }),
+    queryFn: () => fetchEmployeeReport({ employeeId, dateFrom, dateTo }),
     enabled: !!employeeId && !!dateFrom && !!dateTo,
   })
 
