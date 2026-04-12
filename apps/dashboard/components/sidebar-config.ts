@@ -43,7 +43,6 @@ export const organizationNav: NavItem[] = [
   { titleKey: "nav.services", href: "/services", icon: GridIcon },
   { titleKey: "nav.branches", href: "/branches", icon: Building06Icon, featureFlag: "multi_branch" },
   { titleKey: "nav.intakeForms", href: "/intake-forms", icon: DocumentValidationIcon, featureFlag: "intake_forms" },
-  { titleKey: "nav.groups", href: "/groups", icon: UserMultiple02Icon, featureFlag: "groups" },
 ]
 
 export const financeNav: NavItem[] = [

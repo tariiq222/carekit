@@ -193,13 +193,6 @@ export const queryKeys = {
     detail: (id: string) => ["departments", "detail", id] as const,
   },
 
-  /* ─── Groups ─── */
-  groups: {
-    all: ["groups"] as const,
-    list: (filters?: object) => ["groups", "list", filters] as const,
-    detail: (id: string) => ["groups", "detail", id] as const,
-  },
-
   /* ─── Email Templates ─── */
   emailTemplates: {
     all: ["email-templates"] as const,
