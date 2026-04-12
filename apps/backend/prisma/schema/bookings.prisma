@@ -32,6 +32,12 @@ enum WaitlistStatus {
   REMOVED
 }
 
+enum RecurringFrequency {
+  DAILY
+  WEEKLY
+  CUSTOM
+}
+
 // ─── Booking ─────────────────────────────────────────────────────────────────
 
 model Booking {
@@ -57,8 +63,10 @@ model Booking {
   completedAt    DateTime?
   noShowAt       DateTime?
   expiresAt      DateTime?
-  groupSessionId String?
-  createdAt      DateTime            @default(now())
+  groupSessionId    String?
+  recurringGroupId  String?
+  recurringPattern  RecurringFrequency?
+  createdAt         DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
 
   @@index([tenantId])
@@ -68,6 +76,7 @@ model Booking {
   @@index([status])
   @@index([tenantId, employeeId, scheduledAt])
   @@index([tenantId, employeeId, endsAt])
+  @@index([recurringGroupId])
 }
 
 // ─── Waitlist ─────────────────────────────────────────────────────────────────
