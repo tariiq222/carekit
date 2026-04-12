@@ -1,4 +1,17 @@
 import { BookingType, RecurringFrequency } from '@prisma/client';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 /**
  * Payload for creating a recurring series of bookings.
@@ -9,33 +22,44 @@ import { BookingType, RecurringFrequency } from '@prisma/client';
  * For CUSTOM frequency, `customDates` must be provided; `intervalDays` is ignored.
  * For DAILY/WEEKLY, `intervalDays` controls the gap (default 1 for DAILY, 7 for WEEKLY).
  */
-export interface CreateRecurringBookingDto {
-  tenantId: string;
-  branchId: string;
-  clientId: string;
-  employeeId: string;
-  serviceId: string;
-  /** First occurrence */
-  scheduledAt: Date;
-  durationMins: number;
-  price: number;
-  currency?: string;
-  bookingType?: BookingType;
-  notes?: string;
-  expiresAt?: Date;
+export class CreateRecurringBookingDto {
+  @IsUUID() branchId!: string;
+  @IsUUID() clientId!: string;
+  @IsUUID() employeeId!: string;
+  @IsUUID() serviceId!: string;
 
-  frequency: RecurringFrequency;
+  /** First occurrence */
+  @IsDateString() scheduledAt!: string;
+
+  @IsInt() @Min(1) durationMins!: number;
+  @IsNumber() @Min(0) price!: number;
+
+  @IsOptional() @IsString() currency?: string;
+  @IsOptional() @IsEnum(BookingType) bookingType?: BookingType;
+  @IsOptional() @IsString() notes?: string;
+  @IsOptional() @IsDateString() expiresAt?: string;
+
+  @IsEnum(RecurringFrequency) frequency!: RecurringFrequency;
+
   /** Required for DAILY/WEEKLY. Ignored for CUSTOM. */
-  intervalDays?: number;
+  @IsOptional() @IsInt() @Min(1) intervalDays?: number;
+
   /** Number of bookings to create (including the first). Mutually exclusive with `until`. */
-  occurrences?: number;
+  @IsOptional() @IsInt() @Min(1) occurrences?: number;
+
   /** Last possible date for bookings (inclusive). Mutually exclusive with `occurrences`. */
-  until?: Date;
+  @IsOptional() @IsDateString() until?: string;
+
   /** Required when frequency === 'CUSTOM'. Exact list of dates (time portion used). */
-  customDates?: Date[];
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsDateString({}, { each: true })
+  customDates?: string[];
+
   /**
    * When true, skip conflicting slots silently instead of aborting the whole series.
    * Default: false (abort on first conflict).
    */
-  skipConflicts?: boolean;
+  @IsOptional() @IsBoolean() skipConflicts?: boolean;
 }

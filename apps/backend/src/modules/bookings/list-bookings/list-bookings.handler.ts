@@ -1,20 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { BookingStatus, BookingType } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { ListBookingsDto } from './list-bookings.dto';
 
-export interface ListBookingsQuery {
+export type ListBookingsQuery = Omit<ListBookingsDto, 'page' | 'limit' | 'fromDate' | 'toDate'> & {
   tenantId: string;
   page: number;
   limit: number;
-  clientId?: string;
-  employeeId?: string;
-  branchId?: string;
-  serviceId?: string;
-  status?: BookingStatus;
-  bookingType?: BookingType;
   fromDate?: Date;
   toDate?: Date;
-}
+};
 
 @Injectable()
 export class ListBookingsHandler {

@@ -1,15 +1,11 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { AddToWaitlistDto } from './add-to-waitlist.dto';
 
-export interface AddToWaitlistCommand {
+export type AddToWaitlistCommand = Omit<AddToWaitlistDto, 'preferredDate'> & {
   tenantId: string;
-  clientId: string;
-  employeeId: string;
-  serviceId: string;
-  branchId: string;
   preferredDate?: Date;
-  notes?: string;
-}
+};
 
 @Injectable()
 export class AddToWaitlistHandler {

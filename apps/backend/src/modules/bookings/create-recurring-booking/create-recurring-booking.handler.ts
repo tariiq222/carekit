@@ -7,13 +7,24 @@ import { RecurringFrequency } from '@prisma/client';
 import type { Booking } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { randomUUID } from 'crypto';
-import type { CreateRecurringBookingDto } from './create-recurring-booking.dto';
+import { CreateRecurringBookingDto } from './create-recurring-booking.dto';
+
+export type CreateRecurringBookingCommand = Omit<
+  CreateRecurringBookingDto,
+  'scheduledAt' | 'expiresAt' | 'until' | 'customDates'
+> & {
+  tenantId: string;
+  scheduledAt: Date;
+  expiresAt?: Date;
+  until?: Date;
+  customDates?: Date[];
+};
 
 @Injectable()
 export class CreateRecurringBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: CreateRecurringBookingDto) {
+  async execute(dto: CreateRecurringBookingCommand) {
     this.validate(dto);
 
     const dates = this.resolveDates(dto);
@@ -32,7 +43,7 @@ export class CreateRecurringBookingHandler {
 
   private async createBookings(
     db: PrismaService,
-    dto: CreateRecurringBookingDto,
+    dto: CreateRecurringBookingCommand,
     dates: Date[],
     recurringGroupId: string,
   ): Promise<Booking[]> {
@@ -85,7 +96,7 @@ export class CreateRecurringBookingHandler {
     return created;
   }
 
-  private validate(dto: CreateRecurringBookingDto): void {
+  private validate(dto: CreateRecurringBookingCommand): void {
     if (dto.frequency === RecurringFrequency.CUSTOM) {
       if (!dto.customDates?.length) {
         throw new BadRequestException(
@@ -116,7 +127,7 @@ export class CreateRecurringBookingHandler {
     }
   }
 
-  private resolveDates(dto: CreateRecurringBookingDto): Date[] {
+  private resolveDates(dto: CreateRecurringBookingCommand): Date[] {
     if (dto.frequency === RecurringFrequency.CUSTOM) {
       return dto.customDates!.slice().sort((a, b) => a.getTime() - b.getTime());
     }
@@ -141,7 +152,7 @@ export class CreateRecurringBookingHandler {
     return dates;
   }
 
-  private intervalMs(dto: CreateRecurringBookingDto): number {
+  private intervalMs(dto: CreateRecurringBookingCommand): number {
     if (dto.intervalDays !== undefined) {
       return dto.intervalDays * 86400_000;
     }

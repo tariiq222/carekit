@@ -1,18 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { BookingStatus, CancellationReason, RefundType } from '@prisma/client';
+import { BookingStatus, RefundType } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { BookingCancelledEvent } from '../events/booking-cancelled.event';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
+import { CancelBookingDto } from './cancel-booking.dto';
 
-export interface CancelBookingCommand {
+export type CancelBookingCommand = CancelBookingDto & {
   tenantId: string;
   bookingId: string;
-  reason: CancellationReason;
-  cancelNotes?: string;
   changedBy: string;
-  source?: 'client' | 'admin' | 'employee' | 'system';
-}
+};
 
 const CANCELLABLE_STATUSES: BookingStatus[] = [
   BookingStatus.PENDING,

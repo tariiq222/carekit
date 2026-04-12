@@ -8,7 +8,13 @@ import {
 import { PrismaService } from '../../../infrastructure/database';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
-import type { CreateBookingDto } from './create-booking.dto';
+import { CreateBookingDto } from './create-booking.dto';
+
+export type CreateBookingCommand = Omit<CreateBookingDto, 'scheduledAt' | 'expiresAt'> & {
+  tenantId: string;
+  scheduledAt: Date;
+  expiresAt?: Date;
+};
 
 @Injectable()
 export class CreateBookingHandler {
@@ -18,7 +24,7 @@ export class CreateBookingHandler {
     private readonly settingsHandler: GetBookingSettingsHandler,
   ) {}
 
-  async execute(dto: CreateBookingDto) {
+  async execute(dto: CreateBookingCommand) {
     const scheduledAt = new Date(dto.scheduledAt);
     if (scheduledAt <= new Date()) {
       throw new BadRequestException('Booking must be scheduled in the future');

@@ -2,17 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import type { BookingType } from '@prisma/client';
+import { CheckAvailabilityDto } from './check-availability.dto';
 
-export interface CheckAvailabilityQuery {
+export type CheckAvailabilityQuery = Omit<CheckAvailabilityDto, 'date' | 'durationOptionId' | 'bookingType'> & {
   tenantId: string;
-  employeeId: string;
-  branchId: string;
   date: Date;
-  durationMins?: number;
-  serviceId?: string;
   durationOptionId?: string | null;
   bookingType?: BookingType | null;
-}
+};
 
 export interface AvailableSlot {
   startTime: Date;

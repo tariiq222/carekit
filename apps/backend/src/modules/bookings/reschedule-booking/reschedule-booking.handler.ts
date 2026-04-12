@@ -2,14 +2,14 @@ import { Injectable, NotFoundException, BadRequestException, ConflictException }
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
+import { RescheduleBookingDto } from './reschedule-booking.dto';
 
-export interface RescheduleBookingCommand {
+export type RescheduleBookingCommand = Omit<RescheduleBookingDto, 'newScheduledAt'> & {
   tenantId: string;
   bookingId: string;
   newScheduledAt: Date;
-  newDurationMins?: number;
   changedBy: string;
-}
+};
 
 @Injectable()
 export class RescheduleBookingHandler {

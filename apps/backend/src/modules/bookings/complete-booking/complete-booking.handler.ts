@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { CompleteBookingDto } from './complete-booking.dto';
 
-export interface CompleteBookingCommand {
+export type CompleteBookingCommand = CompleteBookingDto & {
   tenantId: string;
   bookingId: string;
-  completionNotes?: string;
   changedBy: string;
-}
+};
 
 const COMPLETABLE_STATUSES: BookingStatus[] = [BookingStatus.CONFIRMED];
 

@@ -20,8 +20,9 @@ import { GetBookingHandler } from '../../../modules/bookings/get-booking/get-boo
 import { CreateBookingHandler } from '../../../modules/bookings/create-booking/create-booking.handler';
 import { CancelBookingHandler } from '../../../modules/bookings/cancel-booking/cancel-booking.handler';
 import { RescheduleBookingHandler } from '../../../modules/bookings/reschedule-booking/reschedule-booking.handler';
+import { RescheduleBookingDto } from '../../../modules/bookings/reschedule-booking/reschedule-booking.dto';
 
-export class MobileCreateBookingBody {
+export class MobileCreateBookingDto {
   @IsUUID() branchId!: string;
   @IsUUID() employeeId!: string;
   @IsUUID() serviceId!: string;
@@ -30,17 +31,12 @@ export class MobileCreateBookingBody {
   @IsOptional() @IsString() notes?: string;
 }
 
-export class MobileCancelBookingBody {
+export class MobileCancelBookingDto {
   @IsEnum(CancellationReason) reason!: CancellationReason;
   @IsOptional() @IsString() cancelNotes?: string;
 }
 
-export class MobileRescheduleBody {
-  @IsDateString() newScheduledAt!: string;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) newDurationMins?: number;
-}
-
-export class MobileListBookingsQuery {
+export class MobileListBookingsDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) limit?: number;
   @IsOptional() @IsEnum(BookingStatus) status?: BookingStatus;
@@ -61,7 +57,7 @@ export class MobileClientBookingsController {
   createBooking(
     @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
-    @Body() body: MobileCreateBookingBody,
+    @Body() body: MobileCreateBookingDto,
   ) {
     return this.create.execute({
       tenantId,
@@ -79,7 +75,7 @@ export class MobileClientBookingsController {
   listMyBookings(
     @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
-    @Query() q: MobileListBookingsQuery,
+    @Query() q: MobileListBookingsDto,
   ) {
     return this.list.execute({
       tenantId,
@@ -103,7 +99,7 @@ export class MobileClientBookingsController {
     @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: MobileCancelBookingBody,
+    @Body() body: MobileCancelBookingDto,
   ) {
     return this.cancel.execute({
       tenantId,
@@ -120,7 +116,7 @@ export class MobileClientBookingsController {
     @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: MobileRescheduleBody,
+    @Body() body: RescheduleBookingDto,
   ) {
     return this.reschedule.execute({
       tenantId,
