@@ -21,8 +21,8 @@ export class PreviewEmailTemplateHandler {
       throw new NotFoundException('Email template not found');
     }
 
-    const rawSubject = cmd.lang === 'ar' ? template.subjectAr : template.subjectEn;
-    const rawBody = cmd.lang === 'ar' ? template.bodyAr : template.bodyEn;
+    const rawSubject = (cmd.lang === 'ar' ? template.subjectAr : template.subjectEn) ?? '';
+    const rawBody = (cmd.lang === 'ar' ? template.bodyAr : template.bodyEn) ?? '';
 
     const interpolate = (str: string): string =>
       str.replace(/\{\{(\w+)\}\}/g, (_, key: string) =>

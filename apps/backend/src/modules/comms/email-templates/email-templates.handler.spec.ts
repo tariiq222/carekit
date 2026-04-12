@@ -1,7 +1,9 @@
+import { NotFoundException } from '@nestjs/common';
 import { CreateEmailTemplateHandler } from './create-email-template.handler';
 import { UpdateEmailTemplateHandler } from './update-email-template.handler';
 import { GetEmailTemplateHandler } from './get-email-template.handler';
 import { ListEmailTemplatesHandler } from './list-email-templates.handler';
+import { PreviewEmailTemplateHandler } from './preview-email-template.handler';
 import type { PrismaService } from '../../../infrastructure/database';
 
 const buildPrisma = () => ({
@@ -126,6 +128,69 @@ describe('GetEmailTemplateHandler', () => {
     const handler = new GetEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({ tenantId: 'tenant-1', id: 'tpl-1' });
     expect(result).toBeNull();
+  });
+});
+
+// ─── PreviewEmailTemplateHandler ─────────────────────────────────────────────
+describe('PreviewEmailTemplateHandler', () => {
+  const mockTemplate = {
+    id: 'tpl-1',
+    tenantId: 'tenant-1',
+    subjectAr: 'مرحباً {{client_name}}',
+    subjectEn: 'Hello {{client_name}}',
+    bodyAr: '<p>مرحباً {{client_name}}</p>',
+    bodyEn: '<p>Hello {{client_name}}</p>',
+  };
+
+  it('interpolates context into subject and body for Arabic', async () => {
+    const prisma = buildPrisma();
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce(mockTemplate);
+    const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({
+      tenantId: 'tenant-1',
+      id: 'tpl-1',
+      lang: 'ar',
+      context: { client_name: 'أحمد' },
+    });
+    expect(result.subject).toBe('مرحباً أحمد');
+    expect(result.body).toBe('<p>مرحباً أحمد</p>');
+  });
+
+  it('interpolates context into subject and body for English', async () => {
+    const prisma = buildPrisma();
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce(mockTemplate);
+    const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({
+      tenantId: 'tenant-1',
+      id: 'tpl-1',
+      lang: 'en',
+      context: { client_name: 'John' },
+    });
+    expect(result.subject).toBe('Hello John');
+    expect(result.body).toBe('<p>Hello John</p>');
+  });
+
+  it('replaces missing context keys with empty string', async () => {
+    const prisma = buildPrisma();
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce(mockTemplate);
+    const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({
+      tenantId: 'tenant-1',
+      id: 'tpl-1',
+      lang: 'en',
+      context: {},
+    });
+    expect(result.subject).toBe('Hello ');
+    expect(result.body).toBe('<p>Hello </p>');
+  });
+
+  it('throws NotFoundException when template not found', async () => {
+    const prisma = buildPrisma();
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
+    const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
+    await expect(
+      handler.execute({ tenantId: 'tenant-1', id: 'missing', lang: 'ar', context: {} }),
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
