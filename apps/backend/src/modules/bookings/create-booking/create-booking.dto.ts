@@ -7,8 +7,6 @@ export interface CreateBookingDto {
   employeeId: string;
   serviceId: string;
   scheduledAt: Date;
-  durationMins: number;
-  price: number;
   currency?: string;
   bookingType?: BookingType;
   notes?: string;

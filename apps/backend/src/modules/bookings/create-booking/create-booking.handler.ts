@@ -1,4 +1,10 @@
-import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import type { CreateBookingDto } from './create-booking.dto';
 
@@ -12,10 +18,22 @@ export class CreateBookingHandler {
       throw new BadRequestException('Booking must be scheduled in the future');
     }
 
-    const endsAt = new Date(scheduledAt.getTime() + dto.durationMins * 60_000);
+    // Derive price and duration from the Service — callers cannot dictate these.
+    // Temporary until PriceResolver (p11-t5) handles coupons, gift cards, etc.
+    const service = await this.prisma.service.findUnique({
+      where: { id: dto.serviceId },
+    });
+    if (!service) throw new NotFoundException('Service not found');
+    if (service.tenantId !== dto.tenantId) {
+      throw new ForbiddenException('Service does not belong to tenant');
+    }
 
-    // Correct overlap: existing booking overlaps if it starts before our slot ends
-    // AND its own endsAt is after our slot start.
+    const durationMins = service.durationMins;
+    const price = service.price;
+    const currency = dto.currency ?? service.currency;
+
+    const endsAt = new Date(scheduledAt.getTime() + durationMins * 60_000);
+
     const conflict = await this.prisma.booking.findFirst({
       where: {
         tenantId: dto.tenantId,
@@ -38,9 +56,9 @@ export class CreateBookingHandler {
         serviceId: dto.serviceId,
         scheduledAt,
         endsAt,
-        durationMins: dto.durationMins,
-        price: dto.price,
-        currency: dto.currency ?? 'SAR',
+        durationMins,
+        price,
+        currency,
         bookingType: dto.bookingType ?? 'INDIVIDUAL',
         notes: dto.notes,
         expiresAt: dto.expiresAt,

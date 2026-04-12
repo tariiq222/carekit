@@ -1,4 +1,4 @@
-import { ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { ConflictException, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { BookingStatus, CancellationReason } from '@prisma/client';
 import { CreateBookingHandler } from './create-booking/create-booking.handler';
 import { CancelBookingHandler } from './cancel-booking/cancel-booking.handler';
@@ -71,13 +71,15 @@ const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) }
 
 // ─── CreateBookingHandler ────────────────────────────────────────────────────
 describe('CreateBookingHandler', () => {
-  it('creates booking when slot is free', async () => {
+  it('creates booking with price and duration derived from Service', async () => {
     const prisma = buildPrisma();
     const result = await new CreateBookingHandler(prisma as never).execute({
       tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-      employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future, durationMins: 60, price: 200,
+      employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
     });
     expect(result.id).toBe('book-1');
+    // price and durationMins come from service mock, not from DTO
+    expect(prisma.service.findUnique).toHaveBeenCalledWith({ where: { id: 'svc-1' } });
   });
 
   it('throws ConflictException on overlapping slot', async () => {
@@ -86,7 +88,7 @@ describe('CreateBookingHandler', () => {
     await expect(
       new CreateBookingHandler(prisma as never).execute({
         tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future, durationMins: 60, price: 200,
+        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
       }),
     ).rejects.toThrow(ConflictException);
   });
@@ -95,9 +97,33 @@ describe('CreateBookingHandler', () => {
     await expect(
       new CreateBookingHandler(buildPrisma() as never).execute({
         tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: past, durationMins: 60, price: 200,
+        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: past,
       }),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws NotFoundException when service does not exist', async () => {
+    const prisma = buildPrisma();
+    prisma.service.findUnique = jest.fn().mockResolvedValue(null);
+    await expect(
+      new CreateBookingHandler(prisma as never).execute({
+        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
+        employeeId: 'emp-1', serviceId: 'bad-svc', scheduledAt: future,
+      }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('throws ForbiddenException when service belongs to different tenant', async () => {
+    const prisma = buildPrisma();
+    prisma.service.findUnique = jest.fn().mockResolvedValue({
+      id: 'svc-1', tenantId: 'other-tenant', durationMins: 60, price: 200, currency: 'SAR',
+    });
+    await expect(
+      new CreateBookingHandler(prisma as never).execute({
+        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
+        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
+      }),
+    ).rejects.toThrow(ForbiddenException);
   });
 });
 
