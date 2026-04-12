@@ -5,25 +5,19 @@ import { useState, useCallback } from "react"
 import { queryKeys } from "@/lib/query-keys"
 import {
   fetchPayments,
+  fetchPaymentStats,
 } from "@/lib/api/payments"
-import type { PaymentListQuery } from "@/lib/types/payment"
+import type { PaymentListQuery, PaymentStats } from "@/lib/types/payment"
 import type { PaymentStatus, PaymentMethod } from "@/lib/types/common"
 
-/* ─── Stats stub — TODO: no backend endpoint ─── */
-
-interface PaymentStats {
-  totalAmount: number
-  total: number
-  pending: number
-  pendingAmount: number
-  paid: number
-  paidAmount: number
-  refunded: number
-  refundedAmount: number
-}
+export type { PaymentStats }
 
 export function usePaymentStats() {
-  return { data: null as PaymentStats | null, isLoading: false }
+  return useQuery({
+    queryKey: queryKeys.payments.stats(),
+    queryFn: fetchPaymentStats,
+    staleTime: 5 * 60 * 1000,
+  })
 }
 
 /* ─── Mutations stub — TODO: no backend endpoints for refund/verify ─── */
