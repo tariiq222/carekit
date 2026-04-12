@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { BookingStatus, CancellationReason } from '@prisma/client';
+import { BookingStatus, CancellationReason, RefundType } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { BookingCancelledEvent } from '../events/booking-cancelled.event';
@@ -40,7 +40,7 @@ export class CancelBookingHandler {
     const hoursUntilBooking = (booking.scheduledAt.getTime() - Date.now()) / 3_600_000;
     const refundType = hoursUntilBooking >= settings.freeCancelBeforeHours
       ? settings.freeCancelRefundType
-      : 'NONE';
+      : RefundType.NONE;
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({

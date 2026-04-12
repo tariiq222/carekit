@@ -95,6 +95,7 @@ export class CronTasksService implements OnModuleInit {
     let totalCompleted = 0;
 
     for (const tenantId of tenantIds) {
+      // Use tenant-global settings for cron jobs — branch-level overrides apply to user-facing flows only.
       const settings = await this.settingsHandler.execute({ tenantId, branchId: null });
       const cutoff = new Date(Date.now() - settings.autoCompleteAfterHours * 3_600_000);
 
@@ -148,6 +149,7 @@ export class CronTasksService implements OnModuleInit {
     let totalNoShow = 0;
 
     for (const tenantId of tenantIds) {
+      // Use tenant-global settings for cron jobs — branch-level overrides apply to user-facing flows only.
       const settings = await this.settingsHandler.execute({ tenantId, branchId: null });
       const cutoff = new Date(Date.now() - settings.autoNoShowAfterMinutes * 60_000);
 
