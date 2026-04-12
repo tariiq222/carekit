@@ -1,12 +1,12 @@
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtGuard } from './jwt.guard';
 
-const makeCtx = (handler: object, cls: object) =>
+const makeCtx = (handler: object, cls: object, headers: Record<string, string> = {}) =>
   ({
     getHandler: () => handler,
     getClass: () => cls,
-    switchToHttp: () => ({ getRequest: () => ({}) }),
+    switchToHttp: () => ({ getRequest: () => ({ headers }) }),
   }) as unknown as ExecutionContext;
 
 describe('JwtGuard', () => {
@@ -19,22 +19,43 @@ describe('JwtGuard', () => {
   });
 
   it('returns true for public routes', () => {
-    jest
-      .spyOn(reflector, 'getAllAndOverride')
-      .mockReturnValue(true);
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
     expect(guard.canActivate(makeCtx({}, {}))).toBe(true);
   });
 
-  it('handleRequest returns user when valid', () => {
-    const user = { id: '1' };
-    expect(guard.handleRequest(null, user)).toBe(user);
+  it('handleRequest returns user when JWT tenant matches header', () => {
+    const user = { id: 'u-1', tenantId: 'tenant-a' };
+    const ctx = makeCtx({}, {}, { 'x-tenant-id': 'tenant-a' });
+    expect(guard.handleRequest(null, user, null, ctx)).toBe(user);
+  });
+
+  it('handleRequest trims whitespace on header before matching', () => {
+    const user = { id: 'u-1', tenantId: 'tenant-a' };
+    const ctx = makeCtx({}, {}, { 'x-tenant-id': '  tenant-a  ' });
+    expect(guard.handleRequest(null, user, null, ctx)).toBe(user);
+  });
+
+  it('handleRequest throws ForbiddenException when header tenant differs from JWT', () => {
+    const user = { id: 'u-1', tenantId: 'tenant-a' };
+    const ctx = makeCtx({}, {}, { 'x-tenant-id': 'tenant-b' });
+    expect(() => guard.handleRequest(null, user, null, ctx)).toThrow(ForbiddenException);
+  });
+
+  it('handleRequest throws ForbiddenException when header is missing', () => {
+    const user = { id: 'u-1', tenantId: 'tenant-a' };
+    const ctx = makeCtx({}, {}, {});
+    expect(() => guard.handleRequest(null, user, null, ctx)).toThrow(ForbiddenException);
   });
 
   it('handleRequest throws UnauthorizedException when no user', () => {
-    expect(() => guard.handleRequest(null, null)).toThrow(UnauthorizedException);
+    const ctx = makeCtx({}, {}, { 'x-tenant-id': 'tenant-a' });
+    expect(() => guard.handleRequest(null, null as never, null, ctx)).toThrow(UnauthorizedException);
   });
 
   it('handleRequest throws UnauthorizedException when error present', () => {
-    expect(() => guard.handleRequest(new Error('fail'), null)).toThrow(UnauthorizedException);
+    const ctx = makeCtx({}, {}, { 'x-tenant-id': 'tenant-a' });
+    expect(() => guard.handleRequest(new Error('fail'), null as never, null, ctx)).toThrow(
+      UnauthorizedException,
+    );
   });
 });
