@@ -3,7 +3,6 @@ import {
   ConflictException,
   BadRequestException,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
@@ -49,19 +48,35 @@ export class CreateBookingHandler {
       }
     }
 
+    // Verify branch and client belong to the same tenant before touching any
+    // other entity. Booking has no Prisma @relation to Client/Branch (cross-BC
+    // strings by design), so handler-level checks are the only defense against
+    // creating a booking against another tenant's client or branch.
+    const branch = await this.prisma.branch.findFirst({
+      where: { id: dto.branchId, tenantId: dto.tenantId },
+      select: { id: true },
+    });
+    if (!branch) throw new NotFoundException('Branch not found');
+
+    const client = await this.prisma.client.findFirst({
+      where: { id: dto.clientId, tenantId: dto.tenantId },
+      select: { id: true },
+    });
+    if (!client) throw new NotFoundException('Client not found');
+
     // Verify employee exists and belongs to the same tenant.
-    const employee = await this.prisma.employee.findUnique({
-      where: { id: dto.employeeId },
+    const employee = await this.prisma.employee.findFirst({
+      where: { id: dto.employeeId, tenantId: dto.tenantId },
+      select: { id: true },
     });
     if (!employee) throw new NotFoundException('Employee not found');
-    if (employee.tenantId !== dto.tenantId) {
-      throw new ForbiddenException('Employee does not belong to tenant');
-    }
 
     // Verify service belongs to this tenant before resolving price.
-    const service = await this.prisma.service.findUnique({ where: { id: dto.serviceId } });
+    const service = await this.prisma.service.findFirst({
+      where: { id: dto.serviceId, tenantId: dto.tenantId },
+      select: { id: true },
+    });
     if (!service) throw new NotFoundException('Service not found');
-    if (service.tenantId !== dto.tenantId) throw new ForbiddenException('Service does not belong to tenant');
 
     // Verify employee actually provides this service and get the employeeService id.
     const employeeService = await this.prisma.employeeService.findUnique({
