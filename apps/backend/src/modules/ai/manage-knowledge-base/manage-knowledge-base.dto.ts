@@ -1,11 +1,9 @@
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsObject, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsEnum, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { DocumentStatus } from '@prisma/client';
+import { PaginationDto } from '../../../common/dto';
 
-export class ListDocumentsDto {
+export class ListDocumentsDto extends PaginationDto {
   @IsOptional() @IsEnum(DocumentStatus) status?: DocumentStatus;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) limit?: number;
 }
 
 export class UpdateDocumentDto {

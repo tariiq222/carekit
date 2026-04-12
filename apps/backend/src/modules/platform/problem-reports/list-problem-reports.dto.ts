@@ -1,9 +1,8 @@
-import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProblemReportStatus } from '@prisma/client';
+import { PaginationDto } from '../../../common/dto';
 
-export class ListProblemReportsDto {
+export class ListProblemReportsDto extends PaginationDto {
   @IsOptional() @IsEnum(ProblemReportStatus) status?: ProblemReportStatus;
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) page?: number;
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) limit?: number;
 }

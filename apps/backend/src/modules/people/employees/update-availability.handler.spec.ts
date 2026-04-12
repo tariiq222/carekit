@@ -23,7 +23,7 @@ describe('UpdateAvailabilityHandler', () => {
     prisma = {
       employee: { findFirst: jest.fn() },
       employeeAvailability: { deleteMany: jest.fn(), createMany: jest.fn(), findMany: jest.fn() },
-      employeeAvailabilityException: { upsert: jest.fn(), findMany: jest.fn() },
+      employeeAvailabilityException: { deleteMany: jest.fn(), createMany: jest.fn(), findMany: jest.fn() },
       $transaction: jest.fn().mockImplementation((fn: (tx: unknown) => unknown) => fn(prisma)),
     };
 
@@ -70,6 +70,8 @@ describe('UpdateAvailabilityHandler', () => {
       { id: 'w2', dayOfWeek: 2, startTime: '09:00', endTime: '17:00' },
     ];
     prisma.employeeAvailability.findMany.mockResolvedValue(windowRows);
+    prisma.employeeAvailabilityException.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.employeeAvailabilityException.findMany.mockResolvedValue([]);
 
     const result = await handler.execute(makeCmd());
 
@@ -85,33 +87,38 @@ describe('UpdateAvailabilityHandler', () => {
     expect(result.exceptions).toEqual([]);
   });
 
-  it('upserts exceptions when provided', async () => {
+  it('deletes and recreates exceptions when provided', async () => {
     prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.findMany.mockResolvedValue([]);
-    const exceptionRow = { id: 'ex-1', date: new Date('2026-04-15'), isOff: true };
-    prisma.employeeAvailabilityException.upsert.mockResolvedValue(exceptionRow);
+    prisma.employeeAvailabilityException.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.employeeAvailabilityException.createMany.mockResolvedValue({ count: 1 });
+    const exceptionRow = { id: 'ex-1', startDate: new Date('2026-04-15'), endDate: new Date('2026-04-15'), reason: 'holiday' };
+    prisma.employeeAvailabilityException.findMany.mockResolvedValue([exceptionRow]);
 
     const result = await handler.execute(
       makeCmd({
         windows: [],
-        exceptions: [{ date: '2026-04-15', isOff: true, reason: 'holiday' }],
+        exceptions: [{ startDate: '2026-04-15', endDate: '2026-04-15', reason: 'holiday' }],
       }),
     );
 
-    expect(prisma.employeeAvailabilityException.upsert).toHaveBeenCalledTimes(1);
+    expect(prisma.employeeAvailabilityException.deleteMany).toHaveBeenCalledWith({ where: { employeeId: 'emp-1' } });
+    expect(prisma.employeeAvailabilityException.createMany).toHaveBeenCalledTimes(1);
     expect(result.exceptions).toEqual([exceptionRow]);
   });
 
-  it('handles empty exceptions array without calling upsert', async () => {
+  it('handles empty exceptions array without calling createMany', async () => {
     prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.findMany.mockResolvedValue([]);
+    prisma.employeeAvailabilityException.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.employeeAvailabilityException.findMany.mockResolvedValue([]);
 
     await handler.execute(makeCmd({ windows: [], exceptions: [] }));
 
-    expect(prisma.employeeAvailabilityException.upsert).not.toHaveBeenCalled();
+    expect(prisma.employeeAvailabilityException.createMany).not.toHaveBeenCalled();
   });
 });

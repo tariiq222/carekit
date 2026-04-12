@@ -1,8 +1,7 @@
-import { IsBoolean, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsBoolean, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaginationDto } from '../../../common/dto';
 
-export class ListServicesDto {
+export class ListServicesDto extends PaginationDto {
   @IsOptional() @Type(() => Boolean) @IsBoolean() isActive?: boolean;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(200) limit?: number;
 }

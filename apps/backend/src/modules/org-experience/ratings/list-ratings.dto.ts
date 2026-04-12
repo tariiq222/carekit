@@ -1,9 +1,7 @@
-import { IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsUUID } from 'class-validator';
+import { PaginationDto } from '../../../common/dto';
 
-export class ListRatingsDto {
+export class ListRatingsDto extends PaginationDto {
   @IsOptional() @IsUUID() employeeId?: string;
   @IsOptional() @IsUUID() clientId?: string;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(200) limit?: number;
 }

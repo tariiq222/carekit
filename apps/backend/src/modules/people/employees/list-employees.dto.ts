@@ -1,8 +1,9 @@
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 import { EmployeeGender, EmploymentType, OnboardingStatus } from '@prisma/client';
+import { PaginationDto } from '../../../common/dto';
 
-export class ListEmployeesDto {
+export class ListEmployeesDto extends PaginationDto {
   @IsOptional() @IsString() search?: string;
   @IsOptional() @IsBoolean() @Type(() => Boolean) isActive?: boolean;
   @IsOptional() @IsEnum(EmployeeGender) gender?: EmployeeGender;
@@ -10,6 +11,4 @@ export class ListEmployeesDto {
   @IsOptional() @IsEnum(OnboardingStatus) onboardingStatus?: OnboardingStatus;
   @IsOptional() @IsUUID() specialtyId?: string;
   @IsOptional() @IsUUID() branchId?: string;
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) page?: number;
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) limit?: number;
 }

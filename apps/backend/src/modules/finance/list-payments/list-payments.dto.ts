@@ -1,10 +1,9 @@
-import { IsDateString, IsEnum, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
+import { PaginationDto } from '../../../common/dto';
 
-export class ListPaymentsDto {
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) page?: number;
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) limit?: number;
+export class ListPaymentsDto extends PaginationDto {
   @IsOptional() @IsUUID() invoiceId?: string;
   @IsOptional() @IsUUID() clientId?: string;
   @IsOptional() @IsEnum(PaymentMethod) method?: PaymentMethod;

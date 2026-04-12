@@ -51,6 +51,7 @@ export class TokenService {
       // incorrectly assume no features are licensed.
       // TODO(phase-finance): inject ValidateLicenseService here and populate
       // features from the active license at token issuance time.
+      // Tracked in: https://github.com/carekit-hq/carekit/issues/PHASE-FINANCE
       features: [],
     };
 
