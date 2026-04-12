@@ -17,12 +17,14 @@ import { DeactivateUserHandler } from './users/deactivate-user.handler';
 import { CreateRoleHandler } from './roles/create-role.handler';
 import { AssignPermissionsHandler } from './roles/assign-permissions.handler';
 import { ListRolesHandler } from './roles/list-roles.handler';
+import { ChangePasswordHandler } from './users/change-password.handler';
 import { CaslAbilityFactory } from './casl/casl-ability.factory';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
   GetCurrentUserHandler, CreateUserHandler, UpdateUserHandler, ListUsersHandler, DeactivateUserHandler,
   CreateRoleHandler, AssignPermissionsHandler, ListRolesHandler,
+  ChangePasswordHandler,
 ];
 
 @Module({

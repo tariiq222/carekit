@@ -1,5 +1,5 @@
 import {
-  Controller, Post, Body, HttpCode, HttpStatus, UnauthorizedException,
+  Controller, Post, Get, Patch, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { LoginHandler } from '../../modules/identity/login/login.handler';
@@ -9,7 +9,17 @@ import { RefreshTokenDto } from '../../modules/identity/refresh-token/refresh-to
 import { LogoutDto } from '../../modules/identity/logout/logout.dto';
 import { PrismaService } from '../../infrastructure/database';
 import { TokenService } from '../../modules/identity/shared/token.service';
-import { TenantId } from '../../common/tenant/tenant.decorator';
+import { TenantId, UserId } from '../../common/tenant/tenant.decorator';
+import { JwtGuard } from '../../common/guards/jwt.guard';
+import { GetCurrentUserHandler } from '../../modules/identity/get-current-user/get-current-user.handler';
+import { GetCurrentUserQuery } from '../../modules/identity/get-current-user/get-current-user.query';
+import { ChangePasswordHandler } from '../../modules/identity/users/change-password.handler';
+import { IsString, MinLength } from 'class-validator';
+
+class ChangePasswordDto {
+  @IsString() currentPassword!: string;
+  @IsString() @MinLength(8) newPassword!: string;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -18,6 +28,8 @@ export class AuthController {
     private readonly logout: LogoutHandler,
     private readonly prisma: PrismaService,
     private readonly tokens: TokenService,
+    private readonly getCurrentUser: GetCurrentUserHandler,
+    private readonly changePassword: ChangePasswordHandler,
   ) {}
 
   @Post('login')
@@ -53,6 +65,31 @@ export class AuthController {
     const { refreshToken: rawToken } = body;
     const record = await this.findActiveToken(rawToken);
     await this.logout.execute({ userId: record.userId, tenantId: record.tenantId });
+  }
+
+  @Get('me')
+  @UseGuards(JwtGuard)
+  async meEndpoint(
+    @UserId() userId: string,
+    @TenantId() tenantId: string,
+  ) {
+    return this.getCurrentUser.execute({ userId, tenantId } satisfies GetCurrentUserQuery);
+  }
+
+  @Patch('password/change')
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changePasswordEndpoint(
+    @UserId() userId: string,
+    @TenantId() tenantId: string,
+    @Body() body: ChangePasswordDto,
+  ) {
+    await this.changePassword.execute({
+      userId,
+      tenantId,
+      currentPassword: body.currentPassword,
+      newPassword: body.newPassword,
+    });
   }
 
   // Uses tokenSelector (first 8 chars of the raw UUID) as an indexed DB filter
