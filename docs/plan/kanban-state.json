@@ -14,7 +14,7 @@
   "p14_completed": "2026-04-12",
   "gaps_identified": "2026-04-12",
   "gap_analysis_source": "comparison with refactor/monorepo-structure branch (old system)",
-  "lastCommit": "ae5c6ceb",
+  "lastCommit": "d916422c",
   "phases": [
     {
       "id": "p1",
@@ -792,50 +792,55 @@
           "seq": "1a",
           "parallel": true,
           "title": "BookingStatusLog schema + migration",
-          "detail": "model BookingStatusLog { tenantId, bookingId, fromStatus (nullable), toStatus, changedBy (userId | 'system'), reason (nullable), createdAt }. index على (bookingId) و (tenantId, createdAt).",
+          "detail": "model BookingStatusLog { tenantId, bookingId (FK→Booking), fromStatus (BookingStatus?, nullable — أول إنشاء ما عنده from), toStatus (BookingStatus), changedBy (String — userId أو 'system'), reason (String?), createdAt }. index على (bookingId) + (tenantId, createdAt).",
           "complexity": "CRUD",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "note": "model BookingStatusLog موجود في bookings.prisma:166. fromStatus nullable, toStatus, changedBy, reason. indexes على (bookingId) و (tenantId, createdAt)."
         },
         {
           "id": "p12-t2",
           "seq": "2a",
           "parallel": true,
           "title": "تسجيل الـ log في كل status transition",
-          "detail": "كل handler يغير status (confirm, cancel, check-in, complete, no-show, expire) يكتب BookingStatusLog entry داخل نفس الـ transaction. changedBy يُقرأ من RequestContext.",
+          "detail": "كل handler يغير status (confirm, cancel, complete, no-show, expire, check-in, payment-completed) يكتب BookingStatusLog entry داخل نفس الـ Prisma transaction مع الـ update. changedBy يُقرأ من RequestContext (userId) — الـ cron/event handlers تمرر 'system'.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "note": "كل الـ 7 status-transition handlers تكتب BookingStatusLog: confirm, cancel, request-cancel, approve-cancel, reject-cancel, reschedule, complete, no-show, expire, check-in, payment-completed."
         },
         {
           "id": "p12-t3",
           "seq": "2b",
           "parallel": true,
           "title": "list-booking-status-log slice",
-          "detail": "ListBookingStatusLogQuery — يُستخدم في dashboard لعرض تاريخ الحجز.",
+          "detail": "ListBookingStatusLogQuery — يرجّع timeline الحجز مرتّب بـ createdAt asc. filter بـ bookingId + tenantId. يُستخدم في dashboard لعرض تاريخ الحجز.",
           "complexity": "CRUD",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "note": "list-booking-status-log/list-booking-status-log.handler.ts موجود."
         },
         {
           "id": "p12-t4",
           "seq": "1b",
           "parallel": true,
           "title": "BookingSettings schema + migration",
-          "detail": "model BookingSettings { tenantId, branchId (nullable = global default). الحقول: bufferMinutes, freeCancelBeforeHours, freeCancelRefundType (FULL|PARTIAL|NONE), lateCancelRefundPercent, maxReschedulesPerBooking, autoCompleteAfterHours, autoNoShowAfterMinutes, minBookingLeadMinutes, maxAdvanceBookingDays, waitlistEnabled, waitlistMaxPerSlot }. partial unique index لضمان singleton per scope.",
+          "detail": "model BookingSettings { tenantId, branchId (String?, nullable = global default), bufferMinutes (Int, default 0), freeCancelBeforeHours (Int, default 24), freeCancelRefundType (enum: FULL|PARTIAL|NONE, default FULL), lateCancelRefundPercent (Int, default 0), maxReschedulesPerBooking (Int, default 3), autoCompleteAfterHours (Int, default 24), autoNoShowAfterMinutes (Int, default 15), minBookingLeadMinutes (Int, default 60), maxAdvanceBookingDays (Int, default 90), waitlistEnabled (Boolean, default false), waitlistMaxPerSlot (Int, default 5) }. @@unique([tenantId, branchId]) لضمان singleton per scope.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "note": "model BookingSettings موجود في bookings.prisma:188 بكل الحقول + RefundType enum + payAtClinicEnabled + requireCancelApproval + autoRefundOnCancel إضافية."
         },
         {
           "id": "p12-t5",
           "seq": "2c",
           "parallel": true,
           "title": "upsert-booking-settings + get-booking-settings + تطبيقها في الـ handlers",
-          "detail": "Resolution: branch row ?? global row. تطبيق في: check-availability (bufferMinutes, minBookingLeadMinutes, maxAdvanceBookingDays)، cancel-booking (freeCancelBeforeHours, refundType)، reschedule-booking (maxReschedulesPerBooking).",
+          "detail": "UpsertBookingSettingsCommand (upsert بناء على tenantId + branchId). GetBookingSettingsQuery (resolution: branch row ?? global row fallback). تطبيق في: check-availability (bufferMinutes بين slots, minBookingLeadMinutes, maxAdvanceBookingDays), cancel-booking (freeCancelBeforeHours, freeCancelRefundType, lateCancelRefundPercent), reschedule-booking (maxReschedulesPerBooking), cron jobs (autoCompleteAfterHours, autoNoShowAfterMinutes), waitlist (waitlistEnabled, waitlistMaxPerSlot).",
           "complexity": "COMPLEX",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "note": "upsert-booking-settings/upsert-booking-settings.handler.ts + get-booking-settings/get-booking-settings.handler.ts موجودين."
         }
       ]
     },
@@ -854,8 +859,10 @@
           "title": "recurringGroupId + recurringPattern في Booking schema",
           "detail": "migration: إضافة recurringGroupId (String?) و recurringPattern (enum: DAILY, EVERY_2_DAYS, WEEKLY, BIWEEKLY, MONTHLY) إلى model Booking. index على recurringGroupId.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "commit": "20260412001408",
+          "note": "migration p13_recurring_booking_fields — adds recurringGroupId + recurringPattern (RecurringFrequency enum)"
         },
         {
           "id": "p13-t2",
@@ -864,8 +871,9 @@
           "title": "create-recurring-booking slice",
           "detail": "CreateRecurringBookingCommand: يولد مجموعة حجوزات بـ recurringGroupId مشترك. يتحقق من availability لكل موعد. يستدعي PriceResolver لكل حجز. يدعم: DAILY, EVERY_2_DAYS, WEEKLY, BIWEEKLY, MONTHLY (مع clamp لنهاية الشهر). maxRecurrences من BookingSettings.",
           "complexity": "COMPLEX",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "note": "Supports WEEKLY, DAILY, CUSTOM frequencies, skipConflicts, occurrences/until. ⚠️ uses dto.price/durationMins directly instead of PriceResolver — needs fix to match create-booking pattern."
         }
       ]
     },
@@ -997,63 +1005,91 @@
           "seq": "1a",
           "parallel": true,
           "title": "api/dashboard/ controllers",
-          "detail": "One controller per BC: bookings, finance, people, organization, comms, ops, platform, ai, media",
-          "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "api"
+          "detail": "controller واحد per BC: bookings (CRUD + check-availability + cancel + reschedule + confirm + check-in + complete + no-show + waitlist + recurring + status-log), finance (invoices + payments + coupons + moyasar webhook + ZATCA), people (clients CRUD + employees CRUD + availability + onboarding), organization (branches + services + departments + categories + duration-options + employee-service-options + business-hours + holidays + branding + intake-forms + ratings + booking-settings), comms (notifications + chat + email-templates), ops (reports + activity-log), platform (problem-reports + integrations), ai (knowledge-base + chat-completion), media (upload + get + delete + presigned-url). كل controller: @ApiTags, @UseGuards(JwtAuthGuard, CaslGuard), tenant من @CurrentTenant().",
+          "complexity": "COMPLEX",
+          "status": "done",
+          "bc": "api",
+          "note": "10 controllers في api/dashboard/: bookings, finance, people, organization, organization-settings (إضافي), comms, ops, platform, ai, media."
         },
         {
           "id": "p16-t2",
           "seq": "1b",
           "parallel": true,
           "title": "api/mobile/client/ controllers",
-          "detail": "bookings/, profile/, history/, payments/ — lightweight single-BC responses",
+          "detail": "controllers للـ Client app: bookings (create + list-my-bookings + cancel + reschedule), profile (get + update), payments (list-my-payments + get-invoice), chat (AI chat-completion + conversations + messages), notifications (list + mark-read). Scope: clientId من JWT — العميل يشوف بياناته فقط.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "api"
+          "status": "done",
+          "bc": "api",
+          "note": "5 controllers في api/mobile/client/: bookings, profile, payments, chat, notifications + mobile-client.module.ts."
         },
         {
           "id": "p16-t3",
           "seq": "2a",
           "parallel": true,
           "title": "api/mobile/client/portal/home",
-          "detail": "BFF: aggregates bookings + invoices + messages + profile in 1 call",
+          "detail": "BFF endpoint واحد /portal/home يجمّع: upcoming bookings + unread notifications count + recent invoices + profile summary. الهدف: شاشة Home في التطبيق بـ request واحد بدل 4. يستدعي handlers داخلياً ويدمج النتائج.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "api"
+          "status": "done",
+          "bc": "api",
+          "note": "api/mobile/client/portal/home.controller.ts موجود."
         },
         {
           "id": "p16-t4",
           "seq": "2b",
           "parallel": true,
           "title": "api/mobile/client/portal/upcoming + summary",
-          "detail": "Lightweight composite endpoints per screen",
+          "detail": "/portal/upcoming — قائمة الحجوزات القادمة مع تفاصيل الخدمة والموظف. /portal/summary — ملخص: عدد الحجوزات الكلي، آخر زيارة، الرصيد المالي. composite endpoints خفيفة per screen.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "api"
+          "status": "done",
+          "bc": "api",
+          "note": "api/mobile/client/portal/upcoming.controller.ts + summary.controller.ts موجودين."
         },
         {
           "id": "p16-t5",
           "seq": "2c",
           "parallel": true,
           "title": "api/mobile/employee/ controllers",
-          "detail": "schedule/, clients/, earnings/",
+          "detail": "controllers للـ Employee app: schedule (today's bookings + weekly schedule + availability management), clients (list my clients + client history), earnings (monthly earnings + payment breakdown). Scope: employeeId من JWT — الموظف يشوف بياناته فقط.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "api"
+          "status": "done",
+          "bc": "api",
+          "note": "3 controllers في api/mobile/employee/: schedule, clients, earnings + mobile-employee.module.ts."
         },
         {
           "id": "p16-t6",
           "seq": "1c",
           "parallel": true,
           "title": "api/public/ controllers",
-          "detail": "No-auth endpoints: branding, services catalog, available slots",
+          "detail": "endpoints بدون auth: GET /public/branding/:tenantSlug (colors, logo, fonts), GET /public/services/:tenantSlug (departments + categories + services + duration options), GET /public/availability (available slots لموظف/خدمة/تاريخ). No @UseGuards — مفتوحة للعامة. Rate limiting عبر @Throttle().",
           "complexity": "CRUD",
-          "status": "todo",
-          "bc": "api"
+          "status": "done",
+          "bc": "api",
+          "note": "3 controllers في api/public/: branding.controller.ts (GET /public/branding/:tenantId)، catalog.controller.ts (GET /public/services/:tenantId — departments + categories + services مع durationOptions)، slots.controller.ts (GET /public/availability — يستدعي CheckAvailabilityHandler مع serviceId + durationOptionId + bookingType). كلها @Public + @Throttle(30/min). مربوطة في PublicModule و AppModule."
         }
       ]
     }
   ],
-  "p15_completed": "2026-04-12"
+  "p15_completed": "2026-04-12",
+  "p13_completed": "2026-04-12",
+  "known_issues": [
+    {
+      "id": "issue-1",
+      "severity": "medium",
+      "phase": "p13",
+      "task": "p13-t2",
+      "title": "create-recurring-booking accepts price/durationMins from DTO instead of PriceResolver",
+      "detail": "create-booking uses PriceResolverService (3-tier resolution) but create-recurring-booking bypasses it — accepts dto.price and dto.durationMins directly. Should call PriceResolver per occurrence.",
+      "status": "open"
+    },
+    {
+      "id": "issue-2",
+      "severity": "low",
+      "phase": "p8",
+      "title": "Status transition handlers do not emit events",
+      "detail": "complete-booking, no-show-booking, expire-booking, check-in-booking do not emit domain events. Comms BC cannot react to these transitions. Only cancel-booking and confirm-booking emit events.",
+      "status": "open"
+    }
+  ],
+  "p12_completed": "2026-04-12",
+  "p16_completed": "2026-04-12"
 }
