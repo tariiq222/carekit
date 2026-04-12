@@ -255,12 +255,6 @@ export const queryKeys = {
     map: () => ["feature-flag-map"] as const,
   },
 
-  /* ─── Widget ─── */
-  widget: {
-    branding: () => ["widget", "branding"] as const,
-    settings: () => ["organization-settings", "widget"] as const,
-  },
-
   /* ─── Organization Public Settings ─── */
   organizationPublic: {
     settings: () => ["organization-settings", "public"] as const,

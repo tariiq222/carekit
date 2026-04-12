@@ -95,8 +95,6 @@ export function useBookingSettingsMutation() {
     mutationFn: updateBookingSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.bookingSettings.all })
-      queryClient.invalidateQueries({ queryKey: queryKeys.widget.branding() })
-      queryClient.invalidateQueries({ queryKey: queryKeys.widget.settings() })
       queryClient.invalidateQueries({ queryKey: queryKeys.organizationPublic.settings() })
     },
   })
@@ -142,38 +140,6 @@ export function usePaymentSettingsMutation() {
   })
 }
 
-/* ─── Widget Settings ─── */
-
-export interface WidgetSettings {
-  widgetShowPrice: boolean
-  widgetAnyEmployee: boolean
-  widgetRedirectUrl: string | null
-}
-
-export function useWidgetSettings() {
-  return useQuery({
-    queryKey: ["organization-settings", "widget"],
-    queryFn: () => fetchBookingSettings().then((s) => ({
-      widgetShowPrice:          s.widgetShowPrice ?? true,
-      widgetAnyEmployee:    s.widgetAnyEmployee ?? false,
-      widgetRedirectUrl:        s.widgetRedirectUrl ?? null,
-    })),
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-export function useWidgetSettingsMutation() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (data: Partial<WidgetSettings>) => updateBookingSettings({ ...data }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BOOKING_SETTINGS_KEY })
-      queryClient.invalidateQueries({ queryKey: queryKeys.widget.branding() })
-      queryClient.invalidateQueries({ queryKey: queryKeys.widget.settings() })
-      queryClient.invalidateQueries({ queryKey: queryKeys.organizationPublic.settings() })
-    },
-  })
-}
 
 /* ─── Clinic Settings Config ─── */
 

@@ -15,10 +15,8 @@ import { arFinance } from "./ar.finance"
 import { arUsers } from "./ar.users"
 import { arSettings } from "./ar.settings"
 import { arMisc } from "./ar.misc"
-import { arWidget } from "./ar.widget"
 import { arIntakeForms } from "./ar.intake-forms"
 import { arWhiteLabel } from "./ar.whitelabel"
-import { arGroups } from "./ar.groups"
 import { arDepartments } from "./ar.departments"
 
 export const ar: Record<string, string> = {
@@ -32,9 +30,7 @@ export const ar: Record<string, string> = {
   ...arUsers,
   ...arSettings,
   ...arMisc,
-  ...arWidget,
   ...arIntakeForms,
   ...arWhiteLabel,
-  ...arGroups,
   ...arDepartments,
 }

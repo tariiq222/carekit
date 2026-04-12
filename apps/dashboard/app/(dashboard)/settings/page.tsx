@@ -14,7 +14,6 @@ import { SettingsPaymentTab } from "@/components/features/settings/settings-paym
 import { SettingsIntegrationsTab } from "@/components/features/settings/settings-integrations-tab"
 import { ZatcaTab } from "@/components/features/invoices/zatca-tab"
 import { EmailTemplatesTab } from "@/components/features/settings/email-templates-tab"
-import { WidgetTab } from "@/components/features/settings/widget-tab"
 
 export default function SettingsPage() {
   const { t } = useLocale()
@@ -35,7 +34,6 @@ export default function SettingsPage() {
             <TabsTrigger value="integrations">{t("settings.tabs.integrations")}</TabsTrigger>
             <TabsTrigger value="zatca">{t("invoices.tabs.zatca")}</TabsTrigger>
             <TabsTrigger value="email-templates">{t("settings.tabs.emailTemplates")}</TabsTrigger>
-            <TabsTrigger value="widget">{t("settings.tabs.widget")}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -62,9 +60,6 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="email-templates" className="mt-4">
           <EmailTemplatesTab />
-        </TabsContent>
-        <TabsContent value="widget" className="mt-4">
-          <WidgetTab t={t} />
         </TabsContent>
       </Tabs>
     </ListPageShell>
