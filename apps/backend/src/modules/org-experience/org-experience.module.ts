@@ -13,6 +13,7 @@ import { GetBrandingHandler } from './branding/get-branding.handler';
 import { CreateIntakeFormHandler } from './intake-forms/create-intake-form.handler';
 import { GetIntakeFormHandler } from './intake-forms/get-intake-form.handler';
 import { ListIntakeFormsHandler } from './intake-forms/list-intake-forms.handler';
+import { DeleteIntakeFormHandler } from './intake-forms/delete-intake-form.handler';
 import { SubmitRatingHandler } from './ratings/submit-rating.handler';
 import { ListRatingsHandler } from './ratings/list-ratings.handler';
 import { GetOrgSettingsHandler } from './org-settings/get-org-settings.handler';
@@ -31,7 +32,7 @@ const serviceHandlers = [
   providers: [
     ...serviceHandlers,
     UpsertBrandingHandler, GetBrandingHandler,
-    CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler,
+    CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler, DeleteIntakeFormHandler,
     SubmitRatingHandler, ListRatingsHandler,
     GetOrgSettingsHandler, UpsertOrgSettingsHandler,
     GetBookingSettingsHandler, UpsertBookingSettingsHandler,
@@ -39,7 +40,7 @@ const serviceHandlers = [
   exports: [
     ...serviceHandlers,
     UpsertBrandingHandler, GetBrandingHandler,
-    CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler,
+    CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler, DeleteIntakeFormHandler,
     SubmitRatingHandler, ListRatingsHandler,
     GetOrgSettingsHandler, UpsertOrgSettingsHandler,
     GetBookingSettingsHandler, UpsertBookingSettingsHandler,

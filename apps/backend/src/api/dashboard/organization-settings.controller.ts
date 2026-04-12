@@ -20,6 +20,7 @@ import { CreateIntakeFormDto } from '../../modules/org-experience/intake-forms/c
 import { GetIntakeFormHandler } from '../../modules/org-experience/intake-forms/get-intake-form.handler';
 import { ListIntakeFormsHandler } from '../../modules/org-experience/intake-forms/list-intake-forms.handler';
 import { ListIntakeFormsDto } from '../../modules/org-experience/intake-forms/list-intake-forms.dto';
+import { DeleteIntakeFormHandler } from '../../modules/org-experience/intake-forms/delete-intake-form.handler';
 import { SubmitRatingHandler } from '../../modules/org-experience/ratings/submit-rating.handler';
 import { SubmitRatingDto } from '../../modules/org-experience/ratings/submit-rating.dto';
 import { ListRatingsHandler } from '../../modules/org-experience/ratings/list-ratings.handler';
@@ -43,6 +44,7 @@ export class DashboardOrganizationSettingsController {
     private readonly createIntakeForm: CreateIntakeFormHandler,
     private readonly getIntakeForm: GetIntakeFormHandler,
     private readonly listIntakeForms: ListIntakeFormsHandler,
+    private readonly deleteIntakeForm: DeleteIntakeFormHandler,
     private readonly submitRating: SubmitRatingHandler,
     private readonly listRatings: ListRatingsHandler,
     private readonly getOrgSettings: GetOrgSettingsHandler,
@@ -126,6 +128,15 @@ export class DashboardOrganizationSettingsController {
     @Param('formId', ParseUUIDPipe) formId: string,
   ) {
     return this.getIntakeForm.execute({ tenantId, formId });
+  }
+
+  @Delete('intake-forms/:formId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteIntakeFormEndpoint(
+    @TenantId() tenantId: string,
+    @Param('formId', ParseUUIDPipe) formId: string,
+  ) {
+    return this.deleteIntakeForm.execute({ tenantId, formId });
   }
 
   // ── Ratings ───────────────────────────────────────────────────────────────
