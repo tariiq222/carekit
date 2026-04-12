@@ -12,6 +12,7 @@ import { CheckInBookingHandler } from './check-in-booking/check-in-booking.handl
 import { CompleteBookingHandler } from './complete-booking/complete-booking.handler';
 import { NoShowBookingHandler } from './no-show-booking/no-show-booking.handler';
 import { ExpireBookingHandler } from './expire-booking/expire-booking.handler';
+import { ListBookingStatusLogHandler } from './list-booking-status-log/list-booking-status-log.handler';
 
 const future = new Date(Date.now() + 86400_000);
 const past = new Date(Date.now() - 86400_000);
@@ -651,5 +652,48 @@ describe('CheckInBookingHandler — status log', () => {
         reason: 'checked-in',
       }),
     });
+  });
+});
+
+describe('ListBookingStatusLogHandler', () => {
+  const mockLog = {
+    id: 'log-1',
+    tenantId: 'tenant-1',
+    bookingId: 'book-1',
+    fromStatus: BookingStatus.PENDING,
+    toStatus: BookingStatus.CONFIRMED,
+    changedBy: 'user-42',
+    reason: null,
+    createdAt: new Date(),
+  };
+
+  it('returns logs ordered by createdAt asc for a booking', async () => {
+    const prisma = buildPrisma();
+    (prisma as any).bookingStatusLog = {
+      create: jest.fn().mockResolvedValue({ id: 'log-1' }),
+      findMany: jest.fn().mockResolvedValue([mockLog]),
+    };
+    const handler = new ListBookingStatusLogHandler(prisma as never);
+
+    const result = await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+
+    expect((prisma as any).bookingStatusLog.findMany).toHaveBeenCalledWith({
+      where: { tenantId: 'tenant-1', bookingId: 'book-1' },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(result).toEqual([mockLog]);
+  });
+
+  it('returns empty array when booking has no log entries', async () => {
+    const prisma = buildPrisma();
+    (prisma as any).bookingStatusLog = {
+      create: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+    };
+    const handler = new ListBookingStatusLogHandler(prisma as never);
+
+    const result = await handler.execute({ tenantId: 'tenant-1', bookingId: 'no-logs' });
+
+    expect(result).toEqual([]);
   });
 });

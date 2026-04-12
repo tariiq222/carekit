@@ -15,6 +15,7 @@ import { CheckInBookingHandler } from './check-in-booking/check-in-booking.handl
 import { CompleteBookingHandler } from './complete-booking/complete-booking.handler';
 import { NoShowBookingHandler } from './no-show-booking/no-show-booking.handler';
 import { ExpireBookingHandler } from './expire-booking/expire-booking.handler';
+import { ListBookingStatusLogHandler } from './list-booking-status-log/list-booking-status-log.handler';
 import { PaymentCompletedEventHandler } from './payment-completed-handler/payment-completed.handler';
 
 const handlers = [
@@ -31,6 +32,7 @@ const handlers = [
   CompleteBookingHandler,
   NoShowBookingHandler,
   ExpireBookingHandler,
+  ListBookingStatusLogHandler,
 ];
 
 @Module({
