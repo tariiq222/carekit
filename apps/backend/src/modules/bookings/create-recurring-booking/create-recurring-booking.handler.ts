@@ -18,12 +18,30 @@ export class CreateRecurringBookingHandler {
 
     const dates = this.resolveDates(dto);
     const recurringGroupId = randomUUID();
+
+    // skipConflicts=true: best-effort — no transaction needed, partial series is intentional.
+    // skipConflicts=false (default): all-or-nothing — wrap in transaction so a mid-series
+    // conflict rolls back already-created bookings.
+    if (dto.skipConflicts) {
+      return this.createBookings(this.prisma, dto, dates, recurringGroupId);
+    }
+    return this.prisma.$transaction((tx) =>
+      this.createBookings(tx as unknown as PrismaService, dto, dates, recurringGroupId),
+    );
+  }
+
+  private async createBookings(
+    db: PrismaService,
+    dto: CreateRecurringBookingDto,
+    dates: Date[],
+    recurringGroupId: string,
+  ): Promise<Booking[]> {
     const created: Booking[] = [];
 
     for (const scheduledAt of dates) {
       const endsAt = new Date(scheduledAt.getTime() + dto.durationMins * 60_000);
 
-      const conflict = await this.prisma.booking.findFirst({
+      const conflict = await db.booking.findFirst({
         where: {
           tenantId: dto.tenantId,
           employeeId: dto.employeeId,
@@ -40,7 +58,7 @@ export class CreateRecurringBookingHandler {
         );
       }
 
-      const booking = await this.prisma.booking.create({
+      const booking = await db.booking.create({
         data: {
           tenantId: dto.tenantId,
           branchId: dto.branchId,

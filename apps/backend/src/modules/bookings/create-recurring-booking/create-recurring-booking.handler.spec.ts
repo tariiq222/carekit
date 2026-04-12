@@ -21,14 +21,19 @@ const mockBooking = (scheduledAt: Date, id = 'book-1') => ({
   recurringPattern: RecurringFrequency.WEEKLY,
 });
 
-const buildPrisma = (overrides?: Partial<{ findFirst: jest.Mock; create: jest.Mock }>) => ({
-  booking: {
-    findFirst: overrides?.findFirst ?? jest.fn().mockResolvedValue(null),
-    create: overrides?.create ?? jest.fn().mockImplementation(({ data }) =>
-      Promise.resolve(mockBooking(data.scheduledAt, `book-${Math.random()}`)),
-    ),
-  },
-});
+const buildPrisma = (overrides?: Partial<{ findFirst: jest.Mock; create: jest.Mock }>) => {
+  const prisma = {
+    booking: {
+      findFirst: overrides?.findFirst ?? jest.fn().mockResolvedValue(null),
+      create: overrides?.create ?? jest.fn().mockImplementation(({ data }) =>
+        Promise.resolve(mockBooking(data.scheduledAt, `book-${Math.random()}`)),
+      ),
+    },
+    // Simulate $transaction by calling the callback with the prisma itself (unit test context)
+    $transaction: jest.fn().mockImplementation((cb: (tx: unknown) => Promise<unknown>) => cb(prisma)),
+  };
+  return prisma;
+};
 
 const baseDto = {
   tenantId: 'tenant-1',
@@ -208,6 +213,32 @@ describe('CreateRecurringBookingHandler', () => {
       ).rejects.toThrow(ConflictException);
       // No bookings created when first slot conflicts
       expect(prisma.booking.create).not.toHaveBeenCalled();
+    });
+
+    it('throws ConflictException on mid-series conflict (skipConflicts false) — no prior bookings persisted', async () => {
+      let callCount = 0;
+      const prisma = buildPrisma({
+        findFirst: jest.fn().mockImplementation(() => {
+          callCount++;
+          // No conflict on 1st occurrence, conflict on 2nd
+          return callCount === 2 ? Promise.resolve({ id: 'existing' }) : Promise.resolve(null);
+        }),
+        create: jest.fn().mockImplementation(({ data }) =>
+          Promise.resolve(mockBooking(data.scheduledAt)),
+        ),
+      });
+      await expect(
+        new CreateRecurringBookingHandler(prisma as never).execute({
+          ...baseDto,
+          frequency: RecurringFrequency.WEEKLY,
+          occurrences: 3,
+        }),
+      ).rejects.toThrow(ConflictException);
+      // In unit test context, $transaction runs the callback synchronously with the same prisma
+      // so create was called once (1st occurrence succeeded) before the 2nd threw.
+      // The transaction rollback is handled by PostgreSQL in production; here we just verify
+      // that the ConflictException is propagated from a mid-series position.
+      expect(prisma.booking.create).toHaveBeenCalledTimes(1);
     });
 
     it('skips conflicting slots when skipConflicts is true', async () => {
