@@ -11,6 +11,20 @@ export async function fetchPaymentStats(): Promise<PaymentStats> {
   return api.get<PaymentStats>("/dashboard/finance/payments/stats")
 }
 
+export async function refundPayment(
+  id: string,
+  payload: { reason: string; amount?: number },
+): Promise<Payment> {
+  return api.patch<Payment>(`/dashboard/finance/payments/${id}/refund`, payload)
+}
+
+export async function verifyPayment(
+  id: string,
+  payload: { transferRef?: string },
+): Promise<Payment> {
+  return api.patch<Payment>(`/dashboard/finance/payments/${id}/verify`, payload)
+}
+
 export async function fetchPayments(
   query: PaymentListQuery = {},
 ): Promise<PaginatedResponse<Payment>> {

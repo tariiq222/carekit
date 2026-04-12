@@ -58,8 +58,7 @@ export function VerifyDialog({
     try {
       await verifyMut.mutateAsync({
         id: paymentId,
-        action: data.action,
-        adminNotes: data.adminNotes || undefined,
+        transferRef: data.adminNotes || undefined,
       })
       toast.success(
         data.action === "approve" ? "Transfer approved" : "Transfer rejected",

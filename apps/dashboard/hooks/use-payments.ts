@@ -6,6 +6,8 @@ import { queryKeys } from "@/lib/query-keys"
 import {
   fetchPayments,
   fetchPaymentStats,
+  refundPayment,
+  verifyPayment,
 } from "@/lib/api/payments"
 import type { PaymentListQuery, PaymentStats } from "@/lib/types/payment"
 import type { PaymentStatus, PaymentMethod } from "@/lib/types/common"
@@ -20,17 +22,25 @@ export function usePaymentStats() {
   })
 }
 
-/* ─── Mutations stub — TODO: no backend endpoints for refund/verify ─── */
-
 export function usePaymentMutations() {
-  const refundMut = {
-    mutateAsync: async (_args: unknown) => { throw new Error("Not implemented") },
-    isPending: false,
-  }
-  const verifyMut = {
-    mutateAsync: async (_args: unknown) => { throw new Error("Not implemented") },
-    isPending: false,
-  }
+  const queryClient = useQueryClient()
+
+  const refundMut = useMutation({
+    mutationFn: ({ id, reason, amount }: { id: string; reason: string; amount?: number }) =>
+      refundPayment(id, { reason, amount }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.all })
+    },
+  })
+
+  const verifyMut = useMutation({
+    mutationFn: ({ id, transferRef }: { id: string; transferRef?: string }) =>
+      verifyPayment(id, { transferRef }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.all })
+    },
+  })
+
   return { refundMut, verifyMut }
 }
 
