@@ -1,31 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { BookingType } from '@prisma/client';
+import { SetDurationOptionsDto } from './set-duration-options.dto';
 
-export interface DurationOptionInput {
-  id?: string;               // present = update, absent = create
-  bookingType?: BookingType | null;
-  label: string;
-  labelAr: string;
-  durationMins: number;
-  price: number;
-  currency?: string;
-  isDefault?: boolean;
-  sortOrder?: number;
-  isActive?: boolean;
-}
-
-export interface SetDurationOptionsDto {
-  tenantId: string;
-  serviceId: string;
-  options: DurationOptionInput[];
-}
+export type SetDurationOptionsCommand = SetDurationOptionsDto & { tenantId: string; serviceId: string };
 
 @Injectable()
 export class SetDurationOptionsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: SetDurationOptionsDto) {
+  async execute(dto: SetDurationOptionsCommand) {
     const service = await this.prisma.service.findFirst({
       where: { id: dto.serviceId, tenantId: dto.tenantId },
     });

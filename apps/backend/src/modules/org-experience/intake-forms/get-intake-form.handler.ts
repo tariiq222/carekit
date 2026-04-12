@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { GetIntakeFormDto } from './intake-form.dto';
+
+export type GetIntakeFormCommand = { tenantId: string; formId: string };
 
 @Injectable()
 export class GetIntakeFormHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: GetIntakeFormDto) {
+  async execute(dto: GetIntakeFormCommand) {
     const form = await this.prisma.intakeForm.findFirst({
       where: { id: dto.formId, tenantId: dto.tenantId },
       include: { fields: { orderBy: { position: 'asc' } } },

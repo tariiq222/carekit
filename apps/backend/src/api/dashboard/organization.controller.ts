@@ -6,24 +6,39 @@ import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateBranchHandler } from '../../modules/org-config/branches/create-branch.handler';
+import { CreateBranchDto } from '../../modules/org-config/branches/create-branch.dto';
 import { UpdateBranchHandler } from '../../modules/org-config/branches/update-branch.handler';
+import { UpdateBranchDto } from '../../modules/org-config/branches/update-branch.dto';
 import { ListBranchesHandler } from '../../modules/org-config/branches/list-branches.handler';
+import { ListBranchesDto } from '../../modules/org-config/branches/list-branches.dto';
 import { GetBranchHandler } from '../../modules/org-config/branches/get-branch.handler';
 import { CreateServiceHandler } from '../../modules/org-experience/services/create-service.handler';
+import { CreateServiceDto } from '../../modules/org-experience/services/create-service.dto';
 import { UpdateServiceHandler } from '../../modules/org-experience/services/update-service.handler';
+import { UpdateServiceDto } from '../../modules/org-experience/services/update-service.dto';
 import { ListServicesHandler } from '../../modules/org-experience/services/list-services.handler';
+import { ListServicesDto } from '../../modules/org-experience/services/list-services.dto';
 import { ArchiveServiceHandler } from '../../modules/org-experience/services/archive-service.handler';
 import { CreateDepartmentHandler } from '../../modules/org-config/departments/create-department.handler';
+import { CreateDepartmentDto } from '../../modules/org-config/departments/create-department.dto';
 import { UpdateDepartmentHandler } from '../../modules/org-config/departments/update-department.handler';
+import { UpdateDepartmentDto } from '../../modules/org-config/departments/update-department.dto';
 import { ListDepartmentsHandler } from '../../modules/org-config/departments/list-departments.handler';
+import { ListDepartmentsDto } from '../../modules/org-config/departments/list-departments.dto';
 import { CreateCategoryHandler } from '../../modules/org-config/categories/create-category.handler';
+import { CreateCategoryDto } from '../../modules/org-config/categories/create-category.dto';
 import { UpdateCategoryHandler } from '../../modules/org-config/categories/update-category.handler';
+import { UpdateCategoryDto } from '../../modules/org-config/categories/update-category.dto';
 import { ListCategoriesHandler } from '../../modules/org-config/categories/list-categories.handler';
+import { ListCategoriesDto } from '../../modules/org-config/categories/list-categories.dto';
 import { SetBusinessHoursHandler } from '../../modules/org-config/business-hours/set-business-hours.handler';
+import { SetBusinessHoursDto } from '../../modules/org-config/business-hours/set-business-hours.dto';
 import { GetBusinessHoursHandler } from '../../modules/org-config/business-hours/get-business-hours.handler';
 import { AddHolidayHandler } from '../../modules/org-config/business-hours/add-holiday.handler';
+import { AddHolidayDto } from '../../modules/org-config/business-hours/add-holiday.dto';
 import { RemoveHolidayHandler } from '../../modules/org-config/business-hours/remove-holiday.handler';
 import { ListHolidaysHandler } from '../../modules/org-config/business-hours/list-holidays.handler';
+import { ListHolidaysDto } from '../../modules/org-config/business-hours/list-holidays.dto';
 
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
@@ -55,17 +70,17 @@ export class DashboardOrganizationController {
   @Post('branches')
   createBranchEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateBranchDto,
   ) {
-    return this.createBranch.execute({ tenantId, ...body } as Parameters<typeof this.createBranch.execute>[0]);
+    return this.createBranch.execute({ tenantId, ...body });
   }
 
   @Get('branches')
   listBranchesEndpoint(
     @TenantId() tenantId: string,
-    @Query() query: Record<string, unknown>,
+    @Query() query: ListBranchesDto,
   ) {
-    return this.listBranches.execute({ tenantId, ...query } as Parameters<typeof this.listBranches.execute>[0]);
+    return this.listBranches.execute({ tenantId, ...query });
   }
 
   @Get('branches/:branchId')
@@ -80,9 +95,9 @@ export class DashboardOrganizationController {
   updateBranchEndpoint(
     @TenantId() tenantId: string,
     @Param('branchId', ParseUUIDPipe) branchId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateBranchDto,
   ) {
-    return this.updateBranch.execute({ tenantId, branchId, ...body } as Parameters<typeof this.updateBranch.execute>[0]);
+    return this.updateBranch.execute({ tenantId, branchId, ...body });
   }
 
   // ── Services ──────────────────────────────────────────────────────────────
@@ -90,26 +105,26 @@ export class DashboardOrganizationController {
   @Post('services')
   createServiceEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateServiceDto,
   ) {
-    return this.createService.execute({ tenantId, ...body } as Parameters<typeof this.createService.execute>[0]);
+    return this.createService.execute({ tenantId, ...body });
   }
 
   @Get('services')
   listServicesEndpoint(
     @TenantId() tenantId: string,
-    @Query() query: Record<string, unknown>,
+    @Query() query: ListServicesDto,
   ) {
-    return this.listServices.execute({ tenantId, ...query } as Parameters<typeof this.listServices.execute>[0]);
+    return this.listServices.execute({ tenantId, ...query });
   }
 
   @Patch('services/:serviceId')
   updateServiceEndpoint(
     @TenantId() tenantId: string,
     @Param('serviceId', ParseUUIDPipe) serviceId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateServiceDto,
   ) {
-    return this.updateService.execute({ tenantId, serviceId, ...body } as Parameters<typeof this.updateService.execute>[0]);
+    return this.updateService.execute({ tenantId, serviceId, ...body });
   }
 
   @Delete('services/:serviceId')
@@ -126,26 +141,26 @@ export class DashboardOrganizationController {
   @Post('departments')
   createDepartmentEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateDepartmentDto,
   ) {
-    return this.createDepartment.execute({ tenantId, ...body } as Parameters<typeof this.createDepartment.execute>[0]);
+    return this.createDepartment.execute({ tenantId, ...body });
   }
 
   @Get('departments')
   listDepartmentsEndpoint(
     @TenantId() tenantId: string,
-    @Query() query: Record<string, unknown>,
+    @Query() query: ListDepartmentsDto,
   ) {
-    return this.listDepartments.execute({ tenantId, ...query } as Parameters<typeof this.listDepartments.execute>[0]);
+    return this.listDepartments.execute({ tenantId, ...query });
   }
 
   @Patch('departments/:departmentId')
   updateDepartmentEndpoint(
     @TenantId() tenantId: string,
     @Param('departmentId', ParseUUIDPipe) departmentId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateDepartmentDto,
   ) {
-    return this.updateDepartment.execute({ tenantId, departmentId, ...body } as Parameters<typeof this.updateDepartment.execute>[0]);
+    return this.updateDepartment.execute({ tenantId, departmentId, ...body });
   }
 
   // ── Categories ────────────────────────────────────────────────────────────
@@ -153,26 +168,26 @@ export class DashboardOrganizationController {
   @Post('categories')
   createCategoryEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateCategoryDto,
   ) {
-    return this.createCategory.execute({ tenantId, ...body } as Parameters<typeof this.createCategory.execute>[0]);
+    return this.createCategory.execute({ tenantId, ...body });
   }
 
   @Get('categories')
   listCategoriesEndpoint(
     @TenantId() tenantId: string,
-    @Query() query: Record<string, unknown>,
+    @Query() query: ListCategoriesDto,
   ) {
-    return this.listCategories.execute({ tenantId, ...query } as Parameters<typeof this.listCategories.execute>[0]);
+    return this.listCategories.execute({ tenantId, ...query });
   }
 
   @Patch('categories/:categoryId')
   updateCategoryEndpoint(
     @TenantId() tenantId: string,
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpdateCategoryDto,
   ) {
-    return this.updateCategory.execute({ tenantId, categoryId, ...body } as Parameters<typeof this.updateCategory.execute>[0]);
+    return this.updateCategory.execute({ tenantId, categoryId, ...body });
   }
 
   // ── Business Hours ────────────────────────────────────────────────────────
@@ -180,9 +195,9 @@ export class DashboardOrganizationController {
   @Post('hours')
   setBusinessHoursEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: SetBusinessHoursDto,
   ) {
-    return this.setBusinessHours.execute({ tenantId, ...body } as Parameters<typeof this.setBusinessHours.execute>[0]);
+    return this.setBusinessHours.execute({ tenantId, ...body });
   }
 
   @Get('hours/:branchId')
@@ -198,9 +213,9 @@ export class DashboardOrganizationController {
   @Post('holidays')
   addHolidayEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: AddHolidayDto,
   ) {
-    return this.addHoliday.execute({ tenantId, ...body } as Parameters<typeof this.addHoliday.execute>[0]);
+    return this.addHoliday.execute({ tenantId, ...body });
   }
 
   @Delete('holidays/:holidayId')
@@ -215,8 +230,8 @@ export class DashboardOrganizationController {
   @Get('holidays')
   listHolidaysEndpoint(
     @TenantId() tenantId: string,
-    @Query() query: Record<string, unknown>,
+    @Query() query: ListHolidaysDto,
   ) {
-    return this.listHolidays.execute({ tenantId, ...query } as Parameters<typeof this.listHolidays.execute>[0]);
+    return this.listHolidays.execute({ tenantId, ...query });
   }
 }

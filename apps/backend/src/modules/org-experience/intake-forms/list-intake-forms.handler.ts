@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { ListIntakeFormsDto } from './intake-form.dto';
+import { ListIntakeFormsDto } from './list-intake-forms.dto';
+
+export type ListIntakeFormsCommand = ListIntakeFormsDto & { tenantId: string };
 
 @Injectable()
 export class ListIntakeFormsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: ListIntakeFormsDto) {
+  async execute(dto: ListIntakeFormsCommand) {
     return this.prisma.intakeForm.findMany({
       where: {
         tenantId: dto.tenantId,

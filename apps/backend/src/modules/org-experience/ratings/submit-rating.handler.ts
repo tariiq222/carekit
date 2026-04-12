@@ -1,12 +1,14 @@
 import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { SubmitRatingDto } from './rating.dto';
+import { SubmitRatingDto } from './submit-rating.dto';
+
+export type SubmitRatingCommand = SubmitRatingDto & { tenantId: string };
 
 @Injectable()
 export class SubmitRatingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: SubmitRatingDto) {
+  async execute(dto: SubmitRatingCommand) {
     if (dto.score < 1 || dto.score > 5) {
       throw new BadRequestException('Score must be between 1 and 5');
     }

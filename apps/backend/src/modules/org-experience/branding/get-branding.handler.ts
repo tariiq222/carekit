@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { GetBrandingDto } from './branding.dto';
+
+export type GetBrandingCommand = { tenantId: string };
 
 @Injectable()
 export class GetBrandingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: GetBrandingDto) {
+  async execute(dto: GetBrandingCommand) {
     const config = await this.prisma.brandingConfig.findUnique({
       where: { tenantId: dto.tenantId },
     });

@@ -6,12 +6,17 @@ import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
 import { UpsertBrandingHandler } from '../../modules/org-experience/branding/upsert-branding.handler';
+import { UpsertBrandingDto } from '../../modules/org-experience/branding/upsert-branding.dto';
 import { GetBrandingHandler } from '../../modules/org-experience/branding/get-branding.handler';
 import { CreateIntakeFormHandler } from '../../modules/org-experience/intake-forms/create-intake-form.handler';
+import { CreateIntakeFormDto } from '../../modules/org-experience/intake-forms/create-intake-form.dto';
 import { GetIntakeFormHandler } from '../../modules/org-experience/intake-forms/get-intake-form.handler';
 import { ListIntakeFormsHandler } from '../../modules/org-experience/intake-forms/list-intake-forms.handler';
+import { ListIntakeFormsDto } from '../../modules/org-experience/intake-forms/list-intake-forms.dto';
 import { SubmitRatingHandler } from '../../modules/org-experience/ratings/submit-rating.handler';
+import { SubmitRatingDto } from '../../modules/org-experience/ratings/submit-rating.dto';
 import { ListRatingsHandler } from '../../modules/org-experience/ratings/list-ratings.handler';
+import { ListRatingsDto } from '../../modules/org-experience/ratings/list-ratings.dto';
 
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
@@ -31,9 +36,9 @@ export class DashboardOrganizationSettingsController {
   @Post('branding')
   upsertBrandingEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: UpsertBrandingDto,
   ) {
-    return this.upsertBranding.execute({ tenantId, ...body } as Parameters<typeof this.upsertBranding.execute>[0]);
+    return this.upsertBranding.execute({ tenantId, ...body });
   }
 
   @Get('branding')
@@ -46,17 +51,17 @@ export class DashboardOrganizationSettingsController {
   @Post('intake-forms')
   createIntakeFormEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateIntakeFormDto,
   ) {
-    return this.createIntakeForm.execute({ tenantId, ...body } as Parameters<typeof this.createIntakeForm.execute>[0]);
+    return this.createIntakeForm.execute({ tenantId, ...body });
   }
 
   @Get('intake-forms')
   listIntakeFormsEndpoint(
     @TenantId() tenantId: string,
-    @Query() query: Record<string, unknown>,
+    @Query() query: ListIntakeFormsDto,
   ) {
-    return this.listIntakeForms.execute({ tenantId, ...query } as Parameters<typeof this.listIntakeForms.execute>[0]);
+    return this.listIntakeForms.execute({ tenantId, ...query });
   }
 
   @Get('intake-forms/:formId')
@@ -72,16 +77,16 @@ export class DashboardOrganizationSettingsController {
   @Post('ratings')
   submitRatingEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: SubmitRatingDto,
   ) {
-    return this.submitRating.execute({ tenantId, ...body } as Parameters<typeof this.submitRating.execute>[0]);
+    return this.submitRating.execute({ tenantId, ...body });
   }
 
   @Get('ratings')
   listRatingsEndpoint(
     @TenantId() tenantId: string,
-    @Query() query: Record<string, unknown>,
+    @Query() query: ListRatingsDto,
   ) {
-    return this.listRatings.execute({ tenantId, ...query } as Parameters<typeof this.listRatings.execute>[0]);
+    return this.listRatings.execute({ tenantId, ...query });
   }
 }

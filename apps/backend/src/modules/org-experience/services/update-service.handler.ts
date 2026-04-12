@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { UpdateServiceDto } from './service.dto';
+import { UpdateServiceDto } from './update-service.dto';
+
+export type UpdateServiceCommand = UpdateServiceDto & { tenantId: string; serviceId: string };
 
 @Injectable()
 export class UpdateServiceHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: UpdateServiceDto) {
+  async execute(dto: UpdateServiceCommand) {
     const service = await this.prisma.service.findFirst({
       where: { id: dto.serviceId, tenantId: dto.tenantId, archivedAt: null },
     });

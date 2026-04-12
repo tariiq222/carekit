@@ -1,24 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { SetEmployeeServiceOptionsDto } from './set-employee-service-options.dto';
 
-export interface EmployeeServiceOptionInput {
-  durationOptionId: string;
-  priceOverride?: number | null;
-  durationOverride?: number | null;
-  isActive?: boolean;
-}
-
-export interface SetEmployeeServiceOptionsDto {
+export type SetEmployeeServiceOptionsCommand = SetEmployeeServiceOptionsDto & {
   tenantId: string;
   employeeServiceId: string;
-  options: EmployeeServiceOptionInput[];
-}
+};
 
 @Injectable()
 export class SetEmployeeServiceOptionsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: SetEmployeeServiceOptionsDto) {
+  async execute(dto: SetEmployeeServiceOptionsCommand) {
     // Verify each durationOptionId belongs to the tenant
     const optionIds = dto.options.map((o) => o.durationOptionId);
     const validOptions = await this.prisma.serviceDurationOption.findMany({

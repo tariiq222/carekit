@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { ListRatingsDto } from './rating.dto';
+import { ListRatingsDto } from './list-ratings.dto';
+
+export type ListRatingsCommand = ListRatingsDto & { tenantId: string };
 
 @Injectable()
 export class ListRatingsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: ListRatingsDto) {
+  async execute(dto: ListRatingsCommand) {
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 20;
     const skip = (page - 1) * limit;

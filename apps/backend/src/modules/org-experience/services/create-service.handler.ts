@@ -1,12 +1,14 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { CreateServiceDto } from './service.dto';
+import { CreateServiceDto } from './create-service.dto';
+
+export type CreateServiceCommand = CreateServiceDto & { tenantId: string };
 
 @Injectable()
 export class CreateServiceHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: CreateServiceDto) {
+  async execute(dto: CreateServiceCommand) {
     const existing = await this.prisma.service.findFirst({
       where: { tenantId: dto.tenantId, nameAr: dto.nameAr, archivedAt: null },
     });

@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { CreateIntakeFormDto } from './intake-form.dto';
+import { CreateIntakeFormDto } from './create-intake-form.dto';
+
+export type CreateIntakeFormCommand = CreateIntakeFormDto & { tenantId: string };
 
 @Injectable()
 export class CreateIntakeFormHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: CreateIntakeFormDto) {
+  async execute(dto: CreateIntakeFormCommand) {
     return this.prisma.intakeForm.create({
       data: {
         tenantId: dto.tenantId,
@@ -18,7 +20,7 @@ export class CreateIntakeFormHandler {
                 tenantId: dto.tenantId,
                 labelAr: f.labelAr,
                 labelEn: f.labelEn,
-                fieldType: f.fieldType as never,
+                fieldType: f.fieldType,
                 isRequired: f.isRequired ?? false,
                 options: f.options ?? undefined,
                 position: f.position ?? i,
