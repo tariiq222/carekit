@@ -1,5 +1,7 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { envValidationSchema } from './config/env.validation';
 import { DatabaseModule } from './infrastructure/database';
 import { MessagingModule } from './infrastructure/messaging.module';
@@ -11,12 +13,16 @@ import { IdentityModule } from './modules/identity/identity.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { PeopleModule } from './modules/people/people.module';
 import { MediaModule } from './modules/media/media.module';
-import { OrganizationModule } from './modules/organization/organization.module';
+import { OrgConfigModule } from './modules/org-config/org-config.module';
+import { OrgExperienceModule } from './modules/org-experience/org-experience.module';
 import { FinanceModule } from './modules/finance/finance.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { OpsModule } from './modules/ops/ops.module';
 import { AiModule } from './modules/ai/ai.module';
 import { CommsModule } from './modules/comms/comms.module';
+import { MobileClientModule } from './api/mobile/client/mobile-client.module';
+import { MobileEmployeeModule } from './api/mobile/employee/mobile-employee.module';
+import { PublicModule } from './api/public/public.module';
 
 @Module({
   imports: [
@@ -29,6 +35,7 @@ import { CommsModule } from './modules/comms/comms.module';
         allowUnknown: true,
       },
     }),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
     DatabaseModule,
     MessagingModule,
     AiInfraModule,
@@ -38,13 +45,18 @@ import { CommsModule } from './modules/comms/comms.module';
     PlatformModule,
     PeopleModule,
     MediaModule,
-    OrganizationModule,
+    OrgConfigModule,
+    OrgExperienceModule,
     FinanceModule,
     BookingsModule,
     OpsModule,
     AiModule,
     CommsModule,
+    MobileClientModule,
+    MobileEmployeeModule,
+    PublicModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

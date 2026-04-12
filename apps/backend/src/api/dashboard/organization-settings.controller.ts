@@ -5,13 +5,13 @@ import {
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
-import { UpsertBrandingHandler } from '../../modules/organization/branding/upsert-branding.handler';
-import { GetBrandingHandler } from '../../modules/organization/branding/get-branding.handler';
-import { CreateIntakeFormHandler } from '../../modules/organization/intake-forms/create-intake-form.handler';
-import { GetIntakeFormHandler } from '../../modules/organization/intake-forms/get-intake-form.handler';
-import { ListIntakeFormsHandler } from '../../modules/organization/intake-forms/list-intake-forms.handler';
-import { SubmitRatingHandler } from '../../modules/organization/ratings/submit-rating.handler';
-import { ListRatingsHandler } from '../../modules/organization/ratings/list-ratings.handler';
+import { UpsertBrandingHandler } from '../../modules/org-experience/branding/upsert-branding.handler';
+import { GetBrandingHandler } from '../../modules/org-experience/branding/get-branding.handler';
+import { CreateIntakeFormHandler } from '../../modules/org-experience/intake-forms/create-intake-form.handler';
+import { GetIntakeFormHandler } from '../../modules/org-experience/intake-forms/get-intake-form.handler';
+import { ListIntakeFormsHandler } from '../../modules/org-experience/intake-forms/list-intake-forms.handler';
+import { SubmitRatingHandler } from '../../modules/org-experience/ratings/submit-rating.handler';
+import { ListRatingsHandler } from '../../modules/org-experience/ratings/list-ratings.handler';
 
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
