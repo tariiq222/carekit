@@ -12,6 +12,9 @@ import {
 } from '../../modules/ai/manage-knowledge-base/manage-knowledge-base.dto';
 import { ChatCompletionHandler } from '../../modules/ai/chat-completion/chat-completion.handler';
 import { ChatCompletionDto } from '../../modules/ai/chat-completion/chat-completion.dto';
+import { GetChatbotConfigHandler } from '../../modules/ai/chatbot-config/get-chatbot-config.handler';
+import { UpsertChatbotConfigHandler } from '../../modules/ai/chatbot-config/upsert-chatbot-config.handler';
+import { UpsertChatbotConfigDto } from '../../modules/ai/chatbot-config/upsert-chatbot-config.dto';
 
 @Controller('dashboard/ai')
 @UseGuards(JwtGuard, CaslGuard)
@@ -19,6 +22,8 @@ export class DashboardAiController {
   constructor(
     private readonly knowledgeBase: ManageKnowledgeBaseHandler,
     private readonly chatCompletion: ChatCompletionHandler,
+    private readonly getChatbotConfig: GetChatbotConfigHandler,
+    private readonly upsertChatbotConfig: UpsertChatbotConfigHandler,
   ) {}
 
   // ── Knowledge Base ─────────────────────────────────────────────────────────
@@ -52,6 +57,25 @@ export class DashboardAiController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.knowledgeBase.deleteDocument({ tenantId, documentId: id });
+  }
+
+  // ── Chatbot Config ────────────────────────────────────────────────────────
+
+  @Get('chatbot-config')
+  getChatbotConfigEndpoint(
+    @TenantId() tenantId: string,
+    @Query('category') category?: string,
+  ) {
+    return this.getChatbotConfig.execute({ tenantId, category });
+  }
+
+  @Patch('chatbot-config')
+  @HttpCode(HttpStatus.OK)
+  upsertChatbotConfigEndpoint(
+    @TenantId() tenantId: string,
+    @Body() body: UpsertChatbotConfigDto,
+  ) {
+    return this.upsertChatbotConfig.execute({ tenantId, configs: body.configs });
   }
 
   // ── Chat Completion ────────────────────────────────────────────────────────
