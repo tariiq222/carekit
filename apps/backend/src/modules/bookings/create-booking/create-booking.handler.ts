@@ -4,6 +4,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
@@ -101,19 +102,6 @@ export class CreateBookingHandler {
 
     const endsAt = new Date(scheduledAt.getTime() + durationMins * 60_000);
 
-    const conflict = await this.prisma.booking.findFirst({
-      where: {
-        tenantId: dto.tenantId,
-        employeeId: dto.employeeId,
-        status: { in: ['PENDING', 'CONFIRMED'] },
-        scheduledAt: { lt: endsAt },
-        endsAt: { gt: scheduledAt },
-      },
-    });
-    if (conflict) {
-      throw new ConflictException('Employee already has a booking in this time slot');
-    }
-
     let discountedPrice: number | null = null;
 
     if (dto.couponCode) {
@@ -144,29 +132,51 @@ export class CreateBookingHandler {
       discountedPrice = parseFloat((basePrice - deduction).toFixed(2));
     }
 
-    return this.prisma.booking.create({
-      data: {
-        tenantId: dto.tenantId,
-        branchId: dto.branchId,
-        clientId: dto.clientId,
-        employeeId: dto.employeeId,
-        serviceId: dto.serviceId,
-        durationOptionId: resolved.durationOptionId || null,
-        scheduledAt,
-        endsAt,
-        durationMins,
-        price,
-        currency,
-        bookingType: dto.bookingType ?? 'INDIVIDUAL',
-        notes: dto.notes,
-        expiresAt: dto.expiresAt,
-        groupSessionId: dto.groupSessionId,
-        payAtClinic: dto.payAtClinic ?? false,
-        couponCode: dto.couponCode ?? null,
-        giftCardCode: dto.giftCardCode ?? null,
-        discountedPrice: discountedPrice,
-        status: 'PENDING',
+    // Serialize the conflict check + insert so two concurrent requests for the
+    // same slot cannot both pass the overlap check. Postgres Serializable
+    // isolation detects the write-skew and rolls one back with a 40001 error.
+    return this.prisma.$transaction(
+      async (tx) => {
+        const conflict = await tx.booking.findFirst({
+          where: {
+            tenantId: dto.tenantId,
+            employeeId: dto.employeeId,
+            status: { in: ['PENDING', 'CONFIRMED'] },
+            scheduledAt: { lt: endsAt },
+            endsAt: { gt: scheduledAt },
+          },
+          select: { id: true },
+        });
+        if (conflict) {
+          throw new ConflictException('Employee already has a booking in this time slot');
+        }
+
+        return tx.booking.create({
+          data: {
+            tenantId: dto.tenantId,
+            branchId: dto.branchId,
+            clientId: dto.clientId,
+            employeeId: dto.employeeId,
+            serviceId: dto.serviceId,
+            durationOptionId: resolved.durationOptionId || null,
+            scheduledAt,
+            endsAt,
+            durationMins,
+            price,
+            currency,
+            bookingType: dto.bookingType ?? 'INDIVIDUAL',
+            notes: dto.notes,
+            expiresAt: dto.expiresAt,
+            groupSessionId: dto.groupSessionId,
+            payAtClinic: dto.payAtClinic ?? false,
+            couponCode: dto.couponCode ?? null,
+            giftCardCode: dto.giftCardCode ?? null,
+            discountedPrice: discountedPrice,
+            status: 'PENDING',
+          },
+        });
       },
-    });
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
 }

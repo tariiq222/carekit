@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { RescheduleBookingDto } from './reschedule-booking.dto';
@@ -49,34 +49,45 @@ export class RescheduleBookingHandler {
     const durationMins = cmd.newDurationMins ?? booking.durationMins;
     const newEndsAt = new Date(newScheduledAt.getTime() + durationMins * 60_000);
 
-    const conflict = await this.prisma.booking.findFirst({
-      where: {
-        tenantId: cmd.tenantId,
-        employeeId: booking.employeeId,
-        id: { not: cmd.bookingId },
-        status: { in: ['PENDING', 'CONFIRMED'] },
-        scheduledAt: { lt: newEndsAt },
-        endsAt: { gt: newScheduledAt },
-      },
-    });
-    if (conflict) throw new ConflictException('Employee already has a booking in the new time slot');
+    // Serialize conflict check + update + status log inside one transaction so
+    // two concurrent reschedules to the same slot cannot both pass the check.
+    // Postgres Serializable isolation detects write-skew and rolls one back.
+    const [updated] = await this.prisma.$transaction(
+      async (tx) => {
+        const conflict = await tx.booking.findFirst({
+          where: {
+            tenantId: cmd.tenantId,
+            employeeId: booking.employeeId,
+            id: { not: cmd.bookingId },
+            status: { in: ['PENDING', 'CONFIRMED'] },
+            scheduledAt: { lt: newEndsAt },
+            endsAt: { gt: newScheduledAt },
+          },
+          select: { id: true },
+        });
+        if (conflict) {
+          throw new ConflictException('Employee already has a booking in the new time slot');
+        }
 
-    const [updated] = await this.prisma.$transaction([
-      this.prisma.booking.update({
-        where: { id: cmd.bookingId },
-        data: { scheduledAt: newScheduledAt, endsAt: newEndsAt, durationMins },
-      }),
-      this.prisma.bookingStatusLog.create({
-        data: {
-          tenantId: cmd.tenantId,
-          bookingId: cmd.bookingId,
-          fromStatus: booking.status,
-          toStatus: booking.status,
-          changedBy: cmd.changedBy,
-          reason: 'rescheduled',
-        },
-      }),
-    ]);
+        return Promise.all([
+          tx.booking.update({
+            where: { id: cmd.bookingId },
+            data: { scheduledAt: newScheduledAt, endsAt: newEndsAt, durationMins },
+          }),
+          tx.bookingStatusLog.create({
+            data: {
+              tenantId: cmd.tenantId,
+              bookingId: cmd.bookingId,
+              fromStatus: booking.status,
+              toStatus: booking.status,
+              changedBy: cmd.changedBy,
+              reason: 'rescheduled',
+            },
+          }),
+        ]);
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
 
     return updated;
   }

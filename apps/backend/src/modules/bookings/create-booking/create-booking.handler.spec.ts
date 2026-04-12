@@ -19,27 +19,34 @@ const mockService = {
   id: 'svc-1', tenantId: 'tenant-1', durationMins: 60, price: 200, currency: 'SAR',
 };
 
-const buildPrisma = () => ({
-  booking: {
-    findFirst: jest.fn().mockResolvedValue(null),
-    create: jest.fn().mockResolvedValue(mockBooking),
-  },
-  branch: {
-    findFirst: jest.fn().mockResolvedValue({ id: 'branch-1' }),
-  },
-  client: {
-    findFirst: jest.fn().mockResolvedValue({ id: 'client-1' }),
-  },
-  service: {
-    findFirst: jest.fn().mockResolvedValue(mockService),
-  },
-  employee: {
-    findFirst: jest.fn().mockResolvedValue({ id: 'emp-1' }),
-  },
-  employeeService: {
-    findUnique: jest.fn().mockResolvedValue({ id: 'es-1', employeeId: 'emp-1', serviceId: 'svc-1' }),
-  },
-});
+const buildPrisma = () => {
+  const prisma = {
+    booking: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      create: jest.fn().mockResolvedValue(mockBooking),
+    },
+    branch: {
+      findFirst: jest.fn().mockResolvedValue({ id: 'branch-1' }),
+    },
+    client: {
+      findFirst: jest.fn().mockResolvedValue({ id: 'client-1' }),
+    },
+    service: {
+      findFirst: jest.fn().mockResolvedValue(mockService),
+    },
+    employee: {
+      findFirst: jest.fn().mockResolvedValue({ id: 'emp-1' }),
+    },
+    employeeService: {
+      findUnique: jest.fn().mockResolvedValue({ id: 'es-1', employeeId: 'emp-1', serviceId: 'svc-1' }),
+    },
+    $transaction: jest.fn(),
+  };
+  // $transaction is invoked with a callback — run it with prisma itself as tx
+  // so the create/findFirst calls inside the transaction hit our mocks.
+  prisma.$transaction = jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(prisma));
+  return prisma;
+};
 
 const buildPriceResolver = () => ({
   resolve: jest.fn().mockResolvedValue({

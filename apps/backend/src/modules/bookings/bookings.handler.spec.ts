@@ -27,7 +27,7 @@ const mockBooking = {
   status: BookingStatus.PENDING, bookingType: 'INDIVIDUAL',
 };
 
-const buildPrisma = () => ({
+const buildPrismaRaw = () => ({
   booking: {
     findUnique: jest.fn().mockResolvedValue(mockBooking),
     findFirst: jest.fn().mockResolvedValue(null),
@@ -40,7 +40,6 @@ const buildPrisma = () => ({
     create: jest.fn().mockResolvedValue({ id: 'log-1' }),
     count: jest.fn().mockResolvedValue(0),
   },
-  $transaction: jest.fn().mockImplementation((ops: Promise<unknown>[]) => Promise.all(ops)),
   waitlistEntry: {
     findFirst: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue({ id: 'wl-1', status: 'WAITING' }),
@@ -66,14 +65,39 @@ const buildPrisma = () => ({
     findUnique: jest.fn().mockResolvedValue({
       id: 'svc-1', tenantId: 'tenant-1', durationMins: 60, price: 200, currency: 'SAR',
     }),
+    findFirst: jest.fn().mockResolvedValue({
+      id: 'svc-1', tenantId: 'tenant-1', durationMins: 60, price: 200, currency: 'SAR',
+    }),
   },
   employee: {
     findUnique: jest.fn().mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' }),
+    findFirst: jest.fn().mockResolvedValue({ id: 'emp-1' }),
   },
   employeeService: {
     findUnique: jest.fn().mockResolvedValue({ id: 'es-1', employeeId: 'emp-1', serviceId: 'svc-1' }),
   },
+  branch: {
+    findFirst: jest.fn().mockResolvedValue({ id: 'branch-1' }),
+  },
+  client: {
+    findFirst: jest.fn().mockResolvedValue({ id: 'client-1' }),
+  },
 });
+
+// $transaction supports two shapes used across the bookings handlers:
+//   prisma.$transaction([promise1, promise2])            -> array form (cancel-booking, reschedule-booking update+log)
+//   prisma.$transaction(async (tx) => { ... })           -> interactive form (create-booking, reschedule-booking overlap)
+// The mock dispatches on argument type: arrays map to Promise.all, callbacks receive prisma as tx.
+const buildPrisma = () => {
+  const p = buildPrismaRaw() as ReturnType<typeof buildPrismaRaw> & { $transaction: jest.Mock };
+  p.$transaction = jest.fn(
+    (arg: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) => {
+      if (typeof arg === 'function') return arg(p);
+      return Promise.all(arg);
+    },
+  );
+  return p;
+};
 
 const buildPriceResolver = () => ({
   resolve: jest.fn().mockResolvedValue({
@@ -83,96 +107,17 @@ const buildPriceResolver = () => ({
 
 const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) });
 
-// ─── CreateBookingHandler ────────────────────────────────────────────────────
-describe('CreateBookingHandler', () => {
-  it('creates booking with price and duration derived from Service', async () => {
-    const prisma = buildPrisma();
-    const result = await new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
-      tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-      employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
-    });
-    expect(result.id).toBe('book-1');
-    // price and durationMins come from service mock, not from DTO
-    expect(prisma.service.findUnique).toHaveBeenCalledWith({ where: { id: 'svc-1' } });
-  });
-
-  it('throws ConflictException on overlapping slot', async () => {
-    const prisma = buildPrisma();
-    prisma.booking.findFirst = jest.fn().mockResolvedValue(mockBooking);
-    await expect(
-      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
-        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
-      }),
-    ).rejects.toThrow(ConflictException);
-  });
-
-  it('throws BadRequestException for past scheduledAt', async () => {
-    await expect(
-      new CreateBookingHandler(buildPrisma() as never).execute({
-        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: past,
-      }),
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('throws NotFoundException when service does not exist', async () => {
-    const prisma = buildPrisma();
-    prisma.service.findUnique = jest.fn().mockResolvedValue(null);
-    await expect(
-      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
-        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-        employeeId: 'emp-1', serviceId: 'bad-svc', scheduledAt: future,
-      }),
-    ).rejects.toThrow(NotFoundException);
-  });
-
-  it('throws ForbiddenException when service belongs to different tenant', async () => {
-    const prisma = buildPrisma();
-    prisma.service.findUnique = jest.fn().mockResolvedValue({
-      id: 'svc-1', tenantId: 'other-tenant', durationMins: 60, price: 200, currency: 'SAR',
-    });
-    await expect(
-      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
-        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
-      }),
-    ).rejects.toThrow(ForbiddenException);
-  });
-
-  it('throws NotFoundException when employee does not exist', async () => {
-    const prisma = buildPrisma();
-    prisma.employee.findUnique = jest.fn().mockResolvedValue(null);
-    await expect(
-      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
-        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-        employeeId: 'bad-emp', serviceId: 'svc-1', scheduledAt: future,
-      }),
-    ).rejects.toThrow(NotFoundException);
-  });
-
-  it('throws ForbiddenException when employee belongs to different tenant', async () => {
-    const prisma = buildPrisma();
-    prisma.employee.findUnique = jest.fn().mockResolvedValue({ id: 'emp-1', tenantId: 'other-tenant' });
-    await expect(
-      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
-        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
-      }),
-    ).rejects.toThrow(ForbiddenException);
-  });
-
-  it('throws BadRequestException when employee does not provide the service', async () => {
-    const prisma = buildPrisma();
-    prisma.employeeService.findUnique = jest.fn().mockResolvedValue(null);
-    await expect(
-      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
-        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
-        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
-      }),
-    ).rejects.toThrow(BadRequestException);
-  });
+const buildSettingsHandler = () => ({
+  execute: jest.fn().mockResolvedValue(DEFAULT_BOOKING_SETTINGS),
 });
+
+const buildZoomHandler = () => ({
+  execute: jest.fn().mockResolvedValue({ joinUrl: 'https://zoom.example/join' }),
+});
+
+// ─── CreateBookingHandler ────────────────────────────────────────────────────
+// CreateBookingHandler tests live in create-booking/create-booking.handler.spec.ts
+// (per-slice). Removed from this aggregated file to eliminate duplication.
 
 const defaultCancelSettings = {
   execute: jest.fn().mockResolvedValue({
@@ -252,7 +197,7 @@ describe('ConfirmBookingHandler', () => {
   it('confirms PENDING booking and emits BookingConfirmedEvent', async () => {
     const prisma = buildPrisma();
     const eb = buildEventBus();
-    await new ConfirmBookingHandler(prisma as never, eb as never).execute({
+    await new ConfirmBookingHandler(prisma as never, eb as never, buildZoomHandler() as never).execute({
       tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
@@ -265,7 +210,7 @@ describe('ConfirmBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
     await expect(
-      new ConfirmBookingHandler(prisma as never, buildEventBus() as never).execute({
+      new ConfirmBookingHandler(prisma as never, buildEventBus() as never, buildZoomHandler() as never).execute({
         tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
@@ -594,7 +539,7 @@ describe('ConfirmBookingHandler — status log', () => {
   it('writes a BookingStatusLog entry on confirm', async () => {
     const prisma = buildPrisma();
     const eventBus = { publish: jest.fn() };
-    const handler = new ConfirmBookingHandler(prisma as never, eventBus as never);
+    const handler = new ConfirmBookingHandler(prisma as never, eventBus as never, buildZoomHandler() as never);
 
     await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
 
