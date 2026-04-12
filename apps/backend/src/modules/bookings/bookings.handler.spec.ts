@@ -33,6 +33,10 @@ const buildPrisma = () => ({
     findMany: jest.fn().mockResolvedValue([]),
     count: jest.fn().mockResolvedValue(1),
   },
+  bookingStatusLog: {
+    create: jest.fn().mockResolvedValue({ id: 'log-1' }),
+  },
+  $transaction: jest.fn().mockImplementation((ops: Promise<unknown>[]) => Promise.all(ops)),
   waitlistEntry: {
     findFirst: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue({ id: 'wl-1', status: 'WAITING' }),
@@ -529,5 +533,123 @@ describe('CheckAvailabilityHandler', () => {
     // No slot should start before 09:00 or end after 17:00
     expect(result.every((s) => s.startTime.getHours() >= 9)).toBe(true);
     expect(result.every((s) => s.endTime <= new Date(tomorrowMidnight.getTime() + 17 * 3600_000))).toBe(true);
+  });
+});
+
+describe('ConfirmBookingHandler — status log', () => {
+  it('writes a BookingStatusLog entry on confirm', async () => {
+    const prisma = buildPrisma();
+    const eventBus = { publish: jest.fn() };
+    const handler = new ConfirmBookingHandler(prisma as never, eventBus as never);
+
+    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
+
+    expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tenantId: 'tenant-1',
+        bookingId: 'book-1',
+        fromStatus: BookingStatus.PENDING,
+        toStatus: BookingStatus.CONFIRMED,
+        changedBy: 'user-42',
+      }),
+    });
+  });
+});
+
+describe('CancelBookingHandler — status log', () => {
+  it('writes a BookingStatusLog entry on cancel', async () => {
+    const prisma = buildPrisma();
+    const eventBus = { publish: jest.fn() };
+    const handler = new CancelBookingHandler(prisma as never, eventBus as never);
+
+    await handler.execute({
+      tenantId: 'tenant-1',
+      bookingId: 'book-1',
+      reason: CancellationReason.CLIENT_REQUESTED,
+      changedBy: 'user-42',
+    });
+
+    expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        fromStatus: BookingStatus.PENDING,
+        toStatus: BookingStatus.CANCELLED,
+        changedBy: 'user-42',
+      }),
+    });
+  });
+});
+
+describe('CompleteBookingHandler — status log', () => {
+  it('writes a BookingStatusLog entry on complete', async () => {
+    const prisma = buildPrisma();
+    const confirmedBooking = { ...mockBooking, status: BookingStatus.CONFIRMED };
+    prisma.booking.findUnique.mockResolvedValue(confirmedBooking);
+    const handler = new CompleteBookingHandler(prisma as never);
+
+    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
+
+    expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        fromStatus: BookingStatus.CONFIRMED,
+        toStatus: BookingStatus.COMPLETED,
+        changedBy: 'user-42',
+      }),
+    });
+  });
+});
+
+describe('NoShowBookingHandler — status log', () => {
+  it('writes a BookingStatusLog entry on no-show', async () => {
+    const prisma = buildPrisma();
+    const confirmedBooking = { ...mockBooking, status: BookingStatus.CONFIRMED };
+    prisma.booking.findUnique.mockResolvedValue(confirmedBooking);
+    const handler = new NoShowBookingHandler(prisma as never);
+
+    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'system' });
+
+    expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        fromStatus: BookingStatus.CONFIRMED,
+        toStatus: BookingStatus.NO_SHOW,
+        changedBy: 'system',
+      }),
+    });
+  });
+});
+
+describe('ExpireBookingHandler — status log', () => {
+  it('writes a BookingStatusLog entry on expire', async () => {
+    const prisma = buildPrisma();
+    const handler = new ExpireBookingHandler(prisma as never);
+
+    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'system' });
+
+    expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        fromStatus: BookingStatus.PENDING,
+        toStatus: BookingStatus.EXPIRED,
+        changedBy: 'system',
+      }),
+    });
+  });
+});
+
+describe('CheckInBookingHandler — status log', () => {
+  it('writes a BookingStatusLog entry on check-in', async () => {
+    const prisma = buildPrisma();
+    const confirmedBooking = { ...mockBooking, status: BookingStatus.CONFIRMED, checkedInAt: null };
+    prisma.booking.findUnique.mockResolvedValue(confirmedBooking);
+    const handler = new CheckInBookingHandler(prisma as never);
+
+    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
+
+    expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        fromStatus: BookingStatus.CONFIRMED,
+        toStatus: BookingStatus.CONFIRMED,
+        changedBy: 'user-42',
+        reason: 'checked-in',
+      }),
+    });
   });
 });

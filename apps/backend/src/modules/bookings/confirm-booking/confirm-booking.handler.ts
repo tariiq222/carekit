@@ -7,6 +7,7 @@ import { BookingConfirmedEvent } from '../events/booking-confirmed.event';
 export interface ConfirmBookingCommand {
   tenantId: string;
   bookingId: string;
+  changedBy: string;
 }
 
 @Injectable()
@@ -25,10 +26,21 @@ export class ConfirmBookingHandler {
       throw new BadRequestException(`Only PENDING bookings can be confirmed (status: ${booking.status})`);
     }
 
-    const updated = await this.prisma.booking.update({
-      where: { id: cmd.bookingId },
-      data: { status: BookingStatus.CONFIRMED, confirmedAt: new Date() },
-    });
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: { status: BookingStatus.CONFIRMED, confirmedAt: new Date() },
+      }),
+      this.prisma.bookingStatusLog.create({
+        data: {
+          tenantId: cmd.tenantId,
+          bookingId: cmd.bookingId,
+          fromStatus: booking.status,
+          toStatus: BookingStatus.CONFIRMED,
+          changedBy: cmd.changedBy,
+        },
+      }),
+    ]);
 
     const event = new BookingConfirmedEvent(cmd.tenantId, {
       bookingId: booking.id,

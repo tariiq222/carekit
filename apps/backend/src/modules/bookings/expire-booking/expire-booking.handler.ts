@@ -5,6 +5,7 @@ import { PrismaService } from '../../../infrastructure/database';
 export interface ExpireBookingCommand {
   tenantId: string;
   bookingId: string;
+  changedBy: string;
 }
 
 @Injectable()
@@ -20,12 +21,21 @@ export class ExpireBookingHandler {
       throw new BadRequestException(`Only PENDING bookings can be expired (status: ${booking.status})`);
     }
 
-    return this.prisma.booking.update({
-      where: { id: cmd.bookingId },
-      data: {
-        status: BookingStatus.EXPIRED,
-        expiresAt: new Date(),
-      },
-    });
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: { status: BookingStatus.EXPIRED, expiresAt: new Date() },
+      }),
+      this.prisma.bookingStatusLog.create({
+        data: {
+          tenantId: cmd.tenantId,
+          bookingId: cmd.bookingId,
+          fromStatus: booking.status,
+          toStatus: BookingStatus.EXPIRED,
+          changedBy: cmd.changedBy,
+        },
+      }),
+    ]);
+    return updated;
   }
 }

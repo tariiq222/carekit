@@ -5,6 +5,7 @@ import { PrismaService } from '../../../infrastructure/database';
 export interface NoShowBookingCommand {
   tenantId: string;
   bookingId: string;
+  changedBy: string;
 }
 
 @Injectable()
@@ -20,12 +21,21 @@ export class NoShowBookingHandler {
       throw new BadRequestException(`Only CONFIRMED bookings can be marked as no-show (status: ${booking.status})`);
     }
 
-    return this.prisma.booking.update({
-      where: { id: cmd.bookingId },
-      data: {
-        status: BookingStatus.NO_SHOW,
-        noShowAt: new Date(),
-      },
-    });
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: { status: BookingStatus.NO_SHOW, noShowAt: new Date() },
+      }),
+      this.prisma.bookingStatusLog.create({
+        data: {
+          tenantId: cmd.tenantId,
+          bookingId: cmd.bookingId,
+          fromStatus: booking.status,
+          toStatus: BookingStatus.NO_SHOW,
+          changedBy: cmd.changedBy,
+        },
+      }),
+    ]);
+    return updated;
   }
 }

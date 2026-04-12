@@ -32,10 +32,22 @@ export class PaymentCompletedEventHandler {
           if (!booking || booking.tenantId !== tenantId) return;
           if (booking.status !== 'PENDING') return;
 
-          await this.prisma.booking.update({
-            where: { id: bookingId },
-            data: { status: 'CONFIRMED', confirmedAt: new Date() },
-          });
+          await this.prisma.$transaction([
+            this.prisma.booking.update({
+              where: { id: bookingId },
+              data: { status: 'CONFIRMED', confirmedAt: new Date() },
+            }),
+            this.prisma.bookingStatusLog.create({
+              data: {
+                tenantId,
+                bookingId,
+                fromStatus: booking.status,
+                toStatus: 'CONFIRMED',
+                changedBy: 'system',
+                reason: `payment:${envelope.payload.paymentId}`,
+              },
+            }),
+          ]);
         } catch (err) {
           this.logger.error(`Failed to confirm booking ${bookingId} after payment`, err);
           throw err;

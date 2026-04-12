@@ -5,6 +5,7 @@ import { PrismaService } from '../../../infrastructure/database';
 export interface CheckInBookingCommand {
   tenantId: string;
   bookingId: string;
+  changedBy: string;
 }
 
 /** Receptionist marks client as arrived — transitions CONFIRMED → CONFIRMED with checkedInAt timestamp. */
@@ -24,9 +25,22 @@ export class CheckInBookingHandler {
       throw new BadRequestException('Booking is already checked in');
     }
 
-    return this.prisma.booking.update({
-      where: { id: cmd.bookingId },
-      data: { checkedInAt: new Date() },
-    });
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: { checkedInAt: new Date() },
+      }),
+      this.prisma.bookingStatusLog.create({
+        data: {
+          tenantId: cmd.tenantId,
+          bookingId: cmd.bookingId,
+          fromStatus: BookingStatus.CONFIRMED,
+          toStatus: BookingStatus.CONFIRMED,
+          changedBy: cmd.changedBy,
+          reason: 'checked-in',
+        },
+      }),
+    ]);
+    return updated;
   }
 }

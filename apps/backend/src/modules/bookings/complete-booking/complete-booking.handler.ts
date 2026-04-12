@@ -6,6 +6,7 @@ export interface CompleteBookingCommand {
   tenantId: string;
   bookingId: string;
   completionNotes?: string;
+  changedBy: string;
 }
 
 const COMPLETABLE_STATUSES: BookingStatus[] = [BookingStatus.CONFIRMED];
@@ -23,13 +24,25 @@ export class CompleteBookingHandler {
       throw new BadRequestException(`Booking cannot be completed (status: ${booking.status})`);
     }
 
-    return this.prisma.booking.update({
-      where: { id: cmd.bookingId },
-      data: {
-        status: BookingStatus.COMPLETED,
-        completedAt: new Date(),
-        ...(cmd.completionNotes && { notes: cmd.completionNotes }),
-      },
-    });
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: {
+          status: BookingStatus.COMPLETED,
+          completedAt: new Date(),
+          ...(cmd.completionNotes && { notes: cmd.completionNotes }),
+        },
+      }),
+      this.prisma.bookingStatusLog.create({
+        data: {
+          tenantId: cmd.tenantId,
+          bookingId: cmd.bookingId,
+          fromStatus: booking.status,
+          toStatus: BookingStatus.COMPLETED,
+          changedBy: cmd.changedBy,
+        },
+      }),
+    ]);
+    return updated;
   }
 }

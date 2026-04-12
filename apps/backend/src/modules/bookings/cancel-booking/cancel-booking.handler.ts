@@ -9,6 +9,7 @@ export interface CancelBookingCommand {
   bookingId: string;
   reason: CancellationReason;
   cancelNotes?: string;
+  changedBy: string;
 }
 
 const CANCELLABLE_STATUSES: BookingStatus[] = [BookingStatus.PENDING, BookingStatus.CONFIRMED];
@@ -29,15 +30,27 @@ export class CancelBookingHandler {
       throw new BadRequestException(`Booking cannot be cancelled (status: ${booking.status})`);
     }
 
-    const updated = await this.prisma.booking.update({
-      where: { id: cmd.bookingId },
-      data: {
-        status: BookingStatus.CANCELLED,
-        cancelReason: cmd.reason,
-        cancelNotes: cmd.cancelNotes,
-        cancelledAt: new Date(),
-      },
-    });
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: {
+          status: BookingStatus.CANCELLED,
+          cancelReason: cmd.reason,
+          cancelNotes: cmd.cancelNotes,
+          cancelledAt: new Date(),
+        },
+      }),
+      this.prisma.bookingStatusLog.create({
+        data: {
+          tenantId: cmd.tenantId,
+          bookingId: cmd.bookingId,
+          fromStatus: booking.status,
+          toStatus: BookingStatus.CANCELLED,
+          changedBy: cmd.changedBy,
+          reason: cmd.reason,
+        },
+      }),
+    ]);
 
     const event = new BookingCancelledEvent(cmd.tenantId, {
       bookingId: booking.id,
