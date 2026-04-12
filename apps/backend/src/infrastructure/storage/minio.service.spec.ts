@@ -24,6 +24,15 @@ const configMap: Record<string, string | number> = {
   MINIO_USE_SSL: 'false',
 };
 
+const configMapSSL: Record<string, string | number> = {
+  MINIO_ENDPOINT: 'localhost',
+  MINIO_PORT: 9000,
+  MINIO_ACCESS_KEY: 'access',
+  MINIO_SECRET_KEY: 'secret',
+  MINIO_BUCKET: 'carekit',
+  MINIO_USE_SSL: 'true',
+};
+
 const mockConfig = {
   getOrThrow: (key: string) => configMap[key],
   get: (key: string) => configMap[key],
@@ -122,6 +131,24 @@ describe('MinioService', () => {
       const result = await service.fileExists('carekit', 'test.jpg');
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('SSL', () => {
+    it('uses https when MINIO_USE_SSL is true', async () => {
+      const sslConfig = {
+        getOrThrow: (key: string) => configMapSSL[key],
+        get: (key: string) => configMapSSL[key],
+      };
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          MinioService,
+          { provide: ConfigService, useValue: sslConfig },
+        ],
+      }).compile();
+
+      const sslService = module.get<MinioService>(MinioService);
+      expect((sslService as unknown as { publicEndpoint: string }).publicEndpoint).toContain('https://');
     });
   });
 });

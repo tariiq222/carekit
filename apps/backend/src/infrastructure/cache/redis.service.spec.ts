@@ -69,4 +69,9 @@ describe('RedisService', () => {
     await service.onModuleDestroy();
     expect(quitSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('defaults db to 0 when REDIS_DB is not set', () => {
+    const service = new RedisService(makeConfig({ REDIS_DB: undefined }));
+    expect(service.buildOptions().db).toBe(0);
+  });
 });

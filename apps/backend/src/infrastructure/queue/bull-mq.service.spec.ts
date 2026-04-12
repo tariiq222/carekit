@@ -54,6 +54,12 @@ describe('BullMqService', () => {
     expect(conn.password).toBe('pw');
   });
 
+  it('omits password from connection when REDIS_PASSWORD is empty string', () => {
+    const service = new BullMqService(makeConfig({ REDIS_PASSWORD: '' }));
+    const conn = service.buildConnection();
+    expect(conn.password).toBeUndefined();
+  });
+
   it('caches queues by name', () => {
     const service = new BullMqService(makeConfig());
     const q1 = service.getQueue('bookings');
@@ -67,6 +73,21 @@ describe('BullMqService', () => {
     service.getQueue('bookings');
     service.getQueue('finance');
     expect(queueInstances.map((q) => q.name)).toEqual(['bookings', 'finance']);
+  });
+
+  it('getQueueEvents returns cached instance when already created', () => {
+    const service = new BullMqService(makeConfig());
+    const ev1 = service.getQueueEvents('bookings');
+    const ev2 = service.getQueueEvents('bookings');
+    expect(ev1).toBe(ev2);
+    expect(queueEventsInstances.length).toBe(1);
+  });
+
+  it('getQueueEvents creates new instance for different names', () => {
+    const service = new BullMqService(makeConfig());
+    service.getQueueEvents('bookings');
+    service.getQueueEvents('finance');
+    expect(queueEventsInstances.length).toBe(2);
   });
 
   it('rejects duplicate worker registration for same queue', () => {
