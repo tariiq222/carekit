@@ -1,8 +1,10 @@
 import { createHmac } from 'crypto';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { PaymentStatus } from '@prisma/client';
 import { MoyasarWebhookHandler, MoyasarWebhookRequest } from './moyasar-webhook.handler';
 import { MoyasarWebhookDto } from './moyasar-webhook.dto';
+
+const TEST_SECRET = 'test-secret';
 
 const mockInvoice = {
   id: 'inv-1',
@@ -32,8 +34,9 @@ const buildPrisma = () => ({
 });
 
 const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) });
-// Config with no secret — signature verification skipped in tests
-const buildConfig = () => ({ get: jest.fn().mockReturnValue(undefined) });
+const buildConfig = (secret: string | undefined = TEST_SECRET) => ({
+  get: jest.fn().mockReturnValue(secret),
+});
 
 const paidPayload: MoyasarWebhookDto = {
   id: 'moyasar-pay-1',
@@ -43,25 +46,49 @@ const paidPayload: MoyasarWebhookDto = {
   metadata: { invoiceId: 'inv-1', tenantId: 'tenant-1' },
 };
 
+const sign = (rawBody: string, secret = TEST_SECRET) =>
+  createHmac('sha256', secret).update(rawBody).digest('hex');
+
 const makeReq = (
   payload: MoyasarWebhookDto = paidPayload,
-  rawBody = '{}',
-  signature = '',
-): MoyasarWebhookRequest => ({ payload, rawBody, signature });
+  rawBody?: string,
+): MoyasarWebhookRequest => {
+  const body = rawBody ?? JSON.stringify(payload);
+  return { payload, rawBody: body, signature: sign(body) };
+};
 
 describe('MoyasarWebhookHandler', () => {
   describe('verifySignature', () => {
     it('passes for valid signature', () => {
-      const handler = new MoyasarWebhookHandler(buildPrisma() as never, buildEventBus() as never, buildConfig() as never);
+      const handler = new MoyasarWebhookHandler(
+        buildPrisma() as never,
+        buildEventBus() as never,
+        buildConfig() as never,
+      );
       const body = '{"id":"test"}';
-      const secret = 'test-secret';
-      const sig = createHmac('sha256', secret).update(body).digest('hex');
-      expect(() => handler.verifySignature(body, sig, secret)).not.toThrow();
+      expect(() => handler.verifySignature(body, sign(body), TEST_SECRET)).not.toThrow();
     });
 
     it('throws BadRequestException for invalid signature', () => {
-      const handler = new MoyasarWebhookHandler(buildPrisma() as never, buildEventBus() as never, buildConfig() as never);
-      expect(() => handler.verifySignature('body', 'bad-sig', 'secret')).toThrow(BadRequestException);
+      const handler = new MoyasarWebhookHandler(
+        buildPrisma() as never,
+        buildEventBus() as never,
+        buildConfig() as never,
+      );
+      const body = '{"id":"test"}';
+      const wrong = sign(body, 'wrong-secret');
+      expect(() => handler.verifySignature(body, wrong, TEST_SECRET)).toThrow(BadRequestException);
+    });
+
+    it('throws BadRequestException when signature length differs (not timing-attackable)', () => {
+      const handler = new MoyasarWebhookHandler(
+        buildPrisma() as never,
+        buildEventBus() as never,
+        buildConfig() as never,
+      );
+      expect(() => handler.verifySignature('body', 'deadbeef', TEST_SECRET)).toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -69,7 +96,11 @@ describe('MoyasarWebhookHandler', () => {
     it('processes paid webhook and emits PaymentCompletedEvent', async () => {
       const prisma = buildPrisma();
       const eventBus = buildEventBus();
-      const handler = new MoyasarWebhookHandler(prisma as never, eventBus as never, buildConfig() as never);
+      const handler = new MoyasarWebhookHandler(
+        prisma as never,
+        eventBus as never,
+        buildConfig() as never,
+      );
 
       const result = await handler.execute(makeReq());
 
@@ -82,7 +113,10 @@ describe('MoyasarWebhookHandler', () => {
       expect(prisma.invoice.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ status: 'PAID' }) }),
       );
-      expect(eventBus.publish).toHaveBeenCalledWith('finance.payment.completed', expect.anything());
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        'finance.payment.completed',
+        expect.anything(),
+      );
       expect(result.skipped).toBeUndefined();
     });
 
@@ -90,7 +124,11 @@ describe('MoyasarWebhookHandler', () => {
       const prisma = buildPrisma();
       prisma.payment.findFirst = jest.fn().mockResolvedValue(mockPayment);
       const eventBus = buildEventBus();
-      const handler = new MoyasarWebhookHandler(prisma as never, eventBus as never, buildConfig() as never);
+      const handler = new MoyasarWebhookHandler(
+        prisma as never,
+        eventBus as never,
+        buildConfig() as never,
+      );
 
       const result = await handler.execute(makeReq());
 
@@ -100,16 +138,25 @@ describe('MoyasarWebhookHandler', () => {
     });
 
     it('skips when metadata is missing', async () => {
-      const handler = new MoyasarWebhookHandler(buildPrisma() as never, buildEventBus() as never, buildConfig() as never);
-      const result = await handler.execute(makeReq({ ...paidPayload, metadata: undefined }));
+      const handler = new MoyasarWebhookHandler(
+        buildPrisma() as never,
+        buildEventBus() as never,
+        buildConfig() as never,
+      );
+      const noMetadata = { ...paidPayload, metadata: undefined };
+      const result = await handler.execute(makeReq(noMetadata));
       expect(result.skipped).toBe(true);
     });
 
     it('creates failed payment for non-paid status', async () => {
       const prisma = buildPrisma();
-      const handler = new MoyasarWebhookHandler(prisma as never, buildEventBus() as never, buildConfig() as never);
-
-      await handler.execute(makeReq({ ...paidPayload, status: 'failed', message: 'Declined' }));
+      const handler = new MoyasarWebhookHandler(
+        prisma as never,
+        buildEventBus() as never,
+        buildConfig() as never,
+      );
+      const failedPayload: MoyasarWebhookDto = { ...paidPayload, status: 'failed', message: 'Declined' };
+      await handler.execute(makeReq(failedPayload));
 
       expect(prisma.payment.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -119,12 +166,27 @@ describe('MoyasarWebhookHandler', () => {
       expect(prisma.invoice.update).not.toHaveBeenCalled();
     });
 
-    it('enforces signature when MOYASAR_SECRET_KEY is set', async () => {
-      const config = { get: jest.fn().mockReturnValue('my-secret') };
-      const handler = new MoyasarWebhookHandler(buildPrisma() as never, buildEventBus() as never, config as never);
+    it('rejects a webhook with a forged signature', async () => {
+      const handler = new MoyasarWebhookHandler(
+        buildPrisma() as never,
+        buildEventBus() as never,
+        buildConfig() as never,
+      );
       const rawBody = JSON.stringify(paidPayload);
-      const badSig = 'bad-signature';
-      await expect(handler.execute({ payload: paidPayload, rawBody, signature: badSig })).rejects.toThrow(BadRequestException);
+      const forged = sign(rawBody, 'attacker-secret');
+      await expect(
+        handler.execute({ payload: paidPayload, rawBody, signature: forged }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws InternalServerErrorException when MOYASAR_SECRET_KEY is not configured', async () => {
+      const emptyConfig = { get: jest.fn().mockReturnValue(undefined) };
+      const handler = new MoyasarWebhookHandler(
+        buildPrisma() as never,
+        buildEventBus() as never,
+        emptyConfig as never,
+      );
+      await expect(handler.execute(makeReq())).rejects.toThrow(InternalServerErrorException);
     });
   });
 });

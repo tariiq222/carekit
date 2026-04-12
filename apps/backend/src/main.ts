@@ -5,7 +5,11 @@ import { LoggingInterceptor } from './common/interceptors';
 import { HttpExceptionFilter } from './common/filters';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: true preserves the untouched request body buffer on req.rawBody,
+  // required by webhook handlers (Moyasar, etc.) for HMAC signature verification.
+  // Without this the body is JSON-parsed before the handler sees it and the
+  // signature computed over the raw bytes would never match.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.useGlobalPipes(
     new ValidationPipe({

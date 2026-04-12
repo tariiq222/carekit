@@ -1,5 +1,10 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { createHmac } from 'crypto';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
@@ -30,14 +35,25 @@ export class MoyasarWebhookHandler {
 
   verifySignature(rawBody: string, signature: string, secret: string): void {
     const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
-    if (expected !== signature) {
+    const expectedBuf = Buffer.from(expected, 'hex');
+    const signatureBuf = Buffer.from(signature, 'hex');
+    if (
+      expectedBuf.length !== signatureBuf.length ||
+      !timingSafeEqual(expectedBuf, signatureBuf)
+    ) {
       throw new BadRequestException('Invalid Moyasar webhook signature');
     }
   }
 
   async execute(req: MoyasarWebhookRequest): Promise<{ skipped?: boolean }> {
+    // Signature verification is mandatory. If the secret is missing it's a
+    // misconfiguration — fail loudly rather than silently accepting the webhook.
     const secret = this.config.get<string>('MOYASAR_SECRET_KEY');
-    if (secret) this.verifySignature(req.rawBody, req.signature, secret);
+    if (!secret) {
+      this.logger.error('MOYASAR_SECRET_KEY not configured — refusing webhook');
+      throw new InternalServerErrorException('Payment webhook is not configured');
+    }
+    this.verifySignature(req.rawBody, req.signature, secret);
 
     const payload = req.payload;
     const { invoiceId, tenantId } = payload.metadata ?? {};
