@@ -10,6 +10,10 @@ interface PaymentStats {
   pendingAmount: number;
   refunded: number;
   refundedAmount: number;
+  failed: number;
+  rejected: number;
+  awaiting: number;
+  awaitingAmount: number;
 }
 
 @Injectable()
@@ -33,6 +37,10 @@ export class GetPaymentStatsHandler {
       pendingAmount: 0,
       refunded: 0,
       refundedAmount: 0,
+      failed: 0,
+      rejected: 0,
+      awaiting: 0,
+      awaitingAmount: 0,
     };
 
     for (const row of rows) {
@@ -50,6 +58,8 @@ export class GetPaymentStatsHandler {
       } else if (row.status === 'REFUNDED') {
         stats.refunded = count;
         stats.refundedAmount = amount;
+      } else if (row.status === 'FAILED') {
+        stats.failed = count;
       }
     }
 
