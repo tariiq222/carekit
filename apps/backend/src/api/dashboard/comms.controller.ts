@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { CurrentUser, JwtUser } from '../../common/auth/current-user.decorator';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -22,6 +23,10 @@ import { ListConversationsHandler } from '../../modules/comms/chat/list-conversa
 import { ListConversationsDto } from '../../modules/comms/chat/list-conversations.dto';
 import { ListMessagesHandler } from '../../modules/comms/chat/list-messages.handler';
 import { ListMessagesDto } from '../../modules/comms/chat/list-messages.dto';
+import { GetConversationHandler } from '../../modules/comms/chat/get-conversation.handler';
+import { CloseConversationHandler } from '../../modules/comms/chat/close-conversation.handler';
+import { SendStaffMessageHandler } from '../../modules/comms/chat/send-staff-message.handler';
+import { SendStaffMessageDto } from '../../modules/comms/chat/send-staff-message.dto';
 
 @Controller('dashboard/comms')
 @UseGuards(JwtGuard, CaslGuard)
@@ -36,6 +41,9 @@ export class DashboardCommsController {
     private readonly previewEmailTemplate: PreviewEmailTemplateHandler,
     private readonly listConversations: ListConversationsHandler,
     private readonly listMessages: ListMessagesHandler,
+    private readonly getConversation: GetConversationHandler,
+    private readonly closeConversation: CloseConversationHandler,
+    private readonly sendStaffMessage: SendStaffMessageHandler,
   ) {}
 
   // ── Notifications ──────────────────────────────────────────────────────────
@@ -141,6 +149,39 @@ export class DashboardCommsController {
       conversationId: id,
       cursor: query.cursor,
       limit: query.limit ?? 20,
+    });
+  }
+
+  @Get('chat/conversations/:id')
+  getConversationEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.getConversation.execute({ tenantId, conversationId: id });
+  }
+
+  @Patch('chat/conversations/:id/close')
+  @HttpCode(HttpStatus.OK)
+  closeConversationEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.closeConversation.execute({ tenantId, conversationId: id });
+  }
+
+  @Post('chat/conversations/:id/messages')
+  @HttpCode(HttpStatus.CREATED)
+  sendStaffMessageEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: SendStaffMessageDto,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.sendStaffMessage.execute({
+      tenantId,
+      conversationId: id,
+      staffId: user.sub,
+      body: body.body,
     });
   }
 }

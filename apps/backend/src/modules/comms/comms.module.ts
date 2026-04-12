@@ -15,6 +15,9 @@ import { CreateConversationHandler } from './chat/create-conversation.handler';
 import { CreateChatMessageHandler } from './chat/create-chat-message.handler';
 import { ListConversationsHandler } from './chat/list-conversations.handler';
 import { ListMessagesHandler } from './chat/list-messages.handler';
+import { GetConversationHandler } from './chat/get-conversation.handler';
+import { CloseConversationHandler } from './chat/close-conversation.handler';
+import { SendStaffMessageHandler } from './chat/send-staff-message.handler';
 import { CreateEmailTemplateHandler } from './email-templates/create-email-template.handler';
 import { UpdateEmailTemplateHandler } from './email-templates/update-email-template.handler';
 import { GetEmailTemplateHandler } from './email-templates/get-email-template.handler';
@@ -37,6 +40,9 @@ const handlers = [
   CreateChatMessageHandler,
   ListConversationsHandler,
   ListMessagesHandler,
+  GetConversationHandler,
+  CloseConversationHandler,
+  SendStaffMessageHandler,
   CreateEmailTemplateHandler,
   UpdateEmailTemplateHandler,
   GetEmailTemplateHandler,

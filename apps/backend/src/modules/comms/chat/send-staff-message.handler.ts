@@ -1,0 +1,42 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { MessageSenderType } from '@prisma/client';
+import { PrismaService } from '../../../infrastructure/database';
+
+export interface SendStaffMessageCommand {
+  tenantId: string;
+  conversationId: string;
+  staffId: string;
+  body: string;
+}
+
+@Injectable()
+export class SendStaffMessageHandler {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async execute(cmd: SendStaffMessageCommand) {
+    const conversation = await this.prisma.chatConversation.findFirst({
+      where: { id: cmd.conversationId, tenantId: cmd.tenantId },
+    });
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    const [message] = await Promise.all([
+      this.prisma.commsChatMessage.create({
+        data: {
+          tenantId: cmd.tenantId,
+          conversationId: cmd.conversationId,
+          senderType: MessageSenderType.EMPLOYEE,
+          senderId: cmd.staffId,
+          body: cmd.body,
+        },
+      }),
+      this.prisma.chatConversation.update({
+        where: { id: cmd.conversationId },
+        data: { lastMessageAt: new Date() },
+      }),
+    ]);
+
+    return message;
+  }
+}
