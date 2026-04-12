@@ -176,7 +176,7 @@ describe('CancelBookingHandler', () => {
     const prisma = buildPrisma();
     const eb = buildEventBus();
     const result = await new CancelBookingHandler(prisma as never, eb as never).execute({
-      tenantId: 'tenant-1', bookingId: 'book-1', reason: CancellationReason.CLIENT_REQUESTED,
+      tenantId: 'tenant-1', bookingId: 'book-1', reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.CANCELLED }) }),
@@ -190,7 +190,7 @@ describe('CancelBookingHandler', () => {
     prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
       new CancelBookingHandler(prisma as never, buildEventBus() as never).execute({
-        tenantId: 'tenant-1', bookingId: 'bad', reason: CancellationReason.OTHER,
+        tenantId: 'tenant-1', bookingId: 'bad', reason: CancellationReason.OTHER, changedBy: 'user-42',
       }),
     ).rejects.toThrow(NotFoundException);
   });
@@ -200,7 +200,7 @@ describe('CancelBookingHandler', () => {
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CANCELLED });
     await expect(
       new CancelBookingHandler(prisma as never, buildEventBus() as never).execute({
-        tenantId: 'tenant-1', bookingId: 'book-1', reason: CancellationReason.OTHER,
+        tenantId: 'tenant-1', bookingId: 'book-1', reason: CancellationReason.OTHER, changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -237,7 +237,7 @@ describe('ConfirmBookingHandler', () => {
     const prisma = buildPrisma();
     const eb = buildEventBus();
     await new ConfirmBookingHandler(prisma as never, eb as never).execute({
-      tenantId: 'tenant-1', bookingId: 'book-1',
+      tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.CONFIRMED }) }),
@@ -250,7 +250,7 @@ describe('ConfirmBookingHandler', () => {
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
     await expect(
       new ConfirmBookingHandler(prisma as never, buildEventBus() as never).execute({
-        tenantId: 'tenant-1', bookingId: 'book-1',
+        tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -314,7 +314,7 @@ describe('CheckInBookingHandler', () => {
   it('sets checkedInAt on CONFIRMED booking', async () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
-    await new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+    await new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ checkedInAt: expect.any(Date) }) }),
     );
@@ -324,7 +324,7 @@ describe('CheckInBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.COMPLETED });
     await expect(
-      new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+      new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -332,7 +332,7 @@ describe('CheckInBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED, checkedInAt: new Date() });
     await expect(
-      new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+      new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -340,7 +340,7 @@ describe('CheckInBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad' }),
+      new CheckInBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad', changedBy: 'user-42' }),
     ).rejects.toThrow(NotFoundException);
   });
 });
@@ -350,7 +350,7 @@ describe('CompleteBookingHandler', () => {
   it('completes CONFIRMED booking', async () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
-    await new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+    await new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.COMPLETED }) }),
     );
@@ -360,7 +360,7 @@ describe('CompleteBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CANCELLED });
     await expect(
-      new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+      new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -368,7 +368,7 @@ describe('CompleteBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad' }),
+      new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad', changedBy: 'user-42' }),
     ).rejects.toThrow(NotFoundException);
   });
 });
@@ -378,7 +378,7 @@ describe('NoShowBookingHandler', () => {
   it('marks CONFIRMED booking as NO_SHOW', async () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
-    await new NoShowBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+    await new NoShowBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.NO_SHOW }) }),
     );
@@ -388,7 +388,7 @@ describe('NoShowBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.COMPLETED });
     await expect(
-      new NoShowBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+      new NoShowBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -396,7 +396,7 @@ describe('NoShowBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new NoShowBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad' }),
+      new NoShowBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad', changedBy: 'user-42' }),
     ).rejects.toThrow(NotFoundException);
   });
 });
@@ -405,7 +405,7 @@ describe('NoShowBookingHandler', () => {
 describe('ExpireBookingHandler', () => {
   it('expires PENDING booking', async () => {
     const prisma = buildPrisma();
-    await new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+    await new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.EXPIRED }) }),
     );
@@ -415,7 +415,7 @@ describe('ExpireBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
     await expect(
-      new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1' }),
+      new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -423,7 +423,7 @@ describe('ExpireBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad' }),
+      new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad', changedBy: 'user-42' }),
     ).rejects.toThrow(NotFoundException);
   });
 });
