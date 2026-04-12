@@ -3,6 +3,8 @@ import { CreateServiceHandler } from './create-service.handler';
 import { UpdateServiceHandler } from './update-service.handler';
 import { ListServicesHandler } from './list-services.handler';
 import { ArchiveServiceHandler } from './archive-service.handler';
+import { SetDurationOptionsHandler } from './set-duration-options.handler';
+import { SetEmployeeServiceOptionsHandler } from './set-employee-service-options.handler';
 
 const mockService = {
   id: 'svc-1',
@@ -93,5 +95,99 @@ describe('ArchiveServiceHandler', () => {
     await expect(
       handler.execute({ tenantId: 'tenant-1', serviceId: 'missing' }),
     ).rejects.toThrow(NotFoundException);
+  });
+});
+
+describe('SetDurationOptionsHandler', () => {
+  const buildServicesPrisma = () => ({
+    service: { findFirst: jest.fn().mockResolvedValue({ id: 'svc-1', tenantId: 'tenant-1' }) },
+    serviceDurationOption: {
+      update: jest.fn().mockResolvedValue({ id: 'opt-1' }),
+      create: jest.fn().mockResolvedValue({ id: 'opt-new' }),
+      findMany: jest.fn().mockResolvedValue([{ id: 'opt-1' }]),
+    },
+    employeeServiceOption: {
+      upsert: jest.fn().mockResolvedValue({ id: 'eso-1' }),
+    },
+    $transaction: jest.fn().mockImplementation(
+      (ops: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) =>
+        typeof ops === 'function' ? ops({
+          serviceDurationOption: { update: jest.fn().mockResolvedValue({ id: 'opt-1' }), create: jest.fn().mockResolvedValue({ id: 'opt-new' }) },
+          employeeServiceOption: { upsert: jest.fn().mockResolvedValue({ id: 'eso-1' }) },
+        }) : Promise.all(ops),
+    ),
+  });
+
+  it('throws NotFoundException when service not found', async () => {
+    const prisma = buildServicesPrisma();
+    prisma.service.findFirst = jest.fn().mockResolvedValue(null);
+    const handler = new SetDurationOptionsHandler(prisma as never);
+    await expect(handler.execute({
+      tenantId: 'tenant-1', serviceId: 'bad', options: [],
+    })).rejects.toThrow('not found');
+  });
+
+  it('creates new options when id is not provided', async () => {
+    const prisma = buildServicesPrisma();
+    const handler = new SetDurationOptionsHandler(prisma as never);
+    await handler.execute({
+      tenantId: 'tenant-1',
+      serviceId: 'svc-1',
+      options: [{ durationMins: 60, price: 200, currency: 'SAR', label: '60 min', labelAr: '٦٠ دقيقة' }],
+    });
+    expect(prisma.$transaction).toHaveBeenCalled();
+  });
+
+  it('updates existing options when id is provided', async () => {
+    const prisma = buildServicesPrisma();
+    const handler = new SetDurationOptionsHandler(prisma as never);
+    await handler.execute({
+      tenantId: 'tenant-1',
+      serviceId: 'svc-1',
+      options: [{ id: 'opt-1', durationMins: 45, price: 150, currency: 'SAR', label: '45 min', labelAr: '٤٥ دقيقة' }],
+    });
+    expect(prisma.$transaction).toHaveBeenCalled();
+  });
+});
+
+describe('SetEmployeeServiceOptionsHandler', () => {
+  const buildServicesPrisma = () => ({
+    service: { findFirst: jest.fn().mockResolvedValue({ id: 'svc-1', tenantId: 'tenant-1' }) },
+    serviceDurationOption: {
+      findMany: jest.fn().mockResolvedValue([{ id: 'opt-1' }]),
+    },
+    employeeServiceOption: {
+      upsert: jest.fn().mockResolvedValue({ id: 'eso-1' }),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    $transaction: jest.fn().mockImplementation(
+      (ops: Promise<unknown>[] | ((tx: unknown) => Promise<unknown>)) =>
+        typeof ops === 'function' ? ops({
+          serviceDurationOption: { findMany: jest.fn().mockResolvedValue([{ id: 'opt-1' }]) },
+          employeeServiceOption: { upsert: jest.fn().mockResolvedValue({ id: 'eso-1' }) },
+        }) : Promise.all(ops),
+    ),
+  });
+
+  it('throws NotFoundException when durationOptionId not found for tenant', async () => {
+    const prisma = buildServicesPrisma();
+    prisma.serviceDurationOption.findMany = jest.fn().mockResolvedValue([]);
+    const handler = new SetEmployeeServiceOptionsHandler(prisma as never);
+    await expect(handler.execute({
+      tenantId: 'tenant-1',
+      employeeServiceId: 'es-1',
+      options: [{ durationOptionId: 'bad-opt' }],
+    })).rejects.toThrow('not found');
+  });
+
+  it('upserts employee service options', async () => {
+    const prisma = buildServicesPrisma();
+    const handler = new SetEmployeeServiceOptionsHandler(prisma as never);
+    await handler.execute({
+      tenantId: 'tenant-1',
+      employeeServiceId: 'es-1',
+      options: [{ durationOptionId: 'opt-1', priceOverride: 300 }],
+    });
+    expect(prisma.$transaction).toHaveBeenCalled();
   });
 });

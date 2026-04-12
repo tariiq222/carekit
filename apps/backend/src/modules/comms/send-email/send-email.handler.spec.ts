@@ -67,3 +67,50 @@ describe('SendEmailHandler', () => {
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
 });
+
+describe('SendEmailHandler — interpolation', () => {
+  it('skips email when SMTP not available', async () => {
+    const smtp = { isAvailable: jest.fn().mockReturnValue(false), sendMail: jest.fn() };
+    const prisma = { emailTemplate: { findUnique: jest.fn() } };
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'booking-confirmed', vars: {} });
+    expect(smtp.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('skips when template not found', async () => {
+    const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn() };
+    const prisma = { emailTemplate: { findUnique: jest.fn().mockResolvedValue(null) } };
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'missing', vars: {} });
+    expect(smtp.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('skips when template is inactive', async () => {
+    const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn() };
+    const prisma = { emailTemplate: { findUnique: jest.fn().mockResolvedValue({ isActive: false, htmlBody: '', subjectAr: '' }) } };
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'tpl', vars: {} });
+    expect(smtp.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('replaces {{vars}} in htmlBody and subject', async () => {
+    const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn().mockResolvedValue(undefined) };
+    const prisma = {
+      emailTemplate: {
+        findUnique: jest.fn().mockResolvedValue({
+          isActive: true,
+          htmlBody: '<p>Hello {{name}}</p>',
+          subjectAr: 'مرحبا {{name}}',
+          subjectEn: 'Hello {{name}}',
+        }),
+      },
+    };
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'tpl', vars: { name: 'Ahmad' } });
+    expect(smtp.sendMail).toHaveBeenCalledWith('a@b.com', 'مرحبا Ahmad', '<p>Hello Ahmad</p>');
+  });
+
+  it('does not throw when smtp.sendMail rejects', async () => {
+    const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn().mockRejectedValue(new Error('SMTP down')) };
+    const prisma = {
+      emailTemplate: { findUnique: jest.fn().mockResolvedValue({ isActive: true, htmlBody: 'body', subjectAr: 'subj', subjectEn: '' }) },
+    };
+    await expect(new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'tpl', vars: {} })).resolves.not.toThrow();
+  });
+});

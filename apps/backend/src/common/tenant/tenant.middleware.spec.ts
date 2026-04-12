@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { TenantMiddleware } from './tenant.middleware';
 import { RequestContextStorage } from './request-context';
 
-const makeReq = (headers: Record<string, string> = {}) =>
+const makeReq = (headers: Record<string, string | string[]> = {}) =>
   ({ headers, ip: '127.0.0.1' }) as any;
 
 const makeRes = () => {
@@ -51,5 +51,44 @@ describe('TenantMiddleware', () => {
       expect(res._headers['x-request-id']).toBeDefined();
       done();
     });
+  });
+});
+
+describe('TenantMiddleware — edge cases', () => {
+  let middleware: TenantMiddleware;
+
+  beforeEach(() => {
+    middleware = new TenantMiddleware();
+  });
+
+  it('rejects requests with whitespace-only X-Tenant-ID', () => {
+    const req = makeReq({ 'x-tenant-id': '   ' });
+    const res = makeRes();
+    const next = jest.fn();
+    expect(() => middleware.use(req, res, next)).toThrow('required');
+  });
+
+  it('rejects when X-Tenant-ID is an array (multi-value header)', () => {
+    const req = makeReq({ 'x-tenant-id': ['t1', 't2'] });
+    const res = makeRes();
+    const next = jest.fn();
+    expect(() => middleware.use(req, res, next)).toThrow('required');
+  });
+
+  it('passes through valid X-Tenant-ID and calls next()', () => {
+    const req = makeReq({ 'x-tenant-id': 'tenant-1', 'x-request-id': 'req-123' });
+    const res = makeRes();
+    const next = jest.fn();
+    middleware.use(req, res, next);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('generates requestId when x-request-id header not provided', () => {
+    const req = makeReq({ 'x-tenant-id': 'tenant-1' });
+    const setHeaderMock = jest.fn();
+    const res = { setHeader: setHeaderMock };
+    const next = jest.fn();
+    middleware.use(req, res as never, next);
+    expect(setHeaderMock).toHaveBeenCalledWith('x-request-id', expect.stringMatching(/^[0-9a-f-]{36}$/));
   });
 });

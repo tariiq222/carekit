@@ -3,8 +3,17 @@ import { OnBookingReminderHandler } from './events/on-booking-reminder.handler';
 import { OnPaymentFailedHandler } from './events/on-payment-failed.handler';
 import { OnClientEnrolledHandler } from './events/on-client-enrolled.handler';
 import type { SendNotificationHandler } from './send-notification/send-notification.handler';
+import type { EventBusService } from '../../../infrastructure/events';
 
 const buildNotifyHandler = () => ({ execute: jest.fn().mockResolvedValue(undefined) });
+
+const buildEventBus = () => {
+  const subscribers = new Map<string, (e: unknown) => Promise<void>>();
+  return {
+    subscribe: jest.fn((event: string, cb: (e: unknown) => Promise<void>) => { subscribers.set(event, cb); }),
+    getSubscriber: (event: string) => subscribers.get(event)!,
+  };
+};
 
 describe('OnBookingCancelledHandler', () => {
   it('calls SendNotificationHandler with push + email + in-app channels', async () => {
@@ -40,6 +49,46 @@ describe('OnBookingReminderHandler', () => {
     expect(notify.execute).toHaveBeenCalledWith(
       expect.objectContaining({ channels: expect.arrayContaining(['push', 'sms', 'in-app']) }),
     );
+  });
+
+  it('registers subscriber on ops.booking.reminder_due', () => {
+    const notify = buildNotifyHandler();
+    const eb = buildEventBus();
+    const handler = new OnBookingReminderHandler(notify as unknown as SendNotificationHandler);
+    handler.register(eb as unknown as EventBusService);
+    expect(eb.subscribe).toHaveBeenCalledWith('ops.booking.reminder_due', expect.any(Function));
+  });
+
+  it('sends push notification with booking time', async () => {
+    const notify = buildNotifyHandler();
+    const eb = buildEventBus();
+    const handler = new OnBookingReminderHandler(notify as unknown as SendNotificationHandler);
+    handler.register(eb as unknown as EventBusService);
+
+    await eb.getSubscriber('ops.booking.reminder_due')({
+      payload: {
+        bookingId: 'b-1', tenantId: 'tenant-1', clientId: 'c-1',
+        scheduledAt: '2026-06-01T10:00:00Z', fcmToken: 'tok-1',
+      },
+    });
+
+    expect(notify.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: 'tenant-1', recipientId: 'c-1' }),
+    );
+  });
+
+  it('handles error gracefully without throwing', async () => {
+    const notify = buildNotifyHandler();
+    notify.execute = jest.fn().mockRejectedValue(new Error('push failed'));
+    const eb = buildEventBus();
+    const handler = new OnBookingReminderHandler(notify as unknown as SendNotificationHandler);
+    handler.register(eb as unknown as EventBusService);
+
+    await expect(
+      eb.getSubscriber('ops.booking.reminder_due')({
+        payload: { bookingId: 'b-1', tenantId: 'tenant-1', clientId: 'c-1', scheduledAt: new Date() },
+      }),
+    ).resolves.not.toThrow();
   });
 });
 

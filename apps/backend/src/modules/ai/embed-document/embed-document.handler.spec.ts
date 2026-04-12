@@ -79,3 +79,14 @@ describe('EmbedDocumentHandler', () => {
     await expect(handler.execute(dto)).rejects.toThrow('EmbeddingAdapter is not available');
   });
 });
+
+describe('EmbedDocumentHandler — chunking', () => {
+  it('throws BadRequestException when EmbeddingAdapter not available', async () => {
+    const prisma = { knowledgeDocument: { create: jest.fn() }, documentChunk: { createMany: jest.fn() } };
+    const embedding = { isAvailable: jest.fn().mockReturnValue(false), embed: jest.fn() };
+    const handler = new EmbedDocumentHandler(prisma as never, embedding as never);
+    await expect(handler.execute({
+      tenantId: 'tenant-1', title: 'Doc', content: 'text', sourceType: 'MANUAL' as never,
+    })).rejects.toThrow('not available');
+  });
+});

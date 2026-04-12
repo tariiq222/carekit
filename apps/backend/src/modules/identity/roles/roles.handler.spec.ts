@@ -1,56 +1,80 @@
-import { Test } from '@nestjs/testing';
 import { ConflictException } from '@nestjs/common';
 import { CreateRoleHandler } from './create-role.handler';
 import { AssignPermissionsHandler } from './assign-permissions.handler';
-import { PrismaService } from '../../../infrastructure/database';
+import { ListRolesHandler } from './list-roles.handler';
 
-describe('Roles handlers', () => {
-  let createRole: CreateRoleHandler;
-  let assignPerms: AssignPermissionsHandler;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let prisma: any;
+const buildRolesPrisma = () => ({
+  customRole: {
+    findUnique: jest.fn().mockResolvedValue(null),
+    create: jest.fn().mockResolvedValue({ id: 'role-1', name: 'Reception', tenantId: 'tenant-1', permissions: [] }),
+    findMany: jest.fn().mockResolvedValue([{ id: 'role-1', name: 'Reception', permissions: [] }]),
+  },
+  permission: {
+    deleteMany: jest.fn().mockResolvedValue({ count: 2 }),
+    createMany: jest.fn().mockResolvedValue({ count: 2 }),
+  },
+});
 
-  beforeEach(async () => {
-    const module = await Test.createTestingModule({
-      providers: [
-        CreateRoleHandler,
-        AssignPermissionsHandler,
-        {
-          provide: PrismaService,
-          useValue: {
-            customRole: { findUnique: jest.fn(), create: jest.fn() },
-            permission: { deleteMany: jest.fn(), createMany: jest.fn() },
-          },
-        },
-      ],
-    }).compile();
-
-    createRole = module.get(CreateRoleHandler);
-    assignPerms = module.get(AssignPermissionsHandler);
-    prisma = module.get(PrismaService);
-  });
-
-  it('creates a new custom role', async () => {
-    prisma.customRole.findUnique.mockResolvedValue(null);
-    prisma.customRole.create.mockResolvedValue({ id: 'role-1', name: 'Senior Receptionist' });
-    const result = await createRole.execute({ tenantId: 'tenant-1', name: 'Senior Receptionist' });
+describe('CreateRoleHandler — pure mock', () => {
+  it('creates role successfully', async () => {
+    const prisma = buildRolesPrisma();
+    const handler = new CreateRoleHandler(prisma as never);
+    const result = await handler.execute({ tenantId: 'tenant-1', name: 'Reception' });
+    expect(prisma.customRole.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ tenantId: 'tenant-1', name: 'Reception' }) }),
+    );
     expect(result.id).toBe('role-1');
   });
 
-  it('throws ConflictException for duplicate role name', async () => {
-    prisma.customRole.findUnique.mockResolvedValue({ id: 'exists' });
-    await expect(createRole.execute({ tenantId: 'tenant-1', name: 'Existing Role' })).rejects.toThrow(ConflictException);
+  it('throws ConflictException for duplicate name', async () => {
+    const prisma = buildRolesPrisma();
+    prisma.customRole.findUnique = jest.fn().mockResolvedValue({ id: 'role-1', name: 'Reception' });
+    const handler = new CreateRoleHandler(prisma as never);
+    await expect(handler.execute({ tenantId: 'tenant-1', name: 'Reception' })).rejects.toThrow('already exists');
   });
+});
 
-  it('replaces permissions for a role', async () => {
-    prisma.permission.deleteMany.mockResolvedValue({ count: 1 });
-    prisma.permission.createMany.mockResolvedValue({ count: 2 });
-    await assignPerms.execute({
+describe('AssignPermissionsHandler — pure mock', () => {
+  it('deletes old permissions then creates new ones', async () => {
+    const prisma = buildRolesPrisma();
+    const handler = new AssignPermissionsHandler(prisma as never);
+    await handler.execute({
       tenantId: 'tenant-1',
       customRoleId: 'role-1',
-      permissions: [{ action: 'create', subject: 'Booking' }, { action: 'read', subject: 'Client' }],
+      permissions: [
+        { action: 'read', subject: 'Booking' },
+        { action: 'create', subject: 'Booking' },
+      ],
     });
-    expect(prisma.permission.deleteMany).toHaveBeenCalledWith(expect.objectContaining({ where: { customRoleId: 'role-1' } }));
-    expect(prisma.permission.createMany).toHaveBeenCalled();
+    expect(prisma.permission.deleteMany).toHaveBeenCalledWith({ where: { customRoleId: 'role-1' } });
+    expect(prisma.permission.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.arrayContaining([
+          expect.objectContaining({ action: 'read', subject: 'Booking', tenantId: 'tenant-1' }),
+        ]),
+      }),
+    );
+  });
+
+  it('handles empty permissions array (removes all)', async () => {
+    const prisma = buildRolesPrisma();
+    const handler = new AssignPermissionsHandler(prisma as never);
+    await handler.execute({ tenantId: 'tenant-1', customRoleId: 'role-1', permissions: [] });
+    expect(prisma.permission.deleteMany).toHaveBeenCalled();
+    expect(prisma.permission.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: [] }),
+    );
+  });
+});
+
+describe('ListRolesHandler', () => {
+  it('returns roles scoped to tenant', async () => {
+    const prisma = buildRolesPrisma();
+    const handler = new ListRolesHandler(prisma as never);
+    const result = await handler.execute({ tenantId: 'tenant-1' });
+    expect(prisma.customRole.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ tenantId: { tenantId: 'tenant-1' } }) }),
+    );
+    expect(Array.isArray(result)).toBe(true);
   });
 });

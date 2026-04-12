@@ -60,3 +60,80 @@ describe('ValidateLicenseService', () => {
     expect(result.features).toContain('BOOKINGS');
   });
 });
+
+describe('ValidateLicenseService — fallbacks', () => {
+  const buildPrisma = (cached: unknown = null) => ({
+    licenseCache: {
+      findUnique: jest.fn().mockResolvedValue(cached),
+      upsert: jest.fn().mockResolvedValue({}),
+    },
+  });
+
+  const buildConfig = (overrides: Record<string, string | undefined> = {}) => ({
+    get: jest.fn().mockImplementation((key: string) => overrides[key]),
+    getOrThrow: jest.fn().mockImplementation((key: string) => overrides[key] ?? ''),
+  });
+
+  it('returns Basic license when no LICENSE_SERVER_URL configured', async () => {
+    const prisma = buildPrisma();
+    const config = buildConfig({ LICENSE_SERVER_URL: undefined });
+    const service = new ValidateLicenseService(config as never, prisma as never);
+    const result = await service.getActiveLicense('tenant-1');
+    expect(result.tier).toBe('Basic');
+  });
+
+  it('returns cached license when not stale', async () => {
+    const cachedLicense = {
+      tenantId: 'tenant-1',
+      tier: 'Pro',
+      features: ['bookings', 'reports'],
+      expiresAt: new Date(Date.now() + 86400_000),
+      lastCheckedAt: new Date(),
+    };
+    const prisma = buildPrisma(cachedLicense);
+    const config = buildConfig({ LICENSE_SERVER_URL: 'https://license.example.com' });
+    const service = new ValidateLicenseService(config as never, prisma as never);
+    const result = await service.getActiveLicense('tenant-1');
+    expect(result.tier).toBe('Pro');
+  });
+
+  it('falls back to stale cache when license server unreachable', async () => {
+    const staleCache = {
+      tenantId: 'tenant-1',
+      tier: 'Enterprise',
+      features: ['all'],
+      expiresAt: new Date(Date.now() + 86400_000),
+      lastCheckedAt: new Date(0),
+    };
+    const prisma = buildPrisma(staleCache);
+    const config = buildConfig({ LICENSE_SERVER_URL: 'https://license.example.com', LICENSE_KEY: 'key-1' });
+
+    global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+
+    const service = new ValidateLicenseService(config as never, prisma as never);
+    const result = await service.getActiveLicense('tenant-1');
+    expect(result.tier).toBe('Enterprise');
+  });
+
+  it('fetches fresh license from server when cache is stale', async () => {
+    const staleCache = {
+      tenantId: 'tenant-1',
+      tier: 'Basic',
+      features: [],
+      expiresAt: new Date(Date.now() + 86400_000),
+      lastCheckedAt: new Date(0),
+    };
+    const prisma = buildPrisma(staleCache);
+    const config = buildConfig({ LICENSE_SERVER_URL: 'https://license.example.com', LICENSE_KEY: 'key-1' });
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ tier: 'Pro', features: ['bookings'], expiresAt: new Date(Date.now() + 86400_000).toISOString() }),
+    });
+
+    const service = new ValidateLicenseService(config as never, prisma as never);
+    const result = await service.getActiveLicense('tenant-1');
+    expect(result.tier).toBe('Pro');
+    expect(prisma.licenseCache.upsert).toHaveBeenCalled();
+  });
+});
