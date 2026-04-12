@@ -30,7 +30,7 @@ const buildPrisma = () => ({
     findFirst: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue(mockBooking),
     update: jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED }),
-    findMany: jest.fn().mockResolvedValue([mockBooking]),
+    findMany: jest.fn().mockResolvedValue([]),
     count: jest.fn().mockResolvedValue(1),
   },
   waitlistEntry: {
@@ -42,6 +42,28 @@ const buildPrisma = () => ({
       branchId: 'branch-1', dayOfWeek: future.getDay(),
       startTime: '09:00', endTime: '17:00', isOpen: true,
     }),
+  },
+  holiday: {
+    findFirst: jest.fn().mockResolvedValue(null),
+  },
+  employeeAvailability: {
+    findMany: jest.fn().mockResolvedValue([
+      { employeeId: 'emp-1', dayOfWeek: future.getDay(), startTime: '09:00', endTime: '17:00', isActive: true },
+    ]),
+  },
+  employeeAvailabilityException: {
+    findFirst: jest.fn().mockResolvedValue(null),
+  },
+  service: {
+    findUnique: jest.fn().mockResolvedValue({
+      id: 'svc-1', tenantId: 'tenant-1', durationMins: 60, price: 200, currency: 'SAR',
+    }),
+  },
+  employee: {
+    findUnique: jest.fn().mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' }),
+  },
+  employeeService: {
+    findUnique: jest.fn().mockResolvedValue({ id: 'es-1', employeeId: 'emp-1', serviceId: 'svc-1' }),
   },
 });
 
@@ -209,6 +231,7 @@ describe('GetBookingHandler', () => {
 describe('ListBookingsHandler', () => {
   it('returns paginated bookings', async () => {
     const prisma = buildPrisma();
+    prisma.booking.findMany = jest.fn().mockResolvedValue([mockBooking]);
     const result = await new ListBookingsHandler(prisma as never).execute({
       tenantId: 'tenant-1', page: 1, limit: 10,
     });
@@ -338,14 +361,13 @@ describe('ExpireBookingHandler', () => {
 
 // ─── CheckAvailabilityHandler ────────────────────────────────────────────────
 describe('CheckAvailabilityHandler', () => {
-  it('returns available slots for open business day', async () => {
-    const prisma = buildPrisma();
-    prisma.booking.findMany = jest.fn().mockResolvedValue([]);
-    const tomorrowDate = new Date(future);
-    tomorrowDate.setHours(0, 0, 0, 0);
-    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+  const tomorrowMidnight = new Date(future);
+  tomorrowMidnight.setHours(0, 0, 0, 0);
+
+  it('returns available slots when employee has a shift covering the day', async () => {
+    const result = await new CheckAvailabilityHandler(buildPrisma() as never).execute({
       tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
-      date: tomorrowDate, durationMins: 60,
+      date: tomorrowMidnight, durationMins: 60,
     });
     expect(Array.isArray(result)).toBe(true);
     expect(result.length).toBeGreaterThan(0);
@@ -356,8 +378,91 @@ describe('CheckAvailabilityHandler', () => {
     prisma.businessHour.findUnique = jest.fn().mockResolvedValue({ isOpen: false });
     const result = await new CheckAvailabilityHandler(prisma as never).execute({
       tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
-      date: future, durationMins: 60,
+      date: tomorrowMidnight, durationMins: 60,
     });
     expect(result).toEqual([]);
+  });
+
+  it('returns empty array when employee has no shifts on this day (weekly off)', async () => {
+    const prisma = buildPrisma();
+    prisma.employeeAvailability.findMany = jest.fn().mockResolvedValue([]);
+    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      date: tomorrowMidnight, durationMins: 60,
+    });
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array when a holiday exists for the branch on that date', async () => {
+    const prisma = buildPrisma();
+    prisma.holiday.findFirst = jest.fn().mockResolvedValue({ id: 'hol-1', branchId: 'branch-1', date: tomorrowMidnight });
+    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      date: tomorrowMidnight, durationMins: 60,
+    });
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array when an exception covers the requested date', async () => {
+    const prisma = buildPrisma();
+    const yesterday = new Date(tomorrowMidnight);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dayAfter = new Date(tomorrowMidnight);
+    dayAfter.setDate(dayAfter.getDate() + 1);
+    prisma.employeeAvailabilityException.findFirst = jest.fn().mockResolvedValue({
+      id: 'exc-1', employeeId: 'emp-1', startDate: yesterday, endDate: dayAfter,
+    });
+    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      date: tomorrowMidnight, durationMins: 60,
+    });
+    expect(result).toEqual([]);
+  });
+
+  it('generates slots from both windows for a split shift with no slots in the gap', async () => {
+    const prisma = buildPrisma();
+    // Branch: 08:00-22:00. Employee: 09:00-13:00 and 16:00-21:00.
+    // Slots should appear in 09:00-13:00 and 16:00-21:00 only.
+    prisma.businessHour.findUnique = jest.fn().mockResolvedValue({
+      branchId: 'branch-1', dayOfWeek: tomorrowMidnight.getDay(),
+      startTime: '08:00', endTime: '22:00', isOpen: true,
+    });
+    prisma.employeeAvailability.findMany = jest.fn().mockResolvedValue([
+      { employeeId: 'emp-1', dayOfWeek: tomorrowMidnight.getDay(), startTime: '09:00', endTime: '13:00', isActive: true },
+      { employeeId: 'emp-1', dayOfWeek: tomorrowMidnight.getDay(), startTime: '16:00', endTime: '21:00', isActive: true },
+    ]);
+
+    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      date: tomorrowMidnight, durationMins: 60,
+    });
+
+    const hours = result.map((s) => s.startTime.getHours());
+    // All slots start inside shift windows
+    expect(hours.every((h) => (h >= 9 && h < 13) || (h >= 16 && h < 21))).toBe(true);
+    // No slot starts in the gap (13:00-16:00)
+    expect(hours.some((h) => h >= 13 && h < 16)).toBe(false);
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('clamps slot window to branch hours when shift exceeds them', async () => {
+    const prisma = buildPrisma();
+    // Branch: 09:00-17:00. Employee shift: 08:00-18:00.
+    prisma.businessHour.findUnique = jest.fn().mockResolvedValue({
+      branchId: 'branch-1', dayOfWeek: tomorrowMidnight.getDay(),
+      startTime: '09:00', endTime: '17:00', isOpen: true,
+    });
+    prisma.employeeAvailability.findMany = jest.fn().mockResolvedValue([
+      { employeeId: 'emp-1', dayOfWeek: tomorrowMidnight.getDay(), startTime: '08:00', endTime: '18:00', isActive: true },
+    ]);
+
+    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      date: tomorrowMidnight, durationMins: 60,
+    });
+
+    // No slot should start before 09:00 or end after 17:00
+    expect(result.every((s) => s.startTime.getHours() >= 9)).toBe(true);
+    expect(result.every((s) => s.endTime <= new Date(tomorrowMidnight.getTime() + 17 * 3600_000))).toBe(true);
   });
 });
