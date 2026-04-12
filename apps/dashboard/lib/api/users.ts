@@ -21,7 +21,7 @@ import type {
 export async function fetchUsers(
   query: UserListQuery = {},
 ): Promise<PaginatedResponse<User>> {
-  return api.get<PaginatedResponse<User>>("/users", {
+  return api.get<PaginatedResponse<User>>("/dashboard/identity/users", {
     page: query.page,
     perPage: query.perPage,
     sortBy: query.sortBy,
@@ -33,65 +33,65 @@ export async function fetchUsers(
 }
 
 export async function fetchUser(id: string): Promise<User> {
-  return api.get<User>(`/users/${id}`)
+  return api.get<User>(`/dashboard/identity/users/${id}`)
 }
 
 export async function createUser(payload: CreateUserPayload): Promise<User> {
-  return api.post<User>("/users", payload)
+  return api.post<User>("/dashboard/identity/users", payload)
 }
 
 export async function updateUser(
   id: string,
   payload: UpdateUserPayload,
 ): Promise<User> {
-  return api.patch<User>(`/users/${id}`, payload)
+  return api.patch<User>(`/dashboard/identity/users/${id}`, payload)
 }
 
 export async function deleteUser(id: string): Promise<void> {
-  await api.delete(`/users/${id}`)
+  await api.delete(`/dashboard/identity/users/${id}`)
 }
 
 export async function activateUser(id: string): Promise<void> {
-  await api.patch(`/users/${id}/activate`)
+  await api.patch(`/dashboard/identity/users/${id}/activate`)
 }
 
 export async function deactivateUser(id: string): Promise<void> {
-  await api.patch(`/users/${id}/deactivate`)
+  await api.patch(`/dashboard/identity/users/${id}/deactivate`)
 }
 
 export async function assignRole(
   userId: string,
   payload: AssignRolePayload,
 ): Promise<void> {
-  await api.post(`/users/${userId}/roles`, payload)
+  await api.post(`/dashboard/identity/users/${userId}/roles`, payload)
 }
 
 export async function removeRole(
   userId: string,
   roleId: string,
 ): Promise<void> {
-  await api.delete(`/users/${userId}/roles/${roleId}`)
+  await api.delete(`/dashboard/identity/users/${userId}/roles/${roleId}`)
 }
 
 /* ─── Roles ─── */
 
 export async function fetchRoles(): Promise<Role[]> {
-  return api.get<Role[]>("/roles")
+  return api.get<Role[]>("/dashboard/identity/roles")
 }
 
 export async function createRole(payload: CreateRolePayload): Promise<Role> {
-  return api.post<Role>("/roles", payload)
+  return api.post<Role>("/dashboard/identity/roles", payload)
 }
 
 export async function deleteRole(id: string): Promise<void> {
-  await api.delete(`/roles/${id}`)
+  await api.delete(`/dashboard/identity/roles/${id}`)
 }
 
 export async function assignPermission(
   roleId: string,
   payload: AssignPermissionPayload,
 ): Promise<void> {
-  await api.post(`/roles/${roleId}/permissions`, payload)
+  await api.post(`/dashboard/identity/roles/${roleId}/permissions`, payload)
 }
 
 export async function removePermission(
