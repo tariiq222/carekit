@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import type { BookingType } from '@prisma/client';
 
 export interface CheckAvailabilityQuery {
@@ -7,9 +8,7 @@ export interface CheckAvailabilityQuery {
   employeeId: string;
   branchId: string;
   date: Date;
-  /** Explicit duration — used when serviceId/durationOptionId are not provided */
   durationMins?: number;
-  /** When provided the handler resolves durationMins from the matching ServiceDurationOption */
   serviceId?: string;
   durationOptionId?: string | null;
   bookingType?: BookingType | null;
@@ -29,10 +28,7 @@ function parseHHmm(hhmm: string, anchor: Date): Date {
   return d;
 }
 
-function intersectWindows(
-  a: [Date, Date],
-  b: [Date, Date],
-): [Date, Date] | null {
+function intersectWindows(a: [Date, Date], b: [Date, Date]): [Date, Date] | null {
   const start = a[0] > b[0] ? a[0] : b[0];
   const end = a[1] < b[1] ? a[1] : b[1];
   return start < end ? [start, end] : null;
@@ -40,19 +36,37 @@ function intersectWindows(
 
 @Injectable()
 export class CheckAvailabilityHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly settingsHandler: GetBookingSettingsHandler,
+  ) {}
 
   async execute(query: CheckAvailabilityQuery): Promise<AvailableSlot[]> {
-    // Resolve durationMins from ServiceDurationOption when serviceId is given.
+    const settings = await this.settingsHandler.execute({
+      tenantId: query.tenantId,
+      branchId: query.branchId,
+    });
+
+    const dateOnly = new Date(query.date);
+    dateOnly.setHours(0, 0, 0, 0);
+
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + settings.maxAdvanceBookingDays);
+    maxDate.setHours(23, 59, 59, 999);
+    if (dateOnly > maxDate) return [];
+
     let durationMins = query.durationMins ?? 0;
     if (query.serviceId) {
-      const option = await this.resolveDurationOption(query.tenantId, query.serviceId, query.durationOptionId ?? null, query.bookingType ?? null);
+      const option = await this.resolveDurationOption(
+        query.tenantId,
+        query.serviceId,
+        query.durationOptionId ?? null,
+        query.bookingType ?? null,
+      );
       if (option) durationMins = option.durationMins;
     }
     if (!durationMins) return [];
 
-    const dateOnly = new Date(query.date);
-    dateOnly.setHours(0, 0, 0, 0);
     const dayOfWeek = dateOnly.getDay();
 
     const [businessHour, holiday, shifts, exception] = await Promise.all([
@@ -110,7 +124,9 @@ export class CheckAvailabilityHandler {
       orderBy: { scheduledAt: 'asc' },
     });
 
-    const now = new Date();
+    const earliestAllowed = new Date(Date.now() + settings.minBookingLeadMinutes * 60_000);
+    const bufferMs = settings.bufferMinutes * 60_000;
+
     const slots: AvailableSlot[] = [];
 
     for (const [windowStart, windowEnd] of windows) {
@@ -119,11 +135,11 @@ export class CheckAvailabilityHandler {
         const slotEnd = new Date(cursor.getTime() + durationMins * 60_000);
 
         const hasConflict = existingBookings.some((b) => {
-          const bEnd = new Date(b.scheduledAt.getTime() + b.durationMins * 60_000);
+          const bEnd = new Date(b.scheduledAt.getTime() + b.durationMins * 60_000 + bufferMs);
           return b.scheduledAt < slotEnd && bEnd > cursor;
         });
 
-        if (!hasConflict && cursor > now) {
+        if (!hasConflict && cursor >= earliestAllowed) {
           slots.push({ startTime: new Date(cursor), endTime: slotEnd });
         }
 

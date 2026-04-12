@@ -436,8 +436,16 @@ describe('CheckAvailabilityHandler', () => {
   const tomorrowMidnight = new Date(future);
   tomorrowMidnight.setHours(0, 0, 0, 0);
 
+  const defaultSettingsHandler = {
+    execute: jest.fn().mockResolvedValue({
+      bufferMinutes: 0,
+      minBookingLeadMinutes: 0,
+      maxAdvanceBookingDays: 90,
+    }),
+  };
+
   it('returns available slots when employee has a shift covering the day', async () => {
-    const result = await new CheckAvailabilityHandler(buildPrisma() as never).execute({
+    const result = await new CheckAvailabilityHandler(buildPrisma() as never, defaultSettingsHandler as never).execute({
       tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
@@ -448,7 +456,7 @@ describe('CheckAvailabilityHandler', () => {
   it('returns empty array when branch is closed', async () => {
     const prisma = buildPrisma();
     prisma.businessHour.findUnique = jest.fn().mockResolvedValue({ isOpen: false });
-    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+    const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
       tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
@@ -458,7 +466,7 @@ describe('CheckAvailabilityHandler', () => {
   it('returns empty array when employee has no shifts on this day (weekly off)', async () => {
     const prisma = buildPrisma();
     prisma.employeeAvailability.findMany = jest.fn().mockResolvedValue([]);
-    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+    const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
       tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
@@ -468,7 +476,7 @@ describe('CheckAvailabilityHandler', () => {
   it('returns empty array when a holiday exists for the branch on that date', async () => {
     const prisma = buildPrisma();
     prisma.holiday.findFirst = jest.fn().mockResolvedValue({ id: 'hol-1', branchId: 'branch-1', date: tomorrowMidnight });
-    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+    const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
       tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
@@ -484,7 +492,7 @@ describe('CheckAvailabilityHandler', () => {
     prisma.employeeAvailabilityException.findFirst = jest.fn().mockResolvedValue({
       id: 'exc-1', employeeId: 'emp-1', startDate: yesterday, endDate: dayAfter,
     });
-    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+    const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
       tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
@@ -504,7 +512,7 @@ describe('CheckAvailabilityHandler', () => {
       { employeeId: 'emp-1', dayOfWeek: tomorrowMidnight.getDay(), startTime: '16:00', endTime: '21:00', isActive: true },
     ]);
 
-    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+    const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
       tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
@@ -528,7 +536,7 @@ describe('CheckAvailabilityHandler', () => {
       { employeeId: 'emp-1', dayOfWeek: tomorrowMidnight.getDay(), startTime: '08:00', endTime: '18:00', isActive: true },
     ]);
 
-    const result = await new CheckAvailabilityHandler(prisma as never).execute({
+    const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
       tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
@@ -536,6 +544,36 @@ describe('CheckAvailabilityHandler', () => {
     // No slot should start before 09:00 or end after 17:00
     expect(result.every((s) => s.startTime.getHours() >= 9)).toBe(true);
     expect(result.every((s) => s.endTime <= new Date(tomorrowMidnight.getTime() + 17 * 3600_000))).toBe(true);
+  });
+});
+
+describe('CheckAvailabilityHandler — settings enforcement', () => {
+  const makeSettingsHandler = (overrides: Partial<{ bufferMinutes: number; minBookingLeadMinutes: number; maxAdvanceBookingDays: number }> = {}) => ({
+    execute: jest.fn().mockResolvedValue({
+      bufferMinutes: 0,
+      minBookingLeadMinutes: 0,
+      maxAdvanceBookingDays: 90,
+      ...overrides,
+    }),
+  });
+
+  it('returns empty array when date exceeds maxAdvanceBookingDays', async () => {
+    const prisma = buildPrisma();
+    const handler = new CheckAvailabilityHandler(
+      prisma as never,
+      makeSettingsHandler({ maxAdvanceBookingDays: 7 }) as never,
+    );
+    const farFuture = new Date(Date.now() + 30 * 86400_000);
+
+    const result = await handler.execute({
+      tenantId: 'tenant-1',
+      employeeId: 'emp-1',
+      branchId: 'branch-1',
+      date: farFuture,
+      durationMins: 60,
+    });
+
+    expect(result).toEqual([]);
   });
 });
 
