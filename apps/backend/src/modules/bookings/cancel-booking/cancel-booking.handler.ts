@@ -3,6 +3,7 @@ import { BookingStatus, CancellationReason } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { BookingCancelledEvent } from '../events/booking-cancelled.event';
+import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 
 export interface CancelBookingCommand {
   tenantId: string;
@@ -19,6 +20,7 @@ export class CancelBookingHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly settingsHandler: GetBookingSettingsHandler,
   ) {}
 
   async execute(cmd: CancelBookingCommand) {
@@ -29,6 +31,16 @@ export class CancelBookingHandler {
     if (!CANCELLABLE_STATUSES.includes(booking.status)) {
       throw new BadRequestException(`Booking cannot be cancelled (status: ${booking.status})`);
     }
+
+    const settings = await this.settingsHandler.execute({
+      tenantId: cmd.tenantId,
+      branchId: booking.branchId,
+    });
+
+    const hoursUntilBooking = (booking.scheduledAt.getTime() - Date.now()) / 3_600_000;
+    const refundType = hoursUntilBooking >= settings.freeCancelBeforeHours
+      ? settings.freeCancelRefundType
+      : 'NONE';
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({
@@ -62,6 +74,6 @@ export class CancelBookingHandler {
     });
     await this.eventBus.publish(event.eventName, event.toEnvelope());
 
-    return updated;
+    return { ...updated, refundType };
   }
 }

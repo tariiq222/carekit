@@ -38,6 +38,7 @@ const buildPrisma = () => ({
   },
   bookingStatusLog: {
     create: jest.fn().mockResolvedValue({ id: 'log-1' }),
+    count: jest.fn().mockResolvedValue(0),
   },
   $transaction: jest.fn().mockImplementation((ops: Promise<unknown>[]) => Promise.all(ops)),
   waitlistEntry: {
@@ -173,12 +174,24 @@ describe('CreateBookingHandler', () => {
   });
 });
 
+const defaultCancelSettings = {
+  execute: jest.fn().mockResolvedValue({
+    freeCancelBeforeHours: 24,
+    freeCancelRefundType: 'FULL',
+    lateCancelRefundPercent: 0,
+  }),
+};
+
+const defaultRescheduleSettings = {
+  execute: jest.fn().mockResolvedValue({ maxReschedulesPerBooking: 3 }),
+};
+
 // ─── CancelBookingHandler ────────────────────────────────────────────────────
 describe('CancelBookingHandler', () => {
   it('cancels PENDING booking and emits event', async () => {
     const prisma = buildPrisma();
     const eb = buildEventBus();
-    const result = await new CancelBookingHandler(prisma as never, eb as never).execute({
+    const result = await new CancelBookingHandler(prisma as never, eb as never, defaultCancelSettings as never).execute({
       tenantId: 'tenant-1', bookingId: 'book-1', reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
@@ -192,7 +205,7 @@ describe('CancelBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new CancelBookingHandler(prisma as never, buildEventBus() as never).execute({
+      new CancelBookingHandler(prisma as never, buildEventBus() as never, defaultCancelSettings as never).execute({
         tenantId: 'tenant-1', bookingId: 'bad', reason: CancellationReason.OTHER, changedBy: 'user-42',
       }),
     ).rejects.toThrow(NotFoundException);
@@ -202,7 +215,7 @@ describe('CancelBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CANCELLED });
     await expect(
-      new CancelBookingHandler(prisma as never, buildEventBus() as never).execute({
+      new CancelBookingHandler(prisma as never, buildEventBus() as never, defaultCancelSettings as never).execute({
         tenantId: 'tenant-1', bookingId: 'book-1', reason: CancellationReason.OTHER, changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
@@ -215,8 +228,8 @@ describe('RescheduleBookingHandler', () => {
 
   it('reschedules booking when new slot is free', async () => {
     const prisma = buildPrisma();
-    await new RescheduleBookingHandler(prisma as never).execute({
-      tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newFuture,
+    await new RescheduleBookingHandler(prisma as never, defaultRescheduleSettings as never).execute({
+      tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newFuture, changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ scheduledAt: newFuture }) }),
@@ -227,8 +240,8 @@ describe('RescheduleBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.COMPLETED });
     await expect(
-      new RescheduleBookingHandler(prisma as never).execute({
-        tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newFuture,
+      new RescheduleBookingHandler(prisma as never, defaultRescheduleSettings as never).execute({
+        tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newFuture, changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -601,7 +614,7 @@ describe('CancelBookingHandler — status log', () => {
   it('writes a BookingStatusLog entry on cancel', async () => {
     const prisma = buildPrisma();
     const eventBus = { publish: jest.fn() };
-    const handler = new CancelBookingHandler(prisma as never, eventBus as never);
+    const handler = new CancelBookingHandler(prisma as never, eventBus as never, defaultCancelSettings as never);
 
     await handler.execute({
       tenantId: 'tenant-1',
@@ -824,6 +837,92 @@ describe('UpsertBookingSettingsHandler', () => {
       where: { tenantId_branchId: { tenantId: 'tenant-1', branchId: null } },
       update: { bufferMinutes: 5 },
       create: expect.objectContaining({ tenantId: 'tenant-1', branchId: null }),
+    });
+  });
+});
+
+describe('CancelBookingHandler — free cancel window', () => {
+  it('attaches freeCancelRefundType when cancelling within free window', async () => {
+    const prisma = buildPrisma();
+    const eventBus = { publish: jest.fn() };
+    const in48h = new Date(Date.now() + 48 * 3_600_000);
+    prisma.booking.findUnique.mockResolvedValue({ ...mockBooking, scheduledAt: in48h });
+    const settingsHandler = {
+      execute: jest.fn().mockResolvedValue({
+        freeCancelBeforeHours: 24,
+        freeCancelRefundType: 'FULL',
+        lateCancelRefundPercent: 0,
+      }),
+    };
+    const handler = new CancelBookingHandler(prisma as never, eventBus as never, settingsHandler as never);
+
+    const result = await handler.execute({
+      tenantId: 'tenant-1', bookingId: 'book-1',
+      reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-42',
+    });
+
+    expect(result.refundType).toBe('FULL');
+  });
+
+  it('attaches NONE when cancelling outside free window', async () => {
+    const prisma = buildPrisma();
+    const eventBus = { publish: jest.fn() };
+    const in10h = new Date(Date.now() + 10 * 3_600_000);
+    prisma.booking.findUnique.mockResolvedValue({ ...mockBooking, scheduledAt: in10h });
+    const settingsHandler = {
+      execute: jest.fn().mockResolvedValue({
+        freeCancelBeforeHours: 24,
+        freeCancelRefundType: 'FULL',
+        lateCancelRefundPercent: 0,
+      }),
+    };
+    const handler = new CancelBookingHandler(prisma as never, eventBus as never, settingsHandler as never);
+
+    const result = await handler.execute({
+      tenantId: 'tenant-1', bookingId: 'book-1',
+      reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-42',
+    });
+
+    expect(result.refundType).toBe('NONE');
+  });
+});
+
+describe('RescheduleBookingHandler — maxReschedulesPerBooking', () => {
+  it('allows reschedule when count is below max', async () => {
+    const prisma = buildPrisma();
+    (prisma as any).bookingStatusLog.count = jest.fn().mockResolvedValue(2);
+    const settingsHandler = { execute: jest.fn().mockResolvedValue({ maxReschedulesPerBooking: 3 }) };
+    const handler = new RescheduleBookingHandler(prisma as never, settingsHandler as never);
+    const newTime = new Date(Date.now() + 2 * 86400_000);
+
+    await expect(
+      handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' }),
+    ).resolves.toBeDefined();
+  });
+
+  it('throws BadRequestException when max reschedules reached', async () => {
+    const prisma = buildPrisma();
+    (prisma as any).bookingStatusLog.count = jest.fn().mockResolvedValue(3);
+    const settingsHandler = { execute: jest.fn().mockResolvedValue({ maxReschedulesPerBooking: 3 }) };
+    const handler = new RescheduleBookingHandler(prisma as never, settingsHandler as never);
+    const newTime = new Date(Date.now() + 2 * 86400_000);
+
+    await expect(
+      handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('writes rescheduled log entry on success', async () => {
+    const prisma = buildPrisma();
+    (prisma as any).bookingStatusLog.count = jest.fn().mockResolvedValue(0);
+    const settingsHandler = { execute: jest.fn().mockResolvedValue({ maxReschedulesPerBooking: 3 }) };
+    const handler = new RescheduleBookingHandler(prisma as never, settingsHandler as never);
+    const newTime = new Date(Date.now() + 2 * 86400_000);
+
+    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' });
+
+    expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ reason: 'rescheduled', changedBy: 'user-42' }),
     });
   });
 });
