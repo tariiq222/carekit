@@ -11,8 +11,10 @@ export class GetBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: GetBookingQuery) {
-    const booking = await this.prisma.booking.findUnique({ where: { id: query.bookingId } });
-    if (!booking || booking.tenantId !== query.tenantId) {
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: query.bookingId, tenantId: query.tenantId },
+    });
+    if (!booking) {
       throw new NotFoundException(`Booking ${query.bookingId} not found`);
     }
     return booking;

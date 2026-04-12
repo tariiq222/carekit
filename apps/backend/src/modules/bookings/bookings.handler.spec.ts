@@ -96,6 +96,19 @@ const buildPrisma = () => {
       return Promise.all(arg);
     },
   );
+  // Compound-WHERE tenant verification uses findFirst({ where: { id, tenantId } }).
+  // Tests continue to drive the lookup result via booking.findUnique, so route
+  // pure id-lookup findFirst calls (no status/employee filter) to findUnique.
+  // Overlap-conflict findFirst calls (with status + employeeId + scheduledAt)
+  // fall through to the original null-returning mock.
+  const conflictFindFirst = p.booking.findFirst;
+  p.booking.findFirst = jest.fn((args: { where?: Record<string, unknown> } = {}) => {
+    const where = args.where ?? {};
+    if ('id' in where && !('status' in where) && !('employeeId' in where)) {
+      return p.booking.findUnique({ where: { id: where.id as string } });
+    }
+    return conflictFindFirst(args);
+  });
   return p;
 };
 

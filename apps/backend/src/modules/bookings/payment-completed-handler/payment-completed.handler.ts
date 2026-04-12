@@ -28,8 +28,10 @@ export class PaymentCompletedEventHandler {
       async (envelope) => {
         const { bookingId, tenantId } = envelope.payload;
         try {
-          const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
-          if (!booking || booking.tenantId !== tenantId) return;
+          const booking = await this.prisma.booking.findFirst({
+            where: { id: bookingId, tenantId },
+          });
+          if (!booking) return;
           if (booking.status !== 'PENDING') return;
 
           await this.prisma.$transaction([

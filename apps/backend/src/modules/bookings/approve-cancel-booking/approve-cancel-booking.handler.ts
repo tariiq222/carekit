@@ -25,10 +25,10 @@ export class ApproveCancelBookingHandler {
   ) {}
 
   async execute(cmd: ApproveCancelBookingCommand) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: cmd.bookingId },
+    const booking = await this.prisma.booking.findFirst({
+      where: { id: cmd.bookingId, tenantId: cmd.tenantId },
     });
-    if (!booking || booking.tenantId !== cmd.tenantId) {
+    if (!booking) {
       throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
     }
     if (booking.status !== ('CANCEL_REQUESTED' as BookingStatus)) {
