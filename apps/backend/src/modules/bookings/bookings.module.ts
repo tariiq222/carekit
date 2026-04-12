@@ -19,6 +19,7 @@ import { ListBookingStatusLogHandler } from './list-booking-status-log/list-book
 import { PaymentCompletedEventHandler } from './payment-completed-handler/payment-completed.handler';
 import { GetBookingSettingsHandler } from './get-booking-settings/get-booking-settings.handler';
 import { UpsertBookingSettingsHandler } from './upsert-booking-settings/upsert-booking-settings.handler';
+import { DashboardBookingsController } from '../../api/dashboard/bookings.controller';
 
 const handlers = [
   CreateBookingHandler,
@@ -41,6 +42,7 @@ const handlers = [
 
 @Module({
   imports: [DatabaseModule, MessagingModule, OrganizationModule],
+  controllers: [DashboardBookingsController],
   providers: [...handlers, PaymentCompletedEventHandler],
   exports: [...handlers],
 })
