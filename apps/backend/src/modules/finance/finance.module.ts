@@ -1,4 +1,5 @@
 import { Module, OnModuleInit } from '@nestjs/common';
+import { DashboardFinanceController } from '../../api/dashboard/finance.controller';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
 import { StorageModule } from '../../infrastructure/storage';
@@ -27,6 +28,7 @@ const handlers = [
 
 @Module({
   imports: [DatabaseModule, MessagingModule, StorageModule],
+  controllers: [DashboardFinanceController],
   providers: [...handlers, BookingConfirmedHandler],
   exports: [...handlers],
 })
