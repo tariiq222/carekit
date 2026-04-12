@@ -5,6 +5,7 @@ import { PrismaService } from '../../../infrastructure/database';
 interface VerifyPaymentCommand {
   tenantId: string;
   paymentId: string;
+  action: 'approve' | 'reject';
   transferRef?: string;
 }
 
@@ -21,6 +22,16 @@ export class VerifyPaymentHandler {
 
     if (payment.status !== PaymentStatus.PENDING_VERIFICATION) {
       throw new BadRequestException('Payment is not pending verification');
+    }
+
+    if (cmd.action === 'reject') {
+      return this.prisma.payment.update({
+        where: { id: cmd.paymentId },
+        data: {
+          status: PaymentStatus.FAILED,
+          failureReason: 'Bank transfer rejected',
+        },
+      });
     }
 
     return this.prisma.payment.update({
