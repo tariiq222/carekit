@@ -13,10 +13,21 @@ function buildController() {
   const getEmployee = fn({ id: 'e-1' });
   const updateAvailability = fn({ slots: [] });
   const employeeOnboarding = fn({ id: 'e-1' });
+  const deleteEmployee = fn();
+  const listEmployeeServices = fn([]);
+  const assignEmployeeService = fn({ id: 'es-1' });
+  const removeEmployeeService = fn();
+  const listEmployeeExceptions = fn([]);
+  const createEmployeeException = fn({ id: 'ex-1' });
+  const deleteEmployeeException = fn();
+  const listEmployeeRatings = fn([]);
   const controller = new DashboardPeopleController(
     createClient as never, updateClient as never, listClients as never, getClient as never,
     createEmployee as never, listEmployees as never, getEmployee as never,
     updateAvailability as never, employeeOnboarding as never,
+    deleteEmployee as never, listEmployeeServices as never, assignEmployeeService as never,
+    removeEmployeeService as never, listEmployeeExceptions as never, createEmployeeException as never,
+    deleteEmployeeException as never, listEmployeeRatings as never,
   );
   return { controller, createClient, updateClient, listClients, getClient, createEmployee, listEmployees, getEmployee, updateAvailability, employeeOnboarding };
 }

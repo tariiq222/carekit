@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { JwtGuard } from '../../common/guards/jwt.guard';
@@ -21,6 +21,15 @@ import { CreateEmployeeDto } from '../../modules/people/employees/create-employe
 import { ListEmployeesDto } from '../../modules/people/employees/list-employees.dto';
 import { UpdateAvailabilityDto } from '../../modules/people/employees/update-availability.dto';
 import { EmployeeOnboardingDto } from '../../modules/people/employees/employee-onboarding.dto';
+import { DeleteEmployeeHandler } from '../../modules/people/employees/delete-employee.handler';
+import { ListEmployeeServicesHandler } from '../../modules/people/employees/list-employee-services.handler';
+import { AssignEmployeeServiceHandler } from '../../modules/people/employees/assign-employee-service.handler';
+import { RemoveEmployeeServiceHandler } from '../../modules/people/employees/remove-employee-service.handler';
+import { ListEmployeeExceptionsHandler } from '../../modules/people/employees/list-employee-exceptions.handler';
+import { CreateEmployeeExceptionHandler } from '../../modules/people/employees/create-employee-exception.handler';
+import { CreateEmployeeExceptionDto } from '../../modules/people/employees/create-employee-exception.dto';
+import { DeleteEmployeeExceptionHandler } from '../../modules/people/employees/delete-employee-exception.handler';
+import { ListEmployeeRatingsHandler } from '../../modules/people/employees/list-employee-ratings.handler';
 
 @Controller('dashboard/people')
 @UseGuards(JwtGuard, CaslGuard)
@@ -35,6 +44,14 @@ export class DashboardPeopleController {
     private readonly getEmployee: GetEmployeeHandler,
     private readonly updateAvailability: UpdateAvailabilityHandler,
     private readonly employeeOnboarding: EmployeeOnboardingHandler,
+    private readonly deleteEmployee: DeleteEmployeeHandler,
+    private readonly listEmployeeServices: ListEmployeeServicesHandler,
+    private readonly assignEmployeeService: AssignEmployeeServiceHandler,
+    private readonly removeEmployeeService: RemoveEmployeeServiceHandler,
+    private readonly listEmployeeExceptions: ListEmployeeExceptionsHandler,
+    private readonly createEmployeeException: CreateEmployeeExceptionHandler,
+    private readonly deleteEmployeeException: DeleteEmployeeExceptionHandler,
+    private readonly listEmployeeRatings: ListEmployeeRatingsHandler,
   ) {}
 
   // ── Clients ────────────────────────────────────────────────────────────────
@@ -120,5 +137,78 @@ export class DashboardPeopleController {
     @Body() body: EmployeeOnboardingDto,
   ) {
     return this.employeeOnboarding.execute({ tenantId, employeeId: id, ...body });
+  }
+
+  @Delete('employees/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteEmployeeEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.deleteEmployee.execute({ tenantId, employeeId: id });
+  }
+
+  @Get('employees/:id/services')
+  listEmployeeServicesEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.listEmployeeServices.execute({ tenantId, employeeId: id });
+  }
+
+  @Post('employees/:id/services')
+  @HttpCode(HttpStatus.CREATED)
+  assignEmployeeServiceEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { serviceId: string },
+  ) {
+    return this.assignEmployeeService.execute({ tenantId, employeeId: id, serviceId: body.serviceId });
+  }
+
+  @Delete('employees/:id/services/:serviceId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeEmployeeServiceEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+  ) {
+    return this.removeEmployeeService.execute({ tenantId, employeeId: id, serviceId });
+  }
+
+  @Get('employees/:id/exceptions')
+  listEmployeeExceptionsEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.listEmployeeExceptions.execute({ tenantId, employeeId: id });
+  }
+
+  @Post('employees/:id/exceptions')
+  @HttpCode(HttpStatus.CREATED)
+  createEmployeeExceptionEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: CreateEmployeeExceptionDto,
+  ) {
+    return this.createEmployeeException.execute({ tenantId, employeeId: id, ...body });
+  }
+
+  @Delete('employees/:id/exceptions/:exceptionId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteEmployeeExceptionEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('exceptionId', ParseUUIDPipe) exceptionId: string,
+  ) {
+    return this.deleteEmployeeException.execute({ tenantId, employeeId: id, exceptionId });
+  }
+
+  @Get('employees/:id/ratings')
+  listEmployeeRatingsEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.listEmployeeRatings.execute({ tenantId, employeeId: id });
   }
 }
