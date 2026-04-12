@@ -36,17 +36,22 @@ model User {
 }
 
 model RefreshToken {
-  id        String    @id @default(uuid())
-  tenantId  String
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String    @unique
-  expiresAt DateTime
-  revokedAt DateTime?
-  createdAt DateTime  @default(now())
+  id            String    @id @default(uuid())
+  tenantId      String
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash     String    @unique
+  // First 8 chars of the raw UUID used as a fast lookup key.
+  // Lets us do an indexed DB lookup to a single row before the bcrypt compare,
+  // avoiding a full-table scan over all active tokens.
+  tokenSelector String
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  createdAt     DateTime  @default(now())
 
   @@index([userId])
   @@index([tenantId])
+  @@index([tokenSelector])
 }
 
 model CustomRole {

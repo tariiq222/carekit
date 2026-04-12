@@ -61,12 +61,13 @@ export class TokenService {
     });
 
     const rawRefresh = randomUUID();
+    const tokenSelector = rawRefresh.slice(0, 8);
     const tokenHash = await bcrypt.hash(rawRefresh, 10);
     const ttl = this.config.get<string>('JWT_REFRESH_TTL') ?? '30d';
     const expiresAt = new Date(Date.now() + this.parseTtlMs(ttl));
 
     await this.prisma.refreshToken.create({
-      data: { tenantId: user.tenantId, userId: user.id, tokenHash, expiresAt },
+      data: { tenantId: user.tenantId, userId: user.id, tokenHash, tokenSelector, expiresAt },
     });
 
     return { accessToken, refreshToken: rawRefresh };

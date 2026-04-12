@@ -68,7 +68,7 @@ describe('AuthController', () => {
       const result = await controller.refreshEndpoint({ refreshToken: rawToken } as never);
 
       expect(prisma.refreshToken.findMany).toHaveBeenCalledWith({
-        where: { revokedAt: null, expiresAt: { gt: expect.any(Date) } },
+        where: { tokenSelector: rawToken.slice(0, 8), revokedAt: null, expiresAt: { gt: expect.any(Date) } },
       });
       expect(prisma.refreshToken.update).toHaveBeenCalledWith({
         where: { id: 'rt-1' },
