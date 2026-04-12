@@ -12,7 +12,7 @@ export class UpsertChatbotConfigHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   execute(cmd: UpsertChatbotConfigCommand) {
-    return Promise.all(
+    return this.prisma.$transaction(
       cmd.configs.map((entry) =>
         this.prisma.chatbotConfig.upsert({
           where: { tenantId_key: { tenantId: cmd.tenantId, key: entry.key } },

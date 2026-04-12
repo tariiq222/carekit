@@ -1,12 +1,16 @@
 import { GetChatbotConfigHandler } from './get-chatbot-config.handler';
 import { UpsertChatbotConfigHandler } from './upsert-chatbot-config.handler';
 
-const buildPrisma = () => ({
-  chatbotConfig: {
-    findMany: jest.fn().mockResolvedValue([]),
-    upsert: jest.fn().mockResolvedValue({ id: 'cfg-1' }),
-  },
-});
+const buildPrisma = () => {
+  const upsert = jest.fn().mockResolvedValue({ id: 'cfg-1' });
+  return {
+    chatbotConfig: {
+      findMany: jest.fn().mockResolvedValue([]),
+      upsert,
+    },
+    $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
+  };
+};
 
 describe('GetChatbotConfigHandler', () => {
   it('returns all configs for tenant (no category filter)', async () => {

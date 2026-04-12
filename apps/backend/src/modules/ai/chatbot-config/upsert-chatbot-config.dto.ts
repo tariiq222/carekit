@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { Allow, IsArray, IsDefined, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ConfigItemDto {
@@ -6,7 +6,9 @@ class ConfigItemDto {
   @IsNotEmpty()
   key!: string;
 
-  @IsNotEmpty()
+  // Accepts any JSON-serializable value — intentionally permissive
+  @IsDefined()
+  @Allow()
   value!: unknown;
 
   @IsString()
