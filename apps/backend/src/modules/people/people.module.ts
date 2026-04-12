@@ -9,6 +9,7 @@ import { UpdateAvailabilityHandler } from './employees/update-availability.handl
 import { EmployeeOnboardingHandler } from './employees/employee-onboarding.handler';
 import { ListEmployeesHandler } from './employees/list-employees.handler';
 import { GetEmployeeHandler } from './employees/get-employee.handler';
+import { DashboardPeopleController } from '../../api/dashboard/people.controller';
 
 const handlers = [
   CreateClientHandler, UpdateClientHandler, ListClientsHandler, GetClientHandler,
@@ -18,6 +19,7 @@ const handlers = [
 
 @Module({
   imports: [DatabaseModule],
+  controllers: [DashboardPeopleController],
   providers: [...handlers],
   exports: [...handlers],
 })
