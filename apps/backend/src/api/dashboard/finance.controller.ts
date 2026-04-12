@@ -28,6 +28,7 @@ import { GetZatcaConfigHandler } from '../../modules/finance/zatca-config/get-za
 import { UpsertZatcaConfigHandler } from '../../modules/finance/zatca-config/upsert-zatca-config.handler';
 import { UpsertZatcaConfigDto } from '../../modules/finance/zatca-config/upsert-zatca-config.dto';
 import { OnboardZatcaHandler } from '../../modules/finance/zatca-config/onboard-zatca.handler';
+import { GetPaymentStatsHandler } from '../../modules/finance/get-payment-stats/get-payment-stats.handler';
 
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/finance')
@@ -47,6 +48,7 @@ export class DashboardFinanceController {
     private readonly getZatcaConfig: GetZatcaConfigHandler,
     private readonly upsertZatcaConfig: UpsertZatcaConfigHandler,
     private readonly onboardZatca: OnboardZatcaHandler,
+    private readonly getPaymentStats: GetPaymentStatsHandler,
   ) {}
 
   // ── Invoices ──────────────────────────────────────────────────────────────
@@ -69,6 +71,11 @@ export class DashboardFinanceController {
   }
 
   // ── Payments ──────────────────────────────────────────────────────────────
+
+  @Get('payments/stats')
+  getPaymentStatsEndpoint(@TenantId() tenantId: string) {
+    return this.getPaymentStats.execute({ tenantId });
+  }
 
   @Post('payments')
   processPaymentEndpoint(

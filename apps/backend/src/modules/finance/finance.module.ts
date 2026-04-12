@@ -21,6 +21,7 @@ import { DeleteCouponHandler } from './coupons/delete-coupon.handler';
 import { GetZatcaConfigHandler } from './zatca-config/get-zatca-config.handler';
 import { UpsertZatcaConfigHandler } from './zatca-config/upsert-zatca-config.handler';
 import { OnboardZatcaHandler } from './zatca-config/onboard-zatca.handler';
+import { GetPaymentStatsHandler } from './get-payment-stats/get-payment-stats.handler';
 
 const handlers = [
   CreateInvoiceHandler,
@@ -40,6 +41,7 @@ const handlers = [
   GetZatcaConfigHandler,
   UpsertZatcaConfigHandler,
   OnboardZatcaHandler,
+  GetPaymentStatsHandler,
 ];
 
 @Module({
