@@ -15,6 +15,10 @@ import { GetIntakeFormHandler } from './intake-forms/get-intake-form.handler';
 import { ListIntakeFormsHandler } from './intake-forms/list-intake-forms.handler';
 import { SubmitRatingHandler } from './ratings/submit-rating.handler';
 import { ListRatingsHandler } from './ratings/list-ratings.handler';
+import { GetOrgSettingsHandler } from './org-settings/get-org-settings.handler';
+import { UpsertOrgSettingsHandler } from './org-settings/upsert-org-settings.handler';
+import { GetBookingSettingsHandler } from '../bookings/get-booking-settings/get-booking-settings.handler';
+import { UpsertBookingSettingsHandler } from '../bookings/upsert-booking-settings/upsert-booking-settings.handler';
 
 const serviceHandlers = [
   CreateServiceHandler, UpdateServiceHandler, ListServicesHandler, ArchiveServiceHandler,
@@ -29,12 +33,16 @@ const serviceHandlers = [
     UpsertBrandingHandler, GetBrandingHandler,
     CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler,
     SubmitRatingHandler, ListRatingsHandler,
+    GetOrgSettingsHandler, UpsertOrgSettingsHandler,
+    GetBookingSettingsHandler, UpsertBookingSettingsHandler,
   ],
   exports: [
     ...serviceHandlers,
     UpsertBrandingHandler, GetBrandingHandler,
     CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler,
     SubmitRatingHandler, ListRatingsHandler,
+    GetOrgSettingsHandler, UpsertOrgSettingsHandler,
+    GetBookingSettingsHandler, UpsertBookingSettingsHandler,
   ],
 })
 export class OrgExperienceModule {}

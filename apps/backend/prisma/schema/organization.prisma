@@ -266,3 +266,54 @@ model Rating {
   @@index([employeeId])
   @@index([clientId])
 }
+
+// ─── Organization Settings ────────────────────────────────────────────────────
+
+model OrganizationSettings {
+  id                        String   @id @default(uuid())
+  tenantId                  String   @unique
+  companyNameAr             String?
+  companyNameEn             String?
+  businessRegistration      String?
+  vatRegistrationNumber     String?
+  vatRate                   Decimal  @default(0.15) @db.Decimal(5, 4)
+  sellerAddress             String?
+  organizationCity          String   @default("Riyadh")
+  postalCode                String?
+  contactPhone              String?
+  contactEmail              String?
+  address                   String?
+  socialMedia               Json?
+  aboutAr                   String?
+  aboutEn                   String?
+  privacyPolicyAr           String?
+  privacyPolicyEn           String?
+  termsAr                   String?
+  termsEn                   String?
+  cancellationPolicyAr      String?
+  cancellationPolicyEn      String?
+  defaultLanguage           String   @default("ar")
+  timezone                  String   @default("Asia/Riyadh")
+  weekStartDay              String   @default("sunday")
+  dateFormat                String   @default("DD/MM/YYYY")
+  timeFormat                String   @default("12h")
+  emailHeaderShowLogo       Boolean  @default(true)
+  emailHeaderShowName       Boolean  @default(true)
+  emailFooterPhone          String?
+  emailFooterWebsite        String?
+  emailFooterInstagram      String?
+  emailFooterTwitter        String?
+  emailFooterSnapchat       String?
+  emailFooterTiktok         String?
+  emailFooterLinkedin       String?
+  emailFooterYoutube        String?
+  sessionDuration           Int      @default(60)
+  reminderBeforeMinutes     Int      @default(60)
+  bookingFlowOrder          String   @default("service_first")
+  paymentMoyasarEnabled     Boolean  @default(true)
+  paymentAtClinicEnabled    Boolean  @default(false)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@index([tenantId])
+}

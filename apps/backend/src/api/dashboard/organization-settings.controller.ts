@@ -24,6 +24,11 @@ import { SubmitRatingHandler } from '../../modules/org-experience/ratings/submit
 import { SubmitRatingDto } from '../../modules/org-experience/ratings/submit-rating.dto';
 import { ListRatingsHandler } from '../../modules/org-experience/ratings/list-ratings.handler';
 import { ListRatingsDto } from '../../modules/org-experience/ratings/list-ratings.dto';
+import { GetOrgSettingsHandler } from '../../modules/org-experience/org-settings/get-org-settings.handler';
+import { UpsertOrgSettingsHandler } from '../../modules/org-experience/org-settings/upsert-org-settings.handler';
+import { UpsertOrgSettingsDto } from '../../modules/org-experience/org-settings/upsert-org-settings.dto';
+import { GetBookingSettingsHandler } from '../../modules/bookings/get-booking-settings/get-booking-settings.handler';
+import { UpsertBookingSettingsHandler } from '../../modules/bookings/upsert-booking-settings/upsert-booking-settings.handler';
 
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
@@ -40,6 +45,10 @@ export class DashboardOrganizationSettingsController {
     private readonly listIntakeForms: ListIntakeFormsHandler,
     private readonly submitRating: SubmitRatingHandler,
     private readonly listRatings: ListRatingsHandler,
+    private readonly getOrgSettings: GetOrgSettingsHandler,
+    private readonly upsertOrgSettings: UpsertOrgSettingsHandler,
+    private readonly getBookingSettings: GetBookingSettingsHandler,
+    private readonly upsertBookingSettings: UpsertBookingSettingsHandler,
   ) {}
 
   // ── Services ─────────────────────────────────────────────────────────────
@@ -135,5 +144,29 @@ export class DashboardOrganizationSettingsController {
     @Query() query: ListRatingsDto,
   ) {
     return this.listRatings.execute({ tenantId, ...query });
+  }
+
+  // ── Organization Settings ─────────────────────────────────────────────────
+
+  @Get('settings')
+  getOrgSettingsEndpoint(@TenantId() tenantId: string) {
+    return this.getOrgSettings.execute({ tenantId });
+  }
+
+  @Patch('settings')
+  upsertOrgSettingsEndpoint(@TenantId() tenantId: string, @Body() body: UpsertOrgSettingsDto) {
+    return this.upsertOrgSettings.execute({ tenantId, ...body });
+  }
+
+  // ── Booking Settings ──────────────────────────────────────────────────────
+
+  @Get('booking-settings')
+  getBookingSettingsEndpoint(@TenantId() tenantId: string) {
+    return this.getBookingSettings.execute({ tenantId, branchId: null });
+  }
+
+  @Patch('booking-settings')
+  upsertBookingSettingsEndpoint(@TenantId() tenantId: string, @Body() body: Record<string, unknown>) {
+    return this.upsertBookingSettings.execute({ tenantId, branchId: null, ...body });
   }
 }

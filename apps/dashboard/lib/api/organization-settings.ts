@@ -11,60 +11,55 @@ import type {
 
 /* ─── Queries ─── */
 
-// TODO: no backend endpoint in dashboard controllers — needs backend route
 export async function fetchOrganizationSettings(): Promise<OrganizationSettings> {
-  return api.get<OrganizationSettings>("/organization-settings")
+  return api.get<OrganizationSettings>("/dashboard/organization/settings")
 }
 
-// TODO: no backend endpoint in dashboard controllers — needs backend route
 export async function fetchOrganizationSettingsPublic(): Promise<PublicOrganizationSettings> {
-  return api.get<PublicOrganizationSettings>("/organization-settings/public")
+  return api.get<PublicOrganizationSettings>("/dashboard/organization/settings")
 }
 
 /* ─── Mutations ─── */
 
-// TODO: no backend endpoint in dashboard controllers — needs backend route
 export async function updateOrganizationSettings(
   data: UpdateOrganizationSettingsPayload,
 ): Promise<OrganizationSettings> {
-  return api.put<OrganizationSettings>("/organization-settings", data)
+  return api.patch<OrganizationSettings>("/dashboard/organization/settings", data)
 }
 
-/* ─── Booking Flow Order (legacy organization/ endpoints) ─── */
+/* ─── Booking Flow Order ─── */
 
 export type BookingFlowOrder = "service_first" | "employee_first" | "both"
 
-// TODO: no backend endpoint in dashboard controllers — needs backend route
 export async function fetchBookingFlowOrder(): Promise<BookingFlowOrder> {
-  const res = await api.get<{ bookingFlowOrder: BookingFlowOrder }>("/organization/settings/booking-flow")
+  const res = await api.get<{ bookingFlowOrder: BookingFlowOrder }>("/dashboard/organization/booking-settings")
   return res.bookingFlowOrder ?? "service_first"
 }
 
-// TODO: no backend endpoint in dashboard controllers — needs backend route
 export async function updateBookingFlowOrder(
   order: BookingFlowOrder,
 ): Promise<BookingFlowOrder> {
-  const res = await api.patch<{ bookingFlowOrder: BookingFlowOrder }>("/organization/settings/booking-flow", {
-    order,
+  const res = await api.patch<{ bookingFlowOrder: BookingFlowOrder }>("/dashboard/organization/booking-settings", {
+    bookingFlowOrder: order,
   })
   return res.bookingFlowOrder ?? "service_first"
 }
 
-/* ─── Payment Settings (legacy organization/ endpoints) ─── */
+/* ─── Payment Settings ─── */
 
 export interface PaymentSettings {
   paymentMoyasarEnabled: boolean
   paymentAtClinicEnabled: boolean
 }
 
-// TODO: no backend endpoint in dashboard controllers — needs backend route
 export async function fetchPaymentSettings(): Promise<PaymentSettings> {
-  return api.get<PaymentSettings>("/organization/settings/payment")
+  const res = await api.get<PaymentSettings>("/dashboard/organization/settings")
+  return { paymentMoyasarEnabled: res.paymentMoyasarEnabled, paymentAtClinicEnabled: res.paymentAtClinicEnabled }
 }
 
-// TODO: no backend endpoint in dashboard controllers — needs backend route
 export async function updatePaymentSettings(
   settings: Partial<PaymentSettings>,
 ): Promise<PaymentSettings> {
-  return api.patch<PaymentSettings>("/organization/settings/payment", settings)
+  const res = await api.patch<PaymentSettings>("/dashboard/organization/settings", settings)
+  return { paymentMoyasarEnabled: res.paymentMoyasarEnabled, paymentAtClinicEnabled: res.paymentAtClinicEnabled }
 }
