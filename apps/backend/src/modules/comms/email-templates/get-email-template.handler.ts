@@ -9,8 +9,10 @@ export class GetEmailTemplateHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: GetEmailTemplateCommand) {
-    const template = await this.prisma.emailTemplate.findUnique({ where: { id: cmd.id } });
-    if (!template || template.tenantId !== cmd.tenantId) return null;
+    const template = await this.prisma.emailTemplate.findFirst({
+      where: { id: cmd.id, tenantId: cmd.tenantId },
+    });
+    if (!template) return null;
     return template;
   }
 }

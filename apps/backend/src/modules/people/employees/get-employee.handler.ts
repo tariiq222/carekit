@@ -11,8 +11,8 @@ export class GetEmployeeHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: GetEmployeeQuery) {
-    const employee = await this.prisma.employee.findUnique({
-      where: { id: query.employeeId },
+    const employee = await this.prisma.employee.findFirst({
+      where: { id: query.employeeId, tenantId: query.tenantId },
       include: {
         specialties: true,
         branches: true,
@@ -22,7 +22,7 @@ export class GetEmployeeHandler {
       },
     });
 
-    if (!employee || employee.tenantId !== query.tenantId) {
+    if (!employee) {
       throw new NotFoundException('Employee not found');
     }
 

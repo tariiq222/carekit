@@ -43,7 +43,7 @@ describe('List/Get Employees handlers', () => {
         {
           provide: PrismaService,
           useValue: {
-            employee: { findMany: jest.fn(), findUnique: jest.fn(), count: jest.fn() },
+            employee: { findMany: jest.fn(), findUnique: jest.fn(), findFirst: jest.fn(), count: jest.fn() },
           },
         },
       ],
@@ -95,7 +95,7 @@ describe('List/Get Employees handlers', () => {
 
   describe('GetEmployeeHandler', () => {
     it('returns employee with full projection', async () => {
-      prisma.employee.findUnique.mockResolvedValue(mockEmployee);
+      prisma.employee.findFirst.mockResolvedValue(mockEmployee);
 
       const result = (await getHandler.execute({ employeeId: 'e1', tenantId: 'tenant-1' })) as unknown as {
         id: string;
@@ -109,13 +109,13 @@ describe('List/Get Employees handlers', () => {
     });
 
     it('throws NotFoundException when not found', async () => {
-      prisma.employee.findUnique.mockResolvedValue(null);
+      prisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(getHandler.execute({ employeeId: 'e1', tenantId: 'tenant-1' })).rejects.toThrow(NotFoundException);
     });
 
     it('throws NotFoundException when tenant mismatch', async () => {
-      prisma.employee.findUnique.mockResolvedValue({ ...mockEmployee, tenantId: 'other' });
+      prisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(getHandler.execute({ employeeId: 'e1', tenantId: 'tenant-1' })).rejects.toThrow(NotFoundException);
     });

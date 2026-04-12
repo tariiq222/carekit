@@ -36,8 +36,8 @@ export class ManageKnowledgeBaseHandler {
   }
 
   async getDocument(dto: GetDocumentQuery) {
-    const doc = await this.prisma.knowledgeDocument.findUnique({
-      where: { id: dto.documentId },
+    const doc = await this.prisma.knowledgeDocument.findFirst({
+      where: { id: dto.documentId, tenantId: dto.tenantId },
       include: {
         chunks: {
           select: { id: true, chunkIndex: true, tokenCount: true },
@@ -45,7 +45,7 @@ export class ManageKnowledgeBaseHandler {
         },
       },
     });
-    if (!doc || doc.tenantId !== dto.tenantId) throw new NotFoundException('Document not found');
+    if (!doc) throw new NotFoundException('Document not found');
     return doc;
   }
 

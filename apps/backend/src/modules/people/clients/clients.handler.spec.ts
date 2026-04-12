@@ -45,6 +45,7 @@ describe('Clients handlers', () => {
           useValue: {
             client: {
               findUnique: jest.fn(),
+              findFirst: jest.fn(),
               create: jest.fn(),
               update: jest.fn(),
               findMany: jest.fn(),
@@ -101,7 +102,7 @@ describe('Clients handlers', () => {
 
   describe('UpdateClientHandler', () => {
     it('updates client fields', async () => {
-      prisma.client.findUnique.mockResolvedValue(mockClient);
+      prisma.client.findFirst.mockResolvedValue(mockClient);
       prisma.client.update.mockResolvedValue({ ...mockClient, name: 'محمد أحمد' });
 
       const result = await updateHandler.execute({ clientId: 'c1', tenantId: 'tenant-1', name: 'محمد أحمد' });
@@ -113,7 +114,7 @@ describe('Clients handlers', () => {
     });
 
     it('throws NotFoundException when client not found', async () => {
-      prisma.client.findUnique.mockResolvedValue(null);
+      prisma.client.findFirst.mockResolvedValue(null);
 
       await expect(updateHandler.execute({ clientId: 'c1', tenantId: 'tenant-1', name: 'x' })).rejects.toThrow(
         NotFoundException,
@@ -121,7 +122,7 @@ describe('Clients handlers', () => {
     });
 
     it('throws NotFoundException when client belongs to different tenant', async () => {
-      prisma.client.findUnique.mockResolvedValue({ ...mockClient, tenantId: 'other-tenant' });
+      prisma.client.findFirst.mockResolvedValue(null);
 
       await expect(updateHandler.execute({ clientId: 'c1', tenantId: 'tenant-1' })).rejects.toThrow(NotFoundException);
     });
@@ -152,7 +153,7 @@ describe('Clients handlers', () => {
 
   describe('GetClientHandler', () => {
     it('returns client by id', async () => {
-      prisma.client.findUnique.mockResolvedValue(mockClient);
+      prisma.client.findFirst.mockResolvedValue(mockClient);
 
       const result = await getHandler.execute({ clientId: 'c1', tenantId: 'tenant-1' });
 
@@ -160,7 +161,7 @@ describe('Clients handlers', () => {
     });
 
     it('throws NotFoundException when not found', async () => {
-      prisma.client.findUnique.mockResolvedValue(null);
+      prisma.client.findFirst.mockResolvedValue(null);
 
       await expect(getHandler.execute({ clientId: 'c1', tenantId: 'tenant-1' })).rejects.toThrow(NotFoundException);
     });

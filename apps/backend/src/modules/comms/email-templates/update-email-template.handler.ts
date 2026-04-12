@@ -12,8 +12,10 @@ export class UpdateEmailTemplateHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: UpdateEmailTemplateCommand) {
-    const template = await this.prisma.emailTemplate.findUnique({ where: { id: cmd.id } });
-    if (!template || template.tenantId !== cmd.tenantId) {
+    const template = await this.prisma.emailTemplate.findFirst({
+      where: { id: cmd.id, tenantId: cmd.tenantId },
+    });
+    if (!template) {
       throw new NotFoundException(`Email template ${cmd.id} not found`);
     }
 

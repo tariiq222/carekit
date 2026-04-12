@@ -7,6 +7,7 @@ import type { PrismaService } from '../../../infrastructure/database';
 const buildPrisma = () => ({
   emailTemplate: {
     findUnique: jest.fn(),
+    findFirst: jest.fn(),
     create: jest.fn().mockResolvedValue({ id: 'tpl-1' }),
     update: jest.fn().mockResolvedValue({ id: 'tpl-1' }),
     findMany: jest.fn().mockResolvedValue([]),
@@ -59,7 +60,7 @@ describe('CreateEmailTemplateHandler', () => {
 describe('UpdateEmailTemplateHandler', () => {
   it('updates subjectAr only when provided', async () => {
     const prisma = buildPrisma();
-    prisma.emailTemplate.findUnique.mockResolvedValueOnce({
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce({
       id: 'tpl-1',
       tenantId: 'tenant-1',
       slug: 'welcome',
@@ -80,7 +81,7 @@ describe('UpdateEmailTemplateHandler', () => {
 
   it('throws NotFoundException when template missing', async () => {
     const prisma = buildPrisma();
-    prisma.emailTemplate.findUnique.mockResolvedValueOnce(null);
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new UpdateEmailTemplateHandler(prisma as unknown as PrismaService);
     await expect(
       handler.execute({ tenantId: 'tenant-1', id: 'missing', subjectAr: 'X' }),
@@ -89,10 +90,7 @@ describe('UpdateEmailTemplateHandler', () => {
 
   it('throws NotFoundException when template belongs to another tenant', async () => {
     const prisma = buildPrisma();
-    prisma.emailTemplate.findUnique.mockResolvedValueOnce({
-      id: 'tpl-1',
-      tenantId: 'tenant-2',
-    });
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new UpdateEmailTemplateHandler(prisma as unknown as PrismaService);
     await expect(
       handler.execute({ tenantId: 'tenant-1', id: 'tpl-1', subjectAr: 'X' }),
@@ -104,7 +102,7 @@ describe('UpdateEmailTemplateHandler', () => {
 describe('GetEmailTemplateHandler', () => {
   it('returns template by id when tenant matches', async () => {
     const prisma = buildPrisma();
-    prisma.emailTemplate.findUnique.mockResolvedValueOnce({
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce({
       id: 'tpl-1',
       tenantId: 'tenant-1',
       slug: 'welcome',
@@ -116,7 +114,7 @@ describe('GetEmailTemplateHandler', () => {
 
   it('returns null when template not found', async () => {
     const prisma = buildPrisma();
-    prisma.emailTemplate.findUnique.mockResolvedValueOnce(null);
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new GetEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({ tenantId: 'tenant-1', id: 'missing' });
     expect(result).toBeNull();
@@ -124,10 +122,7 @@ describe('GetEmailTemplateHandler', () => {
 
   it('returns null when template belongs to another tenant', async () => {
     const prisma = buildPrisma();
-    prisma.emailTemplate.findUnique.mockResolvedValueOnce({
-      id: 'tpl-1',
-      tenantId: 'tenant-2',
-    });
+    prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new GetEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({ tenantId: 'tenant-1', id: 'tpl-1' });
     expect(result).toBeNull();

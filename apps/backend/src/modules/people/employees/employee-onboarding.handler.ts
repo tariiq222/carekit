@@ -33,11 +33,11 @@ export class EmployeeOnboardingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: EmployeeOnboardingCommand) {
-    const employee = await this.prisma.employee.findUnique({
-      where: { id: cmd.employeeId },
+    const employee = await this.prisma.employee.findFirst({
+      where: { id: cmd.employeeId, tenantId: cmd.tenantId },
     });
 
-    if (!employee || employee.tenantId !== cmd.tenantId) {
+    if (!employee) {
       throw new NotFoundException(`Employee ${cmd.employeeId} not found`);
     }
 

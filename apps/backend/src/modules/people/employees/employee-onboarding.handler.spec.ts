@@ -27,6 +27,7 @@ describe('EmployeeOnboardingHandler', () => {
     prisma = {
       employee: {
         findUnique: jest.fn(),
+        findFirst: jest.fn(),
         update: jest.fn(),
       },
       employeeSpecialty: { deleteMany: jest.fn(), createMany: jest.fn() },
@@ -48,7 +49,7 @@ describe('EmployeeOnboardingHandler', () => {
 
   describe('employee not found', () => {
     it('throws NotFoundException when employee does not exist', async () => {
-      prisma.employee.findUnique.mockResolvedValue(null);
+      prisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(
         handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'profile' }),
@@ -56,7 +57,7 @@ describe('EmployeeOnboardingHandler', () => {
     });
 
     it('throws NotFoundException when tenantId does not match', async () => {
-      prisma.employee.findUnique.mockResolvedValue(mockEmployee);
+      prisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(
         handler.execute({ employeeId: 'emp-1', tenantId: 'wrong-tenant', step: 'profile' }),
@@ -67,9 +68,8 @@ describe('EmployeeOnboardingHandler', () => {
   describe('profile step', () => {
     it('updates employee fields and sets onboardingStatus to IN_PROGRESS when PENDING', async () => {
       const updated = { ...mockEmployee, name: 'Ali', onboardingStatus: OnboardingStatus.IN_PROGRESS };
-      prisma.employee.findUnique
-        .mockResolvedValueOnce(mockEmployee)
-        .mockResolvedValueOnce(updated);
+      prisma.employee.findFirst.mockResolvedValueOnce(mockEmployee);
+      prisma.employee.findUnique.mockResolvedValueOnce(updated);
       prisma.employee.update.mockResolvedValue(updated);
 
       const result = await handler.execute({
@@ -88,9 +88,8 @@ describe('EmployeeOnboardingHandler', () => {
 
     it('does not override onboardingStatus when already IN_PROGRESS', async () => {
       const inProgressEmployee = { ...mockEmployee, onboardingStatus: OnboardingStatus.IN_PROGRESS };
-      prisma.employee.findUnique
-        .mockResolvedValueOnce(inProgressEmployee)
-        .mockResolvedValueOnce(inProgressEmployee);
+      prisma.employee.findFirst.mockResolvedValueOnce(inProgressEmployee);
+      prisma.employee.findUnique.mockResolvedValueOnce(inProgressEmployee);
       prisma.employee.update.mockResolvedValue(inProgressEmployee);
 
       await handler.execute({
@@ -109,9 +108,8 @@ describe('EmployeeOnboardingHandler', () => {
 
   describe('specialties step', () => {
     it('deletes existing specialties and creates new ones inside a transaction', async () => {
-      prisma.employee.findUnique
-        .mockResolvedValueOnce(mockEmployee)
-        .mockResolvedValueOnce(mockEmployee);
+      prisma.employee.findFirst.mockResolvedValueOnce(mockEmployee);
+      prisma.employee.findUnique.mockResolvedValueOnce(mockEmployee);
       prisma.employeeSpecialty.deleteMany.mockResolvedValue({ count: 2 });
       prisma.employeeSpecialty.createMany.mockResolvedValue({ count: 2 });
       prisma.employee.update.mockResolvedValue(mockEmployee);
@@ -140,9 +138,8 @@ describe('EmployeeOnboardingHandler', () => {
 
   describe('branches step', () => {
     it('replaces branches inside a transaction', async () => {
-      prisma.employee.findUnique
-        .mockResolvedValueOnce(mockEmployee)
-        .mockResolvedValueOnce(mockEmployee);
+      prisma.employee.findFirst.mockResolvedValueOnce(mockEmployee);
+      prisma.employee.findUnique.mockResolvedValueOnce(mockEmployee);
       prisma.employeeBranch.deleteMany.mockResolvedValue({ count: 1 });
       prisma.employeeBranch.createMany.mockResolvedValue({ count: 1 });
       prisma.employee.update.mockResolvedValue(mockEmployee);
@@ -169,8 +166,8 @@ describe('EmployeeOnboardingHandler', () => {
       };
       const completed = { ...readyEmployee, onboardingStatus: OnboardingStatus.COMPLETED };
 
+      prisma.employee.findFirst.mockResolvedValueOnce(mockEmployee); // guard check
       prisma.employee.findUnique
-        .mockResolvedValueOnce(mockEmployee)      // guard check
         .mockResolvedValueOnce(readyEmployee)     // complete validation inside tx
         .mockResolvedValueOnce(completed);        // final return
       prisma.employee.update.mockResolvedValue(completed);
@@ -194,9 +191,8 @@ describe('EmployeeOnboardingHandler', () => {
         onboardingStatus: OnboardingStatus.IN_PROGRESS,
       };
 
-      prisma.employee.findUnique
-        .mockResolvedValueOnce(mockEmployee)
-        .mockResolvedValueOnce(incompleteEmployee);
+      prisma.employee.findFirst.mockResolvedValueOnce(mockEmployee);
+      prisma.employee.findUnique.mockResolvedValueOnce(incompleteEmployee);
 
       await expect(
         handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'complete' }),

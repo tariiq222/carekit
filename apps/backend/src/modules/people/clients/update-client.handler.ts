@@ -9,8 +9,10 @@ export class UpdateClientHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: UpdateClientCommand) {
-    const client = await this.prisma.client.findUnique({ where: { id: cmd.clientId } });
-    if (!client || client.tenantId !== cmd.tenantId) throw new NotFoundException('Client not found');
+    const client = await this.prisma.client.findFirst({
+      where: { id: cmd.clientId, tenantId: cmd.tenantId },
+    });
+    if (!client) throw new NotFoundException('Client not found');
 
     return this.prisma.client.update({
       where: { id: cmd.clientId },

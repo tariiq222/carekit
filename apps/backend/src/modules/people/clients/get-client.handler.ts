@@ -11,8 +11,10 @@ export class GetClientHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: GetClientQuery) {
-    const client = await this.prisma.client.findUnique({ where: { id: query.clientId } });
-    if (!client || client.tenantId !== query.tenantId) throw new NotFoundException('Client not found');
+    const client = await this.prisma.client.findFirst({
+      where: { id: query.clientId, tenantId: query.tenantId },
+    });
+    if (!client) throw new NotFoundException('Client not found');
     return client;
   }
 }

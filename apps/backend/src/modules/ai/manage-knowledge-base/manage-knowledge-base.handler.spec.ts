@@ -6,7 +6,7 @@ const mockDoc = { id: 'doc-1', tenantId: 't1', title: 'FAQ', status: 'EMBEDDED',
 const mockPrisma = () => ({
   knowledgeDocument: {
     findMany: jest.fn().mockResolvedValue([mockDoc]),
-    findUnique: jest.fn().mockResolvedValue(mockDoc),
+    findFirst: jest.fn().mockResolvedValue(mockDoc),
     update: jest.fn().mockResolvedValue({ ...mockDoc, title: 'Updated FAQ' }),
     delete: jest.fn().mockResolvedValue(mockDoc),
     count: jest.fn().mockResolvedValue(1),
@@ -31,7 +31,7 @@ describe('ManageKnowledgeBaseHandler', () => {
 
   it('getDocument throws NotFoundException for wrong tenant', async () => {
     const prisma = mockPrisma();
-    prisma.knowledgeDocument.findUnique = jest.fn().mockResolvedValue(null);
+    prisma.knowledgeDocument.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new ManageKnowledgeBaseHandler(prisma as never);
     await expect(handler.getDocument({ tenantId: 't1', documentId: 'doc-x' })).rejects.toThrow(NotFoundException);
   });

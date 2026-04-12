@@ -46,10 +46,10 @@ export class UpdateAvailabilityHandler {
 
     validateWindows(windows);
 
-    const employee = await this.prisma.employee.findUnique({
-      where: { id: employeeId },
+    const employee = await this.prisma.employee.findFirst({
+      where: { id: employeeId, tenantId },
     });
-    if (!employee || employee.tenantId !== tenantId) {
+    if (!employee) {
       throw new NotFoundException(`Employee ${employeeId} not found`);
     }
 

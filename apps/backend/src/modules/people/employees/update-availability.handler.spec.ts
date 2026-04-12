@@ -21,7 +21,7 @@ describe('UpdateAvailabilityHandler', () => {
 
   beforeEach(async () => {
     prisma = {
-      employee: { findUnique: jest.fn() },
+      employee: { findFirst: jest.fn() },
       employeeAvailability: { deleteMany: jest.fn(), createMany: jest.fn(), findMany: jest.fn() },
       employeeAvailabilityException: { upsert: jest.fn(), findMany: jest.fn() },
       $transaction: jest.fn().mockImplementation((fn: (tx: unknown) => unknown) => fn(prisma)),
@@ -38,12 +38,12 @@ describe('UpdateAvailabilityHandler', () => {
   });
 
   it('throws NotFoundException when employee does not exist', async () => {
-    prisma.employee.findUnique.mockResolvedValue(null);
+    prisma.employee.findFirst.mockResolvedValue(null);
     await expect(handler.execute(makeCmd())).rejects.toThrow(NotFoundException);
   });
 
   it('throws NotFoundException when tenant does not match', async () => {
-    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1', tenantId: 'other-tenant' });
+    prisma.employee.findFirst.mockResolvedValue(null);
     await expect(handler.execute(makeCmd())).rejects.toThrow(NotFoundException);
   });
 
@@ -62,7 +62,7 @@ describe('UpdateAvailabilityHandler', () => {
   });
 
   it('deletes existing windows and creates new ones', async () => {
-    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
+    prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 3 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 2 });
     const windowRows = [
@@ -86,7 +86,7 @@ describe('UpdateAvailabilityHandler', () => {
   });
 
   it('upserts exceptions when provided', async () => {
-    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
+    prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.findMany.mockResolvedValue([]);
@@ -105,7 +105,7 @@ describe('UpdateAvailabilityHandler', () => {
   });
 
   it('handles empty exceptions array without calling upsert', async () => {
-    prisma.employee.findUnique.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
+    prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.findMany.mockResolvedValue([]);
