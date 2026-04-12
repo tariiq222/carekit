@@ -48,9 +48,8 @@ export async function setIntakeFields(
   return api.put<IntakeFormApi["fields"]>(`/dashboard/organization/intake-forms/${formId}/fields`, payload)
 }
 
-/** TODO: no backend endpoint — kept for type safety */
-export async function deleteIntakeForm(_formId: string): Promise<void> {
-  // no-op stub — backend does not expose DELETE /intake-forms/:id
+export async function deleteIntakeForm(formId: string): Promise<void> {
+  return api.delete<void>(`/dashboard/organization/intake-forms/${formId}`)
 }
 
 /* ─── Responses ─── */
