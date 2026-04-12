@@ -2,7 +2,9 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { ClientEnrolledEvent } from '../events/client-enrolled.event';
-import type { CreateClientDto } from './create-client.dto';
+import { CreateClientDto } from './create-client.dto';
+
+export type CreateClientCommand = CreateClientDto & { tenantId: string };
 
 @Injectable()
 export class CreateClientHandler {
@@ -11,7 +13,7 @@ export class CreateClientHandler {
     private readonly eventBus: EventBusService,
   ) {}
 
-  async execute(dto: CreateClientDto) {
+  async execute(dto: CreateClientCommand) {
     if (dto.phone) {
       const existing = await this.prisma.client.findUnique({
         where: { tenantId_phone: { tenantId: dto.tenantId, phone: dto.phone } },

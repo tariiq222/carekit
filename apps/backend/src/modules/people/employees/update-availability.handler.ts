@@ -1,27 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { AvailabilityWindow, UpdateAvailabilityDto } from './update-availability.dto';
 
-export interface AvailabilityWindow {
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  isActive?: boolean;
-}
+export { AvailabilityWindow, AvailabilityException } from './update-availability.dto';
 
-export interface AvailabilityException {
-  date: string;
-  isOff: boolean;
-  startTime?: string;
-  endTime?: string;
-  reason?: string;
-}
-
-export interface UpdateAvailabilityCommand {
+export type UpdateAvailabilityCommand = UpdateAvailabilityDto & {
   employeeId: string;
   tenantId: string;
-  windows: AvailabilityWindow[];
-  exceptions?: AvailabilityException[];
-}
+};
 
 function validateTimeFormat(time: string): boolean {
   return /^\d{2}:\d{2}$/.test(time);
@@ -82,28 +68,24 @@ export class UpdateAvailabilityHandler {
           })),
         });
 
-        const exceptionResults = await Promise.all(
-          exceptions.map((e) =>
-            tx.employeeAvailabilityException.upsert({
-              where: { employeeId_date: { employeeId, date: new Date(e.date) } },
-              create: {
-                tenantId,
-                employeeId,
-                date: new Date(e.date),
-                isOff: e.isOff,
-                startTime: e.startTime ?? null,
-                endTime: e.endTime ?? null,
-                reason: e.reason ?? null,
-              },
-              update: {
-                isOff: e.isOff,
-                startTime: e.startTime ?? null,
-                endTime: e.endTime ?? null,
-                reason: e.reason ?? null,
-              },
-            }),
-          ),
-        );
+        await tx.employeeAvailabilityException.deleteMany({ where: { employeeId } });
+
+        if (exceptions.length > 0) {
+          await tx.employeeAvailabilityException.createMany({
+            data: exceptions.map((e) => ({
+              tenantId,
+              employeeId,
+              startDate: new Date(e.startDate),
+              endDate: new Date(e.endDate),
+              reason: e.reason ?? null,
+            })),
+          });
+        }
+
+        const exceptionResults = await tx.employeeAvailabilityException.findMany({
+          where: { employeeId },
+          orderBy: { startDate: 'asc' },
+        });
 
         const windowRows = await tx.employeeAvailability.findMany({
           where: { employeeId },

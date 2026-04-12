@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ClientGender, ClientSource } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { ListClientsDto } from './list-clients.dto';
 
-export interface ListClientsQuery {
+export type ListClientsQuery = ListClientsDto & {
   tenantId: string;
   page: number;
   limit: number;
-  search?: string;
-  isActive?: boolean;
-  gender?: ClientGender;
-  source?: ClientSource;
-}
+};
 
 @Injectable()
 export class ListClientsHandler {

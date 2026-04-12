@@ -18,7 +18,7 @@ export class GetEmployeeHandler {
         branches: true,
         services: true,
         availability: { where: { isActive: true }, orderBy: { dayOfWeek: 'asc' } },
-        exceptions: { orderBy: { date: 'asc' } },
+        exceptions: { orderBy: { startDate: 'asc' } },
       },
     });
 

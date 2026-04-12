@@ -1,12 +1,14 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { CreateEmployeeDto } from './create-employee.dto';
+import { CreateEmployeeDto } from './create-employee.dto';
+
+export type CreateEmployeeCommand = CreateEmployeeDto & { tenantId: string };
 
 @Injectable()
 export class CreateEmployeeHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: CreateEmployeeDto) {
+  async execute(dto: CreateEmployeeCommand) {
     if (dto.email) {
       const existing = await this.prisma.employee.findUnique({
         where: { tenantId_email: { tenantId: dto.tenantId, email: dto.email } },

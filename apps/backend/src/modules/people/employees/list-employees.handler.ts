@@ -1,19 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { EmployeeGender, EmploymentType, OnboardingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { ListEmployeesDto } from './list-employees.dto';
 
-export interface ListEmployeesQuery {
+export type ListEmployeesQuery = ListEmployeesDto & {
   tenantId: string;
   page: number;
   limit: number;
-  search?: string;
-  isActive?: boolean;
-  gender?: EmployeeGender;
-  employmentType?: EmploymentType;
-  onboardingStatus?: OnboardingStatus;
-  specialtyId?: string;
-  branchId?: string;
-}
+};
 
 @Injectable()
 export class ListEmployeesHandler {

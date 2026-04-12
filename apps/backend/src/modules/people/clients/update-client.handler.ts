@@ -1,20 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ClientGender, ClientSource } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { UpdateClientDto } from './update-client.dto';
 
-export interface UpdateClientCommand {
-  clientId: string;
-  tenantId: string;
-  name?: string;
-  phone?: string | null;
-  email?: string | null;
-  gender?: ClientGender;
-  dateOfBirth?: string | null;
-  avatarUrl?: string | null;
-  notes?: string | null;
-  source?: ClientSource;
-  isActive?: boolean;
-}
+export type UpdateClientCommand = UpdateClientDto & { tenantId: string; clientId: string };
 
 @Injectable()
 export class UpdateClientHandler {

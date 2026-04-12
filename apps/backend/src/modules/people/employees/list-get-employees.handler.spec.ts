@@ -97,7 +97,11 @@ describe('List/Get Employees handlers', () => {
     it('returns employee with full projection', async () => {
       prisma.employee.findUnique.mockResolvedValue(mockEmployee);
 
-      const result = await getHandler.execute({ employeeId: 'e1', tenantId: 'tenant-1' });
+      const result = (await getHandler.execute({ employeeId: 'e1', tenantId: 'tenant-1' })) as unknown as {
+        id: string;
+        specialties: unknown[];
+        availability: unknown[];
+      };
 
       expect(result.id).toBe('e1');
       expect(result.specialties).toHaveLength(1);

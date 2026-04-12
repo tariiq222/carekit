@@ -1,23 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { EmployeeGender, OnboardingStatus } from '@prisma/client';
+import { OnboardingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { EmployeeOnboardingDto } from './employee-onboarding.dto';
 
-export interface EmployeeOnboardingCommand {
+export type EmployeeOnboardingCommand = EmployeeOnboardingDto & {
   employeeId: string;
   tenantId: string;
-  step: 'profile' | 'specialties' | 'branches' | 'services' | 'complete';
-  profile?: {
-    name?: string;
-    phone?: string;
-    email?: string;
-    gender?: EmployeeGender;
-    bio?: string;
-    avatarUrl?: string;
-  };
-  specialtyIds?: string[];
-  branchIds?: string[];
-  serviceIds?: string[];
-}
+};
 
 type RelationStep = 'specialties' | 'branches' | 'services';
 
