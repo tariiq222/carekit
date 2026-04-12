@@ -6,7 +6,7 @@ export const verifyTransferSchema = z.object({
   action: z.enum(["approve", "reject"], {
     required_error: "Action is required",
   }),
-  adminNotes: z.string().optional(),
+  transferRef: z.string().optional(),
 })
 
 export type VerifyTransferFormData = z.infer<typeof verifyTransferSchema>

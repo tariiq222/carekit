@@ -51,7 +51,7 @@ export function VerifyDialog({
 
   const form = useForm<VerifyTransferFormData>({
     resolver: zodResolver(verifyTransferSchema),
-    defaultValues: { action: undefined, adminNotes: "" },
+    defaultValues: { action: undefined, transferRef: "" },
   })
 
   const onSubmit = form.handleSubmit(async (data: VerifyTransferFormData) => {
@@ -59,7 +59,7 @@ export function VerifyDialog({
       await verifyMut.mutateAsync({
         id: paymentId,
         action: data.action,
-        transferRef: data.adminNotes || undefined,
+        transferRef: data.transferRef || undefined,
       })
       toast.success(
         data.action === "approve" ? "Transfer approved" : "Transfer rejected",
@@ -115,7 +115,7 @@ export function VerifyDialog({
                 id="verify-notes"
                 placeholder="Bank transfer reference number..."
                 rows={3}
-                {...form.register("adminNotes")}
+                {...form.register("transferRef")}
               />
             </div>
           </form>
