@@ -11,12 +11,12 @@ export async function fetchChatSession(id: string): Promise<ChatSessionDetail> {
   return api.get<ChatSessionDetail>(`/dashboard/comms/chat/conversations/${id}`)
 }
 
-export async function endChatSession(id: string): Promise<unknown> {
-  return api.patch<unknown>(`/dashboard/comms/chat/conversations/${id}/close`)
+export async function endChatSession(id: string): Promise<ChatSessionDetail> {
+  return api.patch<ChatSessionDetail>(`/dashboard/comms/chat/conversations/${id}/close`)
 }
 
-export async function sendStaffMessage(id: string, body: string): Promise<unknown> {
-  return api.post<unknown>(`/dashboard/comms/chat/conversations/${id}/messages`, { body })
+export async function sendStaffMessage(id: string, body: string): Promise<{ id: string; body: string; createdAt: string }> {
+  return api.post<{ id: string; body: string; createdAt: string }>(`/dashboard/comms/chat/conversations/${id}/messages`, { body })
 }
 
 export async function fetchChatSessions(

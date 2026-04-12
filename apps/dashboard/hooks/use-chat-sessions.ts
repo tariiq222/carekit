@@ -12,6 +12,7 @@ export function useChatSession(sessionId: string) {
     queryFn: () => fetchChatSession(sessionId),
     enabled: !!sessionId,
     staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
   })
   return {
     session: data ?? null,

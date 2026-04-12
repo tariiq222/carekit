@@ -76,6 +76,7 @@ export function useChatbotMutations() {
     mutationFn: ({ sessionId, content }: { sessionId: string; content: string }) =>
       sendStaffMessage(sessionId, content),
     onSuccess: (_data, { sessionId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.chatbot.sessions.all })
       void qc.invalidateQueries({ queryKey: queryKeys.chatbot.sessions.detail(sessionId) })
     },
   })
