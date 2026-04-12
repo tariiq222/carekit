@@ -167,3 +167,39 @@ model BookingStatusLog {
   @@index([bookingId])
   @@index([tenantId, createdAt])
 }
+
+// ─── BookingSettings ──────────────────────────────────────────────────────────
+
+enum RefundType {
+  FULL
+  PARTIAL
+  NONE
+}
+
+model BookingSettings {
+  id                        String     @id @default(uuid())
+  tenantId                  String
+  branchId                  String?    // null = global default for tenant
+
+  bufferMinutes             Int        @default(0)
+  freeCancelBeforeHours     Int        @default(24)
+  freeCancelRefundType      RefundType @default(FULL)
+  lateCancelRefundPercent   Int        @default(0)
+
+  maxReschedulesPerBooking  Int        @default(3)
+
+  autoCompleteAfterHours    Int        @default(2)
+  autoNoShowAfterMinutes    Int        @default(30)
+
+  minBookingLeadMinutes     Int        @default(60)
+  maxAdvanceBookingDays     Int        @default(90)
+
+  waitlistEnabled           Boolean    @default(true)
+  waitlistMaxPerSlot        Int        @default(5)
+
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
+
+  @@unique([tenantId, branchId])
+  @@index([tenantId])
+}
