@@ -127,6 +127,10 @@ export class CreateRecurringBookingHandler {
     if (dto.intervalDays !== undefined) {
       return dto.intervalDays * 86400_000;
     }
-    return dto.frequency === RecurringFrequency.WEEKLY ? 7 * 86400_000 : 86400_000;
+    switch (dto.frequency) {
+      case RecurringFrequency.WEEKLY: return 7 * 86400_000;
+      case RecurringFrequency.DAILY:  return 86400_000;
+      default: throw new BadRequestException(`Unsupported frequency: ${dto.frequency as string}`);
+    }
   }
 }
