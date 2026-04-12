@@ -3,12 +3,22 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchChatSessions } from "@/lib/api/chatbot"
+import { fetchChatSession, fetchChatSessions } from "@/lib/api/chatbot"
 import type { ChatSessionListQuery } from "@/lib/types/chatbot"
 
-// useChatSession stub — no backend single-session endpoint
-export function useChatSession(_sessionId: string) {
-  return { session: null as import("@/lib/types/chatbot").ChatSessionDetail | null, loading: false, error: null as string | null, refetch: () => {} }
+export function useChatSession(sessionId: string) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.chatbot.sessions.detail(sessionId),
+    queryFn: () => fetchChatSession(sessionId),
+    enabled: !!sessionId,
+    staleTime: 30 * 1000,
+  })
+  return {
+    session: data ?? null,
+    loading: isLoading,
+    error: error?.message ?? null,
+    refetch,
+  }
 }
 
 export function useChatSessions() {

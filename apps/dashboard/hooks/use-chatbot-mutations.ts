@@ -11,6 +11,7 @@ import {
   processKnowledgeFile,
   deleteKnowledgeFile,
 } from "@/lib/api/chatbot-kb"
+import { endChatSession, sendStaffMessage } from "@/lib/api/chatbot"
 import type { CreateKbEntryPayload, UpdateKbEntryPayload } from "@/lib/types/chatbot"
 
 function stub<T = Record<string, unknown>>(defaultVal: T = {} as T) {
@@ -63,12 +64,28 @@ export function useChatbotMutations() {
     onSuccess: invalidateFiles,
   })
 
+  const endSessionMut = useMutation({
+    mutationFn: (sessionId: string) => endChatSession(sessionId),
+    onSuccess: (_data, sessionId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.chatbot.sessions.all })
+      void qc.invalidateQueries({ queryKey: queryKeys.chatbot.sessions.detail(sessionId) })
+    },
+  })
+
+  const staffMsgMut = useMutation({
+    mutationFn: ({ sessionId, content }: { sessionId: string; content: string }) =>
+      sendStaffMessage(sessionId, content),
+    onSuccess: (_data, { sessionId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.chatbot.sessions.detail(sessionId) })
+    },
+  })
+
   return {
-    // Session stubs — no backend endpoints
+    // Session mutations
     createSessionMut: stub(),
-    endSessionMut: stub(),
+    endSessionMut,
     sendMessageMut: stub(),
-    staffMsgMut: stub(),
+    staffMsgMut,
 
     // KB mutations
     createKbEntryMut,
