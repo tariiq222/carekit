@@ -5,7 +5,17 @@
 
 import { api } from "@/lib/api"
 import type { PaginatedResponse } from "@/lib/types/common"
-import type { ChatSession, ChatSessionDetail, ChatSessionListQuery } from "@/lib/types/chatbot"
+import type { ChatSession, ChatSessionDetail, ChatSessionListQuery, ChatbotConfigEntry } from "@/lib/types/chatbot"
+
+export async function fetchChatbotConfig(category?: string): Promise<ChatbotConfigEntry[]> {
+  return api.get<ChatbotConfigEntry[]>("/dashboard/ai/chatbot-config", category ? { category } : undefined)
+}
+
+export async function upsertChatbotConfig(
+  configs: { key: string; value: unknown; category: string }[],
+): Promise<ChatbotConfigEntry[]> {
+  return api.patch<ChatbotConfigEntry[]>("/dashboard/ai/chatbot-config", { configs })
+}
 
 export async function fetchChatSession(id: string): Promise<ChatSessionDetail> {
   return api.get<ChatSessionDetail>(`/dashboard/comms/chat/conversations/${id}`)

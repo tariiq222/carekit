@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchKnowledgeBase, fetchKnowledgeFiles } from "@/lib/api/chatbot-kb"
+import { fetchChatbotConfig } from "@/lib/api/chatbot"
 import type {
   KnowledgeBaseQuery,
   KbSource,
@@ -67,7 +68,15 @@ export function useKnowledgeFiles() {
   }
 }
 
-// useChatbotConfig stub — no backend config endpoint
-export function useChatbotConfig(_category?: string) {
-  return { config: [] as ChatbotConfigEntry[], loading: false, error: null as string | null }
+export function useChatbotConfig(category?: string) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.chatbot.config.list(category),
+    queryFn: () => fetchChatbotConfig(category),
+    staleTime: 5 * 60 * 1000,
+  })
+  return {
+    config: data ?? ([] as ChatbotConfigEntry[]),
+    loading: isLoading,
+    error: error?.message ?? null,
+  }
 }

@@ -11,7 +11,7 @@ import {
   processKnowledgeFile,
   deleteKnowledgeFile,
 } from "@/lib/api/chatbot-kb"
-import { endChatSession, sendStaffMessage } from "@/lib/api/chatbot"
+import { endChatSession, sendStaffMessage, upsertChatbotConfig } from "@/lib/api/chatbot"
 import type { CreateKbEntryPayload, UpdateKbEntryPayload } from "@/lib/types/chatbot"
 
 function stub<T = Record<string, unknown>>(defaultVal: T = {} as T) {
@@ -99,8 +99,14 @@ export function useChatbotMutations() {
     processFileMut,
     deleteFileMut,
 
-    // Config stubs — no backend endpoints
-    updateConfigMut: stub(),
+    // Config mutations
+    updateConfigMut: useMutation({
+      mutationFn: ({ configs }: { configs: { key: string; value: unknown; category: string }[] }) =>
+        upsertChatbotConfig(configs),
+      onSuccess: () => {
+        void qc.invalidateQueries({ queryKey: queryKeys.chatbot.config.all })
+      },
+    }),
     seedDefaultsMut: stub(),
   }
 }

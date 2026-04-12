@@ -151,6 +151,8 @@ export const queryKeys = {
       all: ["chatbot", "config"] as const,
       byCategory: (category: string) =>
         ["chatbot", "config", category] as const,
+      list: (category?: string) =>
+        ["chatbot", "config", { category }] as const,
     },
     analytics: {
       all: (filters?: object) =>
