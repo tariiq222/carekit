@@ -16,6 +16,8 @@ import { CreateEmailTemplateHandler } from '../../modules/comms/email-templates/
 import { CreateEmailTemplateDto } from '../../modules/comms/email-templates/create-email-template.dto';
 import { UpdateEmailTemplateHandler } from '../../modules/comms/email-templates/update-email-template.handler';
 import { UpdateEmailTemplateDto } from '../../modules/comms/email-templates/update-email-template.dto';
+import { PreviewEmailTemplateHandler } from '../../modules/comms/email-templates/preview-email-template.handler';
+import { PreviewEmailTemplateDto } from '../../modules/comms/email-templates/preview-email-template.dto';
 import { ListConversationsHandler } from '../../modules/comms/chat/list-conversations.handler';
 import { ListConversationsDto } from '../../modules/comms/chat/list-conversations.dto';
 import { ListMessagesHandler } from '../../modules/comms/chat/list-messages.handler';
@@ -31,6 +33,7 @@ export class DashboardCommsController {
     private readonly getEmailTemplate: GetEmailTemplateHandler,
     private readonly createEmailTemplate: CreateEmailTemplateHandler,
     private readonly updateEmailTemplate: UpdateEmailTemplateHandler,
+    private readonly previewEmailTemplate: PreviewEmailTemplateHandler,
     private readonly listConversations: ListConversationsHandler,
     private readonly listMessages: ListMessagesHandler,
   ) {}
@@ -85,6 +88,21 @@ export class DashboardCommsController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.getEmailTemplate.execute({ tenantId, id });
+  }
+
+  @Post('email-templates/:id/preview')
+  @HttpCode(HttpStatus.OK)
+  previewEmailTemplateEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: PreviewEmailTemplateDto,
+  ) {
+    return this.previewEmailTemplate.execute({
+      tenantId,
+      id,
+      lang: body.lang,
+      context: body.context ?? {},
+    });
   }
 
   @Patch('email-templates/:id')

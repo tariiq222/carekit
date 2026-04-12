@@ -19,6 +19,7 @@ import { CreateEmailTemplateHandler } from './email-templates/create-email-templ
 import { UpdateEmailTemplateHandler } from './email-templates/update-email-template.handler';
 import { GetEmailTemplateHandler } from './email-templates/get-email-template.handler';
 import { ListEmailTemplatesHandler } from './email-templates/list-email-templates.handler';
+import { PreviewEmailTemplateHandler } from './email-templates/preview-email-template.handler';
 import { OnBookingCancelledHandler } from './events/on-booking-cancelled.handler';
 import { OnBookingReminderHandler } from './events/on-booking-reminder.handler';
 import { OnPaymentFailedHandler } from './events/on-payment-failed.handler';
@@ -40,6 +41,7 @@ const handlers = [
   UpdateEmailTemplateHandler,
   GetEmailTemplateHandler,
   ListEmailTemplatesHandler,
+  PreviewEmailTemplateHandler,
 ];
 
 const eventHandlers = [
