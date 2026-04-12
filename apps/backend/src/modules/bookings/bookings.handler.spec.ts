@@ -125,6 +125,39 @@ describe('CreateBookingHandler', () => {
       }),
     ).rejects.toThrow(ForbiddenException);
   });
+
+  it('throws NotFoundException when employee does not exist', async () => {
+    const prisma = buildPrisma();
+    prisma.employee.findUnique = jest.fn().mockResolvedValue(null);
+    await expect(
+      new CreateBookingHandler(prisma as never).execute({
+        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
+        employeeId: 'bad-emp', serviceId: 'svc-1', scheduledAt: future,
+      }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('throws ForbiddenException when employee belongs to different tenant', async () => {
+    const prisma = buildPrisma();
+    prisma.employee.findUnique = jest.fn().mockResolvedValue({ id: 'emp-1', tenantId: 'other-tenant' });
+    await expect(
+      new CreateBookingHandler(prisma as never).execute({
+        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
+        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
+      }),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('throws BadRequestException when employee does not provide the service', async () => {
+    const prisma = buildPrisma();
+    prisma.employeeService.findUnique = jest.fn().mockResolvedValue(null);
+    await expect(
+      new CreateBookingHandler(prisma as never).execute({
+        tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
+        employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
 });
 
 // ─── CancelBookingHandler ────────────────────────────────────────────────────

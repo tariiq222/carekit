@@ -32,6 +32,23 @@ export class CreateBookingHandler {
     const price = service.price;
     const currency = dto.currency ?? service.currency;
 
+    // Verify employee exists and belongs to the same tenant.
+    const employee = await this.prisma.employee.findUnique({
+      where: { id: dto.employeeId },
+    });
+    if (!employee) throw new NotFoundException('Employee not found');
+    if (employee.tenantId !== dto.tenantId) {
+      throw new ForbiddenException('Employee does not belong to tenant');
+    }
+
+    // Verify employee actually provides this service.
+    const employeeService = await this.prisma.employeeService.findUnique({
+      where: { employeeId_serviceId: { employeeId: dto.employeeId, serviceId: dto.serviceId } },
+    });
+    if (!employeeService) {
+      throw new BadRequestException('Employee does not provide this service');
+    }
+
     const endsAt = new Date(scheduledAt.getTime() + durationMins * 60_000);
 
     const conflict = await this.prisma.booking.findFirst({
