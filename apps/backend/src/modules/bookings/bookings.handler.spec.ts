@@ -1,5 +1,7 @@
 import { ConflictException, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { BookingStatus, CancellationReason } from '@prisma/client';
+import { GetBookingSettingsHandler, DEFAULT_BOOKING_SETTINGS } from './get-booking-settings/get-booking-settings.handler';
+import { UpsertBookingSettingsHandler } from './upsert-booking-settings/upsert-booking-settings.handler';
 import { CreateBookingHandler } from './create-booking/create-booking.handler';
 import { CancelBookingHandler } from './cancel-booking/cancel-booking.handler';
 import { RescheduleBookingHandler } from './reschedule-booking/reschedule-booking.handler';
@@ -695,5 +697,95 @@ describe('ListBookingStatusLogHandler', () => {
     const result = await handler.execute({ tenantId: 'tenant-1', bookingId: 'no-logs' });
 
     expect(result).toEqual([]);
+  });
+});
+
+const dbSettings = {
+  id: 'settings-1', tenantId: 'tenant-1', branchId: null,
+  bufferMinutes: 0, freeCancelBeforeHours: 24, freeCancelRefundType: 'FULL' as const,
+  lateCancelRefundPercent: 0, maxReschedulesPerBooking: 3,
+  autoCompleteAfterHours: 2, autoNoShowAfterMinutes: 30,
+  minBookingLeadMinutes: 60, maxAdvanceBookingDays: 90,
+  waitlistEnabled: true, waitlistMaxPerSlot: 5,
+  createdAt: new Date(), updatedAt: new Date(),
+};
+
+describe('GetBookingSettingsHandler', () => {
+  it('returns branch-level settings when they exist', async () => {
+    const branchSettings = { ...dbSettings, id: 'settings-branch', branchId: 'branch-1', bufferMinutes: 10 };
+    const prisma = buildPrisma();
+    (prisma as any).bookingSettings = {
+      findUnique: jest.fn().mockResolvedValueOnce(branchSettings),
+    };
+    const handler = new GetBookingSettingsHandler(prisma as never);
+
+    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1' });
+
+    expect((result as typeof branchSettings).bufferMinutes).toBe(10);
+    expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to global settings when no branch-level row exists', async () => {
+    const prisma = buildPrisma();
+    (prisma as any).bookingSettings = {
+      findUnique: jest.fn()
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(dbSettings),
+    };
+    const handler = new GetBookingSettingsHandler(prisma as never);
+
+    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1' });
+
+    expect((result as typeof dbSettings).bufferMinutes).toBe(0);
+    expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledTimes(2);
+  });
+
+  it('returns hardcoded defaults when no DB row exists', async () => {
+    const prisma = buildPrisma();
+    (prisma as any).bookingSettings = {
+      findUnique: jest.fn().mockResolvedValue(null),
+    };
+    const handler = new GetBookingSettingsHandler(prisma as never);
+
+    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1' });
+
+    expect(result.bufferMinutes).toBe(0);
+    expect(result.freeCancelBeforeHours).toBe(24);
+    expect(result.maxReschedulesPerBooking).toBe(3);
+  });
+});
+
+describe('UpsertBookingSettingsHandler', () => {
+  it('upserts settings for a given tenantId + branchId', async () => {
+    const prisma = buildPrisma();
+    (prisma as any).bookingSettings = {
+      upsert: jest.fn().mockResolvedValue({ ...dbSettings, bufferMinutes: 15 }),
+    };
+    const handler = new UpsertBookingSettingsHandler(prisma as never);
+
+    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1', bufferMinutes: 15 });
+
+    expect((prisma as any).bookingSettings.upsert).toHaveBeenCalledWith({
+      where: { tenantId_branchId: { tenantId: 'tenant-1', branchId: 'branch-1' } },
+      update: { bufferMinutes: 15 },
+      create: expect.objectContaining({ tenantId: 'tenant-1', branchId: 'branch-1', bufferMinutes: 15 }),
+    });
+    expect((result as typeof dbSettings).bufferMinutes).toBe(15);
+  });
+
+  it('upserts global settings when branchId is null', async () => {
+    const prisma = buildPrisma();
+    (prisma as any).bookingSettings = {
+      upsert: jest.fn().mockResolvedValue(dbSettings),
+    };
+    const handler = new UpsertBookingSettingsHandler(prisma as never);
+
+    await handler.execute({ tenantId: 'tenant-1', branchId: null, bufferMinutes: 5 });
+
+    expect((prisma as any).bookingSettings.upsert).toHaveBeenCalledWith({
+      where: { tenantId_branchId: { tenantId: 'tenant-1', branchId: null } },
+      update: { bufferMinutes: 5 },
+      create: expect.objectContaining({ tenantId: 'tenant-1', branchId: null }),
+    });
   });
 });
