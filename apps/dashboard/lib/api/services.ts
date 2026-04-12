@@ -46,11 +46,11 @@ function downloadFile(url: string, filename: string) {
 }
 
 export function exportServicesCsv() {
-  downloadFile("/services/export?format=csv", "services.csv")
+  downloadFile("/dashboard/organization/services/export?format=csv", "services.csv")
 }
 
 export function exportServicesExcel() {
-  downloadFile("/services/export?format=xlsx", "services.xlsx")
+  downloadFile("/dashboard/organization/services/export?format=xlsx", "services.xlsx")
 }
 
 /* ─── Categories ─── */
@@ -73,7 +73,7 @@ export async function updateCategory(
   payload: UpdateCategoryPayload,
 ): Promise<ServiceCategory> {
   return api.patch<ServiceCategory>(
-    `/services/categories/${id}`,
+    `/dashboard/organization/services/categories/${id}`,
     payload,
   )
 }
@@ -87,7 +87,7 @@ export async function deleteCategory(id: string): Promise<void> {
 export async function fetchServices(
   query: ServiceListQuery = {},
 ): Promise<PaginatedResponse<Service>> {
-  return api.get<PaginatedResponse<Service>>("/services", {
+  return api.get<PaginatedResponse<Service>>("/dashboard/organization/services", {
     page: query.page,
     perPage: query.perPage,
     categoryId: query.categoryId,
@@ -99,24 +99,24 @@ export async function fetchServices(
 }
 
 export async function fetchService(id: string): Promise<Service> {
-  return api.get<Service>(`/services/${id}`)
+  return api.get<Service>(`/dashboard/organization/services/${id}`)
 }
 
 export async function createService(
   payload: CreateServicePayload,
 ): Promise<Service> {
-  return api.post<Service>("/services", payload)
+  return api.post<Service>("/dashboard/organization/services", payload)
 }
 
 export async function updateService(
   id: string,
   payload: UpdateServicePayload,
 ): Promise<Service> {
-  return api.patch<Service>(`/services/${id}`, payload)
+  return api.patch<Service>(`/dashboard/organization/services/${id}`, payload)
 }
 
 export async function deleteService(id: string): Promise<void> {
-  await api.delete(`/services/${id}`)
+  await api.delete(`/dashboard/organization/services/${id}`)
 }
 
 /* ─── Duration Options ─── */
@@ -125,7 +125,7 @@ export async function fetchDurationOptions(
   serviceId: string,
 ): Promise<ServiceDurationOption[]> {
   return api.get<ServiceDurationOption[]>(
-    `/services/${serviceId}/duration-options`,
+    `/dashboard/organization/services/${serviceId}/duration-options`,
   )
 }
 
@@ -134,7 +134,7 @@ export async function setDurationOptions(
   payload: SetDurationOptionsPayload,
 ): Promise<ServiceDurationOption[]> {
   return api.put<ServiceDurationOption[]>(
-    `/services/${serviceId}/duration-options`,
+    `/dashboard/organization/services/${serviceId}/duration-options`,
     payload,
   )
 }
@@ -145,7 +145,7 @@ export async function fetchServiceBookingTypes(
   serviceId: string,
 ): Promise<ServiceBookingType[]> {
   return api.get<ServiceBookingType[]>(
-    `/services/${serviceId}/booking-types`,
+    `/dashboard/organization/services/${serviceId}/booking-types`,
   )
 }
 
@@ -154,7 +154,7 @@ export async function setServiceBookingTypes(
   payload: SetServiceBookingTypesPayload,
 ): Promise<ServiceBookingType[]> {
   return api.put<ServiceBookingType[]>(
-    `/services/${serviceId}/booking-types`,
+    `/dashboard/organization/services/${serviceId}/booking-types`,
     payload,
   )
 }
@@ -165,7 +165,7 @@ export async function fetchIntakeForms(
   serviceId: string,
 ): Promise<IntakeForm[]> {
   return api.get<IntakeForm[]>(
-    `/services/${serviceId}/intake-forms/all`,
+    `/dashboard/organization/services/${serviceId}/intake-forms/all`,
   )
 }
 
@@ -174,7 +174,7 @@ export async function createIntakeForm(
   payload: CreateIntakeFormPayload,
 ): Promise<IntakeForm> {
   return api.post<IntakeForm>(
-    `/services/${serviceId}/intake-forms`,
+    `/dashboard/organization/services/${serviceId}/intake-forms`,
     payload,
   )
 }
@@ -218,7 +218,7 @@ export async function uploadServiceImage(serviceId: string, file: File): Promise
   formData.append("image", file)
 
   const token = getAccessToken()
-  const res = await fetch(`${API_BASE}/services/${serviceId}/avatar`, {
+  const res = await fetch(`${API_BASE}/dashboard/organization/services/${serviceId}/avatar`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
@@ -237,7 +237,7 @@ export async function uploadServiceImage(serviceId: string, file: File): Promise
 export async function fetchServiceEmployees(
   serviceId: string,
 ): Promise<ServiceEmployee[]> {
-  return api.get<ServiceEmployee[]>(`/services/${serviceId}/employees`)
+  return api.get<ServiceEmployee[]>(`/dashboard/organization/services/${serviceId}/employees`)
 }
 
 /* ─── Service List Stats ─── */
@@ -249,7 +249,7 @@ export interface ServiceListStats {
 }
 
 export async function fetchServicesListStats(): Promise<ServiceListStats> {
-  return api.get<ServiceListStats>('/services/list-stats')
+  return api.get<ServiceListStats>('/dashboard/organization/services/list-stats')
 }
 
 /* ─── Service Branches ─── */
@@ -258,11 +258,11 @@ export async function setServiceBranches(
   serviceId: string,
   payload: SetServiceBranchesPayload,
 ): Promise<{ updated: boolean }> {
-  return api.put<{ updated: boolean }>(`/services/${serviceId}/branches`, payload)
+  return api.put<{ updated: boolean }>(`/dashboard/organization/services/${serviceId}/branches`, payload)
 }
 
 export async function clearServiceBranches(
   serviceId: string,
 ): Promise<{ cleared: boolean }> {
-  return api.delete<{ cleared: boolean }>(`/services/${serviceId}/branches`)
+  return api.delete<{ cleared: boolean }>(`/dashboard/organization/services/${serviceId}/branches`)
 }

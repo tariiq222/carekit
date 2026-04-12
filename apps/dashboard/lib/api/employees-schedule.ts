@@ -26,7 +26,7 @@ export async function fetchAvailability(
   id: string,
 ): Promise<AvailabilitySlot[]> {
   const res = await api.get<{ schedule: AvailabilitySlot[] }>(
-    `/employees/${id}/availability`,
+    `/dashboard/people/employees/${id}/availability`,
   )
   return res.schedule
 }
@@ -35,14 +35,14 @@ export async function setAvailability(
   id: string,
   payload: SetAvailabilityPayload,
 ): Promise<void> {
-  await api.put(`/employees/${id}/availability`, payload)
+  await api.put(`/dashboard/people/employees/${id}/availability`, payload)
 }
 
 /* ─── Breaks ─── */
 
 export async function fetchBreaks(id: string): Promise<BreakSlot[]> {
   return api.get<BreakSlot[]>(
-    `/employees/${id}/breaks`,
+    `/dashboard/people/employees/${id}/breaks`,
   )
 }
 
@@ -51,7 +51,7 @@ export async function setBreaks(
   payload: SetBreaksPayload,
 ): Promise<BreakSlot[]> {
   return api.put<BreakSlot[]>(
-    `/employees/${id}/breaks`,
+    `/dashboard/people/employees/${id}/breaks`,
     payload,
   )
 }
@@ -64,7 +64,7 @@ export async function fetchSlots(
   duration?: number,
 ): Promise<TimeSlot[]> {
   const res = await api.get<TimeSlot[] | { slots: TimeSlot[] }>(
-    `/employees/${id}/slots`,
+    `/dashboard/people/employees/${id}/slots`,
     { date, duration },
   )
   return Array.isArray(res) ? res : (res.slots ?? [])
@@ -74,7 +74,7 @@ export async function fetchSlots(
 
 export async function fetchVacations(id: string): Promise<Vacation[]> {
   return api.get<Vacation[]>(
-    `/employees/${id}/vacations`,
+    `/dashboard/people/employees/${id}/vacations`,
   )
 }
 
@@ -83,7 +83,7 @@ export async function createVacation(
   payload: CreateVacationPayload,
 ): Promise<Vacation> {
   return api.post<Vacation>(
-    `/employees/${id}/vacations`,
+    `/dashboard/people/employees/${id}/vacations`,
     payload,
   )
 }
@@ -93,7 +93,7 @@ export async function deleteVacation(
   vacationId: string,
 ): Promise<void> {
   await api.delete(
-    `/employees/${employeeId}/vacations/${vacationId}`,
+    `/dashboard/people/employees/${employeeId}/vacations/${vacationId}`,
   )
 }
 
@@ -103,7 +103,7 @@ export async function fetchEmployeeServices(
   id: string,
 ): Promise<EmployeeService[]> {
   return api.get<EmployeeService[]>(
-    `/employees/${id}/services`,
+    `/dashboard/people/employees/${id}/services`,
   )
 }
 
@@ -112,7 +112,7 @@ export async function assignService(
   payload: AssignServicePayload,
 ): Promise<EmployeeService> {
   return api.post<EmployeeService>(
-    `/employees/${id}/services`,
+    `/dashboard/people/employees/${id}/services`,
     payload,
   )
 }
@@ -123,7 +123,7 @@ export async function updateEmployeeService(
   payload: UpdateServicePayload,
 ): Promise<EmployeeService> {
   return api.patch<EmployeeService>(
-    `/employees/${employeeId}/services/${serviceId}`,
+    `/dashboard/people/employees/${employeeId}/services/${serviceId}`,
     payload,
   )
 }
@@ -133,7 +133,7 @@ export async function removeEmployeeService(
   serviceId: string,
 ): Promise<void> {
   await api.delete(
-    `/employees/${employeeId}/services/${serviceId}`,
+    `/dashboard/people/employees/${employeeId}/services/${serviceId}`,
   )
 }
 
@@ -144,7 +144,7 @@ export async function fetchEmployeeServiceTypes(
   serviceId: string,
 ): Promise<EmployeeServiceType[]> {
   return api.get<EmployeeServiceType[]>(
-    `/employees/${employeeId}/services/${serviceId}/types`,
+    `/dashboard/people/employees/${employeeId}/services/${serviceId}/types`,
   )
 }
 
@@ -155,7 +155,7 @@ export async function fetchEmployeeRatings(
   query: { page?: number; perPage?: number } = {},
 ): Promise<PaginatedResponse<Rating>> {
   return api.get<PaginatedResponse<Rating>>(
-    `/employees/${id}/ratings`,
+    `/dashboard/people/employees/${id}/ratings`,
     { page: query.page, perPage: query.perPage },
   )
 }

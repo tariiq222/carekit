@@ -10,26 +10,26 @@ import type { PaginatedResponse } from "@/lib/types/common"
 export async function fetchDepartments(
   query: DepartmentListQuery = {},
 ): Promise<PaginatedResponse<Department>> {
-  return api.get("/departments", query as Record<string, string | number | boolean | undefined>)
+  return api.get("/dashboard/organization/departments", query as Record<string, string | number | boolean | undefined>)
 }
 
 export async function fetchDepartment(id: string): Promise<Department> {
-  return api.get(`/departments/${id}`)
+  return api.get(`/dashboard/organization/departments/${id}`)
 }
 
 export async function createDepartment(
   payload: CreateDepartmentPayload,
 ): Promise<Department> {
-  return api.post("/departments", payload)
+  return api.post("/dashboard/organization/departments", payload)
 }
 
 export async function updateDepartment(
   id: string,
   payload: UpdateDepartmentPayload,
 ): Promise<Department> {
-  return api.patch(`/departments/${id}`, payload)
+  return api.patch(`/dashboard/organization/departments/${id}`, payload)
 }
 
 export async function deleteDepartment(id: string): Promise<void> {
-  return api.delete(`/departments/${id}`)
+  return api.delete(`/dashboard/organization/departments/${id}`)
 }

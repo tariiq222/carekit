@@ -17,7 +17,7 @@ import type {
 export async function fetchBranches(
   query: BranchListQuery = {},
 ): Promise<PaginatedResponse<Branch>> {
-  return api.get<PaginatedResponse<Branch>>("/branches", {
+  return api.get<PaginatedResponse<Branch>>("/dashboard/organization/branches", {
     page: query.page,
     perPage: query.perPage,
     search: query.search,
@@ -28,7 +28,7 @@ export async function fetchBranches(
 /* ─── Detail ─── */
 
 export async function fetchBranch(id: string): Promise<Branch> {
-  return api.get<Branch>(`/branches/${id}`)
+  return api.get<Branch>(`/dashboard/organization/branches/${id}`)
 }
 
 /* ─── Create ─── */
@@ -36,7 +36,7 @@ export async function fetchBranch(id: string): Promise<Branch> {
 export async function createBranch(
   payload: CreateBranchPayload,
 ): Promise<Branch> {
-  return api.post<Branch>("/branches", payload)
+  return api.post<Branch>("/dashboard/organization/branches", payload)
 }
 
 /* ─── Update ─── */
@@ -45,13 +45,13 @@ export async function updateBranch(
   id: string,
   payload: UpdateBranchPayload,
 ): Promise<Branch> {
-  return api.patch<Branch>(`/branches/${id}`, payload)
+  return api.patch<Branch>(`/dashboard/organization/branches/${id}`, payload)
 }
 
 /* ─── Delete ─── */
 
 export async function deleteBranch(id: string): Promise<void> {
-  await api.delete(`/branches/${id}`)
+  await api.delete(`/dashboard/organization/branches/${id}`)
 }
 
 /* ─── Employees ─── */
@@ -60,7 +60,7 @@ export async function fetchBranchEmployees(
   branchId: string,
 ): Promise<EmployeeBranch[]> {
   return api.get<EmployeeBranch[]>(
-    `/branches/${branchId}/employees`,
+    `/dashboard/organization/branches/${branchId}/employees`,
   )
 }
 
@@ -69,7 +69,7 @@ export async function assignBranchEmployees(
   employeeIds: string[],
 ): Promise<EmployeeBranch[]> {
   return api.patch<EmployeeBranch[]>(
-    `/branches/${branchId}/employees`,
+    `/dashboard/organization/branches/${branchId}/employees`,
     { employeeIds },
   )
 }
@@ -78,5 +78,5 @@ export async function removeBranchEmployee(
   branchId: string,
   employeeId: string,
 ): Promise<void> {
-  await api.delete(`/branches/${branchId}/employees/${employeeId}`)
+  await api.delete(`/dashboard/organization/branches/${branchId}/employees/${employeeId}`)
 }

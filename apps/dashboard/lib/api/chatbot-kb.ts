@@ -23,7 +23,7 @@ export async function fetchKnowledgeBase(
   query: KnowledgeBaseQuery = {},
 ): Promise<PaginatedResponse<KnowledgeBaseEntry>> {
   return api.get<PaginatedResponse<KnowledgeBaseEntry>>(
-    "/chatbot/knowledge-base",
+    "/dashboard/ai/knowledge-base",
     {
       page: query.page,
       perPage: query.perPage,
@@ -36,7 +36,7 @@ export async function fetchKnowledgeBase(
 export async function createKnowledgeEntry(
   payload: CreateKbEntryPayload,
 ): Promise<KnowledgeBaseEntry> {
-  return api.post<KnowledgeBaseEntry>("/chatbot/knowledge-base", payload)
+  return api.post<KnowledgeBaseEntry>("/dashboard/ai/knowledge-base", payload)
 }
 
 export async function updateKnowledgeEntry(
@@ -44,7 +44,7 @@ export async function updateKnowledgeEntry(
   payload: UpdateKbEntryPayload,
 ): Promise<KnowledgeBaseEntry> {
   return api.patch<KnowledgeBaseEntry>(
-    `/chatbot/knowledge-base/${id}`,
+    `/dashboard/ai/knowledge-base/${id}`,
     payload,
   )
 }
@@ -52,11 +52,11 @@ export async function updateKnowledgeEntry(
 export async function deleteKnowledgeEntry(
   id: string,
 ): Promise<{ deleted: boolean }> {
-  return api.delete<{ deleted: boolean }>(`/chatbot/knowledge-base/${id}`)
+  return api.delete<{ deleted: boolean }>(`/dashboard/ai/knowledge-base/${id}`)
 }
 
 export async function syncKnowledgeBase(): Promise<{ synced: number }> {
-  return api.post<{ synced: number }>("/chatbot/knowledge-base/sync")
+  return api.post<{ synced: number }>("/dashboard/ai/knowledge-base/sync")
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -67,7 +67,7 @@ export async function fetchKnowledgeFiles(
   query: { page?: number; perPage?: number } = {},
 ): Promise<PaginatedResponse<KnowledgeBaseFile>> {
   return api.get<PaginatedResponse<KnowledgeBaseFile>>(
-    "/chatbot/knowledge-base/files",
+    "/dashboard/ai/knowledge-base/files",
     { page: query.page, perPage: query.perPage },
   )
 }
@@ -83,7 +83,7 @@ export async function uploadKnowledgeFile(
   formData.append("file", file)
 
   const token = getAccessToken()
-  const res = await fetch(`${API_BASE_URL}/chatbot/knowledge-base/files`, {
+  const res = await fetch(`${API_BASE_URL}/dashboard/ai/knowledge-base/files`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
@@ -101,7 +101,7 @@ export async function processKnowledgeFile(
   id: string,
 ): Promise<{ processed: boolean }> {
   return api.post<{ processed: boolean }>(
-    `/chatbot/knowledge-base/files/${id}/process`,
+    `/dashboard/ai/knowledge-base/files/${id}/process`,
   )
 }
 
@@ -109,6 +109,6 @@ export async function deleteKnowledgeFile(
   id: string,
 ): Promise<{ deleted: boolean }> {
   return api.delete<{ deleted: boolean }>(
-    `/chatbot/knowledge-base/files/${id}`,
+    `/dashboard/ai/knowledge-base/files/${id}`,
   )
 }

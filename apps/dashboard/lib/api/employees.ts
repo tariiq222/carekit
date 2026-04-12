@@ -20,7 +20,7 @@ import type {
 export async function fetchEmployees(
   query: EmployeeListQuery = {},
 ): Promise<PaginatedResponse<Employee>> {
-  const res = await api.get<PaginatedResponse<RawEmployee>>("/employees", {
+  const res = await api.get<PaginatedResponse<RawEmployee>>("/dashboard/people/employees", {
     page: query.page,
     perPage: query.perPage,
     sortBy: query.sortBy,
@@ -60,7 +60,7 @@ function mapEmployee(raw: RawEmployee): Employee {
 }
 
 export async function fetchEmployee(id: string): Promise<Employee> {
-  const res = await api.get<RawEmployee>(`/employees/${id}`)
+  const res = await api.get<RawEmployee>(`/dashboard/people/employees/${id}`)
   return mapEmployee(res)
 }
 
@@ -69,22 +69,22 @@ export async function fetchEmployee(id: string): Promise<Employee> {
 export async function createEmployee(
   payload: CreateEmployeePayload,
 ): Promise<Employee> {
-  return api.post<Employee>("/employees", payload)
+  return api.post<Employee>("/dashboard/people/employees", payload)
 }
 
 export async function onboardEmployee(
   payload: OnboardEmployeePayload,
 ): Promise<OnboardEmployeeResponse> {
-  return api.post<OnboardEmployeeResponse>("/employees/onboard", payload)
+  return api.post<OnboardEmployeeResponse>(`/dashboard/people/employees/onboarding`, payload)
 }
 
 export async function updateEmployee(
   id: string,
   payload: UpdateEmployeePayload,
 ): Promise<Employee> {
-  return api.patch<Employee>(`/employees/${id}`, payload)
+  return api.patch<Employee>(`/dashboard/people/employees/${id}`, payload)
 }
 
 export async function deleteEmployee(id: string): Promise<void> {
-  await api.delete(`/employees/${id}`)
+  await api.delete(`/dashboard/people/employees/${id}`)
 }
