@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DashboardAiController } from '../../api/dashboard/ai.controller';
 import { DatabaseModule } from '../../infrastructure/database';
 import { EmbedDocumentHandler } from './embed-document/embed-document.handler';
 import { SemanticSearchHandler } from './semantic-search/semantic-search.handler';
@@ -14,6 +15,7 @@ const handlers = [
 
 @Module({
   imports: [DatabaseModule],
+  controllers: [DashboardAiController],
   providers: handlers,
   exports: handlers,
 })

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DashboardPlatformController } from '../../api/dashboard/platform.controller';
 import { DatabaseModule } from '../../infrastructure/database';
 import { ValidateLicenseService } from './license/validate-license.service';
 import { CheckFeatureHandler } from './license/check-feature.handler';
@@ -10,6 +11,7 @@ import { ListIntegrationsHandler } from './integrations/list-integrations.handle
 
 @Module({
   imports: [DatabaseModule],
+  controllers: [DashboardPlatformController],
   providers: [
     ValidateLicenseService,
     CheckFeatureHandler,

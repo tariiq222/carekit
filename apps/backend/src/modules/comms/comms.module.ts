@@ -1,4 +1,5 @@
 import { Module, OnModuleInit } from '@nestjs/common';
+import { DashboardCommsController } from '../../api/dashboard/comms.controller';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
 import { MailModule } from '../../infrastructure/mail/mail.module';
@@ -50,6 +51,7 @@ const eventHandlers = [
 
 @Module({
   imports: [DatabaseModule, MessagingModule, MailModule],
+  controllers: [DashboardCommsController],
   providers: [...handlers, ...eventHandlers],
   exports: [...handlers],
 })

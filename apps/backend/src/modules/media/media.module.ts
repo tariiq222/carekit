@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { MulterModule } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { DatabaseModule } from '../../infrastructure/database';
 import { UploadFileHandler } from './files/upload-file.handler';
 import { GetFileHandler } from './files/get-file.handler';
 import { DeleteFileHandler } from './files/delete-file.handler';
 import { GeneratePresignedUrlHandler } from './files/generate-presigned-url.handler';
+import { DashboardMediaController } from '../../api/dashboard/media.controller';
 
 const handlers = [
   UploadFileHandler,
@@ -14,7 +17,12 @@ const handlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, ConfigModule],
+  imports: [
+    DatabaseModule,
+    ConfigModule,
+    MulterModule.register({ storage: memoryStorage() }),
+  ],
+  controllers: [DashboardMediaController],
   providers: [...handlers],
   exports: [...handlers],
 })
