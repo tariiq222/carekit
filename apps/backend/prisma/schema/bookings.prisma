@@ -63,6 +63,7 @@ model Booking {
   completedAt    DateTime?
   noShowAt       DateTime?
   expiresAt      DateTime?
+  durationOptionId  String?   // cross-BC ref to ServiceDurationOption — plain string, no FK
   groupSessionId    String?
   recurringGroupId  String?
   recurringPattern  RecurringFrequency?

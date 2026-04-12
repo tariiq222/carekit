@@ -67,13 +67,19 @@ const buildPrisma = () => ({
   },
 });
 
+const buildPriceResolver = () => ({
+  resolve: jest.fn().mockResolvedValue({
+    price: 200, durationMins: 60, durationOptionId: '', currency: 'SAR', isEmployeeOverride: false,
+  }),
+});
+
 const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) });
 
 // ─── CreateBookingHandler ────────────────────────────────────────────────────
 describe('CreateBookingHandler', () => {
   it('creates booking with price and duration derived from Service', async () => {
     const prisma = buildPrisma();
-    const result = await new CreateBookingHandler(prisma as never).execute({
+    const result = await new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
       tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
       employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
     });
@@ -86,7 +92,7 @@ describe('CreateBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findFirst = jest.fn().mockResolvedValue(mockBooking);
     await expect(
-      new CreateBookingHandler(prisma as never).execute({
+      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
         tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
         employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
       }),
@@ -106,7 +112,7 @@ describe('CreateBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.service.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new CreateBookingHandler(prisma as never).execute({
+      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
         tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
         employeeId: 'emp-1', serviceId: 'bad-svc', scheduledAt: future,
       }),
@@ -119,7 +125,7 @@ describe('CreateBookingHandler', () => {
       id: 'svc-1', tenantId: 'other-tenant', durationMins: 60, price: 200, currency: 'SAR',
     });
     await expect(
-      new CreateBookingHandler(prisma as never).execute({
+      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
         tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
         employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
       }),
@@ -130,7 +136,7 @@ describe('CreateBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.employee.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new CreateBookingHandler(prisma as never).execute({
+      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
         tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
         employeeId: 'bad-emp', serviceId: 'svc-1', scheduledAt: future,
       }),
@@ -141,7 +147,7 @@ describe('CreateBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.employee.findUnique = jest.fn().mockResolvedValue({ id: 'emp-1', tenantId: 'other-tenant' });
     await expect(
-      new CreateBookingHandler(prisma as never).execute({
+      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
         tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
         employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
       }),
@@ -152,7 +158,7 @@ describe('CreateBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.employeeService.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new CreateBookingHandler(prisma as never).execute({
+      new CreateBookingHandler(prisma as never, buildPriceResolver() as never).execute({
         tenantId: 'tenant-1', branchId: 'branch-1', clientId: 'client-1',
         employeeId: 'emp-1', serviceId: 'svc-1', scheduledAt: future,
       }),

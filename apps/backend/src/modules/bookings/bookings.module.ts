@@ -1,6 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
+import { OrganizationModule } from '../organization/organization.module';
 import { CreateBookingHandler } from './create-booking/create-booking.handler';
 import { CancelBookingHandler } from './cancel-booking/cancel-booking.handler';
 import { RescheduleBookingHandler } from './reschedule-booking/reschedule-booking.handler';
@@ -31,7 +32,7 @@ const handlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule],
+  imports: [DatabaseModule, MessagingModule, OrganizationModule],
   providers: [...handlers, PaymentCompletedEventHandler],
   exports: [...handlers],
 })

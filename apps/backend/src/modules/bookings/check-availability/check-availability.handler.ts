@@ -1,12 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import type { BookingType } from '@prisma/client';
 
 export interface CheckAvailabilityQuery {
   tenantId: string;
   employeeId: string;
   branchId: string;
   date: Date;
-  durationMins: number;
+  /** Explicit duration — used when serviceId/durationOptionId are not provided */
+  durationMins?: number;
+  /** When provided the handler resolves durationMins from the matching ServiceDurationOption */
+  serviceId?: string;
+  durationOptionId?: string | null;
+  bookingType?: BookingType | null;
 }
 
 export interface AvailableSlot {
@@ -37,6 +43,14 @@ export class CheckAvailabilityHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: CheckAvailabilityQuery): Promise<AvailableSlot[]> {
+    // Resolve durationMins from ServiceDurationOption when serviceId is given.
+    let durationMins = query.durationMins ?? 0;
+    if (query.serviceId) {
+      const option = await this.resolveDurationOption(query.tenantId, query.serviceId, query.durationOptionId ?? null, query.bookingType ?? null);
+      if (option) durationMins = option.durationMins;
+    }
+    if (!durationMins) return [];
+
     const dateOnly = new Date(query.date);
     dateOnly.setHours(0, 0, 0, 0);
     const dayOfWeek = dateOnly.getDay();
@@ -101,8 +115,8 @@ export class CheckAvailabilityHandler {
 
     for (const [windowStart, windowEnd] of windows) {
       let cursor = new Date(windowStart);
-      while (cursor.getTime() + query.durationMins * 60_000 <= windowEnd.getTime()) {
-        const slotEnd = new Date(cursor.getTime() + query.durationMins * 60_000);
+      while (cursor.getTime() + durationMins * 60_000 <= windowEnd.getTime()) {
+        const slotEnd = new Date(cursor.getTime() + durationMins * 60_000);
 
         const hasConflict = existingBookings.some((b) => {
           const bEnd = new Date(b.scheduledAt.getTime() + b.durationMins * 60_000);
@@ -118,5 +132,36 @@ export class CheckAvailabilityHandler {
     }
 
     return slots;
+  }
+
+  private async resolveDurationOption(
+    tenantId: string,
+    serviceId: string,
+    durationOptionId: string | null,
+    bookingType: BookingType | null,
+  ) {
+    if (durationOptionId) {
+      return this.prisma.serviceDurationOption.findFirst({
+        where: { id: durationOptionId, tenantId, serviceId, isActive: true },
+        select: { durationMins: true },
+      });
+    }
+    if (bookingType) {
+      const scoped = await this.prisma.serviceDurationOption.findFirst({
+        where: { tenantId, serviceId, bookingType, isDefault: true, isActive: true },
+        select: { durationMins: true },
+      });
+      if (scoped) return scoped;
+    }
+    const global = await this.prisma.serviceDurationOption.findFirst({
+      where: { tenantId, serviceId, bookingType: null, isDefault: true, isActive: true },
+      select: { durationMins: true },
+    });
+    if (global) return global;
+    return this.prisma.serviceDurationOption.findFirst({
+      where: { tenantId, serviceId, isActive: true },
+      orderBy: [{ bookingType: 'asc' }, { sortOrder: 'asc' }],
+      select: { durationMins: true },
+    });
   }
 }

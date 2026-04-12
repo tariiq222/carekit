@@ -10,6 +10,7 @@
   "p8_completed": "2026-04-12",
   "p9_completed": "2026-04-12",
   "p10_completed": "2026-04-12",
+  "p11_completed": "2026-04-12",
   "p14_completed": "2026-04-12",
   "gaps_identified": "2026-04-12",
   "gap_analysis_source": "comparison with refactor/monorepo-structure branch (old system)",
@@ -772,8 +773,9 @@
           "title": "ربط PriceResolver بـ create-booking + تحديث check-availability",
           "detail": "create-booking يستدعي PriceResolverService بدل قبول price/duration من الـ caller — يُكمل الإصلاح المؤقت من p9-t2. check-availability يقرأ ServiceDurationOption المتاحة per booking type ويعرض السلوتات per-option.",
           "complexity": "COMPLEX",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "note": "CreateBookingDto.durationOptionId أضيف. Booking.durationOptionId (cross-BC plain string) migration 20260412001926. BookingsModule يستورد OrganizationModule. CheckAvailabilityQuery يدعم serviceId/durationOptionId/bookingType."
         }
       ]
     },
