@@ -745,8 +745,9 @@
           "title": "EmployeeServiceOption schema + migration + PriceResolverService",
           "detail": "model EmployeeServiceOption { tenantId, employeeServiceId (FK to EmployeeService), durationOptionId (FK to ServiceDurationOption), priceOverride (nullable), durationOverride (nullable), isActive }. PriceResolverService: (1) EmployeeServiceOption.priceOverride/durationOverride → (2) ServiceDurationOption.price/durationMins → (3) Service.price/durationMins.",
           "complexity": "COMPLEX",
-          "status": "todo",
-          "bc": "organization"
+          "status": "done",
+          "bc": "organization",
+          "note": "migration 20260412000841_p11_t3_employee_service_options. employeeServiceId plain string (cross-BC). PriceResolverService with 3-tier fallback."
         },
         {
           "id": "p11-t4",
@@ -755,8 +756,9 @@
           "title": "Department + ServiceCategory CRUD slices",
           "detail": "create/update/list/archive لكل من Department و ServiceCategory. toggle-department-visibility slice. set-duration-options slice (إضافة/حذف/تعديل خيارات المدة لخدمة). set-employee-service-options slice (override الموظف per خيار مدة).",
           "complexity": "CRUD",
-          "status": "todo",
-          "bc": "organization"
+          "status": "done",
+          "bc": "organization",
+          "note": "departments/ + categories/ CRUD handlers. SetDurationOptionsHandler + SetEmployeeServiceOptionsHandler. OrganizationModule updated."
         },
         {
           "id": "p11-t5",

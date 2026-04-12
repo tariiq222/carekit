@@ -117,9 +117,36 @@ model ServiceDurationOption {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
+  employeeOptions EmployeeServiceOption[]
+
   @@index([tenantId])
   @@index([serviceId])
   @@index([serviceId, bookingType])
+}
+
+// ─── Employee Service Options ────────────────────────────────────────────────
+
+// Per-employee override of a specific ServiceDurationOption.
+// employeeServiceId is a plain string (cross-BC to people.EmployeeService —
+// no Prisma FK, referential integrity is event-driven).
+// priceOverride / durationOverride = null → fall back to ServiceDurationOption values.
+// Resolution order (PriceResolverService): (1) priceOverride → (2) ServiceDurationOption.price → (3) Service.price
+model EmployeeServiceOption {
+  id               String                @id @default(uuid())
+  tenantId         String
+  employeeServiceId String               // FK to people.EmployeeService (plain string, cross-BC)
+  durationOptionId String
+  durationOption   ServiceDurationOption @relation(fields: [durationOptionId], references: [id], onDelete: Cascade)
+  priceOverride    Decimal?              @db.Decimal(12, 2)
+  durationOverride Int?
+  isActive         Boolean               @default(true)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@unique([employeeServiceId, durationOptionId])
+  @@index([tenantId])
+  @@index([employeeServiceId])
+  @@index([durationOptionId])
 }
 
 // ─── Business Hours ──────────────────────────────────────────────────────────
