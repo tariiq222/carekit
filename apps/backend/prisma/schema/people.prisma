@@ -117,6 +117,9 @@ model EmployeeService {
   @@index([employeeId])
 }
 
+// Multiple rows per (employeeId, dayOfWeek) represent split shifts
+// (e.g. 09:00-13:00 then 16:00-21:00). The gap between shifts IS the break.
+// A missing dayOfWeek row = weekly off day.
 model EmployeeAvailability {
   id         String   @id @default(uuid())
   tenantId   String
@@ -129,24 +132,23 @@ model EmployeeAvailability {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@unique([employeeId, dayOfWeek])
   @@index([tenantId])
-  @@index([employeeId])
+  @@index([employeeId, dayOfWeek])
 }
 
+// Date-range exception — employee is off from startDate to endDate (inclusive).
+// Single-day leave: startDate == endDate. Annual leave: multi-day range.
+// No partial-day overrides — adjust EmployeeAvailability instead.
 model EmployeeAvailabilityException {
   id         String   @id @default(uuid())
   tenantId   String
   employeeId String
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  date       DateTime
-  isOff      Boolean
-  startTime  String?
-  endTime    String?
+  startDate  DateTime @db.Date
+  endDate    DateTime @db.Date
   reason     String?
   createdAt  DateTime @default(now())
 
-  @@unique([employeeId, date])
   @@index([tenantId])
-  @@index([employeeId])
+  @@index([employeeId, startDate, endDate])
 }

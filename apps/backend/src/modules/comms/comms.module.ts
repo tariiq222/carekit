@@ -13,6 +13,7 @@ import { MarkReadHandler } from './notifications/mark-read.handler';
 import { CreateConversationHandler } from './chat/create-conversation.handler';
 import { CreateChatMessageHandler } from './chat/create-chat-message.handler';
 import { ListConversationsHandler } from './chat/list-conversations.handler';
+import { ListMessagesHandler } from './chat/list-messages.handler';
 import { CreateEmailTemplateHandler } from './email-templates/create-email-template.handler';
 import { UpdateEmailTemplateHandler } from './email-templates/update-email-template.handler';
 import { GetEmailTemplateHandler } from './email-templates/get-email-template.handler';
@@ -33,6 +34,7 @@ const handlers = [
   CreateConversationHandler,
   CreateChatMessageHandler,
   ListConversationsHandler,
+  ListMessagesHandler,
   CreateEmailTemplateHandler,
   UpdateEmailTemplateHandler,
   GetEmailTemplateHandler,

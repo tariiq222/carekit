@@ -8,6 +8,8 @@ import { MarkReadHandler } from './notifications/mark-read.handler';
 import { CreateConversationHandler } from './chat/create-conversation.handler';
 import { CreateChatMessageHandler } from './chat/create-chat-message.handler';
 import { ListConversationsHandler } from './chat/list-conversations.handler';
+import { ListMessagesHandler } from './chat/list-messages.handler';
+import { NotFoundException } from '@nestjs/common';
 import type { FcmService } from '../../infrastructure/mail';
 import type { SmtpService } from '../../infrastructure/mail';
 import type { PrismaService } from '../../infrastructure/database';
@@ -40,6 +42,7 @@ const buildPrisma = () => ({
   },
   commsChatMessage: {
     create: jest.fn().mockResolvedValue({ id: 'msg-1' }),
+    findMany: jest.fn().mockResolvedValue([]),
   },
 });
 
@@ -292,6 +295,58 @@ describe('ListConversationsHandler', () => {
     const result = await handler.execute({ tenantId: 'tenant-1', clientId: 'client-1', page: 1, limit: 20 });
     expect(result.data).toHaveLength(1);
     expect(result.meta.total).toBe(1);
+  });
+});
+
+describe('ListMessagesHandler', () => {
+  it('throws NotFoundException when conversation does not exist', async () => {
+    const prisma = buildPrisma();
+    prisma.chatConversation.findFirst.mockResolvedValue(null);
+    const handler = new ListMessagesHandler(prisma as unknown as PrismaService);
+    await expect(
+      handler.execute({ tenantId: 'tenant-1', conversationId: 'missing', limit: 20 }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('returns messages newest-first without cursor on first load', async () => {
+    const prisma = buildPrisma();
+    prisma.chatConversation.findFirst.mockResolvedValue({ id: 'conv-1' });
+    prisma.commsChatMessage.findMany.mockResolvedValue([
+      { id: 'msg-3' }, { id: 'msg-2' }, { id: 'msg-1' },
+    ]);
+    const handler = new ListMessagesHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({ tenantId: 'tenant-1', conversationId: 'conv-1', limit: 20 });
+    expect(result.data).toHaveLength(3);
+    expect(result.meta.hasMore).toBe(false);
+    expect(result.meta.nextCursor).toBeNull();
+    expect(prisma.commsChatMessage.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { createdAt: 'desc' }, take: 21 }),
+    );
+  });
+
+  it('sets hasMore and nextCursor when more messages exist', async () => {
+    const prisma = buildPrisma();
+    prisma.chatConversation.findFirst.mockResolvedValue({ id: 'conv-1' });
+    // Return limit+1 items to signal hasMore
+    prisma.commsChatMessage.findMany.mockResolvedValue([
+      { id: 'msg-3' }, { id: 'msg-2' }, { id: 'msg-1' },
+    ]);
+    const handler = new ListMessagesHandler(prisma as unknown as PrismaService);
+    const result = await handler.execute({ tenantId: 'tenant-1', conversationId: 'conv-1', limit: 2 });
+    expect(result.data).toHaveLength(2);
+    expect(result.meta.hasMore).toBe(true);
+    expect(result.meta.nextCursor).toBe('msg-2');
+  });
+
+  it('applies cursor pagination to load older messages', async () => {
+    const prisma = buildPrisma();
+    prisma.chatConversation.findFirst.mockResolvedValue({ id: 'conv-1' });
+    prisma.commsChatMessage.findMany.mockResolvedValue([]);
+    const handler = new ListMessagesHandler(prisma as unknown as PrismaService);
+    await handler.execute({ tenantId: 'tenant-1', conversationId: 'conv-1', cursor: 'msg-5', limit: 20 });
+    expect(prisma.commsChatMessage.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ cursor: { id: 'msg-5' }, skip: 1 }),
+    );
   });
 });
 

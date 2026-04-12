@@ -8,6 +8,7 @@
   "p6_completed": "2026-04-12",
   "p7_completed": "2026-04-12",
   "p8_completed": "2026-04-12",
+  "p9_completed": "2026-04-12",
   "p10_completed": "2026-04-12",
   "p14_completed": "2026-04-12",
   "gaps_identified": "2026-04-12",
@@ -621,8 +622,9 @@
           "title": "Migration: توسيع EmployeeAvailability + EmployeeAvailabilityException",
           "detail": "نموذج وقت الموظف الحقيقي: (1) فترات متعددة في اليوم (9-1 ثم 4-9) — إزالة @@unique([employeeId, dayOfWeek]) من EmployeeAvailability. (2) يوم off أسبوعي = غياب أي صف لذلك dayOfWeek. (3) إجازة سنوية ممتدة — تحويل EmployeeAvailabilityException من date مفرد إلى نطاق (startDate, endDate) وحذف startTime/endTime (تنظيف).",
           "complexity": "COMPLEX",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "commit": "4cae30f1"
         },
         {
           "id": "p9-t1",
@@ -631,8 +633,9 @@
           "title": "إصلاح check-availability — دعم فترات متعددة + exceptions + holidays",
           "detail": "CheckAvailabilityHandler يتجاهل EmployeeAvailability حالياً. بعد p9-t0: (1) جلب كل shifts اليوم من EmployeeAvailability (قد تكون فترتين)، (2) التحقق من EmployeeAvailabilityException كنطاق تاريخي للإجازات، (3) Holiday على البرانش، (4) توليد slots ضمن كل نافذة منفصلة (الاستراحة = فجوة بين الفترات). يعتمد على p9-t0.",
           "complexity": "COMPLEX",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "commit": "1b80b4c4"
         },
         {
           "id": "p9-t2",
@@ -641,9 +644,10 @@
           "title": "إصلاح create-booking — منع قبول price/duration من الـ caller",
           "detail": "CreateBookingHandler يقبل price و durationMins من الـ DTO مباشرة — ثغرة تجارية. مؤقتاً: جلب القيم من Service model والتحقق من تطابقها. سيُستبدل بـ PriceResolver الكامل في p11.",
           "complexity": "MEDIUM",
-          "status": "todo",
+          "status": "done",
           "bc": "bookings",
-          "note": "إصلاح مؤقت — يُكتمل في p11-t5 (PriceResolver)"
+          "note": "إصلاح مؤقت — يُكتمل في p11-t5 (PriceResolver)",
+          "commit": "77c4638f"
         },
         {
           "id": "p9-t3",
@@ -652,8 +656,9 @@
           "title": "إصلاح create-booking — التحقق من EmployeeService",
           "detail": "CreateBookingHandler لا يتحقق من أن الموظف يقدم الخدمة المطلوبة. يجب التحقق من EmployeeService (موجود في schema). أيضاً: التحقق من أن employeeId و serviceId ينتميان لنفس الـ tenantId.",
           "complexity": "MEDIUM",
-          "status": "todo",
-          "bc": "bookings"
+          "status": "done",
+          "bc": "bookings",
+          "commit": "eca89ef9"
         }
       ]
     },
@@ -745,8 +750,9 @@
           "title": "EmployeeServiceOption schema + migration + PriceResolverService",
           "detail": "model EmployeeServiceOption { tenantId, employeeServiceId (FK to EmployeeService), durationOptionId (FK to ServiceDurationOption), priceOverride (nullable), durationOverride (nullable), isActive }. PriceResolverService: (1) EmployeeServiceOption.priceOverride/durationOverride → (2) ServiceDurationOption.price/durationMins → (3) Service.price/durationMins.",
           "complexity": "COMPLEX",
-          "status": "todo",
-          "bc": "organization"
+          "status": "done",
+          "bc": "organization",
+          "note": "migration 20260412000841_p11_t3_employee_service_options. employeeServiceId plain string (cross-BC). PriceResolverService with 3-tier fallback."
         },
         {
           "id": "p11-t4",
@@ -755,8 +761,9 @@
           "title": "Department + ServiceCategory CRUD slices",
           "detail": "create/update/list/archive لكل من Department و ServiceCategory. toggle-department-visibility slice. set-duration-options slice (إضافة/حذف/تعديل خيارات المدة لخدمة). set-employee-service-options slice (override الموظف per خيار مدة).",
           "complexity": "CRUD",
-          "status": "todo",
-          "bc": "organization"
+          "status": "done",
+          "bc": "organization",
+          "note": "departments/ + categories/ CRUD handlers. SetDurationOptionsHandler + SetEmployeeServiceOptionsHandler. OrganizationModule updated."
         },
         {
           "id": "p11-t5",
