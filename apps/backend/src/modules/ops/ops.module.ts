@@ -5,6 +5,12 @@ import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
 import { BookingsModule } from '../bookings/bookings.module';
 import { CronTasksService } from './cron-tasks/cron-tasks.service';
+import { BookingAutocompleteCron } from './cron-tasks/booking-autocomplete.cron';
+import { BookingExpiryCron } from './cron-tasks/booking-expiry.cron';
+import { BookingNoShowCron } from './cron-tasks/booking-noshow.cron';
+import { AppointmentRemindersCron } from './cron-tasks/appointment-reminders.cron';
+import { GroupSessionAutomationCron } from './cron-tasks/group-session-automation.cron';
+import { RefreshTokenCleanupCron } from './cron-tasks/refresh-token-cleanup.cron';
 import { LogActivityHandler } from './log-activity/log-activity.handler';
 import { ListActivityHandler } from './log-activity/list-activity.handler';
 import { GenerateReportHandler } from './generate-report/generate-report.handler';
@@ -17,10 +23,19 @@ const handlers = [
   HealthCheckHandler,
 ];
 
+const cronHandlers = [
+  BookingAutocompleteCron,
+  BookingExpiryCron,
+  BookingNoShowCron,
+  AppointmentRemindersCron,
+  GroupSessionAutomationCron,
+  RefreshTokenCleanupCron,
+];
+
 @Module({
   imports: [DatabaseModule, MessagingModule, TerminusModule, BookingsModule],
   controllers: [DashboardOpsController],
-  providers: [...handlers, CronTasksService],
+  providers: [...handlers, ...cronHandlers, CronTasksService],
   exports: [...handlers],
 })
 export class OpsModule implements OnModuleInit {

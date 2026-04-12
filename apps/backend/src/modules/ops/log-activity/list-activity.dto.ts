@@ -1,14 +1,13 @@
-import { IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ActivityAction } from '@prisma/client';
+import { PaginationDto } from '../../../common/dto';
 
-export class ListActivityDto {
+export class ListActivityDto extends PaginationDto {
   @IsOptional() @IsUUID() userId?: string;
   @IsOptional() @IsString() entity?: string;
   @IsOptional() @IsUUID() entityId?: string;
   @IsOptional() @IsEnum(ActivityAction) action?: ActivityAction;
   @IsOptional() @IsDateString() from?: string;
   @IsOptional() @IsDateString() to?: string;
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) page?: number;
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) limit?: number;
 }

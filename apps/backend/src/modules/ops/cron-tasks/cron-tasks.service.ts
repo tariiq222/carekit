@@ -1,8 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { BookingStatus, WaitlistStatus } from '@prisma/client';
 import { BullMqService } from '../../../infrastructure/queue/bull-mq.service';
-import { PrismaService } from '../../../infrastructure/database';
-import { GetBookingSettingsHandler } from '../../bookings/get-booking-settings/get-booking-settings.handler';
+import { BookingAutocompleteCron } from './booking-autocomplete.cron';
+import { BookingExpiryCron } from './booking-expiry.cron';
+import { BookingNoShowCron } from './booking-noshow.cron';
+import { AppointmentRemindersCron } from './appointment-reminders.cron';
+import { GroupSessionAutomationCron } from './group-session-automation.cron';
+import { RefreshTokenCleanupCron } from './refresh-token-cleanup.cron';
 
 const QUEUE_NAME = 'ops-cron';
 
@@ -21,8 +24,12 @@ export class CronTasksService implements OnModuleInit {
 
   constructor(
     private readonly bullMq: BullMqService,
-    private readonly prisma: PrismaService,
-    private readonly settingsHandler: GetBookingSettingsHandler,
+    private readonly bookingAutocomplete: BookingAutocompleteCron,
+    private readonly bookingExpiry: BookingExpiryCron,
+    private readonly bookingNoShow: BookingNoShowCron,
+    private readonly appointmentReminders: AppointmentRemindersCron,
+    private readonly groupSessionAutomation: GroupSessionAutomationCron,
+    private readonly refreshTokenCleanup: RefreshTokenCleanupCron,
   ) {}
 
   onModuleInit(): void {
@@ -57,161 +64,26 @@ export class CronTasksService implements OnModuleInit {
     this.bullMq.createWorker<object>(QUEUE_NAME, async (job) => {
       switch (job.name) {
         case CRON_JOBS.BOOKING_AUTOCOMPLETE:
-          await this.runBookingAutocomplete();
+          await this.bookingAutocomplete.execute();
           break;
         case CRON_JOBS.BOOKING_EXPIRY:
-          await this.runBookingExpiry();
+          await this.bookingExpiry.execute();
           break;
         case CRON_JOBS.BOOKING_NOSHOW:
-          await this.runBookingNoShow();
+          await this.bookingNoShow.execute();
           break;
         case CRON_JOBS.APPOINTMENT_REMINDERS:
-          await this.runAppointmentReminders();
+          await this.appointmentReminders.execute();
           break;
         case CRON_JOBS.GROUP_SESSION_AUTOMATION:
-          await this.runGroupSessionAutomation();
+          await this.groupSessionAutomation.execute();
           break;
         case CRON_JOBS.REFRESH_TOKEN_CLEANUP:
-          await this.runRefreshTokenCleanup();
+          await this.refreshTokenCleanup.execute();
           break;
         default:
           this.logger.warn(`Unknown cron job: ${job.name}`);
       }
     });
-  }
-
-  /**
-   * Auto-complete bookings per tenant using each tenant's autoCompleteAfterHours setting.
-   */
-  private async runBookingAutocomplete(): Promise<void> {
-    const tenantIds = await this.prisma.booking
-      .findMany({
-        where: { status: BookingStatus.CONFIRMED },
-        select: { tenantId: true },
-        distinct: ['tenantId'],
-      })
-      .then((rows) => rows.map((r) => r.tenantId));
-
-    let totalCompleted = 0;
-
-    for (const tenantId of tenantIds) {
-      // Use tenant-global settings for cron jobs — branch-level overrides apply to user-facing flows only.
-      const settings = await this.settingsHandler.execute({ tenantId, branchId: null });
-      const cutoff = new Date(Date.now() - settings.autoCompleteAfterHours * 3_600_000);
-
-      const result = await this.prisma.booking.updateMany({
-        where: {
-          tenantId,
-          status: BookingStatus.CONFIRMED,
-          endsAt: { lte: cutoff },
-        },
-        data: {
-          status: BookingStatus.COMPLETED,
-          completedAt: new Date(),
-        },
-      });
-      totalCompleted += result.count;
-    }
-
-    if (totalCompleted > 0) {
-      this.logger.log(`[booking-autocomplete] completed ${totalCompleted} bookings`);
-    }
-  }
-
-  private async runBookingExpiry(): Promise<void> {
-    const now = new Date();
-    const result = await this.prisma.booking.updateMany({
-      where: {
-        status: BookingStatus.PENDING,
-        expiresAt: { lte: now },
-      },
-      data: {
-        status: BookingStatus.EXPIRED,
-      },
-    });
-    if (result.count > 0) {
-      this.logger.log(`[booking-expiry] expired ${result.count} bookings`);
-    }
-  }
-
-  /**
-   * Mark CONFIRMED bookings as NO_SHOW per tenant using each tenant's autoNoShowAfterMinutes setting.
-   */
-  private async runBookingNoShow(): Promise<void> {
-    const tenantIds = await this.prisma.booking
-      .findMany({
-        where: { status: BookingStatus.CONFIRMED },
-        select: { tenantId: true },
-        distinct: ['tenantId'],
-      })
-      .then((rows) => rows.map((r) => r.tenantId));
-
-    let totalNoShow = 0;
-
-    for (const tenantId of tenantIds) {
-      // Use tenant-global settings for cron jobs — branch-level overrides apply to user-facing flows only.
-      const settings = await this.settingsHandler.execute({ tenantId, branchId: null });
-      const cutoff = new Date(Date.now() - settings.autoNoShowAfterMinutes * 60_000);
-
-      const result = await this.prisma.booking.updateMany({
-        where: {
-          tenantId,
-          status: BookingStatus.CONFIRMED,
-          scheduledAt: { lte: cutoff },
-          checkedInAt: null,
-        },
-        data: {
-          status: BookingStatus.NO_SHOW,
-          noShowAt: new Date(),
-        },
-      });
-      totalNoShow += result.count;
-    }
-
-    if (totalNoShow > 0) {
-      this.logger.log(`[booking-noshow] marked ${totalNoShow} as NO_SHOW`);
-    }
-  }
-
-  private async runAppointmentReminders(): Promise<void> {
-    const waiting = await this.prisma.waitlistEntry.findMany({
-      where: { status: WaitlistStatus.WAITING },
-      orderBy: { createdAt: 'asc' },
-      take: 50,
-    });
-    if (waiting.length > 0) {
-      this.logger.log(`[appointment-reminders] ${waiting.length} waitlist entries checked`);
-    }
-  }
-
-  private async runGroupSessionAutomation(): Promise<void> {
-    const now = new Date();
-    const result = await this.prisma.groupSession.updateMany({
-      where: {
-        status: 'OPEN',
-        scheduledAt: { lte: now },
-      },
-      data: { status: 'COMPLETED' },
-    });
-    if (result.count > 0) {
-      this.logger.log(`[group-session-automation] closed ${result.count} group sessions`);
-    }
-  }
-
-  /**
-   * Delete expired/revoked refresh tokens older than 30 days.
-   * Critical for performance — prevents O(n) bcrypt compare degradation.
-   */
-  private async runRefreshTokenCleanup(): Promise<void> {
-    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60_000);
-    const result = await this.prisma.refreshToken.deleteMany({
-      where: {
-        OR: [
-          { expiresAt: { lte: cutoff } },
-          { revokedAt: { not: null, lte: cutoff } },
-        ],
-      },
-    });
-    this.logger.log(`[refresh-token-cleanup] deleted ${result.count} stale tokens`);
   }
 }
