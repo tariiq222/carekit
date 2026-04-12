@@ -110,10 +110,10 @@ export function VerifyDialog({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="verify-notes">Admin Notes (optional)</Label>
+              <Label htmlFor="verify-notes">Transfer Reference (optional)</Label>
               <Textarea
                 id="verify-notes"
-                placeholder="Internal notes..."
+                placeholder="Bank transfer reference number..."
                 rows={3}
                 {...form.register("adminNotes")}
               />
