@@ -6,7 +6,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import { PriceResolverService } from '../../organization/services/price-resolver.service';
+import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import type { CreateBookingDto } from './create-booking.dto';
 
