@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { UpdateBranchDto } from './branch.dto';
+import { UpdateBranchDto } from './update-branch.dto';
+
+export type UpdateBranchCommand = UpdateBranchDto & { tenantId: string; branchId: string };
 
 @Injectable()
 export class UpdateBranchHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: UpdateBranchDto) {
+  async execute(dto: UpdateBranchCommand) {
     const branch = await this.prisma.branch.findFirst({
       where: { id: dto.branchId, tenantId: dto.tenantId },
     });

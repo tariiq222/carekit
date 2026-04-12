@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { SetBusinessHoursDto } from './hours.dto';
+import { SetBusinessHoursDto } from './set-business-hours.dto';
+
+export type SetBusinessHoursCommand = SetBusinessHoursDto & { tenantId: string };
 
 @Injectable()
 export class SetBusinessHoursHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: SetBusinessHoursDto) {
+  async execute(dto: SetBusinessHoursCommand) {
     const branch = await this.prisma.branch.findFirst({
       where: { id: dto.branchId, tenantId: dto.tenantId },
     });

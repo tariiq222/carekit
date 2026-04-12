@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { CreateDepartmentDto } from './department.dto';
+import { CreateDepartmentDto } from './create-department.dto';
+
+export type CreateDepartmentCommand = CreateDepartmentDto & { tenantId: string };
 
 @Injectable()
 export class CreateDepartmentHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: CreateDepartmentDto) {
+  async execute(dto: CreateDepartmentCommand) {
     return this.prisma.department.create({
       data: {
         tenantId: dto.tenantId,

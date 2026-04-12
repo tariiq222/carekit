@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { ListHolidaysDto } from './hours.dto';
+import { ListHolidaysDto } from './list-holidays.dto';
+
+export type ListHolidaysQuery = ListHolidaysDto & { tenantId: string };
 
 @Injectable()
 export class ListHolidaysHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: ListHolidaysDto) {
+  async execute(dto: ListHolidaysQuery) {
     const branch = await this.prisma.branch.findFirst({
       where: { id: dto.branchId, tenantId: dto.tenantId },
     });
