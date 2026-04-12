@@ -20,9 +20,9 @@ const config: Config = {
   coverageThreshold: {
     global: {
       branches: 86,
-      functions: 88,
-      lines: 87,
-      statements: 87,
+      functions: 91,
+      lines: 90,
+      statements: 90,
     },
   },
   testEnvironment: 'node',
