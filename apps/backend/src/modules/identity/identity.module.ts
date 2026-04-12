@@ -19,6 +19,7 @@ import { AssignPermissionsHandler } from './roles/assign-permissions.handler';
 import { ListRolesHandler } from './roles/list-roles.handler';
 import { ChangePasswordHandler } from './users/change-password.handler';
 import { CaslAbilityFactory } from './casl/casl-ability.factory';
+import { DashboardIdentityController } from '../../api/dashboard/identity.controller';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -40,6 +41,7 @@ const handlers = [
       }),
     }),
   ],
+  controllers: [DashboardIdentityController],
   providers: [JwtStrategy, PasswordService, TokenService, CaslAbilityFactory, ...handlers],
   exports: [CaslAbilityFactory, TokenService, PasswordService, ...handlers],
 })
