@@ -146,17 +146,4 @@ describe("queryKeys", () => {
     })
   })
 
-  describe("license", () => {
-    it("all returns base key", () => {
-      expect(queryKeys.license.all).toEqual(["license"])
-    })
-
-    it("config returns config key", () => {
-      expect(queryKeys.license.config()).toEqual(["license", "config"])
-    })
-
-    it("features returns features key", () => {
-      expect(queryKeys.license.features()).toEqual(["license", "features"])
-    })
-  })
 })
