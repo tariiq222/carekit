@@ -53,3 +53,19 @@ model Integration {
   @@unique([tenantId, provider])
   @@index([tenantId])
 }
+
+model FeatureFlag {
+  id            String   @id @default(cuid())
+  tenantId      String
+  key           String
+  enabled       Boolean  @default(true)
+  nameAr        String
+  nameEn        String
+  descriptionAr String?
+  descriptionEn String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+}

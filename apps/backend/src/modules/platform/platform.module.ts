@@ -8,6 +8,9 @@ import { ListProblemReportsHandler } from './problem-reports/list-problem-report
 import { UpdateProblemReportStatusHandler } from './problem-reports/update-problem-report-status.handler';
 import { UpsertIntegrationHandler } from './integrations/upsert-integration.handler';
 import { ListIntegrationsHandler } from './integrations/list-integrations.handler';
+import { ListFeatureFlagsHandler } from './feature-flags/list-feature-flags.handler';
+import { GetFeatureFlagMapHandler } from './feature-flags/get-feature-flag-map.handler';
+import { UpdateFeatureFlagHandler } from './feature-flags/update-feature-flag.handler';
 
 @Module({
   imports: [DatabaseModule],
@@ -20,6 +23,9 @@ import { ListIntegrationsHandler } from './integrations/list-integrations.handle
     UpdateProblemReportStatusHandler,
     UpsertIntegrationHandler,
     ListIntegrationsHandler,
+    ListFeatureFlagsHandler,
+    GetFeatureFlagMapHandler,
+    UpdateFeatureFlagHandler,
   ],
   exports: [
     ValidateLicenseService,
@@ -29,6 +35,9 @@ import { ListIntegrationsHandler } from './integrations/list-integrations.handle
     UpdateProblemReportStatusHandler,
     UpsertIntegrationHandler,
     ListIntegrationsHandler,
+    ListFeatureFlagsHandler,
+    GetFeatureFlagMapHandler,
+    UpdateFeatureFlagHandler,
   ],
 })
 export class PlatformModule {}

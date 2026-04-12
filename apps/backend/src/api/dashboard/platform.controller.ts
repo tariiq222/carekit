@@ -14,6 +14,10 @@ import { UpdateProblemReportStatusDto } from '../../modules/platform/problem-rep
 import { UpsertIntegrationHandler } from '../../modules/platform/integrations/upsert-integration.handler';
 import { UpsertIntegrationDto } from '../../modules/platform/integrations/upsert-integration.dto';
 import { ListIntegrationsHandler } from '../../modules/platform/integrations/list-integrations.handler';
+import { ListFeatureFlagsHandler } from '../../modules/platform/feature-flags/list-feature-flags.handler';
+import { GetFeatureFlagMapHandler } from '../../modules/platform/feature-flags/get-feature-flag-map.handler';
+import { UpdateFeatureFlagHandler } from '../../modules/platform/feature-flags/update-feature-flag.handler';
+import { UpdateFeatureFlagDto } from '../../modules/platform/feature-flags/update-feature-flag.dto';
 
 @Controller('dashboard/platform')
 @UseGuards(JwtGuard, CaslGuard)
@@ -24,6 +28,9 @@ export class DashboardPlatformController {
     private readonly updateProblemReportStatus: UpdateProblemReportStatusHandler,
     private readonly upsertIntegration: UpsertIntegrationHandler,
     private readonly listIntegrations: ListIntegrationsHandler,
+    private readonly listFeatureFlags: ListFeatureFlagsHandler,
+    private readonly getFeatureFlagMap: GetFeatureFlagMapHandler,
+    private readonly updateFeatureFlag: UpdateFeatureFlagHandler,
   ) {}
 
   // ── Problem Reports ──────────────────────────────────────────────────────────
@@ -68,5 +75,26 @@ export class DashboardPlatformController {
   @Get('integrations')
   listIntegrationsEndpoint(@TenantId() tenantId: string) {
     return this.listIntegrations.execute(tenantId);
+  }
+
+  // ── Feature Flags ──────────────────────────────────────────────────────────
+
+  @Get('feature-flags')
+  async listFeatureFlagsEndpoint(@TenantId() tenantId: string) {
+    return this.listFeatureFlags.execute(tenantId);
+  }
+
+  @Get('feature-flags/map')
+  async featureFlagMapEndpoint(@TenantId() tenantId: string) {
+    return this.getFeatureFlagMap.execute(tenantId);
+  }
+
+  @Patch('feature-flags/:key')
+  async updateFeatureFlagEndpoint(
+    @TenantId() tenantId: string,
+    @Param('key') key: string,
+    @Body() body: UpdateFeatureFlagDto,
+  ) {
+    return this.updateFeatureFlag.execute({ tenantId, key, enabled: body.enabled });
   }
 }
