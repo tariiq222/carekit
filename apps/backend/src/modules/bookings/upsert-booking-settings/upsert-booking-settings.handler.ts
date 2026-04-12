@@ -32,10 +32,19 @@ export class UpsertBookingSettingsHandler {
       Object.entries(fields).filter(([, v]) => v !== undefined),
     );
 
-    return this.prisma.bookingSettings.upsert({
-      where: { tenantId_branchId: { tenantId, branchId } },
-      update: updateData,
-      create: { tenantId, branchId, ...updateData },
+    const existing = await this.prisma.bookingSettings.findFirst({
+      where: { tenantId, branchId },
+    });
+
+    if (existing) {
+      return this.prisma.bookingSettings.update({
+        where: { id: existing.id },
+        data: updateData,
+      });
+    }
+
+    return this.prisma.bookingSettings.create({
+      data: { tenantId, branchId, ...updateData },
     });
   }
 }

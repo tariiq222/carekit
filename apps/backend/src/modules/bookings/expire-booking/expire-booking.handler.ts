@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export interface ExpireBookingCommand {
   tenantId: string;
@@ -13,15 +14,7 @@ export class ExpireBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: ExpireBookingCommand) {
-    const booking = await this.prisma.booking.findFirst({
-      where: { id: cmd.bookingId, tenantId: cmd.tenantId },
-    });
-    if (!booking) {
-      throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
-    }
-    if (booking.status !== BookingStatus.PENDING) {
-      throw new BadRequestException(`Only PENDING bookings can be expired (status: ${booking.status})`);
-    }
+    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.PENDING], 'expired');
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({

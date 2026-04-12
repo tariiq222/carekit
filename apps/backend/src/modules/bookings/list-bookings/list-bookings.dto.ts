@@ -1,17 +1,8 @@
 import { BookingStatus, BookingType } from '@prisma/client';
-import { Type } from 'class-transformer';
-import {
-  IsDateString,
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsUUID,
-  Min,
-} from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { PaginationDto } from '../../../common/dto';
 
-export class ListBookingsDto {
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) limit?: number;
+export class ListBookingsDto extends PaginationDto {
   @IsOptional() @IsUUID() clientId?: string;
   @IsOptional() @IsUUID() employeeId?: string;
   @IsOptional() @IsUUID() branchId?: string;

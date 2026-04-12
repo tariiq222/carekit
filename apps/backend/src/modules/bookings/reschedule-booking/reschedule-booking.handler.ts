@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { BookingStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { RescheduleBookingDto } from './reschedule-booking.dto';
+import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export type RescheduleBookingCommand = Omit<RescheduleBookingDto, 'newScheduledAt'> & {
   tenantId: string;
@@ -19,15 +20,7 @@ export class RescheduleBookingHandler {
   ) {}
 
   async execute(cmd: RescheduleBookingCommand) {
-    const booking = await this.prisma.booking.findFirst({
-      where: { id: cmd.bookingId, tenantId: cmd.tenantId },
-    });
-    if (!booking) {
-      throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
-    }
-    if (booking.status !== BookingStatus.PENDING && booking.status !== BookingStatus.CONFIRMED) {
-      throw new BadRequestException(`Booking cannot be rescheduled (status: ${booking.status})`);
-    }
+    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.PENDING, BookingStatus.CONFIRMED], 'rescheduled');
 
     const newScheduledAt = new Date(cmd.newScheduledAt);
     if (newScheduledAt <= new Date()) {

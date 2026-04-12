@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export interface CheckInBookingCommand {
   tenantId: string;
@@ -14,15 +15,7 @@ export class CheckInBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: CheckInBookingCommand) {
-    const booking = await this.prisma.booking.findFirst({
-      where: { id: cmd.bookingId, tenantId: cmd.tenantId },
-    });
-    if (!booking) {
-      throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
-    }
-    if (booking.status !== BookingStatus.CONFIRMED) {
-      throw new BadRequestException(`Only CONFIRMED bookings can be checked in (status: ${booking.status})`);
-    }
+    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.CONFIRMED], 'checked in');
     if (booking.checkedInAt) {
       throw new BadRequestException('Booking is already checked in');
     }

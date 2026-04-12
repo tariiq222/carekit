@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { CompleteBookingDto } from './complete-booking.dto';
+import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export type CompleteBookingCommand = CompleteBookingDto & {
   tenantId: string;
@@ -9,22 +10,12 @@ export type CompleteBookingCommand = CompleteBookingDto & {
   changedBy: string;
 };
 
-const COMPLETABLE_STATUSES: BookingStatus[] = [BookingStatus.CONFIRMED];
-
 @Injectable()
 export class CompleteBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: CompleteBookingCommand) {
-    const booking = await this.prisma.booking.findFirst({
-      where: { id: cmd.bookingId, tenantId: cmd.tenantId },
-    });
-    if (!booking) {
-      throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
-    }
-    if (!COMPLETABLE_STATUSES.includes(booking.status)) {
-      throw new BadRequestException(`Booking cannot be completed (status: ${booking.status})`);
-    }
+    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.CONFIRMED], 'completed');
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({
