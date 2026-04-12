@@ -68,8 +68,10 @@ export class MoyasarWebhookHandler {
     });
     if (existing) return { skipped: true };
 
-    const invoice = await this.prisma.invoice.findUnique({ where: { id: invoiceId } });
-    if (!invoice || invoice.tenantId !== tenantId) return { skipped: true };
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id: invoiceId, tenantId },
+    });
+    if (!invoice) return { skipped: true };
 
     const amountSar = payload.amount / 100;
     const status: PaymentStatus = payload.status === 'paid' ? PaymentStatus.COMPLETED : PaymentStatus.FAILED;

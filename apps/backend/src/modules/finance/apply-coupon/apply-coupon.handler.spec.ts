@@ -11,8 +11,13 @@ const mockCoupon = {
 const mockRedemption = { id: 'red-1', couponId: 'coupon-1', invoiceId: 'inv-1', discount: 20 };
 
 const buildPrisma = () => {
-  const db = {
-    invoice: { findUnique: jest.fn().mockResolvedValue(mockInvoice), update: jest.fn() },
+  const db: {
+    invoice: { findFirst: jest.Mock; update: jest.Mock };
+    coupon: { findUnique: jest.Mock; update: jest.Mock; updateMany: jest.Mock };
+    couponRedemption: { findUnique: jest.Mock; create: jest.Mock };
+    $transaction: jest.Mock;
+  } = {
+    invoice: { findFirst: jest.fn().mockResolvedValue(mockInvoice), update: jest.fn() },
     coupon: {
       findUnique: jest.fn().mockResolvedValue(mockCoupon),
       update: jest.fn(),
@@ -22,8 +27,9 @@ const buildPrisma = () => {
       findUnique: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue(mockRedemption),
     },
-  } as Record<string, unknown>;
-  db['$transaction'] = jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(db));
+    $transaction: jest.fn(),
+  };
+  db.$transaction = jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(db));
   return db;
 };
 
@@ -42,7 +48,7 @@ describe('ApplyCouponHandler', () => {
 
   it('throws NotFoundException when invoice not found', async () => {
     const prisma = buildPrisma();
-    prisma.invoice.findUnique = jest.fn().mockResolvedValue(null);
+    prisma.invoice.findFirst = jest.fn().mockResolvedValue(null);
     await expect(new ApplyCouponHandler(prisma as never).execute(cmd)).rejects.toThrow(NotFoundException);
   });
 

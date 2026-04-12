@@ -11,14 +11,14 @@ export class GetInvoiceHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: GetInvoiceQuery) {
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id: query.invoiceId },
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id: query.invoiceId, tenantId: query.tenantId },
       include: {
         payments: { orderBy: { createdAt: 'desc' } },
         zatcaSub: true,
       },
     });
-    if (!invoice || invoice.tenantId !== query.tenantId) {
+    if (!invoice) {
       throw new NotFoundException(`Invoice ${query.invoiceId} not found`);
     }
     return invoice;

@@ -12,23 +12,27 @@ const mockPayment = { id: 'pay-1', tenantId: 'tenant-1', invoiceId: 'inv-1', sta
 
 describe('GetInvoiceHandler', () => {
   it('returns invoice with payments and zatcaSub', async () => {
-    const prisma = { invoice: { findUnique: jest.fn().mockResolvedValue(mockInvoice) } };
+    const prisma = { invoice: { findFirst: jest.fn().mockResolvedValue(mockInvoice) } };
     const handler = new GetInvoiceHandler(prisma as never);
     const result = await handler.execute({ tenantId: 'tenant-1', invoiceId: 'inv-1' });
     expect(result.id).toBe('inv-1');
-    expect(prisma.invoice.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 'inv-1' }, include: expect.objectContaining({ payments: expect.anything() }) }),
+    expect(prisma.invoice.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'inv-1', tenantId: 'tenant-1' },
+        include: expect.objectContaining({ payments: expect.anything() }),
+      }),
     );
   });
 
   it('throws NotFoundException when invoice not found', async () => {
-    const prisma = { invoice: { findUnique: jest.fn().mockResolvedValue(null) } };
+    const prisma = { invoice: { findFirst: jest.fn().mockResolvedValue(null) } };
     await expect(new GetInvoiceHandler(prisma as never).execute({ tenantId: 'tenant-1', invoiceId: 'bad' }))
       .rejects.toThrow(NotFoundException);
   });
 
   it('throws NotFoundException when tenantId mismatch', async () => {
-    const prisma = { invoice: { findUnique: jest.fn().mockResolvedValue({ ...mockInvoice, tenantId: 'other' }) } };
+    // findFirst with compound WHERE returns null for cross-tenant lookups.
+    const prisma = { invoice: { findFirst: jest.fn().mockResolvedValue(null) } };
     await expect(new GetInvoiceHandler(prisma as never).execute({ tenantId: 'tenant-1', invoiceId: 'inv-1' }))
       .rejects.toThrow(NotFoundException);
   });

@@ -28,7 +28,7 @@ const buildPrisma = () => ({
     upsert: jest.fn().mockResolvedValue(mockPayment),
   },
   invoice: {
-    findUnique: jest.fn().mockResolvedValue(mockInvoice),
+    findFirst: jest.fn().mockResolvedValue(mockInvoice),
     update: jest.fn().mockResolvedValue({ ...mockInvoice, status: 'PAID' }),
   },
 });

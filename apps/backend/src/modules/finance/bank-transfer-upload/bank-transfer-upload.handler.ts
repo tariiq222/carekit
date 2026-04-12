@@ -31,8 +31,10 @@ export class BankTransferUploadHandler {
       throw new BadRequestException(`File type ${cmd.mimetype} not allowed. Use JPEG, PNG, WebP, or PDF.`);
     }
 
-    const invoice = await this.prisma.invoice.findUnique({ where: { id: cmd.invoiceId } });
-    if (!invoice || invoice.tenantId !== cmd.tenantId) {
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id: cmd.invoiceId, tenantId: cmd.tenantId },
+    });
+    if (!invoice) {
       throw new NotFoundException(`Invoice ${cmd.invoiceId} not found`);
     }
 

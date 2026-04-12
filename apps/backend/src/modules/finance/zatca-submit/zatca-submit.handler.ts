@@ -29,10 +29,10 @@ export class ZatcaSubmitHandler {
   ) {}
 
   async execute(cmd: ZatcaSubmitCommand) {
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id: cmd.invoiceId },
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id: cmd.invoiceId, tenantId: cmd.tenantId },
     });
-    if (!invoice || invoice.tenantId !== cmd.tenantId) {
+    if (!invoice) {
       throw new NotFoundException(`Invoice ${cmd.invoiceId} not found`);
     }
     if (invoice.status !== 'PAID') {

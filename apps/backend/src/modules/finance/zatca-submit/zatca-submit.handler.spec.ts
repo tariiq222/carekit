@@ -12,7 +12,7 @@ const mockSubmission = {
 };
 
 const buildPrisma = () => ({
-  invoice: { findUnique: jest.fn().mockResolvedValue(mockInvoice) },
+  invoice: { findFirst: jest.fn().mockResolvedValue(mockInvoice) },
   zatcaSubmission: {
     findUnique: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue({ ...mockSubmission, status: ZatcaSubmissionStatus.PENDING }),
@@ -55,14 +55,14 @@ describe('ZatcaSubmitHandler', () => {
 
   it('throws NotFoundException when invoice not found', async () => {
     const prisma = buildPrisma();
-    prisma.invoice.findUnique = jest.fn().mockResolvedValue(null);
+    prisma.invoice.findFirst = jest.fn().mockResolvedValue(null);
     await expect(new ZatcaSubmitHandler(prisma as never, buildConfig() as never).execute(cmd))
       .rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException when invoice is not PAID', async () => {
     const prisma = buildPrisma();
-    prisma.invoice.findUnique = jest.fn().mockResolvedValue({ ...mockInvoice, status: 'ISSUED' });
+    prisma.invoice.findFirst = jest.fn().mockResolvedValue({ ...mockInvoice, status: 'ISSUED' });
     await expect(new ZatcaSubmitHandler(prisma as never, buildConfig() as never).execute(cmd))
       .rejects.toThrow(BadRequestException);
   });

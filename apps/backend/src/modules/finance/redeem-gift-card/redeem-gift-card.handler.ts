@@ -9,8 +9,10 @@ export class RedeemGiftCardHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: RedeemGiftCardCommand) {
-    const invoice = await this.prisma.invoice.findUnique({ where: { id: cmd.invoiceId } });
-    if (!invoice || invoice.tenantId !== cmd.tenantId) {
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id: cmd.invoiceId, tenantId: cmd.tenantId },
+    });
+    if (!invoice) {
       throw new NotFoundException(`Invoice ${cmd.invoiceId} not found`);
     }
 

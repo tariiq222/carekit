@@ -9,8 +9,14 @@ const mockGiftCard = {
 const mockRedemption = { id: 'red-1', giftCardId: 'gc-1', invoiceId: 'inv-1', amount: 100 };
 
 const buildPrisma = () => {
-  const db = {
-    invoice: { findUnique: jest.fn().mockResolvedValue(mockInvoice) },
+  const db: {
+    invoice: { findFirst: jest.Mock };
+    giftCard: { findUnique: jest.Mock; update: jest.Mock; updateMany: jest.Mock };
+    giftCardRedemption: { create: jest.Mock };
+    payment: { create: jest.Mock };
+    $transaction: jest.Mock;
+  } = {
+    invoice: { findFirst: jest.fn().mockResolvedValue(mockInvoice) },
     giftCard: {
       findUnique: jest.fn().mockResolvedValue(mockGiftCard),
       update: jest.fn(),
@@ -18,8 +24,9 @@ const buildPrisma = () => {
     },
     giftCardRedemption: { create: jest.fn().mockResolvedValue(mockRedemption) },
     payment: { create: jest.fn().mockResolvedValue({ id: 'pay-1' }) },
-  } as Record<string, unknown>;
-  db['$transaction'] = jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(db));
+    $transaction: jest.fn(),
+  };
+  db.$transaction = jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(db));
   return db;
 };
 
@@ -51,7 +58,7 @@ describe('RedeemGiftCardHandler', () => {
 
   it('throws NotFoundException when invoice not found', async () => {
     const prisma = buildPrisma();
-    prisma.invoice.findUnique = jest.fn().mockResolvedValue(null);
+    prisma.invoice.findFirst = jest.fn().mockResolvedValue(null);
     await expect(new RedeemGiftCardHandler(prisma as never).execute(cmd)).rejects.toThrow(NotFoundException);
   });
 

@@ -17,7 +17,7 @@ const mockPayment = {
 };
 
 const buildPrisma = () => ({
-  invoice: { findUnique: jest.fn().mockResolvedValue(mockInvoice) },
+  invoice: { findFirst: jest.fn().mockResolvedValue(mockInvoice) },
   payment: { create: jest.fn().mockResolvedValue(mockPayment) },
 });
 
@@ -68,14 +68,15 @@ describe('BankTransferUploadHandler', () => {
 
   it('throws NotFoundException when invoice not found', async () => {
     const prisma = buildPrisma();
-    prisma.invoice.findUnique = jest.fn().mockResolvedValue(null);
+    prisma.invoice.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new BankTransferUploadHandler(prisma as never, buildStorage() as never);
     await expect(handler.execute(cmd)).rejects.toThrow(NotFoundException);
   });
 
   it('throws NotFoundException when tenantId mismatch', async () => {
     const prisma = buildPrisma();
-    prisma.invoice.findUnique = jest.fn().mockResolvedValue({ ...mockInvoice, tenantId: 'other' });
+    // findFirst with compound WHERE returns null for cross-tenant lookups.
+    prisma.invoice.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new BankTransferUploadHandler(prisma as never, buildStorage() as never);
     await expect(handler.execute(cmd)).rejects.toThrow(NotFoundException);
   });
