@@ -2,6 +2,7 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
+import { BookingsModule } from '../bookings/bookings.module';
 import { CronTasksService } from './cron-tasks/cron-tasks.service';
 import { LogActivityHandler } from './log-activity/log-activity.handler';
 import { ListActivityHandler } from './log-activity/list-activity.handler';
@@ -16,7 +17,7 @@ const handlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, TerminusModule],
+  imports: [DatabaseModule, MessagingModule, TerminusModule, BookingsModule],
   providers: [...handlers, CronTasksService],
   exports: [...handlers],
 })

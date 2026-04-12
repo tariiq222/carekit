@@ -2,10 +2,10 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { BookingStatus, WaitlistStatus } from '@prisma/client';
 import { BullMqService } from '../../../infrastructure/queue/bull-mq.service';
 import { PrismaService } from '../../../infrastructure/database';
+import { GetBookingSettingsHandler } from '../../bookings/get-booking-settings/get-booking-settings.handler';
 
 const QUEUE_NAME = 'ops-cron';
 
-/** Cron job names — used as BullMQ job types and repeat keys. */
 export const CRON_JOBS = {
   BOOKING_AUTOCOMPLETE: 'booking-autocomplete',
   BOOKING_EXPIRY: 'booking-expiry',
@@ -22,6 +22,7 @@ export class CronTasksService implements OnModuleInit {
   constructor(
     private readonly bullMq: BullMqService,
     private readonly prisma: PrismaService,
+    private readonly settingsHandler: GetBookingSettingsHandler,
   ) {}
 
   onModuleInit(): void {
@@ -29,18 +30,16 @@ export class CronTasksService implements OnModuleInit {
     this.registerWorker();
   }
 
-  // ── Schedule repeating jobs ────────────────────────────────────────────────
-
   private registerRepeatingJobs(): void {
     const queue = this.bullMq.getQueue(QUEUE_NAME);
 
     const jobs: Array<{ name: string; cron: string }> = [
-      { name: CRON_JOBS.BOOKING_AUTOCOMPLETE, cron: '*/15 * * * *' },  // every 15 min
-      { name: CRON_JOBS.BOOKING_EXPIRY, cron: '*/10 * * * *' },        // every 10 min
-      { name: CRON_JOBS.BOOKING_NOSHOW, cron: '*/5 * * * *' },         // every 5 min
-      { name: CRON_JOBS.APPOINTMENT_REMINDERS, cron: '0 * * * *' },    // every hour
-      { name: CRON_JOBS.GROUP_SESSION_AUTOMATION, cron: '*/30 * * * *' }, // every 30 min
-      { name: CRON_JOBS.REFRESH_TOKEN_CLEANUP, cron: '0 3 * * *' },    // daily at 03:00
+      { name: CRON_JOBS.BOOKING_AUTOCOMPLETE, cron: '*/15 * * * *' },
+      { name: CRON_JOBS.BOOKING_EXPIRY, cron: '*/10 * * * *' },
+      { name: CRON_JOBS.BOOKING_NOSHOW, cron: '*/5 * * * *' },
+      { name: CRON_JOBS.APPOINTMENT_REMINDERS, cron: '0 * * * *' },
+      { name: CRON_JOBS.GROUP_SESSION_AUTOMATION, cron: '*/30 * * * *' },
+      { name: CRON_JOBS.REFRESH_TOKEN_CLEANUP, cron: '0 3 * * *' },
     ];
 
     for (const { name, cron } of jobs) {
@@ -53,8 +52,6 @@ export class CronTasksService implements OnModuleInit {
 
     this.logger.log(`Scheduled ${jobs.length} cron jobs on queue "${QUEUE_NAME}"`);
   }
-
-  // ── Worker processor ───────────────────────────────────────────────────────
 
   private registerWorker(): void {
     this.bullMq.createWorker<object>(QUEUE_NAME, async (job) => {
@@ -83,27 +80,43 @@ export class CronTasksService implements OnModuleInit {
     });
   }
 
-  // ── Job implementations ────────────────────────────────────────────────────
-
-  /** Auto-complete bookings whose scheduledAt passed and are still CONFIRMED. */
+  /**
+   * Auto-complete bookings per tenant using each tenant's autoCompleteAfterHours setting.
+   */
   private async runBookingAutocomplete(): Promise<void> {
-    const cutoff = new Date();
-    const result = await this.prisma.booking.updateMany({
-      where: {
-        status: BookingStatus.CONFIRMED,
-        endsAt: { lte: cutoff },
-      },
-      data: {
-        status: BookingStatus.COMPLETED,
-        completedAt: cutoff,
-      },
-    });
-    if (result.count > 0) {
-      this.logger.log(`[booking-autocomplete] completed ${result.count} bookings`);
+    const tenantIds = await this.prisma.booking
+      .findMany({
+        where: { status: BookingStatus.CONFIRMED },
+        select: { tenantId: true },
+        distinct: ['tenantId'],
+      })
+      .then((rows) => rows.map((r) => r.tenantId));
+
+    let totalCompleted = 0;
+
+    for (const tenantId of tenantIds) {
+      const settings = await this.settingsHandler.execute({ tenantId, branchId: null });
+      const cutoff = new Date(Date.now() - settings.autoCompleteAfterHours * 3_600_000);
+
+      const result = await this.prisma.booking.updateMany({
+        where: {
+          tenantId,
+          status: BookingStatus.CONFIRMED,
+          endsAt: { lte: cutoff },
+        },
+        data: {
+          status: BookingStatus.COMPLETED,
+          completedAt: new Date(),
+        },
+      });
+      totalCompleted += result.count;
+    }
+
+    if (totalCompleted > 0) {
+      this.logger.log(`[booking-autocomplete] completed ${totalCompleted} bookings`);
     }
   }
 
-  /** Expire PENDING bookings that passed their expiresAt. */
   private async runBookingExpiry(): Promise<void> {
     const now = new Date();
     const result = await this.prisma.booking.updateMany({
@@ -120,30 +133,45 @@ export class CronTasksService implements OnModuleInit {
     }
   }
 
-  /** Mark CONFIRMED bookings as NO_SHOW if scheduledAt passed with no check-in. */
+  /**
+   * Mark CONFIRMED bookings as NO_SHOW per tenant using each tenant's autoNoShowAfterMinutes setting.
+   */
   private async runBookingNoShow(): Promise<void> {
-    const gracePeriodMs = 30 * 60_000; // 30 minutes grace
-    const cutoff = new Date(Date.now() - gracePeriodMs);
-    const result = await this.prisma.booking.updateMany({
-      where: {
-        status: BookingStatus.CONFIRMED,
-        scheduledAt: { lte: cutoff },
-        checkedInAt: null,
-      },
-      data: {
-        status: BookingStatus.NO_SHOW,
-        noShowAt: new Date(),
-      },
-    });
-    if (result.count > 0) {
-      this.logger.log(`[booking-noshow] marked ${result.count} as NO_SHOW`);
+    const tenantIds = await this.prisma.booking
+      .findMany({
+        where: { status: BookingStatus.CONFIRMED },
+        select: { tenantId: true },
+        distinct: ['tenantId'],
+      })
+      .then((rows) => rows.map((r) => r.tenantId));
+
+    let totalNoShow = 0;
+
+    for (const tenantId of tenantIds) {
+      const settings = await this.settingsHandler.execute({ tenantId, branchId: null });
+      const cutoff = new Date(Date.now() - settings.autoNoShowAfterMinutes * 60_000);
+
+      const result = await this.prisma.booking.updateMany({
+        where: {
+          tenantId,
+          status: BookingStatus.CONFIRMED,
+          scheduledAt: { lte: cutoff },
+          checkedInAt: null,
+        },
+        data: {
+          status: BookingStatus.NO_SHOW,
+          noShowAt: new Date(),
+        },
+      });
+      totalNoShow += result.count;
+    }
+
+    if (totalNoShow > 0) {
+      this.logger.log(`[booking-noshow] marked ${totalNoShow} as NO_SHOW`);
     }
   }
 
-  /** Promote the oldest WAITING waitlist entry when a slot opens. */
   private async runAppointmentReminders(): Promise<void> {
-    // Promote WAITING waitlist entries that have been waiting the longest.
-    // Real reminder sending is handled by CommsBC — this job only promotes.
     const waiting = await this.prisma.waitlistEntry.findMany({
       where: { status: WaitlistStatus.WAITING },
       orderBy: { createdAt: 'asc' },
@@ -154,7 +182,6 @@ export class CronTasksService implements OnModuleInit {
     }
   }
 
-  /** Close past group sessions that are still OPEN. */
   private async runGroupSessionAutomation(): Promise<void> {
     const now = new Date();
     const result = await this.prisma.groupSession.updateMany({
