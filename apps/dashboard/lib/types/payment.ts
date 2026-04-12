@@ -53,14 +53,13 @@ export interface PaymentStats {
   totalAmount: number
   pending: number
   pendingAmount: number
-  awaiting: number
-  awaitingAmount: number
-  paid: number
-  paidAmount: number
+  pendingVerification: number
+  pendingVerificationAmount: number
+  completed: number
+  completedAmount: number
   refunded: number
   refundedAmount: number
   failed: number
-  rejected: number
 }
 
 /* ─── Query ─── */

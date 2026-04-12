@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import { PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 interface PaymentStats {
   total: number;
   totalAmount: number;
-  paid: number;
-  paidAmount: number;
+  completed: number;
+  completedAmount: number;
   pending: number;
   pendingAmount: number;
+  pendingVerification: number;
+  pendingVerificationAmount: number;
   refunded: number;
   refundedAmount: number;
   failed: number;
-  rejected: number;
-  awaiting: number;
-  awaitingAmount: number;
 }
 
 @Injectable()
@@ -31,16 +31,15 @@ export class GetPaymentStatsHandler {
     const stats: PaymentStats = {
       total: 0,
       totalAmount: 0,
-      paid: 0,
-      paidAmount: 0,
+      completed: 0,
+      completedAmount: 0,
       pending: 0,
       pendingAmount: 0,
+      pendingVerification: 0,
+      pendingVerificationAmount: 0,
       refunded: 0,
       refundedAmount: 0,
       failed: 0,
-      rejected: 0,
-      awaiting: 0,
-      awaitingAmount: 0,
     };
 
     for (const row of rows) {
@@ -49,16 +48,19 @@ export class GetPaymentStatsHandler {
       stats.total += count;
       stats.totalAmount += amount;
 
-      if (row.status === 'PAID') {
-        stats.paid = count;
-        stats.paidAmount = amount;
-      } else if (row.status === 'PENDING') {
+      if (row.status === PaymentStatus.COMPLETED) {
+        stats.completed = count;
+        stats.completedAmount = amount;
+      } else if (row.status === PaymentStatus.PENDING) {
         stats.pending = count;
         stats.pendingAmount = amount;
-      } else if (row.status === 'REFUNDED') {
+      } else if (row.status === PaymentStatus.PENDING_VERIFICATION) {
+        stats.pendingVerification = count;
+        stats.pendingVerificationAmount = amount;
+      } else if (row.status === PaymentStatus.REFUNDED) {
         stats.refunded = count;
         stats.refundedAmount = amount;
-      } else if (row.status === 'FAILED') {
+      } else if (row.status === PaymentStatus.FAILED) {
         stats.failed = count;
       }
     }
