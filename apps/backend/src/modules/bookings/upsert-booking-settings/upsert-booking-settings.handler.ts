@@ -16,6 +16,9 @@ export interface UpsertBookingSettingsCommand {
   maxAdvanceBookingDays?: number;
   waitlistEnabled?: boolean;
   waitlistMaxPerSlot?: number;
+  payAtClinicEnabled?: boolean;
+  requireCancelApproval?: boolean;
+  autoRefundOnCancel?: boolean;
 }
 
 @Injectable()

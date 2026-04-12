@@ -20,6 +20,9 @@ export const DEFAULT_BOOKING_SETTINGS = {
   maxAdvanceBookingDays: 90,
   waitlistEnabled: true,
   waitlistMaxPerSlot: 5,
+  payAtClinicEnabled: false,
+  requireCancelApproval: false,
+  autoRefundOnCancel: true,
 } as const;
 
 export type ResolvedBookingSettings = typeof DEFAULT_BOOKING_SETTINGS;

@@ -1,0 +1,70 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { BookingStatus } from '@prisma/client';
+import { PrismaService } from '../../../infrastructure/database';
+import { EventBusService } from '../../../infrastructure/events';
+import { BookingCancelRejectedEvent } from '../events/booking-cancel-rejected.event';
+
+export interface RejectCancelBookingCommand {
+  tenantId: string;
+  bookingId: string;
+  rejectedBy: string;
+  rejectReason: string;
+}
+
+@Injectable()
+export class RejectCancelBookingHandler {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
+
+  async execute(cmd: RejectCancelBookingCommand) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: cmd.bookingId },
+    });
+    if (!booking || booking.tenantId !== cmd.tenantId) {
+      throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
+    }
+    if (booking.status !== ('CANCEL_REQUESTED' as BookingStatus)) {
+      throw new BadRequestException(
+        `Only CANCEL_REQUESTED bookings can be rejected (status: ${booking.status})`,
+      );
+    }
+
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.booking.update({
+        where: { id: cmd.bookingId },
+        data: {
+          status: BookingStatus.CONFIRMED,
+          cancelReason: null,
+          cancelNotes: null,
+        },
+      }),
+      this.prisma.bookingStatusLog.create({
+        data: {
+          tenantId: cmd.tenantId,
+          bookingId: cmd.bookingId,
+          fromStatus: 'CANCEL_REQUESTED' as BookingStatus,
+          toStatus: BookingStatus.CONFIRMED,
+          changedBy: cmd.rejectedBy,
+          reason: cmd.rejectReason,
+        },
+      }),
+    ]);
+
+    const event = new BookingCancelRejectedEvent(cmd.tenantId, {
+      bookingId: booking.id,
+      tenantId: booking.tenantId,
+      clientId: booking.clientId,
+      employeeId: booking.employeeId,
+      rejectReason: cmd.rejectReason,
+    });
+    await this.eventBus.publish(event.eventName, event.toEnvelope());
+
+    return updated;
+  }
+}

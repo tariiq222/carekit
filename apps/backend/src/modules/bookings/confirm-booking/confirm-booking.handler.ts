@@ -3,6 +3,7 @@ import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { BookingConfirmedEvent } from '../events/booking-confirmed.event';
+import { CreateZoomMeetingHandler } from '../create-zoom-meeting/create-zoom-meeting.handler';
 
 export interface ConfirmBookingCommand {
   tenantId: string;
@@ -15,6 +16,7 @@ export class ConfirmBookingHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
+    private readonly createZoomMeeting: CreateZoomMeetingHandler,
   ) {}
 
   async execute(cmd: ConfirmBookingCommand) {
@@ -52,8 +54,19 @@ export class ConfirmBookingHandler {
       scheduledAt: booking.scheduledAt,
       price: Number(booking.price),
       currency: booking.currency,
+      couponCode: (booking as any).couponCode ?? null,
+      giftCardCode: (booking as any).giftCardCode ?? null,
+      discountedPrice: (booking as any).discountedPrice ? Number((booking as any).discountedPrice) : null,
+      bookingType: booking.bookingType,
     });
     await this.eventBus.publish(event.eventName, event.toEnvelope());
+
+    if ((booking.bookingType as string) === 'ONLINE') {
+      await this.createZoomMeeting.execute({
+        tenantId: cmd.tenantId,
+        bookingId: cmd.bookingId,
+      });
+    }
 
     return updated;
   }

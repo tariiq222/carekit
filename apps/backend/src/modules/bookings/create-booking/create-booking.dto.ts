@@ -14,4 +14,7 @@ export interface CreateBookingDto {
   notes?: string;
   expiresAt?: Date;
   groupSessionId?: string;
+  payAtClinic?: boolean;
+  couponCode?: string;
+  giftCardCode?: string;
 }

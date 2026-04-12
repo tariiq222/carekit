@@ -11,9 +11,14 @@ export interface CancelBookingCommand {
   reason: CancellationReason;
   cancelNotes?: string;
   changedBy: string;
+  source?: 'client' | 'admin' | 'employee' | 'system';
 }
 
-const CANCELLABLE_STATUSES: BookingStatus[] = [BookingStatus.PENDING, BookingStatus.CONFIRMED];
+const CANCELLABLE_STATUSES: BookingStatus[] = [
+  BookingStatus.PENDING,
+  BookingStatus.CONFIRMED,
+  'CANCEL_REQUESTED' as BookingStatus,
+];
 
 @Injectable()
 export class CancelBookingHandler {
@@ -36,6 +41,17 @@ export class CancelBookingHandler {
       tenantId: cmd.tenantId,
       branchId: booking.branchId,
     });
+
+    if (cmd.source === 'client') {
+      const requireApproval = 'requireCancelApproval' in settings
+        ? (settings as any).requireCancelApproval
+        : false;
+      if (requireApproval) {
+        throw new BadRequestException(
+          'Cancel approval is required. Use request-cancel-booking instead.',
+        );
+      }
+    }
 
     const hoursUntilBooking = (booking.scheduledAt.getTime() - Date.now()) / 3_600_000;
     const refundType = hoursUntilBooking >= settings.freeCancelBeforeHours
@@ -71,6 +87,7 @@ export class CancelBookingHandler {
       employeeId: booking.employeeId,
       reason: cmd.reason,
       cancelNotes: cmd.cancelNotes,
+      zoomMeetingId: (booking as any).zoomMeetingId ?? null,
     });
     await this.eventBus.publish(event.eventName, event.toEnvelope());
 

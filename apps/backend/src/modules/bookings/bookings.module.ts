@@ -19,6 +19,10 @@ import { ListBookingStatusLogHandler } from './list-booking-status-log/list-book
 import { PaymentCompletedEventHandler } from './payment-completed-handler/payment-completed.handler';
 import { GetBookingSettingsHandler } from './get-booking-settings/get-booking-settings.handler';
 import { UpsertBookingSettingsHandler } from './upsert-booking-settings/upsert-booking-settings.handler';
+import { RequestCancelBookingHandler } from './request-cancel-booking/request-cancel-booking.handler';
+import { ApproveCancelBookingHandler } from './approve-cancel-booking/approve-cancel-booking.handler';
+import { RejectCancelBookingHandler } from './reject-cancel-booking/reject-cancel-booking.handler';
+import { CreateZoomMeetingHandler } from './create-zoom-meeting/create-zoom-meeting.handler';
 import { DashboardBookingsController } from '../../api/dashboard/bookings.controller';
 
 const handlers = [
@@ -38,6 +42,10 @@ const handlers = [
   ListBookingStatusLogHandler,
   GetBookingSettingsHandler,
   UpsertBookingSettingsHandler,
+  RequestCancelBookingHandler,
+  ApproveCancelBookingHandler,
+  RejectCancelBookingHandler,
+  CreateZoomMeetingHandler,
 ];
 
 @Module({

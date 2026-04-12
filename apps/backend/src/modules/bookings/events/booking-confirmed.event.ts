@@ -10,6 +10,10 @@ export interface BookingConfirmedPayload {
   scheduledAt: Date;
   price: number;
   currency: string;
+  couponCode?: string | null;
+  giftCardCode?: string | null;
+  discountedPrice?: number | null;
+  bookingType: string;
 }
 
 /**

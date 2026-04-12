@@ -8,6 +8,7 @@ export interface BookingCancelledPayload {
   employeeId: string;
   reason: CancellationReason;
   cancelNotes?: string;
+  zoomMeetingId?: string | null;
 }
 
 /**

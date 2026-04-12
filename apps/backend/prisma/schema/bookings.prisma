@@ -9,12 +9,14 @@ enum BookingStatus {
   COMPLETED
   NO_SHOW
   EXPIRED
+  CANCEL_REQUESTED
 }
 
 enum BookingType {
   INDIVIDUAL
   WALK_IN
   GROUP
+  ONLINE
 }
 
 enum CancellationReason {
@@ -67,6 +69,13 @@ model Booking {
   groupSessionId    String?
   recurringGroupId  String?
   recurringPattern  RecurringFrequency?
+  payAtClinic       Boolean             @default(false)
+  couponCode        String?
+  giftCardCode      String?
+  discountedPrice   Decimal?            @db.Decimal(12, 2)
+  zoomMeetingId     String?
+  zoomJoinUrl       String?
+  zoomHostUrl       String?
   createdAt         DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
 
@@ -196,6 +205,10 @@ model BookingSettings {
 
   waitlistEnabled           Boolean    @default(true)
   waitlistMaxPerSlot        Int        @default(5)
+
+  payAtClinicEnabled        Boolean    @default(false)
+  requireCancelApproval     Boolean    @default(false)
+  autoRefundOnCancel        Boolean    @default(true)
 
   createdAt                 DateTime   @default(now())
   updatedAt                 DateTime   @updatedAt
