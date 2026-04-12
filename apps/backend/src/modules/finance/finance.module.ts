@@ -22,6 +22,8 @@ import { GetZatcaConfigHandler } from './zatca-config/get-zatca-config.handler';
 import { UpsertZatcaConfigHandler } from './zatca-config/upsert-zatca-config.handler';
 import { OnboardZatcaHandler } from './zatca-config/onboard-zatca.handler';
 import { GetPaymentStatsHandler } from './get-payment-stats/get-payment-stats.handler';
+import { RefundPaymentHandler } from './refund-payment/refund-payment.handler';
+import { VerifyPaymentHandler } from './verify-payment/verify-payment.handler';
 
 const handlers = [
   CreateInvoiceHandler,
@@ -42,6 +44,8 @@ const handlers = [
   UpsertZatcaConfigHandler,
   OnboardZatcaHandler,
   GetPaymentStatsHandler,
+  RefundPaymentHandler,
+  VerifyPaymentHandler,
 ];
 
 @Module({

@@ -29,6 +29,10 @@ import { UpsertZatcaConfigHandler } from '../../modules/finance/zatca-config/ups
 import { UpsertZatcaConfigDto } from '../../modules/finance/zatca-config/upsert-zatca-config.dto';
 import { OnboardZatcaHandler } from '../../modules/finance/zatca-config/onboard-zatca.handler';
 import { GetPaymentStatsHandler } from '../../modules/finance/get-payment-stats/get-payment-stats.handler';
+import { RefundPaymentHandler } from '../../modules/finance/refund-payment/refund-payment.handler';
+import { RefundPaymentDto } from '../../modules/finance/refund-payment/refund-payment.dto';
+import { VerifyPaymentHandler } from '../../modules/finance/verify-payment/verify-payment.handler';
+import { VerifyPaymentDto } from '../../modules/finance/verify-payment/verify-payment.dto';
 
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/finance')
@@ -49,6 +53,8 @@ export class DashboardFinanceController {
     private readonly upsertZatcaConfig: UpsertZatcaConfigHandler,
     private readonly onboardZatca: OnboardZatcaHandler,
     private readonly getPaymentStats: GetPaymentStatsHandler,
+    private readonly refundPayment: RefundPaymentHandler,
+    private readonly verifyPayment: VerifyPaymentHandler,
   ) {}
 
   // ── Invoices ──────────────────────────────────────────────────────────────
@@ -101,6 +107,24 @@ export class DashboardFinanceController {
       fromDate: query.fromDate ? new Date(query.fromDate) : undefined,
       toDate: query.toDate ? new Date(query.toDate) : undefined,
     });
+  }
+
+  @Patch('payments/:id/refund')
+  refundPaymentEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: RefundPaymentDto,
+  ) {
+    return this.refundPayment.execute({ tenantId, paymentId: id, ...body });
+  }
+
+  @Patch('payments/:id/verify')
+  verifyPaymentEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: VerifyPaymentDto,
+  ) {
+    return this.verifyPayment.execute({ tenantId, paymentId: id, ...body });
   }
 
   // ── Coupons apply (existing) ───────────────────────────────────────────────
