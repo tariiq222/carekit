@@ -1,32 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import { ProblemReportStatus } from '@prisma/client';
+import { ListProblemReportsDto } from './list-problem-reports.dto';
 
-export interface ListProblemReportsQuery {
-  tenantId: string;
-  page: number;
-  limit: number;
-  status?: ProblemReportStatus;
-}
+export type ListProblemReportsQuery = ListProblemReportsDto & { tenantId: string };
 
 @Injectable()
 export class ListProblemReportsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: ListProblemReportsQuery) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
     const where = { tenantId: query.tenantId, status: query.status };
     const [data, total] = await Promise.all([
       this.prisma.problemReport.findMany({
         where,
-        skip: (query.page - 1) * query.limit,
-        take: query.limit,
+        skip: (page - 1) * limit,
+        take: limit,
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.problemReport.count({ where }),
     ]);
     return {
       data,
-      meta: { total, page: query.page, limit: query.limit, totalPages: Math.ceil(total / query.limit) },
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 }

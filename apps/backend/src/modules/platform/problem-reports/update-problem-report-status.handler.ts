@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import { ProblemReportStatus } from '@prisma/client';
+import { UpdateProblemReportStatusDto } from './update-problem-report-status.dto';
 
-export interface UpdateProblemReportStatusCommand {
+export type UpdateProblemReportStatusCommand = UpdateProblemReportStatusDto & {
   id: string;
   tenantId: string;
-  status: ProblemReportStatus;
-  resolution?: string;
-}
+};
 
 @Injectable()
 export class UpdateProblemReportStatusHandler {
