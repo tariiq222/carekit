@@ -2,7 +2,9 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { ChatAdapter } from '../../../infrastructure/ai';
 import { SemanticSearchHandler } from '../semantic-search/semantic-search.handler';
-import type { ChatCompletionDto, ChatCompletionResult } from './chat-completion.dto';
+import { ChatCompletionDto, ChatCompletionResult } from './chat-completion.dto';
+
+export type ChatCompletionCommand = ChatCompletionDto & { tenantId: string };
 
 const SYSTEM_PROMPT_TEMPLATE = (context: string) => `
 You are a helpful assistant for a medical clinic using CareKit.
@@ -21,7 +23,7 @@ export class ChatCompletionHandler {
     private readonly chat: ChatAdapter,
   ) {}
 
-  async execute(dto: ChatCompletionDto): Promise<ChatCompletionResult> {
+  async execute(dto: ChatCompletionCommand): Promise<ChatCompletionResult> {
     if (!this.chat.isAvailable()) {
       throw new BadRequestException('ChatAdapter is not available — set OPENROUTER_API_KEY');
     }

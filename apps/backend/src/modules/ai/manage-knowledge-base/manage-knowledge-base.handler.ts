@@ -1,17 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
-import type {
-  ListDocumentsDto,
-  GetDocumentDto,
-  DeleteDocumentDto,
-  UpdateDocumentDto,
-} from './manage-knowledge-base.dto';
+import { ListDocumentsDto, UpdateDocumentDto } from './manage-knowledge-base.dto';
+
+export type ListDocumentsQuery = ListDocumentsDto & { tenantId: string };
+export type GetDocumentQuery = { tenantId: string; documentId: string };
+export type DeleteDocumentCommand = { tenantId: string; documentId: string };
+export type UpdateDocumentCommand = UpdateDocumentDto & { tenantId: string; documentId: string };
 
 @Injectable()
 export class ManageKnowledgeBaseHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async listDocuments(dto: ListDocumentsDto) {
+  async listDocuments(dto: ListDocumentsQuery) {
     const page = dto.page ?? 1;
     const limit = Math.min(dto.limit ?? 20, 100);
     const skip = (page - 1) * limit;
@@ -34,7 +35,7 @@ export class ManageKnowledgeBaseHandler {
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
-  async getDocument(dto: GetDocumentDto) {
+  async getDocument(dto: GetDocumentQuery) {
     const doc = await this.prisma.knowledgeDocument.findUnique({
       where: { id: dto.documentId },
       include: {
@@ -48,18 +49,20 @@ export class ManageKnowledgeBaseHandler {
     return doc;
   }
 
-  async deleteDocument(dto: DeleteDocumentDto) {
+  async deleteDocument(dto: DeleteDocumentCommand) {
     await this.getDocument(dto);
     await this.prisma.knowledgeDocument.delete({ where: { id: dto.documentId } });
   }
 
-  async updateDocument(dto: UpdateDocumentDto) {
+  async updateDocument(dto: UpdateDocumentCommand) {
     await this.getDocument(dto);
     return this.prisma.knowledgeDocument.update({
       where: { id: dto.documentId },
       data: {
         ...(dto.title !== undefined ? { title: dto.title } : {}),
-        ...(dto.metadata !== undefined ? { metadata: dto.metadata } : {}),
+        ...(dto.metadata !== undefined
+          ? { metadata: dto.metadata as Prisma.InputJsonValue }
+          : {}),
       },
     });
   }

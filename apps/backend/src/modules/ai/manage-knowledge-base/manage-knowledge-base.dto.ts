@@ -1,23 +1,14 @@
-export interface ListDocumentsDto {
-  tenantId: string;
-  page?: number;
-  limit?: number;
-  status?: 'PENDING' | 'EMBEDDED' | 'FAILED';
+import { Type } from 'class-transformer';
+import { IsEnum, IsInt, IsObject, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { DocumentStatus } from '@prisma/client';
+
+export class ListDocumentsDto {
+  @IsOptional() @IsEnum(DocumentStatus) status?: DocumentStatus;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) limit?: number;
 }
 
-export interface GetDocumentDto {
-  tenantId: string;
-  documentId: string;
-}
-
-export interface DeleteDocumentDto {
-  tenantId: string;
-  documentId: string;
-}
-
-export interface UpdateDocumentDto {
-  tenantId: string;
-  documentId: string;
-  title?: string;
-  metadata?: Record<string, unknown>;
+export class UpdateDocumentDto {
+  @IsOptional() @IsString() @MaxLength(500) title?: string;
+  @IsOptional() @IsObject() metadata?: Record<string, unknown>;
 }

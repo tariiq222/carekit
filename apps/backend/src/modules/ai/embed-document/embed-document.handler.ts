@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EmbeddingAdapter } from '../../../infrastructure/ai';
 import type { EmbedDocumentDto } from './embed-document.dto';
@@ -35,7 +36,7 @@ export class EmbedDocumentHandler {
         title: dto.title,
         sourceType: dto.sourceType,
         sourceRef: dto.sourceRef,
-        metadata: dto.metadata,
+        metadata: (dto.metadata ?? Prisma.JsonNull) as Prisma.InputJsonValue,
         status: 'PENDING',
       },
     });
