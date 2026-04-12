@@ -16,7 +16,6 @@ import {
   fetchZatcaConfig,
   onboardZatca,
   fetchOnboardingStatus,
-  fetchSandboxStats,
   reportToSandbox,
 } from "@/lib/api/zatca"
 
@@ -38,34 +37,28 @@ import {
 describe("zatca api", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("fetchZatcaConfig calls /zatca/config", async () => {
+  it("fetchZatcaConfig calls /dashboard/finance/zatca/config", async () => {
     getMock.mockResolvedValueOnce({})
     await fetchZatcaConfig()
-    expect(getMock).toHaveBeenCalledWith("/zatca/config")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/finance/zatca/config")
   })
 
-  it("onboardZatca posts to /zatca/onboard", async () => {
+  it("onboardZatca posts to /dashboard/finance/zatca/onboard", async () => {
     postMock.mockResolvedValueOnce({})
-    await onboardZatca({ otp: "123456", vatNumber: "123" } as Parameters<typeof onboardZatca>[0])
-    expect(postMock).toHaveBeenCalledWith("/zatca/onboard", expect.anything())
+    await onboardZatca({ vatRegistrationNumber: "123", sellerName: "Clinic" })
+    expect(postMock).toHaveBeenCalledWith("/dashboard/finance/zatca/onboard", expect.anything())
   })
 
-  it("fetchOnboardingStatus calls /zatca/onboarding/status", async () => {
+  it("fetchOnboardingStatus calls /dashboard/finance/zatca/config", async () => {
     getMock.mockResolvedValueOnce({})
     await fetchOnboardingStatus()
-    expect(getMock).toHaveBeenCalledWith("/zatca/onboarding/status")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/finance/zatca/config")
   })
 
-  it("fetchSandboxStats calls /zatca/sandbox/stats", async () => {
-    getMock.mockResolvedValueOnce({})
-    await fetchSandboxStats()
-    expect(getMock).toHaveBeenCalledWith("/zatca/sandbox/stats")
-  })
-
-  it("reportToSandbox posts to /zatca/sandbox/report/:invoiceId", async () => {
+  it("reportToSandbox posts to /dashboard/finance/zatca/submit", async () => {
     postMock.mockResolvedValueOnce({})
     await reportToSandbox("inv-1")
-    expect(postMock).toHaveBeenCalledWith("/zatca/sandbox/report/inv-1")
+    expect(postMock).toHaveBeenCalledWith("/dashboard/finance/zatca/submit", { invoiceId: "inv-1" })
   })
 })
 

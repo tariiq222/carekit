@@ -29,9 +29,9 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet"
 
-import { useZatcaConfig, useOnboardingStatus, useSandboxStats, useZatcaMutations } from "@/hooks/use-zatca"
+import { useZatcaConfig, useOnboardingStatus, useZatcaMutations } from "@/hooks/use-zatca"
 import { useLocale } from "@/components/locale-provider"
-import { zatcaOtpSchema, type ZatcaOtpFormData } from "@/lib/schemas/invoice.schema"
+import { zatcaOnboardSchema, type ZatcaOnboardFormData } from "@/lib/schemas/invoice.schema"
 
 type TabId = "config" | "status"
 
@@ -48,14 +48,13 @@ export function ZatcaTab() {
   const { t } = useLocale()
   const { data: config, isLoading: configLoading } = useZatcaConfig()
   const { data: status, isLoading: statusLoading } = useOnboardingStatus()
-  const { data: sandbox, isLoading: sandboxLoading } = useSandboxStats()
   const { onboardMut } = useZatcaMutations()
   const [onboardOpen, setOnboardOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>("config")
 
-  const form = useForm<ZatcaOtpFormData>({
-    resolver: zodResolver(zatcaOtpSchema),
-    defaultValues: { otp: "" },
+  const form = useForm<ZatcaOnboardFormData>({
+    resolver: zodResolver(zatcaOnboardSchema),
+    defaultValues: { vatRegistrationNumber: "", sellerName: "" },
   })
 
   const handleOnboard = form.handleSubmit(async (data) => {
@@ -69,7 +68,7 @@ export function ZatcaTab() {
     }
   })
 
-  const isLoading = configLoading || statusLoading || sandboxLoading
+  const isLoading = configLoading || statusLoading
 
   const tabs: { id: TabId; label: string; desc: string }[] = [
     { id: "config", label: t("zatca.config"), desc: t("zatca.configDesc") },
@@ -85,12 +84,12 @@ export function ZatcaTab() {
             <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
         </div>
-      ) : sandbox ? (
+      ) : config ? (
         <StatsGrid>
-          <StatCard title={t("zatca.totalReported")} value={sandbox.totalReported} icon={TimeQuarterPassIcon} iconColor="primary" />
-          <StatCard title={t("zatca.accepted")} value={sandbox.accepted} icon={CheckmarkCircle02Icon} iconColor="success" />
-          <StatCard title={t("zatca.rejected")} value={sandbox.rejected} icon={Cancel01Icon} iconColor="warning" />
-          <StatCard title={t("zatca.warnings")} value={sandbox.warnings} icon={Alert02Icon} iconColor="warning" />
+          <StatCard title={t("zatca.environment")} value={config.environment} icon={TimeQuarterPassIcon} iconColor="primary" />
+          <StatCard title={t("zatca.onboarded")} value={config.isOnboarded ? t("common.yes") : t("common.no")} icon={CheckmarkCircle02Icon} iconColor={config.isOnboarded ? "success" : "warning"} />
+          <StatCard title={t("zatca.vatNumber")} value={config.vatRegistrationNumber ?? "—"} icon={Alert02Icon} iconColor="warning" />
+          <StatCard title={t("zatca.seller")} value={config.sellerName ?? "—"} icon={Cancel01Icon} iconColor="primary" />
         </StatsGrid>
       ) : null}
 
@@ -136,27 +135,25 @@ export function ZatcaTab() {
                 <div className="grid grid-cols-2 gap-3">
                   <Card className="shadow-sm bg-surface">
                     <CardContent className="pt-3 pb-3">
-                      <InfoRow label={t("zatca.vatNumber")} value={config?.vatNumber ?? "—"} />
+                      <InfoRow label={t("zatca.vatNumber")} value={config?.vatRegistrationNumber ?? "—"} />
                     </CardContent>
                   </Card>
                   <Card className="shadow-sm bg-surface">
                     <CardContent className="pt-3 pb-3">
-                      <InfoRow label={t("zatca.orgName")} value={config?.organizationName ?? "—"} />
+                      <InfoRow label={t("zatca.orgName")} value={config?.sellerName ?? "—"} />
                     </CardContent>
                   </Card>
                   <Card className="shadow-sm bg-surface">
                     <CardContent className="pt-3 pb-3">
                       <InfoRow
-                        label={t("zatca.phase")}
+                        label={t("zatca.environment")}
                         value={
                           <Badge variant="outline" className={
-                            config?.phase === "production"
+                            config?.environment === "production"
                               ? "border-success/30 bg-success/10 text-success"
-                              : config?.phase === "compliance"
-                                ? "border-warning/30 bg-warning/10 text-warning"
-                                : "border-muted-foreground/30 bg-muted text-muted-foreground"
+                              : "border-warning/30 bg-warning/10 text-warning"
                           }>
-                            {config?.phase ?? "none"}
+                            {config?.environment ?? "sandbox"}
                           </Badge>
                         }
                       />
@@ -164,8 +161,8 @@ export function ZatcaTab() {
                   </Card>
                 </div>
                 <div className="flex justify-end mt-auto pt-2">
-                  <Button size="sm" onClick={() => setOnboardOpen(true)}>
-                    {t("zatca.startOnboarding")}
+                  <Button size="sm" onClick={() => setOnboardOpen(true)} disabled={config?.isOnboarded}>
+                    {config?.isOnboarded ? t("zatca.alreadyOnboarded") : t("zatca.startOnboarding")}
                   </Button>
                 </div>
               </div>
@@ -177,31 +174,19 @@ export function ZatcaTab() {
                   <Card className="shadow-sm bg-surface">
                     <CardContent className="pt-3 pb-3">
                       <InfoRow
-                        label={t("zatca.complianceCsid")}
+                        label={t("zatca.onboarded")}
                         value={
-                          <Badge variant="outline" className={status?.hasComplianceCsid ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive"}>
-                            {status?.hasComplianceCsid ? "Active" : "Missing"}
+                          <Badge variant="outline" className={status?.isOnboarded ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive"}>
+                            {status?.isOnboarded ? t("common.yes") : t("common.no")}
                           </Badge>
                         }
                       />
                     </CardContent>
                   </Card>
-                  <Card className="shadow-sm bg-surface">
-                    <CardContent className="pt-3 pb-3">
-                      <InfoRow
-                        label={t("zatca.productionCsid")}
-                        value={
-                          <Badge variant="outline" className={status?.hasProductionCsid ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive"}>
-                            {status?.hasProductionCsid ? "Active" : "Missing"}
-                          </Badge>
-                        }
-                      />
-                    </CardContent>
-                  </Card>
-                  {status?.complianceCsidExpiry && (
+                  {status?.onboardedAt && (
                     <Card className="shadow-sm bg-surface">
                       <CardContent className="pt-3 pb-3">
-                        <InfoRow label={t("zatca.csidExpiry")} value={new Date(status.complianceCsidExpiry).toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" })} />
+                        <InfoRow label={t("zatca.onboardedAt")} value={new Date(status.onboardedAt).toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" })} />
                       </CardContent>
                     </Card>
                   )}
@@ -221,10 +206,17 @@ export function ZatcaTab() {
           </SheetHeader>
           <form onSubmit={handleOnboard} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label>OTP *</Label>
-              <Input {...form.register("otp")} placeholder={t("zatca.otpPlaceholder")} className="tabular-nums" />
-              {form.formState.errors.otp && (
-                <p className="text-xs text-destructive">{form.formState.errors.otp.message}</p>
+              <Label>{t("zatca.vatNumber")} *</Label>
+              <Input {...form.register("vatRegistrationNumber")} placeholder={t("zatca.vatPlaceholder")} className="tabular-nums" />
+              {form.formState.errors.vatRegistrationNumber && (
+                <p className="text-xs text-destructive">{form.formState.errors.vatRegistrationNumber.message}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>{t("zatca.orgName")} *</Label>
+              <Input {...form.register("sellerName")} placeholder={t("zatca.sellerPlaceholder")} />
+              {form.formState.errors.sellerName && (
+                <p className="text-xs text-destructive">{form.formState.errors.sellerName.message}</p>
               )}
             </div>
             <SheetFooter>

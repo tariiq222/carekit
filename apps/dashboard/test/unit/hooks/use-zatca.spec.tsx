@@ -7,13 +7,11 @@ import type { ReactNode } from "react"
 const {
   fetchZatcaConfig,
   fetchOnboardingStatus,
-  fetchSandboxStats,
   onboardZatca,
   reportToSandbox,
 } = vi.hoisted(() => ({
   fetchZatcaConfig: vi.fn(),
   fetchOnboardingStatus: vi.fn(),
-  fetchSandboxStats: vi.fn(),
   onboardZatca: vi.fn(),
   reportToSandbox: vi.fn(),
 }))
@@ -21,7 +19,6 @@ const {
 vi.mock("@/lib/api/zatca", () => ({
   fetchZatcaConfig,
   fetchOnboardingStatus,
-  fetchSandboxStats,
   onboardZatca,
   reportToSandbox,
 }))
@@ -29,7 +26,6 @@ vi.mock("@/lib/api/zatca", () => ({
 import {
   useZatcaConfig,
   useOnboardingStatus,
-  useSandboxStats,
   useZatcaMutations,
 } from "@/hooks/use-zatca"
 
@@ -100,23 +96,6 @@ describe("useOnboardingStatus", () => {
   })
 })
 
-describe("useSandboxStats", () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it("fetches sandbox stats and returns them", async () => {
-    const mockStats = { reported: 10, failed: 1 }
-    fetchSandboxStats.mockResolvedValueOnce(mockStats)
-
-    const { result } = renderHook(() => useSandboxStats(), {
-      wrapper: makeWrapper(),
-    })
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-
-    expect(result.current.data).toEqual(mockStats)
-    expect(fetchSandboxStats).toHaveBeenCalledTimes(1)
-  })
-})
 
 describe("useZatcaMutations", () => {
   beforeEach(() => vi.clearAllMocks())

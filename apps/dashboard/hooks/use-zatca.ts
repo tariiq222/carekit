@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   fetchZatcaConfig,
   fetchOnboardingStatus,
-  fetchSandboxStats,
   onboardZatca,
   reportToSandbox,
 } from "@/lib/api/zatca"
@@ -12,14 +11,13 @@ import {
 const KEYS = {
   config: ["zatca", "config"] as const,
   onboarding: ["zatca", "onboarding"] as const,
-  sandbox: ["zatca", "sandbox"] as const,
 }
 
 export function useZatcaConfig() {
   return useQuery({
     queryKey: KEYS.config,
     queryFn: fetchZatcaConfig,
-    staleTime: 30 * 60 * 1000, // 30 min — config rarely changes
+    staleTime: 30 * 60 * 1000,
   })
 }
 
@@ -27,14 +25,7 @@ export function useOnboardingStatus() {
   return useQuery({
     queryKey: KEYS.onboarding,
     queryFn: fetchOnboardingStatus,
-    staleTime: 30 * 60 * 1000, // 30 min — onboarding state is stable
-  })
-}
-
-export function useSandboxStats() {
-  return useQuery({
-    queryKey: KEYS.sandbox,
-    queryFn: fetchSandboxStats,
+    staleTime: 30 * 60 * 1000,
   })
 }
 

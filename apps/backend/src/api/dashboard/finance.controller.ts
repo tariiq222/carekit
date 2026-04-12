@@ -1,6 +1,6 @@
 import {
-  Controller, Get, Post, Body, Param, Query,
-  UseGuards, ParseUUIDPipe,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
@@ -16,6 +16,18 @@ import { ApplyCouponHandler } from '../../modules/finance/apply-coupon/apply-cou
 import { ApplyCouponDto } from '../../modules/finance/apply-coupon/apply-coupon.dto';
 import { ZatcaSubmitHandler } from '../../modules/finance/zatca-submit/zatca-submit.handler';
 import { ZatcaSubmitDto } from '../../modules/finance/zatca-submit/zatca-submit.dto';
+import { ListCouponsHandler } from '../../modules/finance/coupons/list-coupons.handler';
+import { ListCouponsDto } from '../../modules/finance/coupons/list-coupons.dto';
+import { GetCouponHandler } from '../../modules/finance/coupons/get-coupon.handler';
+import { CreateCouponHandler } from '../../modules/finance/coupons/create-coupon.handler';
+import { CreateCouponDto } from '../../modules/finance/coupons/create-coupon.dto';
+import { UpdateCouponHandler } from '../../modules/finance/coupons/update-coupon.handler';
+import { UpdateCouponDto } from '../../modules/finance/coupons/update-coupon.dto';
+import { DeleteCouponHandler } from '../../modules/finance/coupons/delete-coupon.handler';
+import { GetZatcaConfigHandler } from '../../modules/finance/zatca-config/get-zatca-config.handler';
+import { UpsertZatcaConfigHandler } from '../../modules/finance/zatca-config/upsert-zatca-config.handler';
+import { UpsertZatcaConfigDto } from '../../modules/finance/zatca-config/upsert-zatca-config.dto';
+import { OnboardZatcaHandler } from '../../modules/finance/zatca-config/onboard-zatca.handler';
 
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/finance')
@@ -27,7 +39,17 @@ export class DashboardFinanceController {
     private readonly listPayments: ListPaymentsHandler,
     private readonly applyCoupon: ApplyCouponHandler,
     private readonly zatcaSubmit: ZatcaSubmitHandler,
+    private readonly listCoupons: ListCouponsHandler,
+    private readonly getCoupon: GetCouponHandler,
+    private readonly createCoupon: CreateCouponHandler,
+    private readonly updateCoupon: UpdateCouponHandler,
+    private readonly deleteCoupon: DeleteCouponHandler,
+    private readonly getZatcaConfig: GetZatcaConfigHandler,
+    private readonly upsertZatcaConfig: UpsertZatcaConfigHandler,
+    private readonly onboardZatca: OnboardZatcaHandler,
   ) {}
+
+  // ── Invoices ──────────────────────────────────────────────────────────────
 
   @Post('invoices')
   createInv(@TenantId() tenantId: string, @Body() body: CreateInvoiceDto) {
@@ -45,6 +67,8 @@ export class DashboardFinanceController {
   ) {
     return this.getInvoice.execute({ tenantId, invoiceId: id });
   }
+
+  // ── Payments ──────────────────────────────────────────────────────────────
 
   @Post('payments')
   processPaymentEndpoint(
@@ -72,6 +96,8 @@ export class DashboardFinanceController {
     });
   }
 
+  // ── Coupons apply (existing) ───────────────────────────────────────────────
+
   @Post('coupons/apply')
   applyCouponEndpoint(
     @TenantId() tenantId: string,
@@ -80,8 +106,68 @@ export class DashboardFinanceController {
     return this.applyCoupon.execute({ tenantId, ...body });
   }
 
+  // ── Coupons CRUD ──────────────────────────────────────────────────────────
+
+  @Get('coupons')
+  listCouponsEndpoint(@TenantId() tenantId: string, @Query() query: ListCouponsDto) {
+    return this.listCoupons.execute({ tenantId, ...query });
+  }
+
+  @Get('coupons/:id')
+  getCouponEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.getCoupon.execute({ tenantId, couponId: id });
+  }
+
+  @Post('coupons')
+  @HttpCode(HttpStatus.CREATED)
+  createCouponEndpoint(@TenantId() tenantId: string, @Body() body: CreateCouponDto) {
+    return this.createCoupon.execute({ tenantId, ...body });
+  }
+
+  @Patch('coupons/:id')
+  updateCouponEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateCouponDto,
+  ) {
+    return this.updateCoupon.execute({ tenantId, couponId: id, ...body });
+  }
+
+  @Delete('coupons/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteCouponEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.deleteCoupon.execute({ tenantId, couponId: id });
+  }
+
+  // ── ZATCA ─────────────────────────────────────────────────────────────────
+
   @Post('zatca/submit')
   zatca(@TenantId() tenantId: string, @Body() body: ZatcaSubmitDto) {
     return this.zatcaSubmit.execute({ tenantId, ...body });
+  }
+
+  @Get('zatca/config')
+  getZatcaConfigEndpoint(@TenantId() tenantId: string) {
+    return this.getZatcaConfig.execute({ tenantId });
+  }
+
+  @Patch('zatca/config')
+  upsertZatcaConfigEndpoint(@TenantId() tenantId: string, @Body() body: UpsertZatcaConfigDto) {
+    return this.upsertZatcaConfig.execute({ tenantId, ...body });
+  }
+
+  @Post('zatca/onboard')
+  @HttpCode(HttpStatus.OK)
+  onboardZatcaEndpoint(
+    @TenantId() tenantId: string,
+    @Body() body: { vatRegistrationNumber: string; sellerName: string },
+  ) {
+    return this.onboardZatca.execute({ tenantId, ...body });
   }
 }

@@ -10,11 +10,22 @@ function buildController() {
   const listPayments = fn({ data: [], meta: {} });
   const applyCoupon = fn({ discount: 10 });
   const zatcaSubmit = fn({ status: 'ok' });
+  const listCoupons = fn({ data: [], total: 0 });
+  const getCoupon = fn({ id: 'c-1' });
+  const createCoupon = fn({ id: 'c-1' });
+  const updateCoupon = fn({ id: 'c-1' });
+  const deleteCoupon = fn(undefined);
+  const getZatcaConfig = fn({ id: 'z-1' });
+  const upsertZatcaConfig = fn({ id: 'z-1' });
+  const onboardZatca = fn({ id: 'z-1' });
   const controller = new DashboardFinanceController(
     createInvoice as never, getInvoice as never, processPayment as never,
     listPayments as never, applyCoupon as never, zatcaSubmit as never,
+    listCoupons as never, getCoupon as never, createCoupon as never,
+    updateCoupon as never, deleteCoupon as never, getZatcaConfig as never,
+    upsertZatcaConfig as never, onboardZatca as never,
   );
-  return { controller, createInvoice, getInvoice, processPayment, listPayments, applyCoupon, zatcaSubmit };
+  return { controller, createInvoice, getInvoice, processPayment, listPayments, applyCoupon, zatcaSubmit, listCoupons, getCoupon, createCoupon, updateCoupon, deleteCoupon, getZatcaConfig, upsertZatcaConfig, onboardZatca };
 }
 
 describe('DashboardFinanceController', () => {

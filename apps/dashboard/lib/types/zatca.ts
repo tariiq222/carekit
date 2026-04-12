@@ -3,29 +3,18 @@
  */
 
 export interface ZatcaConfig {
-  vatNumber: string | null
-  organizationName: string | null
-  hasComplianceCsid: boolean
-  hasProductionCsid: boolean
-  phase: "none" | "compliance" | "production"
-}
-
-export interface OnboardingStatus {
-  phase: string
-  hasComplianceCsid: boolean
-  hasProductionCsid: boolean
-  complianceCsidExpiry: string | null
-  productionCsidExpiry: string | null
-}
-
-export interface SandboxStats {
-  totalReported: number
-  accepted: number
-  rejected: number
-  warnings: number
-  pending: number
+  id: string
+  tenantId: string
+  vatRegistrationNumber: string | null
+  sellerName: string | null
+  environment: string
+  isOnboarded: boolean
+  onboardedAt: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 export interface ZatcaOnboardPayload {
-  otp: string
+  vatRegistrationNumber: string
+  sellerName: string
 }

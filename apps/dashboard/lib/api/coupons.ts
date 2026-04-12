@@ -16,7 +16,7 @@ import type {
 export async function fetchCoupons(
   query: CouponListQuery = {},
 ): Promise<PaginatedResponse<Coupon>> {
-  return api.get<PaginatedResponse<Coupon>>("/coupons", {
+  return api.get<PaginatedResponse<Coupon>>("/dashboard/finance/coupons", {
     page: query.page,
     perPage: query.perPage,
     search: query.search,
@@ -27,7 +27,7 @@ export async function fetchCoupons(
 /* ─── Detail ─── */
 
 export async function fetchCoupon(id: string): Promise<Coupon> {
-  return api.get<Coupon>(`/coupons/${id}`)
+  return api.get<Coupon>(`/dashboard/finance/coupons/${id}`)
 }
 
 /* ─── Create ─── */
@@ -35,7 +35,7 @@ export async function fetchCoupon(id: string): Promise<Coupon> {
 export async function createCoupon(
   payload: CreateCouponPayload,
 ): Promise<Coupon> {
-  return api.post<Coupon>("/coupons", payload)
+  return api.post<Coupon>("/dashboard/finance/coupons", payload)
 }
 
 /* ─── Update ─── */
@@ -44,11 +44,11 @@ export async function updateCoupon(
   id: string,
   payload: UpdateCouponPayload,
 ): Promise<Coupon> {
-  return api.patch<Coupon>(`/coupons/${id}`, payload)
+  return api.patch<Coupon>(`/dashboard/finance/coupons/${id}`, payload)
 }
 
 /* ─── Delete ─── */
 
 export async function deleteCoupon(id: string): Promise<void> {
-  await api.delete(`/coupons/${id}`)
+  await api.delete(`/dashboard/finance/coupons/${id}`)
 }

@@ -1,9 +1,14 @@
 import { z } from "zod"
 
-/* ─── OTP schema (zatca-tab) ─── */
+/* ─── ZATCA onboarding form ─── */
 
-export const zatcaOtpSchema = z.object({
-  otp: z.string().min(1, "OTP is required"),
+export const zatcaOnboardSchema = z.object({
+  vatRegistrationNumber: z.string().min(1, "VAT registration number is required"),
+  sellerName: z.string().min(1, "Seller name is required"),
 })
 
-export type ZatcaOtpFormData = z.infer<typeof zatcaOtpSchema>
+export type ZatcaOnboardFormData = z.infer<typeof zatcaOnboardSchema>
+
+// Keep alias for any existing references
+export const zatcaOtpSchema = zatcaOnboardSchema
+export type ZatcaOtpFormData = ZatcaOnboardFormData
