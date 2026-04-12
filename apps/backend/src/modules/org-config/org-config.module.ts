@@ -1,6 +1,11 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../infrastructure/database';
-import { DashboardOrganizationController } from '../../api/dashboard/organization.controller';
+import {
+  DashboardOrganizationBranchesController,
+  DashboardOrganizationDepartmentsController,
+  DashboardOrganizationCategoriesController,
+  DashboardOrganizationHoursController,
+} from '../../api/dashboard/organization.controller';
 import { CreateBranchHandler } from './branches/create-branch.handler';
 import { UpdateBranchHandler } from './branches/update-branch.handler';
 import { ListBranchesHandler } from './branches/list-branches.handler';
@@ -36,7 +41,12 @@ const hoursHandlers = [
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [DashboardOrganizationController],
+  controllers: [
+    DashboardOrganizationBranchesController,
+    DashboardOrganizationDepartmentsController,
+    DashboardOrganizationCategoriesController,
+    DashboardOrganizationHoursController,
+  ],
   providers: [
     ...branchHandlers, ...departmentHandlers, ...categoryHandlers, ...hoursHandlers,
   ],
