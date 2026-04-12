@@ -149,8 +149,8 @@ describe("useChatbotMutations", () => {
     act(() => {
       result.current.updateKbEntryMut.mutate({
         id: "kb-1",
-        content: "updated",
-      } as Parameters<typeof result.current.updateKbEntryMut.mutate>[0])
+        payload: { content: "updated" },
+      })
     })
 
     await waitFor(() =>
