@@ -81,8 +81,16 @@ export function useChatbotMutations() {
     },
   })
 
+  const updateConfigMut = useMutation({
+    mutationFn: ({ configs }: { configs: { key: string; value: unknown; category: string }[] }) =>
+      upsertChatbotConfig(configs),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.chatbot.config.all })
+    },
+  })
+
   return {
-    // Session mutations
+    // Session mutations — no backend endpoints yet
     createSessionMut: stub(),
     endSessionMut,
     sendMessageMut: stub(),
@@ -99,14 +107,8 @@ export function useChatbotMutations() {
     processFileMut,
     deleteFileMut,
 
-    // Config mutations
-    updateConfigMut: useMutation({
-      mutationFn: ({ configs }: { configs: { key: string; value: unknown; category: string }[] }) =>
-        upsertChatbotConfig(configs),
-      onSuccess: () => {
-        void qc.invalidateQueries({ queryKey: queryKeys.chatbot.config.all })
-      },
-    }),
+    // Config mutations — seedDefaultsMut deferred (no backend endpoint)
+    updateConfigMut,
     seedDefaultsMut: stub(),
   }
 }

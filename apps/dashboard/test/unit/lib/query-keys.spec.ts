@@ -85,12 +85,6 @@ describe("queryKeys", () => {
       )
     })
 
-    it("config.byCategory includes category", () => {
-      expect(queryKeys.chatbot.config.byCategory("general")).toEqual(
-        ["chatbot", "config", "general"],
-      )
-    })
-
     it("analytics.questions includes limit", () => {
       expect(queryKeys.chatbot.analytics.questions(10)).toContain(10)
     })

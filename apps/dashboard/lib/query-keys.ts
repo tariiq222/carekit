@@ -149,8 +149,6 @@ export const queryKeys = {
     },
     config: {
       all: ["chatbot", "config"] as const,
-      byCategory: (category: string) =>
-        ["chatbot", "config", category] as const,
       list: (category?: string) =>
         ["chatbot", "config", { category }] as const,
     },
