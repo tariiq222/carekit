@@ -10,6 +10,7 @@ import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { PaymentCompletedEvent } from '../events/payment-completed.event';
+import { PaymentFailedEvent } from '../events/payment-failed.event';
 import { MoyasarWebhookDto } from './moyasar-webhook.dto';
 
 export interface MoyasarWebhookRequest {
@@ -105,6 +106,17 @@ export class MoyasarWebhookHandler {
         currency: invoice.currency,
       });
       await this.eventBus.publish(event.eventName, event.toEnvelope());
+    } else if (status === PaymentStatus.FAILED) {
+      const failedEvent = new PaymentFailedEvent(tenantId, {
+        paymentId: payment.id,
+        invoiceId: invoice.id,
+        tenantId,
+        clientId: invoice.clientId,
+        amount: amountSar,
+        currency: invoice.currency,
+        reason: payload.message,
+      });
+      await this.eventBus.publish(failedEvent.eventName, failedEvent.toEnvelope());
     }
 
     return {};
