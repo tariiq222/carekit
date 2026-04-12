@@ -1,23 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { MarkReadDto } from './mark-read.dto';
 
-export interface MarkReadDto {
-  tenantId: string;
-  recipientId: string;
-  notificationId?: string;
-}
+export type MarkReadCommand = MarkReadDto & { tenantId: string };
 
 @Injectable()
 export class MarkReadHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: MarkReadDto): Promise<void> {
+  async execute(cmd: MarkReadCommand): Promise<void> {
     await this.prisma.notification.updateMany({
       where: {
-        tenantId: dto.tenantId,
-        recipientId: dto.recipientId,
+        tenantId: cmd.tenantId,
+        recipientId: cmd.recipientId,
         isRead: false,
-        ...(dto.notificationId ? { id: dto.notificationId } : {}),
+        ...(cmd.notificationId ? { id: cmd.notificationId } : {}),
       },
       data: { isRead: true, readAt: new Date() },
     });

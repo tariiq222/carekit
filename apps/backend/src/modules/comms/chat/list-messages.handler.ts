@@ -1,50 +1,49 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { ListMessagesDto } from './list-messages.dto';
 
-export interface ListMessagesDto {
+export type ListMessagesCommand = Omit<ListMessagesDto, 'limit'> & {
   tenantId: string;
   conversationId: string;
-  /** Cursor = id of the oldest message already loaded by the client. */
-  cursor?: string;
   limit: number;
-}
+};
 
 @Injectable()
 export class ListMessagesHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: ListMessagesDto) {
+  async execute(cmd: ListMessagesCommand) {
     const conversation = await this.prisma.chatConversation.findFirst({
-      where: { id: dto.conversationId, tenantId: dto.tenantId },
+      where: { id: cmd.conversationId, tenantId: cmd.tenantId },
       select: { id: true },
     });
     if (!conversation) {
-      throw new NotFoundException(`Conversation ${dto.conversationId} not found`);
+      throw new NotFoundException(`Conversation ${cmd.conversationId} not found`);
     }
 
     // Cursor-based pagination: fetch `limit + 1` to detect if more pages exist.
     // Ordered newest-first so mobile can load older messages as user scrolls up.
-    const take = dto.limit + 1;
+    const take = cmd.limit + 1;
     const messages = await this.prisma.commsChatMessage.findMany({
       where: {
-        tenantId: dto.tenantId,
-        conversationId: dto.conversationId,
+        tenantId: cmd.tenantId,
+        conversationId: cmd.conversationId,
       },
       orderBy: { createdAt: 'desc' },
       take,
-      ...(dto.cursor
-        ? { cursor: { id: dto.cursor }, skip: 1 } // skip the cursor itself
+      ...(cmd.cursor
+        ? { cursor: { id: cmd.cursor }, skip: 1 } // skip the cursor itself
         : {}),
     });
 
-    const hasMore = messages.length > dto.limit;
-    const data = hasMore ? messages.slice(0, dto.limit) : messages;
+    const hasMore = messages.length > cmd.limit;
+    const data = hasMore ? messages.slice(0, cmd.limit) : messages;
     const nextCursor = hasMore ? data[data.length - 1].id : null;
 
     return {
       data,
       meta: {
-        limit: dto.limit,
+        limit: cmd.limit,
         nextCursor,
         hasMore,
       },

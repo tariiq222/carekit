@@ -1,31 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { ListConversationsDto } from './list-conversations.dto';
 
-export interface ListConversationsDto {
+export type ListConversationsCommand = Omit<ListConversationsDto, 'page' | 'limit'> & {
   tenantId: string;
-  clientId?: string;
-  employeeId?: string;
   page: number;
   limit: number;
-}
+};
 
 @Injectable()
 export class ListConversationsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: ListConversationsDto) {
+  async execute(cmd: ListConversationsCommand) {
     const where = {
-      tenantId: dto.tenantId,
-      ...(dto.clientId ? { clientId: dto.clientId } : {}),
-      ...(dto.employeeId ? { employeeId: dto.employeeId } : {}),
+      tenantId: cmd.tenantId,
+      ...(cmd.clientId ? { clientId: cmd.clientId } : {}),
+      ...(cmd.employeeId ? { employeeId: cmd.employeeId } : {}),
     };
 
     const [data, total] = await Promise.all([
       this.prisma.chatConversation.findMany({
         where,
         orderBy: { lastMessageAt: 'desc' },
-        skip: (dto.page - 1) * dto.limit,
-        take: dto.limit,
+        skip: (cmd.page - 1) * cmd.limit,
+        take: cmd.limit,
         include: { messages: { orderBy: { createdAt: 'desc' }, take: 1 } },
       }),
       this.prisma.chatConversation.count({ where }),
@@ -35,9 +34,9 @@ export class ListConversationsHandler {
       data,
       meta: {
         total,
-        page: dto.page,
-        limit: dto.limit,
-        totalPages: Math.ceil(total / dto.limit),
+        page: cmd.page,
+        limit: cmd.limit,
+        totalPages: Math.ceil(total / cmd.limit),
       },
     };
   }

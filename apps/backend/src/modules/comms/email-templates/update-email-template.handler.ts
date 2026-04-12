@@ -1,36 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { UpdateEmailTemplateDto } from './update-email-template.dto';
 
-export interface UpdateEmailTemplateDto {
+export type UpdateEmailTemplateCommand = UpdateEmailTemplateDto & {
   tenantId: string;
   id: string;
-  nameAr?: string;
-  nameEn?: string;
-  subjectAr?: string;
-  subjectEn?: string;
-  htmlBody?: string;
-  isActive?: boolean;
-}
+};
 
 @Injectable()
 export class UpdateEmailTemplateHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: UpdateEmailTemplateDto) {
-    const template = await this.prisma.emailTemplate.findUnique({ where: { id: dto.id } });
-    if (!template || template.tenantId !== dto.tenantId) {
-      throw new NotFoundException(`Email template ${dto.id} not found`);
+  async execute(cmd: UpdateEmailTemplateCommand) {
+    const template = await this.prisma.emailTemplate.findUnique({ where: { id: cmd.id } });
+    if (!template || template.tenantId !== cmd.tenantId) {
+      throw new NotFoundException(`Email template ${cmd.id} not found`);
     }
 
     return this.prisma.emailTemplate.update({
-      where: { id: dto.id },
+      where: { id: cmd.id },
       data: {
-        ...(dto.nameAr !== undefined ? { nameAr: dto.nameAr } : {}),
-        ...(dto.nameEn !== undefined ? { nameEn: dto.nameEn } : {}),
-        ...(dto.subjectAr !== undefined ? { subjectAr: dto.subjectAr } : {}),
-        ...(dto.subjectEn !== undefined ? { subjectEn: dto.subjectEn } : {}),
-        ...(dto.htmlBody !== undefined ? { htmlBody: dto.htmlBody } : {}),
-        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+        ...(cmd.nameAr !== undefined ? { nameAr: cmd.nameAr } : {}),
+        ...(cmd.nameEn !== undefined ? { nameEn: cmd.nameEn } : {}),
+        ...(cmd.subjectAr !== undefined ? { subjectAr: cmd.subjectAr } : {}),
+        ...(cmd.subjectEn !== undefined ? { subjectEn: cmd.subjectEn } : {}),
+        ...(cmd.htmlBody !== undefined ? { htmlBody: cmd.htmlBody } : {}),
+        ...(cmd.isActive !== undefined ? { isActive: cmd.isActive } : {}),
       },
     });
   }

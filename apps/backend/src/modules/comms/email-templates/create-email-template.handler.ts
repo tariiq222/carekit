@@ -1,37 +1,30 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { CreateEmailTemplateDto } from './create-email-template.dto';
 
-export interface CreateEmailTemplateDto {
-  tenantId: string;
-  slug: string;
-  nameAr: string;
-  nameEn?: string;
-  subjectAr: string;
-  subjectEn?: string;
-  htmlBody: string;
-}
+export type CreateEmailTemplateCommand = CreateEmailTemplateDto & { tenantId: string };
 
 @Injectable()
 export class CreateEmailTemplateHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: CreateEmailTemplateDto) {
+  async execute(cmd: CreateEmailTemplateCommand) {
     const existing = await this.prisma.emailTemplate.findUnique({
-      where: { tenantId_slug: { tenantId: dto.tenantId, slug: dto.slug } },
+      where: { tenantId_slug: { tenantId: cmd.tenantId, slug: cmd.slug } },
     });
     if (existing) {
-      throw new ConflictException(`Template "${dto.slug}" already exists for this tenant`);
+      throw new ConflictException(`Template "${cmd.slug}" already exists for this tenant`);
     }
 
     return this.prisma.emailTemplate.create({
       data: {
-        tenantId: dto.tenantId,
-        slug: dto.slug,
-        nameAr: dto.nameAr,
-        nameEn: dto.nameEn,
-        subjectAr: dto.subjectAr,
-        subjectEn: dto.subjectEn,
-        htmlBody: dto.htmlBody,
+        tenantId: cmd.tenantId,
+        slug: cmd.slug,
+        nameAr: cmd.nameAr,
+        nameEn: cmd.nameEn,
+        subjectAr: cmd.subjectAr,
+        subjectEn: cmd.subjectEn,
+        htmlBody: cmd.htmlBody,
       },
     });
   }

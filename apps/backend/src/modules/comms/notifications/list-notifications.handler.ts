@@ -1,38 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { ListNotificationsDto } from './list-notifications.dto';
 
-export interface ListNotificationsDto {
+export type ListNotificationsCommand = Omit<ListNotificationsDto, 'page' | 'limit'> & {
   tenantId: string;
-  recipientId: string;
-  unreadOnly?: boolean;
   page: number;
   limit: number;
-}
+};
 
 @Injectable()
 export class ListNotificationsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: ListNotificationsDto) {
+  async execute(cmd: ListNotificationsCommand) {
     const where = {
-      tenantId: dto.tenantId,
-      recipientId: dto.recipientId,
-      ...(dto.unreadOnly ? { isRead: false } : {}),
+      tenantId: cmd.tenantId,
+      recipientId: cmd.recipientId,
+      ...(cmd.unreadOnly ? { isRead: false } : {}),
     };
 
     const [data, total] = await Promise.all([
       this.prisma.notification.findMany({
         where,
         orderBy: { createdAt: 'desc' },
-        skip: (dto.page - 1) * dto.limit,
-        take: dto.limit,
+        skip: (cmd.page - 1) * cmd.limit,
+        take: cmd.limit,
       }),
       this.prisma.notification.count({ where }),
     ]);
 
     return {
       data,
-      meta: { total, page: dto.page, limit: dto.limit, totalPages: Math.ceil(total / dto.limit) },
+      meta: { total, page: cmd.page, limit: cmd.limit, totalPages: Math.ceil(total / cmd.limit) },
     };
   }
 }
