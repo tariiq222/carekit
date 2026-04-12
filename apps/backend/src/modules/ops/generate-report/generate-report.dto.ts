@@ -1,32 +1,12 @@
-import { IsEnum, IsOptional, IsDateString, IsString } from 'class-validator';
-import { ReportType, ReportFormat } from '@prisma/client';
+import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ReportFormat, ReportType } from '@prisma/client';
 
 export class GenerateReportDto {
-  @IsString()
-  tenantId!: string;
-
-  @IsEnum(ReportType)
-  type!: ReportType;
-
-  @IsEnum(ReportFormat)
-  @IsOptional()
-  format?: ReportFormat;
-
-  @IsDateString()
-  from!: string;
-
-  @IsDateString()
-  to!: string;
-
-  @IsString()
-  @IsOptional()
-  branchId?: string;
-
-  @IsString()
-  @IsOptional()
-  employeeId?: string;
-
-  @IsString()
-  @IsOptional()
-  requestedBy?: string;
+  @IsEnum(ReportType) type!: ReportType;
+  @IsOptional() @IsEnum(ReportFormat) format?: ReportFormat;
+  @IsDateString() from!: string;
+  @IsDateString() to!: string;
+  @IsOptional() @IsUUID() branchId?: string;
+  @IsOptional() @IsUUID() employeeId?: string;
+  @IsOptional() @IsString() requestedBy?: string;
 }

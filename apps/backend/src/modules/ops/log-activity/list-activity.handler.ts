@@ -1,39 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { ActivityAction } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { ListActivityDto } from './list-activity.dto';
 
-export interface ListActivityQuery {
-  tenantId: string;
-  userId?: string;
-  entity?: string;
-  entityId?: string;
-  action?: ActivityAction;
-  from?: Date;
-  to?: Date;
-  page?: number;
-  limit?: number;
-}
+export type ListActivityCommand = ListActivityDto & { tenantId: string };
 
 @Injectable()
 export class ListActivityHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(query: ListActivityQuery) {
-    const page = Math.max(1, query.page ?? 1);
-    const limit = Math.min(100, query.limit ?? 50);
+  async execute(cmd: ListActivityCommand) {
+    const page = Math.max(1, cmd.page ?? 1);
+    const limit = Math.min(100, cmd.limit ?? 50);
     const skip = (page - 1) * limit;
 
+    const from = cmd.from ? new Date(cmd.from) : undefined;
+    const to = cmd.to ? new Date(cmd.to) : undefined;
+
     const where = {
-      tenantId: query.tenantId,
-      ...(query.userId ? { userId: query.userId } : {}),
-      ...(query.entity ? { entity: query.entity } : {}),
-      ...(query.entityId ? { entityId: query.entityId } : {}),
-      ...(query.action ? { action: query.action } : {}),
-      ...(query.from || query.to
+      tenantId: cmd.tenantId,
+      ...(cmd.userId ? { userId: cmd.userId } : {}),
+      ...(cmd.entity ? { entity: cmd.entity } : {}),
+      ...(cmd.entityId ? { entityId: cmd.entityId } : {}),
+      ...(cmd.action ? { action: cmd.action } : {}),
+      ...(from || to
         ? {
             occurredAt: {
-              ...(query.from ? { gte: query.from } : {}),
-              ...(query.to ? { lte: query.to } : {}),
+              ...(from ? { gte: from } : {}),
+              ...(to ? { lte: to } : {}),
             },
           }
         : {}),
