@@ -1,17 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
-import type { AssignPermissionsDto } from './assign-permissions.dto';
+import { AssignPermissionsDto } from './assign-permissions.dto';
+
+export type AssignPermissionsCommand = AssignPermissionsDto & { tenantId: string };
 
 @Injectable()
 export class AssignPermissionsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(dto: AssignPermissionsDto): Promise<void> {
-    await this.prisma.permission.deleteMany({ where: { customRoleId: dto.customRoleId } });
+  async execute(cmd: AssignPermissionsCommand): Promise<void> {
+    await this.prisma.permission.deleteMany({ where: { customRoleId: cmd.customRoleId } });
     await this.prisma.permission.createMany({
-      data: dto.permissions.map((p) => ({
-        tenantId: dto.tenantId,
-        customRoleId: dto.customRoleId,
+      data: cmd.permissions.map((p) => ({
+        tenantId: cmd.tenantId,
+        customRoleId: cmd.customRoleId,
         action: p.action,
         subject: p.subject,
       })),

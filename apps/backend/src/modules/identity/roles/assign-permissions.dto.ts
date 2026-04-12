@@ -1,4 +1,4 @@
-import { IsArray, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsString, IsUUID, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class PermissionEntryDto {
@@ -7,7 +7,6 @@ class PermissionEntryDto {
 }
 
 export class AssignPermissionsDto {
-  @IsString() tenantId!: string;
-  @IsString() customRoleId!: string;
+  @IsUUID() customRoleId!: string;
   @IsArray() @ValidateNested({ each: true }) @Type(() => PermissionEntryDto) permissions!: PermissionEntryDto[];
 }
