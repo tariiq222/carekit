@@ -273,9 +273,4 @@ export const queryKeys = {
     settings: () => ["organization-settings", "public"] as const,
   },
 
-  /* ─── Runs ─── */
-  runs: {
-    detail: (runId: string) => ["runs", "detail", runId] as const,
-  },
-
 } as const
