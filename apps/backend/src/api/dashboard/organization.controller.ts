@@ -12,13 +12,6 @@ import { UpdateBranchDto } from '../../modules/org-config/branches/update-branch
 import { ListBranchesHandler } from '../../modules/org-config/branches/list-branches.handler';
 import { ListBranchesDto } from '../../modules/org-config/branches/list-branches.dto';
 import { GetBranchHandler } from '../../modules/org-config/branches/get-branch.handler';
-import { CreateServiceHandler } from '../../modules/org-experience/services/create-service.handler';
-import { CreateServiceDto } from '../../modules/org-experience/services/create-service.dto';
-import { UpdateServiceHandler } from '../../modules/org-experience/services/update-service.handler';
-import { UpdateServiceDto } from '../../modules/org-experience/services/update-service.dto';
-import { ListServicesHandler } from '../../modules/org-experience/services/list-services.handler';
-import { ListServicesDto } from '../../modules/org-experience/services/list-services.dto';
-import { ArchiveServiceHandler } from '../../modules/org-experience/services/archive-service.handler';
 import { CreateDepartmentHandler } from '../../modules/org-config/departments/create-department.handler';
 import { CreateDepartmentDto } from '../../modules/org-config/departments/create-department.dto';
 import { UpdateDepartmentHandler } from '../../modules/org-config/departments/update-department.handler';
@@ -48,10 +41,6 @@ export class DashboardOrganizationController {
     private readonly updateBranch: UpdateBranchHandler,
     private readonly listBranches: ListBranchesHandler,
     private readonly getBranch: GetBranchHandler,
-    private readonly createService: CreateServiceHandler,
-    private readonly updateService: UpdateServiceHandler,
-    private readonly listServices: ListServicesHandler,
-    private readonly archiveService: ArchiveServiceHandler,
     private readonly createDepartment: CreateDepartmentHandler,
     private readonly updateDepartment: UpdateDepartmentHandler,
     private readonly listDepartments: ListDepartmentsHandler,
@@ -98,42 +87,6 @@ export class DashboardOrganizationController {
     @Body() body: UpdateBranchDto,
   ) {
     return this.updateBranch.execute({ tenantId, branchId, ...body });
-  }
-
-  // ── Services ──────────────────────────────────────────────────────────────
-
-  @Post('services')
-  createServiceEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: CreateServiceDto,
-  ) {
-    return this.createService.execute({ tenantId, ...body });
-  }
-
-  @Get('services')
-  listServicesEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListServicesDto,
-  ) {
-    return this.listServices.execute({ tenantId, ...query });
-  }
-
-  @Patch('services/:serviceId')
-  updateServiceEndpoint(
-    @TenantId() tenantId: string,
-    @Param('serviceId', ParseUUIDPipe) serviceId: string,
-    @Body() body: UpdateServiceDto,
-  ) {
-    return this.updateService.execute({ tenantId, serviceId, ...body });
-  }
-
-  @Delete('services/:serviceId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  archiveServiceEndpoint(
-    @TenantId() tenantId: string,
-    @Param('serviceId', ParseUUIDPipe) serviceId: string,
-  ) {
-    return this.archiveService.execute({ tenantId, serviceId });
   }
 
   // ── Departments ───────────────────────────────────────────────────────────

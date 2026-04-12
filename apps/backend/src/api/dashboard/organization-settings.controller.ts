@@ -1,10 +1,17 @@
 import {
-  Controller, Get, Post, Body, Param, Query,
-  UseGuards, ParseUUIDPipe,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
+import { CreateServiceHandler } from '../../modules/org-experience/services/create-service.handler';
+import { CreateServiceDto } from '../../modules/org-experience/services/create-service.dto';
+import { UpdateServiceHandler } from '../../modules/org-experience/services/update-service.handler';
+import { UpdateServiceDto } from '../../modules/org-experience/services/update-service.dto';
+import { ListServicesHandler } from '../../modules/org-experience/services/list-services.handler';
+import { ListServicesDto } from '../../modules/org-experience/services/list-services.dto';
+import { ArchiveServiceHandler } from '../../modules/org-experience/services/archive-service.handler';
 import { UpsertBrandingHandler } from '../../modules/org-experience/branding/upsert-branding.handler';
 import { UpsertBrandingDto } from '../../modules/org-experience/branding/upsert-branding.dto';
 import { GetBrandingHandler } from '../../modules/org-experience/branding/get-branding.handler';
@@ -22,6 +29,10 @@ import { ListRatingsDto } from '../../modules/org-experience/ratings/list-rating
 @Controller('dashboard/organization')
 export class DashboardOrganizationSettingsController {
   constructor(
+    private readonly createService: CreateServiceHandler,
+    private readonly updateService: UpdateServiceHandler,
+    private readonly listServices: ListServicesHandler,
+    private readonly archiveService: ArchiveServiceHandler,
     private readonly upsertBranding: UpsertBrandingHandler,
     private readonly getBranding: GetBrandingHandler,
     private readonly createIntakeForm: CreateIntakeFormHandler,
@@ -30,6 +41,42 @@ export class DashboardOrganizationSettingsController {
     private readonly submitRating: SubmitRatingHandler,
     private readonly listRatings: ListRatingsHandler,
   ) {}
+
+  // ── Services ─────────────────────────────────────────────────────────────
+
+  @Post('services')
+  createServiceEndpoint(
+    @TenantId() tenantId: string,
+    @Body() body: CreateServiceDto,
+  ) {
+    return this.createService.execute({ tenantId, ...body });
+  }
+
+  @Get('services')
+  listServicesEndpoint(
+    @TenantId() tenantId: string,
+    @Query() query: ListServicesDto,
+  ) {
+    return this.listServices.execute({ tenantId, ...query });
+  }
+
+  @Patch('services/:serviceId')
+  updateServiceEndpoint(
+    @TenantId() tenantId: string,
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Body() body: UpdateServiceDto,
+  ) {
+    return this.updateService.execute({ tenantId, serviceId, ...body });
+  }
+
+  @Delete('services/:serviceId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  archiveServiceEndpoint(
+    @TenantId() tenantId: string,
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+  ) {
+    return this.archiveService.execute({ tenantId, serviceId });
+  }
 
   // ── Branding ──────────────────────────────────────────────────────────────
 
