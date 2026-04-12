@@ -119,8 +119,18 @@ describe('Media files handlers', () => {
       const big = Buffer.alloc(26 * 1024 * 1024, 0);
       await expect(
         uploadHandler.execute(
-          { tenantId: 't', filename: 'big.bin', mimetype: 'application/octet-stream', size: big.length },
+          { tenantId: 't', filename: 'big.pdf', mimetype: 'application/pdf', size: big.length },
           big,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('rejects disallowed mime types', async () => {
+      const buffer = Buffer.from('MZ');
+      await expect(
+        uploadHandler.execute(
+          { tenantId: 't', filename: 'evil.exe', mimetype: 'application/x-msdownload', size: buffer.length },
+          buffer,
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
     });

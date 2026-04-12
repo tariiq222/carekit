@@ -1,30 +1,18 @@
 import {
-  Controller, Get, Post, Delete, Param, Query,
+  Controller, Get, Post, Delete, Param, Query, Body,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
   UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { IsInt, IsOptional, Min } from 'class-validator';
-
-interface MulterFile {
-  originalname: string;
-  mimetype: string;
-  size: number;
-  buffer: Buffer;
-}
-import { Type } from 'class-transformer';
-import { FileVisibility } from '@prisma/client';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
 import { UploadFileHandler } from '../../modules/media/files/upload-file.handler';
+import { UploadFileDto } from '../../modules/media/files/upload-file.dto';
 import { GetFileHandler } from '../../modules/media/files/get-file.handler';
 import { DeleteFileHandler } from '../../modules/media/files/delete-file.handler';
 import { GeneratePresignedUrlHandler } from '../../modules/media/files/generate-presigned-url.handler';
-
-export class PresignedUrlQuery {
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) expirySeconds?: number;
-}
+import { GeneratePresignedUrlDto } from '../../modules/media/files/generate-presigned-url.dto';
 
 @Controller('dashboard/media')
 @UseGuards(JwtGuard, CaslGuard)
@@ -41,7 +29,8 @@ export class DashboardMediaController {
   @UseInterceptors(FileInterceptor('file'))
   uploadFileEndpoint(
     @TenantId() tenantId: string,
-    @UploadedFile() file: MulterFile | undefined,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body() body: UploadFileDto,
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
 
@@ -51,7 +40,7 @@ export class DashboardMediaController {
         filename: file.originalname,
         mimetype: file.mimetype,
         size: file.size,
-        visibility: FileVisibility.PRIVATE,
+        ...body,
       },
       file.buffer,
     );
@@ -78,12 +67,12 @@ export class DashboardMediaController {
   presignedUrlEndpoint(
     @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
-    @Query() query: PresignedUrlQuery,
+    @Query() query: GeneratePresignedUrlDto,
   ) {
     return this.generatePresignedUrl.execute({
       tenantId,
       fileId: id,
-      expirySeconds: query.expirySeconds,
+      ...query,
     });
   }
 }

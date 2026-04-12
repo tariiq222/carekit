@@ -1,14 +1,13 @@
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { FileVisibility } from '@prisma/client';
 
+/**
+ * Body fields for multipart upload. The actual file bytes come via
+ * @UploadedFile(); these are metadata sent alongside the file.
+ */
 export class UploadFileDto {
-  @IsString() tenantId!: string;
-  @IsString() filename!: string;
-  @IsString() mimetype!: string;
-  @IsInt() @Min(1) size!: number;
   @IsOptional() @IsEnum(FileVisibility) visibility?: FileVisibility;
-  @IsOptional() @IsString() ownerType?: string;
-  @IsOptional() @IsString() ownerId?: string;
-  @IsOptional() @IsString() uploadedBy?: string;
-  @IsOptional() @IsString() bucket?: string;
+  @IsOptional() @IsString() @MaxLength(32) ownerType?: string;
+  @IsOptional() @IsUUID() ownerId?: string;
+  @IsOptional() @IsUUID() uploadedBy?: string;
 }

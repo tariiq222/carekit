@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
-import type { GeneratePresignedUrlDto } from './generate-presigned-url.dto';
+import { GeneratePresignedUrlDto } from './generate-presigned-url.dto';
 
 const DEFAULT_EXPIRY_SECONDS = 3600;
+
+export type GeneratePresignedUrlQuery = GeneratePresignedUrlDto & {
+  tenantId: string;
+  fileId: string;
+};
 
 @Injectable()
 export class GeneratePresignedUrlHandler {
@@ -12,13 +17,13 @@ export class GeneratePresignedUrlHandler {
     private readonly storage: MinioService,
   ) {}
 
-  async execute(dto: GeneratePresignedUrlDto) {
+  async execute(query: GeneratePresignedUrlQuery) {
     const file = await this.prisma.file.findFirst({
-      where: { id: dto.fileId, tenantId: dto.tenantId, isDeleted: false },
+      where: { id: query.fileId, tenantId: query.tenantId, isDeleted: false },
     });
     if (!file) throw new NotFoundException('File not found');
 
-    const expiry = dto.expirySeconds ?? DEFAULT_EXPIRY_SECONDS;
+    const expiry = query.expirySeconds ?? DEFAULT_EXPIRY_SECONDS;
     const url = await this.storage.getSignedUrl(file.bucket, file.storageKey, expiry);
 
     return {
