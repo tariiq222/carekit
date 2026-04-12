@@ -3,7 +3,6 @@
 import { toast } from "sonner"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { useLocale } from "@/components/locale-provider"
@@ -11,7 +10,6 @@ import { useWhitelabel, useUpdateWhitelabel } from "@/hooks/use-whitelabel"
 import { useAuth } from "@/components/providers/auth-provider"
 
 import { BrandingTab } from "@/components/features/white-label/branding-tab"
-import { WlFeaturesTab } from "@/components/features/white-label/wl-features-tab"
 import type { UpdateWhitelabelPayload } from "@/lib/types/whitelabel"
 
 export default function WhiteLabelPage() {
@@ -56,25 +54,11 @@ export default function WhiteLabelPage() {
       <Breadcrumbs />
       <PageHeader title={t("whiteLabel.title")} description={t("whiteLabel.description")} />
 
-      <Tabs defaultValue="branding">
-        <div className="overflow-x-auto">
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="branding">{t("whiteLabel.tabs.branding")}</TabsTrigger>
-            <TabsTrigger value="license">{t("whiteLabel.tabs.license")}</TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value="branding" className="mt-4">
-          <BrandingTab
-            whitelabel={whitelabel ?? null}
-            onSave={handleSave}
-            isPending={mutation.isPending}
-          />
-        </TabsContent>
-        <TabsContent value="license" className="mt-4">
-          <WlFeaturesTab />
-        </TabsContent>
-      </Tabs>
+      <BrandingTab
+        whitelabel={whitelabel ?? null}
+        onSave={handleSave}
+        isPending={mutation.isPending}
+      />
     </ListPageShell>
   )
 }

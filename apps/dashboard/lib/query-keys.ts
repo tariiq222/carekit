@@ -249,13 +249,6 @@ export const queryKeys = {
     config: () => ["organization-integrations", "config"] as const,
   },
 
-  /* ─── License ─── */
-  license: {
-    all: ["license"] as const,
-    config: () => ["license", "config"] as const,
-    features: () => ["license", "features"] as const,
-  },
-
   /* ─── Feature Flags ─── */
   featureFlags: {
     all: ["feature-flags"] as const,

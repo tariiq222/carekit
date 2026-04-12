@@ -47,7 +47,4 @@ export const arWhiteLabel: Record<string, string> = {
   "whiteLabel.flagsCompliance": "الامتثال",
   "whiteLabel.systemName": "اسم النظام (إنجليزي)",
   "whiteLabel.systemNameAr": "اسم النظام (عربي)",
-  "whiteLabel.tabs.license": "الرخصة",
-  "whiteLabel.licenseHint": "تحكم في الميزات المتاحة لهذه العيادة. تعطيل الرخصة يمنع العيادة من استخدام الميزة.",
-  "whiteLabel.licenseManagement": "إدارة الرخصة",
 }

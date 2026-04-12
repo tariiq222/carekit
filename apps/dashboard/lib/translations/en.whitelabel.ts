@@ -42,7 +42,4 @@ export const enWhiteLabel: Record<string, string> = {
   "whiteLabel.flagsCompliance": "Compliance",
   "whiteLabel.systemName": "System Name (English)",
   "whiteLabel.systemNameAr": "System Name (Arabic)",
-  "whiteLabel.tabs.license": "License",
-  "whiteLabel.licenseHint": "Control which features are available for this clinic. Disabling a license prevents the clinic from using the feature.",
-  "whiteLabel.licenseManagement": "License Management",
 }
