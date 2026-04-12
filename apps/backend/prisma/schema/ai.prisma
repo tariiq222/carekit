@@ -59,6 +59,21 @@ model ChatSession {
   @@index([tenantId, clientId])
 }
 
+// ─── Chatbot Config ───────────────────────────────────────────────────────────
+
+model ChatbotConfig {
+  id        String   @id @default(uuid())
+  tenantId  String
+  key       String
+  value     Json
+  category  String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, key])
+  @@index([tenantId, category])
+}
+
 model ChatMessage {
   id          String   @id @default(uuid())
   sessionId   String
