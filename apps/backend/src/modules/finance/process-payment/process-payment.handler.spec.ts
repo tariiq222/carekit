@@ -1,5 +1,5 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { InvoiceStatus, PaymentMethod } from '@prisma/client';
+import { InvoiceStatus, PaymentMethod, Prisma } from '@prisma/client';
 import { ProcessPaymentHandler } from './process-payment.handler';
 
 const mockInvoice = {
@@ -22,24 +22,38 @@ const mockPayment = {
   processedAt: new Date(),
 };
 
-const buildPrisma = (overrides: Record<string, unknown> = {}) => ({
+// Build a tx object that execute() will see inside $transaction. The $transaction
+// mock immediately invokes its callback with this tx, simulating a real Prisma
+// interactive transaction against the mock.
+const buildTx = (overrides: Record<string, unknown> = {}) => ({
   invoice: {
-    findUnique: jest.fn().mockResolvedValue(mockInvoice),
+    findFirst: jest.fn().mockResolvedValue(mockInvoice),
     update: jest.fn().mockResolvedValue({ ...mockInvoice, status: InvoiceStatus.PAID }),
   },
   payment: {
-    findUnique: jest.fn().mockResolvedValue(null),
+    findUnique: jest.fn().mockResolvedValue(mockPayment),
     create: jest.fn().mockResolvedValue(mockPayment),
     aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 230 } }),
   },
   ...overrides,
 });
 
+const buildPrisma = (tx = buildTx()) => ({
+  ...tx,
+  // Outside-of-transaction read used to fetch invoice for event publishing.
+  invoice: {
+    ...tx.invoice,
+    findUnique: jest.fn().mockResolvedValue(mockInvoice),
+  },
+  $transaction: jest.fn((cb: (tx: unknown) => Promise<unknown>) => cb(tx)),
+});
+
 const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) });
 
 describe('ProcessPaymentHandler', () => {
   it('creates payment and marks invoice PAID when fully paid', async () => {
-    const prisma = buildPrisma();
+    const tx = buildTx();
+    const prisma = buildPrisma(tx);
     const eventBus = buildEventBus();
     const handler = new ProcessPaymentHandler(prisma as never, eventBus as never);
 
@@ -51,8 +65,8 @@ describe('ProcessPaymentHandler', () => {
       idempotencyKey: 'key-1',
     });
 
-    expect(prisma.payment.create).toHaveBeenCalled();
-    expect(prisma.invoice.update).toHaveBeenCalledWith(
+    expect(tx.payment.create).toHaveBeenCalled();
+    expect(tx.invoice.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: InvoiceStatus.PAID }) }),
     );
     expect(eventBus.publish).toHaveBeenCalledWith(
@@ -62,21 +76,54 @@ describe('ProcessPaymentHandler', () => {
     expect(result.id).toBe('pay-1');
   });
 
-  it('marks invoice PARTIALLY_PAID when underpaid', async () => {
-    const prisma = buildPrisma();
-    prisma.payment.aggregate = jest.fn().mockResolvedValue({ _sum: { amount: 100 } });
-    const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never);
+  it('marks invoice PARTIALLY_PAID when underpaid and does not publish event', async () => {
+    const tx = buildTx({
+      invoice: {
+        findFirst: jest.fn().mockResolvedValue(mockInvoice),
+        update: jest.fn().mockResolvedValue(mockInvoice),
+      },
+      payment: {
+        findUnique: jest.fn(),
+        create: jest.fn().mockResolvedValue(mockPayment),
+        aggregate: jest.fn().mockResolvedValue({ _sum: { amount: 100 } }),
+      },
+    });
+    const prisma = buildPrisma(tx);
+    const eventBus = buildEventBus();
+    const handler = new ProcessPaymentHandler(prisma as never, eventBus as never);
 
-    await handler.execute({ tenantId: 'tenant-1', invoiceId: 'inv-1', amount: 100, method: PaymentMethod.CASH });
+    await handler.execute({
+      tenantId: 'tenant-1',
+      invoiceId: 'inv-1',
+      amount: 100,
+      method: PaymentMethod.CASH,
+    });
 
-    expect(prisma.invoice.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: InvoiceStatus.PARTIALLY_PAID }) }),
+    expect(tx.invoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: InvoiceStatus.PARTIALLY_PAID }),
+      }),
     );
+    expect(eventBus.publish).not.toHaveBeenCalled();
   });
 
-  it('returns existing payment when idempotency key matches', async () => {
-    const prisma = buildPrisma();
-    prisma.payment.findUnique = jest.fn().mockResolvedValue(mockPayment);
+  it('returns existing payment when idempotencyKey unique constraint fires', async () => {
+    const uniqueError = new Prisma.PrismaClientKnownRequestError('unique violation', {
+      code: 'P2002',
+      clientVersion: 'test',
+    });
+    const tx = buildTx({
+      invoice: {
+        findFirst: jest.fn().mockResolvedValue(mockInvoice),
+        update: jest.fn(),
+      },
+      payment: {
+        findUnique: jest.fn().mockResolvedValue(mockPayment),
+        create: jest.fn().mockRejectedValue(uniqueError),
+        aggregate: jest.fn(),
+      },
+    });
+    const prisma = buildPrisma(tx);
     const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never);
 
     const result = await handler.execute({
@@ -87,27 +134,53 @@ describe('ProcessPaymentHandler', () => {
       idempotencyKey: 'key-1',
     });
 
-    expect(prisma.payment.create).not.toHaveBeenCalled();
+    expect(tx.payment.create).toHaveBeenCalled();
+    expect(tx.payment.findUnique).toHaveBeenCalledWith({
+      where: { idempotencyKey: 'key-1' },
+    });
+    expect(tx.invoice.update).not.toHaveBeenCalled();
     expect(result.id).toBe('pay-1');
   });
 
-  it('throws NotFoundException when invoice not found', async () => {
-    const prisma = buildPrisma();
-    prisma.invoice.findUnique = jest.fn().mockResolvedValue(null);
+  it('throws NotFoundException when invoice not found or belongs to different tenant', async () => {
+    const tx = buildTx({
+      invoice: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        update: jest.fn(),
+      },
+      payment: { findUnique: jest.fn(), create: jest.fn(), aggregate: jest.fn() },
+    });
+    const prisma = buildPrisma(tx);
     const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never);
 
     await expect(
-      handler.execute({ tenantId: 'tenant-1', invoiceId: 'bad-id', amount: 100, method: PaymentMethod.CASH }),
+      handler.execute({
+        tenantId: 'tenant-1',
+        invoiceId: 'bad-id',
+        amount: 100,
+        method: PaymentMethod.CASH,
+      }),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException when invoice is VOID', async () => {
-    const prisma = buildPrisma();
-    prisma.invoice.findUnique = jest.fn().mockResolvedValue({ ...mockInvoice, status: InvoiceStatus.VOID });
+    const tx = buildTx({
+      invoice: {
+        findFirst: jest.fn().mockResolvedValue({ ...mockInvoice, status: InvoiceStatus.VOID }),
+        update: jest.fn(),
+      },
+      payment: { findUnique: jest.fn(), create: jest.fn(), aggregate: jest.fn() },
+    });
+    const prisma = buildPrisma(tx);
     const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never);
 
     await expect(
-      handler.execute({ tenantId: 'tenant-1', invoiceId: 'inv-1', amount: 100, method: PaymentMethod.CASH }),
+      handler.execute({
+        tenantId: 'tenant-1',
+        invoiceId: 'inv-1',
+        amount: 100,
+        method: PaymentMethod.CASH,
+      }),
     ).rejects.toThrow(BadRequestException);
   });
 });
