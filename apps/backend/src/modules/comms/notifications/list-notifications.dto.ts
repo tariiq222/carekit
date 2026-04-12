@@ -1,9 +1,8 @@
-import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PaginationDto } from '../../../common/dto';
 
-export class ListNotificationsDto {
+export class ListNotificationsDto extends PaginationDto {
   @IsString() recipientId!: string;
   @IsOptional() @IsBoolean() @Type(() => Boolean) unreadOnly?: boolean;
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) page?: number;
-  @IsOptional() @IsInt() @Min(1) @Type(() => Number) limit?: number;
 }
