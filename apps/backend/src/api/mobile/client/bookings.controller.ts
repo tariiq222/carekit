@@ -1,0 +1,133 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import { BookingStatus, CancellationReason } from '@prisma/client';
+import { IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { JwtGuard } from '../../../common/guards/jwt.guard';
+import { TenantId } from '../../../common/tenant/tenant.decorator';
+import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
+import { ListBookingsHandler } from '../../../modules/bookings/list-bookings/list-bookings.handler';
+import { GetBookingHandler } from '../../../modules/bookings/get-booking/get-booking.handler';
+import { CreateBookingHandler } from '../../../modules/bookings/create-booking/create-booking.handler';
+import { CancelBookingHandler } from '../../../modules/bookings/cancel-booking/cancel-booking.handler';
+import { RescheduleBookingHandler } from '../../../modules/bookings/reschedule-booking/reschedule-booking.handler';
+
+export class MobileCreateBookingBody {
+  @IsUUID() branchId!: string;
+  @IsUUID() employeeId!: string;
+  @IsUUID() serviceId!: string;
+  @IsDateString() scheduledAt!: string;
+  @IsOptional() @IsUUID() durationOptionId?: string;
+  @IsOptional() @IsString() notes?: string;
+}
+
+export class MobileCancelBookingBody {
+  @IsEnum(CancellationReason) reason!: CancellationReason;
+  @IsOptional() @IsString() cancelNotes?: string;
+}
+
+export class MobileRescheduleBody {
+  @IsDateString() newScheduledAt!: string;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) newDurationMins?: number;
+}
+
+export class MobileListBookingsQuery {
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) limit?: number;
+  @IsOptional() @IsEnum(BookingStatus) status?: BookingStatus;
+}
+
+@UseGuards(JwtGuard)
+@Controller('mobile/client/bookings')
+export class MobileClientBookingsController {
+  constructor(
+    private readonly list: ListBookingsHandler,
+    private readonly get: GetBookingHandler,
+    private readonly create: CreateBookingHandler,
+    private readonly cancel: CancelBookingHandler,
+    private readonly reschedule: RescheduleBookingHandler,
+  ) {}
+
+  @Post()
+  createBooking(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: JwtUser,
+    @Body() body: MobileCreateBookingBody,
+  ) {
+    return this.create.execute({
+      tenantId,
+      clientId: user.sub,
+      branchId: body.branchId,
+      employeeId: body.employeeId,
+      serviceId: body.serviceId,
+      scheduledAt: new Date(body.scheduledAt),
+      durationOptionId: body.durationOptionId,
+      notes: body.notes,
+    });
+  }
+
+  @Get()
+  listMyBookings(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: JwtUser,
+    @Query() q: MobileListBookingsQuery,
+  ) {
+    return this.list.execute({
+      tenantId,
+      clientId: user.sub,
+      page: q.page ?? 1,
+      limit: q.limit ?? 20,
+      status: q.status,
+    });
+  }
+
+  @Get(':id')
+  getBooking(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.get.execute({ tenantId, bookingId: id });
+  }
+
+  @Patch(':id/cancel')
+  cancelBooking(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: JwtUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: MobileCancelBookingBody,
+  ) {
+    return this.cancel.execute({
+      tenantId,
+      bookingId: id,
+      reason: body.reason,
+      cancelNotes: body.cancelNotes,
+      changedBy: user.sub,
+      source: 'client',
+    });
+  }
+
+  @Patch(':id/reschedule')
+  rescheduleBooking(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: JwtUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: MobileRescheduleBody,
+  ) {
+    return this.reschedule.execute({
+      tenantId,
+      bookingId: id,
+      newScheduledAt: new Date(body.newScheduledAt),
+      newDurationMins: body.newDurationMins,
+      changedBy: user.sub,
+    });
+  }
+}
