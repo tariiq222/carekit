@@ -1,12 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { ApplyCouponDto } from './apply-coupon.dto';
 
-export interface ApplyCouponCommand {
-  tenantId: string;
-  invoiceId: string;
-  clientId: string;
-  code: string;
-}
+export type ApplyCouponCommand = ApplyCouponDto & { tenantId: string };
 
 @Injectable()
 export class ApplyCouponHandler {

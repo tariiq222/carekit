@@ -5,18 +5,10 @@ import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { PaymentCompletedEvent } from '../events/payment-completed.event';
-
-export interface MoyasarWebhookPayload {
-  id: string;           // Moyasar payment id
-  status: 'paid' | 'failed' | 'refunded';
-  amount: number;       // in halalas (×100)
-  currency: string;
-  metadata?: { invoiceId?: string; tenantId?: string };
-  message?: string;
-}
+import { MoyasarWebhookDto } from './moyasar-webhook.dto';
 
 export interface MoyasarWebhookRequest {
-  payload: MoyasarWebhookPayload;
+  payload: MoyasarWebhookDto;
   rawBody: string;
   signature: string;
 }

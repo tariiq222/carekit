@@ -1,75 +1,21 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  ParseUUIDPipe,
+  Controller, Get, Post, Body, Param, Query,
+  UseGuards, ParseUUIDPipe,
 } from '@nestjs/common';
-import { PaymentMethod, PaymentStatus } from '@prisma/client';
-import {
-  IsDateString,
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Min,
-  IsNumber,
-} from 'class-validator';
-import { Type } from 'class-transformer';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateInvoiceHandler } from '../../modules/finance/create-invoice/create-invoice.handler';
+import { CreateInvoiceDto } from '../../modules/finance/create-invoice/create-invoice.dto';
 import { GetInvoiceHandler } from '../../modules/finance/get-invoice/get-invoice.handler';
 import { ProcessPaymentHandler } from '../../modules/finance/process-payment/process-payment.handler';
+import { ProcessPaymentDto } from '../../modules/finance/process-payment/process-payment.dto';
 import { ListPaymentsHandler } from '../../modules/finance/list-payments/list-payments.handler';
+import { ListPaymentsDto } from '../../modules/finance/list-payments/list-payments.dto';
 import { ApplyCouponHandler } from '../../modules/finance/apply-coupon/apply-coupon.handler';
+import { ApplyCouponDto } from '../../modules/finance/apply-coupon/apply-coupon.dto';
 import { ZatcaSubmitHandler } from '../../modules/finance/zatca-submit/zatca-submit.handler';
-
-export class CreateInvoiceBody {
-  @IsUUID() bookingId!: string;
-  @IsUUID() branchId!: string;
-  @IsUUID() clientId!: string;
-  @IsUUID() employeeId!: string;
-  @IsNumber() subtotal!: number;
-  @IsOptional() @IsNumber() discountAmt?: number;
-  @IsOptional() @IsNumber() vatRate?: number;
-  @IsOptional() @IsString() notes?: string;
-  @IsOptional() @IsDateString() dueAt?: string;
-}
-
-export class ProcessPaymentBody {
-  @IsUUID() invoiceId!: string;
-  @IsNumber() amount!: number;
-  @IsEnum(PaymentMethod) method!: PaymentMethod;
-  @IsOptional() @IsString() gatewayRef?: string;
-  @IsOptional() @IsString() idempotencyKey?: string;
-}
-
-export class ApplyCouponBody {
-  @IsUUID() invoiceId!: string;
-  @IsUUID() clientId!: string;
-  @IsString() code!: string;
-}
-
-export class ListPaymentsQueryDto {
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) limit?: number;
-  @IsOptional() @IsUUID() invoiceId?: string;
-  @IsOptional() @IsUUID() clientId?: string;
-  @IsOptional() @IsEnum(PaymentMethod) method?: PaymentMethod;
-  @IsOptional() @IsEnum(PaymentStatus) status?: PaymentStatus;
-  @IsOptional() @IsDateString() fromDate?: string;
-  @IsOptional() @IsDateString() toDate?: string;
-}
-
-export class ZatcaSubmitBody {
-  @IsUUID() invoiceId!: string;
-}
+import { ZatcaSubmitDto } from '../../modules/finance/zatca-submit/zatca-submit.dto';
 
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/finance')
@@ -84,17 +30,10 @@ export class DashboardFinanceController {
   ) {}
 
   @Post('invoices')
-  createInv(@TenantId() tenantId: string, @Body() body: CreateInvoiceBody) {
+  createInv(@TenantId() tenantId: string, @Body() body: CreateInvoiceDto) {
     return this.createInvoice.execute({
       tenantId,
-      bookingId: body.bookingId,
-      branchId: body.branchId,
-      clientId: body.clientId,
-      employeeId: body.employeeId,
-      subtotal: body.subtotal,
-      discountAmt: body.discountAmt,
-      vatRate: body.vatRate,
-      notes: body.notes,
+      ...body,
       dueAt: body.dueAt ? new Date(body.dueAt) : undefined,
     });
   }
@@ -110,51 +49,39 @@ export class DashboardFinanceController {
   @Post('payments')
   processPaymentEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: ProcessPaymentBody,
+    @Body() body: ProcessPaymentDto,
   ) {
-    return this.processPayment.execute({
-      tenantId,
-      invoiceId: body.invoiceId,
-      amount: body.amount,
-      method: body.method,
-      gatewayRef: body.gatewayRef,
-      idempotencyKey: body.idempotencyKey,
-    });
+    return this.processPayment.execute({ tenantId, ...body });
   }
 
   @Get('payments')
   listPaymentsEndpoint(
     @TenantId() tenantId: string,
-    @Query() q: ListPaymentsQueryDto,
+    @Query() query: ListPaymentsDto,
   ) {
     return this.listPayments.execute({
       tenantId,
-      page: q.page ?? 1,
-      limit: q.limit ?? 20,
-      invoiceId: q.invoiceId,
-      clientId: q.clientId,
-      method: q.method,
-      status: q.status,
-      fromDate: q.fromDate ? new Date(q.fromDate) : undefined,
-      toDate: q.toDate ? new Date(q.toDate) : undefined,
+      page: query.page,
+      limit: query.limit,
+      invoiceId: query.invoiceId,
+      clientId: query.clientId,
+      method: query.method,
+      status: query.status,
+      fromDate: query.fromDate ? new Date(query.fromDate) : undefined,
+      toDate: query.toDate ? new Date(query.toDate) : undefined,
     });
   }
 
   @Post('coupons/apply')
   applyCouponEndpoint(
     @TenantId() tenantId: string,
-    @Body() body: ApplyCouponBody,
+    @Body() body: ApplyCouponDto,
   ) {
-    return this.applyCoupon.execute({
-      tenantId,
-      invoiceId: body.invoiceId,
-      clientId: body.clientId,
-      code: body.code,
-    });
+    return this.applyCoupon.execute({ tenantId, ...body });
   }
 
   @Post('zatca/submit')
-  zatca(@TenantId() tenantId: string, @Body() body: ZatcaSubmitBody) {
-    return this.zatcaSubmit.execute({ tenantId, invoiceId: body.invoiceId });
+  zatca(@TenantId() tenantId: string, @Body() body: ZatcaSubmitDto) {
+    return this.zatcaSubmit.execute({ tenantId, ...body });
   }
 }

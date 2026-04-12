@@ -3,11 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 import { ZatcaSubmissionStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { ZatcaSubmitDto } from './zatca-submit.dto';
 
-export interface ZatcaSubmitCommand {
-  tenantId: string;
-  invoiceId: string;
-}
+export type ZatcaSubmitCommand = ZatcaSubmitDto & { tenantId: string };
 
 interface ZatcaApiResponse {
   uuid: string;

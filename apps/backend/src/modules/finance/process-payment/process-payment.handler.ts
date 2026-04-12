@@ -3,7 +3,9 @@ import { InvoiceStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 import { PaymentCompletedEvent } from '../events/payment-completed.event';
-import type { ProcessPaymentDto } from './process-payment.dto';
+import { ProcessPaymentDto } from './process-payment.dto';
+
+export type ProcessPaymentCommand = ProcessPaymentDto & { tenantId: string };
 
 @Injectable()
 export class ProcessPaymentHandler {
@@ -12,7 +14,7 @@ export class ProcessPaymentHandler {
     private readonly eventBus: EventBusService,
   ) {}
 
-  async execute(dto: ProcessPaymentDto) {
+  async execute(dto: ProcessPaymentCommand) {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: dto.invoiceId },
     });

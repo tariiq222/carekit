@@ -1,9 +1,14 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
-import type { CreateInvoiceDto } from './create-invoice.dto';
+import { CreateInvoiceDto } from './create-invoice.dto';
 
 const DEFAULT_VAT_RATE = 0.15;
+
+export type CreateInvoiceCommand = Omit<CreateInvoiceDto, 'dueAt'> & {
+  tenantId: string;
+  dueAt?: Date;
+};
 
 @Injectable()
 export class CreateInvoiceHandler {
@@ -12,7 +17,7 @@ export class CreateInvoiceHandler {
     private readonly eventBus: EventBusService,
   ) {}
 
-  async execute(dto: CreateInvoiceDto) {
+  async execute(dto: CreateInvoiceCommand) {
     const existing = await this.prisma.invoice.findUnique({
       where: { bookingId: dto.bookingId },
     });

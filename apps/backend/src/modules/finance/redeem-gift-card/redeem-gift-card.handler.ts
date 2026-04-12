@@ -1,13 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { RedeemGiftCardDto } from './redeem-gift-card.dto';
 
-export interface RedeemGiftCardCommand {
-  tenantId: string;
-  invoiceId: string;
-  clientId: string;
-  code: string;
-  amount: number;
-}
+export type RedeemGiftCardCommand = RedeemGiftCardDto & { tenantId: string };
 
 @Injectable()
 export class RedeemGiftCardHandler {

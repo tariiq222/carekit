@@ -2,19 +2,22 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
+import { BankTransferUploadDto } from './bank-transfer-upload.dto';
 
 const RECEIPTS_BUCKET = 'finance-receipts';
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+const ALLOWED_MIME_TYPES: ReadonlySet<string> = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/pdf',
+]);
 
-export interface BankTransferUploadCommand {
+export type BankTransferUploadCommand = BankTransferUploadDto & {
   tenantId: string;
-  invoiceId: string;
-  clientId: string;
-  amount: number;
   fileBuffer: Buffer;
   mimetype: string;
   filename: string;
-}
+};
 
 @Injectable()
 export class BankTransferUploadHandler {
@@ -24,7 +27,7 @@ export class BankTransferUploadHandler {
   ) {}
 
   async execute(cmd: BankTransferUploadCommand) {
-    if (!ALLOWED_MIME_TYPES.includes(cmd.mimetype)) {
+    if (!ALLOWED_MIME_TYPES.has(cmd.mimetype)) {
       throw new BadRequestException(`File type ${cmd.mimetype} not allowed. Use JPEG, PNG, WebP, or PDF.`);
     }
 

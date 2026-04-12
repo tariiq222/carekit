@@ -2,6 +2,7 @@ import { createHmac } from 'crypto';
 import { BadRequestException } from '@nestjs/common';
 import { PaymentStatus } from '@prisma/client';
 import { MoyasarWebhookHandler, MoyasarWebhookRequest } from './moyasar-webhook.handler';
+import { MoyasarWebhookDto } from './moyasar-webhook.dto';
 
 const mockInvoice = {
   id: 'inv-1',
@@ -34,16 +35,19 @@ const buildEventBus = () => ({ publish: jest.fn().mockResolvedValue(undefined) }
 // Config with no secret — signature verification skipped in tests
 const buildConfig = () => ({ get: jest.fn().mockReturnValue(undefined) });
 
-const paidPayload = {
+const paidPayload: MoyasarWebhookDto = {
   id: 'moyasar-pay-1',
-  status: 'paid' as const,
+  status: 'paid',
   amount: 23000,
   currency: 'SAR',
   metadata: { invoiceId: 'inv-1', tenantId: 'tenant-1' },
 };
 
-const makeReq = (payload = paidPayload, rawBody = '{}', signature = ''): MoyasarWebhookRequest =>
-  ({ payload, rawBody, signature });
+const makeReq = (
+  payload: MoyasarWebhookDto = paidPayload,
+  rawBody = '{}',
+  signature = '',
+): MoyasarWebhookRequest => ({ payload, rawBody, signature });
 
 describe('MoyasarWebhookHandler', () => {
   describe('verifySignature', () => {

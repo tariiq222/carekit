@@ -1,24 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { ListPaymentsDto } from './list-payments.dto';
 
-export interface ListPaymentsQuery {
+export type ListPaymentsQuery = Omit<ListPaymentsDto, 'fromDate' | 'toDate'> & {
   tenantId: string;
-  page: number;
-  limit: number;
-  invoiceId?: string;
-  clientId?: string;
-  method?: PaymentMethod;
-  status?: PaymentStatus;
   fromDate?: Date;
   toDate?: Date;
-}
+};
 
 @Injectable()
 export class ListPaymentsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: ListPaymentsQuery) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
     const where = {
       tenantId: query.tenantId,
       ...(query.invoiceId ? { invoiceId: query.invoiceId } : {}),
@@ -35,8 +31,8 @@ export class ListPaymentsHandler {
     const [data, total] = await Promise.all([
       this.prisma.payment.findMany({
         where,
-        skip: (query.page - 1) * query.limit,
-        take: query.limit,
+        skip: (page - 1) * limit,
+        take: limit,
         orderBy: { createdAt: 'desc' },
         include: { invoice: { select: { bookingId: true, clientId: true, total: true } } },
       }),
@@ -45,7 +41,7 @@ export class ListPaymentsHandler {
 
     return {
       data,
-      meta: { total, page: query.page, limit: query.limit, totalPages: Math.ceil(total / query.limit) },
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 }
