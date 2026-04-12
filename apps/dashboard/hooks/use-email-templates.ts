@@ -5,9 +5,12 @@ import { queryKeys } from "@/lib/query-keys"
 import {
   fetchEmailTemplates,
   updateEmailTemplate,
+  previewEmailTemplate,
 } from "@/lib/api/email-templates"
 import type {
   UpdateEmailTemplatePayload,
+  TemplatePreviewPayload,
+  TemplatePreviewResult,
 } from "@/lib/types/email-template"
 
 /* ─── List ─── */
@@ -33,11 +36,12 @@ export function useEmailTemplateMutations() {
     onSuccess: invalidate,
   })
 
-  // previewMut stub — TODO: no backend endpoint for email preview
-  const previewMut = useMutation({
-    mutationFn: async (_args: { slug: string; context: Record<string, string>; lang: "ar" | "en" }) => {
-      return null as unknown as { subject: string; body: string }
-    },
+  const previewMut = useMutation<
+    TemplatePreviewResult,
+    Error,
+    { id: string } & TemplatePreviewPayload
+  >({
+    mutationFn: ({ id, ...payload }) => previewEmailTemplate(id, payload),
   })
 
   return { updateMut, previewMut }

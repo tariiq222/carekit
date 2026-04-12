@@ -33,3 +33,15 @@ export async function updateEmailTemplate(
     payload,
   )
 }
+
+/* ─── Preview ─── */
+
+export async function previewEmailTemplate(
+  id: string,
+  payload: TemplatePreviewPayload,
+): Promise<TemplatePreviewResult> {
+  return api.post<TemplatePreviewResult>(
+    `/dashboard/comms/email-templates/${id}/preview`,
+    payload,
+  )
+}
