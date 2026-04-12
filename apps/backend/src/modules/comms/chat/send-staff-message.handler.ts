@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { MessageSenderType } from '@prisma/client';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConversationStatus, MessageSenderType } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface SendStaffMessageCommand {
@@ -19,6 +19,9 @@ export class SendStaffMessageHandler {
     });
     if (!conversation) {
       throw new NotFoundException('Conversation not found');
+    }
+    if (conversation.status === ConversationStatus.CLOSED) {
+      throw new BadRequestException('Cannot send message to a closed conversation');
     }
 
     const [message] = await Promise.all([
