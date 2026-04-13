@@ -5,19 +5,30 @@ const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolved
 
 function buildController() {
   const listNotifications = fn({ data: [], meta: {} });
+  const getUnreadCount = fn({ count: 0 });
   const markRead = fn({ updated: 1 });
   const listEmailTemplates = fn({ data: [] });
   const getEmailTemplate = fn({ id: 'tpl-1' });
   const createEmailTemplate = fn({ id: 'tpl-1' });
   const updateEmailTemplate = fn({ id: 'tpl-1' });
+  const previewEmailTemplate = fn({ subject: 's', html: 'h' });
   const listConversations = fn({ data: [] });
   const listMessages = fn({ data: [] });
+  const getConversation = fn({ id: 'cv-1' });
+  const closeConversation = fn({ id: 'cv-1' });
+  const sendStaffMessage = fn({ id: 'msg-1' });
   const controller = new DashboardCommsController(
-    listNotifications as never, markRead as never, listEmailTemplates as never,
-    getEmailTemplate as never, createEmailTemplate as never, updateEmailTemplate as never,
+    listNotifications as never, getUnreadCount as never, markRead as never,
+    listEmailTemplates as never, getEmailTemplate as never, createEmailTemplate as never,
+    updateEmailTemplate as never, previewEmailTemplate as never,
     listConversations as never, listMessages as never,
+    getConversation as never, closeConversation as never, sendStaffMessage as never,
   );
-  return { controller, listNotifications, markRead, listEmailTemplates, getEmailTemplate, createEmailTemplate, updateEmailTemplate, listConversations, listMessages };
+  return {
+    controller, listNotifications, getUnreadCount, markRead,
+    listEmailTemplates, getEmailTemplate, createEmailTemplate, updateEmailTemplate, previewEmailTemplate,
+    listConversations, listMessages, getConversation, closeConversation, sendStaffMessage,
+  };
 }
 
 describe('DashboardCommsController', () => {

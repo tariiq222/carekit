@@ -18,7 +18,6 @@
 |-------|---------|------|
 | [branches.md](branches.md) | الفروع | إنشاء، قراءة، تعديل، حذف، إسناد ممارسين |
 | [coupons.md](coupons.md) | الكوبونات | إنشاء، قراءة، تعديل، حذف، تطبيق |
-| [gift-cards.md](gift-cards.md) | بطاقات الهدايا | إنشاء، قراءة، تعديل، رصيد، check balance |
 | [invoices-zatca.md](invoices-zatca.md) | الفواتير وZATCA | إنشاء، قراءة، HTML، توافق ZATCA |
 | [notifications.md](notifications.md) | الإشعارات | قراءة، تحديد مقروء، FCM tokens |
 | [intake-forms.md](intake-forms.md) | نماذج الاستقبال | إنشاء، حقول، إجابات، فلترة |

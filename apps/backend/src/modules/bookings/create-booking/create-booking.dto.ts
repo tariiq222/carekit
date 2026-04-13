@@ -24,5 +24,4 @@ export class CreateBookingDto {
   @IsOptional() @IsUUID() groupSessionId?: string;
   @IsOptional() @IsBoolean() payAtClinic?: boolean;
   @IsOptional() @IsString() couponCode?: string;
-  @IsOptional() @IsString() giftCardCode?: string;
 }

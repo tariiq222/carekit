@@ -8,6 +8,7 @@ import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
 import { ListNotificationsHandler } from '../../modules/comms/notifications/list-notifications.handler';
 import { ListNotificationsDto } from '../../modules/comms/notifications/list-notifications.dto';
+import { GetUnreadCountHandler } from '../../modules/comms/notifications/get-unread-count.handler';
 import { MarkReadHandler } from '../../modules/comms/notifications/mark-read.handler';
 import { MarkReadDto } from '../../modules/comms/notifications/mark-read.dto';
 import { ListEmailTemplatesHandler } from '../../modules/comms/email-templates/list-email-templates.handler';
@@ -33,6 +34,7 @@ import { SendStaffMessageDto } from '../../modules/comms/chat/send-staff-message
 export class DashboardCommsController {
   constructor(
     private readonly listNotifications: ListNotificationsHandler,
+    private readonly getUnreadCount: GetUnreadCountHandler,
     private readonly markRead: MarkReadHandler,
     private readonly listEmailTemplates: ListEmailTemplatesHandler,
     private readonly getEmailTemplate: GetEmailTemplateHandler,
@@ -61,10 +63,22 @@ export class DashboardCommsController {
     });
   }
 
+  @Get('notifications/unread-count')
+  getUnreadCountEndpoint(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.getUnreadCount.execute({ tenantId, recipientId: user.sub });
+  }
+
   @Patch('notifications/mark-read')
   @HttpCode(HttpStatus.NO_CONTENT)
-  markReadEndpoint(@TenantId() tenantId: string, @Body() body: MarkReadDto) {
-    return this.markRead.execute({ tenantId, ...body });
+  markReadEndpoint(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: JwtUser,
+    @Body() body: MarkReadDto = {},
+  ) {
+    return this.markRead.execute({ tenantId, recipientId: user.sub, ...body });
   }
 
   // ── Email Templates ────────────────────────────────────────────────────────

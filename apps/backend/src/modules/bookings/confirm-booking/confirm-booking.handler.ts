@@ -50,7 +50,6 @@ export class ConfirmBookingHandler {
       price: Number(booking.price),
       currency: booking.currency,
       couponCode: (booking as any).couponCode ?? null,
-      giftCardCode: (booking as any).giftCardCode ?? null,
       discountedPrice: (booking as any).discountedPrice ? Number((booking as any).discountedPrice) : null,
       bookingType: booking.bookingType,
     });

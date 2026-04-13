@@ -121,17 +121,6 @@ export class CreateBookingHandler {
       discountedPrice = parseFloat((Number(price) - discount).toFixed(2));
     }
 
-    if (dto.giftCardCode) {
-      const card = await this.prisma.giftCard.findUnique({
-        where: { tenantId_code: { tenantId: dto.tenantId, code: dto.giftCardCode } },
-      });
-      if (!card || !card.isActive) throw new BadRequestException(`Gift card ${dto.giftCardCode} not found`);
-      if (Number(card.balance) <= 0) throw new BadRequestException(`Gift card has no balance`);
-      const basePrice = discountedPrice ?? Number(price);
-      const deduction = Math.min(Number(card.balance), basePrice);
-      discountedPrice = parseFloat((basePrice - deduction).toFixed(2));
-    }
-
     // Serialize the conflict check + insert so two concurrent requests for the
     // same slot cannot both pass the overlap check. Postgres Serializable
     // isolation detects the write-skew and rolls one back with a 40001 error.
@@ -170,7 +159,6 @@ export class CreateBookingHandler {
             groupSessionId: dto.groupSessionId,
             payAtClinic: dto.payAtClinic ?? false,
             couponCode: dto.couponCode ?? null,
-            giftCardCode: dto.giftCardCode ?? null,
             discountedPrice: discountedPrice,
             status: 'PENDING',
           },

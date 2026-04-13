@@ -17,13 +17,16 @@ function buildController() {
   const complete = fn({ id: 'book-1' });
   const noShow = fn({ id: 'book-1' });
   const waitlist = fn({ id: 'wl-1' });
+  const listWaitlist = fn([] as unknown);
+  const removeWaitlist = fn(undefined);
   const availability = fn({ available: true });
   const controller = new DashboardBookingsController(
     create as never, createRecurring as never, list as never, get as never,
     cancel as never, reschedule as never, confirm as never, checkIn as never,
-    complete as never, noShow as never, waitlist as never, availability as never,
+    complete as never, noShow as never, waitlist as never,
+    listWaitlist as never, removeWaitlist as never, availability as never,
   );
-  return { controller, create, createRecurring, list, get, cancel, reschedule, confirm, checkIn, complete, noShow, waitlist, availability };
+  return { controller, create, createRecurring, list, get, cancel, reschedule, confirm, checkIn, complete, noShow, waitlist, listWaitlist, removeWaitlist, availability };
 }
 
 describe('DashboardBookingsController', () => {

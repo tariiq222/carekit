@@ -129,8 +129,6 @@ export const arOps: Record<string, string> = {
   "branches.delete.success": "تم حذف الفرع بنجاح",
   "branches.delete.error": "فشل حذف الفرع",
 
-  // ─── Gift Cards ───
-
   // ─── Employee Services ───
   "employees.services.title": "الخدمات المرتبطة",
   "employees.services.assign": "إضافة خدمة",

@@ -70,7 +70,7 @@ lib/translations/              ← i18n strings (ar + en)
 | المجموعة | الـ Features |
 | --------- | ----------- |
 | Clinical Core | bookings, clients, employees |
-| Financial | payments, invoices, coupons, gift-cards |
+| Financial | payments, invoices, coupons |
 | Compliance | zatca |
 | Catalog | services, branches, intake-forms |
 | Config | settings, white-label |

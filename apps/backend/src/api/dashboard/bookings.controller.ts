@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { JwtGuard } from '../../common/guards/jwt.guard';
@@ -23,6 +23,9 @@ import { CompleteBookingDto } from '../../modules/bookings/complete-booking/comp
 import { NoShowBookingHandler } from '../../modules/bookings/no-show-booking/no-show-booking.handler';
 import { AddToWaitlistHandler } from '../../modules/bookings/add-to-waitlist/add-to-waitlist.handler';
 import { AddToWaitlistDto } from '../../modules/bookings/add-to-waitlist/add-to-waitlist.dto';
+import { ListWaitlistHandler } from '../../modules/bookings/list-waitlist/list-waitlist.handler';
+import { ListWaitlistDto } from '../../modules/bookings/list-waitlist/list-waitlist.dto';
+import { RemoveWaitlistEntryHandler } from '../../modules/bookings/remove-waitlist-entry/remove-waitlist-entry.handler';
 import { CheckAvailabilityHandler } from '../../modules/bookings/check-availability/check-availability.handler';
 import { CheckAvailabilityDto } from '../../modules/bookings/check-availability/check-availability.dto';
 
@@ -41,6 +44,8 @@ export class DashboardBookingsController {
     private readonly completeHandler: CompleteBookingHandler,
     private readonly noShowHandler: NoShowBookingHandler,
     private readonly waitlistHandler: AddToWaitlistHandler,
+    private readonly listWaitlistHandler: ListWaitlistHandler,
+    private readonly removeWaitlistHandler: RemoveWaitlistEntryHandler,
     private readonly availabilityHandler: CheckAvailabilityHandler,
   ) {}
 
@@ -184,5 +189,19 @@ export class DashboardBookingsController {
       ...rest,
       preferredDate: preferredDate ? new Date(preferredDate) : undefined,
     });
+  }
+
+  @Get('waitlist')
+  listWaitlist(@TenantId() tenantId: string, @Query() query: ListWaitlistDto) {
+    return this.listWaitlistHandler.execute({ tenantId, ...query });
+  }
+
+  @Delete('waitlist/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeWaitlistEntry(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.removeWaitlistHandler.execute({ tenantId, id });
   }
 }

@@ -10,6 +10,7 @@ import { SendEmailHandler } from './send-email/send-email.handler';
 import { SendNotificationHandler } from './send-notification/send-notification.handler';
 import { CreateNotificationHandler } from './notifications/create-notification.handler';
 import { ListNotificationsHandler } from './notifications/list-notifications.handler';
+import { GetUnreadCountHandler } from './notifications/get-unread-count.handler';
 import { MarkReadHandler } from './notifications/mark-read.handler';
 import { CreateConversationHandler } from './chat/create-conversation.handler';
 import { CreateChatMessageHandler } from './chat/create-chat-message.handler';
@@ -35,6 +36,7 @@ const handlers = [
   SendNotificationHandler,
   CreateNotificationHandler,
   ListNotificationsHandler,
+  GetUnreadCountHandler,
   MarkReadHandler,
   CreateConversationHandler,
   CreateChatMessageHandler,

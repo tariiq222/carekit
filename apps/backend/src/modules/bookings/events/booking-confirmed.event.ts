@@ -11,7 +11,6 @@ export interface BookingConfirmedPayload {
   price: number;
   currency: string;
   couponCode?: string | null;
-  giftCardCode?: string | null;
   discountedPrice?: number | null;
   bookingType: string;
 }

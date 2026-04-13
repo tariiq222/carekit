@@ -1,22 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getMock, postMock, patchMock, deleteMock } = vi.hoisted(() => ({
+const { getMock, postMock, patchMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   postMock: vi.fn(),
   patchMock: vi.fn(),
-  deleteMock: vi.fn(),
 }))
 
 vi.mock("@/lib/api", () => ({
-  api: { get: getMock, post: postMock, patch: patchMock, delete: deleteMock },
+  api: { get: getMock, post: postMock, patch: patchMock },
 }))
 
 import {
   fetchDepartments,
-  fetchDepartment,
   createDepartment,
   updateDepartment,
-  deleteDepartment,
 } from "@/lib/api/departments"
 
 describe("departments api", () => {
@@ -30,12 +27,6 @@ describe("departments api", () => {
     expect(getMock).toHaveBeenCalledWith("/departments", expect.objectContaining({ search: "cardio" }))
   })
 
-  it("fetchDepartment calls /departments/:id", async () => {
-    getMock.mockResolvedValueOnce({ id: "d-1", nameAr: "قلبية" })
-    await fetchDepartment("d-1")
-    expect(getMock).toHaveBeenCalledWith("/departments/d-1")
-  })
-
   it("createDepartment posts to /departments", async () => {
     postMock.mockResolvedValueOnce({ id: "d-1", nameAr: "جلدية" })
     await createDepartment({ nameAr: "جلدية" } as Parameters<typeof createDepartment>[0])
@@ -46,11 +37,5 @@ describe("departments api", () => {
     patchMock.mockResolvedValueOnce({ id: "d-1", nameAr: "updated" })
     await updateDepartment("d-1", { nameAr: "updated" } as Parameters<typeof updateDepartment>[1])
     expect(patchMock).toHaveBeenCalledWith("/departments/d-1", expect.anything())
-  })
-
-  it("deleteDepartment deletes /departments/:id", async () => {
-    deleteMock.mockResolvedValueOnce(undefined)
-    await deleteDepartment("d-1")
-    expect(deleteMock).toHaveBeenCalledWith("/departments/d-1")
   })
 })

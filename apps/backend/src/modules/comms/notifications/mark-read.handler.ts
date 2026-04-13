@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { MarkReadDto } from './mark-read.dto';
 
-export type MarkReadCommand = MarkReadDto & { tenantId: string };
+export type MarkReadCommand = MarkReadDto & { tenantId: string; recipientId: string };
 
 @Injectable()
 export class MarkReadHandler {

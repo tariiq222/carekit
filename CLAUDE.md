@@ -114,7 +114,6 @@ See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 | ZATCA | `zatca/` | `zatca/` | Saudi e-invoicing, regulated |
 | Invoices | `invoices/` | `invoices/` | Invoice generation + HTML |
 | Coupons | `coupons/` | `coupons/` | Discount codes |
-| Gift Cards | `gift-cards/` | `gift-cards/` | Gift card system |
 | Chatbot | `chatbot/` | `chatbot/` | RAG + streaming AI |
 | AI | `ai/` | — | pgvector embeddings, knowledge base |
 | Reports | `reports/` | `reports/` | Revenue, activity, exports |

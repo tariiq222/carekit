@@ -1,5 +1,5 @@
 /**
- * English translations — Payments, Refund, Invoices, Gift Cards, Coupons
+ * English translations — Payments, Refund, Invoices, Coupons
  */
 
 export const enFinance: Record<string, string> = {
@@ -114,8 +114,6 @@ export const enFinance: Record<string, string> = {
   "invoices.zatcaStatus.accepted": "Accepted",
   "invoices.zatcaStatus.rejected": "Rejected",
   "invoices.zatcaStatus.warning": "Warning",
-
-  // — Gift Cards —
 
   // — Coupons —
   "coupons.title": "Coupons",

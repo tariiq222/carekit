@@ -71,7 +71,6 @@ model Booking {
   recurringPattern  RecurringFrequency?
   payAtClinic       Boolean             @default(false)
   couponCode        String?
-  giftCardCode      String?
   discountedPrice   Decimal?            @db.Decimal(12, 2)
   zoomMeetingId     String?
   zoomJoinUrl       String?

@@ -109,12 +109,11 @@ The following 20 features represent the official domain boundaries of CareKit. E
 | 9 | Invoices | `invoices/` | `invoices/` | Invoice generation, PDF export |
 | 10 | ZATCA | `zatca/` | `zatca/` | Saudi e-invoice compliance, XML |
 | 11 | Coupons | `coupons/` | `coupons/` | Discount codes, usage tracking |
-| 12 | Gift Cards | `gift-cards/` | `gift-cards/` | Prepaid gift cards |
-| 13 | Ratings | `ratings/` | `ratings/` | Star ratings, feedback collection |
-| 14 | Problem Reports | `problem-reports/` | `problem-reports/` | Client complaints, admin alerts |
-| 15 | AI Chatbot | `chatbot/` | `chatbot/` | OpenRouter chatbot, knowledge base |
-| 16 | Intake Forms | `intake-forms/` | `intake-forms/` | Pre-visit medical questionnaires |
-| 17 | Notifications | `notifications/` | `notifications/` | FCM push, in-app, email |
+| 12 | Ratings | `ratings/` | `ratings/` | Star ratings, feedback collection |
+| 13 | Problem Reports | `problem-reports/` | `problem-reports/` | Client complaints, admin alerts |
+| 14 | AI Chatbot | `chatbot/` | `chatbot/` | OpenRouter chatbot, knowledge base |
+| 15 | Intake Forms | `intake-forms/` | `intake-forms/` | Pre-visit medical questionnaires |
+| 16 | Notifications | `notifications/` | `notifications/` | FCM push, in-app, email |
 | 18 | Branches | `branches/` | `branches/` | Multi-location clinic support |
 | 19 | White Label | `whitelabel/` | `white-label/` | Branding, config per client |
 | 20 | Reports | `reports/` | `reports/` | Analytics, revenue, occupancy |

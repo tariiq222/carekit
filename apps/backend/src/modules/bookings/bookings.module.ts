@@ -8,6 +8,8 @@ import { CancelBookingHandler } from './cancel-booking/cancel-booking.handler';
 import { RescheduleBookingHandler } from './reschedule-booking/reschedule-booking.handler';
 import { ConfirmBookingHandler } from './confirm-booking/confirm-booking.handler';
 import { AddToWaitlistHandler } from './add-to-waitlist/add-to-waitlist.handler';
+import { ListWaitlistHandler } from './list-waitlist/list-waitlist.handler';
+import { RemoveWaitlistEntryHandler } from './remove-waitlist-entry/remove-waitlist-entry.handler';
 import { GetBookingHandler } from './get-booking/get-booking.handler';
 import { ListBookingsHandler } from './list-bookings/list-bookings.handler';
 import { CheckAvailabilityHandler } from './check-availability/check-availability.handler';
@@ -32,6 +34,8 @@ const handlers = [
   RescheduleBookingHandler,
   ConfirmBookingHandler,
   AddToWaitlistHandler,
+  ListWaitlistHandler,
+  RemoveWaitlistEntryHandler,
   GetBookingHandler,
   ListBookingsHandler,
   CheckAvailabilityHandler,

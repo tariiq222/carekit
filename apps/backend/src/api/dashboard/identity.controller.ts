@@ -9,13 +9,17 @@ import { ListUsersHandler } from '../../modules/identity/users/list-users.handle
 import { CreateUserHandler } from '../../modules/identity/users/create-user.handler';
 import { UpdateUserHandler } from '../../modules/identity/users/update-user.handler';
 import { DeactivateUserHandler } from '../../modules/identity/users/deactivate-user.handler';
+import { DeleteUserHandler } from '../../modules/identity/users/delete-user.handler';
+import { AssignRoleHandler } from '../../modules/identity/users/assign-role.handler';
+import { RemoveRoleHandler } from '../../modules/identity/users/remove-role.handler';
 import { ListRolesHandler } from '../../modules/identity/roles/list-roles.handler';
 import { CreateRoleHandler } from '../../modules/identity/roles/create-role.handler';
+import { DeleteRoleHandler } from '../../modules/identity/roles/delete-role.handler';
 import { AssignPermissionsHandler } from '../../modules/identity/roles/assign-permissions.handler';
 import { CreateUserDto } from '../../modules/identity/users/create-user.dto';
 import { CreateRoleDto } from '../../modules/identity/roles/create-role.dto';
 import { AssignPermissionsDto } from '../../modules/identity/roles/assign-permissions.dto';
-import { IsOptional, IsString, IsBoolean, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsInt, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ListUsersQueryDto {
@@ -31,6 +35,10 @@ class UpdateUserDto {
   @IsOptional() @IsString() customRoleId?: string | null;
 }
 
+class AssignRoleDto {
+  @IsUUID() customRoleId!: string;
+}
+
 @Controller('dashboard/identity')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardIdentityController {
@@ -39,8 +47,12 @@ export class DashboardIdentityController {
     private readonly createUserHandler: CreateUserHandler,
     private readonly updateUserHandler: UpdateUserHandler,
     private readonly deactivateUserHandler: DeactivateUserHandler,
+    private readonly deleteUserHandler: DeleteUserHandler,
+    private readonly assignRoleHandler: AssignRoleHandler,
+    private readonly removeRoleHandler: RemoveRoleHandler,
     private readonly listRolesHandler: ListRolesHandler,
     private readonly createRoleHandler: CreateRoleHandler,
+    private readonly deleteRoleHandler: DeleteRoleHandler,
     private readonly assignPermissionsHandler: AssignPermissionsHandler,
   ) {}
 
@@ -89,6 +101,35 @@ export class DashboardIdentityController {
     await this.updateUserHandler.execute({ userId, tenantId, isActive: true } as never);
   }
 
+  @Delete('users/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteUserEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) userId: string,
+  ) {
+    await this.deleteUserHandler.execute({ userId, tenantId });
+  }
+
+  @Post('users/:userId/roles')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async assignRoleEndpoint(
+    @TenantId() tenantId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Body() body: AssignRoleDto,
+  ) {
+    await this.assignRoleHandler.execute({ tenantId, userId, customRoleId: body.customRoleId });
+  }
+
+  @Delete('users/:userId/roles/:roleId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeRoleEndpoint(
+    @TenantId() tenantId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Param('roleId', ParseUUIDPipe) customRoleId: string,
+  ) {
+    await this.removeRoleHandler.execute({ tenantId, userId, customRoleId });
+  }
+
   // ── Roles ────────────────────────────────────────────────────────────────
 
   @Get('roles')
@@ -109,5 +150,14 @@ export class DashboardIdentityController {
     @Body() body: AssignPermissionsDto,
   ) {
     await this.assignPermissionsHandler.execute({ ...body, customRoleId, tenantId });
+  }
+
+  @Delete('roles/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteRoleEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) customRoleId: string,
+  ) {
+    await this.deleteRoleHandler.execute({ tenantId, customRoleId });
   }
 }

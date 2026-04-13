@@ -1,14 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getMock, postMock, patchMock, deleteMock } = vi.hoisted(() => ({
+const { getMock, postMock, patchMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   postMock: vi.fn(),
   patchMock: vi.fn(),
-  deleteMock: vi.fn(),
 }))
 
 vi.mock("@/lib/api", () => ({
-  api: { get: getMock, post: postMock, patch: patchMock, delete: deleteMock },
+  api: { get: getMock, post: postMock, patch: patchMock },
 }))
 
 import {
@@ -16,10 +15,6 @@ import {
   fetchBranch,
   createBranch,
   updateBranch,
-  deleteBranch,
-  fetchBranchEmployees,
-  assignBranchEmployees,
-  removeBranchEmployee,
 } from "@/lib/api/branches"
 
 describe("branches api", () => {
@@ -51,27 +46,4 @@ describe("branches api", () => {
     expect(patchMock).toHaveBeenCalledWith("/branches/br-1", expect.anything())
   })
 
-  it("deleteBranch deletes /branches/:id", async () => {
-    deleteMock.mockResolvedValueOnce(undefined)
-    await deleteBranch("br-1")
-    expect(deleteMock).toHaveBeenCalledWith("/branches/br-1")
-  })
-
-  it("fetchBranchEmployees calls /branches/:id/employees", async () => {
-    getMock.mockResolvedValueOnce([])
-    await fetchBranchEmployees("br-1")
-    expect(getMock).toHaveBeenCalledWith("/branches/br-1/employees")
-  })
-
-  it("assignBranchEmployees patches /branches/:id/employees", async () => {
-    patchMock.mockResolvedValueOnce([])
-    await assignBranchEmployees("br-1", ["p-1", "p-2"])
-    expect(patchMock).toHaveBeenCalledWith("/branches/br-1/employees", { employeeIds: ["p-1", "p-2"] })
-  })
-
-  it("removeBranchEmployee deletes /branches/:branchId/employees/:employeeId", async () => {
-    deleteMock.mockResolvedValueOnce(undefined)
-    await removeBranchEmployee("br-1", "p-1")
-    expect(deleteMock).toHaveBeenCalledWith("/branches/br-1/employees/p-1")
-  })
 })

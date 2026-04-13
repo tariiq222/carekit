@@ -47,7 +47,6 @@ backend/src/common/decorators/           @tariq
 backend/src/modules/payments/            @tariq
 backend/src/modules/invoices/            @tariq
 backend/src/modules/coupons/             @tariq
-backend/src/modules/gift-cards/          @tariq
 dashboard/src/app/(dashboard)/payments/  @tariq
 dashboard/src/app/(dashboard)/invoices/  @tariq
 dashboard/src/components/features/payments/ @tariq

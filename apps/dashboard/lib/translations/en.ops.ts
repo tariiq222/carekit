@@ -129,8 +129,6 @@ export const enOps: Record<string, string> = {
   "branches.delete.success": "Branch deleted successfully",
   "branches.delete.error": "Failed to delete branch",
 
-  // ─── Gift Cards ───
-
   // ─── Employee Services ───
   "employees.services.title": "Linked Services",
   "employees.services.assign": "Add Service",

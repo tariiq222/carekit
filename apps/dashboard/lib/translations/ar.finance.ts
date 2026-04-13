@@ -1,5 +1,5 @@
 /**
- * Arabic translations — Payments, Refund, Invoices, Gift Cards, Coupons
+ * Arabic translations — Payments, Refund, Invoices, Coupons
  */
 
 export const arFinance: Record<string, string> = {
@@ -114,8 +114,6 @@ export const arFinance: Record<string, string> = {
   "invoices.zatcaStatus.accepted": "مقبول",
   "invoices.zatcaStatus.rejected": "مرفوض",
   "invoices.zatcaStatus.warning": "تحذير",
-
-  // — Gift Cards —
 
   // — Coupons —
   "coupons.title": "الكوبونات",

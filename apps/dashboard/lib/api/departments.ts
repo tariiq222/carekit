@@ -13,10 +13,6 @@ export async function fetchDepartments(
   return api.get("/dashboard/organization/departments", query as Record<string, string | number | boolean | undefined>)
 }
 
-export async function fetchDepartment(id: string): Promise<Department> {
-  return api.get(`/dashboard/organization/departments/${id}`)
-}
-
 export async function createDepartment(
   payload: CreateDepartmentPayload,
 ): Promise<Department> {
@@ -28,8 +24,4 @@ export async function updateDepartment(
   payload: UpdateDepartmentPayload,
 ): Promise<Department> {
   return api.patch(`/dashboard/organization/departments/${id}`, payload)
-}
-
-export async function deleteDepartment(id: string): Promise<void> {
-  return api.delete(`/dashboard/organization/departments/${id}`)
 }

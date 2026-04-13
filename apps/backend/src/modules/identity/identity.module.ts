@@ -14,7 +14,11 @@ import { CreateUserHandler } from './users/create-user.handler';
 import { UpdateUserHandler } from './users/update-user.handler';
 import { ListUsersHandler } from './users/list-users.handler';
 import { DeactivateUserHandler } from './users/deactivate-user.handler';
+import { DeleteUserHandler } from './users/delete-user.handler';
+import { AssignRoleHandler } from './users/assign-role.handler';
+import { RemoveRoleHandler } from './users/remove-role.handler';
 import { CreateRoleHandler } from './roles/create-role.handler';
+import { DeleteRoleHandler } from './roles/delete-role.handler';
 import { AssignPermissionsHandler } from './roles/assign-permissions.handler';
 import { ListRolesHandler } from './roles/list-roles.handler';
 import { ChangePasswordHandler } from './users/change-password.handler';
@@ -23,8 +27,9 @@ import { DashboardIdentityController } from '../../api/dashboard/identity.contro
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
-  GetCurrentUserHandler, CreateUserHandler, UpdateUserHandler, ListUsersHandler, DeactivateUserHandler,
-  CreateRoleHandler, AssignPermissionsHandler, ListRolesHandler,
+  GetCurrentUserHandler, CreateUserHandler, UpdateUserHandler, ListUsersHandler,
+  DeactivateUserHandler, DeleteUserHandler, AssignRoleHandler, RemoveRoleHandler,
+  CreateRoleHandler, DeleteRoleHandler, AssignPermissionsHandler, ListRolesHandler,
   ChangePasswordHandler,
 ];
 

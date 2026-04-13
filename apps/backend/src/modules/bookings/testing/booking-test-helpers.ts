@@ -26,6 +26,8 @@ const buildPrismaRaw = () => ({
   waitlistEntry: {
     findFirst: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue({ id: 'wl-1', status: 'WAITING' }),
+    findMany: jest.fn().mockResolvedValue([]),
+    deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
   },
   businessHour: {
     findUnique: jest.fn().mockResolvedValue({
