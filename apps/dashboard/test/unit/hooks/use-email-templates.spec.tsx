@@ -94,23 +94,22 @@ describe("useEmailTemplateMutations", () => {
     await waitFor(() => expect(invalidateSpy).toHaveBeenCalled())
   })
 
-  it("previewMut calls previewEmailTemplate with slug and payload", async () => {
-    previewEmailTemplate.mockResolvedValueOnce({ html: "<p>preview</p>" })
+  it("previewMut calls previewEmailTemplate with id and payload", async () => {
+    previewEmailTemplate.mockResolvedValueOnce({ subject: "Hi", body: "<p>preview</p>" })
 
     const { result } = renderHook(() => useEmailTemplateMutations(), { wrapper: makeWrapper() })
 
     act(() => {
       result.current.previewMut.mutate({
-        slug: "welcome",
-        variables: {},
+        id: "t-1",
         context: {},
         lang: "ar",
-      } as Parameters<typeof result.current.previewMut.mutate>[0])
+      })
     })
 
     await waitFor(() => expect(previewEmailTemplate).toHaveBeenCalledWith(
-      "welcome",
-      expect.objectContaining({ variables: {} }),
+      "t-1",
+      expect.objectContaining({ context: {}, lang: "ar" }),
     ))
   })
 })

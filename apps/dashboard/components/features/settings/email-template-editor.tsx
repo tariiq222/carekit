@@ -71,9 +71,9 @@ export function EmailTemplateEditor({ template, onBack }: Props) {
     const sampleContext: Record<string, string> = {}
     for (const v of variables) sampleContext[v] = `[${v}]`
     previewMut.mutate(
-      { slug: template.slug, context: sampleContext, lang: locale as "ar" | "en" },
+      { id: template.id, context: sampleContext, lang: locale as "ar" | "en" },
       {
-        onSuccess: (data: { subject: string; body: string } | null) => { if (data) setPreview(data) },
+        onSuccess: (data) => setPreview(data),
         onError: () => toast.error(t("settings.error")),
       },
     )
