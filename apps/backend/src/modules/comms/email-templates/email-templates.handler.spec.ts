@@ -138,8 +138,7 @@ describe('PreviewEmailTemplateHandler', () => {
     tenantId: 'tenant-1',
     subjectAr: 'مرحباً {{client_name}}',
     subjectEn: 'Hello {{client_name}}',
-    bodyAr: '<p>مرحباً {{client_name}}</p>',
-    bodyEn: '<p>Hello {{client_name}}</p>',
+    htmlBody: '<p>Hi {{client_name}}</p>',
   };
 
   it('interpolates context into subject and body for Arabic', async () => {
@@ -153,7 +152,7 @@ describe('PreviewEmailTemplateHandler', () => {
       context: { client_name: 'أحمد' },
     });
     expect(result.subject).toBe('مرحباً أحمد');
-    expect(result.body).toBe('<p>مرحباً أحمد</p>');
+    expect(result.body).toBe('<p>Hi أحمد</p>');
   });
 
   it('interpolates context into subject and body for English', async () => {
@@ -167,7 +166,7 @@ describe('PreviewEmailTemplateHandler', () => {
       context: { client_name: 'John' },
     });
     expect(result.subject).toBe('Hello John');
-    expect(result.body).toBe('<p>Hello John</p>');
+    expect(result.body).toBe('<p>Hi John</p>');
   });
 
   it('replaces missing context keys with empty string', async () => {
@@ -181,7 +180,7 @@ describe('PreviewEmailTemplateHandler', () => {
       context: {},
     });
     expect(result.subject).toBe('Hello ');
-    expect(result.body).toBe('<p>Hello </p>');
+    expect(result.body).toBe('<p>Hi </p>');
   });
 
   it('throws NotFoundException when template not found', async () => {

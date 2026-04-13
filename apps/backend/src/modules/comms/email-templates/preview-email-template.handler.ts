@@ -22,7 +22,7 @@ export class PreviewEmailTemplateHandler {
     }
 
     const rawSubject = (cmd.lang === 'ar' ? template.subjectAr : template.subjectEn) ?? '';
-    const rawBody = (cmd.lang === 'ar' ? template.bodyAr : template.bodyEn) ?? '';
+    const rawBody = template.htmlBody;
 
     const interpolate = (str: string): string =>
       str.replace(/\{\{(\w+)\}\}/g, (_, key: string) =>
