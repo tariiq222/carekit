@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
-interface PaymentStats {
+export interface PaymentStats {
   total: number;
   totalAmount: number;
   completed: number;
