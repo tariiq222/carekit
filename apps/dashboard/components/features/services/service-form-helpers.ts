@@ -18,9 +18,9 @@ export function buildPayload(data: CreateServiceFormData) {
     imageUrl: data.imageUrl?.startsWith("blob:") ? undefined : (data.imageUrl ?? null),
     bufferMinutes: data.bufferMinutes,
     depositEnabled: data.depositEnabled,
-    depositPercent: data.depositPercent,
+    depositAmount: data.depositEnabled ? data.depositPercent : undefined,
     allowRecurring: data.allowRecurring,
-    allowedRecurringPatterns: data.allowedRecurringPatterns,
+    allowedRecurringPatterns: data.allowedRecurringPatterns as import("@/lib/types/service").RecurringPattern[] | undefined,
     maxRecurrences: data.maxRecurrences,
     maxParticipants: data.maxParticipants,
     minLeadMinutes: data.minLeadMinutes,
@@ -32,19 +32,8 @@ export function buildBookingTypesPayload(bookingTypes: DraftBookingType[]) {
   return bookingTypes.filter((bt) => bt.enabled).map((d) => ({
     bookingType: d.bookingType,
     price: Math.round(d.price * 100),
-    duration: d.duration,
+    durationMins: d.durationMins,
     isActive: true,
-    durationOptions:
-      d.durationOptions.length > 0
-        ? d.durationOptions.map((o, i) => ({
-            label: o.label,
-            labelAr: o.labelAr || undefined,
-            durationMinutes: o.durationMinutes,
-            price: Math.round(o.price * 100),
-            isDefault: o.isDefault,
-            sortOrder: i,
-          }))
-        : undefined,
   }))
 }
 

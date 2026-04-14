@@ -49,7 +49,7 @@ export function BookingTypeRow({
         key: nextOptionKey(),
         label: "",
         labelAr: "",
-        durationMinutes: 30,
+        durationMins: 30,
         price: 0,
         isDefault: false,
         sortOrder: draft.durationOptions.length,
@@ -103,8 +103,8 @@ export function BookingTypeRow({
           <Input
             type="number"
             min={1}
-            value={draft.duration}
-            onChange={(e) => onUpdate("duration", Number(e.target.value))}
+            value={draft.durationMins}
+            onChange={(e) => onUpdate("durationMins", Number(e.target.value))}
             className="h-8 text-sm tabular-nums"
           />
         </div>
@@ -112,7 +112,7 @@ export function BookingTypeRow({
 
       {/* Duration Options */}
       <div className="space-y-3">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="flex flex-col gap-3">
           {draft.durationOptions.map((opt) => (
             <DurationOptionMiniRow
               key={opt.key}
@@ -186,8 +186,8 @@ function DurationOptionMiniRow({
           <Input
             type="number"
             min={5}
-            value={option.durationMinutes}
-            onChange={(e) => onUpdate("durationMinutes", Number(e.target.value))}
+            value={option.durationMins}
+            onChange={(e) => onUpdate("durationMins", Number(e.target.value))}
             className="h-7 text-xs tabular-nums"
           />
         </div>

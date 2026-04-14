@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -17,6 +18,8 @@ import { ListEmployeesHandler } from '../../modules/people/employees/list-employ
 import { GetEmployeeHandler } from '../../modules/people/employees/get-employee.handler';
 import { UpdateAvailabilityHandler } from '../../modules/people/employees/update-availability.handler';
 import { EmployeeOnboardingHandler } from '../../modules/people/employees/employee-onboarding.handler';
+import { OnboardEmployeeHandler } from '../../modules/people/employees/onboard-employee.handler';
+import { OnboardEmployeeDto } from '../../modules/people/employees/onboard-employee.dto';
 import { CreateEmployeeDto } from '../../modules/people/employees/create-employee.dto';
 import { ListEmployeesDto } from '../../modules/people/employees/list-employees.dto';
 import { UpdateAvailabilityDto } from '../../modules/people/employees/update-availability.dto';
@@ -31,6 +34,8 @@ import { CreateEmployeeExceptionDto } from '../../modules/people/employees/creat
 import { DeleteEmployeeExceptionHandler } from '../../modules/people/employees/delete-employee-exception.handler';
 import { ListEmployeeRatingsHandler } from '../../modules/people/employees/list-employee-ratings.handler';
 
+@ApiTags('People')
+@ApiBearerAuth()
 @Controller('dashboard/people')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardPeopleController {
@@ -44,6 +49,7 @@ export class DashboardPeopleController {
     private readonly getEmployee: GetEmployeeHandler,
     private readonly updateAvailability: UpdateAvailabilityHandler,
     private readonly employeeOnboarding: EmployeeOnboardingHandler,
+    private readonly onboardEmployee: OnboardEmployeeHandler,
     private readonly deleteEmployee: DeleteEmployeeHandler,
     private readonly listEmployeeServices: ListEmployeeServicesHandler,
     private readonly assignEmployeeService: AssignEmployeeServiceHandler,
@@ -95,6 +101,12 @@ export class DashboardPeopleController {
   @HttpCode(HttpStatus.CREATED)
   createEmployeeEndpoint(@TenantId() tenantId: string, @Body() body: CreateEmployeeDto) {
     return this.createEmployee.execute({ tenantId, ...body });
+  }
+
+  @Post('employees/onboarding')
+  @HttpCode(HttpStatus.CREATED)
+  onboardEmployeeEndpoint(@TenantId() tenantId: string, @Body() body: OnboardEmployeeDto) {
+    return this.onboardEmployee.execute({ tenantId, ...body });
   }
 
   @Get('employees')

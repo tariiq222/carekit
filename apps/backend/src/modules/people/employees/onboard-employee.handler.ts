@@ -1,0 +1,44 @@
+import { Injectable, ConflictException } from '@nestjs/common';
+import { PrismaService } from '../../../infrastructure/database';
+import { OnboardEmployeeDto } from './onboard-employee.dto';
+
+export type OnboardEmployeeCommand = OnboardEmployeeDto & { tenantId: string };
+
+@Injectable()
+export class OnboardEmployeeHandler {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async execute(dto: OnboardEmployeeCommand) {
+    const existing = await this.prisma.employee.findUnique({
+      where: { tenantId_email: { tenantId: dto.tenantId, email: dto.email } },
+    });
+    if (existing) throw new ConflictException('Email already registered for this employee');
+
+    const employee = await this.prisma.employee.create({
+      data: {
+        tenantId: dto.tenantId,
+        name: dto.nameAr || dto.nameEn,
+        nameEn: dto.nameEn,
+        nameAr: dto.nameAr,
+        title: dto.title,
+        specialty: dto.specialty,
+        specialtyAr: dto.specialtyAr,
+        email: dto.email,
+        bio: dto.bio,
+        bioAr: dto.bioAr,
+        education: dto.education,
+        educationAr: dto.educationAr,
+        experience: dto.experience,
+        avatarUrl: dto.avatarUrl ?? undefined,
+        isActive: dto.isActive ?? true,
+      },
+      include: { specialties: true, branches: true, services: true },
+    });
+
+    return {
+      success: true,
+      message: 'Employee onboarded successfully',
+      employee,
+    };
+  }
+}

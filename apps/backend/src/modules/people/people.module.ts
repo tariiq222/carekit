@@ -7,6 +7,7 @@ import { GetClientHandler } from './clients/get-client.handler';
 import { CreateEmployeeHandler } from './employees/create-employee.handler';
 import { UpdateAvailabilityHandler } from './employees/update-availability.handler';
 import { EmployeeOnboardingHandler } from './employees/employee-onboarding.handler';
+import { OnboardEmployeeHandler } from './employees/onboard-employee.handler';
 import { ListEmployeesHandler } from './employees/list-employees.handler';
 import { GetEmployeeHandler } from './employees/get-employee.handler';
 import { DeleteEmployeeHandler } from './employees/delete-employee.handler';
@@ -21,7 +22,7 @@ import { DashboardPeopleController } from '../../api/dashboard/people.controller
 
 const handlers = [
   CreateClientHandler, UpdateClientHandler, ListClientsHandler, GetClientHandler,
-  CreateEmployeeHandler, UpdateAvailabilityHandler, EmployeeOnboardingHandler,
+  CreateEmployeeHandler, UpdateAvailabilityHandler, EmployeeOnboardingHandler, OnboardEmployeeHandler,
   ListEmployeesHandler, GetEmployeeHandler,
   DeleteEmployeeHandler, ListEmployeeServicesHandler, AssignEmployeeServiceHandler,
   RemoveEmployeeServiceHandler, ListEmployeeExceptionsHandler, CreateEmployeeExceptionHandler,

@@ -59,11 +59,20 @@ model Employee {
   tenantId       String
   userId         String?
   name           String
+  nameEn         String?
+  nameAr         String?
+  title          String?
+  specialty      String?
+  specialtyAr    String?
   phone          String?
   email          String?
   gender         EmployeeGender?
   avatarUrl      String?
   bio            String?
+  bioAr          String?
+  education      String?
+  educationAr    String?
+  experience     Int?
   employmentType   EmploymentType   @default(FULL_TIME)
   onboardingStatus OnboardingStatus @default(PENDING)
   isActive         Boolean          @default(true)
