@@ -1,13 +1,10 @@
--- NOTE: Prisma's diff engine wanted to DROP the DocumentChunk ivfflat index here
--- because it's defined in raw SQL (migration 20260411232059) and not in schema.prisma.
--- That drop has been removed intentionally — the index is load-bearing for pgvector
--- similarity search (p11 AI knowledge base). Leave it alone.
+-- NOTE: Modified for local dev (no pgvector). IF NOT EXISTS added to handle partial apply.
 
 -- AlterTable
-ALTER TABLE "Service" ADD COLUMN     "categoryId" TEXT;
+ALTER TABLE "Service" ADD COLUMN IF NOT EXISTS "categoryId" TEXT;
 
 -- CreateTable
-CREATE TABLE "Department" (
+CREATE TABLE IF NOT EXISTS "Department" (
     "id" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
     "nameAr" TEXT NOT NULL,
@@ -22,7 +19,7 @@ CREATE TABLE "Department" (
 );
 
 -- CreateTable
-CREATE TABLE "ServiceCategory" (
+CREATE TABLE IF NOT EXISTS "ServiceCategory" (
     "id" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
     "departmentId" TEXT,
@@ -37,31 +34,30 @@ CREATE TABLE "ServiceCategory" (
 );
 
 -- CreateIndex
-CREATE INDEX "Department_tenantId_idx" ON "Department"("tenantId");
+CREATE INDEX IF NOT EXISTS "Department_tenantId_idx" ON "Department"("tenantId");
 
 -- CreateIndex
-CREATE INDEX "Department_tenantId_isActive_idx" ON "Department"("tenantId", "isActive");
+CREATE INDEX IF NOT EXISTS "Department_tenantId_isActive_idx" ON "Department"("tenantId", "isActive");
 
 -- CreateIndex
-CREATE INDEX "ServiceCategory_tenantId_idx" ON "ServiceCategory"("tenantId");
+CREATE INDEX IF NOT EXISTS "ServiceCategory_tenantId_idx" ON "ServiceCategory"("tenantId");
 
 -- CreateIndex
-CREATE INDEX "ServiceCategory_tenantId_isActive_idx" ON "ServiceCategory"("tenantId", "isActive");
+CREATE INDEX IF NOT EXISTS "ServiceCategory_tenantId_isActive_idx" ON "ServiceCategory"("tenantId", "isActive");
 
 -- CreateIndex
-CREATE INDEX "ServiceCategory_departmentId_idx" ON "ServiceCategory"("departmentId");
+CREATE INDEX IF NOT EXISTS "ServiceCategory_departmentId_idx" ON "ServiceCategory"("departmentId");
 
 -- CreateIndex
-CREATE INDEX "Service_categoryId_idx" ON "Service"("categoryId");
+CREATE INDEX IF NOT EXISTS "Service_categoryId_idx" ON "Service"("categoryId");
 
--- AddForeignKey
-ALTER TABLE "ServiceCategory" ADD CONSTRAINT "ServiceCategory_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- AddForeignKey (ignore if exists)
+DO $$ BEGIN
+  ALTER TABLE "ServiceCategory" ADD CONSTRAINT "ServiceCategory_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- AddForeignKey
-ALTER TABLE "Service" ADD CONSTRAINT "Service_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "ServiceCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- Ensure pgvector index survives Prisma drift detection (see prisma/hooks/ensure_vector_indexes.sql).
-CREATE INDEX IF NOT EXISTS "DocumentChunk_embedding_cosine_idx"
-  ON "DocumentChunk"
-  USING ivfflat (embedding vector_cosine_ops)
-  WITH (lists = 100);
+DO $$ BEGIN
+  ALTER TABLE "Service" ADD CONSTRAINT "Service_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "ServiceCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;

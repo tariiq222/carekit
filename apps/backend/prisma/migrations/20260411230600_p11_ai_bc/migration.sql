@@ -22,7 +22,7 @@ CREATE TABLE "DocumentChunk" (
     "tenantId" TEXT NOT NULL,
     "documentId" TEXT NOT NULL,
     "content" TEXT NOT NULL,
-    "embedding" vector(1536),
+    "embedding" TEXT,
     "chunkIndex" INTEGER NOT NULL,
     "tokenCount" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

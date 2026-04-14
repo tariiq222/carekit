@@ -19,7 +19,8 @@
     "prisma:migrate": "prisma migrate dev && npm run prisma:hooks",
     "prisma:migrate:deploy": "prisma migrate deploy && npm run prisma:hooks",
     "prisma:hooks": "prisma db execute --file prisma/hooks/ensure_vector_indexes.sql",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@casl/ability": "^6.8.0",

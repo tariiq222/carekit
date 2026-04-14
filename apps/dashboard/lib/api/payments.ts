@@ -30,11 +30,10 @@ export async function fetchPayments(
 ): Promise<PaginatedResponse<Payment>> {
   return api.get<PaginatedResponse<Payment>>("/dashboard/finance/payments", {
     page: query.page,
-    perPage: query.perPage,
-    search: query.search,
+    limit: query.perPage,
     status: query.status,
     method: query.method,
-    dateFrom: query.dateFrom,
-    dateTo: query.dateTo,
+    fromDate: query.dateFrom,
+    toDate: query.dateTo,
   })
 }

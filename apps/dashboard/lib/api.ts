@@ -15,6 +15,8 @@ export type { ApiResponse, PaginatedResponse }
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100/api/v1"
 
+const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID ?? ""
+
 // Same-origin proxy for cookie-bearing auth endpoints (avoids cross-port cookie rejection)
 const PROXY_BASE_URL = "/api/proxy"
 
@@ -59,17 +61,25 @@ export { ApiError }
 async function tryRefreshToken(): Promise<boolean> {
   if (typeof window === "undefined") return false
 
+  const storedRefresh = localStorage.getItem("carekit_refresh_token")
+  if (!storedRefresh) return false
+
   try {
-    const res = await fetch(resolveUrl("/auth/refresh-token"), {
+    const res = await fetch(resolveUrl("/auth/refresh"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(TENANT_ID ? { "X-Tenant-ID": TENANT_ID } : {}),
+      },
+      body: JSON.stringify({ refreshToken: storedRefresh }),
       credentials: "include",
     })
     if (!res.ok) return false
 
     const body = await res.json()
-    const data = body.data
+    const data = body.data ?? body
     setAccessToken(data.accessToken)
+    if (data.refreshToken) localStorage.setItem("carekit_refresh_token", data.refreshToken)
     return true
   } catch {
     return false
@@ -85,6 +95,7 @@ async function request<T>(
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
+    ...(TENANT_ID ? { "X-Tenant-ID": TENANT_ID } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   }

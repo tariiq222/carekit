@@ -53,11 +53,13 @@ export class DashboardCommsController {
   @Get('notifications')
   listNotificationsEndpoint(
     @TenantId() tenantId: string,
+    @CurrentUser() user: JwtUser,
     @Query() query: ListNotificationsDto,
   ) {
     return this.listNotifications.execute({
       tenantId,
-      ...query,
+      recipientId: user.sub,
+      unreadOnly: query.unreadOnly,
       page: query.page ?? 1,
       limit: query.limit ?? 20,
     });

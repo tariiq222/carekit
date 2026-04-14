@@ -2,6 +2,7 @@ import {
   Controller, Post, Get, Patch, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { ConfigService } from '@nestjs/config';
 import { LoginHandler } from '../../modules/identity/login/login.handler';
 import { LogoutHandler } from '../../modules/identity/logout/logout.handler';
 import { LoginDto } from '../../modules/identity/login/login.dto';
@@ -30,12 +31,23 @@ export class AuthController {
     private readonly tokens: TokenService,
     private readonly getCurrentUser: GetCurrentUserHandler,
     private readonly changePassword: ChangePasswordHandler,
+    private readonly config: ConfigService,
   ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async loginEndpoint(@TenantId() tenantId: string, @Body() body: LoginDto) {
-    return this.login.execute({ tenantId, email: body.email, password: body.password });
+    const tokens = await this.login.execute({ tenantId, email: body.email, password: body.password });
+    const user = await this.prisma.user.findUnique({
+      where: { tenantId_email: { tenantId, email: body.email } },
+      omit: { passwordHash: true },
+      include: { customRole: { include: { permissions: true } } },
+    });
+    return {
+      ...tokens,
+      user,
+      expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
+    };
   }
 
   @Post('refresh')
@@ -56,7 +68,11 @@ export class AuthController {
 
     if (!user || !user.isActive) throw new UnauthorizedException('User not found or inactive');
 
-    return this.tokens.issueTokenPair(user);
+    const tokens = await this.tokens.issueTokenPair(user);
+    return {
+      ...tokens,
+      expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
+    };
   }
 
   @Post('logout')
@@ -90,6 +106,14 @@ export class AuthController {
       currentPassword: body.currentPassword,
       newPassword: body.newPassword,
     });
+  }
+
+  private parseTtlSeconds(ttl: string): number {
+    const match = /^(\d+)([smhd])$/.exec(ttl);
+    if (!match) return 900;
+    const n = parseInt(match[1], 10);
+    const multipliers: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };
+    return n * multipliers[match[2]];
   }
 
   // Uses tokenSelector (first 8 chars of the raw UUID) as an indexed DB filter

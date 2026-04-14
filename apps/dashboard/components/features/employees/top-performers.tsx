@@ -53,7 +53,7 @@ export function TopPerformers({ employees }: TopPerformersProps) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {top3.map((p, i) => {
           const name = `${p.user.firstName} ${p.user.lastName}`
-          const initials = `${p.user.firstName[0]}${p.user.lastName[0]}`.toUpperCase()
+          const initials = `${p.user.firstName?.[0] ?? ""}${p.user.lastName?.[0] ?? ""}`.toUpperCase()
           const specialty = locale === "ar" ? (p.specialtyAr || p.specialty) : p.specialty
           const style = rankStyles[i]
 

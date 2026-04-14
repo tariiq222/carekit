@@ -26,7 +26,7 @@ export function useSidebarNav() {
       navGroups.map((group) => ({
         labelKey: group.labelKey,
         items: group.items.filter((item) => {
-          if (item.permission && !user?.permissions.includes(item.permission)) return false
+          if (item.permission && !user?.permissions?.includes(item.permission)) return false
           return true
         }),
       })),
@@ -35,11 +35,11 @@ export function useSidebarNav() {
 
   /* ── user display info ── */
   const userInitials = useMemo(
-    () => (user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : "??"),
+    () => (user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "??" : "??"),
     [user]
   )
   const userName = useMemo(
-    () => (user ? `${user.firstName} ${user.lastName}` : "—"),
+    () => (user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "—" : "—"),
     [user]
   )
 

@@ -1,5 +1,5 @@
--- CreateExtension
-CREATE EXTENSION IF NOT EXISTS "vector";
+-- CreateExtension (pgvector disabled for local dev without extension)
+-- CREATE EXTENSION IF NOT EXISTS "vector";
 
 -- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'RECEPTIONIST', 'ACCOUNTANT', 'PRACTITIONER', 'PATIENT');

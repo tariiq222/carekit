@@ -18,8 +18,7 @@ export async function fetchBranches(
 ): Promise<PaginatedResponse<Branch>> {
   return api.get<PaginatedResponse<Branch>>("/dashboard/organization/branches", {
     page: query.page,
-    perPage: query.perPage,
-    search: query.search,
+    limit: query.perPage,
     isActive: query.isActive,
   })
 }

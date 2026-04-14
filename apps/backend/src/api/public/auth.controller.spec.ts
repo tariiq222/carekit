@@ -18,13 +18,19 @@ function buildController() {
       update: jest.fn(),
     },
     user: {
-      findUnique: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue(null),
     },
-  } as never;
+  } as unknown as import('../../infrastructure/database').PrismaService;
   const tokens = {
     issueTokenPair: jest.fn().mockResolvedValue(TOKEN_PAIR),
   } as unknown as TokenService;
-  const controller = new AuthController(login as never, logout as never, prisma, tokens);
+  const getCurrentUser = fn();
+  const changePassword = fn();
+  const config = { get: jest.fn().mockReturnValue('15m'), getOrThrow: jest.fn().mockReturnValue('15m') } as never;
+  const controller = new AuthController(
+    login as never, logout as never, prisma, tokens,
+    getCurrentUser as never, changePassword as never, config,
+  );
   return { controller, login, logout, prisma, tokens };
 }
 
@@ -42,10 +48,10 @@ describe('AuthController', () => {
       });
     });
 
-    it('returns token pair from login handler', async () => {
-      const { controller, login } = buildController();
+    it('returns token pair plus user and expiresIn from login handler', async () => {
+      const { controller } = buildController();
       const result = await controller.loginEndpoint(TENANT, { email: 'a@b.com', password: 'pass123' } as never);
-      expect(result).toEqual(TOKEN_PAIR);
+      expect(result).toMatchObject({ accessToken: 'access', refreshToken: 'refresh', expiresIn: expect.any(Number) });
     });
   });
 
@@ -78,7 +84,7 @@ describe('AuthController', () => {
         where: { id: USER_ID },
         include: { customRole: { include: { permissions: true } } },
       });
-      expect(result).toEqual(TOKEN_PAIR);
+      expect(result).toMatchObject({ accessToken: 'access', refreshToken: 'refresh', expiresIn: expect.any(Number) });
     });
 
     it('throws UnauthorizedException when no token matches', async () => {

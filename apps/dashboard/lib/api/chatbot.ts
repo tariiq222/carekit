@@ -36,12 +36,12 @@ export async function fetchChatSessions(
     "/dashboard/comms/chat/conversations",
     {
       page: query.page,
-      perPage: query.perPage,
+      limit: query.perPage,
       handedOff:
         query.handedOff !== undefined ? String(query.handedOff) : undefined,
       language: query.language,
-      dateFrom: query.dateFrom,
-      dateTo: query.dateTo,
+      fromDate: query.dateFrom,
+      toDate: query.dateTo,
       search: query.search,
     },
   )

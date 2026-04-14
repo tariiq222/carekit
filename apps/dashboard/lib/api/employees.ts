@@ -22,7 +22,7 @@ export async function fetchEmployees(
 ): Promise<PaginatedResponse<Employee>> {
   const res = await api.get<PaginatedResponse<RawEmployee>>("/dashboard/people/employees", {
     page: query.page,
-    perPage: query.perPage,
+    limit: query.perPage,
     sortBy: query.sortBy,
     sortOrder: query.sortOrder,
     search: query.search,
@@ -31,7 +31,7 @@ export async function fetchEmployees(
     isActive: query.isActive,
   })
   return {
-    items: res.items.map(mapEmployee),
+    items: (res.items ?? []).map(mapEmployee),
     meta: res.meta,
   }
 }

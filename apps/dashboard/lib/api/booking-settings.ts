@@ -66,14 +66,14 @@ export interface BookingSettings {
 }
 
 export async function fetchBookingSettings(): Promise<BookingSettings> {
-  return api.get<BookingSettings>("/booking-settings")
+  return api.get<BookingSettings>("/dashboard/organization/booking-settings")
 }
 
 export async function updateBookingSettings(
   data: Record<string, unknown>,
 ): Promise<BookingSettings> {
   return api.patch<BookingSettings>(
-    "/booking-settings",
+    "/dashboard/organization/booking-settings",
     data,
   )
 }

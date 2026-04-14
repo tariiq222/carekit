@@ -23,7 +23,7 @@ export async function fetchUsers(
 ): Promise<PaginatedResponse<User>> {
   return api.get<PaginatedResponse<User>>("/dashboard/identity/users", {
     page: query.page,
-    perPage: query.perPage,
+    limit: query.perPage,
     sortBy: query.sortBy,
     sortOrder: query.sortOrder,
     search: query.search,

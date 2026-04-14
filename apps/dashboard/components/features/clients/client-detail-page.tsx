@@ -67,7 +67,7 @@ export function ClientDetailPage({ clientId }: Props) {
         <div className="flex items-center gap-3">
           <Avatar className="size-12 shrink-0">
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-              {client.firstName[0]}{client.lastName[0]}
+              {client.firstName?.[0] ?? ""}{client.lastName?.[0] ?? ""}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col gap-1">

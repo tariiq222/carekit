@@ -17,7 +17,7 @@ export async function fetchNotifications(
 ): Promise<PaginatedResponse<Notification>> {
   return api.get<PaginatedResponse<Notification>>("/dashboard/comms/notifications", {
     page: query.page,
-    perPage: query.perPage,
+    limit: query.perPage,
   })
 }
 

@@ -56,7 +56,8 @@ export function exportServicesExcel() {
 /* ─── Categories ─── */
 
 export async function fetchCategories(): Promise<ServiceCategory[]> {
-  return api.get<ServiceCategory[]>("/dashboard/organization/categories")
+  const res = await api.get<{ items: ServiceCategory[] } | ServiceCategory[]>("/dashboard/organization/categories", { limit: 200 })
+  return Array.isArray(res) ? res : res.items
 }
 
 export async function createCategory(
@@ -89,12 +90,8 @@ export async function fetchServices(
 ): Promise<PaginatedResponse<Service>> {
   return api.get<PaginatedResponse<Service>>("/dashboard/organization/services", {
     page: query.page,
-    perPage: query.perPage,
-    categoryId: query.categoryId,
+    limit: query.perPage,
     isActive: query.isActive,
-    includeHidden: query.includeHidden,
-    search: query.search,
-    branchId: query.branchId,
   })
 }
 
@@ -243,13 +240,19 @@ export async function fetchServiceEmployees(
 /* ─── Service List Stats ─── */
 
 export interface ServiceListStats {
-  total: number;
-  active: number;
-  inactive: number;
+  total: number
+  active: number
+  inactive: number
 }
 
 export async function fetchServicesListStats(): Promise<ServiceListStats> {
-  return api.get<ServiceListStats>('/dashboard/organization/services/list-stats')
+  const [all, active] = await Promise.all([
+    api.get<{ meta: { total: number } }>("/dashboard/organization/services", { limit: 1 }),
+    api.get<{ meta: { total: number } }>("/dashboard/organization/services", { limit: 1, isActive: true }),
+  ])
+  const total = all.meta?.total ?? 0
+  const activeCount = active.meta?.total ?? 0
+  return { total, active: activeCount, inactive: total - activeCount }
 }
 
 /* ─── Service Branches ─── */

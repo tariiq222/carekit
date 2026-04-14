@@ -156,6 +156,6 @@ export async function fetchEmployeeRatings(
 ): Promise<PaginatedResponse<Rating>> {
   return api.get<PaginatedResponse<Rating>>(
     `/dashboard/people/employees/${id}/ratings`,
-    { page: query.page, perPage: query.perPage },
+    { page: query.page, limit: query.perPage },
   )
 }

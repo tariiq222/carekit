@@ -26,7 +26,7 @@ export async function fetchKnowledgeBase(
     "/dashboard/ai/knowledge-base",
     {
       page: query.page,
-      perPage: query.perPage,
+      limit: query.perPage,
       source: query.source,
       category: query.category,
     },
@@ -68,7 +68,7 @@ export async function fetchKnowledgeFiles(
 ): Promise<PaginatedResponse<KnowledgeBaseFile>> {
   return api.get<PaginatedResponse<KnowledgeBaseFile>>(
     "/dashboard/ai/knowledge-base/files",
-    { page: query.page, perPage: query.perPage },
+    { page: query.page, limit: query.perPage },
   )
 }
 

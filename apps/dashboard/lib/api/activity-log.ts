@@ -13,13 +13,13 @@ export async function fetchActivityLogs(
 ): Promise<PaginatedResponse<ActivityLog>> {
   return api.get<PaginatedResponse<ActivityLog>>("/dashboard/ops/activity", {
     page: query.page,
-    perPage: query.perPage,
+    limit: query.perPage,
     sortBy: query.sortBy,
     sortOrder: query.sortOrder,
     module: query.module,
     action: query.action,
     userId: query.userId,
-    dateFrom: query.dateFrom,
-    dateTo: query.dateTo,
+    fromDate: query.dateFrom,
+    toDate: query.dateTo,
   })
 }

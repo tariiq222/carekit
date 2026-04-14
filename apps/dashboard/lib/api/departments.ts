@@ -10,7 +10,11 @@ import type { PaginatedResponse } from "@/lib/types/common"
 export async function fetchDepartments(
   query: DepartmentListQuery = {},
 ): Promise<PaginatedResponse<Department>> {
-  return api.get("/dashboard/organization/departments", query as Record<string, string | number | boolean | undefined>)
+  return api.get("/dashboard/organization/departments", {
+    page: query.page,
+    limit: query.perPage,
+    isActive: query.isActive,
+  })
 }
 
 export async function createDepartment(

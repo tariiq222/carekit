@@ -12,8 +12,10 @@ export async function fetchRevenueReport(params: {
   branchId?: string
 }): Promise<RevenueReport> {
   return api.post<RevenueReport>("/dashboard/ops/reports", {
-    type: "revenue",
-    ...params,
+    type: "REVENUE",
+    from: params.dateFrom,
+    to: params.dateTo,
+    branchId: params.branchId,
   })
 }
 
@@ -23,8 +25,10 @@ export async function fetchBookingReport(params: {
   branchId?: string
 }): Promise<BookingReport> {
   return api.post<BookingReport>("/dashboard/ops/reports", {
-    type: "bookings",
-    ...params,
+    type: "BOOKINGS",
+    from: params.dateFrom,
+    to: params.dateTo,
+    branchId: params.branchId,
   })
 }
 
@@ -34,7 +38,9 @@ export async function fetchEmployeeReport(params: {
   employeeId?: string
 }): Promise<EmployeeReport> {
   return api.post<EmployeeReport>("/dashboard/ops/reports", {
-    type: "employees",
-    ...params,
+    type: "EMPLOYEES",
+    from: params.dateFrom,
+    to: params.dateTo,
+    employeeId: params.employeeId,
   })
 }

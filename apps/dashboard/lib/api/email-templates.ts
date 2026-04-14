@@ -13,7 +13,8 @@ import type {
 /* ─── List ─── */
 
 export async function fetchEmailTemplates(): Promise<EmailTemplate[]> {
-  return api.get<EmailTemplate[]>("/dashboard/comms/email-templates")
+  const res = await api.get<{ data: EmailTemplate[] } | EmailTemplate[]>("/dashboard/comms/email-templates")
+  return Array.isArray(res) ? res : res.data
 }
 
 /* ─── Detail ─── */

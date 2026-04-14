@@ -11,6 +11,17 @@ async function bootstrap(): Promise<void> {
   // signature computed over the raw bytes would never match.
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
+  app.setGlobalPrefix('api/v1');
+
+  app.enableCors({
+    origin: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',')
+      : ['http://localhost:3000', 'http://localhost:5103'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Request-ID'],
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

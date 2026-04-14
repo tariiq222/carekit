@@ -23,12 +23,14 @@ export interface AuthUser {
 export interface AuthResponse {
   user: AuthUser
   accessToken: string
+  refreshToken: string
   expiresIn: number
 }
 
 /* ─── Constants ─── */
 
-const USER_KEY = "carekit_user"
+const USER_KEY    = "carekit_user"
+const REFRESH_KEY = "carekit_refresh_token"
 
 /* ─── API Calls ─── */
 
@@ -52,10 +54,15 @@ export async function fetchMe(): Promise<AuthUser> {
 }
 
 export async function refreshToken(): Promise<AuthResponse> {
-  // Cookie is sent automatically via credentials: 'include'
-  const data = await api.post<AuthResponse>("/auth/refresh")
+  const storedRefresh = typeof window !== "undefined"
+    ? localStorage.getItem(REFRESH_KEY)
+    : null
+  if (!storedRefresh) throw new Error("No refresh token")
+
+  const data = await api.post<AuthResponse>("/auth/refresh", { refreshToken: storedRefresh })
 
   setAccessToken(data.accessToken)
+  if (data.refreshToken) localStorage.setItem(REFRESH_KEY, data.refreshToken)
   return data
 }
 
@@ -101,9 +108,11 @@ export function isAuthenticated(): boolean {
 function persistAuth(data: AuthResponse) {
   localStorage.setItem(USER_KEY, JSON.stringify(data.user))
   setAccessToken(data.accessToken)
+  if (data.refreshToken) localStorage.setItem(REFRESH_KEY, data.refreshToken)
 }
 
 function clearAuth() {
   localStorage.removeItem(USER_KEY)
+  localStorage.removeItem(REFRESH_KEY)
   setAccessToken(null)
 }

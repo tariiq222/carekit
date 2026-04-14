@@ -53,7 +53,7 @@ export async function fetchClients(
 ): Promise<PaginatedResponse<Client>> {
   return api.get<PaginatedResponse<Client>>("/dashboard/people/clients", {
     page: query.page,
-    perPage: query.perPage,
+    limit: query.perPage,
     search: query.search,
     ...(query.isActive !== undefined && { isActive: query.isActive }),
   })

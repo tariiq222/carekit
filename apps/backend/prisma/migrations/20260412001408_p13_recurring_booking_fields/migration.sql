@@ -1,12 +1,15 @@
--- CreateEnum
-CREATE TYPE "RecurringFrequency" AS ENUM ('DAILY', 'WEEKLY', 'CUSTOM');
+-- CreateEnum (IF NOT EXISTS workaround)
+DO $$ BEGIN
+  CREATE TYPE "RecurringFrequency" AS ENUM ('DAILY', 'WEEKLY', 'CUSTOM');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- DropIndex
-DROP INDEX "DocumentChunk_embedding_cosine_idx";
+-- DropIndex (disabled for local dev - index doesn't exist without pgvector)
+-- DROP INDEX "DocumentChunk_embedding_cosine_idx";
 
 -- AlterTable
-ALTER TABLE "Booking" ADD COLUMN     "recurringGroupId" TEXT,
-ADD COLUMN     "recurringPattern" "RecurringFrequency";
+ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "recurringGroupId" TEXT;
+ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "recurringPattern" "RecurringFrequency";
 
 -- CreateIndex
-CREATE INDEX "Booking_recurringGroupId_idx" ON "Booking"("recurringGroupId");
+CREATE INDEX IF NOT EXISTS "Booking_recurringGroupId_idx" ON "Booking"("recurringGroupId");

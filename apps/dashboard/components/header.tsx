@@ -57,6 +57,20 @@ export function Header() {
 
       <div className="flex-1" />
 
+      {/* Theme toggle */}
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={t("header.darkMode")}
+        onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        className="size-9 hover:text-primary hover:bg-primary/8"
+      >
+        <HugeiconsIcon
+          icon={resolvedTheme === "dark" ? Sun03Icon : Moon02Icon}
+          size={18}
+        />
+      </Button>
+
       {/* Settings */}
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
@@ -174,12 +188,12 @@ export function Header() {
           <button className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-all duration-200 hover:bg-primary/8">
             <Avatar className="size-8">
               <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
-                {user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : "??"}
+                {user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "??" : "??"}
               </AvatarFallback>
             </Avatar>
             <div className="hidden sm:grid text-start text-sm leading-tight">
               <span className="font-semibold text-foreground text-xs">
-                {user ? `${user.firstName} ${user.lastName}` : "—"}
+                {user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "—" : "—"}
               </span>
               <span className="text-[11px] text-muted-foreground">
                 {t("header.role")}

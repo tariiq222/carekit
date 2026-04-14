@@ -19,13 +19,13 @@ export async function fetchBookings(
 ): Promise<PaginatedResponse<Booking>> {
   return api.get<PaginatedResponse<Booking>>("/dashboard/bookings", {
     page: query.page,
-    perPage: query.perPage,
+    limit: query.perPage,
     status: query.status,
-    type: query.type,
+    bookingType: query.type,
     employeeId: query.employeeId,
     clientId: query.clientId,
-    dateFrom: query.dateFrom,
-    dateTo: query.dateTo,
+    fromDate: query.dateFrom,
+    toDate: query.dateTo,
   })
 }
 
