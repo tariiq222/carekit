@@ -1,8 +1,14 @@
 import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PaginationDto } from '../../../common/dto';
 
+const toBoolean = ({ value }: { value: unknown }) => {
+  if (value === true || value === 'true' || value === 1 || value === '1') return true;
+  if (value === false || value === 'false' || value === 0 || value === '0') return false;
+  return value;
+};
+
 export class ListDepartmentsDto extends PaginationDto {
-  @IsOptional() @IsBoolean() @Type(() => Boolean) isActive?: boolean;
+  @IsOptional() @Type(() => String) @Transform(toBoolean) @IsBoolean() isActive?: boolean;
   @IsOptional() @IsString() @MaxLength(200) search?: string;
 }

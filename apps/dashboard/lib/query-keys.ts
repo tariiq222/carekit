@@ -57,7 +57,8 @@ export const queryKeys = {
       ["services", "list", filters] as const,
     listStats: () => ["services", "list-stats"] as const,
     detail: (id: string) => ["services", "detail", id] as const,
-    categories: () => ["services", "categories"] as const,
+    categories: (filters?: object) =>
+      ["services", "categories", filters ?? {}] as const,
     bookingTypes: (serviceId: string) =>
       ["services", serviceId, "booking-types"] as const,
     durationOptions: (serviceId: string) =>

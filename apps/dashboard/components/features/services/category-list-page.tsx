@@ -2,11 +2,19 @@
 
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Add01Icon } from "@hugeicons/core-free-icons"
+import {
+  Add01Icon,
+  Tag01Icon,
+  CheckmarkCircle02Icon,
+  Cancel01Icon,
+  CalendarAdd02Icon,
+} from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
+import { StatsGrid } from "@/components/features/stats-grid"
+import { StatCard } from "@/components/features/stat-card"
 import { DataTable } from "@/components/features/data-table"
 import { FilterBar } from "@/components/features/filter-bar"
 import { ErrorBanner } from "@/components/features/error-banner"
@@ -18,26 +26,38 @@ import { CreateCategoryDialog } from "./create-category-dialog"
 import { EditCategoryDialog } from "./edit-category-dialog"
 import { DeleteCategoryDialog } from "./delete-category-dialog"
 
-import { useCategories } from "@/hooks/use-services"
+import { useCategoriesList } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 import type { ServiceCategory } from "@/lib/types/service"
 
 export function CategoryListPage() {
   const { t, locale } = useLocale()
-  const { data: categories, isLoading, error } = useCategories()
+  const {
+    categories, meta, isLoading, error,
+    search, setSearch, isActive, setIsActive,
+    page, setPage, resetFilters, refetch,
+  } = useCategoriesList()
 
-  const [search, setSearch] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<ServiceCategory | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ServiceCategory | null>(null)
 
-  const columns = getCategoryColumns(locale, setEditTarget, setDeleteTarget, t)
+  const activeCount = categories.filter((c) => c.isActive).length
+  const inactiveCount = categories.filter((c) => !c.isActive).length
+  const now = new Date()
+  const newThisMonth = categories.filter((c) => {
+    const created = new Date(c.createdAt)
+    return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth()
+  }).length
 
-  const filtered = (categories ?? []).filter((c) => {
-    if (!search) return true
-    const q = search.toLowerCase()
-    return c.nameEn.toLowerCase().includes(q) || c.nameAr.includes(q)
-  })
+  const columns = getCategoryColumns(
+    locale,
+    t,
+    (c) => setEditTarget(c),
+    (c) => setDeleteTarget(c),
+  )
+
+  const hasFilters = search.length > 0 || isActive !== undefined
 
   return (
     <ListPageShell>
@@ -53,41 +73,68 @@ export function CategoryListPage() {
         </Button>
       </PageHeader>
 
+      {isLoading && !meta ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        </div>
+      ) : (
+        <StatsGrid className="sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard title={t("services.categories.stats.total")} value={meta?.total ?? 0} icon={Tag01Icon} iconColor="primary" />
+          <StatCard title={t("services.categories.stats.active")} value={activeCount} icon={CheckmarkCircle02Icon} iconColor="success" />
+          <StatCard title={t("services.categories.stats.inactive")} value={inactiveCount} icon={Cancel01Icon} iconColor="warning" />
+          <StatCard title={t("services.categories.stats.newThisMonth")} value={newThisMonth} icon={CalendarAdd02Icon} iconColor="accent" />
+        </StatsGrid>
+      )}
+
       <FilterBar
         search={{ value: search, onChange: setSearch, placeholder: t("services.categories.searchPlaceholder") }}
-        hasFilters={search.length > 0}
-        onReset={() => setSearch("")}
+        selects={[
+          {
+            key: "status",
+            value: isActive === undefined ? "all" : isActive ? "active" : "inactive",
+            placeholder: t("services.categories.filters.allStatuses"),
+            options: [
+              { value: "all", label: t("services.categories.filters.allStatuses") },
+              { value: "active", label: t("services.categories.status.active") },
+              { value: "inactive", label: t("services.categories.status.inactive") },
+            ],
+            onValueChange: (v) => setIsActive(v === "all" ? undefined : v === "active"),
+          },
+        ]}
+        hasFilters={hasFilters}
+        onReset={resetFilters}
+        resultCount={meta && !isLoading ? `${meta.total} ${t("services.categories.stats.total")}` : undefined}
       />
 
-      {error && <ErrorBanner message={error.message} />}
+      {error && <ErrorBanner message={error} onRetry={() => refetch()} />}
 
-      {isLoading ? (
+      {isLoading && categories.length === 0 ? (
         <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-lg" />
-          ))}
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
         </div>
       ) : (
         <DataTable
           columns={columns}
-          data={filtered}
-          emptyTitle={t("services.categories.empty.title")}
-          emptyDescription={t("services.categories.empty.description")}
-          emptyAction={{ label: t("services.categories.addCategory"), onClick: () => setCreateOpen(true) }}
+          data={categories}
+          emptyTitle={hasFilters ? t("services.categories.empty.searchTitle") : t("services.categories.empty.title")}
+          emptyDescription={hasFilters ? t("services.categories.empty.searchDescription") : t("services.categories.empty.description")}
+          emptyAction={hasFilters ? undefined : { label: t("services.categories.addCategory"), onClick: () => setCreateOpen(true) }}
         />
       )}
 
+      {meta && meta.totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground tabular-nums">{page} / {meta.totalPages}</p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>{t("table.previous")}</Button>
+            <Button variant="outline" size="sm" disabled={page >= meta.totalPages} onClick={() => setPage(page + 1)}>{t("table.next")}</Button>
+          </div>
+        </div>
+      )}
+
       <CreateCategoryDialog open={createOpen} onOpenChange={setCreateOpen} />
-      <EditCategoryDialog
-        category={editTarget}
-        open={!!editTarget}
-        onOpenChange={(open) => { if (!open) setEditTarget(null) }}
-      />
-      <DeleteCategoryDialog
-        category={deleteTarget}
-        open={!!deleteTarget}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
-      />
+      <EditCategoryDialog category={editTarget} open={!!editTarget} onOpenChange={(o) => { if (!o) setEditTarget(null) }} />
+      <DeleteCategoryDialog category={deleteTarget} open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null) }} />
     </ListPageShell>
   )
 }

@@ -7,10 +7,14 @@ function buildController() {
   const createCategory = fn({ id: 'cat-1' });
   const updateCategory = fn({ id: 'cat-1' });
   const listCategories = fn({ data: [] });
+  const deleteCategory = fn({ id: 'cat-1' });
   const controller = new DashboardOrganizationCategoriesController(
-    createCategory as never, updateCategory as never, listCategories as never,
+    createCategory as never,
+    updateCategory as never,
+    listCategories as never,
+    deleteCategory as never,
   );
-  return { controller, createCategory, updateCategory, listCategories };
+  return { controller, createCategory, updateCategory, listCategories, deleteCategory };
 }
 
 describe('DashboardOrganizationCategoriesController', () => {
@@ -32,5 +36,11 @@ describe('DashboardOrganizationCategoriesController', () => {
     expect(updateCategory.execute).toHaveBeenCalledWith(
       expect.objectContaining({ tenantId: TENANT, categoryId: 'cat-1' }),
     );
+  });
+
+  it('deleteCategoryEndpoint — passes tenantId and categoryId', async () => {
+    const { controller, deleteCategory } = buildController();
+    await controller.deleteCategoryEndpoint(TENANT, 'cat-1');
+    expect(deleteCategory.execute).toHaveBeenCalledWith({ tenantId: TENANT, categoryId: 'cat-1' });
   });
 });

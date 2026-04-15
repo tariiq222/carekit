@@ -21,6 +21,7 @@ import { DeleteDepartmentHandler } from './departments/delete-department.handler
 import { CreateCategoryHandler } from './categories/create-category.handler';
 import { UpdateCategoryHandler } from './categories/update-category.handler';
 import { ListCategoriesHandler } from './categories/list-categories.handler';
+import { DeleteCategoryHandler } from './categories/delete-category.handler';
 import { SetBusinessHoursHandler } from './business-hours/set-business-hours.handler';
 import { GetBusinessHoursHandler } from './business-hours/get-business-hours.handler';
 import { AddHolidayHandler } from './business-hours/add-holiday.handler';
@@ -40,6 +41,7 @@ const departmentHandlers = [
 
 const categoryHandlers = [
   CreateCategoryHandler, UpdateCategoryHandler, ListCategoriesHandler,
+  DeleteCategoryHandler,
 ];
 
 const hoursHandlers = [

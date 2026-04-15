@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
@@ -31,31 +31,33 @@ import {
   type CreateCategoryFormData,
 } from "@/lib/schemas/service.schema"
 
-/* ─── Props ─── */
-
-interface CreateCategoryDialogProps {
+interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-/* ─── Component ─── */
+const NO_DEPT = "__none"
 
-export function CreateCategoryDialog({
-  open,
-  onOpenChange,
-}: CreateCategoryDialogProps) {
-  const { t } = useLocale()
+export function CreateCategoryDialog({ open, onOpenChange }: Props) {
+  const { t, locale } = useLocale()
   const { createMut } = useCategoryMutations()
   const { options: departments } = useDepartmentOptions()
 
   const form = useForm<CreateCategoryFormData>({
     resolver: zodResolver(createCategorySchema),
-    defaultValues: { nameEn: "", nameAr: "", sortOrder: 0, departmentId: "" },
+    defaultValues: { nameAr: "", nameEn: "", sortOrder: 0, departmentId: undefined },
   })
+
+  const translateError = (msg?: string) => (msg ? t(msg) : undefined)
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
-      await createMut.mutateAsync(data)
+      await createMut.mutateAsync({
+        nameAr: data.nameAr,
+        nameEn: data.nameEn || undefined,
+        sortOrder: data.sortOrder,
+        departmentId: data.departmentId || undefined,
+      })
       toast.success(t("services.categories.create.success"))
       form.reset()
       onOpenChange(false)
@@ -76,52 +78,65 @@ export function CreateCategoryDialog({
           <form id="create-category-form" onSubmit={onSubmit} className="flex flex-col gap-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label>{t("services.categories.create.nameEn")} *</Label>
-                <Input {...form.register("nameEn")} />
-                {form.formState.errors.nameEn && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.nameEn.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-1.5">
                 <Label>{t("services.categories.create.nameAr")} *</Label>
                 <Input {...form.register("nameAr")} dir="rtl" />
                 {form.formState.errors.nameAr && (
                   <p className="text-xs text-destructive">
-                    {form.formState.errors.nameAr.message}
+                    {translateError(form.formState.errors.nameAr.message)}
                   </p>
                 )}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("services.categories.create.nameEn")}</Label>
+                <Input {...form.register("nameEn")} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label>{t("services.categories.create.department")} *</Label>
-                <Select
-                  value={form.watch("departmentId") || ""}
-                  onValueChange={(v) => form.setValue("departmentId", v)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("services.categories.create.departmentPlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.nameAr} / {d.nameEn}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form.formState.errors.departmentId && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.departmentId.message}
-                  </p>
-                )}
+                <Label>{t("services.categories.create.department")}</Label>
+                <Controller
+                  control={form.control}
+                  name="departmentId"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || NO_DEPT}
+                      onValueChange={(v) => field.onChange(v === NO_DEPT ? undefined : v)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t("services.categories.create.departmentPlaceholder")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NO_DEPT}>
+                          {t("services.categories.create.departmentPlaceholder")}
+                        </SelectItem>
+                        {departments.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>
+                            {locale === "ar" ? d.nameAr : d.nameEn}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("services.categories.create.sortOrder")}</Label>
-                <Input type="number" min={0} {...form.register("sortOrder")} />
+                <Controller
+                  control={form.control}
+                  name="sortOrder"
+                  render={({ field }) => (
+                    <Input
+                      type="number"
+                      min={0}
+                      max={999}
+                      value={field.value ?? 0}
+                      onChange={(e) =>
+                        field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                      }
+                    />
+                  )}
+                />
               </div>
             </div>
           </form>

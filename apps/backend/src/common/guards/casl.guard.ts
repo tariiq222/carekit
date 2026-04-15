@@ -6,7 +6,10 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AbilityBuilder, createMongoAbility, MongoAbility } from '@casl/ability';
+import {
+  CaslAbilityFactory,
+  AppAbility,
+} from '../../modules/identity/casl/casl-ability.factory';
 
 export type Action = 'manage' | 'create' | 'read' | 'update' | 'delete';
 export type Subject = string;
@@ -22,29 +25,23 @@ export const CHECK_PERMISSIONS_KEY = 'requiredPermissions';
 export const CheckPermissions = (...permissions: RequiredPermission[]) =>
   SetMetadata(CHECK_PERMISSIONS_KEY, permissions);
 
-export type AppAbility = MongoAbility;
+export type { AppAbility };
 
-/** Builds CASL ability from the user's roles + permissions attached by JwtStrategy. */
-export function buildAbilityFor(user: {
-  permissions: Array<{ action: string; subject: string }>;
-}): AppAbility {
-  const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
-
-  for (const p of user.permissions) {
-    can(p.action as Action, p.subject);
-  }
-
-  return build();
-}
+type RequestUser = {
+  role: string;
+  customRole: { permissions: Array<{ action: string; subject: string }> } | null;
+};
 
 /**
  * CASL guard — evaluates @CheckPermissions() metadata against the
- * current user's ability.
+ * current user's ability, derived from their role (built-in) or customRole.
  *
  * Must run after JwtGuard so req.user is populated.
  */
 @Injectable()
 export class CaslGuard implements CanActivate {
+  private readonly abilityFactory = new CaslAbilityFactory();
+
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(ctx: ExecutionContext): boolean {
@@ -55,11 +52,13 @@ export class CaslGuard implements CanActivate {
 
     if (!required || required.length === 0) return true;
 
-    const { user } = ctx.switchToHttp().getRequest<{ user?: { permissions: Array<{ action: string; subject: string }> } }>();
+    const { user } = ctx
+      .switchToHttp()
+      .getRequest<{ user?: RequestUser }>();
 
     if (!user) throw new ForbiddenException('No authenticated user');
 
-    const ability = buildAbilityFor(user);
+    const ability = this.abilityFactory.buildForUser(user);
 
     const allowed = required.every((p) => ability.can(p.action, p.subject));
 

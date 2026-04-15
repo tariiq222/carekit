@@ -1,10 +1,10 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
-import { CaslGuard } from '../../common/guards/casl.guard';
+import { CaslGuard, CheckPermissions } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateCategoryHandler } from '../../modules/org-config/categories/create-category.handler';
 import { CreateCategoryDto } from '../../modules/org-config/categories/create-category.dto';
@@ -12,6 +12,7 @@ import { UpdateCategoryHandler } from '../../modules/org-config/categories/updat
 import { UpdateCategoryDto } from '../../modules/org-config/categories/update-category.dto';
 import { ListCategoriesHandler } from '../../modules/org-config/categories/list-categories.handler';
 import { ListCategoriesDto } from '../../modules/org-config/categories/list-categories.dto';
+import { DeleteCategoryHandler } from '../../modules/org-config/categories/delete-category.handler';
 
 @ApiTags('Categories')
 @ApiBearerAuth()
@@ -22,9 +23,11 @@ export class DashboardOrganizationCategoriesController {
     private readonly createCategory: CreateCategoryHandler,
     private readonly updateCategory: UpdateCategoryHandler,
     private readonly listCategories: ListCategoriesHandler,
+    private readonly deleteCategory: DeleteCategoryHandler,
   ) {}
 
   @Post('categories')
+  @CheckPermissions({ action: 'create', subject: 'Category' })
   createCategoryEndpoint(
     @TenantId() tenantId: string,
     @Body() body: CreateCategoryDto,
@@ -33,6 +36,7 @@ export class DashboardOrganizationCategoriesController {
   }
 
   @Get('categories')
+  @CheckPermissions({ action: 'read', subject: 'Category' })
   listCategoriesEndpoint(
     @TenantId() tenantId: string,
     @Query() query: ListCategoriesDto,
@@ -41,11 +45,21 @@ export class DashboardOrganizationCategoriesController {
   }
 
   @Patch('categories/:categoryId')
+  @CheckPermissions({ action: 'update', subject: 'Category' })
   updateCategoryEndpoint(
     @TenantId() tenantId: string,
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Body() body: UpdateCategoryDto,
   ) {
     return this.updateCategory.execute({ tenantId, categoryId, ...body });
+  }
+
+  @Delete('categories/:categoryId')
+  @CheckPermissions({ action: 'delete', subject: 'Category' })
+  deleteCategoryEndpoint(
+    @TenantId() tenantId: string,
+    @Param('categoryId', ParseUUIDPipe) categoryId: string,
+  ) {
+    return this.deleteCategory.execute({ tenantId, categoryId });
   }
 }

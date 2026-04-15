@@ -23,12 +23,12 @@ export function CategoriesTabContent() {
   const [editTarget, setEditTarget] = useState<ServiceCategory | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ServiceCategory | null>(null)
 
-  const columns = getCategoryColumns(locale, setEditTarget, setDeleteTarget, t)
+  const columns = getCategoryColumns(locale, t, setEditTarget, setDeleteTarget)
 
   const filtered = (categories ?? []).filter((c) => {
     if (!search) return true
     const q = search.toLowerCase()
-    return c.nameEn.toLowerCase().includes(q) || c.nameAr.includes(q)
+    return (c.nameEn?.toLowerCase().includes(q) ?? false) || c.nameAr.includes(q)
   })
 
   return (

@@ -11,6 +11,7 @@ import type {
   ServiceDurationOption,
   ServiceListQuery,
   ServiceEmployee,
+  CategoryListQuery,
 } from "@/lib/types/service"
 import type {
   CreateCategoryPayload,
@@ -49,9 +50,16 @@ export function exportServicesExcel() {
 
 /* ─── Categories ─── */
 
-export async function fetchCategories(): Promise<ServiceCategory[]> {
-  const res = await api.get<{ items: ServiceCategory[] } | ServiceCategory[]>("/dashboard/organization/categories", { limit: 200 })
-  return Array.isArray(res) ? res : res.items
+export async function fetchCategories(
+  query: CategoryListQuery = {},
+): Promise<PaginatedResponse<ServiceCategory>> {
+  return api.get<PaginatedResponse<ServiceCategory>>("/dashboard/organization/categories", {
+    page: query.page,
+    limit: query.perPage,
+    search: query.search,
+    isActive: query.isActive,
+    departmentId: query.departmentId,
+  })
 }
 
 export async function createCategory(

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 import { ListCategoriesDto } from './list-categories.dto';
@@ -14,10 +15,16 @@ export class ListCategoriesHandler {
     const limit = dto.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where = {
+    const where: Prisma.ServiceCategoryWhereInput = {
       tenantId: dto.tenantId,
       ...(dto.departmentId !== undefined && { departmentId: dto.departmentId }),
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
+      ...(dto.search && {
+        OR: [
+          { nameAr: { contains: dto.search, mode: 'insensitive' } },
+          { nameEn: { contains: dto.search, mode: 'insensitive' } },
+        ],
+      }),
     };
 
     const [items, total] = await this.prisma.$transaction([
@@ -25,6 +32,7 @@ export class ListCategoriesHandler {
         where,
         skip,
         take: limit,
+        include: { _count: { select: { services: true } } },
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       }),
       this.prisma.serviceCategory.count({ where }),
