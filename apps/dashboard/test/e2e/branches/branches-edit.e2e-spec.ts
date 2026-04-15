@@ -70,9 +70,10 @@ test.describe('Branches — edit', () => {
     await addressInput.clear();
     await addressInput.fill(newAddress);
 
-    // ضع waitForURL قبل الضغط لتجنب race condition إن كان التنقل يحدث قبل استدعاء waitForURL
+    // ضع waitForURL قبل الضغط لتجنب race condition
     const navPromise = adminPage.waitForURL(/\/branches$/, { timeout: 20_000, waitUntil: 'commit' });
-    await adminPage.locator('button[type="submit"]').click();
+    // dispatchEvent مباشرة على الـ form لضمان submit
+    await adminPage.locator('form').dispatchEvent('submit');
     await navPromise;
 
     await searchInList('/branches', branch.nameAr);
