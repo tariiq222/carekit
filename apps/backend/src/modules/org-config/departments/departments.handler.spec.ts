@@ -17,20 +17,37 @@ const buildPrisma = () => ({
 });
 
 describe('CreateDepartmentHandler', () => {
-  it('creates a department', async () => {
+  it('creates a department and passes all fields to prisma', async () => {
     const prisma = buildPrisma();
-    prisma.department.findFirst = jest.fn().mockResolvedValue(null); // no duplicate
     const handler = new CreateDepartmentHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', nameAr: 'عيادة', nameEn: 'Clinic' });
-    expect(prisma.department.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ tenantId: 'tenant-1' }) }),
-    );
+    const result = await handler.execute({
+      tenantId: 'tenant-1',
+      nameAr: 'عيادة',
+      nameEn: 'Clinic',
+      descriptionAr: 'وصف القسم',
+      descriptionEn: 'Department description',
+      icon: 'clinic-icon',
+    });
+    expect(prisma.department.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tenantId: 'tenant-1',
+        nameAr: 'عيادة',
+        descriptionAr: 'وصف القسم',
+        descriptionEn: 'Department description',
+        icon: 'clinic-icon',
+      }),
+    });
     expect(result).toMatchObject({ id: 'dept-1' });
   });
 
-  it('throws ConflictException on duplicate nameAr', async () => {
+  it('throws ConflictException on duplicate nameAr (P2002)', async () => {
+    const { Prisma } = await import('@prisma/client');
     const prisma = buildPrisma();
-    // findFirst returns existing dept (duplicate)
+    const p2002 = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed',
+      { code: 'P2002', clientVersion: '5.0.0' },
+    );
+    prisma.department.create = jest.fn().mockRejectedValue(p2002);
     const handler = new CreateDepartmentHandler(prisma as never);
     await expect(
       handler.execute({ tenantId: 'tenant-1', nameAr: 'عيادة' }),
