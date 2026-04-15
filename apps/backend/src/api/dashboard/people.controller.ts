@@ -1,7 +1,9 @@
 import {
   Controller, Get, Post, Put, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
+  UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
@@ -38,6 +40,7 @@ import { CreateEmployeeExceptionDto } from '../../modules/people/employees/creat
 import { DeleteEmployeeExceptionHandler } from '../../modules/people/employees/delete-employee-exception.handler';
 import { ListEmployeeRatingsHandler } from '../../modules/people/employees/list-employee-ratings.handler';
 import { EmployeeStatsHandler } from '../../modules/people/employees/employee-stats.handler';
+import { UploadAvatarHandler } from '../../modules/people/employees/upload-avatar/upload-avatar.handler';
 
 @ApiTags('People')
 @ApiBearerAuth()
@@ -67,10 +70,9 @@ export class DashboardPeopleController {
     private readonly deleteEmployeeException: DeleteEmployeeExceptionHandler,
     private readonly listEmployeeRatings: ListEmployeeRatingsHandler,
     private readonly employeeStats: EmployeeStatsHandler,
+    private readonly uploadAvatar: UploadAvatarHandler,
   ) {}
-
   // ── Clients ────────────────────────────────────────────────────────────────
-
   @Post('clients')
   @HttpCode(HttpStatus.CREATED)
   createClientEndpoint(@TenantId() tenantId: string, @Body() body: CreateClientDto) {
@@ -122,9 +124,7 @@ export class DashboardPeopleController {
   ) {
     await this.deleteClient.execute({ tenantId, clientId: id });
   }
-
   // ── Employees ──────────────────────────────────────────────────────────────
-
   @Post('employees')
   @HttpCode(HttpStatus.CREATED)
   createEmployeeEndpoint(@TenantId() tenantId: string, @Body() body: CreateEmployeeDto) {
@@ -331,5 +331,20 @@ export class DashboardPeopleController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.listEmployeeRatings.execute({ tenantId, employeeId: id });
+  }
+
+  @Post('employees/:employeeId/avatar')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file'))
+  uploadAvatarEndpoint(
+    @TenantId() tenantId: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    return this.uploadAvatar.execute({
+      tenantId, employeeId,
+      filename: file.originalname, mimetype: file.mimetype, size: file.size,
+    }, file.buffer);
   }
 }

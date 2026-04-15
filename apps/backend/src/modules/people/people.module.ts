@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
+import { MulterModule } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { DatabaseModule } from '../../infrastructure/database';
+import { MediaModule } from '../media/media.module';
+import { UploadAvatarHandler } from './employees/upload-avatar/upload-avatar.handler';
 import { CreateClientHandler } from './clients/create-client.handler';
 import { UpdateClientHandler } from './clients/update-client.handler';
 import { ListClientsHandler } from './clients/list-clients.handler';
@@ -31,10 +35,11 @@ const handlers = [
   DeleteEmployeeHandler, ListEmployeeServicesHandler, AssignEmployeeServiceHandler,
   RemoveEmployeeServiceHandler, ListEmployeeExceptionsHandler, CreateEmployeeExceptionHandler,
   DeleteEmployeeExceptionHandler, ListEmployeeRatingsHandler, EmployeeStatsHandler,
+  UploadAvatarHandler,
 ];
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, MediaModule, MulterModule.register({ storage: memoryStorage() })],
   controllers: [DashboardPeopleController],
   providers: [...handlers],
   exports: [...handlers],
