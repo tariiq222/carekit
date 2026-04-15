@@ -47,6 +47,7 @@ function NotificationRow({
   return (
     <button
       type="button"
+      data-testid="notification-item"
       className={cn(
         "flex w-full items-start gap-3 rounded-sm px-3 py-2 text-start transition-colors hover:bg-surface-muted",
         isUnread && "bg-primary/5"
@@ -129,6 +130,7 @@ export function NotificationDropdown() {
             <Button
               variant="ghost"
               size="sm"
+              data-testid="mark-all-read"
               className="h-auto px-2 py-1 text-xs text-primary"
               onClick={() => markAllMut.mutate()}
               disabled={markAllMut.isPending}

@@ -148,11 +148,15 @@ export function Header() {
             variant="ghost"
             size="icon"
             aria-label="Notifications"
+            data-testid="notifications-bell"
             className="relative size-9 hover:text-primary hover:bg-primary/8"
           >
             <HugeiconsIcon icon={Notification03Icon} size={18} />
             {(unreadCount ?? 0) > 0 && (
-              <span className="absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-error text-[9px] font-bold tabular-nums text-white ring-2 ring-background">
+              <span
+                data-testid="notifications-badge"
+                className="absolute -top-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-error text-[9px] font-bold tabular-nums text-white ring-2 ring-background"
+              >
                 {unreadCount! > 9 ? "9+" : unreadCount}
               </span>
             )}
