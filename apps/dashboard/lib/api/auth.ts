@@ -12,12 +12,13 @@ import { api, setAccessToken, getAccessToken } from "@/lib/api"
 export interface AuthUser {
   id: string
   email: string
-  firstName: string
-  lastName: string
+  name: string
   phone: string | null
   gender: string | null
-  roles: { id: string; name: string; slug: string }[]
-  permissions: string[]
+  role: string
+  avatarUrl: string | null
+  isActive: boolean
+  permissions?: string[]
 }
 
 export interface AuthResponse {

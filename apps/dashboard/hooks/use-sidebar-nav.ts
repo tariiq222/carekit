@@ -34,12 +34,13 @@ export function useSidebarNav() {
   )
 
   /* ── user display info ── */
-  const userInitials = useMemo(
-    () => (user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "??" : "??"),
-    [user]
-  )
+  const userInitials = useMemo(() => {
+    if (!user) return "??"
+    const parts = user.name?.trim().split(/\s+/).filter(Boolean) ?? []
+    return parts.slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "??"
+  }, [user])
   const userName = useMemo(
-    () => (user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "—" : "—"),
+    () => user?.name?.trim() || user?.email || "—",
     [user]
   )
 

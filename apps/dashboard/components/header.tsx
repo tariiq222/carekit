@@ -194,7 +194,8 @@ export function Header() {
               <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                 {(() => {
                   if (!user) return "—"
-                  const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase()
+                  const parts = user.name?.trim().split(/\s+/).filter(Boolean) ?? []
+                  const initials = parts.slice(0, 2).map((p) => p[0]).join("").toUpperCase()
                   if (initials) return initials
                   return user.email?.[0]?.toUpperCase() ?? "—"
                 })()}
@@ -202,9 +203,7 @@ export function Header() {
             </Avatar>
             <div className="hidden sm:grid text-start text-sm leading-tight">
               <span className="font-semibold text-foreground text-xs">
-                {user
-                  ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email || "—"
-                  : "—"}
+                {user ? user.name || user.email || "—" : "—"}
               </span>
               <span className="text-[11px] text-muted-foreground">
                 {t("header.role")}

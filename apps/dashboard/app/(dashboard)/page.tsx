@@ -45,7 +45,7 @@ export default function DashboardPage() {
     refetch: refetchNotifs,
   } = useDashboardNotifications()
 
-  const userName = user ? `${user.firstName}` : "—"
+  const userName = user?.name || user?.email || "—"
 
   return (
     <div className="flex flex-col gap-12">
