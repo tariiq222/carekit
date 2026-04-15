@@ -111,7 +111,17 @@ export async function createTestApp(): Promise<{
     .overrideProvider(EmbeddingAdapter)
     .useValue({ embed: jest.fn().mockResolvedValue(new Array(1536).fill(0)) })
     .overrideProvider(ChatAdapter)
-    .useValue({ chat: jest.fn().mockResolvedValue({ content: 'test response' }) })
+    .useValue({
+      isAvailable: () => true,
+      complete: jest.fn(async (messages: Array<{ role: string; content: string }>) => {
+        const last = messages[messages.length - 1]?.content ?? '';
+        return `test reply for: ${last}`;
+      }),
+      stream: jest.fn(async function* () {
+        yield 'test ';
+        yield 'reply';
+      }),
+    })
     .overrideProvider(MinioService)
     .useValue({
       upload: jest.fn().mockResolvedValue({ url: 'http://localhost:5200/carekit/test.pdf' }),
