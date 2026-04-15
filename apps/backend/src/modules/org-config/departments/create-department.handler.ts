@@ -26,7 +26,10 @@ export class CreateDepartmentHandler {
       });
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-        throw new ConflictException('Department with this Arabic name already exists');
+        throw new ConflictException({
+          error: 'DEPARTMENT_NAME_EXISTS',
+          message: 'Department with this Arabic name already exists',
+        });
       }
       throw err;
     }

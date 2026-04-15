@@ -18,7 +18,10 @@ export class ListDepartmentsHandler {
       tenantId: dto.tenantId,
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       ...(dto.search && {
-        nameAr: { contains: dto.search, mode: 'insensitive' as const },
+        OR: [
+          { nameAr: { contains: dto.search, mode: 'insensitive' as const } },
+          { nameEn: { contains: dto.search, mode: 'insensitive' as const } },
+        ],
       }),
     };
 

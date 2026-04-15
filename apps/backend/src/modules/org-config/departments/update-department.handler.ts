@@ -14,6 +14,9 @@ export class UpdateDepartmentHandler {
       data: {
         ...(dto.nameAr !== undefined && { nameAr: dto.nameAr }),
         ...(dto.nameEn !== undefined && { nameEn: dto.nameEn }),
+        ...(dto.descriptionAr !== undefined && { descriptionAr: dto.descriptionAr }),
+        ...(dto.descriptionEn !== undefined && { descriptionEn: dto.descriptionEn }),
+        ...(dto.icon !== undefined && { icon: dto.icon }),
         ...(dto.isVisible !== undefined && { isVisible: dto.isVisible }),
         ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
         ...(dto.isActive !== undefined && { isActive: dto.isActive }),
