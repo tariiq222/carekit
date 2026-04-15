@@ -7,6 +7,9 @@ import {
   PencilEdit01Icon,
   Delete02Icon,
   UserGroupIcon,
+  StarIcon,
+  CheckmarkCircle02Icon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@/components/ui/badge"
@@ -28,6 +31,8 @@ export function getBranchColumns(
   onDelete?: (b: Branch) => void,
   t?: TFn,
   onManageEmployees?: (b: Branch) => void,
+  onToggleActive?: (b: Branch) => void,
+  onSetPrimary?: (b: Branch) => void,
 ): ColumnDef<Branch>[] {
   const label = (key: string, fallback: string) => t?.(key) ?? fallback
 
@@ -128,6 +133,19 @@ export function getBranchColumns(
                 <HugeiconsIcon icon={PencilEdit01Icon} size={14} />
                 {label("branches.action.edit", "Edit")}
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onToggleActive?.(b)}>
+                <HugeiconsIcon icon={b.isActive ? Cancel01Icon : CheckmarkCircle02Icon} size={14} />
+                {label(
+                  b.isActive ? "branches.action.deactivate" : "branches.action.activate",
+                  b.isActive ? "Deactivate" : "Activate",
+                )}
+              </DropdownMenuItem>
+              {!b.isMain && (
+                <DropdownMenuItem onClick={() => onSetPrimary?.(b)}>
+                  <HugeiconsIcon icon={StarIcon} size={14} />
+                  {label("branches.action.setPrimary", "Set as Primary")}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={() => onDelete?.(b)}
                 className="text-destructive focus:text-destructive"

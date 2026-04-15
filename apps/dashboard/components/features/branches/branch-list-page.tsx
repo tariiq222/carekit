@@ -18,7 +18,8 @@ import { BranchEmployeesDialog } from "@/components/features/branches/branch-emp
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FilterBar } from "@/components/features/filter-bar"
-import { useBranches } from "@/hooks/use-branches"
+import { toast } from "sonner"
+import { useBranches, useBranchMutations } from "@/hooks/use-branches"
 import { useLocale } from "@/components/locale-provider"
 import type { Branch } from "@/lib/types/branch"
 
@@ -26,6 +27,7 @@ export function BranchListPage() {
   const router = useRouter()
   const { t, locale } = useLocale()
   const { branches, meta, isLoading, error, search, setSearch, isActive, setIsActive, setPage } = useBranches()
+  const { updateMut } = useBranchMutations()
 
   const [deleteTarget, setDeleteTarget] = useState<Branch | null>(null)
   const [employeesTarget, setEmployeesTarget] = useState<Branch | null>(null)
@@ -34,12 +36,32 @@ export function BranchListPage() {
   const inactiveCount = branches.filter((b) => !b.isActive).length
   const mainCount = branches.filter((b) => b.isMain).length
 
+  const handleToggleActive = async (b: Branch) => {
+    try {
+      await updateMut.mutateAsync({ id: b.id, isActive: !b.isActive })
+      toast.success(t("branches.edit.success"))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("branches.edit.error"))
+    }
+  }
+
+  const handleSetPrimary = async (b: Branch) => {
+    try {
+      await updateMut.mutateAsync({ id: b.id, isMain: true })
+      toast.success(t("branches.edit.success"))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("branches.edit.error"))
+    }
+  }
+
   const columns = getBranchColumns(
     locale,
     (b) => router.push(`/branches/${b.id}/edit`),
     (b) => setDeleteTarget(b),
     t,
     (b) => setEmployeesTarget(b),
+    handleToggleActive,
+    handleSetPrimary,
   )
 
   return (
