@@ -13,6 +13,11 @@ export const enDepartments: Record<string, string> = {
   "departments.stats.total": "Total Departments",
   "departments.stats.active": "Active",
   "departments.stats.inactive": "Inactive",
+  "departments.stats.newThisMonth": "New This Month",
+
+  // Validation
+  "validation.required": "This field is required",
+  "validation.maxLength": "Exceeds maximum length",
 
   // Status
   "departments.status.active": "Active",

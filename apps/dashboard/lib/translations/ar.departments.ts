@@ -13,6 +13,11 @@ export const arDepartments: Record<string, string> = {
   "departments.stats.total": "إجمالي الأقسام",
   "departments.stats.active": "نشطة",
   "departments.stats.inactive": "غير نشطة",
+  "departments.stats.newThisMonth": "جديد هذا الشهر",
+
+  // Validation
+  "validation.required": "هذا الحقل مطلوب",
+  "validation.maxLength": "تجاوز الحد الأقصى للطول",
 
   // Status
   "departments.status.active": "نشط",

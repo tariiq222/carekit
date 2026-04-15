@@ -14,6 +14,7 @@ export async function fetchDepartments(
     page: query.page,
     limit: query.perPage,
     isActive: query.isActive,
+    search: query.search,
   })
 }
 
@@ -28,4 +29,8 @@ export async function updateDepartment(
   payload: UpdateDepartmentPayload,
 ): Promise<Department> {
   return api.patch(`/dashboard/organization/departments/${id}`, payload)
+}
+
+export async function deleteDepartment(id: string): Promise<{ deleted: boolean }> {
+  return api.delete(`/dashboard/organization/departments/${id}`)
 }
