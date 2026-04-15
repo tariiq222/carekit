@@ -35,12 +35,11 @@ interface BasicInfoTabProps {
   form: UseFormReturn<CreateServiceFormData>
   onImageSelect?: (file: File) => void
   serviceId?: string
-  serviceBranches?: { branchId: string }[]
 }
 
 /* ─── Component ─── */
 
-export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }: BasicInfoTabProps) {
+export function BasicInfoTab({ form, onImageSelect, serviceId }: BasicInfoTabProps) {
   const { t, locale } = useLocale()
   const { data: categories, isLoading: loadingCategories } = useCategories()
   const { options: departments } = useDepartmentOptions()
@@ -182,11 +181,17 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }
                 <SelectValue placeholder={t("services.create.categoryPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                {visibleCategories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {locale === "ar" ? c.nameAr : c.nameEn}
-                  </SelectItem>
-                ))}
+                {visibleCategories.length === 0 ? (
+                  <div className="py-6 text-center text-sm text-muted-foreground">
+                    {locale === "ar" ? "لا يوجد فئات" : "No categories found"}
+                  </div>
+                ) : (
+                  visibleCategories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {locale === "ar" ? c.nameAr : c.nameEn}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             {form.formState.errors.categoryId && (
@@ -230,21 +235,10 @@ export function BasicInfoTab({ form, onImageSelect, serviceId, serviceBranches }
             <div className="rounded-lg border border-border bg-surface-muted px-4 py-3 flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-medium text-foreground">{t("services.branches.title")}</p>
-                {serviceId && serviceBranches !== undefined && (
-                  <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${
-                    serviceBranches.length > 0
-                      ? "border-warning/30 bg-warning/10 text-warning"
-                      : "border-success/30 bg-success/10 text-success"
-                  }`}>
-                    {serviceBranches.length > 0
-                      ? (locale === "ar" ? `${serviceBranches.length} فروع` : `${serviceBranches.length} branches`)
-                      : (locale === "ar" ? "جميع الفروع" : "All branches")}
-                  </span>
-                )}
               </div>
               <p className="text-xs text-muted-foreground">{t("services.branches.cardDesc")}</p>
               {serviceId ? (
-                <ServiceBranchesTab serviceId={serviceId} serviceBranches={serviceBranches} />
+                <ServiceBranchesTab serviceId={serviceId} />
               ) : (
                 <ServiceBranchesPicker
                   value={branchIds ?? []}

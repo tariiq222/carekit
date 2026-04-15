@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId, UserId } from '../../common/tenant/tenant.decorator';
@@ -29,6 +30,8 @@ import { RemoveWaitlistEntryHandler } from '../../modules/bookings/remove-waitli
 import { CheckAvailabilityHandler } from '../../modules/bookings/check-availability/check-availability.handler';
 import { CheckAvailabilityDto } from '../../modules/bookings/check-availability/check-availability.dto';
 
+@ApiTags('Bookings')
+@ApiBearerAuth()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/bookings')
 export class DashboardBookingsController {

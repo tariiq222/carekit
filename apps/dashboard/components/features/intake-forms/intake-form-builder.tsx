@@ -130,7 +130,7 @@ export function IntakeFormBuilder({
     if (draft.scope === "service") {
       return services.map((s) => ({
         value: s.id,
-        label: isAr ? s.nameAr : s.nameEn,
+        label: isAr ? s.nameAr : (s.nameEn ?? s.nameAr),
       }))
     }
     if (draft.scope === "employee") {

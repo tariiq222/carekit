@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser, JwtUser } from '../../common/auth/current-user.decorator';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
@@ -29,6 +30,8 @@ import { CloseConversationHandler } from '../../modules/comms/chat/close-convers
 import { SendStaffMessageHandler } from '../../modules/comms/chat/send-staff-message.handler';
 import { SendStaffMessageDto } from '../../modules/comms/chat/send-staff-message.dto';
 
+@ApiTags('Comms')
+@ApiBearerAuth()
 @Controller('dashboard/comms')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardCommsController {

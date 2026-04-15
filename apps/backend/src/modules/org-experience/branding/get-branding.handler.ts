@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
 export type GetBrandingCommand = { tenantId: string };
@@ -11,7 +11,17 @@ export class GetBrandingHandler {
     const config = await this.prisma.brandingConfig.findUnique({
       where: { tenantId: dto.tenantId },
     });
-    if (!config) throw new NotFoundException('Branding config not found');
-    return config;
+    if (config) return config;
+    return {
+      tenantId: dto.tenantId,
+      clinicNameAr: '',
+      clinicNameEn: null,
+      logoUrl: null,
+      faviconUrl: null,
+      primaryColor: null,
+      accentColor: null,
+      fontFamily: null,
+      customCss: null,
+    };
   }
 }

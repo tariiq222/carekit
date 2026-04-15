@@ -30,7 +30,8 @@ export const BLOOD_LABELS: Record<BloodType, string> = {
 
 /* ─── Phone regex ─── */
 
-const phoneRegex = /^\+[1-9]\d{6,14}$/
+// Saudi phone: +966 followed by 5 then 8 digits (local number 5XXXXXXXX)
+const phoneRegex = /^\+9665\d{8}$/
 const nameField = z.string().min(1).max(255)
 const optionalNameField = z.string().max(255).optional()
 const optionalNationality = z.string().max(100).optional()
@@ -39,7 +40,7 @@ const optionalPhone = z
   .string()
   .optional()
   .refine((v) => !v || phoneRegex.test(v), {
-    message: "يجب أن يبدأ بـ + مثل +966501234567",
+    message: "رقم سعودي غير صحيح — مثال +966501234567",
   })
 const optionalMedicalText = z.string().max(1000).optional()
 
@@ -54,7 +55,7 @@ export const createClientSchema = z.object({
   nationality: optionalNationality,
   nationalId: optionalNationalId,
   phone: z.string().min(1).regex(phoneRegex, {
-    message: "يجب أن يبدأ بـ + مثل +966501234567",
+    message: "رقم سعودي غير صحيح — مثال +966501234567",
   }),
   emergencyName: optionalNameField,
   emergencyPhone: optionalPhone,

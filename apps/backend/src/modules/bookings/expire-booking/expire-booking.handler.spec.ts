@@ -29,6 +29,26 @@ describe('ExpireBookingHandler', () => {
   });
 });
 
+describe('ExpireBookingHandler — group booking statuses', () => {
+  it('expires PENDING_GROUP_FILL booking', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.PENDING_GROUP_FILL });
+    await new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'system' });
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.EXPIRED }) }),
+    );
+  });
+
+  it('expires AWAITING_PAYMENT booking', async () => {
+    const prisma = buildPrisma();
+    prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.AWAITING_PAYMENT });
+    await new ExpireBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'system' });
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.EXPIRED }) }),
+    );
+  });
+});
+
 describe('ExpireBookingHandler — status log', () => {
   it('writes a BookingStatusLog entry on expire', async () => {
     const prisma = buildPrisma();

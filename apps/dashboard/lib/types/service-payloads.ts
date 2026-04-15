@@ -21,67 +21,75 @@ export interface UpdateCategoryPayload {
 
 /* ─── Service DTOs ─── */
 
+import type { RecurringPattern } from './service'
+
 export interface CreateServicePayload {
-  nameEn: string
   nameAr: string
-  descriptionEn?: string
+  nameEn?: string
   descriptionAr?: string
-  categoryId: string
-  price?: number
-  duration?: number
+  descriptionEn?: string
+  categoryId?: string
+  durationMins: number
+  price: number
+  currency?: string
+  imageUrl?: string | null
   isActive?: boolean
   isHidden?: boolean
   hidePriceOnBooking?: boolean
   hideDurationOnBooking?: boolean
   iconName?: string | null
   iconBgColor?: string | null
-  imageUrl?: string | null
   bufferMinutes?: number
-  depositEnabled?: boolean
-  depositPercent?: number
-  allowRecurring?: boolean
-  allowedRecurringPatterns?: string[]
-  maxRecurrences?: number
-  maxParticipants?: number
   minLeadMinutes?: number | null
   maxAdvanceDays?: number | null
-  employeeIds?: string[]
-  branchIds?: string[]
+  depositEnabled?: boolean
+  depositAmount?: number
+  allowRecurring?: boolean
+  allowedRecurringPatterns?: RecurringPattern[]
+  maxRecurrences?: number | null
+  minParticipants?: number
+  maxParticipants?: number
+  reserveWithoutPayment?: boolean
 }
 
 export interface UpdateServicePayload {
-  nameEn?: string
   nameAr?: string
-  descriptionEn?: string
+  nameEn?: string
   descriptionAr?: string
+  descriptionEn?: string
   categoryId?: string
+  durationMins?: number
   price?: number
-  duration?: number
+  currency?: string
+  imageUrl?: string | null
   isActive?: boolean
   isHidden?: boolean
   hidePriceOnBooking?: boolean
   hideDurationOnBooking?: boolean
   iconName?: string | null
   iconBgColor?: string | null
-  imageUrl?: string | null
   bufferMinutes?: number
-  depositEnabled?: boolean
-  depositPercent?: number
-  allowRecurring?: boolean
-  allowedRecurringPatterns?: string[]
-  maxRecurrences?: number
-  maxParticipants?: number
   minLeadMinutes?: number | null
   maxAdvanceDays?: number | null
+  depositEnabled?: boolean
+  depositAmount?: number
+  allowRecurring?: boolean
+  allowedRecurringPatterns?: RecurringPattern[]
+  maxRecurrences?: number | null
+  minParticipants?: number
+  maxParticipants?: number
+  reserveWithoutPayment?: boolean
 }
 
 /* ─── Duration Options Payloads ─── */
 
 export interface DurationOptionPayload {
+  id?: string
   label: string
   labelAr?: string
-  durationMinutes: number
-  price: number // halalat
+  durationMins: number
+  price: number
+  currency?: string
   isDefault?: boolean
   sortOrder?: number
 }
@@ -92,21 +100,12 @@ export interface SetDurationOptionsPayload {
 
 /* ─── Booking Type Payloads ─── */
 
-export interface DurationOptionInput {
-  label: string
-  labelAr?: string
-  durationMinutes: number
-  price: number // halalat
-  isDefault?: boolean
-  sortOrder?: number
-}
-
 export interface BookingTypeConfigPayload {
   bookingType: 'in_person' | 'online'
-  price: number // halalat
-  duration: number // minutes
+  price: number
+  durationMins: number
   isActive?: boolean
-  durationOptions?: DurationOptionInput[]
+  durationOptions?: DurationOptionPayload[]
 }
 
 export interface SetServiceBookingTypesPayload {
@@ -116,28 +115,7 @@ export interface SetServiceBookingTypesPayload {
 /* ─── Intake Forms Payloads ─── */
 
 export interface CreateIntakeFormPayload {
-  titleAr: string
-  titleEn: string
-  isRequired?: boolean
+  nameAr: string
+  nameEn?: string
   isActive?: boolean
-}
-
-export interface UpdateIntakeFormPayload {
-  titleAr?: string
-  titleEn?: string
-  isRequired?: boolean
-  isActive?: boolean
-}
-
-export interface IntakeFieldPayload {
-  labelAr: string
-  labelEn: string
-  fieldType: string
-  options?: string[]
-  isRequired?: boolean
-  sortOrder?: number
-}
-
-export interface SetFieldsPayload {
-  fields: IntakeFieldPayload[]
 }

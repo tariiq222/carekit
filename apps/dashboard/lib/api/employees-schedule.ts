@@ -35,7 +35,13 @@ export async function setAvailability(
   id: string,
   payload: SetAvailabilityPayload,
 ): Promise<void> {
-  await api.put(`/dashboard/people/employees/${id}/availability`, payload)
+  const windows = payload.schedule.map((s) => ({
+    dayOfWeek: s.dayOfWeek,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    isActive: s.isActive,
+  }))
+  await api.patch(`/dashboard/people/employees/${id}/availability`, { windows })
 }
 
 /* ─── Breaks ─── */

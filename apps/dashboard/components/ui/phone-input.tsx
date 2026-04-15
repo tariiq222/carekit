@@ -31,9 +31,13 @@ export function PhoneInput({
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     let digits = e.target.value.replace(/\D/g, "")
-    // Strip leading zero — show the user it's not accepted
-    if (digits.startsWith("0")) {
+    // Strip any leading zero the user types — Saudi local numbers start with 5
+    while (digits.startsWith("0")) {
       digits = digits.slice(1)
+    }
+    // Saudi local number is exactly 9 digits starting with 5 (e.g. 5XXXXXXXX)
+    if (digits.length > 9) {
+      digits = digits.slice(0, 9)
     }
     onChange?.(digits ? `${COUNTRY_CODE}${digits}` : "")
   }

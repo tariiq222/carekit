@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import { UpsertBrandingHandler } from './upsert-branding.handler';
 import { GetBrandingHandler } from './get-branding.handler';
 
@@ -42,10 +41,13 @@ describe('GetBrandingHandler', () => {
     expect(result.clinicNameAr).toBe('عيادتي');
   });
 
-  it('throws NotFoundException when config not found', async () => {
+  it('returns defaults when config not found', async () => {
     const prisma = buildPrisma();
     prisma.brandingConfig.findUnique = jest.fn().mockResolvedValue(null);
     const handler = new GetBrandingHandler(prisma as never);
-    await expect(handler.execute({ tenantId: 'missing' })).rejects.toThrow(NotFoundException);
+    const result = await handler.execute({ tenantId: 'missing' });
+    expect(result.tenantId).toBe('missing');
+    expect(result.clinicNameAr).toBe('');
+    expect(result.primaryColor).toBeNull();
   });
 });

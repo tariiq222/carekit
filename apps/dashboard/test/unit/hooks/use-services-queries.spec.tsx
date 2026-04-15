@@ -170,22 +170,7 @@ describe("useServices", () => {
     )
   })
 
-  it("setBranchId resets page to 1", async () => {
-    fetchServices.mockResolvedValue({ items: [], meta: { total: 0 } })
-
-    const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-
-    act(() => { result.current.setBranchId("br-1") })
-
-    await waitFor(() =>
-      expect(fetchServices).toHaveBeenCalledWith(
-        expect.objectContaining({ branchId: "br-1", page: 1 }),
-      ),
-    )
-  })
-
-  it("resetFilters clears all filters including branchId", async () => {
+  it("resetFilters clears all filters", async () => {
     fetchServices.mockResolvedValue({ items: [], meta: { total: 0 } })
 
     const { result } = renderHook(() => useServices(), { wrapper: makeWrapper() })
@@ -195,7 +180,6 @@ describe("useServices", () => {
       result.current.setSearch("test")
       result.current.setCategoryId("cat-1")
       result.current.setIsActive(true)
-      result.current.setBranchId("br-1")
     })
 
     act(() => { result.current.resetFilters() })
@@ -204,7 +188,6 @@ describe("useServices", () => {
       expect(result.current.search).toBe("")
       expect(result.current.categoryId).toBeUndefined()
       expect(result.current.isActive).toBeUndefined()
-      expect(result.current.branchId).toBeUndefined()
       expect(result.current.page).toBe(1)
     })
   })

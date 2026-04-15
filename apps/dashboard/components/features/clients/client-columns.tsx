@@ -10,6 +10,7 @@ import {
   UserCheck01Icon,
   UserBlock01Icon,
   MailValidation01Icon,
+  Delete02Icon,
 } from "@hugeicons/core-free-icons"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +22,7 @@ interface ClientColumnOptions {
   onViewClick: (client: Client) => void
   onEditClick: (client: Client) => void
   onToggleActive: (client: Client) => void
+  onDeleteClick: (client: Client) => void
   t: (key: string) => string
   locale?: "ar" | "en"
 }
@@ -30,6 +32,7 @@ export function getClientColumns({
   onViewClick,
   onEditClick,
   onToggleActive,
+  onDeleteClick,
   t,
   locale = "ar",
 }: ClientColumnOptions): ColumnDef<Client>[] {
@@ -62,7 +65,7 @@ export function getClientColumns({
                 <p className="text-sm font-medium text-foreground">
                   {p.firstName} {p.lastName}
                 </p>
-                {p.accountType === "walk_in" && (
+                {(p.accountType === "walk_in" || p.accountType === "WALK_IN") && (
                   <span className="rounded-sm bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">
                     {t("clients.detail.walkIn")}
                   </span>
@@ -217,6 +220,20 @@ export function getClientColumns({
             <TooltipContent side="top">
               {row.original.isActive ? t("clients.actions.deactivate") : t("clients.actions.activate")}
             </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => onDeleteClick(row.original)}
+                aria-label={t("clients.actions.delete")}
+                data-testid={`delete-client-${row.original.id}`}
+                className="flex size-9 items-center justify-center rounded-sm border border-transparent text-destructive transition-all duration-200 hover:border-destructive/30 hover:bg-destructive/10"
+              >
+                <HugeiconsIcon icon={Delete02Icon} size={16} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">{t("clients.actions.delete")}</TooltipContent>
           </Tooltip>
         </div>
       ),

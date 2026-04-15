@@ -67,11 +67,15 @@ export function AddServiceForm({
                 />
               </SelectTrigger>
               <SelectContent>
-                {availableServices.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {isAr ? s.nameAr : s.nameEn}
-                  </SelectItem>
-                ))}
+                {availableServices.map((s) => {
+                  const name = (isAr ? s.nameAr : s.nameEn) || s.nameAr || s.nameEn
+                  if (!name) return null
+                  return (
+                    <SelectItem key={s.id} value={s.id}>
+                      {name}
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
           )}

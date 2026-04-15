@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { UpdateServiceDto } from './update-service.dto';
 
@@ -14,6 +14,31 @@ export class UpdateServiceHandler {
     });
     if (!service) throw new NotFoundException('Service not found');
 
+    // Merge incoming values with existing for cross-field constraint validation
+    const effectivePrice = dto.price ?? Number(service.price);
+    const effectiveMin = dto.minParticipants ?? service.minParticipants;
+    const effectiveMax = dto.maxParticipants ?? service.maxParticipants;
+    const effectiveDepositEnabled = dto.depositEnabled ?? service.depositEnabled;
+    const effectiveDepositAmount =
+      dto.depositAmount !== undefined ? dto.depositAmount : service.depositAmount ? Number(service.depositAmount) : undefined;
+
+    if (
+      effectiveDepositEnabled &&
+      effectiveDepositAmount !== undefined &&
+      effectiveDepositAmount > effectivePrice
+    ) {
+      throw new BadRequestException('depositAmount must not exceed the service price');
+    }
+
+    if (effectiveMin > effectiveMax) {
+      throw new BadRequestException('minParticipants must not exceed maxParticipants');
+    }
+
+    const effectiveReserve = dto.reserveWithoutPayment ?? service.reserveWithoutPayment;
+    if (effectiveReserve && effectiveMax <= 1) {
+      throw new BadRequestException('reserveWithoutPayment requires maxParticipants > 1');
+    }
+
     return this.prisma.service.update({
       where: { id: dto.serviceId },
       data: {
@@ -25,7 +50,34 @@ export class UpdateServiceHandler {
         price: dto.price,
         currency: dto.currency,
         imageUrl: dto.imageUrl,
+        categoryId: dto.categoryId,
+        // العرض/الإخفاء
         isActive: dto.isActive,
+        isHidden: dto.isHidden,
+        hidePriceOnBooking: dto.hidePriceOnBooking,
+        hideDurationOnBooking: dto.hideDurationOnBooking,
+        // الهوية البصرية
+        iconName: dto.iconName,
+        iconBgColor: dto.iconBgColor,
+        // قواعد الجدولة
+        bufferMinutes: dto.bufferMinutes,
+        minLeadMinutes: dto.minLeadMinutes,
+        maxAdvanceDays: dto.maxAdvanceDays,
+        // العربون
+        depositEnabled: dto.depositEnabled,
+        depositAmount: dto.depositAmount,
+        // التكرار
+        allowRecurring: dto.allowRecurring,
+        allowedRecurringPatterns: dto.allowedRecurringPatterns,
+        maxRecurrences: dto.maxRecurrences,
+        // الجلسات الجماعية
+        minParticipants: dto.minParticipants,
+        maxParticipants: dto.maxParticipants,
+        reserveWithoutPayment: dto.reserveWithoutPayment,
+      },
+      include: {
+        category: true,
+        durationOptions: { orderBy: { sortOrder: 'asc' } },
       },
     });
   }

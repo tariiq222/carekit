@@ -1,5 +1,6 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateServiceHandler } from './create-service.handler';
+import { RecurringPatternDto } from './create-service.dto';
 import { UpdateServiceHandler } from './update-service.handler';
 import { ListServicesHandler } from './list-services.handler';
 import { ArchiveServiceHandler } from './archive-service.handler';
@@ -13,14 +14,33 @@ const mockService = {
   nameEn: 'Haircut',
   descriptionAr: null,
   descriptionEn: null,
+  categoryId: null,
   durationMins: 30,
   price: '50.00',
   currency: 'SAR',
   imageUrl: null,
   isActive: true,
+  isHidden: false,
+  hidePriceOnBooking: false,
+  hideDurationOnBooking: false,
+  iconName: null,
+  iconBgColor: null,
+  bufferMinutes: 0,
+  minLeadMinutes: null,
+  maxAdvanceDays: null,
+  depositEnabled: false,
+  depositAmount: null,
+  allowRecurring: false,
+  allowedRecurringPatterns: [],
+  maxRecurrences: null,
+  minParticipants: 1,
+  maxParticipants: 1,
+  reserveWithoutPayment: false,
   archivedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
+  category: null,
+  durationOptions: [],
 };
 
 const buildPrisma = () => ({
@@ -33,6 +53,8 @@ const buildPrisma = () => ({
   },
   $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
 });
+
+// ─── CreateServiceHandler ─────────────────────────────────────────────────────
 
 describe('CreateServiceHandler', () => {
   it('creates service when name is unique', async () => {
@@ -50,7 +72,84 @@ describe('CreateServiceHandler', () => {
       handler.execute({ tenantId: 'tenant-1', nameAr: 'قص الشعر', durationMins: 30, price: 50 }),
     ).rejects.toThrow(ConflictException);
   });
+
+  it('throws BadRequestException when depositAmount exceeds price', async () => {
+    const prisma = buildPrisma();
+    const handler = new CreateServiceHandler(prisma as never);
+    await expect(
+      handler.execute({
+        tenantId: 'tenant-1',
+        nameAr: 'خدمة جديدة',
+        durationMins: 30,
+        price: 100,
+        depositEnabled: true,
+        depositAmount: 150,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws BadRequestException when minParticipants > maxParticipants', async () => {
+    const prisma = buildPrisma();
+    const handler = new CreateServiceHandler(prisma as never);
+    await expect(
+      handler.execute({
+        tenantId: 'tenant-1',
+        nameAr: 'جلسة جماعية',
+        durationMins: 60,
+        price: 100,
+        minParticipants: 10,
+        maxParticipants: 5,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws BadRequestException when reserveWithoutPayment is true but maxParticipants = 1', async () => {
+    const prisma = buildPrisma();
+    const handler = new CreateServiceHandler(prisma as never);
+    await expect(
+      handler.execute({
+        tenantId: 'tenant-1',
+        nameAr: 'خدمة فردية',
+        durationMins: 30,
+        price: 100,
+        maxParticipants: 1,
+        reserveWithoutPayment: true,
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('creates group session service successfully', async () => {
+    const prisma = buildPrisma();
+    const handler = new CreateServiceHandler(prisma as never);
+    const result = await handler.execute({
+      tenantId: 'tenant-1',
+      nameAr: 'يوغا جماعية',
+      durationMins: 60,
+      price: 100,
+      minParticipants: 3,
+      maxParticipants: 10,
+      reserveWithoutPayment: true,
+    });
+    expect(result.id).toBe('svc-1');
+  });
+
+  it('creates recurring service successfully', async () => {
+    const prisma = buildPrisma();
+    const handler = new CreateServiceHandler(prisma as never);
+    const result = await handler.execute({
+      tenantId: 'tenant-1',
+      nameAr: 'علاج أسبوعي',
+      durationMins: 45,
+      price: 200,
+      allowRecurring: true,
+      allowedRecurringPatterns: [RecurringPatternDto.WEEKLY, RecurringPatternDto.BIWEEKLY],
+      maxRecurrences: 12,
+    });
+    expect(result.id).toBe('svc-1');
+  });
 });
+
+// ─── UpdateServiceHandler ─────────────────────────────────────────────────────
 
 describe('UpdateServiceHandler', () => {
   it('updates service when found', async () => {
@@ -68,17 +167,80 @@ describe('UpdateServiceHandler', () => {
       handler.execute({ tenantId: 'tenant-1', serviceId: 'missing', durationMins: 45 }),
     ).rejects.toThrow(NotFoundException);
   });
+
+  it('throws BadRequestException when depositAmount would exceed updated price', async () => {
+    const prisma = buildPrisma();
+    prisma.service.findFirst = jest.fn().mockResolvedValue({ ...mockService, depositEnabled: true, depositAmount: '80.00' });
+    const handler = new UpdateServiceHandler(prisma as never);
+    await expect(
+      handler.execute({ tenantId: 'tenant-1', serviceId: 'svc-1', price: 50 }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws BadRequestException when minParticipants would exceed maxParticipants', async () => {
+    const prisma = buildPrisma();
+    prisma.service.findFirst = jest.fn().mockResolvedValue({ ...mockService, maxParticipants: 5 });
+    const handler = new UpdateServiceHandler(prisma as never);
+    await expect(
+      handler.execute({ tenantId: 'tenant-1', serviceId: 'svc-1', minParticipants: 10 }),
+    ).rejects.toThrow(BadRequestException);
+  });
 });
 
+// ─── ListServicesHandler ──────────────────────────────────────────────────────
+
 describe('ListServicesHandler', () => {
-  it('returns paginated services excluding archived', async () => {
+  it('returns paginated services with meta', async () => {
     const prisma = buildPrisma();
     const handler = new ListServicesHandler(prisma as never);
     const result = await handler.execute({ tenantId: 'tenant-1' });
     expect(result.items).toHaveLength(1);
-    expect(result.total).toBe(1);
+    expect(result.meta.total).toBe(1);
+    expect(result.meta.totalPages).toBe(1);
+  });
+
+  it('filters by isActive', async () => {
+    const prisma = buildPrisma();
+    const handler = new ListServicesHandler(prisma as never);
+    await handler.execute({ tenantId: 'tenant-1', isActive: true });
+    const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(callArgs.where.isActive).toBe(true);
+  });
+
+  it('excludes hidden services by default', async () => {
+    const prisma = buildPrisma();
+    const handler = new ListServicesHandler(prisma as never);
+    await handler.execute({ tenantId: 'tenant-1' });
+    const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(callArgs.where.isHidden).toBe(false);
+  });
+
+  it('includes hidden services when includeHidden = true', async () => {
+    const prisma = buildPrisma();
+    const handler = new ListServicesHandler(prisma as never);
+    await handler.execute({ tenantId: 'tenant-1', includeHidden: true });
+    const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(callArgs.where.isHidden).toBeUndefined();
+  });
+
+  it('filters by categoryId', async () => {
+    const prisma = buildPrisma();
+    const handler = new ListServicesHandler(prisma as never);
+    await handler.execute({ tenantId: 'tenant-1', categoryId: 'cat-1' });
+    const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(callArgs.where.categoryId).toBe('cat-1');
+  });
+
+  it('adds search OR clause when search is provided', async () => {
+    const prisma = buildPrisma();
+    const handler = new ListServicesHandler(prisma as never);
+    await handler.execute({ tenantId: 'tenant-1', search: 'قص' });
+    const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(callArgs.where.OR).toBeDefined();
   });
 });
+
+// ─── ArchiveServiceHandler ────────────────────────────────────────────────────
 
 describe('ArchiveServiceHandler', () => {
   it('archives service when found', async () => {
@@ -97,6 +259,8 @@ describe('ArchiveServiceHandler', () => {
     ).rejects.toThrow(NotFoundException);
   });
 });
+
+// ─── SetDurationOptionsHandler ────────────────────────────────────────────────
 
 describe('SetDurationOptionsHandler', () => {
   const buildServicesPrisma = () => ({
@@ -149,6 +313,8 @@ describe('SetDurationOptionsHandler', () => {
     expect(prisma.$transaction).toHaveBeenCalled();
   });
 });
+
+// ─── SetEmployeeServiceOptionsHandler ────────────────────────────────────────
 
 describe('SetEmployeeServiceOptionsHandler', () => {
   const buildServicesPrisma = () => ({

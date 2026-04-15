@@ -17,6 +17,15 @@ export class ListServicesHandler {
       tenantId: dto.tenantId,
       archivedAt: null,
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
+      // إخفاء الخدمات المخفية افتراضياً ما لم يُطلب تضمينها صراحةً
+      ...(dto.includeHidden !== true && { isHidden: false }),
+      ...(dto.categoryId && { categoryId: dto.categoryId }),
+      ...(dto.search && {
+        OR: [
+          { nameAr: { contains: dto.search, mode: 'insensitive' as const } },
+          { nameEn: { contains: dto.search, mode: 'insensitive' as const } },
+        ],
+      }),
     };
 
     const [items, total] = await this.prisma.$transaction([
@@ -25,10 +34,22 @@ export class ListServicesHandler {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          category: true,
+          durationOptions: { orderBy: { sortOrder: 'asc' } },
+        },
       }),
       this.prisma.service.count({ where }),
     ]);
 
-    return { items, total, page, limit };
+    return {
+      items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

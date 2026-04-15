@@ -23,6 +23,7 @@ import { OnboardZatcaHandler } from './zatca-config/onboard-zatca.handler';
 import { GetPaymentStatsHandler } from './get-payment-stats/get-payment-stats.handler';
 import { RefundPaymentHandler } from './refund-payment/refund-payment.handler';
 import { VerifyPaymentHandler } from './verify-payment/verify-payment.handler';
+import { GroupSessionReadyHandler } from './group-session-ready/group-session-ready.handler';
 
 const handlers = [
   CreateInvoiceHandler,
@@ -44,18 +45,23 @@ const handlers = [
   GetPaymentStatsHandler,
   RefundPaymentHandler,
   VerifyPaymentHandler,
+  GroupSessionReadyHandler,
 ];
 
 @Module({
   imports: [DatabaseModule, MessagingModule, StorageModule],
   controllers: [DashboardFinanceController],
-  providers: [...handlers, BookingConfirmedHandler],
+  providers: [...handlers, BookingConfirmedHandler, GroupSessionReadyHandler],
   exports: [...handlers],
 })
 export class FinanceModule implements OnModuleInit {
-  constructor(private readonly bookingConfirmedHandler: BookingConfirmedHandler) {}
+  constructor(
+    private readonly bookingConfirmedHandler: BookingConfirmedHandler,
+    private readonly groupSessionReadyHandler: GroupSessionReadyHandler,
+  ) {}
 
   onModuleInit(): void {
     this.bookingConfirmedHandler.register();
+    this.groupSessionReadyHandler.register();
   }
 }

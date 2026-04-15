@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -16,6 +17,8 @@ import { GetChatbotConfigHandler } from '../../modules/ai/chatbot-config/get-cha
 import { UpsertChatbotConfigHandler } from '../../modules/ai/chatbot-config/upsert-chatbot-config.handler';
 import { UpsertChatbotConfigDto } from '../../modules/ai/chatbot-config/upsert-chatbot-config.dto';
 
+@ApiTags('AI')
+@ApiBearerAuth()
 @Controller('dashboard/ai')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardAiController {

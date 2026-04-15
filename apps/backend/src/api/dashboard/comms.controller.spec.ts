@@ -34,7 +34,7 @@ function buildController() {
 describe('DashboardCommsController', () => {
   it('listNotificationsEndpoint — passes tenantId with defaults', async () => {
     const { controller, listNotifications } = buildController();
-    await controller.listNotificationsEndpoint(TENANT, {} as never);
+    await controller.listNotificationsEndpoint(TENANT, { sub: 'user-1' } as never, {} as never);
     expect(listNotifications.execute).toHaveBeenCalledWith(
       expect.objectContaining({ tenantId: TENANT, page: 1, limit: 20 }),
     );

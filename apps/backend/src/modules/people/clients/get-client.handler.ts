@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { serializeClient } from './client.serializer';
 
 export interface GetClientQuery {
   clientId: string;
@@ -12,9 +13,9 @@ export class GetClientHandler {
 
   async execute(query: GetClientQuery) {
     const client = await this.prisma.client.findFirst({
-      where: { id: query.clientId, tenantId: query.tenantId },
+      where: { id: query.clientId, tenantId: query.tenantId, deletedAt: null },
     });
     if (!client) throw new NotFoundException('Client not found');
-    return client;
+    return serializeClient(client);
   }
 }

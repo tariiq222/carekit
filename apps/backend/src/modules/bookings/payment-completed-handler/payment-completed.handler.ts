@@ -32,7 +32,7 @@ export class PaymentCompletedEventHandler {
             where: { id: bookingId, tenantId },
           });
           if (!booking) return;
-          if (booking.status !== 'PENDING') return;
+          if (booking.status !== 'PENDING' && booking.status !== 'AWAITING_PAYMENT') return;
 
           await this.prisma.$transaction([
             this.prisma.booking.update({

@@ -25,6 +25,7 @@ import { RequestCancelBookingHandler } from './request-cancel-booking/request-ca
 import { ApproveCancelBookingHandler } from './approve-cancel-booking/approve-cancel-booking.handler';
 import { RejectCancelBookingHandler } from './reject-cancel-booking/reject-cancel-booking.handler';
 import { CreateZoomMeetingHandler } from './create-zoom-meeting/create-zoom-meeting.handler';
+import { GroupSessionMinReachedHandler } from './group-session-min-reached/group-session-min-reached.handler';
 import { DashboardBookingsController } from '../../api/dashboard/bookings.controller';
 
 const handlers = [
@@ -50,6 +51,7 @@ const handlers = [
   ApproveCancelBookingHandler,
   RejectCancelBookingHandler,
   CreateZoomMeetingHandler,
+  GroupSessionMinReachedHandler,
 ];
 
 @Module({

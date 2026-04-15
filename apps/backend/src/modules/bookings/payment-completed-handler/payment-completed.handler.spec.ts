@@ -37,7 +37,19 @@ describe('PaymentCompletedEventHandler', () => {
     );
   });
 
-  it('skips non-PENDING bookings', async () => {
+  it('confirms AWAITING_PAYMENT booking on payment completed', async () => {
+    const { prisma, getSubscriber } = buildHandler();
+    prisma.booking.findFirst = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.AWAITING_PAYMENT });
+    prisma.booking.update = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
+
+    await getSubscriber()(makeEnvelope());
+
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'CONFIRMED' }) }),
+    );
+  });
+
+  it('skips non-PENDING / non-AWAITING_PAYMENT bookings', async () => {
     const { prisma, getSubscriber } = buildHandler();
     prisma.booking.findFirst = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
 

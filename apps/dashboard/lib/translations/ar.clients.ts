@@ -91,6 +91,17 @@ export const arClients: Record<string, string> = {
   "clients.activateError": "فشل تفعيل الحساب",
   "clients.actions.deactivate": "حظر",
   "clients.actions.activate": "تفعيل",
+  "clients.actions.delete": "حذف",
+
+  // ── Delete dialog ──
+  "clients.delete.title": "حذف المستفيد؟",
+  "clients.delete.descriptionPrefix": "هل أنت متأكد من حذف المستفيد",
+  "clients.delete.descriptionSuffix": "؟ لن تظهر بياناته في القوائم بعد الحذف. يمكن استعادته من قِبَل فريق الدعم إذا لزم الأمر.",
+  "clients.delete.cancel": "إلغاء",
+  "clients.delete.submit": "حذف",
+  "clients.delete.submitting": "جاري الحذف...",
+  "clients.delete.success": "تم حذف المستفيد",
+  "clients.delete.error": "فشل حذف المستفيد",
   "clients.otpVerified": "البريد الإلكتروني مُفعَّل عبر OTP",
 
   // ── Confirm dialog ──

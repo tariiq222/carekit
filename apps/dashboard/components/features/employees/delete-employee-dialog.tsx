@@ -1,5 +1,6 @@
 "use client"
 
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 import {
@@ -13,6 +14,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useLocale } from "@/components/locale-provider"
+import { deleteEmployee } from "@/lib/api/employees"
+import { queryKeys } from "@/lib/query-keys"
 import type { Employee } from "@/lib/types/employee"
 
 interface DeleteEmployeeDialogProps {
@@ -27,10 +30,25 @@ export function DeleteEmployeeDialog({
   onOpenChange,
 }: DeleteEmployeeDialogProps) {
   const { t } = useLocale()
+  const queryClient = useQueryClient()
 
-  const handleDelete = () => {
-    toast.error(t("employees.delete.error"))
-    onOpenChange(false)
+  const mutation = useMutation({
+    mutationFn: (id: string) => deleteEmployee(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.stats() })
+      toast.success(t("employees.delete.success"))
+      onOpenChange(false)
+    },
+    onError: () => {
+      toast.error(t("employees.delete.error"))
+    },
+  })
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!employee) return
+    mutation.mutate(employee.id)
   }
 
   const name = employee
@@ -49,14 +67,17 @@ export function DeleteEmployeeDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>
+          <AlertDialogCancel disabled={mutation.isPending}>
             {t("employees.delete.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
+            disabled={mutation.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {t("employees.delete.submit")}
+            {mutation.isPending
+              ? t("employees.delete.submitting")
+              : t("employees.delete.submit")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

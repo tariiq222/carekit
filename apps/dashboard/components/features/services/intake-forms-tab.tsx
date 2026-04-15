@@ -55,13 +55,8 @@ export function IntakeFormsTab({ serviceId }: Props) {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">
-                {isAr ? form.titleAr : form.titleEn}
+                {isAr ? form.nameAr : (form.nameEn ?? form.nameAr)}
               </span>
-              {form.isRequired && (
-                <Badge variant="secondary" className="text-xs">
-                  {t("services.intake.required")}
-                </Badge>
-              )}
               {!form.isActive && (
                 <Badge variant="outline" className="text-xs text-muted-foreground">
                   {t("services.intake.inactive")}

@@ -28,138 +28,138 @@ import {
   setDurationOptions,
   fetchServiceBookingTypes,
   setServiceBookingTypes,
+  fetchServiceEmployees,
+} from "@/lib/api/services"
+import {
   fetchIntakeForms,
   createIntakeForm,
-  updateIntakeForm,
   deleteIntakeForm,
+  updateIntakeForm,
   setIntakeFields,
   fetchIntakeResponses,
-  fetchServiceEmployees,
-  setServiceBranches,
-  clearServiceBranches,
-} from "@/lib/api/services"
+} from "@/lib/api/intake-forms"
 
 describe("services api", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it("fetchCategories calls /services/categories", async () => {
+  it("fetchCategories calls /dashboard/organization/categories", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchCategories()
-    expect(getMock).toHaveBeenCalledWith("/services/categories")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/categories", expect.anything())
   })
 
-  it("createCategory posts to /services/categories", async () => {
+  it("createCategory posts to /dashboard/organization/categories", async () => {
     postMock.mockResolvedValueOnce({ id: "cat-1" })
     await createCategory({ nameEn: "Physio", nameAr: "علاج", departmentId: "dept-1" })
-    expect(postMock).toHaveBeenCalledWith("/services/categories", expect.objectContaining({ nameEn: "Physio" }))
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/categories", expect.objectContaining({ nameEn: "Physio" }))
   })
 
-  it("updateCategory patches /services/categories/:id", async () => {
+  it("updateCategory patches /dashboard/organization/categories/:id", async () => {
     patchMock.mockResolvedValueOnce({ id: "cat-1" })
     await updateCategory("cat-1", { nameEn: "Physio" })
-    expect(patchMock).toHaveBeenCalledWith("/services/categories/cat-1", expect.anything())
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/categories/cat-1", expect.anything())
   })
 
-  it("deleteCategory calls DELETE /services/categories/:id", async () => {
+  it("deleteCategory calls DELETE /dashboard/organization/categories/:id", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
     await deleteCategory("cat-1")
-    expect(deleteMock).toHaveBeenCalledWith("/services/categories/cat-1")
+    expect(deleteMock).toHaveBeenCalledWith("/dashboard/organization/categories/cat-1")
   })
 
-  it("fetchServices sends query params to /services", async () => {
+  it("fetchServices sends query params to /dashboard/organization/services", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
     await fetchServices({ isActive: true })
-    expect(getMock).toHaveBeenCalledWith("/services", expect.objectContaining({ isActive: true }))
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/services", expect.objectContaining({ isActive: true }))
   })
 
-  it("fetchService calls /services/:id", async () => {
+  it("fetchService calls /dashboard/organization/services/:id", async () => {
     getMock.mockResolvedValueOnce({ id: "svc-1" })
     await fetchService("svc-1")
-    expect(getMock).toHaveBeenCalledWith("/services/svc-1")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/services/svc-1")
   })
 
-  it("createService posts to /services", async () => {
+  it("createService posts to /dashboard/organization/services", async () => {
     postMock.mockResolvedValueOnce({ id: "svc-1" })
     await createService({ nameEn: "Service" } as Parameters<typeof createService>[0])
-    expect(postMock).toHaveBeenCalledWith("/services", expect.anything())
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/services", expect.anything())
   })
 
-  it("updateService patches /services/:id", async () => {
+  it("updateService patches /dashboard/organization/services/:id", async () => {
     patchMock.mockResolvedValueOnce({ id: "svc-1" })
     await updateService("svc-1", { nameEn: "Updated" })
-    expect(patchMock).toHaveBeenCalledWith("/services/svc-1", expect.anything())
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/services/svc-1", expect.anything())
   })
 
-  it("deleteService calls DELETE /services/:id", async () => {
+  it("deleteService calls DELETE /dashboard/organization/services/:id", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
     await deleteService("svc-1")
-    expect(deleteMock).toHaveBeenCalledWith("/services/svc-1")
+    expect(deleteMock).toHaveBeenCalledWith("/dashboard/organization/services/svc-1")
   })
 
-  it("fetchDurationOptions calls /services/:id/duration-options", async () => {
+  it("fetchDurationOptions calls /dashboard/organization/services/:id/duration-options", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchDurationOptions("svc-1")
-    expect(getMock).toHaveBeenCalledWith("/services/svc-1/duration-options")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/services/svc-1/duration-options")
   })
 
-  it("setDurationOptions puts to /services/:id/duration-options", async () => {
+  it("setDurationOptions puts to /dashboard/organization/services/:id/duration-options", async () => {
     putMock.mockResolvedValueOnce([])
     await setDurationOptions("svc-1", { options: [] } as Parameters<typeof setDurationOptions>[1])
-    expect(putMock).toHaveBeenCalledWith("/services/svc-1/duration-options", expect.anything())
+    expect(putMock).toHaveBeenCalledWith("/dashboard/organization/services/svc-1/duration-options", expect.anything())
   })
 
-  it("fetchServiceBookingTypes calls /services/:id/booking-types", async () => {
+  it("fetchServiceBookingTypes calls /dashboard/organization/services/:id/booking-types", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchServiceBookingTypes("svc-1")
-    expect(getMock).toHaveBeenCalledWith("/services/svc-1/booking-types")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/services/svc-1/booking-types")
   })
 
-  it("setServiceBookingTypes puts to /services/:id/booking-types", async () => {
+  it("setServiceBookingTypes puts to /dashboard/organization/services/:id/booking-types", async () => {
     putMock.mockResolvedValueOnce([])
     await setServiceBookingTypes("svc-1", { types: [] } as Parameters<typeof setServiceBookingTypes>[1])
-    expect(putMock).toHaveBeenCalledWith("/services/svc-1/booking-types", expect.anything())
+    expect(putMock).toHaveBeenCalledWith("/dashboard/organization/services/svc-1/booking-types", expect.anything())
   })
 
-  it("fetchIntakeForms calls /services/:id/intake-forms/all", async () => {
+  it("fetchIntakeForms calls /dashboard/organization/intake-forms", async () => {
     getMock.mockResolvedValueOnce([])
-    await fetchIntakeForms("svc-1")
-    expect(getMock).toHaveBeenCalledWith("/services/svc-1/intake-forms/all")
+    await fetchIntakeForms()
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms", undefined)
   })
 
-  it("createIntakeForm posts to /services/:id/intake-forms", async () => {
+  it("createIntakeForm posts to /dashboard/organization/intake-forms", async () => {
     postMock.mockResolvedValueOnce({ id: "form-1" })
-    await createIntakeForm("svc-1", { titleAr: "نموذج", titleEn: "Form" } as Parameters<typeof createIntakeForm>[1])
-    expect(postMock).toHaveBeenCalledWith("/services/svc-1/intake-forms", expect.anything())
+    await createIntakeForm({ nameAr: "نموذج", nameEn: "Form", type: "pre_booking", scope: "service" })
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms", expect.anything())
   })
 
-  it("updateIntakeForm patches /intake-forms/:id", async () => {
+  it("updateIntakeForm patches /dashboard/organization/intake-forms/:id", async () => {
     patchMock.mockResolvedValueOnce({ id: "form-1" })
-    await updateIntakeForm("form-1", { titleAr: "محدث" })
-    expect(patchMock).toHaveBeenCalledWith("/intake-forms/form-1", expect.anything())
+    await updateIntakeForm("form-1", { nameAr: "محدث" })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms/form-1", expect.anything())
   })
 
-  it("deleteIntakeForm calls DELETE /intake-forms/:id", async () => {
+  it("deleteIntakeForm calls DELETE /dashboard/organization/intake-forms/:id", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
     await deleteIntakeForm("form-1")
-    expect(deleteMock).toHaveBeenCalledWith("/intake-forms/form-1")
+    expect(deleteMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms/form-1")
   })
 
-  it("setIntakeFields puts to /intake-forms/:id/fields", async () => {
+  it("setIntakeFields puts to /dashboard/organization/intake-forms/:id/fields", async () => {
     putMock.mockResolvedValueOnce({})
     await setIntakeFields("form-1", { fields: [] } as Parameters<typeof setIntakeFields>[1])
-    expect(putMock).toHaveBeenCalledWith("/intake-forms/form-1/fields", expect.anything())
+    expect(putMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms/form-1/fields", expect.anything())
   })
 
-  it("fetchIntakeResponses calls /intake-forms/responses/:bookingId", async () => {
+  it("fetchIntakeResponses calls /dashboard/organization/intake-forms/responses/:bookingId", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchIntakeResponses("bk-1")
-    expect(getMock).toHaveBeenCalledWith("/intake-forms/responses/bk-1")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms/responses/bk-1")
   })
 
   describe("fetchServices edge cases", () => {
-    it("sends all query params including branchId and includeHidden", async () => {
+    it("sends all query params including categoryId, search and includeHidden", async () => {
       getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
       await fetchServices({
         page: 2,
@@ -168,47 +168,29 @@ describe("services api", () => {
         isActive: false,
         includeHidden: false,
         search: "massage",
-        branchId: "br-1",
       })
-      expect(getMock).toHaveBeenCalledWith("/services", {
+      expect(getMock).toHaveBeenCalledWith("/dashboard/organization/services", expect.objectContaining({
         page: 2,
-        perPage: 50,
+        limit: 50,
         categoryId: "cat-1",
         isActive: false,
         includeHidden: false,
         search: "massage",
-        branchId: "br-1",
-      })
+      }))
     })
 
     it("defaults to empty query object", async () => {
       getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
       await fetchServices()
-      expect(getMock).toHaveBeenCalledWith("/services", expect.any(Object))
+      expect(getMock).toHaveBeenCalledWith("/dashboard/organization/services", expect.any(Object))
     })
   })
 
   describe("fetchServiceEmployees", () => {
-    it("calls /services/:id/employees", async () => {
+    it("calls /dashboard/organization/services/:id/employees", async () => {
       getMock.mockResolvedValueOnce([{ id: "p-1", name: "Dr. Ali" }])
       await fetchServiceEmployees("svc-1")
-      expect(getMock).toHaveBeenCalledWith("/services/svc-1/employees")
-    })
-  })
-
-  describe("setServiceBranches", () => {
-    it("puts to /services/:id/branches with payload", async () => {
-      putMock.mockResolvedValueOnce({ updated: true })
-      await setServiceBranches("svc-1", { branchIds: ["br-1", "br-2"] })
-      expect(putMock).toHaveBeenCalledWith("/services/svc-1/branches", { branchIds: ["br-1", "br-2"] })
-    })
-  })
-
-  describe("clearServiceBranches", () => {
-    it("deletes /services/:id/branches", async () => {
-      deleteMock.mockResolvedValueOnce({ cleared: true })
-      await clearServiceBranches("svc-1")
-      expect(deleteMock).toHaveBeenCalledWith("/services/svc-1/branches")
+      expect(getMock).toHaveBeenCalledWith("/dashboard/organization/services/svc-1/employees")
     })
   })
 })

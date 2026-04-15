@@ -29,7 +29,7 @@ function makeDraft(option: DraftDurationOption): DraftBookingType {
     bookingType: "in_person",
     enabled: true,
     price: 100,
-    duration: 30,
+    durationMins: 30,
     durationOptions: [option],
   }
 }
@@ -39,7 +39,7 @@ describe("DurationOptionMiniRow (via BookingTypeRow) — labelEn + labelAr", () 
     key: "opt-1",
     label: "",
     labelAr: "",
-    durationMinutes: 30,
+    durationMins: 30,
     price: 0,
     isDefault: false,
     sortOrder: 0,

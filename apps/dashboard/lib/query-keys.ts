@@ -47,6 +47,7 @@ export const queryKeys = {
       [...["employees"] as const, employeeId, "service-types", serviceId] as const,
     ratings: (id: string) =>
       ["employees", "ratings", id] as const,
+    stats: () => ["employees", "stats"] as const,
   },
 
   /* ─── Services ─── */

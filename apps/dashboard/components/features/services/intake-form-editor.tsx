@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { useIntakeForms, useIntakeFormMutations } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 import { IntakeFieldsEditor } from "./intake-fields-editor"
-import type { IntakeForm } from "@/lib/types/service"
+import type { IntakeFormApi } from "@/lib/types/intake-form-api"
 
 interface Props {
   serviceId: string
@@ -31,9 +31,9 @@ export function IntakeFormEditor({ serviceId, locale }: Props) {
   const { data: forms, isLoading } = useIntakeForms(serviceId)
   const { createMut, updateMut, deleteMut } = useIntakeFormMutations(serviceId)
 
-  const handleCreate = async (titleEn: string, titleAr: string, isRequired: boolean) => {
+  const handleCreate = async (nameAr: string, nameEn: string) => {
     try {
-      await createMut.mutateAsync({ titleEn, titleAr, isRequired })
+      await createMut.mutateAsync({ nameAr, nameEn })
       setShowCreate(false)
       toast.success(t("services.intake.formCreated"))
     } catch {
@@ -41,7 +41,7 @@ export function IntakeFormEditor({ serviceId, locale }: Props) {
     }
   }
 
-  const handleToggleActive = async (form: IntakeForm) => {
+  const handleToggleActive = async (form: IntakeFormApi) => {
     try {
       await updateMut.mutateAsync({
         formId: form.id,
@@ -148,7 +148,7 @@ function FormCard({
   onToggleActive,
   onDelete,
 }: {
-  form: IntakeForm
+  form: IntakeFormApi
   isAr: boolean
   t: (key: string) => string
   isEditing: boolean
@@ -163,13 +163,8 @@ function FormCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">
-            {isAr ? form.titleAr : form.titleEn}
+            {isAr ? form.nameAr : (form.nameEn ?? form.nameAr)}
           </span>
-          {form.isRequired && (
-            <Badge variant="secondary" className="text-xs">
-              {t("services.intake.required")}
-            </Badge>
-          )}
           {!form.isActive && (
             <Badge variant="outline" className="text-xs text-muted-foreground">
               {t("services.intake.inactive")}
@@ -222,12 +217,11 @@ function CreateFormInline({
   isAr: boolean
   t: (key: string) => string
   isPending: boolean
-  onSave: (titleEn: string, titleAr: string, isRequired: boolean) => void
+  onSave: (nameAr: string, nameEn: string) => void
   onCancel: () => void
 }) {
-  const [titleEn, setTitleEn] = useState("")
-  const [titleAr, setTitleAr] = useState("")
-  const [isRequired, setIsRequired] = useState(false)
+  const [nameEn, setNameEn] = useState("")
+  const [nameAr, setNameAr] = useState("")
 
   return (
     <div className="space-y-3 rounded-lg border border-border p-3">
@@ -235,33 +229,27 @@ function CreateFormInline({
         <div className="flex flex-col gap-1">
           <Label className="text-xs">{t("services.intake.titleEn")}</Label>
           <Input
-            value={titleEn}
-            onChange={(e) => setTitleEn(e.target.value)}
+            value={nameEn}
+            onChange={(e) => setNameEn(e.target.value)}
             className="h-8 text-sm"
           />
         </div>
         <div className="flex flex-col gap-1">
           <Label className="text-xs">{t("services.intake.titleAr")}</Label>
           <Input
-            value={titleAr}
-            onChange={(e) => setTitleAr(e.target.value)}
+            value={nameAr}
+            onChange={(e) => setNameAr(e.target.value)}
             className="h-8 text-sm"
             dir="rtl"
           />
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Switch id="create-intake-required" checked={isRequired} onCheckedChange={setIsRequired} />
-        <Label htmlFor="create-intake-required" className="text-xs cursor-pointer">
-          {t("services.intake.required")}
-        </Label>
-      </div>
       <div className="flex gap-2">
         <Button
           type="button"
           size="sm"
-          disabled={isPending || !titleEn.trim() || !titleAr.trim()}
-          onClick={() => onSave(titleEn.trim(), titleAr.trim(), isRequired)}
+          disabled={isPending || !nameEn.trim() || !nameAr.trim()}
+          onClick={() => onSave(nameAr.trim(), nameEn.trim())}
         >
           {isPending ? t("services.intake.creating") : t("services.intake.create")}
         </Button>

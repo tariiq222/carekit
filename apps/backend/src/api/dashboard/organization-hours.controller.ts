@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -14,6 +15,8 @@ import { RemoveHolidayHandler } from '../../modules/org-config/business-hours/re
 import { ListHolidaysHandler } from '../../modules/org-config/business-hours/list-holidays.handler';
 import { ListHolidaysDto } from '../../modules/org-config/business-hours/list-holidays.dto';
 
+@ApiTags('Business Hours')
+@ApiBearerAuth()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
 export class DashboardOrganizationHoursController {

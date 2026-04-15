@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -19,6 +20,8 @@ import { GetFeatureFlagMapHandler } from '../../modules/platform/feature-flags/g
 import { UpdateFeatureFlagHandler } from '../../modules/platform/feature-flags/update-feature-flag.handler';
 import { UpdateFeatureFlagDto } from '../../modules/platform/feature-flags/update-feature-flag.dto';
 
+@ApiTags('Platform')
+@ApiBearerAuth()
 @Controller('dashboard/platform')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardPlatformController {

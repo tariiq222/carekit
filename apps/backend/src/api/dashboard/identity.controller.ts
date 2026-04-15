@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -39,6 +40,8 @@ class AssignRoleDto {
   @IsUUID() customRoleId!: string;
 }
 
+@ApiTags('Identity')
+@ApiBearerAuth()
 @Controller('dashboard/identity')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardIdentityController {

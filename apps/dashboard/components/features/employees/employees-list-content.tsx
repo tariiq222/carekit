@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getEmployeeColumns } from "@/components/features/employees/employee-columns"
 import { DeleteEmployeeDialog } from "@/components/features/employees/delete-employee-dialog"
 import { useLocale } from "@/components/locale-provider"
+import { useEmployeeStats } from "@/hooks/use-employees"
 import type { Employee } from "@/lib/types/employee"
 
 interface EmployeesListContentProps {
@@ -47,6 +48,7 @@ export function EmployeesListContent({
 }: EmployeesListContentProps) {
   const router = useRouter()
   const { t, locale } = useLocale()
+  const { data: stats } = useEmployeeStats()
 
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null)
 
@@ -54,13 +56,15 @@ export function EmployeesListContent({
   const handleDelete = (p: Employee) => setDeleteTarget(p)
   const handlePreview = (p: Employee) => router.push(`/employees/${p.id}`)
 
-  const activeCount = useMemo(() => employees.filter((p) => p.isActive).length, [employees])
-  const inactiveCount = useMemo(() => employees.filter((p) => !p.isActive).length, [employees])
+  const totalCount = stats?.total ?? meta?.total ?? employees.length
+  const activeCount = stats?.active ?? employees.filter((p) => p.isActive).length
+  const inactiveCount = stats?.inactive ?? employees.filter((p) => !p.isActive).length
   const avgRating = useMemo(() => {
+    if (stats?.avgRating != null) return stats.avgRating.toFixed(1)
     const rated = employees.filter((p) => p.averageRating != null)
     if (rated.length === 0) return null
     return (rated.reduce((sum, p) => sum + (p.averageRating ?? 0), 0) / rated.length).toFixed(1)
-  }, [employees])
+  }, [stats?.avgRating, employees])
 
   const statusFilter = isActive === true ? "active" : isActive === false ? "inactive" : "all"
   const handleStatusChange = (v: string) => {
@@ -87,7 +91,7 @@ export function EmployeesListContent({
         <StatsGrid>
           <StatCard
             title={t("employees.stats.total")}
-            value={meta?.total ?? employees.length}
+            value={totalCount}
             icon={Stethoscope02Icon}
             iconColor="primary"
           />

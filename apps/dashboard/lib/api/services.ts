@@ -10,10 +10,7 @@ import type {
   ServiceBookingType,
   ServiceDurationOption,
   ServiceListQuery,
-  IntakeForm,
-  IntakeResponse,
   ServiceEmployee,
-  SetServiceBranchesPayload,
 } from "@/lib/types/service"
 import type {
   CreateCategoryPayload,
@@ -22,9 +19,6 @@ import type {
   UpdateServicePayload,
   SetDurationOptionsPayload,
   SetServiceBookingTypesPayload,
-  CreateIntakeFormPayload,
-  UpdateIntakeFormPayload,
-  SetFieldsPayload,
 } from "@/lib/types/service-payloads"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100/api/v1"
@@ -74,7 +68,7 @@ export async function updateCategory(
   payload: UpdateCategoryPayload,
 ): Promise<ServiceCategory> {
   return api.patch<ServiceCategory>(
-    `/dashboard/organization/services/categories/${id}`,
+    `/dashboard/organization/categories/${id}`,
     payload,
   )
 }
@@ -92,6 +86,9 @@ export async function fetchServices(
     page: query.page,
     limit: query.perPage,
     isActive: query.isActive,
+    categoryId: query.categoryId,
+    search: query.search,
+    includeHidden: query.includeHidden,
   })
 }
 
@@ -156,77 +153,44 @@ export async function setServiceBookingTypes(
   )
 }
 
-/* ─── Intake Forms ─── */
-
-export async function fetchIntakeForms(
-  serviceId: string,
-): Promise<IntakeForm[]> {
-  return api.get<IntakeForm[]>(
-    `/dashboard/organization/services/${serviceId}/intake-forms/all`,
-  )
-}
-
-export async function createIntakeForm(
-  serviceId: string,
-  payload: CreateIntakeFormPayload,
-): Promise<IntakeForm> {
-  return api.post<IntakeForm>(
-    `/dashboard/organization/services/${serviceId}/intake-forms`,
-    payload,
-  )
-}
-
-export async function updateIntakeForm(
-  formId: string,
-  payload: UpdateIntakeFormPayload,
-): Promise<IntakeForm> {
-  return api.patch<IntakeForm>(
-    `/intake-forms/${formId}`,
-    payload,
-  )
-}
-
-export async function deleteIntakeForm(formId: string): Promise<void> {
-  await api.delete(`/intake-forms/${formId}`)
-}
-
-export async function setIntakeFields(
-  formId: string,
-  payload: SetFieldsPayload,
-): Promise<unknown> {
-  return api.put<unknown>(
-    `/intake-forms/${formId}/fields`,
-    payload,
-  )
-}
-
-export async function fetchIntakeResponses(
-  bookingId: string,
-): Promise<IntakeResponse[]> {
-  return api.get<IntakeResponse[]>(
-    `/intake-forms/responses/${bookingId}`,
-  )
-}
 
 /* ─── Service Avatar ─── */
 
 export async function uploadServiceImage(serviceId: string, file: File): Promise<Service> {
-  const formData = new FormData()
-  formData.append("image", file)
-
   const token = getAccessToken()
-  const res = await fetch(`${API_BASE}/dashboard/organization/services/${serviceId}/avatar`, {
+  const formData = new FormData()
+  formData.append("file", file)
+
+  // Step 1: upload file to media storage
+  const uploadRes = await fetch(`${API_BASE}/dashboard/media/upload`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   })
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as { message?: string }
-    throw new Error(body?.message ?? res.statusText)
+  if (!uploadRes.ok) {
+    const body = await uploadRes.json().catch(() => ({})) as { message?: string }
+    throw new Error(body?.message ?? uploadRes.statusText)
   }
 
-  return res.json() as Promise<Service>
+  const uploaded = await uploadRes.json() as { id: string; storageKey: string }
+
+  // Step 2: get long-lived presigned URL (1 year) for the uploaded file
+  const presignedRes = await fetch(
+    `${API_BASE}/dashboard/media/${uploaded.id}/presigned-url?expirySeconds=31536000`,
+    { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+  )
+
+  if (!presignedRes.ok) {
+    const body = await presignedRes.json().catch(() => ({})) as { message?: string }
+    throw new Error(body?.message ?? presignedRes.statusText)
+  }
+
+  // Use a long-lived presigned URL (1 year) suitable for service image storage
+  const presignedData = await presignedRes.json() as { url: string }
+
+  // Step 3: attach the image URL to the service
+  return api.patch<Service>(`/dashboard/organization/services/${serviceId}`, { imageUrl: presignedData.url })
 }
 
 /* ─── Service Employees ─── */
@@ -255,17 +219,3 @@ export async function fetchServicesListStats(): Promise<ServiceListStats> {
   return { total, active: activeCount, inactive: total - activeCount }
 }
 
-/* ─── Service Branches ─── */
-
-export async function setServiceBranches(
-  serviceId: string,
-  payload: SetServiceBranchesPayload,
-): Promise<{ updated: boolean }> {
-  return api.put<{ updated: boolean }>(`/dashboard/organization/services/${serviceId}/branches`, payload)
-}
-
-export async function clearServiceBranches(
-  serviceId: string,
-): Promise<{ cleared: boolean }> {
-  return api.delete<{ cleared: boolean }>(`/dashboard/organization/services/${serviceId}/branches`)
-}

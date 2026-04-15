@@ -60,6 +60,8 @@ export const enNav: Record<string, string> = {
   "common.delete": "Delete",
   "common.edit": "Edit",
   "common.view": "View",
+  "common.preview": "Preview",
+  "common.warnings": "Warnings",
   "common.close": "Close",
   "common.search": "Search",
   "common.export": "Export",

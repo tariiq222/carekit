@@ -18,15 +18,19 @@ export interface ServiceCategory {
   _count?: { services: number }
 }
 
+export type RecurringPattern = 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'
+
 export interface Service {
   id: string
-  nameEn: string
+  tenantId: string
+  nameEn: string | null
   nameAr: string
   descriptionEn: string | null
   descriptionAr: string | null
-  categoryId: string
+  categoryId: string | null
   price: number
-  duration: number
+  currency: string
+  durationMins: number
   isActive: boolean
   isHidden: boolean
   hidePriceOnBooking: boolean
@@ -35,29 +39,29 @@ export interface Service {
   iconBgColor: string | null
   imageUrl: string | null
   bufferMinutes: number
-  depositEnabled: boolean
-  depositPercent: number
-  allowRecurring: boolean
-  allowedRecurringPatterns: string[]
-  maxRecurrences: number
-  maxParticipants: number
   minLeadMinutes: number | null
   maxAdvanceDays: number | null
+  depositEnabled: boolean
+  depositAmount: number | null
+  allowRecurring: boolean
+  allowedRecurringPatterns: RecurringPattern[]
+  maxRecurrences: number | null
+  minParticipants: number
+  maxParticipants: number
+  reserveWithoutPayment: boolean
+  archivedAt: string | null
   createdAt: string
   updatedAt: string
-  category?: ServiceCategory
-  bookingTypes?: ServiceBookingType[]
+  category?: ServiceCategory | null
   durationOptions?: ServiceDurationOption[]
-  intakeForms?: IntakeForm[]
-  branches?: { branchId: string }[]
 }
 
 export interface ServiceBookingType {
   id: string
   serviceId: string
   bookingType: 'in_person' | 'online'
-  price: number // halalat
-  duration: number // minutes
+  price: number
+  durationMins: number
   isActive: boolean
   durationOptions: ServiceDurationOption[]
 }
@@ -65,21 +69,19 @@ export interface ServiceBookingType {
 export interface ServiceDurationOption {
   id: string
   serviceId: string
-  serviceBookingTypeId?: string
   label: string
   labelAr: string | null
-  durationMinutes: number
-  price: number // halalat
+  durationMins: number
+  price: number
+  currency: string
   isDefault: boolean
   sortOrder: number
 }
 
 export interface IntakeForm {
   id: string
-  serviceId: string
-  titleAr: string
-  titleEn: string
-  isRequired: boolean
+  nameAr: string
+  nameEn: string | null
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -90,21 +92,11 @@ export interface IntakeField {
   id: string
   formId: string
   labelAr: string
-  labelEn: string
+  labelEn: string | null
   fieldType: string
   options: string[] | null
   isRequired: boolean
-  sortOrder: number
-}
-
-export interface IntakeResponse {
-  id: string
-  formId: string
-  bookingId: string
-  clientId: string
-  answers: Record<string, string>
-  createdAt: string
-  form?: IntakeForm
+  position: number
 }
 
 /* ─── Query ─── */
@@ -114,11 +106,6 @@ export interface ServiceListQuery extends PaginatedQuery {
   isActive?: boolean
   includeHidden?: boolean
   search?: string
-  branchId?: string
-}
-
-export interface SetServiceBranchesPayload {
-  branchIds: string[]
 }
 
 /* ─── Service Employees ─── */
@@ -127,7 +114,7 @@ export interface ServiceEmployeeServiceType {
   id: string
   bookingType: string
   price: number | null
-  duration: number | null
+  durationMins: number | null
   isActive: boolean
 }
 

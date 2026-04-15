@@ -17,6 +17,7 @@ export type NotificationType =
   | 'BOOKING_REMINDER'
   | 'PAYMENT_RECEIVED'
   | 'PAYMENT_FAILED'
+  | 'PAYMENT_REMINDER'
   | 'WELCOME'
   | 'GENERAL';
 
@@ -27,6 +28,7 @@ const NOTIFICATION_TYPES: NotificationType[] = [
   'BOOKING_REMINDER',
   'PAYMENT_RECEIVED',
   'PAYMENT_FAILED',
+  'PAYMENT_REMINDER',
   'WELCOME',
   'GENERAL',
 ];

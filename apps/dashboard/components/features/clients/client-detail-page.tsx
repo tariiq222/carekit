@@ -73,7 +73,7 @@ export function ClientDetailPage({ clientId }: Props) {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold tracking-tight text-foreground">{fullName}</h1>
-              {client.accountType === "walk_in" && (
+              {(client.accountType === "walk_in" || client.accountType === "WALK_IN") && (
                 <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning">
                   {t("clients.detail.walkIn")}
                 </Badge>
@@ -172,7 +172,7 @@ export function ClientDetailPage({ clientId }: Props) {
                     value={formatDate(client.updatedAt)}
                     numeric
                   />
-                  {client.accountType === "walk_in" && (
+                  {(client.accountType === "walk_in" || client.accountType === "WALK_IN") && (
                     <>
                       <DetailRow
                         label={t("clients.detail.accountType")}

@@ -31,12 +31,22 @@ export async function seedUser(
 export async function seedClient(
   prisma: PrismaClient,
   tenantId: string,
-  overrides: Partial<{ name: string; phone: string; isActive: boolean }> = {},
+  overrides: Partial<{
+    name: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    isActive: boolean;
+  }> = {},
 ) {
+  const name = overrides.name ?? 'Test Client';
+  const [firstToken, ...rest] = name.split(' ');
   return prisma.client.create({
     data: {
       tenantId,
-      name: overrides.name ?? 'Test Client',
+      name,
+      firstName: overrides.firstName ?? firstToken ?? 'Test',
+      lastName: overrides.lastName ?? (rest.join(' ') || 'Client'),
       phone: overrides.phone ?? `+9665${Date.now().toString().slice(-8)}`,
       isActive: overrides.isActive ?? true,
       source: 'WALK_IN',

@@ -89,10 +89,6 @@ export function ServiceDetailSheet({
 
   if (!service) return null
 
-  const inPersonType = service.bookingTypes?.find((bt) => bt.bookingType === "in_person")
-  const onlineType = service.bookingTypes?.find((bt) => bt.bookingType === "online")
-  const hasBookingTypes = inPersonType || onlineType
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -102,7 +98,7 @@ export function ServiceDetailSheet({
               iconName={service.iconName}
               iconBgColor={service.iconBgColor}
               imageUrl={service.imageUrl}
-              name={isAr ? service.nameAr : service.nameEn}
+              name={isAr ? service.nameAr : (service.nameEn ?? undefined)}
               size="md"
             />
             <div className="flex flex-col gap-1 min-w-0">
@@ -177,44 +173,9 @@ export function ServiceDetailSheet({
               />
               <Field
                 label={t("services.detail.duration")}
-                value={<span className="tabular-nums">{service.duration} {t("services.detail.min")}</span>}
+                value={<span className="tabular-nums">{service.durationMins} {t("services.detail.min")}</span>}
               />
             </div>
-
-            {/* Booking type cards */}
-            {hasBookingTypes && (
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                {[inPersonType, onlineType].map((bt) => {
-                  if (!bt) return null
-                  const label = bt.bookingType === "in_person"
-                    ? t("services.detail.inPerson")
-                    : t("services.detail.online")
-                  return (
-                    <div
-                      key={bt.bookingType}
-                      className="rounded-lg border border-border bg-muted/40 p-3 flex flex-col gap-2"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-foreground">{label}</span>
-                        <StatusPill
-                          active={bt.isActive}
-                          yes={t("services.status.active")}
-                          no={t("services.status.inactive")}
-                        />
-                      </div>
-                      <div className="flex gap-4">
-                        <span className="tabular-nums text-xs text-muted-foreground">
-                          {(bt.price / 100).toFixed(2)} {t("services.bookingTypes.priceCurrency")}
-                        </span>
-                        <span className="tabular-nums text-xs text-muted-foreground">
-                          {bt.duration} {t("services.detail.min")}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
           </div>
 
           <Separator />
@@ -227,7 +188,7 @@ export function ServiceDetailSheet({
                 label={t("services.detail.deposit")}
                 value={
                   service.depositEnabled
-                    ? <span className="tabular-nums">{service.depositPercent}%</span>
+                    ? <span className="tabular-nums">{service.depositAmount != null ? (service.depositAmount / 100).toFixed(2) : "—"}</span>
                     : <StatusPill active={false} yes="" no={t("common.disabled")} />
                 }
               />

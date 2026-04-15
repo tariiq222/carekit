@@ -12,8 +12,14 @@ export class ListEmployeeServicesHandler {
       where: { id: query.employeeId, tenantId: query.tenantId },
     });
     if (!employee) throw new NotFoundException('Employee not found');
-    return this.prisma.employeeService.findMany({
+    const links = await this.prisma.employeeService.findMany({
       where: { employeeId: query.employeeId },
     });
+    if (links.length === 0) return [];
+    const services = await this.prisma.service.findMany({
+      where: { id: { in: links.map((l) => l.serviceId) } },
+    });
+    const byId = new Map(services.map((s) => [s.id, s]));
+    return links.map((l) => ({ ...l, service: byId.get(l.serviceId) ?? null }));
   }
 }

@@ -1,0 +1,63 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { PrismaService } from '../../../infrastructure/database';
+import { SetServiceBookingConfigsDto, type ServiceBookingTypeValue } from './set-service-booking-configs.dto';
+
+export type SetServiceBookingConfigsCommand = SetServiceBookingConfigsDto & {
+  tenantId: string;
+  serviceId: string;
+};
+
+@Injectable()
+export class SetServiceBookingConfigsHandler {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async execute(cmd: SetServiceBookingConfigsCommand) {
+    const service = await this.prisma.service.findFirst({
+      where: { id: cmd.serviceId, tenantId: cmd.tenantId },
+    });
+    if (!service) throw new NotFoundException('Service not found');
+
+    // Upsert each booking type config; delete types not included in the payload.
+    await this.prisma.$transaction([
+      // Remove configs for types not present in the new payload
+      this.prisma.serviceBookingConfig.deleteMany({
+        where: {
+          serviceId: cmd.serviceId,
+          bookingType: { notIn: cmd.types.map((t) => t.bookingType) },
+        },
+      }),
+      // Upsert each config
+      ...cmd.types.map((t) =>
+        this.prisma.serviceBookingConfig.upsert({
+          where: {
+            serviceId_bookingType: {
+              serviceId: cmd.serviceId,
+              bookingType: t.bookingType,
+            },
+          },
+          create: {
+            id: randomUUID(),
+            tenantId: cmd.tenantId,
+            serviceId: cmd.serviceId,
+            bookingType: t.bookingType,
+            price: t.price,
+            durationMins: t.durationMins,
+            isActive: t.isActive ?? true,
+          },
+          update: {
+            price: t.price,
+            durationMins: t.durationMins,
+            isActive: t.isActive ?? true,
+            updatedAt: new Date(),
+          },
+        }),
+      ),
+    ]);
+
+    return this.prisma.serviceBookingConfig.findMany({
+      where: { serviceId: cmd.serviceId, tenantId: cmd.tenantId },
+      orderBy: { bookingType: 'asc' },
+    });
+  }
+}

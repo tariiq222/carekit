@@ -25,7 +25,10 @@ import type {
 export function useEmployeeMutations() {
   const queryClient = useQueryClient()
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: queryKeys.employees.all })
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.employees.all,
+      refetchType: "all",
+    })
 
   const createMutation = useMutation({
     mutationFn: createEmployee,

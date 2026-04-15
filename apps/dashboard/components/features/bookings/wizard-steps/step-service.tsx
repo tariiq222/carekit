@@ -9,25 +9,8 @@ import { WizardCard } from "@/components/features/bookings/wizard-card"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchServices } from "@/lib/api/services"
-import type { Service, ServiceBookingType } from "@/lib/types/service"
+import type { Service } from "@/lib/types/service"
 import { cn } from "@/lib/utils"
-
-/* ─── Price helpers ─── */
-
-function getMinPrice(bookingTypes: ServiceBookingType[]): number {
-  const active = bookingTypes.filter((bt) => bt.isActive)
-  if (!active.length) return 0
-  return Math.min(...active.map((bt) => bt.price))
-}
-
-function hasMultiplePrices(service: Service): boolean {
-  const bts = service.bookingTypes
-  if (!bts || bts.length < 2) return false
-  const active = bts.filter((bt) => bt.isActive)
-  if (active.length < 2) return false
-  const prices = active.map((bt) => bt.price)
-  return new Set(prices).size > 1
-}
 
 /* ─── Meta text builder ─── */
 
@@ -39,25 +22,14 @@ function buildMeta(
 
   // Duration
   if (!service.hideDurationOnBooking) {
-    const minutes = service.duration
-    parts.push(`${minutes} ${t("bookings.wizard.step.typeDuration.minutes")}`)
+    parts.push(`${service.durationMins} ${t("bookings.wizard.step.typeDuration.minutes")}`)
   }
 
   // Price
   if (!service.hidePriceOnBooking) {
     const currency = t("bookings.wizard.step.service.currency")
-    const bts = service.bookingTypes
-    if (bts && bts.length > 0 && hasMultiplePrices(service)) {
-      const minPrice = Math.floor(getMinPrice(bts) / 100)
-      parts.push(`${t("bookings.wizard.step.service.priceFrom")} ${minPrice} ${currency}`)
-    } else if (bts && bts.length > 0) {
-      const active = bts.filter((bt) => bt.isActive)
-      const price = active.length > 0 ? Math.floor(active[0].price / 100) : Math.floor(service.price / 100)
-      parts.push(`${price} ${currency}`)
-    } else {
-      const price = Math.floor(service.price / 100)
-      parts.push(`${price} ${currency}`)
-    }
+    const price = Math.floor(service.price / 100)
+    parts.push(`${price} ${currency}`)
   }
 
   return parts.join(" · ")
@@ -99,7 +71,7 @@ export function StepService({ onSelect }: StepServiceProps) {
     return all.filter(
       (s) =>
         s.nameAr.toLowerCase().includes(q) ||
-        s.nameEn.toLowerCase().includes(q),
+        (s.nameEn ?? "").toLowerCase().includes(q),
     )
   }, [data, search])
 
@@ -134,7 +106,7 @@ export function StepService({ onSelect }: StepServiceProps) {
       {/* Service list */}
       <div className="flex flex-col gap-3">
         {services.map((service) => {
-          const name = locale === "ar" ? service.nameAr : service.nameEn
+          const name = locale === "ar" ? service.nameAr : (service.nameEn ?? service.nameAr)
           const meta = buildMeta(service, t)
 
           return (

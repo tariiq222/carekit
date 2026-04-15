@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Body, Query,
   UseGuards, HttpCode, HttpStatus, Res,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ReportFormat } from '@prisma/client';
 import { JwtGuard } from '../../common/guards/jwt.guard';
@@ -12,6 +13,8 @@ import { GenerateReportDto } from '../../modules/ops/generate-report/generate-re
 import { ListActivityHandler } from '../../modules/ops/log-activity/list-activity.handler';
 import { ListActivityDto } from '../../modules/ops/log-activity/list-activity.dto';
 
+@ApiTags('Ops')
+@ApiBearerAuth()
 @Controller('dashboard/ops')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardOpsController {

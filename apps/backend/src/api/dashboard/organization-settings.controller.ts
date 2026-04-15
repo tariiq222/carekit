@@ -1,7 +1,8 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  Controller, Get, Post, Patch, Put, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -12,6 +13,9 @@ import { UpdateServiceDto } from '../../modules/org-experience/services/update-s
 import { ListServicesHandler } from '../../modules/org-experience/services/list-services.handler';
 import { ListServicesDto } from '../../modules/org-experience/services/list-services.dto';
 import { ArchiveServiceHandler } from '../../modules/org-experience/services/archive-service.handler';
+import { SetServiceBookingConfigsHandler } from '../../modules/org-experience/services/set-service-booking-configs.handler';
+import { SetServiceBookingConfigsDto } from '../../modules/org-experience/services/set-service-booking-configs.dto';
+import { GetServiceBookingConfigsHandler } from '../../modules/org-experience/services/get-service-booking-configs.handler';
 import { UpsertBrandingHandler } from '../../modules/org-experience/branding/upsert-branding.handler';
 import { UpsertBrandingDto } from '../../modules/org-experience/branding/upsert-branding.dto';
 import { GetBrandingHandler } from '../../modules/org-experience/branding/get-branding.handler';
@@ -31,6 +35,8 @@ import { UpsertOrgSettingsDto } from '../../modules/org-experience/org-settings/
 import { GetBookingSettingsHandler } from '../../modules/bookings/get-booking-settings/get-booking-settings.handler';
 import { UpsertBookingSettingsHandler } from '../../modules/bookings/upsert-booking-settings/upsert-booking-settings.handler';
 
+@ApiTags('Services & Org')
+@ApiBearerAuth()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
 export class DashboardOrganizationSettingsController {
@@ -51,6 +57,8 @@ export class DashboardOrganizationSettingsController {
     private readonly upsertOrgSettings: UpsertOrgSettingsHandler,
     private readonly getBookingSettings: GetBookingSettingsHandler,
     private readonly upsertBookingSettings: UpsertBookingSettingsHandler,
+    private readonly setServiceBookingConfigs: SetServiceBookingConfigsHandler,
+    private readonly getServiceBookingConfigs: GetServiceBookingConfigsHandler,
   ) {}
 
   // ── Services ─────────────────────────────────────────────────────────────
@@ -87,6 +95,23 @@ export class DashboardOrganizationSettingsController {
     @Param('serviceId', ParseUUIDPipe) serviceId: string,
   ) {
     return this.archiveService.execute({ tenantId, serviceId });
+  }
+
+  @Get('services/:serviceId/booking-types')
+  getServiceBookingTypesEndpoint(
+    @TenantId() tenantId: string,
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+  ) {
+    return this.getServiceBookingConfigs.execute({ tenantId, serviceId });
+  }
+
+  @Put('services/:serviceId/booking-types')
+  setServiceBookingTypesEndpoint(
+    @TenantId() tenantId: string,
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Body() body: SetServiceBookingConfigsDto,
+  ) {
+    return this.setServiceBookingConfigs.execute({ tenantId, serviceId, ...body });
   }
 
   // ── Branding ──────────────────────────────────────────────────────────────

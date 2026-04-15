@@ -17,12 +17,13 @@ export interface ClientBookingPreview {
 
 export interface Client {
   id: string
-  email: string
+  email: string | null
   firstName: string
   middleName?: string | null
   lastName: string
   phone: string | null
   gender: UserGender | null
+  name?: string
   nationality?: string | null
   nationalId?: string | null
   dateOfBirth?: string | null
@@ -35,7 +36,7 @@ export interface Client {
   emailVerified: boolean
   createdAt: string
   updatedAt: string
-  accountType?: "full" | "walk_in" | null
+  accountType?: "FULL" | "WALK_IN" | "full" | "walk_in" | null
   claimedAt?: string | null
   avatarUrl?: string | null
   lastBooking?: { id: string; date: string; status: string } | null

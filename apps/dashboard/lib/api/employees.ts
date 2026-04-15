@@ -20,7 +20,7 @@ import type {
 export async function fetchEmployees(
   query: EmployeeListQuery = {},
 ): Promise<PaginatedResponse<Employee>> {
-  const res = await api.get<PaginatedResponse<RawEmployee>>("/dashboard/people/employees", {
+  const res = await api.get<{ data?: RawEmployee[]; items?: RawEmployee[]; meta: PaginatedResponse<RawEmployee>["meta"] }>("/dashboard/people/employees", {
     page: query.page,
     limit: query.perPage,
     sortBy: query.sortBy,
@@ -30,24 +30,46 @@ export async function fetchEmployees(
     minRating: query.minRating,
     isActive: query.isActive,
   })
+  const rawItems = res.data ?? res.items ?? []
   return {
-    items: (res.items ?? []).map(mapEmployee),
+    items: rawItems.map(mapEmployee),
     meta: res.meta,
   }
 }
 
 /** Backend returns specialty as plain text fields + rating/reviewCount */
-type RawEmployee = Omit<Employee, "averageRating" | "_count"> & {
+type RawEmployee = Omit<Employee, "averageRating" | "_count" | "user"> & {
   rating?: number
   reviewCount?: number
   _count?: Employee["_count"]
   averageRating?: number
-  user: Employee["user"] & { avatarUrl?: string | null }
+  name?: string | null
+  nameEn?: string | null
+  email?: string | null
+  phone?: string | null
+  user?: (Employee["user"] & { avatarUrl?: string | null }) | null
+}
+
+function splitName(full: string | null | undefined): { firstName: string; lastName: string } {
+  const parts = (full ?? "").trim().split(/\s+/)
+  if (parts.length === 0 || parts[0] === "") return { firstName: "", lastName: "" }
+  if (parts.length === 1) return { firstName: parts[0], lastName: "" }
+  return { firstName: parts[0], lastName: parts.slice(1).join(" ") }
 }
 
 function mapEmployee(raw: RawEmployee): Employee {
+  const fullName = raw.nameEn ?? raw.name ?? raw.nameAr ?? ""
+  const { firstName, lastName } = splitName(fullName)
+  const user: Employee["user"] = raw.user ?? {
+    id: raw.userId ?? raw.id,
+    firstName,
+    lastName,
+    email: raw.email ?? "",
+    phone: raw.phone ?? null,
+  }
   return {
     ...raw,
+    user,
     specialty: raw.specialty ?? "",
     specialtyAr: raw.specialtyAr ?? null,
     avatarUrl: raw.user?.avatarUrl ?? raw.avatarUrl ?? null,
@@ -87,4 +109,17 @@ export async function updateEmployee(
 
 export async function deleteEmployee(id: string): Promise<void> {
   await api.delete(`/dashboard/people/employees/${id}`)
+}
+
+/* ─── Stats ─── */
+
+export interface EmployeeStats {
+  total: number
+  active: number
+  inactive: number
+  avgRating: number | null
+}
+
+export async function fetchEmployeeStats(): Promise<EmployeeStats> {
+  return api.get<EmployeeStats>("/dashboard/people/employees/stats")
 }

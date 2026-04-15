@@ -116,8 +116,8 @@ export function getServiceColumns(
       header: label("services.col.service", "Service"),
       enableSorting: true,
       sortingFn: (a, b) => {
-        const nameA = locale === "ar" ? a.original.nameAr : a.original.nameEn
-        const nameB = locale === "ar" ? b.original.nameAr : b.original.nameEn
+        const nameA = (locale === "ar" ? a.original.nameAr : a.original.nameEn) ?? ""
+        const nameB = (locale === "ar" ? b.original.nameAr : b.original.nameEn) ?? ""
         return nameA.localeCompare(nameB, locale === "ar" ? "ar" : "en")
       },
       cell: ({ row }) => {
@@ -128,7 +128,7 @@ export function getServiceColumns(
               iconName={s.iconName}
               iconBgColor={s.iconBgColor}
               imageUrl={s.imageUrl}
-              name={locale === "ar" ? s.nameAr : s.nameEn}
+              name={locale === "ar" ? s.nameAr : (s.nameEn ?? undefined)}
               size="sm"
             />
             <div>
@@ -176,12 +176,12 @@ export function getServiceColumns(
       ),
     },
     {
-      accessorKey: "duration",
+      accessorKey: "durationMins",
       header: label("services.col.duration", "Duration"),
       enableSorting: true,
       cell: ({ row }) => (
         <span className="tabular-nums text-sm text-muted-foreground">
-          {row.original.duration} {label("services.detail.min", "min")}
+          {row.original.durationMins} {label("services.detail.min", "min")}
         </span>
       ),
     },

@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Body, Param, Query,
   UseGuards, ParseUUIDPipe,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -12,6 +13,8 @@ import { UpdateCategoryDto } from '../../modules/org-config/categories/update-ca
 import { ListCategoriesHandler } from '../../modules/org-config/categories/list-categories.handler';
 import { ListCategoriesDto } from '../../modules/org-config/categories/list-categories.dto';
 
+@ApiTags('Categories')
+@ApiBearerAuth()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
 export class DashboardOrganizationCategoriesController {

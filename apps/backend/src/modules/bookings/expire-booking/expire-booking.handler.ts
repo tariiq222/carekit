@@ -14,7 +14,13 @@ export class ExpireBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: ExpireBookingCommand) {
-    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.PENDING], 'expired');
+    const booking = await fetchBookingOrFail(
+      this.prisma,
+      cmd.bookingId,
+      cmd.tenantId,
+      [BookingStatus.PENDING, BookingStatus.PENDING_GROUP_FILL, BookingStatus.AWAITING_PAYMENT],
+      'expired',
+    );
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({

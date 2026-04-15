@@ -35,10 +35,11 @@ export function ServicesTabContent() {
     search, setSearch,
     categoryId, setCategoryId,
     isActive, setIsActive,
-    branchId, setBranchId,
     page, setPage,
     resetFilters,
   } = useServices()
+  const branchId: string | undefined = undefined
+  const setBranchId = (_v: string | undefined) => { /* branch filter not supported */ }
   const { data: categories } = useCategories()
   const { data: listStats } = useServicesListStats()
   const { branches } = useBranches()

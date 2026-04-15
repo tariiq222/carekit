@@ -1,6 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Add01Icon,
@@ -13,14 +15,19 @@ import { PageHeader } from "@/components/features/page-header"
 import { ErrorBanner } from "@/components/features/error-banner"
 import { FilterBar } from "@/components/features/filter-bar"
 import { getClientColumns } from "@/components/features/clients/client-columns"
+import { DeleteClientDialog } from "@/components/features/clients/delete-client-dialog"
 import { Button } from "@/components/ui/button"
-import { useClients } from "@/hooks/use-clients"
+import { useClients, useClientMutations } from "@/hooks/use-clients"
 import { useLocale } from "@/components/locale-provider"
+import type { Client } from "@/lib/types/client"
 
 export function ClientListPage() {
   const router = useRouter()
   const { t, locale } = useLocale()
   const { clients, meta, isLoading, error, search, setSearch, isActive, setIsActive, resetSearch } = useClients()
+  const { toggleActiveMut } = useClientMutations()
+
+  const [pendingDelete, setPendingDelete] = useState<Client | null>(null)
 
   const hasFilters = isActive !== undefined || search.length > 0
 
@@ -28,7 +35,18 @@ export function ClientListPage() {
     onRowClick: (p) => router.push(`/clients/${p.id}`),
     onViewClick: (p) => router.push(`/clients/${p.id}`),
     onEditClick: (p) => router.push(`/clients/${p.id}/edit`),
-    onToggleActive: () => {},
+    onToggleActive: (p) => {
+      toggleActiveMut.mutate(
+        { id: p.id, isActive: !p.isActive },
+        {
+          onSuccess: () =>
+            toast.success(p.isActive ? t("clients.deactivated") : t("clients.activated")),
+          onError: () =>
+            toast.error(p.isActive ? t("clients.deactivateError") : t("clients.activateError")),
+        },
+      )
+    },
+    onDeleteClick: (p) => setPendingDelete(p),
     t,
     locale,
   })
@@ -85,6 +103,12 @@ export function ClientListPage() {
           emptyAction={{ label: t("clients.addClient"), onClick: () => router.push("/clients/create") }}
         />
       )}
+
+      <DeleteClientDialog
+        client={pendingDelete}
+        open={!!pendingDelete}
+        onOpenChange={(open) => { if (!open) setPendingDelete(null) }}
+      />
     </ListPageShell>
   )
 }

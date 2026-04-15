@@ -18,7 +18,8 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "docker:up": "docker compose -f docker/docker-compose.yml up -d",
-    "docker:down": "docker compose -f docker/docker-compose.yml down"
+    "docker:down": "docker compose -f docker/docker-compose.yml down",
+    "openapi:sync": "npm run openapi:export --workspace=backend && npm run openapi:generate --workspace=dashboard"
   },
   "devDependencies": {
     "lru-cache": "^11.3.3",

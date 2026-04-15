@@ -3,6 +3,7 @@ import {
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
   UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
@@ -14,6 +15,8 @@ import { DeleteFileHandler } from '../../modules/media/files/delete-file.handler
 import { GeneratePresignedUrlHandler } from '../../modules/media/files/generate-presigned-url.handler';
 import { GeneratePresignedUrlDto } from '../../modules/media/files/generate-presigned-url.dto';
 
+@ApiTags('Media')
+@ApiBearerAuth()
 @Controller('dashboard/media')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardMediaController {

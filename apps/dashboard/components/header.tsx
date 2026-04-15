@@ -188,12 +188,19 @@ export function Header() {
           <button className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-all duration-200 hover:bg-primary/8">
             <Avatar className="size-8">
               <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
-                {user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "??" : "??"}
+                {(() => {
+                  if (!user) return "—"
+                  const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase()
+                  if (initials) return initials
+                  return user.email?.[0]?.toUpperCase() ?? "—"
+                })()}
               </AvatarFallback>
             </Avatar>
             <div className="hidden sm:grid text-start text-sm leading-tight">
               <span className="font-semibold text-foreground text-xs">
-                {user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "—" : "—"}
+                {user
+                  ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email || "—"
+                  : "—"}
               </span>
               <span className="text-[11px] text-muted-foreground">
                 {t("header.role")}

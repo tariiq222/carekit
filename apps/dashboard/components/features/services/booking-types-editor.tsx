@@ -26,7 +26,7 @@ export interface DraftDurationOption {
   key: string
   label: string
   labelAr: string
-  durationMinutes: number
+  durationMins: number
   price: number // SAR display
   isDefault: boolean
   sortOrder: number
@@ -36,7 +36,7 @@ export interface DraftBookingType {
   bookingType: "in_person" | "online"
   enabled: boolean
   price: number // SAR display
-  duration: number // minutes
+  durationMins: number // minutes
   durationOptions: DraftDurationOption[]
 }
 
@@ -106,12 +106,12 @@ export function BookingTypesEditor({ serviceId }: BookingTypesEditorProps) {
         types: enabledTypes.map((d) => ({
           bookingType: d.bookingType,
           price: Math.round(d.price * 100),
-          duration: d.duration,
+          durationMins: d.durationMins,
           isActive: true,
           durationOptions: d.durationOptions.map((o, i) => ({
             label: o.label,
             labelAr: o.labelAr || undefined,
-            durationMinutes: o.durationMinutes,
+            durationMins: o.durationMins,
             price: Math.round(o.price * 100),
             isDefault: o.isDefault,
             sortOrder: i,
@@ -181,8 +181,8 @@ export function BookingTypesEditor({ serviceId }: BookingTypesEditorProps) {
 
 function buildEmptyDrafts(): DraftBookingType[] {
   return [
-    { bookingType: "in_person", enabled: false, price: 0, duration: 30, durationOptions: [] },
-    { bookingType: "online", enabled: false, price: 0, duration: 30, durationOptions: [] },
+    { bookingType: "in_person", enabled: false, price: 0, durationMins: 30, durationOptions: [] },
+    { bookingType: "online", enabled: false, price: 0, durationMins: 30, durationOptions: [] },
   ]
 }
 
@@ -194,18 +194,18 @@ export function mergeDraftsFromServer(
     (bt) => {
       const server = map.get(bt)
       if (!server) {
-        return { bookingType: bt, enabled: false, price: 0, duration: 30, durationOptions: [] }
+        return { bookingType: bt, enabled: false, price: 0, durationMins: 30, durationOptions: [] }
       }
       return {
         bookingType: bt,
         enabled: server.isActive,
         price: server.price / 100,
-        duration: server.duration,
+        durationMins: server.durationMins,
         durationOptions: (server.durationOptions ?? []).map((o) => ({
           key: o.id,
           label: o.label,
           labelAr: o.labelAr ?? "",
-          durationMinutes: o.durationMinutes,
+          durationMins: o.durationMins,
           price: o.price / 100,
           isDefault: o.isDefault,
           sortOrder: o.sortOrder,

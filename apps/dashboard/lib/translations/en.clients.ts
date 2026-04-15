@@ -91,6 +91,17 @@ export const enClients: Record<string, string> = {
   "clients.activateError": "Failed to activate client",
   "clients.actions.deactivate": "Block",
   "clients.actions.activate": "Activate",
+  "clients.actions.delete": "Delete",
+
+  // ── Delete dialog ──
+  "clients.delete.title": "Delete client?",
+  "clients.delete.descriptionPrefix": "Are you sure you want to delete",
+  "clients.delete.descriptionSuffix": "? The client will be removed from lists. Support can restore if needed.",
+  "clients.delete.cancel": "Cancel",
+  "clients.delete.submit": "Delete",
+  "clients.delete.submitting": "Deleting...",
+  "clients.delete.success": "Client deleted",
+  "clients.delete.error": "Failed to delete client",
   "clients.otpVerified": "Email verified via OTP",
 
   // ── Confirm dialog ──

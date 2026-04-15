@@ -13,6 +13,7 @@ export class GetCurrentUserHandler {
       omit: { passwordHash: true },
     });
     if (!user || user.tenantId !== query.tenantId) throw new NotFoundException('User not found');
-    return user;
+    const [firstName = '', ...rest] = (user.name ?? '').trim().split(/\s+/);
+    return { ...user, firstName, lastName: rest.join(' ') };
   }
 }

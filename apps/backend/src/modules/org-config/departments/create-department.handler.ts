@@ -14,6 +14,7 @@ export class CreateDepartmentHandler {
         tenantId: dto.tenantId,
         nameAr: dto.nameAr,
         nameEn: dto.nameEn,
+        isActive: dto.isActive ?? true,
         isVisible: dto.isVisible ?? true,
         sortOrder: dto.sortOrder ?? 0,
       },

@@ -34,7 +34,7 @@ export function EmployeeTypeRow({
   onRemove,
 }: EmployeeTypeRowProps) {
   const defaultPrice = serviceDefault ? (serviceDefault.price / 100).toFixed(2) : ""
-  const defaultDuration = serviceDefault ? String(serviceDefault.duration) : ""
+  const defaultDuration = serviceDefault ? String(serviceDefault.durationMins) : ""
   const hasDefault = !!serviceDefault
 
   const pricePlaceholder = hasDefault

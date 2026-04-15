@@ -84,7 +84,7 @@ export function ServicesTab({
       {
         key: nextDraftKey(),
         serviceId: data.serviceId,
-        serviceName: isAr ? svc.nameAr : svc.nameEn,
+        serviceName: isAr ? svc.nameAr : (svc.nameEn ?? svc.nameAr),
         bufferMinutes: data.bufferMinutes,
         isActive: data.isActive,
         availableTypes: typeConfigs.map((tc) => tc.bookingType),
@@ -132,7 +132,7 @@ export function ServicesTab({
         {isAdding ? (
           <AddServiceForm
             form={form}
-            availableServices={availableServices}
+            availableServices={availableServices.map((s) => ({ id: s.id, nameAr: s.nameAr, nameEn: s.nameEn ?? s.nameAr }))}
             serviceBookingTypes={[]}
             typeConfigs={typeConfigs}
             onTypeConfigsChange={setTypeConfigs}

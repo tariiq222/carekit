@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
+import { GroupSessionMinReachedHandler } from '../group-session-min-reached/group-session-min-reached.handler';
 import { CreateBookingDto } from './create-booking.dto';
 
 export type CreateBookingCommand = Omit<CreateBookingDto, 'scheduledAt' | 'expiresAt'> & {
@@ -22,6 +23,7 @@ export class CreateBookingHandler {
     private readonly prisma: PrismaService,
     private readonly priceResolver: PriceResolverService,
     private readonly settingsHandler: GetBookingSettingsHandler,
+    private readonly groupMinReachedHandler: GroupSessionMinReachedHandler,
   ) {}
 
   async execute(dto: CreateBookingCommand) {
@@ -121,23 +123,51 @@ export class CreateBookingHandler {
       discountedPrice = parseFloat((Number(price) - discount).toFixed(2));
     }
 
+    // Resolve group-session settings from the service
+    const serviceRecord = await this.prisma.service.findFirst({
+      where: { id: dto.serviceId, tenantId: dto.tenantId },
+      select: { minParticipants: true, maxParticipants: true, reserveWithoutPayment: true },
+    });
+    const isGroupService =
+      !!serviceRecord && serviceRecord.maxParticipants > 1 && serviceRecord.reserveWithoutPayment;
+
+    // For group services, use PENDING_GROUP_FILL until minParticipants is reached.
+    const initialStatus = isGroupService ? 'PENDING_GROUP_FILL' : 'PENDING';
+
     // Serialize the conflict check + insert so two concurrent requests for the
     // same slot cannot both pass the overlap check. Postgres Serializable
     // isolation detects the write-skew and rolls one back with a 40001 error.
-    return this.prisma.$transaction(
+    const booking = await this.prisma.$transaction(
       async (tx) => {
-        const conflict = await tx.booking.findFirst({
-          where: {
-            tenantId: dto.tenantId,
-            employeeId: dto.employeeId,
-            status: { in: ['PENDING', 'CONFIRMED'] },
-            scheduledAt: { lt: endsAt },
-            endsAt: { gt: scheduledAt },
-          },
-          select: { id: true },
-        });
-        if (conflict) {
-          throw new ConflictException('Employee already has a booking in this time slot');
+        if (!isGroupService) {
+          // Individual bookings: hard overlap check
+          const conflict = await tx.booking.findFirst({
+            where: {
+              tenantId: dto.tenantId,
+              employeeId: dto.employeeId,
+              status: { in: ['PENDING', 'CONFIRMED'] },
+              scheduledAt: { lt: endsAt },
+              endsAt: { gt: scheduledAt },
+            },
+            select: { id: true },
+          });
+          if (conflict) {
+            throw new ConflictException('Employee already has a booking in this time slot');
+          }
+        } else {
+          // Group bookings: check capacity
+          const slotCount = await tx.booking.count({
+            where: {
+              tenantId: dto.tenantId,
+              serviceId: dto.serviceId,
+              employeeId: dto.employeeId,
+              scheduledAt,
+              status: { in: ['PENDING_GROUP_FILL', 'AWAITING_PAYMENT', 'CONFIRMED'] },
+            },
+          });
+          if (slotCount >= serviceRecord!.maxParticipants) {
+            throw new ConflictException('This group session is full');
+          }
         }
 
         return tx.booking.create({
@@ -153,18 +183,42 @@ export class CreateBookingHandler {
             durationMins,
             price,
             currency,
-            bookingType: dto.bookingType ?? 'INDIVIDUAL',
+            bookingType: isGroupService ? 'GROUP' : (dto.bookingType ?? 'INDIVIDUAL'),
             notes: dto.notes,
             expiresAt: dto.expiresAt,
             groupSessionId: dto.groupSessionId,
             payAtClinic: dto.payAtClinic ?? false,
             couponCode: dto.couponCode ?? null,
             discountedPrice: discountedPrice,
-            status: 'PENDING',
+            status: initialStatus,
           },
         });
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+
+    // After insert: check if minParticipants is now reached for this slot
+    if (isGroupService) {
+      const filledCount = await this.prisma.booking.count({
+        where: {
+          tenantId: dto.tenantId,
+          serviceId: dto.serviceId,
+          employeeId: dto.employeeId,
+          scheduledAt,
+          status: { in: ['PENDING_GROUP_FILL', 'AWAITING_PAYMENT', 'CONFIRMED'] },
+        },
+      });
+      if (filledCount >= serviceRecord!.minParticipants) {
+        // Fire-and-forget — don't fail the booking if notification fails
+        this.groupMinReachedHandler.execute({
+          tenantId: dto.tenantId,
+          serviceId: dto.serviceId,
+          employeeId: dto.employeeId,
+          scheduledAt,
+        }).catch(() => { /* logged by eventBus */ });
+      }
+    }
+
+    return booking;
   }
 }

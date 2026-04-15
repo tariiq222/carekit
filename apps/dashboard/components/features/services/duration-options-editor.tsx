@@ -20,7 +20,7 @@ interface DraftOption {
   key: string
   label: string
   labelAr: string
-  durationMinutes: number
+  durationMins: number
   price: number // SAR display value
   isDefault: boolean
   sortOrder: number
@@ -53,7 +53,7 @@ export function DurationOptionsEditor({ serviceId, locale: _locale }: Props) {
           key: o.id,
           label: o.label,
           labelAr: o.labelAr ?? "",
-          durationMinutes: o.durationMinutes,
+          durationMins: o.durationMins,
           price: o.price / 100,
           isDefault: o.isDefault,
           sortOrder: o.sortOrder,
@@ -69,7 +69,7 @@ export function DurationOptionsEditor({ serviceId, locale: _locale }: Props) {
         key: nextKey(),
         label: "",
         labelAr: "",
-        durationMinutes: 30,
+        durationMins: 30,
         price: 0,
         isDefault: false,
         sortOrder: prev.length,
@@ -98,7 +98,7 @@ export function DurationOptionsEditor({ serviceId, locale: _locale }: Props) {
           options: options.map((o, i) => ({
             label: o.label,
             labelAr: o.labelAr || undefined,
-            durationMinutes: o.durationMinutes,
+            durationMins: o.durationMins,
             price: Math.round(o.price * 100),
             isDefault: o.isDefault,
             sortOrder: i,
@@ -214,8 +214,8 @@ function DurationOptionRow({
             type="number"
             min={5}
             max={480}
-            value={option.durationMinutes}
-            onChange={(e) => onUpdate("durationMinutes", Number(e.target.value))}
+            value={option.durationMins}
+            onChange={(e) => onUpdate("durationMins", Number(e.target.value))}
             className="h-8 text-sm tabular-nums"
           />
         </div>

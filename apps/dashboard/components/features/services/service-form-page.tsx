@@ -45,8 +45,8 @@ import { uploadServiceImage } from "@/lib/api/services"
 /* ─── Constants ─── */
 
 const EMPTY_BOOKING_TYPES: DraftBookingType[] = [
-  { bookingType: "in_person", enabled: true, price: 0, duration: 30, durationOptions: [] },
-  { bookingType: "online", enabled: false, price: 0, duration: 30, durationOptions: [] },
+  { bookingType: "in_person", enabled: true, price: 0, durationMins: 30, durationOptions: [] },
+  { bookingType: "online", enabled: false, price: 0, durationMins: 30, durationOptions: [] },
 ]
 
 /* ─── Props ─── */
@@ -97,7 +97,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
   useEffect(() => {
     if (!service || !isEdit) return
     form.reset({
-      nameEn: service.nameEn,
+      nameEn: service.nameEn ?? "",
       nameAr: service.nameAr,
       descriptionEn: service.descriptionEn ?? "",
       descriptionAr: service.descriptionAr ?? "",
@@ -111,7 +111,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
       imageUrl: service.imageUrl ?? null,
       bufferMinutes: service.bufferMinutes ?? undefined,
       depositEnabled: service.depositEnabled,
-      depositPercent: service.depositPercent ?? 100,
+      depositPercent: service.depositAmount != null ? service.depositAmount / 100 : 100,
       allowRecurring: service.allowRecurring,
       allowedRecurringPatterns: service.allowedRecurringPatterns ?? [],
       maxRecurrences: service.maxRecurrences ?? 12,
@@ -142,7 +142,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
           id: serviceId,
           ...buildPayload(data),
           price: firstEnabled ? Math.round(firstEnabled.price * 100) : undefined,
-          duration: firstEnabled ? firstEnabled.duration : undefined,
+          durationMins: firstEnabled ? firstEnabled.durationMins : undefined,
         })
 
         if (pendingAvatarFile.current) {
@@ -156,11 +156,12 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
 
         toast.success(t("services.edit.success"))
       } else {
+        const firstEnabled = bookingTypes.find((bt) => bt.enabled)
         const created = await createMut.mutateAsync({
           ...buildPayload(data),
           categoryId: data.categoryId ?? "",
-          employeeIds: pendingEmployeeIds.length > 0 ? pendingEmployeeIds : undefined,
-          branchIds: data.branchIds?.length ? data.branchIds : undefined,
+          price: firstEnabled ? Math.round(firstEnabled.price * 100) : 0,
+          durationMins: firstEnabled ? firstEnabled.durationMins : 30,
         })
 
         if (pendingAvatarFile.current) {
@@ -224,7 +225,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
     ? [
         { label: t("nav.dashboard"), href: "/" },
         { label: t("nav.services"), href: "/services" },
-        { label: isAr ? (service.nameAr ?? "…") : (service.nameEn ?? "…"), href: `/services/${serviceId}/edit` },
+        { label: isAr ? (service.nameAr ?? "…") : (service.nameEn ?? service.nameAr ?? "…"), href: `/services/${serviceId}/edit` },
         { label: t("nav.edit") },
       ]
     : undefined
@@ -241,7 +242,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
         title={t(isEdit ? "services.edit.title" : "services.create.pageTitle")}
         description={
           isEdit
-            ? (isAr ? service?.nameAr : service?.nameEn)
+            ? (isAr ? service?.nameAr : (service?.nameEn ?? service?.nameAr))
             : t("services.create.pageDescription")
         }
       />
@@ -265,7 +266,6 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
               form={form}
               onImageSelect={(file) => { pendingAvatarFile.current = file }}
               serviceId={serviceId}
-              serviceBranches={service?.branches}
             />
           </TabsContent>
 

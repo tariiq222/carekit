@@ -13,6 +13,7 @@ function buildController() {
   const createIntakeForm = fn({ id: 'if-1' });
   const getIntakeForm = fn({ id: 'if-1' });
   const listIntakeForms = fn({ data: [] });
+  const deleteIntakeForm = fn(undefined);
   const submitRating = fn({ id: 'r-1' });
   const listRatings = fn({ data: [] });
   const getOrgSettings = fn({ id: 'os-1' });
@@ -23,11 +24,11 @@ function buildController() {
     createService as never, updateService as never, listServices as never, archiveService as never,
     upsertBranding as never, getBranding as never,
     createIntakeForm as never, getIntakeForm as never, listIntakeForms as never,
-    submitRating as never, listRatings as never,
+    deleteIntakeForm as never, submitRating as never, listRatings as never,
     getOrgSettings as never, upsertOrgSettings as never,
     getBookingSettings as never, upsertBookingSettings as never,
   );
-  return { controller, createService, updateService, listServices, archiveService, upsertBranding, getBranding, createIntakeForm, getIntakeForm, listIntakeForms, submitRating, listRatings, getOrgSettings, upsertOrgSettings, getBookingSettings, upsertBookingSettings };
+  return { controller, createService, updateService, listServices, archiveService, upsertBranding, getBranding, createIntakeForm, getIntakeForm, listIntakeForms, deleteIntakeForm, submitRating, listRatings, getOrgSettings, upsertOrgSettings, getBookingSettings, upsertBookingSettings };
 }
 
 describe('DashboardOrganizationSettingsController', () => {

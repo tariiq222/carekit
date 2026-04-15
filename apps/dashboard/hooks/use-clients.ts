@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient, useMutation, keepPreviousData } from "@tanstack/react-query"
 import { useState, useCallback } from "react"
 import { queryKeys } from "@/lib/query-keys"
-import { fetchClients, fetchClient, updateClient, createWalkInClient } from "@/lib/api/clients"
+import { fetchClients, fetchClient, updateClient, createWalkInClient, deleteClient } from "@/lib/api/clients"
 import type { ClientListQuery } from "@/lib/types/client"
 
 /* ─── List Hook ─── */
@@ -80,7 +80,18 @@ export function useClientMutations() {
     onSuccess: () => invalidate(),
   })
 
-  return { createMut, updateMut }
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteClient(id),
+    onSuccess: () => invalidate(),
+  })
+
+  const toggleActiveMut = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      updateClient(id, { isActive }),
+    onSuccess: () => invalidate(),
+  })
+
+  return { createMut, updateMut, deleteMut, toggleActiveMut }
 }
 
 /* ─── Invalidation ─── */

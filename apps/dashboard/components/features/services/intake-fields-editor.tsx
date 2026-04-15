@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/select"
 import { useIntakeFormMutations } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
-import type { IntakeField } from "@/lib/types/service"
+import type { IntakeFieldApi } from "@/lib/types/intake-form-api"
+import type { FieldType } from "@/lib/types/intake-form-shared"
 
 const FIELD_TYPES = [
   { value: "text", labelEn: "Text", labelAr: "نص" },
@@ -44,7 +45,7 @@ interface DraftField {
 interface Props {
   formId: string
   serviceId: string
-  initialFields: IntakeField[]
+  initialFields: IntakeFieldApi[]
   locale: string
 }
 
@@ -65,7 +66,7 @@ export function IntakeFieldsEditor({ formId, serviceId, initialFields, locale }:
     setFields(
       initialFields.map((f) => ({
         key: f.id,
-        labelEn: f.labelEn,
+        labelEn: f.labelEn ?? "",
         labelAr: f.labelAr,
         fieldType: f.fieldType,
         options: f.options?.join(", ") ?? "",
@@ -112,7 +113,7 @@ export function IntakeFieldsEditor({ formId, serviceId, initialFields, locale }:
           fields: fields.map((f, i) => ({
             labelEn: f.labelEn,
             labelAr: f.labelAr,
-            fieldType: f.fieldType,
+            fieldType: f.fieldType as FieldType,
             options: f.fieldType === "select" && f.options.trim()
               ? f.options.split(",").map((o) => o.trim()).filter(Boolean)
               : undefined,

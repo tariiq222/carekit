@@ -1,10 +1,11 @@
 import { Test } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { ClientGender, ClientSource } from '@prisma/client';
+import { ClientAccountType, ClientGender, ClientSource } from '@prisma/client';
 import { CreateClientHandler } from './create-client.handler';
 import { UpdateClientHandler } from './update-client.handler';
 import { ListClientsHandler } from './list-clients.handler';
 import { GetClientHandler } from './get-client.handler';
+import { DeleteClientHandler } from './delete-client.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { EventBusService } from '../../../infrastructure/events';
 
@@ -13,14 +14,27 @@ const mockClient = {
   tenantId: 'tenant-1',
   userId: null,
   name: 'أحمد محمد',
-  phone: '0501234567',
+  firstName: 'أحمد',
+  middleName: null,
+  lastName: 'محمد',
+  phone: '+966501234567',
   email: 'ahmed@example.com',
   gender: ClientGender.MALE,
   dateOfBirth: new Date('1990-01-01'),
+  nationality: null,
+  nationalId: null,
+  emergencyName: null,
+  emergencyPhone: null,
+  bloodType: null,
+  allergies: null,
+  chronicConditions: null,
   avatarUrl: null,
   notes: null,
   source: ClientSource.WALK_IN,
+  accountType: ClientAccountType.WALK_IN,
+  claimedAt: null,
   isActive: true,
+  deletedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -30,6 +44,7 @@ describe('Clients handlers', () => {
   let updateHandler: UpdateClientHandler;
   let listHandler: ListClientsHandler;
   let getHandler: GetClientHandler;
+  let deleteHandler: DeleteClientHandler;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let prisma: any;
 
@@ -40,6 +55,7 @@ describe('Clients handlers', () => {
         UpdateClientHandler,
         ListClientsHandler,
         GetClientHandler,
+        DeleteClientHandler,
         {
           provide: PrismaService,
           useValue: {
@@ -61,109 +77,177 @@ describe('Clients handlers', () => {
     updateHandler = module.get(UpdateClientHandler);
     listHandler = module.get(ListClientsHandler);
     getHandler = module.get(GetClientHandler);
+    deleteHandler = module.get(DeleteClientHandler);
     prisma = module.get(PrismaService);
   });
 
   describe('CreateClientHandler', () => {
-    it('creates a client successfully', async () => {
-      prisma.client.findUnique.mockResolvedValue(null);
+    it('composes name from first/middle/last and creates a client', async () => {
+      prisma.client.findFirst.mockResolvedValue(null);
       prisma.client.create.mockResolvedValue(mockClient);
 
       const result = await createHandler.execute({
         tenantId: 'tenant-1',
-        name: 'أحمد محمد',
-        phone: '0501234567',
+        firstName: 'أحمد',
+        lastName: 'محمد',
+        phone: '+966501234567',
         gender: ClientGender.MALE,
       });
 
       expect(result.id).toBe('c1');
+      expect(result.gender).toBe('male'); // serialized lowercase
+      expect(result.accountType).toBe('walk_in'); // serialized lowercase
       expect(prisma.client.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ tenantId: 'tenant-1', name: 'أحمد محمد' }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({
+            tenantId: 'tenant-1',
+            name: 'أحمد محمد',
+            firstName: 'أحمد',
+            lastName: 'محمد',
+          }),
+        }),
       );
     });
 
-    it('creates a walk-in client without phone (no uniqueness check)', async () => {
-      prisma.client.create.mockResolvedValue({ ...mockClient, phone: null });
-
-      const result = await createHandler.execute({ tenantId: 'tenant-1', name: 'زبون عابر' });
-
-      expect(result.phone).toBeNull();
-      expect(prisma.client.findUnique).not.toHaveBeenCalled();
-    });
-
-    it('throws ConflictException when phone already registered', async () => {
-      prisma.client.findUnique.mockResolvedValue(mockClient);
+    it('throws ConflictException when phone already registered for a non-deleted client', async () => {
+      prisma.client.findFirst.mockResolvedValue(mockClient);
 
       await expect(
-        createHandler.execute({ tenantId: 'tenant-1', name: 'آخر', phone: '0501234567' }),
+        createHandler.execute({
+          tenantId: 'tenant-1',
+          firstName: 'آخر',
+          lastName: 'مختلف',
+          phone: '+966501234567',
+        }),
       ).rejects.toThrow(ConflictException);
     });
   });
 
   describe('UpdateClientHandler', () => {
-    it('updates client fields', async () => {
+    it('updates fields and re-composes name', async () => {
       prisma.client.findFirst.mockResolvedValue(mockClient);
-      prisma.client.update.mockResolvedValue({ ...mockClient, name: 'محمد أحمد' });
+      prisma.client.update.mockResolvedValue({ ...mockClient, firstName: 'محمد', lastName: 'أحمد', name: 'محمد أحمد' });
 
-      const result = await updateHandler.execute({ clientId: 'c1', tenantId: 'tenant-1', name: 'محمد أحمد' });
+      const result = await updateHandler.execute({
+        clientId: 'c1',
+        tenantId: 'tenant-1',
+        firstName: 'محمد',
+        lastName: 'أحمد',
+      });
 
-      expect(result.name).toBe('محمد أحمد');
+      expect(result.firstName).toBe('محمد');
       expect(prisma.client.update).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 'c1' }, data: expect.objectContaining({ name: 'محمد أحمد' }) }),
+        expect.objectContaining({
+          where: { id: 'c1' },
+          data: expect.objectContaining({ firstName: 'محمد', lastName: 'أحمد', name: 'محمد أحمد' }),
+        }),
       );
+    });
+
+    it('checks phone uniqueness when phone changes', async () => {
+      prisma.client.findFirst
+        .mockResolvedValueOnce(mockClient) // initial existence check
+        .mockResolvedValueOnce({ id: 'c2' }); // duplicate check returns another client
+
+      await expect(
+        updateHandler.execute({ clientId: 'c1', tenantId: 'tenant-1', phone: '+966501111111' }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('skips uniqueness check when phone is unchanged', async () => {
+      prisma.client.findFirst.mockResolvedValueOnce(mockClient);
+      prisma.client.update.mockResolvedValue(mockClient);
+
+      await updateHandler.execute({ clientId: 'c1', tenantId: 'tenant-1', phone: mockClient.phone });
+
+      // Only the existence lookup — no duplicate query
+      expect(prisma.client.findFirst).toHaveBeenCalledTimes(1);
     });
 
     it('throws NotFoundException when client not found', async () => {
       prisma.client.findFirst.mockResolvedValue(null);
 
-      await expect(updateHandler.execute({ clientId: 'c1', tenantId: 'tenant-1', name: 'x' })).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('throws NotFoundException when client belongs to different tenant', async () => {
-      prisma.client.findFirst.mockResolvedValue(null);
-
-      await expect(updateHandler.execute({ clientId: 'c1', tenantId: 'tenant-1' })).rejects.toThrow(NotFoundException);
+      await expect(
+        updateHandler.execute({ clientId: 'c1', tenantId: 'tenant-1', firstName: 'x' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('ListClientsHandler', () => {
-    it('returns paginated clients', async () => {
+    it('returns items + meta excluding deleted clients', async () => {
       prisma.client.findMany.mockResolvedValue([mockClient]);
       prisma.client.count.mockResolvedValue(1);
 
       const result = await listHandler.execute({ tenantId: 'tenant-1', page: 1, limit: 10 });
 
-      expect(result.data).toHaveLength(1);
-      expect(result.meta).toMatchObject({ total: 1, page: 1, limit: 10, totalPages: 1 });
+      expect(result.items).toHaveLength(1);
+      expect(result.meta).toMatchObject({ total: 1, page: 1, perPage: 10, totalPages: 1 });
+      expect(prisma.client.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ deletedAt: null }),
+        }),
+      );
     });
 
-    it('applies search filter', async () => {
+    it('applies search across name/firstName/lastName/phone/email', async () => {
       prisma.client.findMany.mockResolvedValue([]);
       prisma.client.count.mockResolvedValue(0);
 
       await listHandler.execute({ tenantId: 'tenant-1', page: 1, limit: 10, search: 'أحمد' });
 
       expect(prisma.client.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ OR: expect.any(Array) }) }),
+        expect.objectContaining({
+          where: expect.objectContaining({ OR: expect.any(Array) }),
+        }),
       );
     });
   });
 
   describe('GetClientHandler', () => {
-    it('returns client by id', async () => {
+    it('returns serialized client (lowercase enums)', async () => {
       prisma.client.findFirst.mockResolvedValue(mockClient);
 
       const result = await getHandler.execute({ clientId: 'c1', tenantId: 'tenant-1' });
 
       expect(result.id).toBe('c1');
+      expect(result.gender).toBe('male');
+      expect(result.accountType).toBe('walk_in');
     });
 
-    it('throws NotFoundException when not found', async () => {
+    it('throws NotFoundException when deleted', async () => {
       prisma.client.findFirst.mockResolvedValue(null);
 
-      await expect(getHandler.execute({ clientId: 'c1', tenantId: 'tenant-1' })).rejects.toThrow(NotFoundException);
+      await expect(getHandler.execute({ clientId: 'c1', tenantId: 'tenant-1' })).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('DeleteClientHandler', () => {
+    it('soft-deletes by setting deletedAt and nulling phone', async () => {
+      prisma.client.findFirst.mockResolvedValue(mockClient);
+      prisma.client.update.mockResolvedValue({ ...mockClient, deletedAt: new Date(), phone: null });
+
+      await deleteHandler.execute({ clientId: 'c1', tenantId: 'tenant-1' });
+
+      expect(prisma.client.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'c1' },
+          data: expect.objectContaining({
+            deletedAt: expect.any(Date),
+            isActive: false,
+            phone: null,
+          }),
+        }),
+      );
+    });
+
+    it('throws NotFoundException when client does not exist or is already deleted', async () => {
+      prisma.client.findFirst.mockResolvedValue(null);
+
+      await expect(deleteHandler.execute({ clientId: 'c1', tenantId: 'tenant-1' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

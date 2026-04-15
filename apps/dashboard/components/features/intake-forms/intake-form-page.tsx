@@ -132,7 +132,7 @@ export function IntakeFormPage({ mode, initialDraft, onSave, isSaving, isLoading
     if (draft.scope === "service") {
       return (servicesData?.items ?? []).map((s) => ({
         value: s.id,
-        label: isAr ? s.nameAr : s.nameEn,
+        label: isAr ? s.nameAr : (s.nameEn ?? s.nameAr),
       }))
     }
     if (draft.scope === "branch" && isMultiBranch) {

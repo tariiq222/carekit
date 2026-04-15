@@ -125,6 +125,7 @@ export function useEmployeeForm({
 
   async function submitEdit(data: EditEmployeeFormData) {
     const id = employeeId!
+    const stepErrors: string[] = []
     try {
       await updateMutation.mutateAsync({
         id,
@@ -140,42 +141,56 @@ export function useEmployeeForm({
         avatarUrl: data.avatarUrl || undefined,
         isActive: data.isActive,
       })
-      const activeSlots = schedule.filter((s) => s.isActive)
-      if (activeSlots.length > 0) await setAvailabilityMut.mutateAsync({ id, schedule: activeSlots })
-      if (breaks.length > 0) {
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("employees.edit.error"))
+      setIsSubmitting(false)
+      return
+    }
+    const activeSlots = schedule.filter((s) => s.isActive)
+    if (activeSlots.length > 0) {
+      try { await setAvailabilityMut.mutateAsync({ id, schedule: activeSlots }) }
+      catch { stepErrors.push("جدول المواعيد") }
+    }
+    if (breaks.length > 0) {
+      try {
         await setBreaksMut.mutateAsync({
           id,
           breaks: breaks.map(({ dayOfWeek, startTime, endTime }) => ({
             dayOfWeek, startTime, endTime,
           })),
         })
-      }
-      if (vacation.enabled && vacation.startDate && vacation.endDate) {
+      } catch { stepErrors.push("فترات الاستراحة") }
+    }
+    if (vacation.enabled && vacation.startDate && vacation.endDate) {
+      try {
         await vacationMuts.createMut.mutateAsync({
           startDate: vacation.startDate,
           endDate: vacation.endDate,
           reason: vacation.reason || undefined,
         })
+      } catch { stepErrors.push("الإجازة") }
+    }
+    const existingIds = new Set((existingServices ?? []).map((ps) => ps.serviceId))
+    for (const ds of draftServices) {
+      const payload = {
+        availableTypes: ds.availableTypes, bufferMinutes: ds.bufferMinutes,
+        isActive: ds.isActive, types: ds.types,
       }
-      const existingIds = new Set((existingServices ?? []).map((ps) => ps.serviceId))
-      for (const ds of draftServices) {
-        const payload = {
-          availableTypes: ds.availableTypes, bufferMinutes: ds.bufferMinutes,
-          isActive: ds.isActive, types: ds.types,
-        }
+      try {
         if (existingIds.has(ds.serviceId)) {
           await serviceMuts.updateMut.mutateAsync({ serviceId: ds.serviceId, payload })
         } else {
           await assignService(id, { serviceId: ds.serviceId, ...payload })
         }
-      }
-      toast.success(t("employees.edit.success"))
-      router.push("/employees")
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("employees.edit.error"))
-    } finally {
-      setIsSubmitting(false)
+      } catch { stepErrors.push("الخدمات") }
     }
+    if (stepErrors.length > 0) {
+      toast.warning(`${t("employees.edit.success")} (${t("common.warnings")}: ${[...new Set(stepErrors)].join("، ")})`)
+    } else {
+      toast.success(t("employees.edit.success"))
+    }
+    setIsSubmitting(false)
+    router.push("/employees")
   }
 
   async function submitCreate(data: CreateEmployeeFormData) {

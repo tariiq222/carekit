@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Body, Param, Query,
   UseGuards, ParseUUIDPipe,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -12,6 +13,8 @@ import { UpdateDepartmentDto } from '../../modules/org-config/departments/update
 import { ListDepartmentsHandler } from '../../modules/org-config/departments/list-departments.handler';
 import { ListDepartmentsDto } from '../../modules/org-config/departments/list-departments.dto';
 
+@ApiTags('Departments')
+@ApiBearerAuth()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
 export class DashboardOrganizationDepartmentsController {

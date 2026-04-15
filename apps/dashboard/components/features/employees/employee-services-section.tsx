@@ -126,7 +126,11 @@ interface ServiceRowProps {
 }
 
 function ServiceRow({ ps, locale, t, onEdit, onRemove }: ServiceRowProps) {
-  const name = locale === "ar" ? ps.service.nameAr : ps.service.nameEn
+  const name = ps.service
+    ? locale === "ar"
+      ? ps.service.nameAr
+      : ps.service.nameEn
+    : t("employees.services.unknown")
   const sarUnit = t("employees.services.sar")
   const minUnit = t("employees.services.minutes")
 
@@ -238,6 +242,7 @@ function buildTypeBadges(
   }
 
   /* Fallback: legacy availableTypes + single price display */
+  if (!ps.availableTypes) return []
   return ps.availableTypes.map((type) => {
     const key = TYPE_LABEL_MAP[type]
     const typeLabel = key ? t(`employees.services.${key}`) : type

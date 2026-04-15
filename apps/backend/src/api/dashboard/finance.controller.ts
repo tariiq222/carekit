@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -34,6 +35,8 @@ import { RefundPaymentDto } from '../../modules/finance/refund-payment/refund-pa
 import { VerifyPaymentHandler } from '../../modules/finance/verify-payment/verify-payment.handler';
 import { VerifyPaymentDto } from '../../modules/finance/verify-payment/verify-payment.dto';
 
+@ApiTags('Finance')
+@ApiBearerAuth()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/finance')
 export class DashboardFinanceController {

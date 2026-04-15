@@ -2,6 +2,7 @@ import {
   Controller, Get, Post, Patch, Body, Param, Query,
   UseGuards, ParseUUIDPipe,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -13,6 +14,8 @@ import { ListBranchesHandler } from '../../modules/org-config/branches/list-bran
 import { ListBranchesDto } from '../../modules/org-config/branches/list-branches.dto';
 import { GetBranchHandler } from '../../modules/org-config/branches/get-branch.handler';
 
+@ApiTags('Branches')
+@ApiBearerAuth()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
 export class DashboardOrganizationBranchesController {

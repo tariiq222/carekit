@@ -1,5 +1,8 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { writeFileSync } from 'fs';
+import { resolve } from 'path';
 import { AppModule } from './app.module';
 import { LoggingInterceptor } from './common/interceptors';
 import { HttpExceptionFilter } from './common/filters';
@@ -33,6 +36,27 @@ async function bootstrap(): Promise<void> {
 
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  // ─── Swagger / OpenAPI ──────────────────────────────────────────────────────
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('CareKit API')
+    .setDescription('CareKit clinic management platform — dashboard & mobile API')
+    .setVersion('2.0')
+    .addBearerAuth()
+    .addServer('http://localhost:5100', 'Local dev')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: { persistAuthorization: true },
+  });
+
+  // Write openapi.json snapshot for codegen (only when WRITE_OPENAPI_SPEC=1)
+  if (process.env.WRITE_OPENAPI_SPEC === '1') {
+    const outPath = resolve(__dirname, '../openapi.json');
+    writeFileSync(outPath, JSON.stringify(document, null, 2), 'utf-8');
+    Logger.log(`OpenAPI spec written to ${outPath}`, 'Bootstrap');
+  }
 
   const port = Number(process.env.PORT ?? 5100);
   await app.listen(port);

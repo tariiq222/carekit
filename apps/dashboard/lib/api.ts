@@ -141,6 +141,10 @@ async function request<T>(
     )
   }
 
+  if (res.status === 204 || res.headers.get("content-length") === "0") {
+    return undefined as T
+  }
+
   const body = await res.json()
 
   // Auto-unwrap ApiResponse envelope { success, data } from backend interceptor

@@ -8,6 +8,8 @@ import { ArchiveServiceHandler } from './services/archive-service.handler';
 import { PriceResolverService } from './services/price-resolver.service';
 import { SetDurationOptionsHandler } from './services/set-duration-options.handler';
 import { SetEmployeeServiceOptionsHandler } from './services/set-employee-service-options.handler';
+import { SetServiceBookingConfigsHandler } from './services/set-service-booking-configs.handler';
+import { GetServiceBookingConfigsHandler } from './services/get-service-booking-configs.handler';
 import { UpsertBrandingHandler } from './branding/upsert-branding.handler';
 import { GetBrandingHandler } from './branding/get-branding.handler';
 import { CreateIntakeFormHandler } from './intake-forms/create-intake-form.handler';
@@ -24,6 +26,7 @@ import { UpsertBookingSettingsHandler } from '../bookings/upsert-booking-setting
 const serviceHandlers = [
   CreateServiceHandler, UpdateServiceHandler, ListServicesHandler, ArchiveServiceHandler,
   PriceResolverService, SetDurationOptionsHandler, SetEmployeeServiceOptionsHandler,
+  SetServiceBookingConfigsHandler, GetServiceBookingConfigsHandler,
 ];
 
 @Module({

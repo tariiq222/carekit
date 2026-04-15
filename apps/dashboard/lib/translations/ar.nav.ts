@@ -60,6 +60,8 @@ export const arNav: Record<string, string> = {
   "common.delete": "حذف",
   "common.edit": "تعديل",
   "common.view": "عرض",
+  "common.preview": "معاينة",
+  "common.warnings": "تحذيرات",
   "common.close": "إغلاق",
   "common.search": "بحث",
   "common.export": "تصدير",

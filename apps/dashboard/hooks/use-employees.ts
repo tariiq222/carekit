@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { queryKeys } from "@/lib/query-keys"
 import {
   fetchEmployees,
@@ -11,6 +11,7 @@ import {
   fetchVacations,
   fetchEmployeeServices,
   fetchEmployeeServiceTypes,
+  fetchEmployeeStats,
 } from "@/lib/api/employees"
 import type { EmployeeListQuery } from "@/lib/types/employee"
 
@@ -28,12 +29,18 @@ export {
 export function useEmployees() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [isActive, setIsActive] = useState<boolean | undefined>()
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const query: EmployeeListQuery = {
     page,
     perPage: 20,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     isActive,
   }
 
@@ -46,11 +53,12 @@ export function useEmployees() {
 
   const resetFilters = useCallback(() => {
     setSearch("")
+    setDebouncedSearch("")
     setIsActive(undefined)
     setPage(1)
   }, [])
 
-  const hasFilters = !!(search || isActive !== undefined)
+  const hasFilters = !!(debouncedSearch || isActive !== undefined)
 
   const items = data?.items ?? []
 
@@ -69,6 +77,16 @@ export function useEmployees() {
     resetFilters,
     refetch,
   }
+}
+
+/* ─── Stats Hook ─── */
+
+export function useEmployeeStats() {
+  return useQuery({
+    queryKey: queryKeys.employees.stats(),
+    queryFn: fetchEmployeeStats,
+    staleTime: 60 * 1000,
+  })
 }
 
 /* ─── Detail Hook ─── */

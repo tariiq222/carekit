@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  Controller, Get, Post, Put, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -10,6 +10,7 @@ import { CreateClientHandler } from '../../modules/people/clients/create-client.
 import { UpdateClientHandler } from '../../modules/people/clients/update-client.handler';
 import { ListClientsHandler } from '../../modules/people/clients/list-clients.handler';
 import { GetClientHandler } from '../../modules/people/clients/get-client.handler';
+import { DeleteClientHandler } from '../../modules/people/clients/delete-client.handler';
 import { CreateClientDto } from '../../modules/people/clients/create-client.dto';
 import { UpdateClientDto } from '../../modules/people/clients/update-client.dto';
 import { ListClientsDto } from '../../modules/people/clients/list-clients.dto';
@@ -20,6 +21,9 @@ import { UpdateAvailabilityHandler } from '../../modules/people/employees/update
 import { EmployeeOnboardingHandler } from '../../modules/people/employees/employee-onboarding.handler';
 import { OnboardEmployeeHandler } from '../../modules/people/employees/onboard-employee.handler';
 import { OnboardEmployeeDto } from '../../modules/people/employees/onboard-employee.dto';
+import { GetAvailabilityHandler } from '../../modules/people/employees/get-availability.handler';
+import { UpdateEmployeeHandler } from '../../modules/people/employees/update-employee.handler';
+import { UpdateEmployeeDto } from '../../modules/people/employees/update-employee.dto';
 import { CreateEmployeeDto } from '../../modules/people/employees/create-employee.dto';
 import { ListEmployeesDto } from '../../modules/people/employees/list-employees.dto';
 import { UpdateAvailabilityDto } from '../../modules/people/employees/update-availability.dto';
@@ -33,6 +37,7 @@ import { CreateEmployeeExceptionHandler } from '../../modules/people/employees/c
 import { CreateEmployeeExceptionDto } from '../../modules/people/employees/create-employee-exception.dto';
 import { DeleteEmployeeExceptionHandler } from '../../modules/people/employees/delete-employee-exception.handler';
 import { ListEmployeeRatingsHandler } from '../../modules/people/employees/list-employee-ratings.handler';
+import { EmployeeStatsHandler } from '../../modules/people/employees/employee-stats.handler';
 
 @ApiTags('People')
 @ApiBearerAuth()
@@ -44,12 +49,15 @@ export class DashboardPeopleController {
     private readonly updateClient: UpdateClientHandler,
     private readonly listClients: ListClientsHandler,
     private readonly getClient: GetClientHandler,
+    private readonly deleteClient: DeleteClientHandler,
     private readonly createEmployee: CreateEmployeeHandler,
     private readonly listEmployees: ListEmployeesHandler,
     private readonly getEmployee: GetEmployeeHandler,
     private readonly updateAvailability: UpdateAvailabilityHandler,
     private readonly employeeOnboarding: EmployeeOnboardingHandler,
     private readonly onboardEmployee: OnboardEmployeeHandler,
+    private readonly getAvailability: GetAvailabilityHandler,
+    private readonly updateEmployee: UpdateEmployeeHandler,
     private readonly deleteEmployee: DeleteEmployeeHandler,
     private readonly listEmployeeServices: ListEmployeeServicesHandler,
     private readonly assignEmployeeService: AssignEmployeeServiceHandler,
@@ -58,6 +66,7 @@ export class DashboardPeopleController {
     private readonly createEmployeeException: CreateEmployeeExceptionHandler,
     private readonly deleteEmployeeException: DeleteEmployeeExceptionHandler,
     private readonly listEmployeeRatings: ListEmployeeRatingsHandler,
+    private readonly employeeStats: EmployeeStatsHandler,
   ) {}
 
   // ── Clients ────────────────────────────────────────────────────────────────
@@ -69,10 +78,20 @@ export class DashboardPeopleController {
   }
 
   @Get('clients')
-  listClientsEndpoint(@TenantId() tenantId: string, @Query() query: ListClientsDto) {
+  listClientsEndpoint(
+    @TenantId() tenantId: string,
+    @Query() query: ListClientsDto,
+    @Query('isActive') rawIsActive?: string,
+  ) {
+    // Global ValidationPipe has enableImplicitConversion: true, which runs
+    // Boolean(string) against query params — making any non-empty string truthy
+    // (so "false" becomes true). Parse the raw value explicitly instead.
+    const isActive =
+      rawIsActive === 'true' ? true : rawIsActive === 'false' ? false : undefined;
     return this.listClients.execute({
       ...query,
       tenantId,
+      isActive,
       page: query.page ?? 1,
       limit: query.limit ?? 20,
     });
@@ -95,6 +114,15 @@ export class DashboardPeopleController {
     return this.updateClient.execute({ tenantId, clientId: id, ...body });
   }
 
+  @Delete('clients/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteClientEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    await this.deleteClient.execute({ tenantId, clientId: id });
+  }
+
   // ── Employees ──────────────────────────────────────────────────────────────
 
   @Post('employees')
@@ -110,13 +138,28 @@ export class DashboardPeopleController {
   }
 
   @Get('employees')
-  listEmployeesEndpoint(@TenantId() tenantId: string, @Query() query: ListEmployeesDto) {
+  listEmployeesEndpoint(
+    @TenantId() tenantId: string,
+    @Query() query: ListEmployeesDto,
+    @Query('isActive') rawIsActive?: string,
+  ) {
+    // Global ValidationPipe has enableImplicitConversion: true, which runs
+    // Boolean(string) against query params — making any non-empty string truthy
+    // (so "false" becomes true). Parse the raw value explicitly instead.
+    const isActive =
+      rawIsActive === 'true' ? true : rawIsActive === 'false' ? false : undefined;
     return this.listEmployees.execute({
       ...query,
       tenantId,
+      isActive,
       page: query.page ?? 1,
       limit: query.limit ?? 20,
     });
+  }
+
+  @Get('employees/stats')
+  employeeStatsEndpoint(@TenantId() tenantId: string) {
+    return this.employeeStats.execute({ tenantId });
   }
 
   @Get('employees/:id')
@@ -125,6 +168,72 @@ export class DashboardPeopleController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.getEmployee.execute({ tenantId, employeeId: id });
+  }
+
+  @Patch('employees/:id')
+  updateEmployeeEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateEmployeeDto,
+  ) {
+    return this.updateEmployee.execute({ tenantId, employeeId: id, ...body });
+  }
+
+  @Get('employees/:id/availability')
+  getAvailabilityEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.getAvailability.execute({ tenantId, employeeId: id });
+  }
+
+  @Get('employees/:id/breaks')
+  getBreaksEndpoint(
+    @TenantId() _tenantId: string,
+    @Param('id', ParseUUIDPipe) _id: string,
+  ) {
+    return [];
+  }
+
+  @Put('employees/:id/breaks')
+  @HttpCode(HttpStatus.OK)
+  putBreaksEndpoint(
+    @TenantId() _tenantId: string,
+    @Param('id', ParseUUIDPipe) _id: string,
+    @Body() _body: unknown,
+  ) {
+    // Breaks are stored as gaps in split-shift EmployeeAvailability rows,
+    // not as a separate resource. Accept payload but no-op until the
+    // schedule-splitting migration lands.
+    return [];
+  }
+
+  @Get('employees/:id/vacations')
+  listVacationsEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.listEmployeeExceptions.execute({ tenantId, employeeId: id });
+  }
+
+  @Post('employees/:id/vacations')
+  @HttpCode(HttpStatus.CREATED)
+  createVacationEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: CreateEmployeeExceptionDto,
+  ) {
+    return this.createEmployeeException.execute({ tenantId, employeeId: id, ...body });
+  }
+
+  @Delete('employees/:id/vacations/:vacationId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteVacationEndpoint(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('vacationId', ParseUUIDPipe) vacationId: string,
+  ) {
+    return this.deleteEmployeeException.execute({ tenantId, employeeId: id, exceptionId: vacationId });
   }
 
   @Patch('employees/:id/availability')
