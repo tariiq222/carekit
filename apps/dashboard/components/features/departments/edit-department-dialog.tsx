@@ -63,6 +63,16 @@ export function EditDepartmentDialog({
         sortOrder: department.sortOrder ?? 0,
         isActive: department.isActive,
       })
+    } else if (!open) {
+      form.reset({
+        nameAr: "",
+        nameEn: "",
+        descriptionAr: "",
+        descriptionEn: "",
+        icon: "",
+        sortOrder: 0,
+        isActive: true,
+      })
     }
   }, [department, open, form])
 
@@ -101,7 +111,7 @@ export function EditDepartmentDialog({
                 <Input {...form.register("nameEn")} />
                 {form.formState.errors.nameEn && (
                   <p className="text-xs text-destructive">
-                    {form.formState.errors.nameEn.message}
+                    {t(form.formState.errors.nameEn.message ?? "")}
                   </p>
                 )}
               </div>
@@ -110,7 +120,7 @@ export function EditDepartmentDialog({
                 <Input {...form.register("nameAr")} />
                 {form.formState.errors.nameAr && (
                   <p className="text-xs text-destructive">
-                    {form.formState.errors.nameAr.message}
+                    {t(form.formState.errors.nameAr.message ?? "")}
                   </p>
                 )}
               </div>

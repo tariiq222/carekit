@@ -85,7 +85,7 @@ export function CreateDepartmentDialog({
                 <Input {...form.register("nameEn")} />
                 {form.formState.errors.nameEn && (
                   <p className="text-xs text-destructive">
-                    {form.formState.errors.nameEn.message}
+                    {t(form.formState.errors.nameEn.message ?? "")}
                   </p>
                 )}
               </div>
@@ -94,7 +94,7 @@ export function CreateDepartmentDialog({
                 <Input {...form.register("nameAr")} />
                 {form.formState.errors.nameAr && (
                   <p className="text-xs text-destructive">
-                    {form.formState.errors.nameAr.message}
+                    {t(form.formState.errors.nameAr.message ?? "")}
                   </p>
                 )}
               </div>

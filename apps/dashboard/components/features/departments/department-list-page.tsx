@@ -7,6 +7,7 @@ import {
   Building06Icon,
   CheckmarkCircle02Icon,
   Cancel01Icon,
+  CalendarAdd02Icon,
 } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
@@ -41,6 +42,11 @@ export function DepartmentListPage() {
 
   const activeCount = departments.filter((d) => d.isActive).length
   const inactiveCount = departments.filter((d) => !d.isActive).length
+  const now = new Date()
+  const newThisMonth = departments.filter((d) => {
+    const created = new Date(d.createdAt)
+    return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth()
+  }).length
 
   const columns = getDepartmentColumns(
     locale,
@@ -64,14 +70,15 @@ export function DepartmentListPage() {
       </PageHeader>
 
       {isLoading && !meta ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
       ) : (
-        <StatsGrid className="sm:grid-cols-3 lg:grid-cols-3">
+        <StatsGrid className="sm:grid-cols-2 lg:grid-cols-4">
           <StatCard title={t("departments.stats.total")} value={meta?.total ?? 0} icon={Building06Icon} iconColor="primary" />
           <StatCard title={t("departments.stats.active")} value={activeCount} icon={CheckmarkCircle02Icon} iconColor="success" />
           <StatCard title={t("departments.stats.inactive")} value={inactiveCount} icon={Cancel01Icon} iconColor="warning" />
+          <StatCard title={t("departments.stats.newThisMonth")} value={newThisMonth} icon={CalendarAdd02Icon} iconColor="accent" />
         </StatsGrid>
       )}
 
