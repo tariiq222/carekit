@@ -1,10 +1,10 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { CaslGuard, buildAbilityFor, RequiredPermission } from './casl.guard';
+import { CaslGuard, RequiredPermission } from './casl.guard';
 
-const makeCtx = (user: object | undefined, permissions: RequiredPermission[]) => {
+const makeCtx = (user: object | undefined, required: RequiredPermission[]) => {
   const reflector = new Reflector();
-  jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(permissions);
+  jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(required);
 
   return {
     reflector,
@@ -16,47 +16,57 @@ const makeCtx = (user: object | undefined, permissions: RequiredPermission[]) =>
   };
 };
 
-describe('buildAbilityFor', () => {
-  it('grants declared permissions', () => {
-    const ability = buildAbilityFor({ permissions: [{ action: 'read', subject: 'Client' }] });
-    expect(ability.can('read', 'Client')).toBe(true);
-    expect(ability.can('delete', 'Client')).toBe(false);
-  });
-
-  it('grants manage as wildcard', () => {
-    const ability = buildAbilityFor({ permissions: [{ action: 'manage', subject: 'all' }] });
-    expect(ability.can('delete', 'Booking')).toBe(true);
-  });
-});
-
-describe('CaslGuard', () => {
+describe('CaslGuard (role-aware)', () => {
   it('returns true when no permissions required', () => {
-    const { reflector, ctx } = makeCtx({ permissions: [] }, []);
-    const guard = new CaslGuard(reflector);
-    expect(guard.canActivate(ctx)).toBe(true);
+    const { reflector, ctx } = makeCtx({ role: 'EMPLOYEE', customRole: null }, []);
+    expect(new CaslGuard(reflector).canActivate(ctx)).toBe(true);
   });
 
-  it('returns true when user has required permission', () => {
+  it('grants SUPER_ADMIN access to anything', () => {
     const { reflector, ctx } = makeCtx(
-      { permissions: [{ action: 'read', subject: 'Booking' }] },
+      { role: 'SUPER_ADMIN', customRole: null },
+      [{ action: 'delete', subject: 'Department' }],
+    );
+    expect(new CaslGuard(reflector).canActivate(ctx)).toBe(true);
+  });
+
+  it('grants ADMIN access to Department (built-in)', () => {
+    const { reflector, ctx } = makeCtx(
+      { role: 'ADMIN', customRole: null },
+      [{ action: 'read', subject: 'Department' }],
+    );
+    expect(new CaslGuard(reflector).canActivate(ctx)).toBe(true);
+  });
+
+  it('grants ADMIN access to Category (built-in)', () => {
+    const { reflector, ctx } = makeCtx(
+      { role: 'ADMIN', customRole: null },
+      [{ action: 'manage', subject: 'Category' }],
+    );
+    expect(new CaslGuard(reflector).canActivate(ctx)).toBe(true);
+  });
+
+  it('rejects EMPLOYEE from managing Category', () => {
+    const { reflector, ctx } = makeCtx(
+      { role: 'EMPLOYEE', customRole: null },
+      [{ action: 'delete', subject: 'Category' }],
+    );
+    expect(() => new CaslGuard(reflector).canActivate(ctx)).toThrow(ForbiddenException);
+  });
+
+  it('uses customRole permissions when present', () => {
+    const { reflector, ctx } = makeCtx(
+      {
+        role: 'CUSTOM',
+        customRole: { permissions: [{ action: 'read', subject: 'Booking' }] },
+      },
       [{ action: 'read', subject: 'Booking' }],
     );
-    const guard = new CaslGuard(reflector);
-    expect(guard.canActivate(ctx)).toBe(true);
+    expect(new CaslGuard(reflector).canActivate(ctx)).toBe(true);
   });
 
-  it('throws ForbiddenException when permission missing', () => {
-    const { reflector, ctx } = makeCtx(
-      { permissions: [] },
-      [{ action: 'delete', subject: 'Booking' }],
-    );
-    const guard = new CaslGuard(reflector);
-    expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
-  });
-
-  it('throws ForbiddenException when no user', () => {
+  it('throws when no user', () => {
     const { reflector, ctx } = makeCtx(undefined, [{ action: 'read', subject: 'X' }]);
-    const guard = new CaslGuard(reflector);
-    expect(() => guard.canActivate(ctx)).toThrow(ForbiddenException);
+    expect(() => new CaslGuard(reflector).canActivate(ctx)).toThrow(ForbiddenException);
   });
 });
