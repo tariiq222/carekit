@@ -1,7 +1,7 @@
 /**
- * CareKit Dashboard — Whitelabel Settings Interaction Tests
+ * CareKit Dashboard — Branding Settings Interaction Tests
  *
- * Verifies UI interactions on /settings/whitelabel (or /white-label):
+ * Verifies UI interactions on /branding (or /settings/branding):
  *   - Default (Branding) tab is active
  *   - "الدفع" tab shows payment config form
  *   - "التكاملات" tab shows integrations content
@@ -12,15 +12,15 @@
 import { test, expect } from '../setup/fixtures';
 import type { Page } from '@playwright/test';
 
-const WHITELABEL_ROUTES = ['/white-label', '/settings/whitelabel', '/settings/white-label'];
+const BRANDING_ROUTES = ['/branding', '/settings/branding'];
 
 type GotoFn = (path: string) => Promise<void>;
 
-async function gotoWhitelabel(
+async function gotoBranding(
   adminPage: Page,
   goto: GotoFn,
 ) {
-  for (const route of WHITELABEL_ROUTES) {
+  for (const route of BRANDING_ROUTES) {
     await goto(route);
     await adminPage.waitForLoadState('networkidle').catch(() => {});
     if (!adminPage.url().includes('404') && !adminPage.url().includes('not-found')) {
@@ -29,9 +29,9 @@ async function gotoWhitelabel(
   }
 }
 
-test.describe('Whitelabel — default tab', () => {
+test.describe('Branding — default tab', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await gotoWhitelabel(adminPage, goto);
+    await gotoBranding(adminPage, goto);
   });
 
   test('Branding tab is active by default', async ({ adminPage }) => {
@@ -43,9 +43,9 @@ test.describe('Whitelabel — default tab', () => {
   });
 });
 
-test.describe('Whitelabel — tab navigation', () => {
+test.describe('Branding — tab navigation', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await gotoWhitelabel(adminPage, goto);
+    await gotoBranding(adminPage, goto);
   });
 
   test('clicking "الدفع" tab shows payment config form', async ({ adminPage }) => {
@@ -74,9 +74,9 @@ test.describe('Whitelabel — tab navigation', () => {
   });
 });
 
-test.describe('Whitelabel — Branding tab form', () => {
+test.describe('Branding — Branding tab form', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await gotoWhitelabel(adminPage, goto);
+    await gotoBranding(adminPage, goto);
 
     const brandingTab = adminPage.getByRole('tab', { name: /العلامة التجارية|Branding|الهوية/ }).first();
     if (await brandingTab.count() > 0) {
@@ -110,9 +110,9 @@ function brandingPanel(adminPage: Page): ReturnType<Page['locator']> {
   return adminPage.locator('[role="tabpanel"][data-state="active"], main').first();
 }
 
-test.describe('Whitelabel — Branding interactive', () => {
+test.describe('Branding — Branding interactive', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await gotoWhitelabel(adminPage, goto);
+    await gotoBranding(adminPage, goto);
     const brandingTab = adminPage.getByRole('tab', { name: /العلامة التجارية|Branding|الهوية/ }).first();
     if (await brandingTab.count() > 0) {
       await brandingTab.click();
@@ -120,7 +120,7 @@ test.describe('Whitelabel — Branding interactive', () => {
     }
   });
 
-  test('[WL-001][Whitelabel/branding][P2-Medium] تعديل اسم النظام EN + AR والحفظ', async ({ adminPage, waitForToast }) => {
+  test('[WL-001][Branding/branding][P2-Medium] تعديل اسم النظام EN + AR والحفظ', async ({ adminPage, waitForToast }) => {
     const panel = brandingPanel(adminPage);
     const inputs = panel.locator('input');
     const count = await inputs.count();
@@ -149,7 +149,7 @@ test.describe('Whitelabel — Branding interactive', () => {
     }
   });
 
-  test('[WL-002][Whitelabel/branding][P1-High] تغيير primary color عبر hex input يحدّث preview', async ({ adminPage }) => {
+  test('[WL-002][Branding/branding][P1-High] تغيير primary color عبر hex input يحدّث preview', async ({ adminPage }) => {
     const panel = brandingPanel(adminPage);
     const hexInput = panel.locator('input[placeholder="#354FD8"]').first();
     if (!(await hexInput.isVisible({ timeout: 6_000 }).catch(() => false))) {
@@ -166,7 +166,7 @@ test.describe('Whitelabel — Branding interactive', () => {
     await expect(previewSwatch).toBeVisible({ timeout: 4_000 });
   });
 
-  test('[WL-003][Whitelabel/branding][P2-Medium] primary color غير صالح لا يُظهر الـ preview', async ({ adminPage }) => {
+  test('[WL-003][Branding/branding][P2-Medium] primary color غير صالح لا يُظهر الـ preview', async ({ adminPage }) => {
     const panel = brandingPanel(adminPage);
     const hexInput = panel.locator('input[placeholder="#354FD8"]').first();
     if (!(await hexInput.isVisible({ timeout: 6_000 }).catch(() => false))) {
@@ -181,7 +181,7 @@ test.describe('Whitelabel — Branding interactive', () => {
     await expect(previewLabel).toHaveCount(0);
   });
 
-  test('[WL-004][Whitelabel/branding][P3-Low] contrast badge يظهر عند تعبئة الألوان', async ({ adminPage }) => {
+  test('[WL-004][Branding/branding][P3-Low] contrast badge يظهر عند تعبئة الألوان', async ({ adminPage }) => {
     const panel = brandingPanel(adminPage);
     const primaryHex = panel.locator('input[placeholder="#354FD8"]').first();
     if (!(await primaryHex.isVisible({ timeout: 6_000 }).catch(() => false))) {
@@ -195,7 +195,7 @@ test.describe('Whitelabel — Branding interactive', () => {
     await expect(badge).toBeVisible({ timeout: 6_000 });
   });
 
-  test('[WL-006][Whitelabel/branding][P2-Medium] إدخال logo URL يحدّث حقل الإدخال', async ({ adminPage }) => {
+  test('[WL-006][Branding/branding][P2-Medium] إدخال logo URL يحدّث حقل الإدخال', async ({ adminPage }) => {
     const panel = brandingPanel(adminPage);
     // Find the logo URL input via its surrounding label or a url-ish placeholder.
     const logoInput = panel.locator('input').filter({ hasNotText: '#' }).nth(2);
@@ -211,9 +211,9 @@ test.describe('Whitelabel — Branding interactive', () => {
   });
 });
 
-test.describe('Whitelabel — Payment tab interactive', () => {
-  test('[WL-005][Whitelabel/payment][P2-Medium] تبويب الدفع يُظهر حقول إدخال إن وُجد', async ({ adminPage, goto }) => {
-    await gotoWhitelabel(adminPage, goto);
+test.describe('Branding — Payment tab interactive', () => {
+  test('[WL-005][Branding/payment][P2-Medium] تبويب الدفع يُظهر حقول إدخال إن وُجد', async ({ adminPage, goto }) => {
+    await gotoBranding(adminPage, goto);
     const payTab = adminPage.getByRole('tab', { name: /الدفع/ }).first();
     if (!(await payTab.isVisible({ timeout: 4_000 }).catch(() => false))) {
       test.skip();
