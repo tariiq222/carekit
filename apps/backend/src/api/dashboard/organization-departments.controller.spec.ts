@@ -7,10 +7,12 @@ function buildController() {
   const createDepartment = fn({ id: 'dept-1' });
   const updateDepartment = fn({ id: 'dept-1' });
   const listDepartments = fn({ data: [] });
+  const deleteDepartment = fn({ deleted: true });
   const controller = new DashboardOrganizationDepartmentsController(
     createDepartment as never, updateDepartment as never, listDepartments as never,
+    deleteDepartment as never,
   );
-  return { controller, createDepartment, updateDepartment, listDepartments };
+  return { controller, createDepartment, updateDepartment, listDepartments, deleteDepartment };
 }
 
 describe('DashboardOrganizationDepartmentsController', () => {
@@ -32,5 +34,11 @@ describe('DashboardOrganizationDepartmentsController', () => {
     expect(updateDepartment.execute).toHaveBeenCalledWith(
       expect.objectContaining({ tenantId: TENANT, departmentId: 'dept-1' }),
     );
+  });
+
+  it('deleteDepartmentEndpoint — passes tenantId and departmentId', async () => {
+    const { controller, deleteDepartment } = buildController();
+    await controller.deleteDepartmentEndpoint(TENANT, 'dept-1');
+    expect(deleteDepartment.execute).toHaveBeenCalledWith({ tenantId: TENANT, departmentId: 'dept-1' });
   });
 });

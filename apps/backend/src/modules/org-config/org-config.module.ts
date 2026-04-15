@@ -17,6 +17,7 @@ import { UnassignEmployeeFromBranchHandler } from './branches/unassign-employee-
 import { CreateDepartmentHandler } from './departments/create-department.handler';
 import { UpdateDepartmentHandler } from './departments/update-department.handler';
 import { ListDepartmentsHandler } from './departments/list-departments.handler';
+import { DeleteDepartmentHandler } from './departments/delete-department.handler';
 import { CreateCategoryHandler } from './categories/create-category.handler';
 import { UpdateCategoryHandler } from './categories/update-category.handler';
 import { ListCategoriesHandler } from './categories/list-categories.handler';
@@ -34,6 +35,7 @@ const branchHandlers = [
 
 const departmentHandlers = [
   CreateDepartmentHandler, UpdateDepartmentHandler, ListDepartmentsHandler,
+  DeleteDepartmentHandler,
 ];
 
 const categoryHandlers = [
