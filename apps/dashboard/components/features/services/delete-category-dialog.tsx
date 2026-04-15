@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { toast } from "sonner"
 
 import {
@@ -16,23 +17,22 @@ import { useCategoryMutations } from "@/hooks/use-services"
 import { useLocale } from "@/components/locale-provider"
 import type { ServiceCategory } from "@/lib/types/service"
 
-/* ─── Props ─── */
-
-interface DeleteCategoryDialogProps {
+interface Props {
   category: ServiceCategory | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-/* ─── Component ─── */
-
-export function DeleteCategoryDialog({
-  category,
-  open,
-  onOpenChange,
-}: DeleteCategoryDialogProps) {
-  const { t } = useLocale()
+export function DeleteCategoryDialog({ category, open, onOpenChange }: Props) {
+  const { t, locale } = useLocale()
   const { deleteMut } = useCategoryMutations()
+
+  // Freeze display name keyed by category id so dropdown teardown
+  // re-renders cannot swap in another row's name.
+  const displayName = useMemo(() => {
+    if (!category) return ""
+    return locale === "ar" ? category.nameAr : (category.nameEn ?? category.nameAr)
+  }, [category, locale])
 
   const handleDelete = async () => {
     if (!category) return
@@ -51,7 +51,7 @@ export function DeleteCategoryDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{t("services.categories.delete.title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t("services.categories.delete.description").replace("{name}", category?.nameEn ?? "")}
+            {t("services.categories.delete.description").replace("{name}", displayName)}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

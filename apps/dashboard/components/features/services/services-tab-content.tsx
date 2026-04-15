@@ -74,7 +74,7 @@ export function ServicesTabContent() {
     { value: "all", label: t("services.filters.allCategories") },
     ...(categories ?? []).map((c) => ({
       value: c.id,
-      label: locale === "ar" ? c.nameAr : c.nameEn,
+      label: locale === "ar" ? c.nameAr : (c.nameEn ?? c.nameAr),
     })),
   ]
 
