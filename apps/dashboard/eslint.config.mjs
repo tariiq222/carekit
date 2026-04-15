@@ -29,7 +29,7 @@ const FEATURES = [
   "ratings",
   "reports",
   "settings",
-  "white-label",
+  "branding",
   "zatca",
   "activity-log",
   "groups",
