@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateDepartmentHandler } from './create-department.handler';
 import { ListDepartmentsHandler } from './list-departments.handler';
 import { UpdateDepartmentHandler } from './update-department.handler';
@@ -19,12 +19,22 @@ const buildPrisma = () => ({
 describe('CreateDepartmentHandler', () => {
   it('creates a department', async () => {
     const prisma = buildPrisma();
+    prisma.department.findFirst = jest.fn().mockResolvedValue(null); // no duplicate
     const handler = new CreateDepartmentHandler(prisma as never);
     const result = await handler.execute({ tenantId: 'tenant-1', nameAr: 'عيادة', nameEn: 'Clinic' });
     expect(prisma.department.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ tenantId: 'tenant-1' }) }),
     );
     expect(result).toMatchObject({ id: 'dept-1' });
+  });
+
+  it('throws ConflictException on duplicate nameAr', async () => {
+    const prisma = buildPrisma();
+    // findFirst returns existing dept (duplicate)
+    const handler = new CreateDepartmentHandler(prisma as never);
+    await expect(
+      handler.execute({ tenantId: 'tenant-1', nameAr: 'عيادة' }),
+    ).rejects.toThrow(ConflictException);
   });
 });
 
