@@ -1,5 +1,5 @@
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PaginationDto } from '../../../common/dto';
 
 const toBoolean = ({ value }: { value: unknown }) => {
@@ -10,5 +10,5 @@ const toBoolean = ({ value }: { value: unknown }) => {
 
 export class ListBranchesDto extends PaginationDto {
   @IsOptional() @IsString() search?: string;
-  @IsOptional() @Transform(toBoolean, { toClassOnly: true }) @IsBoolean() isActive?: boolean;
+  @IsOptional() @Type(() => String) @Transform(toBoolean) @IsBoolean() isActive?: boolean;
 }

@@ -10,6 +10,10 @@ import { CreateBranchHandler } from './branches/create-branch.handler';
 import { UpdateBranchHandler } from './branches/update-branch.handler';
 import { ListBranchesHandler } from './branches/list-branches.handler';
 import { GetBranchHandler } from './branches/get-branch.handler';
+import { DeleteBranchHandler } from './branches/delete-branch.handler';
+import { ListBranchEmployeesHandler } from './branches/list-branch-employees.handler';
+import { AssignEmployeeToBranchHandler } from './branches/assign-employee-to-branch.handler';
+import { UnassignEmployeeFromBranchHandler } from './branches/unassign-employee-from-branch.handler';
 import { CreateDepartmentHandler } from './departments/create-department.handler';
 import { UpdateDepartmentHandler } from './departments/update-department.handler';
 import { ListDepartmentsHandler } from './departments/list-departments.handler';
@@ -24,6 +28,8 @@ import { ListHolidaysHandler } from './business-hours/list-holidays.handler';
 
 const branchHandlers = [
   CreateBranchHandler, UpdateBranchHandler, ListBranchesHandler, GetBranchHandler,
+  DeleteBranchHandler, ListBranchEmployeesHandler,
+  AssignEmployeeToBranchHandler, UnassignEmployeeFromBranchHandler,
 ];
 
 const departmentHandlers = [

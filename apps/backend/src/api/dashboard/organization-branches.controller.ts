@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -13,6 +13,11 @@ import { UpdateBranchDto } from '../../modules/org-config/branches/update-branch
 import { ListBranchesHandler } from '../../modules/org-config/branches/list-branches.handler';
 import { ListBranchesDto } from '../../modules/org-config/branches/list-branches.dto';
 import { GetBranchHandler } from '../../modules/org-config/branches/get-branch.handler';
+import { DeleteBranchHandler } from '../../modules/org-config/branches/delete-branch.handler';
+import { ListBranchEmployeesHandler } from '../../modules/org-config/branches/list-branch-employees.handler';
+import { AssignEmployeeToBranchHandler } from '../../modules/org-config/branches/assign-employee-to-branch.handler';
+import { AssignEmployeeToBranchDto } from '../../modules/org-config/branches/assign-employee-to-branch.dto';
+import { UnassignEmployeeFromBranchHandler } from '../../modules/org-config/branches/unassign-employee-from-branch.handler';
 
 @ApiTags('Branches')
 @ApiBearerAuth()
@@ -24,6 +29,10 @@ export class DashboardOrganizationBranchesController {
     private readonly updateBranch: UpdateBranchHandler,
     private readonly listBranches: ListBranchesHandler,
     private readonly getBranch: GetBranchHandler,
+    private readonly deleteBranch: DeleteBranchHandler,
+    private readonly listBranchEmployees: ListBranchEmployeesHandler,
+    private readonly assignEmployee: AssignEmployeeToBranchHandler,
+    private readonly unassignEmployee: UnassignEmployeeFromBranchHandler,
   ) {}
 
   @Post('branches')
@@ -57,5 +66,39 @@ export class DashboardOrganizationBranchesController {
     @Body() body: UpdateBranchDto,
   ) {
     return this.updateBranch.execute({ tenantId, branchId, ...body });
+  }
+
+  @Delete('branches/:branchId')
+  deleteBranchEndpoint(
+    @TenantId() tenantId: string,
+    @Param('branchId', ParseUUIDPipe) branchId: string,
+  ) {
+    return this.deleteBranch.execute({ tenantId, branchId });
+  }
+
+  @Get('branches/:branchId/employees')
+  listBranchEmployeesEndpoint(
+    @TenantId() tenantId: string,
+    @Param('branchId', ParseUUIDPipe) branchId: string,
+  ) {
+    return this.listBranchEmployees.execute({ tenantId, branchId });
+  }
+
+  @Post('branches/:branchId/employees')
+  assignEmployeeEndpoint(
+    @TenantId() tenantId: string,
+    @Param('branchId', ParseUUIDPipe) branchId: string,
+    @Body() body: AssignEmployeeToBranchDto,
+  ) {
+    return this.assignEmployee.execute({ tenantId, branchId, ...body });
+  }
+
+  @Delete('branches/:branchId/employees/:employeeId')
+  unassignEmployeeEndpoint(
+    @TenantId() tenantId: string,
+    @Param('branchId', ParseUUIDPipe) branchId: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+  ) {
+    return this.unassignEmployee.execute({ tenantId, branchId, employeeId });
   }
 }
