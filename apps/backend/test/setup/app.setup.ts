@@ -7,6 +7,7 @@ import { FcmService } from '../../src/infrastructure/mail/fcm.service';
 import { SmtpService } from '../../src/infrastructure/mail/smtp.service';
 import { EmbeddingAdapter } from '../../src/infrastructure/ai/embedding.adapter';
 import { ChatAdapter } from '../../src/infrastructure/ai/chat.adapter';
+import { SemanticSearchHandler } from '../../src/modules/ai/semantic-search/semantic-search.handler';
 import { MinioService } from '../../src/infrastructure/storage/minio.service';
 import { ensureTestUsers } from './auth.helper';
 
@@ -109,7 +110,12 @@ export async function createTestApp(): Promise<{
     .overrideProvider(SmtpService)
     .useValue({ send: jest.fn().mockResolvedValue(undefined), sendTemplate: jest.fn().mockResolvedValue(undefined) })
     .overrideProvider(EmbeddingAdapter)
-    .useValue({ embed: jest.fn().mockResolvedValue(new Array(1536).fill(0)) })
+    .useValue({
+      isAvailable: () => true,
+      embed: jest.fn().mockResolvedValue([new Array(1536).fill(0)]),
+    })
+    .overrideProvider(SemanticSearchHandler)
+    .useValue({ execute: jest.fn().mockResolvedValue([]) })
     .overrideProvider(ChatAdapter)
     .useValue({
       isAvailable: () => true,
@@ -124,9 +130,10 @@ export async function createTestApp(): Promise<{
     })
     .overrideProvider(MinioService)
     .useValue({
-      upload: jest.fn().mockResolvedValue({ url: 'http://localhost:5200/carekit/test.pdf' }),
-      delete: jest.fn().mockResolvedValue(undefined),
-      getPresignedUrl: jest.fn().mockResolvedValue('http://localhost:5200/carekit/test.pdf'),
+      uploadFile: jest.fn().mockResolvedValue('http://localhost:9000/carekit/mocked-key'),
+      deleteFile: jest.fn().mockResolvedValue(undefined),
+      getSignedUrl: jest.fn().mockResolvedValue('http://localhost:9000/carekit/mocked-key?sig=x'),
+      fileExists: jest.fn().mockResolvedValue(true),
     })
     .compile();
 
