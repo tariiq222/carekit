@@ -26,7 +26,7 @@ type Props =
   | { mode: "edit"; branchId: string }
 
 const DEFAULT_VALUES: BranchFormData = {
-  nameAr: "", nameEn: "", address: "", phone: "", email: "",
+  nameAr: "", nameEn: "", address: "", phone: "",
   isMain: false, isActive: true, timezone: "Asia/Riyadh",
 }
 
@@ -57,9 +57,8 @@ export function BranchFormPage(props: Props) {
     form.reset({
       nameAr: branch.nameAr,
       nameEn: branch.nameEn,
-      address: branch.address ?? "",
+      address: branch.addressAr ?? branch.addressEn ?? "",
       phone: branch.phone ?? "",
-      email: branch.email ?? "",
       isMain: branch.isMain ?? false,
       isActive: branch.isActive ?? true,
       timezone: branch.timezone ?? "Asia/Riyadh",
@@ -67,19 +66,17 @@ export function BranchFormPage(props: Props) {
   }, [branch, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
-    const createPayload = {
-      nameAr: data.nameAr, nameEn: data.nameEn,
-      address: data.address || undefined, phone: data.phone || undefined,
-      email: data.email || undefined, isMain: data.isMain,
-      isActive: data.isActive, timezone: data.timezone,
-    }
-    // Backend update-branch.dto.ts only accepts nameAr, nameEn, phone, isActive,
-    // addressAr/addressEn/city (not a single 'address'), no isMain/timezone/email.
-    const updatePayload = {
-      nameAr: data.nameAr, nameEn: data.nameEn,
+    const payload = {
+      nameAr: data.nameAr,
+      nameEn: data.nameEn,
+      addressAr: data.address || undefined,
       phone: data.phone || undefined,
+      isMain: data.isMain,
       isActive: data.isActive,
+      timezone: data.timezone,
     }
+    const createPayload = payload
+    const updatePayload = payload
     try {
       if (isEdit) {
         await updateMut.mutateAsync({ id: branchId!, ...updatePayload })

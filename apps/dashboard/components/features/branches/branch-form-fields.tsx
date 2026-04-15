@@ -113,28 +113,19 @@ export function BranchFormFields({ form, isEdit, mode }: BranchFormFieldsProps) 
               <Label>{t("branches.field.address")}</Label>
               <Input {...form.register("address")} />
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("branches.field.phone")}</Label>
-                <Controller
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <PhoneInput
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                    />
-                  )}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("branches.field.email")}</Label>
-                <Input {...form.register("email")} type="email" dir="ltr" />
-                {form.formState.errors.email && (
-                  <p className="text-xs text-destructive">{form.formState.errors.email.message as string}</p>
+            <div className="flex flex-col gap-1.5">
+              <Label>{t("branches.field.phone")}</Label>
+              <Controller
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <PhoneInput
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  />
                 )}
-              </div>
+              />
             </div>
           </div>
         </CardContent>

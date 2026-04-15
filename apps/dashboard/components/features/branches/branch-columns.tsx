@@ -51,11 +51,11 @@ export function getBranchColumns(
       },
     },
     {
-      accessorKey: "address",
+      id: "address",
       header: label("branches.col.address", "Address"),
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
-          {row.original.address || "—"}
+          {row.original.addressAr || row.original.addressEn || "—"}
         </span>
       ),
     },

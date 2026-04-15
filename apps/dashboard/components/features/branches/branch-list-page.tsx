@@ -25,7 +25,7 @@ import type { Branch } from "@/lib/types/branch"
 export function BranchListPage() {
   const router = useRouter()
   const { t, locale } = useLocale()
-  const { branches, meta, isLoading, error, search, setSearch, isActive, setIsActive, page, setPage } = useBranches()
+  const { branches, meta, isLoading, error, search, setSearch, isActive, setIsActive, setPage } = useBranches()
 
   const [deleteTarget, setDeleteTarget] = useState<Branch | null>(null)
   const [employeesTarget, setEmployeesTarget] = useState<Branch | null>(null)
@@ -96,7 +96,7 @@ export function BranchListPage() {
           {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
         </div>
       ) : (
-        <DataTable columns={columns} data={branches} emptyTitle={t("branches.empty.title")} emptyDescription={t("branches.empty.description")} emptyAction={{ label: t("branches.addBranch"), onClick: () => router.push("/branches/create") }} />
+        <DataTable columns={columns} data={branches} serverPaginated emptyTitle={t("branches.empty.title")} emptyDescription={t("branches.empty.description")} emptyAction={{ label: t("branches.addBranch"), onClick: () => router.push("/branches/create") }} />
       )}
 
       {meta && meta.totalPages > 1 && (

@@ -31,6 +31,8 @@ interface DataTableProps<TData, TValue> {
   emptyTitle?: string
   emptyDescription?: string
   emptyAction?: { label: string; onClick: () => void }
+  /** When true, hide the table's own pagination controls — caller uses server-side pagination. */
+  serverPaginated?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -39,6 +41,7 @@ export function DataTable<TData, TValue>({
   emptyTitle,
   emptyDescription,
   emptyAction,
+  serverPaginated = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const { t } = useLocale()
@@ -47,7 +50,7 @@ export function DataTable<TData, TValue>({
     data: data ?? [],
     columns: columns ?? [],
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    ...(serverPaginated ? {} : { getPaginationRowModel: getPaginationRowModel() }),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
     state: { sorting },
@@ -115,7 +118,7 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {table.getPageCount() > 1 && (
+      {!serverPaginated && table.getPageCount() > 1 && (
         <div className="flex items-center justify-between pt-4">
           <p className="text-sm text-muted-foreground tabular-nums">
             {t("table.page")} {table.getState().pagination.pageIndex + 1} {t("table.of")} {table.getPageCount()}
