@@ -7,6 +7,7 @@ import {
   fetchDepartments,
   createDepartment,
   updateDepartment,
+  deleteDepartment,
 } from "@/lib/api/departments"
 import type { DepartmentListQuery } from "@/lib/types/department"
 
@@ -89,5 +90,10 @@ export function useDepartmentMutations() {
     onSuccess: invalidate,
   })
 
-  return { createMut, updateMut }
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteDepartment(id),
+    onSuccess: invalidate,
+  })
+
+  return { createMut, updateMut, deleteMut }
 }
