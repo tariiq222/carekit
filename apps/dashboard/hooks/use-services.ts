@@ -28,7 +28,7 @@ import {
 } from "@/lib/api/intake-forms"
 import { assignService } from "@/lib/api/employees"
 import type { AssignServicePayload } from "@/lib/types/employee"
-import type { ServiceListQuery } from "@/lib/types/service"
+import type { ServiceListQuery, CategoryListQuery } from "@/lib/types/service"
 import type {
   SetDurationOptionsPayload,
   SetServiceBookingTypesPayload,
@@ -100,12 +100,57 @@ export function useServicesListStats() {
 
 /* ─── Categories ─── */
 
+/** Flat list of all categories — used by selects/dropdowns in service forms. */
 export function useCategories() {
   return useQuery({
-    queryKey: queryKeys.services.categories(),
-    queryFn: fetchCategories,
+    queryKey: queryKeys.services.categories({ all: true }),
+    queryFn: async () => {
+      const res = await fetchCategories({ page: 1, perPage: 200 })
+      return res.items
+    },
     staleTime: 30 * 60 * 1000, // 30 min — categories rarely change
   })
+}
+
+/** Server-driven list hook for the categories admin page (search, status, pagination). */
+export function useCategoriesList() {
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState("")
+  const [isActive, setIsActive] = useState<boolean | undefined>()
+
+  const query: CategoryListQuery = {
+    page,
+    perPage: 20,
+    search: search || undefined,
+    isActive,
+  }
+
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: queryKeys.services.categories(query),
+    queryFn: () => fetchCategories(query),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const resetFilters = useCallback(() => {
+    setSearch("")
+    setIsActive(undefined)
+    setPage(1)
+  }, [])
+
+  return {
+    categories: data?.items ?? [],
+    meta: data?.meta ?? null,
+    isLoading,
+    error: error instanceof Error ? error.message : null,
+    page,
+    setPage,
+    search,
+    setSearch: (s: string) => { setSearch(s); setPage(1) },
+    isActive,
+    setIsActive: (v: boolean | undefined) => { setIsActive(v); setPage(1) },
+    resetFilters,
+    refetch,
+  }
 }
 
 /* ─── Service Mutations ─── */
@@ -139,7 +184,7 @@ export function useServiceMutations() {
 export function useCategoryMutations() {
   const queryClient = useQueryClient()
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: queryKeys.services.categories() })
+    queryClient.invalidateQueries({ queryKey: ["services", "categories"] })
 
   const createMut = useMutation({
     mutationFn: createCategory,

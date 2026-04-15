@@ -8,14 +8,20 @@ import type { PaginatedQuery } from "./common"
 
 export interface ServiceCategory {
   id: string
-  nameEn: string
+  nameEn: string | null
   nameAr: string
   sortOrder: number
   isActive: boolean
-  departmentId: string
-  department?: { id: string; nameEn: string; nameAr: string }
+  departmentId: string | null
+  department?: { id: string; nameEn: string | null; nameAr: string } | null
   createdAt: string
   _count?: { services: number }
+}
+
+export interface CategoryListQuery extends PaginatedQuery {
+  search?: string
+  isActive?: boolean
+  departmentId?: string
 }
 
 export type RecurringPattern = 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'

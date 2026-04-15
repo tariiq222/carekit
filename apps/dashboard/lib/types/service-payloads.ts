@@ -5,10 +5,10 @@
 /* ─── Category DTOs ─── */
 
 export interface CreateCategoryPayload {
-  nameEn: string
   nameAr: string
+  nameEn?: string
   sortOrder?: number
-  departmentId: string
+  departmentId?: string | null
 }
 
 export interface UpdateCategoryPayload {
@@ -16,7 +16,7 @@ export interface UpdateCategoryPayload {
   nameAr?: string
   sortOrder?: number
   isActive?: boolean
-  departmentId?: string
+  departmentId?: string | null
 }
 
 /* ─── Service DTOs ─── */

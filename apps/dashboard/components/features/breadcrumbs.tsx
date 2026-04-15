@@ -62,6 +62,8 @@ function generateBreadcrumbs(pathname: string, t: (key: string) => string): Brea
     clients: t("nav.clients"),
     employees: t("nav.employees"),
     services: t("nav.services"),
+    categories: t("nav.categories"),
+    departments: t("nav.departments"),
     payments: t("nav.payments"),
     invoices: t("nav.invoices"),
     reports: t("nav.reports"),
