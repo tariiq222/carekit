@@ -1,8 +1,8 @@
 /**
- * OrganizationTheme — the canonical shape returned by GET /whitelabel/public.
+ * BrandingConfig — the canonical shape returned by GET /public/branding/:tenantId.
  * All apps (dashboard, mobile) consume this type.
  */
-export interface OrganizationTheme {
+export interface BrandingConfig {
   // Identity
   systemName:        string;
   systemNameAr:      string;
@@ -29,7 +29,7 @@ export interface DerivedTokens {
   colorAccentUltra:  string;
 }
 
-export const DEFAULT_THEME: OrganizationTheme = {
+export const DEFAULT_BRANDING: BrandingConfig = {
   systemName:        'CareKit',
   systemNameAr:      'كيركيت',
   productTagline:    'إدارة العيادة',

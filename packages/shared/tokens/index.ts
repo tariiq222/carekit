@@ -5,4 +5,4 @@ export * from './radius';
 export * from './shadows';
 export * from './animations';
 export * from './breakpoints';
-export * from './white-label';
+export * from './branding';
