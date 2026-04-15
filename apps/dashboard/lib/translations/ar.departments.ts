@@ -34,6 +34,9 @@ export const arDepartments: Record<string, string> = {
 
   // Filters
   "departments.filters.allStatuses": "جميع الحالات",
+  "departments.filters.reset": "إعادة تعيين الفلاتر",
+  "departments.empty.noMatches.title": "لا توجد نتائج مطابقة",
+  "departments.empty.noMatches.description": "جرّب تعديل البحث أو الفلاتر",
 
   // Empty state
   "departments.empty.title": "لا توجد أقسام",
@@ -47,9 +50,11 @@ export const arDepartments: Record<string, string> = {
   "departments.create.cancel": "إلغاء",
   "departments.create.submit": "إنشاء القسم",
   "departments.create.submitting": "جاري الإنشاء...",
+  "departments.create.duplicate": "يوجد قسم بنفس الاسم العربي",
 
   // Edit
   "departments.edit.title": "تعديل القسم",
+  "departments.edit.description": "حدّث بيانات القسم",
   "departments.edit.success": "تم تحديث القسم بنجاح",
   "departments.edit.error": "فشل تحديث القسم",
   "departments.edit.cancel": "إلغاء",

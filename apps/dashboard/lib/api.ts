@@ -133,12 +133,18 @@ async function request<T>(
     const body = await res.json().catch(() => ({}))
     // NestJS returns: { statusCode, message, error: string }
     // Our custom exceptions return: { statusCode, message, error: string (code) }
-    const code = body?.error?.code ?? body?.error ?? "UNKNOWN"
-    throw new ApiError(
-      res.status,
-      code,
-      body?.message ?? res.statusText,
-    )
+    // Custom conflicts return { statusCode, message: { error, message } }
+    // NestJS default returns { statusCode, message: string | string[], error: string }
+    const nestedError =
+      body?.message && typeof body.message === "object" && !Array.isArray(body.message)
+        ? body.message
+        : null
+    const code = nestedError?.error ?? body?.error?.code ?? body?.error ?? "UNKNOWN"
+    const rawMessage = nestedError?.message ?? body?.message
+    const message = Array.isArray(rawMessage)
+      ? rawMessage.join(", ")
+      : (rawMessage ?? res.statusText)
+    throw new ApiError(res.status, code, message)
   }
 
   if (res.status === 204 || res.headers.get("content-length") === "0") {

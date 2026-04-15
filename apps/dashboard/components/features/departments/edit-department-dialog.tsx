@@ -5,10 +5,12 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
+import { ApiError } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogBody,
   DialogFooter,
   DialogHeader,
@@ -48,6 +50,7 @@ export function EditDepartmentDialog({
       descriptionAr: "",
       descriptionEn: "",
       icon: "",
+      sortOrder: 0,
       isActive: true,
     },
   })
@@ -92,7 +95,11 @@ export function EditDepartmentDialog({
       toast.success(t("departments.edit.success"))
       onOpenChange(false)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("departments.edit.error"))
+      if (err instanceof ApiError && err.code === "DEPARTMENT_NAME_EXISTS") {
+        toast.error(t("departments.create.duplicate"))
+      } else {
+        toast.error(err instanceof Error ? err.message : t("departments.edit.error"))
+      }
     }
   })
 
@@ -101,20 +108,12 @@ export function EditDepartmentDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("departments.edit.title")}</DialogTitle>
+          <DialogDescription>{t("departments.edit.description")}</DialogDescription>
         </DialogHeader>
 
         <DialogBody>
           <form id="edit-dept-form" onSubmit={onSubmit} className="flex flex-col gap-5">
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("departments.field.nameEn")} *</Label>
-                <Input {...form.register("nameEn")} />
-                {form.formState.errors.nameEn && (
-                  <p className="text-xs text-destructive">
-                    {t(form.formState.errors.nameEn.message ?? "")}
-                  </p>
-                )}
-              </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.nameAr")} *</Label>
                 <Input {...form.register("nameAr")} />
@@ -124,16 +123,25 @@ export function EditDepartmentDialog({
                   </p>
                 )}
               </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("departments.field.nameEn")} *</Label>
+                <Input {...form.register("nameEn")} />
+                {form.formState.errors.nameEn && (
+                  <p className="text-xs text-destructive">
+                    {t(form.formState.errors.nameEn.message ?? "")}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label>{t("departments.field.descriptionEn")}</Label>
-                <Input {...form.register("descriptionEn")} />
-              </div>
-              <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.descriptionAr")}</Label>
                 <Input {...form.register("descriptionAr")} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("departments.field.descriptionEn")}</Label>
+                <Input {...form.register("descriptionEn")} />
               </div>
             </div>
 
@@ -150,6 +158,7 @@ export function EditDepartmentDialog({
                 <Input
                   type="number"
                   min={0}
+                  max={9999}
                   {...form.register("sortOrder", { valueAsNumber: true })}
                   className="h-9 text-sm tabular-nums"
                 />

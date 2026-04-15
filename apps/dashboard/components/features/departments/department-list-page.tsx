@@ -24,7 +24,7 @@ import { EditDepartmentDialog } from "@/components/features/departments/edit-dep
 import { DeleteDepartmentDialog } from "@/components/features/departments/delete-department-dialog"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useDepartments } from "@/hooks/use-departments"
+import { useDepartments, useDepartmentStats } from "@/hooks/use-departments"
 import { useLocale } from "@/components/locale-provider"
 import type { Department } from "@/lib/types/department"
 
@@ -36,17 +36,13 @@ export function DepartmentListPage() {
     page, setPage, resetFilters, refetch,
   } = useDepartments()
 
+  const stats = useDepartmentStats()
+
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Department | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Department | null>(null)
 
-  const activeCount = departments.filter((d) => d.isActive).length
-  const inactiveCount = departments.filter((d) => !d.isActive).length
-  const now = new Date()
-  const newThisMonth = departments.filter((d) => {
-    const created = new Date(d.createdAt)
-    return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth()
-  }).length
+  const hasFilters = search.length > 0 || isActive !== undefined
 
   const columns = getDepartmentColumns(
     locale,
@@ -69,16 +65,16 @@ export function DepartmentListPage() {
         </Button>
       </PageHeader>
 
-      {isLoading && !meta ? (
+      {stats.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
       ) : (
         <StatsGrid className="sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard title={t("departments.stats.total")} value={meta?.total ?? 0} icon={Building06Icon} iconColor="primary" />
-          <StatCard title={t("departments.stats.active")} value={activeCount} icon={CheckmarkCircle02Icon} iconColor="success" />
-          <StatCard title={t("departments.stats.inactive")} value={inactiveCount} icon={Cancel01Icon} iconColor="warning" />
-          <StatCard title={t("departments.stats.newThisMonth")} value={newThisMonth} icon={CalendarAdd02Icon} iconColor="accent" />
+          <StatCard title={t("departments.stats.total")} value={stats.total} icon={Building06Icon} iconColor="primary" />
+          <StatCard title={t("departments.stats.active")} value={stats.active} icon={CheckmarkCircle02Icon} iconColor="success" />
+          <StatCard title={t("departments.stats.inactive")} value={stats.inactive} icon={Cancel01Icon} iconColor="warning" />
+          <StatCard title={t("departments.stats.newThisMonth")} value={stats.newThisMonth} icon={CalendarAdd02Icon} iconColor="accent" />
         </StatsGrid>
       )}
 
@@ -97,7 +93,7 @@ export function DepartmentListPage() {
             onValueChange: (v) => setIsActive(v === "all" ? undefined : v === "active"),
           },
         ]}
-        hasFilters={search.length > 0 || isActive !== undefined}
+        hasFilters={hasFilters}
         onReset={resetFilters}
         resultCount={meta && !isLoading ? `${meta.total} ${t("departments.stats.total")}` : undefined}
       />
@@ -112,9 +108,13 @@ export function DepartmentListPage() {
         <DataTable
           columns={columns}
           data={departments}
-          emptyTitle={t("departments.empty.title")}
-          emptyDescription={t("departments.empty.description")}
-          emptyAction={{ label: t("departments.addDepartment"), onClick: () => setCreateOpen(true) }}
+          emptyTitle={hasFilters ? t("departments.empty.noMatches.title") : t("departments.empty.title")}
+          emptyDescription={hasFilters ? t("departments.empty.noMatches.description") : t("departments.empty.description")}
+          emptyAction={
+            hasFilters
+              ? { label: t("departments.filters.reset"), onClick: resetFilters }
+              : { label: t("departments.addDepartment"), onClick: () => setCreateOpen(true) }
+          }
         />
       )}
 

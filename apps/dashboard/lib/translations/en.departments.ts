@@ -34,6 +34,9 @@ export const enDepartments: Record<string, string> = {
 
   // Filters
   "departments.filters.allStatuses": "All Statuses",
+  "departments.filters.reset": "Reset filters",
+  "departments.empty.noMatches.title": "No matching results",
+  "departments.empty.noMatches.description": "Try adjusting the search or filters",
 
   // Empty state
   "departments.empty.title": "No departments",
@@ -47,9 +50,11 @@ export const enDepartments: Record<string, string> = {
   "departments.create.cancel": "Cancel",
   "departments.create.submit": "Create Department",
   "departments.create.submitting": "Creating...",
+  "departments.create.duplicate": "A department with this Arabic name already exists",
 
   // Edit
   "departments.edit.title": "Edit Department",
+  "departments.edit.description": "Update department details",
   "departments.edit.success": "Department updated successfully",
   "departments.edit.error": "Failed to update department",
   "departments.edit.cancel": "Cancel",
