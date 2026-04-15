@@ -37,6 +37,7 @@ ID_TO_MODULE = {
     "AI": "AI Chatbot",
     "CH": "Chat",
     "NT": "Notifications",
+    "MD": "Media",
 }
 
 # FLOW prefixes for cross-feature lifecycle tests (Phase 3).
