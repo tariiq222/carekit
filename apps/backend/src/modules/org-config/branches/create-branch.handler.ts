@@ -14,6 +14,18 @@ export class CreateBranchHandler {
     });
     if (existing) throw new ConflictException('Branch with this Arabic name already exists');
 
+    if (dto.isMain === true) {
+      const currentMain = await this.prisma.branch.findFirst({
+        where: { tenantId: dto.tenantId, isMain: true },
+        select: { id: true, nameAr: true },
+      });
+      if (currentMain) {
+        throw new ConflictException(
+          `Another branch is already primary (${currentMain.nameAr}). Unset it first.`,
+        );
+      }
+    }
+
     return this.prisma.branch.create({
       data: {
         tenantId: dto.tenantId,
