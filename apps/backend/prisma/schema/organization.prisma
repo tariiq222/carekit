@@ -31,18 +31,22 @@ model Branch {
 
 // isVisible = false → يُخفى القسم في الواجهة وتُعرض فئاته مباشرة تحت الجذر.
 model Department {
-  id        String   @id @default(uuid())
-  tenantId  String
-  nameAr    String
-  nameEn    String?
-  isVisible Boolean  @default(true)
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  tenantId      String
+  nameAr        String
+  nameEn        String?
+  descriptionAr String?
+  descriptionEn String?
+  icon          String?
+  isVisible     Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   categories ServiceCategory[]
 
+  @@unique([tenantId, nameAr])
   @@index([tenantId])
   @@index([tenantId, isActive])
 }
