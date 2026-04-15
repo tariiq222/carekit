@@ -21,7 +21,7 @@
 - **Ports 5000–5999** reserved exclusively for CareKit tools/environments
 - **All DB changes via Prisma migrations** — never `prisma db push`, never manual SQL
 - **RTL-first layout** — use logical properties (`start`/`end`, `ps-`/`pe-`, `ms-`/`me-`); never hardcode `left`/`right`
-- **Semantic tokens only** — no hex colors, no `text-gray-*`; always use CSS custom properties so the white-label system works
+- **Semantic tokens only** — no hex colors, no `text-gray-*`; always use CSS custom properties so the branding system works
 
 ## Commands
 
@@ -120,7 +120,7 @@ See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 | Notifications | `notifications/` | `notifications/` | FCM push + in-app |
 | Ratings | `ratings/` | `ratings/` | Employee ratings |
 | Intake Forms | `intake-forms/` | `intake-forms/` | Pre-appointment forms |
-| Whitelabel | `whitelabel/` | `settings/` | Clinic branding config |
+| Branding | `org-experience/branding/` | `branding/` | Clinic branding config |
 | Roles | `roles/` | `settings/` | Custom roles |
 | Permissions | `permissions/` | `settings/` | CASL permission sets |
 | Clinic | `clinic/` | `settings/` | Hours, holidays |
@@ -163,7 +163,7 @@ CareKit should feel like it belongs in a well-designed Apple environment, not a 
 
 **Reference**: Apple Health / iOS apps — clean hierarchy, generous whitespace, glassmorphism with restraint, information that surfaces exactly when needed.
 
-**White-label note**: CareKit's own brand colors are Royal Blue `#354FD8` + Lime Green `#82CC17`. All color tokens are CSS custom properties — each client deployment overrides them via the white-label config. Never hardcode CareKit's colors as if they were universal; always use semantic tokens (`--primary`, `--accent`, etc.).
+**Branding note**: CareKit's own brand colors are Royal Blue `#354FD8` + Lime Green `#82CC17`. All color tokens are CSS custom properties — each client deployment overrides them via the branding config. Never hardcode CareKit's colors as if they were universal; always use semantic tokens (`--primary`, `--accent`, etc.).
 
 **Visual signature**: Frosted glass surfaces, animated gradient blobs, IBM Plex Sans Arabic, 8px grid, iOS-grade border radii, whisper-soft shadows.
 
@@ -181,7 +181,7 @@ CareKit should feel like it belongs in a well-designed Apple environment, not a 
 3. **Glass, not plastic** — semi-transparent layered surfaces; never flat white or opaque gray
 4. **Speed is a feature** — optimistic updates, skeletons not spinners, instant-feeling interactions
 5. **Accessible by default** — WCAG 2.1 AAA target; contrast, focus states, keyboard nav, reduced motion are correctness not polish
-6. **Tokens, not colors** — always use CSS custom properties; the white-label system depends on it
+6. **Tokens, not colors** — always use CSS custom properties; the branding system depends on it
 
 ### Page Anatomy — The Law (Dashboard List Pages)
 

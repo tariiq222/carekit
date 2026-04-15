@@ -21,7 +21,7 @@
 - إذا وُجدت فاتورة للدفعة نفسها → 409 CONFLICT (ليس 400)
 - GET /invoices/:id/html يعيد HTML وليس JSON — Content-Type: text/html
 - PATCH /invoices/:id/send يعيد 200 (مع @HttpCode) + timestamp sentAt
-- صلاحيات ZATCA config/onboard تستخدم `whitelabel:view` و `whitelabel:edit`
+- صلاحيات ZATCA config/onboard تستخدم `branding:view` و `branding:edit`
 - صلاحية sandbox/stats و sandbox/report تستخدم `invoices:view` و `invoices:edit`
 - Invoice hash chaining يستخدم Serializable transaction (مهم لمنع race conditions)
 - Phase 2: يُضاف job تلقائياً لـ zatca-submit queue عند إنشاء فاتورة
@@ -80,7 +80,7 @@
 
 ## إعدادات ZATCA
 
-> الصلاحيات: `whitelabel:view` للقراءة، `whitelabel:edit` للتعديل
+> الصلاحيات: `branding:view` للقراءة، `branding:edit` للتعديل
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 | --- | --- | --- | --- |
@@ -89,8 +89,8 @@
 | ZATCA-C3 | تسجيل Phase 2 | POST /zatca/onboard + { otp: "123456" } | 200 + { success: true, message, phase: "phase2" } |
 | ZATCA-C4 | otp فارغ | otp بدون قيمة | 400 VALIDATION_ERROR |
 | ZATCA-C5 | بيانات ناقصة | sellerName أو VAT مفقود من الإعدادات | 400 VALIDATION_ERROR |
-| ZATCA-C6 | بدون صلاحية (قراءة) | مستخدم بدون whitelabel:view | 403 FORBIDDEN |
-| ZATCA-C7 | بدون صلاحية (تسجيل) | مستخدم بدون whitelabel:edit | 403 FORBIDDEN |
+| ZATCA-C6 | بدون صلاحية (قراءة) | مستخدم بدون branding:view | 403 FORBIDDEN |
+| ZATCA-C7 | بدون صلاحية (تسجيل) | مستخدم بدون branding:edit | 403 FORBIDDEN |
 
 ---
 
@@ -116,4 +116,4 @@
 - **Hash Chaining**: كل فاتورة تخزن hash الفاتورة السابقة — Serializable transaction لمنع race conditions
 - **Phase 1**: zatcaStatus="not_applicable" — QR Code فقط
 - **Phase 2**: zatcaStatus="pending" تلقائياً + job في zatca-submit queue (3 محاولات، exponential backoff 30s)
-- **ضريبة القيمة المضافة**: `vatAmount = Math.round(amount * vatRate / 100)` — المعدل من `vat_rate` في WhiteLabelConfig
+- **ضريبة القيمة المضافة**: `vatAmount = Math.round(amount * vatRate / 100)` — المعدل من `vat_rate` في BrandingConfig

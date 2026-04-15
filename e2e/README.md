@@ -27,7 +27,7 @@
 
 | الملف | الموديول | يشمل |
 |-------|---------|------|
-| [settings.md](settings.md) | الإعدادات | Whitelabel، ساعات العمل، إجازات، قوالب البريد |
+| [settings.md](settings.md) | الإعدادات | Branding، ساعات العمل، إجازات، قوالب البريد |
 | [activity-log.md](activity-log.md) | سجل النشاط | قراءة، فلترة، تحقق تسجيل تلقائي |
 | [specialties.md](specialties.md) | التخصصات | إنشاء، قراءة (عام)، تعديل، حذف |
 | [problem-reports.md](problem-reports.md) | تقارير المشاكل | إنشاء، قراءة، حل/رفض |

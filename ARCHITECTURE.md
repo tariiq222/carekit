@@ -115,7 +115,7 @@ The following 20 features represent the official domain boundaries of CareKit. E
 | 15 | Intake Forms | `intake-forms/` | `intake-forms/` | Pre-visit medical questionnaires |
 | 16 | Notifications | `notifications/` | `notifications/` | FCM push, in-app, email |
 | 18 | Branches | `branches/` | `branches/` | Multi-location clinic support |
-| 19 | White Label | `whitelabel/` | `white-label/` | Branding, config per client |
+| 19 | Branding | `org-experience/branding/` | `branding/` | Per-client branding config (colors, logo, system name) |
 | 20 | Reports | `reports/` | `reports/` | Analytics, revenue, occupancy |
 
 **Also present (infrastructure):**

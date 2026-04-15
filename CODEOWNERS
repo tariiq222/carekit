@@ -89,11 +89,11 @@ dashboard/src/app/(dashboard)/chatbot/   @tariq
 dashboard/src/components/features/chatbot/ @tariq
 
 # ─────────────────────────────────────────────
-# WHITE LABEL CONFIGURATION
+# BRANDING CONFIGURATION
 # ─────────────────────────────────────────────
-backend/src/modules/whitelabel/          @tariq
-dashboard/src/app/(dashboard)/white-label/ @tariq
-dashboard/src/components/features/white-label/ @tariq
+backend/src/modules/org-experience/branding/ @tariq
+dashboard/src/app/(dashboard)/branding/  @tariq
+dashboard/src/components/features/branding/ @tariq
 
 # ─────────────────────────────────────────────
 # ROLES & PERMISSIONS (CASL / RBAC)
