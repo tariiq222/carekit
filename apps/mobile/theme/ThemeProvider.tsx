@@ -1,15 +1,16 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { I18nManager } from 'react-native';
 import { buildTheme, type AppTheme } from './tokens';
-import type { OrganizationTheme } from '@carekit/shared/types';
+import type { BrandingConfig } from '@carekit/shared/types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5100/api/v1';
+const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? '';
 
 interface ThemeContextValue {
   theme: AppTheme;
   isRTL: boolean;
   language: 'ar' | 'en';
-  organizationTheme?: OrganizationTheme | null;
+  branding?: BrandingConfig | null;
 }
 
 const defaultTheme = buildTheme();
@@ -18,7 +19,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   theme: defaultTheme,
   isRTL: true,
   language: 'ar',
-  organizationTheme: null,
+  branding: null,
 });
 
 interface ThemeProviderProps {
@@ -29,7 +30,7 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children, language = 'ar' }: ThemeProviderProps) {
   const isRTL = language === 'ar';
   const [appTheme, setAppTheme] = useState<AppTheme>(defaultTheme);
-  const [organizationTheme, setOrganizationTheme] = useState<OrganizationTheme | null>(null);
+  const [branding, setBranding] = useState<BrandingConfig | null>(null);
 
   useEffect(() => {
     if (I18nManager.isRTL !== isRTL) {
@@ -38,11 +39,12 @@ export function ThemeProvider({ children, language = 'ar' }: ThemeProviderProps)
   }, [isRTL]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/whitelabel/public`)
+    if (!TENANT_ID) return;
+    fetch(`${API_BASE}/public/branding/${TENANT_ID}`)
       .then((r) => r.json())
       .then((body) => {
-        const data: OrganizationTheme = body.data ?? body;
-        setOrganizationTheme(data);
+        const data: BrandingConfig = body.data ?? body;
+        setBranding(data);
         setAppTheme(buildTheme(data));
       })
       .catch(() => {
@@ -51,7 +53,7 @@ export function ThemeProvider({ children, language = 'ar' }: ThemeProviderProps)
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme: appTheme, isRTL, language, organizationTheme }}>
+    <ThemeContext.Provider value={{ theme: appTheme, isRTL, language, branding }}>
       {children}
     </ThemeContext.Provider>
   );
