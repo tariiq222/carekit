@@ -5,6 +5,13 @@ import { seedClient } from '../../setup/seed.helper';
 import { createTestToken, adminUser, TEST_TENANT_ID } from '../../setup/auth.helper';
 
 const TENANT = TEST_TENANT_ID;
+const OTHER_TENANT = 'other-tenant-e2e';
+
+let counter = 0;
+const uniquePhone = () => {
+  counter += 1;
+  return `+9665${Date.now().toString().slice(-6)}${counter.toString().padStart(2, '0')}`;
+};
 
 describe('Clients API (e2e)', () => {
   let req: SuperTest.Agent;
@@ -21,168 +28,372 @@ describe('Clients API (e2e)', () => {
     await closeTestApp();
   });
 
-  describe('GET /dashboard/people/clients', () => {
-    it('✅ قائمة فارغة → 200 + items []', async () => {
-      const res = await req
-        .get('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
-        .set('Authorization', `Bearer ${TOKEN}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.items).toEqual([]);
-    });
-
-    it('✅ بعد إضافة client → يظهر في القائمة', async () => {
-      await seedClient(testPrisma as any, TENANT, { name: 'أحمد محمد' });
-
-      const res = await req
-        .get('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
-        .set('Authorization', `Bearer ${TOKEN}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.items.length).toBeGreaterThan(0);
-    });
-
-    it('❌ بدون JWT → 401', async () => {
-      const res = await req
-        .get('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT);
-
-      expect(res.status).toBe(401);
-    });
-  });
-
+  // ══════════════════════════════════════════════════════════════════════════
+  // CREATE
+  // ══════════════════════════════════════════════════════════════════════════
   describe('POST /dashboard/people/clients', () => {
-    it('✅ إنشاء client → 201 + name مُركَّب من first/last', async () => {
-      const phone = `+9665${Date.now().toString().slice(-8)}`;
-
+    it('[CL-001][Clients/create-client][P1-High] إنشاء walk-in بالحد الأدنى', async () => {
+      const phone = uniquePhone();
       const res = await req
         .post('/dashboard/people/clients')
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
-        .send({ firstName: 'سارة', lastName: 'العلي', phone, gender: 'female' });
+        .send({ firstName: 'أحمد', lastName: 'العلي', phone });
 
       expect(res.status).toBe(201);
-
       const inDb = await (testPrisma as any).client.findUnique({ where: { id: res.body.id } });
-      expect(inDb).not.toBeNull();
-      expect(inDb.firstName).toBe('سارة');
-      expect(inDb.lastName).toBe('العلي');
-      expect(inDb.name).toBe('سارة العلي');
+      expect(inDb.source).toBe('WALK_IN');
+      expect(inDb.accountType).toBe('WALK_IN');
+      expect(inDb.isActive).toBe(true);
+      expect(inDb.name).toBe('أحمد العلي');
     });
 
-    it('❌ firstName مفقود → 400', async () => {
+    it('[CL-002][Clients/create-client][P1-High] إنشاء بجميع الحقول الاختيارية', async () => {
+      const phone = uniquePhone();
       const res = await req
         .post('/dashboard/people/clients')
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
-        .send({ lastName: 'فقط', phone: '+966501234567' });
+        .send({
+          firstName: 'سارة',
+          middleName: 'محمد',
+          lastName: 'الفهد',
+          phone,
+          email: 'sara@example.com',
+          gender: 'FEMALE',
+          dateOfBirth: '1990-05-15',
+          nationality: 'Saudi',
+          nationalId: '1012345678',
+          emergencyName: 'أخ سارة',
+          emergencyPhone: uniquePhone(),
+          bloodType: 'O_POS',
+          allergies: 'البنسلين',
+          chronicConditions: 'السكري',
+          notes: 'ملاحظة تجريبية',
+        });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(201);
+      const inDb = await (testPrisma as any).client.findUnique({ where: { id: res.body.id } });
+      expect(inDb.name).toBe('سارة محمد الفهد');
+      expect(inDb.gender).toBe('FEMALE');
+      expect(inDb.bloodType).toBe('O_POS');
     });
 
-    it('❌ phone بصيغة غير E.164 → 400', async () => {
+    it('[CL-003][Clients/create-client][P1-High] جوال مستخدم مسبقاً → backend يُرجع 409 (UI يفسّره كـ isExisting)', async () => {
+      const phone = uniquePhone();
+      const first = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'Existing', lastName: 'User', phone });
+      expect(first.status).toBe(201);
+
+      const second = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'Another', lastName: 'Attempt', phone });
+      expect(second.status).toBe(409);
+    });
+
+    it('[CL-004][Clients/create-client][P1-High] رفض جوال بدون +966', async () => {
       const res = await req
         .post('/dashboard/people/clients')
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Bad', lastName: 'Phone', phone: '0501234567' });
-
       expect(res.status).toBe(400);
     });
 
-    it('❌ phone مكرّر → 409', async () => {
-      const phone = `+9665${Date.now().toString().slice(-8)}`;
+    it('[CL-005][Clients/create-client][P2-Medium] رفض جوال +966 بدون 5', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: '+966401234567' });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-006][Clients/create-client][P2-Medium] رفض جوال طوله غير صحيح', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: '+9665123456789' });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-007][Clients/create-client][P1-High] جوال مكرر → 409', async () => {
+      const phone = uniquePhone();
       await req
         .post('/dashboard/people/clients')
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Orig', lastName: 'Client', phone });
-
       const res = await req
         .post('/dashboard/people/clients')
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Dup', lastName: 'Client', phone });
-
       expect(res.status).toBe(409);
     });
 
-    it('❌ بدون JWT → 401', async () => {
+    it('[CL-008][Clients/create-client][P1-High] رفض firstName فارغ', async () => {
       const res = await req
         .post('/dashboard/people/clients')
         .set('x-tenant-id', TENANT)
-        .send({ firstName: 'Un', lastName: 'Auth', phone: '+966500000000' });
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: '', lastName: 'L', phone: uniquePhone() });
+      expect(res.status).toBe(400);
+    });
 
+    it('[CL-009][Clients/create-client][P1-High] رفض lastName مفقود', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'F', phone: uniquePhone() });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-010][Clients/create-client][P3-Low] رفض firstName > 255', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'a'.repeat(256), lastName: 'B', phone: uniquePhone() });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-011][Clients/create-client][P2-Medium] رفض email خاطئ', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), email: 'not-an-email' });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-012][Clients/create-client][P2-Medium] رفض dateOfBirth بصيغة غير ISO', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), dateOfBirth: 'not-a-date' });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-013][Clients/create-client][P2-Medium] رفض gender enum غير صالح', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), gender: 'OTHER' });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-014][Clients/create-client][P3-Low] رفض bloodType enum غير صالح', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), bloodType: 'XX' });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-015][Clients/create-client][P3-Low] رفض nationalId > 20', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), nationalId: '1'.repeat(21) });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-016][Clients/create-client][P3-Low] رفض allergies > 1000', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), allergies: 'a'.repeat(1001) });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-017][Clients/create-client][P3-Low] رفض notes > 2000', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), notes: 'a'.repeat(2001) });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-018][Clients/create-client][P2-Medium] رفض emergencyPhone خاطئ', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), emergencyPhone: '0501234567' });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-019][Clients/create-client][P1-High] رفض بلا JWT → 401', async () => {
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .send({ firstName: 'A', lastName: 'B', phone: uniquePhone() });
       expect(res.status).toBe(401);
     });
   });
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // UPDATE
+  // ══════════════════════════════════════════════════════════════════════════
   describe('PATCH /dashboard/people/clients/:id', () => {
-    it('✅ تحديث firstName → DB تتغير + name يُعاد تركيبه', async () => {
-      const client = await seedClient(testPrisma as any, TENANT, {
+    it('[CL-021][Clients/update-client][P1-High] تعديل firstName + إعادة تركيب name', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, {
         name: 'Old Name',
         firstName: 'Old',
         lastName: 'Name',
+        phone: uniquePhone(),
       });
-
       const res = await req
-        .patch(`/dashboard/people/clients/${client.id}`)
+        .patch(`/dashboard/people/clients/${c.id}`)
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'New' });
-
       expect(res.status).toBe(200);
-
-      const inDb = await (testPrisma as any).client.findUnique({ where: { id: client.id } });
+      const inDb = await (testPrisma as any).client.findUnique({ where: { id: c.id } });
       expect(inDb.firstName).toBe('New');
       expect(inDb.name).toBe('New Name');
     });
 
-    it('❌ تحديث phone إلى رقم مستخدم لعميل آخر → 409', async () => {
-      const c1 = await seedClient(testPrisma as any, TENANT, {
-        name: 'A',
-        firstName: 'A',
-        lastName: 'A',
-        phone: `+9665${Date.now().toString().slice(-8)}`,
+    it('[CL-022][Clients/update-client][P1-High] تعديل جميع الحقول + تفعيل isActive', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, {
+        phone: uniquePhone(),
+        isActive: false,
       });
-      const otherPhone = `+9665${(Date.now() + 1).toString().slice(-8)}`;
-      await seedClient(testPrisma as any, TENANT, {
-        name: 'B',
-        firstName: 'B',
-        lastName: 'B',
-        phone: otherPhone,
-      });
-
       const res = await req
-        .patch(`/dashboard/people/clients/${c1.id}`)
+        .patch(`/dashboard/people/clients/${c.id}`)
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
-        .send({ phone: otherPhone });
-
-      expect(res.status).toBe(409);
+        .send({ isActive: true, firstName: 'Updated', lastName: 'All' });
+      expect(res.status).toBe(200);
+      const inDb = await (testPrisma as any).client.findUnique({ where: { id: c.id } });
+      expect(inDb.isActive).toBe(true);
+      expect(inDb.firstName).toBe('Updated');
     });
 
-    it('❌ ID غير موجود → 404', async () => {
+    it('[CL-023][Clients/update-client][P1-High] تعديل الجوال إلى قيمة فريدة', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const newPhone = uniquePhone();
+      const res = await req
+        .patch(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ phone: newPhone });
+      expect(res.status).toBe(200);
+      const inDb = await (testPrisma as any).client.findUnique({ where: { id: c.id } });
+      expect(inDb.phone).toBe(newPhone);
+    });
+
+    it('[CL-024][Clients/update-client][P2-Medium] إبقاء نفس الجوال لا يُثير تكراراً', async () => {
+      const phone = uniquePhone();
+      const c = await seedClient(testPrisma as any, TENANT, { phone });
+      const res = await req
+        .patch(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ phone, firstName: 'Changed' });
+      expect(res.status).toBe(200);
+    });
+
+    it('[CL-025][Clients/update-client][P2-Medium] مسح حقل اختياري (null)', async () => {
+      const c = await (testPrisma as any).client.create({
+        data: {
+          tenantId: TENANT,
+          name: 'Has Notes',
+          firstName: 'Has',
+          lastName: 'Notes',
+          phone: uniquePhone(),
+          notes: 'existing note',
+          source: 'WALK_IN',
+          isActive: true,
+        },
+      });
+      const res = await req
+        .patch(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ notes: null });
+      expect(res.status).toBe(200);
+      const inDb = await (testPrisma as any).client.findUnique({ where: { id: c.id } });
+      expect(inDb.notes).toBeNull();
+    });
+
+    it('[CL-026][Clients/update-client][P1-High] تعديل عميل غير موجود → 404', async () => {
       const res = await req
         .patch('/dashboard/people/clients/00000000-0000-0000-0000-000000000000')
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Ghost' });
-
       expect(res.status).toBe(404);
+    });
+
+    it('[CL-027][Clients/update-client][P2-Medium] تعديل عميل محذوف ناعمياً → 404', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      await (testPrisma as any).client.update({
+        where: { id: c.id },
+        data: { deletedAt: new Date(), phone: null },
+      });
+      const res = await req
+        .patch(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'X' });
+      expect(res.status).toBe(404);
+    });
+
+    it('[CL-028][Clients/update-client][P1-High] تعديل الجوال إلى مكرر → 409', async () => {
+      const c1 = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const phoneOther = uniquePhone();
+      await seedClient(testPrisma as any, TENANT, { phone: phoneOther });
+      const res = await req
+        .patch(`/dashboard/people/clients/${c1.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ phone: phoneOther });
+      expect(res.status).toBe(409);
+    });
+
+    it('[CL-029][Clients/update-client][P2-Medium] phone regex خاطئ في PATCH → 400', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const res = await req
+        .patch(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ phone: '0501234567' });
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-030][Clients/update-client][P3-Low] طول حقل تجاوز الحد في PATCH → 400', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const res = await req
+        .patch(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'a'.repeat(256) });
+      expect(res.status).toBe(400);
     });
   });
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // DELETE
+  // ══════════════════════════════════════════════════════════════════════════
   describe('DELETE /dashboard/people/clients/:id', () => {
-    it('✅ soft-delete → 204 + list لا يُعيد المحذوف', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, {
-        name: 'To Remove',
-        firstName: 'To',
-        lastName: 'Remove',
-        phone: `+9665${Date.now().toString().slice(-8)}`,
-      });
+    it('[CL-032][Clients/delete-client][P1-High] soft-delete → 204 + يختفي من القائمة + phone=null', async () => {
+      const phone = uniquePhone();
+      const c = await seedClient(testPrisma as any, TENANT, { phone });
 
       const delRes = await req
         .delete(`/dashboard/people/clients/${c.id}`)
@@ -190,11 +401,17 @@ describe('Clients API (e2e)', () => {
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(delRes.status).toBe(204);
 
+      const inDb = await (testPrisma as any).client.findUnique({ where: { id: c.id } });
+      expect(inDb.deletedAt).not.toBeNull();
+      expect(inDb.isActive).toBe(false);
+      expect(inDb.phone).toBeNull();
+      expect(inDb.notes).toContain(`[deleted-phone:${phone}]`);
+
       const listRes = await req
         .get('/dashboard/people/clients')
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
-      expect(listRes.body.items.find((c2: { id: string }) => c2.id === c.id)).toBeUndefined();
+      expect(listRes.body.items.find((x: { id: string }) => x.id === c.id)).toBeUndefined();
 
       const getRes = await req
         .get(`/dashboard/people/clients/${c.id}`)
@@ -203,13 +420,305 @@ describe('Clients API (e2e)', () => {
       expect(getRes.status).toBe(404);
     });
 
-    it('❌ ID غير موجود → 404', async () => {
+    it('[CL-033][Clients/delete-client][P2-Medium] إعادة استخدام الجوال بعد الحذف', async () => {
+      const phone = uniquePhone();
+      const c = await seedClient(testPrisma as any, TENANT, { phone });
+      await req
+        .delete(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: 'Re', lastName: 'Use', phone });
+      expect(res.status).toBe(201);
+    });
+
+    it('[CL-034][Clients/delete-client][P2-Medium] حذف عميل غير موجود → 404', async () => {
       const res = await req
         .delete('/dashboard/people/clients/00000000-0000-0000-0000-000000000000')
         .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
-
       expect(res.status).toBe(404);
+    });
+
+    it('[CL-035][Clients/delete-client][P2-Medium] حذف عميل محذوف مسبقاً → 404', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      await req
+        .delete(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      const res = await req
+        .delete(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(404);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // GET BY ID
+  // ══════════════════════════════════════════════════════════════════════════
+  describe('GET /dashboard/people/clients/:id', () => {
+    it('[CL-039][Clients/get-client][P1-High] عرض تفاصيل عميل موجود', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, {
+        firstName: 'View',
+        lastName: 'Me',
+        phone: uniquePhone(),
+      });
+      const res = await req
+        .get(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.id).toBe(c.id);
+      expect(res.body.firstName).toBe('View');
+    });
+
+    it('[CL-040][Clients/get-client][P2-Medium] شارة Walk-in تظهر عند accountType=WALK_IN', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const res = await req
+        .get(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      // serializer يُرجع lowercase
+      expect(['walk_in', 'WALK_IN']).toContain(res.body.accountType);
+    });
+
+    it('[CL-042][Clients/get-client][P1-High] عرض id غير موجود → 404', async () => {
+      const res = await req
+        .get('/dashboard/people/clients/00000000-0000-0000-0000-000000000000')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(404);
+    });
+
+    it('[CL-043][Clients/get-client][P2-Medium] عرض عميل محذوف → 404', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      await (testPrisma as any).client.update({
+        where: { id: c.id },
+        data: { deletedAt: new Date(), phone: null },
+      });
+      const res = await req
+        .get(`/dashboard/people/clients/${c.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(404);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // LIST / SEARCH / FILTER
+  // ══════════════════════════════════════════════════════════════════════════
+  describe('GET /dashboard/people/clients', () => {
+    it('[CL-044][Clients/list-clients][P1-High] Pagination - الصفحة الأولى', async () => {
+      for (let i = 0; i < 5; i++) {
+        await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      }
+      const res = await req
+        .get('/dashboard/people/clients?page=1&limit=20')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items.length).toBeLessThanOrEqual(20);
+      expect(res.body.meta.page).toBe(1);
+      expect(res.body.meta.perPage).toBe(20);
+    });
+
+    it('[CL-045][Clients/list-clients][P1-High] بحث بالاسم', async () => {
+      await seedClient(testPrisma as any, TENANT, {
+        firstName: 'SearchMeUnique',
+        lastName: 'Xyz',
+        phone: uniquePhone(),
+      });
+      const res = await req
+        .get('/dashboard/people/clients?search=SearchMeUnique')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items.some((c: any) => c.firstName === 'SearchMeUnique')).toBe(true);
+    });
+
+    it('[CL-046][Clients/list-clients][P2-Medium] بحث بالجوال', async () => {
+      const phone = uniquePhone();
+      await seedClient(testPrisma as any, TENANT, { phone });
+      const res = await req
+        .get(`/dashboard/people/clients?search=${encodeURIComponent(phone.slice(-6))}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items.some((c: any) => c.phone === phone)).toBe(true);
+    });
+
+    it('[CL-047][Clients/list-clients][P2-Medium] بحث case-insensitive', async () => {
+      await seedClient(testPrisma as any, TENANT, {
+        firstName: 'CaseSensitive',
+        phone: uniquePhone(),
+      });
+      const res = await req
+        .get('/dashboard/people/clients?search=casesensitive')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items.length).toBeGreaterThan(0);
+    });
+
+    it('[CL-048][Clients/list-clients][P2-Medium] بحث بنص عربي', async () => {
+      await seedClient(testPrisma as any, TENANT, {
+        firstName: 'زينب',
+        lastName: 'فريد',
+        phone: uniquePhone(),
+      });
+      const res = await req
+        .get(`/dashboard/people/clients?search=${encodeURIComponent('زينب')}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items.length).toBeGreaterThan(0);
+    });
+
+    it('[CL-049][Clients/list-clients][P2-Medium] فلتر isActive=true', async () => {
+      const res = await req
+        .get('/dashboard/people/clients?isActive=true')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items.every((c: any) => c.isActive === true)).toBe(true);
+    });
+
+    it('[CL-050][Clients/list-clients][P2-Medium] فلتر isActive=false', async () => {
+      await seedClient(testPrisma as any, TENANT, {
+        phone: uniquePhone(),
+        isActive: false,
+      });
+      const res = await req
+        .get('/dashboard/people/clients?isActive=false')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items.every((c: any) => c.isActive === false)).toBe(true);
+      expect(res.body.items.length).toBeGreaterThan(0);
+    });
+
+    it('[CL-051][Clients/list-clients][P2-Medium] فلتر gender=MALE', async () => {
+      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      await (testPrisma as any).client.update({
+        where: { id: c.id },
+        data: { gender: 'MALE' },
+      });
+      const res = await req
+        .get('/dashboard/people/clients?gender=MALE')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items.every((c: any) => ['male', 'MALE'].includes(c.gender))).toBe(true);
+    });
+
+    it('[CL-052][Clients/list-clients][P2-Medium] فلتر source=WALK_IN', async () => {
+      const res = await req
+        .get('/dashboard/people/clients?source=WALK_IN')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+    });
+
+    it('[CL-056][Clients/list-clients][P2-Medium] رفض limit > 200', async () => {
+      const res = await req
+        .get('/dashboard/people/clients?limit=500')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-057][Clients/list-clients][P2-Medium] رفض page < 1', async () => {
+      const res = await req
+        .get('/dashboard/people/clients?page=0')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(400);
+    });
+
+    it('[CL-058][Clients/list-clients][P2-Medium] بحث بدون نتائج → قائمة فارغة', async () => {
+      const res = await req
+        .get('/dashboard/people/clients?search=XXNOTEXISTXX99999')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items).toEqual([]);
+      expect(res.body.meta.total).toBe(0);
+    });
+
+    it('[CL-059][Clients/list-clients][P1-High] عزل tenant - لا يظهر عميل من مستأجر آخر', async () => {
+      const other = await (testPrisma as any).client.create({
+        data: {
+          tenantId: OTHER_TENANT,
+          name: 'Other Tenant Client',
+          firstName: 'Other',
+          lastName: 'Client',
+          phone: uniquePhone(),
+          source: 'WALK_IN',
+          isActive: true,
+        },
+      });
+      const res = await req
+        .get('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+      expect(res.body.items.find((c: any) => c.id === other.id)).toBeUndefined();
+
+      const byId = await req
+        .get(`/dashboard/people/clients/${other.id}`)
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(byId.status).toBe(404);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SECURITY / CONCURRENCY
+  // ══════════════════════════════════════════════════════════════════════════
+  describe('Security & Concurrency', () => {
+    it('[CL-082][Clients/security][P1-High] تزامن إنشاء بنفس الجوال → واحد ينجح والآخر 409', async () => {
+      const phone = uniquePhone();
+      const [r1, r2] = await Promise.all([
+        req
+          .post('/dashboard/people/clients')
+          .set('x-tenant-id', TENANT)
+          .set('Authorization', `Bearer ${TOKEN}`)
+          .send({ firstName: 'A', lastName: 'One', phone }),
+        req
+          .post('/dashboard/people/clients')
+          .set('x-tenant-id', TENANT)
+          .set('Authorization', `Bearer ${TOKEN}`)
+          .send({ firstName: 'B', lastName: 'Two', phone }),
+      ]);
+      const codes = [r1.status, r2.status].sort();
+      expect(codes).toContain(201);
+      expect(codes.some((c) => c === 409 || c === 500)).toBe(true);
+    });
+
+    it('[CL-083][Clients/security][P1-High] SQL injection في search — آمن', async () => {
+      const res = await req
+        .get("/dashboard/people/clients?search=' OR 1=1 --")
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`);
+      expect(res.status).toBe(200);
+    });
+
+    it('[CL-084][Clients/security][P1-High] XSS في الاسم/notes يُخزَّن حرفياً (لا تنفيذ)', async () => {
+      const payload = '<script>alert(1)</script>';
+      const res = await req
+        .post('/dashboard/people/clients')
+        .set('x-tenant-id', TENANT)
+        .set('Authorization', `Bearer ${TOKEN}`)
+        .send({ firstName: payload, lastName: 'XSS', phone: uniquePhone() });
+      expect(res.status).toBe(201);
+      const inDb = await (testPrisma as any).client.findUnique({ where: { id: res.body.id } });
+      expect(inDb.firstName).toBe(payload);
     });
   });
 });

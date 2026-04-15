@@ -17,7 +17,7 @@ import { test as setup } from '@playwright/test';
 import { AUTH_STATE_PATH } from '../../../playwright.config';
 
 const ADMIN_EMAIL = process.env['TEST_ADMIN_EMAIL'] ?? 'admin@carekit-test.com';
-const ADMIN_PASSWORD = process.env['TEST_ADMIN_PASSWORD'] ?? 'Adm!nP@ss123';
+const ADMIN_PASSWORD = process.env['TEST_ADMIN_PASSWORD'] ?? 'Admin@1234';
 
 setup('authenticate as super_admin', async ({ page }) => {
   await page.goto('/');

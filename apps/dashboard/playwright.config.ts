@@ -4,7 +4,7 @@ import path from 'path';
 /**
  * CareKit Dashboard — Playwright E2E Configuration
  *
- * Runs against the Next.js dev server on :5001.
+ * Runs against the Next.js dev server on :5103.
  * Auth state is persisted to a file by global-setup and reused across tests.
  *
  * Usage:
@@ -28,31 +28,45 @@ export default defineConfig({
   outputDir: 'test-results',
 
   use: {
-    baseURL: 'http://localhost:5001',
+    baseURL: 'http://localhost:5103',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'off',
   },
 
   projects: [
+    /**
+     * smoke  — تحميل الصفحات، عناصر أساسية. يعمل على كل PR. (~2 دقيقة)
+     * critical — المسار الأساسي end-to-end. يعمل قبل كل deploy. (~10 دقائق)
+     * full   — كل الاختبارات. يعمل nightly.
+     *
+     * تشغيل مشروع معين:
+     *   npx playwright test --project=smoke
+     *   npx playwright test --project=critical
+     *   npx playwright test --project=full
+     */
     {
-      name: 'global-setup',
-      testMatch: '**/setup/global-setup.ts',
+      name: 'smoke',
+      grep: /@smoke/,
+      use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: AUTH_STATE_PATH,
-      },
-      dependencies: ['global-setup'],
+      name: 'critical',
+      grep: /@critical/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'full',
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5001',
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  // webServer disabled — we run backend + dashboard manually in separate shells
+  // for the local test run so we can control env vars (TEST DB, test Redis port).
+  // webServer: {
+  //   command: 'npm run dev',
+  //   url: 'http://localhost:5103',
+  //   reuseExistingServer: true,
+  //   timeout: 120_000,
+  // },
 });
