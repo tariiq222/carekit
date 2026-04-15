@@ -32,6 +32,7 @@ export function NotificationCard({
         isUnread && "border-primary/20 bg-primary/5"
       )}
       onClick={handleClick}
+      data-testid="notification-card"
     >
       <CardContent className="flex items-start gap-4 p-4">
         {/* Unread dot */}

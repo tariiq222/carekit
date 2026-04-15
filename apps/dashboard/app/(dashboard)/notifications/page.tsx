@@ -44,6 +44,7 @@ export default function NotificationsPage() {
           size="sm"
           onClick={handleMarkAllRead}
           disabled={markAllMut.isPending || unreadCount === 0}
+          data-testid="mark-all-read"
         >
           {t("notifications.markAllRead")}
         </Button>
