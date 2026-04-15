@@ -27,6 +27,8 @@ export class UpdateBranchHandler {
         latitude: dto.latitude,
         longitude: dto.longitude,
         isActive: dto.isActive,
+        isMain: dto.isMain,
+        timezone: dto.timezone,
       },
     });
   }

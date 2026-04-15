@@ -19,7 +19,7 @@ export function useBranches() {
 
   const query: BranchListQuery = {
     page,
-    perPage: 20,
+    perPage: 50,
     search: search || undefined,
     isActive,
   }
@@ -62,12 +62,18 @@ export function useBranchMutations() {
   const createMut = useMutation({
     mutationFn: createBranch,
     onSuccess: invalidate,
+    onError: (err) => {
+      console.error('Create branch error:', err)
+    },
   })
 
   const updateMut = useMutation({
     mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof updateBranch>[1]) =>
       updateBranch(id, payload),
     onSuccess: invalidate,
+    onError: (err) => {
+      console.error('Update branch error:', err)
+    },
   })
 
   return { createMut, updateMut }

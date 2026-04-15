@@ -1,4 +1,4 @@
-import { IsLatitude, IsLongitude, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsLatitude, IsLongitude, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateBranchDto {
   @IsString() @MaxLength(200) nameAr!: string;
@@ -10,4 +10,7 @@ export class CreateBranchDto {
   @IsOptional() @IsString() @MaxLength(2) country?: string;
   @IsOptional() @IsLatitude() latitude?: number;
   @IsOptional() @IsLongitude() longitude?: number;
+  @IsOptional() @IsBoolean() isActive?: boolean;
+  @IsOptional() @IsBoolean() isMain?: boolean;
+  @IsOptional() @IsString() timezone?: string;
 }

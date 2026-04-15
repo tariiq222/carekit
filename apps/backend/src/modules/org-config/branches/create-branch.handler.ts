@@ -26,6 +26,9 @@ export class CreateBranchHandler {
         country: dto.country ?? 'SA',
         latitude: dto.latitude,
         longitude: dto.longitude,
+        isActive: dto.isActive,
+        isMain: dto.isMain,
+        timezone: dto.timezone,
       },
     });
   }

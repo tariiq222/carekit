@@ -60,25 +60,32 @@ export function BranchFormPage(props: Props) {
       address: branch.address ?? "",
       phone: branch.phone ?? "",
       email: branch.email ?? "",
-      isMain: branch.isMain,
-      isActive: branch.isActive,
+      isMain: branch.isMain ?? false,
+      isActive: branch.isActive ?? true,
       timezone: branch.timezone ?? "Asia/Riyadh",
     })
   }, [branch, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
-    const payload = {
+    const createPayload = {
       nameAr: data.nameAr, nameEn: data.nameEn,
       address: data.address || undefined, phone: data.phone || undefined,
       email: data.email || undefined, isMain: data.isMain,
       isActive: data.isActive, timezone: data.timezone,
     }
+    // Backend update-branch.dto.ts only accepts nameAr, nameEn, phone, isActive,
+    // addressAr/addressEn/city (not a single 'address'), no isMain/timezone/email.
+    const updatePayload = {
+      nameAr: data.nameAr, nameEn: data.nameEn,
+      phone: data.phone || undefined,
+      isActive: data.isActive,
+    }
     try {
       if (isEdit) {
-        await updateMut.mutateAsync({ id: branchId!, ...payload })
+        await updateMut.mutateAsync({ id: branchId!, ...updatePayload })
         toast.success(t("branches.edit.success"))
       } else {
-        await createMut.mutateAsync(payload)
+        await createMut.mutateAsync(createPayload)
         toast.success(t("branches.create.success"))
       }
       router.push("/branches")
