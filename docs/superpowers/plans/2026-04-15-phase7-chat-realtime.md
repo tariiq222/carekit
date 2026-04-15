@@ -622,42 +622,74 @@ git commit -m "test(dashboard): add stable data-testids to notifications header 
 
 ---
 
-## Task 7: Notifications seed helper for Playwright
+## Task 7: Notifications seed helper for Playwright (direct DB via `pg`)
 
 **Files:**
 - Create: `apps/dashboard/test/e2e/setup/seed-notification.ts`
 
-- [ ] **Step 1: Write the helper**
+**Decision:** seed directly against the dev database from the Playwright process using `pg`. Rationale: no production endpoint added, no test-only route that could leak; matches the "tests don't change source" rule. The dev DB connection env (`DATABASE_URL`) is already present in the project; Playwright reads it via `dotenv` at runtime.
 
-Mirror the `seed-client.ts` pattern exactly:
+- [ ] **Step 1: Confirm `pg` is already available as a dashboard dep**
+
+Run:
+```bash
+cd apps/dashboard && npm ls pg 2>&1 | head -5
+```
+
+- **If installed**: continue.
+- **If missing**: run `npm i -D pg @types/pg` in `apps/dashboard`. Commit that alone first:
+  ```bash
+  git add apps/dashboard/package.json apps/dashboard/package-lock.json
+  git commit -m "chore(dashboard): add pg as test devDependency for Playwright seeding"
+  ```
+
+- [ ] **Step 2: Resolve the admin userId + tenantId once at module load**
+
+The seed helper needs both the tenant ID (already in `NEXT_PUBLIC_TENANT_ID`) and the admin user's database id. The admin id is NOT exported as an env var today — resolve it via a one-time lookup by email on first use, then cache.
+
+- [ ] **Step 3: Write the helper**
 
 ```ts
 /**
- * Seed helpers — create/delete notifications via the backend for the logged-in admin.
- * Used by Playwright specs that verify sidebar badge + mark-as-read UI.
+ * Notification seed helpers for Playwright.
+ *
+ * Writes directly to Postgres using `pg` — no test-only endpoint, no production
+ * route changes. Requires DATABASE_URL in the environment (already configured
+ * in apps/dashboard/.env for dev).
  */
+import { Pool } from 'pg';
+import { randomUUID } from 'node:crypto';
 
-const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:5100/api/v1';
+const DATABASE_URL =
+  process.env['DATABASE_URL'] ??
+  process.env['TEST_DATABASE_URL'] ??
+  'postgresql://carekit:carekit_dev_password@127.0.0.1:5432/carekit_dev?schema=public';
 const TENANT_ID =
   process.env['NEXT_PUBLIC_TENANT_ID'] ?? 'b46accb4-dd8a-4f34-a2fd-1bac26119e1c';
 const ADMIN_EMAIL = process.env['TEST_ADMIN_EMAIL'] ?? 'admin@carekit-test.com';
-const ADMIN_PASSWORD = process.env['TEST_ADMIN_PASSWORD'] ?? 'Admin@1234';
 
-let cachedToken: string | null = null;
+let pool: Pool | null = null;
 let cachedUserId: string | null = null;
 
-async function login(): Promise<{ token: string; userId: string }> {
-  if (cachedToken && cachedUserId) return { token: cachedToken, userId: cachedUserId };
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Tenant-ID': TENANT_ID },
-    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
-  });
-  if (!res.ok) throw new Error(`Login failed: ${res.status}`);
-  const data = (await res.json()) as { accessToken: string; user: { id: string } };
-  cachedToken = data.accessToken;
-  cachedUserId = data.user.id;
-  return { token: cachedToken, userId: cachedUserId };
+function getPool(): Pool {
+  if (!pool) pool = new Pool({ connectionString: DATABASE_URL });
+  return pool;
+}
+
+async function resolveAdminUserId(): Promise<string> {
+  if (cachedUserId) return cachedUserId;
+  const { rows } = await getPool().query<{ id: string }>(
+    'SELECT id FROM "User" WHERE "tenantId" = $1 AND email = $2 LIMIT 1',
+    [TENANT_ID, ADMIN_EMAIL],
+  );
+  if (rows.length === 0) {
+    throw new Error(
+      `Admin user not found for tenant ${TENANT_ID} email ${ADMIN_EMAIL}. ` +
+        `Ensure the dashboard dev DB is seeded before running Playwright.`,
+    );
+  }
+  cachedUserId = rows[0].id;
+  return cachedUserId;
 }
 
 export interface SeededNotification {
@@ -668,63 +700,50 @@ export interface SeededNotification {
 export async function seedNotification(
   overrides: Partial<{ title: string; body: string }> = {},
 ): Promise<SeededNotification> {
-  const { token, userId } = await login();
-  const res = await fetch(`${API_URL}/internal/test/notifications`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Tenant-ID': TENANT_ID,
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      recipientId: userId,
-      recipientType: 'STAFF',
-      type: 'APPOINTMENT_REMINDER',
-      title: overrides.title ?? `E2E notification ${Date.now()}`,
-      body: overrides.body ?? 'E2E body',
-    }),
-  });
-  if (!res.ok) {
-    // Fallback: this project may not expose an internal seeding route.
-    // In that case we use the public dashboard create endpoint via the handler if wired,
-    // else we fail loudly so the test author adds the route.
-    throw new Error(
-      `seedNotification failed: ${res.status}. If no seeding endpoint exists, ` +
-        `add one under /internal/test/notifications (see Task 7 note).`,
-    );
-  }
-  const data = (await res.json()) as { id: string; title: string };
-  return { id: data.id, title: data.title };
+  const userId = await resolveAdminUserId();
+  const id = randomUUID();
+  const title = overrides.title ?? `E2E notification ${Date.now()}`;
+  const body = overrides.body ?? 'E2E body';
+  await getPool().query(
+    `INSERT INTO "Notification"
+       (id, "tenantId", "recipientId", "recipientType", type, title, body, "isRead", "createdAt", "updatedAt")
+     VALUES ($1, $2, $3, 'STAFF'::"RecipientType", 'APPOINTMENT_REMINDER'::"NotificationType", $4, $5, false, now(), now())`,
+    [id, TENANT_ID, userId, title, body],
+  );
+  return { id, title };
 }
 
 export async function clearNotifications(): Promise<void> {
-  const { token } = await login();
-  await fetch(`${API_URL}/internal/test/notifications`, {
-    method: 'DELETE',
-    headers: { 'X-Tenant-ID': TENANT_ID, Authorization: `Bearer ${token}` },
-  });
+  const userId = await resolveAdminUserId();
+  await getPool().query(
+    'DELETE FROM "Notification" WHERE "tenantId" = $1 AND "recipientId" = $2',
+    [TENANT_ID, userId],
+  );
+}
+
+export async function closeSeedPool(): Promise<void> {
+  if (pool) {
+    await pool.end();
+    pool = null;
+  }
 }
 ```
 
-- [ ] **Step 2: Confirm whether a test-seed endpoint exists**
+- [ ] **Step 4: Verify the helper compiles + lints**
 
 Run:
 ```bash
-grep -rn "internal/test/notifications\|@Post.*notifications.*test\|TestSeeding" apps/backend/src
+cd apps/dashboard && npm run typecheck
 ```
 
-- **If found**: proceed — the helper works as-is.
-- **If NOT found**: the project does not have a test-only seeding route, which is expected. Fall back to direct Prisma access from within the Playwright spec via a small worker-side shim. Replace the `seedNotification` body above with an approach that `POST`s through the live `CreateNotificationHandler` exposed on a dashboard route — OR if neither exists, **stop and ask the user** whether to (a) add a test-only endpoint, or (b) seed via direct DB connection from the Playwright process using `pg`. Do NOT invent endpoints.
+Expected: 0 errors. If `RecipientType`/`NotificationType` casts fail, read `apps/backend/prisma/schema/comms.prisma` to confirm the exact enum names and adjust the SQL.
 
-- [ ] **Step 3: Commit only if the helper is actually usable**
+- [ ] **Step 5: Commit**
 
-If the seed path resolved cleanly in Step 2:
 ```bash
 git add apps/dashboard/test/e2e/setup/seed-notification.ts
-git commit -m "test(dashboard): add notification seed helper for Playwright"
+git commit -m "test(dashboard): add notification seed helper (direct pg, no endpoint)"
 ```
-
-If blocked, skip the commit and raise the decision to the user before Task 8.
 
 ---
 
