@@ -59,9 +59,9 @@ lib/api/zatca.ts                    @tariq
 
 # ── Configuration & Settings ─────────────────────────
 components/features/settings/       @tariq
-components/features/white-label/    @tariq
+components/features/branding/        @tariq
 app/(dashboard)/settings/           @tariq
-app/(dashboard)/white-label/        @tariq
+app/(dashboard)/branding/           @tariq
 
 # ── Services & Catalog ───────────────────────────────
 components/features/services/       @tariq

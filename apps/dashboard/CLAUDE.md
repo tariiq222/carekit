@@ -43,7 +43,7 @@ lib/utils.ts                           pure utilities
 `services/`, `branches/`, `coupons/`, `chatbot/`,
 `intake-forms/`, `invoices/`, `ratings/`, `notifications/`,
 `activity-log/`, `users/`, `settings/`,
-`white-label/`, `zatca/`
+`branding/`, `zatca/`
 
 ## Real-time Updates
 

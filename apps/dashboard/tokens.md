@@ -6,9 +6,9 @@ If a token exists in code but not here, it's a bug in this doc — update it.
 - **Token values** live in [`app/globals.css`](./app/globals.css) as CSS custom properties
 - **Type-safe references** live in [`lib/ds.ts`](./lib/ds.ts)
 - **Tailwind mapping** happens inside the `@theme inline` block in `globals.css`
-- **Runtime white-label overrides** are injected by `BrandingProvider` via a `#carekit-dark-theme` style tag
+- **Runtime branding overrides** are injected by `BrandingProvider` via a `#carekit-dark-theme` style tag
 
-> White-label rule: clinic deployments override **brand tokens only** (`--primary`, `--accent`, `--ring`, `--sidebar-*`). Neutrals, states, and decorative tokens stay fixed.
+> Branding rule: clinic deployments override **brand tokens only** (`--primary`, `--accent`, `--ring`, `--sidebar-*`). Neutrals, states, and decorative tokens stay fixed.
 
 ---
 
@@ -28,7 +28,7 @@ If a token exists in code but not here, it's a bug in this doc — update it.
 
 - `primary` **leads** — it's the one CTA per region.
 - `accent` **highlights** — never use as a CTA or wide background.
-- Never hardcode `#354FD8` or `#82CC17` in JSX. Always use tokens so white-label works.
+- Never hardcode `#354FD8` or `#82CC17` in JSX. Always use tokens so branding works.
 
 ---
 
