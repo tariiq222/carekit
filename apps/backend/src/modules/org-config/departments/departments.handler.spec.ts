@@ -12,6 +12,7 @@ const buildPrisma = () => ({
     count: jest.fn().mockResolvedValue(1),
     findFirst: jest.fn().mockResolvedValue(mockDept),
     update: jest.fn().mockResolvedValue(mockDept),
+    updateMany: jest.fn().mockResolvedValue({ count: 1 }),
   },
   $transaction: jest.fn().mockImplementation((promises) => Promise.all(promises as unknown as unknown[])),
 });
@@ -69,13 +70,19 @@ describe('UpdateDepartmentHandler', () => {
     const prisma = buildPrisma();
     const handler = new UpdateDepartmentHandler(prisma as never);
     await handler.execute({ tenantId: 'tenant-1', departmentId: 'dept-1', nameEn: 'Updated' });
-    expect(prisma.department.update).toHaveBeenCalled();
+    expect(prisma.department.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'dept-1', tenantId: 'tenant-1' },
+      }),
+    );
   });
 
-  it('throws NotFoundException when not found', async () => {
+  it('throws NotFoundException when department not found or wrong tenant', async () => {
     const prisma = buildPrisma();
-    prisma.department.findFirst = jest.fn().mockResolvedValue(null);
+    prisma.department.updateMany = jest.fn().mockResolvedValue({ count: 0 });
     const handler = new UpdateDepartmentHandler(prisma as never);
-    await expect(handler.execute({ tenantId: 'tenant-1', departmentId: 'bad', nameEn: 'x' })).rejects.toThrow(NotFoundException);
+    await expect(
+      handler.execute({ tenantId: 'tenant-2', departmentId: 'dept-1', nameEn: 'x' }),
+    ).rejects.toThrow(NotFoundException);
   });
 });
