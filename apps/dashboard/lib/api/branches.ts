@@ -6,6 +6,7 @@ import { api } from "@/lib/api"
 import type { PaginatedResponse } from "@/lib/types/common"
 import type {
   Branch,
+  BranchEmployeeAssignment,
   BranchListQuery,
   CreateBranchPayload,
   UpdateBranchPayload,
@@ -45,5 +46,40 @@ export async function updateBranch(
   payload: UpdateBranchPayload,
 ): Promise<Branch> {
   return api.patch<Branch>(`/dashboard/organization/branches/${id}`, payload)
+}
+
+/* ─── Delete ─── */
+
+export async function deleteBranch(id: string): Promise<{ id: string }> {
+  return api.delete<{ id: string }>(`/dashboard/organization/branches/${id}`)
+}
+
+/* ─── Employees ─── */
+
+export async function fetchBranchEmployees(
+  branchId: string,
+): Promise<BranchEmployeeAssignment[]> {
+  return api.get<BranchEmployeeAssignment[]>(
+    `/dashboard/organization/branches/${branchId}/employees`,
+  )
+}
+
+export async function assignEmployeeToBranch(
+  branchId: string,
+  employeeId: string,
+): Promise<BranchEmployeeAssignment> {
+  return api.post<BranchEmployeeAssignment>(
+    `/dashboard/organization/branches/${branchId}/employees`,
+    { employeeId },
+  )
+}
+
+export async function unassignEmployeeFromBranch(
+  branchId: string,
+  employeeId: string,
+): Promise<{ id: string }> {
+  return api.delete<{ id: string }>(
+    `/dashboard/organization/branches/${branchId}/employees/${employeeId}`,
+  )
 }
 

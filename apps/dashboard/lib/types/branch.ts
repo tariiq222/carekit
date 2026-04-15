@@ -10,9 +10,9 @@ export interface Branch {
   id: string
   nameAr: string
   nameEn: string
-  address: string | null
+  addressAr: string | null
+  addressEn: string | null
   phone: string | null
-  email: string | null
   isMain: boolean
   isActive: boolean
   timezone: string
@@ -20,20 +20,18 @@ export interface Branch {
   updatedAt: string
 }
 
-export interface EmployeeBranch {
+export interface BranchEmployeeAssignment {
   id: string
   employeeId: string
   branchId: string
-  isPrimary: boolean
-  createdAt: string
-  updatedAt: string
   employee: {
     id: string
-    rating: number
     isActive: boolean
-    user: { id: string; firstName: string; lastName: string; email: string }
-    specialty: string
+    specialty: string | null
     specialtyAr: string | null
+    name: string
+    nameEn: string
+    email: string | null
   }
 }
 
@@ -48,10 +46,10 @@ export interface BranchListQuery extends PaginatedQuery {
 
 export interface CreateBranchPayload {
   nameAr: string
-  nameEn: string
-  address?: string
+  nameEn?: string
+  addressAr?: string
+  addressEn?: string
   phone?: string
-  email?: string
   isMain?: boolean
   isActive?: boolean
   timezone?: string
@@ -60,9 +58,9 @@ export interface CreateBranchPayload {
 export interface UpdateBranchPayload {
   nameAr?: string
   nameEn?: string
-  address?: string
+  addressAr?: string
+  addressEn?: string
   phone?: string
-  email?: string
   isMain?: boolean
   isActive?: boolean
   timezone?: string

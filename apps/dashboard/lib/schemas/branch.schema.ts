@@ -10,7 +10,6 @@ export const branchSchema = z.object({
     (v) => !v || /^\+[1-9]\d{6,14}$/.test(v),
     { message: "أدخل الرقم بصيغة دولية مثل: +966501234567" }
   ),
-  email: z.string().email().optional().or(z.literal("")),
   isMain: z.boolean(),
   isActive: z.boolean(),
   timezone: z.string(),
