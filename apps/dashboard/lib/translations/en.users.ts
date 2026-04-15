@@ -52,7 +52,7 @@ export const enUsers: Record<string, string> = {
   "users.roles.modules.reports": "Reports",
   "users.roles.modules.notifications": "Notifications",
   "users.roles.modules.chatbot": "Chatbot",
-  "users.roles.modules.whitelabel": "White Label",
+  "users.roles.modules.branding": "Branding",
   "users.roles.modules.clients": "Clients",
   "users.roles.modules.ratings": "Ratings",
   "users.roles.modules.coupons": "Coupons",

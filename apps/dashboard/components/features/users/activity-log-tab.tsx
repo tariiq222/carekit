@@ -19,7 +19,7 @@ import { useLocale } from "@/components/locale-provider"
 
 const MODULES = [
   "bookings", "users", "employees", "payments",
-  "invoices", "services", "roles", "whitelabel", "ratings",
+  "invoices", "services", "roles", "branding", "ratings",
 ]
 
 const ACTIONS = [

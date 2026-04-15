@@ -24,7 +24,7 @@
 - BK-REC3: `monthly` is valid enum value; VALID but note `maxRecurrences` default is 12, so repeatCount: 6 is fine
 - BK-RS7: wrong status code — should be `400 INVALID_STATUS_FOR_RESCHEDULE` (already correct), but original said "completed أو ملغى" — actually applies to all non-reschedulable statuses
 - BK-CX8: admin-cancel from `in_progress`, `completed`, `cancelled`, etc. returns `409 INVALID_STATUS_FOR_ADMIN_CANCEL` — missing scenario
-- BK-SET7: read-only permission requires `whitelabel:edit`, not `bookings:edit` — doc was silent on this
+- BK-SET7: read-only permission requires `branding:edit`, not `bookings:edit` — doc was silent on this
 - Walk-in confirmation: walk_in bookings get `status=confirmed` on creation — missing scenario
 - payAtClinic: only owner/admin/staff roles can use; client calling returns 403 — missing scenario
 - No-show: only from `confirmed`, not from `checked_in` — missing forbidden transition
@@ -214,7 +214,7 @@
 | BK-SET9 | freeCancelBeforeHours=168 (الحد الأعلى) | freeCancelBeforeHours=168 | 200 + القيمة محفوظة |
 | BK-SET10 | freeCancelBeforeHours خارج النطاق | freeCancelBeforeHours=169 | 400 VALIDATION_ERROR |
 | BK-SET11 | waitlistMaxPerSlot خارج النطاق | waitlistMaxPerSlot=51 (أكبر من 50) | 400 VALIDATION_ERROR |
-| BK-SET12 | تحديث بدون صلاحية | مستخدم بدون whitelabel:edit يستدعي PATCH | 403 FORBIDDEN |
+| BK-SET12 | تحديث بدون صلاحية | مستخدم بدون branding:edit يستدعي PATCH | 403 FORBIDDEN |
 | BK-SET13 | بدون مصادقة | PATCH /booking-settings بدون token | 401 Unauthorized |
 
 ---

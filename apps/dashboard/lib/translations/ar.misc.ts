@@ -31,10 +31,6 @@ export const arMisc: Record<string, string> = {
   "notifications.recent": "آخر الإشعارات",
   "notifications.total": "الإجمالي",
 
-  // — White Label —
-  "whiteLabel.title": "وايت ليبل",
-  "whiteLabel.description": "العلامة التجارية وبوابات الدفع والتكاملات الخارجية",
-
   // — Chatbot —
   "chatbot.col.id": "المعرف",
   "chatbot.col.user": "المستخدم",

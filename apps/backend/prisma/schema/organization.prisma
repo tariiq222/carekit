@@ -16,6 +16,8 @@ model Branch {
   latitude  Float?
   longitude Float?
   isActive  Boolean  @default(true)
+  isMain    Boolean  @default(false)
+  timezone  String   @default("Asia/Riyadh")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

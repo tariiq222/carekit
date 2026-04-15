@@ -1,9 +1,8 @@
 /**
- * WhiteLabel Types — CareKit Dashboard
- * Structured singleton (no longer EAV key-value)
+ * Branding Types — CareKit Dashboard
  */
 
-export interface WhiteLabelConfig {
+export interface BrandingConfig {
   id: string
   // Identity
   systemName:        string
@@ -29,6 +28,6 @@ export interface WhiteLabelConfig {
   updatedAt:         string
 }
 
-export type PublicBranding = Omit<WhiteLabelConfig, "id" | "domain" | "clinicCanEdit" | "createdAt" | "updatedAt">
+export type PublicBranding = Omit<BrandingConfig, "id" | "domain" | "clinicCanEdit" | "createdAt" | "updatedAt">
 
-export type UpdateWhitelabelPayload = Partial<Omit<WhiteLabelConfig, "id" | "createdAt" | "updatedAt">>
+export type UpdateBrandingPayload = Partial<Omit<BrandingConfig, "id" | "createdAt" | "updatedAt">>

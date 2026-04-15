@@ -1,4 +1,4 @@
-import type { OrganizationTheme, DerivedTokens } from '../types/theme.js'
+import type { BrandingConfig, DerivedTokens } from '../types/branding.js'
 
 function hexToRgbParts(hex: string): string {
   const clean = hex.replace('#', '')
@@ -8,7 +8,7 @@ function hexToRgbParts(hex: string): string {
   return `${r} ${g} ${b}`
 }
 
-function derivedTokens(theme: OrganizationTheme): DerivedTokens {
+function derivedTokens(theme: BrandingConfig): DerivedTokens {
   const pr = hexToRgbParts(theme.colorPrimary).replace(/ /g, ',')
   const ac = hexToRgbParts(theme.colorAccent).replace(/ /g, ',')
   return {
@@ -19,7 +19,7 @@ function derivedTokens(theme: OrganizationTheme): DerivedTokens {
   }
 }
 
-export function generateCssVariables(theme: OrganizationTheme): string {
+export function generateCssVariables(theme: BrandingConfig): string {
   const d = derivedTokens(theme)
   return `:root {
   --primary:        ${theme.colorPrimary};

@@ -6,19 +6,19 @@ import { PageHeader } from "@/components/features/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { useLocale } from "@/components/locale-provider"
-import { useWhitelabel, useUpdateWhitelabel } from "@/hooks/use-whitelabel"
+import { useBranding, useUpdateBranding } from "@/hooks/use-branding"
 import { useAuth } from "@/components/providers/auth-provider"
 
-import { BrandingTab } from "@/components/features/white-label/branding-tab"
-import type { UpdateWhitelabelPayload } from "@/lib/types/whitelabel"
+import { BrandingForm } from "@/components/features/branding/branding-form"
+import type { UpdateBrandingPayload } from "@/lib/types/branding"
 
-export default function WhiteLabelPage() {
+export default function BrandingPage() {
   const { t } = useLocale()
   const { canDo } = useAuth()
-  const { data: whitelabel, isLoading } = useWhitelabel()
-  const mutation = useUpdateWhitelabel()
+  const { data: branding, isLoading } = useBranding()
+  const mutation = useUpdateBranding()
 
-  if (!canDo("whitelabel", "edit")) {
+  if (!canDo("branding", "edit")) {
     return (
       <ListPageShell>
         <Breadcrumbs />
@@ -29,7 +29,7 @@ export default function WhiteLabelPage() {
     )
   }
 
-  const handleSave = (data: UpdateWhitelabelPayload) => {
+  const handleSave = (data: UpdateBrandingPayload) => {
     mutation.mutate(data, {
       onSuccess: () => toast.success(t("settings.saved")),
       onError: () => toast.error(t("settings.error")),
@@ -40,7 +40,7 @@ export default function WhiteLabelPage() {
     return (
       <ListPageShell>
         <Breadcrumbs />
-        <PageHeader title={t("whiteLabel.title")} description={t("whiteLabel.description")} />
+        <PageHeader title={t("branding.title")} description={t("branding.description")} />
         <div className="space-y-4">
           <Skeleton className="h-10 w-full sm:w-96" />
           <Skeleton className="h-[300px] rounded-lg" />
@@ -52,10 +52,10 @@ export default function WhiteLabelPage() {
   return (
     <ListPageShell>
       <Breadcrumbs />
-      <PageHeader title={t("whiteLabel.title")} description={t("whiteLabel.description")} />
+      <PageHeader title={t("branding.title")} description={t("branding.description")} />
 
-      <BrandingTab
-        whitelabel={whitelabel ?? null}
+      <BrandingForm
+        branding={branding ?? null}
         onSave={handleSave}
         isPending={mutation.isPending}
       />

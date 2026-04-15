@@ -31,10 +31,6 @@ export const enMisc: Record<string, string> = {
   "notifications.recent": "Recent Notifications",
   "notifications.total": "Total",
 
-  // — White Label —
-  "whiteLabel.title": "White Label",
-  "whiteLabel.description": "Branding, payment gateways, and third-party integrations",
-
   // — Chatbot —
   "chatbot.col.id": "ID",
   "chatbot.col.user": "User",

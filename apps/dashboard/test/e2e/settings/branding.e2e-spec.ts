@@ -1,24 +1,24 @@
 /**
- * CareKit Dashboard — Whitelabel Page E2E Tests
+ * CareKit Dashboard — Branding Page E2E Tests
  *
- * The /white-label route has tabs: العلامة التجارية (Branding), الدفع (Payment), التكاملات (Integrations)
+ * The /branding route has tabs: العلامة التجارية (Branding), الدفع (Payment), التكاملات (Integrations)
  */
 
 import { test, expect } from '../setup/fixtures';
 
-test.describe('Whitelabel page', () => {
+test.describe('Branding page', () => {
   test.beforeEach(async ({ adminPage, goto }) => {
-    await goto('/white-label');
+    await goto('/branding');
     await adminPage.waitForLoadState('networkidle').catch(() => {});
   });
 
   test('loads without being redirected to login', async ({ adminPage }) => {
-    await expect(adminPage).toHaveURL(/\/white-label/);
+    await expect(adminPage).toHaveURL(/\/branding/);
     await expect(adminPage.locator('#email')).not.toBeVisible();
   });
 
   test('shows the page title', async ({ adminPage }) => {
-    await expect(adminPage.getByText('وايت ليبل').first()).toBeVisible({ timeout: 12_000 });
+    await expect(adminPage.getByText('العلامة التجارية').first()).toBeVisible({ timeout: 12_000 });
   });
 
   test('renders tab navigation', async ({ adminPage }) => {

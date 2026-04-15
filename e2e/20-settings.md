@@ -1,36 +1,31 @@
 # الإعدادات (Settings)
-> يشمل: Whitelabel · ساعات العمل · الإجازات · قوالب البريد
+> يشمل: Branding · ساعات العمل · الإجازات · قوالب البريد
 
 ---
 
-## Whitelabel (هوية العيادة)
+## Branding (هوية العيادة)
 
-### قراءة الإعدادات
+> الصلاحيات: `branding:edit` للكتابة. الـ endpoint العام مفتوح (بدون auth) ومقيّد بـ throttle (30/min).
 
-| # | الاسم | الوصف | النتيجة المتوقعة |
-|---|-------|-------|-----------------|
-| WL-L1 | الإعدادات العامة | GET /whitelabel/public (بدون auth) | 200 + شعار + اسم + ألوان |
-| WL-L2 | كل الإعدادات (admin) | GET /whitelabel/config | 200 + مصفوفة key/value |
-| WL-L3 | خريطة الإعدادات | GET /whitelabel/config/map | 200 + `{ key: value }` |
-| WL-L4 | إعداد بمفتاح | GET /whitelabel/config/:key | 200 + القيمة |
-| WL-L5 | مفتاح غير موجود | GET /whitelabel/config/unknown_key | 404 NOT_FOUND |
-
-### تحديث الإعدادات
+### قراءة
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
-| WL-U1 | تحديث متعدد | PUT /whitelabel/config + مصفوفة key/value | 200 + محدّثة |
-| WL-U2 | تحديث اسم العيادة | `key: "clinic_name", value: "عيادتي"` | 200 + محفوظ |
-| WL-U3 | مصفوفة فارغة | configs: [] | 400 VALIDATION_ERROR (min 1) |
-| WL-U4 | value طويلة | أكثر من 2000 حرف | 400 VALIDATION_ERROR |
-| WL-U5 | key طويل | أكثر من 255 حرف | 400 VALIDATION_ERROR |
+| BR-L1 | الهوية العامة | GET /public/branding/:tenantId (بدون auth) | 200 + BrandingConfig (اسم + شعار + ألوان + خط) |
+| BR-L2 | tenantId غير صالح | UUID سيئ الصياغة | 400 VALIDATION_ERROR |
+| BR-L3 | هوية admin | GET /dashboard/organization/branding | 200 + BrandingConfig مع defaults لو فارغة |
 
-### حذف إعداد
+### تحديث
 
 | # | الاسم | الوصف | النتيجة المتوقعة |
 |---|-------|-------|-----------------|
-| WL-D1 | حذف مفتاح | DELETE /whitelabel/config/:key | 200 + محذوف |
-| WL-D2 | مفتاح غير موجود | key وهمي | 404 NOT_FOUND |
+| BR-U1 | تحديث كامل | POST /dashboard/organization/branding + الحقول المنظمة | 200 + BrandingConfig محدّثة |
+| BR-U2 | تحديث اسم العيادة | `clinicNameAr: "عيادتي"` | 200 + محفوظ |
+| BR-U3 | hex صالح | `primaryColor: "#354FD8"` | 200 + محفوظ |
+| BR-U4 | hex غير صالح | `primaryColor: "blue"` | 400 VALIDATION_ERROR |
+| BR-U5 | clinicNameAr فارغ | required field | 400 VALIDATION_ERROR |
+| BR-U6 | clinicNameAr طويل | أكثر من 200 حرف | 400 VALIDATION_ERROR |
+| BR-U7 | بدون صلاحية | مستخدم بدون `branding:edit` | 403 FORBIDDEN |
 
 ---
 

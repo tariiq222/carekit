@@ -1,7 +1,7 @@
 import { colors, typography, spacing, radius, rnShadows, animations } from '@carekit/shared/tokens';
-import type { OrganizationTheme } from '@carekit/shared/types';
+import type { BrandingConfig } from '@carekit/shared/types';
 
-export function buildTheme(overrides?: Partial<OrganizationTheme>) {
+export function buildTheme(overrides?: Partial<BrandingConfig>) {
   return {
     colors: {
       ...colors,

@@ -11,4 +11,6 @@ export class UpdateBranchDto {
   @IsOptional() @IsLatitude() latitude?: number;
   @IsOptional() @IsLongitude() longitude?: number;
   @IsOptional() @IsBoolean() isActive?: boolean;
+  @IsOptional() @IsBoolean() isMain?: boolean;
+  @IsOptional() @IsString() timezone?: string;
 }

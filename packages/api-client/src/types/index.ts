@@ -8,7 +8,7 @@ export type {
   CreateUserPayload,
   UpdateUserPayload,
 } from './user.js'
-export type { WhitelabelConfig } from './whitelabel.js'
+export type { BrandingConfig, UpdateBrandingPayload } from './branding.js'
 export type { FeatureFlags } from './feature-flags.js'
 export { DEFAULT_FEATURE_FLAGS } from './feature-flags.js'
 export type { PaginationMeta, PaginatedResponse, PaginationParams } from './api.js'

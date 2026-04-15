@@ -15,7 +15,7 @@ export interface FeatureFlags {
   zatca: boolean
   intakeForms: boolean
   chatbot: boolean
-  whitelabel: boolean
+  branding: boolean
   ratings: boolean
   notifications: boolean
   integrations: boolean
@@ -40,7 +40,7 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   zatca: true,
   intakeForms: true,
   chatbot: true,
-  whitelabel: true,
+  branding: true,
   ratings: true,
   notifications: true,
   integrations: true,

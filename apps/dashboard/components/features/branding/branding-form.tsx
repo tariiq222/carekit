@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { useBranding } from "@/components/providers/branding-provider"
 import { isValidHex, hexToRgb, contrastRatio, pickForeground } from "@/lib/color-utils"
 import { useLocale } from "@/components/locale-provider"
-import type { WhiteLabelConfig, UpdateWhitelabelPayload } from "@/lib/types/whitelabel"
+import type { BrandingConfig, UpdateBrandingPayload } from "@/lib/types/branding"
 
 function ContrastBadge({ ratio, label }: { ratio: number; label?: string }) {
   const pass = ratio >= 4.5
@@ -29,12 +29,12 @@ function ContrastBadge({ ratio, label }: { ratio: number; label?: string }) {
 }
 
 interface Props {
-  whitelabel: WhiteLabelConfig | null
-  onSave: (data: UpdateWhitelabelPayload) => void
+  branding: BrandingConfig | null
+  onSave: (data: UpdateBrandingPayload) => void
   isPending: boolean
 }
 
-export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
+export function BrandingForm({ branding, onSave, isPending }: Props) {
   const { t } = useLocale()
   const [systemName, setSystemName] = useState("")
   const [systemNameAr, setSystemNameAr] = useState("")
@@ -53,21 +53,21 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
   const { preview, clearPreview, apply } = useBranding()
 
   useEffect(() => {
-    if (!whitelabel) return
-    setSystemName(whitelabel.systemName ?? "")
-    setSystemNameAr(whitelabel.systemNameAr ?? "")
-    setProductTagline(whitelabel.productTagline ?? "")
-    setColorPrimary(whitelabel.colorPrimary ?? "")
-    setColorPrimaryLight(whitelabel.colorPrimaryLight ?? "")
-    setColorPrimaryDark(whitelabel.colorPrimaryDark ?? "")
-    setColorAccent(whitelabel.colorAccent ?? "")
-    setColorAccentDark(whitelabel.colorAccentDark ?? "")
-    setColorBackground(whitelabel.colorBackground ?? "")
-    setFontFamily(whitelabel.fontFamily ?? "")
-    setFontUrl(whitelabel.fontUrl ?? "")
-    setLogoUrl(whitelabel.logoUrl ?? "")
-    setFaviconUrl(whitelabel.faviconUrl ?? "")
-  }, [whitelabel])
+    if (!branding) return
+    setSystemName(branding.systemName ?? "")
+    setSystemNameAr(branding.systemNameAr ?? "")
+    setProductTagline(branding.productTagline ?? "")
+    setColorPrimary(branding.colorPrimary ?? "")
+    setColorPrimaryLight(branding.colorPrimaryLight ?? "")
+    setColorPrimaryDark(branding.colorPrimaryDark ?? "")
+    setColorAccent(branding.colorAccent ?? "")
+    setColorAccentDark(branding.colorAccentDark ?? "")
+    setColorBackground(branding.colorBackground ?? "")
+    setFontFamily(branding.fontFamily ?? "")
+    setFontUrl(branding.fontUrl ?? "")
+    setLogoUrl(branding.logoUrl ?? "")
+    setFaviconUrl(branding.faviconUrl ?? "")
+  }, [branding])
 
   const updatePreview = useCallback(
     (primary: string, accent: string) => {
@@ -122,11 +122,11 @@ export function BrandingTab({ whitelabel, onSave, isPending }: Props) {
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>{t("whiteLabel.systemName")}</Label>
+            <Label>{t("branding.systemName")}</Label>
             <Input value={systemName} onChange={(e) => setSystemName(e.target.value)} dir="ltr" placeholder="CareKit Clinic" />
           </div>
           <div className="space-y-2">
-            <Label>{t("whiteLabel.systemNameAr")}</Label>
+            <Label>{t("branding.systemNameAr")}</Label>
             <Input value={systemNameAr} onChange={(e) => setSystemNameAr(e.target.value)} dir="rtl" placeholder="عيادة كيركت" />
           </div>
           <div className="space-y-2 sm:col-span-2">

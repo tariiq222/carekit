@@ -10,7 +10,7 @@ export const MODULES = {
   RATINGS: 'ratings',
   ROLES: 'roles',
   NOTIFICATIONS: 'notifications',
-  WHITELABEL: 'whitelabel',
+  BRANDING: 'branding',
   REPORTS: 'reports',
   CHATBOT: 'chatbot',
 } as const;

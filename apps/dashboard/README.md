@@ -73,7 +73,7 @@ lib/translations/              ← i18n strings (ar + en)
 | Financial | payments, invoices, coupons |
 | Compliance | zatca |
 | Catalog | services, branches, intake-forms |
-| Config | settings, white-label |
+| Config | settings, branding |
 | Users | users |
 | AI & Comms | chatbot, notifications |
 | Operations | reports, ratings, activity-log |
