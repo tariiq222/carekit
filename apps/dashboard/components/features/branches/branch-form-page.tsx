@@ -69,7 +69,9 @@ export function BranchFormPage(props: Props) {
     const payload = {
       nameAr: data.nameAr,
       nameEn: data.nameEn,
+      // Single address field maps to both locale columns so they stay in sync
       addressAr: data.address || undefined,
+      addressEn: data.address || undefined,
       phone: data.phone || undefined,
       isMain: data.isMain,
       isActive: data.isActive,

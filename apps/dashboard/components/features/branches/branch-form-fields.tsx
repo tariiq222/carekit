@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { SectionHeader } from "@/components/features/section-header"
 import { useLocale } from "@/components/locale-provider"
+import type { BranchFormData } from "@/lib/schemas/branch.schema"
 
 const TIMEZONES = [
   "Asia/Riyadh", "Asia/Dubai", "Asia/Kuwait", "Asia/Bahrain",
@@ -28,8 +29,7 @@ const TIMEZONES = [
 ]
 
 interface BranchFormFieldsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: UseFormReturn<any>
+  form: UseFormReturn<BranchFormData>
   isEdit: boolean
   mode: "create" | "edit"
 }

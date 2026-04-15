@@ -23,17 +23,28 @@ const mockBranch = {
   holidays: [],
 };
 
-const buildPrisma = (overrides: Record<string, unknown> = {}) => ({
-  branch: {
+const buildPrisma = (overrides: Record<string, unknown> = {}) => {
+  const branchMethods = {
     findFirst: jest.fn(),
     create: jest.fn().mockResolvedValue(mockBranch),
     update: jest.fn().mockResolvedValue(mockBranch),
     findMany: jest.fn().mockResolvedValue([mockBranch]),
     count: jest.fn().mockResolvedValue(1),
-  },
-  $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
-  ...overrides,
-});
+  };
+  return {
+    branch: branchMethods,
+    // Supports both array form (list/count) and interactive callback form (create/update)
+    $transaction: jest.fn((opsOrFn: unknown) => {
+      if (typeof opsOrFn === 'function') {
+        // Interactive transaction: call callback with a tx proxy that delegates to branchMethods
+        const tx = { branch: branchMethods };
+        return opsOrFn(tx);
+      }
+      return Promise.all(opsOrFn as Promise<unknown>[]);
+    }),
+    ...overrides,
+  };
+};
 
 describe('CreateBranchHandler', () => {
   it('creates branch when name is unique', async () => {
