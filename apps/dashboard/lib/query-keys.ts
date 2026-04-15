@@ -201,10 +201,10 @@ export const queryKeys = {
     detail: (slug: string) => ["email-templates", "detail", slug] as const,
   },
 
-  /* ─── WhiteLabel ─── */
-  whitelabel: {
-    all: ["whitelabel"] as const,
-    config: () => ["whitelabel", "config"] as const,
+  /* ─── Branding ─── */
+  branding: {
+    all: ["branding"] as const,
+    config: () => ["branding", "config"] as const,
   },
 
   /* ─── Waitlist ─── */
