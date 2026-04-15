@@ -1,5 +1,4 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { UploadAvatarHandler } from './upload-avatar.handler';
 import { UploadFileHandler } from '../../../media/files/upload-file.handler';
 import { PrismaService } from '../../../../infrastructure/database';
@@ -8,8 +7,7 @@ const TENANT = '00000000-0000-0000-0000-000000000001';
 const EMPLOYEE_ID = '00000000-0000-0000-0000-000000000002';
 const MAX_AVATAR_BYTES = 1 * 1024 * 1024;
 
-// Fake File row shape returned by UploadFileHandler.execute (Prisma File model).
-// The real model has no `url` field — bucket + storageKey are used to compose it.
+// Fake File row shape returned by UploadFileHandler.execute — now includes `url`.
 const MOCK_FILE_ROW = {
   id: 'file-9',
   bucket: 'carekit',
@@ -18,10 +16,10 @@ const MOCK_FILE_ROW = {
   mimetype: 'image/png',
   size: 1024,
   tenantId: TENANT,
+  url: 'https://cdn/new.png',
 } as const;
 
-// Expected URL: ${MINIO_PUBLIC_URL}/${bucket}/${storageKey}
-const EXPECTED_URL = `https://cdn/${MOCK_FILE_ROW.bucket}/${MOCK_FILE_ROW.storageKey}`;
+const EXPECTED_URL = MOCK_FILE_ROW.url;
 
 function makeHandler(overrides: {
   employeeExists?: boolean;
@@ -44,14 +42,7 @@ function makeHandler(overrides: {
     : jest.fn().mockResolvedValue(overrides.uploadResult ?? MOCK_FILE_ROW);
   const uploadFile = { execute: uploadFileExecute } as unknown as UploadFileHandler;
 
-  const config = {
-    getOrThrow: (k: string) => {
-      if (k === 'MINIO_PUBLIC_URL') return 'https://cdn';
-      return 'carekit';
-    },
-  } as unknown as ConfigService;
-
-  const handler = new UploadAvatarHandler(prisma, uploadFile, config);
+  const handler = new UploadAvatarHandler(prisma, uploadFile);
   return { handler, employeeFindUnique, employeeUpdate, uploadFileExecute };
 }
 

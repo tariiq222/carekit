@@ -1,5 +1,4 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../infrastructure/database';
 import { UploadFileHandler } from '../../../media/files/upload-file.handler';
 
@@ -20,15 +19,10 @@ export type UploadAvatarCommand = {
 
 @Injectable()
 export class UploadAvatarHandler {
-  private readonly publicBase: string;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadFile: UploadFileHandler,
-    config: ConfigService,
-  ) {
-    this.publicBase = config.getOrThrow<string>('MINIO_PUBLIC_URL');
-  }
+  ) {}
 
   async execute(
     cmd: UploadAvatarCommand,
@@ -63,7 +57,7 @@ export class UploadAvatarHandler {
       buffer,
     );
 
-    const url = `${this.publicBase}/${file.bucket}/${file.storageKey}`;
+    const { url } = file;
 
     await this.prisma.employee.update({
       where: { id: cmd.employeeId, tenantId: cmd.tenantId },

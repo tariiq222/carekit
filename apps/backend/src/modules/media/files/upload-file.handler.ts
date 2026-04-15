@@ -2,7 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';
-import { FileVisibility } from '@prisma/client';
+import { File, FileVisibility } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
 import { UploadFileDto } from './upload-file.dto';
@@ -40,7 +40,7 @@ export class UploadFileHandler {
     this.defaultBucket = config.getOrThrow<string>('MINIO_BUCKET');
   }
 
-  async execute(cmd: UploadFileCommand, buffer: Buffer) {
+  async execute(cmd: UploadFileCommand, buffer: Buffer): Promise<File & { url: string }> {
     if (!buffer || buffer.length === 0) {
       throw new BadRequestException('Empty file buffer');
     }
@@ -57,9 +57,9 @@ export class UploadFileHandler {
     const ext = extname(cmd.filename).toLowerCase();
     const storageKey = `${cmd.tenantId}/${randomUUID()}${ext}`;
 
-    await this.storage.uploadFile(this.defaultBucket, storageKey, buffer, cmd.mimetype);
+    const url = await this.storage.uploadFile(this.defaultBucket, storageKey, buffer, cmd.mimetype);
 
-    return this.prisma.file.create({
+    const file = await this.prisma.file.create({
       data: {
         tenantId: cmd.tenantId,
         bucket: this.defaultBucket,
@@ -73,5 +73,7 @@ export class UploadFileHandler {
         uploadedBy: cmd.uploadedBy,
       },
     });
+
+    return Object.assign(file, { url });
   }
 }
