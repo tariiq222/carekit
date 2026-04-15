@@ -112,13 +112,13 @@ describe("queryKeys", () => {
     })
   })
 
-  describe("whitelabel", () => {
+  describe("branding", () => {
     it("config returns stable key", () => {
-      expect(queryKeys.whitelabel.config()).toEqual(["whitelabel", "config"])
+      expect(queryKeys.branding.config()).toEqual(["branding", "config"])
     })
 
     it("all returns base key", () => {
-      expect(queryKeys.whitelabel.all).toEqual(["whitelabel"])
+      expect(queryKeys.branding.all).toEqual(["branding"])
     })
   })
 
