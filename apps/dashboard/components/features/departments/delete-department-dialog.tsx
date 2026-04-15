@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useLocale } from "@/components/locale-provider"
+import { useDepartmentMutations } from "@/hooks/use-departments"
 import type { Department } from "@/lib/types/department"
 
 interface DeleteDepartmentDialogProps {
@@ -27,14 +28,21 @@ export function DeleteDepartmentDialog({
   onOpenChange,
 }: DeleteDepartmentDialogProps) {
   const { t, locale } = useLocale()
+  const { deleteMut } = useDepartmentMutations()
 
   const name = department
     ? (locale === "ar" ? department.nameAr : department.nameEn)
     : ""
 
-  const handleDelete = () => {
-    toast.error(t("departments.delete.error"))
-    onOpenChange(false)
+  const handleDelete = async () => {
+    if (!department) return
+    try {
+      await deleteMut.mutateAsync(department.id)
+      toast.success(t("departments.delete.success"))
+      onOpenChange(false)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("departments.delete.error"))
+    }
   }
 
   return (
@@ -47,14 +55,17 @@ export function DeleteDepartmentDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteMut.isPending}>
             {t("departments.delete.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
+            disabled={deleteMut.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {t("departments.delete.submit")}
+            {deleteMut.isPending
+              ? t("departments.delete.submitting")
+              : t("departments.delete.submit")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
