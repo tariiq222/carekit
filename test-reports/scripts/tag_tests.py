@@ -29,11 +29,9 @@ ID_TO_MODULE = {
     "PY": "Payments",
     "AU": "Auth",
     "SV": "Services",
-    "WL": "Whitelabel",
-    "ZT": "ZATCA",
-    "BH": "OrgConfig",
-    "ET": "Comms",
-    "A11Y": "Accessibility",
+    "AI": "AI Chatbot",
+    "CH": "Chat",
+    "NT": "Notifications",
 }
 
 # FLOW prefixes for cross-feature lifecycle tests (Phase 3).
@@ -136,9 +134,9 @@ def process_file(path: Path) -> int:
         tid = m.group("tid").upper()
         prefix_code = tid.split("-")[0]
         module = ID_TO_MODULE.get(prefix_code, "Uncategorized")
-        # لـ CL-UI-###  نجعل الـ module = Clients لكن prefix_code = CL
-        if prefix_code == "CL" and "UI" in tid:
-            module = "Clients"
+        # Generic -UI- rollup: NT-UI-### rolls up under Notifications, same shape as CL-UI-
+        if "UI" in tid and prefix_code in ID_TO_MODULE:
+            module = ID_TO_MODULE[prefix_code]
         # FLOW-BLC-01 → module=Flows, slice from second segment
         is_flow = prefix_code == "FLOW"
         if is_flow:
