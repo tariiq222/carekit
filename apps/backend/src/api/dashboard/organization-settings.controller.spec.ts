@@ -20,15 +20,19 @@ function buildController() {
   const upsertOrgSettings = fn({ id: 'os-1' });
   const getBookingSettings = fn({ id: 'bs-1' });
   const upsertBookingSettings = fn({ id: 'bs-1' });
+  const setServiceBookingConfigs = fn({ id: 'sbc-1' });
+  const getServiceBookingConfigs = fn({ id: 'sbc-1' });
+  const uploadLogo = fn({ fileId: 'f-1', url: 'https://example.com/logo.png' });
   const controller = new DashboardOrganizationSettingsController(
     createService as never, updateService as never, listServices as never, archiveService as never,
-    upsertBranding as never, getBranding as never,
+    upsertBranding as never, getBranding as never, uploadLogo as never,
     createIntakeForm as never, getIntakeForm as never, listIntakeForms as never,
     deleteIntakeForm as never, submitRating as never, listRatings as never,
     getOrgSettings as never, upsertOrgSettings as never,
     getBookingSettings as never, upsertBookingSettings as never,
+    setServiceBookingConfigs as never, getServiceBookingConfigs as never,
   );
-  return { controller, createService, updateService, listServices, archiveService, upsertBranding, getBranding, createIntakeForm, getIntakeForm, listIntakeForms, deleteIntakeForm, submitRating, listRatings, getOrgSettings, upsertOrgSettings, getBookingSettings, upsertBookingSettings };
+  return { controller, createService, updateService, listServices, archiveService, upsertBranding, getBranding, uploadLogo, createIntakeForm, getIntakeForm, listIntakeForms, deleteIntakeForm, submitRating, listRatings, getOrgSettings, upsertOrgSettings, getBookingSettings, upsertBookingSettings, setServiceBookingConfigs, getServiceBookingConfigs };
 }
 
 describe('DashboardOrganizationSettingsController', () => {

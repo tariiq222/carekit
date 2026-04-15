@@ -1,7 +1,9 @@
 import {
   Controller, Get, Post, Patch, Put, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
+  UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
@@ -34,6 +36,7 @@ import { UpsertOrgSettingsHandler } from '../../modules/org-experience/org-setti
 import { UpsertOrgSettingsDto } from '../../modules/org-experience/org-settings/upsert-org-settings.dto';
 import { GetBookingSettingsHandler } from '../../modules/bookings/get-booking-settings/get-booking-settings.handler';
 import { UpsertBookingSettingsHandler } from '../../modules/bookings/upsert-booking-settings/upsert-booking-settings.handler';
+import { UploadLogoHandler } from '../../modules/org-experience/branding/upload-logo/upload-logo.handler';
 
 @ApiTags('Services & Org')
 @ApiBearerAuth()
@@ -47,6 +50,7 @@ export class DashboardOrganizationSettingsController {
     private readonly archiveService: ArchiveServiceHandler,
     private readonly upsertBranding: UpsertBrandingHandler,
     private readonly getBranding: GetBrandingHandler,
+    private readonly uploadLogo: UploadLogoHandler,
     private readonly createIntakeForm: CreateIntakeFormHandler,
     private readonly getIntakeForm: GetIntakeFormHandler,
     private readonly listIntakeForms: ListIntakeFormsHandler,
@@ -127,6 +131,25 @@ export class DashboardOrganizationSettingsController {
   @Get('branding')
   getBrandingEndpoint(@TenantId() tenantId: string) {
     return this.getBranding.execute({ tenantId });
+  }
+
+  @Post('branding/logo')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file'))
+  uploadLogoEndpoint(
+    @TenantId() tenantId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    return this.uploadLogo.execute(
+      {
+        tenantId,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      },
+      file.buffer,
+    );
   }
 
   // ── Intake Forms ──────────────────────────────────────────────────────────

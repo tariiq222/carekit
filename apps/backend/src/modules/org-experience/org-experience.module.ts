@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
+import { MulterModule } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { DatabaseModule } from '../../infrastructure/database';
+import { MediaModule } from '../media/media.module';
 import { DashboardOrganizationSettingsController } from '../../api/dashboard/organization-settings.controller';
+import { UploadLogoHandler } from './branding/upload-logo/upload-logo.handler';
 import { CreateServiceHandler } from './services/create-service.handler';
 import { UpdateServiceHandler } from './services/update-service.handler';
 import { ListServicesHandler } from './services/list-services.handler';
@@ -30,11 +34,11 @@ const serviceHandlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, MediaModule, MulterModule.register({ storage: memoryStorage() })],
   controllers: [DashboardOrganizationSettingsController],
   providers: [
     ...serviceHandlers,
-    UpsertBrandingHandler, GetBrandingHandler,
+    UpsertBrandingHandler, GetBrandingHandler, UploadLogoHandler,
     CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler, DeleteIntakeFormHandler,
     SubmitRatingHandler, ListRatingsHandler,
     GetOrgSettingsHandler, UpsertOrgSettingsHandler,
@@ -42,7 +46,7 @@ const serviceHandlers = [
   ],
   exports: [
     ...serviceHandlers,
-    UpsertBrandingHandler, GetBrandingHandler,
+    UpsertBrandingHandler, GetBrandingHandler, UploadLogoHandler,
     CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler, DeleteIntakeFormHandler,
     SubmitRatingHandler, ListRatingsHandler,
     GetOrgSettingsHandler, UpsertOrgSettingsHandler,
