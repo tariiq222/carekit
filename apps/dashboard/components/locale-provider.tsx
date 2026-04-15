@@ -8,6 +8,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react"
+import { DirectionProvider } from "@radix-ui/react-direction"
 import { translations, type Locale } from "@/lib/translations"
 
 interface LocaleContextValue {
@@ -62,7 +63,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   return (
     <LocaleContext.Provider value={{ locale, dir, toggleLocale, t }}>
-      {children}
+      <DirectionProvider dir={dir}>{children}</DirectionProvider>
     </LocaleContext.Provider>
   )
 }
