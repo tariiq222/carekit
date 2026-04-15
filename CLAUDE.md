@@ -53,7 +53,7 @@ npm run build             # next build
 npm run typecheck         # tsc --noEmit
 npm run lint              # ESLint
 npm run test              # Vitest
-npm run test:e2e          # Playwright
+# Dashboard e2e: manual QA via Chrome DevTools MCP (see memory); Playwright removed 2026-04-16
 
 # Mobile (cd apps/mobile)
 npm run dev               # Expo start

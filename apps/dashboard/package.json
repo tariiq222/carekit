@@ -12,7 +12,6 @@
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:e2e": "playwright test --reporter=json > playwright-clients-results.json && npm run test:report",
     "test:report": "py ../../test-reports/scripts/generate_html_report.py",
     "openapi:generate": "openapi-typescript ../../apps/backend/openapi.json -o lib/types/api.generated.ts"
   },
@@ -45,9 +44,7 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.1",
     "@eslint/eslintrc": "^3",
-    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.2.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
