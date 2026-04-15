@@ -67,6 +67,8 @@ export const enBookings: Record<string, string> = {
   "bookings.create.stepLabel.booking": "Booking",
   "bookings.create.dialogTitle": "New Booking",
   "bookings.create.dialogDescription": "New booking form",
+  "bookings.create.pageTitle": "New Booking",
+  "bookings.create.pageDescription": "Create a new booking step by step",
   "bookings.create.toast.success": "Booking created successfully",
   "bookings.create.toast.error": "Failed to create booking",
   "bookings.create.changeClient": "← Change Client",

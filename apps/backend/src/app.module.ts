@@ -35,7 +35,7 @@ import { PublicModule } from './api/public/public.module';
         allowUnknown: true,
       },
     }),
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 1_000_000 }]),
     DatabaseModule,
     MessagingModule,
     AiInfraModule,

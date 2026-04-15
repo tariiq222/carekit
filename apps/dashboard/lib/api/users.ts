@@ -98,11 +98,11 @@ export async function removePermission(
   roleId: string,
   payload: AssignPermissionPayload,
 ): Promise<void> {
-  await api.post(`/roles/${roleId}/permissions/remove`, payload)
+  await api.post(`/dashboard/identity/roles/${roleId}/permissions/remove`, payload)
 }
 
 /* ─── Permissions ─── */
 
 export async function fetchPermissions(): Promise<Permission[]> {
-  return api.get<Permission[]>("/permissions")
+  return api.get<Permission[]>("/dashboard/identity/permissions")
 }

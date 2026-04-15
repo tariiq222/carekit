@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListConversationsDto } from './list-conversations.dto';
 
 export type ListConversationsCommand = Omit<ListConversationsDto, 'page' | 'limit'> & {
@@ -19,7 +20,7 @@ export class ListConversationsHandler {
       ...(cmd.employeeId ? { employeeId: cmd.employeeId } : {}),
     };
 
-    const [data, total] = await Promise.all([
+    const [items, total] = await Promise.all([
       this.prisma.chatConversation.findMany({
         where,
         orderBy: { lastMessageAt: 'desc' },
@@ -30,14 +31,6 @@ export class ListConversationsHandler {
       this.prisma.chatConversation.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: {
-        total,
-        page: cmd.page,
-        limit: cmd.limit,
-        totalPages: Math.ceil(total / cmd.limit),
-      },
-    };
+    return toListResponse(items, total, cmd.page, cmd.limit);
   }
 }

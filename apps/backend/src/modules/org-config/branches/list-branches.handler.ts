@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListBranchesDto } from './list-branches.dto';
 
 export type ListBranchesQuery = ListBranchesDto & { tenantId: string };
@@ -28,6 +29,6 @@ export class ListBranchesHandler {
       this.prisma.branch.count({ where }),
     ]);
 
-    return { items, total, page, limit };
+    return toListResponse(items, total, page, limit);
   }
 }

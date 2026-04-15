@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListCouponsDto } from './list-coupons.dto';
 
 export type ListCouponsQuery = ListCouponsDto & { tenantId: string };
@@ -24,11 +25,11 @@ export class ListCouponsHandler {
       where['isActive'] = true;
     }
 
-    const [data, total] = await this.prisma.$transaction([
+    const [items, total] = await this.prisma.$transaction([
       this.prisma.coupon.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
       this.prisma.coupon.count({ where }),
     ]);
 
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return toListResponse(items, total, page, limit);
   }
 }

@@ -17,7 +17,7 @@ describe('ListPaymentsHandler', () => {
     const prisma = buildPrisma();
     const handler = new ListPaymentsHandler(prisma as never);
     const result = await handler.execute({ tenantId: 'tenant-1', page: 1, limit: 10 });
-    expect(result.data).toHaveLength(1);
+    expect(result.items).toHaveLength(1);
     expect(result.meta.total).toBe(1);
   });
 

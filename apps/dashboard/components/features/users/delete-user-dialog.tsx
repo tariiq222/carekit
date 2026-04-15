@@ -41,7 +41,7 @@ export function DeleteUserDialog({ user, open, onOpenChange }: DeleteUserDialogP
     }
   }
 
-  const userName = user ? `${user.firstName} ${user.lastName}` : ""
+  const userName = user?.name ?? ""
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

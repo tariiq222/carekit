@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListNotificationsDto } from './list-notifications.dto';
 
 export type ListNotificationsCommand = Omit<ListNotificationsDto, 'page' | 'limit'> & {
@@ -20,7 +21,7 @@ export class ListNotificationsHandler {
       ...(cmd.unreadOnly ? { isRead: false } : {}),
     };
 
-    const [data, total] = await Promise.all([
+    const [items, total] = await Promise.all([
       this.prisma.notification.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -30,9 +31,6 @@ export class ListNotificationsHandler {
       this.prisma.notification.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: { total, page: cmd.page, limit: cmd.limit, totalPages: Math.ceil(total / cmd.limit) },
-    };
+    return toListResponse(items, total, cmd.page, cmd.limit);
   }
 }

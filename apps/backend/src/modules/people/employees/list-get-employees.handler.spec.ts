@@ -61,9 +61,9 @@ describe('List/Get Employees handlers', () => {
 
       const result = await listHandler.execute({ tenantId: 'tenant-1', page: 1, limit: 10 });
 
-      expect(result.data).toHaveLength(1);
-      expect(result.data[0].availability).toHaveLength(1);
-      expect(result.meta).toMatchObject({ total: 1, page: 1, limit: 10, totalPages: 1 });
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]?.availability).toHaveLength(1);
+      expect(result.meta).toMatchObject({ total: 1, page: 1, perPage: 10, totalPages: 1 });
     });
 
     it('filters by specialtyId', async () => {

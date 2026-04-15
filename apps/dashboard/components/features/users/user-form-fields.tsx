@@ -22,16 +22,21 @@ import {
 import { SectionHeader } from "@/components/features/section-header"
 import { useLocale } from "@/components/locale-provider"
 
-interface Role { id: string; slug: string; name: string }
+const USER_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "RECEPTIONIST",
+  "ACCOUNTANT",
+  "EMPLOYEE",
+] as const
 
 interface UserFormFieldsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: UseFormReturn<any>
   isEdit: boolean
-  roles?: Role[]
 }
 
-export function UserFormFields({ form, isEdit, roles }: UserFormFieldsProps) {
+export function UserFormFields({ form, isEdit }: UserFormFieldsProps) {
   const { t } = useLocale()
 
   return (
@@ -45,21 +50,12 @@ export function UserFormFields({ form, isEdit, roles }: UserFormFieldsProps) {
             description={t("users.create.description")}
           />
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("users.create.firstName")} *</Label>
-                <Input placeholder={t("users.create.firstName")} {...form.register("firstName")} />
-                {form.formState.errors.firstName && (
-                  <p className="text-xs text-destructive">{form.formState.errors.firstName.message as string}</p>
-                )}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("users.create.lastName")} *</Label>
-                <Input placeholder={t("users.create.lastName")} {...form.register("lastName")} />
-                {form.formState.errors.lastName && (
-                  <p className="text-xs text-destructive">{form.formState.errors.lastName.message as string}</p>
-                )}
-              </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>{t("users.create.firstName")} *</Label>
+              <Input placeholder={t("users.create.firstName")} {...form.register("name")} />
+              {form.formState.errors.name && (
+                <p className="text-xs text-destructive">{form.formState.errors.name.message as string}</p>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>{t("users.create.gender")}</Label>
@@ -138,23 +134,23 @@ export function UserFormFields({ form, isEdit, roles }: UserFormFieldsProps) {
           />
           <Controller
             control={form.control}
-            name="roleSlug"
+            name="role"
             render={({ field }) => (
               <Select value={field.value ?? ""} onValueChange={field.onChange}>
                 <SelectTrigger className="w-full sm:w-64">
                   <SelectValue placeholder={t("users.create.rolePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {roles?.map((role) => (
-                    <SelectItem key={role.id} value={role.slug}>{role.name}</SelectItem>
+                  {USER_ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>{t(`users.role.${r}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
           />
-          {(form.formState.errors as { roleSlug?: { message?: string } }).roleSlug && (
+          {(form.formState.errors as { role?: { message?: string } }).role && (
             <p className="text-xs text-destructive mt-1.5">
-              {(form.formState.errors as { roleSlug?: { message?: string } }).roleSlug?.message}
+              {(form.formState.errors as { role?: { message?: string } }).role?.message}
             </p>
           )}
         </CardContent>

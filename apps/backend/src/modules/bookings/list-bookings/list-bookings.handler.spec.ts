@@ -9,7 +9,7 @@ describe('ListBookingsHandler', () => {
     const result = await new ListBookingsHandler(prisma as never).execute({
       tenantId: 'tenant-1', page: 1, limit: 10,
     });
-    expect(result.data).toHaveLength(1);
+    expect(result.items).toHaveLength(1);
     expect(result.meta.total).toBe(1);
   });
 
@@ -62,6 +62,6 @@ describe('ListBookingsHandler', () => {
     const result = await handler.execute({ tenantId: 'tenant-1', page: 2, limit: 10 });
     expect(result.meta.totalPages).toBe(3);
     expect(result.meta.page).toBe(2);
-    expect(result.meta.limit).toBe(10);
+    expect(result.meta.perPage).toBe(10);
   });
 });

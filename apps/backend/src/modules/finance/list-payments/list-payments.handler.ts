@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListPaymentsDto } from './list-payments.dto';
 
 export type ListPaymentsQuery = Omit<ListPaymentsDto, 'fromDate' | 'toDate'> & {
@@ -28,7 +29,7 @@ export class ListPaymentsHandler {
         : {}),
     };
 
-    const [data, total] = await Promise.all([
+    const [items, total] = await Promise.all([
       this.prisma.payment.findMany({
         where,
         skip: (page - 1) * limit,
@@ -39,9 +40,6 @@ export class ListPaymentsHandler {
       this.prisma.payment.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
-    };
+    return toListResponse(items, total, page, limit);
   }
 }

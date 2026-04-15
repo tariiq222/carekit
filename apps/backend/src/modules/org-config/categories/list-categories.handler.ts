@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListCategoriesDto } from './list-categories.dto';
 
 export type ListCategoriesQuery = ListCategoriesDto & { tenantId: string };
@@ -29,6 +30,6 @@ export class ListCategoriesHandler {
       this.prisma.serviceCategory.count({ where }),
     ]);
 
-    return { items, total, page, limit };
+    return toListResponse(items, total, page, limit);
   }
 }

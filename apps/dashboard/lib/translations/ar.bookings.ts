@@ -67,6 +67,8 @@ export const arBookings: Record<string, string> = {
   "bookings.create.stepLabel.booking": "الحجز",
   "bookings.create.dialogTitle": "حجز جديد",
   "bookings.create.dialogDescription": "نموذج إنشاء حجز جديد",
+  "bookings.create.pageTitle": "حجز جديد",
+  "bookings.create.pageDescription": "أنشئ حجزًا جديدًا خطوة بخطوة",
   "bookings.create.toast.success": "تم إنشاء الحجز بنجاح",
   "bookings.create.toast.error": "فشل إنشاء الحجز",
   "bookings.create.changeClient": "← تغيير المستفيد",

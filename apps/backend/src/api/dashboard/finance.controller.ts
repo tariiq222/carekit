@@ -1,8 +1,10 @@
 import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
+  UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { TenantId } from '../../common/tenant/tenant.decorator';
@@ -34,6 +36,8 @@ import { RefundPaymentHandler } from '../../modules/finance/refund-payment/refun
 import { RefundPaymentDto } from '../../modules/finance/refund-payment/refund-payment.dto';
 import { VerifyPaymentHandler } from '../../modules/finance/verify-payment/verify-payment.handler';
 import { VerifyPaymentDto } from '../../modules/finance/verify-payment/verify-payment.dto';
+import { BankTransferUploadHandler } from '../../modules/finance/bank-transfer-upload/bank-transfer-upload.handler';
+import { BankTransferUploadDto } from '../../modules/finance/bank-transfer-upload/bank-transfer-upload.dto';
 
 @ApiTags('Finance')
 @ApiBearerAuth()
@@ -58,6 +62,7 @@ export class DashboardFinanceController {
     private readonly getPaymentStats: GetPaymentStatsHandler,
     private readonly refundPayment: RefundPaymentHandler,
     private readonly verifyPayment: VerifyPaymentHandler,
+    private readonly bankTransferUpload: BankTransferUploadHandler,
   ) {}
 
   // ── Invoices ──────────────────────────────────────────────────────────────
@@ -92,6 +97,24 @@ export class DashboardFinanceController {
     @Body() body: ProcessPaymentDto,
   ) {
     return this.processPayment.execute({ tenantId, ...body });
+  }
+
+  @Post('payments/bank-transfer')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('receipt'))
+  bankTransferEndpoint(
+    @TenantId() tenantId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body() body: BankTransferUploadDto,
+  ) {
+    if (!file) throw new BadRequestException('receipt file is required');
+    return this.bankTransferUpload.execute({
+      tenantId,
+      ...body,
+      fileBuffer: file.buffer,
+      mimetype: file.mimetype,
+      filename: file.originalname,
+    });
   }
 
   @Get('payments')

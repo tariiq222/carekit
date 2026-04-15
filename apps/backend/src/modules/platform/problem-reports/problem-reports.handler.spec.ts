@@ -48,7 +48,7 @@ describe('ProblemReport handlers', () => {
     prisma.problemReport.findMany.mockResolvedValue([{ id: 'pr-1' }]);
     prisma.problemReport.count.mockResolvedValue(1);
     const result = await list.execute({ tenantId: 'tenant-1', page: 1, limit: 10 });
-    expect(result.data).toHaveLength(1);
+    expect(result.items).toHaveLength(1);
     expect(result.meta.total).toBe(1);
   });
 

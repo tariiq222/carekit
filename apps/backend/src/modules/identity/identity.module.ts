@@ -21,6 +21,7 @@ import { CreateRoleHandler } from './roles/create-role.handler';
 import { DeleteRoleHandler } from './roles/delete-role.handler';
 import { AssignPermissionsHandler } from './roles/assign-permissions.handler';
 import { ListRolesHandler } from './roles/list-roles.handler';
+import { ListPermissionsHandler } from './roles/list-permissions.handler';
 import { ChangePasswordHandler } from './users/change-password.handler';
 import { CaslAbilityFactory } from './casl/casl-ability.factory';
 import { DashboardIdentityController } from '../../api/dashboard/identity.controller';
@@ -30,6 +31,7 @@ const handlers = [
   GetCurrentUserHandler, CreateUserHandler, UpdateUserHandler, ListUsersHandler,
   DeactivateUserHandler, DeleteUserHandler, AssignRoleHandler, RemoveRoleHandler,
   CreateRoleHandler, DeleteRoleHandler, AssignPermissionsHandler, ListRolesHandler,
+  ListPermissionsHandler,
   ChangePasswordHandler,
 ];
 

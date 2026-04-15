@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListBookingsDto } from './list-bookings.dto';
 
 export type ListBookingsQuery = Omit<ListBookingsDto, 'page' | 'limit' | 'fromDate' | 'toDate'> & {
@@ -28,7 +29,7 @@ export class ListBookingsHandler {
         : {}),
     };
 
-    const [data, total] = await Promise.all([
+    const [items, total] = await Promise.all([
       this.prisma.booking.findMany({
         where,
         skip: (query.page - 1) * query.limit,
@@ -38,9 +39,6 @@ export class ListBookingsHandler {
       this.prisma.booking.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: { total, page: query.page, limit: query.limit, totalPages: Math.ceil(total / query.limit) },
-    };
+    return toListResponse(items, total, query.page, query.limit);
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListEmployeesDto } from './list-employees.dto';
 
 export type ListEmployeesQuery = ListEmployeesDto & {
@@ -32,7 +33,7 @@ export class ListEmployeesHandler {
       ...(query.branchId ? { branches: { some: { branchId: query.branchId } } } : {}),
     };
 
-    const [data, total] = await Promise.all([
+    const [items, total] = await Promise.all([
       this.prisma.employee.findMany({
         where,
         skip: (query.page - 1) * query.limit,
@@ -48,9 +49,6 @@ export class ListEmployeesHandler {
       this.prisma.employee.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: { total, page: query.page, limit: query.limit, totalPages: Math.ceil(total / query.limit) },
-    };
+    return toListResponse(items, total, query.page, query.limit);
   }
 }

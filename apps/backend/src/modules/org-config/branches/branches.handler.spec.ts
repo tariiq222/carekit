@@ -79,7 +79,7 @@ describe('ListBranchesHandler', () => {
     const handler = new ListBranchesHandler(prisma as never);
     const result = await handler.execute({ tenantId: 'tenant-1' });
     expect(result.items).toHaveLength(1);
-    expect(result.total).toBe(1);
+    expect(result.meta.total).toBe(1);
   });
 });
 

@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { getInitials, formatClinicDate } from "@/lib/utils"
+import { formatClinicDate } from "@/lib/utils"
 import type { DateFormat } from "@/lib/utils"
 import {
   MoreHorizontalIcon,
@@ -39,7 +39,7 @@ export function getUserColumns(
       header: t("users.col.user"),
       cell: ({ row }) => {
         const u = row.original
-        const initials = getInitials(u.firstName, u.lastName)
+        const initials = (u.name ?? "").slice(0, 2).toUpperCase() || "U"
         return (
           <div className="flex items-center gap-4">
             <Avatar className="size-8">
@@ -48,9 +48,7 @@ export function getUserColumns(
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-medium text-foreground">
-                {u.firstName} {u.lastName}
-              </p>
+              <p className="text-sm font-medium text-foreground">{u.name}</p>
               <p className="text-xs text-muted-foreground">{u.email}</p>
             </div>
           </div>
@@ -58,16 +56,12 @@ export function getUserColumns(
       },
     },
     {
-      id: "roles",
+      id: "role",
       header: t("users.col.roles"),
       cell: ({ row }) => (
-        <div className="flex flex-wrap gap-1">
-          {row.original.roles.map((r) => (
-            <Badge key={r.slug} variant="secondary" className="text-[10px]">
-              {r.name}
-            </Badge>
-          ))}
-        </div>
+        <Badge variant="secondary" className="text-[10px]">
+          {t(`users.role.${row.original.role}`)}
+        </Badge>
       ),
     },
     {

@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation"
+"use client"
+
+import { DepartmentListPage } from "@/components/features/departments/department-list-page"
 
 export default function DepartmentsRoute() {
-  redirect("/services?tab=departments")
+  return <DepartmentListPage />
 }

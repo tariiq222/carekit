@@ -19,14 +19,14 @@ import {
   removePermission,
   fetchPermissions,
 } from "@/lib/api/users"
-import type { UserListQuery } from "@/lib/types/user"
+import type { UserListQuery, UserRole } from "@/lib/types/user"
 
 /* ─── Users List ─── */
 
 export function useUsers() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
-  const [role, setRole] = useState<string | undefined>()
+  const [role, setRole] = useState<UserRole | undefined>()
 
   const query: UserListQuery = {
     page,
@@ -56,7 +56,7 @@ export function useUsers() {
     search,
     setSearch: (s: string) => { setSearch(s); setPage(1) },
     role,
-    setRole: (r: string | undefined) => { setRole(r); setPage(1) },
+    setRole: (r: UserRole | undefined) => { setRole(r); setPage(1) },
     resetFilters,
     refetch,
   }

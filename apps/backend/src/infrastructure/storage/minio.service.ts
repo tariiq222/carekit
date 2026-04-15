@@ -35,12 +35,18 @@ export class MinioService implements IStorageService, OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
-    const exists = await this.client.bucketExists(this.defaultBucket);
-    if (!exists) {
-      await this.client.makeBucket(this.defaultBucket);
-      this.logger.log(`Bucket "${this.defaultBucket}" created`);
+    try {
+      const exists = await this.client.bucketExists(this.defaultBucket);
+      if (!exists) {
+        await this.client.makeBucket(this.defaultBucket);
+        this.logger.log(`Bucket "${this.defaultBucket}" created`);
+      }
+      this.logger.log('MinIO connected');
+    } catch (err) {
+      // Dev convenience: allow the server to boot without MinIO for UI-only workflows.
+      // File upload endpoints will still fail at call time if MinIO is unreachable.
+      this.logger.warn(`MinIO unavailable — file storage disabled: ${(err as Error).message}`);
     }
-    this.logger.log('MinIO connected');
   }
 
   async uploadFile(bucket: string, key: string, buffer: Buffer, mimetype: string): Promise<string> {

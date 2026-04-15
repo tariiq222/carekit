@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListClientsDto } from './list-clients.dto';
 import { serializeClient } from './client.serializer';
 
@@ -43,18 +44,6 @@ export class ListClientsHandler {
       this.prisma.client.count({ where }),
     ]);
 
-    const totalPages = Math.max(1, Math.ceil(total / query.limit));
-
-    return {
-      items: items.map(serializeClient),
-      meta: {
-        total,
-        page: query.page,
-        perPage: query.limit,
-        totalPages,
-        hasNextPage: query.page < totalPages,
-        hasPreviousPage: query.page > 1,
-      },
-    };
+    return toListResponse(items.map(serializeClient), total, query.page, query.limit);
   }
 }

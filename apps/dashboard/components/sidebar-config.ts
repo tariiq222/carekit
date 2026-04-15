@@ -41,6 +41,8 @@ export const organizationNav: NavItem[] = [
   { titleKey: "nav.clients", href: "/clients", icon: UserMultiple02Icon },
   { titleKey: "nav.employees", href: "/employees", icon: Stethoscope02Icon },
   { titleKey: "nav.services", href: "/services", icon: GridIcon },
+  { titleKey: "nav.categories", href: "/categories", icon: GridIcon },
+  { titleKey: "nav.departments", href: "/departments", icon: Building06Icon },
   { titleKey: "nav.branches", href: "/branches", icon: Building06Icon, featureFlag: "multi_branch" },
   { titleKey: "nav.intakeForms", href: "/intake-forms", icon: DocumentValidationIcon, featureFlag: "intake_forms" },
 ]

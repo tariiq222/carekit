@@ -278,6 +278,7 @@ export const enOps: Record<string, string> = {
 
   // ─── Departments ───
   "nav.departments": "Departments",
+  "nav.categories": "Categories",
   "departments.title": "Departments",
   "departments.description": "Manage clinic departments and service organization",
   "departments.addDepartment": "Add Department",

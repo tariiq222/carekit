@@ -1,13 +1,40 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { PaymentStatus } from '@prisma/client';
+import { InvoiceStatus, PaymentStatus } from '@prisma/client';
 import { RefundPaymentHandler } from './refund-payment/refund-payment.handler';
 import { VerifyPaymentHandler } from './verify-payment/verify-payment.handler';
 
-const buildPrisma = () => ({
-  payment: {
-    findFirst: jest.fn(),
-    update: jest.fn(),
-  },
+const buildPrisma = () => {
+  const prisma: {
+    payment: {
+      findFirst: jest.Mock;
+      update: jest.Mock;
+      aggregate: jest.Mock;
+    };
+    invoice: {
+      findFirst: jest.Mock;
+      findUnique: jest.Mock;
+      update: jest.Mock;
+    };
+    $transaction: jest.Mock;
+  } = {
+    payment: {
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      aggregate: jest.fn(),
+    },
+    invoice: {
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+    $transaction: jest.fn(async (fn) => fn(prisma)),
+  };
+  return prisma;
+};
+
+const buildEventBus = () => ({
+  publish: jest.fn().mockResolvedValue(undefined),
+  subscribe: jest.fn(),
 });
 
 const TENANT = 'tenant-1';
@@ -53,15 +80,49 @@ describe('RefundPaymentHandler', () => {
 });
 
 describe('VerifyPaymentHandler', () => {
-  it('approves (sets COMPLETED) when action is approve', async () => {
+  const INVOICE_ID = 'inv-1';
+
+  it('approves (sets COMPLETED), flips invoice to PAID, and publishes PaymentCompletedEvent', async () => {
     const prisma = buildPrisma();
-    const pendingPayment = { id: PAY_ID, tenantId: TENANT, status: PaymentStatus.PENDING_VERIFICATION, gatewayRef: null };
-    const verified = { ...pendingPayment, status: PaymentStatus.COMPLETED, processedAt: new Date(), gatewayRef: 'REF-123' };
+    const eventBus = buildEventBus();
+    const pendingPayment = {
+      id: PAY_ID,
+      tenantId: TENANT,
+      invoiceId: INVOICE_ID,
+      amount: 230,
+      status: PaymentStatus.PENDING_VERIFICATION,
+      gatewayRef: null,
+    };
+    const verified = {
+      ...pendingPayment,
+      status: PaymentStatus.COMPLETED,
+      processedAt: new Date(),
+      gatewayRef: 'REF-123',
+    };
     prisma.payment.findFirst.mockResolvedValue(pendingPayment);
     prisma.payment.update.mockResolvedValue(verified);
+    prisma.invoice.findFirst.mockResolvedValue({
+      id: INVOICE_ID,
+      tenantId: TENANT,
+      total: 230,
+      currency: 'SAR',
+      bookingId: 'book-1',
+    });
+    prisma.payment.aggregate.mockResolvedValue({ _sum: { amount: 230 } });
+    prisma.invoice.update.mockResolvedValue({ id: INVOICE_ID, status: InvoiceStatus.PAID });
+    prisma.invoice.findUnique.mockResolvedValue({
+      id: INVOICE_ID,
+      bookingId: 'book-1',
+      currency: 'SAR',
+    });
 
-    const handler = new VerifyPaymentHandler(prisma as never);
-    const result = await handler.execute({ tenantId: TENANT, paymentId: PAY_ID, action: 'approve', transferRef: 'REF-123' });
+    const handler = new VerifyPaymentHandler(prisma as never, eventBus as never);
+    const result = await handler.execute({
+      tenantId: TENANT,
+      paymentId: PAY_ID,
+      action: 'approve',
+      transferRef: 'REF-123',
+    });
 
     expect(result.status).toBe(PaymentStatus.COMPLETED);
     expect(prisma.payment.update).toHaveBeenCalledWith(
@@ -70,16 +131,59 @@ describe('VerifyPaymentHandler', () => {
         data: expect.objectContaining({ status: PaymentStatus.COMPLETED, gatewayRef: 'REF-123' }),
       }),
     );
+    expect(prisma.invoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: INVOICE_ID },
+        data: expect.objectContaining({ status: InvoiceStatus.PAID }),
+      }),
+    );
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      'finance.payment.completed',
+      expect.objectContaining({ payload: expect.objectContaining({ invoiceId: INVOICE_ID }) }),
+    );
+  });
+
+  it('approves partial payment → invoice marked PARTIALLY_PAID, no event emitted', async () => {
+    const prisma = buildPrisma();
+    const eventBus = buildEventBus();
+    prisma.payment.findFirst.mockResolvedValue({
+      id: PAY_ID,
+      tenantId: TENANT,
+      invoiceId: INVOICE_ID,
+      amount: 100,
+      status: PaymentStatus.PENDING_VERIFICATION,
+      gatewayRef: null,
+    });
+    prisma.payment.update.mockResolvedValue({ id: PAY_ID, status: PaymentStatus.COMPLETED, amount: 100 });
+    prisma.invoice.findFirst.mockResolvedValue({
+      id: INVOICE_ID,
+      tenantId: TENANT,
+      total: 230,
+      currency: 'SAR',
+      bookingId: 'book-1',
+    });
+    prisma.payment.aggregate.mockResolvedValue({ _sum: { amount: 100 } });
+
+    const handler = new VerifyPaymentHandler(prisma as never, eventBus as never);
+    await handler.execute({ tenantId: TENANT, paymentId: PAY_ID, action: 'approve' });
+
+    expect(prisma.invoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: InvoiceStatus.PARTIALLY_PAID }),
+      }),
+    );
+    expect(eventBus.publish).not.toHaveBeenCalled();
   });
 
   it('rejects (sets FAILED) when action is reject', async () => {
     const prisma = buildPrisma();
+    const eventBus = buildEventBus();
     const pendingPayment = { id: PAY_ID, tenantId: TENANT, status: PaymentStatus.PENDING_VERIFICATION, gatewayRef: null };
     const failed = { ...pendingPayment, status: PaymentStatus.FAILED, failureReason: 'Bank transfer rejected' };
     prisma.payment.findFirst.mockResolvedValue(pendingPayment);
     prisma.payment.update.mockResolvedValue(failed);
 
-    const handler = new VerifyPaymentHandler(prisma as never);
+    const handler = new VerifyPaymentHandler(prisma as never, eventBus as never);
     const result = await handler.execute({ tenantId: TENANT, paymentId: PAY_ID, action: 'reject' });
 
     expect(result.status).toBe(PaymentStatus.FAILED);
@@ -89,23 +193,39 @@ describe('VerifyPaymentHandler', () => {
         data: expect.objectContaining({ status: PaymentStatus.FAILED, failureReason: 'Bank transfer rejected' }),
       }),
     );
+    expect(eventBus.publish).not.toHaveBeenCalled();
   });
 
   it('throws NotFoundException when payment not found', async () => {
     const prisma = buildPrisma();
+    const eventBus = buildEventBus();
     prisma.payment.findFirst.mockResolvedValue(null);
 
     await expect(
-      new VerifyPaymentHandler(prisma as never).execute({ tenantId: TENANT, paymentId: 'bad', action: 'approve' }),
+      new VerifyPaymentHandler(prisma as never, eventBus as never).execute({
+        tenantId: TENANT,
+        paymentId: 'bad',
+        action: 'approve',
+      }),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException when payment is not PENDING_VERIFICATION', async () => {
     const prisma = buildPrisma();
-    prisma.payment.findFirst.mockResolvedValue({ id: PAY_ID, tenantId: TENANT, status: PaymentStatus.COMPLETED, gatewayRef: null });
+    const eventBus = buildEventBus();
+    prisma.payment.findFirst.mockResolvedValue({
+      id: PAY_ID,
+      tenantId: TENANT,
+      status: PaymentStatus.COMPLETED,
+      gatewayRef: null,
+    });
 
     await expect(
-      new VerifyPaymentHandler(prisma as never).execute({ tenantId: TENANT, paymentId: PAY_ID, action: 'approve' }),
+      new VerifyPaymentHandler(prisma as never, eventBus as never).execute({
+        tenantId: TENANT,
+        paymentId: PAY_ID,
+        action: 'approve',
+      }),
     ).rejects.toThrow(BadRequestException);
   });
 });

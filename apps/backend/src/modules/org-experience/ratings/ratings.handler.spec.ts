@@ -55,7 +55,7 @@ describe('ListRatingsHandler', () => {
     const handler = new ListRatingsHandler(prisma as never);
     const result = await handler.execute({ tenantId: 'tenant-1' });
     expect(result.items).toHaveLength(1);
-    expect(result.total).toBe(1);
+    expect(result.meta.total).toBe(1);
   });
 
   it('filters by employeeId', async () => {

@@ -15,7 +15,7 @@ describe('ListNotificationsHandler', () => {
     (prisma.notification.count as jest.Mock).mockResolvedValue(1);
     const handler = new ListNotificationsHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({ tenantId: 'tenant-1', recipientId: 'client-1', page: 1, limit: 20 });
-    expect(result.data).toHaveLength(1);
+    expect(result.items).toHaveLength(1);
     expect(result.meta.total).toBe(1);
   });
 

@@ -6,24 +6,27 @@ import type { SearchableQuery, UserGender } from "./common"
 
 /* ─── Entities ─── */
 
-export interface UserRole {
-  id: string
-  name: string
-  slug: string
-}
+export type UserRole =
+  | "SUPER_ADMIN"
+  | "ADMIN"
+  | "RECEPTIONIST"
+  | "ACCOUNTANT"
+  | "EMPLOYEE"
+  | "CLIENT"
 
 export interface User {
   id: string
+  tenantId: string
   email: string
-  firstName: string
-  lastName: string
+  name: string
   phone: string | null
   gender: UserGender | null
+  avatarUrl: string | null
   isActive: boolean
-  emailVerified: boolean
+  role: UserRole
+  customRoleId: string | null
   createdAt: string
   updatedAt: string
-  roles: UserRole[]
 }
 
 export interface Role {
@@ -46,7 +49,7 @@ export interface Permission {
 /* ─── Query ─── */
 
 export interface UserListQuery extends SearchableQuery {
-  role?: string
+  role?: UserRole
   isActive?: boolean
 }
 
@@ -55,19 +58,20 @@ export interface UserListQuery extends SearchableQuery {
 export interface CreateUserPayload {
   email: string
   password: string
-  firstName: string
-  lastName: string
+  name: string
+  role: UserRole
   phone?: string
   gender?: UserGender
-  roleSlug: string
+  customRoleId?: string
 }
 
 export interface UpdateUserPayload {
   email?: string
-  firstName?: string
-  lastName?: string
+  name?: string
   phone?: string
   gender?: UserGender
+  role?: UserRole
+  customRoleId?: string | null
 }
 
 export interface AssignRolePayload {

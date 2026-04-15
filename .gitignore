@@ -41,6 +41,14 @@ pic-test/*.log
 # Coverage
 coverage/
 
+# Test result artifacts
+**/test-results/
+**/test-results-*.json
+**/playwright-report/
+**/playwright-*-results.json
+test-reports/output/
+**/~$*
+
 # Docker volumes (local)
 docker/data/
 
@@ -84,3 +92,10 @@ node_modules 2/
 *.mcp 2.json
 *.mcp 3.json
 *.mcp 4.json
+
+# Python cache (from test-reports scripts)
+__pycache__/
+*.pyc
+
+# Debug artifacts
+apps/backend/_check-admin.ts

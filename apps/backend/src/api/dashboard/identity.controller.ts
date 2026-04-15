@@ -17,6 +17,7 @@ import { ListRolesHandler } from '../../modules/identity/roles/list-roles.handle
 import { CreateRoleHandler } from '../../modules/identity/roles/create-role.handler';
 import { DeleteRoleHandler } from '../../modules/identity/roles/delete-role.handler';
 import { AssignPermissionsHandler } from '../../modules/identity/roles/assign-permissions.handler';
+import { ListPermissionsHandler } from '../../modules/identity/roles/list-permissions.handler';
 import { CreateUserDto } from '../../modules/identity/users/create-user.dto';
 import { CreateRoleDto } from '../../modules/identity/roles/create-role.dto';
 import { AssignPermissionsDto } from '../../modules/identity/roles/assign-permissions.dto';
@@ -57,6 +58,7 @@ export class DashboardIdentityController {
     private readonly createRoleHandler: CreateRoleHandler,
     private readonly deleteRoleHandler: DeleteRoleHandler,
     private readonly assignPermissionsHandler: AssignPermissionsHandler,
+    private readonly listPermissionsHandler: ListPermissionsHandler,
   ) {}
 
   // ── Users ────────────────────────────────────────────────────────────────
@@ -101,7 +103,7 @@ export class DashboardIdentityController {
     @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) userId: string,
   ) {
-    await this.updateUserHandler.execute({ userId, tenantId, isActive: true } as never);
+    await this.updateUserHandler.execute({ userId, tenantId, isActive: true });
   }
 
   @Delete('users/:id')
@@ -153,6 +155,11 @@ export class DashboardIdentityController {
     @Body() body: AssignPermissionsDto,
   ) {
     await this.assignPermissionsHandler.execute({ ...body, customRoleId, tenantId });
+  }
+
+  @Get('permissions')
+  async listPermissions() {
+    return this.listPermissionsHandler.execute();
   }
 
   @Delete('roles/:id')

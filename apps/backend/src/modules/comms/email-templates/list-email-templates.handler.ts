@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { toListResponse } from '../../../common/dto';
 import { ListEmailTemplatesDto } from './list-email-templates.dto';
 
 export type ListEmailTemplatesCommand = Omit<ListEmailTemplatesDto, 'page' | 'limit'> & {
@@ -14,7 +15,7 @@ export class ListEmailTemplatesHandler {
 
   async execute(cmd: ListEmailTemplatesCommand) {
     const where = { tenantId: cmd.tenantId };
-    const [data, total] = await Promise.all([
+    const [items, total] = await Promise.all([
       this.prisma.emailTemplate.findMany({
         where,
         orderBy: { createdAt: 'asc' },
@@ -23,14 +24,6 @@ export class ListEmailTemplatesHandler {
       }),
       this.prisma.emailTemplate.count({ where }),
     ]);
-    return {
-      data,
-      meta: {
-        total,
-        page: cmd.page,
-        limit: cmd.limit,
-        totalPages: Math.ceil(total / cmd.limit),
-      },
-    };
+    return toListResponse(items, total, cmd.page, cmd.limit);
   }
 }

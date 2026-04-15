@@ -201,7 +201,7 @@ describe('ListEmailTemplatesHandler', () => {
     prisma.emailTemplate.count.mockResolvedValueOnce(1);
     const handler = new ListEmailTemplatesHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({ tenantId: 'tenant-1', page: 1, limit: 20 });
-    expect(result.data).toHaveLength(1);
+    expect(result.items).toHaveLength(1);
     expect(result.meta).toEqual({ total: 1, page: 1, limit: 20, totalPages: 1 });
     expect(prisma.emailTemplate.findMany).toHaveBeenCalledWith({
       where: { tenantId: 'tenant-1' },

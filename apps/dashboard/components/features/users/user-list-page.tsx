@@ -96,7 +96,7 @@ export function UserListPage() {
               <StatCard title={t("users.stats.total")} value={meta?.total ?? 0} icon={UserMultiple02Icon} iconColor="primary" />
               <StatCard title={t("users.stats.active")} value={users.filter((u) => u.isActive).length} icon={UserCheck01Icon} iconColor="success" />
               <StatCard title={t("users.stats.roles")} value={roles?.length ?? 0} icon={ShieldKeyIcon} iconColor="accent" />
-              <StatCard title={t("users.stats.verified")} value={users.filter((u) => u.emailVerified).length} icon={UserCheck01Icon} iconColor="success" />
+              <StatCard title={t("users.stats.inactive")} value={users.filter((u) => !u.isActive).length} icon={UserCheck01Icon} iconColor="warning" />
             </StatsGrid>
           )}
 

@@ -12,9 +12,9 @@ import { PageHeader } from "@/components/features/page-header"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useRoles, useUserMutations } from "@/hooks/use-users"
+import { useUserMutations } from "@/hooks/use-users"
 import { useLocale } from "@/components/locale-provider"
-import { fetchUser, assignRole } from "@/lib/api/users"
+import { fetchUser } from "@/lib/api/users"
 import { queryKeys } from "@/lib/query-keys"
 import { UserFormFields } from "./user-form-fields"
 import {
@@ -40,7 +40,6 @@ export function UserFormPage(props: Props) {
   const router = useRouter()
   const { t } = useLocale()
   const { createMut, updateMut } = useUserMutations()
-  const { data: roles } = useRoles()
   const isPending = isEdit ? updateMut.isPending : createMut.isPending
 
   const { data: user, isLoading } = useQuery({
@@ -51,30 +50,25 @@ export function UserFormPage(props: Props) {
 
   const form = useForm<FormData>({
     resolver: zodResolver(isEdit ? userEditSchema : userCreateSchema) as never,
-    defaultValues: { email: "", password: "", firstName: "", lastName: "", phone: "", roleSlug: "" },
+    defaultValues: { email: "", password: "", name: "", phone: "", role: "RECEPTIONIST" },
   })
 
   useEffect(() => {
     if (!user) return
     form.reset({
       email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      name: user.name,
       phone: user.phone ?? "",
       gender: user.gender ?? undefined,
-      roleSlug: (user as { role?: { slug?: string } }).role?.slug ?? "",
+      role: user.role,
     })
   }, [user, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       if (isEdit) {
-        const { password: _pw, roleSlug, ...editData } = data as FormData
+        const { password: _pw, ...editData } = data as FormData
         await updateMut.mutateAsync({ id: userId!, ...editData, phone: editData.phone || undefined })
-        // Assign new role if changed
-        if (roleSlug && roleSlug !== (user as { role?: { slug?: string } }).role?.slug) {
-          await assignRole(userId!, { roleSlug })
-        }
         toast.success(t("users.edit.success"))
       } else {
         await createMut.mutateAsync({ ...(data as UserCreateFormData), phone: data.phone || undefined })
@@ -98,7 +92,7 @@ export function UserFormPage(props: Props) {
   }
 
   const title = isEdit ? t("users.edit.title") : t("users.create.title")
-  const description = isEdit ? (user ? `${user.firstName} ${user.lastName}` : "") : t("users.create.description")
+  const description = isEdit ? (user?.name ?? "") : t("users.create.description")
   const submitLabel = isPending
     ? t(isEdit ? "users.edit.submitting" : "users.create.submitting")
     : t(isEdit ? "users.edit.submit" : "users.create.submit")
@@ -108,7 +102,7 @@ export function UserFormPage(props: Props) {
       <Breadcrumbs />
       <PageHeader title={title} description={description} />
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
-        <UserFormFields form={form} isEdit={isEdit} roles={roles} />
+        <UserFormFields form={form} isEdit={isEdit} />
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => router.push("/users")}>
             {t(isEdit ? "users.edit.cancel" : "users.create.cancel")}

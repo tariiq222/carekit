@@ -278,6 +278,7 @@ export const arOps: Record<string, string> = {
 
   // ─── Departments ───
   "nav.departments": "الأقسام",
+  "nav.categories": "الفئات",
   "departments.title": "الأقسام",
   "departments.description": "إدارة أقسام العيادة وتنظيم الخدمات",
   "departments.addDepartment": "إضافة قسم",

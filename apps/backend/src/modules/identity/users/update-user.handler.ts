@@ -11,6 +11,7 @@ export interface UpdateUserCommand {
   role?: UserRole;
   customRoleId?: string | null;
   avatarUrl?: string;
+  isActive?: boolean;
 }
 
 @Injectable()
@@ -23,7 +24,15 @@ export class UpdateUserHandler {
 
     return this.prisma.user.update({
       where: { id: cmd.userId },
-      data: { name: cmd.name, phone: cmd.phone, gender: cmd.gender, role: cmd.role, customRoleId: cmd.customRoleId, avatarUrl: cmd.avatarUrl },
+      data: {
+        name: cmd.name,
+        phone: cmd.phone,
+        gender: cmd.gender,
+        role: cmd.role,
+        customRoleId: cmd.customRoleId,
+        avatarUrl: cmd.avatarUrl,
+        isActive: cmd.isActive,
+      },
       omit: { passwordHash: true },
     });
   }

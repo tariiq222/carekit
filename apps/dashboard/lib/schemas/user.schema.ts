@@ -1,11 +1,19 @@
 import { z } from "zod"
 
+const USER_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "RECEPTIONIST",
+  "ACCOUNTANT",
+  "EMPLOYEE",
+  "CLIENT",
+] as const
+
 /* ─── User base schema (user-form-page) ─── */
 
 export const userBaseSchema = z.object({
   email: z.string().email(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
+  name: z.string().min(1),
   phone: z.string().optional().refine(
     (v) => !v || /^\+[1-9]\d{6,14}$/.test(v),
     { message: "أدخل الرقم بصيغة دولية مثل: +966501234567" }
@@ -15,11 +23,11 @@ export const userBaseSchema = z.object({
 
 export const userCreateSchema = userBaseSchema.extend({
   password: z.string().min(8),
-  roleSlug: z.string().min(1),
+  role: z.enum(USER_ROLES),
 })
 
 export const userEditSchema = userBaseSchema.extend({
-  roleSlug: z.string().optional(),
+  role: z.enum(USER_ROLES).optional(),
 })
 
 export type UserBaseFormData   = z.infer<typeof userBaseSchema>
