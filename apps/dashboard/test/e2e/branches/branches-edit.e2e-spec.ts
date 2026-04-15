@@ -72,8 +72,7 @@ test.describe('Branches — edit', () => {
 
     // ضع waitForURL قبل الضغط لتجنب race condition
     const navPromise = adminPage.waitForURL(/\/branches$/, { timeout: 20_000, waitUntil: 'commit' });
-    // dispatchEvent مباشرة على الـ form لضمان submit
-    await adminPage.locator('form').dispatchEvent('submit');
+    await adminPage.locator('button[type="submit"]').click();
     await navPromise;
 
     await searchInList('/branches', branch.nameAr);
