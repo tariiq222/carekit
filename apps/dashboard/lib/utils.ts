@@ -58,7 +58,7 @@ function hashCode(s: string): number {
 
 /**
  * Returns a deterministic CSS gradient style for an avatar based on an entity id.
- * Uses CSS custom properties so it respects dark mode and white-label theming.
+ * Uses CSS custom properties so it respects dark mode and branding theming.
  */
 export function getAvatarGradientStyle(id: string): CSSProperties {
   const idx = Math.abs(hashCode(id)) % AVATAR_PAIRS.length
@@ -83,7 +83,7 @@ export type TimeFormat = "24h" | "12h"
 /**
  * Format a date according to the clinic's configured date format.
  * @param date - Date object or ISO string
- * @param format - Clinic date format from WhiteLabelConfig
+ * @param format - Clinic date format from BrandingConfig
  * @returns Formatted date string
  */
 export function formatClinicDate(date: Date | string, format: DateFormat = "Y-m-d"): string {
@@ -105,7 +105,7 @@ export function formatClinicDate(date: Date | string, format: DateFormat = "Y-m-
 /**
  * Format a time string (HH:mm or HH:mm:ss) according to the clinic's configured time format.
  * @param time - Time string in 24h format (e.g. "14:30" or "14:30:00")
- * @param format - Clinic time format from WhiteLabelConfig
+ * @param format - Clinic time format from BrandingConfig
  * @returns Formatted time string
  */
 export function formatClinicTime(time: string, format: TimeFormat = "24h"): string {
