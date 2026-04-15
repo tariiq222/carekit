@@ -17,6 +17,9 @@ export class ListDepartmentsHandler {
     const where = {
       tenantId: dto.tenantId,
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
+      ...(dto.search && {
+        nameAr: { contains: dto.search, mode: 'insensitive' as const },
+      }),
     };
 
     const [items, total] = await this.prisma.$transaction([
