@@ -16,7 +16,7 @@ import { arUsers } from "./ar.users"
 import { arSettings } from "./ar.settings"
 import { arMisc } from "./ar.misc"
 import { arIntakeForms } from "./ar.intake-forms"
-import { arWhiteLabel } from "./ar.whitelabel"
+import { arBranding } from "./ar.branding"
 import { arDepartments } from "./ar.departments"
 
 export const ar: Record<string, string> = {
@@ -31,6 +31,6 @@ export const ar: Record<string, string> = {
   ...arSettings,
   ...arMisc,
   ...arIntakeForms,
-  ...arWhiteLabel,
+  ...arBranding,
   ...arDepartments,
 }

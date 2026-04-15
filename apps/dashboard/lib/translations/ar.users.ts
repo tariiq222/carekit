@@ -52,7 +52,7 @@ export const arUsers: Record<string, string> = {
   "users.roles.modules.reports": "التقارير",
   "users.roles.modules.notifications": "الإشعارات",
   "users.roles.modules.chatbot": "الشات بوت",
-  "users.roles.modules.whitelabel": "وايت ليبل",
+  "users.roles.modules.branding": "العلامة التجارية",
   "users.roles.modules.clients": "المستفيدين",
   "users.roles.modules.ratings": "التقييمات",
   "users.roles.modules.coupons": "الكوبونات",
