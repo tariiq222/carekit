@@ -4,14 +4,14 @@ import { RequestContextStorage } from '../tenant/request-context';
 class TestEvent extends BaseEvent<{ value: number }> {
   readonly eventName = 'test.happened';
 
-  constructor(tenantId: string, value: number, correlationId?: string) {
-    super({ source: 'test-bc', version: 1, tenantId, payload: { value }, correlationId });
+  constructor(value: number, correlationId?: string) {
+    super({ source: 'test-bc', version: 1, payload: { value }, correlationId });
   }
 }
 
 describe('BaseEvent', () => {
   it('auto-generates eventId as UUID', () => {
-    const e = new TestEvent('clinic-1', 42);
+    const e = new TestEvent(42);
     expect(e.eventId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
     );
@@ -19,20 +19,19 @@ describe('BaseEvent', () => {
 
   it('sets occurredAt to current date', () => {
     const before = new Date();
-    const e = new TestEvent('clinic-1', 1);
+    const e = new TestEvent(1);
     expect(e.occurredAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
   });
 
-  it('carries tenantId, source, version, payload', () => {
-    const e = new TestEvent('clinic-abc', 7);
-    expect(e.tenantId).toBe('clinic-abc');
+  it('carries source, version, payload', () => {
+    const e = new TestEvent(7);
     expect(e.source).toBe('test-bc');
     expect(e.version).toBe(1);
     expect(e.payload).toEqual({ value: 7 });
   });
 
   it('uses explicit correlationId when provided', () => {
-    const e = new TestEvent('clinic-1', 0, 'corr-xyz');
+    const e = new TestEvent(0, 'corr-xyz');
     expect(e.correlationId).toBe('corr-xyz');
   });
 
@@ -40,26 +39,25 @@ describe('BaseEvent', () => {
     RequestContextStorage.run(
       { tenantId: 'clinic-1', requestId: 'req-from-ctx', ip: '127.0.0.1' },
       () => {
-        const e = new TestEvent('clinic-1', 0);
+        const e = new TestEvent(0);
         expect(e.correlationId).toBe('req-from-ctx');
       },
     );
   });
 
   it('generates random correlationId when no context and none provided', () => {
-    const e = new TestEvent('clinic-1', 0);
+    const e = new TestEvent(0);
     expect(e.correlationId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
     );
   });
 
   it('toEnvelope() returns all required fields', () => {
-    const e = new TestEvent('clinic-1', 99);
+    const e = new TestEvent(99);
     const env = e.toEnvelope();
     expect(env).toMatchObject({
       eventId: e.eventId,
       correlationId: e.correlationId,
-      tenantId: 'clinic-1',
       source: 'test-bc',
       version: 1,
       payload: { value: 99 },
@@ -68,7 +66,7 @@ describe('BaseEvent', () => {
   });
 
   it('each instance gets a unique eventId', () => {
-    const ids = new Set(Array.from({ length: 10 }, () => new TestEvent('c', 0).eventId));
+    const ids = new Set(Array.from({ length: 10 }, () => new TestEvent(0).eventId));
     expect(ids.size).toBe(10);
   });
 });

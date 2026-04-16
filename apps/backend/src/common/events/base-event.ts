@@ -6,13 +6,13 @@ import { RequestContextStorage } from '../tenant/request-context';
  *
  * Every Bounded Context extends this to define its own events.
  * The constructor auto-populates eventId, occurredAt, and pulls
- * tenantId + correlationId from the active RequestContext when available.
+ * correlationId from the active RequestContext when available.
  *
  * @example
  * class BookingConfirmedEvent extends BaseEvent<{ bookingId: string }> {
  *   readonly eventName = 'booking.confirmed';
- *   constructor(tenantId: string, payload: { bookingId: string }) {
- *     super({ source: 'bookings', version: 1, tenantId, payload });
+ *   constructor(payload: { bookingId: string }) {
+ *     super({ source: 'bookings', version: 1, payload });
  *   }
  * }
  */
@@ -21,7 +21,6 @@ export abstract class BaseEvent<TPayload = unknown> {
 
   readonly eventId: string;
   readonly correlationId: string;
-  readonly tenantId: string;
   readonly source: string;
   readonly version: number;
   readonly occurredAt: Date;
@@ -30,14 +29,12 @@ export abstract class BaseEvent<TPayload = unknown> {
   protected constructor(opts: {
     source: string;
     version: number;
-    tenantId: string;
     payload: TPayload;
     correlationId?: string;
   }) {
     const ctx = RequestContextStorage.get();
     this.eventId = randomUUID();
     this.correlationId = opts.correlationId ?? ctx?.requestId ?? randomUUID();
-    this.tenantId = opts.tenantId;
     this.source = opts.source;
     this.version = opts.version;
     this.occurredAt = new Date();
@@ -48,7 +45,6 @@ export abstract class BaseEvent<TPayload = unknown> {
   toEnvelope(): {
     eventId: string;
     correlationId: string;
-    tenantId: string;
     source: string;
     version: number;
     occurredAt: Date;
@@ -57,7 +53,6 @@ export abstract class BaseEvent<TPayload = unknown> {
     return {
       eventId: this.eventId,
       correlationId: this.correlationId,
-      tenantId: this.tenantId,
       source: this.source,
       version: this.version,
       occurredAt: this.occurredAt,

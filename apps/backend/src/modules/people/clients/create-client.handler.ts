@@ -5,7 +5,7 @@ import { ClientEnrolledEvent } from '../events/client-enrolled.event';
 import { CreateClientDto } from './create-client.dto';
 import { serializeClient } from './client.serializer';
 
-export type CreateClientCommand = CreateClientDto & { tenantId: string };
+export type CreateClientCommand = CreateClientDto;
 
 function composeName(firstName: string, middleName: string | undefined, lastName: string): string {
   return [firstName, middleName, lastName].filter(Boolean).join(' ').trim();
@@ -21,7 +21,7 @@ export class CreateClientHandler {
   async execute(dto: CreateClientCommand) {
     if (dto.phone) {
       const existing = await this.prisma.client.findFirst({
-        where: { tenantId: dto.tenantId, phone: dto.phone, deletedAt: null },
+        where: { phone: dto.phone, deletedAt: null },
       });
       if (existing) {
         throw new ConflictException({
@@ -35,7 +35,6 @@ export class CreateClientHandler {
 
     const client = await this.prisma.client.create({
       data: {
-        tenantId: dto.tenantId,
         name: fullName,
         firstName: dto.firstName,
         middleName: dto.middleName,
@@ -60,9 +59,8 @@ export class CreateClientHandler {
       },
     });
 
-    const event = new ClientEnrolledEvent(client.tenantId, {
+    const event = new ClientEnrolledEvent({
       clientId: client.id,
-      tenantId: client.tenantId,
       name: client.name,
       phone: client.phone ?? undefined,
       email: client.email ?? undefined,

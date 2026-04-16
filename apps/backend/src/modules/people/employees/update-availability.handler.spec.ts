@@ -5,7 +5,6 @@ import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 const makeCmd = (overrides = {}) => ({
   employeeId: 'emp-1',
-  tenantId: 'tenant-1',
   windows: [
     { dayOfWeek: 1, startTime: '09:00', endTime: '17:00' },
     { dayOfWeek: 2, startTime: '09:00', endTime: '17:00' },
@@ -42,11 +41,6 @@ describe('UpdateAvailabilityHandler', () => {
     await expect(handler.execute(makeCmd())).rejects.toThrow(NotFoundException);
   });
 
-  it('throws NotFoundException when tenant does not match', async () => {
-    prisma.employee.findFirst.mockResolvedValue(null);
-    await expect(handler.execute(makeCmd())).rejects.toThrow(NotFoundException);
-  });
-
   it('throws BadRequestException for invalid dayOfWeek', async () => {
     await expect(handler.execute(makeCmd({ windows: [{ dayOfWeek: 7, startTime: '09:00', endTime: '17:00' }] }))).rejects.toThrow(BadRequestException);
   });
@@ -62,7 +56,7 @@ describe('UpdateAvailabilityHandler', () => {
   });
 
   it('deletes existing windows and creates new ones', async () => {
-    prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
+    prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 3 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 2 });
     const windowRows = [
@@ -80,7 +74,7 @@ describe('UpdateAvailabilityHandler', () => {
     });
     expect(prisma.employeeAvailability.createMany).toHaveBeenCalledWith({
       data: expect.arrayContaining([
-        expect.objectContaining({ dayOfWeek: 1, tenantId: 'tenant-1', employeeId: 'emp-1' }),
+        expect.objectContaining({ dayOfWeek: 1, employeeId: 'emp-1' }),
       ]),
     });
     expect(result.windows).toEqual(windowRows);
@@ -88,7 +82,7 @@ describe('UpdateAvailabilityHandler', () => {
   });
 
   it('deletes and recreates exceptions when provided', async () => {
-    prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
+    prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.findMany.mockResolvedValue([]);
@@ -110,7 +104,7 @@ describe('UpdateAvailabilityHandler', () => {
   });
 
   it('handles empty exceptions array without calling createMany', async () => {
-    prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' });
+    prisma.employee.findFirst.mockResolvedValue({ id: 'emp-1' });
     prisma.employeeAvailability.deleteMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.createMany.mockResolvedValue({ count: 0 });
     prisma.employeeAvailability.findMany.mockResolvedValue([]);

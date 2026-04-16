@@ -2,7 +2,6 @@ import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
 import { ClientGender, ClientSource } from '@prisma/client';
 import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { JwtGuard } from '../../../common/guards/jwt.guard';
-import { TenantId } from '../../../common/tenant/tenant.decorator';
 import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
 import { GetClientHandler } from '../../../modules/people/clients/get-client.handler';
 import { UpdateClientHandler } from '../../../modules/people/clients/update-client.handler';
@@ -28,16 +27,15 @@ export class MobileClientProfileController {
   ) {}
 
   @Get()
-  getProfile(@TenantId() tenantId: string, @CurrentUser() user: JwtUser) {
-    return this.getClient.execute({ tenantId, clientId: user.sub });
+  getProfile(@CurrentUser() user: JwtUser) {
+    return this.getClient.execute({ clientId: user.sub });
   }
 
   @Patch()
   updateProfile(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Body() body: MobileUpdateProfileBody,
   ) {
-    return this.updateClient.execute({ tenantId, clientId: user.sub, ...body });
+    return this.updateClient.execute({ clientId: user.sub, ...body });
   }
 }

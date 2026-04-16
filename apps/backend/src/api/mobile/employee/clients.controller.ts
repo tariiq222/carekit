@@ -2,7 +2,6 @@ import { Controller, Get, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs
 import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { JwtGuard } from '../../../common/guards/jwt.guard';
-import { TenantId } from '../../../common/tenant/tenant.decorator';
 import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
 import { PrismaService } from '../../../infrastructure/database';
 
@@ -19,7 +18,6 @@ export class MobileEmployeeClientsController {
 
   @Get()
   async listMyClients(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Query() q: EmployeeClientListQuery,
   ) {
@@ -27,7 +25,7 @@ export class MobileEmployeeClientsController {
     const limit = q.limit ?? 20;
 
     const clientIdRows = await this.prisma.booking.findMany({
-      where: { tenantId, employeeId: user.sub },
+      where: { employeeId: user.sub },
       select: { clientId: true },
       distinct: ['clientId'],
     });
@@ -36,7 +34,6 @@ export class MobileEmployeeClientsController {
 
     const where = {
       id: { in: ids },
-      tenantId,
       ...(q.search
         ? {
             OR: [
@@ -62,12 +59,11 @@ export class MobileEmployeeClientsController {
 
   @Get(':clientId/history')
   clientHistory(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Param('clientId', ParseUUIDPipe) clientId: string,
   ) {
     return this.prisma.booking.findMany({
-      where: { tenantId, employeeId: user.sub, clientId },
+      where: { employeeId: user.sub, clientId },
       orderBy: { scheduledAt: 'desc' },
       take: 20,
     });

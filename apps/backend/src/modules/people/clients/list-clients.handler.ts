@@ -5,7 +5,6 @@ import { ListClientsDto } from './list-clients.dto';
 import { serializeClient } from './client.serializer';
 
 export type ListClientsQuery = ListClientsDto & {
-  tenantId: string;
   page: number;
   limit: number;
 };
@@ -16,7 +15,6 @@ export class ListClientsHandler {
 
   async execute(query: ListClientsQuery) {
     const where = {
-      tenantId: query.tenantId,
       deletedAt: null,
       isActive: query.isActive,
       gender: query.gender,

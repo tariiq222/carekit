@@ -3,7 +3,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { UpdateEmployeeDto } from './update-employee.dto';
 
 export type UpdateEmployeeCommand = UpdateEmployeeDto & {
-  tenantId: string;
   employeeId: string;
 };
 
@@ -13,11 +12,11 @@ export class UpdateEmployeeHandler {
 
   async execute(cmd: UpdateEmployeeCommand) {
     const employee = await this.prisma.employee.findFirst({
-      where: { id: cmd.employeeId, tenantId: cmd.tenantId },
+      where: { id: cmd.employeeId },
     });
     if (!employee) throw new NotFoundException('Employee not found');
 
-    const { tenantId: _t, employeeId: _e, avatarUrl, ...rest } = cmd;
+    const { employeeId: _e, avatarUrl, ...rest } = cmd;
     const data: Record<string, unknown> = { ...rest };
     if (avatarUrl !== undefined) data.avatarUrl = avatarUrl;
     if (cmd.nameAr || cmd.nameEn) {

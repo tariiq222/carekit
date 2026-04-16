@@ -3,7 +3,6 @@ import { PrismaService } from '../../../infrastructure/database';
 
 export interface GetEmployeeQuery {
   employeeId: string;
-  tenantId: string;
 }
 
 @Injectable()
@@ -12,7 +11,7 @@ export class GetEmployeeHandler {
 
   async execute(query: GetEmployeeQuery) {
     const employee = await this.prisma.employee.findFirst({
-      where: { id: query.employeeId, tenantId: query.tenantId },
+      where: { id: query.employeeId },
       include: {
         specialties: true,
         branches: true,

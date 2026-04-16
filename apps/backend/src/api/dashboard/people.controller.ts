@@ -7,7 +7,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateClientHandler } from '../../modules/people/clients/create-client.handler';
 import { UpdateClientHandler } from '../../modules/people/clients/update-client.handler';
 import { ListClientsHandler } from '../../modules/people/clients/list-clients.handler';
@@ -75,13 +74,12 @@ export class DashboardPeopleController {
   // ── Clients ────────────────────────────────────────────────────────────────
   @Post('clients')
   @HttpCode(HttpStatus.CREATED)
-  createClientEndpoint(@TenantId() tenantId: string, @Body() body: CreateClientDto) {
-    return this.createClient.execute({ tenantId, ...body });
+  createClientEndpoint(@Body() body: CreateClientDto) {
+    return this.createClient.execute(body);
   }
 
   @Get('clients')
   listClientsEndpoint(
-    @TenantId() tenantId: string,
     @Query() query: ListClientsDto,
     @Query('isActive') rawIsActive?: string,
   ) {
@@ -92,7 +90,6 @@ export class DashboardPeopleController {
       rawIsActive === 'true' ? true : rawIsActive === 'false' ? false : undefined;
     return this.listClients.execute({
       ...query,
-      tenantId,
       isActive,
       page: query.page ?? 1,
       limit: query.limit ?? 20,
@@ -100,46 +97,38 @@ export class DashboardPeopleController {
   }
 
   @Get('clients/:id')
-  getClientEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.getClient.execute({ tenantId, clientId: id });
+  getClientEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.getClient.execute({ clientId: id });
   }
 
   @Patch('clients/:id')
   updateClientEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateClientDto,
   ) {
-    return this.updateClient.execute({ tenantId, clientId: id, ...body });
+    return this.updateClient.execute({ clientId: id, ...body });
   }
 
   @Delete('clients/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteClientEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    await this.deleteClient.execute({ tenantId, clientId: id });
+  async deleteClientEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    await this.deleteClient.execute({ clientId: id });
   }
   // ── Employees ──────────────────────────────────────────────────────────────
   @Post('employees')
   @HttpCode(HttpStatus.CREATED)
-  createEmployeeEndpoint(@TenantId() tenantId: string, @Body() body: CreateEmployeeDto) {
-    return this.createEmployee.execute({ tenantId, ...body });
+  createEmployeeEndpoint(@Body() body: CreateEmployeeDto) {
+    return this.createEmployee.execute(body);
   }
 
   @Post('employees/onboarding')
   @HttpCode(HttpStatus.CREATED)
-  onboardEmployeeEndpoint(@TenantId() tenantId: string, @Body() body: OnboardEmployeeDto) {
-    return this.onboardEmployee.execute({ tenantId, ...body });
+  onboardEmployeeEndpoint(@Body() body: OnboardEmployeeDto) {
+    return this.onboardEmployee.execute(body);
   }
 
   @Get('employees')
   listEmployeesEndpoint(
-    @TenantId() tenantId: string,
     @Query() query: ListEmployeesDto,
     @Query('isActive') rawIsActive?: string,
   ) {
@@ -150,7 +139,6 @@ export class DashboardPeopleController {
       rawIsActive === 'true' ? true : rawIsActive === 'false' ? false : undefined;
     return this.listEmployees.execute({
       ...query,
-      tenantId,
       isActive,
       page: query.page ?? 1,
       limit: query.limit ?? 20,
@@ -158,47 +146,36 @@ export class DashboardPeopleController {
   }
 
   @Get('employees/stats')
-  employeeStatsEndpoint(@TenantId() tenantId: string) {
-    return this.employeeStats.execute({ tenantId });
+  employeeStatsEndpoint() {
+    return this.employeeStats.execute();
   }
 
   @Get('employees/:id')
-  getEmployeeEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.getEmployee.execute({ tenantId, employeeId: id });
+  getEmployeeEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.getEmployee.execute({ employeeId: id });
   }
 
   @Patch('employees/:id')
   updateEmployeeEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateEmployeeDto,
   ) {
-    return this.updateEmployee.execute({ tenantId, employeeId: id, ...body });
+    return this.updateEmployee.execute({ employeeId: id, ...body });
   }
 
   @Get('employees/:id/availability')
-  getAvailabilityEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.getAvailability.execute({ tenantId, employeeId: id });
+  getAvailabilityEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.getAvailability.execute({ employeeId: id });
   }
 
   @Get('employees/:id/breaks')
-  getBreaksEndpoint(
-    @TenantId() _tenantId: string,
-    @Param('id', ParseUUIDPipe) _id: string,
-  ) {
+  getBreaksEndpoint(@Param('id', ParseUUIDPipe) _id: string) {
     return [];
   }
 
   @Put('employees/:id/breaks')
   @HttpCode(HttpStatus.OK)
   putBreaksEndpoint(
-    @TenantId() _tenantId: string,
     @Param('id', ParseUUIDPipe) _id: string,
     @Body() _body: unknown,
   ) {
@@ -209,41 +186,34 @@ export class DashboardPeopleController {
   }
 
   @Get('employees/:id/vacations')
-  listVacationsEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.listEmployeeExceptions.execute({ tenantId, employeeId: id });
+  listVacationsEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.listEmployeeExceptions.execute({ employeeId: id });
   }
 
   @Post('employees/:id/vacations')
   @HttpCode(HttpStatus.CREATED)
   createVacationEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: CreateEmployeeExceptionDto,
   ) {
-    return this.createEmployeeException.execute({ tenantId, employeeId: id, ...body });
+    return this.createEmployeeException.execute({ employeeId: id, ...body });
   }
 
   @Delete('employees/:id/vacations/:vacationId')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteVacationEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Param('vacationId', ParseUUIDPipe) vacationId: string,
   ) {
-    return this.deleteEmployeeException.execute({ tenantId, employeeId: id, exceptionId: vacationId });
+    return this.deleteEmployeeException.execute({ employeeId: id, exceptionId: vacationId });
   }
 
   @Patch('employees/:id/availability')
   updateAvailabilityEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateAvailabilityDto,
   ) {
     return this.updateAvailability.execute({
-      tenantId,
       employeeId: id,
       windows: body.windows,
       exceptions: body.exceptions,
@@ -253,97 +223,79 @@ export class DashboardPeopleController {
   @Post('employees/:id/onboarding')
   @HttpCode(HttpStatus.OK)
   employeeOnboardingEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: EmployeeOnboardingDto,
   ) {
-    return this.employeeOnboarding.execute({ tenantId, employeeId: id, ...body });
+    return this.employeeOnboarding.execute({ employeeId: id, ...body });
   }
 
   @Delete('employees/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteEmployeeEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.deleteEmployee.execute({ tenantId, employeeId: id });
+  deleteEmployeeEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.deleteEmployee.execute({ employeeId: id });
   }
 
   @Get('employees/:id/services')
-  listEmployeeServicesEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.listEmployeeServices.execute({ tenantId, employeeId: id });
+  listEmployeeServicesEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.listEmployeeServices.execute({ employeeId: id });
   }
 
   @Post('employees/:id/services')
   @HttpCode(HttpStatus.CREATED)
   assignEmployeeServiceEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { serviceId: string },
   ) {
-    return this.assignEmployeeService.execute({ tenantId, employeeId: id, serviceId: body.serviceId });
+    return this.assignEmployeeService.execute({ employeeId: id, serviceId: body.serviceId });
   }
 
   @Delete('employees/:id/services/:serviceId')
   @HttpCode(HttpStatus.NO_CONTENT)
   removeEmployeeServiceEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Param('serviceId', ParseUUIDPipe) serviceId: string,
   ) {
-    return this.removeEmployeeService.execute({ tenantId, employeeId: id, serviceId });
+    return this.removeEmployeeService.execute({ employeeId: id, serviceId });
   }
 
   @Get('employees/:id/exceptions')
-  listEmployeeExceptionsEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.listEmployeeExceptions.execute({ tenantId, employeeId: id });
+  listEmployeeExceptionsEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.listEmployeeExceptions.execute({ employeeId: id });
   }
 
   @Post('employees/:id/exceptions')
   @HttpCode(HttpStatus.CREATED)
   createEmployeeExceptionEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: CreateEmployeeExceptionDto,
   ) {
-    return this.createEmployeeException.execute({ tenantId, employeeId: id, ...body });
+    return this.createEmployeeException.execute({ employeeId: id, ...body });
   }
 
   @Delete('employees/:id/exceptions/:exceptionId')
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteEmployeeExceptionEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Param('exceptionId', ParseUUIDPipe) exceptionId: string,
   ) {
-    return this.deleteEmployeeException.execute({ tenantId, employeeId: id, exceptionId });
+    return this.deleteEmployeeException.execute({ employeeId: id, exceptionId });
   }
 
   @Get('employees/:id/ratings')
-  listEmployeeRatingsEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.listEmployeeRatings.execute({ tenantId, employeeId: id });
+  listEmployeeRatingsEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.listEmployeeRatings.execute({ employeeId: id });
   }
 
   @Post('employees/:employeeId/avatar')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
   uploadAvatarEndpoint(
-    @TenantId() tenantId: string,
     @Param('employeeId', ParseUUIDPipe) employeeId: string,
     @UploadedFile() file: Express.Multer.File | undefined,
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
     return this.uploadAvatar.execute({
-      tenantId, employeeId,
+      employeeId,
       filename: file.originalname, mimetype: file.mimetype, size: file.size,
     }, file.buffer);
   }

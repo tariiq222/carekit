@@ -4,7 +4,6 @@ import { serializeClient } from './client.serializer';
 
 export interface GetClientQuery {
   clientId: string;
-  tenantId: string;
 }
 
 @Injectable()
@@ -13,7 +12,7 @@ export class GetClientHandler {
 
   async execute(query: GetClientQuery) {
     const client = await this.prisma.client.findFirst({
-      where: { id: query.clientId, tenantId: query.tenantId, deletedAt: null },
+      where: { id: query.clientId, deletedAt: null },
     });
     if (!client) throw new NotFoundException('Client not found');
     return serializeClient(client);

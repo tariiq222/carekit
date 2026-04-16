@@ -6,7 +6,6 @@ import { PrismaService } from '../../../infrastructure/database';
 
 const mockEmployee = {
   id: 'e1',
-  tenantId: 'tenant-1',
   userId: null,
   name: 'د. سارة الأحمد',
   phone: '0551234567',
@@ -51,7 +50,6 @@ describe('Employees handlers', () => {
       prisma.employee.create.mockResolvedValue(mockEmployee);
 
       const result = await createHandler.execute({
-        tenantId: 'tenant-1',
         name: 'د. سارة الأحمد',
         email: 'sara@clinic.com',
         gender: EmployeeGender.FEMALE,
@@ -60,7 +58,7 @@ describe('Employees handlers', () => {
       expect(result.id).toBe('e1');
       expect(prisma.employee.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ tenantId: 'tenant-1', name: 'د. سارة الأحمد' }),
+          data: expect.objectContaining({ name: 'د. سارة الأحمد' }),
           include: { specialties: true, branches: true, services: true },
         }),
       );
@@ -70,12 +68,11 @@ describe('Employees handlers', () => {
       prisma.employee.findUnique.mockResolvedValue(null);
       prisma.employee.create.mockResolvedValue({
         ...mockEmployee,
-        specialties: [{ id: 'es1', specialtyId: 'sp1', tenantId: 'tenant-1', employeeId: 'e1' }],
-        branches: [{ id: 'eb1', branchId: 'br1', tenantId: 'tenant-1', employeeId: 'e1' }],
+        specialties: [{ id: 'es1', specialtyId: 'sp1', employeeId: 'e1' }],
+        branches: [{ id: 'eb1', branchId: 'br1', employeeId: 'e1' }],
       });
 
       const result = await createHandler.execute({
-        tenantId: 'tenant-1',
         name: 'د. سارة الأحمد',
         specialtyIds: ['sp1'],
         branchIds: ['br1'],
@@ -86,8 +83,8 @@ describe('Employees handlers', () => {
       expect(prisma.employee.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            specialties: { create: [{ tenantId: 'tenant-1', specialtyId: 'sp1' }] },
-            branches: { create: [{ tenantId: 'tenant-1', branchId: 'br1' }] },
+            specialties: { create: [{ specialtyId: 'sp1' }] },
+            branches: { create: [{ branchId: 'br1' }] },
           }),
         }),
       );
@@ -96,7 +93,7 @@ describe('Employees handlers', () => {
     it('skips email uniqueness check when no email provided', async () => {
       prisma.employee.create.mockResolvedValue({ ...mockEmployee, email: null });
 
-      await createHandler.execute({ tenantId: 'tenant-1', name: 'موظف بدون إيميل' });
+      await createHandler.execute({ name: 'موظف بدون إيميل' });
 
       expect(prisma.employee.findUnique).not.toHaveBeenCalled();
     });
@@ -105,7 +102,7 @@ describe('Employees handlers', () => {
       prisma.employee.findUnique.mockResolvedValue(mockEmployee);
 
       await expect(
-        createHandler.execute({ tenantId: 'tenant-1', name: 'آخر', email: 'sara@clinic.com' }),
+        createHandler.execute({ name: 'آخر', email: 'sara@clinic.com' }),
       ).rejects.toThrow(ConflictException);
     });
   });

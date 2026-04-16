@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
-export interface RemoveEmployeeServiceCommand { tenantId: string; employeeId: string; serviceId: string; }
+export interface RemoveEmployeeServiceCommand { employeeId: string; serviceId: string; }
 
 @Injectable()
 export class RemoveEmployeeServiceHandler {
@@ -11,7 +11,7 @@ export class RemoveEmployeeServiceHandler {
     const record = await this.prisma.employeeService.findUnique({
       where: { employeeId_serviceId: { employeeId: cmd.employeeId, serviceId: cmd.serviceId } },
     });
-    if (!record || record.tenantId !== cmd.tenantId) {
+    if (!record) {
       throw new NotFoundException('Service assignment not found');
     }
     await this.prisma.employeeService.delete({

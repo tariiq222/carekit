@@ -3,7 +3,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { UpdateClientDto } from './update-client.dto';
 import { serializeClient } from './client.serializer';
 
-export type UpdateClientCommand = UpdateClientDto & { tenantId: string; clientId: string };
+export type UpdateClientCommand = UpdateClientDto & { clientId: string };
 
 @Injectable()
 export class UpdateClientHandler {
@@ -11,14 +11,13 @@ export class UpdateClientHandler {
 
   async execute(cmd: UpdateClientCommand) {
     const client = await this.prisma.client.findFirst({
-      where: { id: cmd.clientId, tenantId: cmd.tenantId, deletedAt: null },
+      where: { id: cmd.clientId, deletedAt: null },
     });
     if (!client) throw new NotFoundException('Client not found');
 
     if (cmd.phone && cmd.phone !== client.phone) {
       const duplicate = await this.prisma.client.findFirst({
         where: {
-          tenantId: cmd.tenantId,
           phone: cmd.phone,
           deletedAt: null,
           NOT: { id: cmd.clientId },

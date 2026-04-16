@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
-export interface AssignEmployeeServiceCommand { tenantId: string; employeeId: string; serviceId: string; }
+export interface AssignEmployeeServiceCommand { employeeId: string; serviceId: string; }
 
 @Injectable()
 export class AssignEmployeeServiceHandler {
@@ -9,7 +9,7 @@ export class AssignEmployeeServiceHandler {
 
   async execute(cmd: AssignEmployeeServiceCommand) {
     const employee = await this.prisma.employee.findFirst({
-      where: { id: cmd.employeeId, tenantId: cmd.tenantId },
+      where: { id: cmd.employeeId },
     });
     if (!employee) throw new NotFoundException('Employee not found');
 
@@ -19,7 +19,7 @@ export class AssignEmployeeServiceHandler {
     if (existing) throw new ConflictException('Service already assigned to employee');
 
     return this.prisma.employeeService.create({
-      data: { tenantId: cmd.tenantId, employeeId: cmd.employeeId, serviceId: cmd.serviceId },
+      data: { employeeId: cmd.employeeId, serviceId: cmd.serviceId },
     });
   }
 }

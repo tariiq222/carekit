@@ -11,7 +11,6 @@ const OnboardingStatus = {
 
 const mockEmployee = {
   id: 'emp-1',
-  tenantId: 'tenant-1',
   onboardingStatus: OnboardingStatus.PENDING,
   name: 'Ahmed',
 };
@@ -52,15 +51,7 @@ describe('EmployeeOnboardingHandler', () => {
       prisma.employee.findFirst.mockResolvedValue(null);
 
       await expect(
-        handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'profile' }),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('throws NotFoundException when tenantId does not match', async () => {
-      prisma.employee.findFirst.mockResolvedValue(null);
-
-      await expect(
-        handler.execute({ employeeId: 'emp-1', tenantId: 'wrong-tenant', step: 'profile' }),
+        handler.execute({ employeeId: 'emp-1', step: 'profile' }),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -74,7 +65,6 @@ describe('EmployeeOnboardingHandler', () => {
 
       const result = await handler.execute({
         employeeId: 'emp-1',
-        tenantId: 'tenant-1',
         step: 'profile',
         profile: { name: 'Ali' },
       });
@@ -94,7 +84,6 @@ describe('EmployeeOnboardingHandler', () => {
 
       await handler.execute({
         employeeId: 'emp-1',
-        tenantId: 'tenant-1',
         step: 'profile',
         profile: { name: 'Ali' },
       });
@@ -116,7 +105,6 @@ describe('EmployeeOnboardingHandler', () => {
 
       await handler.execute({
         employeeId: 'emp-1',
-        tenantId: 'tenant-1',
         step: 'specialties',
         specialtyIds: ['spec-1', 'spec-2'],
       });
@@ -125,8 +113,8 @@ describe('EmployeeOnboardingHandler', () => {
       expect(prisma.employeeSpecialty.deleteMany).toHaveBeenCalledWith({ where: { employeeId: 'emp-1' } });
       expect(prisma.employeeSpecialty.createMany).toHaveBeenCalledWith({
         data: [
-          { tenantId: 'tenant-1', employeeId: 'emp-1', specialtyId: 'spec-1' },
-          { tenantId: 'tenant-1', employeeId: 'emp-1', specialtyId: 'spec-2' },
+          { employeeId: 'emp-1', specialtyId: 'spec-1' },
+          { employeeId: 'emp-1', specialtyId: 'spec-2' },
         ],
       });
       expect(prisma.employee.update).toHaveBeenCalledWith({
@@ -144,12 +132,12 @@ describe('EmployeeOnboardingHandler', () => {
       prisma.employeeBranch.createMany.mockResolvedValue({ count: 1 });
       prisma.employee.update.mockResolvedValue(mockEmployee);
 
-      await handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'branches', branchIds: ['br-1'] });
+      await handler.execute({ employeeId: 'emp-1', step: 'branches', branchIds: ['br-1'] });
 
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(prisma.employeeBranch.deleteMany).toHaveBeenCalledWith({ where: { employeeId: 'emp-1' } });
       expect(prisma.employeeBranch.createMany).toHaveBeenCalledWith({
-        data: [{ tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'br-1' }],
+        data: [{ employeeId: 'emp-1', branchId: 'br-1' }],
       });
     });
   });
@@ -166,13 +154,13 @@ describe('EmployeeOnboardingHandler', () => {
       };
       const completed = { ...readyEmployee, onboardingStatus: OnboardingStatus.COMPLETED };
 
-      prisma.employee.findFirst.mockResolvedValueOnce(mockEmployee); // guard check
+      prisma.employee.findFirst.mockResolvedValueOnce(mockEmployee);
       prisma.employee.findUnique
-        .mockResolvedValueOnce(readyEmployee)     // complete validation inside tx
-        .mockResolvedValueOnce(completed);        // final return
+        .mockResolvedValueOnce(readyEmployee)
+        .mockResolvedValueOnce(completed);
       prisma.employee.update.mockResolvedValue(completed);
 
-      const result = await handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'complete' });
+      const result = await handler.execute({ employeeId: 'emp-1', step: 'complete' });
 
       expect(prisma.employee.update).toHaveBeenCalledWith({
         where: { id: 'emp-1' },
@@ -195,7 +183,7 @@ describe('EmployeeOnboardingHandler', () => {
       prisma.employee.findUnique.mockResolvedValueOnce(incompleteEmployee);
 
       await expect(
-        handler.execute({ employeeId: 'emp-1', tenantId: 'tenant-1', step: 'complete' }),
+        handler.execute({ employeeId: 'emp-1', step: 'complete' }),
       ).rejects.toThrow(BadRequestException);
     });
   });

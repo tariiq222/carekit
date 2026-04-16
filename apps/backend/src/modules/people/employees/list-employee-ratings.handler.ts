@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
-export interface ListEmployeeRatingsQuery { tenantId: string; employeeId: string; }
+export interface ListEmployeeRatingsQuery { employeeId: string; }
 
 @Injectable()
 export class ListEmployeeRatingsHandler {
@@ -9,11 +9,11 @@ export class ListEmployeeRatingsHandler {
 
   async execute(query: ListEmployeeRatingsQuery) {
     const employee = await this.prisma.employee.findFirst({
-      where: { id: query.employeeId, tenantId: query.tenantId },
+      where: { id: query.employeeId },
     });
     if (!employee) throw new NotFoundException('Employee not found');
     return this.prisma.rating.findMany({
-      where: { employeeId: query.employeeId, tenantId: query.tenantId },
+      where: { employeeId: query.employeeId },
       orderBy: { createdAt: 'desc' },
     });
   }

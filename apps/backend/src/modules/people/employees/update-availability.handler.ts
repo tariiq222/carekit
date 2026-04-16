@@ -6,7 +6,6 @@ export { AvailabilityWindow, AvailabilityException } from './update-availability
 
 export type UpdateAvailabilityCommand = UpdateAvailabilityDto & {
   employeeId: string;
-  tenantId: string;
 };
 
 function validateTimeFormat(time: string): boolean {
@@ -42,12 +41,12 @@ export class UpdateAvailabilityHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: UpdateAvailabilityCommand) {
-    const { employeeId, tenantId, windows, exceptions = [] } = cmd;
+    const { employeeId, windows, exceptions = [] } = cmd;
 
     validateWindows(windows);
 
     const employee = await this.prisma.employee.findFirst({
-      where: { id: employeeId, tenantId },
+      where: { id: employeeId },
     });
     if (!employee) {
       throw new NotFoundException(`Employee ${employeeId} not found`);
@@ -59,7 +58,6 @@ export class UpdateAvailabilityHandler {
 
         await tx.employeeAvailability.createMany({
           data: windows.map((w) => ({
-            tenantId,
             employeeId,
             dayOfWeek: w.dayOfWeek,
             startTime: w.startTime,
@@ -73,7 +71,6 @@ export class UpdateAvailabilityHandler {
         if (exceptions.length > 0) {
           await tx.employeeAvailabilityException.createMany({
             data: exceptions.map((e) => ({
-              tenantId,
               employeeId,
               startDate: new Date(e.startDate),
               endDate: new Date(e.endDate),

@@ -1,6 +1,5 @@
 import { DashboardPeopleController } from './people.controller';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
@@ -42,67 +41,67 @@ function buildController() {
 }
 
 describe('DashboardPeopleController', () => {
-  it('createClientEndpoint — passes tenantId', async () => {
+  it('createClientEndpoint — passes body', async () => {
     const { controller, createClient } = buildController();
-    await controller.createClientEndpoint(TENANT, { nameAr: 'أحمد', phone: '+966500000000' } as never);
-    expect(createClient.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.createClientEndpoint({ nameAr: 'أحمد', phone: '+966500000000' } as never);
+    expect(createClient.execute).toHaveBeenCalled();
   });
 
-  it('listClientsEndpoint — passes tenantId and defaults page/limit', async () => {
+  it('listClientsEndpoint — defaults page/limit', async () => {
     const { controller, listClients } = buildController();
-    await controller.listClientsEndpoint(TENANT, {} as never);
+    await controller.listClientsEndpoint({} as never);
     expect(listClients.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, page: 1, limit: 20 }),
+      expect.objectContaining({ page: 1, limit: 20 }),
     );
   });
 
-  it('getClientEndpoint — passes tenantId and id', async () => {
+  it('getClientEndpoint — passes id', async () => {
     const { controller, getClient } = buildController();
-    await controller.getClientEndpoint(TENANT, 'c-1');
-    expect(getClient.execute).toHaveBeenCalledWith({ tenantId: TENANT, clientId: 'c-1' });
+    await controller.getClientEndpoint('c-1');
+    expect(getClient.execute).toHaveBeenCalledWith({ clientId: 'c-1' });
   });
 
-  it('updateClientEndpoint — passes tenantId and id', async () => {
+  it('updateClientEndpoint — passes id and body', async () => {
     const { controller, updateClient } = buildController();
-    await controller.updateClientEndpoint(TENANT, 'c-1', { nameAr: 'محمد' } as never);
+    await controller.updateClientEndpoint('c-1', { nameAr: 'محمد' } as never);
     expect(updateClient.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, clientId: 'c-1' }),
+      expect.objectContaining({ clientId: 'c-1' }),
     );
   });
 
-  it('createEmployeeEndpoint — passes tenantId', async () => {
+  it('createEmployeeEndpoint — passes body', async () => {
     const { controller, createEmployee } = buildController();
-    await controller.createEmployeeEndpoint(TENANT, { nameAr: 'سارة' } as never);
-    expect(createEmployee.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.createEmployeeEndpoint({ nameAr: 'سارة' } as never);
+    expect(createEmployee.execute).toHaveBeenCalled();
   });
 
-  it('listEmployeesEndpoint — passes tenantId and defaults pagination', async () => {
+  it('listEmployeesEndpoint — defaults pagination', async () => {
     const { controller, listEmployees } = buildController();
-    await controller.listEmployeesEndpoint(TENANT, {} as never);
+    await controller.listEmployeesEndpoint({} as never);
     expect(listEmployees.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, page: 1, limit: 20 }),
+      expect.objectContaining({ page: 1, limit: 20 }),
     );
   });
 
-  it('getEmployeeEndpoint — passes tenantId and id', async () => {
+  it('getEmployeeEndpoint — passes id', async () => {
     const { controller, getEmployee } = buildController();
-    await controller.getEmployeeEndpoint(TENANT, 'e-1');
-    expect(getEmployee.execute).toHaveBeenCalledWith({ tenantId: TENANT, employeeId: 'e-1' });
+    await controller.getEmployeeEndpoint('e-1');
+    expect(getEmployee.execute).toHaveBeenCalledWith({ employeeId: 'e-1' });
   });
 
-  it('updateAvailabilityEndpoint — passes tenantId and employeeId', async () => {
+  it('updateAvailabilityEndpoint — passes employeeId', async () => {
     const { controller, updateAvailability } = buildController();
-    await controller.updateAvailabilityEndpoint(TENANT, 'e-1', { windows: [], exceptions: [] } as never);
+    await controller.updateAvailabilityEndpoint('e-1', { windows: [], exceptions: [] } as never);
     expect(updateAvailability.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, employeeId: 'e-1' }),
+      expect.objectContaining({ employeeId: 'e-1' }),
     );
   });
 
-  it('employeeOnboardingEndpoint — passes tenantId and employeeId', async () => {
+  it('employeeOnboardingEndpoint — passes employeeId', async () => {
     const { controller, employeeOnboarding } = buildController();
-    await controller.employeeOnboardingEndpoint(TENANT, 'e-1', {} as never);
+    await controller.employeeOnboardingEndpoint('e-1', {} as never);
     expect(employeeOnboarding.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, employeeId: 'e-1' }),
+      expect.objectContaining({ employeeId: 'e-1' }),
     );
   });
 });

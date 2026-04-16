@@ -4,7 +4,6 @@ import { toListResponse } from '../../../common/dto';
 import { ListEmployeesDto } from './list-employees.dto';
 
 export type ListEmployeesQuery = ListEmployeesDto & {
-  tenantId: string;
   page: number;
   limit: number;
 };
@@ -15,7 +14,6 @@ export class ListEmployeesHandler {
 
   async execute(query: ListEmployeesQuery) {
     const where = {
-      tenantId: query.tenantId,
       isActive: query.isActive,
       gender: query.gender,
       employmentType: query.employmentType,

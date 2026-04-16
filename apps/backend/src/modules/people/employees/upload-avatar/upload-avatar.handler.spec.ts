@@ -3,19 +3,16 @@ import { UploadAvatarHandler } from './upload-avatar.handler';
 import { UploadFileHandler } from '../../../media/files/upload-file.handler';
 import { PrismaService } from '../../../../infrastructure/database';
 
-const TENANT = '00000000-0000-0000-0000-000000000001';
 const EMPLOYEE_ID = '00000000-0000-0000-0000-000000000002';
 const MAX_AVATAR_BYTES = 1 * 1024 * 1024;
 
-// Fake File row shape returned by UploadFileHandler.execute — now includes `url`.
 const MOCK_FILE_ROW = {
   id: 'file-9',
   bucket: 'carekit',
-  storageKey: 'tenant/new.png',
+  storageKey: 'org/new.png',
   filename: 'a.png',
   mimetype: 'image/png',
   size: 1024,
-  tenantId: TENANT,
   url: 'https://cdn/new.png',
 } as const;
 
@@ -27,7 +24,7 @@ function makeHandler(overrides: {
   throwOnUpload?: Error;
 } = {}) {
   const employeeFindUnique = jest.fn().mockResolvedValue(
-    overrides.employeeExists === false ? null : { id: EMPLOYEE_ID, tenantId: TENANT },
+    overrides.employeeExists === false ? null : { id: EMPLOYEE_ID },
   );
   const employeeUpdate = jest.fn().mockResolvedValue({ id: EMPLOYEE_ID });
   const prisma = {
@@ -48,7 +45,6 @@ function makeHandler(overrides: {
 
 describe('UploadAvatarHandler', () => {
   const validCmd = {
-    tenantId: TENANT,
     employeeId: EMPLOYEE_ID,
     filename: 'a.png',
     mimetype: 'image/png',
@@ -70,7 +66,7 @@ describe('UploadAvatarHandler', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('throws NotFoundException when employee does not exist under tenant', async () => {
+  it('throws NotFoundException when employee does not exist', async () => {
     const { handler } = makeHandler({ employeeExists: false });
     await expect(
       handler.execute(validCmd, Buffer.alloc(1024)),
@@ -84,14 +80,13 @@ describe('UploadAvatarHandler', () => {
 
     expect(uploadFileExecute).toHaveBeenCalledWith(
       expect.objectContaining({
-        tenantId: TENANT,
         ownerType: 'employee',
         ownerId: EMPLOYEE_ID,
       }),
       expect.any(Buffer),
     );
     expect(employeeUpdate).toHaveBeenCalledWith({
-      where: { id: EMPLOYEE_ID, tenantId: TENANT },
+      where: { id: EMPLOYEE_ID },
       data: { avatarUrl: EXPECTED_URL },
     });
     expect(res).toEqual({ fileId: MOCK_FILE_ROW.id, url: EXPECTED_URL });

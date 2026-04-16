@@ -2,7 +2,6 @@ import { BaseEvent } from '../../../common/events';
 
 export interface ClientEnrolledPayload {
   clientId: string;
-  tenantId: string;
   name: string;
   phone?: string;
   email?: string;
@@ -15,7 +14,7 @@ export interface ClientEnrolledPayload {
 export class ClientEnrolledEvent extends BaseEvent<ClientEnrolledPayload> {
   readonly eventName = 'people.client.enrolled';
 
-  constructor(tenantId: string, payload: ClientEnrolledPayload) {
-    super({ source: 'people', version: 1, tenantId, payload });
+  constructor(payload: ClientEnrolledPayload) {
+    super({ source: 'people', version: 1, payload });
   }
 }

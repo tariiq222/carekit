@@ -5,7 +5,6 @@ import { EmployeeOnboardingDto } from './employee-onboarding.dto';
 
 export type EmployeeOnboardingCommand = EmployeeOnboardingDto & {
   employeeId: string;
-  tenantId: string;
 };
 
 type RelationStep = 'specialties' | 'branches' | 'services';
@@ -34,7 +33,7 @@ export class EmployeeOnboardingHandler {
 
   async execute(cmd: EmployeeOnboardingCommand) {
     const employee = await this.prisma.employee.findFirst({
-      where: { id: cmd.employeeId, tenantId: cmd.tenantId },
+      where: { id: cmd.employeeId },
     });
 
     if (!employee) {
@@ -68,7 +67,6 @@ export class EmployeeOnboardingHandler {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (tx[config.table] as any).createMany({
               data: ids.map((id) => ({
-                tenantId: cmd.tenantId,
                 employeeId: cmd.employeeId,
                 [config.idField]: id,
               })),
