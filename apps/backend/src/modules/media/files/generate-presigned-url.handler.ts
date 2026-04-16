@@ -6,7 +6,6 @@ import { GeneratePresignedUrlDto } from './generate-presigned-url.dto';
 const DEFAULT_EXPIRY_SECONDS = 3600;
 
 export type GeneratePresignedUrlQuery = GeneratePresignedUrlDto & {
-  tenantId: string;
   fileId: string;
 };
 
@@ -19,7 +18,7 @@ export class GeneratePresignedUrlHandler {
 
   async execute(query: GeneratePresignedUrlQuery) {
     const file = await this.prisma.file.findFirst({
-      where: { id: query.fileId, tenantId: query.tenantId, isDeleted: false },
+      where: { id: query.fileId, isDeleted: false },
     });
     if (!file) throw new NotFoundException('File not found');
 

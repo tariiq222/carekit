@@ -1,7 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { DashboardMediaController } from './media.controller';
 
-const TENANT = 'tenant-1';
 const FILE_ID = '123e4567-e89b-12d3-a456-426614174000';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -19,10 +18,10 @@ function buildController() {
 describe('DashboardMediaController', () => {
   it('uploadFileEndpoint — throws BadRequestException when no file', () => {
     const { controller } = buildController();
-    expect(() => controller.uploadFileEndpoint(TENANT, undefined, {} as never)).toThrow(BadRequestException);
+    expect(() => controller.uploadFileEndpoint(undefined, {} as never)).toThrow(BadRequestException);
   });
 
-  it('uploadFileEndpoint — passes tenantId and file metadata to handler', async () => {
+  it('uploadFileEndpoint — passes file metadata to handler', async () => {
     const { controller, uploadFile } = buildController();
     const mockFile = {
       originalname: 'photo.jpg',
@@ -30,30 +29,30 @@ describe('DashboardMediaController', () => {
       size: 1024,
       buffer: Buffer.from('fake'),
     } as Express.Multer.File;
-    await controller.uploadFileEndpoint(TENANT, mockFile, { folder: 'profile-photos' } as never);
+    await controller.uploadFileEndpoint(mockFile, { folder: 'profile-photos' } as never);
     expect(uploadFile.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, filename: 'photo.jpg', mimetype: 'image/jpeg', size: 1024 }),
+      expect.objectContaining({ filename: 'photo.jpg', mimetype: 'image/jpeg', size: 1024 }),
       mockFile.buffer,
     );
   });
 
-  it('getFileEndpoint — passes tenantId and fileId', async () => {
+  it('getFileEndpoint — passes fileId', async () => {
     const { controller, getFile } = buildController();
-    await controller.getFileEndpoint(TENANT, FILE_ID);
-    expect(getFile.execute).toHaveBeenCalledWith(TENANT, FILE_ID);
+    await controller.getFileEndpoint(FILE_ID);
+    expect(getFile.execute).toHaveBeenCalledWith(FILE_ID);
   });
 
-  it('deleteFileEndpoint — passes tenantId and fileId', async () => {
+  it('deleteFileEndpoint — passes fileId', async () => {
     const { controller, deleteFile } = buildController();
-    await controller.deleteFileEndpoint(TENANT, FILE_ID);
-    expect(deleteFile.execute).toHaveBeenCalledWith(TENANT, FILE_ID);
+    await controller.deleteFileEndpoint(FILE_ID);
+    expect(deleteFile.execute).toHaveBeenCalledWith(FILE_ID);
   });
 
-  it('presignedUrlEndpoint — passes tenantId, fileId, and query params', async () => {
+  it('presignedUrlEndpoint — passes fileId and query params', async () => {
     const { controller, generatePresignedUrl } = buildController();
-    await controller.presignedUrlEndpoint(TENANT, FILE_ID, { expiresIn: 3600 } as never);
+    await controller.presignedUrlEndpoint(FILE_ID, { expiresIn: 3600 } as never);
     expect(generatePresignedUrl.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, fileId: FILE_ID, expiresIn: 3600 }),
+      expect.objectContaining({ fileId: FILE_ID, expiresIn: 3600 }),
     );
   });
 });

@@ -22,7 +22,6 @@ export const ALLOWED_MIME_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 export type UploadFileCommand = UploadFileDto & {
-  tenantId: string;
   filename: string;
   mimetype: string;
   size: number;
@@ -55,13 +54,12 @@ export class UploadFileHandler {
     }
 
     const ext = extname(cmd.filename).toLowerCase();
-    const storageKey = `${cmd.tenantId}/${randomUUID()}${ext}`;
+    const storageKey = `${randomUUID()}${ext}`;
 
     const url = await this.storage.uploadFile(this.defaultBucket, storageKey, buffer, cmd.mimetype);
 
     const file = await this.prisma.file.create({
       data: {
-        tenantId: cmd.tenantId,
         bucket: this.defaultBucket,
         storageKey,
         filename: cmd.filename,

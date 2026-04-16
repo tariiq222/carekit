@@ -5,9 +5,9 @@ import { PrismaService } from '../../../infrastructure/database';
 export class GetFileHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(tenantId: string, fileId: string) {
+  async execute(fileId: string) {
     const file = await this.prisma.file.findFirst({
-      where: { id: fileId, tenantId, isDeleted: false },
+      where: { id: fileId, isDeleted: false },
     });
     if (!file) throw new NotFoundException('File not found');
     return file;

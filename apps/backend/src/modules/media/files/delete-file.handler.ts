@@ -9,9 +9,9 @@ export class DeleteFileHandler {
     private readonly storage: MinioService,
   ) {}
 
-  async execute(tenantId: string, fileId: string) {
+  async execute(fileId: string) {
     const file = await this.prisma.file.findFirst({
-      where: { id: fileId, tenantId, isDeleted: false },
+      where: { id: fileId, isDeleted: false },
     });
     if (!file) throw new NotFoundException('File not found');
 

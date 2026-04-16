@@ -11,9 +11,8 @@ import { MinioService } from '../../../infrastructure/storage/minio.service';
 
 const mockFile = {
   id: 'f1',
-  tenantId: 'tenant-1',
   bucket: 'carekit',
-  storageKey: 'tenant-1/abc.png',
+  storageKey: 'abc.png',
   filename: 'photo.png',
   mimetype: 'image/png',
   size: 12,
@@ -81,7 +80,6 @@ describe('Media files handlers', () => {
       const buffer = Buffer.from('hello world!');
       const result = await uploadHandler.execute(
         {
-          tenantId: 'tenant-1',
           filename: 'photo.png',
           mimetype: 'image/png',
           size: buffer.length,
@@ -91,16 +89,15 @@ describe('Media files handlers', () => {
       expect(storage.uploadFile).toHaveBeenCalledTimes(1);
       expect(prisma.file.create).toHaveBeenCalledTimes(1);
       const createArg = prisma.file.create.mock.calls[0][0].data;
-      expect(createArg.tenantId).toBe('tenant-1');
       expect(createArg.bucket).toBe('carekit');
-      expect(createArg.storageKey).toMatch(/^tenant-1\/.+\.png$/);
+      expect(createArg.storageKey).toMatch(/^[0-9a-f-]+\.png$/);
       expect(result).toEqual(mockFile);
     });
 
     it('rejects empty buffer', async () => {
       await expect(
         uploadHandler.execute(
-          { tenantId: 't', filename: 'a.txt', mimetype: 'text/plain', size: 0 },
+          { filename: 'a.txt', mimetype: 'text/plain', size: 0 },
           Buffer.alloc(0),
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
@@ -109,7 +106,7 @@ describe('Media files handlers', () => {
     it('rejects size mismatch', async () => {
       await expect(
         uploadHandler.execute(
-          { tenantId: 't', filename: 'a.txt', mimetype: 'text/plain', size: 99 },
+          { filename: 'a.txt', mimetype: 'text/plain', size: 99 },
           Buffer.from('hi'),
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
@@ -119,7 +116,7 @@ describe('Media files handlers', () => {
       const big = Buffer.alloc(26 * 1024 * 1024, 0);
       await expect(
         uploadHandler.execute(
-          { tenantId: 't', filename: 'big.pdf', mimetype: 'application/pdf', size: big.length },
+          { filename: 'big.pdf', mimetype: 'application/pdf', size: big.length },
           big,
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
@@ -129,7 +126,7 @@ describe('Media files handlers', () => {
       const buffer = Buffer.from('MZ');
       await expect(
         uploadHandler.execute(
-          { tenantId: 't', filename: 'evil.exe', mimetype: 'application/x-msdownload', size: buffer.length },
+          { filename: 'evil.exe', mimetype: 'application/x-msdownload', size: buffer.length },
           buffer,
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
@@ -137,24 +134,24 @@ describe('Media files handlers', () => {
   });
 
   describe('get-file', () => {
-    it('returns file by id scoped to tenant', async () => {
-      const result = await getHandler.execute('tenant-1', 'f1');
+    it('returns file by id', async () => {
+      const result = await getHandler.execute('f1');
       expect(prisma.file.findFirst).toHaveBeenCalledWith({
-        where: { id: 'f1', tenantId: 'tenant-1', isDeleted: false },
+        where: { id: 'f1', isDeleted: false },
       });
       expect(result).toEqual(mockFile);
     });
 
     it('throws NotFound when missing', async () => {
       prisma.file.findFirst.mockResolvedValueOnce(null);
-      await expect(getHandler.execute('tenant-1', 'missing')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(getHandler.execute('missing')).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
   describe('delete-file', () => {
     it('removes object from storage and soft-deletes row', async () => {
-      const result = await deleteHandler.execute('tenant-1', 'f1');
-      expect(storage.deleteFile).toHaveBeenCalledWith('carekit', 'tenant-1/abc.png');
+      const result = await deleteHandler.execute('f1');
+      expect(storage.deleteFile).toHaveBeenCalledWith('carekit', 'abc.png');
       expect(prisma.file.update).toHaveBeenCalledWith({
         where: { id: 'f1' },
         data: { isDeleted: true },
@@ -164,28 +161,28 @@ describe('Media files handlers', () => {
 
     it('throws NotFound when file missing', async () => {
       prisma.file.findFirst.mockResolvedValueOnce(null);
-      await expect(deleteHandler.execute('tenant-1', 'missing')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(deleteHandler.execute('missing')).rejects.toBeInstanceOf(NotFoundException);
       expect(storage.deleteFile).not.toHaveBeenCalled();
     });
   });
 
   describe('generate-presigned-url', () => {
     it('returns signed url with default expiry', async () => {
-      const result = await presignHandler.execute({ tenantId: 'tenant-1', fileId: 'f1' });
-      expect(storage.getSignedUrl).toHaveBeenCalledWith('carekit', 'tenant-1/abc.png', 3600);
+      const result = await presignHandler.execute({ fileId: 'f1' });
+      expect(storage.getSignedUrl).toHaveBeenCalledWith('carekit', 'abc.png', 3600);
       expect(result.url).toBe('http://minio/signed?token=xyz');
       expect(result.expiresInSeconds).toBe(3600);
     });
 
     it('honors custom expiry', async () => {
-      await presignHandler.execute({ tenantId: 'tenant-1', fileId: 'f1', expirySeconds: 600 });
-      expect(storage.getSignedUrl).toHaveBeenCalledWith('carekit', 'tenant-1/abc.png', 600);
+      await presignHandler.execute({ fileId: 'f1', expirySeconds: 600 });
+      expect(storage.getSignedUrl).toHaveBeenCalledWith('carekit', 'abc.png', 600);
     });
 
     it('throws NotFound when file missing', async () => {
       prisma.file.findFirst.mockResolvedValueOnce(null);
       await expect(
-        presignHandler.execute({ tenantId: 'tenant-1', fileId: 'missing' }),
+        presignHandler.execute({ fileId: 'missing' }),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
