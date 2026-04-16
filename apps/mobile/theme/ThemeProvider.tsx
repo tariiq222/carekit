@@ -4,7 +4,6 @@ import { buildTheme, type AppTheme } from './tokens';
 import type { BrandingConfig } from '@carekit/shared/types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5100/api/v1';
-const TENANT_ID = process.env.EXPO_PUBLIC_TENANT_ID ?? '';
 
 interface ThemeContextValue {
   theme: AppTheme;
@@ -39,8 +38,7 @@ export function ThemeProvider({ children, language = 'ar' }: ThemeProviderProps)
   }, [isRTL]);
 
   useEffect(() => {
-    if (!TENANT_ID) return;
-    fetch(`${API_BASE}/public/branding/${TENANT_ID}`)
+    fetch(`${API_BASE}/public/branding`)
       .then((r) => r.json())
       .then((body) => {
         const data: BrandingConfig = body.data ?? body;
