@@ -128,7 +128,7 @@ model CouponRedemption {
 // ─── ZATCA Config ─────────────────────────────────────────────────────────────
 
 model ZatcaConfig {
-  id                    String    @id @default(uuid())
+  id                    String    @id @default("default")
   vatRegistrationNumber String?
   sellerName            String?
   environment           String    @default("sandbox") // "sandbox" | "production"

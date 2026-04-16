@@ -239,7 +239,7 @@ model Holiday {
 // ─── Branding Config ─────────────────────────────────────────────────────────
 
 model BrandingConfig {
-  id           String   @id @default(uuid())
+  id           String   @id @default("default")
   clinicNameAr String
   clinicNameEn String?
   logoUrl      String?
@@ -310,7 +310,7 @@ model Rating {
 // ─── Organization Settings ────────────────────────────────────────────────────
 
 model OrganizationSettings {
-  id                     String   @id @default(uuid())
+  id                     String   @id @default("default")
   companyNameAr          String?
   companyNameEn          String?
   businessRegistration   String?
