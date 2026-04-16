@@ -3,10 +3,10 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { ListDocumentsDto, UpdateDocumentDto } from './manage-knowledge-base.dto';
 
-export type ListDocumentsQuery = ListDocumentsDto & { tenantId: string };
-export type GetDocumentQuery = { tenantId: string; documentId: string };
-export type DeleteDocumentCommand = { tenantId: string; documentId: string };
-export type UpdateDocumentCommand = UpdateDocumentDto & { tenantId: string; documentId: string };
+export type ListDocumentsQuery = ListDocumentsDto;
+export type GetDocumentQuery = { documentId: string };
+export type DeleteDocumentCommand = { documentId: string };
+export type UpdateDocumentCommand = UpdateDocumentDto & { documentId: string };
 
 @Injectable()
 export class ManageKnowledgeBaseHandler {
@@ -18,7 +18,6 @@ export class ManageKnowledgeBaseHandler {
     const skip = (page - 1) * limit;
 
     const where = {
-      tenantId: dto.tenantId,
       ...(dto.status ? { status: dto.status } : {}),
     };
 
@@ -37,7 +36,7 @@ export class ManageKnowledgeBaseHandler {
 
   async getDocument(dto: GetDocumentQuery) {
     const doc = await this.prisma.knowledgeDocument.findFirst({
-      where: { id: dto.documentId, tenantId: dto.tenantId },
+      where: { id: dto.documentId },
       include: {
         chunks: {
           select: { id: true, chunkIndex: true, tokenCount: true },

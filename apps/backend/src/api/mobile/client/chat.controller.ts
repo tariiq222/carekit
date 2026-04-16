@@ -49,7 +49,6 @@ export class MobileClientChatController {
       clientId: user.sub,
       userMessage: body.userMessage,
       sessionId: body.sessionId,
-      tenantId: '', // TODO: remove after ai-cluster migration
     });
   }
 

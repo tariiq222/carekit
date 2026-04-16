@@ -4,7 +4,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { EmbeddingAdapter } from '../../../infrastructure/ai';
 import { EmbedDocumentDto } from './embed-document.dto';
 
-export type EmbedDocumentCommand = EmbedDocumentDto & { tenantId: string };
+export type EmbedDocumentCommand = EmbedDocumentDto;
 
 const CHUNK_SIZE = 2000;
 const CHUNK_OVERLAP = 100;
@@ -34,7 +34,6 @@ export class EmbedDocumentHandler {
 
     const doc = await this.prisma.knowledgeDocument.create({
       data: {
-        tenantId: dto.tenantId,
         title: dto.title,
         sourceType: dto.sourceType,
         sourceRef: dto.sourceRef,
@@ -51,7 +50,6 @@ export class EmbedDocumentHandler {
       await this.prisma.$transaction(async (tx) => {
         await tx.documentChunk.createMany({
           data: chunks.map((content, i) => ({
-            tenantId: dto.tenantId,
             documentId: doc.id,
             content,
             chunkIndex: i,

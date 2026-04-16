@@ -23,7 +23,6 @@ const mockChat = () => ({
 });
 
 const dto = {
-  tenantId: 't1',
   userMessage: 'How do I book an appointment?',
 };
 

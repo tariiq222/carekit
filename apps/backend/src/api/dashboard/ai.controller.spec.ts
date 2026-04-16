@@ -1,6 +1,5 @@
 import { DashboardAiController } from './ai.controller';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 const kbFn = () => ({
   listDocuments: jest.fn().mockResolvedValue({ data: [] }),
@@ -12,40 +11,47 @@ const kbFn = () => ({
 function buildController() {
   const knowledgeBase = kbFn();
   const chatCompletion = fn({ content: 'Hello' });
-  const controller = new DashboardAiController(knowledgeBase as never, chatCompletion as never);
-  return { controller, knowledgeBase, chatCompletion };
+  const getChatbotConfig = fn({});
+  const upsertChatbotConfig = fn({});
+  const controller = new DashboardAiController(
+    knowledgeBase as never,
+    chatCompletion as never,
+    getChatbotConfig as never,
+    upsertChatbotConfig as never,
+  );
+  return { controller, knowledgeBase, chatCompletion, getChatbotConfig, upsertChatbotConfig };
 }
 
 describe('DashboardAiController', () => {
-  it('listDocuments — passes tenantId', async () => {
+  it('listDocuments — delegates to knowledgeBase', async () => {
     const { controller, knowledgeBase } = buildController();
-    await controller.listDocuments(TENANT, {} as never);
-    expect(knowledgeBase.listDocuments).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listDocuments({} as never);
+    expect(knowledgeBase.listDocuments).toHaveBeenCalledWith({});
   });
 
-  it('getDocument — passes tenantId and id', async () => {
+  it('getDocument — passes documentId', async () => {
     const { controller, knowledgeBase } = buildController();
-    await controller.getDocument(TENANT, 'doc-1');
-    expect(knowledgeBase.getDocument).toHaveBeenCalledWith({ tenantId: TENANT, documentId: 'doc-1' });
+    await controller.getDocument('doc-1');
+    expect(knowledgeBase.getDocument).toHaveBeenCalledWith({ documentId: 'doc-1' });
   });
 
-  it('updateDocument — passes tenantId and id', async () => {
+  it('updateDocument — passes documentId and body', async () => {
     const { controller, knowledgeBase } = buildController();
-    await controller.updateDocument(TENANT, 'doc-1', { isActive: false } as never);
+    await controller.updateDocument('doc-1', { isActive: false } as never);
     expect(knowledgeBase.updateDocument).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, documentId: 'doc-1' }),
+      expect.objectContaining({ documentId: 'doc-1' }),
     );
   });
 
-  it('deleteDocument — passes tenantId and id', async () => {
+  it('deleteDocument — passes documentId', async () => {
     const { controller, knowledgeBase } = buildController();
-    await controller.deleteDocument(TENANT, 'doc-1');
-    expect(knowledgeBase.deleteDocument).toHaveBeenCalledWith({ tenantId: TENANT, documentId: 'doc-1' });
+    await controller.deleteDocument('doc-1');
+    expect(knowledgeBase.deleteDocument).toHaveBeenCalledWith({ documentId: 'doc-1' });
   });
 
-  it('chatCompletionEndpoint — passes tenantId', async () => {
+  it('chatCompletionEndpoint — delegates body to handler', async () => {
     const { controller, chatCompletion } = buildController();
-    await controller.chatCompletionEndpoint(TENANT, { messages: [] } as never);
-    expect(chatCompletion.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.chatCompletionEndpoint({ userMessage: 'hi' } as never);
+    expect(chatCompletion.execute).toHaveBeenCalledWith({ userMessage: 'hi' });
   });
 });

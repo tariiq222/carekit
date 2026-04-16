@@ -17,7 +17,7 @@ const mockEmbedding = () => ({
   embed: jest.fn().mockResolvedValue([[0.1, 0.2, 0.3]]),
 });
 
-const dto = { tenantId: 't1', query: 'how to book an appointment', topK: 5 };
+const dto = { query: 'how to book an appointment', topK: 5 };
 
 describe('SemanticSearchHandler', () => {
   it('returns ranked chunks with similarity scores', async () => {
@@ -38,13 +38,12 @@ describe('SemanticSearchHandler', () => {
     expect(embedding.embed).toHaveBeenCalledWith(['how to book an appointment']);
   });
 
-  it('passes tenantId filter and topK limit to the query', async () => {
+  it('passes topK limit to the query', async () => {
     const prisma = mockPrisma();
     const embedding = mockEmbedding();
     const handler = new SemanticSearchHandler(prisma as never, embedding as never);
     await handler.execute(dto);
     const rawCall: string = prisma.$queryRawUnsafe.mock.calls[0][0];
-    expect(rawCall).toContain('tenantId');
     expect(rawCall).toContain('LIMIT');
   });
 
@@ -61,17 +60,17 @@ describe('SemanticSearchHandler — embedding unavailable', () => {
     const prisma = { $queryRawUnsafe: jest.fn() };
     const embedding = { isAvailable: jest.fn().mockReturnValue(false), embed: jest.fn() };
     const handler = new SemanticSearchHandler(prisma as never, embedding as never);
-    await expect(handler.execute({ tenantId: 'tenant-1', query: 'test' })).rejects.toThrow('not available');
+    await expect(handler.execute({ query: 'test' })).rejects.toThrow('not available');
   });
 
   it('limits topK to max 20', async () => {
     const prisma = { $queryRawUnsafe: jest.fn().mockResolvedValue([]) };
     const embedding = { isAvailable: jest.fn().mockReturnValue(true), embed: jest.fn().mockResolvedValue([[0.1, 0.2]]) };
     const handler = new SemanticSearchHandler(prisma as never, embedding as never);
-    await handler.execute({ tenantId: 'tenant-1', query: 'test', topK: 100 });
+    await handler.execute({ query: 'test', topK: 100 });
     expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith(
       expect.stringContaining('LIMIT'),
-      expect.anything(), expect.anything(), 20,
+      expect.anything(), 20,
     );
   });
 
@@ -79,9 +78,9 @@ describe('SemanticSearchHandler — embedding unavailable', () => {
     const prisma = { $queryRawUnsafe: jest.fn().mockResolvedValue([]) };
     const embedding = { isAvailable: jest.fn().mockReturnValue(true), embed: jest.fn().mockResolvedValue([[0.1]]) };
     const handler = new SemanticSearchHandler(prisma as never, embedding as never);
-    await handler.execute({ tenantId: 'tenant-1', query: 'test', documentId: 'doc-1' });
+    await handler.execute({ query: 'test', documentId: 'doc-1' });
     expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith(
-      expect.anything(), expect.anything(), expect.anything(), expect.anything(), 'doc-1',
+      expect.anything(), expect.anything(), expect.anything(), 'doc-1',
     );
   });
 });

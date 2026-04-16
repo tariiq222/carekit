@@ -4,7 +4,7 @@ import { ChatAdapter } from '../../../infrastructure/ai';
 import { SemanticSearchHandler } from '../semantic-search/semantic-search.handler';
 import { ChatCompletionDto, ChatCompletionResult } from './chat-completion.dto';
 
-export type ChatCompletionCommand = ChatCompletionDto & { tenantId: string };
+export type ChatCompletionCommand = ChatCompletionDto;
 
 const SYSTEM_PROMPT_TEMPLATE = (context: string) => `
 You are a helpful assistant for a medical clinic using CareKit.
@@ -29,7 +29,6 @@ export class ChatCompletionHandler {
     }
 
     const chunks = await this.search.execute({
-      tenantId: dto.tenantId,
       query: dto.userMessage,
       topK: 5,
     });
@@ -47,7 +46,6 @@ export class ChatCompletionHandler {
     if (!sessionId) {
       const session = await this.prisma.chatSession.create({
         data: {
-          tenantId: dto.tenantId,
           clientId: dto.clientId,
           userId: dto.userId,
         },

@@ -1,6 +1,6 @@
 import { EmbedDocumentHandler } from './embed-document.handler';
 
-const futureDoc = { id: 'doc-1', tenantId: 't1', title: 'Test', status: 'PENDING' };
+const futureDoc = { id: 'doc-1', title: 'Test', status: 'PENDING' };
 
 type MockPrisma = {
   knowledgeDocument: { create: jest.Mock; update: jest.Mock };
@@ -31,7 +31,6 @@ const mockEmbedding = () => ({
 });
 
 const dto = {
-  tenantId: 't1',
   title: 'CareKit FAQ',
   content: 'A'.repeat(3000),
   sourceType: 'manual' as const,
@@ -44,7 +43,7 @@ describe('EmbedDocumentHandler', () => {
     const handler = new EmbedDocumentHandler(prisma as never, embedding as never);
     await handler.execute(dto);
     expect(prisma.knowledgeDocument.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: 'PENDING', tenantId: 't1' }) }),
+      expect.objectContaining({ data: expect.objectContaining({ status: 'PENDING' }) }),
     );
     expect(prisma.knowledgeDocument.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: 'EMBEDDED' }) }),
@@ -86,7 +85,7 @@ describe('EmbedDocumentHandler — chunking', () => {
     const embedding = { isAvailable: jest.fn().mockReturnValue(false), embed: jest.fn() };
     const handler = new EmbedDocumentHandler(prisma as never, embedding as never);
     await expect(handler.execute({
-      tenantId: 'tenant-1', title: 'Doc', content: 'text', sourceType: 'MANUAL' as never,
+      title: 'Doc', content: 'text', sourceType: 'MANUAL' as never,
     })).rejects.toThrow('not available');
   });
 });

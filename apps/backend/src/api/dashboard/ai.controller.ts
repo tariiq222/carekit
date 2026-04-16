@@ -5,7 +5,6 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { ManageKnowledgeBaseHandler } from '../../modules/ai/manage-knowledge-base/manage-knowledge-base.handler';
 import {
   ListDocumentsDto,
@@ -32,60 +31,48 @@ export class DashboardAiController {
   // ── Knowledge Base ─────────────────────────────────────────────────────────
 
   @Get('knowledge-base')
-  listDocuments(@TenantId() tenantId: string, @Query() query: ListDocumentsDto) {
-    return this.knowledgeBase.listDocuments({ tenantId, ...query });
+  listDocuments(@Query() query: ListDocumentsDto) {
+    return this.knowledgeBase.listDocuments(query);
   }
 
   @Get('knowledge-base/:id')
-  getDocument(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.knowledgeBase.getDocument({ tenantId, documentId: id });
+  getDocument(@Param('id', ParseUUIDPipe) id: string) {
+    return this.knowledgeBase.getDocument({ documentId: id });
   }
 
   @Patch('knowledge-base/:id')
   updateDocument(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateDocumentDto,
   ) {
-    return this.knowledgeBase.updateDocument({ tenantId, documentId: id, ...body });
+    return this.knowledgeBase.updateDocument({ documentId: id, ...body });
   }
 
   @Delete('knowledge-base/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteDocument(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.knowledgeBase.deleteDocument({ tenantId, documentId: id });
+  deleteDocument(@Param('id', ParseUUIDPipe) id: string) {
+    return this.knowledgeBase.deleteDocument({ documentId: id });
   }
 
   // ── Chatbot Config ────────────────────────────────────────────────────────
+  // NOTE: tenantId removed; Plan D will convert these to singleton handlers.
 
   @Get('chatbot-config')
-  getChatbotConfigEndpoint(
-    @TenantId() tenantId: string,
-    @Query('category') category?: string,
-  ) {
-    return this.getChatbotConfig.execute({ tenantId, category });
+  getChatbotConfigEndpoint(@Query('category') category?: string) {
+    return this.getChatbotConfig.execute({ category } as never);
   }
 
   @Patch('chatbot-config')
   @HttpCode(HttpStatus.OK)
-  upsertChatbotConfigEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: UpsertChatbotConfigDto,
-  ) {
-    return this.upsertChatbotConfig.execute({ tenantId, configs: body.configs });
+  upsertChatbotConfigEndpoint(@Body() body: UpsertChatbotConfigDto) {
+    return this.upsertChatbotConfig.execute({ configs: body.configs } as never);
   }
 
   // ── Chat Completion ────────────────────────────────────────────────────────
 
   @Post('chat')
   @HttpCode(HttpStatus.OK)
-  chatCompletionEndpoint(@TenantId() tenantId: string, @Body() body: ChatCompletionDto) {
-    return this.chatCompletion.execute({ tenantId, ...body });
+  chatCompletionEndpoint(@Body() body: ChatCompletionDto) {
+    return this.chatCompletion.execute(body);
   }
 }
