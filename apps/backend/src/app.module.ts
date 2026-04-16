@@ -1,4 +1,4 @@
-import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -8,7 +8,6 @@ import { MessagingModule } from './infrastructure/messaging.module';
 import { AiInfraModule } from './infrastructure/ai';
 import { StorageModule } from './infrastructure/storage';
 import { MailModule } from './infrastructure/mail';
-import { TenantMiddleware } from './common/tenant';
 import { IdentityModule } from './modules/identity/identity.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { PeopleModule } from './modules/people/people.module';
@@ -58,15 +57,4 @@ import { PublicModule } from './api/public/public.module';
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer): void {
-    consumer
-      .apply(TenantMiddleware)
-      .exclude(
-        { path: 'api/v1/auth/refresh', method: RequestMethod.POST },
-        { path: 'api/v1/auth/logout', method: RequestMethod.POST },
-        { path: 'api/v1/public/(.*)', method: RequestMethod.ALL },
-      )
-      .forRoutes('*');
-  }
-}
+export class AppModule {}
