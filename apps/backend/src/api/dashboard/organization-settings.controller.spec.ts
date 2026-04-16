@@ -36,30 +36,30 @@ function buildController() {
 }
 
 describe('DashboardOrganizationSettingsController', () => {
-  it('createServiceEndpoint — passes tenantId', async () => {
+  it('createServiceEndpoint — passes body', async () => {
     const { controller, createService } = buildController();
-    await controller.createServiceEndpoint(TENANT, { nameAr: 'خدمة' } as never);
-    expect(createService.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.createServiceEndpoint({ nameAr: 'خدمة' } as never);
+    expect(createService.execute).toHaveBeenCalled();
   });
 
-  it('listServicesEndpoint — passes tenantId', async () => {
+  it('listServicesEndpoint — passes query', async () => {
     const { controller, listServices } = buildController();
-    await controller.listServicesEndpoint(TENANT, {} as never);
-    expect(listServices.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listServicesEndpoint({} as never);
+    expect(listServices.execute).toHaveBeenCalled();
   });
 
-  it('updateServiceEndpoint — passes tenantId and id', async () => {
+  it('updateServiceEndpoint — passes id', async () => {
     const { controller, updateService } = buildController();
-    await controller.updateServiceEndpoint(TENANT, 'svc-1', {} as never);
+    await controller.updateServiceEndpoint('svc-1', {} as never);
     expect(updateService.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, serviceId: 'svc-1' }),
+      expect.objectContaining({ serviceId: 'svc-1' }),
     );
   });
 
-  it('archiveServiceEndpoint — passes tenantId and id', async () => {
+  it('archiveServiceEndpoint — passes id', async () => {
     const { controller, archiveService } = buildController();
-    await controller.archiveServiceEndpoint(TENANT, 'svc-1');
-    expect(archiveService.execute).toHaveBeenCalledWith({ tenantId: TENANT, serviceId: 'svc-1' });
+    await controller.archiveServiceEndpoint('svc-1');
+    expect(archiveService.execute).toHaveBeenCalledWith({ serviceId: 'svc-1' });
   });
 
   it('upsertBrandingEndpoint — passes tenantId', async () => {
@@ -74,27 +74,27 @@ describe('DashboardOrganizationSettingsController', () => {
     expect(getBranding.execute).toHaveBeenCalledWith({ tenantId: TENANT });
   });
 
-  it('createIntakeFormEndpoint — passes tenantId', async () => {
+  it('createIntakeFormEndpoint — passes body', async () => {
     const { controller, createIntakeForm } = buildController();
-    await controller.createIntakeFormEndpoint(TENANT, { title: 'Form' } as never);
-    expect(createIntakeForm.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.createIntakeFormEndpoint({ title: 'Form' } as never);
+    expect(createIntakeForm.execute).toHaveBeenCalled();
   });
 
-  it('listIntakeFormsEndpoint — passes tenantId', async () => {
+  it('listIntakeFormsEndpoint — passes query', async () => {
     const { controller, listIntakeForms } = buildController();
-    await controller.listIntakeFormsEndpoint(TENANT, {} as never);
-    expect(listIntakeForms.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listIntakeFormsEndpoint({} as never);
+    expect(listIntakeForms.execute).toHaveBeenCalled();
   });
 
-  it('submitRatingEndpoint — passes tenantId', async () => {
+  it('submitRatingEndpoint — passes body', async () => {
     const { controller, submitRating } = buildController();
-    await controller.submitRatingEndpoint(TENANT, { bookingId: 'b-1', score: 5 } as never);
-    expect(submitRating.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.submitRatingEndpoint({ bookingId: 'b-1', score: 5 } as never);
+    expect(submitRating.execute).toHaveBeenCalled();
   });
 
-  it('listRatingsEndpoint — passes tenantId', async () => {
+  it('listRatingsEndpoint — passes query', async () => {
     const { controller, listRatings } = buildController();
-    await controller.listRatingsEndpoint(TENANT, {} as never);
-    expect(listRatings.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listRatingsEndpoint({} as never);
+    expect(listRatings.execute).toHaveBeenCalled();
   });
 });

@@ -29,22 +29,23 @@ describe('GetBookingSettingsHandler', () => {
   it('falls back to global settings when no branch-level row exists', async () => {
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
-      findUnique: jest.fn()
-        .mockResolvedValueOnce(null)   // branch query
-        .mockResolvedValueOnce(dbSettings), // global query
+      findUnique: jest.fn().mockResolvedValue(null),
+      findFirst: jest.fn().mockResolvedValue(dbSettings),
     };
     const handler = new GetBookingSettingsHandler(prisma as never);
 
     const result = await handler.execute({ branchId: 'branch-1' });
 
     expect((result as typeof dbSettings).bufferMinutes).toBe(0);
-    expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledTimes(2);
+    expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledTimes(1);
+    expect((prisma as any).bookingSettings.findFirst).toHaveBeenCalledTimes(1);
   });
 
   it('returns hardcoded defaults when no DB row exists', async () => {
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
       findUnique: jest.fn().mockResolvedValue(null),
+      findFirst: jest.fn().mockResolvedValue(null),
     };
     const handler = new GetBookingSettingsHandler(prisma as never);
 

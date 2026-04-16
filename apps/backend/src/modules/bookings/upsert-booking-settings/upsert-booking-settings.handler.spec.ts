@@ -34,7 +34,7 @@ describe('UpsertBookingSettingsHandler', () => {
   it('updates existing settings when row exists', async () => {
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
-      findUnique: jest.fn().mockResolvedValue(dbSettings),
+      findFirst: jest.fn().mockResolvedValue(dbSettings),
       update: jest.fn().mockResolvedValue({ ...dbSettings, bufferMinutes: 5 }),
     };
     const handler = new UpsertBookingSettingsHandler(prisma as never);

@@ -68,54 +68,40 @@ export class DashboardOrganizationSettingsController {
   // ── Services ─────────────────────────────────────────────────────────────
 
   @Post('services')
-  createServiceEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: CreateServiceDto,
-  ) {
-    return this.createService.execute({ tenantId, ...body });
+  createServiceEndpoint(@Body() body: CreateServiceDto) {
+    return this.createService.execute(body);
   }
 
   @Get('services')
-  listServicesEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListServicesDto,
-  ) {
-    return this.listServices.execute({ tenantId, ...query });
+  listServicesEndpoint(@Query() query: ListServicesDto) {
+    return this.listServices.execute(query);
   }
 
   @Patch('services/:serviceId')
   updateServiceEndpoint(
-    @TenantId() tenantId: string,
     @Param('serviceId', ParseUUIDPipe) serviceId: string,
     @Body() body: UpdateServiceDto,
   ) {
-    return this.updateService.execute({ tenantId, serviceId, ...body });
+    return this.updateService.execute({ serviceId, ...body });
   }
 
   @Delete('services/:serviceId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  archiveServiceEndpoint(
-    @TenantId() tenantId: string,
-    @Param('serviceId', ParseUUIDPipe) serviceId: string,
-  ) {
-    return this.archiveService.execute({ tenantId, serviceId });
+  archiveServiceEndpoint(@Param('serviceId', ParseUUIDPipe) serviceId: string) {
+    return this.archiveService.execute({ serviceId });
   }
 
   @Get('services/:serviceId/booking-types')
-  getServiceBookingTypesEndpoint(
-    @TenantId() tenantId: string,
-    @Param('serviceId', ParseUUIDPipe) serviceId: string,
-  ) {
-    return this.getServiceBookingConfigs.execute({ tenantId, serviceId });
+  getServiceBookingTypesEndpoint(@Param('serviceId', ParseUUIDPipe) serviceId: string) {
+    return this.getServiceBookingConfigs.execute({ serviceId });
   }
 
   @Put('services/:serviceId/booking-types')
   setServiceBookingTypesEndpoint(
-    @TenantId() tenantId: string,
     @Param('serviceId', ParseUUIDPipe) serviceId: string,
     @Body() body: SetServiceBookingConfigsDto,
   ) {
-    return this.setServiceBookingConfigs.execute({ tenantId, serviceId, ...body });
+    return this.setServiceBookingConfigs.execute({ serviceId, ...body });
   }
 
   // ── Branding ──────────────────────────────────────────────────────────────
@@ -155,54 +141,36 @@ export class DashboardOrganizationSettingsController {
   // ── Intake Forms ──────────────────────────────────────────────────────────
 
   @Post('intake-forms')
-  createIntakeFormEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: CreateIntakeFormDto,
-  ) {
-    return this.createIntakeForm.execute({ tenantId, ...body });
+  createIntakeFormEndpoint(@Body() body: CreateIntakeFormDto) {
+    return this.createIntakeForm.execute(body);
   }
 
   @Get('intake-forms')
-  listIntakeFormsEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListIntakeFormsDto,
-  ) {
-    return this.listIntakeForms.execute({ tenantId, ...query });
+  listIntakeFormsEndpoint(@Query() query: ListIntakeFormsDto) {
+    return this.listIntakeForms.execute(query);
   }
 
   @Get('intake-forms/:formId')
-  getIntakeFormEndpoint(
-    @TenantId() tenantId: string,
-    @Param('formId', ParseUUIDPipe) formId: string,
-  ) {
-    return this.getIntakeForm.execute({ tenantId, formId });
+  getIntakeFormEndpoint(@Param('formId', ParseUUIDPipe) formId: string) {
+    return this.getIntakeForm.execute({ formId });
   }
 
   @Delete('intake-forms/:formId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteIntakeFormEndpoint(
-    @TenantId() tenantId: string,
-    @Param('formId', ParseUUIDPipe) formId: string,
-  ) {
-    return this.deleteIntakeForm.execute({ tenantId, formId });
+  deleteIntakeFormEndpoint(@Param('formId', ParseUUIDPipe) formId: string) {
+    return this.deleteIntakeForm.execute({ formId });
   }
 
   // ── Ratings ───────────────────────────────────────────────────────────────
 
   @Post('ratings')
-  submitRatingEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: SubmitRatingDto,
-  ) {
-    return this.submitRating.execute({ tenantId, ...body });
+  submitRatingEndpoint(@Body() body: SubmitRatingDto) {
+    return this.submitRating.execute(body);
   }
 
   @Get('ratings')
-  listRatingsEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListRatingsDto,
-  ) {
-    return this.listRatings.execute({ tenantId, ...query });
+  listRatingsEndpoint(@Query() query: ListRatingsDto) {
+    return this.listRatings.execute(query);
   }
 
   // ── Organization Settings ─────────────────────────────────────────────────
@@ -220,12 +188,12 @@ export class DashboardOrganizationSettingsController {
   // ── Booking Settings ──────────────────────────────────────────────────────
 
   @Get('booking-settings')
-  getBookingSettingsEndpoint(@TenantId() tenantId: string) {
-    return this.getBookingSettings.execute({ tenantId, branchId: null });
+  getBookingSettingsEndpoint() {
+    return this.getBookingSettings.execute({ branchId: null });
   }
 
   @Patch('booking-settings')
-  upsertBookingSettingsEndpoint(@TenantId() tenantId: string, @Body() body: Record<string, unknown>) {
-    return this.upsertBookingSettings.execute({ tenantId, branchId: null, ...body });
+  upsertBookingSettingsEndpoint(@Body() body: Record<string, unknown>) {
+    return this.upsertBookingSettings.execute({ branchId: null, ...body });
   }
 }
