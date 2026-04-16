@@ -1,8 +1,8 @@
 import { PriceResolverService } from './price-resolver.service';
 
-const mockService = { id: 'svc-1', tenantId: 'tenant-1', price: 200, durationMins: 60, currency: 'SAR' };
+const mockService = { id: 'svc-1', price: 200, durationMins: 60, currency: 'SAR' };
 const mockDurationOption = { id: 'opt-1', serviceId: 'svc-1', price: 250, durationMins: 45, isDefault: true, bookingType: 'INDIVIDUAL' as const, currency: 'SAR', isActive: true };
-const mockEmployeeServiceOption = { employeeServiceId: 'es-1', durationOptionId: 'opt-1', priceOverride: 300, durationOverride: 50, isActive: true, tenantId: 'tenant-1' };
+const mockEmployeeServiceOption = { employeeServiceId: 'es-1', durationOptionId: 'opt-1', priceOverride: 300, durationOverride: 50, isActive: true };
 
 const buildPrisma = (overrides: Partial<{
   service: unknown; durationOption: unknown; employeeServiceOption: unknown;
@@ -24,7 +24,7 @@ describe('PriceResolverService', () => {
     const service = new PriceResolverService(prisma as never);
 
     const result = await service.resolve({
-      tenantId: 'tenant-1', serviceId: 'svc-1',
+      serviceId: 'svc-1',
       employeeServiceId: null, durationOptionId: 'opt-1',
     });
 
@@ -38,7 +38,7 @@ describe('PriceResolverService', () => {
     const service = new PriceResolverService(prisma as never);
 
     const result = await service.resolve({
-      tenantId: 'tenant-1', serviceId: 'svc-1',
+      serviceId: 'svc-1',
       employeeServiceId: 'es-1', durationOptionId: 'opt-1',
     });
 
@@ -53,7 +53,7 @@ describe('PriceResolverService', () => {
     const service = new PriceResolverService(prisma as never);
 
     const result = await service.resolve({
-      tenantId: 'tenant-1', serviceId: 'svc-1',
+      serviceId: 'svc-1',
       employeeServiceId: null, durationOptionId: null,
     });
 
@@ -67,7 +67,7 @@ describe('PriceResolverService', () => {
     const service = new PriceResolverService(prisma as never);
 
     const result = await service.resolve({
-      tenantId: 'tenant-1', serviceId: 'svc-1',
+      serviceId: 'svc-1',
       employeeServiceId: null, durationOptionId: 'opt-1',
     });
 

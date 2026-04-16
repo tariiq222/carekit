@@ -3,7 +3,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 import { ListRatingsDto } from './list-ratings.dto';
 
-export type ListRatingsCommand = ListRatingsDto & { tenantId: string };
+export type ListRatingsCommand = ListRatingsDto;
 
 @Injectable()
 export class ListRatingsHandler {
@@ -15,7 +15,6 @@ export class ListRatingsHandler {
     const skip = (page - 1) * limit;
 
     const where = {
-      tenantId: dto.tenantId,
       ...(dto.employeeId && { employeeId: dto.employeeId }),
       ...(dto.clientId && { clientId: dto.clientId }),
     };

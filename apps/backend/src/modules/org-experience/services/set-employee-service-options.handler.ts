@@ -3,7 +3,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { SetEmployeeServiceOptionsDto } from './set-employee-service-options.dto';
 
 export type SetEmployeeServiceOptionsCommand = SetEmployeeServiceOptionsDto & {
-  tenantId: string;
   employeeServiceId: string;
 };
 
@@ -12,10 +11,9 @@ export class SetEmployeeServiceOptionsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(dto: SetEmployeeServiceOptionsCommand) {
-    // Verify each durationOptionId belongs to the tenant
     const optionIds = dto.options.map((o) => o.durationOptionId);
     const validOptions = await this.prisma.serviceDurationOption.findMany({
-      where: { id: { in: optionIds }, tenantId: dto.tenantId },
+      where: { id: { in: optionIds } },
       select: { id: true },
     });
     const validIds = new Set(validOptions.map((o) => o.id));
@@ -33,7 +31,6 @@ export class SetEmployeeServiceOptionsHandler {
           },
         },
         create: {
-          tenantId: dto.tenantId,
           employeeServiceId: dto.employeeServiceId,
           durationOptionId: opt.durationOptionId,
           priceOverride: opt.priceOverride ?? null,
@@ -51,7 +48,7 @@ export class SetEmployeeServiceOptionsHandler {
     await this.prisma.$transaction(upserts);
 
     return this.prisma.employeeServiceOption.findMany({
-      where: { employeeServiceId: dto.employeeServiceId, tenantId: dto.tenantId },
+      where: { employeeServiceId: dto.employeeServiceId },
       include: { durationOption: true },
     });
   }

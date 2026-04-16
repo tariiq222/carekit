@@ -3,7 +3,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 import { ListServicesDto } from './list-services.dto';
 
-export type ListServicesCommand = ListServicesDto & { tenantId: string };
+export type ListServicesCommand = ListServicesDto;
 
 @Injectable()
 export class ListServicesHandler {
@@ -15,7 +15,6 @@ export class ListServicesHandler {
     const skip = (page - 1) * limit;
 
     const where = {
-      tenantId: dto.tenantId,
       archivedAt: null,
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       // إخفاء الخدمات المخفية افتراضياً ما لم يُطلب تضمينها صراحةً

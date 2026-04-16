@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
-export type ArchiveServiceCommand = { tenantId: string; serviceId: string };
+export type ArchiveServiceCommand = { serviceId: string };
 
 @Injectable()
 export class ArchiveServiceHandler {
@@ -9,7 +9,7 @@ export class ArchiveServiceHandler {
 
   async execute(dto: ArchiveServiceCommand) {
     const service = await this.prisma.service.findFirst({
-      where: { id: dto.serviceId, tenantId: dto.tenantId, archivedAt: null },
+      where: { id: dto.serviceId, archivedAt: null },
     });
     if (!service) throw new NotFoundException('Service not found');
 

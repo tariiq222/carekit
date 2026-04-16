@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../infrastructure/database';
 import { UpdateServiceDto } from './update-service.dto';
 
-export type UpdateServiceCommand = UpdateServiceDto & { tenantId: string; serviceId: string };
+export type UpdateServiceCommand = UpdateServiceDto & { serviceId: string };
 
 @Injectable()
 export class UpdateServiceHandler {
@@ -10,7 +10,7 @@ export class UpdateServiceHandler {
 
   async execute(dto: UpdateServiceCommand) {
     const service = await this.prisma.service.findFirst({
-      where: { id: dto.serviceId, tenantId: dto.tenantId, archivedAt: null },
+      where: { id: dto.serviceId, archivedAt: null },
     });
     if (!service) throw new NotFoundException('Service not found');
 

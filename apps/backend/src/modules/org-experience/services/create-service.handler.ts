@@ -2,7 +2,7 @@ import { Injectable, ConflictException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../infrastructure/database';
 import { CreateServiceDto } from './create-service.dto';
 
-export type CreateServiceCommand = CreateServiceDto & { tenantId: string };
+export type CreateServiceCommand = CreateServiceDto;
 
 @Injectable()
 export class CreateServiceHandler {
@@ -12,13 +12,12 @@ export class CreateServiceHandler {
     this.validateBusinessRules(dto);
 
     const existing = await this.prisma.service.findFirst({
-      where: { tenantId: dto.tenantId, nameAr: dto.nameAr, archivedAt: null },
+      where: { nameAr: dto.nameAr, archivedAt: null },
     });
     if (existing) throw new ConflictException('Service with this Arabic name already exists');
 
     return this.prisma.service.create({
       data: {
-        tenantId: dto.tenantId,
         nameAr: dto.nameAr,
         nameEn: dto.nameEn,
         descriptionAr: dto.descriptionAr,

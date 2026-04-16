@@ -4,7 +4,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { SetServiceBookingConfigsDto, type ServiceBookingTypeValue } from './set-service-booking-configs.dto';
 
 export type SetServiceBookingConfigsCommand = SetServiceBookingConfigsDto & {
-  tenantId: string;
   serviceId: string;
 };
 
@@ -14,7 +13,7 @@ export class SetServiceBookingConfigsHandler {
 
   async execute(cmd: SetServiceBookingConfigsCommand) {
     const service = await this.prisma.service.findFirst({
-      where: { id: cmd.serviceId, tenantId: cmd.tenantId },
+      where: { id: cmd.serviceId },
     });
     if (!service) throw new NotFoundException('Service not found');
 
@@ -38,7 +37,6 @@ export class SetServiceBookingConfigsHandler {
           },
           create: {
             id: randomUUID(),
-            tenantId: cmd.tenantId,
             serviceId: cmd.serviceId,
             bookingType: t.bookingType,
             price: t.price,
@@ -56,7 +54,7 @@ export class SetServiceBookingConfigsHandler {
     ]);
 
     return this.prisma.serviceBookingConfig.findMany({
-      where: { serviceId: cmd.serviceId, tenantId: cmd.tenantId },
+      where: { serviceId: cmd.serviceId },
       orderBy: { bookingType: 'asc' },
     });
   }

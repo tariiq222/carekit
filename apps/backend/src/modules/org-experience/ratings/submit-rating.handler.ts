@@ -2,7 +2,7 @@ import { Injectable, ConflictException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../infrastructure/database';
 import { SubmitRatingDto } from './submit-rating.dto';
 
-export type SubmitRatingCommand = SubmitRatingDto & { tenantId: string };
+export type SubmitRatingCommand = SubmitRatingDto;
 
 @Injectable()
 export class SubmitRatingHandler {
@@ -20,7 +20,6 @@ export class SubmitRatingHandler {
 
     return this.prisma.rating.create({
       data: {
-        tenantId: dto.tenantId,
         bookingId: dto.bookingId,
         clientId: dto.clientId,
         employeeId: dto.employeeId,

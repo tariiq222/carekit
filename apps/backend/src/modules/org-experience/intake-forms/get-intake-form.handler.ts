@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
-export type GetIntakeFormCommand = { tenantId: string; formId: string };
+export type GetIntakeFormCommand = { formId: string };
 
 @Injectable()
 export class GetIntakeFormHandler {
@@ -9,7 +9,7 @@ export class GetIntakeFormHandler {
 
   async execute(dto: GetIntakeFormCommand) {
     const form = await this.prisma.intakeForm.findFirst({
-      where: { id: dto.formId, tenantId: dto.tenantId },
+      where: { id: dto.formId },
       include: { fields: { orderBy: { position: 'asc' } } },
     });
     if (!form) throw new NotFoundException('Intake form not found');

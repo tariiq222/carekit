@@ -4,7 +4,6 @@ import { ListRatingsHandler } from './list-ratings.handler';
 
 const mockRating = {
   id: 'rating-1',
-  tenantId: 'tenant-1',
   bookingId: 'booking-1',
   clientId: 'client-1',
   employeeId: 'emp-1',
@@ -24,7 +23,7 @@ const buildPrisma = () => ({
   $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
 });
 
-const validDto = { tenantId: 'tenant-1', bookingId: 'booking-1', clientId: 'client-1', employeeId: 'emp-1', score: 5 };
+const validDto = { bookingId: 'booking-1', clientId: 'client-1', employeeId: 'emp-1', score: 5 };
 
 describe('SubmitRatingHandler', () => {
   it('creates rating for valid input', async () => {
@@ -53,7 +52,7 @@ describe('ListRatingsHandler', () => {
   it('returns paginated ratings', async () => {
     const prisma = buildPrisma();
     const handler = new ListRatingsHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1' });
+    const result = await handler.execute({});
     expect(result.items).toHaveLength(1);
     expect(result.meta.total).toBe(1);
   });
@@ -61,7 +60,7 @@ describe('ListRatingsHandler', () => {
   it('filters by employeeId', async () => {
     const prisma = buildPrisma();
     const handler = new ListRatingsHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1', employeeId: 'emp-1' });
+    await handler.execute({ employeeId: 'emp-1' });
     const call = (prisma.rating.findMany as jest.Mock).mock.calls[0][0];
     expect(call.where.employeeId).toBe('emp-1');
   });

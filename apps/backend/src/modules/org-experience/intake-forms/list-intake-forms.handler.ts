@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { ListIntakeFormsDto } from './list-intake-forms.dto';
 
-export type ListIntakeFormsCommand = ListIntakeFormsDto & { tenantId: string };
+export type ListIntakeFormsCommand = ListIntakeFormsDto;
 
 @Injectable()
 export class ListIntakeFormsHandler {
@@ -11,7 +11,6 @@ export class ListIntakeFormsHandler {
   async execute(dto: ListIntakeFormsCommand) {
     return this.prisma.intakeForm.findMany({
       where: {
-        tenantId: dto.tenantId,
         ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       },
       include: { fields: { orderBy: { position: 'asc' } } },

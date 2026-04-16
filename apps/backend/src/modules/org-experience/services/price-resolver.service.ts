@@ -22,24 +22,21 @@ export class PriceResolverService {
    * 2. ServiceDurationOption.price / durationMins (catalog option)
    * 3. Service.price / durationMins (service-level fallback)
    *
-   * @param tenantId    - tenant scope
    * @param serviceId   - the service being booked
    * @param employeeServiceId - EmployeeService join-table id (null for unassigned)
    * @param durationOptionId  - chosen ServiceDurationOption; null = use isDefault
    * @param bookingType - booking type for option lookup when durationOptionId is null
    */
   async resolve(params: {
-    tenantId: string;
     serviceId: string;
     employeeServiceId: string | null;
     durationOptionId: string | null;
     bookingType?: BookingType | null;
   }): Promise<ResolvedPrice> {
-    const { tenantId, serviceId, employeeServiceId, durationOptionId, bookingType } = params;
+    const { serviceId, employeeServiceId, durationOptionId, bookingType } = params;
 
     // --- Step 1: resolve the ServiceDurationOption ---
     const durationOption = await this.resolveDurationOption({
-      tenantId,
       serviceId,
       durationOptionId,
       bookingType,
@@ -50,7 +47,6 @@ export class PriceResolverService {
     if (employeeServiceId && durationOption) {
       employeeOverride = await this.prisma.employeeServiceOption.findFirst({
         where: {
-          tenantId,
           employeeServiceId,
           durationOptionId: durationOption.id,
           isActive: true,
@@ -95,16 +91,15 @@ export class PriceResolverService {
   }
 
   private async resolveDurationOption(params: {
-    tenantId: string;
     serviceId: string;
     durationOptionId: string | null;
     bookingType?: BookingType | null;
   }) {
-    const { tenantId, serviceId, durationOptionId, bookingType } = params;
+    const { serviceId, durationOptionId, bookingType } = params;
 
     if (durationOptionId) {
       return this.prisma.serviceDurationOption.findFirst({
-        where: { id: durationOptionId, tenantId, serviceId, isActive: true },
+        where: { id: durationOptionId, serviceId, isActive: true },
         select: { id: true, price: true, durationMins: true, currency: true },
       });
     }
@@ -112,7 +107,7 @@ export class PriceResolverService {
     // Try: default option scoped to this bookingType
     if (bookingType) {
       const scoped = await this.prisma.serviceDurationOption.findFirst({
-        where: { tenantId, serviceId, bookingType, isDefault: true, isActive: true },
+        where: { serviceId, bookingType, isDefault: true, isActive: true },
         select: { id: true, price: true, durationMins: true, currency: true },
       });
       if (scoped) return scoped;
@@ -120,14 +115,14 @@ export class PriceResolverService {
 
     // Try: default option with no bookingType restriction (applies to all)
     const global = await this.prisma.serviceDurationOption.findFirst({
-      where: { tenantId, serviceId, bookingType: null, isDefault: true, isActive: true },
+      where: { serviceId, bookingType: null, isDefault: true, isActive: true },
       select: { id: true, price: true, durationMins: true, currency: true },
     });
     if (global) return global;
 
     // Last resort: first active option regardless of defaults
     return this.prisma.serviceDurationOption.findFirst({
-      where: { tenantId, serviceId, isActive: true },
+      where: { serviceId, isActive: true },
       orderBy: [{ bookingType: 'asc' }, { sortOrder: 'asc' }],
       select: { id: true, price: true, durationMins: true, currency: true },
     });

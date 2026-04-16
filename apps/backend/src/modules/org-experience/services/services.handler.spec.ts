@@ -9,7 +9,6 @@ import { SetEmployeeServiceOptionsHandler } from './set-employee-service-options
 
 const mockService = {
   id: 'svc-1',
-  tenantId: 'tenant-1',
   nameAr: 'قص الشعر',
   nameEn: 'Haircut',
   descriptionAr: null,
@@ -54,13 +53,11 @@ const buildPrisma = () => ({
   $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
 });
 
-// ─── CreateServiceHandler ─────────────────────────────────────────────────────
-
 describe('CreateServiceHandler', () => {
   it('creates service when name is unique', async () => {
     const prisma = buildPrisma();
     const handler = new CreateServiceHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', nameAr: 'قص الشعر', durationMins: 30, price: 50 });
+    const result = await handler.execute({ nameAr: 'قص الشعر', durationMins: 30, price: 50 });
     expect(result.id).toBe('svc-1');
   });
 
@@ -69,7 +66,7 @@ describe('CreateServiceHandler', () => {
     prisma.service.findFirst = jest.fn().mockResolvedValue(mockService);
     const handler = new CreateServiceHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', nameAr: 'قص الشعر', durationMins: 30, price: 50 }),
+      handler.execute({ nameAr: 'قص الشعر', durationMins: 30, price: 50 }),
     ).rejects.toThrow(ConflictException);
   });
 
@@ -78,7 +75,6 @@ describe('CreateServiceHandler', () => {
     const handler = new CreateServiceHandler(prisma as never);
     await expect(
       handler.execute({
-        tenantId: 'tenant-1',
         nameAr: 'خدمة جديدة',
         durationMins: 30,
         price: 100,
@@ -93,7 +89,6 @@ describe('CreateServiceHandler', () => {
     const handler = new CreateServiceHandler(prisma as never);
     await expect(
       handler.execute({
-        tenantId: 'tenant-1',
         nameAr: 'جلسة جماعية',
         durationMins: 60,
         price: 100,
@@ -108,7 +103,6 @@ describe('CreateServiceHandler', () => {
     const handler = new CreateServiceHandler(prisma as never);
     await expect(
       handler.execute({
-        tenantId: 'tenant-1',
         nameAr: 'خدمة فردية',
         durationMins: 30,
         price: 100,
@@ -122,7 +116,6 @@ describe('CreateServiceHandler', () => {
     const prisma = buildPrisma();
     const handler = new CreateServiceHandler(prisma as never);
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       nameAr: 'يوغا جماعية',
       durationMins: 60,
       price: 100,
@@ -137,7 +130,6 @@ describe('CreateServiceHandler', () => {
     const prisma = buildPrisma();
     const handler = new CreateServiceHandler(prisma as never);
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       nameAr: 'علاج أسبوعي',
       durationMins: 45,
       price: 200,
@@ -149,14 +141,12 @@ describe('CreateServiceHandler', () => {
   });
 });
 
-// ─── UpdateServiceHandler ─────────────────────────────────────────────────────
-
 describe('UpdateServiceHandler', () => {
   it('updates service when found', async () => {
     const prisma = buildPrisma();
     prisma.service.findFirst = jest.fn().mockResolvedValue(mockService);
     const handler = new UpdateServiceHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', serviceId: 'svc-1', durationMins: 45 });
+    const result = await handler.execute({ serviceId: 'svc-1', durationMins: 45 });
     expect(result).toEqual(mockService);
   });
 
@@ -164,7 +154,7 @@ describe('UpdateServiceHandler', () => {
     const prisma = buildPrisma();
     const handler = new UpdateServiceHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', serviceId: 'missing', durationMins: 45 }),
+      handler.execute({ serviceId: 'missing', durationMins: 45 }),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -173,7 +163,7 @@ describe('UpdateServiceHandler', () => {
     prisma.service.findFirst = jest.fn().mockResolvedValue({ ...mockService, depositEnabled: true, depositAmount: '80.00' });
     const handler = new UpdateServiceHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', serviceId: 'svc-1', price: 50 }),
+      handler.execute({ serviceId: 'svc-1', price: 50 }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -182,18 +172,16 @@ describe('UpdateServiceHandler', () => {
     prisma.service.findFirst = jest.fn().mockResolvedValue({ ...mockService, maxParticipants: 5 });
     const handler = new UpdateServiceHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', serviceId: 'svc-1', minParticipants: 10 }),
+      handler.execute({ serviceId: 'svc-1', minParticipants: 10 }),
     ).rejects.toThrow(BadRequestException);
   });
 });
-
-// ─── ListServicesHandler ──────────────────────────────────────────────────────
 
 describe('ListServicesHandler', () => {
   it('returns paginated services with meta', async () => {
     const prisma = buildPrisma();
     const handler = new ListServicesHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1' });
+    const result = await handler.execute({});
     expect(result.items).toHaveLength(1);
     expect(result.meta.total).toBe(1);
     expect(result.meta.totalPages).toBe(1);
@@ -202,7 +190,7 @@ describe('ListServicesHandler', () => {
   it('filters by isActive', async () => {
     const prisma = buildPrisma();
     const handler = new ListServicesHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1', isActive: true });
+    await handler.execute({ isActive: true });
     const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
     expect(callArgs.where.isActive).toBe(true);
   });
@@ -210,7 +198,7 @@ describe('ListServicesHandler', () => {
   it('excludes hidden services by default', async () => {
     const prisma = buildPrisma();
     const handler = new ListServicesHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1' });
+    await handler.execute({});
     const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
     expect(callArgs.where.isHidden).toBe(false);
   });
@@ -218,7 +206,7 @@ describe('ListServicesHandler', () => {
   it('includes hidden services when includeHidden = true', async () => {
     const prisma = buildPrisma();
     const handler = new ListServicesHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1', includeHidden: true });
+    await handler.execute({ includeHidden: true });
     const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
     expect(callArgs.where.isHidden).toBeUndefined();
   });
@@ -226,7 +214,7 @@ describe('ListServicesHandler', () => {
   it('filters by categoryId', async () => {
     const prisma = buildPrisma();
     const handler = new ListServicesHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1', categoryId: 'cat-1' });
+    await handler.execute({ categoryId: 'cat-1' });
     const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
     expect(callArgs.where.categoryId).toBe('cat-1');
   });
@@ -234,20 +222,18 @@ describe('ListServicesHandler', () => {
   it('adds search OR clause when search is provided', async () => {
     const prisma = buildPrisma();
     const handler = new ListServicesHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1', search: 'قص' });
+    await handler.execute({ search: 'قص' });
     const callArgs = prisma.service.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
     expect(callArgs.where.OR).toBeDefined();
   });
 });
-
-// ─── ArchiveServiceHandler ────────────────────────────────────────────────────
 
 describe('ArchiveServiceHandler', () => {
   it('archives service when found', async () => {
     const prisma = buildPrisma();
     prisma.service.findFirst = jest.fn().mockResolvedValue(mockService);
     const handler = new ArchiveServiceHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', serviceId: 'svc-1' });
+    const result = await handler.execute({ serviceId: 'svc-1' });
     expect(result).toEqual(mockService);
   });
 
@@ -255,16 +241,14 @@ describe('ArchiveServiceHandler', () => {
     const prisma = buildPrisma();
     const handler = new ArchiveServiceHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', serviceId: 'missing' }),
+      handler.execute({ serviceId: 'missing' }),
     ).rejects.toThrow(NotFoundException);
   });
 });
 
-// ─── SetDurationOptionsHandler ────────────────────────────────────────────────
-
 describe('SetDurationOptionsHandler', () => {
   const buildServicesPrisma = () => ({
-    service: { findFirst: jest.fn().mockResolvedValue({ id: 'svc-1', tenantId: 'tenant-1' }) },
+    service: { findFirst: jest.fn().mockResolvedValue({ id: 'svc-1' }) },
     serviceDurationOption: {
       update: jest.fn().mockResolvedValue({ id: 'opt-1' }),
       create: jest.fn().mockResolvedValue({ id: 'opt-new' }),
@@ -287,7 +271,7 @@ describe('SetDurationOptionsHandler', () => {
     prisma.service.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new SetDurationOptionsHandler(prisma as never);
     await expect(handler.execute({
-      tenantId: 'tenant-1', serviceId: 'bad', options: [],
+      serviceId: 'bad', options: [],
     })).rejects.toThrow('not found');
   });
 
@@ -295,7 +279,6 @@ describe('SetDurationOptionsHandler', () => {
     const prisma = buildServicesPrisma();
     const handler = new SetDurationOptionsHandler(prisma as never);
     await handler.execute({
-      tenantId: 'tenant-1',
       serviceId: 'svc-1',
       options: [{ durationMins: 60, price: 200, currency: 'SAR', label: '60 min', labelAr: '٦٠ دقيقة' }],
     });
@@ -306,7 +289,6 @@ describe('SetDurationOptionsHandler', () => {
     const prisma = buildServicesPrisma();
     const handler = new SetDurationOptionsHandler(prisma as never);
     await handler.execute({
-      tenantId: 'tenant-1',
       serviceId: 'svc-1',
       options: [{ id: 'opt-1', durationMins: 45, price: 150, currency: 'SAR', label: '45 min', labelAr: '٤٥ دقيقة' }],
     });
@@ -314,11 +296,9 @@ describe('SetDurationOptionsHandler', () => {
   });
 });
 
-// ─── SetEmployeeServiceOptionsHandler ────────────────────────────────────────
-
 describe('SetEmployeeServiceOptionsHandler', () => {
   const buildServicesPrisma = () => ({
-    service: { findFirst: jest.fn().mockResolvedValue({ id: 'svc-1', tenantId: 'tenant-1' }) },
+    service: { findFirst: jest.fn().mockResolvedValue({ id: 'svc-1' }) },
     serviceDurationOption: {
       findMany: jest.fn().mockResolvedValue([{ id: 'opt-1' }]),
     },
@@ -335,12 +315,11 @@ describe('SetEmployeeServiceOptionsHandler', () => {
     ),
   });
 
-  it('throws NotFoundException when durationOptionId not found for tenant', async () => {
+  it('throws NotFoundException when durationOptionId not found', async () => {
     const prisma = buildServicesPrisma();
     prisma.serviceDurationOption.findMany = jest.fn().mockResolvedValue([]);
     const handler = new SetEmployeeServiceOptionsHandler(prisma as never);
     await expect(handler.execute({
-      tenantId: 'tenant-1',
       employeeServiceId: 'es-1',
       options: [{ durationOptionId: 'bad-opt' }],
     })).rejects.toThrow('not found');
@@ -350,7 +329,6 @@ describe('SetEmployeeServiceOptionsHandler', () => {
     const prisma = buildServicesPrisma();
     const handler = new SetEmployeeServiceOptionsHandler(prisma as never);
     await handler.execute({
-      tenantId: 'tenant-1',
       employeeServiceId: 'es-1',
       options: [{ durationOptionId: 'opt-1', priceOverride: 300 }],
     });

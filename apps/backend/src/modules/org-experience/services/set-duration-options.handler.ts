@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { SetDurationOptionsDto } from './set-duration-options.dto';
 
-export type SetDurationOptionsCommand = SetDurationOptionsDto & { tenantId: string; serviceId: string };
+export type SetDurationOptionsCommand = SetDurationOptionsDto & { serviceId: string };
 
 @Injectable()
 export class SetDurationOptionsHandler {
@@ -10,7 +10,7 @@ export class SetDurationOptionsHandler {
 
   async execute(dto: SetDurationOptionsCommand) {
     const service = await this.prisma.service.findFirst({
-      where: { id: dto.serviceId, tenantId: dto.tenantId },
+      where: { id: dto.serviceId },
     });
     if (!service) throw new NotFoundException('Service not found');
 
@@ -32,7 +32,6 @@ export class SetDurationOptionsHandler {
           })
         : this.prisma.serviceDurationOption.create({
             data: {
-              tenantId: dto.tenantId,
               serviceId: dto.serviceId,
               bookingType: opt.bookingType ?? null,
               label: opt.label,
@@ -49,7 +48,7 @@ export class SetDurationOptionsHandler {
     await this.prisma.$transaction(upserts);
 
     return this.prisma.serviceDurationOption.findMany({
-      where: { serviceId: dto.serviceId, tenantId: dto.tenantId },
+      where: { serviceId: dto.serviceId },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
