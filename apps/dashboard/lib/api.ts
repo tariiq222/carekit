@@ -15,8 +15,6 @@ export type { ApiResponse, PaginatedResponse }
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100/api/v1"
 
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID ?? ""
-
 // Same-origin proxy for cookie-bearing auth endpoints (avoids cross-port cookie rejection)
 const PROXY_BASE_URL = "/api/proxy"
 
@@ -69,7 +67,6 @@ async function tryRefreshToken(): Promise<boolean> {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(TENANT_ID ? { "X-Tenant-ID": TENANT_ID } : {}),
       },
       body: JSON.stringify({ refreshToken: storedRefresh }),
       credentials: "include",
@@ -95,7 +92,6 @@ async function request<T>(
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
-    ...(TENANT_ID ? { "X-Tenant-ID": TENANT_ID } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   }
