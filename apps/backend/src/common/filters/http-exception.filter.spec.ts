@@ -19,7 +19,7 @@ describe('HttpExceptionFilter', () => {
   });
 
   afterEach(() => {
-    RequestContextStorage.delete?.();
+    (RequestContextStorage as { delete?: () => void }).delete?.();
   });
 
   it('returns correct status for HttpException', () => {

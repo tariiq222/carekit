@@ -2,7 +2,7 @@ import { MobileClientSummaryController } from './summary.controller';
 import { JwtUser } from '../../../../common/auth/current-user.decorator';
 import { PrismaService } from '../../../../infrastructure/database';
 
-const USER: JwtUser = { sub: 'client-1', email: 'client@test.com', roles: [] };
+const USER: JwtUser = { sub: 'client-1', roles: [], permissions: [] };
 
 function buildController(prisma: Partial<PrismaService>) {
   const controller = new MobileClientSummaryController(prisma as PrismaService);

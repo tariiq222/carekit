@@ -1,7 +1,7 @@
 import { MobileClientHomeController } from './home.controller';
 import { JwtUser } from '../../../../common/auth/current-user.decorator';
 
-const USER: JwtUser = { sub: 'client-1', email: 'client@test.com', roles: [] };
+const USER: JwtUser = { sub: 'client-1', roles: [], permissions: [] };
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 

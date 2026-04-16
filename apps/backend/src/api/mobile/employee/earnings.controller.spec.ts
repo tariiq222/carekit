@@ -1,7 +1,7 @@
 import { MobileEmployeeEarningsController } from './earnings.controller';
 import { InvoiceStatus } from '@prisma/client';
 
-const USER = { sub: 'user-1' };
+const USER = { sub: 'user-1', roles: [], permissions: [] };
 
 function mockPrisma(overrides: Partial<{
   findMany: jest.Mock;

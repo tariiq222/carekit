@@ -1,12 +1,18 @@
 import { PublicCatalogController } from './catalog.controller';
 
+interface PrismaStub {
+  department: { findMany: jest.Mock };
+  serviceCategory: { findMany: jest.Mock };
+  service: { findMany: jest.Mock };
+}
+
 function buildController() {
-  const prisma = {
+  const prisma: PrismaStub = {
     department: { findMany: jest.fn() },
     serviceCategory: { findMany: jest.fn() },
     service: { findMany: jest.fn() },
-  } as never;
-  const controller = new PublicCatalogController(prisma);
+  };
+  const controller = new PublicCatalogController(prisma as never);
   return { controller, prisma };
 }
 
