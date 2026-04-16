@@ -107,29 +107,22 @@ export class DashboardOrganizationSettingsController {
   // ── Branding ──────────────────────────────────────────────────────────────
 
   @Post('branding')
-  upsertBrandingEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: UpsertBrandingDto,
-  ) {
-    return this.upsertBranding.execute({ tenantId, ...body });
+  upsertBrandingEndpoint(@Body() body: UpsertBrandingDto) {
+    return this.upsertBranding.execute(body);
   }
 
   @Get('branding')
-  getBrandingEndpoint(@TenantId() tenantId: string) {
-    return this.getBranding.execute({ tenantId });
+  getBrandingEndpoint() {
+    return this.getBranding.execute();
   }
 
   @Post('branding/logo')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
-  uploadLogoEndpoint(
-    @TenantId() tenantId: string,
-    @UploadedFile() file: Express.Multer.File | undefined,
-  ) {
+  uploadLogoEndpoint(@UploadedFile() file: Express.Multer.File | undefined) {
     if (!file) throw new BadRequestException('No file uploaded');
     return this.uploadLogo.execute(
       {
-        tenantId,
         filename: file.originalname,
         mimetype: file.mimetype,
         size: file.size,
@@ -176,13 +169,13 @@ export class DashboardOrganizationSettingsController {
   // ── Organization Settings ─────────────────────────────────────────────────
 
   @Get('settings')
-  getOrgSettingsEndpoint(@TenantId() tenantId: string) {
-    return this.getOrgSettings.execute({ tenantId });
+  getOrgSettingsEndpoint() {
+    return this.getOrgSettings.execute();
   }
 
   @Patch('settings')
-  upsertOrgSettingsEndpoint(@TenantId() tenantId: string, @Body() body: UpsertOrgSettingsDto) {
-    return this.upsertOrgSettings.execute({ tenantId, ...body });
+  upsertOrgSettingsEndpoint(@Body() body: UpsertOrgSettingsDto) {
+    return this.upsertOrgSettings.execute(body);
   }
 
   // ── Booking Settings ──────────────────────────────────────────────────────

@@ -2,6 +2,8 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/database';
 import { UploadFileHandler } from '../../../media/files/upload-file.handler';
 
+const SINGLETON_ID = 'default';
+
 export const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 export const ALLOWED_LOGO_MIMETYPES: ReadonlySet<string> = new Set([
   'image/png',
@@ -10,7 +12,6 @@ export const ALLOWED_LOGO_MIMETYPES: ReadonlySet<string> = new Set([
 ]);
 
 export type UploadLogoCommand = {
-  tenantId: string;
   filename: string;
   mimetype: string;
   size: number;
@@ -33,7 +34,6 @@ export class UploadLogoHandler {
 
     const file = await this.uploadFile.execute(
       {
-        tenantId: cmd.tenantId,
         filename: cmd.filename,
         mimetype: cmd.mimetype,
         size: cmd.size,
@@ -43,12 +43,8 @@ export class UploadLogoHandler {
     );
 
     await this.prisma.brandingConfig.upsert({
-      where: { tenantId: cmd.tenantId },
-      create: {
-        tenantId: cmd.tenantId,
-        clinicNameAr: 'Clinic',
-        logoUrl: file.url,
-      },
+      where: { id: SINGLETON_ID },
+      create: { id: SINGLETON_ID, clinicNameAr: 'منظمتي', logoUrl: file.url },
       update: { logoUrl: file.url },
     });
 

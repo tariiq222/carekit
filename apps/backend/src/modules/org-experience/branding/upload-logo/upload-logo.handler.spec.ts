@@ -3,7 +3,6 @@ import { UploadLogoHandler } from './upload-logo.handler';
 import { UploadFileHandler } from '../../../media/files/upload-file.handler';
 import { PrismaService } from '../../../../infrastructure/database';
 
-const TENANT = '00000000-0000-0000-0000-000000000001';
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 const MOCK_FILE_ROW = {
   id: 'file-7',
@@ -13,7 +12,7 @@ const MOCK_FILE_ROW = {
 };
 
 function makeHandler(overrides: { uploadResult?: typeof MOCK_FILE_ROW } = {}) {
-  const brandingUpsert = jest.fn().mockResolvedValue({ tenantId: TENANT });
+  const brandingUpsert = jest.fn().mockResolvedValue({ id: 'default' });
   const prisma = {
     brandingConfig: { upsert: brandingUpsert },
   } as unknown as PrismaService;
@@ -30,7 +29,6 @@ function makeHandler(overrides: { uploadResult?: typeof MOCK_FILE_ROW } = {}) {
 
 describe('UploadLogoHandler', () => {
   const validCmd = {
-    tenantId: TENANT,
     filename: 'l.png',
     mimetype: 'image/png',
     size: 2048,
@@ -58,14 +56,14 @@ describe('UploadLogoHandler', () => {
 
     expect(uploadFileExecute).toHaveBeenCalledWith(
       expect.objectContaining({
-        tenantId: TENANT,
         ownerType: 'branding',
       }),
       expect.any(Buffer),
     );
     expect(brandingUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { tenantId: TENANT },
+        where: { id: 'default' },
+        create: expect.objectContaining({ id: 'default', clinicNameAr: 'منظمتي' }),
         update: { logoUrl: MOCK_FILE_ROW.url },
       }),
     );
