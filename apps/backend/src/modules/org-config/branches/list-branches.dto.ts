@@ -1,5 +1,6 @@
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationDto } from '../../../common/dto';
 
 const toBoolean = ({ value }: { value: unknown }) => {
@@ -9,6 +10,9 @@ const toBoolean = ({ value }: { value: unknown }) => {
 };
 
 export class ListBranchesDto extends PaginationDto {
+  @ApiPropertyOptional({ description: 'Search branches by name or city', example: 'Riyadh' })
   @IsOptional() @IsString() search?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by active status', example: true })
   @IsOptional() @Type(() => String) @Transform(toBoolean) @IsBoolean() isActive?: boolean;
 }

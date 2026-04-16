@@ -4,7 +4,12 @@ import {
   UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery,
+  ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse, ApiResponse,
+  ApiConsumes, ApiBody,
+} from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { CreateServiceHandler } from '../../modules/org-experience/services/create-service.handler';
@@ -37,8 +42,9 @@ import { GetBookingSettingsHandler } from '../../modules/bookings/get-booking-se
 import { UpsertBookingSettingsHandler } from '../../modules/bookings/upsert-booking-settings/upsert-booking-settings.handler';
 import { UploadLogoHandler } from '../../modules/org-experience/branding/upload-logo/upload-logo.handler';
 
-@ApiTags('Services & Org')
+@ApiTags('Dashboard / Org Experience')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
 export class DashboardOrganizationSettingsController {
@@ -67,16 +73,24 @@ export class DashboardOrganizationSettingsController {
   // ── Services ─────────────────────────────────────────────────────────────
 
   @Post('services')
+  @ApiOperation({ summary: 'Create a service' })
+  @ApiCreatedResponse({ description: 'Service created' })
   createServiceEndpoint(@Body() body: CreateServiceDto) {
     return this.createService.execute(body);
   }
 
   @Get('services')
+  @ApiOperation({ summary: 'List services' })
+  @ApiOkResponse({ description: 'Paginated list of services' })
   listServicesEndpoint(@Query() query: ListServicesDto) {
     return this.listServices.execute(query);
   }
 
   @Patch('services/:serviceId')
+  @ApiOperation({ summary: 'Update a service' })
+  @ApiParam({ name: 'serviceId', description: 'Service UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Service updated' })
+  @ApiResponse({ status: 404, description: 'Service not found' })
   updateServiceEndpoint(
     @Param('serviceId', ParseUUIDPipe) serviceId: string,
     @Body() body: UpdateServiceDto,
@@ -86,16 +100,28 @@ export class DashboardOrganizationSettingsController {
 
   @Delete('services/:serviceId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Archive a service' })
+  @ApiParam({ name: 'serviceId', description: 'Service UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Service archived' })
+  @ApiResponse({ status: 404, description: 'Service not found' })
   archiveServiceEndpoint(@Param('serviceId', ParseUUIDPipe) serviceId: string) {
     return this.archiveService.execute({ serviceId });
   }
 
   @Get('services/:serviceId/booking-types')
+  @ApiOperation({ summary: 'Get booking type configs for a service' })
+  @ApiParam({ name: 'serviceId', description: 'Service UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Booking type configs' })
+  @ApiResponse({ status: 404, description: 'Service not found' })
   getServiceBookingTypesEndpoint(@Param('serviceId', ParseUUIDPipe) serviceId: string) {
     return this.getServiceBookingConfigs.execute({ serviceId });
   }
 
   @Put('services/:serviceId/booking-types')
+  @ApiOperation({ summary: 'Set booking type configs for a service' })
+  @ApiParam({ name: 'serviceId', description: 'Service UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Booking type configs updated' })
+  @ApiResponse({ status: 404, description: 'Service not found' })
   setServiceBookingTypesEndpoint(
     @Param('serviceId', ParseUUIDPipe) serviceId: string,
     @Body() body: SetServiceBookingConfigsDto,
@@ -106,11 +132,15 @@ export class DashboardOrganizationSettingsController {
   // ── Branding ──────────────────────────────────────────────────────────────
 
   @Post('branding')
+  @ApiOperation({ summary: 'Upsert clinic branding' })
+  @ApiOkResponse({ description: 'Branding saved' })
   upsertBrandingEndpoint(@Body() body: UpsertBrandingDto) {
     return this.upsertBranding.execute(body);
   }
 
   @Get('branding')
+  @ApiOperation({ summary: 'Get clinic branding' })
+  @ApiOkResponse({ description: 'Current branding config' })
   getBrandingEndpoint() {
     return this.getBranding.execute();
   }
@@ -118,6 +148,10 @@ export class DashboardOrganizationSettingsController {
   @Post('branding/logo')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload clinic logo' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiCreatedResponse({ description: 'Logo uploaded, URL returned' })
   uploadLogoEndpoint(@UploadedFile() file: Express.Multer.File | undefined) {
     if (!file) throw new BadRequestException('No file uploaded');
     return this.uploadLogo.execute(
@@ -133,22 +167,34 @@ export class DashboardOrganizationSettingsController {
   // ── Intake Forms ──────────────────────────────────────────────────────────
 
   @Post('intake-forms')
+  @ApiOperation({ summary: 'Create an intake form' })
+  @ApiCreatedResponse({ description: 'Intake form created' })
   createIntakeFormEndpoint(@Body() body: CreateIntakeFormDto) {
     return this.createIntakeForm.execute(body);
   }
 
   @Get('intake-forms')
+  @ApiOperation({ summary: 'List intake forms' })
+  @ApiOkResponse({ description: 'List of intake forms' })
   listIntakeFormsEndpoint(@Query() query: ListIntakeFormsDto) {
     return this.listIntakeForms.execute(query);
   }
 
   @Get('intake-forms/:formId')
+  @ApiOperation({ summary: 'Get an intake form by ID' })
+  @ApiParam({ name: 'formId', description: 'Intake form UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Intake form detail' })
+  @ApiResponse({ status: 404, description: 'Intake form not found' })
   getIntakeFormEndpoint(@Param('formId', ParseUUIDPipe) formId: string) {
     return this.getIntakeForm.execute({ formId });
   }
 
   @Delete('intake-forms/:formId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete an intake form' })
+  @ApiParam({ name: 'formId', description: 'Intake form UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Intake form deleted' })
+  @ApiResponse({ status: 404, description: 'Intake form not found' })
   deleteIntakeFormEndpoint(@Param('formId', ParseUUIDPipe) formId: string) {
     return this.deleteIntakeForm.execute({ formId });
   }
@@ -156,11 +202,15 @@ export class DashboardOrganizationSettingsController {
   // ── Ratings ───────────────────────────────────────────────────────────────
 
   @Post('ratings')
+  @ApiOperation({ summary: 'Submit a rating for a booking' })
+  @ApiCreatedResponse({ description: 'Rating submitted' })
   submitRatingEndpoint(@Body() body: SubmitRatingDto) {
     return this.submitRating.execute(body);
   }
 
   @Get('ratings')
+  @ApiOperation({ summary: 'List ratings' })
+  @ApiOkResponse({ description: 'Paginated list of ratings' })
   listRatingsEndpoint(@Query() query: ListRatingsDto) {
     return this.listRatings.execute(query);
   }
@@ -168,11 +218,15 @@ export class DashboardOrganizationSettingsController {
   // ── Organization Settings ─────────────────────────────────────────────────
 
   @Get('settings')
+  @ApiOperation({ summary: 'Get organization settings' })
+  @ApiOkResponse({ description: 'Current organization settings' })
   getOrgSettingsEndpoint() {
     return this.getOrgSettings.execute();
   }
 
   @Patch('settings')
+  @ApiOperation({ summary: 'Update organization settings' })
+  @ApiOkResponse({ description: 'Organization settings updated' })
   upsertOrgSettingsEndpoint(@Body() body: UpsertOrgSettingsDto) {
     return this.upsertOrgSettings.execute(body);
   }
@@ -180,11 +234,15 @@ export class DashboardOrganizationSettingsController {
   // ── Booking Settings ──────────────────────────────────────────────────────
 
   @Get('booking-settings')
+  @ApiOperation({ summary: 'Get booking settings' })
+  @ApiOkResponse({ description: 'Current booking settings' })
   getBookingSettingsEndpoint() {
     return this.getBookingSettings.execute({ branchId: null });
   }
 
   @Patch('booking-settings')
+  @ApiOperation({ summary: 'Update booking settings' })
+  @ApiOkResponse({ description: 'Booking settings updated' })
   upsertBookingSettingsEndpoint(@Body() body: Record<string, unknown>) {
     return this.upsertBookingSettings.execute({ branchId: null, ...body });
   }

@@ -2,9 +2,13 @@ import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery,
+  ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse, ApiResponse,
+} from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
+import { ApiStandardResponses, ApiErrorDto } from '../../common/swagger';
 import { CreateBranchHandler } from '../../modules/org-config/branches/create-branch.handler';
 import { CreateBranchDto } from '../../modules/org-config/branches/create-branch.dto';
 import { UpdateBranchHandler } from '../../modules/org-config/branches/update-branch.handler';
@@ -18,8 +22,9 @@ import { AssignEmployeeToBranchHandler } from '../../modules/org-config/branches
 import { AssignEmployeeToBranchDto } from '../../modules/org-config/branches/assign-employee-to-branch.dto';
 import { UnassignEmployeeFromBranchHandler } from '../../modules/org-config/branches/unassign-employee-from-branch.handler';
 
-@ApiTags('Branches')
+@ApiTags('Dashboard / Org Config')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
 export class DashboardOrganizationBranchesController {
@@ -35,21 +40,37 @@ export class DashboardOrganizationBranchesController {
   ) {}
 
   @Post('branches')
+  @ApiOperation({ summary: 'Create a branch' })
+  @ApiCreatedResponse({ description: 'Branch created' })
   createBranchEndpoint(@Body() body: CreateBranchDto) {
     return this.createBranch.execute(body);
   }
 
   @Get('branches')
+  @ApiOperation({ summary: 'List branches' })
+  @ApiQuery({ name: 'search', required: false, description: 'Search branches by name or city', example: 'Riyadh' })
+  @ApiQuery({ name: 'isActive', required: false, description: 'Filter by active status', example: true })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (1-based)', example: 1 })
+  @ApiQuery({ name: 'limit', required: false, description: 'Results per page', example: 20 })
+  @ApiOkResponse({ description: 'Paginated list of branches' })
   listBranchesEndpoint(@Query() query: ListBranchesDto) {
     return this.listBranches.execute(query);
   }
 
   @Get('branches/:branchId')
+  @ApiOperation({ summary: 'Get a branch by ID' })
+  @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Branch details' })
+  @ApiResponse({ status: 404, description: 'Branch not found', type: ApiErrorDto })
   getBranchEndpoint(@Param('branchId', ParseUUIDPipe) branchId: string) {
     return this.getBranch.execute({ branchId });
   }
 
   @Patch('branches/:branchId')
+  @ApiOperation({ summary: 'Update a branch' })
+  @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Branch updated' })
+  @ApiResponse({ status: 404, description: 'Branch not found', type: ApiErrorDto })
   updateBranchEndpoint(
     @Param('branchId', ParseUUIDPipe) branchId: string,
     @Body() body: UpdateBranchDto,
@@ -58,16 +79,28 @@ export class DashboardOrganizationBranchesController {
   }
 
   @Delete('branches/:branchId')
+  @ApiOperation({ summary: 'Delete a branch' })
+  @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Branch deleted' })
+  @ApiResponse({ status: 404, description: 'Branch not found', type: ApiErrorDto })
   deleteBranchEndpoint(@Param('branchId', ParseUUIDPipe) branchId: string) {
     return this.deleteBranch.execute({ branchId });
   }
 
   @Get('branches/:branchId/employees')
+  @ApiOperation({ summary: 'List employees assigned to a branch' })
+  @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'List of employees in the branch' })
+  @ApiResponse({ status: 404, description: 'Branch not found', type: ApiErrorDto })
   listBranchEmployeesEndpoint(@Param('branchId', ParseUUIDPipe) branchId: string) {
     return this.listBranchEmployees.execute({ branchId });
   }
 
   @Post('branches/:branchId/employees')
+  @ApiOperation({ summary: 'Assign an employee to a branch' })
+  @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiCreatedResponse({ description: 'Employee assigned to branch' })
+  @ApiResponse({ status: 404, description: 'Branch or employee not found', type: ApiErrorDto })
   assignEmployeeEndpoint(
     @Param('branchId', ParseUUIDPipe) branchId: string,
     @Body() body: AssignEmployeeToBranchDto,
@@ -76,6 +109,11 @@ export class DashboardOrganizationBranchesController {
   }
 
   @Delete('branches/:branchId/employees/:employeeId')
+  @ApiOperation({ summary: 'Unassign an employee from a branch' })
+  @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiParam({ name: 'employeeId', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Employee unassigned from branch' })
+  @ApiResponse({ status: 404, description: 'Branch or employee not found', type: ApiErrorDto })
   unassignEmployeeEndpoint(
     @Param('branchId', ParseUUIDPipe) branchId: string,
     @Param('employeeId', ParseUUIDPipe) employeeId: string,

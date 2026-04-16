@@ -2,9 +2,13 @@ import {
   Controller, Get, Post, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery,
+  ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse, ApiResponse,
+} from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
+import { ApiStandardResponses, ApiErrorDto } from '../../common/swagger';
 import { SetBusinessHoursHandler } from '../../modules/org-config/business-hours/set-business-hours.handler';
 import { SetBusinessHoursDto } from '../../modules/org-config/business-hours/set-business-hours.dto';
 import { GetBusinessHoursHandler } from '../../modules/org-config/business-hours/get-business-hours.handler';
@@ -14,8 +18,9 @@ import { RemoveHolidayHandler } from '../../modules/org-config/business-hours/re
 import { ListHolidaysHandler } from '../../modules/org-config/business-hours/list-holidays.handler';
 import { ListHolidaysDto } from '../../modules/org-config/business-hours/list-holidays.dto';
 
-@ApiTags('Business Hours')
+@ApiTags('Dashboard / Org Config')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @UseGuards(JwtGuard, CaslGuard)
 @Controller('dashboard/organization')
 export class DashboardOrganizationHoursController {
@@ -28,27 +33,45 @@ export class DashboardOrganizationHoursController {
   ) {}
 
   @Post('hours')
+  @ApiOperation({ summary: 'Set business hours for a branch' })
+  @ApiCreatedResponse({ description: 'Business hours saved' })
+  @ApiResponse({ status: 404, description: 'Branch not found', type: ApiErrorDto })
   setBusinessHoursEndpoint(@Body() body: SetBusinessHoursDto) {
     return this.setBusinessHours.execute(body);
   }
 
   @Get('hours/:branchId')
+  @ApiOperation({ summary: 'Get business hours for a branch' })
+  @ApiParam({ name: 'branchId', description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Business hours schedule' })
+  @ApiResponse({ status: 404, description: 'Branch not found', type: ApiErrorDto })
   getBusinessHoursEndpoint(@Param('branchId', ParseUUIDPipe) branchId: string) {
     return this.getBusinessHours.execute({ branchId });
   }
 
   @Post('holidays')
+  @ApiOperation({ summary: 'Add a holiday to a branch' })
+  @ApiCreatedResponse({ description: 'Holiday added' })
+  @ApiResponse({ status: 404, description: 'Branch not found', type: ApiErrorDto })
   addHolidayEndpoint(@Body() body: AddHolidayDto) {
     return this.addHoliday.execute(body);
   }
 
   @Delete('holidays/:holidayId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove a holiday' })
+  @ApiParam({ name: 'holidayId', description: 'Holiday UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Holiday removed' })
+  @ApiResponse({ status: 404, description: 'Holiday not found', type: ApiErrorDto })
   removeHolidayEndpoint(@Param('holidayId', ParseUUIDPipe) holidayId: string) {
     return this.removeHoliday.execute({ holidayId });
   }
 
   @Get('holidays')
+  @ApiOperation({ summary: 'List holidays for a branch' })
+  @ApiQuery({ name: 'branchId', required: true, description: 'Branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiQuery({ name: 'year', required: false, description: 'Filter by year', example: 2025 })
+  @ApiOkResponse({ description: 'List of holidays' })
   listHolidaysEndpoint(@Query() query: ListHolidaysDto) {
     return this.listHolidays.execute(query);
   }
