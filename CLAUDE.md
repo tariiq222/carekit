@@ -1,5 +1,7 @@
 # CareKit — White-label Clinic Management Platform
 
+Single-organization mode: one deployment serves one clinic. No tenant layer — a clinic can still have multiple physical branches.
+
 ## Tech Stack
 
 - **Monorepo**: npm workspaces + Turborepo
