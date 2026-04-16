@@ -31,9 +31,9 @@ export class UpsertBookingSettingsHandler {
       Object.entries(fields).filter(([, v]) => v !== undefined),
     );
 
-    const existing = await this.prisma.bookingSettings.findUnique({
-      where: { branchId: branchId ?? null } as { branchId: string | null },
-    });
+    const existing = branchId
+      ? await this.prisma.bookingSettings.findUnique({ where: { branchId } })
+      : await this.prisma.bookingSettings.findFirst({ where: { branchId: null } });
 
     if (existing) {
       return this.prisma.bookingSettings.update({

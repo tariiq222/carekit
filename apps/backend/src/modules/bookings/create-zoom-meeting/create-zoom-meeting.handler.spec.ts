@@ -28,7 +28,7 @@ describe('CreateZoomMeetingHandler', () => {
   });
 
   it('throws BadRequestException for non-ONLINE booking', async () => {
-    const prisma = buildPrismaWithZoom({ ...mockBooking, bookingType: 'INDIVIDUAL' as const });
+    const prisma = buildPrismaWithZoom({ ...mockBooking, bookingType: 'INDIVIDUAL' } as never);
     const handler = new CreateZoomMeetingHandler(prisma as never);
 
     await expect(handler.execute({ bookingId: 'book-1' })).rejects.toThrow(BadRequestException);

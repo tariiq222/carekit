@@ -130,7 +130,7 @@ describe('CreateBookingHandler — validation guards', () => {
     await expect(handler.execute({
       scheduledAt: new Date(Date.now() - 86400_000),
       clientId: 'c-1', employeeId: 'e-1', serviceId: 'svc-1',
-      branchId: 'branch-1', durationMins: 60, bookingType: 'INDIVIDUAL' as never,
+      branchId: 'branch-1', bookingType: 'INDIVIDUAL' as never,
     })).rejects.toThrow('future');
   });
 
@@ -144,7 +144,7 @@ describe('CreateBookingHandler — validation guards', () => {
     await expect(handler.execute({
       scheduledAt: new Date(Date.now() + 86400_000),
       clientId: 'c-1', employeeId: 'e-1', serviceId: 'svc-1',
-      branchId: 'bad-branch', durationMins: 60, bookingType: 'INDIVIDUAL' as never,
+      branchId: 'bad-branch', bookingType: 'INDIVIDUAL' as never,
     })).rejects.toThrow('Branch not found');
   });
 
@@ -159,7 +159,7 @@ describe('CreateBookingHandler — validation guards', () => {
     await expect(handler.execute({
       scheduledAt: new Date(Date.now() + 86400_000),
       clientId: 'bad-client', employeeId: 'e-1', serviceId: 'svc-1',
-      branchId: 'branch-1', durationMins: 60, bookingType: 'INDIVIDUAL' as never,
+      branchId: 'branch-1', bookingType: 'INDIVIDUAL' as never,
     })).rejects.toThrow('Client not found');
   });
 
@@ -171,7 +171,7 @@ describe('CreateBookingHandler — validation guards', () => {
     await expect(handler.execute({
       scheduledAt: new Date(Date.now() + 86400_000),
       clientId: 'c-1', employeeId: 'e-1', serviceId: 'svc-1',
-      branchId: 'branch-1', durationMins: 60, bookingType: 'INDIVIDUAL' as never,
+      branchId: 'branch-1', bookingType: 'INDIVIDUAL' as never,
       payAtClinic: true,
     })).rejects.toThrow('Pay at clinic');
   });

@@ -38,7 +38,7 @@ export class GetBookingSettingsHandler {
       if (branchRow) return branchRow;
     }
 
-    const globalRow = await this.prisma.bookingSettings.findUnique({
+    const globalRow = await this.prisma.bookingSettings.findFirst({
       where: { branchId: null },
     });
     if (globalRow) return globalRow;
