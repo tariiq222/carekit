@@ -46,7 +46,6 @@ vi.mock("@/lib/api/services", () => ({
   fetchCategories,
   fetchDurationOptions,
   fetchServiceBookingTypes,
-  fetchIntakeForms,
   createService,
   updateService,
   deleteService,
@@ -55,6 +54,10 @@ vi.mock("@/lib/api/services", () => ({
   deleteCategory,
   setDurationOptions,
   setServiceBookingTypes,
+}))
+
+vi.mock("@/lib/api/intake-forms", () => ({
+  fetchIntakeForms,
   createIntakeForm,
   updateIntakeForm,
   deleteIntakeForm,
@@ -68,6 +71,9 @@ import {
   useServiceBookingTypes,
   useIntakeForms,
 } from "@/hooks/use-services"
+
+// useCategories now fetches paginated data internally and returns items
+// useIntakeForms now calls fetchIntakeFormsApi() without args
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -239,13 +245,13 @@ describe("useCategories", () => {
 
   it("fetches categories", async () => {
     const cats = [{ id: "cat-1", name: "Wellness" }]
-    fetchCategories.mockResolvedValueOnce(cats)
+    fetchCategories.mockResolvedValueOnce({ items: cats, meta: { total: 1 } })
 
     const { result } = renderHook(() => useCategories(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(fetchCategories).toHaveBeenCalled()
+    expect(fetchCategories).toHaveBeenCalledWith({ page: 1, perPage: 200 })
     expect(result.current.data).toEqual(cats)
   })
 })
@@ -311,7 +317,7 @@ describe("useIntakeForms", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(fetchIntakeForms).toHaveBeenCalledWith("svc-1")
+    expect(fetchIntakeForms).toHaveBeenCalled()
     expect(result.current.data).toEqual(forms)
   })
 

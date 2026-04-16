@@ -26,12 +26,12 @@ describe("createKbEntrySchema", () => {
 
 describe("zatcaOtpSchema", () => {
   it("accepts a valid OTP", () => {
-    const result = zatcaOtpSchema.safeParse({ otp: "123456" })
+    const result = zatcaOtpSchema.safeParse({ vatRegistrationNumber: "300000000000003", sellerName: "Test Clinic" })
     expect(result.success).toBe(true)
   })
 
-  it("rejects empty OTP", () => {
-    const result = zatcaOtpSchema.safeParse({ otp: "" })
+  it("rejects empty vatRegistrationNumber", () => {
+    const result = zatcaOtpSchema.safeParse({ vatRegistrationNumber: "", sellerName: "Test Clinic" })
     expect(result.success).toBe(false)
   })
 })

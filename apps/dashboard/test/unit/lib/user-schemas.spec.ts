@@ -10,8 +10,7 @@ describe("userBaseSchema", () => {
   it("accepts a valid user payload", () => {
     const result = userBaseSchema.safeParse({
       email: "user@example.com",
-      firstName: "أحمد",
-      lastName: "السالم",
+      name: "أحمد السالم",
     })
     expect(result.success).toBe(true)
   })
@@ -19,17 +18,15 @@ describe("userBaseSchema", () => {
   it("rejects invalid email format", () => {
     const result = userBaseSchema.safeParse({
       email: "not-an-email",
-      firstName: "أحمد",
-      lastName: "السالم",
+      name: "أحمد السالم",
     })
     expect(result.success).toBe(false)
   })
 
-  it("rejects empty firstName", () => {
+  it("rejects empty name", () => {
     const result = userBaseSchema.safeParse({
       email: "user@example.com",
-      firstName: "",
-      lastName: "السالم",
+      name: "",
     })
     expect(result.success).toBe(false)
   })
@@ -37,8 +34,7 @@ describe("userBaseSchema", () => {
   it("accepts optional E.164 phone", () => {
     const result = userBaseSchema.safeParse({
       email: "user@example.com",
-      firstName: "أحمد",
-      lastName: "السالم",
+      name: "أحمد السالم",
       phone: "+966501234567",
     })
     expect(result.success).toBe(true)
@@ -47,8 +43,7 @@ describe("userBaseSchema", () => {
   it("rejects non-E.164 phone", () => {
     const result = userBaseSchema.safeParse({
       email: "user@example.com",
-      firstName: "أحمد",
-      lastName: "السالم",
+      name: "أحمد السالم",
       phone: "0501234567",
     })
     expect(result.success).toBe(false)
@@ -56,13 +51,12 @@ describe("userBaseSchema", () => {
 })
 
 describe("userCreateSchema", () => {
-  it("accepts a valid create payload with password and roleSlug", () => {
+  it("accepts a valid create payload with password and role", () => {
     const result = userCreateSchema.safeParse({
       email: "user@example.com",
-      firstName: "أحمد",
-      lastName: "السالم",
+      name: "أحمد السالم",
       password: "securepass",
-      roleSlug: "receptionist",
+      role: "RECEPTIONIST",
     })
     expect(result.success).toBe(true)
   })
@@ -70,19 +64,17 @@ describe("userCreateSchema", () => {
   it("rejects password shorter than 8 characters", () => {
     const result = userCreateSchema.safeParse({
       email: "user@example.com",
-      firstName: "أحمد",
-      lastName: "السالم",
+      name: "أحمد السالم",
       password: "short",
-      roleSlug: "receptionist",
+      role: "RECEPTIONIST",
     })
     expect(result.success).toBe(false)
   })
 
-  it("rejects missing roleSlug", () => {
+  it("rejects missing role", () => {
     const result = userCreateSchema.safeParse({
       email: "user@example.com",
-      firstName: "أحمد",
-      lastName: "السالم",
+      name: "أحمد السالم",
       password: "securepass",
     })
     expect(result.success).toBe(false)
@@ -90,11 +82,10 @@ describe("userCreateSchema", () => {
 })
 
 describe("userEditSchema", () => {
-  it("accepts partial payload — roleSlug is optional", () => {
+  it("accepts partial payload — role is optional", () => {
     const result = userEditSchema.safeParse({
       email: "user@example.com",
-      firstName: "أحمد",
-      lastName: "السالم",
+      name: "أحمد السالم",
     })
     expect(result.success).toBe(true)
   })

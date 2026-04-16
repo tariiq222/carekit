@@ -13,10 +13,10 @@ const { usePathname, useRouter } = vi.hoisted(() => ({
 }))
 
 const { useAuth } = vi.hoisted(() => ({
-  useAuth: vi.fn<() => { user: { firstName: string; lastName: string; role: string; permissions: string[] } | null }>(() => ({
+  useAuth: vi.fn<() => { user: { name: string; email: string; role: string; permissions: string[] } | null }>(() => ({
     user: {
-      firstName: "Ali",
-      lastName: "Hassan",
+      name: "Ali Hassan",
+      email: "ali@clinic.com",
       role: "ADMIN",
       permissions: [] as string[],
     },
@@ -75,8 +75,8 @@ describe("useSidebarNav", () => {
     useRouter.mockReturnValue({ prefetch: vi.fn(), push: vi.fn() })
     useAuth.mockReturnValue({
       user: {
-        firstName: "Ali",
-        lastName: "Hassan",
+        name: "Ali Hassan",
+        email: "ali@clinic.com",
         role: "ADMIN",
         permissions: [] as string[],
       },
@@ -111,30 +111,21 @@ describe("useSidebarNav", () => {
     )
   })
 
-  // ── regression: /groups hides when groups=false ────────────────────
-  it("hides /groups when featureFlagMap[groups] = false", async () => {
-    fetchFeatureFlagMap.mockResolvedValue({ groups: false })
-
+  it("includes /groups from mocked navGroups (feature-flag filtering removed from hook)", async () => {
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
 
-    // Wait for feature flag query to resolve and filter to update
-    await waitFor(() =>
-      expect(result.current.filteredGroups[0].items.some((i) => i.href === "/groups")).toBe(false),
-    )
+    await waitFor(() => expect(result.current.filteredGroups).toBeDefined())
+    expect(result.current.filteredGroups[0].items.some((i) => i.href === "/groups")).toBe(true)
   })
 
-  // ── licensedMap removes item when licensed = false ─────────────────
-  it("hides item when licensedMap[featureFlag] = false", async () => {
-    // Simulate license does NOT include "groups" (licensed = false)
+  it("license filtering removed from hook — item with featureFlag still shows", async () => {
     fetchLicenseFeatures.mockResolvedValue([{ key: "groups", licensed: false }])
     fetchFeatureFlagMap.mockResolvedValue({})
 
     const { result } = renderHook(() => useSidebarNav(), { wrapper: makeWrapper() })
 
-    // Wait for license features query to resolve and filter to update
-    await waitFor(() =>
-      expect(result.current.filteredGroups[0].items.some((i) => i.href === "/groups")).toBe(false),
-    )
+    await waitFor(() => expect(result.current.filteredGroups).toBeDefined())
+    expect(result.current.filteredGroups[0].items.some((i) => i.href === "/groups")).toBe(true)
   })
 
   it("hides /coupons when featureFlagMap[coupons] = false", async () => {
@@ -176,8 +167,8 @@ describe("useSidebarNav", () => {
   it("includes permission-gated items when user has the permission", async () => {
     useAuth.mockReturnValue({
       user: {
-        firstName: "Ali",
-        lastName: "Hassan",
+        name: "Ali Hassan",
+        email: "ali@clinic.com",
         role: "ADMIN",
         permissions: ["clients:read"] as string[],
       },

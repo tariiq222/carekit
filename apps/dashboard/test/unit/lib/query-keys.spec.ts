@@ -54,7 +54,7 @@ describe("queryKeys", () => {
 
   describe("services", () => {
     it("categories returns stable key", () => {
-      expect(queryKeys.services.categories()).toEqual(["services", "categories"])
+      expect(queryKeys.services.categories()).toEqual(["services", "categories", {}])
     })
 
     it("bookingTypes includes serviceId", () => {

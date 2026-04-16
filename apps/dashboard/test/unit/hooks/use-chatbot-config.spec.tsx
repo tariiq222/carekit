@@ -15,9 +15,12 @@ const {
   fetchChatbotConfigByCategory: vi.fn(),
 }))
 
-vi.mock("@/lib/api/chatbot", () => ({
+vi.mock("@/lib/api/chatbot-kb", () => ({
   fetchKnowledgeBase,
   fetchKnowledgeFiles,
+}))
+
+vi.mock("@/lib/api/chatbot", () => ({
   fetchChatbotConfig,
   fetchChatbotConfigByCategory,
   fetchChatSessions: vi.fn(),
@@ -109,13 +112,13 @@ describe("useChatbotConfig", () => {
 
   it("fetches config by category when category is provided", async () => {
     const config = [{ key: "tone", value: "formal" }]
-    fetchChatbotConfigByCategory.mockResolvedValueOnce(config)
+    fetchChatbotConfig.mockResolvedValueOnce(config)
 
     const { result } = renderHook(() => useChatbotConfig("general"), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(fetchChatbotConfigByCategory).toHaveBeenCalledWith("general")
+    expect(fetchChatbotConfig).toHaveBeenCalledWith("general")
     expect(result.current.config).toEqual(config)
   })
 })

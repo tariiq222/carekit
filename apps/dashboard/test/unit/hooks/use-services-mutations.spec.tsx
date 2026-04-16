@@ -46,7 +46,6 @@ vi.mock("@/lib/api/services", () => ({
   fetchCategories,
   fetchDurationOptions,
   fetchServiceBookingTypes,
-  fetchIntakeForms,
   createService,
   updateService,
   deleteService,
@@ -55,6 +54,10 @@ vi.mock("@/lib/api/services", () => ({
   deleteCategory,
   setDurationOptions,
   setServiceBookingTypes,
+}))
+
+vi.mock("@/lib/api/intake-forms", () => ({
+  fetchIntakeForms,
   createIntakeForm,
   updateIntakeForm,
   deleteIntakeForm,
@@ -219,7 +222,7 @@ describe("useServiceBookingTypesMutation", () => {
 describe("useIntakeFormMutations", () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it("createMut calls createIntakeForm with serviceId and payload", async () => {
+  it("createMut calls createIntakeForm with mapped payload", async () => {
     createIntakeForm.mockResolvedValueOnce({ id: "form-new" })
 
     const { result } = renderHook(
@@ -228,13 +231,12 @@ describe("useIntakeFormMutations", () => {
     )
 
     act(() => {
-      result.current.createMut.mutate({ title: "Health Check" } as Parameters<typeof createIntakeForm>[1])
+      result.current.createMut.mutate({ nameAr: "فحص صحي", nameEn: "Health Check", isActive: true } as Parameters<typeof result.current.createMut.mutate>[0])
     })
 
     await waitFor(() =>
       expect(createIntakeForm).toHaveBeenCalledWith(
-        "svc-1",
-        expect.objectContaining({ title: "Health Check" }),
+        expect.objectContaining({ nameAr: "فحص صحي", nameEn: "Health Check", type: "pre_booking", scope: "service", isActive: true }),
       ),
     )
   })

@@ -45,7 +45,7 @@ describe("useBranches", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(fetchBranches).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 1, perPage: 20 }),
+      expect.objectContaining({ page: 1, perPage: 50 }),
     )
     expect(result.current.branches).toEqual(items)
     expect(result.current.meta).toEqual({ total: 1 })

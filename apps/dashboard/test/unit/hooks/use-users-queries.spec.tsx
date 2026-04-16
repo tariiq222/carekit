@@ -126,11 +126,11 @@ describe("useUsers", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    act(() => { result.current.setRole("manager") })
+    act(() => { result.current.setRole("ADMIN") })
 
     await waitFor(() =>
       expect(fetchUsers).toHaveBeenCalledWith(
-        expect.objectContaining({ role: "manager", page: 1 }),
+        expect.objectContaining({ role: "ADMIN", page: 1 }),
       ),
     )
   })
@@ -142,8 +142,8 @@ describe("useUsers", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    act(() => { result.current.setRole("admin") })
-    await waitFor(() => expect(result.current.role).toBe("admin"))
+    act(() => { result.current.setRole("ADMIN") })
+    await waitFor(() => expect(result.current.role).toBe("ADMIN"))
 
     act(() => { result.current.resetFilters() })
     await waitFor(() => expect(result.current.role).toBeUndefined())
