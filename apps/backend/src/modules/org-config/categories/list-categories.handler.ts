@@ -4,7 +4,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 import { ListCategoriesDto } from './list-categories.dto';
 
-export type ListCategoriesQuery = ListCategoriesDto & { tenantId: string };
+export type ListCategoriesQuery = ListCategoriesDto;
 
 @Injectable()
 export class ListCategoriesHandler {
@@ -16,7 +16,6 @@ export class ListCategoriesHandler {
     const skip = (page - 1) * limit;
 
     const where: Prisma.ServiceCategoryWhereInput = {
-      tenantId: dto.tenantId,
       ...(dto.departmentId !== undefined && { departmentId: dto.departmentId }),
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       ...(dto.search && {

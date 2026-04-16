@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../../../infrastructure/database';
 import { AddHolidayDto } from './add-holiday.dto';
 
-export type AddHolidayCommand = AddHolidayDto & { tenantId: string };
+export type AddHolidayCommand = AddHolidayDto;
 
 @Injectable()
 export class AddHolidayHandler {
@@ -10,7 +10,7 @@ export class AddHolidayHandler {
 
   async execute(dto: AddHolidayCommand) {
     const branch = await this.prisma.branch.findFirst({
-      where: { id: dto.branchId, tenantId: dto.tenantId },
+      where: { id: dto.branchId },
     });
     if (!branch) throw new NotFoundException('Branch not found');
 
@@ -22,7 +22,6 @@ export class AddHolidayHandler {
 
     return this.prisma.holiday.create({
       data: {
-        tenantId: dto.tenantId,
         branchId: dto.branchId,
         date,
         nameAr: dto.nameAr,

@@ -2,7 +2,6 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface DeleteCategoryCommand {
-  tenantId: string;
   categoryId: string;
 }
 
@@ -10,9 +9,9 @@ export interface DeleteCategoryCommand {
 export class DeleteCategoryHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute({ tenantId, categoryId }: DeleteCategoryCommand) {
+  async execute({ categoryId }: DeleteCategoryCommand) {
     const existing = await this.prisma.serviceCategory.findFirst({
-      where: { id: categoryId, tenantId },
+      where: { id: categoryId },
       include: { _count: { select: { services: true } } },
     });
     if (!existing) throw new NotFoundException('Category not found');

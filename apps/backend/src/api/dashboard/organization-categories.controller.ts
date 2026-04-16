@@ -5,7 +5,6 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard, CheckPermissions } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateCategoryHandler } from '../../modules/org-config/categories/create-category.handler';
 import { CreateCategoryDto } from '../../modules/org-config/categories/create-category.dto';
 import { UpdateCategoryHandler } from '../../modules/org-config/categories/update-category.handler';
@@ -28,38 +27,28 @@ export class DashboardOrganizationCategoriesController {
 
   @Post('categories')
   @CheckPermissions({ action: 'create', subject: 'Category' })
-  createCategoryEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: CreateCategoryDto,
-  ) {
-    return this.createCategory.execute({ tenantId, ...body });
+  createCategoryEndpoint(@Body() body: CreateCategoryDto) {
+    return this.createCategory.execute(body);
   }
 
   @Get('categories')
   @CheckPermissions({ action: 'read', subject: 'Category' })
-  listCategoriesEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListCategoriesDto,
-  ) {
-    return this.listCategories.execute({ tenantId, ...query });
+  listCategoriesEndpoint(@Query() query: ListCategoriesDto) {
+    return this.listCategories.execute(query);
   }
 
   @Patch('categories/:categoryId')
   @CheckPermissions({ action: 'update', subject: 'Category' })
   updateCategoryEndpoint(
-    @TenantId() tenantId: string,
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Body() body: UpdateCategoryDto,
   ) {
-    return this.updateCategory.execute({ tenantId, categoryId, ...body });
+    return this.updateCategory.execute({ categoryId, ...body });
   }
 
   @Delete('categories/:categoryId')
   @CheckPermissions({ action: 'delete', subject: 'Category' })
-  deleteCategoryEndpoint(
-    @TenantId() tenantId: string,
-    @Param('categoryId', ParseUUIDPipe) categoryId: string,
-  ) {
-    return this.deleteCategory.execute({ tenantId, categoryId });
+  deleteCategoryEndpoint(@Param('categoryId', ParseUUIDPipe) categoryId: string) {
+    return this.deleteCategory.execute({ categoryId });
   }
 }

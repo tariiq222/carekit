@@ -5,7 +5,6 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard, CheckPermissions } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateDepartmentHandler } from '../../modules/org-config/departments/create-department.handler';
 import { CreateDepartmentDto } from '../../modules/org-config/departments/create-department.dto';
 import { UpdateDepartmentHandler } from '../../modules/org-config/departments/update-department.handler';
@@ -28,38 +27,28 @@ export class DashboardOrganizationDepartmentsController {
 
   @Post('departments')
   @CheckPermissions({ action: 'create', subject: 'Department' })
-  createDepartmentEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: CreateDepartmentDto,
-  ) {
-    return this.createDepartment.execute({ tenantId, ...body });
+  createDepartmentEndpoint(@Body() body: CreateDepartmentDto) {
+    return this.createDepartment.execute(body);
   }
 
   @Get('departments')
   @CheckPermissions({ action: 'read', subject: 'Department' })
-  listDepartmentsEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListDepartmentsDto,
-  ) {
-    return this.listDepartments.execute({ tenantId, ...query });
+  listDepartmentsEndpoint(@Query() query: ListDepartmentsDto) {
+    return this.listDepartments.execute(query);
   }
 
   @Patch('departments/:departmentId')
   @CheckPermissions({ action: 'update', subject: 'Department' })
   updateDepartmentEndpoint(
-    @TenantId() tenantId: string,
     @Param('departmentId', ParseUUIDPipe) departmentId: string,
     @Body() body: UpdateDepartmentDto,
   ) {
-    return this.updateDepartment.execute({ tenantId, departmentId, ...body });
+    return this.updateDepartment.execute({ departmentId, ...body });
   }
 
   @Delete('departments/:departmentId')
   @CheckPermissions({ action: 'delete', subject: 'Department' })
-  deleteDepartmentEndpoint(
-    @TenantId() tenantId: string,
-    @Param('departmentId', ParseUUIDPipe) departmentId: string,
-  ) {
-    return this.deleteDepartment.execute({ tenantId, departmentId });
+  deleteDepartmentEndpoint(@Param('departmentId', ParseUUIDPipe) departmentId: string) {
+    return this.deleteDepartment.execute({ departmentId });
   }
 }

@@ -5,7 +5,6 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { SetBusinessHoursHandler } from '../../modules/org-config/business-hours/set-business-hours.handler';
 import { SetBusinessHoursDto } from '../../modules/org-config/business-hours/set-business-hours.dto';
 import { GetBusinessHoursHandler } from '../../modules/org-config/business-hours/get-business-hours.handler';
@@ -29,43 +28,28 @@ export class DashboardOrganizationHoursController {
   ) {}
 
   @Post('hours')
-  setBusinessHoursEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: SetBusinessHoursDto,
-  ) {
-    return this.setBusinessHours.execute({ tenantId, ...body });
+  setBusinessHoursEndpoint(@Body() body: SetBusinessHoursDto) {
+    return this.setBusinessHours.execute(body);
   }
 
   @Get('hours/:branchId')
-  getBusinessHoursEndpoint(
-    @TenantId() tenantId: string,
-    @Param('branchId', ParseUUIDPipe) branchId: string,
-  ) {
-    return this.getBusinessHours.execute({ tenantId, branchId });
+  getBusinessHoursEndpoint(@Param('branchId', ParseUUIDPipe) branchId: string) {
+    return this.getBusinessHours.execute({ branchId });
   }
 
   @Post('holidays')
-  addHolidayEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: AddHolidayDto,
-  ) {
-    return this.addHoliday.execute({ tenantId, ...body });
+  addHolidayEndpoint(@Body() body: AddHolidayDto) {
+    return this.addHoliday.execute(body);
   }
 
   @Delete('holidays/:holidayId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeHolidayEndpoint(
-    @TenantId() tenantId: string,
-    @Param('holidayId', ParseUUIDPipe) holidayId: string,
-  ) {
-    return this.removeHoliday.execute({ tenantId, holidayId });
+  removeHolidayEndpoint(@Param('holidayId', ParseUUIDPipe) holidayId: string) {
+    return this.removeHoliday.execute({ holidayId });
   }
 
   @Get('holidays')
-  listHolidaysEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListHolidaysDto,
-  ) {
-    return this.listHolidays.execute({ tenantId, ...query });
+  listHolidaysEndpoint(@Query() query: ListHolidaysDto) {
+    return this.listHolidays.execute(query);
   }
 }

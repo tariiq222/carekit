@@ -2,7 +2,7 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { CreateBranchDto } from './create-branch.dto';
 
-export type CreateBranchCommand = CreateBranchDto & { tenantId: string };
+export type CreateBranchCommand = CreateBranchDto;
 
 @Injectable()
 export class CreateBranchHandler {
@@ -12,13 +12,13 @@ export class CreateBranchHandler {
     return this.prisma.$transaction(
       async (tx) => {
         const existing = await tx.branch.findFirst({
-          where: { tenantId: dto.tenantId, nameAr: dto.nameAr },
+          where: { nameAr: dto.nameAr },
         });
         if (existing) throw new ConflictException('Branch with this Arabic name already exists');
 
         if (dto.isMain === true) {
           const currentMain = await tx.branch.findFirst({
-            where: { tenantId: dto.tenantId, isMain: true },
+            where: { isMain: true },
             select: { id: true, nameAr: true },
           });
           if (currentMain) {
@@ -30,7 +30,6 @@ export class CreateBranchHandler {
 
         return tx.branch.create({
           data: {
-            tenantId: dto.tenantId,
             nameAr: dto.nameAr,
             nameEn: dto.nameEn,
             phone: dto.phone,

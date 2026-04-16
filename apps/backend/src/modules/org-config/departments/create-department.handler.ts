@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { CreateDepartmentDto } from './create-department.dto';
 
-export type CreateDepartmentCommand = CreateDepartmentDto & { tenantId: string };
+export type CreateDepartmentCommand = CreateDepartmentDto;
 
 @Injectable()
 export class CreateDepartmentHandler {
@@ -13,7 +13,6 @@ export class CreateDepartmentHandler {
     try {
       return await this.prisma.department.create({
         data: {
-          tenantId: dto.tenantId,
           nameAr: dto.nameAr,
           nameEn: dto.nameEn,
           descriptionAr: dto.descriptionAr,

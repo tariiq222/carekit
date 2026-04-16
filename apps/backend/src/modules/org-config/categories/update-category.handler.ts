@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { UpdateCategoryDto } from './update-category.dto';
 
-export type UpdateCategoryCommand = UpdateCategoryDto & { tenantId: string; categoryId: string };
+export type UpdateCategoryCommand = UpdateCategoryDto & { categoryId: string };
 
 @Injectable()
 export class UpdateCategoryHandler {
@@ -10,7 +10,7 @@ export class UpdateCategoryHandler {
 
   async execute(dto: UpdateCategoryCommand) {
     const existing = await this.prisma.serviceCategory.findFirst({
-      where: { id: dto.categoryId, tenantId: dto.tenantId },
+      where: { id: dto.categoryId },
     });
     if (!existing) throw new NotFoundException('ServiceCategory not found');
 

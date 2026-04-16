@@ -5,7 +5,6 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateBranchHandler } from '../../modules/org-config/branches/create-branch.handler';
 import { CreateBranchDto } from '../../modules/org-config/branches/create-branch.dto';
 import { UpdateBranchHandler } from '../../modules/org-config/branches/update-branch.handler';
@@ -36,69 +35,51 @@ export class DashboardOrganizationBranchesController {
   ) {}
 
   @Post('branches')
-  createBranchEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: CreateBranchDto,
-  ) {
-    return this.createBranch.execute({ tenantId, ...body });
+  createBranchEndpoint(@Body() body: CreateBranchDto) {
+    return this.createBranch.execute(body);
   }
 
   @Get('branches')
-  listBranchesEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListBranchesDto,
-  ) {
-    return this.listBranches.execute({ tenantId, ...query });
+  listBranchesEndpoint(@Query() query: ListBranchesDto) {
+    return this.listBranches.execute(query);
   }
 
   @Get('branches/:branchId')
-  getBranchEndpoint(
-    @TenantId() tenantId: string,
-    @Param('branchId', ParseUUIDPipe) branchId: string,
-  ) {
-    return this.getBranch.execute({ tenantId, branchId });
+  getBranchEndpoint(@Param('branchId', ParseUUIDPipe) branchId: string) {
+    return this.getBranch.execute({ branchId });
   }
 
   @Patch('branches/:branchId')
   updateBranchEndpoint(
-    @TenantId() tenantId: string,
     @Param('branchId', ParseUUIDPipe) branchId: string,
     @Body() body: UpdateBranchDto,
   ) {
-    return this.updateBranch.execute({ tenantId, branchId, ...body });
+    return this.updateBranch.execute({ branchId, ...body });
   }
 
   @Delete('branches/:branchId')
-  deleteBranchEndpoint(
-    @TenantId() tenantId: string,
-    @Param('branchId', ParseUUIDPipe) branchId: string,
-  ) {
-    return this.deleteBranch.execute({ tenantId, branchId });
+  deleteBranchEndpoint(@Param('branchId', ParseUUIDPipe) branchId: string) {
+    return this.deleteBranch.execute({ branchId });
   }
 
   @Get('branches/:branchId/employees')
-  listBranchEmployeesEndpoint(
-    @TenantId() tenantId: string,
-    @Param('branchId', ParseUUIDPipe) branchId: string,
-  ) {
-    return this.listBranchEmployees.execute({ tenantId, branchId });
+  listBranchEmployeesEndpoint(@Param('branchId', ParseUUIDPipe) branchId: string) {
+    return this.listBranchEmployees.execute({ branchId });
   }
 
   @Post('branches/:branchId/employees')
   assignEmployeeEndpoint(
-    @TenantId() tenantId: string,
     @Param('branchId', ParseUUIDPipe) branchId: string,
     @Body() body: AssignEmployeeToBranchDto,
   ) {
-    return this.assignEmployee.execute({ tenantId, branchId, ...body });
+    return this.assignEmployee.execute({ branchId, ...body });
   }
 
   @Delete('branches/:branchId/employees/:employeeId')
   unassignEmployeeEndpoint(
-    @TenantId() tenantId: string,
     @Param('branchId', ParseUUIDPipe) branchId: string,
     @Param('employeeId', ParseUUIDPipe) employeeId: string,
   ) {
-    return this.unassignEmployee.execute({ tenantId, branchId, employeeId });
+    return this.unassignEmployee.execute({ branchId, employeeId });
   }
 }

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../infrastructure/database';
 import { SetBusinessHoursDto } from './set-business-hours.dto';
 
-export type SetBusinessHoursCommand = SetBusinessHoursDto & { tenantId: string };
+export type SetBusinessHoursCommand = SetBusinessHoursDto;
 
 @Injectable()
 export class SetBusinessHoursHandler {
@@ -10,7 +10,7 @@ export class SetBusinessHoursHandler {
 
   async execute(dto: SetBusinessHoursCommand) {
     const branch = await this.prisma.branch.findFirst({
-      where: { id: dto.branchId, tenantId: dto.tenantId },
+      where: { id: dto.branchId },
     });
     if (!branch) throw new NotFoundException('Branch not found');
 
@@ -26,7 +26,6 @@ export class SetBusinessHoursHandler {
         this.prisma.businessHour.upsert({
           where: { branchId_dayOfWeek: { branchId: dto.branchId, dayOfWeek: slot.dayOfWeek } },
           create: {
-            tenantId: dto.tenantId,
             branchId: dto.branchId,
             dayOfWeek: slot.dayOfWeek,
             startTime: slot.startTime,
@@ -43,7 +42,7 @@ export class SetBusinessHoursHandler {
     );
 
     return this.prisma.businessHour.findMany({
-      where: { branchId: dto.branchId, tenantId: dto.tenantId },
+      where: { branchId: dto.branchId },
       orderBy: { dayOfWeek: 'asc' },
     });
   }

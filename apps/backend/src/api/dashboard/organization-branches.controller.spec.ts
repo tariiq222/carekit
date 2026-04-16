@@ -1,6 +1,5 @@
 import { DashboardOrganizationBranchesController } from './organization-branches.controller';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
@@ -24,57 +23,57 @@ function buildController() {
 }
 
 describe('DashboardOrganizationBranchesController', () => {
-  it('createBranchEndpoint — passes tenantId', async () => {
+  it('createBranchEndpoint — passes body', async () => {
     const { controller, createBranch } = buildController();
-    await controller.createBranchEndpoint(TENANT, { nameAr: 'فرع' } as never);
-    expect(createBranch.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.createBranchEndpoint({ nameAr: 'فرع' } as never);
+    expect(createBranch.execute).toHaveBeenCalled();
   });
 
-  it('listBranchesEndpoint — passes tenantId', async () => {
+  it('listBranchesEndpoint — passes query', async () => {
     const { controller, listBranches } = buildController();
-    await controller.listBranchesEndpoint(TENANT, {} as never);
-    expect(listBranches.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listBranchesEndpoint({} as never);
+    expect(listBranches.execute).toHaveBeenCalled();
   });
 
-  it('getBranchEndpoint — passes tenantId and branchId', async () => {
+  it('getBranchEndpoint — passes branchId', async () => {
     const { controller, getBranch } = buildController();
-    await controller.getBranchEndpoint(TENANT, 'br-1');
-    expect(getBranch.execute).toHaveBeenCalledWith({ tenantId: TENANT, branchId: 'br-1' });
+    await controller.getBranchEndpoint('br-1');
+    expect(getBranch.execute).toHaveBeenCalledWith({ branchId: 'br-1' });
   });
 
-  it('updateBranchEndpoint — passes tenantId and branchId', async () => {
+  it('updateBranchEndpoint — passes branchId', async () => {
     const { controller, updateBranch } = buildController();
-    await controller.updateBranchEndpoint(TENANT, 'br-1', {} as never);
+    await controller.updateBranchEndpoint('br-1', {} as never);
     expect(updateBranch.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, branchId: 'br-1' }),
+      expect.objectContaining({ branchId: 'br-1' }),
     );
   });
 
-  it('deleteBranchEndpoint — passes tenantId and branchId', async () => {
+  it('deleteBranchEndpoint — passes branchId', async () => {
     const { controller, deleteBranch } = buildController();
-    await controller.deleteBranchEndpoint(TENANT, 'br-1');
-    expect(deleteBranch.execute).toHaveBeenCalledWith({ tenantId: TENANT, branchId: 'br-1' });
+    await controller.deleteBranchEndpoint('br-1');
+    expect(deleteBranch.execute).toHaveBeenCalledWith({ branchId: 'br-1' });
   });
 
-  it('listBranchEmployeesEndpoint — passes tenantId and branchId', async () => {
+  it('listBranchEmployeesEndpoint — passes branchId', async () => {
     const { controller, listBranchEmployees } = buildController();
-    await controller.listBranchEmployeesEndpoint(TENANT, 'br-1');
-    expect(listBranchEmployees.execute).toHaveBeenCalledWith({ tenantId: TENANT, branchId: 'br-1' });
+    await controller.listBranchEmployeesEndpoint('br-1');
+    expect(listBranchEmployees.execute).toHaveBeenCalledWith({ branchId: 'br-1' });
   });
 
-  it('assignEmployeeEndpoint — passes tenantId, branchId, and employeeId', async () => {
+  it('assignEmployeeEndpoint — passes branchId and employeeId', async () => {
     const { controller, assignEmployee } = buildController();
-    await controller.assignEmployeeEndpoint(TENANT, 'br-1', { employeeId: 'emp-1' } as never);
+    await controller.assignEmployeeEndpoint('br-1', { employeeId: 'emp-1' } as never);
     expect(assignEmployee.execute).toHaveBeenCalledWith({
-      tenantId: TENANT, branchId: 'br-1', employeeId: 'emp-1',
+      branchId: 'br-1', employeeId: 'emp-1',
     });
   });
 
-  it('unassignEmployeeEndpoint — passes tenantId, branchId, and employeeId', async () => {
+  it('unassignEmployeeEndpoint — passes branchId and employeeId', async () => {
     const { controller, unassignEmployee } = buildController();
-    await controller.unassignEmployeeEndpoint(TENANT, 'br-1', 'emp-1');
+    await controller.unassignEmployeeEndpoint('br-1', 'emp-1');
     expect(unassignEmployee.execute).toHaveBeenCalledWith({
-      tenantId: TENANT, branchId: 'br-1', employeeId: 'emp-1',
+      branchId: 'br-1', employeeId: 'emp-1',
     });
   });
 });

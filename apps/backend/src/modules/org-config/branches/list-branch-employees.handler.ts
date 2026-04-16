@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
-export type ListBranchEmployeesQuery = { tenantId: string; branchId: string };
+export type ListBranchEmployeesQuery = { branchId: string };
 
 @Injectable()
 export class ListBranchEmployeesHandler {
@@ -9,13 +9,13 @@ export class ListBranchEmployeesHandler {
 
   async execute(dto: ListBranchEmployeesQuery) {
     const branch = await this.prisma.branch.findFirst({
-      where: { id: dto.branchId, tenantId: dto.tenantId },
+      where: { id: dto.branchId },
       select: { id: true },
     });
     if (!branch) throw new NotFoundException('Branch not found');
 
     const links = await this.prisma.employeeBranch.findMany({
-      where: { branchId: dto.branchId, tenantId: dto.tenantId },
+      where: { branchId: dto.branchId },
       include: {
         employee: {
           select: {

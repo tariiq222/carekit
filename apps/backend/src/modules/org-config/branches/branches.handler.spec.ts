@@ -6,7 +6,6 @@ import { GetBranchHandler } from './get-branch.handler';
 
 const mockBranch = {
   id: 'branch-1',
-  tenantId: 'tenant-1',
   nameAr: 'الفرع الرئيسي',
   nameEn: 'Main Branch',
   phone: null,
@@ -51,7 +50,7 @@ describe('CreateBranchHandler', () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new CreateBranchHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', nameAr: 'الفرع الرئيسي' });
+    const result = await handler.execute({ nameAr: 'الفرع الرئيسي' });
     expect(result.id).toBe('branch-1');
   });
 
@@ -60,7 +59,7 @@ describe('CreateBranchHandler', () => {
     prisma.branch.findFirst = jest.fn().mockResolvedValue(mockBranch);
     const handler = new CreateBranchHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', nameAr: 'الفرع الرئيسي' }),
+      handler.execute({ nameAr: 'الفرع الرئيسي' }),
     ).rejects.toThrow(ConflictException);
   });
 });
@@ -70,7 +69,7 @@ describe('UpdateBranchHandler', () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(mockBranch);
     const handler = new UpdateBranchHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1', city: 'Riyadh' });
+    const result = await handler.execute({ branchId: 'branch-1', city: 'Riyadh' });
     expect(result).toEqual(mockBranch);
   });
 
@@ -79,7 +78,7 @@ describe('UpdateBranchHandler', () => {
     prisma.branch.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new UpdateBranchHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', branchId: 'missing', city: 'Riyadh' }),
+      handler.execute({ branchId: 'missing', city: 'Riyadh' }),
     ).rejects.toThrow(NotFoundException);
   });
 });
@@ -88,7 +87,7 @@ describe('ListBranchesHandler', () => {
   it('returns paginated branches', async () => {
     const prisma = buildPrisma();
     const handler = new ListBranchesHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1' });
+    const result = await handler.execute({});
     expect(result.items).toHaveLength(1);
     expect(result.meta.total).toBe(1);
   });
@@ -99,7 +98,7 @@ describe('GetBranchHandler', () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(mockBranch);
     const handler = new GetBranchHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1' });
+    const result = await handler.execute({ branchId: 'branch-1' });
     expect(result.id).toBe('branch-1');
   });
 
@@ -108,7 +107,7 @@ describe('GetBranchHandler', () => {
     prisma.branch.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new GetBranchHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', branchId: 'missing' }),
+      handler.execute({ branchId: 'missing' }),
     ).rejects.toThrow(NotFoundException);
   });
 });

@@ -1,6 +1,5 @@
 import { DashboardOrganizationDepartmentsController } from './organization-departments.controller';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
@@ -16,29 +15,29 @@ function buildController() {
 }
 
 describe('DashboardOrganizationDepartmentsController', () => {
-  it('createDepartmentEndpoint — passes tenantId', async () => {
+  it('createDepartmentEndpoint — passes body', async () => {
     const { controller, createDepartment } = buildController();
-    await controller.createDepartmentEndpoint(TENANT, { nameAr: 'قسم' } as never);
-    expect(createDepartment.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.createDepartmentEndpoint({ nameAr: 'قسم' } as never);
+    expect(createDepartment.execute).toHaveBeenCalled();
   });
 
-  it('listDepartmentsEndpoint — passes tenantId', async () => {
+  it('listDepartmentsEndpoint — passes query', async () => {
     const { controller, listDepartments } = buildController();
-    await controller.listDepartmentsEndpoint(TENANT, {} as never);
-    expect(listDepartments.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listDepartmentsEndpoint({} as never);
+    expect(listDepartments.execute).toHaveBeenCalled();
   });
 
-  it('updateDepartmentEndpoint — passes tenantId and departmentId', async () => {
+  it('updateDepartmentEndpoint — passes departmentId', async () => {
     const { controller, updateDepartment } = buildController();
-    await controller.updateDepartmentEndpoint(TENANT, 'dept-1', {} as never);
+    await controller.updateDepartmentEndpoint('dept-1', {} as never);
     expect(updateDepartment.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, departmentId: 'dept-1' }),
+      expect.objectContaining({ departmentId: 'dept-1' }),
     );
   });
 
-  it('deleteDepartmentEndpoint — passes tenantId and departmentId', async () => {
+  it('deleteDepartmentEndpoint — passes departmentId', async () => {
     const { controller, deleteDepartment } = buildController();
-    await controller.deleteDepartmentEndpoint(TENANT, 'dept-1');
-    expect(deleteDepartment.execute).toHaveBeenCalledWith({ tenantId: TENANT, departmentId: 'dept-1' });
+    await controller.deleteDepartmentEndpoint('dept-1');
+    expect(deleteDepartment.execute).toHaveBeenCalledWith({ departmentId: 'dept-1' });
   });
 });

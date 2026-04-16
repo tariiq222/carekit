@@ -4,7 +4,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 import { ListBranchesDto } from './list-branches.dto';
 
-export type ListBranchesQuery = ListBranchesDto & { tenantId: string };
+export type ListBranchesQuery = ListBranchesDto;
 
 @Injectable()
 export class ListBranchesHandler {
@@ -16,7 +16,6 @@ export class ListBranchesHandler {
     const skip = (page - 1) * limit;
 
     const where: Prisma.BranchWhereInput = {
-      tenantId: dto.tenantId,
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
     };
 

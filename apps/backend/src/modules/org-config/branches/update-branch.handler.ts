@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../../../infrastructure/database';
 import { UpdateBranchDto } from './update-branch.dto';
 
-export type UpdateBranchCommand = UpdateBranchDto & { tenantId: string; branchId: string };
+export type UpdateBranchCommand = UpdateBranchDto & { branchId: string };
 
 @Injectable()
 export class UpdateBranchHandler {
@@ -12,13 +12,13 @@ export class UpdateBranchHandler {
     return this.prisma.$transaction(
       async (tx) => {
         const branch = await tx.branch.findFirst({
-          where: { id: dto.branchId, tenantId: dto.tenantId },
+          where: { id: dto.branchId },
         });
         if (!branch) throw new NotFoundException('Branch not found');
 
         if (dto.isMain === true && !branch.isMain) {
           const currentMain = await tx.branch.findFirst({
-            where: { tenantId: dto.tenantId, isMain: true, NOT: { id: dto.branchId } },
+            where: { isMain: true, NOT: { id: dto.branchId } },
             select: { id: true, nameAr: true },
           });
           if (currentMain) {

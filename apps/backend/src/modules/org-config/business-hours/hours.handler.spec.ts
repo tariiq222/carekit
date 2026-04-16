@@ -5,9 +5,9 @@ import { AddHolidayHandler } from './add-holiday.handler';
 import { RemoveHolidayHandler } from './remove-holiday.handler';
 import { ListHolidaysHandler } from './list-holidays.handler';
 
-const mockBranch = { id: 'branch-1', tenantId: 'tenant-1' };
-const mockHour = { id: 'hour-1', tenantId: 'tenant-1', branchId: 'branch-1', dayOfWeek: 0, startTime: '09:00', endTime: '17:00', isOpen: true };
-const mockHoliday = { id: 'hol-1', tenantId: 'tenant-1', branchId: 'branch-1', date: new Date('2026-01-01'), nameAr: 'رأس السنة', nameEn: null };
+const mockBranch = { id: 'branch-1' };
+const mockHour = { id: 'hour-1', branchId: 'branch-1', dayOfWeek: 0, startTime: '09:00', endTime: '17:00', isOpen: true };
+const mockHoliday = { id: 'hol-1', branchId: 'branch-1', date: new Date('2026-01-01'), nameAr: 'رأس السنة', nameEn: null };
 
 const schedule = [{ dayOfWeek: 0, startTime: '09:00', endTime: '17:00', isOpen: true }];
 
@@ -31,7 +31,7 @@ describe('SetBusinessHoursHandler', () => {
   it('upserts schedule and returns hours', async () => {
     const prisma = buildPrisma();
     const handler = new SetBusinessHoursHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1', schedule });
+    const result = await handler.execute({ branchId: 'branch-1', schedule });
     expect(result).toEqual([mockHour]);
   });
 
@@ -39,14 +39,14 @@ describe('SetBusinessHoursHandler', () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new SetBusinessHoursHandler(prisma as never);
-    await expect(handler.execute({ tenantId: 'tenant-1', branchId: 'missing', schedule })).rejects.toThrow(NotFoundException);
+    await expect(handler.execute({ branchId: 'missing', schedule })).rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException for invalid dayOfWeek', async () => {
     const prisma = buildPrisma();
     const handler = new SetBusinessHoursHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1', schedule: [{ dayOfWeek: 9, startTime: '09:00', endTime: '17:00', isOpen: true }] }),
+      handler.execute({ branchId: 'branch-1', schedule: [{ dayOfWeek: 9, startTime: '09:00', endTime: '17:00', isOpen: true }] }),
     ).rejects.toThrow(BadRequestException);
   });
 });
@@ -55,7 +55,7 @@ describe('GetBusinessHoursHandler', () => {
   it('returns hours for branch', async () => {
     const prisma = buildPrisma();
     const handler = new GetBusinessHoursHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1' });
+    const result = await handler.execute({ branchId: 'branch-1' });
     expect(result).toEqual([mockHour]);
   });
 
@@ -63,7 +63,7 @@ describe('GetBusinessHoursHandler', () => {
     const prisma = buildPrisma();
     prisma.branch.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new GetBusinessHoursHandler(prisma as never);
-    await expect(handler.execute({ tenantId: 'tenant-1', branchId: 'missing' })).rejects.toThrow(NotFoundException);
+    await expect(handler.execute({ branchId: 'missing' })).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -71,7 +71,7 @@ describe('AddHolidayHandler', () => {
   it('creates holiday', async () => {
     const prisma = buildPrisma();
     const handler = new AddHolidayHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1', date: '2026-01-01', nameAr: 'رأس السنة' });
+    const result = await handler.execute({ branchId: 'branch-1', date: '2026-01-01', nameAr: 'رأس السنة' });
     expect(result.id).toBe('hol-1');
   });
 
@@ -80,7 +80,7 @@ describe('AddHolidayHandler', () => {
     prisma.holiday.findUnique = jest.fn().mockResolvedValue(mockHoliday);
     const handler = new AddHolidayHandler(prisma as never);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1', date: '2026-01-01', nameAr: 'رأس السنة' }),
+      handler.execute({ branchId: 'branch-1', date: '2026-01-01', nameAr: 'رأس السنة' }),
     ).rejects.toThrow(ConflictException);
   });
 });
@@ -90,14 +90,14 @@ describe('RemoveHolidayHandler', () => {
     const prisma = buildPrisma();
     prisma.holiday.findFirst = jest.fn().mockResolvedValue(mockHoliday);
     const handler = new RemoveHolidayHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', holidayId: 'hol-1' });
+    const result = await handler.execute({ holidayId: 'hol-1' });
     expect(result.deleted).toBe(true);
   });
 
   it('throws NotFoundException when holiday not found', async () => {
     const prisma = buildPrisma();
     const handler = new RemoveHolidayHandler(prisma as never);
-    await expect(handler.execute({ tenantId: 'tenant-1', holidayId: 'missing' })).rejects.toThrow(NotFoundException);
+    await expect(handler.execute({ holidayId: 'missing' })).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -105,7 +105,7 @@ describe('ListHolidaysHandler', () => {
   it('returns holidays for branch', async () => {
     const prisma = buildPrisma();
     const handler = new ListHolidaysHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1' });
+    const result = await handler.execute({ branchId: 'branch-1' });
     expect(result).toHaveLength(1);
   });
 });

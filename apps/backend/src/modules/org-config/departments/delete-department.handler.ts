@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
-export type DeleteDepartmentCommand = { tenantId: string; departmentId: string };
+export type DeleteDepartmentCommand = { departmentId: string };
 
 @Injectable()
 export class DeleteDepartmentHandler {
@@ -9,7 +9,7 @@ export class DeleteDepartmentHandler {
 
   async execute(dto: DeleteDepartmentCommand) {
     const result = await this.prisma.department.deleteMany({
-      where: { id: dto.departmentId, tenantId: dto.tenantId },
+      where: { id: dto.departmentId },
     });
 
     if (result.count === 0) throw new NotFoundException('Department not found');

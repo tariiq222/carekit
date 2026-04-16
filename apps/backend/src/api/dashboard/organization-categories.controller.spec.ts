@@ -1,6 +1,5 @@
 import { DashboardOrganizationCategoriesController } from './organization-categories.controller';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
@@ -18,29 +17,29 @@ function buildController() {
 }
 
 describe('DashboardOrganizationCategoriesController', () => {
-  it('createCategoryEndpoint — passes tenantId', async () => {
+  it('createCategoryEndpoint — passes body', async () => {
     const { controller, createCategory } = buildController();
-    await controller.createCategoryEndpoint(TENANT, { nameAr: 'فئة' } as never);
-    expect(createCategory.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.createCategoryEndpoint({ nameAr: 'فئة' } as never);
+    expect(createCategory.execute).toHaveBeenCalled();
   });
 
-  it('listCategoriesEndpoint — passes tenantId', async () => {
+  it('listCategoriesEndpoint — passes query', async () => {
     const { controller, listCategories } = buildController();
-    await controller.listCategoriesEndpoint(TENANT, {} as never);
-    expect(listCategories.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listCategoriesEndpoint({} as never);
+    expect(listCategories.execute).toHaveBeenCalled();
   });
 
-  it('updateCategoryEndpoint — passes tenantId and categoryId', async () => {
+  it('updateCategoryEndpoint — passes categoryId', async () => {
     const { controller, updateCategory } = buildController();
-    await controller.updateCategoryEndpoint(TENANT, 'cat-1', {} as never);
+    await controller.updateCategoryEndpoint('cat-1', {} as never);
     expect(updateCategory.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, categoryId: 'cat-1' }),
+      expect.objectContaining({ categoryId: 'cat-1' }),
     );
   });
 
-  it('deleteCategoryEndpoint — passes tenantId and categoryId', async () => {
+  it('deleteCategoryEndpoint — passes categoryId', async () => {
     const { controller, deleteCategory } = buildController();
-    await controller.deleteCategoryEndpoint(TENANT, 'cat-1');
-    expect(deleteCategory.execute).toHaveBeenCalledWith({ tenantId: TENANT, categoryId: 'cat-1' });
+    await controller.deleteCategoryEndpoint('cat-1');
+    expect(deleteCategory.execute).toHaveBeenCalledWith({ categoryId: 'cat-1' });
   });
 });

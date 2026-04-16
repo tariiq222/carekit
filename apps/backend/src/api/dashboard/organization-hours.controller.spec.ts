@@ -1,6 +1,5 @@
 import { DashboardOrganizationHoursController } from './organization-hours.controller';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
@@ -17,33 +16,33 @@ function buildController() {
 }
 
 describe('DashboardOrganizationHoursController', () => {
-  it('setBusinessHoursEndpoint — passes tenantId', async () => {
+  it('setBusinessHoursEndpoint — passes body', async () => {
     const { controller, setBusinessHours } = buildController();
-    await controller.setBusinessHoursEndpoint(TENANT, { branchId: 'br-1' } as never);
-    expect(setBusinessHours.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.setBusinessHoursEndpoint({ branchId: 'br-1' } as never);
+    expect(setBusinessHours.execute).toHaveBeenCalled();
   });
 
-  it('getBusinessHoursEndpoint — passes tenantId and branchId', async () => {
+  it('getBusinessHoursEndpoint — passes branchId', async () => {
     const { controller, getBusinessHours } = buildController();
-    await controller.getBusinessHoursEndpoint(TENANT, 'br-1');
-    expect(getBusinessHours.execute).toHaveBeenCalledWith({ tenantId: TENANT, branchId: 'br-1' });
+    await controller.getBusinessHoursEndpoint('br-1');
+    expect(getBusinessHours.execute).toHaveBeenCalledWith({ branchId: 'br-1' });
   });
 
-  it('addHolidayEndpoint — passes tenantId', async () => {
+  it('addHolidayEndpoint — passes body', async () => {
     const { controller, addHoliday } = buildController();
-    await controller.addHolidayEndpoint(TENANT, { nameAr: 'عيد' } as never);
-    expect(addHoliday.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.addHolidayEndpoint({ nameAr: 'عيد' } as never);
+    expect(addHoliday.execute).toHaveBeenCalled();
   });
 
-  it('removeHolidayEndpoint — passes tenantId and holidayId', async () => {
+  it('removeHolidayEndpoint — passes holidayId', async () => {
     const { controller, removeHoliday } = buildController();
-    await controller.removeHolidayEndpoint(TENANT, 'hol-1');
-    expect(removeHoliday.execute).toHaveBeenCalledWith({ tenantId: TENANT, holidayId: 'hol-1' });
+    await controller.removeHolidayEndpoint('hol-1');
+    expect(removeHoliday.execute).toHaveBeenCalledWith({ holidayId: 'hol-1' });
   });
 
-  it('listHolidaysEndpoint — passes tenantId', async () => {
+  it('listHolidaysEndpoint — passes query', async () => {
     const { controller, listHolidays } = buildController();
-    await controller.listHolidaysEndpoint(TENANT, {} as never);
-    expect(listHolidays.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listHolidaysEndpoint({} as never);
+    expect(listHolidays.execute).toHaveBeenCalled();
   });
 });

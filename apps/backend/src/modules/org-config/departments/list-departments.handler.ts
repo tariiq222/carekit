@@ -3,7 +3,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 import { ListDepartmentsDto } from './list-departments.dto';
 
-export type ListDepartmentsQuery = ListDepartmentsDto & { tenantId: string };
+export type ListDepartmentsQuery = ListDepartmentsDto;
 
 @Injectable()
 export class ListDepartmentsHandler {
@@ -15,7 +15,6 @@ export class ListDepartmentsHandler {
     const skip = (page - 1) * limit;
 
     const where = {
-      tenantId: dto.tenantId,
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       ...(dto.search && {
         OR: [

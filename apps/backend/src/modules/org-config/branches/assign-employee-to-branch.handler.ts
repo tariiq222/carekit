@@ -4,7 +4,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { AssignEmployeeToBranchDto } from './assign-employee-to-branch.dto';
 
 export type AssignEmployeeToBranchCommand = AssignEmployeeToBranchDto & {
-  tenantId: string;
   branchId: string;
 };
 
@@ -15,11 +14,11 @@ export class AssignEmployeeToBranchHandler {
   async execute(dto: AssignEmployeeToBranchCommand) {
     const [branch, employee] = await Promise.all([
       this.prisma.branch.findFirst({
-        where: { id: dto.branchId, tenantId: dto.tenantId },
+        where: { id: dto.branchId },
         select: { id: true },
       }),
       this.prisma.employee.findFirst({
-        where: { id: dto.employeeId, tenantId: dto.tenantId },
+        where: { id: dto.employeeId },
         select: { id: true },
       }),
     ]);
@@ -29,7 +28,6 @@ export class AssignEmployeeToBranchHandler {
     try {
       return await this.prisma.employeeBranch.create({
         data: {
-          tenantId: dto.tenantId,
           branchId: dto.branchId,
           employeeId: dto.employeeId,
         },

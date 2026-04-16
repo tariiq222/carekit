@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
 export type UnassignEmployeeFromBranchCommand = {
-  tenantId: string;
   branchId: string;
   employeeId: string;
 };
@@ -14,7 +13,6 @@ export class UnassignEmployeeFromBranchHandler {
   async execute(dto: UnassignEmployeeFromBranchCommand) {
     const link = await this.prisma.employeeBranch.findFirst({
       where: {
-        tenantId: dto.tenantId,
         branchId: dto.branchId,
         employeeId: dto.employeeId,
       },
