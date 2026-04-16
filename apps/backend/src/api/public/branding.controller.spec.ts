@@ -4,18 +4,18 @@ import { PublicBrandingController } from './branding.controller';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 describe('PublicBrandingController', () => {
-  it('getBrandingEndpoint — delegates to GetBrandingHandler with tenantId', async () => {
+  it('getBrandingEndpoint — delegates to GetBrandingHandler with no args', async () => {
     const getBranding = fn({ primaryColor: '#354FD8' });
     const controller = new PublicBrandingController(getBranding as never);
-    const result = await controller.getBrandingEndpoint('tenant-1');
-    expect(getBranding.execute).toHaveBeenCalledWith({ tenantId: 'tenant-1' });
+    const result = await controller.getBrandingEndpoint();
+    expect(getBranding.execute).toHaveBeenCalledWith();
     expect(result).toMatchObject({ primaryColor: '#354FD8' });
   });
 
-  it('getBrandingEndpoint — bubbles NotFoundException when tenant not found', async () => {
-    const getBranding = fn();
-    getBranding.execute.mockRejectedValueOnce(new NotFoundException('tenant not found'));
+  it('getBrandingEndpoint — returns the branding config', async () => {
+    const getBranding = fn({ primaryColor: '#354FD8', clinicNameAr: 'عيادتي' });
     const controller = new PublicBrandingController(getBranding as never);
-    await expect(controller.getBrandingEndpoint('unknown-tenant')).rejects.toThrow(NotFoundException);
+    const result = await controller.getBrandingEndpoint();
+    expect(result.primaryColor).toBe('#354FD8');
   });
 });
