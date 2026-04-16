@@ -4,7 +4,11 @@ import {
   UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery,
+  ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse, ApiConsumes,
+} from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { CreateClientHandler } from '../../modules/people/clients/create-client.handler';
@@ -41,8 +45,9 @@ import { ListEmployeeRatingsHandler } from '../../modules/people/employees/list-
 import { EmployeeStatsHandler } from '../../modules/people/employees/employee-stats.handler';
 import { UploadAvatarHandler } from '../../modules/people/employees/upload-avatar/upload-avatar.handler';
 
-@ApiTags('People')
+@ApiTags('Dashboard / People')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('dashboard/people')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardPeopleController {
@@ -74,11 +79,21 @@ export class DashboardPeopleController {
   // ── Clients ────────────────────────────────────────────────────────────────
   @Post('clients')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a client' })
+  @ApiCreatedResponse({ description: 'Client created' })
   createClientEndpoint(@Body() body: CreateClientDto) {
     return this.createClient.execute(body);
   }
 
   @Get('clients')
+  @ApiOperation({ summary: 'List clients' })
+  @ApiQuery({ name: 'search', required: false, description: 'Search by name or phone', example: 'Sara' })
+  @ApiQuery({ name: 'isActive', required: false, description: 'Filter by active status', example: true })
+  @ApiQuery({ name: 'gender', required: false, description: 'Filter by gender', example: 'FEMALE' })
+  @ApiQuery({ name: 'source', required: false, description: 'Filter by acquisition source', example: 'REFERRAL' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (1-based)', example: 1 })
+  @ApiQuery({ name: 'limit', required: false, description: 'Results per page', example: 20 })
+  @ApiOkResponse({ description: 'Paginated list of clients' })
   listClientsEndpoint(
     @Query() query: ListClientsDto,
     @Query('isActive') rawIsActive?: string,
@@ -97,11 +112,17 @@ export class DashboardPeopleController {
   }
 
   @Get('clients/:id')
+  @ApiOperation({ summary: 'Get a client by ID' })
+  @ApiParam({ name: 'id', description: 'Client UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Client record' })
   getClientEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.getClient.execute({ clientId: id });
   }
 
   @Patch('clients/:id')
+  @ApiOperation({ summary: 'Update a client' })
+  @ApiParam({ name: 'id', description: 'Client UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Updated client record' })
   updateClientEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateClientDto,
@@ -111,23 +132,41 @@ export class DashboardPeopleController {
 
   @Delete('clients/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a client' })
+  @ApiParam({ name: 'id', description: 'Client UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Client deleted' })
   async deleteClientEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     await this.deleteClient.execute({ clientId: id });
   }
   // ── Employees ──────────────────────────────────────────────────────────────
   @Post('employees')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create an employee' })
+  @ApiCreatedResponse({ description: 'Employee created' })
   createEmployeeEndpoint(@Body() body: CreateEmployeeDto) {
     return this.createEmployee.execute(body);
   }
 
   @Post('employees/onboarding')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Onboard a new employee with full profile details' })
+  @ApiCreatedResponse({ description: 'Employee onboarded' })
   onboardEmployeeEndpoint(@Body() body: OnboardEmployeeDto) {
     return this.onboardEmployee.execute(body);
   }
 
   @Get('employees')
+  @ApiOperation({ summary: 'List employees' })
+  @ApiQuery({ name: 'search', required: false, description: 'Search by name, email, or phone', example: 'Khalid' })
+  @ApiQuery({ name: 'isActive', required: false, description: 'Filter by active status', example: true })
+  @ApiQuery({ name: 'gender', required: false, description: 'Filter by gender', example: 'MALE' })
+  @ApiQuery({ name: 'employmentType', required: false, description: 'Filter by employment type', example: 'FULL_TIME' })
+  @ApiQuery({ name: 'onboardingStatus', required: false, description: 'Filter by onboarding status', example: 'COMPLETE' })
+  @ApiQuery({ name: 'specialtyId', required: false, description: 'Filter by specialty UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiQuery({ name: 'branchId', required: false, description: 'Filter by branch UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (1-based)', example: 1 })
+  @ApiQuery({ name: 'limit', required: false, description: 'Results per page', example: 20 })
+  @ApiOkResponse({ description: 'Paginated list of employees' })
   listEmployeesEndpoint(
     @Query() query: ListEmployeesDto,
     @Query('isActive') rawIsActive?: string,
@@ -146,16 +185,24 @@ export class DashboardPeopleController {
   }
 
   @Get('employees/stats')
+  @ApiOperation({ summary: 'Get employee statistics' })
+  @ApiOkResponse({ description: 'Employee statistics summary' })
   employeeStatsEndpoint() {
     return this.employeeStats.execute();
   }
 
   @Get('employees/:id')
+  @ApiOperation({ summary: 'Get an employee by ID' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Employee record' })
   getEmployeeEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.getEmployee.execute({ employeeId: id });
   }
 
   @Patch('employees/:id')
+  @ApiOperation({ summary: 'Update an employee' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Updated employee record' })
   updateEmployeeEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateEmployeeDto,
@@ -164,17 +211,26 @@ export class DashboardPeopleController {
   }
 
   @Get('employees/:id/availability')
+  @ApiOperation({ summary: "Get an employee's availability schedule" })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Availability windows and exceptions' })
   getAvailabilityEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.getAvailability.execute({ employeeId: id });
   }
 
   @Get('employees/:id/breaks')
+  @ApiOperation({ summary: "Get an employee's break schedule (placeholder)" })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Break list (always empty until schedule-splitting migration)' })
   getBreaksEndpoint(@Param('id', ParseUUIDPipe) _id: string) {
     return [];
   }
 
   @Put('employees/:id/breaks')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Update an employee's break schedule (placeholder)" })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Accepted (no-op until schedule-splitting migration)' })
   putBreaksEndpoint(
     @Param('id', ParseUUIDPipe) _id: string,
     @Body() _body: unknown,
@@ -186,12 +242,18 @@ export class DashboardPeopleController {
   }
 
   @Get('employees/:id/vacations')
+  @ApiOperation({ summary: "List an employee's vacations (exceptions)" })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'List of vacation/exception records' })
   listVacationsEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.listEmployeeExceptions.execute({ employeeId: id });
   }
 
   @Post('employees/:id/vacations')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a vacation exception for an employee' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiCreatedResponse({ description: 'Vacation created' })
   createVacationEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: CreateEmployeeExceptionDto,
@@ -201,6 +263,10 @@ export class DashboardPeopleController {
 
   @Delete('employees/:id/vacations/:vacationId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a vacation exception' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiParam({ name: 'vacationId', description: 'Vacation exception UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Vacation deleted' })
   deleteVacationEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('vacationId', ParseUUIDPipe) vacationId: string,
@@ -209,6 +275,9 @@ export class DashboardPeopleController {
   }
 
   @Patch('employees/:id/availability')
+  @ApiOperation({ summary: "Update an employee's availability windows and exceptions" })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Updated availability' })
   updateAvailabilityEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateAvailabilityDto,
@@ -222,6 +291,9 @@ export class DashboardPeopleController {
 
   @Post('employees/:id/onboarding')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Submit an onboarding step for an employee' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Onboarding step processed' })
   employeeOnboardingEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: EmployeeOnboardingDto,
@@ -231,17 +303,26 @@ export class DashboardPeopleController {
 
   @Delete('employees/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete an employee' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Employee deleted' })
   deleteEmployeeEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.deleteEmployee.execute({ employeeId: id });
   }
 
   @Get('employees/:id/services')
+  @ApiOperation({ summary: "List services assigned to an employee" })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'List of assigned services' })
   listEmployeeServicesEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.listEmployeeServices.execute({ employeeId: id });
   }
 
   @Post('employees/:id/services')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Assign a service to an employee' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiCreatedResponse({ description: 'Service assigned' })
   assignEmployeeServiceEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { serviceId: string },
@@ -251,6 +332,10 @@ export class DashboardPeopleController {
 
   @Delete('employees/:id/services/:serviceId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove a service from an employee' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiParam({ name: 'serviceId', description: 'Service UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Service removed' })
   removeEmployeeServiceEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('serviceId', ParseUUIDPipe) serviceId: string,
@@ -259,12 +344,18 @@ export class DashboardPeopleController {
   }
 
   @Get('employees/:id/exceptions')
+  @ApiOperation({ summary: "List availability exceptions for an employee" })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'List of availability exceptions' })
   listEmployeeExceptionsEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.listEmployeeExceptions.execute({ employeeId: id });
   }
 
   @Post('employees/:id/exceptions')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create an availability exception for an employee' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiCreatedResponse({ description: 'Exception created' })
   createEmployeeExceptionEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: CreateEmployeeExceptionDto,
@@ -274,6 +365,10 @@ export class DashboardPeopleController {
 
   @Delete('employees/:id/exceptions/:exceptionId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete an availability exception' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiParam({ name: 'exceptionId', description: 'Exception UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiNoContentResponse({ description: 'Exception deleted' })
   deleteEmployeeExceptionEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('exceptionId', ParseUUIDPipe) exceptionId: string,
@@ -282,6 +377,9 @@ export class DashboardPeopleController {
   }
 
   @Get('employees/:id/ratings')
+  @ApiOperation({ summary: "List ratings for an employee" })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'List of employee ratings' })
   listEmployeeRatingsEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     return this.listEmployeeRatings.execute({ employeeId: id });
   }
@@ -289,6 +387,10 @@ export class DashboardPeopleController {
   @Post('employees/:employeeId/avatar')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload an avatar image for an employee' })
+  @ApiParam({ name: 'employeeId', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiConsumes('multipart/form-data')
+  @ApiCreatedResponse({ description: 'Avatar uploaded, returns URL' })
   uploadAvatarEndpoint(
     @Param('employeeId', ParseUUIDPipe) employeeId: string,
     @UploadedFile() file: Express.Multer.File | undefined,
