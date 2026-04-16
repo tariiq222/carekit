@@ -12,6 +12,99 @@
 
 ---
 
+## Progress Log (Session 2026-04-16)
+
+**Tasks completed in session 1:**
+- ✅ Task 1 — backup + feature branches (commit on `backup/pre-tenant-removal` + `feat/single-organization-mode`)
+- ✅ Task 2 — all 41 legacy migrations deleted (commit `2fdb874`)
+- ✅ Task 3 — tenantId stripped from identity/people/bookings/finance (commit `c1f9c74`)
+- ✅ Task 4 — tenantId stripped from org/comms/ai/ops/media + LicenseCache deleted (commit `1c84931` + NIT fix `c368de5`)
+
+**Prisma client regenerated** against the new schema (`npx prisma generate`). Backend build will now FAIL with type errors in roughly 6 handlers until Tasks 9, 16, 19-23 complete. This is expected and was by design — but the plan was too optimistic about running tests between every cluster task.
+
+## Addendum — Revisions discovered during session 1
+
+These revisions are **mandatory** for remaining work. The original plan is kept intact below for reference, but the following adjustments take priority where they conflict.
+
+### Revision 1 — Migration generation MUST move to after singletons
+
+**Problem:** Original Task 5 generates the initial migration, then Tasks 20-23 change schema again (adding `id @default("default")` on BrandingConfig/OrganizationSettings/ChatbotConfig/ZatcaConfig) and regenerate the migration. This forces 4 rewrites of the same migration.
+
+**Revised ordering:**
+- **Skip Task 5 for now.** Do not run `prisma migrate dev` yet.
+- Complete **Phase 4 first** (Tasks 20-23) — apply all `id @default("default")` edits to schema files first.
+- **After Phase 4**, run `prisma migrate dev --name initial_single_organization` ONCE to produce a single clean migration.
+- Renumber: Task 5 effectively moves to become the new Task 24-pre (executed before Phase 5 public routes).
+
+### Revision 2 — Cluster tasks cannot run `npm run test` until enough handlers are clean
+
+**Problem:** Original plan says every cluster task ends with `npx jest <cluster>` passing. But `@TenantId()` is still imported from the deleted-later `common/tenant/tenant.decorator.ts`, and handlers in OTHER clusters still emit type errors. So isolated cluster tests pass type-checking only if we don't do a full build — but handler.spec tests import from handlers that in turn import from other modules.
+
+**Revised approach for Phase 3 (Tasks 9-19):**
+- Do Phase 2 (Tasks 6-8) FIRST so that `@UserId` is relocated and `common/tenant/` is deleted. This forces us to fix `@TenantId()` imports everywhere.
+- BUT: we cannot delete `common/tenant/` until all 172 `@TenantId()` usages are gone. So:
+  - **Step 6 (relocate @UserId) runs first** — non-breaking.
+  - **Step 7 (slim RequestContext + drop tenant from logs/filters/guard)** — may require touching files.
+  - **Step 8 (delete tenant folder + unwire middleware)** — blocked until ALL cluster handlers are clean (Tasks 9-19 done).
+- So the real order is: Task 6 → (Tasks 9-19, 20-23 in parallel sets the implementer can do) → Task 7 → Task 8.
+- Or more safely: Task 6 → Tasks 9-19 → Tasks 20-23 → Tasks 7-8.
+
+### Revision 3 — Handler cleanup scope was under-estimated
+
+**Problem:** Code quality reviewer on Task 4 identified these handlers that break right now after `prisma generate`:
+1. `apps/backend/src/modules/platform/license/validate-license.service.ts` — will be deleted in Task 19.
+2. `apps/backend/src/modules/ai/chatbot-config/upsert-chatbot-config.handler.ts` — Task 22.
+3. `apps/backend/src/modules/ai/chatbot-config/get-chatbot-config.handler.ts` — Task 22.
+4. `apps/backend/src/modules/org-experience/branding/upsert-branding.handler.ts` + `get-branding.handler.ts` — Task 20.
+5. `apps/backend/src/modules/org-experience/org-settings/upsert-org-settings.handler.ts` + `get-org-settings.handler.ts` — Task 21.
+6. `apps/backend/src/modules/ai/manage-knowledge-base/manage-knowledge-base.handler.ts` — Task 16.
+
+All 6 are already scheduled for cleanup. No new tasks needed, but the implication is:
+- **Do not attempt `npm run build` at backend root until all cluster + singleton tasks are done.**
+- Each cluster subagent should run ONLY its cluster's tests, not a full build.
+- The final E2E verification (Task 31) is the first time we expect `npm run build` to succeed.
+
+### Revision 4 — Verification approach clarified
+
+**Each cluster task ends with:**
+- TypeScript compile check **limited to that cluster's files only**: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep "src/modules/<cluster>\|src/api/.*<cluster>"` — errors in THIS cluster's files must be zero.
+- Cluster-scoped Jest run: `npx jest <cluster-path> --runInBand`.
+- Commit.
+
+**Full build (`npm run build`) is gated until after Task 23.**
+
+### Revision 5 — Task 5 (migration) relocated
+
+**Old position:** After Phase 1 (schema edits).
+**New position:** After Phase 4 (singleton schema edits) — just before Phase 5 (public routes).
+**Rationale:** Single migration file produced once, not rewritten 4 times.
+
+---
+
+## New Task Order
+
+1. ✅ Task 1 (safety setup)
+2. ✅ Task 2 (delete legacy migrations)
+3. ✅ Task 3 (schema strip group 1)
+4. ✅ Task 4 (schema strip group 2 + LicenseCache)
+5. **Task 6** (relocate @UserId) ← next up
+6. **Tasks 9-19** (cluster handler cleanup, in order)
+7. **Tasks 20-23** (singleton schema + handler edits)
+8. **Task 5** (generate single migration NOW — renamed conceptually to "Task 23b")
+9. **Task 7** (slim RequestContext + logs/filters/guard)
+10. **Task 8** (delete tenant folder + unwire middleware)
+11. **Task 24** (public branding route)
+12. **Tasks 25-26** (dashboard cleanup + browser verify)
+13. **Task 27** (mobile)
+14. **Task 28** (packages)
+15. **Task 29** (seed rewrite)
+16. **Task 30** (docs)
+17. **Task 31** (E2E + QA)
+
+Task numbers in sections below remain as written; the list above is the execution order.
+
+---
+
 ## File Structure
 
 ### Files deleted entirely
