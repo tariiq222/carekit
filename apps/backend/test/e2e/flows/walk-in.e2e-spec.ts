@@ -3,7 +3,6 @@ import {
   setupFlowFixtures,
   teardownFlowFixtures,
   authHeaders,
-  FLOW_TENANT,
   type FlowFixtures,
 } from './_helpers/flow-fixtures';
 
@@ -34,12 +33,11 @@ describe('Flows — Walk-in Client (e2e)', () => {
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty('id');
 
-    const inDb = await (testPrisma as never as { client: { findUnique(args: unknown): Promise<{ source: string; accountType: string; tenantId: string; userId: string | null } | null> } })
+    const inDb = await (testPrisma as never as { client: { findUnique(args: unknown): Promise<{ source: string; accountType: string; userId: string | null } | null> } })
       .client.findUnique({ where: { id: res.body.id } });
     expect(inDb).not.toBeNull();
     expect(inDb!.source).toBe('WALK_IN');
     expect(inDb!.accountType).toBe('WALK_IN');
-    expect(inDb!.tenantId).toBe(FLOW_TENANT);
     expect(inDb!.userId).toBeNull();
   });
 

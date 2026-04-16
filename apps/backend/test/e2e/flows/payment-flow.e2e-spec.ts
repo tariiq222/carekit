@@ -4,7 +4,6 @@ import {
   setupFlowFixtures,
   teardownFlowFixtures,
   authHeaders,
-  FLOW_TENANT,
   type FlowFixtures,
 } from './_helpers/flow-fixtures';
 
@@ -29,7 +28,7 @@ async function createPaidInvoice(fx: FlowFixtures): Promise<{
   paymentId: string;
   invoiceTotal: number;
 }> {
-  const booking = await seedBooking(testPrisma as never, FLOW_TENANT, {
+  const booking = await seedBooking(testPrisma as never, {
     clientId: fx.clientId,
     employeeId: fx.employeeId,
     serviceId: fx.serviceId,
@@ -88,7 +87,7 @@ describe('Flows — Payment (e2e)', () => {
   it('[FLOW-PAY-02][Flows/payment-flow][P1-High] bank transfer upload → verify approve → COMPLETED', async () => {
     // Separate booking + invoice — can't reuse createPaidInvoice because this
     // test needs an ISSUED (not-yet-PAID) invoice to upload a receipt against.
-    const booking = await seedBooking(testPrisma as never, FLOW_TENANT, {
+    const booking = await seedBooking(testPrisma as never, {
       clientId: fx.clientId,
       employeeId: fx.employeeId,
       serviceId: fx.serviceId,

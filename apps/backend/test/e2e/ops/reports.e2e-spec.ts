@@ -1,9 +1,6 @@
 import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
-import { createTestToken, adminUser, TEST_TENANT_ID } from '../../setup/auth.helper';
-
-const TENANT = TEST_TENANT_ID;
-const from = new Date(Date.now() - 30 * 86_400_000).toISOString();
+import { createTestToken, adminUser } from '../../setup/auth.helper';const from = new Date(Date.now() - 30 * 86_400_000).toISOString();
 const to = new Date().toISOString();
 
 describe('Ops / Reports API (e2e)', () => {
@@ -22,7 +19,6 @@ describe('Ops / Reports API (e2e)', () => {
   it('✅ revenue report → 200', async () => {
     const res = await req
       .post('/dashboard/ops/reports')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ type: 'REVENUE', from, to });
 
@@ -32,7 +28,6 @@ describe('Ops / Reports API (e2e)', () => {
   it('✅ activity report → 200', async () => {
     const res = await req
       .post('/dashboard/ops/reports')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ type: 'ACTIVITY', from, to });
 
@@ -42,7 +37,6 @@ describe('Ops / Reports API (e2e)', () => {
   it('❌ from بدون to → 400', async () => {
     const res = await req
       .post('/dashboard/ops/reports')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ type: 'REVENUE', from: '2026-01-01' });
 
@@ -52,7 +46,6 @@ describe('Ops / Reports API (e2e)', () => {
   it('❌ بدون JWT → 401', async () => {
     const res = await req
       .post('/dashboard/ops/reports')
-      .set('x-tenant-id', TENANT)
       .send({ type: 'REVENUE', from, to });
 
     expect(res.status).toBe(401);

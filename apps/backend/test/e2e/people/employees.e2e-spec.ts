@@ -2,11 +2,7 @@ import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
 import { seedEmployee } from '../../setup/seed.helper';
-import { createTestToken, adminUser, TEST_TENANT_ID } from '../../setup/auth.helper';
-
-const TENANT = TEST_TENANT_ID;
-
-describe('Employees API (e2e)', () => {
+import { createTestToken, adminUser } from '../../setup/auth.helper';describe('Employees API (e2e)', () => {
   let req: SuperTest.Agent;
   let TOKEN: string;
 
@@ -22,11 +18,10 @@ describe('Employees API (e2e)', () => {
   });
 
   it('✅ قائمة الموظفين → 200', async () => {
-    await seedEmployee(testPrisma as any, TENANT, { name: 'Dr. خالد' });
+    await seedEmployee(testPrisma as any, { name: 'Dr. خالد' });
 
     const res = await req
       .get('/dashboard/people/employees')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(200);
@@ -35,7 +30,6 @@ describe('Employees API (e2e)', () => {
   it('✅ إنشاء موظف → 201 + يُحفظ في DB', async () => {
     const res = await req
       .post('/dashboard/people/employees')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ name: 'Dr. نورة', employmentType: 'FULL_TIME', gender: 'FEMALE' });
 
@@ -49,7 +43,6 @@ describe('Employees API (e2e)', () => {
   it('❌ بيانات ناقصة → 400', async () => {
     const res = await req
       .post('/dashboard/people/employees')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({});
 
@@ -59,18 +52,16 @@ describe('Employees API (e2e)', () => {
   it('❌ بدون JWT → 401', async () => {
     const res = await req
       .post('/dashboard/people/employees')
-      .set('x-tenant-id', TENANT)
       .send({ name: 'Unauthorized', employmentType: 'FULL_TIME' });
 
     expect(res.status).toBe(401);
   });
 
   it('✅ GET موظف بـ ID → 200 + بيانات كاملة', async () => {
-    const emp = await seedEmployee(testPrisma as any, TENANT, { name: 'Dr. فيصل' });
+    const emp = await seedEmployee(testPrisma as any, { name: 'Dr. فيصل' });
 
     const res = await req
       .get(`/dashboard/people/employees/${emp.id}`)
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(200);
@@ -81,7 +72,6 @@ describe('Employees API (e2e)', () => {
   it('❌ GET موظف بـ ID غير موجود → 404', async () => {
     const res = await req
       .get('/dashboard/people/employees/00000000-0000-0000-0000-000000000000')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(404);

@@ -1,17 +1,13 @@
 import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
-import { seedUser } from '../../setup/seed.helper';
-
-const TENANT = 'tenant-login-test';
-
-describe('POST /auth/login (e2e)', () => {
+import { seedUser } from '../../setup/seed.helper';describe('POST /auth/login (e2e)', () => {
   let req: SuperTest.Agent;
 
   beforeAll(async () => {
     ({ request: req } = await createTestApp());
     await cleanTables(['RefreshToken', 'User']);
-    await seedUser(testPrisma as any, TENANT, {
+    await seedUser(testPrisma as any, {
       email: 'admin@clinic.com',
       password: 'Pass@1234',
       role: 'ADMIN',
@@ -26,7 +22,6 @@ describe('POST /auth/login (e2e)', () => {
   it('✅ بيانات صحيحة → 200 + accessToken + refreshToken', async () => {
     const res = await req
       .post('/auth/login')
-      .set('x-tenant-id', TENANT)
       .send({ email: 'admin@clinic.com', password: 'Pass@1234' });
 
     expect(res.status).toBe(200);
@@ -34,14 +29,13 @@ describe('POST /auth/login (e2e)', () => {
     expect(res.body).toHaveProperty('refreshToken');
     expect(typeof res.body.accessToken).toBe('string');
 
-    const tokens = await (testPrisma as any).refreshToken.count({ where: { tenantId: TENANT } });
+    const tokens = await (testPrisma as any).refreshToken.count({ where: { } });
     expect(tokens).toBeGreaterThan(0);
   });
 
   it('❌ كلمة مرور خاطئة → 401', async () => {
     const res = await req
       .post('/auth/login')
-      .set('x-tenant-id', TENANT)
       .send({ email: 'admin@clinic.com', password: 'WrongPass' });
 
     expect(res.status).toBe(401);
@@ -51,14 +45,13 @@ describe('POST /auth/login (e2e)', () => {
   it('❌ مستخدم غير موجود → 401', async () => {
     const res = await req
       .post('/auth/login')
-      .set('x-tenant-id', TENANT)
       .send({ email: 'ghost@clinic.com', password: 'Pass@1234' });
 
     expect(res.status).toBe(401);
   });
 
   it('❌ حساب غير مفعّل → 401', async () => {
-    await seedUser(testPrisma as any, TENANT, {
+    await seedUser(testPrisma as any, {
       email: 'inactive@clinic.com',
       password: 'Pass@1234',
       isActive: false,
@@ -66,22 +59,13 @@ describe('POST /auth/login (e2e)', () => {
 
     const res = await req
       .post('/auth/login')
-      .set('x-tenant-id', TENANT)
       .send({ email: 'inactive@clinic.com', password: 'Pass@1234' });
 
     expect(res.status).toBe(401);
   });
 
-  it('❌ بدون X-Tenant-ID → 400', async () => {
-    const res = await req
-      .post('/auth/login')
-      .send({ email: 'admin@clinic.com', password: 'Pass@1234' });
-
-    expect(res.status).toBe(400);
-  });
-
   it('⚠️ body فارغ → 400 validation error', async () => {
-    const res = await req.post('/auth/login').set('x-tenant-id', TENANT).send({});
+    const res = await req.post('/auth/login').send({});
 
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty('message');

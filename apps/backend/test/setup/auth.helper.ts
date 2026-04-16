@@ -6,7 +6,6 @@ const ACCESS_SECRET = 'test-access-secret-32chars-min';
 
 export interface TestUser {
   id: string;
-  tenantId: string;
   email: string;
   role: string;
   customRoleId: string | null;
@@ -17,7 +16,6 @@ export function createTestToken(user: TestUser): string {
   return jwt.sign(
     {
       sub: user.id,
-      tenantId: user.tenantId,
       email: user.email,
       role: user.role,
       customRoleId: user.customRoleId,
@@ -29,11 +27,8 @@ export function createTestToken(user: TestUser): string {
   );
 }
 
-export const TEST_TENANT_ID = 'test-tenant-e2e-fixed';
-
 export const adminUser: TestUser = {
   id: 'user-admin-e2e',
-  tenantId: TEST_TENANT_ID,
   email: 'admin@e2e.test',
   role: 'ADMIN',
   customRoleId: null,
@@ -42,7 +37,6 @@ export const adminUser: TestUser = {
 
 export const receptionistUser: TestUser = {
   id: 'user-receptionist-e2e',
-  tenantId: TEST_TENANT_ID,
   email: 'receptionist@e2e.test',
   role: 'RECEPTIONIST',
   customRoleId: null,
@@ -53,11 +47,10 @@ export async function ensureTestUsers(): Promise<void> {
   const passwordHash = await bcrypt.hash('Test@1234', 10);
 
   await testPrisma.user.upsert({
-    where: { tenantId_email: { tenantId: TEST_TENANT_ID, email: 'admin@e2e.test' } },
+    where: { email: 'admin@e2e.test' },
     update: {},
     create: {
       id: adminUser.id,
-      tenantId: TEST_TENANT_ID,
       email: 'admin@e2e.test',
       name: 'Admin E2E',
       passwordHash,

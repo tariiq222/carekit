@@ -1,10 +1,7 @@
 import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
-import { createTestToken, adminUser, TEST_TENANT_ID } from '../../setup/auth.helper';
-
-const TENANT = TEST_TENANT_ID;
-
+import { createTestToken, adminUser } from '../../setup/auth.helper';
 describe('AI Chatbot chat endpoint (e2e)', () => {
   let req: SuperTest.Agent;
   let TOKEN: string;
@@ -26,7 +23,6 @@ describe('AI Chatbot chat endpoint (e2e)', () => {
   it('[AI-001][AI Chatbot/chat-completion][P1-High] إرسال رسالة للـ chatbot وتلقي رد', async () => {
     const res = await req
       .post('/dashboard/ai/chat')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ userMessage: 'ما ساعات عمل العيادة؟' });
 
@@ -39,7 +35,6 @@ describe('AI Chatbot chat endpoint (e2e)', () => {
   it('[AI-002][AI Chatbot/chat-completion][P1-High] رسالة واحدة تحفظ user+assistant في DB', async () => {
     const res = await req
       .post('/dashboard/ai/chat')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ userMessage: 'سؤال' });
 
@@ -60,26 +55,23 @@ describe('AI Chatbot chat endpoint (e2e)', () => {
   it('[AI-003][AI Chatbot/chat-completion][P2-Medium] New conversation بدون sessionId يبدأ جلسة جديدة', async () => {
     const first = await req
       .post('/dashboard/ai/chat')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ userMessage: 'أول رسالة' });
 
     const second = await req
       .post('/dashboard/ai/chat')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ userMessage: 'محادثة ثانية مستقلة' });
 
     expect(first.body.sessionId).not.toBe(second.body.sessionId);
 
-    const sessions = await (testPrisma as any).chatSession.count({ where: { tenantId: TENANT } });
+    const sessions = await (testPrisma as any).chatSession.count({ where: { } });
     expect(sessions).toBe(2);
   });
 
   it('[AI-004][AI Chatbot/chat-completion][P2-Medium] Conversation history — نفس sessionId يراكم الرسائل', async () => {
     const first = await req
       .post('/dashboard/ai/chat')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ userMessage: 'الرسالة الأولى' });
 
@@ -87,7 +79,6 @@ describe('AI Chatbot chat endpoint (e2e)', () => {
 
     await req
       .post('/dashboard/ai/chat')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ userMessage: 'الرسالة الثانية', sessionId });
 

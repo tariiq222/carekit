@@ -2,12 +2,7 @@ import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
 import { seedClient } from '../../setup/seed.helper';
-import { createTestToken, adminUser, TEST_TENANT_ID } from '../../setup/auth.helper';
-
-const TENANT = TEST_TENANT_ID;
-const OTHER_TENANT = 'other-tenant-e2e';
-
-let counter = 0;
+import { createTestToken, adminUser } from '../../setup/auth.helper';let counter = 0;
 const uniquePhone = () => {
   counter += 1;
   return `+9665${Date.now().toString().slice(-6)}${counter.toString().padStart(2, '0')}`;
@@ -36,7 +31,6 @@ describe('Clients API (e2e)', () => {
       const phone = uniquePhone();
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'أحمد', lastName: 'العلي', phone });
 
@@ -52,7 +46,6 @@ describe('Clients API (e2e)', () => {
       const phone = uniquePhone();
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({
           firstName: 'سارة',
@@ -83,14 +76,12 @@ describe('Clients API (e2e)', () => {
       const phone = uniquePhone();
       const first = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Existing', lastName: 'User', phone });
       expect(first.status).toBe(201);
 
       const second = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Another', lastName: 'Attempt', phone });
       expect(second.status).toBe(409);
@@ -99,7 +90,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-004][Clients/create-client][P1-High] رفض جوال بدون +966', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Bad', lastName: 'Phone', phone: '0501234567' });
       expect(res.status).toBe(400);
@@ -108,7 +98,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-005][Clients/create-client][P2-Medium] رفض جوال +966 بدون 5', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: '+966401234567' });
       expect(res.status).toBe(400);
@@ -117,7 +106,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-006][Clients/create-client][P2-Medium] رفض جوال طوله غير صحيح', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: '+9665123456789' });
       expect(res.status).toBe(400);
@@ -127,12 +115,10 @@ describe('Clients API (e2e)', () => {
       const phone = uniquePhone();
       await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Orig', lastName: 'Client', phone });
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Dup', lastName: 'Client', phone });
       expect(res.status).toBe(409);
@@ -141,7 +127,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-008][Clients/create-client][P1-High] رفض firstName فارغ', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: '', lastName: 'L', phone: uniquePhone() });
       expect(res.status).toBe(400);
@@ -150,7 +135,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-009][Clients/create-client][P1-High] رفض lastName مفقود', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'F', phone: uniquePhone() });
       expect(res.status).toBe(400);
@@ -159,7 +143,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-010][Clients/create-client][P3-Low] رفض firstName > 255', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'a'.repeat(256), lastName: 'B', phone: uniquePhone() });
       expect(res.status).toBe(400);
@@ -168,7 +151,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-011][Clients/create-client][P2-Medium] رفض email خاطئ', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), email: 'not-an-email' });
       expect(res.status).toBe(400);
@@ -177,7 +159,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-012][Clients/create-client][P2-Medium] رفض dateOfBirth بصيغة غير ISO', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), dateOfBirth: 'not-a-date' });
       expect(res.status).toBe(400);
@@ -186,7 +167,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-013][Clients/create-client][P2-Medium] رفض gender enum غير صالح', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), gender: 'OTHER' });
       expect(res.status).toBe(400);
@@ -195,7 +175,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-014][Clients/create-client][P3-Low] رفض bloodType enum غير صالح', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), bloodType: 'XX' });
       expect(res.status).toBe(400);
@@ -204,7 +183,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-015][Clients/create-client][P3-Low] رفض nationalId > 20', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), nationalId: '1'.repeat(21) });
       expect(res.status).toBe(400);
@@ -213,7 +191,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-016][Clients/create-client][P3-Low] رفض allergies > 1000', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), allergies: 'a'.repeat(1001) });
       expect(res.status).toBe(400);
@@ -222,7 +199,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-017][Clients/create-client][P3-Low] رفض notes > 2000', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), notes: 'a'.repeat(2001) });
       expect(res.status).toBe(400);
@@ -231,7 +207,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-018][Clients/create-client][P2-Medium] رفض emergencyPhone خاطئ', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone(), emergencyPhone: '0501234567' });
       expect(res.status).toBe(400);
@@ -240,7 +215,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-019][Clients/create-client][P1-High] رفض بلا JWT → 401', async () => {
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .send({ firstName: 'A', lastName: 'B', phone: uniquePhone() });
       expect(res.status).toBe(401);
     });
@@ -251,7 +225,7 @@ describe('Clients API (e2e)', () => {
   // ══════════════════════════════════════════════════════════════════════════
   describe('PATCH /dashboard/people/clients/:id', () => {
     it('[CL-021][Clients/update-client][P1-High] تعديل firstName + إعادة تركيب name', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, {
+      const c = await seedClient(testPrisma as any, {
         name: 'Old Name',
         firstName: 'Old',
         lastName: 'Name',
@@ -259,7 +233,6 @@ describe('Clients API (e2e)', () => {
       });
       const res = await req
         .patch(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'New' });
       expect(res.status).toBe(200);
@@ -269,13 +242,12 @@ describe('Clients API (e2e)', () => {
     });
 
     it('[CL-022][Clients/update-client][P1-High] تعديل جميع الحقول + تفعيل isActive', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, {
+      const c = await seedClient(testPrisma as any, {
         phone: uniquePhone(),
         isActive: false,
       });
       const res = await req
         .patch(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ isActive: true, firstName: 'Updated', lastName: 'All' });
       expect(res.status).toBe(200);
@@ -285,11 +257,10 @@ describe('Clients API (e2e)', () => {
     });
 
     it('[CL-023][Clients/update-client][P1-High] تعديل الجوال إلى قيمة فريدة', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
       const newPhone = uniquePhone();
       const res = await req
         .patch(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ phone: newPhone });
       expect(res.status).toBe(200);
@@ -299,10 +270,9 @@ describe('Clients API (e2e)', () => {
 
     it('[CL-024][Clients/update-client][P2-Medium] إبقاء نفس الجوال لا يُثير تكراراً', async () => {
       const phone = uniquePhone();
-      const c = await seedClient(testPrisma as any, TENANT, { phone });
+      const c = await seedClient(testPrisma as any, { phone });
       const res = await req
         .patch(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ phone, firstName: 'Changed' });
       expect(res.status).toBe(200);
@@ -311,7 +281,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-025][Clients/update-client][P2-Medium] مسح حقل اختياري (null)', async () => {
       const c = await (testPrisma as any).client.create({
         data: {
-          tenantId: TENANT,
           name: 'Has Notes',
           firstName: 'Has',
           lastName: 'Notes',
@@ -323,7 +292,6 @@ describe('Clients API (e2e)', () => {
       });
       const res = await req
         .patch(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ notes: null });
       expect(res.status).toBe(200);
@@ -334,53 +302,48 @@ describe('Clients API (e2e)', () => {
     it('[CL-026][Clients/update-client][P1-High] تعديل عميل غير موجود → 404', async () => {
       const res = await req
         .patch('/dashboard/people/clients/00000000-0000-0000-0000-000000000000')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Ghost' });
       expect(res.status).toBe(404);
     });
 
     it('[CL-027][Clients/update-client][P2-Medium] تعديل عميل محذوف ناعمياً → 404', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
       await (testPrisma as any).client.update({
         where: { id: c.id },
         data: { deletedAt: new Date(), phone: null },
       });
       const res = await req
         .patch(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'X' });
       expect(res.status).toBe(404);
     });
 
     it('[CL-028][Clients/update-client][P1-High] تعديل الجوال إلى مكرر → 409', async () => {
-      const c1 = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const c1 = await seedClient(testPrisma as any, { phone: uniquePhone() });
       const phoneOther = uniquePhone();
-      await seedClient(testPrisma as any, TENANT, { phone: phoneOther });
+      await seedClient(testPrisma as any, { phone: phoneOther });
       const res = await req
         .patch(`/dashboard/people/clients/${c1.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ phone: phoneOther });
       expect(res.status).toBe(409);
     });
 
     it('[CL-029][Clients/update-client][P2-Medium] phone regex خاطئ في PATCH → 400', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
       const res = await req
         .patch(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ phone: '0501234567' });
       expect(res.status).toBe(400);
     });
 
     it('[CL-030][Clients/update-client][P3-Low] طول حقل تجاوز الحد في PATCH → 400', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
       const res = await req
         .patch(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'a'.repeat(256) });
       expect(res.status).toBe(400);
@@ -393,11 +356,10 @@ describe('Clients API (e2e)', () => {
   describe('DELETE /dashboard/people/clients/:id', () => {
     it('[CL-032][Clients/delete-client][P1-High] soft-delete → 204 + يختفي من القائمة + phone=null', async () => {
       const phone = uniquePhone();
-      const c = await seedClient(testPrisma as any, TENANT, { phone });
+      const c = await seedClient(testPrisma as any, { phone });
 
       const delRes = await req
         .delete(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(delRes.status).toBe(204);
 
@@ -409,28 +371,24 @@ describe('Clients API (e2e)', () => {
 
       const listRes = await req
         .get('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(listRes.body.items.find((x: { id: string }) => x.id === c.id)).toBeUndefined();
 
       const getRes = await req
         .get(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(getRes.status).toBe(404);
     });
 
     it('[CL-033][Clients/delete-client][P2-Medium] إعادة استخدام الجوال بعد الحذف', async () => {
       const phone = uniquePhone();
-      const c = await seedClient(testPrisma as any, TENANT, { phone });
+      const c = await seedClient(testPrisma as any, { phone });
       await req
         .delete(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
 
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: 'Re', lastName: 'Use', phone });
       expect(res.status).toBe(201);
@@ -439,20 +397,17 @@ describe('Clients API (e2e)', () => {
     it('[CL-034][Clients/delete-client][P2-Medium] حذف عميل غير موجود → 404', async () => {
       const res = await req
         .delete('/dashboard/people/clients/00000000-0000-0000-0000-000000000000')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(404);
     });
 
     it('[CL-035][Clients/delete-client][P2-Medium] حذف عميل محذوف مسبقاً → 404', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
       await req
         .delete(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       const res = await req
         .delete(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(404);
     });
@@ -463,14 +418,13 @@ describe('Clients API (e2e)', () => {
   // ══════════════════════════════════════════════════════════════════════════
   describe('GET /dashboard/people/clients/:id', () => {
     it('[CL-039][Clients/get-client][P1-High] عرض تفاصيل عميل موجود', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, {
+      const c = await seedClient(testPrisma as any, {
         firstName: 'View',
         lastName: 'Me',
         phone: uniquePhone(),
       });
       const res = await req
         .get(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.id).toBe(c.id);
@@ -478,10 +432,9 @@ describe('Clients API (e2e)', () => {
     });
 
     it('[CL-040][Clients/get-client][P2-Medium] شارة Walk-in تظهر عند accountType=WALK_IN', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
       const res = await req
         .get(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       // serializer يُرجع lowercase
@@ -491,20 +444,18 @@ describe('Clients API (e2e)', () => {
     it('[CL-042][Clients/get-client][P1-High] عرض id غير موجود → 404', async () => {
       const res = await req
         .get('/dashboard/people/clients/00000000-0000-0000-0000-000000000000')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(404);
     });
 
     it('[CL-043][Clients/get-client][P2-Medium] عرض عميل محذوف → 404', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
       await (testPrisma as any).client.update({
         where: { id: c.id },
         data: { deletedAt: new Date(), phone: null },
       });
       const res = await req
         .get(`/dashboard/people/clients/${c.id}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(404);
     });
@@ -516,11 +467,10 @@ describe('Clients API (e2e)', () => {
   describe('GET /dashboard/people/clients', () => {
     it('[CL-044][Clients/list-clients][P1-High] Pagination - الصفحة الأولى', async () => {
       for (let i = 0; i < 5; i++) {
-        await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+        await seedClient(testPrisma as any, { phone: uniquePhone() });
       }
       const res = await req
         .get('/dashboard/people/clients?page=1&limit=20')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.items.length).toBeLessThanOrEqual(20);
@@ -529,14 +479,13 @@ describe('Clients API (e2e)', () => {
     });
 
     it('[CL-045][Clients/list-clients][P1-High] بحث بالاسم', async () => {
-      await seedClient(testPrisma as any, TENANT, {
+      await seedClient(testPrisma as any, {
         firstName: 'SearchMeUnique',
         lastName: 'Xyz',
         phone: uniquePhone(),
       });
       const res = await req
         .get('/dashboard/people/clients?search=SearchMeUnique')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.items.some((c: any) => c.firstName === 'SearchMeUnique')).toBe(true);
@@ -544,37 +493,34 @@ describe('Clients API (e2e)', () => {
 
     it('[CL-046][Clients/list-clients][P2-Medium] بحث بالجوال', async () => {
       const phone = uniquePhone();
-      await seedClient(testPrisma as any, TENANT, { phone });
+      await seedClient(testPrisma as any, { phone });
       const res = await req
         .get(`/dashboard/people/clients?search=${encodeURIComponent(phone.slice(-6))}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.items.some((c: any) => c.phone === phone)).toBe(true);
     });
 
     it('[CL-047][Clients/list-clients][P2-Medium] بحث case-insensitive', async () => {
-      await seedClient(testPrisma as any, TENANT, {
+      await seedClient(testPrisma as any, {
         firstName: 'CaseSensitive',
         phone: uniquePhone(),
       });
       const res = await req
         .get('/dashboard/people/clients?search=casesensitive')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.items.length).toBeGreaterThan(0);
     });
 
     it('[CL-048][Clients/list-clients][P2-Medium] بحث بنص عربي', async () => {
-      await seedClient(testPrisma as any, TENANT, {
+      await seedClient(testPrisma as any, {
         firstName: 'زينب',
         lastName: 'فريد',
         phone: uniquePhone(),
       });
       const res = await req
         .get(`/dashboard/people/clients?search=${encodeURIComponent('زينب')}`)
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.items.length).toBeGreaterThan(0);
@@ -583,20 +529,18 @@ describe('Clients API (e2e)', () => {
     it('[CL-049][Clients/list-clients][P2-Medium] فلتر isActive=true', async () => {
       const res = await req
         .get('/dashboard/people/clients?isActive=true')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.items.every((c: any) => c.isActive === true)).toBe(true);
     });
 
     it('[CL-050][Clients/list-clients][P2-Medium] فلتر isActive=false', async () => {
-      await seedClient(testPrisma as any, TENANT, {
+      await seedClient(testPrisma as any, {
         phone: uniquePhone(),
         isActive: false,
       });
       const res = await req
         .get('/dashboard/people/clients?isActive=false')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.items.every((c: any) => c.isActive === false)).toBe(true);
@@ -604,14 +548,13 @@ describe('Clients API (e2e)', () => {
     });
 
     it('[CL-051][Clients/list-clients][P2-Medium] فلتر gender=MALE', async () => {
-      const c = await seedClient(testPrisma as any, TENANT, { phone: uniquePhone() });
+      const c = await seedClient(testPrisma as any, { phone: uniquePhone() });
       await (testPrisma as any).client.update({
         where: { id: c.id },
         data: { gender: 'MALE' },
       });
       const res = await req
         .get('/dashboard/people/clients?gender=MALE')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.items.every((c: any) => ['male', 'MALE'].includes(c.gender))).toBe(true);
@@ -620,7 +563,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-052][Clients/list-clients][P2-Medium] فلتر source=WALK_IN', async () => {
       const res = await req
         .get('/dashboard/people/clients?source=WALK_IN')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
     });
@@ -628,7 +570,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-056][Clients/list-clients][P2-Medium] رفض limit > 200', async () => {
       const res = await req
         .get('/dashboard/people/clients?limit=500')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(400);
     });
@@ -636,7 +577,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-057][Clients/list-clients][P2-Medium] رفض page < 1', async () => {
       const res = await req
         .get('/dashboard/people/clients?page=0')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(400);
     });
@@ -644,38 +584,13 @@ describe('Clients API (e2e)', () => {
     it('[CL-058][Clients/list-clients][P2-Medium] بحث بدون نتائج → قائمة فارغة', async () => {
       const res = await req
         .get('/dashboard/people/clients?search=XXNOTEXISTXX99999')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
       expect(res.body.items).toEqual([]);
       expect(res.body.meta.total).toBe(0);
     });
 
-    it('[CL-059][Clients/list-clients][P1-High] عزل tenant - لا يظهر عميل من مستأجر آخر', async () => {
-      const other = await (testPrisma as any).client.create({
-        data: {
-          tenantId: OTHER_TENANT,
-          name: 'Other Tenant Client',
-          firstName: 'Other',
-          lastName: 'Client',
-          phone: uniquePhone(),
-          source: 'WALK_IN',
-          isActive: true,
-        },
-      });
-      const res = await req
-        .get('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
-        .set('Authorization', `Bearer ${TOKEN}`);
-      expect(res.status).toBe(200);
-      expect(res.body.items.find((c: any) => c.id === other.id)).toBeUndefined();
-
-      const byId = await req
-        .get(`/dashboard/people/clients/${other.id}`)
-        .set('x-tenant-id', TENANT)
-        .set('Authorization', `Bearer ${TOKEN}`);
-      expect(byId.status).toBe(404);
-    });
+    // NOTE: cross-tenant isolation removed in single-org refactor
   });
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -687,12 +602,10 @@ describe('Clients API (e2e)', () => {
       const [r1, r2] = await Promise.all([
         req
           .post('/dashboard/people/clients')
-          .set('x-tenant-id', TENANT)
           .set('Authorization', `Bearer ${TOKEN}`)
           .send({ firstName: 'A', lastName: 'One', phone }),
         req
           .post('/dashboard/people/clients')
-          .set('x-tenant-id', TENANT)
           .set('Authorization', `Bearer ${TOKEN}`)
           .send({ firstName: 'B', lastName: 'Two', phone }),
       ]);
@@ -704,7 +617,6 @@ describe('Clients API (e2e)', () => {
     it('[CL-083][Clients/security][P1-High] SQL injection في search — آمن', async () => {
       const res = await req
         .get("/dashboard/people/clients?search=' OR 1=1 --")
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`);
       expect(res.status).toBe(200);
     });
@@ -713,7 +625,6 @@ describe('Clients API (e2e)', () => {
       const payload = '<script>alert(1)</script>';
       const res = await req
         .post('/dashboard/people/clients')
-        .set('x-tenant-id', TENANT)
         .set('Authorization', `Bearer ${TOKEN}`)
         .send({ firstName: payload, lastName: 'XSS', phone: uniquePhone() });
       expect(res.status).toBe(201);

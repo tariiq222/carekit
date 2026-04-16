@@ -11,11 +11,8 @@ import {
 import {
   createTestToken,
   adminUser,
-  TEST_TENANT_ID,
   ensureTestUsers,
 } from '../../../setup/auth.helper';
-
-export const FLOW_TENANT = TEST_TENANT_ID;
 
 export interface FlowFixtures {
   req: SuperTest.Agent;
@@ -51,13 +48,13 @@ export async function setupFlowFixtures(): Promise<FlowFixtures> {
   await cleanTables(FLOW_TABLES);
 
   const [client, employee, service, branch] = await Promise.all([
-    seedClient(testPrisma as never, FLOW_TENANT),
-    seedEmployee(testPrisma as never, FLOW_TENANT),
-    seedService(testPrisma as never, FLOW_TENANT),
-    seedBranch(testPrisma as never, FLOW_TENANT),
+    seedClient(testPrisma as never),
+    seedEmployee(testPrisma as never),
+    seedService(testPrisma as never),
+    seedBranch(testPrisma as never),
   ]);
 
-  await seedEmployeeService(testPrisma as never, FLOW_TENANT, employee.id, service.id);
+  await seedEmployeeService(testPrisma as never, employee.id, service.id);
 
   return {
     req: request,
@@ -76,7 +73,6 @@ export async function teardownFlowFixtures(): Promise<void> {
 
 export function authHeaders(token: string) {
   return {
-    'x-tenant-id': FLOW_TENANT,
     Authorization: `Bearer ${token}`,
   };
 }

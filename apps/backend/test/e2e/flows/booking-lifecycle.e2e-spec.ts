@@ -4,7 +4,6 @@ import {
   setupFlowFixtures,
   teardownFlowFixtures,
   authHeaders,
-  FLOW_TENANT,
   type FlowFixtures,
 } from './_helpers/flow-fixtures';
 
@@ -99,7 +98,6 @@ describe('Flows — Booking Full Lifecycle (e2e)', () => {
           findUnique(args: unknown): Promise<{
             id: string;
             bookingId: string | null;
-            tenantId: string;
             status: string;
             total: unknown;
           } | null>;
@@ -109,7 +107,6 @@ describe('Flows — Booking Full Lifecycle (e2e)', () => {
 
     expect(invoice).not.toBeNull();
     expect(invoice!.bookingId).toBe(bookingId);
-    expect(invoice!.tenantId).toBe(FLOW_TENANT);
     expect(invoice!.status).toBe('ISSUED');
     expect(Number(invoice!.total)).toBeGreaterThan(0);
 
@@ -128,7 +125,7 @@ describe('Flows — Booking Full Lifecycle (e2e)', () => {
   });
 
   it('[FLOW-BLC-06][Flows/booking-lifecycle][P1-High] cancel من حالة PENDING', async () => {
-    const seeded = await seedBooking(testPrisma as never, FLOW_TENANT, {
+    const seeded = await seedBooking(testPrisma as never, {
       clientId: fx.clientId,
       employeeId: fx.employeeId,
       serviceId: fx.serviceId,
@@ -149,7 +146,7 @@ describe('Flows — Booking Full Lifecycle (e2e)', () => {
   });
 
   it('[FLOW-BLC-07][Flows/booking-lifecycle][P1-High] no-show على حجز CONFIRMED', async () => {
-    const seeded = await seedBooking(testPrisma as never, FLOW_TENANT, {
+    const seeded = await seedBooking(testPrisma as never, {
       clientId: fx.clientId,
       employeeId: fx.employeeId,
       serviceId: fx.serviceId,

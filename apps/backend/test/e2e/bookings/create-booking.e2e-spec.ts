@@ -2,11 +2,7 @@ import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
 import { seedClient, seedEmployee, seedService, seedBranch, seedEmployeeService } from '../../setup/seed.helper';
-import { createTestToken, adminUser, TEST_TENANT_ID } from '../../setup/auth.helper';
-
-const TENANT = TEST_TENANT_ID;
-
-describe('POST /dashboard/bookings (e2e)', () => {
+import { createTestToken, adminUser } from '../../setup/auth.helper';describe('POST /dashboard/bookings (e2e)', () => {
   let req: SuperTest.Agent;
   let clientId: string;
   let employeeId: string;
@@ -20,17 +16,17 @@ describe('POST /dashboard/bookings (e2e)', () => {
     await cleanTables(['Booking', 'WaitlistEntry', 'Client', 'Employee', 'Service', 'Branch']);
 
     const [client, employee, service, branch] = await Promise.all([
-      seedClient(testPrisma as any, TENANT),
-      seedEmployee(testPrisma as any, TENANT),
-      seedService(testPrisma as any, TENANT, { durationMins: 60, price: 200 }),
-      seedBranch(testPrisma as any, TENANT),
+      seedClient(testPrisma as any),
+      seedEmployee(testPrisma as any),
+      seedService(testPrisma as any, { durationMins: 60, price: 200 }),
+      seedBranch(testPrisma as any),
     ]);
     clientId = client.id;
     employeeId = employee.id;
     serviceId = service.id;
     branchId = branch.id;
 
-    await seedEmployeeService(testPrisma as any, TENANT, employeeId, serviceId);
+    await seedEmployeeService(testPrisma as any, employeeId, serviceId);
   });
 
   afterAll(async () => {
@@ -43,7 +39,6 @@ describe('POST /dashboard/bookings (e2e)', () => {
   it('✅ حجز صحيح → 201 + PENDING في DB', async () => {
     const res = await req
       .post('/dashboard/bookings')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ clientId, employeeId, serviceId, branchId, scheduledAt: future(), bookingType: 'INDIVIDUAL' });
 
@@ -54,13 +49,11 @@ describe('POST /dashboard/bookings (e2e)', () => {
     const inDb = await (testPrisma as any).booking.findUnique({ where: { id: res.body.id } });
     expect(inDb).not.toBeNull();
     expect(inDb.status).toBe('PENDING');
-    expect(inDb.tenantId).toBe(TENANT);
   });
 
   it('❌ employeeId مفقود → 400', async () => {
     const res = await req
       .post('/dashboard/bookings')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ clientId, serviceId, branchId, scheduledAt: future(), bookingType: 'INDIVIDUAL' });
 
@@ -70,7 +63,6 @@ describe('POST /dashboard/bookings (e2e)', () => {
   it('❌ بدون JWT → 401', async () => {
     const res = await req
       .post('/dashboard/bookings')
-      .set('x-tenant-id', TENANT)
       .send({ clientId, employeeId, serviceId, branchId, scheduledAt: future(), bookingType: 'INDIVIDUAL' });
 
     expect(res.status).toBe(401);

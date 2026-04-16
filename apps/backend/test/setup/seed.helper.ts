@@ -3,7 +3,6 @@ import * as bcrypt from 'bcryptjs';
 
 export async function seedUser(
   prisma: PrismaClient,
-  tenantId: string,
   overrides: Partial<{
     email: string;
     password: string;
@@ -18,7 +17,6 @@ export async function seedUser(
 
   return prisma.user.create({
     data: {
-      tenantId,
       email,
       passwordHash,
       name: overrides.name ?? 'Test User',
@@ -30,7 +28,6 @@ export async function seedUser(
 
 export async function seedClient(
   prisma: PrismaClient,
-  tenantId: string,
   overrides: Partial<{
     name: string;
     firstName: string;
@@ -43,7 +40,6 @@ export async function seedClient(
   const [firstToken, ...rest] = name.split(' ');
   return prisma.client.create({
     data: {
-      tenantId,
       name,
       firstName: overrides.firstName ?? firstToken ?? 'Test',
       lastName: overrides.lastName ?? (rest.join(' ') || 'Client'),
@@ -56,12 +52,10 @@ export async function seedClient(
 
 export async function seedEmployee(
   prisma: PrismaClient,
-  tenantId: string,
   overrides: Partial<{ name: string; isActive: boolean }> = {},
 ) {
   return prisma.employee.create({
     data: {
-      tenantId,
       name: overrides.name ?? 'Test Employee',
       isActive: overrides.isActive ?? true,
       employmentType: 'FULL_TIME',
@@ -71,12 +65,10 @@ export async function seedEmployee(
 
 export async function seedService(
   prisma: PrismaClient,
-  tenantId: string,
   overrides: Partial<{ nameAr: string; nameEn: string; durationMins: number; price: number }> = {},
 ) {
   return prisma.service.create({
     data: {
-      tenantId,
       nameAr: overrides.nameAr ?? 'Test Service',
       nameEn: overrides.nameEn,
       durationMins: overrides.durationMins ?? 60,
@@ -89,12 +81,10 @@ export async function seedService(
 
 export async function seedBranch(
   prisma: PrismaClient,
-  tenantId: string,
   overrides: Partial<{ nameAr: string; nameEn: string }> = {},
 ) {
   return prisma.branch.create({
     data: {
-      tenantId,
       nameAr: overrides.nameAr ?? 'Main Branch',
       nameEn: overrides.nameEn,
       isActive: true,
@@ -104,13 +94,11 @@ export async function seedBranch(
 
 export async function seedEmployeeService(
   prisma: PrismaClient,
-  tenantId: string,
   employeeId: string,
   serviceId: string,
 ) {
   return prisma.employeeService.create({
     data: {
-      tenantId,
       employeeId,
       serviceId,
     },
@@ -119,7 +107,6 @@ export async function seedEmployeeService(
 
 export async function seedBooking(
   prisma: PrismaClient,
-  tenantId: string,
   opts: {
     clientId: string;
     employeeId: string;
@@ -134,7 +121,6 @@ export async function seedBooking(
 
   return prisma.booking.create({
     data: {
-      tenantId,
       clientId: opts.clientId,
       employeeId: opts.employeeId,
       serviceId: opts.serviceId,

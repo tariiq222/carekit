@@ -2,11 +2,7 @@ import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
 import { seedBranch } from '../../setup/seed.helper';
-import { createTestToken, adminUser, TEST_TENANT_ID } from '../../setup/auth.helper';
-
-const TENANT = TEST_TENANT_ID;
-
-describe('Org-Config — Branches API (e2e)', () => {
+import { createTestToken, adminUser } from '../../setup/auth.helper';describe('Org-Config — Branches API (e2e)', () => {
   let req: SuperTest.Agent;
   let TOKEN: string;
 
@@ -24,7 +20,6 @@ describe('Org-Config — Branches API (e2e)', () => {
   it('✅ إنشاء فرع → 201 + يُحفظ في DB', async () => {
     const res = await req
       .post('/dashboard/organization/branches')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ nameAr: 'فرع الرياض', nameEn: 'Riyadh Branch' });
 
@@ -39,18 +34,16 @@ describe('Org-Config — Branches API (e2e)', () => {
   it('✅ قائمة الفروع → 200', async () => {
     const res = await req
       .get('/dashboard/organization/branches')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(200);
   });
 
   it('✅ تحديث فرع → DB تتغير', async () => {
-    const branch = await seedBranch(testPrisma as any, TENANT, { nameAr: 'Old' });
+    const branch = await seedBranch(testPrisma as any, { nameAr: 'Old' });
 
     const res = await req
       .patch(`/dashboard/organization/branches/${branch.id}`)
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ nameAr: 'Updated' });
 
@@ -63,7 +56,6 @@ describe('Org-Config — Branches API (e2e)', () => {
   it('❌ اسمAr مفقود → 400', async () => {
     const res = await req
       .post('/dashboard/organization/branches')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({});
 
@@ -73,7 +65,6 @@ describe('Org-Config — Branches API (e2e)', () => {
   it('❌ ID غير موجود → 404', async () => {
     const res = await req
       .patch('/dashboard/organization/branches/00000000-0000-0000-0000-000000000000')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ nameAr: 'Ghost' });
 

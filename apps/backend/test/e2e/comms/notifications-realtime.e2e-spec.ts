@@ -1,16 +1,14 @@
 import SuperTest from 'supertest';
 import { createTestApp, closeTestApp } from '../../setup/app.setup';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
-import { createTestToken, adminUser, TEST_TENANT_ID } from '../../setup/auth.helper';
+import { createTestToken, adminUser } from '../../setup/auth.helper';
 
 // Enum values verified from comms.prisma: RecipientType.EMPLOYEE, NotificationType.BOOKING_REMINDER
-const TENANT = TEST_TENANT_ID;
 const RECIPIENT = adminUser.id;
 
 async function seedNotification(overrides: Partial<{ title: string; body: string; isRead: boolean }> = {}) {
   return (testPrisma as any).notification.create({
     data: {
-      tenantId: TENANT,
       recipientId: RECIPIENT,
       recipientType: 'EMPLOYEE',
       type: 'BOOKING_REMINDER',
@@ -44,7 +42,6 @@ describe('Notifications realtime API (e2e)', () => {
 
     const res = await req
       .get('/dashboard/comms/notifications')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(200);
@@ -60,7 +57,6 @@ describe('Notifications realtime API (e2e)', () => {
 
     const res = await req
       .get('/dashboard/comms/notifications/unread-count')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`);
 
     expect(res.status).toBe(200);
@@ -73,7 +69,6 @@ describe('Notifications realtime API (e2e)', () => {
 
     const res = await req
       .patch('/dashboard/comms/notifications/mark-read')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({ notificationId: n1.id });
 
@@ -81,7 +76,6 @@ describe('Notifications realtime API (e2e)', () => {
 
     const countRes = await req
       .get('/dashboard/comms/notifications/unread-count')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`);
     expect(countRes.body.count).toBe(1);
 
@@ -97,7 +91,6 @@ describe('Notifications realtime API (e2e)', () => {
 
     const res = await req
       .patch('/dashboard/comms/notifications/mark-read')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`)
       .send({});
 
@@ -105,7 +98,6 @@ describe('Notifications realtime API (e2e)', () => {
 
     const countRes = await req
       .get('/dashboard/comms/notifications/unread-count')
-      .set('x-tenant-id', TENANT)
       .set('Authorization', `Bearer ${TOKEN}`);
     expect(countRes.body.count).toBe(0);
   });
