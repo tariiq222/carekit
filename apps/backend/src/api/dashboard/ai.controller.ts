@@ -2,7 +2,11 @@ import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery,
+  ApiOkResponse, ApiNoContentResponse, ApiResponse,
+} from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { ManageKnowledgeBaseHandler } from '../../modules/ai/manage-knowledge-base/manage-knowledge-base.handler';
@@ -16,8 +20,9 @@ import { GetChatbotConfigHandler } from '../../modules/ai/chatbot-config/get-cha
 import { UpsertChatbotConfigHandler } from '../../modules/ai/chatbot-config/upsert-chatbot-config.handler';
 import { UpsertChatbotConfigDto } from '../../modules/ai/chatbot-config/upsert-chatbot-config.dto';
 
-@ApiTags('AI')
+@ApiTags('Dashboard / AI')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('dashboard/ai')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardAiController {
@@ -31,16 +36,29 @@ export class DashboardAiController {
   // ── Knowledge Base ─────────────────────────────────────────────────────────
 
   @Get('knowledge-base')
+  @ApiOperation({ summary: 'List knowledge-base documents' })
+  @ApiQuery({ name: 'status', required: false, description: 'Filter by document status', example: 'ACTIVE' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (1-based)', example: 1 })
+  @ApiQuery({ name: 'limit', required: false, description: 'Results per page', example: 20 })
+  @ApiOkResponse({ description: 'Paginated list of knowledge-base documents' })
   listDocuments(@Query() query: ListDocumentsDto) {
     return this.knowledgeBase.listDocuments(query);
   }
 
   @Get('knowledge-base/:id')
+  @ApiOperation({ summary: 'Get a knowledge-base document by ID' })
+  @ApiParam({ name: 'id', description: 'Document UUID', example: '00000000-0000-0000-0000-000000000001' })
+  @ApiOkResponse({ description: 'Document detail' })
+  @ApiResponse({ status: 404, description: 'Document not found' })
   getDocument(@Param('id', ParseUUIDPipe) id: string) {
     return this.knowledgeBase.getDocument({ documentId: id });
   }
 
   @Patch('knowledge-base/:id')
+  @ApiOperation({ summary: 'Update a knowledge-base document' })
+  @ApiParam({ name: 'id', description: 'Document UUID', example: '00000000-0000-0000-0000-000000000001' })
+  @ApiOkResponse({ description: 'Updated document' })
+  @ApiResponse({ status: 404, description: 'Document not found' })
   updateDocument(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateDocumentDto,
@@ -50,6 +68,10 @@ export class DashboardAiController {
 
   @Delete('knowledge-base/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a knowledge-base document' })
+  @ApiParam({ name: 'id', description: 'Document UUID', example: '00000000-0000-0000-0000-000000000001' })
+  @ApiNoContentResponse({ description: 'Document deleted' })
+  @ApiResponse({ status: 404, description: 'Document not found' })
   deleteDocument(@Param('id', ParseUUIDPipe) id: string) {
     return this.knowledgeBase.deleteDocument({ documentId: id });
   }
@@ -57,12 +79,17 @@ export class DashboardAiController {
   // ── Chatbot Config ────────────────────────────────────────────────────────
 
   @Get('chatbot-config')
+  @ApiOperation({ summary: 'Get chatbot configuration' })
+  @ApiQuery({ name: 'category', required: false, description: 'Filter config entries by category', example: 'general' })
+  @ApiOkResponse({ description: 'Chatbot configuration entries' })
   getChatbotConfigEndpoint(@Query('category') category?: string) {
     return this.getChatbotConfig.execute({ category });
   }
 
   @Patch('chatbot-config')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Upsert chatbot configuration' })
+  @ApiOkResponse({ description: 'Updated chatbot configuration' })
   upsertChatbotConfigEndpoint(@Body() body: UpsertChatbotConfigDto) {
     return this.upsertChatbotConfig.execute({ configs: body.configs });
   }
@@ -71,6 +98,11 @@ export class DashboardAiController {
 
   @Post('chat')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send a chat message and receive an AI reply (Server-Sent Events)' })
+  @ApiOkResponse({
+    description: 'SSE stream of the AI reply',
+    schema: { type: 'string', description: 'SSE stream' },
+  })
   chatCompletionEndpoint(@Body() body: ChatCompletionDto) {
     return this.chatCompletion.execute(body);
   }
