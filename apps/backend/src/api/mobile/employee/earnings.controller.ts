@@ -1,20 +1,38 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { InvoiceStatus } from '@prisma/client';
 import { IsDateString, IsOptional } from 'class-validator';
+import {
+  ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiOkResponse,
+} from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../../common/swagger';
 import { JwtGuard } from '../../../common/guards/jwt.guard';
 import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
 import { PrismaService } from '../../../infrastructure/database';
 
 export class EarningsQuery {
+  @ApiPropertyOptional({ description: 'Start of earnings period (ISO 8601); defaults to first day of current month', example: '2026-04-01' })
   @IsOptional() @IsDateString() from?: string;
+
+  @ApiPropertyOptional({ description: 'End of earnings period (ISO 8601); defaults to last day of current month', example: '2026-04-30' })
   @IsOptional() @IsDateString() to?: string;
 }
 
+@ApiTags('Mobile Employee / Earnings')
+@ApiBearerAuth()
+@ApiStandardResponses()
 @UseGuards(JwtGuard)
 @Controller('mobile/employee/earnings')
 export class MobileEmployeeEarningsController {
   constructor(private readonly prisma: PrismaService) {}
 
+  @ApiOperation({ summary: 'Get earnings summary for the authenticated employee within a date range' })
+  @ApiOkResponse({
+    description: 'Earnings totals and breakdown by payment method for the requested period',
+    schema: { type: 'object' },
+  })
+  @ApiQuery({ name: 'from', required: false, description: 'Start of earnings period (ISO 8601)', example: '2026-04-01' })
+  @ApiQuery({ name: 'to', required: false, description: 'End of earnings period (ISO 8601)', example: '2026-04-30' })
   @Get()
   async earnings(
     @CurrentUser() user: JwtUser,
