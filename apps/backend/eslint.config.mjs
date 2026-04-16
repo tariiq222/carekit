@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import tsParser from "@typescript-eslint/parser";
 import tsPlugin from "@typescript-eslint/eslint-plugin";
 import { defineConfig, globalIgnores } from "eslint/config";
+import carekitPlugin from "./eslint-rules/carekit-plugin.mjs";
 
 /**
  * Backend ESLint — CareKit NestJS.
@@ -47,6 +48,7 @@ export default defineConfig([
     },
     plugins: {
       "@typescript-eslint": tsPlugin,
+      carekit: carekitPlugin,
     },
     rules: {
       // Disable core JS rules that TS handles or that produce false positives on .ts syntax
@@ -70,6 +72,9 @@ export default defineConfig([
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+
+      // Require @ApiOperation on every NestJS HTTP handler.
+      "carekit/require-api-operation": "error",
     },
   },
 
@@ -78,6 +83,7 @@ export default defineConfig([
     files: ["test/**/*.ts", "**/*.spec.ts"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      "carekit/require-api-operation": "off",
     },
   },
 ]);
