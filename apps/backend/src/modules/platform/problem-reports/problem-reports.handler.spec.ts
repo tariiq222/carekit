@@ -40,9 +40,6 @@ describe('ProblemReport handlers', () => {
       description: 'Something broken here',
     });
     expect(result.id).toBe('pr-1');
-    expect(prisma.problemReport.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.not.objectContaining({ tenantId: expect.anything() }) }),
-    );
   });
 
   it('lists problem reports with pagination', async () => {

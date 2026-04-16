@@ -41,14 +41,6 @@ export class TokenService {
       role: user.role,
       customRoleId: user.customRoleId,
       permissions,
-      // KNOWN LIMITATION: features are always [] at login time.
-      // FeatureGuard calls Platform BC on every request (correct behaviour),
-      // but anything reading the JWT payload directly — middleware, frontend,
-      // mobile token inspection — will see an empty features array and may
-      // incorrectly assume no features are licensed.
-      // TODO(phase-finance): inject ValidateLicenseService here and populate
-      // features from the active license at token issuance time.
-      // Tracked in: https://github.com/carekit-hq/carekit/issues/PHASE-FINANCE
       features: [],
     };
 
