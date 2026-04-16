@@ -29,8 +29,8 @@ export class CreateServiceDto {
   @ApiPropertyOptional({ example: 'Haircut' })
   @IsOptional() @IsString() @MaxLength(200) nameEn?: string;
 
-  @ApiPropertyOptional() @IsOptional() @IsString() descriptionAr?: string;
-  @ApiPropertyOptional() @IsOptional() @IsString() descriptionEn?: string;
+  @ApiPropertyOptional({ description: 'Service description in Arabic' }) @IsOptional() @IsString() descriptionAr?: string;
+  @ApiPropertyOptional({ description: 'Service description in English' }) @IsOptional() @IsString() descriptionEn?: string;
 
   @ApiProperty({ example: 30, description: 'Duration in minutes' })
   @IsInt() @Min(1) durationMins!: number;
@@ -41,8 +41,8 @@ export class CreateServiceDto {
   @ApiPropertyOptional({ example: 'SAR', default: 'SAR' })
   @IsOptional() @IsString() @MaxLength(8) currency?: string;
 
-  @ApiPropertyOptional() @IsOptional() @IsString() imageUrl?: string;
-  @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() categoryId?: string;
+  @ApiPropertyOptional({ description: 'Service image URL', example: 'https://example.com/logo.png' }) @IsOptional() @IsString() imageUrl?: string;
+  @ApiPropertyOptional({ description: 'Category UUID', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' }) @IsOptional() @IsUUID() categoryId?: string;
 
   // ─── العرض/الإخفاء ───────────────────────────────────────────────────────
   @ApiPropertyOptional({ default: true }) @IsOptional() @IsBoolean() isActive?: boolean;
