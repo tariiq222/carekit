@@ -12,14 +12,13 @@ const buildPrisma = () => {
   };
 };
 
-// Re-enabled after Plan D singleton conversion
-describe.skip('GetChatbotConfigHandler', () => {
-  it('returns all configs for tenant (no category filter)', async () => {
+describe('GetChatbotConfigHandler', () => {
+  it('returns all configs (no category filter)', async () => {
     const prisma = buildPrisma();
     const handler = new GetChatbotConfigHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1' });
+    await handler.execute({});
     expect(prisma.chatbotConfig.findMany).toHaveBeenCalledWith({
-      where: { tenantId: 'tenant-1' },
+      where: {},
       orderBy: { createdAt: 'asc' },
     });
   });
@@ -27,16 +26,15 @@ describe.skip('GetChatbotConfigHandler', () => {
   it('returns configs filtered by category', async () => {
     const prisma = buildPrisma();
     const handler = new GetChatbotConfigHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1', category: 'general' });
+    await handler.execute({ category: 'general' });
     expect(prisma.chatbotConfig.findMany).toHaveBeenCalledWith({
-      where: { tenantId: 'tenant-1', category: 'general' },
+      where: { category: 'general' },
       orderBy: { createdAt: 'asc' },
     });
   });
 });
 
-// Re-enabled after Plan D singleton conversion
-describe.skip('UpsertChatbotConfigHandler', () => {
+describe('UpsertChatbotConfigHandler', () => {
   it('upserts multiple config entries using Promise.all', async () => {
     const prisma = buildPrisma();
     const handler = new UpsertChatbotConfigHandler(prisma as never);
@@ -44,8 +42,20 @@ describe.skip('UpsertChatbotConfigHandler', () => {
       { key: 'greeting', value: 'Hello', category: 'general' },
       { key: 'language', value: 'ar', category: 'general' },
     ];
-    const result = await handler.execute({ tenantId: 'tenant-1', configs });
+    const result = await handler.execute({ configs });
     expect(prisma.chatbotConfig.upsert).toHaveBeenCalledTimes(2);
     expect(result).toHaveLength(2);
+  });
+
+  it('upserts each entry by key', async () => {
+    const prisma = buildPrisma();
+    const handler = new UpsertChatbotConfigHandler(prisma as never);
+    const configs = [{ key: 'greeting', value: 'Hi', category: 'general' }];
+    await handler.execute({ configs });
+    expect(prisma.chatbotConfig.upsert).toHaveBeenCalledWith({
+      where: { key: 'greeting' },
+      create: { key: 'greeting', value: 'Hi', category: 'general' },
+      update: { value: 'Hi', category: 'general' },
+    });
   });
 });

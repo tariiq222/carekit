@@ -3,7 +3,6 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface UpsertChatbotConfigCommand {
-  tenantId: string;
   configs: { key: string; value: unknown; category: string }[];
 }
 
@@ -15,9 +14,8 @@ export class UpsertChatbotConfigHandler {
     return this.prisma.$transaction(
       cmd.configs.map((entry) =>
         this.prisma.chatbotConfig.upsert({
-          where: { tenantId_key: { tenantId: cmd.tenantId, key: entry.key } },
+          where: { key: entry.key },
           create: {
-            tenantId: cmd.tenantId,
             key: entry.key,
             value: entry.value as Prisma.InputJsonValue,
             category: entry.category,
