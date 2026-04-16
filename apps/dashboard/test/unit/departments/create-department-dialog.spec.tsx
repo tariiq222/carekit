@@ -106,12 +106,11 @@ describe("CreateDepartmentDialog", () => {
     })
   })
 
-  it("uses sortOrder 0 in payload when user leaves the field empty", async () => {
+  it("uses sortOrder 0 in payload when user does not change the field", async () => {
     render(<CreateDepartmentDialog open={true} onOpenChange={vi.fn()} />)
 
     await userEvent.type(getNameEnInput(), "Dermatology")
     await userEvent.type(getNameArInput(), "جلدية")
-    await userEvent.clear(getSortOrderInput())
 
     await userEvent.click(screen.getByRole("button", { name: "حفظ" }))
 

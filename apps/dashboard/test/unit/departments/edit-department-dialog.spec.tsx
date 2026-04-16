@@ -122,10 +122,9 @@ describe("EditDepartmentDialog", () => {
       />,
     )
 
-    // When department is null, form.reset() is NOT called (useEffect condition),
-    // so sortOrder remains undefined — the component does not enforce a 0 default here
-    const sortInput = getSortOrderInput()
-    expect(sortInput?.value === "" || sortInput?.value === undefined).toBe(true)
+    // When department is null, neither useEffect branch fires,
+    // so the form keeps its defaultValues where sortOrder is 0
+    expect(getSortOrderInput()).toHaveValue(0)
   })
 
   it("includes icon and sortOrder in the update payload", async () => {

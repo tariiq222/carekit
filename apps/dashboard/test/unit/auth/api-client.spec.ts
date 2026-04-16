@@ -188,6 +188,7 @@ describe('API Client (lib/api.ts)', () => {
   it('should retry request with new token after successful 401 refresh', async () => {
     const { api, setAccessToken } = await import('@/lib/api')
     setAccessToken('old-token')
+    localStorage.setItem('carekit_refresh_token', 'stored-rt')
 
     // First call returns 401
     fetchMock.mockResolvedValueOnce({
@@ -195,7 +196,7 @@ describe('API Client (lib/api.ts)', () => {
       status: 401,
       json: () => Promise.resolve({}),
     })
-    // Refresh token call succeeds
+    // Refresh token call succeeds (tryRefreshToken uses fetch directly, not api.post)
     fetchMock.mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -240,12 +241,13 @@ describe('API Client (lib/api.ts)', () => {
   it('should only call refresh once for concurrent 401 responses', async () => {
     const { api, setAccessToken } = await import('@/lib/api')
     setAccessToken('expired-token')
+    localStorage.setItem('carekit_refresh_token', 'stored-rt')
 
     // Both requests fail with 401
     fetchMock
       .mockResolvedValueOnce({ ok: false, status: 401, json: () => Promise.resolve({}) })
       .mockResolvedValueOnce({ ok: false, status: 401, json: () => Promise.resolve({}) })
-      // Single refresh succeeds
+      // Single refresh succeeds (tryRefreshToken uses fetch directly via /api/proxy/auth/refresh)
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -259,7 +261,7 @@ describe('API Client (lib/api.ts)', () => {
 
     // Only one refresh call (the deduplicated one)
     const refreshCalls = fetchMock.mock.calls.filter((call: string[]) =>
-      call[0].includes('/auth/refresh-token'),
+      call[0].includes('/auth/refresh'),
     )
     expect(refreshCalls.length).toBe(1)
   })

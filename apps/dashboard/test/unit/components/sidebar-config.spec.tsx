@@ -22,10 +22,9 @@ describe("SidebarConfig — groups added", () => {
 
   const allHrefs = allNavItems.map((item) => item.href)
 
-  it("contains /groups nav item in organizationNav with featureFlag: groups", () => {
+  it("does not contain a /groups nav item (groups feature removed)", () => {
     const groupsItem = organizationNav.find((item) => item.href === "/groups")
-    expect(groupsItem).toBeDefined()
-    expect(groupsItem?.featureFlag).toBe("groups")
+    expect(groupsItem).toBeUndefined()
   })
 
   it("each nav item with featureFlag uses a key from FEATURE_FLAG_KEYS", () => {
@@ -51,8 +50,7 @@ describe("SidebarConfig — groups added", () => {
     ])
   })
 
-  it("organizationNav contains expected items including groups", () => {
-    expect(allHrefs).toContain("/groups")
+  it("organizationNav contains expected items", () => {
     expect(allHrefs).toContain("/services")
     expect(allHrefs).toContain("/bookings")
     expect(allHrefs).toContain("/clients")
