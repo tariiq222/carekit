@@ -55,8 +55,23 @@ async function bootstrap(): Promise<void> {
 
   if (process.env.WRITE_OPENAPI_SPEC === '1') {
     const outPath = resolve(__dirname, '../openapi.json');
-    // Deterministic key order so git diffs stay readable.
-    const ordered = JSON.stringify(document, Object.keys(document).sort(), 2);
+    // Deterministic key order so git diffs stay readable: recursively sort
+    // every object's keys before serializing. JSON.stringify's replacer
+    // cannot do this (arrays act as a global property allowlist and drop
+    // nested keys), so we walk the tree ourselves.
+    const sortKeys = (value: unknown): unknown => {
+      if (Array.isArray(value)) return value.map(sortKeys);
+      if (value && typeof value === 'object') {
+        return Object.keys(value as Record<string, unknown>)
+          .sort()
+          .reduce<Record<string, unknown>>((acc, key) => {
+            acc[key] = sortKeys((value as Record<string, unknown>)[key]);
+            return acc;
+          }, {});
+      }
+      return value;
+    };
+    const ordered = JSON.stringify(sortKeys(document), null, 2);
     writeFileSync(outPath, ordered, 'utf-8');
     Logger.log(`OpenAPI spec written to ${outPath}`, 'Bootstrap');
     await app.close();

@@ -232,8 +232,22 @@ SwaggerModule.setup('api/docs', app, document, {
 
 if (process.env.WRITE_OPENAPI_SPEC === '1') {
   const outPath = resolve(__dirname, '../openapi.json');
-  // Deterministic key order so git diffs stay readable.
-  const ordered = JSON.stringify(document, Object.keys(document).sort(), 2);
+  // Recursively sort every object's keys so git diffs stay stable.
+  // Note: JSON.stringify's array-replacer is a global allowlist and
+  // drops nested keys — we must walk the tree ourselves.
+  const sortKeys = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(sortKeys);
+    if (value && typeof value === 'object') {
+      return Object.keys(value as Record<string, unknown>)
+        .sort()
+        .reduce<Record<string, unknown>>((acc, key) => {
+          acc[key] = sortKeys((value as Record<string, unknown>)[key]);
+          return acc;
+        }, {});
+    }
+    return value;
+  };
+  const ordered = JSON.stringify(sortKeys(document), null, 2);
   writeFileSync(outPath, ordered, 'utf-8');
   Logger.log(`OpenAPI spec written to ${outPath}`, 'Bootstrap');
   await app.close();

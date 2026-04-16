@@ -1,10 +1,5064 @@
 {
-  "components": {},
-  "info": {},
+  "components": {
+    "schemas": {
+      "AddHolidayDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "AddToWaitlistDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "ApplyCouponDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "AssignEmployeeToBranchDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "AssignPermissionsDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "AssignRoleDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "BankTransferUploadDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CancelBookingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "ChangePasswordDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "ChatCompletionDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CompleteBookingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateBookingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateBranchDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateCategoryDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateClientDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateCouponDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateDepartmentDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateEmailTemplateDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateEmployeeDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateEmployeeExceptionDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateIntakeFormDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateInvoiceDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateProblemReportDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateRecurringBookingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateRoleDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "CreateServiceDto": {
+        "properties": {
+          "allowRecurring": {
+            "default": false,
+            "type": "boolean"
+          },
+          "allowedRecurringPatterns": {
+            "items": {
+              "enum": [
+                "DAILY",
+                "WEEKLY",
+                "BIWEEKLY",
+                "MONTHLY"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "bufferMinutes": {
+            "default": 0,
+            "type": "number"
+          },
+          "categoryId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "currency": {
+            "default": "SAR",
+            "example": "SAR",
+            "type": "string"
+          },
+          "depositAmount": {
+            "description": "Fixed deposit amount — must not exceed price",
+            "type": "number"
+          },
+          "depositEnabled": {
+            "default": false,
+            "type": "boolean"
+          },
+          "descriptionAr": {
+            "type": "string"
+          },
+          "descriptionEn": {
+            "type": "string"
+          },
+          "durationMins": {
+            "description": "Duration in minutes",
+            "example": 30,
+            "type": "number"
+          },
+          "hideDurationOnBooking": {
+            "default": false,
+            "type": "boolean"
+          },
+          "hidePriceOnBooking": {
+            "default": false,
+            "type": "boolean"
+          },
+          "iconBgColor": {
+            "example": "#F0F4FF",
+            "type": "string"
+          },
+          "iconName": {
+            "example": "scissors-01",
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "isActive": {
+            "default": true,
+            "type": "boolean"
+          },
+          "isHidden": {
+            "default": false,
+            "type": "boolean"
+          },
+          "maxAdvanceDays": {
+            "type": "number"
+          },
+          "maxParticipants": {
+            "default": 1,
+            "type": "number"
+          },
+          "maxRecurrences": {
+            "type": "number"
+          },
+          "minLeadMinutes": {
+            "type": "number"
+          },
+          "minParticipants": {
+            "default": 1,
+            "type": "number"
+          },
+          "nameAr": {
+            "example": "قص الشعر",
+            "type": "string"
+          },
+          "nameEn": {
+            "example": "Haircut",
+            "type": "string"
+          },
+          "price": {
+            "example": 50,
+            "type": "number"
+          },
+          "reserveWithoutPayment": {
+            "description": "Defer payment until minParticipants is reached. Requires maxParticipants > 1",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "nameAr",
+          "durationMins",
+          "price"
+        ],
+        "type": "object"
+      },
+      "CreateUserDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "EmployeeOnboardingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "GenerateReportDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "LoginDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "LogoutDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "MarkReadDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "MobileCancelBookingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "MobileChatBody": {
+        "properties": {},
+        "type": "object"
+      },
+      "MobileCreateBookingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "MobileUpdateProfileBody": {
+        "properties": {},
+        "type": "object"
+      },
+      "OnboardEmployeeDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "PreviewEmailTemplateDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "ProcessPaymentDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "RefreshTokenDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "RefundPaymentDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "RescheduleBookingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "SendStaffMessageDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "SetBusinessHoursDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "SetServiceBookingConfigsDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "SubmitRatingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateAvailabilityBody": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateAvailabilityDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateBranchDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateCategoryDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateClientDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateCouponDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateDepartmentDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateDocumentDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateEmailTemplateDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateEmployeeDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateFeatureFlagDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateProblemReportStatusDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateServiceDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpdateUserDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UploadFileDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpsertBrandingDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpsertChatbotConfigDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpsertIntegrationDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpsertOrgSettingsDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "UpsertZatcaConfigDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "VerifyPaymentDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "ZatcaSubmitDto": {
+        "properties": {},
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "dev@carekit.dev",
+      "name": "CareKit Engineering",
+      "url": "https://carekit.dev"
+    },
+    "description": "CareKit clinic management platform — dashboard & mobile API",
+    "license": {
+      "name": "Proprietary",
+      "url": "https://carekit.dev/license"
+    },
+    "title": "CareKit API",
+    "version": "2.0"
+  },
   "openapi": "3.0.0",
-  "paths": {},
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_loginEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logoutEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_meEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/change": {
+      "patch": {
+        "operationId": "AuthController_changePasswordEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refreshEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/dashboard/ai/chat": {
+      "post": {
+        "operationId": "DashboardAiController_chatCompletionEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatCompletionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI"
+        ]
+      }
+    },
+    "/api/v1/dashboard/ai/chatbot-config": {
+      "get": {
+        "operationId": "DashboardAiController_getChatbotConfigEndpoint",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardAiController_upsertChatbotConfigEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertChatbotConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI"
+        ]
+      }
+    },
+    "/api/v1/dashboard/ai/knowledge-base": {
+      "get": {
+        "operationId": "DashboardAiController_listDocuments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI"
+        ]
+      }
+    },
+    "/api/v1/dashboard/ai/knowledge-base/{id}": {
+      "delete": {
+        "operationId": "DashboardAiController_deleteDocument",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI"
+        ]
+      },
+      "get": {
+        "operationId": "DashboardAiController_getDocument",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardAiController_updateDocument",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings": {
+      "get": {
+        "operationId": "DashboardBookingsController_listBookings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardBookingsController_createBooking",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/availability": {
+      "get": {
+        "operationId": "DashboardBookingsController_checkAvailability",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/recurring": {
+      "post": {
+        "operationId": "DashboardBookingsController_createRecurringBooking",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecurringBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/waitlist": {
+      "get": {
+        "operationId": "DashboardBookingsController_listWaitlist",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardBookingsController_addToWaitlist",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToWaitlistDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/waitlist/{id}": {
+      "delete": {
+        "operationId": "DashboardBookingsController_removeWaitlistEntry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/{id}": {
+      "get": {
+        "operationId": "DashboardBookingsController_getBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/{id}/cancel": {
+      "patch": {
+        "operationId": "DashboardBookingsController_cancelBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/{id}/check-in": {
+      "patch": {
+        "operationId": "DashboardBookingsController_checkInBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/{id}/complete": {
+      "patch": {
+        "operationId": "DashboardBookingsController_completeBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/{id}/confirm": {
+      "patch": {
+        "operationId": "DashboardBookingsController_confirmBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/{id}/no-show": {
+      "patch": {
+        "operationId": "DashboardBookingsController_noShowBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/{id}/reschedule": {
+      "patch": {
+        "operationId": "DashboardBookingsController_rescheduleBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/chat/conversations": {
+      "get": {
+        "operationId": "DashboardCommsController_listConversationsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/chat/conversations/{id}": {
+      "get": {
+        "operationId": "DashboardCommsController_getConversationEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/chat/conversations/{id}/close": {
+      "patch": {
+        "operationId": "DashboardCommsController_closeConversationEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/chat/conversations/{id}/messages": {
+      "get": {
+        "operationId": "DashboardCommsController_listMessagesEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardCommsController_sendStaffMessageEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendStaffMessageDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/email-templates": {
+      "get": {
+        "operationId": "DashboardCommsController_listEmailTemplatesEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardCommsController_createEmailTemplateEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmailTemplateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/email-templates/{id}": {
+      "get": {
+        "operationId": "DashboardCommsController_getEmailTemplateEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardCommsController_updateEmailTemplateEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmailTemplateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/email-templates/{id}/preview": {
+      "post": {
+        "operationId": "DashboardCommsController_previewEmailTemplateEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewEmailTemplateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/notifications": {
+      "get": {
+        "operationId": "DashboardCommsController_listNotificationsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/notifications/mark-read": {
+      "patch": {
+        "operationId": "DashboardCommsController_markReadEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkReadDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/notifications/unread-count": {
+      "get": {
+        "operationId": "DashboardCommsController_getUnreadCountEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/coupons": {
+      "get": {
+        "operationId": "DashboardFinanceController_listCouponsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardFinanceController_createCouponEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCouponDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/coupons/apply": {
+      "post": {
+        "operationId": "DashboardFinanceController_applyCouponEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyCouponDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/coupons/{id}": {
+      "delete": {
+        "operationId": "DashboardFinanceController_deleteCouponEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      },
+      "get": {
+        "operationId": "DashboardFinanceController_getCouponEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardFinanceController_updateCouponEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCouponDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/invoices": {
+      "post": {
+        "operationId": "DashboardFinanceController_createInv",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoiceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/invoices/{id}": {
+      "get": {
+        "operationId": "DashboardFinanceController_getInv",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/payments": {
+      "get": {
+        "operationId": "DashboardFinanceController_listPaymentsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardFinanceController_processPaymentEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessPaymentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/payments/bank-transfer": {
+      "post": {
+        "operationId": "DashboardFinanceController_bankTransferEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankTransferUploadDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/payments/stats": {
+      "get": {
+        "operationId": "DashboardFinanceController_getPaymentStatsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/payments/{id}/refund": {
+      "patch": {
+        "operationId": "DashboardFinanceController_refundPaymentEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundPaymentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/payments/{id}/verify": {
+      "patch": {
+        "operationId": "DashboardFinanceController_verifyPaymentEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyPaymentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/zatca/config": {
+      "get": {
+        "operationId": "DashboardFinanceController_getZatcaConfigEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardFinanceController_upsertZatcaConfigEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertZatcaConfigDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/zatca/onboard": {
+      "post": {
+        "operationId": "DashboardFinanceController_onboardZatcaEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/finance/zatca/submit": {
+      "post": {
+        "operationId": "DashboardFinanceController_zatca",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZatcaSubmitDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Finance"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/permissions": {
+      "get": {
+        "operationId": "DashboardIdentityController_listPermissions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/roles": {
+      "get": {
+        "operationId": "DashboardIdentityController_listRoles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardIdentityController_createRoleEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/roles/{id}": {
+      "delete": {
+        "operationId": "DashboardIdentityController_deleteRoleEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/roles/{id}/permissions": {
+      "post": {
+        "operationId": "DashboardIdentityController_assignPermissionsEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignPermissionsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/users": {
+      "get": {
+        "operationId": "DashboardIdentityController_listUsers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardIdentityController_createUserEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/users/{id}": {
+      "delete": {
+        "operationId": "DashboardIdentityController_deleteUserEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardIdentityController_updateUserEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/users/{id}/activate": {
+      "patch": {
+        "operationId": "DashboardIdentityController_activateUserEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/users/{id}/deactivate": {
+      "patch": {
+        "operationId": "DashboardIdentityController_deactivateUserEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/users/{userId}/roles": {
+      "post": {
+        "operationId": "DashboardIdentityController_assignRoleEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignRoleDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/identity/users/{userId}/roles/{roleId}": {
+      "delete": {
+        "operationId": "DashboardIdentityController_removeRoleEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
+    "/api/v1/dashboard/media/upload": {
+      "post": {
+        "operationId": "DashboardMediaController_uploadFileEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadFileDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/v1/dashboard/media/{id}": {
+      "delete": {
+        "operationId": "DashboardMediaController_deleteFileEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Media"
+        ]
+      },
+      "get": {
+        "operationId": "DashboardMediaController_getFileEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/v1/dashboard/media/{id}/presigned-url": {
+      "get": {
+        "operationId": "DashboardMediaController_presignedUrlEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/v1/dashboard/ops/activity": {
+      "get": {
+        "operationId": "DashboardOpsController_listActivityEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Ops"
+        ]
+      }
+    },
+    "/api/v1/dashboard/ops/reports": {
+      "post": {
+        "operationId": "DashboardOpsController_generateReportEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateReportDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Ops"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/booking-settings": {
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_getBookingSettingsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardOrganizationSettingsController_upsertBookingSettingsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/branches": {
+      "get": {
+        "operationId": "DashboardOrganizationBranchesController_listBranchesEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Branches"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardOrganizationBranchesController_createBranchEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBranchDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Branches"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/branches/{branchId}": {
+      "delete": {
+        "operationId": "DashboardOrganizationBranchesController_deleteBranchEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Branches"
+        ]
+      },
+      "get": {
+        "operationId": "DashboardOrganizationBranchesController_getBranchEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Branches"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardOrganizationBranchesController_updateBranchEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBranchDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Branches"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/branches/{branchId}/employees": {
+      "get": {
+        "operationId": "DashboardOrganizationBranchesController_listBranchEmployeesEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Branches"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardOrganizationBranchesController_assignEmployeeEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignEmployeeToBranchDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Branches"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/branches/{branchId}/employees/{employeeId}": {
+      "delete": {
+        "operationId": "DashboardOrganizationBranchesController_unassignEmployeeEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "employeeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Branches"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/branding": {
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_getBrandingEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardOrganizationSettingsController_upsertBrandingEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertBrandingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/branding/logo": {
+      "post": {
+        "operationId": "DashboardOrganizationSettingsController_uploadLogoEndpoint",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/categories": {
+      "get": {
+        "operationId": "DashboardOrganizationCategoriesController_listCategoriesEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Categories"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardOrganizationCategoriesController_createCategoryEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/categories/{categoryId}": {
+      "delete": {
+        "operationId": "DashboardOrganizationCategoriesController_deleteCategoryEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Categories"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardOrganizationCategoriesController_updateCategoryEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/departments": {
+      "get": {
+        "operationId": "DashboardOrganizationDepartmentsController_listDepartmentsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Departments"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardOrganizationDepartmentsController_createDepartmentEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDepartmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Departments"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/departments/{departmentId}": {
+      "delete": {
+        "operationId": "DashboardOrganizationDepartmentsController_deleteDepartmentEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "departmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Departments"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardOrganizationDepartmentsController_updateDepartmentEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "departmentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDepartmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Departments"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/holidays": {
+      "get": {
+        "operationId": "DashboardOrganizationHoursController_listHolidaysEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Business Hours"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardOrganizationHoursController_addHolidayEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddHolidayDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Business Hours"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/holidays/{holidayId}": {
+      "delete": {
+        "operationId": "DashboardOrganizationHoursController_removeHolidayEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "holidayId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Business Hours"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/hours": {
+      "post": {
+        "operationId": "DashboardOrganizationHoursController_setBusinessHoursEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetBusinessHoursDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Business Hours"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/hours/{branchId}": {
+      "get": {
+        "operationId": "DashboardOrganizationHoursController_getBusinessHoursEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Business Hours"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/intake-forms": {
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_listIntakeFormsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardOrganizationSettingsController_createIntakeFormEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntakeFormDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/intake-forms/{formId}": {
+      "delete": {
+        "operationId": "DashboardOrganizationSettingsController_deleteIntakeFormEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "formId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      },
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_getIntakeFormEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "formId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/ratings": {
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_listRatingsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardOrganizationSettingsController_submitRatingEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRatingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/services": {
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_listServicesEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardOrganizationSettingsController_createServiceEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/services/{serviceId}": {
+      "delete": {
+        "operationId": "DashboardOrganizationSettingsController_archiveServiceEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardOrganizationSettingsController_updateServiceEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServiceDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/services/{serviceId}/booking-types": {
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_getServiceBookingTypesEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      },
+      "put": {
+        "operationId": "DashboardOrganizationSettingsController_setServiceBookingTypesEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetServiceBookingConfigsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/settings": {
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_getOrgSettingsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardOrganizationSettingsController_upsertOrgSettingsEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertOrgSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Services & Org"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/clients": {
+      "get": {
+        "operationId": "DashboardPeopleController_listClientsEndpoint",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "isActive",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardPeopleController_createClientEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClientDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/clients/{id}": {
+      "delete": {
+        "operationId": "DashboardPeopleController_deleteClientEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "get": {
+        "operationId": "DashboardPeopleController_getClientEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardPeopleController_updateClientEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClientDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees": {
+      "get": {
+        "operationId": "DashboardPeopleController_listEmployeesEndpoint",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "isActive",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardPeopleController_createEmployeeEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmployeeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/onboarding": {
+      "post": {
+        "operationId": "DashboardPeopleController_onboardEmployeeEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardEmployeeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/stats": {
+      "get": {
+        "operationId": "DashboardPeopleController_employeeStatsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{employeeId}/avatar": {
+      "post": {
+        "operationId": "DashboardPeopleController_uploadAvatarEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "employeeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}": {
+      "delete": {
+        "operationId": "DashboardPeopleController_deleteEmployeeEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "get": {
+        "operationId": "DashboardPeopleController_getEmployeeEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardPeopleController_updateEmployeeEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmployeeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/availability": {
+      "get": {
+        "operationId": "DashboardPeopleController_getAvailabilityEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "patch": {
+        "operationId": "DashboardPeopleController_updateAvailabilityEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAvailabilityDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/breaks": {
+      "get": {
+        "operationId": "DashboardPeopleController_getBreaksEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "put": {
+        "operationId": "DashboardPeopleController_putBreaksEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/exceptions": {
+      "get": {
+        "operationId": "DashboardPeopleController_listEmployeeExceptionsEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardPeopleController_createEmployeeExceptionEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmployeeExceptionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/exceptions/{exceptionId}": {
+      "delete": {
+        "operationId": "DashboardPeopleController_deleteEmployeeExceptionEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "exceptionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/onboarding": {
+      "post": {
+        "operationId": "DashboardPeopleController_employeeOnboardingEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeOnboardingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/ratings": {
+      "get": {
+        "operationId": "DashboardPeopleController_listEmployeeRatingsEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/services": {
+      "get": {
+        "operationId": "DashboardPeopleController_listEmployeeServicesEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardPeopleController_assignEmployeeServiceEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/services/{serviceId}": {
+      "delete": {
+        "operationId": "DashboardPeopleController_removeEmployeeServiceEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/vacations": {
+      "get": {
+        "operationId": "DashboardPeopleController_listVacationsEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardPeopleController_createVacationEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmployeeExceptionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/vacations/{vacationId}": {
+      "delete": {
+        "operationId": "DashboardPeopleController_deleteVacationEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "vacationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/platform/feature-flags": {
+      "get": {
+        "operationId": "DashboardPlatformController_listFeatureFlagsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Platform"
+        ]
+      }
+    },
+    "/api/v1/dashboard/platform/feature-flags/map": {
+      "get": {
+        "operationId": "DashboardPlatformController_featureFlagMapEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Platform"
+        ]
+      }
+    },
+    "/api/v1/dashboard/platform/feature-flags/{key}": {
+      "patch": {
+        "operationId": "DashboardPlatformController_updateFeatureFlagEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFeatureFlagDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Platform"
+        ]
+      }
+    },
+    "/api/v1/dashboard/platform/integrations": {
+      "get": {
+        "operationId": "DashboardPlatformController_listIntegrationsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Platform"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardPlatformController_upsertIntegrationEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertIntegrationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Platform"
+        ]
+      }
+    },
+    "/api/v1/dashboard/platform/problem-reports": {
+      "get": {
+        "operationId": "DashboardPlatformController_listProblemReportsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Platform"
+        ]
+      },
+      "post": {
+        "operationId": "DashboardPlatformController_createProblemReportEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProblemReportDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Platform"
+        ]
+      }
+    },
+    "/api/v1/dashboard/platform/problem-reports/{id}/status": {
+      "patch": {
+        "operationId": "DashboardPlatformController_updateProblemReportStatusEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProblemReportStatusDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Platform"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/bookings": {
+      "get": {
+        "operationId": "MobileClientBookingsController_listMyBookings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientBookings"
+        ]
+      },
+      "post": {
+        "operationId": "MobileClientBookingsController_createBooking",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MobileCreateBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientBookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/bookings/{id}": {
+      "get": {
+        "operationId": "MobileClientBookingsController_getBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientBookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/bookings/{id}/cancel": {
+      "patch": {
+        "operationId": "MobileClientBookingsController_cancelBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MobileCancelBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientBookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/bookings/{id}/reschedule": {
+      "patch": {
+        "operationId": "MobileClientBookingsController_rescheduleBooking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientBookings"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/chat": {
+      "post": {
+        "operationId": "MobileClientChatController_chat",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MobileChatBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientChat"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/chat/conversations": {
+      "get": {
+        "operationId": "MobileClientChatController_listConversationsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientChat"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/chat/conversations/{id}/messages": {
+      "get": {
+        "operationId": "MobileClientChatController_listMessagesEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientChat"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/notifications": {
+      "get": {
+        "operationId": "MobileClientNotificationsController_listNotificationsEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientNotifications"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/notifications/mark-read": {
+      "patch": {
+        "operationId": "MobileClientNotificationsController_markReadEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientNotifications"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/payments": {
+      "get": {
+        "operationId": "MobileClientPaymentsController_listMyPayments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientPayments"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/payments/invoices/{id}": {
+      "get": {
+        "operationId": "MobileClientPaymentsController_getInvoiceEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientPayments"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/portal/home": {
+      "get": {
+        "operationId": "MobileClientHomeController_home",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientHome"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/portal/summary": {
+      "get": {
+        "operationId": "MobileClientSummaryController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientSummary"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/portal/upcoming": {
+      "get": {
+        "operationId": "MobileClientUpcomingController_upcoming",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientUpcoming"
+        ]
+      }
+    },
+    "/api/v1/mobile/client/profile": {
+      "get": {
+        "operationId": "MobileClientProfileController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientProfile"
+        ]
+      },
+      "patch": {
+        "operationId": "MobileClientProfileController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MobileUpdateProfileBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileClientProfile"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/clients": {
+      "get": {
+        "operationId": "MobileEmployeeClientsController_listMyClients",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileEmployeeClients"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/clients/{clientId}/history": {
+      "get": {
+        "operationId": "MobileEmployeeClientsController_clientHistory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "clientId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileEmployeeClients"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/earnings": {
+      "get": {
+        "operationId": "MobileEmployeeEarningsController_earnings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileEmployeeEarnings"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/schedule/availability": {
+      "patch": {
+        "operationId": "MobileEmployeeScheduleController_updateAvailabilityEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAvailabilityBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileEmployeeSchedule"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/schedule/today": {
+      "get": {
+        "operationId": "MobileEmployeeScheduleController_today",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileEmployeeSchedule"
+        ]
+      }
+    },
+    "/api/v1/mobile/employee/schedule/weekly": {
+      "get": {
+        "operationId": "MobileEmployeeScheduleController_weekly",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "MobileEmployeeSchedule"
+        ]
+      }
+    },
+    "/api/v1/public/availability": {
+      "get": {
+        "operationId": "PublicSlotsController_getSlots",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PublicSlots"
+        ]
+      }
+    },
+    "/api/v1/public/branding": {
+      "get": {
+        "operationId": "PublicBrandingController_getBrandingEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PublicBranding"
+        ]
+      }
+    },
+    "/api/v1/public/services": {
+      "get": {
+        "operationId": "PublicCatalogController_getCatalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PublicCatalog"
+        ]
+      }
+    }
+  },
   "servers": [
-    {}
+    {
+      "description": "Local dev",
+      "url": "http://localhost:5100"
+    }
   ],
   "tags": []
 }
