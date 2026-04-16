@@ -138,10 +138,20 @@ export function EditDepartmentDialog({
               <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.descriptionAr")}</Label>
                 <Input {...form.register("descriptionAr")} />
+                {form.formState.errors.descriptionAr && (
+                  <p className="text-xs text-destructive">
+                    {t(form.formState.errors.descriptionAr.message ?? "")}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.descriptionEn")}</Label>
                 <Input {...form.register("descriptionEn")} />
+                {form.formState.errors.descriptionEn && (
+                  <p className="text-xs text-destructive">
+                    {t(form.formState.errors.descriptionEn.message ?? "")}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -152,6 +162,11 @@ export function EditDepartmentDialog({
                   {...form.register("icon")}
                   placeholder={t("departments.field.iconPlaceholder")}
                 />
+                {form.formState.errors.icon && (
+                  <p className="text-xs text-destructive">
+                    {t(form.formState.errors.icon.message ?? "")}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.sortOrder")}</Label>
@@ -162,6 +177,11 @@ export function EditDepartmentDialog({
                   {...form.register("sortOrder", { valueAsNumber: true })}
                   className="h-9 text-sm tabular-nums"
                 />
+                {form.formState.errors.sortOrder && (
+                  <p className="text-xs text-destructive">
+                    {t(form.formState.errors.sortOrder.message ?? "")}
+                  </p>
+                )}
               </div>
             </div>
 

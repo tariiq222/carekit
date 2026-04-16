@@ -36,13 +36,21 @@ export function getDepartmentColumns(
       enableSorting: false,
       cell: ({ row }) => {
         const d = row.original
+        const primary = locale === "ar" ? d.nameAr : d.nameEn
+        const secondary = locale === "ar" ? d.nameEn : d.nameAr
         return (
-          <div className="flex flex-col">
-            <span className="font-medium text-foreground">
-              {locale === "ar" ? d.nameAr : d.nameEn}
+          <div className="flex max-w-[280px] flex-col">
+            <span
+              className="truncate font-medium text-foreground"
+              title={primary ?? undefined}
+            >
+              {primary}
             </span>
-            <span className="text-xs text-muted-foreground">
-              {locale === "ar" ? d.nameEn : d.nameAr}
+            <span
+              className="truncate text-xs text-muted-foreground"
+              title={secondary ?? undefined}
+            >
+              {secondary}
             </span>
           </div>
         )

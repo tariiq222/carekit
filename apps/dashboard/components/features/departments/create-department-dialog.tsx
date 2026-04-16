@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -38,18 +39,24 @@ export function CreateDepartmentDialog({
   const { t } = useLocale()
   const { createMut } = useDepartmentMutations()
 
+  const defaultValues = {
+    nameAr: "",
+    nameEn: "",
+    descriptionAr: "",
+    descriptionEn: "",
+    icon: "",
+    sortOrder: 0,
+    isActive: true,
+  }
+
   const form = useForm<DepartmentFormData>({
     resolver: zodResolver(departmentSchema),
-    defaultValues: {
-      nameAr: "",
-      nameEn: "",
-      descriptionAr: "",
-      descriptionEn: "",
-      icon: "",
-      sortOrder: 0,
-      isActive: true,
-    },
+    defaultValues,
   })
+
+  useEffect(() => {
+    if (!open) form.reset(defaultValues)
+  }, [open, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
@@ -109,10 +116,20 @@ export function CreateDepartmentDialog({
               <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.descriptionAr")}</Label>
                 <Input {...form.register("descriptionAr")} />
+                {form.formState.errors.descriptionAr && (
+                  <p className="text-xs text-destructive">
+                    {t(form.formState.errors.descriptionAr.message ?? "")}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.descriptionEn")}</Label>
                 <Input {...form.register("descriptionEn")} />
+                {form.formState.errors.descriptionEn && (
+                  <p className="text-xs text-destructive">
+                    {t(form.formState.errors.descriptionEn.message ?? "")}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -123,6 +140,11 @@ export function CreateDepartmentDialog({
                   {...form.register("icon")}
                   placeholder={t("departments.field.iconPlaceholder")}
                 />
+                {form.formState.errors.icon && (
+                  <p className="text-xs text-destructive">
+                    {t(form.formState.errors.icon.message ?? "")}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("departments.field.sortOrder")}</Label>
@@ -133,6 +155,11 @@ export function CreateDepartmentDialog({
                   {...form.register("sortOrder", { valueAsNumber: true })}
                   className="h-9 text-sm tabular-nums"
                 />
+                {form.formState.errors.sortOrder && (
+                  <p className="text-xs text-destructive">
+                    {t(form.formState.errors.sortOrder.message ?? "")}
+                  </p>
+                )}
               </div>
             </div>
 

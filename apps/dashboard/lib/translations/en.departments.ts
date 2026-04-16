@@ -18,6 +18,7 @@ export const enDepartments: Record<string, string> = {
   // Validation
   "validation.required": "This field is required",
   "validation.maxLength": "Exceeds maximum length",
+  "validation.minZero": "Value must be 0 or greater",
 
   // Status
   "departments.status.active": "Active",

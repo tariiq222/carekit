@@ -35,11 +35,12 @@ export function DeleteDepartmentDialog({
     : ""
 
   const handleDelete = async () => {
-    if (!department) return
+    if (!department || deleteMut.isPending) return
+    const id = department.id
+    onOpenChange(false)
     try {
-      await deleteMut.mutateAsync(department.id)
+      await deleteMut.mutateAsync(id)
       toast.success(t("departments.delete.success"))
-      onOpenChange(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("departments.delete.error"))
     }

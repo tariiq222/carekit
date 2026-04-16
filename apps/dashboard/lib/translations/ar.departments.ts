@@ -18,6 +18,7 @@ export const arDepartments: Record<string, string> = {
   // Validation
   "validation.required": "هذا الحقل مطلوب",
   "validation.maxLength": "تجاوز الحد الأقصى للطول",
+  "validation.minZero": "يجب أن تكون القيمة 0 أو أكثر",
 
   // Status
   "departments.status.active": "نشط",
