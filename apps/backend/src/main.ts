@@ -42,6 +42,8 @@ async function bootstrap(): Promise<void> {
     .setTitle('CareKit API')
     .setDescription('CareKit clinic management platform — dashboard & mobile API')
     .setVersion('2.0')
+    .setContact('CareKit Engineering', 'https://carekit.dev', 'dev@carekit.dev')
+    .setLicense('Proprietary', 'https://carekit.dev/license')
     .addBearerAuth()
     .addServer('http://localhost:5100', 'Local dev')
     .build();
@@ -51,11 +53,14 @@ async function bootstrap(): Promise<void> {
     swaggerOptions: { persistAuthorization: true },
   });
 
-  // Write openapi.json snapshot for codegen (only when WRITE_OPENAPI_SPEC=1)
   if (process.env.WRITE_OPENAPI_SPEC === '1') {
     const outPath = resolve(__dirname, '../openapi.json');
-    writeFileSync(outPath, JSON.stringify(document, null, 2), 'utf-8');
+    // Deterministic key order so git diffs stay readable.
+    const ordered = JSON.stringify(document, Object.keys(document).sort(), 2);
+    writeFileSync(outPath, ordered, 'utf-8');
     Logger.log(`OpenAPI spec written to ${outPath}`, 'Bootstrap');
+    await app.close();
+    return;
   }
 
   const port = Number(process.env.PORT ?? 5100);

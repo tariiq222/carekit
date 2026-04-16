@@ -85,13 +85,14 @@ When adding an endpoint: add or extend the slice in `src/modules/<cluster>/<use-
 
 ```bash
 npm run dev                          # Watch mode, :5100
+npm run typecheck                    # tsc --noEmit
 npm run test                         # Jest unit tests
 npm run test:cov                     # Coverage (thresholds: 40% branch, 50% fn/line)
 npm run test:e2e                     # E2E (test/jest-e2e.json)
 npx jest path/to/file.spec.ts        # Single test file
 npx jest -t "partial test name"      # By test name
 npm run prisma:migrate               # Apply pending migrations (never `db push`)
-npm run prisma:seed                  # Seed demo data
+npm run seed                         # Seed demo data
 npm run prisma:studio                # GUI
 ```
 
@@ -102,3 +103,22 @@ npm run prisma:studio                # GUI
 - **Tests colocated as `*.handler.spec.ts`** next to the handler, not in a parallel `test/` tree.
 - **Payments, ZATCA, auth, and migrations are owner-only** (see root CLAUDE.md "Security Sensitivity Tiers").
 - **Migrations are immutable** — never edit or squash existing ones; add a new migration instead.
+
+## API Documentation (Standard level)
+
+Every HTTP endpoint in `src/api/**` MUST have:
+
+- `@ApiTags('<Audience> / <Cluster>')` on the controller — tag list is closed, see [spec](../../docs/superpowers/specs/2026-04-17-api-documentation-design.md#audience--cluster-tag-map).
+- `@ApiOperation({ summary })` — English, imperative ("Create a booking").
+- `@ApiStandardResponses()` from `src/common/swagger` plus endpoint-specific success/404 responses.
+- `@ApiParam`/`@ApiQuery` on every route/query parameter.
+
+Every DTO used as `@Body` or `@Query`:
+- `@ApiProperty({ description, example })` on required fields.
+- `@ApiPropertyOptional({ description, example })` on optional fields.
+
+Regenerate the OpenAPI snapshot after any change:
+
+    npm run openapi:build-and-snapshot
+
+Commit `apps/backend/openapi.json` alongside the endpoint change — CI fails if the snapshot drifts from source.

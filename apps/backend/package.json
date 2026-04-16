@@ -12,6 +12,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config test/jest-e2e.json --json --outputFile=test-results-clients.json && npm run test:report",
+    "test:kiwi": "bash /c/pro/kiwi-tcms/run-and-sync.sh",
     "test:report": "py ../../test-reports/scripts/generate_html_report.py",
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
@@ -22,7 +23,10 @@
     "prisma:hooks": "prisma db execute --file prisma/hooks/ensure_vector_indexes.sql",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
-    "openapi:export": "tsx scripts/export-openapi.ts"
+    "openapi:export": "tsx scripts/export-openapi.ts",
+    "openapi:snapshot": "node -e \"process.env.WRITE_OPENAPI_SPEC='1'; require('./dist/main.js')\"",
+    "openapi:build-and-snapshot": "npm run build && npm run openapi:snapshot",
+    "check:openapi-coverage": "tsx scripts/check-openapi-coverage.ts"
   },
   "dependencies": {
     "@casl/ability": "^6.8.0",
