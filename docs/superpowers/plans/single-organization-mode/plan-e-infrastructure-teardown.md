@@ -35,9 +35,10 @@
   2. `apps/backend/src/common/http/request-context.ts` exists with slim interface.
   3. `app.module.ts` has no reference to `TenantMiddleware`.
   4. Logging interceptor + HTTP exception filter + JWT guard + current-user decorator have no tenantId.
-  5. `npm run build` succeeds.
-  6. `npm run test` (backend full suite) passes.
-  7. All commits pushed.
+  5. Mobile controllers (employee earnings + client portal home/summary/upcoming) no longer use `@TenantId()` or pass `tenantId` to handlers / Prisma.
+  6. `npm run build` succeeds.
+  7. `npm run test` (backend full suite) passes.
+  8. All commits pushed.
 
 ---
 
@@ -60,6 +61,69 @@
 - `apps/backend/src/common/filters/http-exception.filter.ts` (import + tenant removal)
 - `apps/backend/src/common/guards/jwt.guard.ts` (stop injecting tenantId)
 - `apps/backend/src/common/auth/current-user.decorator.ts` (drop tenantId from CurrentUser type)
+- `apps/backend/src/api/mobile/employee/earnings.controller.ts` + spec (E0)
+- `apps/backend/src/api/mobile/client/portal/home.controller.ts` + spec (E0)
+- `apps/backend/src/api/mobile/client/portal/summary.controller.ts` + spec (E0)
+- `apps/backend/src/api/mobile/client/portal/upcoming.controller.ts` + spec (E0)
+
+---
+
+## Task E0 — Clean mobile controllers (earnings + client portal)
+
+**Background:** Discovered during Plan E prerequisites verification — four mobile controllers still import `TenantId` from `common/tenant/tenant.decorator`, use `@TenantId()` as a parameter, and pass `tenantId` to handlers / Prisma `where` clauses. Since the underlying handlers (`ListBookingsHandler`, `ListNotificationsHandler`, `ListPaymentsHandler`, `GetClientHandler`) already dropped `tenantId` in Plans B-D, passing it is a TS error once the build runs. These must be cleaned before Task E4 can delete the `common/tenant/` folder.
+
+**Files:**
+- `apps/backend/src/api/mobile/employee/earnings.controller.ts` + spec
+- `apps/backend/src/api/mobile/client/portal/home.controller.ts` + spec
+- `apps/backend/src/api/mobile/client/portal/summary.controller.ts` + spec
+- `apps/backend/src/api/mobile/client/portal/upcoming.controller.ts` + spec
+
+- [ ] **Step 1: earnings.controller.ts**
+
+Remove `import { TenantId } from '../../../common/tenant/tenant.decorator';`. Remove the `@TenantId() tenantId: string,` parameter from `earnings()`. Drop `tenantId,` from the Prisma `where` clause.
+
+- [ ] **Step 2: home.controller.ts**
+
+Remove the `TenantId` import. Remove `@TenantId() tenantId: string,` from `home()`. Drop `tenantId,` from all four handler calls (`listBookings.execute`, `listNotifications.execute`, `listPayments.execute`, `getClient.execute`).
+
+- [ ] **Step 3: summary.controller.ts**
+
+Remove the `TenantId` import. Remove `@TenantId() tenantId: string,` from `summary()`. Drop `tenantId,` from the three Prisma `where` clauses.
+
+- [ ] **Step 4: upcoming.controller.ts**
+
+Remove the `TenantId` import. Remove `@TenantId() tenantId: string,` from `upcoming()`. Drop `tenantId,` from the `where` object.
+
+- [ ] **Step 5: Update specs**
+
+For each of the four `.spec.ts` files: remove the `TENANT` constant, drop `tenantId`/`TENANT` from fixtures, assertions, and controller calls (e.g., `controller.home(TENANT, USER)` → `controller.home(USER)`).
+
+- [ ] **Step 6: Run mobile controller tests**
+
+```bash
+cd c:/pro/carekit/apps/backend
+npx jest src/api/mobile --runInBand
+```
+
+Expected: all pass.
+
+- [ ] **Step 7: Full backend build + test**
+
+```bash
+npm run build
+npm run test
+```
+
+Expected: both pass with zero TS errors.
+
+- [ ] **Step 8: Commit**
+
+```bash
+cd c:/pro/carekit
+git add apps/backend/src/api/mobile/
+git commit -m "refactor(mobile): drop @TenantId() from employee earnings + client portal controllers"
+git push
+```
 
 ---
 
