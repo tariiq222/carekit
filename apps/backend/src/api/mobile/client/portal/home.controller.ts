@@ -1,11 +1,16 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 import { JwtGuard } from '../../../../common/guards/jwt.guard';
 import { CurrentUser, JwtUser } from '../../../../common/auth/current-user.decorator';
+import { ApiStandardResponses } from '../../../../common/swagger';
 import { ListBookingsHandler } from '../../../../modules/bookings/list-bookings/list-bookings.handler';
 import { ListNotificationsHandler } from '../../../../modules/comms/notifications/list-notifications.handler';
 import { ListPaymentsHandler } from '../../../../modules/finance/list-payments/list-payments.handler';
 import { GetClientHandler } from '../../../../modules/people/clients/get-client.handler';
 
+@ApiTags('Mobile Client / Portal')
+@ApiBearerAuth()
+@ApiStandardResponses()
 @UseGuards(JwtGuard)
 @Controller('mobile/client/portal')
 export class MobileClientHomeController {
@@ -17,6 +22,11 @@ export class MobileClientHomeController {
   ) {}
 
   @Get('home')
+  @ApiOperation({ summary: 'Get home screen aggregated data for the authenticated client' })
+  @ApiOkResponse({
+    description: 'Client profile, upcoming bookings, unread notifications, and recent payments.',
+    schema: { type: 'object' },
+  })
   async home(@CurrentUser() user: JwtUser) {
     const now = new Date();
     const [upcomingResult, notificationsResult, paymentsResult, profile] = await Promise.all([
