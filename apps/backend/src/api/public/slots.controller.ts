@@ -7,7 +7,6 @@ import { Public } from '../../common/guards/jwt.guard';
 import { CheckAvailabilityHandler } from '../../modules/bookings/check-availability/check-availability.handler';
 
 export class PublicSlotsQuery {
-  @IsUUID() tenantId!: string;
   @IsUUID() employeeId!: string;
   @IsUUID() branchId!: string;
   @IsDateString() date!: string;
@@ -26,7 +25,6 @@ export class PublicSlotsController {
   @Get()
   getSlots(@Query() q: PublicSlotsQuery) {
     return this.checkAvailability.execute({
-      tenantId: q.tenantId,
       employeeId: q.employeeId,
       branchId: q.branchId,
       date: new Date(q.date),

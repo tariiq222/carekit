@@ -7,14 +7,12 @@ describe('PublicSlotsController', () => {
     const checkAvailability = fn({ slots: ['09:00', '10:00'] });
     const controller = new PublicSlotsController(checkAvailability as never);
     await controller.getSlots({
-      tenantId: 'tenant-1',
       employeeId: 'emp-1',
       branchId: 'branch-1',
       date: '2026-06-01',
     } as never);
     expect(checkAvailability.execute).toHaveBeenCalledWith(
       expect.objectContaining({
-        tenantId: 'tenant-1',
         employeeId: 'emp-1',
         branchId: 'branch-1',
         date: expect.any(Date),
@@ -26,7 +24,6 @@ describe('PublicSlotsController', () => {
     const checkAvailability = fn({ slots: [] });
     const controller = new PublicSlotsController(checkAvailability as never);
     await controller.getSlots({
-      tenantId: 'tenant-1',
       employeeId: 'emp-1',
       branchId: 'branch-1',
       date: '2026-06-01',
@@ -43,7 +40,7 @@ describe('PublicSlotsController', () => {
     checkAvailability.execute.mockRejectedValueOnce(new Error('employee not found'));
     const controller = new PublicSlotsController(checkAvailability as never);
     await expect(
-      controller.getSlots({ tenantId: 't', employeeId: 'e', branchId: 'b', date: '2026-01-01' } as never),
+      controller.getSlots({ employeeId: 'e', branchId: 'b', date: '2026-01-01' } as never),
     ).rejects.toThrow('employee not found');
   });
 });

@@ -1,7 +1,5 @@
 import { PublicCatalogController } from './catalog.controller';
 
-const TENANT = 'tenant-1';
-
 function buildController() {
   const prisma = {
     department: { findMany: jest.fn() },
@@ -26,18 +24,18 @@ describe('PublicCatalogController', () => {
       (prisma.serviceCategory.findMany as jest.Mock).mockResolvedValue(categories);
       (prisma.service.findMany as jest.Mock).mockResolvedValue(services);
 
-      const result = await controller.getCatalog(TENANT);
+      const result = await controller.getCatalog();
 
       expect(prisma.department.findMany).toHaveBeenCalledWith({
-        where: { tenantId: TENANT, isActive: true },
+        where: { isActive: true },
         orderBy: { sortOrder: 'asc' },
       });
       expect(prisma.serviceCategory.findMany).toHaveBeenCalledWith({
-        where: { tenantId: TENANT, isActive: true },
+        where: { isActive: true },
         orderBy: { sortOrder: 'asc' },
       });
       expect(prisma.service.findMany).toHaveBeenCalledWith({
-        where: { tenantId: TENANT, isActive: true, archivedAt: null },
+        where: { isActive: true, archivedAt: null },
         include: {
           durationOptions: {
             where: { isActive: true },
@@ -55,7 +53,7 @@ describe('PublicCatalogController', () => {
       (prisma.serviceCategory.findMany as jest.Mock).mockResolvedValue([]);
       (prisma.service.findMany as jest.Mock).mockResolvedValue([]);
 
-      const result = await controller.getCatalog(TENANT);
+      const result = await controller.getCatalog();
 
       expect(result).toEqual({ departments: [], categories: [], services: [] });
     });
