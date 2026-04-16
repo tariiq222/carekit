@@ -1,8 +1,20 @@
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, Matches, MaxLength, Min } from 'class-validator';
+
+const NOT_WHITESPACE_ONLY = /\S/;
 
 export class UpdateDepartmentDto {
-  @IsOptional() @IsString() @MaxLength(200) nameAr?: string;
-  @IsOptional() @IsString() @MaxLength(200) nameEn?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  @Matches(NOT_WHITESPACE_ONLY, { message: 'nameAr must not be whitespace only' })
+  nameAr?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  @Matches(NOT_WHITESPACE_ONLY, { message: 'nameEn must not be whitespace only' })
+  nameEn?: string;
+
   @IsOptional() @IsString() @MaxLength(1000) descriptionAr?: string;
   @IsOptional() @IsString() @MaxLength(1000) descriptionEn?: string;
   @IsOptional() @IsString() @MaxLength(100) icon?: string;
