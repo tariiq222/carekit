@@ -74,6 +74,31 @@ jobs:
           JWT_SECRET: ci-test-secret-32chars-minimum!!
           JWT_REFRESH_SECRET: ci-test-refresh-secret-32chars!!
 
+  api-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Generate Prisma Client
+        working-directory: apps/backend
+        run: npx prisma generate
+      - name: Build backend
+        working-directory: apps/backend
+        run: npm run build
+      - name: Regenerate openapi.json
+        working-directory: apps/backend
+        run: npm run openapi:snapshot
+      - name: Fail if snapshot drifted
+        run: git diff --exit-code apps/backend/openapi.json
+      - name: Coverage check
+        working-directory: apps/backend
+        run: npm run check:openapi-coverage
+
   leaderboard:
     runs-on: ubuntu-latest
     steps:

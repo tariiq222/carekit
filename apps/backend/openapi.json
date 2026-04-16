@@ -1331,9 +1331,15 @@
         "properties": {
           "allowRecurring": {
             "default": false,
+            "description": "Whether recurring bookings are allowed for this service",
+            "example": false,
             "type": "boolean"
           },
           "allowedRecurringPatterns": {
+            "description": "Allowed recurrence patterns when allowRecurring is true",
+            "example": [
+              "WEEKLY"
+            ],
             "items": {
               "enum": [
                 "DAILY",
@@ -1347,6 +1353,8 @@
           },
           "bufferMinutes": {
             "default": 0,
+            "description": "Buffer in minutes between consecutive bookings",
+            "example": 10,
             "type": "number"
           },
           "categoryId": {
@@ -1366,6 +1374,8 @@
           },
           "depositEnabled": {
             "default": false,
+            "description": "Whether a deposit is required at booking time",
+            "example": false,
             "type": "boolean"
           },
           "descriptionAr": {
@@ -1383,10 +1393,14 @@
           },
           "hideDurationOnBooking": {
             "default": false,
+            "description": "Hide the duration from the booking UI",
+            "example": false,
             "type": "boolean"
           },
           "hidePriceOnBooking": {
             "default": false,
+            "description": "Hide the price from the booking UI",
+            "example": false,
             "type": "boolean"
           },
           "iconBgColor": {
@@ -1404,27 +1418,41 @@
           },
           "isActive": {
             "default": true,
+            "description": "Whether the service is active and bookable",
+            "example": true,
             "type": "boolean"
           },
           "isHidden": {
             "default": false,
+            "description": "Hide the service from public listings",
+            "example": false,
             "type": "boolean"
           },
           "maxAdvanceDays": {
+            "description": "Maximum number of days in advance the service can be booked",
+            "example": 30,
             "type": "number"
           },
           "maxParticipants": {
             "default": 1,
+            "description": "Maximum participants allowed in the session",
+            "example": 1,
             "type": "number"
           },
           "maxRecurrences": {
+            "description": "Maximum number of occurrences for a recurring booking",
+            "example": 12,
             "type": "number"
           },
           "minLeadMinutes": {
+            "description": "Minimum lead time before booking, in minutes",
+            "example": 60,
             "type": "number"
           },
           "minParticipants": {
             "default": 1,
+            "description": "Minimum participants required for the session to proceed",
+            "example": 1,
             "type": "number"
           },
           "nameAr": {
