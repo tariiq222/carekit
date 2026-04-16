@@ -55,17 +55,16 @@ export class DashboardAiController {
   }
 
   // ── Chatbot Config ────────────────────────────────────────────────────────
-  // NOTE: tenantId removed; Plan D will convert these to singleton handlers.
 
   @Get('chatbot-config')
   getChatbotConfigEndpoint(@Query('category') category?: string) {
-    return this.getChatbotConfig.execute({ category } as never);
+    return this.getChatbotConfig.execute({ category });
   }
 
   @Patch('chatbot-config')
   @HttpCode(HttpStatus.OK)
   upsertChatbotConfigEndpoint(@Body() body: UpsertChatbotConfigDto) {
-    return this.upsertChatbotConfig.execute({ configs: body.configs } as never);
+    return this.upsertChatbotConfig.execute({ configs: body.configs });
   }
 
   // ── Chat Completion ────────────────────────────────────────────────────────

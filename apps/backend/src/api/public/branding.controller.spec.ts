@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import { PublicBrandingController } from './branding.controller';
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });

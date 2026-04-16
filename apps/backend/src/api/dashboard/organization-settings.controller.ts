@@ -7,7 +7,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateServiceHandler } from '../../modules/org-experience/services/create-service.handler';
 import { CreateServiceDto } from '../../modules/org-experience/services/create-service.dto';
 import { UpdateServiceHandler } from '../../modules/org-experience/services/update-service.handler';

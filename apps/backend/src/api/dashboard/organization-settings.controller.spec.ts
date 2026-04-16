@@ -1,6 +1,5 @@
 import { DashboardOrganizationSettingsController } from './organization-settings.controller';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
