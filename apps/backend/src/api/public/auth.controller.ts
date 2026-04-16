@@ -10,7 +10,8 @@ import { RefreshTokenDto } from '../../modules/identity/refresh-token/refresh-to
 import { LogoutDto } from '../../modules/identity/logout/logout.dto';
 import { PrismaService } from '../../infrastructure/database';
 import { TokenService } from '../../modules/identity/shared/token.service';
-import { TenantId, UserId } from '../../common/tenant/tenant.decorator';
+import { TenantId } from '../../common/tenant/tenant.decorator';
+import { UserId } from '../../common/auth/user-id.decorator';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { GetCurrentUserHandler } from '../../modules/identity/get-current-user/get-current-user.handler';
 import { GetCurrentUserQuery } from '../../modules/identity/get-current-user/get-current-user.query';

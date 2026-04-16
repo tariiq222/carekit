@@ -5,7 +5,8 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId, UserId } from '../../common/tenant/tenant.decorator';
+import { TenantId } from '../../common/tenant/tenant.decorator';
+import { UserId } from '../../common/auth/user-id.decorator';
 import { CreateBookingHandler } from '../../modules/bookings/create-booking/create-booking.handler';
 import { CreateBookingDto } from '../../modules/bookings/create-booking/create-booking.dto';
 import { CreateRecurringBookingHandler } from '../../modules/bookings/create-recurring-booking/create-recurring-booking.handler';
