@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
+import { ApiError } from "@/lib/api"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
@@ -39,7 +40,11 @@ export default function CreateClientPage() {
       }
       router.push("/clients")
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("clients.create.error"))
+      if (err instanceof ApiError && err.code === "CLIENT_PHONE_EXISTS") {
+        toast.error(t("clients.create.duplicatePhone"))
+      } else {
+        toast.error(err instanceof Error ? err.message : t("clients.create.error"))
+      }
     }
   })
 

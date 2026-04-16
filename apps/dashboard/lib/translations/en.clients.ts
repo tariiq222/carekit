@@ -53,6 +53,7 @@ export const enClients: Record<string, string> = {
   "clients.create.submitting": "Creating...",
   "clients.create.success": "Client created successfully",
   "clients.create.error": "Failed to create client",
+  "clients.create.duplicatePhone": "Phone number is already registered for another client",
 
   // ── Form fields (shared between create & edit) ──
   "clients.form.personalInfo": "Personal Info",

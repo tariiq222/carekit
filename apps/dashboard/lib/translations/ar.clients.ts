@@ -53,6 +53,7 @@ export const arClients: Record<string, string> = {
   "clients.create.submitting": "جارٍ الإنشاء...",
   "clients.create.success": "تم إنشاء المستفيد بنجاح",
   "clients.create.error": "فشل إنشاء المستفيد",
+  "clients.create.duplicatePhone": "رقم الجوال مسجّل لمستفيد آخر",
 
   // ── حقول النموذج (مشتركة بين الإنشاء والتعديل) ──
   "clients.form.personalInfo": "البيانات الشخصية",
@@ -141,7 +142,7 @@ export const arClients: Record<string, string> = {
   "clients.detail.cancelled": "ملغية",
   "clients.detail.totalPaid": "إجمالي المدفوع",
   "clients.detail.accountType": "نوع الحساب",
-  "clients.detail.walkIn": "Walk-in",
+  "clients.detail.walkIn": "مستفيد بدون حساب",
   "clients.detail.claimedAt": "تاريخ التفعيل",
   "clients.detail.notClaimed": "لم يُفعَّل بعد",
   "clients.dialog.paymentStatus.paid": "مدفوع",
