@@ -23,6 +23,32 @@
 
 If either check fails, STOP. Complete Plan A first.
 
+**⚠️ Scope amendment (2026-04-16) — identity cluster expanded:**
+
+Originally `JwtPayload.tenantId`, `req.user.tenantId`, and `CurrentUser.tenantId` were reserved for Plan E. This is reversed because the schema (Tasks 1-4) already dropped `User.tenantId` and `RefreshToken.tenantId`, so `token.service.ts` and `jwt.strategy.ts` no longer compile as-is. The auth surface must be cleaned in the identity cluster of Plan B, not deferred.
+
+**Now owned by Plan B (identity cluster):**
+- `JwtPayload` interface: remove `tenantId: string` field (apps/backend/src/modules/identity/shared/token.service.ts)
+- `issueTokenPair` param type: remove `tenantId` from the user param
+- JWT payload construction: remove `tenantId: user.tenantId`
+- `refreshToken.create`: remove `tenantId: user.tenantId` (schema already dropped the column)
+- `JwtStrategy.validate` return: remove `tenantId: user.tenantId` (apps/backend/src/modules/identity/jwt.strategy.ts)
+- `CurrentUser` interface: remove `tenantId: string` field (apps/backend/src/common/auth/current-user.decorator.ts) — moved here from Plan E
+- Handler reads of `req.user.tenantId`: delete the read entirely (the handler no longer needs it)
+
+**Still owned by Plan E (unchanged):**
+- `TenantMiddleware` wiring in `app.module.ts`
+- `@TenantId()` decorator itself (still used by non-identity handlers in Plans C/D until their own cleanup)
+- `common/tenant/` folder deletion
+- `RequestContext` simplification (keeping requestId + userId only)
+- `X-Tenant-ID` header handling in middleware
+
+**Do NOT use placeholder values like `tenantId: ''`** — remove the fields outright. Placeholders create type lies and just defer the cleanup with extra work.
+
+**Expected breakage after B1 commits:**
+- Any handler in Plans C/D that still reads `req.user.tenantId` will throw a TS error. This is intentional — the compiler surfaces every remaining call site for Plans C/D to clean.
+- Full backend build remains gated until after Plan D (per master plan Revision 4).
+
 **Parallel execution rule:**
 - **Plan B and Plan C CAN run in parallel** ONLY if each session uses its OWN sub-branch:
   - Plan B session: `git checkout -b feat/single-org-B-part1 feat/single-organization-mode`
@@ -176,6 +202,14 @@ Remove any `it('isolates tenants', ...)` or similar cross-tenant tests entirely.
 - `apps/backend/src/api/dashboard/identity.controller.spec.ts`
 - `apps/backend/src/api/public/auth.controller.ts`
 - `apps/backend/src/api/public/auth.controller.spec.ts`
+
+**Task B1 auth surface — exact files (scope amendment above applies here):**
+
+- `apps/backend/src/modules/identity/shared/token.service.ts` (+ spec if exists)
+- `apps/backend/src/modules/identity/jwt.strategy.ts` (+ spec if exists)
+- `apps/backend/src/common/auth/current-user.decorator.ts`
+
+In `current-user.decorator.ts`: remove ONLY the `tenantId: string;` line from the `CurrentUser` interface. Leave `clientId` and `employeeId` untouched.
 
 - [ ] **Step 1: List the files**
 
