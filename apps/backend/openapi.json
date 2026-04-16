@@ -99,7 +99,28 @@
         "type": "object"
       },
       "ApplyCouponDto": {
-        "properties": {},
+        "properties": {
+          "clientId": {
+            "description": "Client redeeming the coupon",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "code": {
+            "description": "Coupon code to apply",
+            "example": "WELCOME10",
+            "type": "string"
+          },
+          "invoiceId": {
+            "description": "Invoice to apply the coupon to",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoiceId",
+          "clientId",
+          "code"
+        ],
         "type": "object"
       },
       "AssignEmployeeToBranchDto": {
@@ -111,10 +132,6 @@
         "type": "object"
       },
       "AssignRoleDto": {
-        "properties": {},
-        "type": "object"
-      },
-      "BankTransferUploadDto": {
         "properties": {},
         "type": "object"
       },
@@ -298,7 +315,77 @@
         "type": "object"
       },
       "CreateCouponDto": {
-        "properties": {},
+        "properties": {
+          "code": {
+            "description": "Unique coupon code",
+            "example": "WELCOME10",
+            "type": "string"
+          },
+          "descriptionAr": {
+            "description": "Coupon description in Arabic",
+            "example": "خصم الترحيب",
+            "type": "string"
+          },
+          "descriptionEn": {
+            "description": "Coupon description in English",
+            "example": "Welcome discount",
+            "type": "string"
+          },
+          "discountType": {
+            "description": "Discount calculation type",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED"
+            ],
+            "example": "PERCENTAGE",
+            "type": "string"
+          },
+          "discountValue": {
+            "description": "Discount value (percent 0–100 or flat amount)",
+            "example": 10,
+            "type": "number"
+          },
+          "expiresAt": {
+            "description": "ISO datetime when the coupon expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether the coupon is active and redeemable",
+            "example": true,
+            "type": "boolean"
+          },
+          "maxUses": {
+            "description": "Maximum number of total redemptions allowed",
+            "example": 100,
+            "type": "number"
+          },
+          "maxUsesPerUser": {
+            "description": "Maximum redemptions per individual user",
+            "example": 1,
+            "type": "number"
+          },
+          "minOrderAmt": {
+            "description": "Minimum order amount required to use this coupon",
+            "example": 50,
+            "type": "number"
+          },
+          "serviceIds": {
+            "description": "Restrict coupon to specific service UUIDs",
+            "example": [
+              "00000000-0000-0000-0000-000000000000"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "code",
+          "discountType",
+          "discountValue"
+        ],
         "type": "object"
       },
       "CreateDepartmentDto": {
@@ -322,7 +409,60 @@
         "type": "object"
       },
       "CreateInvoiceDto": {
-        "properties": {},
+        "properties": {
+          "bookingId": {
+            "description": "Booking this invoice is for",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "branchId": {
+            "description": "Branch where the service was delivered",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "clientId": {
+            "description": "Client being invoiced",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "discountAmt": {
+            "description": "Flat discount amount",
+            "example": 10,
+            "type": "number"
+          },
+          "dueAt": {
+            "description": "ISO datetime when payment is due",
+            "example": "2026-05-01T09:00:00.000Z",
+            "type": "string"
+          },
+          "employeeId": {
+            "description": "Employee who delivered the service",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Free-form invoice notes",
+            "example": "Includes consultation fee",
+            "type": "string"
+          },
+          "subtotal": {
+            "description": "Subtotal before discount and tax",
+            "example": 100,
+            "type": "number"
+          },
+          "vatRate": {
+            "description": "VAT rate as a decimal (e.g. 0.15 for 15%)",
+            "example": 0.15,
+            "type": "number"
+          }
+        },
+        "required": [
+          "bookingId",
+          "branchId",
+          "clientId",
+          "employeeId",
+          "subtotal"
+        ],
         "type": "object"
       },
       "CreateProblemReportDto": {
@@ -664,12 +804,66 @@
         "properties": {},
         "type": "object"
       },
+      "PaymentMethod": {
+        "description": "Payment method used",
+        "enum": [
+          "ONLINE_CARD",
+          "BANK_TRANSFER",
+          "CASH",
+          "COUPON"
+        ],
+        "type": "string"
+      },
+      "PaymentStatus": {
+        "enum": [
+          "PENDING",
+          "PENDING_VERIFICATION",
+          "COMPLETED",
+          "FAILED",
+          "REFUNDED"
+        ],
+        "type": "string"
+      },
       "PreviewEmailTemplateDto": {
         "properties": {},
         "type": "object"
       },
       "ProcessPaymentDto": {
-        "properties": {},
+        "properties": {
+          "amount": {
+            "description": "Amount to charge",
+            "example": 100,
+            "type": "number"
+          },
+          "gatewayRef": {
+            "description": "External gateway transaction reference",
+            "example": "pay_abc123",
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "description": "Idempotency key to prevent duplicate charges",
+            "example": "idem-2026-xyz",
+            "type": "string"
+          },
+          "invoiceId": {
+            "description": "Invoice to be paid",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "method": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentMethod"
+              }
+            ],
+            "description": "Payment method used"
+          }
+        },
+        "required": [
+          "invoiceId",
+          "amount",
+          "method"
+        ],
         "type": "object"
       },
       "RecurringFrequency": {
@@ -686,7 +880,21 @@
         "type": "object"
       },
       "RefundPaymentDto": {
-        "properties": {},
+        "properties": {
+          "amount": {
+            "description": "Partial refund amount; omit to refund the full amount",
+            "example": 50,
+            "type": "number"
+          },
+          "reason": {
+            "description": "Reason for the refund",
+            "example": "Service not delivered",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
         "type": "object"
       },
       "RescheduleBookingDto": {
@@ -744,7 +952,67 @@
         "type": "object"
       },
       "UpdateCouponDto": {
-        "properties": {},
+        "properties": {
+          "descriptionAr": {
+            "description": "Coupon description in Arabic",
+            "example": "خصم الترحيب",
+            "type": "string"
+          },
+          "descriptionEn": {
+            "description": "Coupon description in English",
+            "example": "Welcome discount",
+            "type": "string"
+          },
+          "discountType": {
+            "description": "Discount calculation type",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED"
+            ],
+            "example": "PERCENTAGE",
+            "type": "string"
+          },
+          "discountValue": {
+            "description": "Discount value (percent 0–100 or flat amount)",
+            "example": 15,
+            "type": "number"
+          },
+          "expiresAt": {
+            "description": "ISO datetime when the coupon expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether the coupon is active and redeemable",
+            "example": true,
+            "type": "boolean"
+          },
+          "maxUses": {
+            "description": "Maximum number of total redemptions allowed",
+            "example": 100,
+            "type": "number"
+          },
+          "maxUsesPerUser": {
+            "description": "Maximum redemptions per individual user",
+            "example": 1,
+            "type": "number"
+          },
+          "minOrderAmt": {
+            "description": "Minimum order amount required to use this coupon",
+            "example": 50,
+            "type": "number"
+          },
+          "serviceIds": {
+            "description": "Restrict coupon to specific service UUIDs",
+            "example": [
+              "00000000-0000-0000-0000-000000000000"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
         "type": "object"
       },
       "UpdateDepartmentDto": {
@@ -800,11 +1068,49 @@
         "type": "object"
       },
       "UpsertZatcaConfigDto": {
-        "properties": {},
+        "properties": {
+          "environment": {
+            "description": "ZATCA integration environment",
+            "enum": [
+              "sandbox",
+              "production"
+            ],
+            "example": "sandbox",
+            "type": "string"
+          },
+          "sellerName": {
+            "description": "Legal seller name as registered with ZATCA",
+            "example": "Carekit Medical Clinic",
+            "type": "string"
+          },
+          "vatRegistrationNumber": {
+            "description": "VAT registration number (15 digits)",
+            "example": "300000000000003",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "VerifyPaymentDto": {
-        "properties": {},
+        "properties": {
+          "action": {
+            "description": "Verification decision",
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "example": "approve",
+            "type": "string"
+          },
+          "transferRef": {
+            "description": "Bank transfer reference number (required when approving)",
+            "example": "TRF-20260501-001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ],
         "type": "object"
       },
       "WaitlistStatus": {
@@ -817,7 +1123,16 @@
         "type": "string"
       },
       "ZatcaSubmitDto": {
-        "properties": {},
+        "properties": {
+          "invoiceId": {
+            "description": "Invoice UUID to submit to ZATCA",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoiceId"
+        ],
         "type": "object"
       }
     },
@@ -2829,10 +3144,96 @@
     "/api/v1/dashboard/finance/coupons": {
       "get": {
         "operationId": "DashboardFinanceController_listCouponsEndpoint",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Search by coupon code or description",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "example": "WELCOME",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by coupon status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "active",
+                "inactive",
+                "expired"
+              ],
+              "example": "active",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number (1-based)",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Records per page (max 100)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Paginated coupon list"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -2840,8 +3241,9 @@
             "bearer": []
           }
         ],
+        "summary": "List coupons",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       },
       "post": {
@@ -2859,7 +3261,47 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Coupon created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -2867,8 +3309,9 @@
             "bearer": []
           }
         ],
+        "summary": "Create a coupon",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -2887,8 +3330,48 @@
           "required": true
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "Coupon applied; returns updated discount amount"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -2896,8 +3379,9 @@
             "bearer": []
           }
         ],
+        "summary": "Apply a coupon code to an invoice",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -2906,17 +3390,69 @@
         "operationId": "DashboardFinanceController_deleteCouponEndpoint",
         "parameters": [
           {
+            "description": "Coupon UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Coupon deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Coupon not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -2924,25 +3460,78 @@
             "bearer": []
           }
         ],
+        "summary": "Delete a coupon",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       },
       "get": {
         "operationId": "DashboardFinanceController_getCouponEndpoint",
         "parameters": [
           {
+            "description": "Coupon UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Coupon found"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Coupon not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -2950,18 +3539,21 @@
             "bearer": []
           }
         ],
+        "summary": "Get a coupon by id",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       },
       "patch": {
         "operationId": "DashboardFinanceController_updateCouponEndpoint",
         "parameters": [
           {
+            "description": "Coupon UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -2978,7 +3570,57 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Coupon updated"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Coupon not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -2986,8 +3628,9 @@
             "bearer": []
           }
         ],
+        "summary": "Update a coupon",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -3007,7 +3650,47 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Invoice created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3015,8 +3698,9 @@
             "bearer": []
           }
         ],
+        "summary": "Create an invoice",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -3025,17 +3709,69 @@
         "operationId": "DashboardFinanceController_getInv",
         "parameters": [
           {
+            "description": "Invoice UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Invoice found"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Invoice not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3043,18 +3779,118 @@
             "bearer": []
           }
         ],
+        "summary": "Get an invoice by id",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
     "/api/v1/dashboard/finance/payments": {
       "get": {
         "operationId": "DashboardFinanceController_listPaymentsEndpoint",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Filter by invoice UUID",
+            "in": "query",
+            "name": "invoiceId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by client UUID",
+            "in": "query",
+            "name": "clientId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by payment method",
+            "in": "query",
+            "name": "method",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PaymentMethod"
+            }
+          },
+          {
+            "description": "Filter by payment status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PaymentStatus"
+            }
+          },
+          {
+            "description": "Include payments on or after this ISO date",
+            "in": "query",
+            "name": "fromDate",
+            "required": false,
+            "schema": {
+              "example": "2026-05-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Include payments on or before this ISO date",
+            "in": "query",
+            "name": "toDate",
+            "required": false,
+            "schema": {
+              "example": "2026-05-31T23:59:59.000Z",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Paginated payment list"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3062,8 +3898,9 @@
             "bearer": []
           }
         ],
+        "summary": "List payments with optional filters",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       },
       "post": {
@@ -3081,7 +3918,47 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Payment processed"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3089,8 +3966,9 @@
             "bearer": []
           }
         ],
+        "summary": "Process a payment for an invoice",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -3100,17 +3978,85 @@
         "parameters": [],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/BankTransferUploadDto"
+                "properties": {
+                  "amount": {
+                    "example": 100,
+                    "type": "number"
+                  },
+                  "clientId": {
+                    "example": "00000000-0000-0000-0000-000000000000",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "invoiceId": {
+                    "example": "00000000-0000-0000-0000-000000000000",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "receipt": {
+                    "description": "Bank transfer receipt image or PDF",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "receipt",
+                  "invoiceId",
+                  "clientId",
+                  "amount"
+                ],
+                "type": "object"
               }
             }
           },
+          "description": "Receipt file + invoice metadata",
           "required": true
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Bank transfer receipt uploaded"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3118,8 +4064,9 @@
             "bearer": []
           }
         ],
+        "summary": "Upload a bank transfer receipt for an invoice",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -3129,7 +4076,47 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Payment statistics"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3137,8 +4124,9 @@
             "bearer": []
           }
         ],
+        "summary": "Get payment statistics summary",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -3147,10 +4135,12 @@
         "operationId": "DashboardFinanceController_refundPaymentEndpoint",
         "parameters": [
           {
+            "description": "Payment UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -3167,7 +4157,57 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Payment refunded"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Payment not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3175,8 +4215,9 @@
             "bearer": []
           }
         ],
+        "summary": "Refund a payment",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -3185,10 +4226,12 @@
         "operationId": "DashboardFinanceController_verifyPaymentEndpoint",
         "parameters": [
           {
+            "description": "Payment UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -3205,7 +4248,57 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Payment verification result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Payment not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3213,8 +4306,9 @@
             "bearer": []
           }
         ],
+        "summary": "Approve or reject a pending bank transfer payment",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -3224,7 +4318,47 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "ZATCA configuration"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3232,8 +4366,9 @@
             "bearer": []
           }
         ],
+        "summary": "Get the ZATCA configuration",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       },
       "patch": {
@@ -3251,7 +4386,47 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "ZATCA configuration saved"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3259,8 +4434,9 @@
             "bearer": []
           }
         ],
+        "summary": "Create or update the ZATCA configuration",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -3270,7 +4446,47 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "ZATCA onboarding initiated"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3278,8 +4494,9 @@
             "bearer": []
           }
         ],
+        "summary": "Onboard the clinic with ZATCA (certificate signing request)",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -3299,7 +4516,47 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Invoice submitted to ZATCA"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -3307,8 +4564,9 @@
             "bearer": []
           }
         ],
+        "summary": "Submit an invoice to ZATCA for e-invoicing compliance",
         "tags": [
-          "Finance"
+          "Dashboard / Finance"
         ]
       }
     },
@@ -6490,14 +7748,81 @@
     "/api/v1/mobile/client/payments": {
       "get": {
         "operationId": "MobileClientPaymentsController_listMyPayments",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Page number (1-based)",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Records per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Paginated payment list for the current client"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the authenticated client's payments",
         "tags": [
-          "MobileClientPayments"
+          "Mobile Client / Payments"
         ]
       }
     },
@@ -6506,21 +7831,79 @@
         "operationId": "MobileClientPaymentsController_getInvoiceEndpoint",
         "parameters": [
           {
+            "description": "Invoice UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Invoice found"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Invoice not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an invoice by id (client-scoped)",
         "tags": [
-          "MobileClientPayments"
+          "Mobile Client / Payments"
         ]
       }
     },
