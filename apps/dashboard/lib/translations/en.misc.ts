@@ -192,4 +192,7 @@ export const enMisc: Record<string, string> = {
   "common.nationality.placeholder": "Select nationality",
   "common.nationality.searchPlaceholder": "Search country...",
   "common.nationality.empty": "No results",
+
+  // — Common: Date Picker —
+  "common.datePicker.placeholder": "Select date",
 }

@@ -192,4 +192,7 @@ export const arMisc: Record<string, string> = {
   "common.nationality.placeholder": "اختر الجنسية",
   "common.nationality.searchPlaceholder": "ابحث عن دولة...",
   "common.nationality.empty": "لا توجد نتائج",
+
+  // — Common: Date Picker —
+  "common.datePicker.placeholder": "اختر التاريخ",
 }

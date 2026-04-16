@@ -116,7 +116,7 @@ export function DatePicker({
               {format(dateValue, "dd MMM yyyy", { locale: dateLocale })}
             </span>
           ) : (
-            <span>{placeholder ?? t("bookings.filters.date")}</span>
+            <span>{placeholder ?? t("common.datePicker.placeholder")}</span>
           )}
         </Button>
       </PopoverTrigger>
