@@ -128,11 +128,37 @@
         "type": "object"
       },
       "AssignPermissionsDto": {
-        "properties": {},
+        "properties": {
+          "customRoleId": {
+            "description": "UUID of the custom role",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "permissions": {
+            "description": "Full list of permissions to assign to the role",
+            "items": {
+              "$ref": "#/components/schemas/PermissionEntryDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "customRoleId",
+          "permissions"
+        ],
         "type": "object"
       },
       "AssignRoleDto": {
-        "properties": {},
+        "properties": {
+          "customRoleId": {
+            "description": "UUID of the custom role to assign",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          }
+        },
+        "required": [
+          "customRoleId"
+        ],
         "type": "object"
       },
       "BookingStatus": {
@@ -204,7 +230,23 @@
         "type": "string"
       },
       "ChangePasswordDto": {
-        "properties": {},
+        "properties": {
+          "currentPassword": {
+            "description": "Current account password",
+            "example": "P@ssw0rd123",
+            "type": "string"
+          },
+          "newPassword": {
+            "description": "New password (min 8 characters)",
+            "example": "NewP@ss456",
+            "format": "password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
         "type": "object"
       },
       "ChatCompletionDto": {
@@ -584,7 +626,16 @@
         "type": "object"
       },
       "CreateRoleDto": {
-        "properties": {},
+        "properties": {
+          "name": {
+            "description": "Display name for the custom role (min 2 characters)",
+            "example": "Reception Manager",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
         "type": "object"
       },
       "CreateServiceDto": {
@@ -706,7 +757,58 @@
         "type": "object"
       },
       "CreateUserDto": {
-        "properties": {},
+        "properties": {
+          "customRoleId": {
+            "description": "UUID of a custom role to assign",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "email": {
+            "description": "User email address",
+            "example": "user@example.com",
+            "type": "string"
+          },
+          "gender": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserGender"
+              }
+            ],
+            "description": "Gender",
+            "example": "FEMALE"
+          },
+          "name": {
+            "description": "Full display name",
+            "example": "Sara Al-Harbi",
+            "type": "string"
+          },
+          "password": {
+            "description": "Initial password (min 8 characters)",
+            "example": "P@ssw0rd123",
+            "format": "password",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Mobile phone number",
+            "example": "+966501234567",
+            "type": "string"
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserRole"
+              }
+            ],
+            "description": "System role",
+            "example": "RECEPTIONIST"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "name",
+          "role"
+        ],
         "type": "object"
       },
       "EmployeeOnboardingDto": {
@@ -718,11 +820,36 @@
         "type": "object"
       },
       "LoginDto": {
-        "properties": {},
+        "properties": {
+          "email": {
+            "description": "User email address",
+            "example": "user@example.com",
+            "type": "string"
+          },
+          "password": {
+            "description": "Account password (min 8 characters)",
+            "example": "P@ssw0rd123",
+            "format": "password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
         "type": "object"
       },
       "LogoutDto": {
-        "properties": {},
+        "properties": {
+          "refreshToken": {
+            "description": "Refresh token to revoke",
+            "example": "a1b2c3d4-...",
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ],
         "type": "object"
       },
       "MarkReadDto": {
@@ -824,6 +951,25 @@
         ],
         "type": "string"
       },
+      "PermissionEntryDto": {
+        "properties": {
+          "action": {
+            "description": "CASL action (e.g. manage, read, create)",
+            "example": "read",
+            "type": "string"
+          },
+          "subject": {
+            "description": "CASL subject (resource name or \"all\")",
+            "example": "Booking",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "subject"
+        ],
+        "type": "object"
+      },
       "PreviewEmailTemplateDto": {
         "properties": {},
         "type": "object"
@@ -876,7 +1022,16 @@
         "type": "string"
       },
       "RefreshTokenDto": {
-        "properties": {},
+        "properties": {
+          "refreshToken": {
+            "description": "Refresh token issued at login",
+            "example": "a1b2c3d4-...",
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ],
         "type": "object"
       },
       "RefundPaymentDto": {
@@ -1044,7 +1199,24 @@
         "type": "object"
       },
       "UpdateUserDto": {
-        "properties": {},
+        "properties": {
+          "customRoleId": {
+            "description": "Custom role UUID or null to clear",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "nullable": true,
+            "type": "object"
+          },
+          "name": {
+            "description": "Updated display name",
+            "example": "Sara Al-Harbi",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Updated phone number",
+            "example": "+966501234567",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "UploadFileDto": {
@@ -1090,6 +1262,26 @@
           }
         },
         "type": "object"
+      },
+      "UserGender": {
+        "description": "Gender",
+        "enum": [
+          "MALE",
+          "FEMALE"
+        ],
+        "type": "string"
+      },
+      "UserRole": {
+        "description": "System role",
+        "enum": [
+          "SUPER_ADMIN",
+          "ADMIN",
+          "RECEPTIONIST",
+          "ACCOUNTANT",
+          "EMPLOYEE",
+          "CLIENT"
+        ],
+        "type": "string"
       },
       "VerifyPaymentDto": {
         "properties": {
@@ -1176,11 +1368,67 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "accessToken": {
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "example": 900,
+                      "type": "number"
+                    },
+                    "refreshToken": {
+                      "example": "a1b2c3d4-...",
+                      "type": "string"
+                    },
+                    "user": {
+                      "description": "Authenticated user profile",
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Access + refresh tokens with user profile"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Invalid credentials"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "summary": "Log in with email and password",
         "tags": [
-          "Auth"
+          "Public / Auth"
         ]
       }
     },
@@ -1200,11 +1448,42 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Token revoked; no body returned"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Invalid or expired refresh token"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "summary": "Revoke a refresh token (log out)",
         "tags": [
-          "Auth"
+          "Public / Auth"
         ]
       }
     },
@@ -1214,11 +1493,47 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Current user profile with role and permissions"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid JWT"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the currently authenticated user",
         "tags": [
-          "Auth"
+          "Public / Auth"
         ]
       }
     },
@@ -1238,11 +1553,47 @@
         },
         "responses": {
           "204": {
-            "description": ""
+            "description": "Password changed successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing/invalid JWT or wrong current password"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the current user's password",
         "tags": [
-          "Auth"
+          "Public / Auth"
         ]
       }
     },
@@ -1262,11 +1613,63 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "accessToken": {
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                      "type": "string"
+                    },
+                    "expiresIn": {
+                      "example": 900,
+                      "type": "number"
+                    },
+                    "refreshToken": {
+                      "example": "a1b2c3d4-...",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "New access + refresh token pair"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Invalid or expired refresh token"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "summary": "Rotate a refresh token and issue new token pair",
         "tags": [
-          "Auth"
+          "Public / Auth"
         ]
       }
     },
@@ -4576,7 +4979,47 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "All available CASL permissions"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4584,8 +5027,9 @@
             "bearer": []
           }
         ],
+        "summary": "List available permissions",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },
@@ -4595,7 +5039,47 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "List of custom roles"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4603,8 +5087,9 @@
             "bearer": []
           }
         ],
+        "summary": "List custom roles",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       },
       "post": {
@@ -4622,7 +5107,47 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Role created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4630,8 +5155,9 @@
             "bearer": []
           }
         ],
+        "summary": "Create a custom role",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },
@@ -4640,17 +5166,69 @@
         "operationId": "DashboardIdentityController_deleteRoleEndpoint",
         "parameters": [
           {
+            "description": "Role UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Role deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Role not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4658,8 +5236,9 @@
             "bearer": []
           }
         ],
+        "summary": "Delete a custom role",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },
@@ -4668,10 +5247,12 @@
         "operationId": "DashboardIdentityController_assignPermissionsEndpoint",
         "parameters": [
           {
+            "description": "Role UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -4688,7 +5269,57 @@
         },
         "responses": {
           "204": {
-            "description": ""
+            "description": "Permissions assigned"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Role not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4696,18 +5327,100 @@
             "bearer": []
           }
         ],
+        "summary": "Assign permissions to a role",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },
     "/api/v1/dashboard/identity/users": {
       "get": {
         "operationId": "DashboardIdentityController_listUsers",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Search by name or email",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "example": "sara",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by active status",
+            "in": "query",
+            "name": "isActive",
+            "required": false,
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Page number (1-based)",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Results per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Paginated list of users"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4715,8 +5428,9 @@
             "bearer": []
           }
         ],
+        "summary": "List users",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       },
       "post": {
@@ -4734,7 +5448,47 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "User created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4742,8 +5496,9 @@
             "bearer": []
           }
         ],
+        "summary": "Create a user",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },
@@ -4752,17 +5507,69 @@
         "operationId": "DashboardIdentityController_deleteUserEndpoint",
         "parameters": [
           {
+            "description": "User UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "User deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "User not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4770,18 +5577,21 @@
             "bearer": []
           }
         ],
+        "summary": "Delete a user",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       },
       "patch": {
         "operationId": "DashboardIdentityController_updateUserEndpoint",
         "parameters": [
           {
+            "description": "User UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -4798,7 +5608,57 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "User updated"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "User not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4806,8 +5666,9 @@
             "bearer": []
           }
         ],
+        "summary": "Update a user",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },
@@ -4816,17 +5677,69 @@
         "operationId": "DashboardIdentityController_activateUserEndpoint",
         "parameters": [
           {
+            "description": "User UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "User activated"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "User not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4834,8 +5747,9 @@
             "bearer": []
           }
         ],
+        "summary": "Activate a user",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },
@@ -4844,17 +5758,69 @@
         "operationId": "DashboardIdentityController_deactivateUserEndpoint",
         "parameters": [
           {
+            "description": "User UUID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "User deactivated"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "User not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4862,8 +5828,9 @@
             "bearer": []
           }
         ],
+        "summary": "Deactivate a user",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },
@@ -4872,10 +5839,12 @@
         "operationId": "DashboardIdentityController_assignRoleEndpoint",
         "parameters": [
           {
+            "description": "User UUID",
             "in": "path",
             "name": "userId",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -4892,7 +5861,57 @@
         },
         "responses": {
           "204": {
-            "description": ""
+            "description": "Role assigned"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "User or role not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4900,8 +5919,9 @@
             "bearer": []
           }
         ],
+        "summary": "Assign a role to a user",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },
@@ -4910,25 +5930,79 @@
         "operationId": "DashboardIdentityController_removeRoleEndpoint",
         "parameters": [
           {
+            "description": "User UUID",
             "in": "path",
             "name": "userId",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           },
           {
+            "description": "Role UUID",
             "in": "path",
             "name": "roleId",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Role removed"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "User or role not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -4936,8 +6010,9 @@
             "bearer": []
           }
         ],
+        "summary": "Remove a role from a user",
         "tags": [
-          "Identity"
+          "Dashboard / Identity"
         ]
       }
     },

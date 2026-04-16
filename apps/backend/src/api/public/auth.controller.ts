@@ -3,6 +3,9 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
+import {
+  ApiTags, ApiBearerAuth, ApiOperation, ApiOkResponse, ApiNoContentResponse, ApiResponse,
+} from '@nestjs/swagger';
 import { LoginHandler } from '../../modules/identity/login/login.handler';
 import { LogoutHandler } from '../../modules/identity/logout/logout.handler';
 import { LoginDto } from '../../modules/identity/login/login.dto';
@@ -16,12 +19,19 @@ import { GetCurrentUserHandler } from '../../modules/identity/get-current-user/g
 import { GetCurrentUserQuery } from '../../modules/identity/get-current-user/get-current-user.query';
 import { ChangePasswordHandler } from '../../modules/identity/users/change-password.handler';
 import { IsString, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
 
 class ChangePasswordDto {
+  @ApiProperty({ description: 'Current account password', example: 'P@ssw0rd123' })
   @IsString() currentPassword!: string;
+
+  @ApiProperty({ description: 'New password (min 8 characters)', example: 'NewP@ss456', format: 'password' })
   @IsString() @MinLength(8) newPassword!: string;
 }
 
+@ApiTags('Public / Auth')
+@ApiPublicResponses()
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -36,6 +46,20 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Log in with email and password' })
+  @ApiOkResponse({
+    description: 'Access + refresh tokens with user profile',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+        refreshToken: { type: 'string', example: 'a1b2c3d4-...' },
+        expiresIn: { type: 'number', example: 900 },
+        user: { type: 'object', description: 'Authenticated user profile' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Invalid credentials', type: ApiErrorDto })
   async loginEndpoint(@Body() body: LoginDto) {
     const tokens = await this.login.execute({ email: body.email, password: body.password });
     const user = await this.prisma.user.findUnique({
@@ -52,6 +76,19 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Rotate a refresh token and issue new token pair' })
+  @ApiOkResponse({
+    description: 'New access + refresh token pair',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+        refreshToken: { type: 'string', example: 'a1b2c3d4-...' },
+        expiresIn: { type: 'number', example: 900 },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token', type: ApiErrorDto })
   async refreshEndpoint(@Body() body: RefreshTokenDto) {
     const { refreshToken: rawToken } = body;
     const record = await this.findActiveToken(rawToken);
@@ -77,6 +114,9 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Revoke a refresh token (log out)' })
+  @ApiOkResponse({ description: 'Token revoked; no body returned' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token', type: ApiErrorDto })
   async logoutEndpoint(@Body() body: LogoutDto) {
     const { refreshToken: rawToken } = body;
     const record = await this.findActiveToken(rawToken);
@@ -85,6 +125,10 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get the currently authenticated user' })
+  @ApiOkResponse({ description: 'Current user profile with role and permissions' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
   async meEndpoint(@UserId() userId: string) {
     return this.getCurrentUser.execute({ userId } satisfies GetCurrentUserQuery);
   }
@@ -92,6 +136,10 @@ export class AuthController {
   @Patch('password/change')
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change the current user\'s password' })
+  @ApiNoContentResponse({ description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Missing/invalid JWT or wrong current password', type: ApiErrorDto })
   async changePasswordEndpoint(
     @UserId() userId: string,
     @Body() body: ChangePasswordDto,
