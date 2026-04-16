@@ -325,6 +325,8 @@ export const enOps: Record<string, string> = {
   "departments.edit.error": "Failed to update department",
   "departments.delete.title": "Delete Department",
   "departments.delete.description": "Are you sure you want to delete “{name}”? Categories under it will become unassigned.",
+  "departments.delete.descriptionNoCategories": "Are you sure you want to delete “{name}”? This action cannot be undone.",
+  "departments.delete.descriptionWithCategories": "Are you sure you want to delete “{name}”? {count} categorie(s) will be detached from this department.",
   "departments.delete.submit": "Delete",
   "departments.delete.submitting": "Deleting...",
   "departments.delete.cancel": "Cancel",

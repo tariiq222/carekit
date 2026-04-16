@@ -325,6 +325,8 @@ export const arOps: Record<string, string> = {
   "departments.edit.error": "فشل تحديث القسم",
   "departments.delete.title": "حذف القسم",
   "departments.delete.description": "هل أنت متأكد من حذف «{name}»؟ التصنيفات التابعة ستصبح بدون قسم.",
+  "departments.delete.descriptionNoCategories": "هل أنت متأكد من حذف «{name}»؟ لا يمكن التراجع عن هذا الإجراء.",
+  "departments.delete.descriptionWithCategories": "هل أنت متأكد من حذف «{name}»؟ سيتم فصل {count} تصنيفاً عن هذا القسم.",
   "departments.delete.submit": "حذف",
   "departments.delete.submitting": "جارٍ الحذف...",
   "departments.delete.cancel": "إلغاء",

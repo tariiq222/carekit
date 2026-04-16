@@ -65,6 +65,8 @@ export const arDepartments: Record<string, string> = {
   // Delete
   "departments.delete.title": "حذف القسم",
   "departments.delete.description": "هل أنت متأكد من حذف القسم {name}؟ لا يمكن التراجع عن هذا الإجراء.",
+  "departments.delete.descriptionNoCategories": "هل أنت متأكد من حذف «{name}»؟ لا يمكن التراجع عن هذا الإجراء.",
+  "departments.delete.descriptionWithCategories": "هل أنت متأكد من حذف «{name}»؟ سيتم فصل {count} تصنيفاً عن هذا القسم.",
   "departments.delete.success": "تم حذف القسم بنجاح",
   "departments.delete.error": "فشل حذف القسم",
   "departments.delete.cancel": "إلغاء",

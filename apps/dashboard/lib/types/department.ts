@@ -10,6 +10,7 @@ export interface Department {
   createdAt: string
   updatedAt: string
   _count?: { categories: number }
+  categories?: Array<{ id: string; nameAr: string; nameEn: string | null }>
 }
 
 export interface DepartmentListQuery {

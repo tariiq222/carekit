@@ -33,6 +33,14 @@ export function DeleteDepartmentDialog({
   const name = department
     ? (locale === "ar" ? department.nameAr : department.nameEn)
     : ""
+  const categoryCount =
+    department?._count?.categories ?? department?.categories?.length ?? 0
+  const description =
+    categoryCount > 0
+      ? t("departments.delete.descriptionWithCategories")
+          .replace("{name}", name)
+          .replace("{count}", String(categoryCount))
+      : t("departments.delete.descriptionNoCategories").replace("{name}", name)
 
   const handleDelete = async () => {
     if (!department || deleteMut.isPending) return
@@ -51,9 +59,7 @@ export function DeleteDepartmentDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("departments.delete.title")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("departments.delete.description").replace("{name}", name)}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={deleteMut.isPending}>

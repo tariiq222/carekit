@@ -65,6 +65,8 @@ export const enDepartments: Record<string, string> = {
   // Delete
   "departments.delete.title": "Delete Department",
   "departments.delete.description": "Are you sure you want to delete {name}? This action cannot be undone.",
+  "departments.delete.descriptionNoCategories": "Are you sure you want to delete “{name}”? This action cannot be undone.",
+  "departments.delete.descriptionWithCategories": "Are you sure you want to delete “{name}”? {count} categorie(s) will be detached from this department.",
   "departments.delete.success": "Department deleted successfully",
   "departments.delete.error": "Failed to delete department",
   "departments.delete.cancel": "Cancel",
