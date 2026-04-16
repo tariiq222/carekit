@@ -11,7 +11,6 @@ export type ProblemReportType = "BUG" | "FEATURE_REQUEST" | "IMPROVEMENT" | "OTH
 
 export interface ProblemReport {
   id: string
-  tenantId: string
   reporterId: string
   type: ProblemReportType
   title: string

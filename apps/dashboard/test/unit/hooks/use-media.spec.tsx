@@ -44,7 +44,6 @@ describe("useMediaFile", () => {
   it("fetches file by id", async () => {
     const mockFile = {
       id: "file-1",
-      tenantId: "tenant-1",
       bucket: "carekit",
       storageKey: "uploads/file-1.jpg",
       filename: "photo.jpg",
@@ -79,7 +78,6 @@ describe("useMediaFiles", () => {
       data: [
         {
           id: "file-1",
-          tenantId: "tenant-1",
           bucket: "carekit",
           storageKey: "uploads/file-1.jpg",
           filename: "photo.jpg",

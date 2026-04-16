@@ -32,7 +32,6 @@ function makeWrapper() {
 
 const mockRating = {
   id: "rating-1",
-  tenantId: "tenant-1",
   bookingId: "booking-1",
   clientId: "client-1",
   employeeId: "emp-1",

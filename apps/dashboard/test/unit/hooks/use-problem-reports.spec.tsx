@@ -36,7 +36,6 @@ function makeWrapper() {
 
 const mockReport = {
   id: "rpt-1",
-  tenantId: "tenant-1",
   reporterId: "user-1",
   type: "BUG" as const,
   title: "Button not working",

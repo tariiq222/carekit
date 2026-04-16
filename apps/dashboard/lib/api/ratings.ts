@@ -8,7 +8,6 @@ import type { PaginatedResponse } from "@/lib/types/common"
 
 export interface Rating {
   id: string
-  tenantId: string
   bookingId: string
   clientId: string
   employeeId: string

@@ -8,7 +8,6 @@ import type { PaginatedResponse } from "@/lib/types/common"
 
 export interface MediaFile {
   id: string
-  tenantId: string
   bucket: string
   storageKey: string
   filename: string
