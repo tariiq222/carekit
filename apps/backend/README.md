@@ -22,7 +22,7 @@ apps/backend/
 │   └── schema/            # Prisma DSL — one .prisma file per BC (p1-t2)
 ├── src/
 │   ├── config/            # env validation (Joi). Typed configs added per-BC.
-│   ├── common/            # p1-t6..t9 — tenant, guards, interceptors, filters
+│   ├── common/            # p1-t6..t9 — guards, interceptors, filters
 │   ├── infrastructure/    # adapters for external systems (one folder each)
 │   │   ├── database/      # p1-t2 — PrismaService wrapper
 │   │   ├── queue/         # p1-t3 — BullMQ

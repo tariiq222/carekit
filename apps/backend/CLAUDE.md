@@ -36,7 +36,7 @@ src/
 | `ops/` | generate-report, cron-tasks, health-check, log-activity |
 | `ai/` | chat-completion, chatbot-config, embed-document, manage-knowledge-base, semantic-search |
 | `media/` | files |
-| `platform/` | feature-flags, integrations, license, problem-reports |
+| `platform/` | feature-flags, integrations, problem-reports |
 
 ### Vertical slice anatomy
 
