@@ -2,7 +2,11 @@ import {
   Controller, Get, Post, Patch, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags, ApiBearerAuth, ApiOperation, ApiParam,
+  ApiOkResponse, ApiCreatedResponse, ApiNotFoundResponse,
+} from '@nestjs/swagger';
+import { ApiStandardResponses } from '../../common/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
 import { CreateProblemReportHandler } from '../../modules/platform/problem-reports/create-problem-report.handler';
@@ -19,8 +23,9 @@ import { GetFeatureFlagMapHandler } from '../../modules/platform/feature-flags/g
 import { UpdateFeatureFlagHandler } from '../../modules/platform/feature-flags/update-feature-flag.handler';
 import { UpdateFeatureFlagDto } from '../../modules/platform/feature-flags/update-feature-flag.dto';
 
-@ApiTags('Platform')
+@ApiTags('Dashboard / Platform')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('dashboard/platform')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardPlatformController {
@@ -39,16 +44,24 @@ export class DashboardPlatformController {
 
   @Post('problem-reports')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Submit a problem report' })
+  @ApiCreatedResponse({ description: 'Problem report created successfully' })
   createProblemReportEndpoint(@Body() body: CreateProblemReportDto) {
     return this.createProblemReport.execute(body);
   }
 
   @Get('problem-reports')
+  @ApiOperation({ summary: 'List problem reports with optional status filter' })
+  @ApiOkResponse({ description: 'Paginated list of problem reports' })
   listProblemReportsEndpoint(@Query() query: ListProblemReportsDto) {
     return this.listProblemReports.execute(query);
   }
 
   @Patch('problem-reports/:id/status')
+  @ApiOperation({ summary: 'Update the status of a problem report' })
+  @ApiParam({ name: 'id', description: 'Problem report UUID', format: 'uuid' })
+  @ApiOkResponse({ description: 'Problem report status updated' })
+  @ApiNotFoundResponse({ description: 'Problem report not found' })
   updateProblemReportStatusEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateProblemReportStatusDto,
@@ -60,11 +73,15 @@ export class DashboardPlatformController {
 
   @Post('integrations')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Create or update a third-party integration' })
+  @ApiOkResponse({ description: 'Integration upserted successfully' })
   upsertIntegrationEndpoint(@Body() body: UpsertIntegrationDto) {
     return this.upsertIntegration.execute(body);
   }
 
   @Get('integrations')
+  @ApiOperation({ summary: 'List all configured integrations' })
+  @ApiOkResponse({ description: 'Array of integration records' })
   listIntegrationsEndpoint() {
     return this.listIntegrations.execute();
   }
@@ -72,16 +89,24 @@ export class DashboardPlatformController {
   // ── Feature Flags ──────────────────────────────────────────────────────────
 
   @Get('feature-flags')
+  @ApiOperation({ summary: 'List all feature flags with their current state' })
+  @ApiOkResponse({ description: 'Array of feature flag records' })
   async listFeatureFlagsEndpoint() {
     return this.listFeatureFlags.execute();
   }
 
   @Get('feature-flags/map')
+  @ApiOperation({ summary: 'Get a key→enabled map of all feature flags' })
+  @ApiOkResponse({ description: 'Object mapping flag keys to boolean values' })
   async featureFlagMapEndpoint() {
     return this.getFeatureFlagMap.execute();
   }
 
   @Patch('feature-flags/:key')
+  @ApiOperation({ summary: 'Enable or disable a feature flag by key' })
+  @ApiParam({ name: 'key', description: 'Feature flag identifier key', example: 'CHATBOT_ENABLED' })
+  @ApiOkResponse({ description: 'Feature flag updated' })
+  @ApiNotFoundResponse({ description: 'Feature flag not found' })
   async updateFeatureFlagEndpoint(
     @Param('key') key: string,
     @Body() body: UpdateFeatureFlagDto,
