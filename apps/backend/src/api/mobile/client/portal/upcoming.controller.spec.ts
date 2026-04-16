@@ -3,7 +3,6 @@ import { JwtUser } from '../../../../common/auth/current-user.decorator';
 import { PrismaService } from '../../../../infrastructure/database';
 import { BookingStatus } from '@prisma/client';
 
-const TENANT = 'tenant-1';
 const USER: JwtUser = { sub: 'client-1', email: 'client@test.com', roles: [] };
 
 function buildController(prisma: Partial<PrismaService>) {
@@ -23,7 +22,7 @@ describe('MobileClientUpcomingController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      const result = await controller.upcoming(TENANT, USER, {});
+      const result = await controller.upcoming(USER, {});
 
       expect(result).toEqual({
         data: mockData,
@@ -40,7 +39,7 @@ describe('MobileClientUpcomingController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      await controller.upcoming(TENANT, USER, {});
+      await controller.upcoming(USER, {});
 
       expect(prisma.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 0, take: 10 }),
@@ -57,7 +56,7 @@ describe('MobileClientUpcomingController', () => {
 
       const { controller } = buildController(prisma as never);
       const query: UpcomingQuery = { page: 3, limit: 5 };
-      const result = await controller.upcoming(TENANT, USER, query);
+      const result = await controller.upcoming(USER, query);
 
       expect(prisma.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 10, take: 5 }),
@@ -65,7 +64,7 @@ describe('MobileClientUpcomingController', () => {
       expect(result.meta).toEqual({ total: 25, page: 3, limit: 5, totalPages: 5 });
     });
 
-    it('filters by tenantId, clientId, and upcoming statuses', async () => {
+    it('filters by clientId and upcoming statuses', async () => {
       const prisma = {
         booking: {
           findMany: jest.fn().mockResolvedValue([]),
@@ -74,12 +73,11 @@ describe('MobileClientUpcomingController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      await controller.upcoming(TENANT, USER, {});
+      await controller.upcoming(USER, {});
 
       expect(prisma.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            tenantId: TENANT,
             clientId: USER.sub,
             status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
           }),
@@ -96,7 +94,7 @@ describe('MobileClientUpcomingController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      await controller.upcoming(TENANT, USER, {});
+      await controller.upcoming(USER, {});
 
       expect(prisma.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: { scheduledAt: 'asc' } }),

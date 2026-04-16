@@ -2,7 +2,6 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { InvoiceStatus } from '@prisma/client';
 import { IsDateString, IsOptional } from 'class-validator';
 import { JwtGuard } from '../../../common/guards/jwt.guard';
-import { TenantId } from '../../../common/tenant/tenant.decorator';
 import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
 import { PrismaService } from '../../../infrastructure/database';
 
@@ -18,7 +17,6 @@ export class MobileEmployeeEarningsController {
 
   @Get()
   async earnings(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Query() q: EarningsQuery,
   ) {
@@ -32,7 +30,6 @@ export class MobileEmployeeEarningsController {
 
     const invoices = await this.prisma.invoice.findMany({
       where: {
-        tenantId,
         employeeId: user.sub,
         status: InvoiceStatus.PAID,
         paidAt: { gte: from, lte: to },

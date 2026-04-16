@@ -2,7 +2,6 @@ import { MobileClientSummaryController } from './summary.controller';
 import { JwtUser } from '../../../../common/auth/current-user.decorator';
 import { PrismaService } from '../../../../infrastructure/database';
 
-const TENANT = 'tenant-1';
 const USER: JwtUser = { sub: 'client-1', email: 'client@test.com', roles: [] };
 
 function buildController(prisma: Partial<PrismaService>) {
@@ -24,7 +23,7 @@ describe('MobileClientSummaryController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      const result = await controller.summary(TENANT, USER);
+      const result = await controller.summary(USER);
 
       expect(result).toEqual({
         totalBookings: 10,
@@ -45,10 +44,10 @@ describe('MobileClientSummaryController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      await controller.summary(TENANT, USER);
+      await controller.summary(USER);
 
       expect(prisma.booking.count).toHaveBeenCalledWith({
-        where: { tenantId: TENANT, clientId: USER.sub },
+        where: { clientId: USER.sub },
       });
     });
 
@@ -64,10 +63,10 @@ describe('MobileClientSummaryController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      await controller.summary(TENANT, USER);
+      await controller.summary(USER);
 
       expect(prisma.booking.findFirst).toHaveBeenCalledWith({
-        where: { tenantId: TENANT, clientId: USER.sub, status: 'COMPLETED' },
+        where: { clientId: USER.sub, status: 'COMPLETED' },
         orderBy: { scheduledAt: 'desc' },
         select: { scheduledAt: true },
       });
@@ -85,7 +84,7 @@ describe('MobileClientSummaryController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      const result = await controller.summary(TENANT, USER);
+      const result = await controller.summary(USER);
 
       expect(result.lastVisit).toBeNull();
     });
@@ -102,11 +101,10 @@ describe('MobileClientSummaryController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      const result = await controller.summary(TENANT, USER);
+      const result = await controller.summary(USER);
 
       expect(prisma.invoice.aggregate).toHaveBeenCalledWith({
         where: {
-          tenantId: TENANT,
           clientId: USER.sub,
           status: { in: ['ISSUED', 'PARTIALLY_PAID'] },
         },
@@ -127,7 +125,7 @@ describe('MobileClientSummaryController', () => {
       };
 
       const { controller } = buildController(prisma as never);
-      const result = await controller.summary(TENANT, USER);
+      const result = await controller.summary(USER);
 
       expect(result.outstandingBalance).toBe(0);
     });

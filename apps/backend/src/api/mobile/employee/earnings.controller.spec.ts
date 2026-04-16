@@ -1,7 +1,6 @@
 import { MobileEmployeeEarningsController } from './earnings.controller';
 import { InvoiceStatus } from '@prisma/client';
 
-const TENANT = 'tenant-1';
 const USER = { sub: 'user-1' };
 
 function mockPrisma(overrides: Partial<{
@@ -19,11 +18,10 @@ describe('MobileEmployeeEarningsController', () => {
     it('queries PAID invoices for the employee within the date range', async () => {
       const prisma = mockPrisma();
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      await controller.earnings(TENANT, USER, {} as never);
+      await controller.earnings(USER, {} as never);
       expect(prisma.invoice.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            tenantId: TENANT,
             employeeId: USER.sub,
             status: InvoiceStatus.PAID,
           }),
@@ -34,7 +32,7 @@ describe('MobileEmployeeEarningsController', () => {
     it('includes payments in the query', async () => {
       const prisma = mockPrisma();
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      await controller.earnings(TENANT, USER, {} as never);
+      await controller.earnings(USER, {} as never);
       expect(prisma.invoice.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           include: expect.objectContaining({
@@ -54,7 +52,7 @@ describe('MobileEmployeeEarningsController', () => {
         ]),
       });
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      const result = await controller.earnings(TENANT, USER, {} as never);
+      const result = await controller.earnings(USER, {} as never);
       expect(result).toHaveProperty('period');
       expect(result).toHaveProperty('totalEarnings');
       expect(result).toHaveProperty('invoiceCount');
@@ -70,7 +68,7 @@ describe('MobileEmployeeEarningsController', () => {
         ]),
       });
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      const result = await controller.earnings(TENANT, USER, {} as never);
+      const result = await controller.earnings(USER, {} as never);
       expect(result.totalEarnings).toBe(350);
     });
 
@@ -82,7 +80,7 @@ describe('MobileEmployeeEarningsController', () => {
         ]),
       });
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      const result = await controller.earnings(TENANT, USER, {} as never);
+      const result = await controller.earnings(USER, {} as never);
       expect(result.invoiceCount).toBe(2);
     });
 
@@ -94,7 +92,7 @@ describe('MobileEmployeeEarningsController', () => {
         ]),
       });
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      const result = await controller.earnings(TENANT, USER, {} as never);
+      const result = await controller.earnings(USER, {} as never);
       expect(result.byMethod['CARD']).toBe(250);
       expect(result.byMethod['CASH']).toBe(50);
     });
@@ -104,7 +102,7 @@ describe('MobileEmployeeEarningsController', () => {
         findMany: jest.fn().mockResolvedValue([]),
       });
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      const result = await controller.earnings(TENANT, USER, {} as never);
+      const result = await controller.earnings(USER, {} as never);
       expect(result.totalEarnings).toBe(0);
       expect(result.invoiceCount).toBe(0);
       expect(result.byMethod).toEqual({});
@@ -113,7 +111,7 @@ describe('MobileEmployeeEarningsController', () => {
     it('defaults to current month when no dates provided', async () => {
       const prisma = mockPrisma();
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      await controller.earnings(TENANT, USER, {} as never);
+      await controller.earnings(USER, {} as never);
       const call = prisma.invoice.findMany.mock.calls[0][0];
       expect(call.where.paidAt).toBeDefined();
       expect(call.where.paidAt).toHaveProperty('gte');
@@ -123,7 +121,7 @@ describe('MobileEmployeeEarningsController', () => {
     it('uses provided from date when given', async () => {
       const prisma = mockPrisma();
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      await controller.earnings(TENANT, USER, { from: '2026-01-01', to: undefined } as never);
+      await controller.earnings(USER, { from: '2026-01-01', to: undefined } as never);
       const call = prisma.invoice.findMany.mock.calls[0][0];
       expect(call.where.paidAt.gte).toBeInstanceOf(Date);
     });
@@ -131,7 +129,7 @@ describe('MobileEmployeeEarningsController', () => {
     it('uses provided to date when given', async () => {
       const prisma = mockPrisma();
       const controller = new MobileEmployeeEarningsController(prisma as never);
-      await controller.earnings(TENANT, USER, { from: undefined, to: '2026-12-31' } as never);
+      await controller.earnings(USER, { from: undefined, to: '2026-12-31' } as never);
       const call = prisma.invoice.findMany.mock.calls[0][0];
       expect(call.where.paidAt.lte).toBeInstanceOf(Date);
     });

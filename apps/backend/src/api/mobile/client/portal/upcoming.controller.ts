@@ -3,7 +3,6 @@ import { BookingStatus } from '@prisma/client';
 import { IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { JwtGuard } from '../../../../common/guards/jwt.guard';
-import { TenantId } from '../../../../common/tenant/tenant.decorator';
 import { CurrentUser, JwtUser } from '../../../../common/auth/current-user.decorator';
 import { PrismaService } from '../../../../infrastructure/database';
 
@@ -21,7 +20,6 @@ export class MobileClientUpcomingController {
 
   @Get()
   async upcoming(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Query() q: UpcomingQuery,
   ) {
@@ -30,7 +28,6 @@ export class MobileClientUpcomingController {
     const now = new Date();
 
     const where = {
-      tenantId,
       clientId: user.sub,
       scheduledAt: { gte: now },
       status: { in: UPCOMING_STATUSES },

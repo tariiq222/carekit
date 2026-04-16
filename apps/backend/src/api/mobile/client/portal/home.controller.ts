@@ -1,6 +1,5 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../../../../common/guards/jwt.guard';
-import { TenantId } from '../../../../common/tenant/tenant.decorator';
 import { CurrentUser, JwtUser } from '../../../../common/auth/current-user.decorator';
 import { ListBookingsHandler } from '../../../../modules/bookings/list-bookings/list-bookings.handler';
 import { ListNotificationsHandler } from '../../../../modules/comms/notifications/list-notifications.handler';
@@ -18,13 +17,13 @@ export class MobileClientHomeController {
   ) {}
 
   @Get('home')
-  async home(@TenantId() tenantId: string, @CurrentUser() user: JwtUser) {
+  async home(@CurrentUser() user: JwtUser) {
     const now = new Date();
     const [upcomingResult, notificationsResult, paymentsResult, profile] = await Promise.all([
-      this.listBookings.execute({ tenantId, clientId: user.sub, fromDate: now, page: 1, limit: 5 }),
-      this.listNotifications.execute({ tenantId, recipientId: user.sub, unreadOnly: true, page: 1, limit: 5 }),
-      this.listPayments.execute({ tenantId, clientId: user.sub, page: 1, limit: 3 }),
-      this.getClient.execute({ tenantId, clientId: user.sub }),
+      this.listBookings.execute({ clientId: user.sub, fromDate: now, page: 1, limit: 5 }),
+      this.listNotifications.execute({ recipientId: user.sub, unreadOnly: true, page: 1, limit: 5 }),
+      this.listPayments.execute({ clientId: user.sub, page: 1, limit: 3 }),
+      this.getClient.execute({ clientId: user.sub }),
     ]);
 
     return {

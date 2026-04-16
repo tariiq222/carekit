@@ -1,7 +1,6 @@
 import { MobileClientHomeController } from './home.controller';
 import { JwtUser } from '../../../../common/auth/current-user.decorator';
 
-const TENANT = 'tenant-1';
 const USER: JwtUser = { sub: 'client-1', email: 'client@test.com', roles: [] };
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
@@ -27,23 +26,23 @@ describe('MobileClientHomeController', () => {
     const { controller, listBookings, listNotifications, listPayments, getClient } = buildController();
     const now = new Date();
 
-    await controller.home(TENANT, USER);
+    await controller.home(USER);
 
     expect(listBookings.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, clientId: USER.sub, fromDate: now, page: 1, limit: 5 }),
+      expect.objectContaining({ clientId: USER.sub, fromDate: now, page: 1, limit: 5 }),
     );
     expect(listNotifications.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, recipientId: USER.sub, unreadOnly: true, page: 1, limit: 5 }),
+      expect.objectContaining({ recipientId: USER.sub, unreadOnly: true, page: 1, limit: 5 }),
     );
     expect(listPayments.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, clientId: USER.sub, page: 1, limit: 3 }),
+      expect.objectContaining({ clientId: USER.sub, page: 1, limit: 3 }),
     );
-    expect(getClient.execute).toHaveBeenCalledWith({ tenantId: TENANT, clientId: USER.sub });
+    expect(getClient.execute).toHaveBeenCalledWith({ clientId: USER.sub });
   });
 
   it('home — returns formatted response', async () => {
     const { controller } = buildController();
-    const result = await controller.home(TENANT, USER);
+    const result = await controller.home(USER);
 
     expect(result).toHaveProperty('profile');
     expect(result).toHaveProperty('upcomingBookings');
@@ -69,7 +68,7 @@ describe('MobileClientHomeController', () => {
       getClient as never,
     );
 
-    const result = await controller.home(TENANT, USER);
+    const result = await controller.home(USER);
 
     expect(result.upcomingBookings).toEqual(bookingsResult.data);
     expect(result.unreadNotifications).toEqual(notificationsResult.data);
