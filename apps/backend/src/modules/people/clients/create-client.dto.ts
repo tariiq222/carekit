@@ -4,6 +4,7 @@ import {
   IsDateString,
   IsEmail,
   IsEnum,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
@@ -19,9 +20,9 @@ const toUpper = ({ value }: { value: unknown }) =>
 const PHONE_REGEX = /^\+9665\d{8}$/;
 
 export class CreateClientDto {
-  @IsString() @MaxLength(255) firstName!: string;
+  @IsString() @IsNotEmpty() @MaxLength(255) firstName!: string;
   @IsOptional() @IsString() @MaxLength(255) middleName?: string;
-  @IsString() @MaxLength(255) lastName!: string;
+  @IsString() @IsNotEmpty() @MaxLength(255) lastName!: string;
 
   @IsString() @Matches(PHONE_REGEX, { message: 'phone must be a Saudi number +9665XXXXXXXX' }) phone!: string;
   @IsOptional() @IsEmail() email?: string;
