@@ -14,13 +14,12 @@ const buildEmail = () => ({ execute: jest.fn().mockResolvedValue(undefined) });
 const buildSms = () => ({ execute: jest.fn().mockResolvedValue(undefined) });
 
 const baseDto = {
-  tenantId: 'tenant-1',
   recipientId: 'client-1',
   recipientType: RecipientType.CLIENT,
   type: NotificationType.BOOKING_CONFIRMED,
   title: 'Confirmed',
   body: 'Your booking is confirmed.',
-  channels: ['in-app'] as string[],
+  channels: ['in-app'] as Array<'push' | 'email' | 'sms' | 'in-app'>,
 };
 
 describe('SendNotificationHandler', () => {
@@ -30,7 +29,7 @@ describe('SendNotificationHandler', () => {
     await handler.execute(baseDto);
     expect(prisma.notification.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ tenantId: 'tenant-1', recipientId: 'client-1' }),
+        data: expect.objectContaining({ recipientId: 'client-1' }),
       }),
     );
   });

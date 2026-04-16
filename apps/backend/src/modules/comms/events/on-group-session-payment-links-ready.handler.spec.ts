@@ -2,7 +2,6 @@ import { OnGroupSessionPaymentLinksReadyHandler } from './on-group-session-payme
 
 const makeEnvelope = (paymentLinks: object[]) => ({
   payload: {
-    tenantId: 'tenant-1',
     groupSessionKey: 'emp-1:svc-1:2026-05-01T10:00:00.000Z',
     paymentLinks,
   },

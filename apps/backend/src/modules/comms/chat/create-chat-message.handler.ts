@@ -3,7 +3,6 @@ import { MessageSenderType } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface CreateChatMessageDto {
-  tenantId: string;
   conversationId: string;
   senderType: MessageSenderType;
   senderId?: string;
@@ -16,7 +15,7 @@ export class CreateChatMessageHandler {
 
   async execute(dto: CreateChatMessageDto) {
     const conversation = await this.prisma.chatConversation.findFirst({
-      where: { id: dto.conversationId, tenantId: dto.tenantId },
+      where: { id: dto.conversationId },
     });
     if (!conversation) {
       throw new NotFoundException(`Conversation ${dto.conversationId} not found`);
@@ -25,7 +24,6 @@ export class CreateChatMessageHandler {
     const [message] = await Promise.all([
       this.prisma.commsChatMessage.create({
         data: {
-          tenantId: dto.tenantId,
           conversationId: dto.conversationId,
           senderType: dto.senderType,
           senderId: dto.senderId ?? null,

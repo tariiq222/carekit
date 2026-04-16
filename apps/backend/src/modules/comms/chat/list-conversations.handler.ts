@@ -4,7 +4,6 @@ import { toListResponse } from '../../../common/dto';
 import { ListConversationsDto } from './list-conversations.dto';
 
 export type ListConversationsCommand = Omit<ListConversationsDto, 'page' | 'limit'> & {
-  tenantId: string;
   page: number;
   limit: number;
 };
@@ -15,7 +14,6 @@ export class ListConversationsHandler {
 
   async execute(cmd: ListConversationsCommand) {
     const where = {
-      tenantId: cmd.tenantId,
       ...(cmd.clientId ? { clientId: cmd.clientId } : {}),
       ...(cmd.employeeId ? { employeeId: cmd.employeeId } : {}),
     };

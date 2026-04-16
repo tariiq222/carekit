@@ -5,7 +5,6 @@ import { SendNotificationHandler } from '../send-notification/send-notification.
 
 interface BookingCancelledPayload {
   bookingId: string;
-  tenantId: string;
   clientId: string;
   employeeId: string;
   reason: string;
@@ -30,7 +29,6 @@ export class OnBookingCancelledHandler {
     const { payload } = envelope;
     try {
       await this.notify.execute({
-        tenantId: payload.tenantId,
         recipientId: payload.clientId,
         recipientType: RecipientType.CLIENT,
         type: NotificationType.BOOKING_CANCELLED,

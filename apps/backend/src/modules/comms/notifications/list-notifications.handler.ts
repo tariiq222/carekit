@@ -4,7 +4,6 @@ import { toListResponse } from '../../../common/dto';
 import { ListNotificationsDto } from './list-notifications.dto';
 
 export type ListNotificationsCommand = Omit<ListNotificationsDto, 'page' | 'limit'> & {
-  tenantId: string;
   recipientId: string;
   page: number;
   limit: number;
@@ -16,7 +15,6 @@ export class ListNotificationsHandler {
 
   async execute(cmd: ListNotificationsCommand) {
     const where = {
-      tenantId: cmd.tenantId,
       recipientId: cmd.recipientId,
       ...(cmd.unreadOnly ? { isRead: false } : {}),
     };

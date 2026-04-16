@@ -5,7 +5,6 @@ import { SendNotificationHandler } from '../send-notification/send-notification.
 
 interface ClientEnrolledPayload {
   clientId: string;
-  tenantId: string;
   name: string;
   phone?: string;
   email?: string;
@@ -25,7 +24,6 @@ export class OnClientEnrolledHandler {
     const { payload } = envelope;
     try {
       await this.notify.execute({
-        tenantId: payload.tenantId,
         recipientId: payload.clientId,
         recipientType: RecipientType.CLIENT,
         type: NotificationType.WELCOME,

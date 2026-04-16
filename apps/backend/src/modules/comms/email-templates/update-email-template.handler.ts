@@ -3,7 +3,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { UpdateEmailTemplateDto } from './update-email-template.dto';
 
 export type UpdateEmailTemplateCommand = UpdateEmailTemplateDto & {
-  tenantId: string;
   id: string;
 };
 
@@ -13,7 +12,7 @@ export class UpdateEmailTemplateHandler {
 
   async execute(cmd: UpdateEmailTemplateCommand) {
     const template = await this.prisma.emailTemplate.findFirst({
-      where: { id: cmd.id, tenantId: cmd.tenantId },
+      where: { id: cmd.id },
     });
     if (!template) {
       throw new NotFoundException(`Email template ${cmd.id} not found`);

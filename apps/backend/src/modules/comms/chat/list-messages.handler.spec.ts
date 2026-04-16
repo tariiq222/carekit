@@ -17,7 +17,7 @@ describe('ListMessagesHandler', () => {
     prisma.chatConversation.findFirst.mockResolvedValue(null);
     const handler = new ListMessagesHandler(prisma as unknown as PrismaService);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', conversationId: 'missing', limit: 20 }),
+      handler.execute({ conversationId: 'missing', limit: 20 }),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -28,7 +28,7 @@ describe('ListMessagesHandler', () => {
       { id: 'msg-3' }, { id: 'msg-2' }, { id: 'msg-1' },
     ]);
     const handler = new ListMessagesHandler(prisma as unknown as PrismaService);
-    const result = await handler.execute({ tenantId: 'tenant-1', conversationId: 'conv-1', limit: 20 });
+    const result = await handler.execute({ conversationId: 'conv-1', limit: 20 });
     expect(result.data).toHaveLength(3);
     expect(result.meta.hasMore).toBe(false);
     expect(result.meta.nextCursor).toBeNull();
@@ -44,7 +44,7 @@ describe('ListMessagesHandler', () => {
       { id: 'msg-3' }, { id: 'msg-2' }, { id: 'msg-1' },
     ]);
     const handler = new ListMessagesHandler(prisma as unknown as PrismaService);
-    const result = await handler.execute({ tenantId: 'tenant-1', conversationId: 'conv-1', limit: 2 });
+    const result = await handler.execute({ conversationId: 'conv-1', limit: 2 });
     expect(result.data).toHaveLength(2);
     expect(result.meta.hasMore).toBe(true);
     expect(result.meta.nextCursor).toBe('msg-2');
@@ -55,7 +55,7 @@ describe('ListMessagesHandler', () => {
     prisma.chatConversation.findFirst.mockResolvedValue({ id: 'conv-1' });
     prisma.commsChatMessage.findMany.mockResolvedValue([]);
     const handler = new ListMessagesHandler(prisma as unknown as PrismaService);
-    await handler.execute({ tenantId: 'tenant-1', conversationId: 'conv-1', cursor: 'msg-5', limit: 20 });
+    await handler.execute({ conversationId: 'conv-1', cursor: 'msg-5', limit: 20 });
     expect(prisma.commsChatMessage.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ cursor: { id: 'msg-5' }, skip: 1 }),
     );

@@ -3,7 +3,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { SmtpService } from '../../../infrastructure/mail';
 import { SendEmailDto } from './send-email.dto';
 
-export type SendEmailCommand = SendEmailDto & { tenantId: string };
+export type SendEmailCommand = SendEmailDto;
 
 @Injectable()
 export class SendEmailHandler {
@@ -21,11 +21,11 @@ export class SendEmailHandler {
     }
 
     const template = await this.prisma.emailTemplate.findUnique({
-      where: { tenantId_slug: { tenantId: dto.tenantId, slug: dto.templateSlug } },
+      where: { slug: dto.templateSlug },
     });
 
     if (!template || !template.isActive) {
-      this.logger.warn(`Email template "${dto.templateSlug}" not found for tenant ${dto.tenantId}`);
+      this.logger.warn(`Email template "${dto.templateSlug}" not found`);
       return;
     }
 

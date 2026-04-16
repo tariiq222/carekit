@@ -2,7 +2,7 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { CreateEmailTemplateDto } from './create-email-template.dto';
 
-export type CreateEmailTemplateCommand = CreateEmailTemplateDto & { tenantId: string };
+export type CreateEmailTemplateCommand = CreateEmailTemplateDto;
 
 @Injectable()
 export class CreateEmailTemplateHandler {
@@ -10,15 +10,14 @@ export class CreateEmailTemplateHandler {
 
   async execute(cmd: CreateEmailTemplateCommand) {
     const existing = await this.prisma.emailTemplate.findUnique({
-      where: { tenantId_slug: { tenantId: cmd.tenantId, slug: cmd.slug } },
+      where: { slug: cmd.slug },
     });
     if (existing) {
-      throw new ConflictException(`Template "${cmd.slug}" already exists for this tenant`);
+      throw new ConflictException(`Template "${cmd.slug}" already exists`);
     }
 
     return this.prisma.emailTemplate.create({
       data: {
-        tenantId: cmd.tenantId,
         slug: cmd.slug,
         nameAr: cmd.nameAr,
         nameEn: cmd.nameEn,

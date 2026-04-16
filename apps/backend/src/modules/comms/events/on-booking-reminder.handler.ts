@@ -5,7 +5,6 @@ import { SendNotificationHandler } from '../send-notification/send-notification.
 
 interface BookingReminderPayload {
   bookingId: string;
-  tenantId: string;
   clientId: string;
   scheduledAt: Date | string;
   clientPhone?: string;
@@ -31,7 +30,6 @@ export class OnBookingReminderHandler {
     });
     try {
       await this.notify.execute({
-        tenantId: payload.tenantId,
         recipientId: payload.clientId,
         recipientType: RecipientType.CLIENT,
         type: NotificationType.BOOKING_REMINDER,

@@ -3,7 +3,6 @@ import { ConversationStatus, MessageSenderType } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface SendStaffMessageCommand {
-  tenantId: string;
   conversationId: string;
   staffId: string;
   body: string;
@@ -15,7 +14,7 @@ export class SendStaffMessageHandler {
 
   async execute(cmd: SendStaffMessageCommand) {
     const conversation = await this.prisma.chatConversation.findFirst({
-      where: { id: cmd.conversationId, tenantId: cmd.tenantId },
+      where: { id: cmd.conversationId },
     });
     if (!conversation) {
       throw new NotFoundException('Conversation not found');
@@ -27,7 +26,6 @@ export class SendStaffMessageHandler {
     const [message] = await Promise.all([
       this.prisma.commsChatMessage.create({
         data: {
-          tenantId: cmd.tenantId,
           conversationId: cmd.conversationId,
           senderType: MessageSenderType.EMPLOYEE,
           senderId: cmd.staffId,

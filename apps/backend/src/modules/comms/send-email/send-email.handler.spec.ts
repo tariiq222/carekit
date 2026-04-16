@@ -24,7 +24,6 @@ describe('SendEmailHandler', () => {
       sendMail: jest.fn().mockResolvedValue(undefined),
     };
     await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({
-      tenantId: 'tenant-1',
       to: 'client@example.com',
       templateSlug: 'welcome',
       vars: { client_name: 'أحمد' },
@@ -43,7 +42,6 @@ describe('SendEmailHandler', () => {
       sendMail: jest.fn(),
     };
     await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({
-      tenantId: 'tenant-1',
       to: 'client@example.com',
       templateSlug: 'welcome',
       vars: {},
@@ -59,7 +57,6 @@ describe('SendEmailHandler', () => {
       sendMail: jest.fn(),
     };
     await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({
-      tenantId: 'tenant-1',
       to: 'client@example.com',
       templateSlug: 'missing',
       vars: {},
@@ -72,21 +69,21 @@ describe('SendEmailHandler — interpolation', () => {
   it('skips email when SMTP not available', async () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(false), sendMail: jest.fn() };
     const prisma = { emailTemplate: { findUnique: jest.fn() } };
-    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'booking-confirmed', vars: {} });
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ to: 'a@b.com', templateSlug: 'booking-confirmed', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
 
   it('skips when template not found', async () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn() };
     const prisma = { emailTemplate: { findUnique: jest.fn().mockResolvedValue(null) } };
-    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'missing', vars: {} });
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ to: 'a@b.com', templateSlug: 'missing', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
 
   it('skips when template is inactive', async () => {
     const smtp = { isAvailable: jest.fn().mockReturnValue(true), sendMail: jest.fn() };
     const prisma = { emailTemplate: { findUnique: jest.fn().mockResolvedValue({ isActive: false, htmlBody: '', subjectAr: '' }) } };
-    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'tpl', vars: {} });
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} });
     expect(smtp.sendMail).not.toHaveBeenCalled();
   });
 
@@ -102,7 +99,7 @@ describe('SendEmailHandler — interpolation', () => {
         }),
       },
     };
-    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'tpl', vars: { name: 'Ahmad' } });
+    await new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: { name: 'Ahmad' } });
     expect(smtp.sendMail).toHaveBeenCalledWith('a@b.com', 'مرحبا Ahmad', '<p>Hello Ahmad</p>');
   });
 
@@ -111,6 +108,6 @@ describe('SendEmailHandler — interpolation', () => {
     const prisma = {
       emailTemplate: { findUnique: jest.fn().mockResolvedValue({ isActive: true, htmlBody: 'body', subjectAr: 'subj', subjectEn: '' }) },
     };
-    await expect(new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ tenantId: 'tenant-1', to: 'a@b.com', templateSlug: 'tpl', vars: {} })).resolves.not.toThrow();
+    await expect(new SendEmailHandler(smtp as unknown as SmtpService, prisma as unknown as PrismaService).execute({ to: 'a@b.com', templateSlug: 'tpl', vars: {} })).resolves.not.toThrow();
   });
 });

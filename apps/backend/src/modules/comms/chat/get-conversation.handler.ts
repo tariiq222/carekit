@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface GetConversationCommand {
-  tenantId: string;
   conversationId: string;
 }
 
@@ -12,7 +11,7 @@ export class GetConversationHandler {
 
   async execute(cmd: GetConversationCommand) {
     const conversation = await this.prisma.chatConversation.findFirst({
-      where: { id: cmd.conversationId, tenantId: cmd.tenantId },
+      where: { id: cmd.conversationId },
       include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
     if (!conversation) {

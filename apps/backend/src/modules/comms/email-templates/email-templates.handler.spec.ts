@@ -25,7 +25,6 @@ describe('CreateEmailTemplateHandler', () => {
     prisma.emailTemplate.create.mockResolvedValueOnce({ id: 'tpl-1', slug: 'welcome' });
     const handler = new CreateEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       slug: 'welcome',
       nameAr: 'ترحيب',
       subjectAr: 'مرحباً',
@@ -34,20 +33,18 @@ describe('CreateEmailTemplateHandler', () => {
     expect(result.id).toBe('tpl-1');
     expect(prisma.emailTemplate.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        tenantId: 'tenant-1',
         slug: 'welcome',
         subjectAr: 'مرحباً',
       }),
     });
   });
 
-  it('throws ConflictException when slug already exists for tenant', async () => {
+  it('throws ConflictException when slug already exists', async () => {
     const prisma = buildPrisma();
     prisma.emailTemplate.findUnique.mockResolvedValueOnce({ id: 'tpl-existing' });
     const handler = new CreateEmailTemplateHandler(prisma as unknown as PrismaService);
     await expect(
       handler.execute({
-        tenantId: 'tenant-1',
         slug: 'welcome',
         nameAr: 'ترحيب',
         subjectAr: 'مرحباً',
@@ -64,13 +61,11 @@ describe('UpdateEmailTemplateHandler', () => {
     const prisma = buildPrisma();
     prisma.emailTemplate.findFirst.mockResolvedValueOnce({
       id: 'tpl-1',
-      tenantId: 'tenant-1',
       slug: 'welcome',
     });
     prisma.emailTemplate.update.mockResolvedValueOnce({ id: 'tpl-1', subjectAr: 'Updated' });
     const handler = new UpdateEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       id: 'tpl-1',
       subjectAr: 'Updated',
     });
@@ -86,31 +81,30 @@ describe('UpdateEmailTemplateHandler', () => {
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new UpdateEmailTemplateHandler(prisma as unknown as PrismaService);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', id: 'missing', subjectAr: 'X' }),
+      handler.execute({ id: 'missing', subjectAr: 'X' }),
     ).rejects.toThrow('not found');
   });
 
-  it('throws NotFoundException when template belongs to another tenant', async () => {
+  it('throws NotFoundException when template not found', async () => {
     const prisma = buildPrisma();
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new UpdateEmailTemplateHandler(prisma as unknown as PrismaService);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', id: 'tpl-1', subjectAr: 'X' }),
+      handler.execute({ id: 'tpl-1', subjectAr: 'X' }),
     ).rejects.toThrow('not found');
   });
 });
 
 // ─── GetEmailTemplateHandler ─────────────────────────────────────────────────
 describe('GetEmailTemplateHandler', () => {
-  it('returns template by id when tenant matches', async () => {
+  it('returns template by id', async () => {
     const prisma = buildPrisma();
     prisma.emailTemplate.findFirst.mockResolvedValueOnce({
       id: 'tpl-1',
-      tenantId: 'tenant-1',
       slug: 'welcome',
     });
     const handler = new GetEmailTemplateHandler(prisma as unknown as PrismaService);
-    const result = await handler.execute({ tenantId: 'tenant-1', id: 'tpl-1' });
+    const result = await handler.execute({ id: 'tpl-1' });
     expect(result?.id).toBe('tpl-1');
   });
 
@@ -118,15 +112,7 @@ describe('GetEmailTemplateHandler', () => {
     const prisma = buildPrisma();
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new GetEmailTemplateHandler(prisma as unknown as PrismaService);
-    const result = await handler.execute({ tenantId: 'tenant-1', id: 'missing' });
-    expect(result).toBeNull();
-  });
-
-  it('returns null when template belongs to another tenant', async () => {
-    const prisma = buildPrisma();
-    prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
-    const handler = new GetEmailTemplateHandler(prisma as unknown as PrismaService);
-    const result = await handler.execute({ tenantId: 'tenant-1', id: 'tpl-1' });
+    const result = await handler.execute({ id: 'missing' });
     expect(result).toBeNull();
   });
 });
@@ -135,7 +121,6 @@ describe('GetEmailTemplateHandler', () => {
 describe('PreviewEmailTemplateHandler', () => {
   const mockTemplate = {
     id: 'tpl-1',
-    tenantId: 'tenant-1',
     subjectAr: 'مرحباً {{client_name}}',
     subjectEn: 'Hello {{client_name}}',
     htmlBody: '<p>Hi {{client_name}}</p>',
@@ -146,7 +131,6 @@ describe('PreviewEmailTemplateHandler', () => {
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(mockTemplate);
     const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       id: 'tpl-1',
       lang: 'ar',
       context: { client_name: 'أحمد' },
@@ -160,7 +144,6 @@ describe('PreviewEmailTemplateHandler', () => {
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(mockTemplate);
     const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       id: 'tpl-1',
       lang: 'en',
       context: { client_name: 'John' },
@@ -174,7 +157,6 @@ describe('PreviewEmailTemplateHandler', () => {
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(mockTemplate);
     const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       id: 'tpl-1',
       lang: 'en',
       context: {},
@@ -188,26 +170,23 @@ describe('PreviewEmailTemplateHandler', () => {
     prisma.emailTemplate.findFirst.mockResolvedValueOnce(null);
     const handler = new PreviewEmailTemplateHandler(prisma as unknown as PrismaService);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', id: 'missing', lang: 'ar', context: {} }),
+      handler.execute({ id: 'missing', lang: 'ar', context: {} }),
     ).rejects.toThrow(NotFoundException);
   });
 });
 
 // ─── ListEmailTemplatesHandler ───────────────────────────────────────────────
 describe('ListEmailTemplatesHandler', () => {
-  it('returns paginated templates scoped to tenant', async () => {
+  it('returns paginated templates', async () => {
     const prisma = buildPrisma();
     prisma.emailTemplate.findMany.mockResolvedValueOnce([{ id: 'tpl-1' }]);
     prisma.emailTemplate.count.mockResolvedValueOnce(1);
     const handler = new ListEmailTemplatesHandler(prisma as unknown as PrismaService);
-    const result = await handler.execute({ tenantId: 'tenant-1', page: 1, limit: 20 });
+    const result = await handler.execute({ page: 1, limit: 20 });
     expect(result.items).toHaveLength(1);
-    expect(result.meta).toEqual({ total: 1, page: 1, limit: 20, totalPages: 1 });
-    expect(prisma.emailTemplate.findMany).toHaveBeenCalledWith({
-      where: { tenantId: 'tenant-1' },
-      orderBy: { createdAt: 'asc' },
-      skip: 0,
-      take: 20,
-    });
+    expect(result.meta).toMatchObject({ total: 1, page: 1, totalPages: 1 });
+    expect(prisma.emailTemplate.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { createdAt: 'asc' }, skip: 0, take: 20 }),
+    );
   });
 });

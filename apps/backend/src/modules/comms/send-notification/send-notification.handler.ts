@@ -6,7 +6,7 @@ import { SendEmailHandler } from '../send-email/send-email.handler';
 import { SendSmsHandler } from '../send-sms/send-sms.handler';
 import { SendNotificationDto } from './send-notification.dto';
 
-export type SendNotificationCommand = SendNotificationDto & { tenantId: string };
+export type SendNotificationCommand = SendNotificationDto;
 
 @Injectable()
 export class SendNotificationHandler {
@@ -23,7 +23,6 @@ export class SendNotificationHandler {
     try {
       await this.prisma.notification.create({
         data: {
-          tenantId: dto.tenantId,
           recipientId: dto.recipientId,
           recipientType: dto.recipientType,
           type: dto.type,
@@ -47,7 +46,6 @@ export class SendNotificationHandler {
 
     if (dto.channels.includes('email') && dto.recipientEmail && dto.emailTemplateSlug) {
       tasks.push(this.email.execute({
-        tenantId: dto.tenantId,
         to: dto.recipientEmail,
         templateSlug: dto.emailTemplateSlug,
         vars: dto.emailVars ?? {},

@@ -3,7 +3,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { ListMessagesDto } from './list-messages.dto';
 
 export type ListMessagesCommand = Omit<ListMessagesDto, 'limit'> & {
-  tenantId: string;
   conversationId: string;
   limit: number;
 };
@@ -14,7 +13,7 @@ export class ListMessagesHandler {
 
   async execute(cmd: ListMessagesCommand) {
     const conversation = await this.prisma.chatConversation.findFirst({
-      where: { id: cmd.conversationId, tenantId: cmd.tenantId },
+      where: { id: cmd.conversationId },
       select: { id: true },
     });
     if (!conversation) {
@@ -26,7 +25,6 @@ export class ListMessagesHandler {
     const take = cmd.limit + 1;
     const messages = await this.prisma.commsChatMessage.findMany({
       where: {
-        tenantId: cmd.tenantId,
         conversationId: cmd.conversationId,
       },
       orderBy: { createdAt: 'desc' },

@@ -2,7 +2,6 @@ import { Controller, Get, Patch, Query, UseGuards } from '@nestjs/common';
 import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { JwtGuard } from '../../../common/guards/jwt.guard';
-import { TenantId } from '../../../common/tenant/tenant.decorator';
 import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
 import { ListNotificationsHandler } from '../../../modules/comms/notifications/list-notifications.handler';
 import { MarkReadHandler } from '../../../modules/comms/notifications/mark-read.handler';
@@ -23,12 +22,10 @@ export class MobileClientNotificationsController {
 
   @Get()
   listNotificationsEndpoint(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Query() q: MobileListNotificationsQuery,
   ) {
     return this.listNotifications.execute({
-      tenantId,
       recipientId: user.sub,
       unreadOnly: q.unreadOnly,
       page: q.page ?? 1,
@@ -37,7 +34,7 @@ export class MobileClientNotificationsController {
   }
 
   @Patch('mark-read')
-  markReadEndpoint(@TenantId() tenantId: string, @CurrentUser() user: JwtUser) {
-    return this.markRead.execute({ tenantId, recipientId: user.sub });
+  markReadEndpoint(@CurrentUser() user: JwtUser) {
+    return this.markRead.execute({ recipientId: user.sub });
   }
 }

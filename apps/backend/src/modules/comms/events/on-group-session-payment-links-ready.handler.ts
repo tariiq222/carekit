@@ -12,7 +12,6 @@ interface PaymentLink {
 }
 
 interface GroupSessionPaymentLinksReadyPayload {
-  tenantId: string;
   groupSessionKey: string;
   paymentLinks: PaymentLink[];
 }
@@ -40,17 +39,16 @@ export class OnGroupSessionPaymentLinksReadyHandler {
   async handle(
     envelope: DomainEventEnvelope<GroupSessionPaymentLinksReadyPayload>,
   ): Promise<void> {
-    const { tenantId, paymentLinks } = envelope.payload;
+    const { paymentLinks } = envelope.payload;
 
     await Promise.allSettled(
-      paymentLinks.map((link) => this.notifyClient(tenantId, link)),
+      paymentLinks.map((link) => this.notifyClient(link)),
     );
   }
 
-  private async notifyClient(tenantId: string, link: PaymentLink): Promise<void> {
+  private async notifyClient(link: PaymentLink): Promise<void> {
     try {
       await this.notify.execute({
-        tenantId,
         recipientId: link.clientId,
         recipientType: RecipientType.CLIENT,
         type: NotificationType.PAYMENT_REMINDER,

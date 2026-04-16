@@ -13,7 +13,6 @@ describe('CreateNotificationHandler', () => {
     const prisma = buildPrisma();
     const handler = new CreateNotificationHandler(prisma as unknown as PrismaService);
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       recipientId: 'client-1',
       recipientType: RecipientType.CLIENT,
       type: NotificationType.GENERAL,
@@ -22,7 +21,7 @@ describe('CreateNotificationHandler', () => {
     });
     expect(result.id).toBe('notif-1');
     expect(prisma.notification.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ tenantId: 'tenant-1', recipientId: 'client-1' }),
+      data: expect.objectContaining({ recipientId: 'client-1' }),
     });
   });
 });

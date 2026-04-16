@@ -14,7 +14,6 @@ const buildPrisma = () => ({
   },
 });
 
-const tenantId = 'tenant-1';
 const conversationId = 'conv-1';
 
 describe('GetConversationHandler', () => {
@@ -27,14 +26,14 @@ describe('GetConversationHandler', () => {
   });
 
   it('returns conversation with messages', async () => {
-    const conv = { id: conversationId, tenantId, messages: [{ id: 'msg-1' }] };
+    const conv = { id: conversationId, messages: [{ id: 'msg-1' }] };
     prisma.chatConversation.findFirst.mockResolvedValue(conv);
 
-    const result = await handler.execute({ tenantId, conversationId });
+    const result = await handler.execute({ conversationId });
 
     expect(result).toEqual(conv);
     expect(prisma.chatConversation.findFirst).toHaveBeenCalledWith({
-      where: { id: conversationId, tenantId },
+      where: { id: conversationId },
       include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
   });
@@ -42,7 +41,7 @@ describe('GetConversationHandler', () => {
   it('throws NotFoundException when not found', async () => {
     prisma.chatConversation.findFirst.mockResolvedValue(null);
 
-    await expect(handler.execute({ tenantId, conversationId })).rejects.toThrow(
+    await expect(handler.execute({ conversationId })).rejects.toThrow(
       NotFoundException,
     );
   });
@@ -58,12 +57,12 @@ describe('CloseConversationHandler', () => {
   });
 
   it('closes an open conversation', async () => {
-    const conv = { id: conversationId, tenantId, status: ConversationStatus.OPEN };
+    const conv = { id: conversationId, status: ConversationStatus.OPEN };
     const updated = { ...conv, status: ConversationStatus.CLOSED };
     prisma.chatConversation.findFirst.mockResolvedValue(conv);
     prisma.chatConversation.update.mockResolvedValue(updated);
 
-    const result = await handler.execute({ tenantId, conversationId });
+    const result = await handler.execute({ conversationId });
 
     expect(result).toEqual(updated);
     expect(prisma.chatConversation.update).toHaveBeenCalledWith({
@@ -73,10 +72,10 @@ describe('CloseConversationHandler', () => {
   });
 
   it('returns existing when already closed (idempotent)', async () => {
-    const conv = { id: conversationId, tenantId, status: ConversationStatus.CLOSED };
+    const conv = { id: conversationId, status: ConversationStatus.CLOSED };
     prisma.chatConversation.findFirst.mockResolvedValue(conv);
 
-    const result = await handler.execute({ tenantId, conversationId });
+    const result = await handler.execute({ conversationId });
 
     expect(result).toEqual(conv);
     expect(prisma.chatConversation.update).not.toHaveBeenCalled();
@@ -85,7 +84,7 @@ describe('CloseConversationHandler', () => {
   it('throws NotFoundException when not found', async () => {
     prisma.chatConversation.findFirst.mockResolvedValue(null);
 
-    await expect(handler.execute({ tenantId, conversationId })).rejects.toThrow(
+    await expect(handler.execute({ conversationId })).rejects.toThrow(
       NotFoundException,
     );
   });
@@ -101,14 +100,13 @@ describe('SendStaffMessageHandler', () => {
   });
 
   it('creates a staff message and updates lastMessageAt', async () => {
-    const conv = { id: conversationId, tenantId, status: ConversationStatus.OPEN };
+    const conv = { id: conversationId, status: ConversationStatus.OPEN };
     const message = { id: 'msg-1', body: 'Hello', senderType: MessageSenderType.EMPLOYEE };
     prisma.chatConversation.findFirst.mockResolvedValue(conv);
     prisma.commsChatMessage.create.mockResolvedValue(message);
     prisma.chatConversation.update.mockResolvedValue({ ...conv });
 
     const result = await handler.execute({
-      tenantId,
       conversationId,
       staffId: 'staff-1',
       body: 'Hello',
@@ -117,7 +115,6 @@ describe('SendStaffMessageHandler', () => {
     expect(result).toEqual(message);
     expect(prisma.commsChatMessage.create).toHaveBeenCalledWith({
       data: {
-        tenantId,
         conversationId,
         senderType: MessageSenderType.EMPLOYEE,
         senderId: 'staff-1',
@@ -134,16 +131,16 @@ describe('SendStaffMessageHandler', () => {
     prisma.chatConversation.findFirst.mockResolvedValue(null);
 
     await expect(
-      handler.execute({ tenantId, conversationId, staffId: 'staff-1', body: 'Hello' }),
+      handler.execute({ conversationId, staffId: 'staff-1', body: 'Hello' }),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException when conversation is closed', async () => {
-    const conv = { id: conversationId, tenantId, status: ConversationStatus.CLOSED };
+    const conv = { id: conversationId, status: ConversationStatus.CLOSED };
     prisma.chatConversation.findFirst.mockResolvedValue(conv);
 
     await expect(
-      handler.execute({ tenantId, conversationId, staffId: 'staff-1', body: 'Hello' }),
+      handler.execute({ conversationId, staffId: 'staff-1', body: 'Hello' }),
     ).rejects.toThrow(BadRequestException);
   });
 });

@@ -13,7 +13,7 @@ describe('CreateConversationHandler', () => {
     const prisma = buildPrisma();
     prisma.chatConversation.findFirst.mockResolvedValue({ id: 'conv-existing', status: 'OPEN' });
     const handler = new CreateConversationHandler(prisma as unknown as PrismaService);
-    const result = await handler.execute({ tenantId: 'tenant-1', clientId: 'client-1', employeeId: 'emp-1' });
+    const result = await handler.execute({ clientId: 'client-1', employeeId: 'emp-1' });
     expect(result.id).toBe('conv-existing');
     expect(prisma.chatConversation.create).not.toHaveBeenCalled();
   });
@@ -21,7 +21,7 @@ describe('CreateConversationHandler', () => {
   it('creates new conversation when none exists', async () => {
     const prisma = buildPrisma();
     const handler = new CreateConversationHandler(prisma as unknown as PrismaService);
-    const result = await handler.execute({ tenantId: 'tenant-1', clientId: 'client-1', employeeId: 'emp-1' });
+    const result = await handler.execute({ clientId: 'client-1', employeeId: 'emp-1' });
     expect(result.id).toBe('conv-1');
     expect(prisma.chatConversation.create).toHaveBeenCalled();
   });
@@ -29,7 +29,7 @@ describe('CreateConversationHandler', () => {
   it('creates AI conversation when no employeeId', async () => {
     const prisma = buildPrisma();
     const handler = new CreateConversationHandler(prisma as unknown as PrismaService);
-    await handler.execute({ tenantId: 'tenant-1', clientId: 'client-1' });
+    await handler.execute({ clientId: 'client-1' });
     expect(prisma.chatConversation.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ isAiChat: true, employeeId: null }),
     });

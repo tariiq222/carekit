@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface PreviewEmailTemplateCommand {
-  tenantId: string;
   id: string;
   context: Record<string, unknown>;
   lang: 'ar' | 'en';
@@ -14,7 +13,7 @@ export class PreviewEmailTemplateHandler {
 
   async execute(cmd: PreviewEmailTemplateCommand): Promise<{ subject: string; body: string }> {
     const template = await this.prisma.emailTemplate.findFirst({
-      where: { id: cmd.id, tenantId: cmd.tenantId },
+      where: { id: cmd.id },
     });
 
     if (!template) {

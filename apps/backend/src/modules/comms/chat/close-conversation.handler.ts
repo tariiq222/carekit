@@ -3,7 +3,6 @@ import { ConversationStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface CloseConversationCommand {
-  tenantId: string;
   conversationId: string;
 }
 
@@ -13,7 +12,7 @@ export class CloseConversationHandler {
 
   async execute(cmd: CloseConversationCommand) {
     const conversation = await this.prisma.chatConversation.findFirst({
-      where: { id: cmd.conversationId, tenantId: cmd.tenantId },
+      where: { id: cmd.conversationId },
     });
     if (!conversation) {
       throw new NotFoundException('Conversation not found');
