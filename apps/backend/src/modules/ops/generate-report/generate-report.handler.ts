@@ -6,7 +6,7 @@ import { buildRevenueReport } from './revenue-report.builder';
 import { buildActivityReport } from './activity-report.builder';
 import { buildRevenueExcel, buildActivityExcel } from './excel-export.builder';
 
-export type GenerateReportCommand = GenerateReportDto & { tenantId: string };
+export type GenerateReportCommand = GenerateReportDto;
 
 @Injectable()
 export class GenerateReportHandler {
@@ -31,7 +31,6 @@ export class GenerateReportHandler {
 
     const report = await this.prisma.report.create({
       data: {
-        tenantId: dto.tenantId,
         type: dto.type,
         format,
         status: ReportStatus.PENDING,
@@ -46,7 +45,6 @@ export class GenerateReportHandler {
 
       if (dto.type === ReportType.REVENUE) {
         data = await buildRevenueReport(this.prisma, {
-          tenantId: dto.tenantId,
           from,
           to,
           branchId: dto.branchId,
@@ -57,7 +55,6 @@ export class GenerateReportHandler {
         }
       } else if (dto.type === ReportType.ACTIVITY) {
         data = await buildActivityReport(this.prisma, {
-          tenantId: dto.tenantId,
           from,
           to,
         });
@@ -67,9 +64,9 @@ export class GenerateReportHandler {
           );
         }
       } else if (dto.type === ReportType.BOOKINGS) {
-        data = await this.buildBookingsReport(dto.tenantId, from, to, dto.branchId);
+        data = await this.buildBookingsReport(from, to, dto.branchId);
       } else {
-        data = await this.buildEmployeesReport(dto.tenantId, from, to);
+        data = await this.buildEmployeesReport(from, to);
       }
 
       await this.prisma.report.update({
@@ -105,13 +102,11 @@ export class GenerateReportHandler {
   }
 
   private async buildBookingsReport(
-    tenantId: string,
     from: Date,
     to: Date,
     branchId?: string,
   ) {
     const where = {
-      tenantId,
       scheduledAt: { gte: from, lte: to },
       ...(branchId ? { branchId } : {}),
     };
@@ -132,17 +127,17 @@ export class GenerateReportHandler {
     };
   }
 
-  private async buildEmployeesReport(tenantId: string, from: Date, to: Date) {
+  private async buildEmployeesReport(from: Date, to: Date) {
     const bookings = await this.prisma.booking.groupBy({
       by: ['employeeId', 'status'],
-      where: { tenantId, scheduledAt: { gte: from, lte: to } },
+      where: { scheduledAt: { gte: from, lte: to } },
       _count: { employeeId: true },
     });
 
     const byEmployee = new Map<string, Record<string, number>>();
     for (const row of bookings) {
       const existing = byEmployee.get(row.employeeId) ?? {};
-      existing[row.status] = row._count.employeeId;
+      existing[row.status] = row._count.employeeId!;
       byEmployee.set(row.employeeId, existing);
     }
 

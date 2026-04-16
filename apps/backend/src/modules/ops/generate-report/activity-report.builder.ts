@@ -1,7 +1,6 @@
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface ActivityReportParams {
-  tenantId: string;
   from: Date;
   to: Date;
 }
@@ -22,11 +21,10 @@ export async function buildActivityReport(
   prisma: PrismaService,
   params: ActivityReportParams,
 ): Promise<ActivityReportResult> {
-  const { tenantId, from, to } = params;
+  const { from, to } = params;
 
   const logs = await prisma.activityLog.findMany({
     where: {
-      tenantId,
       occurredAt: { gte: from, lte: to },
     },
     select: {

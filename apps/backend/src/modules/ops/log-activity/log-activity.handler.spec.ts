@@ -11,7 +11,6 @@ describe('LogActivityHandler', () => {
     const handler = new LogActivityHandler(prisma as never);
 
     await handler.execute({
-      tenantId: 'tenant-1',
       action: ActivityAction.CREATE,
       entity: 'Booking',
       entityId: 'book-1',
@@ -21,7 +20,6 @@ describe('LogActivityHandler', () => {
     expect(prisma.activityLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          tenantId: 'tenant-1',
           action: ActivityAction.CREATE,
           entity: 'Booking',
           description: 'Created booking',
@@ -35,7 +33,6 @@ describe('LogActivityHandler', () => {
     const handler = new LogActivityHandler(prisma as never);
 
     await handler.execute({
-      tenantId: 'tenant-1',
       action: ActivityAction.UPDATE,
       entity: 'Employee',
       description: 'Updated availability',
@@ -54,7 +51,6 @@ describe('LogActivityHandler', () => {
     const handler = new LogActivityHandler(prisma as never);
 
     await handler.execute({
-      tenantId: 'tenant-1',
       action: ActivityAction.LOGIN,
       entity: 'User',
       description: 'User logged in',

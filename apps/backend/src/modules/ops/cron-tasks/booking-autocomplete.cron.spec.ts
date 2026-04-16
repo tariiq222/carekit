@@ -32,12 +32,16 @@ describe('BookingAutocompleteCron', () => {
     await expect(cron.execute()).resolves.not.toThrow();
   });
 
-  it('does not call updateMany when no bookings found', async () => {
+  it('calls updateMany with CONFIRMED status and cutoff', async () => {
     const prisma = buildPrisma();
-    prisma.booking.findMany = jest.fn().mockResolvedValue([]);
     const cron = new BookingAutocompleteCron(prisma as never, buildSettingsHandler() as never);
     await cron.execute();
-    expect(prisma.booking.updateMany).not.toHaveBeenCalled();
+    expect(prisma.booking.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: BookingStatus.CONFIRMED }),
+        data: expect.objectContaining({ status: BookingStatus.COMPLETED }),
+      }),
+    );
   });
 });
 

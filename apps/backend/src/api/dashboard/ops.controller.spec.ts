@@ -1,7 +1,6 @@
 import { DashboardOpsController } from './ops.controller';
 import { ReportFormat } from '@prisma/client';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
@@ -17,11 +16,16 @@ const buildRes = () => ({
 });
 
 describe('DashboardOpsController', () => {
-  it('generateReportEndpoint — passes tenantId', async () => {
+  it('generateReportEndpoint — calls handler with body', async () => {
     const { controller, generateReport } = buildController();
     const res = buildRes();
-    await controller.generateReportEndpoint(TENANT, { type: 'REVENUE', from: '2026-01-01', to: '2026-01-31', requestedBy: 'u-1' } as never, res as never);
-    expect(generateReport.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.generateReportEndpoint(
+      { type: 'REVENUE', from: '2026-01-01', to: '2026-01-31', requestedBy: 'u-1' } as never,
+      res as never,
+    );
+    expect(generateReport.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'REVENUE' }),
+    );
   });
 
   it('generateReportEndpoint — sends Excel buffer when format is EXCEL', async () => {
@@ -30,14 +34,20 @@ describe('DashboardOpsController', () => {
     const listActivity = fn();
     const controller = new DashboardOpsController(generateReport as never, listActivity as never);
     const res = buildRes();
-    await controller.generateReportEndpoint(TENANT, { type: 'REVENUE', from: '2026-01-01', to: '2026-01-31', requestedBy: 'u-1' } as never, res as never);
-    expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    await controller.generateReportEndpoint(
+      { type: 'REVENUE', from: '2026-01-01', to: '2026-01-31', requestedBy: 'u-1' } as never,
+      res as never,
+    );
+    expect(res.setHeader).toHaveBeenCalledWith(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
     expect(res.send).toHaveBeenCalledWith(excelBuffer);
   });
 
-  it('listActivityEndpoint — passes tenantId', async () => {
+  it('listActivityEndpoint — calls handler with query', async () => {
     const { controller, listActivity } = buildController();
-    await controller.listActivityEndpoint(TENANT, {} as never);
-    expect(listActivity.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listActivityEndpoint({ page: 1, limit: 10 } as never);
+    expect(listActivity.execute).toHaveBeenCalledWith(expect.objectContaining({ page: 1 }));
   });
 });

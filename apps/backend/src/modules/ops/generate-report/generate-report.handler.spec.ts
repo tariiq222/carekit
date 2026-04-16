@@ -33,7 +33,7 @@ describe('GenerateReportHandler', () => {
 
     await expect(
       handler.execute({
-        tenantId: 'tenant-1', type: ReportType.REVENUE,
+        type: ReportType.REVENUE,
         from: '2026-01-10', to: '2026-01-01',
         requestedBy: 'user-1',
       }),
@@ -45,7 +45,7 @@ describe('GenerateReportHandler', () => {
     const handler = new GenerateReportHandler(prisma as never);
 
     await handler.execute({
-      tenantId: 'tenant-1', type: ReportType.REVENUE,
+      type: ReportType.REVENUE,
       from: '2026-01-01', to: '2026-01-31',
       requestedBy: 'user-1',
     });
@@ -60,7 +60,7 @@ describe('GenerateReportHandler', () => {
     const handler = new GenerateReportHandler(prisma as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1', type: ReportType.REVENUE,
+      type: ReportType.REVENUE,
       from: '2026-01-01', to: '2026-01-31',
       requestedBy: 'user-1',
     });
@@ -74,7 +74,7 @@ describe('GenerateReportHandler', () => {
     const handler = new GenerateReportHandler(prisma as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1', type: ReportType.ACTIVITY,
+      type: ReportType.ACTIVITY,
       from: '2026-01-01', to: '2026-01-31',
       requestedBy: 'user-1',
     });
@@ -87,7 +87,7 @@ describe('GenerateReportHandler', () => {
     const handler = new GenerateReportHandler(prisma as never);
 
     await handler.execute({
-      tenantId: 'tenant-1', type: ReportType.REVENUE,
+      type: ReportType.REVENUE,
       from: '2026-01-01', to: '2026-01-31',
       requestedBy: 'user-1',
     });
@@ -106,7 +106,7 @@ describe('GenerateReportHandler', () => {
     const handler = new GenerateReportHandler(prisma as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1', type: ReportType.BOOKINGS,
+      type: ReportType.BOOKINGS,
       from: '2026-01-01', to: '2026-01-31',
       requestedBy: 'user-1',
     });
@@ -123,7 +123,7 @@ describe('GenerateReportHandler', () => {
     const handler = new GenerateReportHandler(prisma as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1', type: ReportType.EMPLOYEES,
+      type: ReportType.EMPLOYEES,
       from: '2026-01-01', to: '2026-01-31',
       requestedBy: 'user-1',
     });

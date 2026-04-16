@@ -7,7 +7,6 @@ import { Response } from 'express';
 import { ReportFormat } from '@prisma/client';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { GenerateReportHandler } from '../../modules/ops/generate-report/generate-report.handler';
 import { GenerateReportDto } from '../../modules/ops/generate-report/generate-report.dto';
 import { ListActivityHandler } from '../../modules/ops/log-activity/list-activity.handler';
@@ -26,11 +25,10 @@ export class DashboardOpsController {
   @Post('reports')
   @HttpCode(HttpStatus.OK)
   async generateReportEndpoint(
-    @TenantId() tenantId: string,
     @Body() body: GenerateReportDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.generateReport.execute({ tenantId, ...body });
+    const result = await this.generateReport.execute(body);
 
     if (result.format === ReportFormat.EXCEL && result.excelBuffer) {
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -43,7 +41,7 @@ export class DashboardOpsController {
   }
 
   @Get('activity')
-  listActivityEndpoint(@TenantId() tenantId: string, @Query() query: ListActivityDto) {
-    return this.listActivity.execute({ tenantId, ...query });
+  listActivityEndpoint(@Query() query: ListActivityDto) {
+    return this.listActivity.execute(query);
   }
 }

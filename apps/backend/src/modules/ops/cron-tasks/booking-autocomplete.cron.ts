@@ -13,40 +13,25 @@ export class BookingAutocompleteCron {
   ) {}
 
   /**
-   * Auto-complete bookings per tenant using each tenant's autoCompleteAfterHours setting.
+   * Auto-complete confirmed bookings using the global autoCompleteAfterHours setting.
    */
   async execute(): Promise<void> {
-    const tenantIds = await this.prisma.booking
-      .findMany({
-        where: { status: BookingStatus.CONFIRMED },
-        select: { tenantId: true },
-        distinct: ['tenantId'],
-      })
-      .then((rows) => rows.map((r) => r.tenantId));
+    const settings = await this.settingsHandler.execute({ branchId: null });
+    const cutoff = new Date(Date.now() - settings.autoCompleteAfterHours * 3_600_000);
 
-    let totalCompleted = 0;
+    const result = await this.prisma.booking.updateMany({
+      where: {
+        status: BookingStatus.CONFIRMED,
+        endsAt: { lte: cutoff },
+      },
+      data: {
+        status: BookingStatus.COMPLETED,
+        completedAt: new Date(),
+      },
+    });
 
-    for (const tenantId of tenantIds) {
-      // Use tenant-global settings for cron jobs — branch-level overrides apply to user-facing flows only.
-      const settings = await this.settingsHandler.execute({ tenantId, branchId: null });
-      const cutoff = new Date(Date.now() - settings.autoCompleteAfterHours * 3_600_000);
-
-      const result = await this.prisma.booking.updateMany({
-        where: {
-          tenantId,
-          status: BookingStatus.CONFIRMED,
-          endsAt: { lte: cutoff },
-        },
-        data: {
-          status: BookingStatus.COMPLETED,
-          completedAt: new Date(),
-        },
-      });
-      totalCompleted += result.count;
-    }
-
-    if (totalCompleted > 0) {
-      this.logger.log(`completed ${totalCompleted} bookings`);
+    if (result.count > 0) {
+      this.logger.log(`completed ${result.count} bookings`);
     }
   }
 }

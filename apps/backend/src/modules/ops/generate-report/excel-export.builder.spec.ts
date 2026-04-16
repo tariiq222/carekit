@@ -1,6 +1,7 @@
 import { buildRevenueExcel, buildActivityExcel } from './excel-export.builder';
 
 const mockRevenueReport = {
+  period: { from: '2026-04-01T00:00:00.000Z', to: '2026-04-02T23:59:59.000Z' },
   summary: {
     totalRevenue: 15000.5,
     totalPayments: 45,
@@ -24,9 +25,12 @@ const mockRevenueReport = {
 };
 
 const mockActivityReport = {
+  period: { from: '2026-04-01T00:00:00.000Z', to: '2026-04-02T23:59:59.000Z' },
   summary: {
     totalActions: 200,
     uniqueUsers: 50,
+    topEntities: [{ entity: 'Booking', count: 100 }],
+    topActions: [{ action: 'CREATE', count: 80 }],
   },
   byDay: [
     { date: '2026-04-01', count: 100 },

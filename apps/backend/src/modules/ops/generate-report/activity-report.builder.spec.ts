@@ -15,22 +15,14 @@ const buildPrisma = () => ({
 describe('buildActivityReport', () => {
   it('returns period with from and to', async () => {
     const prisma = buildPrisma();
-    const result = await buildActivityReport(prisma as never, { tenantId: 'tenant-1', from, to });
+    const result = await buildActivityReport(prisma as never, { from, to });
     expect(result.period.from).toBe(from.toISOString());
     expect(result.period.to).toBe(to.toISOString());
   });
 
-  it('scopes query to tenantId', async () => {
-    const prisma = buildPrisma();
-    await buildActivityReport(prisma as never, { tenantId: 'tenant-99', from, to });
-    expect(prisma.activityLog.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ tenantId: 'tenant-99' }) }),
-    );
-  });
-
   it('filters by date range using occurredAt', async () => {
     const prisma = buildPrisma();
-    await buildActivityReport(prisma as never, { tenantId: 'tenant-1', from, to });
+    await buildActivityReport(prisma as never, { from, to });
     expect(prisma.activityLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -42,7 +34,7 @@ describe('buildActivityReport', () => {
 
   it('returns summary with totalActions', async () => {
     const prisma = buildPrisma();
-    const result = await buildActivityReport(prisma as never, { tenantId: 'tenant-1', from, to });
+    const result = await buildActivityReport(prisma as never, { from, to });
     expect(result.summary).toMatchObject({
       totalActions: expect.any(Number),
       uniqueUsers: expect.any(Number),
@@ -51,7 +43,7 @@ describe('buildActivityReport', () => {
 
   it('returns byDay and byUser arrays', async () => {
     const prisma = buildPrisma();
-    const result = await buildActivityReport(prisma as never, { tenantId: 'tenant-1', from, to });
+    const result = await buildActivityReport(prisma as never, { from, to });
     expect(Array.isArray(result.byDay)).toBe(true);
     expect(Array.isArray(result.byUser)).toBe(true);
   });

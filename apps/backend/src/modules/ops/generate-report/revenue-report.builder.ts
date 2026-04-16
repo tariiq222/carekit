@@ -2,7 +2,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { PaymentStatus, BookingStatus } from '@prisma/client';
 
 export interface RevenueReportParams {
-  tenantId: string;
   from: Date;
   to: Date;
   branchId?: string;
@@ -28,10 +27,9 @@ export async function buildRevenueReport(
   prisma: PrismaService,
   params: RevenueReportParams,
 ): Promise<RevenueReportResult> {
-  const { tenantId, from, to, branchId, employeeId } = params;
+  const { from, to, branchId, employeeId } = params;
 
   const bookingWhere = {
-    tenantId,
     scheduledAt: { gte: from, lte: to },
     ...(branchId ? { branchId } : {}),
     ...(employeeId ? { employeeId } : {}),
@@ -51,7 +49,6 @@ export async function buildRevenueReport(
     }),
     prisma.payment.findMany({
       where: {
-        tenantId,
         createdAt: { gte: from, lte: to },
         status: PaymentStatus.COMPLETED,
       },

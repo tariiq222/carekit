@@ -3,7 +3,6 @@ import { ActivityAction, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface LogActivityCommand {
-  tenantId: string;
   userId?: string;
   userEmail?: string;
   action: ActivityAction;
@@ -22,7 +21,6 @@ export class LogActivityHandler {
   async execute(cmd: LogActivityCommand): Promise<void> {
     await this.prisma.activityLog.create({
       data: {
-        tenantId: cmd.tenantId,
         userId: cmd.userId,
         userEmail: cmd.userEmail,
         action: cmd.action,

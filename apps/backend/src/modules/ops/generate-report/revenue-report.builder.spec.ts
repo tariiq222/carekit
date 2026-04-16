@@ -21,14 +21,14 @@ const buildPrisma = () => ({
 describe('buildRevenueReport', () => {
   it('returns period with from and to', async () => {
     const prisma = buildPrisma();
-    const result = await buildRevenueReport(prisma as never, { tenantId: 'tenant-1', from, to });
+    const result = await buildRevenueReport(prisma as never, { from, to });
     expect(result.period.from).toBe(from.toISOString());
     expect(result.period.to).toBe(to.toISOString());
   });
 
   it('returns summary with totalRevenue and counts', async () => {
     const prisma = buildPrisma();
-    const result = await buildRevenueReport(prisma as never, { tenantId: 'tenant-1', from, to });
+    const result = await buildRevenueReport(prisma as never, { from, to });
     expect(result.summary).toMatchObject({
       totalBookings: expect.any(Number),
       completedBookings: expect.any(Number),
@@ -36,17 +36,9 @@ describe('buildRevenueReport', () => {
     });
   });
 
-  it('scopes query to tenantId', async () => {
-    const prisma = buildPrisma();
-    await buildRevenueReport(prisma as never, { tenantId: 'tenant-99', from, to });
-    expect(prisma.booking.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ tenantId: 'tenant-99' }) }),
-    );
-  });
-
   it('filters by branchId when provided', async () => {
     const prisma = buildPrisma();
-    await buildRevenueReport(prisma as never, { tenantId: 'tenant-1', from, to, branchId: 'br-1' });
+    await buildRevenueReport(prisma as never, { from, to, branchId: 'br-1' });
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ branchId: 'br-1' }) }),
     );
@@ -54,7 +46,7 @@ describe('buildRevenueReport', () => {
 
   it('returns byBranch and byEmployee breakdowns', async () => {
     const prisma = buildPrisma();
-    const result = await buildRevenueReport(prisma as never, { tenantId: 'tenant-1', from, to });
+    const result = await buildRevenueReport(prisma as never, { from, to });
     expect(Array.isArray(result.byBranch)).toBe(true);
     expect(Array.isArray(result.byEmployee)).toBe(true);
   });

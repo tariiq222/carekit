@@ -13,41 +13,26 @@ export class BookingNoShowCron {
   ) {}
 
   /**
-   * Mark CONFIRMED bookings as NO_SHOW per tenant using each tenant's autoNoShowAfterMinutes setting.
+   * Mark CONFIRMED bookings as NO_SHOW using the global autoNoShowAfterMinutes setting.
    */
   async execute(): Promise<void> {
-    const tenantIds = await this.prisma.booking
-      .findMany({
-        where: { status: BookingStatus.CONFIRMED },
-        select: { tenantId: true },
-        distinct: ['tenantId'],
-      })
-      .then((rows) => rows.map((r) => r.tenantId));
+    const settings = await this.settingsHandler.execute({ branchId: null });
+    const cutoff = new Date(Date.now() - settings.autoNoShowAfterMinutes * 60_000);
 
-    let totalNoShow = 0;
+    const result = await this.prisma.booking.updateMany({
+      where: {
+        status: BookingStatus.CONFIRMED,
+        scheduledAt: { lte: cutoff },
+        checkedInAt: null,
+      },
+      data: {
+        status: BookingStatus.NO_SHOW,
+        noShowAt: new Date(),
+      },
+    });
 
-    for (const tenantId of tenantIds) {
-      // Use tenant-global settings for cron jobs — branch-level overrides apply to user-facing flows only.
-      const settings = await this.settingsHandler.execute({ tenantId, branchId: null });
-      const cutoff = new Date(Date.now() - settings.autoNoShowAfterMinutes * 60_000);
-
-      const result = await this.prisma.booking.updateMany({
-        where: {
-          tenantId,
-          status: BookingStatus.CONFIRMED,
-          scheduledAt: { lte: cutoff },
-          checkedInAt: null,
-        },
-        data: {
-          status: BookingStatus.NO_SHOW,
-          noShowAt: new Date(),
-        },
-      });
-      totalNoShow += result.count;
-    }
-
-    if (totalNoShow > 0) {
-      this.logger.log(`marked ${totalNoShow} as NO_SHOW`);
+    if (result.count > 0) {
+      this.logger.log(`marked ${result.count} as NO_SHOW`);
     }
   }
 }
