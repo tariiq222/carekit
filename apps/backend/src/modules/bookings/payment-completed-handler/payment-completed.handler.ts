@@ -6,7 +6,6 @@ interface PaymentCompletedPayload {
   paymentId: string;
   invoiceId: string;
   bookingId: string;
-  tenantId: string;
 }
 
 /**
@@ -26,10 +25,10 @@ export class PaymentCompletedEventHandler {
     this.eventBus.subscribe<PaymentCompletedPayload>(
       'finance.payment.completed',
       async (envelope) => {
-        const { bookingId, tenantId } = envelope.payload;
+        const { bookingId } = envelope.payload;
         try {
           const booking = await this.prisma.booking.findFirst({
-            where: { id: bookingId, tenantId },
+            where: { id: bookingId },
           });
           if (!booking) return;
           if (booking.status !== 'PENDING' && booking.status !== 'AWAITING_PAYMENT') return;
@@ -41,7 +40,6 @@ export class PaymentCompletedEventHandler {
             }),
             this.prisma.bookingStatusLog.create({
               data: {
-                tenantId,
                 bookingId,
                 fromStatus: booking.status,
                 toStatus: 'CONFIRMED',

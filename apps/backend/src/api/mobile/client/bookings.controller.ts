@@ -13,7 +13,6 @@ import { BookingStatus, CancellationReason } from '@prisma/client';
 import { IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { JwtGuard } from '../../../common/guards/jwt.guard';
-import { TenantId } from '../../../common/tenant/tenant.decorator';
 import { CurrentUser, JwtUser } from '../../../common/auth/current-user.decorator';
 import { ListBookingsHandler } from '../../../modules/bookings/list-bookings/list-bookings.handler';
 import { GetBookingHandler } from '../../../modules/bookings/get-booking/get-booking.handler';
@@ -55,12 +54,10 @@ export class MobileClientBookingsController {
 
   @Post()
   createBooking(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Body() body: MobileCreateBookingDto,
   ) {
     return this.create.execute({
-      tenantId,
       clientId: user.sub,
       branchId: body.branchId,
       employeeId: body.employeeId,
@@ -73,12 +70,10 @@ export class MobileClientBookingsController {
 
   @Get()
   listMyBookings(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Query() q: MobileListBookingsDto,
   ) {
     return this.list.execute({
-      tenantId,
       clientId: user.sub,
       page: q.page ?? 1,
       limit: q.limit ?? 20,
@@ -88,21 +83,18 @@ export class MobileClientBookingsController {
 
   @Get(':id')
   getBooking(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.get.execute({ tenantId, bookingId: id });
+    return this.get.execute({ bookingId: id });
   }
 
   @Patch(':id/cancel')
   cancelBooking(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: MobileCancelBookingDto,
   ) {
     return this.cancel.execute({
-      tenantId,
       bookingId: id,
       reason: body.reason,
       cancelNotes: body.cancelNotes,
@@ -113,13 +105,11 @@ export class MobileClientBookingsController {
 
   @Patch(':id/reschedule')
   rescheduleBooking(
-    @TenantId() tenantId: string,
     @CurrentUser() user: JwtUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: RescheduleBookingDto,
   ) {
     return this.reschedule.execute({
-      tenantId,
       bookingId: id,
       newScheduledAt: new Date(body.newScheduledAt),
       newDurationMins: body.newDurationMins,

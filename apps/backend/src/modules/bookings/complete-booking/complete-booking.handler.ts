@@ -5,7 +5,6 @@ import { CompleteBookingDto } from './complete-booking.dto';
 import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export type CompleteBookingCommand = CompleteBookingDto & {
-  tenantId: string;
   bookingId: string;
   changedBy: string;
 };
@@ -15,7 +14,7 @@ export class CompleteBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: CompleteBookingCommand) {
-    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.CONFIRMED], 'completed');
+    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, [BookingStatus.CONFIRMED], 'completed');
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({
@@ -28,7 +27,6 @@ export class CompleteBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
-          tenantId: cmd.tenantId,
           bookingId: cmd.bookingId,
           fromStatus: booking.status,
           toStatus: BookingStatus.COMPLETED,

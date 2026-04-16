@@ -9,7 +9,6 @@ import { EventBusService } from '../../../infrastructure/events';
 import { BookingCancelRequestedEvent } from '../events/booking-cancel-requested.event';
 
 export interface RequestCancelBookingCommand {
-  tenantId: string;
   bookingId: string;
   reason: CancellationReason;
   cancelNotes?: string;
@@ -25,7 +24,7 @@ export class RequestCancelBookingHandler {
 
   async execute(cmd: RequestCancelBookingCommand) {
     const booking = await this.prisma.booking.findFirst({
-      where: { id: cmd.bookingId, tenantId: cmd.tenantId },
+      where: { id: cmd.bookingId },
     });
     if (!booking) {
       throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
@@ -52,7 +51,6 @@ export class RequestCancelBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
-          tenantId: cmd.tenantId,
           bookingId: cmd.bookingId,
           fromStatus: booking.status,
           toStatus: 'CANCEL_REQUESTED' as BookingStatus,
@@ -62,9 +60,8 @@ export class RequestCancelBookingHandler {
       }),
     ]);
 
-    const event = new BookingCancelRequestedEvent(cmd.tenantId, {
+    const event = new BookingCancelRequestedEvent({
       bookingId: booking.id,
-      tenantId: booking.tenantId,
       clientId: booking.clientId,
       employeeId: booking.employeeId,
       reason: cmd.reason,

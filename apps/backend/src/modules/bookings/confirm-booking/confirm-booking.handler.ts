@@ -7,7 +7,6 @@ import { CreateZoomMeetingHandler } from '../create-zoom-meeting/create-zoom-mee
 import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export interface ConfirmBookingCommand {
-  tenantId: string;
   bookingId: string;
   changedBy: string;
 }
@@ -21,7 +20,7 @@ export class ConfirmBookingHandler {
   ) {}
 
   async execute(cmd: ConfirmBookingCommand) {
-    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.PENDING], 'confirmed');
+    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, [BookingStatus.PENDING], 'confirmed');
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({
@@ -30,7 +29,6 @@ export class ConfirmBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
-          tenantId: cmd.tenantId,
           bookingId: cmd.bookingId,
           fromStatus: booking.status,
           toStatus: BookingStatus.CONFIRMED,
@@ -39,9 +37,8 @@ export class ConfirmBookingHandler {
       }),
     ]);
 
-    const event = new BookingConfirmedEvent(cmd.tenantId, {
+    const event = new BookingConfirmedEvent({
       bookingId: booking.id,
-      tenantId: booking.tenantId,
       clientId: booking.clientId,
       employeeId: booking.employeeId,
       branchId: booking.branchId,
@@ -49,15 +46,16 @@ export class ConfirmBookingHandler {
       scheduledAt: booking.scheduledAt,
       price: Number(booking.price),
       currency: booking.currency,
-      couponCode: (booking as any).couponCode ?? null,
-      discountedPrice: (booking as any).discountedPrice ? Number((booking as any).discountedPrice) : null,
+      couponCode: (booking as Record<string, unknown>).couponCode as string | null ?? null,
+      discountedPrice: (booking as Record<string, unknown>).discountedPrice
+        ? Number((booking as Record<string, unknown>).discountedPrice)
+        : null,
       bookingType: booking.bookingType,
     });
     await this.eventBus.publish(event.eventName, event.toEnvelope());
 
     if ((booking.bookingType as string) === 'ONLINE') {
       await this.createZoomMeeting.execute({
-        tenantId: cmd.tenantId,
         bookingId: cmd.bookingId,
       });
     }

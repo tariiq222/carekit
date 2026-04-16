@@ -5,12 +5,11 @@ import { PrismaService } from '../../infrastructure/database';
 export async function fetchBookingOrFail(
   prisma: PrismaService,
   bookingId: string,
-  tenantId: string,
   allowedStatuses: BookingStatus[],
   actionLabel: string,
 ) {
   const booking = await prisma.booking.findFirst({
-    where: { id: bookingId, tenantId },
+    where: { id: bookingId },
   });
   if (!booking) {
     throw new NotFoundException(`Booking ${bookingId} not found`);

@@ -2,7 +2,7 @@ import { GetBookingSettingsHandler } from './get-booking-settings.handler';
 import { buildPrisma } from '../testing/booking-test-helpers';
 
 const dbSettings = {
-  id: 'settings-1', tenantId: 'tenant-1', branchId: null,
+  id: 'settings-1', branchId: null,
   bufferMinutes: 0, freeCancelBeforeHours: 24, freeCancelRefundType: 'FULL' as const,
   lateCancelRefundPercent: 0, maxReschedulesPerBooking: 3,
   autoCompleteAfterHours: 2, autoNoShowAfterMinutes: 30,
@@ -17,11 +17,10 @@ describe('GetBookingSettingsHandler', () => {
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
       findUnique: jest.fn().mockResolvedValueOnce(branchSettings),
-      findFirst: jest.fn().mockResolvedValueOnce(branchSettings),
     };
     const handler = new GetBookingSettingsHandler(prisma as never);
 
-    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1' });
+    const result = await handler.execute({ branchId: 'branch-1' });
 
     expect((result as typeof branchSettings).bufferMinutes).toBe(10);
     expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledTimes(1);
@@ -30,27 +29,26 @@ describe('GetBookingSettingsHandler', () => {
   it('falls back to global settings when no branch-level row exists', async () => {
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
-      findUnique: jest.fn().mockResolvedValueOnce(null),
-      findFirst: jest.fn().mockResolvedValueOnce(dbSettings),
+      findUnique: jest.fn()
+        .mockResolvedValueOnce(null)   // branch query
+        .mockResolvedValueOnce(dbSettings), // global query
     };
     const handler = new GetBookingSettingsHandler(prisma as never);
 
-    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1' });
+    const result = await handler.execute({ branchId: 'branch-1' });
 
     expect((result as typeof dbSettings).bufferMinutes).toBe(0);
-    expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledTimes(1);
-    expect((prisma as any).bookingSettings.findFirst).toHaveBeenCalledTimes(1);
+    expect((prisma as any).bookingSettings.findUnique).toHaveBeenCalledTimes(2);
   });
 
   it('returns hardcoded defaults when no DB row exists', async () => {
     const prisma = buildPrisma();
     (prisma as any).bookingSettings = {
       findUnique: jest.fn().mockResolvedValue(null),
-      findFirst: jest.fn().mockResolvedValue(null),
     };
     const handler = new GetBookingSettingsHandler(prisma as never);
 
-    const result = await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1' });
+    const result = await handler.execute({ branchId: 'branch-1' });
 
     expect(result.bufferMinutes).toBe(0);
     expect(result.freeCancelBeforeHours).toBe(24);

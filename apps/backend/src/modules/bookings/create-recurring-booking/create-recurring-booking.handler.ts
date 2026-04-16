@@ -13,7 +13,6 @@ export type CreateRecurringBookingCommand = Omit<
   CreateRecurringBookingDto,
   'scheduledAt' | 'expiresAt' | 'until' | 'customDates'
 > & {
-  tenantId: string;
   scheduledAt: Date;
   expiresAt?: Date;
   until?: Date;
@@ -54,7 +53,6 @@ export class CreateRecurringBookingHandler {
 
       const conflict = await db.booking.findFirst({
         where: {
-          tenantId: dto.tenantId,
           employeeId: dto.employeeId,
           status: { in: ['PENDING', 'CONFIRMED'] },
           scheduledAt: { lt: endsAt },
@@ -71,7 +69,6 @@ export class CreateRecurringBookingHandler {
 
       const booking = await db.booking.create({
         data: {
-          tenantId: dto.tenantId,
           branchId: dto.branchId,
           clientId: dto.clientId,
           employeeId: dto.employeeId,

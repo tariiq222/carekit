@@ -3,7 +3,6 @@ import type { BookingSettings, RefundType } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface UpsertBookingSettingsCommand {
-  tenantId: string;
   branchId: string | null;
   bufferMinutes?: number;
   freeCancelBeforeHours?: number;
@@ -26,14 +25,14 @@ export class UpsertBookingSettingsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: UpsertBookingSettingsCommand): Promise<BookingSettings> {
-    const { tenantId, branchId, ...fields } = cmd;
+    const { branchId, ...fields } = cmd;
 
     const updateData = Object.fromEntries(
       Object.entries(fields).filter(([, v]) => v !== undefined),
     );
 
-    const existing = await this.prisma.bookingSettings.findFirst({
-      where: { tenantId, branchId },
+    const existing = await this.prisma.bookingSettings.findUnique({
+      where: { branchId: branchId ?? null } as { branchId: string | null },
     });
 
     if (existing) {
@@ -44,7 +43,7 @@ export class UpsertBookingSettingsHandler {
     }
 
     return this.prisma.bookingSettings.create({
-      data: { tenantId, branchId, ...updateData },
+      data: { branchId, ...updateData },
     });
   }
 }

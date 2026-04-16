@@ -5,7 +5,6 @@ import { EventBusService } from '../../../infrastructure/events';
 import { GroupSessionMinReachedEvent } from '../events/group-session-min-reached.event';
 
 export interface GroupSessionMinReachedCommand {
-  tenantId: string;
   serviceId: string;
   employeeId: string;
   scheduledAt: Date;
@@ -37,7 +36,6 @@ export class GroupSessionMinReachedHandler {
     // Find all PENDING_GROUP_FILL bookings for this slot
     const bookings = await this.prisma.booking.findMany({
       where: {
-        tenantId: cmd.tenantId,
         serviceId: cmd.serviceId,
         employeeId: cmd.employeeId,
         scheduledAt: cmd.scheduledAt,
@@ -61,7 +59,6 @@ export class GroupSessionMinReachedHandler {
       ...bookingIds.map((bookingId) =>
         this.prisma.bookingStatusLog.create({
           data: {
-            tenantId: cmd.tenantId,
             bookingId,
             fromStatus: BookingStatus.PENDING_GROUP_FILL,
             toStatus: BookingStatus.AWAITING_PAYMENT,
@@ -72,8 +69,7 @@ export class GroupSessionMinReachedHandler {
       ),
     ]);
 
-    const event = new GroupSessionMinReachedEvent(cmd.tenantId, {
-      tenantId: cmd.tenantId,
+    const event = new GroupSessionMinReachedEvent({
       serviceId: cmd.serviceId,
       groupSessionKey,
       bookingIds,

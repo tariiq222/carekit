@@ -5,7 +5,6 @@ import { buildPrisma } from '../testing/booking-test-helpers';
 describe('ListBookingStatusLogHandler', () => {
   const mockLog = {
     id: 'log-1',
-    tenantId: 'tenant-1',
     bookingId: 'book-1',
     fromStatus: BookingStatus.PENDING,
     toStatus: BookingStatus.CONFIRMED,
@@ -22,10 +21,10 @@ describe('ListBookingStatusLogHandler', () => {
     };
     const handler = new ListBookingStatusLogHandler(prisma as never);
 
-    const result = await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1' });
+    const result = await handler.execute({ bookingId: 'book-1' });
 
     expect((prisma as any).bookingStatusLog.findMany).toHaveBeenCalledWith({
-      where: { tenantId: 'tenant-1', bookingId: 'book-1' },
+      where: { bookingId: 'book-1' },
       orderBy: { createdAt: 'asc' },
     });
     expect(result).toEqual([mockLog]);
@@ -39,7 +38,7 @@ describe('ListBookingStatusLogHandler', () => {
     };
     const handler = new ListBookingStatusLogHandler(prisma as never);
 
-    const result = await handler.execute({ tenantId: 'tenant-1', bookingId: 'no-logs' });
+    const result = await handler.execute({ bookingId: 'no-logs' });
 
     expect(result).toEqual([]);
   });

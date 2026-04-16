@@ -4,7 +4,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export interface CheckInBookingCommand {
-  tenantId: string;
   bookingId: string;
   changedBy: string;
 }
@@ -15,7 +14,7 @@ export class CheckInBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: CheckInBookingCommand) {
-    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.CONFIRMED], 'checked in');
+    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, [BookingStatus.CONFIRMED], 'checked in');
     if (booking.checkedInAt) {
       throw new BadRequestException('Booking is already checked in');
     }
@@ -27,7 +26,6 @@ export class CheckInBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
-          tenantId: cmd.tenantId,
           bookingId: cmd.bookingId,
           fromStatus: BookingStatus.CONFIRMED,
           toStatus: BookingStatus.CONFIRMED,

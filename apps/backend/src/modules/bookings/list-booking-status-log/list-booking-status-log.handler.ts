@@ -3,7 +3,6 @@ import type { BookingStatusLog } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface ListBookingStatusLogQuery {
-  tenantId: string;
   bookingId: string;
 }
 
@@ -13,7 +12,7 @@ export class ListBookingStatusLogHandler {
 
   async execute(query: ListBookingStatusLogQuery): Promise<BookingStatusLog[]> {
     return this.prisma.bookingStatusLog.findMany({
-      where: { tenantId: query.tenantId, bookingId: query.bookingId },
+      where: { bookingId: query.bookingId },
       orderBy: { createdAt: 'asc' },
     });
   }

@@ -16,7 +16,6 @@ const buildPrisma = (bookingIds: string[] = ['bk-1', 'bk-2']) => ({
 });
 
 const cmd = {
-  tenantId: 'tenant-1',
   serviceId: 'svc-1',
   employeeId: 'emp-1',
   scheduledAt: new Date('2026-05-01T10:00:00Z'),

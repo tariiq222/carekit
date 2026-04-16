@@ -4,7 +4,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export interface NoShowBookingCommand {
-  tenantId: string;
   bookingId: string;
   changedBy: string;
 }
@@ -14,7 +13,7 @@ export class NoShowBookingHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(cmd: NoShowBookingCommand) {
-    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.CONFIRMED], 'marked as no-show');
+    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, [BookingStatus.CONFIRMED], 'marked as no-show');
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.booking.update({
@@ -23,7 +22,6 @@ export class NoShowBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
-          tenantId: cmd.tenantId,
           bookingId: cmd.bookingId,
           fromStatus: booking.status,
           toStatus: BookingStatus.NO_SHOW,

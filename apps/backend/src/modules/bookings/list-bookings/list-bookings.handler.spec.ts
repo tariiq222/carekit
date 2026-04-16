@@ -7,7 +7,7 @@ describe('ListBookingsHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findMany = jest.fn().mockResolvedValue([mockBooking]);
     const result = await new ListBookingsHandler(prisma as never).execute({
-      tenantId: 'tenant-1', page: 1, limit: 10,
+      page: 1, limit: 10,
     });
     expect(result.items).toHaveLength(1);
     expect(result.meta.total).toBe(1);
@@ -16,25 +16,16 @@ describe('ListBookingsHandler', () => {
   it('filters by status when provided', async () => {
     const prisma = buildPrisma();
     const handler = new ListBookingsHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1', status: BookingStatus.CONFIRMED, page: 1, limit: 10 });
+    await handler.execute({ status: BookingStatus.CONFIRMED, page: 1, limit: 10 });
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ status: BookingStatus.CONFIRMED }) }),
-    );
-  });
-
-  it('scopes query to tenantId', async () => {
-    const prisma = buildPrisma();
-    const handler = new ListBookingsHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-99', page: 1, limit: 10 });
-    expect(prisma.booking.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ tenantId: 'tenant-99' }) }),
     );
   });
 
   it('filters by branchId and employeeId', async () => {
     const prisma = buildPrisma();
     const handler = new ListBookingsHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1', branchId: 'branch-1', employeeId: 'emp-1', page: 1, limit: 10 });
+    await handler.execute({ branchId: 'branch-1', employeeId: 'emp-1', page: 1, limit: 10 });
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ branchId: 'branch-1', employeeId: 'emp-1' }),
@@ -47,7 +38,7 @@ describe('ListBookingsHandler', () => {
     const handler = new ListBookingsHandler(prisma as never);
     const fromDate = new Date('2026-01-01');
     const toDate = new Date('2026-01-31');
-    await handler.execute({ tenantId: 'tenant-1', fromDate, toDate, page: 1, limit: 10 });
+    await handler.execute({ fromDate, toDate, page: 1, limit: 10 });
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ scheduledAt: { gte: fromDate, lte: toDate } }),
@@ -59,7 +50,7 @@ describe('ListBookingsHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.count = jest.fn().mockResolvedValue(25);
     const handler = new ListBookingsHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', page: 2, limit: 10 });
+    const result = await handler.execute({ page: 2, limit: 10 });
     expect(result.meta.totalPages).toBe(3);
     expect(result.meta.page).toBe(2);
     expect(result.meta.perPage).toBe(10);

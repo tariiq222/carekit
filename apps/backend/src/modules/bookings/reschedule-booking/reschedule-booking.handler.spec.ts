@@ -13,7 +13,7 @@ describe('RescheduleBookingHandler', () => {
   it('reschedules booking when new slot is free', async () => {
     const prisma = buildPrisma();
     await new RescheduleBookingHandler(prisma as never, defaultRescheduleSettings as never).execute({
-      tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newFuture, changedBy: 'user-42',
+      bookingId: 'book-1', newScheduledAt: newFuture, changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ scheduledAt: newFuture }) }),
@@ -25,7 +25,7 @@ describe('RescheduleBookingHandler', () => {
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.COMPLETED });
     await expect(
       new RescheduleBookingHandler(prisma as never, defaultRescheduleSettings as never).execute({
-        tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newFuture, changedBy: 'user-42',
+        bookingId: 'book-1', newScheduledAt: newFuture, changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -40,7 +40,7 @@ describe('RescheduleBookingHandler — maxReschedulesPerBooking', () => {
     const newTime = new Date(Date.now() + 2 * 86400_000);
 
     await expect(
-      handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' }),
+      handler.execute({ bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' }),
     ).resolves.toBeDefined();
   });
 
@@ -52,7 +52,7 @@ describe('RescheduleBookingHandler — maxReschedulesPerBooking', () => {
     const newTime = new Date(Date.now() + 2 * 86400_000);
 
     await expect(
-      handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' }),
+      handler.execute({ bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -63,7 +63,7 @@ describe('RescheduleBookingHandler — maxReschedulesPerBooking', () => {
     const handler = new RescheduleBookingHandler(prisma as never, settingsHandler as never);
     const newTime = new Date(Date.now() + 2 * 86400_000);
 
-    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' });
+    await handler.execute({ bookingId: 'book-1', newScheduledAt: newTime, changedBy: 'user-42' });
 
     expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ reason: 'rescheduled', changedBy: 'user-42' }),

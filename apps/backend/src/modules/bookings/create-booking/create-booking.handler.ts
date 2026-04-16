@@ -12,7 +12,6 @@ import { GroupSessionMinReachedHandler } from '../group-session-min-reached/grou
 import { CreateBookingDto } from './create-booking.dto';
 
 export type CreateBookingCommand = Omit<CreateBookingDto, 'scheduledAt' | 'expiresAt'> & {
-  tenantId: string;
   scheduledAt: Date;
   expiresAt?: Date;
 };
@@ -34,54 +33,46 @@ export class CreateBookingHandler {
 
     if (dto.payAtClinic) {
       const settings = await this.settingsHandler.execute({
-        tenantId: dto.tenantId,
         branchId: dto.branchId,
       });
-      if (!('payAtClinicEnabled' in settings) || !(settings as any).payAtClinicEnabled) {
+      if (!('payAtClinicEnabled' in settings) || !(settings as Record<string, unknown>).payAtClinicEnabled) {
         throw new BadRequestException('Pay at clinic is not enabled for this branch');
       }
     }
 
     if ((dto.bookingType as string) === 'ONLINE') {
       const zoomIntegration = await this.prisma.integration.findUnique({
-        where: { tenantId_provider: { tenantId: dto.tenantId, provider: 'zoom' } },
+        where: { provider: 'zoom' },
       });
       if (!zoomIntegration || !zoomIntegration.isActive) {
         throw new BadRequestException('Zoom integration must be configured for online bookings');
       }
     }
 
-    // Verify branch and client belong to the same tenant before touching any
-    // other entity. Booking has no Prisma @relation to Client/Branch (cross-BC
-    // strings by design), so handler-level checks are the only defense against
-    // creating a booking against another tenant's client or branch.
     const branch = await this.prisma.branch.findFirst({
-      where: { id: dto.branchId, tenantId: dto.tenantId },
+      where: { id: dto.branchId },
       select: { id: true },
     });
     if (!branch) throw new NotFoundException('Branch not found');
 
     const client = await this.prisma.client.findFirst({
-      where: { id: dto.clientId, tenantId: dto.tenantId },
+      where: { id: dto.clientId },
       select: { id: true },
     });
     if (!client) throw new NotFoundException('Client not found');
 
-    // Verify employee exists and belongs to the same tenant.
     const employee = await this.prisma.employee.findFirst({
-      where: { id: dto.employeeId, tenantId: dto.tenantId },
+      where: { id: dto.employeeId },
       select: { id: true },
     });
     if (!employee) throw new NotFoundException('Employee not found');
 
-    // Verify service belongs to this tenant before resolving price.
     const service = await this.prisma.service.findFirst({
-      where: { id: dto.serviceId, tenantId: dto.tenantId },
+      where: { id: dto.serviceId },
       select: { id: true },
     });
     if (!service) throw new NotFoundException('Service not found');
 
-    // Verify employee actually provides this service and get the employeeService id.
     const employeeService = await this.prisma.employeeService.findUnique({
       where: { employeeId_serviceId: { employeeId: dto.employeeId, serviceId: dto.serviceId } },
     });
@@ -91,7 +82,6 @@ export class CreateBookingHandler {
 
     // Resolve price + duration via PriceResolverService (3-tier: employee override → duration option → service base).
     const resolved = await this.priceResolver.resolve({
-      tenantId: dto.tenantId,
       serviceId: dto.serviceId,
       employeeServiceId: employeeService.id,
       durationOptionId: dto.durationOptionId ?? null,
@@ -108,7 +98,7 @@ export class CreateBookingHandler {
 
     if (dto.couponCode) {
       const coupon = await this.prisma.coupon.findUnique({
-        where: { tenantId_code: { tenantId: dto.tenantId, code: dto.couponCode } },
+        where: { code: dto.couponCode },
       });
       if (!coupon || !coupon.isActive) throw new BadRequestException(`Coupon ${dto.couponCode} not found`);
       if (coupon.expiresAt && coupon.expiresAt < new Date()) {
@@ -125,7 +115,7 @@ export class CreateBookingHandler {
 
     // Resolve group-session settings from the service
     const serviceRecord = await this.prisma.service.findFirst({
-      where: { id: dto.serviceId, tenantId: dto.tenantId },
+      where: { id: dto.serviceId },
       select: { minParticipants: true, maxParticipants: true, reserveWithoutPayment: true },
     });
     const isGroupService =
@@ -135,15 +125,13 @@ export class CreateBookingHandler {
     const initialStatus = isGroupService ? 'PENDING_GROUP_FILL' : 'PENDING';
 
     // Serialize the conflict check + insert so two concurrent requests for the
-    // same slot cannot both pass the overlap check. Postgres Serializable
-    // isolation detects the write-skew and rolls one back with a 40001 error.
+    // same slot cannot both pass the overlap check.
     const booking = await this.prisma.$transaction(
       async (tx) => {
         if (!isGroupService) {
           // Individual bookings: hard overlap check
           const conflict = await tx.booking.findFirst({
             where: {
-              tenantId: dto.tenantId,
               employeeId: dto.employeeId,
               status: { in: ['PENDING', 'CONFIRMED'] },
               scheduledAt: { lt: endsAt },
@@ -158,7 +146,6 @@ export class CreateBookingHandler {
           // Group bookings: check capacity
           const slotCount = await tx.booking.count({
             where: {
-              tenantId: dto.tenantId,
               serviceId: dto.serviceId,
               employeeId: dto.employeeId,
               scheduledAt,
@@ -172,7 +159,6 @@ export class CreateBookingHandler {
 
         return tx.booking.create({
           data: {
-            tenantId: dto.tenantId,
             branchId: dto.branchId,
             clientId: dto.clientId,
             employeeId: dto.employeeId,
@@ -201,7 +187,6 @@ export class CreateBookingHandler {
     if (isGroupService) {
       const filledCount = await this.prisma.booking.count({
         where: {
-          tenantId: dto.tenantId,
           serviceId: dto.serviceId,
           employeeId: dto.employeeId,
           scheduledAt,
@@ -211,7 +196,6 @@ export class CreateBookingHandler {
       if (filledCount >= serviceRecord!.minParticipants) {
         // Fire-and-forget — don't fail the booking if notification fails
         this.groupMinReachedHandler.execute({
-          tenantId: dto.tenantId,
           serviceId: dto.serviceId,
           employeeId: dto.employeeId,
           scheduledAt,

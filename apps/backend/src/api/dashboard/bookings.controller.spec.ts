@@ -1,7 +1,6 @@
 import { DashboardBookingsController } from './bookings.controller';
 import { CancellationReason } from '@prisma/client';
 
-const TENANT = 'tenant-1';
 const USER = 'user-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -30,87 +29,87 @@ function buildController() {
 }
 
 describe('DashboardBookingsController', () => {
-  it('createBooking — passes tenantId and converts date strings to Date', async () => {
+  it('createBooking — converts date strings to Date', async () => {
     const { controller, create } = buildController();
-    await controller.createBooking(TENANT, {
+    await controller.createBooking(USER, {
       scheduledAt: '2026-06-01T10:00:00Z',
       clientId: 'c-1', employeeId: 'e-1', serviceId: 's-1',
       branchId: 'b-1', durationMins: 60, bookingType: 'INDIVIDUAL',
     } as never);
     expect(create.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, scheduledAt: expect.any(Date) }),
+      expect.objectContaining({ scheduledAt: expect.any(Date) }),
     );
   });
 
-  it('listBookings — passes tenantId and default pagination', async () => {
+  it('listBookings — passes default pagination', async () => {
     const { controller, list } = buildController();
-    await controller.listBookings(TENANT, {} as never);
+    await controller.listBookings({} as never);
     expect(list.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, page: 1 }),
+      expect.objectContaining({ page: 1 }),
     );
   });
 
-  it('getBooking — passes tenantId and bookingId', async () => {
+  it('getBooking — passes bookingId', async () => {
     const { controller, get } = buildController();
-    await controller.getBooking(TENANT, 'book-1');
-    expect(get.execute).toHaveBeenCalledWith({ tenantId: TENANT, bookingId: 'book-1' });
+    await controller.getBooking('book-1');
+    expect(get.execute).toHaveBeenCalledWith({ bookingId: 'book-1' });
   });
 
-  it('cancelBooking — passes tenantId, bookingId, and changedBy', async () => {
+  it('cancelBooking — passes bookingId and changedBy', async () => {
     const { controller, cancel } = buildController();
-    await controller.cancelBooking(TENANT, USER, 'book-1', { reason: CancellationReason.CLIENT_REQUESTED } as never);
+    await controller.cancelBooking(USER, 'book-1', { reason: CancellationReason.CLIENT_REQUESTED } as never);
     expect(cancel.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, bookingId: 'book-1', changedBy: USER }),
+      expect.objectContaining({ bookingId: 'book-1', changedBy: USER }),
     );
   });
 
-  it('confirmBooking — passes tenantId and bookingId', async () => {
+  it('confirmBooking — passes bookingId', async () => {
     const { controller, confirm } = buildController();
-    await controller.confirmBooking(TENANT, USER, 'book-1');
+    await controller.confirmBooking(USER, 'book-1');
     expect(confirm.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, bookingId: 'book-1' }),
+      expect.objectContaining({ bookingId: 'book-1' }),
     );
   });
 
-  it('checkInBooking — passes tenantId and bookingId', async () => {
+  it('checkInBooking — passes bookingId', async () => {
     const { controller, checkIn } = buildController();
-    await controller.checkInBooking(TENANT, USER, 'book-1');
+    await controller.checkInBooking(USER, 'book-1');
     expect(checkIn.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, bookingId: 'book-1' }),
+      expect.objectContaining({ bookingId: 'book-1' }),
     );
   });
 
-  it('completeBooking — passes tenantId and bookingId', async () => {
+  it('completeBooking — passes bookingId', async () => {
     const { controller, complete } = buildController();
-    await controller.completeBooking(TENANT, USER, 'book-1', {} as never);
+    await controller.completeBooking(USER, 'book-1', {} as never);
     expect(complete.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, bookingId: 'book-1' }),
+      expect.objectContaining({ bookingId: 'book-1' }),
     );
   });
 
-  it('noShowBooking — passes tenantId and bookingId', async () => {
+  it('noShowBooking — passes bookingId', async () => {
     const { controller, noShow } = buildController();
-    await controller.noShowBooking(TENANT, USER, 'book-1');
+    await controller.noShowBooking(USER, 'book-1');
     expect(noShow.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, bookingId: 'book-1' }),
+      expect.objectContaining({ bookingId: 'book-1' }),
     );
   });
 
-  it('addToWaitlist — passes tenantId', async () => {
+  it('addToWaitlist — passes serviceId', async () => {
     const { controller, waitlist } = buildController();
-    await controller.addToWaitlist(TENANT, { serviceId: 's-1' } as never);
-    expect(waitlist.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.addToWaitlist({ serviceId: 's-1' } as never);
+    expect(waitlist.execute).toHaveBeenCalledWith(expect.objectContaining({ serviceId: 's-1' }));
   });
 
-  it('checkAvailability — passes tenantId', async () => {
+  it('checkAvailability — passes date as Date', async () => {
     const { controller, availability } = buildController();
-    await controller.checkAvailability(TENANT, {} as never);
-    expect(availability.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.checkAvailability({ date: '2026-06-01T00:00:00Z' } as never);
+    expect(availability.execute).toHaveBeenCalledWith(expect.objectContaining({ date: expect.any(Date) }));
   });
 
   it('rescheduleBooking — converts new date string to Date', async () => {
     const { controller, reschedule } = buildController();
-    await controller.rescheduleBooking(TENANT, USER, 'book-1', { newScheduledAt: '2026-07-01T09:00:00Z' } as never);
+    await controller.rescheduleBooking(USER, 'book-1', { newScheduledAt: '2026-07-01T09:00:00Z' } as never);
     expect(reschedule.execute).toHaveBeenCalledWith(
       expect.objectContaining({ newScheduledAt: expect.any(Date) }),
     );
@@ -118,7 +117,7 @@ describe('DashboardBookingsController', () => {
 
   it('createRecurringBooking — handles all optional date fields', async () => {
     const { controller, createRecurring } = buildController();
-    await controller.createRecurringBooking(TENANT, {
+    await controller.createRecurringBooking({
       scheduledAt: '2026-06-01T10:00:00Z',
       expiresAt: '2026-12-31T23:59:59Z',
       until: '2026-12-31T23:59:59Z',
@@ -128,7 +127,6 @@ describe('DashboardBookingsController', () => {
     } as never);
     expect(createRecurring.execute).toHaveBeenCalledWith(
       expect.objectContaining({
-        tenantId: TENANT,
         scheduledAt: expect.any(Date),
         expiresAt: expect.any(Date),
         until: expect.any(Date),
@@ -139,14 +137,13 @@ describe('DashboardBookingsController', () => {
 
   it('createRecurringBooking — handles missing optional dates', async () => {
     const { controller, createRecurring } = buildController();
-    await controller.createRecurringBooking(TENANT, {
+    await controller.createRecurringBooking({
       scheduledAt: '2026-06-01T10:00:00Z',
       clientId: 'c-1', employeeId: 'e-1', serviceId: 's-1',
       branchId: 'b-1', durationMins: 60, bookingType: 'INDIVIDUAL',
     } as never);
     expect(createRecurring.execute).toHaveBeenCalledWith(
       expect.objectContaining({
-        tenantId: TENANT,
         scheduledAt: expect.any(Date),
         expiresAt: undefined,
         until: undefined,

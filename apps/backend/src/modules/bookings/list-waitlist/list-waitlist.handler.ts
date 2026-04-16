@@ -3,7 +3,7 @@ import { WaitlistStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { ListWaitlistDto } from './list-waitlist.dto';
 
-export type ListWaitlistQuery = ListWaitlistDto & { tenantId: string };
+export type ListWaitlistQuery = ListWaitlistDto;
 
 @Injectable()
 export class ListWaitlistHandler {
@@ -12,7 +12,6 @@ export class ListWaitlistHandler {
   async execute(query: ListWaitlistQuery) {
     return this.prisma.waitlistEntry.findMany({
       where: {
-        tenantId: query.tenantId,
         ...(query.employeeId ? { employeeId: query.employeeId } : {}),
         ...(query.status ? { status: query.status as WaitlistStatus } : {}),
       },

@@ -8,15 +8,15 @@ function buildHandler() {
     subscribe: jest.fn(),
     publish: jest.fn().mockResolvedValue(undefined),
   };
-  let subscriber: ((envelope: { payload: { bookingId: string; tenantId: string; paymentId: string; invoiceId: string } }) => Promise<void>) | null = null;
+  let subscriber: ((envelope: { payload: { bookingId: string; paymentId: string; invoiceId: string } }) => Promise<void>) | null = null;
   eb.subscribe = jest.fn((_, cb) => { subscriber = cb as typeof subscriber; });
   const handler = new PaymentCompletedEventHandler(prisma as never, eb as never);
   handler.register();
   return { prisma, eb, handler, getSubscriber: () => subscriber! };
 }
 
-const makeEnvelope = (overrides: Partial<{ bookingId: string; tenantId: string; paymentId: string; invoiceId: string }> = {}) => ({
-  payload: { bookingId: 'book-1', tenantId: 'tenant-1', paymentId: 'pay-1', invoiceId: 'inv-1', ...overrides },
+const makeEnvelope = (overrides: Partial<{ bookingId: string; paymentId: string; invoiceId: string }> = {}) => ({
+  payload: { bookingId: 'book-1', paymentId: 'pay-1', invoiceId: 'inv-1', ...overrides },
 });
 
 describe('PaymentCompletedEventHandler', () => {

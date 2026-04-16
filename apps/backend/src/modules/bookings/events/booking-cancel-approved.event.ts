@@ -2,7 +2,6 @@ import { BaseEvent } from '../../../common/events';
 
 export interface BookingCancelApprovedPayload {
   bookingId: string;
-  tenantId: string;
   clientId: string;
   employeeId: string;
   autoRefund: boolean;
@@ -12,7 +11,7 @@ export interface BookingCancelApprovedPayload {
 export class BookingCancelApprovedEvent extends BaseEvent<BookingCancelApprovedPayload> {
   readonly eventName = 'bookings.booking.cancel_approved';
 
-  constructor(tenantId: string, payload: BookingCancelApprovedPayload) {
-    super({ source: 'bookings', version: 1, tenantId, payload });
+  constructor(payload: BookingCancelApprovedPayload) {
+    super({ source: 'bookings', version: 1, payload });
   }
 }

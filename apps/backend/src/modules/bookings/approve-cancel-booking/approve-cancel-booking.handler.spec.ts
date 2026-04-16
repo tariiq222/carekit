@@ -24,7 +24,6 @@ describe('ApproveCancelBookingHandler', () => {
     const handler = new ApproveCancelBookingHandler(prisma as never, eb as never, defaultSettings as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       bookingId: 'book-1',
       approvedBy: 'admin-1',
       approverNotes: 'Approved',
@@ -43,7 +42,7 @@ describe('ApproveCancelBookingHandler', () => {
     const handler = new ApproveCancelBookingHandler(prisma as never, buildEventBus() as never, defaultSettings as never);
 
     await expect(
-      handler.execute({ tenantId: 'tenant-1', bookingId: 'bad', approvedBy: 'admin-1' }),
+      handler.execute({ bookingId: 'bad', approvedBy: 'admin-1' }),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -53,7 +52,7 @@ describe('ApproveCancelBookingHandler', () => {
     const handler = new ApproveCancelBookingHandler(prisma as never, buildEventBus() as never, defaultSettings as never);
 
     await expect(
-      handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', approvedBy: 'admin-1' }),
+      handler.execute({ bookingId: 'book-1', approvedBy: 'admin-1' }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -63,7 +62,7 @@ describe('ApproveCancelBookingHandler', () => {
     prisma.booking.update = jest.fn().mockResolvedValue({ ...cancelRequestedBooking, status: BookingStatus.CANCELLED });
     const handler = new ApproveCancelBookingHandler(prisma as never, buildEventBus() as never, defaultSettings as never);
 
-    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', approvedBy: 'admin-1', approverNotes: 'ok' });
+    await handler.execute({ bookingId: 'book-1', approvedBy: 'admin-1', approverNotes: 'ok' });
 
     expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -83,7 +82,7 @@ describe('ApproveCancelBookingHandler', () => {
     const settingsNoRefund = { execute: jest.fn().mockResolvedValue({}) };
     const handler = new ApproveCancelBookingHandler(prisma as never, buildEventBus() as never, settingsNoRefund as never);
 
-    const result = await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', approvedBy: 'admin-1' });
+    const result = await handler.execute({ bookingId: 'book-1', approvedBy: 'admin-1' });
     expect(result.autoRefund).toBe(true);
   });
 });

@@ -3,7 +3,7 @@ import { BookingStatus } from '@prisma/client';
 const future = new Date(Date.now() + 86400_000);
 
 export const mockBooking = {
-  id: 'book-1', tenantId: 'tenant-1', branchId: 'branch-1',
+  id: 'book-1', branchId: 'branch-1',
   clientId: 'client-1', employeeId: 'emp-1', serviceId: 'svc-1',
   scheduledAt: future, endsAt: new Date(future.getTime() + 3600_000),
   durationMins: 60, price: 200, currency: 'SAR',
@@ -48,15 +48,15 @@ const buildPrismaRaw = () => ({
   },
   service: {
     findUnique: jest.fn().mockResolvedValue({
-      id: 'svc-1', tenantId: 'tenant-1', durationMins: 60, price: 200, currency: 'SAR',
+      id: 'svc-1', durationMins: 60, price: 200, currency: 'SAR',
     }),
     findFirst: jest.fn().mockResolvedValue({
-      id: 'svc-1', tenantId: 'tenant-1', durationMins: 60, price: 200, currency: 'SAR',
+      id: 'svc-1', durationMins: 60, price: 200, currency: 'SAR',
       minParticipants: 1, maxParticipants: 1, reserveWithoutPayment: false,
     }),
   },
   employee: {
-    findUnique: jest.fn().mockResolvedValue({ id: 'emp-1', tenantId: 'tenant-1' }),
+    findUnique: jest.fn().mockResolvedValue({ id: 'emp-1' }),
     findFirst: jest.fn().mockResolvedValue({ id: 'emp-1' }),
   },
   employeeService: {
@@ -81,7 +81,6 @@ export const buildPrisma = () => {
       return Promise.all(arg);
     },
   );
-  // Compound-WHERE tenant verification uses findFirst({ where: { id, tenantId } }).
   // Route pure id-lookup findFirst calls (no status/employee filter) to findUnique.
   const conflictFindFirst = p.booking.findFirst;
   p.booking.findFirst = jest.fn((args: { where?: Record<string, unknown> } = {}) => {

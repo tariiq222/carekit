@@ -6,7 +6,6 @@ import {
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface CreateZoomMeetingCommand {
-  tenantId: string;
   bookingId: string;
 }
 
@@ -28,7 +27,7 @@ export class CreateZoomMeetingHandler {
 
   async execute(cmd: CreateZoomMeetingCommand) {
     const booking = await this.prisma.booking.findFirst({
-      where: { id: cmd.bookingId, tenantId: cmd.tenantId },
+      where: { id: cmd.bookingId },
     });
     if (!booking) {
       throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
@@ -40,12 +39,7 @@ export class CreateZoomMeetingHandler {
     }
 
     const integration = await this.prisma.integration.findUnique({
-      where: {
-        tenantId_provider: {
-          tenantId: cmd.tenantId,
-          provider: 'zoom',
-        },
-      },
+      where: { provider: 'zoom' },
     });
     if (!integration || !integration.isActive) {
       throw new BadRequestException(

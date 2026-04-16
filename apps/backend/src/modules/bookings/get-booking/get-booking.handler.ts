@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface GetBookingQuery {
-  tenantId: string;
   bookingId: string;
 }
 
@@ -12,7 +11,7 @@ export class GetBookingHandler {
 
   async execute(query: GetBookingQuery) {
     const booking = await this.prisma.booking.findFirst({
-      where: { id: query.bookingId, tenantId: query.tenantId },
+      where: { id: query.bookingId },
     });
     if (!booking) {
       throw new NotFoundException(`Booking ${query.bookingId} not found`);

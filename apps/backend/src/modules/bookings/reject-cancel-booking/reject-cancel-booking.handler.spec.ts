@@ -13,7 +13,7 @@ describe('RejectCancelBookingHandler', () => {
     const eb = buildEventBus();
     const handler = new RejectCancelBookingHandler(prisma as never, eb as never);
 
-    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', rejectedBy: 'admin-1', rejectReason: 'No reason' });
+    await handler.execute({ bookingId: 'book-1', rejectedBy: 'admin-1', rejectReason: 'No reason' });
 
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.CONFIRMED }) }),
@@ -26,7 +26,7 @@ describe('RejectCancelBookingHandler', () => {
     prisma.booking.findFirst = jest.fn().mockResolvedValue(null);
     await expect(
       new RejectCancelBookingHandler(prisma as never, buildEventBus() as never).execute({
-        tenantId: 'tenant-1', bookingId: 'bad', rejectedBy: 'admin-1', rejectReason: 'x',
+        bookingId: 'bad', rejectedBy: 'admin-1', rejectReason: 'x',
       }),
     ).rejects.toThrow(NotFoundException);
   });
@@ -36,7 +36,7 @@ describe('RejectCancelBookingHandler', () => {
     prisma.booking.findFirst = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.PENDING });
     await expect(
       new RejectCancelBookingHandler(prisma as never, buildEventBus() as never).execute({
-        tenantId: 'tenant-1', bookingId: 'book-1', rejectedBy: 'admin-1', rejectReason: 'x',
+        bookingId: 'book-1', rejectedBy: 'admin-1', rejectReason: 'x',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -47,7 +47,7 @@ describe('RejectCancelBookingHandler', () => {
     prisma.booking.update = jest.fn().mockResolvedValue({ ...cancelRequestedBooking, status: BookingStatus.CONFIRMED });
     const handler = new RejectCancelBookingHandler(prisma as never, buildEventBus() as never);
 
-    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', rejectedBy: 'admin-1', rejectReason: 'policy' });
+    await handler.execute({ bookingId: 'book-1', rejectedBy: 'admin-1', rejectReason: 'policy' });
 
     expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith(
       expect.objectContaining({

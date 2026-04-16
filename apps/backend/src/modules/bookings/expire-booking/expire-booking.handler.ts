@@ -4,7 +4,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export interface ExpireBookingCommand {
-  tenantId: string;
   bookingId: string;
   changedBy: string;
 }
@@ -17,7 +16,6 @@ export class ExpireBookingHandler {
     const booking = await fetchBookingOrFail(
       this.prisma,
       cmd.bookingId,
-      cmd.tenantId,
       [BookingStatus.PENDING, BookingStatus.PENDING_GROUP_FILL, BookingStatus.AWAITING_PAYMENT],
       'expired',
     );
@@ -29,7 +27,6 @@ export class ExpireBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
-          tenantId: cmd.tenantId,
           bookingId: cmd.bookingId,
           fromStatus: booking.status,
           toStatus: BookingStatus.EXPIRED,

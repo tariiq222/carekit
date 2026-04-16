@@ -17,7 +17,7 @@ describe('CheckAvailabilityHandler', () => {
 
   it('returns available slots when employee has a shift covering the day', async () => {
     const result = await new CheckAvailabilityHandler(buildPrisma() as never, defaultSettingsHandler as never).execute({
-      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
     expect(Array.isArray(result)).toBe(true);
@@ -28,7 +28,7 @@ describe('CheckAvailabilityHandler', () => {
     const prisma = buildPrisma();
     prisma.businessHour.findUnique = jest.fn().mockResolvedValue({ isOpen: false });
     const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
-      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
     expect(result).toEqual([]);
@@ -38,7 +38,7 @@ describe('CheckAvailabilityHandler', () => {
     const prisma = buildPrisma();
     prisma.employeeAvailability.findMany = jest.fn().mockResolvedValue([]);
     const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
-      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
     expect(result).toEqual([]);
@@ -48,7 +48,7 @@ describe('CheckAvailabilityHandler', () => {
     const prisma = buildPrisma();
     prisma.holiday.findFirst = jest.fn().mockResolvedValue({ id: 'hol-1', branchId: 'branch-1', date: tomorrowMidnight });
     const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
-      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
     expect(result).toEqual([]);
@@ -64,7 +64,7 @@ describe('CheckAvailabilityHandler', () => {
       id: 'exc-1', employeeId: 'emp-1', startDate: yesterday, endDate: dayAfter,
     });
     const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
-      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
     expect(result).toEqual([]);
@@ -82,7 +82,7 @@ describe('CheckAvailabilityHandler', () => {
     ]);
 
     const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
-      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
 
@@ -103,7 +103,7 @@ describe('CheckAvailabilityHandler', () => {
     ]);
 
     const result = await new CheckAvailabilityHandler(prisma as never, defaultSettingsHandler as never).execute({
-      tenantId: 'tenant-1', employeeId: 'emp-1', branchId: 'branch-1',
+      employeeId: 'emp-1', branchId: 'branch-1',
       date: tomorrowMidnight, durationMins: 60,
     });
 
@@ -131,7 +131,6 @@ describe('CheckAvailabilityHandler — settings enforcement', () => {
     const farFuture = new Date(Date.now() + 30 * 86400_000);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       employeeId: 'emp-1',
       branchId: 'branch-1',
       date: farFuture,

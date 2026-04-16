@@ -16,7 +16,7 @@ describe('CancelBookingHandler', () => {
     const prisma = buildPrisma();
     const eb = buildEventBus();
     const result = await new CancelBookingHandler(prisma as never, eb as never, defaultCancelSettings as never).execute({
-      tenantId: 'tenant-1', bookingId: 'book-1', reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-42',
+      bookingId: 'book-1', reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.CANCELLED }) }),
@@ -30,7 +30,7 @@ describe('CancelBookingHandler', () => {
     prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
       new CancelBookingHandler(prisma as never, buildEventBus() as never, defaultCancelSettings as never).execute({
-        tenantId: 'tenant-1', bookingId: 'bad', reason: CancellationReason.OTHER, changedBy: 'user-42',
+        bookingId: 'bad', reason: CancellationReason.OTHER, changedBy: 'user-42',
       }),
     ).rejects.toThrow(NotFoundException);
   });
@@ -40,7 +40,7 @@ describe('CancelBookingHandler', () => {
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CANCELLED });
     await expect(
       new CancelBookingHandler(prisma as never, buildEventBus() as never, defaultCancelSettings as never).execute({
-        tenantId: 'tenant-1', bookingId: 'book-1', reason: CancellationReason.OTHER, changedBy: 'user-42',
+        bookingId: 'book-1', reason: CancellationReason.OTHER, changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -53,7 +53,6 @@ describe('CancelBookingHandler — status log', () => {
     const handler = new CancelBookingHandler(prisma as never, eventBus as never, defaultCancelSettings as never);
 
     await handler.execute({
-      tenantId: 'tenant-1',
       bookingId: 'book-1',
       reason: CancellationReason.CLIENT_REQUESTED,
       changedBy: 'user-42',
@@ -85,7 +84,7 @@ describe('CancelBookingHandler — free cancel window', () => {
     const handler = new CancelBookingHandler(prisma as never, eventBus as never, settingsHandler as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1', bookingId: 'book-1',
+      bookingId: 'book-1',
       reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-42',
     });
 
@@ -107,7 +106,7 @@ describe('CancelBookingHandler — free cancel window', () => {
     const handler = new CancelBookingHandler(prisma as never, eventBus as never, settingsHandler as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1', bookingId: 'book-1',
+      bookingId: 'book-1',
       reason: CancellationReason.CLIENT_REQUESTED, changedBy: 'user-42',
     });
 

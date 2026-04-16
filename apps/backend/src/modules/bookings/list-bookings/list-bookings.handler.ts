@@ -4,7 +4,6 @@ import { toListResponse } from '../../../common/dto';
 import { ListBookingsDto } from './list-bookings.dto';
 
 export type ListBookingsQuery = Omit<ListBookingsDto, 'page' | 'limit' | 'fromDate' | 'toDate'> & {
-  tenantId: string;
   page: number;
   limit: number;
   fromDate?: Date;
@@ -17,7 +16,6 @@ export class ListBookingsHandler {
 
   async execute(query: ListBookingsQuery) {
     const where = {
-      tenantId: query.tenantId,
       ...(query.clientId ? { clientId: query.clientId } : {}),
       ...(query.employeeId ? { employeeId: query.employeeId } : {}),
       ...(query.branchId ? { branchId: query.branchId } : {}),

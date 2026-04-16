@@ -7,7 +7,6 @@ import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-s
 import { CancelBookingDto } from './cancel-booking.dto';
 
 export type CancelBookingCommand = CancelBookingDto & {
-  tenantId: string;
   bookingId: string;
   changedBy: string;
 };
@@ -28,7 +27,7 @@ export class CancelBookingHandler {
 
   async execute(cmd: CancelBookingCommand) {
     const booking = await this.prisma.booking.findFirst({
-      where: { id: cmd.bookingId, tenantId: cmd.tenantId },
+      where: { id: cmd.bookingId },
     });
     if (!booking) {
       throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
@@ -38,13 +37,12 @@ export class CancelBookingHandler {
     }
 
     const settings = await this.settingsHandler.execute({
-      tenantId: cmd.tenantId,
       branchId: booking.branchId,
     });
 
     if (cmd.source === 'client') {
       const requireApproval = 'requireCancelApproval' in settings
-        ? (settings as any).requireCancelApproval
+        ? (settings as Record<string, unknown>).requireCancelApproval
         : false;
       if (requireApproval) {
         throw new BadRequestException(
@@ -70,7 +68,6 @@ export class CancelBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
-          tenantId: cmd.tenantId,
           bookingId: cmd.bookingId,
           fromStatus: booking.status,
           toStatus: BookingStatus.CANCELLED,
@@ -80,14 +77,13 @@ export class CancelBookingHandler {
       }),
     ]);
 
-    const event = new BookingCancelledEvent(cmd.tenantId, {
+    const event = new BookingCancelledEvent({
       bookingId: booking.id,
-      tenantId: booking.tenantId,
       clientId: booking.clientId,
       employeeId: booking.employeeId,
       reason: cmd.reason,
       cancelNotes: cmd.cancelNotes,
-      zoomMeetingId: (booking as any).zoomMeetingId ?? null,
+      zoomMeetingId: (booking as Record<string, unknown>).zoomMeetingId as string | null ?? null,
     });
     await this.eventBus.publish(event.eventName, event.toEnvelope());
 

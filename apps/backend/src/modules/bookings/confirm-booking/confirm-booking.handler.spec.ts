@@ -8,7 +8,7 @@ describe('ConfirmBookingHandler', () => {
     const prisma = buildPrisma();
     const eb = buildEventBus();
     await new ConfirmBookingHandler(prisma as never, eb as never, buildZoomHandler() as never).execute({
-      tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42',
+      bookingId: 'book-1', changedBy: 'user-42',
     });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.CONFIRMED }) }),
@@ -21,7 +21,7 @@ describe('ConfirmBookingHandler', () => {
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
     await expect(
       new ConfirmBookingHandler(prisma as never, buildEventBus() as never, buildZoomHandler() as never).execute({
-        tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42',
+        bookingId: 'book-1', changedBy: 'user-42',
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -33,11 +33,10 @@ describe('ConfirmBookingHandler — status log', () => {
     const eventBus = { publish: jest.fn() };
     const handler = new ConfirmBookingHandler(prisma as never, eventBus as never, buildZoomHandler() as never);
 
-    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
+    await handler.execute({ bookingId: 'book-1', changedBy: 'user-42' });
 
     expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        tenantId: 'tenant-1',
         bookingId: 'book-1',
         fromStatus: BookingStatus.PENDING,
         toStatus: BookingStatus.CONFIRMED,

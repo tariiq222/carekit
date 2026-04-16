@@ -7,7 +7,7 @@ describe('CompleteBookingHandler', () => {
   it('completes CONFIRMED booking', async () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CONFIRMED });
-    await new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
+    await new CompleteBookingHandler(prisma as never).execute({ bookingId: 'book-1', changedBy: 'user-42' });
     expect(prisma.booking.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: BookingStatus.COMPLETED }) }),
     );
@@ -17,7 +17,7 @@ describe('CompleteBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.CANCELLED });
     await expect(
-      new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' }),
+      new CompleteBookingHandler(prisma as never).execute({ bookingId: 'book-1', changedBy: 'user-42' }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -25,7 +25,7 @@ describe('CompleteBookingHandler', () => {
     const prisma = buildPrisma();
     prisma.booking.findUnique = jest.fn().mockResolvedValue(null);
     await expect(
-      new CompleteBookingHandler(prisma as never).execute({ tenantId: 'tenant-1', bookingId: 'bad', changedBy: 'user-42' }),
+      new CompleteBookingHandler(prisma as never).execute({ bookingId: 'bad', changedBy: 'user-42' }),
     ).rejects.toThrow(NotFoundException);
   });
 });
@@ -37,7 +37,7 @@ describe('CompleteBookingHandler — status log', () => {
     prisma.booking.findUnique.mockResolvedValue(confirmedBooking);
     const handler = new CompleteBookingHandler(prisma as never);
 
-    await handler.execute({ tenantId: 'tenant-1', bookingId: 'book-1', changedBy: 'user-42' });
+    await handler.execute({ bookingId: 'book-1', changedBy: 'user-42' });
 
     expect(prisma.bookingStatusLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({

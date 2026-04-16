@@ -2,7 +2,6 @@ import { BaseEvent } from '../../../common/events';
 
 export interface BookingConfirmedPayload {
   bookingId: string;
-  tenantId: string;
   clientId: string;
   employeeId: string;
   branchId: string;
@@ -23,7 +22,7 @@ export interface BookingConfirmedPayload {
 export class BookingConfirmedEvent extends BaseEvent<BookingConfirmedPayload> {
   readonly eventName = 'bookings.booking.confirmed';
 
-  constructor(tenantId: string, payload: BookingConfirmedPayload) {
-    super({ source: 'bookings', version: 1, tenantId, payload });
+  constructor(payload: BookingConfirmedPayload) {
+    super({ source: 'bookings', version: 1, payload });
   }
 }

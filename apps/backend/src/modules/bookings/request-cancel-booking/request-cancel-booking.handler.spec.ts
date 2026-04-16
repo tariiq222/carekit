@@ -12,7 +12,7 @@ describe('RequestCancelBookingHandler', () => {
     const handler = new RequestCancelBookingHandler(prisma as never, eb as never);
 
     await handler.execute({
-      tenantId: 'tenant-1', bookingId: 'book-1',
+      bookingId: 'book-1',
       reason: CancellationReason.CLIENT_REQUESTED, requestedBy: 'client-1',
     });
 
@@ -29,7 +29,7 @@ describe('RequestCancelBookingHandler', () => {
     const handler = new RequestCancelBookingHandler(prisma as never, buildEventBus() as never);
 
     await handler.execute({
-      tenantId: 'tenant-1', bookingId: 'book-1',
+      bookingId: 'book-1',
       reason: CancellationReason.CLIENT_REQUESTED, requestedBy: 'client-1',
     });
 
@@ -41,7 +41,7 @@ describe('RequestCancelBookingHandler', () => {
     prisma.booking.findFirst = jest.fn().mockResolvedValue(null);
     await expect(
       new RequestCancelBookingHandler(prisma as never, buildEventBus() as never).execute({
-        tenantId: 'tenant-1', bookingId: 'bad',
+        bookingId: 'bad',
         reason: CancellationReason.OTHER, requestedBy: 'u',
       }),
     ).rejects.toThrow(NotFoundException);
@@ -52,7 +52,7 @@ describe('RequestCancelBookingHandler', () => {
     prisma.booking.findFirst = jest.fn().mockResolvedValue({ ...mockBooking, status: BookingStatus.COMPLETED });
     await expect(
       new RequestCancelBookingHandler(prisma as never, buildEventBus() as never).execute({
-        tenantId: 'tenant-1', bookingId: 'book-1',
+        bookingId: 'book-1',
         reason: CancellationReason.OTHER, requestedBy: 'u',
       }),
     ).rejects.toThrow(BadRequestException);
@@ -65,7 +65,7 @@ describe('RequestCancelBookingHandler', () => {
     const handler = new RequestCancelBookingHandler(prisma as never, buildEventBus() as never);
 
     await handler.execute({
-      tenantId: 'tenant-1', bookingId: 'book-1',
+      bookingId: 'book-1',
       reason: CancellationReason.OTHER, requestedBy: 'u', cancelNotes: 'urgent',
     });
 

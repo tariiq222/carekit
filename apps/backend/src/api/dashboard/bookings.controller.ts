@@ -5,7 +5,6 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { UserId } from '../../common/auth/user-id.decorator';
 import { CreateBookingHandler } from '../../modules/bookings/create-booking/create-booking.handler';
 import { CreateBookingDto } from '../../modules/bookings/create-booking/create-booking.dto';
@@ -54,10 +53,9 @@ export class DashboardBookingsController {
   ) {}
 
   @Post()
-  createBooking(@TenantId() tenantId: string, @Body() body: CreateBookingDto) {
+  createBooking(@UserId() userId: string, @Body() body: CreateBookingDto) {
     const { scheduledAt, expiresAt, ...rest } = body;
     return this.createHandler.execute({
-      tenantId,
       ...rest,
       scheduledAt: new Date(scheduledAt),
       expiresAt: expiresAt ? new Date(expiresAt) : undefined,
@@ -66,12 +64,10 @@ export class DashboardBookingsController {
 
   @Post('recurring')
   createRecurringBooking(
-    @TenantId() tenantId: string,
     @Body() body: CreateRecurringBookingDto,
   ) {
     const { scheduledAt, expiresAt, until, customDates, ...rest } = body;
     return this.createRecurringHandler.execute({
-      tenantId,
       ...rest,
       scheduledAt: new Date(scheduledAt),
       expiresAt: expiresAt ? new Date(expiresAt) : undefined,
@@ -81,10 +77,9 @@ export class DashboardBookingsController {
   }
 
   @Get()
-  listBookings(@TenantId() tenantId: string, @Query() q: ListBookingsDto) {
+  listBookings(@Query() q: ListBookingsDto) {
     const { page, limit, fromDate, toDate, ...rest } = q;
     return this.listHandler.execute({
-      tenantId,
       ...rest,
       page: page ?? 1,
       limit: limit ?? 20,
@@ -94,29 +89,26 @@ export class DashboardBookingsController {
   }
 
   @Get('availability')
-  checkAvailability(@TenantId() tenantId: string, @Query() q: CheckAvailabilityDto) {
+  checkAvailability(@Query() q: CheckAvailabilityDto) {
     const { date, ...rest } = q;
     return this.availabilityHandler.execute({
-      tenantId,
       ...rest,
       date: new Date(date),
     });
   }
 
   @Get(':id')
-  getBooking(@TenantId() tenantId: string, @Param('id', ParseUUIDPipe) id: string) {
-    return this.getHandler.execute({ tenantId, bookingId: id });
+  getBooking(@Param('id', ParseUUIDPipe) id: string) {
+    return this.getHandler.execute({ bookingId: id });
   }
 
   @Patch(':id/cancel')
   cancelBooking(
-    @TenantId() tenantId: string,
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: CancelBookingDto,
   ) {
     return this.cancelHandler.execute({
-      tenantId,
       bookingId: id,
       changedBy: userId,
       ...body,
@@ -125,13 +117,11 @@ export class DashboardBookingsController {
 
   @Patch(':id/reschedule')
   rescheduleBooking(
-    @TenantId() tenantId: string,
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: RescheduleBookingDto,
   ) {
     return this.rescheduleHandler.execute({
-      tenantId,
       bookingId: id,
       newScheduledAt: new Date(body.newScheduledAt),
       newDurationMins: body.newDurationMins,
@@ -142,33 +132,29 @@ export class DashboardBookingsController {
   @Patch(':id/confirm')
   @HttpCode(HttpStatus.OK)
   confirmBooking(
-    @TenantId() tenantId: string,
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.confirmHandler.execute({ tenantId, bookingId: id, changedBy: userId });
+    return this.confirmHandler.execute({ bookingId: id, changedBy: userId });
   }
 
   @Patch(':id/check-in')
   @HttpCode(HttpStatus.OK)
   checkInBooking(
-    @TenantId() tenantId: string,
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.checkInHandler.execute({ tenantId, bookingId: id, changedBy: userId });
+    return this.checkInHandler.execute({ bookingId: id, changedBy: userId });
   }
 
   @Patch(':id/complete')
   @HttpCode(HttpStatus.OK)
   completeBooking(
-    @TenantId() tenantId: string,
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: CompleteBookingDto,
   ) {
     return this.completeHandler.execute({
-      tenantId,
       bookingId: id,
       changedBy: userId,
       ...body,
@@ -178,34 +164,31 @@ export class DashboardBookingsController {
   @Patch(':id/no-show')
   @HttpCode(HttpStatus.OK)
   noShowBooking(
-    @TenantId() tenantId: string,
     @UserId() userId: string,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.noShowHandler.execute({ tenantId, bookingId: id, changedBy: userId });
+    return this.noShowHandler.execute({ bookingId: id, changedBy: userId });
   }
 
   @Post('waitlist')
-  addToWaitlist(@TenantId() tenantId: string, @Body() body: AddToWaitlistDto) {
+  addToWaitlist(@Body() body: AddToWaitlistDto) {
     const { preferredDate, ...rest } = body;
     return this.waitlistHandler.execute({
-      tenantId,
       ...rest,
       preferredDate: preferredDate ? new Date(preferredDate) : undefined,
     });
   }
 
   @Get('waitlist')
-  listWaitlist(@TenantId() tenantId: string, @Query() query: ListWaitlistDto) {
-    return this.listWaitlistHandler.execute({ tenantId, ...query });
+  listWaitlist(@Query() query: ListWaitlistDto) {
+    return this.listWaitlistHandler.execute({ ...query });
   }
 
   @Delete('waitlist/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   removeWaitlistEntry(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.removeWaitlistHandler.execute({ tenantId, id });
+    return this.removeWaitlistHandler.execute({ id });
   }
 }

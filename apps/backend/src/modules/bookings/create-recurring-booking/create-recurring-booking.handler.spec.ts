@@ -5,7 +5,6 @@ import { CreateRecurringBookingHandler } from './create-recurring-booking.handle
 const future = new Date(Date.now() + 86400_000); // tomorrow
 const mockBooking = (scheduledAt: Date, id = 'book-1') => ({
   id,
-  tenantId: 'tenant-1',
   branchId: 'branch-1',
   clientId: 'client-1',
   employeeId: 'emp-1',
@@ -36,7 +35,6 @@ const buildPrisma = (overrides?: Partial<{ findFirst: jest.Mock; create: jest.Mo
 };
 
 const baseDto = {
-  tenantId: 'tenant-1',
   branchId: 'branch-1',
   clientId: 'client-1',
   employeeId: 'emp-1',
@@ -234,10 +232,6 @@ describe('CreateRecurringBookingHandler', () => {
           occurrences: 3,
         }),
       ).rejects.toThrow(ConflictException);
-      // In unit test context, $transaction runs the callback synchronously with the same prisma
-      // so create was called once (1st occurrence succeeded) before the 2nd threw.
-      // The transaction rollback is handled by PostgreSQL in production; here we just verify
-      // that the ConflictException is propagated from a mid-series position.
       expect(prisma.booking.create).toHaveBeenCalledTimes(1);
     });
 

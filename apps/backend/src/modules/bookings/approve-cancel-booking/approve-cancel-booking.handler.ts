@@ -10,7 +10,6 @@ import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-s
 import { BookingCancelApprovedEvent } from '../events/booking-cancel-approved.event';
 
 export interface ApproveCancelBookingCommand {
-  tenantId: string;
   bookingId: string;
   approvedBy: string;
   approverNotes?: string;
@@ -26,7 +25,7 @@ export class ApproveCancelBookingHandler {
 
   async execute(cmd: ApproveCancelBookingCommand) {
     const booking = await this.prisma.booking.findFirst({
-      where: { id: cmd.bookingId, tenantId: cmd.tenantId },
+      where: { id: cmd.bookingId },
     });
     if (!booking) {
       throw new NotFoundException(`Booking ${cmd.bookingId} not found`);
@@ -38,7 +37,6 @@ export class ApproveCancelBookingHandler {
     }
 
     const settings = await this.settingsHandler.execute({
-      tenantId: cmd.tenantId,
       branchId: booking.branchId,
     });
 
@@ -57,7 +55,6 @@ export class ApproveCancelBookingHandler {
       }),
       this.prisma.bookingStatusLog.create({
         data: {
-          tenantId: cmd.tenantId,
           bookingId: cmd.bookingId,
           fromStatus: 'CANCEL_REQUESTED' as BookingStatus,
           toStatus: BookingStatus.CANCELLED,
@@ -67,9 +64,8 @@ export class ApproveCancelBookingHandler {
       }),
     ]);
 
-    const event = new BookingCancelApprovedEvent(cmd.tenantId, {
+    const event = new BookingCancelApprovedEvent({
       bookingId: booking.id,
-      tenantId: booking.tenantId,
       clientId: booking.clientId,
       employeeId: booking.employeeId,
       autoRefund,

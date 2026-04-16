@@ -6,7 +6,6 @@ import { RescheduleBookingDto } from './reschedule-booking.dto';
 import { fetchBookingOrFail } from '../booking-lifecycle.helper';
 
 export type RescheduleBookingCommand = Omit<RescheduleBookingDto, 'newScheduledAt'> & {
-  tenantId: string;
   bookingId: string;
   newScheduledAt: Date;
   changedBy: string;
@@ -20,7 +19,7 @@ export class RescheduleBookingHandler {
   ) {}
 
   async execute(cmd: RescheduleBookingCommand) {
-    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, cmd.tenantId, [BookingStatus.PENDING, BookingStatus.CONFIRMED], 'rescheduled');
+    const booking = await fetchBookingOrFail(this.prisma, cmd.bookingId, [BookingStatus.PENDING, BookingStatus.CONFIRMED], 'rescheduled');
 
     const newScheduledAt = new Date(cmd.newScheduledAt);
     if (newScheduledAt <= new Date()) {
@@ -28,7 +27,6 @@ export class RescheduleBookingHandler {
     }
 
     const settings = await this.settingsHandler.execute({
-      tenantId: cmd.tenantId,
       branchId: booking.branchId,
     });
 
@@ -44,14 +42,11 @@ export class RescheduleBookingHandler {
     const durationMins = cmd.newDurationMins ?? booking.durationMins;
     const newEndsAt = new Date(newScheduledAt.getTime() + durationMins * 60_000);
 
-    // Serialize conflict check + update + status log inside one transaction so
-    // two concurrent reschedules to the same slot cannot both pass the check.
-    // Postgres Serializable isolation detects write-skew and rolls one back.
+    // Serialize conflict check + update + status log inside one transaction.
     const [updated] = await this.prisma.$transaction(
       async (tx) => {
         const conflict = await tx.booking.findFirst({
           where: {
-            tenantId: cmd.tenantId,
             employeeId: booking.employeeId,
             id: { not: cmd.bookingId },
             status: { in: ['PENDING', 'CONFIRMED'] },
@@ -71,7 +66,6 @@ export class RescheduleBookingHandler {
           }),
           tx.bookingStatusLog.create({
             data: {
-              tenantId: cmd.tenantId,
               bookingId: cmd.bookingId,
               fromStatus: booking.status,
               toStatus: booking.status,

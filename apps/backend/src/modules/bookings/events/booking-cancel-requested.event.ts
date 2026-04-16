@@ -3,7 +3,6 @@ import { CancellationReason } from '@prisma/client';
 
 export interface BookingCancelRequestedPayload {
   bookingId: string;
-  tenantId: string;
   clientId: string;
   employeeId: string;
   reason: CancellationReason;
@@ -13,7 +12,7 @@ export interface BookingCancelRequestedPayload {
 export class BookingCancelRequestedEvent extends BaseEvent<BookingCancelRequestedPayload> {
   readonly eventName = 'bookings.booking.cancel_requested';
 
-  constructor(tenantId: string, payload: BookingCancelRequestedPayload) {
-    super({ source: 'bookings', version: 1, tenantId, payload });
+  constructor(payload: BookingCancelRequestedPayload) {
+    super({ source: 'bookings', version: 1, payload });
   }
 }
