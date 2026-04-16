@@ -3,7 +3,6 @@ import { BaseEvent } from '../../../common/events';
 export interface PaymentFailedPayload {
   paymentId: string;
   invoiceId: string;
-  tenantId: string;
   clientId: string;
   amount: number;
   currency: string;
@@ -20,7 +19,7 @@ export interface PaymentFailedPayload {
 export class PaymentFailedEvent extends BaseEvent<PaymentFailedPayload> {
   readonly eventName = 'finance.payment.failed';
 
-  constructor(tenantId: string, payload: PaymentFailedPayload) {
-    super({ source: 'finance', version: 1, tenantId, payload });
+  constructor(payload: PaymentFailedPayload) {
+    super({ source: 'finance', version: 1, payload });
   }
 }

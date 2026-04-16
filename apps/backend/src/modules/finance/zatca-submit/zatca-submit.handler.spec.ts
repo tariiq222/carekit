@@ -3,11 +3,11 @@ import { ZatcaSubmissionStatus } from '@prisma/client';
 import { ZatcaSubmitHandler } from './zatca-submit.handler';
 
 const mockInvoice = {
-  id: 'inv-1', tenantId: 'tenant-1', status: 'PAID',
+  id: 'inv-1', status: 'PAID',
   total: 230, vatAmt: 30, issuedAt: new Date('2026-01-01'),
 };
 const mockSubmission = {
-  id: 'sub-1', invoiceId: 'inv-1', tenantId: 'tenant-1',
+  id: 'sub-1', invoiceId: 'inv-1',
   status: ZatcaSubmissionStatus.ACCEPTED, zatcaUuid: 'zatca-uuid-1', qrCode: 'qr-code',
 };
 
@@ -24,7 +24,7 @@ const buildConfig = (overrides: Record<string, string | undefined> = {}) => ({
   get: jest.fn((key: string) => ({ ZATCA_API_URL: undefined, ZATCA_API_KEY: undefined, ...overrides }[key])),
 });
 
-const cmd = { tenantId: 'tenant-1', invoiceId: 'inv-1' };
+const cmd = { invoiceId: 'inv-1' };
 
 describe('ZatcaSubmitHandler', () => {
   it('creates submission and returns updated record', async () => {

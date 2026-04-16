@@ -13,7 +13,6 @@ const ALLOWED_MIME_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 export type BankTransferUploadCommand = BankTransferUploadDto & {
-  tenantId: string;
   fileBuffer: Buffer;
   mimetype: string;
   filename: string;
@@ -32,20 +31,19 @@ export class BankTransferUploadHandler {
     }
 
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id: cmd.invoiceId, tenantId: cmd.tenantId },
+      where: { id: cmd.invoiceId },
     });
     if (!invoice) {
       throw new NotFoundException(`Invoice ${cmd.invoiceId} not found`);
     }
 
     const ext = cmd.filename.split('.').pop() ?? 'bin';
-    const key = `${cmd.tenantId}/${cmd.invoiceId}/${Date.now()}.${ext}`;
+    const key = `${cmd.invoiceId}/${Date.now()}.${ext}`;
 
     const receiptUrl = await this.storage.uploadFile(RECEIPTS_BUCKET, key, cmd.fileBuffer, cmd.mimetype);
 
     const payment = await this.prisma.payment.create({
       data: {
-        tenantId: cmd.tenantId,
         invoiceId: cmd.invoiceId,
         amount: cmd.amount,
         currency: invoice.currency,

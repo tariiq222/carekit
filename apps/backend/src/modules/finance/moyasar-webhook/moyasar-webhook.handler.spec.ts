@@ -8,7 +8,6 @@ const TEST_SECRET = 'test-secret';
 
 const mockInvoice = {
   id: 'inv-1',
-  tenantId: 'tenant-1',
   bookingId: 'booking-1',
   currency: 'SAR',
   total: 230,
@@ -17,7 +16,6 @@ const mockInvoice = {
 
 const mockPayment = {
   id: 'pay-1',
-  tenantId: 'tenant-1',
   invoiceId: 'inv-1',
   status: PaymentStatus.COMPLETED,
 };

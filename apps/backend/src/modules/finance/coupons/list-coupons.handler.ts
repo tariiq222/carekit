@@ -3,7 +3,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 import { ListCouponsDto } from './list-coupons.dto';
 
-export type ListCouponsQuery = ListCouponsDto & { tenantId: string };
+export type ListCouponsQuery = ListCouponsDto;
 
 @Injectable()
 export class ListCouponsHandler {
@@ -14,7 +14,7 @@ export class ListCouponsHandler {
     const limit = query.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = { tenantId: query.tenantId };
+    const where: Record<string, unknown> = {};
     if (query.search) {
       where['code'] = { contains: query.search, mode: 'insensitive' };
     }

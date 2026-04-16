@@ -4,7 +4,6 @@ import { toListResponse } from '../../../common/dto';
 import { ListPaymentsDto } from './list-payments.dto';
 
 export type ListPaymentsQuery = Omit<ListPaymentsDto, 'fromDate' | 'toDate'> & {
-  tenantId: string;
   fromDate?: Date;
   toDate?: Date;
 };
@@ -17,7 +16,6 @@ export class ListPaymentsHandler {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const where = {
-      tenantId: query.tenantId,
       ...(query.invoiceId ? { invoiceId: query.invoiceId } : {}),
       ...(query.method ? { method: query.method } : {}),
       ...(query.status ? { status: query.status } : {}),

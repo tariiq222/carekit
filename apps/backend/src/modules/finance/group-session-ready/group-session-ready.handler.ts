@@ -63,7 +63,7 @@ export class GroupSessionReadyHandler {
     groupSessionKey: string,
   ): Promise<void> {
     const bookings = await this.prisma.booking.findMany({
-      where: { id: { in: bookingIds }, tenantId },
+      where: { id: { in: bookingIds } },
       select: {
         id: true,
         clientId: true,
@@ -83,7 +83,6 @@ export class GroupSessionReadyHandler {
       let invoice;
       try {
         invoice = await this.createInvoice.execute({
-          tenantId,
           branchId: booking.branchId,
           clientId: booking.clientId,
           employeeId: booking.employeeId,

@@ -6,7 +6,6 @@ import { CreateInvoiceDto } from './create-invoice.dto';
 const DEFAULT_VAT_RATE = 0.15;
 
 export type CreateInvoiceCommand = Omit<CreateInvoiceDto, 'dueAt'> & {
-  tenantId: string;
   dueAt?: Date;
 };
 
@@ -32,7 +31,6 @@ export class CreateInvoiceHandler {
 
     const invoice = await this.prisma.invoice.create({
       data: {
-        tenantId: dto.tenantId,
         branchId: dto.branchId,
         clientId: dto.clientId,
         employeeId: dto.employeeId,
@@ -53,7 +51,6 @@ export class CreateInvoiceHandler {
       eventId: invoice.id,
       source: 'finance',
       version: 1,
-      tenantId: invoice.tenantId,
       occurredAt: new Date(),
       payload: {
         invoiceId: invoice.id,

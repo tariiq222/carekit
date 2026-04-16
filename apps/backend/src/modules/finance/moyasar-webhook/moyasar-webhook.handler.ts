@@ -57,8 +57,8 @@ export class MoyasarWebhookHandler {
     this.verifySignature(req.rawBody, req.signature, secret);
 
     const payload = req.payload;
-    const { invoiceId, tenantId } = payload.metadata ?? {};
-    if (!invoiceId || !tenantId) {
+    const { invoiceId } = payload.metadata ?? {};
+    if (!invoiceId) {
       this.logger.warn(`Moyasar webhook missing metadata: ${payload.id}`);
       return { skipped: true };
     }
@@ -69,7 +69,7 @@ export class MoyasarWebhookHandler {
     if (existing) return { skipped: true };
 
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id: invoiceId, tenantId },
+      where: { id: invoiceId },
     });
     if (!invoice) return { skipped: true };
 
@@ -80,7 +80,6 @@ export class MoyasarWebhookHandler {
       where: { idempotencyKey: `moyasar:${payload.id}` },
       update: { status, processedAt: new Date(), failureReason: payload.message },
       create: {
-        tenantId,
         invoiceId,
         amount: amountSar,
         currency: payload.currency,
@@ -99,20 +98,18 @@ export class MoyasarWebhookHandler {
         data: { status: 'PAID', paidAt: new Date() },
       });
 
-      const event = new PaymentCompletedEvent(tenantId, {
+      const event = new PaymentCompletedEvent({
         paymentId: payment.id,
         invoiceId: invoice.id,
         bookingId: invoice.bookingId,
-        tenantId,
         amount: amountSar,
         currency: invoice.currency,
       });
       await this.eventBus.publish(event.eventName, event.toEnvelope());
     } else if (status === PaymentStatus.FAILED) {
-      const failedEvent = new PaymentFailedEvent(tenantId, {
+      const failedEvent = new PaymentFailedEvent({
         paymentId: payment.id,
         invoiceId: invoice.id,
-        tenantId,
         clientId: invoice.clientId,
         amount: amountSar,
         currency: invoice.currency,

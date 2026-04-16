@@ -3,7 +3,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { CreateCouponDto } from './create-coupon.dto';
 import type { DiscountType } from '@prisma/client';
 
-export type CreateCouponCommand = CreateCouponDto & { tenantId: string };
+export type CreateCouponCommand = CreateCouponDto;
 
 @Injectable()
 export class CreateCouponHandler {
@@ -11,13 +11,12 @@ export class CreateCouponHandler {
 
   async execute(cmd: CreateCouponCommand) {
     const exists = await this.prisma.coupon.findUnique({
-      where: { tenantId_code: { tenantId: cmd.tenantId, code: cmd.code } },
+      where: { code: cmd.code },
     });
     if (exists) throw new ConflictException(`Coupon code '${cmd.code}' already exists`);
 
     return this.prisma.coupon.create({
       data: {
-        tenantId: cmd.tenantId,
         code: cmd.code,
         descriptionAr: cmd.descriptionAr,
         descriptionEn: cmd.descriptionEn,

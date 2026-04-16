@@ -5,7 +5,6 @@ import { EventBusService } from '../../../infrastructure/events';
 import { PaymentCompletedEvent } from '../events/payment-completed.event';
 
 interface VerifyPaymentCommand {
-  tenantId: string;
   paymentId: string;
   action: 'approve' | 'reject';
   transferRef?: string;
@@ -20,7 +19,7 @@ export class VerifyPaymentHandler {
 
   async execute(cmd: VerifyPaymentCommand) {
     const payment = await this.prisma.payment.findFirst({
-      where: { id: cmd.paymentId, tenantId: cmd.tenantId },
+      where: { id: cmd.paymentId },
     });
 
     if (!payment) throw new NotFoundException('Payment not found');
@@ -56,7 +55,7 @@ export class VerifyPaymentHandler {
         });
 
         const invoice = await tx.invoice.findFirst({
-          where: { id: payment.invoiceId, tenantId: cmd.tenantId },
+          where: { id: payment.invoiceId },
         });
         if (!invoice) {
           throw new NotFoundException(`Invoice ${payment.invoiceId} not found`);
@@ -90,11 +89,10 @@ export class VerifyPaymentHandler {
         select: { id: true, bookingId: true, currency: true },
       });
       if (invoice) {
-        const event = new PaymentCompletedEvent(cmd.tenantId, {
+        const event = new PaymentCompletedEvent({
           paymentId: updatedPayment.id,
           invoiceId: invoice.id,
           bookingId: invoice.bookingId,
-          tenantId: cmd.tenantId,
           amount: Number(updatedPayment.amount),
           currency: invoice.currency,
         });

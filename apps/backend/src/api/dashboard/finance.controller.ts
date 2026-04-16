@@ -7,7 +7,6 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateInvoiceHandler } from '../../modules/finance/create-invoice/create-invoice.handler';
 import { CreateInvoiceDto } from '../../modules/finance/create-invoice/create-invoice.dto';
 import { GetInvoiceHandler } from '../../modules/finance/get-invoice/get-invoice.handler';
@@ -68,48 +67,39 @@ export class DashboardFinanceController {
   // ── Invoices ──────────────────────────────────────────────────────────────
 
   @Post('invoices')
-  createInv(@TenantId() tenantId: string, @Body() body: CreateInvoiceDto) {
+  createInv(@Body() body: CreateInvoiceDto) {
     return this.createInvoice.execute({
-      tenantId,
       ...body,
       dueAt: body.dueAt ? new Date(body.dueAt) : undefined,
     });
   }
 
   @Get('invoices/:id')
-  getInv(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.getInvoice.execute({ tenantId, invoiceId: id });
+  getInv(@Param('id', ParseUUIDPipe) id: string) {
+    return this.getInvoice.execute({ invoiceId: id });
   }
 
   // ── Payments ──────────────────────────────────────────────────────────────
 
   @Get('payments/stats')
-  getPaymentStatsEndpoint(@TenantId() tenantId: string) {
-    return this.getPaymentStats.execute({ tenantId });
+  getPaymentStatsEndpoint() {
+    return this.getPaymentStats.execute();
   }
 
   @Post('payments')
-  processPaymentEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: ProcessPaymentDto,
-  ) {
-    return this.processPayment.execute({ tenantId, ...body });
+  processPaymentEndpoint(@Body() body: ProcessPaymentDto) {
+    return this.processPayment.execute({ ...body });
   }
 
   @Post('payments/bank-transfer')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('receipt'))
   bankTransferEndpoint(
-    @TenantId() tenantId: string,
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() body: BankTransferUploadDto,
   ) {
     if (!file) throw new BadRequestException('receipt file is required');
     return this.bankTransferUpload.execute({
-      tenantId,
       ...body,
       fileBuffer: file.buffer,
       mimetype: file.mimetype,
@@ -118,12 +108,8 @@ export class DashboardFinanceController {
   }
 
   @Get('payments')
-  listPaymentsEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListPaymentsDto,
-  ) {
+  listPaymentsEndpoint(@Query() query: ListPaymentsDto) {
     return this.listPayments.execute({
-      tenantId,
       page: query.page,
       limit: query.limit,
       invoiceId: query.invoiceId,
@@ -137,94 +123,84 @@ export class DashboardFinanceController {
 
   @Patch('payments/:id/refund')
   refundPaymentEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: RefundPaymentDto,
   ) {
-    return this.refundPayment.execute({ tenantId, paymentId: id, ...body });
+    return this.refundPayment.execute({ paymentId: id, ...body });
   }
 
   @Patch('payments/:id/verify')
   verifyPaymentEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: VerifyPaymentDto,
   ) {
-    return this.verifyPayment.execute({ tenantId, paymentId: id, ...body });
+    return this.verifyPayment.execute({ paymentId: id, ...body });
   }
 
   // ── Coupons apply (existing) ───────────────────────────────────────────────
 
   @Post('coupons/apply')
-  applyCouponEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: ApplyCouponDto,
-  ) {
-    return this.applyCoupon.execute({ tenantId, ...body });
+  applyCouponEndpoint(@Body() body: ApplyCouponDto) {
+    return this.applyCoupon.execute({ ...body });
   }
 
   // ── Coupons CRUD ──────────────────────────────────────────────────────────
 
   @Get('coupons')
-  listCouponsEndpoint(@TenantId() tenantId: string, @Query() query: ListCouponsDto) {
-    return this.listCoupons.execute({ tenantId, ...query });
+  listCouponsEndpoint(@Query() query: ListCouponsDto) {
+    return this.listCoupons.execute({ ...query });
   }
 
   @Get('coupons/:id')
-  getCouponEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.getCoupon.execute({ tenantId, couponId: id });
+  getCouponEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.getCoupon.execute({ couponId: id });
   }
 
   @Post('coupons')
   @HttpCode(HttpStatus.CREATED)
-  createCouponEndpoint(@TenantId() tenantId: string, @Body() body: CreateCouponDto) {
-    return this.createCoupon.execute({ tenantId, ...body });
+  createCouponEndpoint(@Body() body: CreateCouponDto) {
+    return this.createCoupon.execute({ ...body });
   }
 
   @Patch('coupons/:id')
   updateCouponEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateCouponDto,
   ) {
-    return this.updateCoupon.execute({ tenantId, couponId: id, ...body });
+    return this.updateCoupon.execute({ couponId: id, ...body });
   }
 
   @Delete('coupons/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteCouponEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.deleteCoupon.execute({ tenantId, couponId: id });
+  deleteCouponEndpoint(@Param('id', ParseUUIDPipe) id: string) {
+    return this.deleteCoupon.execute({ couponId: id });
   }
 
   // ── ZATCA ─────────────────────────────────────────────────────────────────
 
   @Post('zatca/submit')
-  zatca(@TenantId() tenantId: string, @Body() body: ZatcaSubmitDto) {
-    return this.zatcaSubmit.execute({ tenantId, ...body });
+  zatca(@Body() body: ZatcaSubmitDto) {
+    return this.zatcaSubmit.execute({ ...body });
   }
 
   @Get('zatca/config')
-  getZatcaConfigEndpoint(@TenantId() tenantId: string) {
-    return this.getZatcaConfig.execute({ tenantId });
+  getZatcaConfigEndpoint() {
+    // Plan D will rewire this to a singleton handler — tenantId removed here.
+    return this.getZatcaConfig.execute({} as never);
   }
 
   @Patch('zatca/config')
-  upsertZatcaConfigEndpoint(@TenantId() tenantId: string, @Body() body: UpsertZatcaConfigDto) {
-    return this.upsertZatcaConfig.execute({ tenantId, ...body });
+  upsertZatcaConfigEndpoint(@Body() body: UpsertZatcaConfigDto) {
+    // Plan D will rewire this to a singleton handler — tenantId removed here.
+    return this.upsertZatcaConfig.execute({} as never);
   }
 
   @Post('zatca/onboard')
   @HttpCode(HttpStatus.OK)
   onboardZatcaEndpoint(
-    @TenantId() tenantId: string,
     @Body() body: { vatRegistrationNumber: string; sellerName: string },
   ) {
-    return this.onboardZatca.execute({ tenantId, ...body });
+    // Plan D will rewire this to a singleton handler — tenantId removed here.
+    return this.onboardZatca.execute({} as never);
   }
 }

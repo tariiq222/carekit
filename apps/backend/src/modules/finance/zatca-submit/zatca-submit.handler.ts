@@ -5,7 +5,7 @@ import { ZatcaSubmissionStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { ZatcaSubmitDto } from './zatca-submit.dto';
 
-export type ZatcaSubmitCommand = ZatcaSubmitDto & { tenantId: string };
+export type ZatcaSubmitCommand = ZatcaSubmitDto;
 
 interface ZatcaApiResponse {
   uuid: string;
@@ -30,7 +30,7 @@ export class ZatcaSubmitHandler {
 
   async execute(cmd: ZatcaSubmitCommand) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id: cmd.invoiceId, tenantId: cmd.tenantId },
+      where: { id: cmd.invoiceId },
     });
     if (!invoice) {
       throw new NotFoundException(`Invoice ${cmd.invoiceId} not found`);
@@ -54,7 +54,6 @@ export class ZatcaSubmitHandler {
         })
       : await this.prisma.zatcaSubmission.create({
           data: {
-            tenantId: cmd.tenantId,
             invoiceId: cmd.invoiceId,
             status: ZatcaSubmissionStatus.PENDING,
             xmlHash,
@@ -105,7 +104,7 @@ export class ZatcaSubmitHandler {
   // TODO(zatca-xml): Replace stub with full UBL 2.1 / ZATCA Phase-2 XML builder.
   // Tracked in: https://github.com/carekit-hq/carekit/issues/ZATCA-XML
   // Owner: @tariq — do NOT modify XML structure without compliance review.
-  private buildInvoiceXml(invoice: { id: string; tenantId: string; total: unknown; vatAmt: unknown; issuedAt: Date | null }): string {
+  private buildInvoiceXml(invoice: { id: string; total: unknown; vatAmt: unknown; issuedAt: Date | null }): string {
     const id = this.escapeXml(invoice.id);
     const vatAmt = this.escapeXml(String(invoice.vatAmt ?? '0'));
     const total = this.escapeXml(String(invoice.total ?? '0'));

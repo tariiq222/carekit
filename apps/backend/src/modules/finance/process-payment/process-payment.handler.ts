@@ -5,7 +5,7 @@ import { EventBusService } from '../../../infrastructure/events';
 import { PaymentCompletedEvent } from '../events/payment-completed.event';
 import { ProcessPaymentDto } from './process-payment.dto';
 
-export type ProcessPaymentCommand = ProcessPaymentDto & { tenantId: string };
+export type ProcessPaymentCommand = ProcessPaymentDto;
 
 @Injectable()
 export class ProcessPaymentHandler {
@@ -22,7 +22,7 @@ export class ProcessPaymentHandler {
     // duplicate payments — the pre-check is kept only as a fast short-circuit.
     const { payment, newStatus } = await this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.findFirst({
-        where: { id: dto.invoiceId, tenantId: dto.tenantId },
+        where: { id: dto.invoiceId },
       });
       if (!invoice) throw new NotFoundException(`Invoice ${dto.invoiceId} not found`);
       if (invoice.status === InvoiceStatus.VOID || invoice.status === InvoiceStatus.REFUNDED) {
@@ -35,7 +35,6 @@ export class ProcessPaymentHandler {
       try {
         createdPayment = await tx.payment.create({
           data: {
-            tenantId: dto.tenantId,
             invoiceId: dto.invoiceId,
             amount: dto.amount,
             method: dto.method,
@@ -90,11 +89,10 @@ export class ProcessPaymentHandler {
         select: { id: true, bookingId: true, currency: true },
       });
       if (invoice) {
-        const event = new PaymentCompletedEvent(dto.tenantId, {
+        const event = new PaymentCompletedEvent({
           paymentId: payment.id,
           invoiceId: invoice.id,
           bookingId: invoice.bookingId,
-          tenantId: dto.tenantId,
           amount: Number(dto.amount),
           currency: invoice.currency,
         });

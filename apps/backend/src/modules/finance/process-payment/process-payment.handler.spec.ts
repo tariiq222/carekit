@@ -4,7 +4,6 @@ import { ProcessPaymentHandler } from './process-payment.handler';
 
 const mockInvoice = {
   id: 'inv-1',
-  tenantId: 'tenant-1',
   bookingId: 'booking-1',
   currency: 'SAR',
   total: 230,
@@ -13,7 +12,6 @@ const mockInvoice = {
 
 const mockPayment = {
   id: 'pay-1',
-  tenantId: 'tenant-1',
   invoiceId: 'inv-1',
   amount: 230,
   method: PaymentMethod.ONLINE_CARD,
@@ -58,7 +56,6 @@ describe('ProcessPaymentHandler', () => {
     const handler = new ProcessPaymentHandler(prisma as never, eventBus as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       invoiceId: 'inv-1',
       amount: 230,
       method: PaymentMethod.ONLINE_CARD,
@@ -93,7 +90,6 @@ describe('ProcessPaymentHandler', () => {
     const handler = new ProcessPaymentHandler(prisma as never, eventBus as never);
 
     await handler.execute({
-      tenantId: 'tenant-1',
       invoiceId: 'inv-1',
       amount: 100,
       method: PaymentMethod.CASH,
@@ -127,7 +123,6 @@ describe('ProcessPaymentHandler', () => {
     const handler = new ProcessPaymentHandler(prisma as never, buildEventBus() as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       invoiceId: 'inv-1',
       amount: 230,
       method: PaymentMethod.ONLINE_CARD,
@@ -155,7 +150,6 @@ describe('ProcessPaymentHandler', () => {
 
     await expect(
       handler.execute({
-        tenantId: 'tenant-1',
         invoiceId: 'bad-id',
         amount: 100,
         method: PaymentMethod.CASH,
@@ -176,7 +170,6 @@ describe('ProcessPaymentHandler', () => {
 
     await expect(
       handler.execute({
-        tenantId: 'tenant-1',
         invoiceId: 'inv-1',
         amount: 100,
         method: PaymentMethod.CASH,

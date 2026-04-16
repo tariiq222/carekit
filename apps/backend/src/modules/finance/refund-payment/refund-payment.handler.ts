@@ -3,7 +3,6 @@ import { PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 
 interface RefundPaymentCommand {
-  tenantId: string;
   paymentId: string;
   reason: string;
   amount?: number;
@@ -15,7 +14,7 @@ export class RefundPaymentHandler {
 
   async execute(cmd: RefundPaymentCommand) {
     const payment = await this.prisma.payment.findFirst({
-      where: { id: cmd.paymentId, tenantId: cmd.tenantId },
+      where: { id: cmd.paymentId },
     });
 
     if (!payment) throw new NotFoundException('Payment not found');

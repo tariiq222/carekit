@@ -4,7 +4,6 @@ import { CreateInvoiceHandler } from './create-invoice.handler';
 
 interface BookingConfirmedPayload {
   bookingId: string;
-  tenantId: string;
   clientId: string;
   employeeId: string;
   branchId: string;
@@ -29,11 +28,10 @@ export class BookingConfirmedHandler {
     this.eventBus.subscribe<BookingConfirmedPayload>(
       'bookings.booking.confirmed',
       async (envelope) => {
-        const { bookingId, tenantId, clientId, employeeId, branchId, price } =
+        const { bookingId, clientId, employeeId, branchId, price } =
           envelope.payload;
         try {
           await this.createInvoice.execute({
-            tenantId,
             branchId,
             clientId,
             employeeId,

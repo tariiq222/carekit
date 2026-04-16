@@ -3,7 +3,6 @@ import { CreateInvoiceHandler } from './create-invoice.handler';
 
 const mockInvoice = {
   id: 'inv-1',
-  tenantId: 'tenant-1',
   branchId: 'branch-1',
   clientId: 'client-1',
   employeeId: 'emp-1',
@@ -39,7 +38,6 @@ describe('CreateInvoiceHandler', () => {
     const handler = new CreateInvoiceHandler(prisma as never, eventBus as never);
 
     const result = await handler.execute({
-      tenantId: 'tenant-1',
       branchId: 'branch-1',
       clientId: 'client-1',
       employeeId: 'emp-1',
@@ -71,7 +69,6 @@ describe('CreateInvoiceHandler', () => {
     const handler = new CreateInvoiceHandler(prisma as never, buildEventBus() as never);
 
     await handler.execute({
-      tenantId: 'tenant-1',
       branchId: 'branch-1',
       clientId: 'client-1',
       employeeId: 'emp-1',
@@ -94,7 +91,6 @@ describe('CreateInvoiceHandler', () => {
 
     await expect(
       handler.execute({
-        tenantId: 'tenant-1',
         branchId: 'branch-1',
         clientId: 'client-1',
         employeeId: 'emp-1',

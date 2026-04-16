@@ -3,7 +3,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { UpdateCouponDto } from './update-coupon.dto';
 import type { DiscountType } from '@prisma/client';
 
-export type UpdateCouponCommand = UpdateCouponDto & { tenantId: string; couponId: string };
+export type UpdateCouponCommand = UpdateCouponDto & { couponId: string };
 
 @Injectable()
 export class UpdateCouponHandler {
@@ -11,11 +11,11 @@ export class UpdateCouponHandler {
 
   async execute(cmd: UpdateCouponCommand) {
     const coupon = await this.prisma.coupon.findFirst({
-      where: { id: cmd.couponId, tenantId: cmd.tenantId },
+      where: { id: cmd.couponId },
     });
     if (!coupon) throw new NotFoundException('Coupon not found');
 
-    const { tenantId: _t, couponId: _c, discountType, expiresAt, ...rest } = cmd;
+    const { couponId: _c, discountType, expiresAt, ...rest } = cmd;
     return this.prisma.coupon.update({
       where: { id: cmd.couponId },
       data: {

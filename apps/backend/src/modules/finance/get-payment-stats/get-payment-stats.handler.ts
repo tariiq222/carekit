@@ -20,10 +20,9 @@ export interface PaymentStats {
 export class GetPaymentStatsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute({ tenantId }: { tenantId: string }): Promise<PaymentStats> {
+  async execute(): Promise<PaymentStats> {
     const rows = await this.prisma.payment.groupBy({
       by: ['status'],
-      where: { tenantId },
       _count: { id: true },
       _sum: { amount: true },
     });
@@ -43,8 +42,8 @@ export class GetPaymentStatsHandler {
     };
 
     for (const row of rows) {
-      const count = row._count.id;
-      const amount = row._sum.amount?.toNumber() ?? 0;
+      const count = (row._count as { id: number }).id;
+      const amount = (row._sum as { amount: { toNumber(): number } | null }).amount?.toNumber() ?? 0;
       stats.total += count;
       stats.totalAmount += amount;
 

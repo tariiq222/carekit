@@ -1,7 +1,7 @@
 import { BookingConfirmedHandler } from './booking-confirmed.handler';
 
 const buildEventBus = () => {
-  let subscriber: ((env: { payload: { bookingId: string; tenantId: string; clientId: string; employeeId: string; branchId: string; price: number; currency: string } }) => Promise<void>) | null = null;
+  let subscriber: ((env: { payload: { bookingId: string; clientId: string; employeeId: string; branchId: string; price: number; currency: string } }) => Promise<void>) | null = null;
   return {
     subscribe: jest.fn((_, cb) => { subscriber = cb as typeof subscriber; }),
     publish: jest.fn(),
@@ -13,10 +13,10 @@ const buildCreateInvoice = () => ({
   execute: jest.fn().mockResolvedValue({ id: 'inv-1' }),
 });
 
-const mockBooking = { id: 'book-1', tenantId: 'tenant-1', clientId: 'c-1', employeeId: 'e-1', price: 300, currency: 'SAR', serviceId: 'svc-1' };
+const mockBooking = { id: 'book-1', clientId: 'c-1', employeeId: 'e-1', price: 300, currency: 'SAR', serviceId: 'svc-1' };
 
 const makeEnvelope = () => ({
-  payload: { bookingId: 'book-1', tenantId: 'tenant-1', clientId: 'c-1', employeeId: 'e-1', branchId: 'branch-1', price: 300, currency: 'SAR' },
+  payload: { bookingId: 'book-1', clientId: 'c-1', employeeId: 'e-1', branchId: 'branch-1', price: 300, currency: 'SAR' },
 });
 
 describe('BookingConfirmedHandler', () => {
@@ -37,7 +37,7 @@ describe('BookingConfirmedHandler', () => {
     await eb.getSubscriber()(makeEnvelope());
 
     expect(createInvoice.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ bookingId: 'book-1', tenantId: 'tenant-1' }),
+      expect.objectContaining({ bookingId: 'book-1' }),
     );
   });
 

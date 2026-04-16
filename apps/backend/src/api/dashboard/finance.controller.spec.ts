@@ -1,6 +1,5 @@
 import { DashboardFinanceController } from './finance.controller';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
@@ -18,70 +17,74 @@ function buildController() {
   const getZatcaConfig = fn({ id: 'z-1' });
   const upsertZatcaConfig = fn({ id: 'z-1' });
   const onboardZatca = fn({ id: 'z-1' });
+  const getPaymentStats = fn({ total: 0 });
+  const refundPayment = fn({ id: 'pay-1' });
+  const verifyPayment = fn({ id: 'pay-1' });
+  const bankTransferUpload = fn({ id: 'pay-1' });
   const controller = new DashboardFinanceController(
     createInvoice as never, getInvoice as never, processPayment as never,
     listPayments as never, applyCoupon as never, zatcaSubmit as never,
     listCoupons as never, getCoupon as never, createCoupon as never,
     updateCoupon as never, deleteCoupon as never, getZatcaConfig as never,
-    upsertZatcaConfig as never, onboardZatca as never,
+    upsertZatcaConfig as never, onboardZatca as never, getPaymentStats as never,
+    refundPayment as never, verifyPayment as never, bankTransferUpload as never,
   );
-  return { controller, createInvoice, getInvoice, processPayment, listPayments, applyCoupon, zatcaSubmit, listCoupons, getCoupon, createCoupon, updateCoupon, deleteCoupon, getZatcaConfig, upsertZatcaConfig, onboardZatca };
+  return {
+    controller, createInvoice, getInvoice, processPayment, listPayments,
+    applyCoupon, zatcaSubmit, listCoupons, getCoupon, createCoupon,
+    updateCoupon, deleteCoupon, getZatcaConfig, upsertZatcaConfig,
+    onboardZatca, getPaymentStats, refundPayment, verifyPayment, bankTransferUpload,
+  };
 }
 
 describe('DashboardFinanceController', () => {
-  it('createInv — passes tenantId and converts dueAt to Date', async () => {
+  it('createInv — converts dueAt to Date', async () => {
     const { controller, createInvoice } = buildController();
-    await controller.createInv(TENANT, { dueAt: '2026-07-01', bookingId: 'b-1' } as never);
+    await controller.createInv({ dueAt: '2026-07-01', bookingId: 'b-1' } as never);
     expect(createInvoice.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, dueAt: expect.any(Date) }),
+      expect.objectContaining({ dueAt: expect.any(Date) }),
     );
   });
 
   it('createInv — handles missing dueAt', async () => {
     const { controller, createInvoice } = buildController();
-    await controller.createInv(TENANT, { bookingId: 'b-1' } as never);
+    await controller.createInv({ bookingId: 'b-1' } as never);
     expect(createInvoice.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, dueAt: undefined }),
+      expect.objectContaining({ dueAt: undefined }),
     );
   });
 
-  it('getInv — passes tenantId and invoiceId', async () => {
+  it('getInv — passes invoiceId', async () => {
     const { controller, getInvoice } = buildController();
-    await controller.getInv(TENANT, 'inv-1');
-    expect(getInvoice.execute).toHaveBeenCalledWith({ tenantId: TENANT, invoiceId: 'inv-1' });
+    await controller.getInv('inv-1');
+    expect(getInvoice.execute).toHaveBeenCalledWith({ invoiceId: 'inv-1' });
   });
 
-  it('processPaymentEndpoint — passes tenantId', async () => {
+  it('processPaymentEndpoint — delegates to handler', async () => {
     const { controller, processPayment } = buildController();
-    await controller.processPaymentEndpoint(TENANT, { invoiceId: 'inv-1', method: 'CARD' } as never);
-    expect(processPayment.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
-  });
-
-  it('listPaymentsEndpoint — passes tenantId', async () => {
-    const { controller, listPayments } = buildController();
-    await controller.listPaymentsEndpoint(TENANT, {} as never);
-    expect(listPayments.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.processPaymentEndpoint({ invoiceId: 'inv-1', method: 'CARD' } as never);
+    expect(processPayment.execute).toHaveBeenCalledWith(expect.objectContaining({ invoiceId: 'inv-1' }));
   });
 
   it('listPaymentsEndpoint — converts fromDate and toDate when provided', async () => {
     const { controller, listPayments } = buildController();
-    await controller.listPaymentsEndpoint(TENANT, { fromDate: '2026-01-01', toDate: '2026-01-31' } as never);
+    await controller.listPaymentsEndpoint({ fromDate: '2026-01-01', toDate: '2026-01-31' } as never);
     expect(listPayments.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, fromDate: expect.any(Date), toDate: expect.any(Date) }),
+      expect.objectContaining({ fromDate: expect.any(Date), toDate: expect.any(Date) }),
     );
   });
 
-  it('applyCouponEndpoint — passes tenantId', async () => {
+  it('applyCouponEndpoint — delegates to handler', async () => {
     const { controller, applyCoupon } = buildController();
-    await controller.applyCouponEndpoint(TENANT, { code: 'SAVE10', invoiceId: 'inv-1' } as never);
-    expect(applyCoupon.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.applyCouponEndpoint({ code: 'SAVE10', invoiceId: 'inv-1' } as never);
+    expect(applyCoupon.execute).toHaveBeenCalledWith(expect.objectContaining({ code: 'SAVE10' }));
   });
 
-  it('zatca — passes tenantId and invoiceId', async () => {
+  it('zatca — passes invoiceId', async () => {
     const { controller, zatcaSubmit } = buildController();
-    await controller.zatca(TENANT, { invoiceId: 'inv-1' } as never);
+    await controller.zatca({ invoiceId: 'inv-1' } as never);
     expect(zatcaSubmit.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ tenantId: TENANT, invoiceId: 'inv-1' }),
+      expect.objectContaining({ invoiceId: 'inv-1' }),
     );
   });
 });

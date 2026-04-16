@@ -4,7 +4,6 @@ export interface PaymentCompletedPayload {
   paymentId: string;
   invoiceId: string;
   bookingId: string;
-  tenantId: string;
   amount: number;
   currency: string;
 }
@@ -17,7 +16,7 @@ export interface PaymentCompletedPayload {
 export class PaymentCompletedEvent extends BaseEvent<PaymentCompletedPayload> {
   readonly eventName = 'finance.payment.completed';
 
-  constructor(tenantId: string, payload: PaymentCompletedPayload) {
-    super({ source: 'finance', version: 1, tenantId, payload });
+  constructor(payload: PaymentCompletedPayload) {
+    super({ source: 'finance', version: 1, payload });
   }
 }

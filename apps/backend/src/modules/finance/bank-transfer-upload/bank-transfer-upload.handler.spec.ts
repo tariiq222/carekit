@@ -4,7 +4,6 @@ import { BankTransferUploadHandler } from './bank-transfer-upload.handler';
 
 const mockInvoice = {
   id: 'inv-1',
-  tenantId: 'tenant-1',
   total: 230,
   currency: 'SAR',
 };
@@ -26,7 +25,6 @@ const buildStorage = () => ({
 });
 
 const cmd = {
-  tenantId: 'tenant-1',
   invoiceId: 'inv-1',
   clientId: 'client-1',
   amount: 230,
@@ -45,7 +43,7 @@ describe('BankTransferUploadHandler', () => {
 
     expect(storage.uploadFile).toHaveBeenCalledWith(
       'finance-receipts',
-      expect.stringContaining('tenant-1/inv-1/'),
+      expect.stringContaining('inv-1/'),
       cmd.fileBuffer,
       'image/jpeg',
     );
@@ -73,11 +71,10 @@ describe('BankTransferUploadHandler', () => {
     await expect(handler.execute(cmd)).rejects.toThrow(NotFoundException);
   });
 
-  it('throws NotFoundException when tenantId mismatch', async () => {
+  it('throws NotFoundException when invoice not found by id', async () => {
     const prisma = buildPrisma();
-    // findFirst with compound WHERE returns null for cross-tenant lookups.
     prisma.invoice.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new BankTransferUploadHandler(prisma as never, buildStorage() as never);
-    await expect(handler.execute(cmd)).rejects.toThrow(NotFoundException);
+    await expect(handler.execute({ ...cmd, invoiceId: 'bad-id' })).rejects.toThrow(NotFoundException);
   });
 });

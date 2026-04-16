@@ -1,7 +1,7 @@
 import { MobileClientPaymentsController, MobileListPaymentsQuery } from './payments.controller';
+import type { JwtUser } from '../../../common/auth/current-user.decorator';
 
-const TENANT = 'tenant-1';
-const USER = { sub: 'client-1', email: 'client@test.com', role: 'client' as const };
+const USER: JwtUser = { sub: 'client-1', roles: [], permissions: [] };
 
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
@@ -14,40 +14,40 @@ function buildController() {
 
 describe('MobileClientPaymentsController', () => {
   describe('listMyPayments', () => {
-    it('passes tenantId, clientId, and pagination defaults', async () => {
+    it('passes clientId and pagination defaults', async () => {
       const { controller, listPayments } = buildController();
-      await controller.listMyPayments(TENANT, USER, {});
+      await controller.listMyPayments(USER, {});
       expect(listPayments.execute).toHaveBeenCalledWith({
-        tenantId: TENANT, clientId: USER.sub, page: 1, limit: 20,
+        clientId: USER.sub, page: 1, limit: 20,
       });
     });
 
     it('uses query params for page and limit', async () => {
       const { controller, listPayments } = buildController();
       const q: MobileListPaymentsQuery = { page: 3, limit: 50 };
-      await controller.listMyPayments(TENANT, USER, q);
+      await controller.listMyPayments(USER, q);
       expect(listPayments.execute).toHaveBeenCalledWith({
-        tenantId: TENANT, clientId: USER.sub, page: 3, limit: 50,
+        clientId: USER.sub, page: 3, limit: 50,
       });
     });
 
     it('returns handler result', async () => {
       const { controller } = buildController();
-      const result = await controller.listMyPayments(TENANT, USER, {});
+      const result = await controller.listMyPayments(USER, {});
       expect(result).toEqual({ data: [], meta: {} });
     });
   });
 
   describe('getInvoiceEndpoint', () => {
-    it('passes tenantId and invoiceId to handler', async () => {
+    it('passes invoiceId to handler', async () => {
       const { controller, getInvoice } = buildController();
-      await controller.getInvoiceEndpoint(TENANT, 'inv-123');
-      expect(getInvoice.execute).toHaveBeenCalledWith({ tenantId: TENANT, invoiceId: 'inv-123' });
+      await controller.getInvoiceEndpoint('inv-123');
+      expect(getInvoice.execute).toHaveBeenCalledWith({ invoiceId: 'inv-123' });
     });
 
     it('returns handler result', async () => {
       const { controller } = buildController();
-      const result = await controller.getInvoiceEndpoint(TENANT, 'inv-123');
+      const result = await controller.getInvoiceEndpoint('inv-123');
       expect(result).toEqual({ id: 'inv-1', total: 100 });
     });
   });

@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface GetInvoiceQuery {
-  tenantId: string;
   invoiceId: string;
 }
 
@@ -12,7 +11,7 @@ export class GetInvoiceHandler {
 
   async execute(query: GetInvoiceQuery) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id: query.invoiceId, tenantId: query.tenantId },
+      where: { id: query.invoiceId },
       include: {
         payments: { orderBy: { createdAt: 'desc' } },
         zatcaSub: true,

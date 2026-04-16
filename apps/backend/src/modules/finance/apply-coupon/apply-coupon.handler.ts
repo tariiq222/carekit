@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../../infrastructure/database';
 import { ApplyCouponDto } from './apply-coupon.dto';
 
-export type ApplyCouponCommand = ApplyCouponDto & { tenantId: string };
+export type ApplyCouponCommand = ApplyCouponDto;
 
 @Injectable()
 export class ApplyCouponHandler {
@@ -10,14 +10,14 @@ export class ApplyCouponHandler {
 
   async execute(cmd: ApplyCouponCommand) {
     const invoice = await this.prisma.invoice.findFirst({
-      where: { id: cmd.invoiceId, tenantId: cmd.tenantId },
+      where: { id: cmd.invoiceId },
     });
     if (!invoice) {
       throw new NotFoundException(`Invoice ${cmd.invoiceId} not found`);
     }
 
     const coupon = await this.prisma.coupon.findUnique({
-      where: { tenantId_code: { tenantId: cmd.tenantId, code: cmd.code } },
+      where: { code: cmd.code },
     });
     if (!coupon || !coupon.isActive) throw new NotFoundException(`Coupon ${cmd.code} not found`);
     if (coupon.expiresAt && coupon.expiresAt < new Date()) {
@@ -56,7 +56,7 @@ export class ApplyCouponHandler {
       }
 
       const redemption = await tx.couponRedemption.create({
-        data: { tenantId: cmd.tenantId, couponId: coupon.id, invoiceId: cmd.invoiceId, clientId: cmd.clientId, discount },
+        data: { couponId: coupon.id, invoiceId: cmd.invoiceId, clientId: cmd.clientId, discount },
       });
 
       await tx.invoice.update({
