@@ -3,7 +3,7 @@
 //
 // Design notes:
 // - Physical bytes live in MinIO; this table holds the metadata index.
-// - `storageKey` is the object key inside the bucket; globally unique per tenant.
+// - `storageKey` is the object key inside the bucket; globally unique.
 // - `ownerType` + `ownerId` are string references — no Prisma FKs across BCs.
 //   Other BCs reference files by fileId only; deletion is event-driven.
 // - `isDeleted` soft-deletes metadata; hard delete happens in a sweep job.
