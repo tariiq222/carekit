@@ -185,14 +185,12 @@ export class DashboardFinanceController {
 
   @Get('zatca/config')
   getZatcaConfigEndpoint() {
-    // Plan D will rewire this to a singleton handler — tenantId removed here.
-    return this.getZatcaConfig.execute({} as never);
+    return this.getZatcaConfig.execute();
   }
 
   @Patch('zatca/config')
   upsertZatcaConfigEndpoint(@Body() body: UpsertZatcaConfigDto) {
-    // Plan D will rewire this to a singleton handler — tenantId removed here.
-    return this.upsertZatcaConfig.execute({} as never);
+    return this.upsertZatcaConfig.execute(body);
   }
 
   @Post('zatca/onboard')
@@ -200,7 +198,6 @@ export class DashboardFinanceController {
   onboardZatcaEndpoint(
     @Body() body: { vatRegistrationNumber: string; sellerName: string },
   ) {
-    // Plan D will rewire this to a singleton handler — tenantId removed here.
-    return this.onboardZatca.execute({} as never);
+    return this.onboardZatca.execute(body);
   }
 }

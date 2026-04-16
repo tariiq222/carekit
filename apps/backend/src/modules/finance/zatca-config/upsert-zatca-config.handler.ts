@@ -2,18 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { UpsertZatcaConfigDto } from './upsert-zatca-config.dto';
 
-export type UpsertZatcaConfigCommand = UpsertZatcaConfigDto & { tenantId: string };
+const SINGLETON_ID = 'default';
 
 @Injectable()
 export class UpsertZatcaConfigHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(cmd: UpsertZatcaConfigCommand) {
-    const { tenantId, ...fields } = cmd;
+  async execute(dto: UpsertZatcaConfigDto) {
     return this.prisma.zatcaConfig.upsert({
-      where: { tenantId },
-      update: fields,
-      create: { tenantId, ...fields },
+      where: { id: SINGLETON_ID },
+      create: { id: SINGLETON_ID, ...dto },
+      update: dto,
     });
   }
 }
