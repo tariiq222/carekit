@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
-export interface GetOrgSettingsQuery { tenantId: string; }
+const SINGLETON_ID = 'default';
 
 @Injectable()
 export class GetOrgSettingsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(query: GetOrgSettingsQuery) {
+  async execute() {
     return this.prisma.organizationSettings.upsert({
-      where: { tenantId: query.tenantId },
+      where: { id: SINGLETON_ID },
+      create: { id: SINGLETON_ID },
       update: {},
-      create: { tenantId: query.tenantId },
     });
   }
 }

@@ -62,16 +62,16 @@ describe('DashboardOrganizationSettingsController', () => {
     expect(archiveService.execute).toHaveBeenCalledWith({ serviceId: 'svc-1' });
   });
 
-  it('upsertBrandingEndpoint — passes tenantId', async () => {
+  it('upsertBrandingEndpoint — passes body', async () => {
     const { controller, upsertBranding } = buildController();
-    await controller.upsertBrandingEndpoint(TENANT, { logoUrl: 'https://example.com/logo.png' } as never);
-    expect(upsertBranding.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.upsertBrandingEndpoint({ logoUrl: 'https://example.com/logo.png' } as never);
+    expect(upsertBranding.execute).toHaveBeenCalledWith(expect.objectContaining({ logoUrl: 'https://example.com/logo.png' }));
   });
 
-  it('getBrandingEndpoint — passes tenantId', async () => {
+  it('getBrandingEndpoint — calls with no args', async () => {
     const { controller, getBranding } = buildController();
-    await controller.getBrandingEndpoint(TENANT);
-    expect(getBranding.execute).toHaveBeenCalledWith({ tenantId: TENANT });
+    await controller.getBrandingEndpoint();
+    expect(getBranding.execute).toHaveBeenCalledWith();
   });
 
   it('createIntakeFormEndpoint — passes body', async () => {
@@ -96,5 +96,17 @@ describe('DashboardOrganizationSettingsController', () => {
     const { controller, listRatings } = buildController();
     await controller.listRatingsEndpoint({} as never);
     expect(listRatings.execute).toHaveBeenCalled();
+  });
+
+  it('getOrgSettingsEndpoint — calls with no args', async () => {
+    const { controller, getOrgSettings } = buildController();
+    await controller.getOrgSettingsEndpoint();
+    expect(getOrgSettings.execute).toHaveBeenCalledWith();
+  });
+
+  it('upsertOrgSettingsEndpoint — passes body', async () => {
+    const { controller, upsertOrgSettings } = buildController();
+    await controller.upsertOrgSettingsEndpoint({ companyNameAr: 'Company' } as never);
+    expect(upsertOrgSettings.execute).toHaveBeenCalledWith(expect.objectContaining({ companyNameAr: 'Company' }));
   });
 });
