@@ -2,10 +2,14 @@ import {
   Controller, Get, Post, Patch, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags, ApiBearerAuth, ApiOperation, ApiParam,
+  ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse,
+} from '@nestjs/swagger';
 import { CurrentUser, JwtUser } from '../../common/auth/current-user.decorator';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
+import { ApiStandardResponses } from '../../common/swagger';
 import { ListNotificationsHandler } from '../../modules/comms/notifications/list-notifications.handler';
 import { ListNotificationsDto } from '../../modules/comms/notifications/list-notifications.dto';
 import { GetUnreadCountHandler } from '../../modules/comms/notifications/get-unread-count.handler';
@@ -29,8 +33,9 @@ import { CloseConversationHandler } from '../../modules/comms/chat/close-convers
 import { SendStaffMessageHandler } from '../../modules/comms/chat/send-staff-message.handler';
 import { SendStaffMessageDto } from '../../modules/comms/chat/send-staff-message.dto';
 
-@ApiTags('Comms')
+@ApiTags('Dashboard / Comms')
 @ApiBearerAuth()
+@ApiStandardResponses()
 @Controller('dashboard/comms')
 @UseGuards(JwtGuard, CaslGuard)
 export class DashboardCommsController {
@@ -52,6 +57,8 @@ export class DashboardCommsController {
 
   // ── Notifications ──────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'List notifications for the current staff user' })
+  @ApiOkResponse({ description: 'Paginated notification list' })
   @Get('notifications')
   listNotificationsEndpoint(
     @CurrentUser() user: JwtUser,
@@ -65,6 +72,8 @@ export class DashboardCommsController {
     });
   }
 
+  @ApiOperation({ summary: 'Get unread notification count for the current staff user' })
+  @ApiOkResponse({ description: 'Unread count value' })
   @Get('notifications/unread-count')
   getUnreadCountEndpoint(
     @CurrentUser() user: JwtUser,
@@ -72,6 +81,8 @@ export class DashboardCommsController {
     return this.getUnreadCount.execute({ recipientId: user.sub });
   }
 
+  @ApiOperation({ summary: 'Mark notifications as read (all or a single one)' })
+  @ApiNoContentResponse({ description: 'Notifications marked as read' })
   @Patch('notifications/mark-read')
   @HttpCode(HttpStatus.NO_CONTENT)
   markReadEndpoint(
@@ -83,6 +94,8 @@ export class DashboardCommsController {
 
   // ── Email Templates ────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'List email templates' })
+  @ApiOkResponse({ description: 'Paginated email template list' })
   @Get('email-templates')
   listEmailTemplatesEndpoint(
     @Query() query: ListEmailTemplatesDto,
@@ -93,6 +106,8 @@ export class DashboardCommsController {
     });
   }
 
+  @ApiOperation({ summary: 'Create an email template' })
+  @ApiCreatedResponse({ description: 'Email template created' })
   @Post('email-templates')
   @HttpCode(HttpStatus.CREATED)
   createEmailTemplateEndpoint(
@@ -101,6 +116,9 @@ export class DashboardCommsController {
     return this.createEmailTemplate.execute({ ...body });
   }
 
+  @ApiOperation({ summary: 'Get a single email template by ID' })
+  @ApiOkResponse({ description: 'Email template details' })
+  @ApiParam({ name: 'id', description: 'Email template UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Get('email-templates/:id')
   getEmailTemplateEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
@@ -108,6 +126,9 @@ export class DashboardCommsController {
     return this.getEmailTemplate.execute({ id });
   }
 
+  @ApiOperation({ summary: 'Preview a rendered email template' })
+  @ApiOkResponse({ description: 'Rendered HTML preview' })
+  @ApiParam({ name: 'id', description: 'Email template UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Post('email-templates/:id/preview')
   @HttpCode(HttpStatus.OK)
   previewEmailTemplateEndpoint(
@@ -121,6 +142,9 @@ export class DashboardCommsController {
     });
   }
 
+  @ApiOperation({ summary: 'Update an email template' })
+  @ApiOkResponse({ description: 'Updated email template' })
+  @ApiParam({ name: 'id', description: 'Email template UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Patch('email-templates/:id')
   updateEmailTemplateEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
@@ -131,6 +155,8 @@ export class DashboardCommsController {
 
   // ── Chat ───────────────────────────────────────────────────────────────────
 
+  @ApiOperation({ summary: 'List chat conversations' })
+  @ApiOkResponse({ description: 'Paginated conversation list' })
   @Get('chat/conversations')
   listConversationsEndpoint(
     @Query() query: ListConversationsDto,
@@ -143,6 +169,9 @@ export class DashboardCommsController {
     });
   }
 
+  @ApiOperation({ summary: 'List messages in a conversation' })
+  @ApiOkResponse({ description: 'Cursor-paginated message list' })
+  @ApiParam({ name: 'id', description: 'Conversation UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Get('chat/conversations/:id/messages')
   listMessagesEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
@@ -155,6 +184,9 @@ export class DashboardCommsController {
     });
   }
 
+  @ApiOperation({ summary: 'Get a single conversation by ID' })
+  @ApiOkResponse({ description: 'Conversation details' })
+  @ApiParam({ name: 'id', description: 'Conversation UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Get('chat/conversations/:id')
   getConversationEndpoint(
     @Param('id', ParseUUIDPipe) id: string,
@@ -162,6 +194,9 @@ export class DashboardCommsController {
     return this.getConversation.execute({ conversationId: id });
   }
 
+  @ApiOperation({ summary: 'Close a conversation' })
+  @ApiOkResponse({ description: 'Conversation closed' })
+  @ApiParam({ name: 'id', description: 'Conversation UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Patch('chat/conversations/:id/close')
   @HttpCode(HttpStatus.OK)
   closeConversationEndpoint(
@@ -170,6 +205,9 @@ export class DashboardCommsController {
     return this.closeConversation.execute({ conversationId: id });
   }
 
+  @ApiOperation({ summary: 'Send a staff message in a conversation' })
+  @ApiCreatedResponse({ description: 'Message sent' })
+  @ApiParam({ name: 'id', description: 'Conversation UUID', example: '00000000-0000-0000-0000-000000000000' })
   @Post('chat/conversations/:id/messages')
   @HttpCode(HttpStatus.CREATED)
   sendStaffMessageEndpoint(
