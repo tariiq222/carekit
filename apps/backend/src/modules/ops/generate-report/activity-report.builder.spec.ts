@@ -6,8 +6,8 @@ const to = new Date('2026-01-31');
 const buildPrisma = () => ({
   activityLog: {
     findMany: jest.fn().mockResolvedValue([
-      { id: 'log-1', tenantId: 'tenant-1', action: 'CREATE', entity: 'Booking', occurredAt: new Date('2026-01-05'), userId: 'u-1', userEmail: 'u@test.com' },
-      { id: 'log-2', tenantId: 'tenant-1', action: 'UPDATE', entity: 'Client', occurredAt: new Date('2026-01-10'), userId: 'u-2', userEmail: 'v@test.com' },
+      { id: 'log-1', action: 'CREATE', entity: 'Booking', occurredAt: new Date('2026-01-05'), userId: 'u-1', userEmail: 'u@test.com' },
+      { id: 'log-2', action: 'UPDATE', entity: 'Client', occurredAt: new Date('2026-01-10'), userId: 'u-2', userEmail: 'v@test.com' },
     ]),
   },
 });

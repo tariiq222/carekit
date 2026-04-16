@@ -7,7 +7,7 @@ import { BookingStatus } from '@prisma/client';
 
 const buildPrisma = () => ({
   booking: {
-    findMany: jest.fn().mockResolvedValue([{ tenantId: 'tenant-1' }]),
+    findMany: jest.fn().mockResolvedValue([{}]),
     updateMany: jest.fn().mockResolvedValue({ count: 0 }),
   },
   refreshToken: {
