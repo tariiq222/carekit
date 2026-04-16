@@ -15,29 +15,24 @@ enum UserGender {
 }
 
 model User {
-  id            String      @id @default(uuid())
-  tenantId      String
-  email         String
+  id            String         @id @default(uuid())
+  email         String         @unique
   passwordHash  String
   name          String
   phone         String?
   gender        UserGender?
   avatarUrl     String?
-  isActive      Boolean     @default(true)
-  role          UserRole    @default(RECEPTIONIST)
+  isActive      Boolean        @default(true)
+  role          UserRole       @default(RECEPTIONIST)
   customRoleId  String?
-  customRole    CustomRole? @relation(fields: [customRoleId], references: [id])
+  customRole    CustomRole?    @relation(fields: [customRoleId], references: [id])
   refreshTokens RefreshToken[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-
-  @@unique([tenantId, email])
-  @@index([tenantId])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model RefreshToken {
   id            String    @id @default(uuid())
-  tenantId      String
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   tokenHash     String    @unique
@@ -50,26 +45,20 @@ model RefreshToken {
   createdAt     DateTime  @default(now())
 
   @@index([userId])
-  @@index([tenantId])
   @@index([tokenSelector])
 }
 
 model CustomRole {
   id          String       @id @default(uuid())
-  tenantId    String
-  name        String
+  name        String       @unique
   permissions Permission[]
   users       User[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-
-  @@unique([tenantId, name])
-  @@index([tenantId])
 }
 
 model Permission {
   id           String     @id @default(uuid())
-  tenantId     String
   customRoleId String
   customRole   CustomRole @relation(fields: [customRoleId], references: [id], onDelete: Cascade)
   action       String
@@ -77,5 +66,4 @@ model Permission {
   createdAt    DateTime   @default(now())
 
   @@unique([customRoleId, action, subject])
-  @@index([tenantId])
 }

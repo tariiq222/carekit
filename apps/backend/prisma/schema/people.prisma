@@ -32,40 +32,37 @@ enum ClientBloodType {
 }
 
 model Client {
-  id                 String             @id @default(uuid())
-  tenantId           String
-  userId             String?
+  id                String            @id @default(uuid())
+  userId            String?
   // Legacy single-name field kept in sync with first/middle/last on write.
   // Downstream readers that still key off `name` keep working; new code reads the components.
-  name               String
-  firstName          String?
-  middleName         String?
-  lastName           String?
-  phone              String?
-  email              String?
-  gender             ClientGender?
-  dateOfBirth        DateTime?
-  nationality        String?
-  nationalId         String?
-  emergencyName      String?
-  emergencyPhone     String?
-  bloodType          ClientBloodType?
-  allergies          String?
-  chronicConditions  String?
-  avatarUrl          String?
-  notes              String?
-  source             ClientSource       @default(WALK_IN)
-  accountType        ClientAccountType  @default(WALK_IN)
-  claimedAt          DateTime?
-  isActive           Boolean            @default(true)
-  deletedAt          DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  name              String
+  firstName         String?
+  middleName        String?
+  lastName          String?
+  phone             String?           @unique
+  email             String?
+  gender            ClientGender?
+  dateOfBirth       DateTime?
+  nationality       String?
+  nationalId        String?
+  emergencyName     String?
+  emergencyPhone    String?
+  bloodType         ClientBloodType?
+  allergies         String?
+  chronicConditions String?
+  avatarUrl         String?
+  notes             String?
+  source            ClientSource      @default(WALK_IN)
+  accountType       ClientAccountType @default(WALK_IN)
+  claimedAt         DateTime?
+  isActive          Boolean           @default(true)
+  deletedAt         DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
-  @@unique([tenantId, phone])
-  @@index([tenantId])
   @@index([userId])
-  @@index([tenantId, deletedAt])
+  @@index([deletedAt])
 }
 
 enum EmployeeGender {
@@ -88,74 +85,65 @@ enum EmploymentType {
 // Cross-BC IDs (specialtyId, branchId, serviceId) are plain strings —
 // no Prisma FK relations to Clinic BC. Referential integrity is event-driven.
 model Employee {
-  id             String         @id @default(uuid())
-  tenantId       String
-  userId         String?
-  name           String
-  nameEn         String?
-  nameAr         String?
-  title          String?
-  specialty      String?
-  specialtyAr    String?
-  phone          String?
-  email          String?
-  gender         EmployeeGender?
-  avatarUrl      String?
-  bio            String?
-  bioAr          String?
-  education      String?
-  educationAr    String?
-  experience     Int?
+  id               String           @id @default(uuid())
+  userId           String?
+  name             String
+  nameEn           String?
+  nameAr           String?
+  title            String?
+  specialty        String?
+  specialtyAr      String?
+  phone            String?
+  email            String?          @unique
+  gender           EmployeeGender?
+  avatarUrl        String?
+  bio              String?
+  bioAr            String?
+  education        String?
+  educationAr      String?
+  experience       Int?
   employmentType   EmploymentType   @default(FULL_TIME)
   onboardingStatus OnboardingStatus @default(PENDING)
   isActive         Boolean          @default(true)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
-  specialties    EmployeeSpecialty[]
-  branches       EmployeeBranch[]
-  services       EmployeeService[]
-  availability   EmployeeAvailability[]
-  exceptions     EmployeeAvailabilityException[]
+  specialties  EmployeeSpecialty[]
+  branches     EmployeeBranch[]
+  services     EmployeeService[]
+  availability EmployeeAvailability[]
+  exceptions   EmployeeAvailabilityException[]
 
-  @@unique([tenantId, email])
-  @@index([tenantId])
   @@index([userId])
 }
 
 model EmployeeSpecialty {
-  id           String   @id @default(uuid())
-  tenantId     String
-  employeeId   String
-  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  specialtyId  String
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  specialtyId String
 
   @@unique([employeeId, specialtyId])
-  @@index([tenantId])
   @@index([employeeId])
 }
 
 model EmployeeBranch {
   id         String   @id @default(uuid())
-  tenantId   String
   employeeId String
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   branchId   String
 
   @@unique([employeeId, branchId])
-  @@index([tenantId])
   @@index([employeeId])
 }
 
 model EmployeeService {
   id         String   @id @default(uuid())
-  tenantId   String
   employeeId String
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   serviceId  String
 
   @@unique([employeeId, serviceId])
-  @@index([tenantId])
   @@index([employeeId])
 }
 
@@ -164,7 +152,6 @@ model EmployeeService {
 // A missing dayOfWeek row = weekly off day.
 model EmployeeAvailability {
   id         String   @id @default(uuid())
-  tenantId   String
   employeeId String
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   dayOfWeek  Int
@@ -174,7 +161,6 @@ model EmployeeAvailability {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@index([tenantId])
   @@index([employeeId, dayOfWeek])
 }
 
@@ -183,7 +169,6 @@ model EmployeeAvailability {
 // No partial-day overrides — adjust EmployeeAvailability instead.
 model EmployeeAvailabilityException {
   id         String   @id @default(uuid())
-  tenantId   String
   employeeId String
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   startDate  DateTime @db.Date
@@ -191,6 +176,5 @@ model EmployeeAvailabilityException {
   reason     String?
   createdAt  DateTime @default(now())
 
-  @@index([tenantId])
   @@index([employeeId, startDate, endDate])
 }
