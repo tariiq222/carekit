@@ -24,19 +24,19 @@ describe("email-templates api", () => {
   it("fetchEmailTemplates calls /email-templates", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchEmailTemplates()
-    expect(getMock).toHaveBeenCalledWith("/email-templates")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/comms/email-templates")
   })
 
   it("fetchEmailTemplate calls /email-templates/:slug", async () => {
     getMock.mockResolvedValueOnce({})
     await fetchEmailTemplate("booking-confirmed")
-    expect(getMock).toHaveBeenCalledWith("/email-templates/booking-confirmed")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/comms/email-templates/booking-confirmed")
   })
 
   it("updateEmailTemplate patches /email-templates/:id", async () => {
     patchMock.mockResolvedValueOnce({})
     await updateEmailTemplate("tpl-1", { subjectAr: "موضوع" } as Parameters<typeof updateEmailTemplate>[1])
-    expect(patchMock).toHaveBeenCalledWith("/email-templates/tpl-1", expect.anything())
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/comms/email-templates/tpl-1", expect.anything())
   })
 
 })

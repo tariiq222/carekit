@@ -31,6 +31,6 @@ describe("waitlist api", () => {
   it("removeWaitlistEntry calls DELETE /bookings/waitlist/:id", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
     await removeWaitlistEntry("1")
-    expect(deleteMock).toHaveBeenCalledWith("/bookings/waitlist/1")
+    expect(deleteMock).toHaveBeenCalledWith("/dashboard/bookings/waitlist/1")
   })
 })

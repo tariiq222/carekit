@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getMock, putMock } = vi.hoisted(() => ({
+const { getMock, postMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
-  putMock: vi.fn(),
+  postMock: vi.fn(),
 }))
 
 vi.mock("@/lib/api", () => ({
-  api: { get: getMock, put: putMock },
+  api: { get: getMock, post: postMock },
 }))
 
 import { fetchBranding, fetchPublicBranding, updateBranding } from "@/lib/api/branding"
@@ -16,21 +16,21 @@ describe("branding api", () => {
     vi.clearAllMocks()
   })
 
-  it("fetchBranding calls /branding", async () => {
+  it("fetchBranding calls /dashboard/organization/branding", async () => {
     getMock.mockResolvedValueOnce({ colorPrimary: "#354FD8" })
     await fetchBranding()
-    expect(getMock).toHaveBeenCalledWith("/branding")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/branding")
   })
 
-  it("fetchPublicBranding calls /branding/public", async () => {
+  it("fetchPublicBranding calls /public/branding", async () => {
     getMock.mockResolvedValueOnce({ logo: "https://example.com/logo.png" })
     await fetchPublicBranding()
-    expect(getMock).toHaveBeenCalledWith("/branding/public")
+    expect(getMock).toHaveBeenCalledWith("/public/branding")
   })
 
-  it("updateBranding puts to /branding", async () => {
-    putMock.mockResolvedValueOnce({ colorPrimary: "#000000" })
+  it("updateBranding posts to /dashboard/organization/branding", async () => {
+    postMock.mockResolvedValueOnce({ colorPrimary: "#000000" })
     await updateBranding({ colorPrimary: "#000000" } as Parameters<typeof updateBranding>[0])
-    expect(putMock).toHaveBeenCalledWith("/branding", expect.anything())
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/branding", expect.anything())
   })
 })

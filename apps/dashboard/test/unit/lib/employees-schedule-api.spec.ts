@@ -35,85 +35,85 @@ describe("employees-schedule api", () => {
   it("fetchAvailability calls /employees/:id/availability", async () => {
     getMock.mockResolvedValueOnce({ schedule: [] })
     await fetchAvailability("p-1")
-    expect(getMock).toHaveBeenCalledWith("/employees/p-1/availability")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/availability")
   })
 
-  it("setAvailability puts to /employees/:id/availability", async () => {
-    putMock.mockResolvedValueOnce(undefined)
+  it("setAvailability patches to /employees/:id/availability", async () => {
+    patchMock.mockResolvedValueOnce(undefined)
     await setAvailability("p-1", { schedule: [] } as Parameters<typeof setAvailability>[1])
-    expect(putMock).toHaveBeenCalledWith("/employees/p-1/availability", expect.anything())
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/availability", { windows: [] })
   })
 
   it("fetchBreaks calls /employees/:id/breaks", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchBreaks("p-1")
-    expect(getMock).toHaveBeenCalledWith("/employees/p-1/breaks")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/breaks")
   })
 
   it("setBreaks puts to /employees/:id/breaks", async () => {
     putMock.mockResolvedValueOnce([])
     await setBreaks("p-1", { breaks: [] } as Parameters<typeof setBreaks>[1])
-    expect(putMock).toHaveBeenCalledWith("/employees/p-1/breaks", expect.anything())
+    expect(putMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/breaks", expect.anything())
   })
 
   it("fetchSlots calls /employees/:id/slots with params", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchSlots("p-1", "2026-04-01", 30)
-    expect(getMock).toHaveBeenCalledWith("/employees/p-1/slots", { date: "2026-04-01", duration: 30 })
+    expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/slots", { date: "2026-04-01", duration: 30 })
   })
 
   it("fetchVacations calls /employees/:id/vacations", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchVacations("p-1")
-    expect(getMock).toHaveBeenCalledWith("/employees/p-1/vacations")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/vacations")
   })
 
   it("createVacation posts to /employees/:id/vacations", async () => {
     postMock.mockResolvedValueOnce({})
     await createVacation("p-1", { startDate: "2026-05-01", endDate: "2026-05-05" } as Parameters<typeof createVacation>[1])
-    expect(postMock).toHaveBeenCalledWith("/employees/p-1/vacations", expect.anything())
+    expect(postMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/vacations", expect.anything())
   })
 
   it("deleteVacation calls /employees/:pId/vacations/:vId", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
     await deleteVacation("p-1", "v-1")
-    expect(deleteMock).toHaveBeenCalledWith("/employees/p-1/vacations/v-1")
+    expect(deleteMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/vacations/v-1")
   })
 
   it("fetchEmployeeServices calls /employees/:id/services", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchEmployeeServices("p-1")
-    expect(getMock).toHaveBeenCalledWith("/employees/p-1/services")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/services")
   })
 
   it("assignService posts to /employees/:id/services", async () => {
     postMock.mockResolvedValueOnce({})
     await assignService("p-1", { serviceId: "svc-1" } as Parameters<typeof assignService>[1])
-    expect(postMock).toHaveBeenCalledWith("/employees/p-1/services", expect.anything())
+    expect(postMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/services", expect.anything())
   })
 
   it("updateEmployeeService patches /employees/:pId/services/:sId", async () => {
     patchMock.mockResolvedValueOnce({})
     await updateEmployeeService("p-1", "svc-1", { price: 100 } as Parameters<typeof updateEmployeeService>[2])
-    expect(patchMock).toHaveBeenCalledWith("/employees/p-1/services/svc-1", expect.anything())
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/services/svc-1", expect.anything())
   })
 
   it("removeEmployeeService deletes /employees/:pId/services/:sId", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
     await removeEmployeeService("p-1", "svc-1")
-    expect(deleteMock).toHaveBeenCalledWith("/employees/p-1/services/svc-1")
+    expect(deleteMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/services/svc-1")
   })
 
   it("fetchEmployeeServiceTypes calls /employees/:pId/services/:sId/types", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchEmployeeServiceTypes("p-1", "svc-1")
-    expect(getMock).toHaveBeenCalledWith("/employees/p-1/services/svc-1/types")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/services/svc-1/types")
   })
 
   it("fetchEmployeeRatings calls /employees/:id/ratings", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: {} })
     await fetchEmployeeRatings("p-1", { page: 1 })
-    expect(getMock).toHaveBeenCalledWith("/employees/p-1/ratings", expect.anything())
+    expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/ratings", expect.anything())
   })
 
   describe("fetchSlots response normalization", () => {
@@ -153,13 +153,13 @@ describe("employees-schedule api", () => {
     it("passes duration as optional param", async () => {
       getMock.mockResolvedValueOnce([])
       await fetchSlots("p-1", "2026-04-01", 45)
-      expect(getMock).toHaveBeenCalledWith("/employees/p-1/slots", { date: "2026-04-01", duration: 45 })
+      expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/slots", { date: "2026-04-01", duration: 45 })
     })
 
     it("works without duration param", async () => {
       getMock.mockResolvedValueOnce([])
       await fetchSlots("p-1", "2026-04-01")
-      expect(getMock).toHaveBeenCalledWith("/employees/p-1/slots", { date: "2026-04-01", duration: undefined })
+      expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/slots", { date: "2026-04-01", duration: undefined })
     })
   })
 
@@ -167,24 +167,26 @@ describe("employees-schedule api", () => {
     it("sends page and perPage params", async () => {
       getMock.mockResolvedValueOnce({ items: [], meta: {} })
       await fetchEmployeeRatings("p-1", { page: 3, perPage: 50 })
-      expect(getMock).toHaveBeenCalledWith("/employees/p-1/ratings", { page: 3, perPage: 50 })
+      expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/ratings", { page: 3, limit: 50 })
     })
 
     it("defaults to empty query object", async () => {
       getMock.mockResolvedValueOnce({ items: [], meta: {} })
       await fetchEmployeeRatings("p-1")
-      expect(getMock).toHaveBeenCalledWith("/employees/p-1/ratings", { page: undefined, perPage: undefined })
+      expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/ratings", { page: undefined, limit: undefined })
     })
   })
 
   describe("setAvailability edge cases", () => {
     it("sends full schedule payload", async () => {
-      putMock.mockResolvedValueOnce(undefined)
+      patchMock.mockResolvedValueOnce(undefined)
       const payload = {
         schedule: [{ dayOfWeek: 1, startTime: "09:00", endTime: "17:00", isActive: true }],
       }
       await setAvailability("p-1", payload as Parameters<typeof setAvailability>[1])
-      expect(putMock).toHaveBeenCalledWith("/employees/p-1/availability", payload)
+      expect(patchMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1/availability", {
+        windows: [{ dayOfWeek: 1, startTime: "09:00", endTime: "17:00", isActive: true }],
+      })
     })
   })
 })

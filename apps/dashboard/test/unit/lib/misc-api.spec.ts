@@ -68,7 +68,7 @@ describe("activity-log api", () => {
   it("fetchActivityLogs calls /activity-log", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: {} })
     await fetchActivityLogs()
-    expect(getMock).toHaveBeenCalledWith("/activity-log", expect.anything())
+    expect(getMock).toHaveBeenCalledWith("/dashboard/ops/activity", expect.anything())
   })
 
 })
@@ -85,7 +85,7 @@ describe("waitlist api", () => {
   it("removeWaitlistEntry deletes /bookings/waitlist/:id", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
     await removeWaitlistEntry("wl-1")
-    expect(deleteMock).toHaveBeenCalledWith("/bookings/waitlist/wl-1")
+    expect(deleteMock).toHaveBeenCalledWith("/dashboard/bookings/waitlist/wl-1")
   })
 })
 
@@ -95,18 +95,18 @@ describe("feature-flags api", () => {
   it("fetchFeatureFlags calls /feature-flags", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchFeatureFlags()
-    expect(getMock).toHaveBeenCalledWith("/feature-flags")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags")
   })
 
   it("fetchFeatureFlagMap calls /feature-flags/map", async () => {
     getMock.mockResolvedValueOnce({})
     await fetchFeatureFlagMap()
-    expect(getMock).toHaveBeenCalledWith("/feature-flags/map")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags/map")
   })
 
   it("updateFeatureFlag patches /feature-flags/:key", async () => {
     patchMock.mockResolvedValueOnce({})
     await updateFeatureFlag("waitlist", true)
-    expect(patchMock).toHaveBeenCalledWith("/feature-flags/waitlist", { enabled: true })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags/waitlist", { enabled: true })
   })
 })

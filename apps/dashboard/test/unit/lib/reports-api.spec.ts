@@ -1,15 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getMock, postMock, patchMock, deleteMock, putMock } = vi.hoisted(() => ({
-  getMock: vi.fn(),
+const { postMock } = vi.hoisted(() => ({
   postMock: vi.fn(),
-  patchMock: vi.fn(),
-  deleteMock: vi.fn(),
-  putMock: vi.fn(),
 }))
 
 vi.mock("@/lib/api", () => ({
-  api: { get: getMock, post: postMock, patch: patchMock, delete: deleteMock, put: putMock },
+  api: { post: postMock },
   getAccessToken: vi.fn().mockReturnValue(null),
 }))
 
@@ -24,30 +20,30 @@ describe("reports api", () => {
     vi.clearAllMocks()
   })
 
-  it("fetchRevenueReport calls /reports/revenue with query", async () => {
-    getMock.mockResolvedValueOnce({})
+  it("fetchRevenueReport posts to /dashboard/ops/reports with type REVENUE", async () => {
+    postMock.mockResolvedValueOnce({})
     await fetchRevenueReport({ dateFrom: "2026-01-01", dateTo: "2026-01-31" })
-    expect(getMock).toHaveBeenCalledWith(
-      "/reports/revenue",
-      expect.objectContaining({ dateFrom: "2026-01-01", dateTo: "2026-01-31" }),
+    expect(postMock).toHaveBeenCalledWith(
+      "/dashboard/ops/reports",
+      expect.objectContaining({ type: "REVENUE", from: "2026-01-01", to: "2026-01-31" }),
     )
   })
 
-  it("fetchBookingReport calls /reports/bookings with query", async () => {
-    getMock.mockResolvedValueOnce({})
+  it("fetchBookingReport posts to /dashboard/ops/reports with type BOOKINGS", async () => {
+    postMock.mockResolvedValueOnce({})
     await fetchBookingReport({ dateFrom: "2026-01-01", dateTo: "2026-01-31" })
-    expect(getMock).toHaveBeenCalledWith(
-      "/reports/bookings",
-      expect.objectContaining({ dateFrom: "2026-01-01", dateTo: "2026-01-31" }),
+    expect(postMock).toHaveBeenCalledWith(
+      "/dashboard/ops/reports",
+      expect.objectContaining({ type: "BOOKINGS", from: "2026-01-01", to: "2026-01-31" }),
     )
   })
 
-  it("fetchEmployeeReport calls /reports/employees with employeeId", async () => {
-    getMock.mockResolvedValueOnce({})
+  it("fetchEmployeeReport posts to /dashboard/ops/reports with type EMPLOYEES", async () => {
+    postMock.mockResolvedValueOnce({})
     await fetchEmployeeReport({ employeeId: "p-1", dateFrom: "2026-01-01", dateTo: "2026-01-31" })
-    expect(getMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ dateFrom: "2026-01-01" }),
+    expect(postMock).toHaveBeenCalledWith(
+      "/dashboard/ops/reports",
+      expect.objectContaining({ type: "EMPLOYEES", from: "2026-01-01", employeeId: "p-1" }),
     )
   })
 })

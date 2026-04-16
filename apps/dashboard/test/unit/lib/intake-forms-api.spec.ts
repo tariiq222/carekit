@@ -28,42 +28,42 @@ describe("intake-forms api", () => {
   it("fetchIntakeForms calls /intake-forms", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchIntakeForms()
-    expect(getMock).toHaveBeenCalledWith("/intake-forms", undefined)
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms", undefined)
   })
 
   it("fetchIntakeForm calls /intake-forms/:id", async () => {
     getMock.mockResolvedValueOnce({})
     await fetchIntakeForm("form-1")
-    expect(getMock).toHaveBeenCalledWith("/intake-forms/form-1")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms/form-1")
   })
 
   it("createIntakeForm posts to /intake-forms", async () => {
     postMock.mockResolvedValueOnce({})
     await createIntakeForm({ nameAr: "نموذج", nameEn: "Form" } as Parameters<typeof createIntakeForm>[0])
-    expect(postMock).toHaveBeenCalledWith("/intake-forms", expect.anything())
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms", expect.anything())
   })
 
   it("updateIntakeForm patches /intake-forms/:id", async () => {
     patchMock.mockResolvedValueOnce({})
     await updateIntakeForm("form-1", { nameEn: "Updated Form" } as Parameters<typeof updateIntakeForm>[1])
-    expect(patchMock).toHaveBeenCalledWith("/intake-forms/form-1", expect.anything())
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms/form-1", expect.anything())
   })
 
   it("deleteIntakeForm deletes /intake-forms/:id", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
     await deleteIntakeForm("form-1")
-    expect(deleteMock).toHaveBeenCalledWith("/intake-forms/form-1")
+    expect(deleteMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms/form-1")
   })
 
   it("setIntakeFields puts to /intake-forms/:id/fields", async () => {
     putMock.mockResolvedValueOnce([])
     await setIntakeFields("form-1", { fields: [] } as Parameters<typeof setIntakeFields>[1])
-    expect(putMock).toHaveBeenCalledWith("/intake-forms/form-1/fields", expect.anything())
+    expect(putMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms/form-1/fields", expect.anything())
   })
 
   it("fetchIntakeResponses calls /intake-forms/responses/:bookingId", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchIntakeResponses("bk-1")
-    expect(getMock).toHaveBeenCalledWith("/intake-forms/responses/bk-1")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/intake-forms/responses/bk-1")
   })
 })

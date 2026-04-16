@@ -24,20 +24,20 @@ describe("notifications api", () => {
   it("fetchNotifications calls /notifications", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: {} })
     await fetchNotifications()
-    expect(getMock).toHaveBeenCalledWith("/notifications", expect.anything())
+    expect(getMock).toHaveBeenCalledWith("/dashboard/comms/notifications", expect.anything())
   })
 
   it("fetchUnreadCount calls /notifications/unread-count and returns count", async () => {
     getMock.mockResolvedValueOnce({ count: 5 })
     const result = await fetchUnreadCount()
-    expect(getMock).toHaveBeenCalledWith("/notifications/unread-count")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/comms/notifications/unread-count")
     expect(result).toBe(5)
   })
 
   it("markAllAsRead patches /notifications/read-all", async () => {
     patchMock.mockResolvedValueOnce(undefined)
     await markAllAsRead()
-    expect(patchMock).toHaveBeenCalledWith("/notifications/read-all")
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/comms/notifications/mark-read")
   })
 
 })

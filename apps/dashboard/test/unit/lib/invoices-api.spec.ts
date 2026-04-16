@@ -24,13 +24,13 @@ describe("invoices api", () => {
   it("fetchInvoice calls /invoices/:id", async () => {
     getMock.mockResolvedValueOnce({ id: "inv-1" })
     await fetchInvoice("inv-1")
-    expect(getMock).toHaveBeenCalledWith("/invoices/inv-1")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/finance/invoices/inv-1")
   })
 
   it("createInvoice posts to /invoices", async () => {
     postMock.mockResolvedValueOnce({ id: "inv-1" })
     await createInvoice({ paymentId: "pay-1" } as Parameters<typeof createInvoice>[0])
-    expect(postMock).toHaveBeenCalledWith("/invoices", expect.objectContaining({ paymentId: "pay-1" }))
+    expect(postMock).toHaveBeenCalledWith("/dashboard/finance/invoices", expect.objectContaining({ paymentId: "pay-1" }))
   })
 
 })

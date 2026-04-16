@@ -24,18 +24,18 @@ describe("departments api", () => {
   it("fetchDepartments calls /departments with filters", async () => {
     getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
     await fetchDepartments({ page: 1, search: "cardio" })
-    expect(getMock).toHaveBeenCalledWith("/departments", expect.objectContaining({ search: "cardio" }))
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/departments", expect.objectContaining({ search: "cardio" }))
   })
 
   it("createDepartment posts to /departments", async () => {
     postMock.mockResolvedValueOnce({ id: "d-1", nameAr: "جلدية" })
     await createDepartment({ nameAr: "جلدية" } as Parameters<typeof createDepartment>[0])
-    expect(postMock).toHaveBeenCalledWith("/departments", expect.objectContaining({ nameAr: "جلدية" }))
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/departments", expect.objectContaining({ nameAr: "جلدية" }))
   })
 
   it("updateDepartment patches /departments/:id", async () => {
     patchMock.mockResolvedValueOnce({ id: "d-1", nameAr: "updated" })
     await updateDepartment("d-1", { nameAr: "updated" } as Parameters<typeof updateDepartment>[1])
-    expect(patchMock).toHaveBeenCalledWith("/departments/d-1", expect.anything())
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/departments/d-1", expect.anything())
   })
 })

@@ -31,37 +31,37 @@ describe("organization api", () => {
   it("fetchOrganizationHours calls /organization/hours", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchOrganizationHours()
-    expect(getMock).toHaveBeenCalledWith("/organization/hours")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/hours")
   })
 
-  it("updateOrganizationHours puts to /organization/hours", async () => {
-    putMock.mockResolvedValueOnce([])
+  it("updateOrganizationHours posts to /organization/hours", async () => {
+    postMock.mockResolvedValueOnce([])
     await updateOrganizationHours([])
-    expect(putMock).toHaveBeenCalledWith("/organization/hours", { hours: [] })
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/hours", { hours: [] })
   })
 
   it("fetchOrganizationHolidays calls /organization/holidays without params", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchOrganizationHolidays()
-    expect(getMock).toHaveBeenCalledWith("/organization/holidays", undefined)
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/holidays", undefined)
   })
 
   it("fetchOrganizationHolidays passes year param", async () => {
     getMock.mockResolvedValueOnce([])
     await fetchOrganizationHolidays(2026)
-    expect(getMock).toHaveBeenCalledWith("/organization/holidays", { year: 2026 })
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/holidays", { year: 2026 })
   })
 
   it("createOrganizationHoliday posts to /organization/holidays", async () => {
     postMock.mockResolvedValueOnce({})
     await createOrganizationHoliday({ date: "2026-12-25", nameAr: "عيد", nameEn: "Holiday" })
-    expect(postMock).toHaveBeenCalledWith("/organization/holidays", expect.objectContaining({ date: "2026-12-25" }))
+    expect(postMock).toHaveBeenCalledWith("/dashboard/organization/holidays", expect.objectContaining({ date: "2026-12-25" }))
   })
 
   it("deleteOrganizationHoliday deletes /organization/holidays/:id", async () => {
     deleteMock.mockResolvedValueOnce(undefined)
     await deleteOrganizationHoliday("h-1")
-    expect(deleteMock).toHaveBeenCalledWith("/organization/holidays/h-1")
+    expect(deleteMock).toHaveBeenCalledWith("/dashboard/organization/holidays/h-1")
   })
 })
 
@@ -71,12 +71,12 @@ describe("booking-settings api", () => {
   it("fetchBookingSettings calls /booking-settings", async () => {
     getMock.mockResolvedValueOnce({})
     await fetchBookingSettings()
-    expect(getMock).toHaveBeenCalledWith("/booking-settings")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings")
   })
 
   it("updateBookingSettings patches /booking-settings", async () => {
     patchMock.mockResolvedValueOnce({})
     await updateBookingSettings({ bufferMinutes: 10 })
-    expect(patchMock).toHaveBeenCalledWith("/booking-settings", { bufferMinutes: 10 })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings", { bufferMinutes: 10 })
   })
 })

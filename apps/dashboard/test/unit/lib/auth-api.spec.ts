@@ -56,12 +56,13 @@ describe("auth api", () => {
     expect(result.email).toBe("a@b.com")
   })
 
-  it("refreshToken calls POST /auth/refresh-token and sets access token", async () => {
+  it("refreshToken calls POST /auth/refresh and sets access token", async () => {
+    localStorage.setItem("carekit_refresh_token", "stored-rt")
     postMock.mockResolvedValueOnce({ accessToken: "newToken", user: { id: "1" }, expiresIn: 3600 })
 
     await refreshToken()
 
-    expect(postMock).toHaveBeenCalledWith("/auth/refresh-token")
+    expect(postMock).toHaveBeenCalledWith("/auth/refresh", { refreshToken: "stored-rt" })
     expect(setAccessTokenMock).toHaveBeenCalledWith("newToken")
   })
 

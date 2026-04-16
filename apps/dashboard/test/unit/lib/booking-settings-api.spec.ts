@@ -20,7 +20,7 @@ describe("booking-settings api", () => {
     const mockSettings = { id: "bs-1", paymentTimeoutMinutes: 30 }
     getMock.mockResolvedValueOnce(mockSettings)
     const result = await fetchBookingSettings()
-    expect(getMock).toHaveBeenCalledWith("/booking-settings")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings")
     expect(result).toEqual(mockSettings)
   })
 
@@ -28,7 +28,7 @@ describe("booking-settings api", () => {
     const updated = { id: "bs-1", paymentTimeoutMinutes: 60 }
     patchMock.mockResolvedValueOnce(updated)
     const result = await updateBookingSettings({ paymentTimeoutMinutes: 60 })
-    expect(patchMock).toHaveBeenCalledWith("/booking-settings", { paymentTimeoutMinutes: 60 })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings", { paymentTimeoutMinutes: 60 })
     expect(result).toEqual(updated)
   })
 })

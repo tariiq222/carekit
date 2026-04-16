@@ -1,13 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getMock, putMock, patchMock } = vi.hoisted(() => ({
+const { getMock, patchMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
-  putMock: vi.fn(),
   patchMock: vi.fn(),
 }))
 
 vi.mock("@/lib/api", () => ({
-  api: { get: getMock, put: putMock, patch: patchMock },
+  api: { get: getMock, patch: patchMock },
 }))
 
 import {
@@ -25,47 +24,47 @@ describe("organization-settings api", () => {
     vi.clearAllMocks()
   })
 
-  it("fetchOrganizationSettings calls /organization-settings", async () => {
+  it("fetchOrganizationSettings calls /dashboard/organization/settings", async () => {
     getMock.mockResolvedValueOnce({ id: "cs-1", organizationName: "Test" })
     await fetchOrganizationSettings()
-    expect(getMock).toHaveBeenCalledWith("/organization-settings")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/settings")
   })
 
-  it("fetchOrganizationSettingsPublic calls /organization-settings/public", async () => {
+  it("fetchOrganizationSettingsPublic calls /dashboard/organization/settings", async () => {
     getMock.mockResolvedValueOnce({ organizationName: "Public" })
     await fetchOrganizationSettingsPublic()
-    expect(getMock).toHaveBeenCalledWith("/organization-settings/public")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/settings")
   })
 
-  it("updateOrganizationSettings puts to /organization-settings", async () => {
-    putMock.mockResolvedValueOnce({ id: "cs-1" })
+  it("updateOrganizationSettings patches /dashboard/organization/settings", async () => {
+    patchMock.mockResolvedValueOnce({ id: "cs-1" })
     await updateOrganizationSettings({ organizationName: "Updated" } as Parameters<typeof updateOrganizationSettings>[0])
-    expect(putMock).toHaveBeenCalledWith("/organization-settings", expect.anything())
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/settings", expect.anything())
   })
 
-  it("fetchBookingFlowOrder calls /organization/settings/booking-flow", async () => {
+  it("fetchBookingFlowOrder calls /dashboard/organization/booking-settings", async () => {
     getMock.mockResolvedValueOnce({ bookingFlowOrder: "service_first" })
     const result = await fetchBookingFlowOrder()
-    expect(getMock).toHaveBeenCalledWith("/organization/settings/booking-flow")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings")
     expect(result).toBe("service_first")
   })
 
-  it("updateBookingFlowOrder patches /organization/settings/booking-flow", async () => {
+  it("updateBookingFlowOrder patches /dashboard/organization/booking-settings", async () => {
     patchMock.mockResolvedValueOnce({ bookingFlowOrder: "employee_first" })
     const result = await updateBookingFlowOrder("employee_first")
-    expect(patchMock).toHaveBeenCalledWith("/organization/settings/booking-flow", { order: "employee_first" })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/booking-settings", { bookingFlowOrder: "employee_first" })
     expect(result).toBe("employee_first")
   })
 
-  it("fetchPaymentSettings calls /organization/settings/payment", async () => {
-    getMock.mockResolvedValueOnce({ paymentMoyasarEnabled: true })
+  it("fetchPaymentSettings calls /dashboard/organization/settings", async () => {
+    getMock.mockResolvedValueOnce({ paymentMoyasarEnabled: true, paymentAtClinicEnabled: false })
     await fetchPaymentSettings()
-    expect(getMock).toHaveBeenCalledWith("/organization/settings/payment")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/organization/settings")
   })
 
-  it("updatePaymentSettings patches /organization/settings/payment", async () => {
-    patchMock.mockResolvedValueOnce({ paymentMoyasarEnabled: false })
+  it("updatePaymentSettings patches /dashboard/organization/settings", async () => {
+    patchMock.mockResolvedValueOnce({ paymentMoyasarEnabled: false, paymentAtClinicEnabled: true })
     await updatePaymentSettings({ paymentMoyasarEnabled: false })
-    expect(patchMock).toHaveBeenCalledWith("/organization/settings/payment", { paymentMoyasarEnabled: false })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/organization/settings", { paymentMoyasarEnabled: false })
   })
 })

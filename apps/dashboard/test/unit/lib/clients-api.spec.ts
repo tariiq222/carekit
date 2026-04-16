@@ -31,9 +31,9 @@ describe("clients api", () => {
 
     await fetchClients({ page: 2, perPage: 10, search: "محمد" })
 
-    expect(getMock).toHaveBeenCalledWith("/clients", {
+    expect(getMock).toHaveBeenCalledWith("/dashboard/people/clients", {
       page: 2,
-      perPage: 10,
+      limit: 10,
       search: "محمد",
     })
   })
@@ -43,7 +43,7 @@ describe("clients api", () => {
 
     await fetchClient("client-1")
 
-    expect(getMock).toHaveBeenCalledWith("/clients/client-1")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/people/clients/client-1")
   })
 
   it("posts walk-in client payload to the correct endpoint", async () => {
@@ -57,7 +57,7 @@ describe("clients api", () => {
       bloodType: "O_NEG",
     })
 
-    expect(postMock).toHaveBeenCalledWith("/clients/walk-in", {
+    expect(postMock).toHaveBeenCalledWith("/dashboard/people/clients", {
       firstName: "محمد",
       lastName: "السالم",
       phone: "+966501234567",
@@ -75,7 +75,7 @@ describe("clients api", () => {
       allergies: "Dust",
     })
 
-    expect(patchMock).toHaveBeenCalledWith("/clients/client-1", {
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/people/clients/client-1", {
       firstName: "أحمد",
       phone: "+966500000222",
       allergies: "Dust",

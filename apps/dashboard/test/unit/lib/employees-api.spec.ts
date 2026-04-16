@@ -26,7 +26,7 @@ describe("employees api", () => {
   })
 
   describe("fetchEmployees", () => {
-    it("sends all query params to /employees", async () => {
+    it("sends all query params to /dashboard/people/employees", async () => {
       getMock.mockResolvedValueOnce({
         items: [],
         meta: { total: 0, page: 1, perPage: 20 },
@@ -43,9 +43,9 @@ describe("employees api", () => {
         sortOrder: "asc",
       })
 
-      expect(getMock).toHaveBeenCalledWith("/employees", {
+      expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees", {
         page: 2,
-        perPage: 15,
+        limit: 15,
         search: "سارة",
         specialty: "cardiology",
         isActive: true,
@@ -58,7 +58,7 @@ describe("employees api", () => {
     it("defaults to empty query object", async () => {
       getMock.mockResolvedValueOnce({ items: [], meta: { total: 0 } })
       await fetchEmployees()
-      expect(getMock).toHaveBeenCalledWith("/employees", expect.any(Object))
+      expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees", expect.any(Object))
     })
 
     it("maps backend rating field to averageRating", async () => {
@@ -108,12 +108,12 @@ describe("employees api", () => {
   })
 
   describe("fetchEmployee", () => {
-    it("calls /employees/:id", async () => {
+    it("calls /dashboard/people/employees/:id", async () => {
       getMock.mockResolvedValueOnce({ id: "p-1", rating: 4.2, reviewCount: 8 })
 
       await fetchEmployee("p-1")
 
-      expect(getMock).toHaveBeenCalledWith("/employees/p-1")
+      expect(getMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1")
     })
 
     it("maps backend shape before returning", async () => {
@@ -127,7 +127,7 @@ describe("employees api", () => {
   })
 
   describe("createEmployee", () => {
-    it("posts to /employees with payload", async () => {
+    it("posts to /dashboard/people/employees with payload", async () => {
       postMock.mockResolvedValueOnce({ id: "p-2" })
 
       await createEmployee({
@@ -139,14 +139,14 @@ describe("employees api", () => {
       } as Parameters<typeof createEmployee>[0])
 
       expect(postMock).toHaveBeenCalledWith(
-        "/employees",
+        "/dashboard/people/employees",
         expect.objectContaining({ firstName: "فاطمة" }),
       )
     })
   })
 
   describe("onboardEmployee", () => {
-    it("posts to /employees/onboard", async () => {
+    it("posts to /dashboard/people/employees/onboarding", async () => {
       postMock.mockResolvedValueOnce({ employeeId: "p-3", inviteUrl: "https://..." })
 
       await onboardEmployee({
@@ -154,32 +154,32 @@ describe("employees api", () => {
       } as Parameters<typeof onboardEmployee>[0])
 
       expect(postMock).toHaveBeenCalledWith(
-        "/employees/onboard",
+        "/dashboard/people/employees/onboarding",
         expect.objectContaining({ email: "new@clinic.com" }),
       )
     })
   })
 
   describe("updateEmployee", () => {
-    it("patches /employees/:id with payload", async () => {
+    it("patches /dashboard/people/employees/:id with payload", async () => {
       patchMock.mockResolvedValueOnce({ id: "p-1" })
 
       await updateEmployee("p-1", { bio: "متخصص في أمراض القلب" })
 
       expect(patchMock).toHaveBeenCalledWith(
-        "/employees/p-1",
+        "/dashboard/people/employees/p-1",
         { bio: "متخصص في أمراض القلب" },
       )
     })
   })
 
   describe("deleteEmployee", () => {
-    it("calls DELETE /employees/:id", async () => {
+    it("calls DELETE /dashboard/people/employees/:id", async () => {
       deleteMock.mockResolvedValueOnce(undefined)
 
       await deleteEmployee("p-1")
 
-      expect(deleteMock).toHaveBeenCalledWith("/employees/p-1")
+      expect(deleteMock).toHaveBeenCalledWith("/dashboard/people/employees/p-1")
     })
   })
 

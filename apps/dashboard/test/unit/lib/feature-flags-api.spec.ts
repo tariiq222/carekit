@@ -23,18 +23,18 @@ describe("feature-flags api", () => {
   it("fetchFeatureFlags calls /feature-flags", async () => {
     getMock.mockResolvedValueOnce([{ key: "chatbot", enabled: true }])
     await fetchFeatureFlags()
-    expect(getMock).toHaveBeenCalledWith("/feature-flags")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags")
   })
 
   it("fetchFeatureFlagMap calls /feature-flags/map", async () => {
     getMock.mockResolvedValueOnce({ chatbot: true, ratings: false })
     await fetchFeatureFlagMap()
-    expect(getMock).toHaveBeenCalledWith("/feature-flags/map")
+    expect(getMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags/map")
   })
 
   it("updateFeatureFlag patches /feature-flags/:key", async () => {
     patchMock.mockResolvedValueOnce({ key: "chatbot", enabled: false })
     await updateFeatureFlag("chatbot", false)
-    expect(patchMock).toHaveBeenCalledWith("/feature-flags/chatbot", { enabled: false })
+    expect(patchMock).toHaveBeenCalledWith("/dashboard/platform/feature-flags/chatbot", { enabled: false })
   })
 })
