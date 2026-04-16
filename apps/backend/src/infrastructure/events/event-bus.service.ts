@@ -11,7 +11,6 @@ import { BullMqService } from '../queue/bull-mq.service';
 export interface DomainEventEnvelope<TPayload = unknown> {
   eventId: string;
   correlationId?: string;
-  tenantId?: string;
   source: string;
   version: number;
   occurredAt: Date | string;

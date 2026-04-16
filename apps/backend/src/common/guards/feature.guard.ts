@@ -9,13 +9,13 @@ import { Reflector } from '@nestjs/core';
 
 export const REQUIRES_FEATURE_KEY = 'requiresFeature';
 
-/** Restrict a route to tenants with a specific feature flag enabled. */
+/** Restrict a route to requests where a specific feature flag is enabled. */
 export const RequiresFeature = (feature: string) =>
   SetMetadata(REQUIRES_FEATURE_KEY, feature);
 
 /**
- * Feature guard — checks that the authenticated tenant has the required
- * feature enabled via req.user.features (string[]) populated by JwtStrategy.
+ * Feature guard — checks that the organization has the required feature
+ * enabled via req.user.features (string[]) populated by JwtStrategy.
  */
 @Injectable()
 export class FeatureGuard implements CanActivate {
@@ -36,7 +36,7 @@ export class FeatureGuard implements CanActivate {
     const enabled: string[] = user.features ?? [];
 
     if (!enabled.includes(feature)) {
-      throw new ForbiddenException(`Feature "${feature}" is not enabled for this tenant`);
+      throw new ForbiddenException(`Feature "${feature}" is not enabled`);
     }
 
     return true;

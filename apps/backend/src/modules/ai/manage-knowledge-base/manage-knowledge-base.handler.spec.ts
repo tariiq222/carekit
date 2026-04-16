@@ -29,7 +29,7 @@ describe('ManageKnowledgeBaseHandler', () => {
     expect(result.id).toBe('doc-1');
   });
 
-  it('getDocument throws NotFoundException for wrong tenant', async () => {
+  it('getDocument throws NotFoundException when document does not exist', async () => {
     const prisma = mockPrisma();
     prisma.knowledgeDocument.findFirst = jest.fn().mockResolvedValue(null);
     const handler = new ManageKnowledgeBaseHandler(prisma as never);

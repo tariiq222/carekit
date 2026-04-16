@@ -22,7 +22,7 @@ async function bootstrap(): Promise<void> {
       : ['http://localhost:3000', 'http://localhost:5103'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Request-ID'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
   });
 
   app.useGlobalPipes(

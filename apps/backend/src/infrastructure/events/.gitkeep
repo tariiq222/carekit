@@ -1,1 +1,1 @@
-# p1-t9 — BaseEvent contract (eventId, correlationId, tenantId, source, version, occurredAt) + event-bus.service.ts
+# BaseEvent contract (eventId, correlationId, source, version, occurredAt) + event-bus.service.ts

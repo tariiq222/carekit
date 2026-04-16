@@ -14,7 +14,7 @@ describe('PublicCatalogController', () => {
   beforeEach(() => jest.clearAllMocks());
 
   describe('getCatalog', () => {
-    it('queries departments, categories, and services for tenant', async () => {
+    it('queries departments, categories, and services', async () => {
       const { controller, prisma } = buildController();
       const departments = [{ id: 'd-1', nameAr: 'Dept 1' }];
       const categories = [{ id: 'c-1', nameAr: 'Cat 1' }];

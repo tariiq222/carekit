@@ -137,7 +137,7 @@ describe('ProcessPaymentHandler', () => {
     expect(result.id).toBe('pay-1');
   });
 
-  it('throws NotFoundException when invoice not found or belongs to different tenant', async () => {
+  it('throws NotFoundException when invoice not found', async () => {
     const tx = buildTx({
       invoice: {
         findFirst: jest.fn().mockResolvedValue(null),

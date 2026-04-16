@@ -1,6 +1,6 @@
 # CareKit Backend — Conventions
 
-This file provides guidance to Claude Code when working inside `apps/backend`. Read the root [CLAUDE.md](../../CLAUDE.md) first for stack-wide rules (tenant model, immutable migrations, golden rules).
+This file provides guidance to Claude Code when working inside `apps/backend`. Read the root [CLAUDE.md](../../CLAUDE.md) first for stack-wide rules (single-organization mode, immutable migrations, golden rules).
 
 ## Architecture: Domain Clusters + Vertical Slices
 
@@ -17,7 +17,7 @@ src/
 │   ├── comms/                org-config/  org-experience/
 │   ├── ops/                  ai/   media/   platform/
 ├── infrastructure/           ← Shared tech: database, cache, queue, mail, storage, ai, events
-├── common/                   ← Guards, filters, interceptors, pipes, tenant, base events
+├── common/                   ← Guards, filters, interceptors, pipes, base events
 ├── config/                   app.module.ts                main.ts
 └── prisma/schema/            ← One .prisma file per cluster (immutable migrations)
 ```
@@ -50,7 +50,7 @@ modules/bookings/create-booking/
 ```
 
 - **Handler, not Service.** The pattern is `XxxHandler` with a single `execute()` method — one slice, one use case.
-- **Command type** extends the DTO with `tenantId` and decoded values (e.g., `scheduledAt: Date`). Controllers convert DTO → Command.
+- **Command type** extends the DTO with decoded values (e.g., `scheduledAt: Date`) and caller identity (`userId`) where needed. Controllers convert DTO → Command.
 - **Cross-slice calls:** handlers may inject other handlers directly (`GetBookingSettingsHandler`, `PriceResolverService`). Cross-**cluster** calls go through published handlers/services from that cluster's module exports.
 - **Events live in `<cluster>/events/`** as typed event classes extending `BaseEvent` (see [src/common/events/base-event.ts](src/common/events/base-event.ts)). Handlers emit; cross-cluster reaction handlers (e.g., [payment-completed-handler](src/modules/bookings/payment-completed-handler/)) subscribe.
 - **Shared helpers** inside a cluster sit at the cluster root (e.g., [booking-lifecycle.helper.ts](src/modules/bookings/booking-lifecycle.helper.ts)).
@@ -60,8 +60,8 @@ modules/bookings/create-booking/
 
 Controllers are grouped **by audience** (`dashboard/`, `mobile/client/`, `mobile/employee/`, `public/`), one file per cluster (`bookings.controller.ts`, `finance.controller.ts`). They:
 
-1. Apply guards (`JwtGuard`, `CaslGuard`) and extract `@TenantId()` / `@UserId()`.
-2. Inject handlers from `src/modules/...` and call `handler.execute({ ...dto, tenantId })`.
+1. Apply guards (`JwtGuard`, `CaslGuard`) and extract `@UserId()` where needed.
+2. Inject handlers from `src/modules/...` and call `handler.execute({ ...dto })`.
 3. Do **no business logic** — if you're writing an `if` for domain rules in a controller, it belongs in a handler.
 
 When adding an endpoint: add or extend the slice in `src/modules/<cluster>/<use-case>/`, then wire it in the matching `src/api/<audience>/<cluster>.controller.ts`.
@@ -97,7 +97,7 @@ npm run prisma:studio                # GUI
 
 ## Conventions that catch new contributors
 
-- **Tenant isolation is mandatory.** Every query scopes by `tenantId` extracted via `@TenantId()` ([common/tenant](src/common/tenant/)). A handler missing it is a bug.
+- **Single-organization mode.** The backend serves one clinic per deployment — there is no `tenantId`. Queries are global; do not reintroduce multi-tenant scoping.
 - **One handler = one public method (`execute`).** Don't add `executeVariant()`; create a new slice.
 - **Tests colocated as `*.handler.spec.ts`** next to the handler, not in a parallel `test/` tree.
 - **Payments, ZATCA, auth, and migrations are owner-only** (see root CLAUDE.md "Security Sensitivity Tiers").
