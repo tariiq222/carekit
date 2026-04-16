@@ -24,6 +24,7 @@ export interface CreateClientPayload {
   bloodType?: string
   allergies?: string
   chronicConditions?: string
+  [key: string]: unknown
 }
 
 export interface CreateClientResponse {
@@ -46,6 +47,7 @@ export interface UpdateClientPayload {
   allergies?: string
   chronicConditions?: string
   isActive?: boolean
+  [key: string]: unknown
 }
 
 export async function fetchClients(
