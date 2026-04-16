@@ -1,5 +1,5 @@
 /**
- * BrandingConfig — the canonical shape returned by GET /public/branding/:tenantId.
+ * BrandingConfig — the canonical shape returned by GET /public/branding.
  * All apps (dashboard, mobile) consume this type.
  */
 export interface BrandingConfig {
