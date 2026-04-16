@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery, useQueryClient, useMutation, keepPreviousData } from "@tanstack/react-query"
-import { useState, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchClients, fetchClient, updateClient, createWalkInClient, deleteClient } from "@/lib/api/clients"
 import type { ClientListQuery } from "@/lib/types/client"
@@ -11,12 +11,18 @@ import type { ClientListQuery } from "@/lib/types/client"
 export function useClients() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [isActive, setIsActive] = useState<boolean | undefined>()
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const query: ClientListQuery = {
     page,
     perPage: 20,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     isActive,
   }
 
@@ -29,6 +35,7 @@ export function useClients() {
 
   const resetSearch = useCallback(() => {
     setSearch("")
+    setDebouncedSearch("")
     setIsActive(undefined)
     setPage(1)
   }, [])
@@ -48,6 +55,29 @@ export function useClients() {
     setIsActive: (v: boolean | undefined) => { setIsActive(v); setPage(1) },
     resetSearch,
     refetch,
+  }
+}
+
+/* ─── Stats Hook (unfiltered — for StatsGrid) ─── */
+
+export function useClientStats() {
+  const query: ClientListQuery = { page: 1, perPage: 200 }
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.clients.list(query),
+    queryFn: () => fetchClients(query),
+    staleTime: 5 * 60 * 1000,
+  })
+  const items = data?.items ?? []
+  const now = new Date()
+  return {
+    isLoading,
+    total: data?.meta?.total ?? 0,
+    active: items.filter((c) => c.isActive).length,
+    inactive: items.filter((c) => !c.isActive).length,
+    newThisMonth: items.filter((c) => {
+      const d = new Date(c.createdAt)
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+    }).length,
   }
 }
 

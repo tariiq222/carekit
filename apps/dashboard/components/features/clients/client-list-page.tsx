@@ -6,6 +6,11 @@ import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Add01Icon,
+  Download04Icon,
+  UserMultiple02Icon,
+  CheckmarkCircle02Icon,
+  Cancel01Icon,
+  CalendarAdd02Icon,
 } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
@@ -14,10 +19,13 @@ import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { PageHeader } from "@/components/features/page-header"
 import { ErrorBanner } from "@/components/features/error-banner"
 import { FilterBar } from "@/components/features/filter-bar"
+import { StatsGrid } from "@/components/features/stats-grid"
+import { StatCard } from "@/components/features/stat-card"
 import { getClientColumns } from "@/components/features/clients/client-columns"
 import { DeleteClientDialog } from "@/components/features/clients/delete-client-dialog"
 import { Button } from "@/components/ui/button"
-import { useClients, useClientMutations } from "@/hooks/use-clients"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useClients, useClientMutations, useClientStats } from "@/hooks/use-clients"
 import { useLocale } from "@/components/locale-provider"
 import type { Client } from "@/lib/types/client"
 
@@ -26,6 +34,7 @@ export function ClientListPage() {
   const { t, locale } = useLocale()
   const { clients, meta, isLoading, error, search, setSearch, isActive, setIsActive, resetSearch } = useClients()
   const { toggleActiveMut } = useClientMutations()
+  const stats = useClientStats()
 
   const [pendingDelete, setPendingDelete] = useState<Client | null>(null)
 
@@ -59,11 +68,28 @@ export function ClientListPage() {
         title={t("clients.title")}
         description={t("clients.description")}
       >
+        <Button variant="outline" className="gap-2 rounded-full px-5" disabled>
+          <HugeiconsIcon icon={Download04Icon} size={16} />
+          {t("clients.export")}
+        </Button>
         <Button className="gap-2 rounded-full px-5" onClick={() => router.push("/clients/create")}>
           <HugeiconsIcon icon={Add01Icon} size={16} />
           {t("clients.addClient")}
         </Button>
       </PageHeader>
+
+      {stats.isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[100px] rounded-lg" />)}
+        </div>
+      ) : (
+        <StatsGrid className="sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard title={t("clients.stats.total")} value={stats.total} icon={UserMultiple02Icon} iconColor="primary" />
+          <StatCard title={t("clients.stats.active")} value={stats.active} icon={CheckmarkCircle02Icon} iconColor="success" />
+          <StatCard title={t("clients.stats.inactive")} value={stats.inactive} icon={Cancel01Icon} iconColor="warning" />
+          <StatCard title={t("clients.stats.newThisMonth")} value={stats.newThisMonth} icon={CalendarAdd02Icon} iconColor="accent" />
+        </StatsGrid>
+      )}
 
       {error && <ErrorBanner message={error} />}
 
@@ -87,20 +113,23 @@ export function ClientListPage() {
         ]}
       />
 
-      {/* Table */}
       {isLoading && clients.length === 0 ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-12 rounded-lg bg-muted animate-pulse" />
+            <Skeleton key={i} className="h-12 rounded-lg" />
           ))}
         </div>
       ) : (
         <DataTable
           columns={columns}
           data={clients}
-          emptyTitle={t("clients.empty.title")}
-          emptyDescription={t("clients.empty.description")}
-          emptyAction={{ label: t("clients.addClient"), onClick: () => router.push("/clients/create") }}
+          emptyTitle={hasFilters ? t("clients.empty.noMatches.title") : t("clients.empty.title")}
+          emptyDescription={hasFilters ? t("clients.empty.noMatches.description") : t("clients.empty.description")}
+          emptyAction={
+            hasFilters
+              ? { label: t("clients.filters.reset"), onClick: () => { resetSearch(); setIsActive(undefined) } }
+              : { label: t("clients.addClient"), onClick: () => router.push("/clients/create") }
+          }
         />
       )}
 
