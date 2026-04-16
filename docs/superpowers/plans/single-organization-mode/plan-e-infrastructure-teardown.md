@@ -65,6 +65,8 @@
 - `apps/backend/src/api/mobile/client/portal/home.controller.ts` + spec (E0)
 - `apps/backend/src/api/mobile/client/portal/summary.controller.ts` + spec (E0)
 - `apps/backend/src/api/mobile/client/portal/upcoming.controller.ts` + spec (E0)
+- `apps/backend/src/api/public/catalog.controller.ts` + spec (E0.5)
+- `apps/backend/src/api/public/slots.controller.ts` + spec (E0.5)
 
 ---
 
@@ -122,6 +124,68 @@ Expected: both pass with zero TS errors.
 cd c:/pro/carekit
 git add apps/backend/src/api/mobile/
 git commit -m "refactor(mobile): drop @TenantId() from employee earnings + client portal controllers"
+git push
+```
+
+---
+
+## Task E0.5 — Clean public catalog + slots controllers
+
+**Background:** After Task E0 removed mobile `@TenantId()` usage, the `npm run build` still fails with 4 TS errors — all in `api/public/catalog.controller.ts` (3 errors: Prisma where clauses for Department/ServiceCategory/Service no longer accept `tenantId`) and `api/public/slots.controller.ts` (1 error: `CheckAvailabilityQuery` signature no longer accepts `tenantId`). Originally scoped for Plan F Task F7.5, but pulled forward here because Plan E's completion contract requires a clean build. After this task runs, Plan F Task F7.5 becomes a no-op and should be deleted.
+
+**Files:**
+- `apps/backend/src/api/public/catalog.controller.ts` + spec
+- `apps/backend/src/api/public/slots.controller.ts` + spec
+
+- [ ] **Step 1: catalog.controller.ts**
+
+Replace route `@Get(':tenantId')` with `@Get()`. Remove the `@Param('tenantId') tenantId: string` parameter from `getCatalog()`. Drop `tenantId,` from all three Prisma `where` clauses (department, serviceCategory, service) — keep the other filters.
+
+- [ ] **Step 2: catalog.controller.spec.ts**
+
+Remove the `TENANT` constant. Update `controller.getCatalog(TENANT)` calls to `controller.getCatalog()`. Drop `tenantId: TENANT` from all three `where` assertions.
+
+- [ ] **Step 3: slots.controller.ts**
+
+Remove `@IsUUID() tenantId!: string;` from `PublicSlotsQuery`. Remove `tenantId: q.tenantId,` from the handler `execute()` call.
+
+- [ ] **Step 4: slots.controller.spec.ts**
+
+Drop `tenantId: 'tenant-1'` (and the `tenantId: 't'` variant in the error test) from all test fixtures and the `objectContaining` assertion.
+
+- [ ] **Step 5: Run tests**
+
+```bash
+cd c:/pro/carekit/apps/backend
+npx jest src/api/public --runInBand
+```
+
+Expected: all pass.
+
+- [ ] **Step 6: Verify zero tenant references**
+
+```bash
+grep -n "tenantId\|@TenantId" apps/backend/src/api/public/catalog.controller.ts apps/backend/src/api/public/catalog.controller.spec.ts apps/backend/src/api/public/slots.controller.ts apps/backend/src/api/public/slots.controller.spec.ts
+```
+
+Expected: ZERO matches.
+
+- [ ] **Step 7: Full build + full test**
+
+```bash
+cd c:/pro/carekit/apps/backend
+npm run build
+npm run test
+```
+
+Both must exit 0. This is the first commit where `npm run build` should be genuinely clean.
+
+- [ ] **Step 8: Commit**
+
+```bash
+cd c:/pro/carekit
+git add apps/backend/src/api/public/catalog.controller.ts apps/backend/src/api/public/catalog.controller.spec.ts apps/backend/src/api/public/slots.controller.ts apps/backend/src/api/public/slots.controller.spec.ts
+git commit -m "refactor(public): drop tenantId from catalog + slots controllers"
 git push
 ```
 
