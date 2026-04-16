@@ -104,19 +104,17 @@ function applyBranding(colors: BrandingColors) {
 
 /* ─── Fetch public branding (no auth needed) ─── */
 
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID ?? ""
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100/api/v1"
 
 let brandingCache: { colors: BrandingColors | null; ts: number } | null = null
 const BRANDING_CACHE_TTL = 5 * 60_000
 
 async function fetchBranding(): Promise<BrandingColors | null> {
-  if (!TENANT_ID) return null
   if (brandingCache && Date.now() - brandingCache.ts < BRANDING_CACHE_TTL) {
     return brandingCache.colors
   }
   try {
-    const res = await fetch(`${API_BASE_URL}/public/branding/${TENANT_ID}`)
+    const res = await fetch(`${API_BASE_URL}/public/branding`)
     if (!res.ok) {
       brandingCache = { colors: null, ts: Date.now() }
       return null
