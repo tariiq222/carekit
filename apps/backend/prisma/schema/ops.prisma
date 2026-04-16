@@ -33,29 +33,27 @@ enum ReportStatus {
 // ─── ActivityLog ─────────────────────────────────────────────────────────────
 
 model ActivityLog {
-  id           String         @id @default(uuid())
-  tenantId     String
-  userId       String?
-  userEmail    String?
-  action       ActivityAction
-  entity       String
-  entityId     String?
-  description  String
-  metadata     Json?
-  ipAddress    String?
-  userAgent    String?
-  occurredAt   DateTime       @default(now())
+  id          String         @id @default(uuid())
+  userId      String?
+  userEmail   String?
+  action      ActivityAction
+  entity      String
+  entityId    String?
+  description String
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  occurredAt  DateTime       @default(now())
 
-  @@index([tenantId, occurredAt])
-  @@index([tenantId, entity, entityId])
-  @@index([tenantId, userId])
+  @@index([occurredAt])
+  @@index([entity, entityId])
+  @@index([userId])
 }
 
 // ─── Report ──────────────────────────────────────────────────────────────────
 
 model Report {
   id          String       @id @default(uuid())
-  tenantId    String
   type        ReportType
   format      ReportFormat @default(JSON)
   status      ReportStatus @default(PENDING)
@@ -67,5 +65,5 @@ model Report {
   createdAt   DateTime     @default(now())
   completedAt DateTime?
 
-  @@index([tenantId, type, createdAt])
+  @@index([type, createdAt])
 }

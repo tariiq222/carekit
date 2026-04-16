@@ -30,7 +30,6 @@ enum MessageSenderType {
 
 model Notification {
   id            String           @id @default(uuid())
-  tenantId      String
   recipientId   String
   recipientType RecipientType
   type          NotificationType
@@ -42,13 +41,12 @@ model Notification {
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
-  @@index([tenantId, recipientId])
-  @@index([tenantId, recipientId, createdAt])
+  @@index([recipientId])
+  @@index([recipientId, createdAt])
 }
 
 model ChatConversation {
   id            String             @id @default(uuid())
-  tenantId      String
   clientId      String
   employeeId    String?
   isAiChat      Boolean            @default(false)
@@ -57,16 +55,15 @@ model ChatConversation {
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
-  messages      CommsChatMessage[]
+  messages CommsChatMessage[]
 
-  @@index([tenantId, clientId])
-  @@index([tenantId, employeeId])
-  @@index([tenantId, status, lastMessageAt])
+  @@index([clientId])
+  @@index([employeeId])
+  @@index([status, lastMessageAt])
 }
 
 model CommsChatMessage {
   id             String            @id @default(uuid())
-  tenantId       String
   conversationId String
   conversation   ChatConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   senderType     MessageSenderType
@@ -75,13 +72,12 @@ model CommsChatMessage {
   isRead         Boolean           @default(false)
   createdAt      DateTime          @default(now())
 
-  @@index([tenantId, conversationId, createdAt])
+  @@index([conversationId, createdAt])
 }
 
 model EmailTemplate {
   id        String   @id @default(uuid())
-  tenantId  String
-  slug      String
+  slug      String   @unique
   nameAr    String
   nameEn    String?
   subjectAr String
@@ -90,7 +86,4 @@ model EmailTemplate {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([tenantId, slug])
-  @@index([tenantId])
 }
