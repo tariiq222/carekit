@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
 import { HttpExceptionFilter } from './http-exception.filter';
-import { RequestContextStorage } from '../tenant/request-context';
+import { RequestContextStorage } from '../http/request-context';
 
 const makeHost = (statusFn = jest.fn(), jsonFn = jest.fn()) => ({
   switchToHttp: () => ({
@@ -91,7 +91,7 @@ describe('HttpExceptionFilter', () => {
 
   it('includes requestId from RequestContextStorage when available', () => {
     const jsonFn = jest.fn();
-    RequestContextStorage.run({ tenantId: 'tenant-1', requestId: 'req-123' }, () => {
+    RequestContextStorage.run({ requestId: 'req-123' }, () => {
       filter.catch(new BadRequestException('bad'), makeHost(jest.fn(), jsonFn) as any);
     });
     const body = jsonFn.mock.calls[0][0];

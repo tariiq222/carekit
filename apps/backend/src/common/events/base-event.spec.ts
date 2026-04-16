@@ -1,5 +1,5 @@
 import { BaseEvent } from './base-event';
-import { RequestContextStorage } from '../tenant/request-context';
+import { RequestContextStorage } from '../http/request-context';
 
 class TestEvent extends BaseEvent<{ value: number }> {
   readonly eventName = 'test.happened';
@@ -37,7 +37,7 @@ describe('BaseEvent', () => {
 
   it('pulls correlationId from RequestContext when available', () => {
     RequestContextStorage.run(
-      { tenantId: 'clinic-1', requestId: 'req-from-ctx', ip: '127.0.0.1' },
+      { requestId: 'req-from-ctx', ip: '127.0.0.1' },
       () => {
         const e = new TestEvent(0);
         expect(e.correlationId).toBe('req-from-ctx');

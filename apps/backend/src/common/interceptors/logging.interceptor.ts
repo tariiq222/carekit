@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { Request, Response } from 'express';
-import { RequestContextStorage } from '../tenant/request-context';
+import { RequestContextStorage } from '../http/request-context';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -26,7 +26,7 @@ export class LoggingInterceptor implements NestInterceptor {
           const ms = Date.now() - start;
           this.logger.log(
             `${method} ${url} ${res.statusCode} ${ms}ms` +
-              (context ? ` tenant=${context.tenantId} reqId=${context.requestId}` : ''),
+              (context ? ` reqId=${context.requestId}` : ''),
           );
         },
         error: () => {

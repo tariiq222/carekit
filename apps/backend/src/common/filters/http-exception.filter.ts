@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { RequestContextStorage } from '../tenant/request-context';
+import { RequestContextStorage } from '../http/request-context';
 
 interface ErrorResponse {
   statusCode: number;

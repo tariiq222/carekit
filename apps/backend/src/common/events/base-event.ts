@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { RequestContextStorage } from '../tenant/request-context';
+import { RequestContextStorage } from '../http/request-context';
 
 /**
  * Base class for all domain events in CareKit.
