@@ -4,7 +4,6 @@ import { PasswordService } from '../shared/password.service';
 
 export interface ChangePasswordCommand {
   userId: string;
-  tenantId: string;
   currentPassword: string;
   newPassword: string;
 }
@@ -18,7 +17,7 @@ export class ChangePasswordHandler {
 
   async execute(cmd: ChangePasswordCommand): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: cmd.userId } });
-    if (!user || user.tenantId !== cmd.tenantId) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('User not found');
 
     const isValid = await this.password.verify(cmd.currentPassword, user.passwordHash);
     if (!isValid) throw new BadRequestException('Current password is incorrect');

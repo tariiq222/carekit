@@ -10,7 +10,6 @@ import { RefreshTokenDto } from '../../modules/identity/refresh-token/refresh-to
 import { LogoutDto } from '../../modules/identity/logout/logout.dto';
 import { PrismaService } from '../../infrastructure/database';
 import { TokenService } from '../../modules/identity/shared/token.service';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { UserId } from '../../common/auth/user-id.decorator';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { GetCurrentUserHandler } from '../../modules/identity/get-current-user/get-current-user.handler';
@@ -37,10 +36,10 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async loginEndpoint(@TenantId() tenantId: string, @Body() body: LoginDto) {
-    const tokens = await this.login.execute({ tenantId, email: body.email, password: body.password });
+  async loginEndpoint(@Body() body: LoginDto) {
+    const tokens = await this.login.execute({ email: body.email, password: body.password });
     const user = await this.prisma.user.findUnique({
-      where: { tenantId_email: { tenantId, email: body.email } },
+      where: { email: body.email },
       omit: { passwordHash: true },
       include: { customRole: { include: { permissions: true } } },
     });
@@ -81,16 +80,13 @@ export class AuthController {
   async logoutEndpoint(@Body() body: LogoutDto) {
     const { refreshToken: rawToken } = body;
     const record = await this.findActiveToken(rawToken);
-    await this.logout.execute({ userId: record.userId, tenantId: record.tenantId });
+    await this.logout.execute({ userId: record.userId });
   }
 
   @Get('me')
   @UseGuards(JwtGuard)
-  async meEndpoint(
-    @UserId() userId: string,
-    @TenantId() tenantId: string,
-  ) {
-    return this.getCurrentUser.execute({ userId, tenantId } satisfies GetCurrentUserQuery);
+  async meEndpoint(@UserId() userId: string) {
+    return this.getCurrentUser.execute({ userId } satisfies GetCurrentUserQuery);
   }
 
   @Patch('password/change')
@@ -98,12 +94,10 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async changePasswordEndpoint(
     @UserId() userId: string,
-    @TenantId() tenantId: string,
     @Body() body: ChangePasswordDto,
   ) {
     await this.changePassword.execute({
       userId,
-      tenantId,
       currentPassword: body.currentPassword,
       newPassword: body.newPassword,
     });

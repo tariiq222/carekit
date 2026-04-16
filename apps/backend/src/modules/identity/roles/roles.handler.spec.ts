@@ -1,4 +1,3 @@
-import { ConflictException } from '@nestjs/common';
 import { CreateRoleHandler } from './create-role.handler';
 import { AssignPermissionsHandler } from './assign-permissions.handler';
 import { ListRolesHandler } from './list-roles.handler';
@@ -6,7 +5,7 @@ import { ListRolesHandler } from './list-roles.handler';
 const buildRolesPrisma = () => ({
   customRole: {
     findUnique: jest.fn().mockResolvedValue(null),
-    create: jest.fn().mockResolvedValue({ id: 'role-1', name: 'Reception', tenantId: 'tenant-1', permissions: [] }),
+    create: jest.fn().mockResolvedValue({ id: 'role-1', name: 'Reception', permissions: [] }),
     findMany: jest.fn().mockResolvedValue([{ id: 'role-1', name: 'Reception', permissions: [] }]),
   },
   permission: {
@@ -19,9 +18,9 @@ describe('CreateRoleHandler — pure mock', () => {
   it('creates role successfully', async () => {
     const prisma = buildRolesPrisma();
     const handler = new CreateRoleHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1', name: 'Reception' });
+    const result = await handler.execute({ name: 'Reception' });
     expect(prisma.customRole.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ tenantId: 'tenant-1', name: 'Reception' }) }),
+      expect.objectContaining({ data: expect.objectContaining({ name: 'Reception' }) }),
     );
     expect(result.id).toBe('role-1');
   });
@@ -30,7 +29,7 @@ describe('CreateRoleHandler — pure mock', () => {
     const prisma = buildRolesPrisma();
     prisma.customRole.findUnique = jest.fn().mockResolvedValue({ id: 'role-1', name: 'Reception' });
     const handler = new CreateRoleHandler(prisma as never);
-    await expect(handler.execute({ tenantId: 'tenant-1', name: 'Reception' })).rejects.toThrow('already exists');
+    await expect(handler.execute({ name: 'Reception' })).rejects.toThrow('already exists');
   });
 });
 
@@ -39,7 +38,6 @@ describe('AssignPermissionsHandler — pure mock', () => {
     const prisma = buildRolesPrisma();
     const handler = new AssignPermissionsHandler(prisma as never);
     await handler.execute({
-      tenantId: 'tenant-1',
       customRoleId: 'role-1',
       permissions: [
         { action: 'read', subject: 'Booking' },
@@ -50,7 +48,7 @@ describe('AssignPermissionsHandler — pure mock', () => {
     expect(prisma.permission.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.arrayContaining([
-          expect.objectContaining({ action: 'read', subject: 'Booking', tenantId: 'tenant-1' }),
+          expect.objectContaining({ action: 'read', subject: 'Booking' }),
         ]),
       }),
     );
@@ -59,7 +57,7 @@ describe('AssignPermissionsHandler — pure mock', () => {
   it('handles empty permissions array (removes all)', async () => {
     const prisma = buildRolesPrisma();
     const handler = new AssignPermissionsHandler(prisma as never);
-    await handler.execute({ tenantId: 'tenant-1', customRoleId: 'role-1', permissions: [] });
+    await handler.execute({ customRoleId: 'role-1', permissions: [] });
     expect(prisma.permission.deleteMany).toHaveBeenCalled();
     expect(prisma.permission.createMany).toHaveBeenCalledWith(
       expect.objectContaining({ data: [] }),
@@ -68,13 +66,11 @@ describe('AssignPermissionsHandler — pure mock', () => {
 });
 
 describe('ListRolesHandler', () => {
-  it('returns roles scoped to tenant', async () => {
+  it('returns all roles', async () => {
     const prisma = buildRolesPrisma();
     const handler = new ListRolesHandler(prisma as never);
-    const result = await handler.execute({ tenantId: 'tenant-1' });
-    expect(prisma.customRole.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ tenantId: { tenantId: 'tenant-1' } }) }),
-    );
+    const result = await handler.execute();
+    expect(prisma.customRole.findMany).toHaveBeenCalled();
     expect(Array.isArray(result)).toBe(true);
   });
 });

@@ -6,19 +6,19 @@ const buildPrisma = () => ({
 });
 
 describe('DeleteUserHandler', () => {
-  it('deletes a user scoped to tenant', async () => {
+  it('deletes a user', async () => {
     const prisma = buildPrisma();
-    await new DeleteUserHandler(prisma as never).execute({ userId: 'u-1', tenantId: 'tenant-1' });
+    await new DeleteUserHandler(prisma as never).execute({ userId: 'u-1' });
     expect(prisma.user.deleteMany).toHaveBeenCalledWith({
-      where: { id: 'u-1', tenantId: 'tenant-1' },
+      where: { id: 'u-1' },
     });
   });
 
-  it('throws NotFoundException when user does not exist for tenant', async () => {
+  it('throws NotFoundException when user does not exist', async () => {
     const prisma = buildPrisma();
     prisma.user.deleteMany = jest.fn().mockResolvedValue({ count: 0 });
     await expect(
-      new DeleteUserHandler(prisma as never).execute({ userId: 'missing', tenantId: 'tenant-1' }),
+      new DeleteUserHandler(prisma as never).execute({ userId: 'missing' }),
     ).rejects.toThrow(NotFoundException);
   });
 });

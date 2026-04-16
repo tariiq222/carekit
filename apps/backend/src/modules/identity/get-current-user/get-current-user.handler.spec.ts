@@ -20,13 +20,13 @@ describe('GetCurrentUserHandler', () => {
   });
 
   it('returns user when found', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com', tenantId: 'tenant-1' });
-    const result = await handler.execute({ userId: 'u1', tenantId: 'tenant-1' });
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', email: 'a@b.com' });
+    const result = await handler.execute({ userId: 'u1' });
     expect(result.id).toBe('u1');
   });
 
   it('throws NotFoundException when user not found', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
-    await expect(handler.execute({ userId: 'u1', tenantId: 'tenant-1' })).rejects.toThrow(NotFoundException);
+    await expect(handler.execute({ userId: 'u1' })).rejects.toThrow(NotFoundException);
   });
 });

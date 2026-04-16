@@ -12,7 +12,6 @@ export interface TokenPair {
 
 export interface JwtPayload {
   sub: string;
-  tenantId: string;
   email: string;
   role: string;
   customRoleId: string | null;
@@ -30,7 +29,6 @@ export class TokenService {
 
   async issueTokenPair(user: {
     id: string;
-    tenantId: string;
     email: string;
     role: string;
     customRoleId: string | null;
@@ -39,7 +37,6 @@ export class TokenService {
     const permissions = user.customRole?.permissions ?? [];
     const payload: JwtPayload = {
       sub: user.id,
-      tenantId: user.tenantId,
       email: user.email,
       role: user.role,
       customRoleId: user.customRoleId,
@@ -67,7 +64,7 @@ export class TokenService {
     const expiresAt = new Date(Date.now() + this.parseTtlMs(ttl));
 
     await this.prisma.refreshToken.create({
-      data: { tenantId: user.tenantId, userId: user.id, tokenHash, tokenSelector, expiresAt },
+      data: { userId: user.id, tokenHash, tokenSelector, expiresAt },
     });
 
     return { accessToken, refreshToken: rawRefresh };

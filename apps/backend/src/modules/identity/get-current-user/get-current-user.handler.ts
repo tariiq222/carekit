@@ -12,7 +12,7 @@ export class GetCurrentUserHandler {
       include: { customRole: { include: { permissions: true } } },
       omit: { passwordHash: true },
     });
-    if (!user || user.tenantId !== query.tenantId) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('User not found');
     const [firstName = '', ...rest] = (user.name ?? '').trim().split(/\s+/);
     return { ...user, firstName, lastName: rest.join(' ') };
   }

@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface RemoveRoleCommand {
-  tenantId: string;
   userId: string;
   customRoleId: string;
 }
@@ -15,7 +14,6 @@ export class RemoveRoleHandler {
     const { count } = await this.prisma.user.updateMany({
       where: {
         id: cmd.userId,
-        tenantId: cmd.tenantId,
         customRoleId: cmd.customRoleId,
       },
       data: { customRoleId: null },

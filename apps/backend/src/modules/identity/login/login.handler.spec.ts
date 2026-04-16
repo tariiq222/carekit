@@ -7,7 +7,6 @@ import { PrismaService } from '../../../infrastructure/database';
 
 const mockUser = {
   id: 'user-1',
-  tenantId: 'tenant-1',
   email: 'admin@clinic.sa',
   passwordHash: '$2b$10$hashed',
   name: 'Admin',
@@ -53,7 +52,7 @@ describe('LoginHandler', () => {
     passwordService.verify.mockResolvedValue(true);
     tokenService.issueTokenPair.mockResolvedValue({ accessToken: 'acc', refreshToken: 'ref' });
 
-    const result = await handler.execute({ tenantId: 'tenant-1', email: 'admin@clinic.sa', password: 'secret' });
+    const result = await handler.execute({ email: 'admin@clinic.sa', password: 'secret' });
     expect(result.accessToken).toBe('acc');
     expect(result.refreshToken).toBe('ref');
   });
@@ -61,7 +60,7 @@ describe('LoginHandler', () => {
   it('throws UnauthorizedException when user not found', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', email: 'x@y.com', password: 'p' }),
+      handler.execute({ email: 'x@y.com', password: 'p' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 
@@ -69,7 +68,7 @@ describe('LoginHandler', () => {
     prisma.user.findUnique.mockResolvedValue(mockUser as never);
     passwordService.verify.mockResolvedValue(false);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', email: 'admin@clinic.sa', password: 'wrong' }),
+      handler.execute({ email: 'admin@clinic.sa', password: 'wrong' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 
@@ -77,7 +76,7 @@ describe('LoginHandler', () => {
     prisma.user.findUnique.mockResolvedValue({ ...mockUser, isActive: false } as never);
     passwordService.verify.mockResolvedValue(true);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', email: 'admin@clinic.sa', password: 'secret' }),
+      handler.execute({ email: 'admin@clinic.sa', password: 'secret' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 });

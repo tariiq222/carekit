@@ -1,7 +1,7 @@
 import { TokenService } from './token.service';
 
 const mockUser = {
-  id: 'user-1', tenantId: 'tenant-1', email: 'admin@clinic.sa',
+  id: 'user-1', email: 'admin@clinic.sa',
   role: 'ADMIN', customRoleId: null, customRole: null,
 };
 
@@ -49,7 +49,7 @@ describe('TokenService.issueTokenPair', () => {
     await service.issueTokenPair(mockUser);
 
     expect(jwt.sign).toHaveBeenCalledWith(
-      expect.objectContaining({ sub: 'user-1', tenantId: 'tenant-1', email: 'admin@clinic.sa' }),
+      expect.objectContaining({ sub: 'user-1', email: 'admin@clinic.sa' }),
       expect.objectContaining({ secret: 'access-secret' }),
     );
   });
@@ -61,7 +61,7 @@ describe('TokenService.issueTokenPair', () => {
 
     expect(prisma.refreshToken.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ tenantId: 'tenant-1', userId: 'user-1' }),
+        data: expect.objectContaining({ userId: 'user-1' }),
       }),
     );
   });

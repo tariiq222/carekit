@@ -13,7 +13,7 @@ export class RefreshTokenHandler {
 
   async execute(cmd: RefreshTokenCommand): Promise<TokenPair> {
     const candidates = await this.prisma.refreshToken.findMany({
-      where: { userId: cmd.userId, tenantId: cmd.tenantId, revokedAt: null, expiresAt: { gt: new Date() } },
+      where: { userId: cmd.userId, revokedAt: null, expiresAt: { gt: new Date() } },
     });
 
     let matched: (typeof candidates)[0] | undefined;

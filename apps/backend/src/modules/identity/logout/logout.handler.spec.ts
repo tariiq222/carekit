@@ -20,7 +20,7 @@ describe('LogoutHandler', () => {
 
   it('revokes all refresh tokens for the user', async () => {
     prisma.refreshToken.updateMany.mockResolvedValue({ count: 2 });
-    await handler.execute({ userId: 'user-1', tenantId: 'tenant-1' });
+    await handler.execute({ userId: 'user-1' });
     expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ userId: 'user-1' }) }),
     );

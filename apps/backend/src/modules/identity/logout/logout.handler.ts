@@ -8,7 +8,7 @@ export class LogoutHandler {
 
   async execute(cmd: LogoutCommand): Promise<void> {
     await this.prisma.refreshToken.updateMany({
-      where: { userId: cmd.userId, tenantId: cmd.tenantId, revokedAt: null },
+      where: { userId: cmd.userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
   }

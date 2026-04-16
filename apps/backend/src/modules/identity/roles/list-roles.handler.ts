@@ -5,9 +5,8 @@ import { PrismaService } from '../../../infrastructure/database';
 export class ListRolesHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(tenantId: string) {
+  async execute() {
     return this.prisma.customRole.findMany({
-      where: { tenantId },
       include: { permissions: true },
       orderBy: { createdAt: 'asc' },
     });

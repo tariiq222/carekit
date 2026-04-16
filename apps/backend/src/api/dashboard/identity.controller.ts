@@ -5,7 +5,6 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { ListUsersHandler } from '../../modules/identity/users/list-users.handler';
 import { CreateUserHandler } from '../../modules/identity/users/create-user.handler';
 import { UpdateUserHandler } from '../../modules/identity/users/update-user.handler';
@@ -64,9 +63,8 @@ export class DashboardIdentityController {
   // ── Users ────────────────────────────────────────────────────────────────
 
   @Get('users')
-  async listUsers(@TenantId() tenantId: string, @Query() query: ListUsersQueryDto) {
+  async listUsers(@Query() query: ListUsersQueryDto) {
     return this.listUsersHandler.execute({
-      tenantId,
       page: query.page ?? 1,
       limit: query.limit ?? 20,
       search: query.search,
@@ -75,86 +73,73 @@ export class DashboardIdentityController {
   }
 
   @Post('users')
-  async createUserEndpoint(@TenantId() tenantId: string, @Body() body: CreateUserDto) {
-    return this.createUserHandler.execute({ ...body, tenantId });
+  async createUserEndpoint(@Body() body: CreateUserDto) {
+    return this.createUserHandler.execute(body);
   }
 
   @Patch('users/:id')
   async updateUserEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) userId: string,
     @Body() body: UpdateUserDto,
   ) {
-    return this.updateUserHandler.execute({ ...body, userId, tenantId });
+    return this.updateUserHandler.execute({ ...body, userId });
   }
 
   @Patch('users/:id/deactivate')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deactivateUserEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) userId: string,
-  ) {
-    await this.deactivateUserHandler.execute({ userId, tenantId });
+  async deactivateUserEndpoint(@Param('id', ParseUUIDPipe) userId: string) {
+    await this.deactivateUserHandler.execute({ userId });
   }
 
   @Patch('users/:id/activate')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async activateUserEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) userId: string,
-  ) {
-    await this.updateUserHandler.execute({ userId, tenantId, isActive: true });
+  async activateUserEndpoint(@Param('id', ParseUUIDPipe) userId: string) {
+    await this.updateUserHandler.execute({ userId, isActive: true });
   }
 
   @Delete('users/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteUserEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) userId: string,
-  ) {
-    await this.deleteUserHandler.execute({ userId, tenantId });
+  async deleteUserEndpoint(@Param('id', ParseUUIDPipe) userId: string) {
+    await this.deleteUserHandler.execute({ userId });
   }
 
   @Post('users/:userId/roles')
   @HttpCode(HttpStatus.NO_CONTENT)
   async assignRoleEndpoint(
-    @TenantId() tenantId: string,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() body: AssignRoleDto,
   ) {
-    await this.assignRoleHandler.execute({ tenantId, userId, customRoleId: body.customRoleId });
+    await this.assignRoleHandler.execute({ userId, customRoleId: body.customRoleId });
   }
 
   @Delete('users/:userId/roles/:roleId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeRoleEndpoint(
-    @TenantId() tenantId: string,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('roleId', ParseUUIDPipe) customRoleId: string,
   ) {
-    await this.removeRoleHandler.execute({ tenantId, userId, customRoleId });
+    await this.removeRoleHandler.execute({ userId, customRoleId });
   }
 
   // ── Roles ────────────────────────────────────────────────────────────────
 
   @Get('roles')
-  async listRoles(@TenantId() tenantId: string) {
-    return this.listRolesHandler.execute(tenantId);
+  async listRoles() {
+    return this.listRolesHandler.execute();
   }
 
   @Post('roles')
-  async createRoleEndpoint(@TenantId() tenantId: string, @Body() body: CreateRoleDto) {
-    return this.createRoleHandler.execute({ ...body, tenantId });
+  async createRoleEndpoint(@Body() body: CreateRoleDto) {
+    return this.createRoleHandler.execute(body);
   }
 
   @Post('roles/:id/permissions')
   @HttpCode(HttpStatus.NO_CONTENT)
   async assignPermissionsEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) customRoleId: string,
     @Body() body: AssignPermissionsDto,
   ) {
-    await this.assignPermissionsHandler.execute({ ...body, customRoleId, tenantId });
+    await this.assignPermissionsHandler.execute({ ...body, customRoleId });
   }
 
   @Get('permissions')
@@ -164,10 +149,7 @@ export class DashboardIdentityController {
 
   @Delete('roles/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteRoleEndpoint(
-    @TenantId() tenantId: string,
-    @Param('id', ParseUUIDPipe) customRoleId: string,
-  ) {
-    await this.deleteRoleHandler.execute({ tenantId, customRoleId });
+  async deleteRoleEndpoint(@Param('id', ParseUUIDPipe) customRoleId: string) {
+    await this.deleteRoleHandler.execute({ customRoleId });
   }
 }

@@ -35,21 +35,21 @@ describe('RefreshTokenHandler', () => {
 
   it('issues new token pair when refresh token is valid', async () => {
     prisma.refreshToken.findMany.mockResolvedValue([
-      { id: 'rt-1', userId: 'user-1', tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, tenantId: 'tenant-1', createdAt: new Date() },
+      { id: 'rt-1', userId: 'user-1', tokenHash: '$2b$10$abc', expiresAt: futureDate, revokedAt: null, createdAt: new Date() },
     ]);
     jest.spyOn(require('bcryptjs'), 'compare').mockResolvedValue(true);
-    prisma.user.findUnique.mockResolvedValue({ id: 'user-1', tenantId: 'tenant-1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, customRole: null, isActive: true });
+    prisma.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, customRole: null, isActive: true });
     prisma.refreshToken.update.mockResolvedValue({});
     tokenService.issueTokenPair.mockResolvedValue({ accessToken: 'new-acc', refreshToken: 'new-ref' });
 
-    const result = await handler.execute({ tenantId: 'tenant-1', userId: 'user-1', rawToken: 'raw' });
+    const result = await handler.execute({ userId: 'user-1', rawToken: 'raw' });
     expect(result.accessToken).toBe('new-acc');
   });
 
   it('throws UnauthorizedException when no valid token found', async () => {
     prisma.refreshToken.findMany.mockResolvedValue([]);
     await expect(
-      handler.execute({ tenantId: 'tenant-1', userId: 'user-1', rawToken: 'bad' }),
+      handler.execute({ userId: 'user-1', rawToken: 'bad' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 });

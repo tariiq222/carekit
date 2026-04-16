@@ -3,7 +3,6 @@ import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 
 export interface ListUsersQuery {
-  tenantId: string;
   page: number;
   limit: number;
   search?: string;
@@ -16,7 +15,6 @@ export class ListUsersHandler {
 
   async execute(query: ListUsersQuery) {
     const where = {
-      tenantId: query.tenantId,
       isActive: query.isActive,
       ...(query.search
         ? { OR: [{ name: { contains: query.search, mode: 'insensitive' as const } }, { email: { contains: query.search, mode: 'insensitive' as const } }] }

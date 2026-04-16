@@ -27,25 +27,25 @@ describe('ChangePasswordHandler', () => {
   it('throws NotFoundException when user not found', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
     await expect(
-      handler.execute({ userId: 'u1', tenantId: 't1', currentPassword: 'old', newPassword: 'new123' }),
+      handler.execute({ userId: 'u1', currentPassword: 'old', newPassword: 'new123' }),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('throws BadRequestException when current password is wrong', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', tenantId: 't1', passwordHash: 'hash' });
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', passwordHash: 'hash' });
     passwordService.verify.mockResolvedValue(false);
     await expect(
-      handler.execute({ userId: 'u1', tenantId: 't1', currentPassword: 'wrong', newPassword: 'new123' }),
+      handler.execute({ userId: 'u1', currentPassword: 'wrong', newPassword: 'new123' }),
     ).rejects.toThrow(BadRequestException);
   });
 
   it('updates password when current password is correct', async () => {
-    prisma.user.findUnique.mockResolvedValue({ id: 'u1', tenantId: 't1', passwordHash: 'hash' });
+    prisma.user.findUnique.mockResolvedValue({ id: 'u1', passwordHash: 'hash' });
     passwordService.verify.mockResolvedValue(true);
     passwordService.hash.mockResolvedValue('newHash');
     prisma.user.update.mockResolvedValue({});
 
-    await handler.execute({ userId: 'u1', tenantId: 't1', currentPassword: 'old', newPassword: 'new123' });
+    await handler.execute({ userId: 'u1', currentPassword: 'old', newPassword: 'new123' });
 
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },

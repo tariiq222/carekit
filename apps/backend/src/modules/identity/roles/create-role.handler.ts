@@ -2,7 +2,7 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { CreateRoleDto } from './create-role.dto';
 
-export type CreateRoleCommand = CreateRoleDto & { tenantId: string };
+export type CreateRoleCommand = CreateRoleDto;
 
 @Injectable()
 export class CreateRoleHandler {
@@ -10,11 +10,11 @@ export class CreateRoleHandler {
 
   async execute(cmd: CreateRoleCommand) {
     const existing = await this.prisma.customRole.findUnique({
-      where: { tenantId_name: { tenantId: cmd.tenantId, name: cmd.name } },
+      where: { name: cmd.name },
     });
     if (existing) throw new ConflictException(`Role "${cmd.name}" already exists`);
     return this.prisma.customRole.create({
-      data: { tenantId: cmd.tenantId, name: cmd.name },
+      data: { name: cmd.name },
       include: { permissions: true },
     });
   }

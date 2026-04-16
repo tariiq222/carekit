@@ -1,6 +1,5 @@
 import { DashboardIdentityController } from './identity.controller';
 
-const TENANT = 'tenant-1';
 const fn = <T = unknown>(val: T = {} as T) => ({ execute: jest.fn().mockResolvedValue(val) });
 
 function buildController() {
@@ -35,43 +34,43 @@ describe('DashboardIdentityController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('listUsers calls handler with tenantId', async () => {
+  it('listUsers calls handler', async () => {
     const { controller, listUsers } = buildController();
-    await controller.listUsers(TENANT, {} as never);
-    expect(listUsers.execute).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
+    await controller.listUsers({} as never);
+    expect(listUsers.execute).toHaveBeenCalledWith(expect.objectContaining({ page: 1, limit: 20 }));
   });
 
-  it('listRoles calls handler with tenantId', async () => {
+  it('listRoles calls handler', async () => {
     const { controller, listRoles } = buildController();
-    await controller.listRoles(TENANT);
-    expect(listRoles.execute).toHaveBeenCalledWith(TENANT);
+    await controller.listRoles();
+    expect(listRoles.execute).toHaveBeenCalledWith();
   });
 
-  it('deleteUserEndpoint passes tenantId and userId', async () => {
+  it('deleteUserEndpoint passes userId', async () => {
     const { controller, deleteUser } = buildController();
-    await controller.deleteUserEndpoint(TENANT, 'u-1');
-    expect(deleteUser.execute).toHaveBeenCalledWith({ tenantId: TENANT, userId: 'u-1' });
+    await controller.deleteUserEndpoint('u-1');
+    expect(deleteUser.execute).toHaveBeenCalledWith({ userId: 'u-1' });
   });
 
-  it('assignRoleEndpoint passes tenantId, userId, customRoleId', async () => {
+  it('assignRoleEndpoint passes userId, customRoleId', async () => {
     const { controller, assignRole } = buildController();
-    await controller.assignRoleEndpoint(TENANT, 'u-1', { customRoleId: 'r-1' } as never);
+    await controller.assignRoleEndpoint('u-1', { customRoleId: 'r-1' } as never);
     expect(assignRole.execute).toHaveBeenCalledWith({
-      tenantId: TENANT, userId: 'u-1', customRoleId: 'r-1',
+      userId: 'u-1', customRoleId: 'r-1',
     });
   });
 
-  it('removeRoleEndpoint passes tenantId, userId, roleId from path', async () => {
+  it('removeRoleEndpoint passes userId, roleId from path', async () => {
     const { controller, removeRole } = buildController();
-    await controller.removeRoleEndpoint(TENANT, 'u-1', 'r-1');
+    await controller.removeRoleEndpoint('u-1', 'r-1');
     expect(removeRole.execute).toHaveBeenCalledWith({
-      tenantId: TENANT, userId: 'u-1', customRoleId: 'r-1',
+      userId: 'u-1', customRoleId: 'r-1',
     });
   });
 
-  it('deleteRoleEndpoint passes tenantId and customRoleId', async () => {
+  it('deleteRoleEndpoint passes customRoleId', async () => {
     const { controller, deleteRole } = buildController();
-    await controller.deleteRoleEndpoint(TENANT, 'r-1');
-    expect(deleteRole.execute).toHaveBeenCalledWith({ tenantId: TENANT, customRoleId: 'r-1' });
+    await controller.deleteRoleEndpoint('r-1');
+    expect(deleteRole.execute).toHaveBeenCalledWith({ customRoleId: 'r-1' });
   });
 });

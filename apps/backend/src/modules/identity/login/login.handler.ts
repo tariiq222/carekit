@@ -14,7 +14,7 @@ export class LoginHandler {
 
   async execute(cmd: LoginCommand): Promise<TokenPair> {
     const user = await this.prisma.user.findUnique({
-      where: { tenantId_email: { tenantId: cmd.tenantId, email: cmd.email } },
+      where: { email: cmd.email },
       include: { customRole: { include: { permissions: true } } },
     });
 

@@ -13,20 +13,20 @@ const buildPrisma = () => ({
 describe('DeleteRoleHandler', () => {
   it('clears users.customRoleId then deletes role atomically', async () => {
     const prisma = buildPrisma();
-    await new DeleteRoleHandler(prisma as never).execute({ customRoleId: 'r-1', tenantId: 'tenant-1' });
+    await new DeleteRoleHandler(prisma as never).execute({ customRoleId: 'r-1' });
     expect(prisma.user.updateMany).toHaveBeenCalledWith({
-      where: { customRoleId: 'r-1', tenantId: 'tenant-1' },
+      where: { customRoleId: 'r-1' },
       data: { customRoleId: null },
     });
     expect(prisma.customRole.delete).toHaveBeenCalledWith({ where: { id: 'r-1' } });
     expect(prisma.$transaction).toHaveBeenCalled();
   });
 
-  it('throws NotFoundException when role not found for tenant', async () => {
+  it('throws NotFoundException when role not found', async () => {
     const prisma = buildPrisma();
     prisma.customRole.findFirst = jest.fn().mockResolvedValue(null);
     await expect(
-      new DeleteRoleHandler(prisma as never).execute({ customRoleId: 'missing', tenantId: 'tenant-1' }),
+      new DeleteRoleHandler(prisma as never).execute({ customRoleId: 'missing' }),
     ).rejects.toThrow(NotFoundException);
   });
 });

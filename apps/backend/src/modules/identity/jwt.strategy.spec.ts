@@ -25,11 +25,11 @@ describe('JwtStrategy', () => {
 
   it('returns enriched user object for valid payload', async () => {
     prisma.user.findUnique.mockResolvedValue({
-      id: 'u1', tenantId: 'tenant-1', email: 'a@b.com', role: 'ADMIN',
+      id: 'u1', email: 'a@b.com', role: 'ADMIN',
       customRoleId: null, customRole: null, isActive: true,
     } as never);
 
-    const result = await strategy.validate({ sub: 'u1', tenantId: 'tenant-1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, permissions: [], features: [] });
+    const result = await strategy.validate({ sub: 'u1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, permissions: [], features: [] });
     expect(result.id).toBe('u1');
     expect(result.permissions).toBeDefined();
   });
@@ -37,7 +37,7 @@ describe('JwtStrategy', () => {
   it('throws UnauthorizedException when user not found or inactive', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
     await expect(
-      strategy.validate({ sub: 'u1', tenantId: 'tenant-1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, permissions: [], features: [] }),
+      strategy.validate({ sub: 'u1', email: 'a@b.com', role: 'ADMIN', customRoleId: null, permissions: [], features: [] }),
     ).rejects.toThrow(UnauthorizedException);
   });
 });

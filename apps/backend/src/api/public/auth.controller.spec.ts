@@ -3,7 +3,6 @@ import * as bcrypt from 'bcryptjs';
 import { AuthController } from './auth.controller';
 import { TokenService } from '../../modules/identity/shared/token.service';
 
-const TENANT = 'tenant-1';
 const USER_ID = 'user-1';
 const TOKEN_PAIR = { accessToken: 'access', refreshToken: 'refresh' };
 
@@ -38,11 +37,10 @@ describe('AuthController', () => {
   beforeEach(() => jest.clearAllMocks());
 
   describe('loginEndpoint', () => {
-    it('passes tenantId, email, and password to login handler', async () => {
+    it('passes email and password to login handler', async () => {
       const { controller, login } = buildController();
-      await controller.loginEndpoint(TENANT, { email: 'a@b.com', password: 'pass123' } as never);
+      await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123' } as never);
       expect(login.execute).toHaveBeenCalledWith({
-        tenantId: TENANT,
         email: 'a@b.com',
         password: 'pass123',
       });
@@ -50,7 +48,7 @@ describe('AuthController', () => {
 
     it('returns token pair plus user and expiresIn from login handler', async () => {
       const { controller } = buildController();
-      const result = await controller.loginEndpoint(TENANT, { email: 'a@b.com', password: 'pass123' } as never);
+      const result = await controller.loginEndpoint({ email: 'a@b.com', password: 'pass123' } as never);
       expect(result).toMatchObject({ accessToken: 'access', refreshToken: 'refresh', expiresIn: expect.any(Number) });
     });
   });
@@ -59,7 +57,7 @@ describe('AuthController', () => {
     it('finds matching refresh token and issues new tokens', async () => {
       const rawToken = 'raw-refresh';
       const tokenHash = await bcrypt.hash(rawToken, 10);
-      const matched = { id: 'rt-1', userId: USER_ID, tenantId: TENANT, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
+      const matched = { id: 'rt-1', userId: USER_ID, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
       const user = {
         id: USER_ID, email: 'a@b.com', isActive: true,
         customRole: { name: 'admin', permissions: [] },
@@ -98,7 +96,7 @@ describe('AuthController', () => {
     it('throws UnauthorizedException when user not found', async () => {
       const rawToken = 'raw-refresh';
       const tokenHash = await bcrypt.hash(rawToken, 10);
-      const matched = { id: 'rt-1', userId: USER_ID, tenantId: TENANT, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
+      const matched = { id: 'rt-1', userId: USER_ID, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
 
       const { controller, prisma } = buildController();
       (prisma.refreshToken.findMany as jest.Mock).mockResolvedValue([matched]);
@@ -112,7 +110,7 @@ describe('AuthController', () => {
     it('throws UnauthorizedException when user is inactive', async () => {
       const rawToken = 'raw-refresh';
       const tokenHash = await bcrypt.hash(rawToken, 10);
-      const matched = { id: 'rt-1', userId: USER_ID, tenantId: TENANT, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
+      const matched = { id: 'rt-1', userId: USER_ID, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
       const user = { id: USER_ID, email: 'a@b.com', isActive: false };
 
       const { controller, prisma } = buildController();
@@ -129,7 +127,7 @@ describe('AuthController', () => {
     it('finds matching refresh token and calls logout handler', async () => {
       const rawToken = 'raw-refresh';
       const tokenHash = await bcrypt.hash(rawToken, 10);
-      const matched = { id: 'rt-1', userId: USER_ID, tenantId: TENANT, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
+      const matched = { id: 'rt-1', userId: USER_ID, tokenHash, revokedAt: null, expiresAt: new Date(Date.now() + 60_000) };
 
       const { controller, logout, prisma } = buildController();
       (prisma.refreshToken.findMany as jest.Mock).mockResolvedValue([matched]);
@@ -138,7 +136,6 @@ describe('AuthController', () => {
 
       expect(logout.execute).toHaveBeenCalledWith({
         userId: USER_ID,
-        tenantId: TENANT,
       });
     });
 
