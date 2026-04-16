@@ -5,7 +5,6 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CaslGuard } from '../../common/guards/casl.guard';
-import { TenantId } from '../../common/tenant/tenant.decorator';
 import { CreateProblemReportHandler } from '../../modules/platform/problem-reports/create-problem-report.handler';
 import { CreateProblemReportDto } from '../../modules/platform/problem-reports/create-problem-report.dto';
 import { ListProblemReportsHandler } from '../../modules/platform/problem-reports/list-problem-reports.handler';
@@ -40,64 +39,53 @@ export class DashboardPlatformController {
 
   @Post('problem-reports')
   @HttpCode(HttpStatus.CREATED)
-  createProblemReportEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: CreateProblemReportDto,
-  ) {
-    return this.createProblemReport.execute({ tenantId, ...body });
+  createProblemReportEndpoint(@Body() body: CreateProblemReportDto) {
+    return this.createProblemReport.execute(body);
   }
 
   @Get('problem-reports')
-  listProblemReportsEndpoint(
-    @TenantId() tenantId: string,
-    @Query() query: ListProblemReportsDto,
-  ) {
-    return this.listProblemReports.execute({ tenantId, ...query });
+  listProblemReportsEndpoint(@Query() query: ListProblemReportsDto) {
+    return this.listProblemReports.execute(query);
   }
 
   @Patch('problem-reports/:id/status')
   updateProblemReportStatusEndpoint(
-    @TenantId() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateProblemReportStatusDto,
   ) {
-    return this.updateProblemReportStatus.execute({ id, tenantId, ...body });
+    return this.updateProblemReportStatus.execute({ id, ...body });
   }
 
   // ── Integrations ─────────────────────────────────────────────────────────────
 
   @Post('integrations')
   @HttpCode(HttpStatus.OK)
-  upsertIntegrationEndpoint(
-    @TenantId() tenantId: string,
-    @Body() body: UpsertIntegrationDto,
-  ) {
-    return this.upsertIntegration.execute({ tenantId, ...body });
+  upsertIntegrationEndpoint(@Body() body: UpsertIntegrationDto) {
+    return this.upsertIntegration.execute(body);
   }
 
   @Get('integrations')
-  listIntegrationsEndpoint(@TenantId() tenantId: string) {
-    return this.listIntegrations.execute(tenantId);
+  listIntegrationsEndpoint() {
+    return this.listIntegrations.execute();
   }
 
   // ── Feature Flags ──────────────────────────────────────────────────────────
 
   @Get('feature-flags')
-  async listFeatureFlagsEndpoint(@TenantId() tenantId: string) {
-    return this.listFeatureFlags.execute(tenantId);
+  async listFeatureFlagsEndpoint() {
+    return this.listFeatureFlags.execute();
   }
 
   @Get('feature-flags/map')
-  async featureFlagMapEndpoint(@TenantId() tenantId: string) {
-    return this.getFeatureFlagMap.execute(tenantId);
+  async featureFlagMapEndpoint() {
+    return this.getFeatureFlagMap.execute();
   }
 
   @Patch('feature-flags/:key')
   async updateFeatureFlagEndpoint(
-    @TenantId() tenantId: string,
     @Param('key') key: string,
     @Body() body: UpdateFeatureFlagDto,
   ) {
-    return this.updateFeatureFlag.execute({ tenantId, key, enabled: body.enabled });
+    return this.updateFeatureFlag.execute({ key, enabled: body.enabled });
   }
 }

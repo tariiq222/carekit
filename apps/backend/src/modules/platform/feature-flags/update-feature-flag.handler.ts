@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 
 export interface UpdateFeatureFlagCommand {
-  tenantId: string;
   key: string;
   enabled: boolean;
 }
@@ -13,12 +12,12 @@ export class UpdateFeatureFlagHandler {
 
   async execute(cmd: UpdateFeatureFlagCommand) {
     const flag = await this.prisma.featureFlag.findUnique({
-      where: { tenantId_key: { tenantId: cmd.tenantId, key: cmd.key } },
+      where: { key: cmd.key },
     });
     if (!flag) throw new NotFoundException(`Feature flag "${cmd.key}" not found`);
 
     return this.prisma.featureFlag.update({
-      where: { tenantId_key: { tenantId: cmd.tenantId, key: cmd.key } },
+      where: { key: cmd.key },
       data: { enabled: cmd.enabled },
     });
   }

@@ -5,9 +5,8 @@ import { PrismaService } from '../../../infrastructure/database';
 export class ListFeatureFlagsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(tenantId: string) {
+  async execute() {
     return this.prisma.featureFlag.findMany({
-      where: { tenantId },
       orderBy: { key: 'asc' },
     });
   }

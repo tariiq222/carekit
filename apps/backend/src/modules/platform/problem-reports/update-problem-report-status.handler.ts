@@ -4,7 +4,6 @@ import { UpdateProblemReportStatusDto } from './update-problem-report-status.dto
 
 export type UpdateProblemReportStatusCommand = UpdateProblemReportStatusDto & {
   id: string;
-  tenantId: string;
 };
 
 @Injectable()

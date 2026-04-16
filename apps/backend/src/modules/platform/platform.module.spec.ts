@@ -1,11 +1,11 @@
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { PlatformModule } from './platform.module';
-import { CheckFeatureHandler } from './license/check-feature.handler';
+import { ListFeatureFlagsHandler } from './feature-flags/list-feature-flags.handler';
 import { DatabaseModule } from '../../infrastructure/database';
 
 describe('PlatformModule', () => {
-  it('resolves CheckFeatureHandler', async () => {
+  it('resolves ListFeatureFlagsHandler', async () => {
     const module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
@@ -13,6 +13,6 @@ describe('PlatformModule', () => {
         PlatformModule,
       ],
     }).compile();
-    expect(module.get(CheckFeatureHandler)).toBeDefined();
+    expect(module.get(ListFeatureFlagsHandler)).toBeDefined();
   });
 });

@@ -6,7 +6,7 @@ import { UpdateFeatureFlagHandler } from './update-feature-flag.handler';
 import { PrismaService } from '../../../infrastructure/database';
 
 const mockFlag = {
-  id: 'f1', tenantId: 't1', key: 'multi_branch', enabled: true,
+  id: 'f1', key: 'multi_branch', enabled: true,
   nameAr: 'فروع متعددة', nameEn: 'Multi Branch',
   descriptionAr: null, descriptionEn: null,
   createdAt: new Date(), updatedAt: new Date(),
@@ -24,10 +24,10 @@ describe('ListFeatureFlagsHandler', () => {
     handler = module.get(ListFeatureFlagsHandler);
   });
 
-  it('returns flags for tenant', async () => {
-    const result = await handler.execute('t1');
+  it('returns all flags ordered by key', async () => {
+    const result = await handler.execute();
     expect(result).toHaveLength(1);
-    expect(prisma.featureFlag.findMany).toHaveBeenCalledWith({ where: { tenantId: 't1' }, orderBy: { key: 'asc' } });
+    expect(prisma.featureFlag.findMany).toHaveBeenCalledWith({ orderBy: { key: 'asc' } });
   });
 });
 
@@ -44,7 +44,7 @@ describe('GetFeatureFlagMapHandler', () => {
   });
 
   it('returns { key: enabled } map', async () => {
-    const result = await handler.execute('t1');
+    const result = await handler.execute();
     expect(result).toEqual({ multi_branch: true });
   });
 });
@@ -68,11 +68,12 @@ describe('UpdateFeatureFlagHandler', () => {
 
   it('throws NotFoundException when flag not found', async () => {
     prisma.featureFlag.findUnique.mockResolvedValue(null);
-    await expect(handler.execute({ tenantId: 't1', key: 'x', enabled: false })).rejects.toThrow(NotFoundException);
+    await expect(handler.execute({ key: 'x', enabled: false })).rejects.toThrow(NotFoundException);
   });
 
   it('updates flag enabled status', async () => {
-    const result = await handler.execute({ tenantId: 't1', key: 'multi_branch', enabled: false });
+    const result = await handler.execute({ key: 'multi_branch', enabled: false });
     expect(result.enabled).toBe(false);
+    expect(prisma.featureFlag.findUnique).toHaveBeenCalledWith({ where: { key: 'multi_branch' } });
   });
 });

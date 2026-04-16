@@ -3,7 +3,7 @@ import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 import { ListProblemReportsDto } from './list-problem-reports.dto';
 
-export type ListProblemReportsQuery = ListProblemReportsDto & { tenantId: string };
+export type ListProblemReportsQuery = ListProblemReportsDto;
 
 @Injectable()
 export class ListProblemReportsHandler {
@@ -12,7 +12,7 @@ export class ListProblemReportsHandler {
   async execute(query: ListProblemReportsQuery) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
-    const where = { tenantId: query.tenantId, status: query.status };
+    const where = { status: query.status };
     const [items, total] = await Promise.all([
       this.prisma.problemReport.findMany({
         where,

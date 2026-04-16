@@ -5,9 +5,9 @@ import { PrismaService } from '../../../infrastructure/database';
 export class ListIntegrationsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(tenantId: string) {
+  async execute() {
     return this.prisma.integration.findMany({
-      where: { tenantId, isActive: true },
+      where: { isActive: true },
       orderBy: { provider: 'asc' },
     });
   }
