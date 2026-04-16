@@ -1,5 +1,0 @@
--- IVFFlat index disabled for local dev (requires pgvector extension)
--- CREATE INDEX "DocumentChunk_embedding_cosine_idx"
---   ON "DocumentChunk"
---   USING ivfflat (embedding vector_cosine_ops)
---   WITH (lists = 100);
