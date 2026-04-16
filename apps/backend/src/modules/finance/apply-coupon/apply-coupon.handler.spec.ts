@@ -2,10 +2,10 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { ApplyCouponHandler } from './apply-coupon.handler';
 
 const mockInvoice = {
-  id: 'inv-1', tenantId: 'tenant-1', subtotal: 200, discountAmt: 0, vatRate: 0.15, vatAmt: 30, total: 230,
+  id: 'inv-1', subtotal: 200, discountAmt: 0, vatRate: 0.15, vatAmt: 30, total: 230,
 };
 const mockCoupon = {
-  id: 'coupon-1', tenantId: 'tenant-1', code: 'SAVE10', isActive: true,
+  id: 'coupon-1', code: 'SAVE10', isActive: true,
   discountType: 'PERCENTAGE', discountValue: 10, expiresAt: null, maxUses: null, usedCount: 0, minOrderAmt: null,
 };
 const mockRedemption = { id: 'red-1', couponId: 'coupon-1', invoiceId: 'inv-1', discount: 20 };
@@ -33,7 +33,7 @@ const buildPrisma = () => {
   return db;
 };
 
-const cmd = { tenantId: 'tenant-1', invoiceId: 'inv-1', clientId: 'client-1', code: 'SAVE10' };
+const cmd = { invoiceId: 'inv-1', clientId: 'client-1', code: 'SAVE10' };
 
 describe('ApplyCouponHandler', () => {
   it('applies percentage coupon and returns redemption', async () => {

@@ -5,7 +5,6 @@ import { EventBusService } from '../../../infrastructure/events';
 import { CreateInvoiceHandler } from '../create-invoice/create-invoice.handler';
 
 interface GroupSessionMinReachedPayload {
-  tenantId: string;
   serviceId: string;
   groupSessionKey: string;
   bookingIds: string[];
@@ -43,9 +42,9 @@ export class GroupSessionReadyHandler {
     this.eventBus.subscribe<GroupSessionMinReachedPayload>(
       'group_session.min_reached',
       async (envelope) => {
-        const { tenantId, bookingIds, groupSessionKey } = envelope.payload;
+        const { bookingIds, groupSessionKey } = envelope.payload;
         try {
-          await this.handleMinReached(tenantId, bookingIds, groupSessionKey);
+          await this.handleMinReached(bookingIds, groupSessionKey);
         } catch (err) {
           this.logger.error(
             `GroupSessionReadyHandler failed for key ${groupSessionKey}`,
@@ -58,7 +57,6 @@ export class GroupSessionReadyHandler {
   }
 
   async handleMinReached(
-    tenantId: string,
     bookingIds: string[],
     groupSessionKey: string,
   ): Promise<void> {
@@ -114,11 +112,10 @@ export class GroupSessionReadyHandler {
     if (paymentLinks.length > 0) {
       await this.eventBus.publish('group_session.payment_links_ready', {
         eventId: randomUUID(),
-        tenantId,
         source: 'finance',
         version: 1,
         occurredAt: new Date(),
-        payload: { tenantId, groupSessionKey, paymentLinks },
+        payload: { groupSessionKey, paymentLinks },
       });
     }
   }

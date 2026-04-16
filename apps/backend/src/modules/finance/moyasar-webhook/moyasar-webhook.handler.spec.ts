@@ -41,7 +41,7 @@ const paidPayload: MoyasarWebhookDto = {
   status: 'paid',
   amount: 23000,
   currency: 'SAR',
-  metadata: { invoiceId: 'inv-1', tenantId: 'tenant-1' },
+  metadata: { invoiceId: 'inv-1' },
 };
 
 const sign = (rawBody: string, secret = TEST_SECRET) =>

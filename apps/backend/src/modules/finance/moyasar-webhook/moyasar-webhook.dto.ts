@@ -3,7 +3,6 @@ import { Type } from 'class-transformer';
 
 export class MoyasarWebhookMetadataDto {
   @IsOptional() @IsString() invoiceId?: string;
-  @IsOptional() @IsString() tenantId?: string;
 }
 
 /**

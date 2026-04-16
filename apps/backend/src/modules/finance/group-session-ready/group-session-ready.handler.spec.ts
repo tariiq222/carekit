@@ -33,7 +33,7 @@ describe('GroupSessionReadyHandler', () => {
   it('creates an invoice for each booking', async () => {
     const { prisma, createInvoice, eventBus } = buildDeps();
     const handler = new GroupSessionReadyHandler(prisma as never, eventBus as never, createInvoice as never);
-    await handler.handleMinReached('tenant-1', ['bk-1', 'bk-2'], 'emp-1:svc-1:2026-05-01T10:00:00.000Z');
+    await handler.handleMinReached(['bk-1', 'bk-2'], 'emp-1:svc-1:2026-05-01T10:00:00.000Z');
     expect(createInvoice.execute).toHaveBeenCalledTimes(2);
   });
 
@@ -44,7 +44,7 @@ describe('GroupSessionReadyHandler', () => {
       ],
     });
     const handler = new GroupSessionReadyHandler(prisma as never, eventBus as never, createInvoice as never);
-    await handler.handleMinReached('tenant-1', ['bk-1'], 'key');
+    await handler.handleMinReached(['bk-1'], 'key');
     expect(createInvoice.execute).toHaveBeenCalledWith(expect.objectContaining({ subtotal: 150 }));
   });
 
@@ -52,14 +52,14 @@ describe('GroupSessionReadyHandler', () => {
     const { prisma, createInvoice, eventBus } = buildDeps({ invoiceExists: true });
     createInvoice.execute = jest.fn().mockRejectedValue(new ConflictException('exists'));
     const handler = new GroupSessionReadyHandler(prisma as never, eventBus as never, createInvoice as never);
-    await handler.handleMinReached('tenant-1', ['bk-1', 'bk-2'], 'key');
+    await handler.handleMinReached(['bk-1', 'bk-2'], 'key');
     expect(prisma.invoice.findUnique).toHaveBeenCalledTimes(2);
   });
 
   it('emits group_session.payment_links_ready with all invoices', async () => {
     const { prisma, createInvoice, eventBus } = buildDeps();
     const handler = new GroupSessionReadyHandler(prisma as never, eventBus as never, createInvoice as never);
-    await handler.handleMinReached('tenant-1', ['bk-1', 'bk-2'], 'key');
+    await handler.handleMinReached(['bk-1', 'bk-2'], 'key');
     expect(eventBus.publish).toHaveBeenCalledWith(
       'group_session.payment_links_ready',
       expect.objectContaining({
@@ -76,7 +76,7 @@ describe('GroupSessionReadyHandler', () => {
   it('does not emit event when no bookings are found', async () => {
     const { prisma, createInvoice, eventBus } = buildDeps({ bookings: [] });
     const handler = new GroupSessionReadyHandler(prisma as never, eventBus as never, createInvoice as never);
-    await handler.handleMinReached('tenant-1', [], 'key');
+    await handler.handleMinReached([], 'key');
     expect(eventBus.publish).not.toHaveBeenCalled();
   });
 
