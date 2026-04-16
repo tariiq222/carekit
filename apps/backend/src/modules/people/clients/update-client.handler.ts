@@ -24,7 +24,12 @@ export class UpdateClientHandler {
           NOT: { id: cmd.clientId },
         },
       });
-      if (duplicate) throw new ConflictException('Phone number already registered for this client');
+      if (duplicate) {
+        throw new ConflictException({
+          error: 'CLIENT_PHONE_EXISTS',
+          message: 'Phone number already registered for this client',
+        });
+      }
     }
 
     const firstName = cmd.firstName ?? client.firstName ?? client.name;

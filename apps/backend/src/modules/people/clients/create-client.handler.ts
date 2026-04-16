@@ -23,7 +23,12 @@ export class CreateClientHandler {
       const existing = await this.prisma.client.findFirst({
         where: { tenantId: dto.tenantId, phone: dto.phone, deletedAt: null },
       });
-      if (existing) throw new ConflictException('Phone number already registered for this client');
+      if (existing) {
+        throw new ConflictException({
+          error: 'CLIENT_PHONE_EXISTS',
+          message: 'Phone number already registered for this client',
+        });
+      }
     }
 
     const fullName = composeName(dto.firstName, dto.middleName, dto.lastName);
