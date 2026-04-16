@@ -33,7 +33,8 @@
   5. Dashboard `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build` all pass.
   6. Packages build.
   7. Mobile typecheck passes.
-  8. All commits pushed.
+  8. `grep -n "tenantId\|@TenantId" apps/backend/src/api/public/` returns zero.
+  9. All commits pushed.
 - **If this session stops mid-task:** next session resumes the specific task from its first uncompleted step.
 
 ---
@@ -64,8 +65,10 @@
 - `packages/api-client/**` (remove X-Tenant-ID injection if present)
 - `packages/shared/**` (remove `TenantId` type if exists)
 
-### Files modified — Backend (one file)
+### Files modified — Backend (3 files)
 - `apps/backend/src/api/public/branding.controller.ts` + spec — change route from `@Get('branding/:tenantId')` to `@Get('branding')` (no param)
+- `apps/backend/src/api/public/catalog.controller.ts` + spec
+- `apps/backend/src/api/public/slots.controller.ts` + spec
 - `apps/backend/src/api/public/public.module.ts` (if registration needs adjustment — usually no change)
 
 ### Files NOT touched
@@ -420,6 +423,57 @@ npx jest src/api/public/branding --runInBand
 cd c:\pro\carekit
 git add apps/backend/src/api/public/branding.controller.ts apps/backend/src/api/public/branding.controller.spec.ts apps/backend/src/api/public/public.module.ts
 git commit -m "refactor(public): simplify branding route — drop :tenantId param"
+```
+
+---
+
+## Task F7.5 — Clean public catalog + slots controllers
+
+**Files:**
+- `apps/backend/src/api/public/catalog.controller.ts` + spec
+- `apps/backend/src/api/public/slots.controller.ts` + spec
+
+**Background:** Discovered after Plan D — these public controllers still embed `tenantId` in URL params, query DTOs, and Prisma where clauses. In single-organization mode, public clients (mobile apps, embeddable widgets) hit one deployment = one organization, so no tenant scoping is needed.
+
+- [ ] **Step 1: catalog.controller.ts**
+
+Replace route `@Get(':tenantId')` with `@Get()`. Remove `@Param('tenantId')`. Drop `tenantId` from all three Prisma `where` clauses (services, departments, employees) — keep `isActive: true` and `archivedAt: null` filters.
+
+- [ ] **Step 2: catalog.controller.spec.ts**
+
+Remove tenantId from all test fixtures and route assertions. Test now hits `GET /public/catalog` with no params.
+
+- [ ] **Step 3: slots.controller.ts**
+
+Remove `@IsUUID() tenantId!: string;` from the query DTO. Remove `tenantId: q.tenantId` from the handler call. Verify the underlying slots handler signature already dropped tenantId in Plan B (bookings cluster) — it should have. If not, that is a regression and must be fixed first.
+
+- [ ] **Step 4: slots.controller.spec.ts**
+
+Same cleanup pattern — remove tenantId from fixtures and assertions.
+
+- [ ] **Step 5: Run tests**
+
+```bash
+cd c:/pro/carekit/apps/backend
+npx jest src/api/public/catalog src/api/public/slots --runInBand
+```
+
+Expected: all pass.
+
+- [ ] **Step 6: Verify zero tenant references**
+
+```bash
+grep -n "tenantId\|@TenantId" apps/backend/src/api/public/catalog.controller.ts apps/backend/src/api/public/slots.controller.ts
+```
+
+Expected: ZERO matches.
+
+- [ ] **Step 7: Commit**
+
+```bash
+cd c:/pro/carekit
+git add apps/backend/src/api/public/catalog.controller.ts apps/backend/src/api/public/catalog.controller.spec.ts apps/backend/src/api/public/slots.controller.ts apps/backend/src/api/public/slots.controller.spec.ts
+git commit -m "refactor(public): drop tenantId from catalog + slots controllers"
 ```
 
 ---
