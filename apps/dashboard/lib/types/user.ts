@@ -16,7 +16,6 @@ export type UserRole =
 
 export interface User {
   id: string
-  tenantId: string
   email: string
   name: string
   phone: string | null

@@ -4,7 +4,6 @@
 
 export interface ZatcaConfig {
   id: string
-  tenantId: string
   vatRegistrationNumber: string | null
   sellerName: string | null
   environment: string

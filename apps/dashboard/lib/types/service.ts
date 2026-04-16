@@ -28,7 +28,6 @@ export type RecurringPattern = 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'
 
 export interface Service {
   id: string
-  tenantId: string
   nameEn: string | null
   nameAr: string
   descriptionEn: string | null
