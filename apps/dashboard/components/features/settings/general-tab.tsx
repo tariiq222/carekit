@@ -68,6 +68,8 @@ export function GeneralTab() {
 
   useEffect(() => {
     if (!settings) return
+    // Seed editable form fields from server settings; user edits locally and saves explicitly.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setClinicEmail(settings.contactEmail ?? "")
     setClinicPhone(settings.contactPhone ?? "")
     setClinicAddress(settings.address ?? "")

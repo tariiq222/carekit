@@ -26,6 +26,8 @@ export function EntityTab() {
 
   useEffect(() => {
     if (!settings) return
+    // Seed editable form fields from server settings; user edits locally and saves explicitly.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCompanyNameAr(settings.companyNameAr ?? "")
     setCompanyNameEn(settings.companyNameEn ?? "")
     setBusinessRegistration(settings.businessRegistration ?? "")

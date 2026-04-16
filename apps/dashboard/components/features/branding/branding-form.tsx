@@ -54,6 +54,8 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
 
   useEffect(() => {
     if (!branding) return
+    // Seed editable form fields from async-loaded server data; users edit these freely afterwards.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSystemName(branding.systemName ?? "")
     setSystemNameAr(branding.systemNameAr ?? "")
     setProductTagline(branding.productTagline ?? "")

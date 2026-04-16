@@ -67,6 +67,8 @@ export function EmailLayoutForm({ onCancel }: { onCancel: () => void }) {
 
   useEffect(() => {
     if (settings && !initialized) {
+      // One-time init of editable form state from async-loaded server data.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState({
         emailHeaderShowLogo: settings.emailHeaderShowLogo ?? true,
         emailHeaderShowName: settings.emailHeaderShowName ?? true,

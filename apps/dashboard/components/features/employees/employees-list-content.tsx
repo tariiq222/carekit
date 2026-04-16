@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Stethoscope02Icon,
@@ -59,12 +59,12 @@ export function EmployeesListContent({
   const totalCount = stats?.total ?? meta?.total ?? employees.length
   const activeCount = stats?.active ?? employees.filter((p) => p.isActive).length
   const inactiveCount = stats?.inactive ?? employees.filter((p) => !p.isActive).length
-  const avgRating = useMemo(() => {
+  const avgRating = (() => {
     if (stats?.avgRating != null) return stats.avgRating.toFixed(1)
     const rated = employees.filter((p) => p.averageRating != null)
     if (rated.length === 0) return null
     return (rated.reduce((sum, p) => sum + (p.averageRating ?? 0), 0) / rated.length).toFixed(1)
-  }, [stats?.avgRating, employees])
+  })()
 
   const statusFilter = isActive === true ? "active" : isActive === false ? "inactive" : "all"
   const handleStatusChange = (v: string) => {

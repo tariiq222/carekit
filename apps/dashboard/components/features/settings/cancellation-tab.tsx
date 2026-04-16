@@ -32,6 +32,8 @@ function CancellationPolicyPanel({ settings, onSave, isPending, t }: {
   const [cancelHours, setCancelHours] = useState(String(settings.freeCancelBeforeHours))
 
   useEffect(() => {
+    // Seed editable form fields from server settings; user edits locally and saves explicitly.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPolicyEn(settings.cancellationPolicyEn ?? "")
     setPolicyAr(settings.cancellationPolicyAr ?? "")
     setCancelHours(String(settings.freeCancelBeforeHours))

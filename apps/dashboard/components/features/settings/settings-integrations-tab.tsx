@@ -32,6 +32,8 @@ export function SettingsIntegrationsTab() {
 
   useEffect(() => {
     if (!integrations) return
+    // Seed editable form fields from async-loaded integrations; user edits locally and saves explicitly.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setZoomEnabled(!!integrations.zoomClientId)
     setZoomClientId(integrations.zoomClientId ?? "")
     setZoomClientSecret(integrations.zoomClientSecret ?? "")

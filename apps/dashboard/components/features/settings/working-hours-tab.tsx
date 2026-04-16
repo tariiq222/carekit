@@ -62,16 +62,16 @@ function WorkingHoursPanel({ t }: Props) {
 
   useEffect(() => {
     const defaults = buildDefaultHours(orderedDays)
-    if (!serverHours || serverHours.length === 0) {
-      setHours(defaults)
-      return
-    }
-    const merged = defaults.map((def) => {
-      const match = serverHours.find((s: OrganizationHour) => s.dayOfWeek === def.dayOfWeek)
-      return match ?? { ...def, isActive: false }
-    })
+    // Sync hours grid with server data (and re-seed when weekStart day order changes).
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHours(merged)
+    setHours(
+      !serverHours || serverHours.length === 0
+        ? defaults
+        : defaults.map((def) => {
+            const match = serverHours.find((s: OrganizationHour) => s.dayOfWeek === def.dayOfWeek)
+            return match ?? { ...def, isActive: false }
+          }),
+    )
   }, [serverHours, orderedDays])
 
   const updateDay = (index: number, patch: Partial<OrganizationHour>) => {

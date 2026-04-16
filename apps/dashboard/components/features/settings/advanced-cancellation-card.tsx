@@ -76,7 +76,7 @@ export function useAutoSave(
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Keep a ref to always have the latest data without stale closure issues
   const dataRef = useRef(data)
-  dataRef.current = data
+  useEffect(() => { dataRef.current = data }, [data])
 
   const isDirty = JSON.stringify(data) !== JSON.stringify(savedData)
 

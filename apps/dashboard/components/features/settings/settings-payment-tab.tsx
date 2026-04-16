@@ -40,6 +40,8 @@ export function SettingsPaymentTab() {
 
   useEffect(() => {
     if (!integrations) return
+    // Seed editable form fields from async-loaded integrations; user edits locally and saves explicitly.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMoyasarKey(integrations.moyasarPublishableKey ?? "")
     setMoyasarSecret(integrations.moyasarSecretKey ?? "")
     setBankEnabled(!!integrations.bankName || !!integrations.bankIban)

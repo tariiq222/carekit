@@ -66,6 +66,8 @@ export function LegalContentTab() {
 
   useEffect(() => {
     if (!settings) return
+    // Seed editable textareas from server settings; user edits locally and saves explicitly.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAbout({ ar: settings.aboutAr ?? "", en: settings.aboutEn ?? "" })
     setPrivacy({ ar: settings.privacyPolicyAr ?? "", en: settings.privacyPolicyEn ?? "" })
     setTerms({ ar: settings.termsAr ?? "", en: settings.termsEn ?? "" })
