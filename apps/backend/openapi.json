@@ -6,7 +6,96 @@
         "type": "object"
       },
       "AddToWaitlistDto": {
-        "properties": {},
+        "properties": {
+          "branchId": {
+            "description": "Branch where the service should be performed",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "clientId": {
+            "description": "Client to add to the waitlist",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "employeeId": {
+            "description": "Preferred employee for the session",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Additional notes for the waitlist entry",
+            "example": "Morning slot preferred",
+            "type": "string"
+          },
+          "preferredDate": {
+            "description": "Client-preferred date (ISO 8601)",
+            "example": "2026-05-15T00:00:00.000Z",
+            "type": "string"
+          },
+          "serviceId": {
+            "description": "Service the client wants",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientId",
+          "employeeId",
+          "serviceId",
+          "branchId"
+        ],
+        "type": "object"
+      },
+      "ApiErrorDto": {
+        "properties": {
+          "error": {
+            "description": "Short error category",
+            "example": "Bad Request",
+            "type": "string"
+          },
+          "message": {
+            "description": "Human-readable message or array of validation messages",
+            "example": "validation failed",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "path": {
+            "description": "Request path",
+            "example": "/api/v1/dashboard/bookings",
+            "type": "string"
+          },
+          "requestId": {
+            "description": "Correlation ID for log lookup",
+            "example": "req-7f9c2e1a",
+            "type": "string"
+          },
+          "statusCode": {
+            "description": "HTTP status code",
+            "example": 400,
+            "type": "number"
+          },
+          "timestamp": {
+            "description": "ISO timestamp",
+            "example": "2026-04-17T12:34:56.000Z",
+            "type": "string"
+          }
+        },
+        "required": [
+          "statusCode",
+          "error",
+          "message",
+          "timestamp",
+          "path"
+        ],
         "type": "object"
       },
       "ApplyCouponDto": {
@@ -29,9 +118,73 @@
         "properties": {},
         "type": "object"
       },
+      "BookingStatus": {
+        "enum": [
+          "PENDING",
+          "PENDING_GROUP_FILL",
+          "AWAITING_PAYMENT",
+          "CONFIRMED",
+          "CANCELLED",
+          "COMPLETED",
+          "NO_SHOW",
+          "EXPIRED",
+          "CANCEL_REQUESTED"
+        ],
+        "type": "string"
+      },
+      "BookingType": {
+        "description": "Booking type",
+        "enum": [
+          "INDIVIDUAL",
+          "WALK_IN",
+          "GROUP",
+          "ONLINE"
+        ],
+        "type": "string"
+      },
       "CancelBookingDto": {
-        "properties": {},
+        "properties": {
+          "cancelNotes": {
+            "description": "Free-text notes about the cancellation",
+            "example": "Client called to cancel",
+            "type": "string"
+          },
+          "reason": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CancellationReason"
+              }
+            ],
+            "description": "Reason for cancellation",
+            "example": "CLIENT_REQUESTED"
+          },
+          "source": {
+            "description": "Party initiating the cancellation",
+            "enum": [
+              "client",
+              "admin",
+              "employee",
+              "system"
+            ],
+            "example": "admin",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
         "type": "object"
+      },
+      "CancellationReason": {
+        "description": "Reason for cancellation",
+        "enum": [
+          "CLIENT_REQUESTED",
+          "EMPLOYEE_UNAVAILABLE",
+          "NO_SHOW",
+          "SYSTEM_EXPIRED",
+          "OTHER"
+        ],
+        "type": "string"
       },
       "ChangePasswordDto": {
         "properties": {},
@@ -42,11 +195,94 @@
         "type": "object"
       },
       "CompleteBookingDto": {
-        "properties": {},
+        "properties": {
+          "completionNotes": {
+            "description": "Notes recorded at booking completion",
+            "example": "Session completed successfully",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "CreateBookingDto": {
-        "properties": {},
+        "properties": {
+          "bookingType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BookingType"
+              }
+            ],
+            "description": "Booking type",
+            "example": "INDIVIDUAL"
+          },
+          "branchId": {
+            "description": "Branch where the booking takes place",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "clientId": {
+            "description": "Client being booked",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "couponCode": {
+            "description": "Discount coupon code",
+            "example": "SAVE10",
+            "type": "string"
+          },
+          "currency": {
+            "description": "Currency code (ISO 4217)",
+            "example": "SAR",
+            "type": "string"
+          },
+          "durationOptionId": {
+            "description": "Specific duration option to resolve price and duration",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "employeeId": {
+            "description": "Employee performing the service",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "expiresAt": {
+            "description": "Booking expiry datetime (ISO 8601)",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "groupSessionId": {
+            "description": "Group session to attach this booking to",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Free-text notes for the booking",
+            "example": "Client prefers morning sessions",
+            "type": "string"
+          },
+          "payAtClinic": {
+            "description": "Payment collected at the clinic instead of online",
+            "example": true,
+            "type": "boolean"
+          },
+          "scheduledAt": {
+            "description": "ISO 8601 start datetime",
+            "example": "2026-05-01T09:00:00.000Z",
+            "type": "string"
+          },
+          "serviceId": {
+            "description": "Service to be performed",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          }
+        },
+        "required": [
+          "branchId",
+          "clientId",
+          "employeeId",
+          "serviceId",
+          "scheduledAt"
+        ],
         "type": "object"
       },
       "CreateBranchDto": {
@@ -94,7 +330,117 @@
         "type": "object"
       },
       "CreateRecurringBookingDto": {
-        "properties": {},
+        "properties": {
+          "bookingType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BookingType"
+              }
+            ],
+            "description": "Booking type",
+            "example": "INDIVIDUAL"
+          },
+          "branchId": {
+            "description": "Branch where bookings take place",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "clientId": {
+            "description": "Client being booked",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "currency": {
+            "description": "Currency code (ISO 4217)",
+            "example": "SAR",
+            "type": "string"
+          },
+          "customDates": {
+            "description": "Exact list of dates for CUSTOM frequency",
+            "example": [
+              "2026-05-01T09:00:00.000Z",
+              "2026-05-15T09:00:00.000Z"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "durationMins": {
+            "description": "Duration of each session in minutes",
+            "example": 60,
+            "type": "number"
+          },
+          "employeeId": {
+            "description": "Employee performing the service",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "expiresAt": {
+            "description": "Expiry datetime for each booking (ISO 8601)",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "frequency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RecurringFrequency"
+              }
+            ],
+            "description": "Recurrence frequency",
+            "example": "WEEKLY"
+          },
+          "intervalDays": {
+            "description": "Interval in days between bookings (DAILY/WEEKLY only)",
+            "example": 7,
+            "type": "number"
+          },
+          "notes": {
+            "description": "Notes applied to each booking in the series",
+            "example": "Weekly follow-up",
+            "type": "string"
+          },
+          "occurrences": {
+            "description": "Number of bookings to create (mutually exclusive with until)",
+            "example": 8,
+            "type": "number"
+          },
+          "price": {
+            "description": "Price per session",
+            "example": 150,
+            "type": "number"
+          },
+          "scheduledAt": {
+            "description": "ISO 8601 datetime of the first occurrence",
+            "example": "2026-05-01T09:00:00.000Z",
+            "type": "string"
+          },
+          "serviceId": {
+            "description": "Service to be performed",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "skipConflicts": {
+            "description": "Skip conflicting slots silently instead of aborting the series",
+            "example": false,
+            "type": "boolean"
+          },
+          "until": {
+            "description": "Last possible date for the series, inclusive (mutually exclusive with occurrences)",
+            "example": "2026-07-01T00:00:00.000Z",
+            "type": "string"
+          }
+        },
+        "required": [
+          "branchId",
+          "clientId",
+          "employeeId",
+          "serviceId",
+          "scheduledAt",
+          "durationMins",
+          "price",
+          "frequency"
+        ],
         "type": "object"
       },
       "CreateRoleDto": {
@@ -244,7 +590,25 @@
         "type": "object"
       },
       "MobileCancelBookingDto": {
-        "properties": {},
+        "properties": {
+          "cancelNotes": {
+            "description": "Free-text notes about the cancellation",
+            "example": "Change of plans",
+            "type": "string"
+          },
+          "reason": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CancellationReason"
+              }
+            ],
+            "description": "Reason for cancellation",
+            "example": "CLIENT_REQUESTED"
+          }
+        },
+        "required": [
+          "reason"
+        ],
         "type": "object"
       },
       "MobileChatBody": {
@@ -252,7 +616,44 @@
         "type": "object"
       },
       "MobileCreateBookingDto": {
-        "properties": {},
+        "properties": {
+          "branchId": {
+            "description": "Branch where the booking takes place",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "durationOptionId": {
+            "description": "Specific duration option to resolve price and duration",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "employeeId": {
+            "description": "Employee performing the service",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Free-text notes for the booking",
+            "example": "Please prepare the room in advance",
+            "type": "string"
+          },
+          "scheduledAt": {
+            "description": "ISO 8601 start datetime",
+            "example": "2026-05-01T09:00:00.000Z",
+            "type": "string"
+          },
+          "serviceId": {
+            "description": "Service to be performed",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          }
+        },
+        "required": [
+          "branchId",
+          "employeeId",
+          "serviceId",
+          "scheduledAt"
+        ],
         "type": "object"
       },
       "MobileUpdateProfileBody": {
@@ -271,6 +672,15 @@
         "properties": {},
         "type": "object"
       },
+      "RecurringFrequency": {
+        "description": "Recurrence frequency",
+        "enum": [
+          "DAILY",
+          "WEEKLY",
+          "CUSTOM"
+        ],
+        "type": "string"
+      },
       "RefreshTokenDto": {
         "properties": {},
         "type": "object"
@@ -280,7 +690,21 @@
         "type": "object"
       },
       "RescheduleBookingDto": {
-        "properties": {},
+        "properties": {
+          "newDurationMins": {
+            "description": "Override session duration in minutes",
+            "example": 45,
+            "type": "number"
+          },
+          "newScheduledAt": {
+            "description": "New start datetime (ISO 8601)",
+            "example": "2026-05-10T10:00:00.000Z",
+            "type": "string"
+          }
+        },
+        "required": [
+          "newScheduledAt"
+        ],
         "type": "object"
       },
       "SendStaffMessageDto": {
@@ -382,6 +806,15 @@
       "VerifyPaymentDto": {
         "properties": {},
         "type": "object"
+      },
+      "WaitlistStatus": {
+        "enum": [
+          "WAITING",
+          "PROMOTED",
+          "EXPIRED",
+          "REMOVED"
+        ],
+        "type": "string"
       },
       "ZatcaSubmitDto": {
         "properties": {},
@@ -718,10 +1151,136 @@
     "/api/v1/dashboard/bookings": {
       "get": {
         "operationId": "DashboardBookingsController_listBookings",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Filter by client",
+            "in": "query",
+            "name": "clientId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by employee",
+            "in": "query",
+            "name": "employeeId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by branch",
+            "in": "query",
+            "name": "branchId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by service",
+            "in": "query",
+            "name": "serviceId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by booking status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BookingStatus"
+            }
+          },
+          {
+            "description": "Filter by booking type",
+            "in": "query",
+            "name": "bookingType",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BookingType"
+            }
+          },
+          {
+            "description": "Return bookings on or after this date (ISO 8601)",
+            "in": "query",
+            "name": "fromDate",
+            "required": false,
+            "schema": {
+              "example": "2026-05-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return bookings on or before this date (ISO 8601)",
+            "in": "query",
+            "name": "toDate",
+            "required": false,
+            "schema": {
+              "example": "2026-05-31T23:59:59.000Z",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Paginated list of bookings"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -729,8 +1288,9 @@
             "bearer": []
           }
         ],
+        "summary": "List bookings",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       },
       "post": {
@@ -748,7 +1308,54 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -756,18 +1363,136 @@
             "bearer": []
           }
         ],
+        "summary": "Create a booking",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
     "/api/v1/dashboard/bookings/availability": {
       "get": {
         "operationId": "DashboardBookingsController_checkAvailability",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Employee whose availability to check",
+            "in": "query",
+            "name": "employeeId",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Branch to check availability at",
+            "in": "query",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Date to check availability for (ISO 8601)",
+            "in": "query",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "example": "2026-05-01T00:00:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Session duration in minutes (overrides service default)",
+            "in": "query",
+            "name": "durationMins",
+            "required": false,
+            "schema": {
+              "example": 60,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Service to check availability for",
+            "in": "query",
+            "name": "serviceId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specific duration option to resolve duration",
+            "in": "query",
+            "name": "durationOptionId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Booking type context for availability check",
+            "in": "query",
+            "name": "bookingType",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BookingType"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Available time slots"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -775,8 +1500,9 @@
             "bearer": []
           }
         ],
+        "summary": "Check employee availability for a date",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -796,7 +1522,54 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Recurring booking series created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -804,18 +1577,86 @@
             "bearer": []
           }
         ],
+        "summary": "Create a recurring booking series",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
     "/api/v1/dashboard/bookings/waitlist": {
       "get": {
         "operationId": "DashboardBookingsController_listWaitlist",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Filter by employee",
+            "in": "query",
+            "name": "employeeId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by waitlist entry status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/WaitlistStatus"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "List of waitlist entries"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -823,8 +1664,9 @@
             "bearer": []
           }
         ],
+        "summary": "List waitlist entries",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       },
       "post": {
@@ -842,7 +1684,54 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Waitlist entry created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -850,8 +1739,9 @@
             "bearer": []
           }
         ],
+        "summary": "Add a client to the waitlist",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -860,17 +1750,69 @@
         "operationId": "DashboardBookingsController_removeWaitlistEntry",
         "parameters": [
           {
+            "description": "Waitlist entry ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Waitlist entry removed"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Waitlist entry not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -878,8 +1820,9 @@
             "bearer": []
           }
         ],
+        "summary": "Remove a waitlist entry",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -888,17 +1831,76 @@
         "operationId": "DashboardBookingsController_getBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking detail"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -906,8 +1908,9 @@
             "bearer": []
           }
         ],
+        "summary": "Get a booking by ID",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -916,10 +1919,12 @@
         "operationId": "DashboardBookingsController_cancelBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -936,7 +1941,64 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking cancelled"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -944,8 +2006,9 @@
             "bearer": []
           }
         ],
+        "summary": "Cancel a booking",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -954,17 +2017,76 @@
         "operationId": "DashboardBookingsController_checkInBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Client checked in"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -972,8 +2094,9 @@
             "bearer": []
           }
         ],
+        "summary": "Check in a client for a booking",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -982,10 +2105,12 @@
         "operationId": "DashboardBookingsController_completeBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -1002,7 +2127,64 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking marked complete"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -1010,8 +2192,9 @@
             "bearer": []
           }
         ],
+        "summary": "Mark a booking as complete",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -1020,17 +2203,76 @@
         "operationId": "DashboardBookingsController_confirmBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking confirmed"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -1038,8 +2280,9 @@
             "bearer": []
           }
         ],
+        "summary": "Confirm a booking",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -1048,17 +2291,76 @@
         "operationId": "DashboardBookingsController_noShowBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking marked as no-show"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -1066,8 +2368,9 @@
             "bearer": []
           }
         ],
+        "summary": "Mark a booking as no-show",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -1076,10 +2379,12 @@
         "operationId": "DashboardBookingsController_rescheduleBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -1096,7 +2401,64 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking rescheduled"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
         "security": [
@@ -1104,8 +2466,9 @@
             "bearer": []
           }
         ],
+        "summary": "Reschedule a booking",
         "tags": [
-          "Bookings"
+          "Dashboard / Bookings"
         ]
       }
     },
@@ -4582,14 +5945,97 @@
     "/api/v1/mobile/client/bookings": {
       "get": {
         "operationId": "MobileClientBookingsController_listMyBookings",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Page number (1-based)",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Records per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Filter by booking status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BookingStatus"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Paginated list of the authenticated client bookings"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List my bookings",
         "tags": [
-          "MobileClientBookings"
+          "Mobile Client / Bookings"
         ]
       },
       "post": {
@@ -4607,11 +6053,64 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a booking",
         "tags": [
-          "MobileClientBookings"
+          "Mobile Client / Bookings"
         ]
       }
     },
@@ -4620,21 +6119,86 @@
         "operationId": "MobileClientBookingsController_getBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking detail"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a booking by ID",
         "tags": [
-          "MobileClientBookings"
+          "Mobile Client / Bookings"
         ]
       }
     },
@@ -4643,10 +6207,12 @@
         "operationId": "MobileClientBookingsController_cancelBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -4663,11 +6229,74 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking cancelled"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a booking",
         "tags": [
-          "MobileClientBookings"
+          "Mobile Client / Bookings"
         ]
       }
     },
@@ -4676,10 +6305,12 @@
         "operationId": "MobileClientBookingsController_rescheduleBooking",
         "parameters": [
           {
+            "description": "Booking ID",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
               "type": "string"
             }
           }
@@ -4696,11 +6327,74 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Booking rescheduled"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Booking not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reschedule a booking",
         "tags": [
-          "MobileClientBookings"
+          "Mobile Client / Bookings"
         ]
       }
     },
