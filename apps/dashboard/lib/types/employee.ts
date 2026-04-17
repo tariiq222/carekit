@@ -38,6 +38,9 @@ export interface Employee {
     ratings: number
   }
   averageRating?: number
+  specialtyIds?: string[]
+  branchIds?: string[]
+  serviceIds?: string[]
 }
 
 export interface AvailabilitySlot {
@@ -127,10 +130,14 @@ export interface TimeSlot {
 
 /* ─── Query ─── */
 
+export type EmployeeSortField = "name" | "experience" | "isActive" | "createdAt"
+
 export interface EmployeeListQuery extends SearchableQuery {
   specialty?: string
   minRating?: number
   isActive?: boolean
+  sortBy?: EmployeeSortField
+  sortOrder?: "asc" | "desc"
 }
 
 /* ─── DTOs ─── */
@@ -150,6 +157,11 @@ export interface CreateEmployeePayload {
 export interface UpdateEmployeePayload {
   title?: string
   nameAr?: string
+  nameEn?: string
+  email?: string
+  phone?: string
+  gender?: "MALE" | "FEMALE"
+  employmentType?: "FULL_TIME" | "PART_TIME" | "CONTRACT"
   specialty?: string
   specialtyAr?: string
   bio?: string
@@ -197,6 +209,9 @@ export interface OnboardEmployeePayload {
   nameEn: string
   nameAr: string
   email: string
+  phone?: string
+  gender?: "MALE" | "FEMALE"
+  employmentType?: "FULL_TIME" | "PART_TIME" | "CONTRACT"
   specialty: string
   specialtyAr?: string
   bio?: string

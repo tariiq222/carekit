@@ -42,15 +42,10 @@ export function getEmployeeColumns(
 ): ColumnDef<Employee>[] {
   return [
     {
-      id: "employee",
+      id: "name",
       accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
       header: t?.("employees.col.employee") ?? "Employee",
       enableSorting: true,
-      sortingFn: (a, b) => {
-        const nameA = `${a.original.user.firstName} ${a.original.user.lastName}`
-        const nameB = `${b.original.user.firstName} ${b.original.user.lastName}`
-        return nameA.localeCompare(nameB, locale === "ar" ? "ar" : "en")
-      },
       cell: ({ row }) => {
         const p = row.original
         const name = formatName(p.user.firstName, p.user.lastName)
@@ -105,14 +100,13 @@ export function getEmployeeColumns(
     {
       accessorKey: "averageRating",
       header: t?.("employees.col.rating") ?? "Rating",
-      enableSorting: true,
+      enableSorting: false,
       cell: ({ row }) => <RatingDisplay value={row.original.averageRating} />,
     },
     {
-      id: "status",
+      id: "isActive",
       header: t?.("employees.col.status") ?? "Status",
       enableSorting: true,
-      sortingFn: (a, b) => Number(b.original.isActive) - Number(a.original.isActive),
       cell: ({ row }) => {
         const active = row.original.isActive
         return (

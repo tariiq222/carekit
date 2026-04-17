@@ -48,6 +48,9 @@ type RawEmployee = Omit<Employee, "averageRating" | "_count" | "user"> & {
   email?: string | null
   phone?: string | null
   user?: (Employee["user"] & { avatarUrl?: string | null }) | null
+  specialtyIds?: string[]
+  branchIds?: string[]
+  serviceIds?: string[]
 }
 
 function splitName(full: string | null | undefined): { firstName: string; lastName: string } {

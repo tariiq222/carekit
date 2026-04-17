@@ -2,6 +2,7 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import { useState, useCallback, useEffect } from "react"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { queryKeys } from "@/lib/query-keys"
 import {
   fetchEmployees,
@@ -13,7 +14,7 @@ import {
   fetchEmployeeServiceTypes,
   fetchEmployeeStats,
 } from "@/lib/api/employees"
-import type { EmployeeListQuery } from "@/lib/types/employee"
+import type { EmployeeListQuery, EmployeeSortField } from "@/lib/types/employee"
 
 // Re-export mutations from dedicated file for backward compatibility
 export {
@@ -26,53 +27,120 @@ export {
 
 /* ─── List Hook ─── */
 
+const SORT_FIELDS: ReadonlyArray<EmployeeSortField> = ["name", "experience", "isActive", "createdAt"]
+
+function parseSortField(value: string | null): EmployeeSortField | undefined {
+  return value && (SORT_FIELDS as ReadonlyArray<string>).includes(value) ? (value as EmployeeSortField) : undefined
+}
+
+function parseIsActive(value: string | null): boolean | undefined {
+  if (value === "true") return true
+  if (value === "false") return false
+  return undefined
+}
+
 export function useEmployees() {
-  const [page, setPage] = useState(1)
-  const [search, setSearch] = useState("")
-  const [debouncedSearch, setDebouncedSearch] = useState("")
-  const [isActive, setIsActive] = useState<boolean | undefined>()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const urlSearch = searchParams.get("search") ?? ""
+  const urlIsActive = parseIsActive(searchParams.get("isActive"))
+  const urlPage = Number(searchParams.get("page") ?? "1") || 1
+  const urlSortBy = parseSortField(searchParams.get("sortBy"))
+  const sortOrderRaw = searchParams.get("sortOrder")
+  const urlSortOrder: "asc" | "desc" | undefined =
+    sortOrderRaw === "desc" ? "desc" : sortOrderRaw === "asc" ? "asc" : undefined
+
+  const [search, setSearchState] = useState(urlSearch)
+  const [debouncedSearch, setDebouncedSearch] = useState(urlSearch)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300)
     return () => clearTimeout(t)
   }, [search])
 
+  const updateParams = useCallback(
+    (patch: Record<string, string | undefined>) => {
+      const next = new URLSearchParams(searchParams.toString())
+      for (const [key, value] of Object.entries(patch)) {
+        if (value == null || value === "") next.delete(key)
+        else next.set(key, value)
+      }
+      const qs = next.toString()
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    },
+    [pathname, router, searchParams],
+  )
+
+  useEffect(() => {
+    updateParams({ search: debouncedSearch || undefined, page: debouncedSearch !== urlSearch ? "1" : undefined })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch])
+
+  const setSearch = useCallback((s: string) => {
+    setSearchState(s)
+  }, [])
+
+  const setIsActive = useCallback(
+    (v: boolean | undefined) => {
+      updateParams({ isActive: v === undefined ? undefined : String(v), page: "1" })
+    },
+    [updateParams],
+  )
+
+  const setPage = useCallback(
+    (p: number) => {
+      updateParams({ page: p === 1 ? undefined : String(p) })
+    },
+    [updateParams],
+  )
+
+  const setSort = useCallback(
+    (sortBy: EmployeeSortField | undefined, sortOrder: "asc" | "desc" | undefined) => {
+      updateParams({ sortBy, sortOrder })
+    },
+    [updateParams],
+  )
+
   const query: EmployeeListQuery = {
-    page,
+    page: urlPage,
     perPage: 20,
     search: debouncedSearch || undefined,
-    isActive,
+    isActive: urlIsActive,
+    sortBy: urlSortBy,
+    sortOrder: urlSortOrder,
   }
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.employees.list(query),
     queryFn: () => fetchEmployees(query),
     placeholderData: keepPreviousData,
-    staleTime: 5 * 60 * 1000, // 5 min
+    staleTime: 5 * 60 * 1000,
   })
 
   const resetFilters = useCallback(() => {
-    setSearch("")
+    setSearchState("")
     setDebouncedSearch("")
-    setIsActive(undefined)
-    setPage(1)
-  }, [])
+    router.replace(pathname, { scroll: false })
+  }, [pathname, router])
 
-  const hasFilters = !!(debouncedSearch || isActive !== undefined)
-
-  const items = data?.items ?? []
+  const hasFilters = !!(debouncedSearch || urlIsActive !== undefined || urlSortBy)
 
   return {
-    employees: items,
+    employees: data?.items ?? [],
     meta: data?.meta ?? null,
     isLoading,
     error: error?.message ?? null,
-    page,
+    page: urlPage,
     setPage,
     search,
-    setSearch: (s: string) => { setSearch(s); setPage(1) },
-    isActive,
-    setIsActive: (v: boolean | undefined) => { setIsActive(v); setPage(1) },
+    setSearch,
+    isActive: urlIsActive,
+    setIsActive,
+    sortBy: urlSortBy,
+    sortOrder: urlSortOrder,
+    setSort,
     hasFilters,
     resetFilters,
     refetch,

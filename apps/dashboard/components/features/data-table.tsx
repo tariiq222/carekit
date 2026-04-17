@@ -41,6 +41,10 @@ interface DataTableProps<TData, TValue> {
   hasPreviousPage?: boolean
   hasNextPage?: boolean
   onPageChange?: (page: number) => void
+  /** When true, sorting is owned by the server. Provide `sorting` + `onSortingChange`. */
+  manualSorting?: boolean
+  sorting?: SortingState
+  onSortingChange?: (sorting: SortingState) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -55,8 +59,12 @@ export function DataTable<TData, TValue>({
   hasPreviousPage,
   hasNextPage,
   onPageChange,
+  manualSorting = false,
+  sorting: externalSorting,
+  onSortingChange: externalOnSortingChange,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [internalSorting, setInternalSorting] = useState<SortingState>([])
+  const sorting = manualSorting ? (externalSorting ?? []) : internalSorting
   const { t } = useLocale()
 
   const table = useReactTable({
@@ -64,8 +72,14 @@ export function DataTable<TData, TValue>({
     columns: columns ?? [],
     getCoreRowModel: getCoreRowModel(),
     ...(serverPaginated ? {} : { getPaginationRowModel: getPaginationRowModel() }),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
+    ...(manualSorting
+      ? { manualSorting: true as const }
+      : { getSortedRowModel: getSortedRowModel() }),
+    onSortingChange: (updater) => {
+      const next = typeof updater === "function" ? updater(sorting) : updater
+      if (manualSorting) externalOnSortingChange?.(next)
+      else setInternalSorting(next)
+    },
     state: { sorting },
   })
 

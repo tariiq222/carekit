@@ -19,7 +19,8 @@ import { getEmployeeColumns } from "@/components/features/employees/employee-col
 import { DeleteEmployeeDialog } from "@/components/features/employees/delete-employee-dialog"
 import { useLocale } from "@/components/locale-provider"
 import { useEmployeeStats } from "@/hooks/use-employees"
-import type { Employee } from "@/lib/types/employee"
+import type { Employee, EmployeeSortField } from "@/lib/types/employee"
+import type { SortingState } from "@tanstack/react-table"
 
 interface EmployeesListContentProps {
   employees: Employee[]
@@ -30,9 +31,14 @@ interface EmployeesListContentProps {
   setSearch: (v: string) => void
   isActive: boolean | undefined
   setIsActive: (v: boolean | undefined) => void
+  sortBy?: EmployeeSortField
+  sortOrder?: "asc" | "desc"
+  setSort?: (sortBy: EmployeeSortField | undefined, sortOrder: "asc" | "desc" | undefined) => void
   hasFilters: boolean
   resetFilters: () => void
 }
+
+const SORT_FIELDS: readonly EmployeeSortField[] = ["name", "experience", "isActive", "createdAt"]
 
 export function EmployeesListContent({
   employees,
@@ -43,6 +49,9 @@ export function EmployeesListContent({
   setSearch,
   isActive,
   setIsActive,
+  sortBy,
+  sortOrder,
+  setSort,
   hasFilters,
   resetFilters,
 }: EmployeesListContentProps) {
@@ -150,6 +159,16 @@ export function EmployeesListContent({
         <DataTable
           columns={columns}
           data={employees}
+          manualSorting={!!setSort}
+          sorting={sortBy ? [{ id: sortBy, desc: sortOrder === "desc" }] : []}
+          onSortingChange={(s: SortingState) => {
+            if (!setSort) return
+            const next = s[0]
+            if (!next) { setSort(undefined, undefined); return }
+            const id = next.id as EmployeeSortField
+            if (!SORT_FIELDS.includes(id)) return
+            setSort(id, next.desc ? "desc" : "asc")
+          }}
           emptyTitle={
             hasActiveFilters
               ? t("employees.empty.filteredTitle")

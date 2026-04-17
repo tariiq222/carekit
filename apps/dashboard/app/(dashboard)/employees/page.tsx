@@ -30,6 +30,9 @@ function EmployeesPageInner() {
     setSearch,
     isActive,
     setIsActive,
+    sortBy,
+    sortOrder,
+    setSort,
     hasFilters,
     resetFilters,
   } = useEmployees()
@@ -65,6 +68,9 @@ function EmployeesPageInner() {
         setSearch={setSearch}
         isActive={isActive}
         setIsActive={setIsActive}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        setSort={setSort}
         hasFilters={hasFilters}
         resetFilters={resetFilters}
       />
