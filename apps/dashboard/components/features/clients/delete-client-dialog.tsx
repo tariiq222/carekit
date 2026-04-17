@@ -20,9 +20,10 @@ interface DeleteClientDialogProps {
   client: Client | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  onDeleted?: () => void
 }
 
-export function DeleteClientDialog({ client, open, onOpenChange }: DeleteClientDialogProps) {
+export function DeleteClientDialog({ client, open, onOpenChange, onDeleted }: DeleteClientDialogProps) {
   const { t } = useLocale()
   const { deleteMut } = useClientMutations()
 
@@ -33,6 +34,7 @@ export function DeleteClientDialog({ client, open, onOpenChange }: DeleteClientD
       onSuccess: () => {
         toast.success(t("clients.delete.success"))
         onOpenChange(false)
+        onDeleted?.()
       },
       onError: (err) => {
         toast.error(err instanceof Error ? err.message : t("clients.delete.error"))

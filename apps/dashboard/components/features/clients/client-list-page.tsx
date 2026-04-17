@@ -32,7 +32,7 @@ import type { Client } from "@/lib/types/client"
 export function ClientListPage() {
   const router = useRouter()
   const { t, locale } = useLocale()
-  const { clients, meta, isLoading, error, search, setSearch, isActive, setIsActive, resetSearch } = useClients()
+  const { clients, meta, isLoading, error, search, setSearch, isActive, setIsActive, resetSearch, page, setPage } = useClients()
   const { toggleActiveMut } = useClientMutations()
   const stats = useClientStats()
 
@@ -130,6 +130,12 @@ export function ClientListPage() {
               ? { label: t("clients.filters.reset"), onClick: () => { resetSearch(); setIsActive(undefined) } }
               : { label: t("clients.addClient"), onClick: () => router.push("/clients/create") }
           }
+          serverPaginated
+          page={meta?.page ?? page}
+          totalPages={meta?.totalPages ?? 1}
+          hasPreviousPage={meta?.hasPreviousPage ?? false}
+          hasNextPage={meta?.hasNextPage ?? false}
+          onPageChange={setPage}
         />
       )}
 

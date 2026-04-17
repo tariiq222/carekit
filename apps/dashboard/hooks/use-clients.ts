@@ -96,8 +96,14 @@ export function useClient(id: string | null) {
 
 export function useClientMutations() {
   const queryClient = useQueryClient()
+  // Invalidate active queries (currently-mounted list/detail) AND mark inactive
+  // entries stale so the next mount (e.g. after router.push back to /clients)
+  // refetches fresh data instead of serving the pre-mutation cached list.
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: queryKeys.clients.all })
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.clients.all,
+      refetchType: "all",
+    })
 
   const createMut = useMutation({
     mutationFn: createWalkInClient,

@@ -1,10 +1,12 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PencilEdit01Icon,
   ArrowLeft01Icon,
+  Delete02Icon,
 } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
@@ -12,6 +14,7 @@ import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { DetailSection, DetailRow } from "@/components/features/detail-sheet-parts"
 import { ErrorBanner } from "@/components/features/error-banner"
 import { ClientPageSkeleton } from "@/components/features/clients/client-page-skeleton"
+import { DeleteClientDialog } from "@/components/features/clients/delete-client-dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -22,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLocale } from "@/components/locale-provider"
 import { useOrganizationConfig } from "@/hooks/use-organization-config"
 import { useClient } from "@/hooks/use-clients"
+import { BLOOD_LABELS, type BloodType } from "@/lib/schemas/client.schema"
 
 /* ─── Props ─── */
 
@@ -35,6 +39,7 @@ export function ClientDetailPage({ clientId }: Props) {
   const router = useRouter()
   const { locale, t } = useLocale()
   const { formatDate } = useOrganizationConfig()
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const { data: client, isLoading, error } = useClient(clientId)
 
@@ -92,13 +97,23 @@ export function ClientDetailPage({ clientId }: Props) {
             <p className="text-sm text-muted-foreground">{client.email}</p>
           </div>
         </div>
-        <Button
-          className="gap-2 rounded-full px-5"
-          onClick={() => router.push(`/clients/${clientId}/edit`)}
-        >
-          <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
-          {t("clients.detail.edit")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            className="gap-2 rounded-full px-5"
+            onClick={() => router.push(`/clients/${clientId}/edit`)}
+          >
+            <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
+            {t("clients.detail.edit")}
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2 rounded-full px-5 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <HugeiconsIcon icon={Delete02Icon} size={16} />
+            {t("clients.actions.delete")}
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="info" dir={locale === "ar" ? "rtl" : "ltr"}>
@@ -152,7 +167,10 @@ export function ClientDetailPage({ clientId }: Props) {
             <Card>
               <CardContent className="pt-6">
                 <DetailSection title={t("clients.detail.medicalInfo")}>
-                  <DetailRow label={t("clients.detail.bloodType")} value={client.bloodType ?? "—"} />
+                  <DetailRow
+                    label={t("clients.detail.bloodType")}
+                    value={client.bloodType ? (BLOOD_LABELS[client.bloodType as BloodType] ?? client.bloodType) : "—"}
+                  />
                   <DetailRow label={t("clients.detail.allergies")} value={client.allergies ?? "—"} />
                   <DetailRow label={t("clients.detail.chronicConditions")} value={client.chronicConditions ?? "—"} />
                 </DetailSection>
@@ -226,6 +244,13 @@ export function ClientDetailPage({ clientId }: Props) {
           </div>
         </TabsContent>
       </Tabs>
+
+      <DeleteClientDialog
+        client={client}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => router.push("/clients")}
+      />
     </ListPageShell>
   )
 }

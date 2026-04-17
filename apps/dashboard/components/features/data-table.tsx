@@ -31,8 +31,16 @@ interface DataTableProps<TData, TValue> {
   emptyTitle?: string
   emptyDescription?: string
   emptyAction?: { label: string; onClick: () => void }
-  /** When true, hide the table's own pagination controls — caller uses server-side pagination. */
+  /** When true, disable the built-in client pagination. If the server-side
+   * pagination props below are provided the component renders its own prev/next
+   * UI wired to them; if omitted, pagination is hidden entirely. */
   serverPaginated?: boolean
+  /** Server pagination controls — only meaningful when serverPaginated is true. */
+  page?: number
+  totalPages?: number
+  hasPreviousPage?: boolean
+  hasNextPage?: boolean
+  onPageChange?: (page: number) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -42,6 +50,11 @@ export function DataTable<TData, TValue>({
   emptyDescription,
   emptyAction,
   serverPaginated = false,
+  page,
+  totalPages,
+  hasPreviousPage,
+  hasNextPage,
+  onPageChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const { t } = useLocale()
@@ -137,6 +150,32 @@ export function DataTable<TData, TValue>({
               size="sm"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
+            >
+              {t("table.next")}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {serverPaginated && onPageChange && typeof page === "number" && typeof totalPages === "number" && totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4">
+          <p className="text-sm text-muted-foreground tabular-nums">
+            {t("table.page")} {page} {t("table.of")} {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(page - 1)}
+              disabled={!hasPreviousPage}
+            >
+              {t("table.previous")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(page + 1)}
+              disabled={!hasNextPage}
             >
               {t("table.next")}
             </Button>
