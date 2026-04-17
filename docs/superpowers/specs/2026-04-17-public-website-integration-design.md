@@ -180,14 +180,11 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 | Premium theme ships before design is ready | Treat premium theme design as a gated sub-task with its own visual spec before phase-1 implementation begins |
 | SEO impact of client-side heavy flows | Booking wizard + marketing pages stay SSR; only after-booking dashboards are client-rendered |
 
-## 9. Open Questions
-
-- Arabic vs English language switching: does the clinic owner configure default, or is it auto from browser? Assume auto + manual override unless told otherwise.
-
-## 9.1 Decided
+## 9. Decisions
 
 - **OTP channel (phase 2): email only.** Uses the existing `email/` (SMTP) module. SMS providers will be added later as a pluggable `NotificationChannel` adapter — the `OtpCode` model carries a `channel` column from day one to avoid a future migration.
 - **Domain model: each clinic brings its own domain.** CareKit does not own or assign subdomains. Deployment provisions Nginx + TLS (Let's Encrypt or provided cert) per clinic domain. A `Branding.websiteDomain` field stores the authoritative domain for CORS allowlisting, canonical URLs, sitemap, and email links.
+- **Default language: Arabic (RTL).** The site always renders in Arabic on first visit regardless of browser locale. English translation is available via a visible language switcher; the choice is persisted in a cookie and respected on subsequent visits. `next-intl` drives both locales; every string lives in `messages/ar.json` and `messages/en.json`. No auto-detect — Arabic is the product's primary voice.
 
 ## 10. Out of Scope (for this spec)
 
