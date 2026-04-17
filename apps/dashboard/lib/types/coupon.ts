@@ -11,9 +11,9 @@ export interface Coupon {
   code: string
   descriptionAr: string | null
   descriptionEn: string | null
-  discountType: "percentage" | "fixed"
+  discountType: "PERCENTAGE" | "FIXED"
   discountValue: number
-  minAmount: number
+  minOrderAmt: number | null
   maxUses: number | null
   usedCount: number
   maxUsesPerUser: number | null
@@ -37,9 +37,9 @@ export interface CreateCouponPayload {
   code: string
   descriptionAr?: string
   descriptionEn?: string
-  discountType: "percentage" | "fixed"
+  discountType: "PERCENTAGE" | "FIXED"
   discountValue: number
-  minAmount?: number
+  minOrderAmt?: number
   maxUses?: number
   maxUsesPerUser?: number
   serviceIds?: string[]
@@ -51,9 +51,9 @@ export interface UpdateCouponPayload {
   code?: string
   descriptionAr?: string
   descriptionEn?: string
-  discountType?: "percentage" | "fixed"
+  discountType?: "PERCENTAGE" | "FIXED"
   discountValue?: number
-  minAmount?: number
+  minOrderAmt?: number
   maxUses?: number
   maxUsesPerUser?: number
   serviceIds?: string[]

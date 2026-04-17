@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState, useCallback } from "react"
+import { toast } from "sonner"
 import { queryKeys } from "@/lib/query-keys"
 import {
   fetchCoupons,
@@ -62,12 +63,16 @@ export function useCouponMutations() {
   const createMut = useMutation({
     mutationFn: createCoupon,
     onSuccess: invalidate,
+    onError: (err: unknown) =>
+      toast.error(err instanceof Error ? err.message : "فشل إنشاء الكوبون"),
   })
 
   const updateMut = useMutation({
     mutationFn: ({ id, ...payload }: { id: string } & Parameters<typeof updateCoupon>[1]) =>
       updateCoupon(id, payload),
     onSuccess: invalidate,
+    onError: (err: unknown) =>
+      toast.error(err instanceof Error ? err.message : "فشل تحديث الكوبون"),
   })
 
   const deleteMut = useMutation({
