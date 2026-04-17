@@ -42,6 +42,7 @@ model Client {
   lastName          String?
   phone             String?           @unique
   email             String?
+  emailVerified     Boolean           @default(false)
   gender            ClientGender?
   dateOfBirth       DateTime?
   nationality       String?

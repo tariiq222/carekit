@@ -66,6 +66,9 @@ describe('Clients handlers', () => {
               findMany: jest.fn(),
               count: jest.fn(),
             },
+            booking: {
+              findMany: jest.fn().mockResolvedValue([]),
+            },
           },
         },
         { provide: EventBusService, useValue: { publish: jest.fn().mockResolvedValue(undefined) } },
