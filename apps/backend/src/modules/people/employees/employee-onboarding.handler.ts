@@ -7,14 +7,9 @@ export type EmployeeOnboardingCommand = EmployeeOnboardingDto & {
   employeeId: string;
 };
 
-type RelationStep = 'specialties' | 'branches' | 'services';
+type RelationStep = 'branches' | 'services';
 
 const RELATION_CONFIG = {
-  specialties: {
-    table: 'employeeSpecialty' as const,
-    idField: 'specialtyId' as const,
-    idsKey: 'specialtyIds' as const,
-  },
   branches: {
     table: 'employeeBranch' as const,
     idField: 'branchId' as const,
@@ -55,7 +50,6 @@ export class EmployeeOnboardingHandler {
           break;
         }
 
-        case 'specialties':
         case 'branches':
         case 'services': {
           const config = RELATION_CONFIG[cmd.step];
@@ -85,18 +79,17 @@ export class EmployeeOnboardingHandler {
         case 'complete': {
           const current = await tx.employee.findUnique({
             where: { id: cmd.employeeId },
-            include: { specialties: true, branches: true, services: true },
+            include: { branches: true, services: true },
           });
 
           if (
             !current ||
             !current.name ||
-            current.specialties.length === 0 ||
             current.branches.length === 0 ||
             current.services.length === 0
           ) {
             throw new BadRequestException(
-              'Cannot complete onboarding: profile, specialties, branches, and services must all be filled',
+              'Cannot complete onboarding: profile, branches, and services must all be filled',
             );
           }
 
@@ -110,7 +103,7 @@ export class EmployeeOnboardingHandler {
 
       return tx.employee.findUnique({
         where: { id: cmd.employeeId },
-        include: { specialties: true, branches: true, services: true },
+        include: { branches: true, services: true },
       });
     });
   }

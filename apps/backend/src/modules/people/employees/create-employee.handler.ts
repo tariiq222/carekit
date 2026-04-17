@@ -26,9 +26,6 @@ export class CreateEmployeeHandler {
         bio: dto.bio,
         employmentType: dto.employmentType,
         userId: dto.userId,
-        specialties: dto.specialtyIds?.length
-          ? { create: dto.specialtyIds.map((specialtyId) => ({ specialtyId })) }
-          : undefined,
         branches: dto.branchIds?.length
           ? { create: dto.branchIds.map((branchId) => ({ branchId })) }
           : undefined,
@@ -36,7 +33,7 @@ export class CreateEmployeeHandler {
           ? { create: dto.serviceIds.map((serviceId) => ({ serviceId })) }
           : undefined,
       },
-      include: { specialties: true, branches: true, services: true },
+      include: { branches: true, services: true },
     });
   }
 }

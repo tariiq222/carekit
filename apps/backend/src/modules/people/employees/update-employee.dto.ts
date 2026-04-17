@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsEnum, IsInt, IsOptional, IsString, Matches, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsInt, IsOptional, IsString, IsUrl, Matches, MaxLength, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { EmployeeGender, EmploymentType } from '@prisma/client';
 
@@ -50,4 +50,20 @@ export class UpdateEmployeeDto {
 
   @ApiPropertyOptional({ description: 'Avatar image URL', example: 'https://cdn.example.com/avatars/khalid.jpg', nullable: true })
   @IsOptional() @IsString() avatarUrl?: string | null;
+
+  @ApiPropertyOptional({ description: 'Public slug (unique, URL-safe)', example: 'dr-khalid' })
+  @IsOptional() @IsString() @MaxLength(200) @Matches(/^[a-z0-9-]+$/i, { message: 'slug must be alphanumeric with hyphens' })
+  slug?: string | null;
+
+  @ApiPropertyOptional({ description: 'Whether the employee appears in the public directory', example: true })
+  @IsOptional() @IsBoolean() isPublic?: boolean;
+
+  @ApiPropertyOptional({ description: 'Public biography (Arabic)' })
+  @IsOptional() @IsString() @MaxLength(5000) publicBioAr?: string | null;
+
+  @ApiPropertyOptional({ description: 'Public biography (English)' })
+  @IsOptional() @IsString() @MaxLength(5000) publicBioEn?: string | null;
+
+  @ApiPropertyOptional({ description: 'Public profile image URL' })
+  @IsOptional() @IsUrl() publicImageUrl?: string | null;
 }

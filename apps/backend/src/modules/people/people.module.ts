@@ -28,6 +28,8 @@ import { CreateEmployeeExceptionHandler } from './employees/create-employee-exce
 import { DeleteEmployeeExceptionHandler } from './employees/delete-employee-exception.handler';
 import { ListEmployeeRatingsHandler } from './employees/list-employee-ratings.handler';
 import { EmployeeStatsHandler } from './employees/employee-stats.handler';
+import { ListPublicEmployeesHandler } from './employees/public/list-public-employees.handler';
+import { GetPublicEmployeeHandler } from './employees/public/get-public-employee.handler';
 import { DashboardPeopleController } from '../../api/dashboard/people.controller';
 
 const handlers = [
@@ -38,6 +40,7 @@ const handlers = [
   RemoveEmployeeServiceHandler, ListEmployeeExceptionsHandler, CreateEmployeeExceptionHandler,
   DeleteEmployeeExceptionHandler, ListEmployeeRatingsHandler, EmployeeStatsHandler,
   UploadAvatarHandler,
+  ListPublicEmployeesHandler, GetPublicEmployeeHandler,
 ];
 
 @Module({

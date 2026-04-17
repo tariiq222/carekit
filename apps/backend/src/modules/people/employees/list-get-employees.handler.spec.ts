@@ -19,7 +19,6 @@ const mockEmployee = {
   userId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
-  specialties: [{ id: 'es1', specialtyId: 'sp1', employeeId: 'e1' }],
   branches: [],
   services: [],
   availability: [
@@ -65,15 +64,15 @@ describe('List/Get Employees handlers', () => {
       expect(result.meta).toMatchObject({ total: 1, page: 1, perPage: 10, totalPages: 1 });
     });
 
-    it('filters by specialtyId', async () => {
+    it('filters by branchId', async () => {
       prisma.employee.findMany.mockResolvedValue([]);
       prisma.employee.count.mockResolvedValue(0);
 
-      await listHandler.execute({ page: 1, limit: 10, specialtyId: 'sp1' });
+      await listHandler.execute({ page: 1, limit: 10, branchId: 'br1' });
 
       expect(prisma.employee.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ specialties: { some: { specialtyId: 'sp1' } } }),
+          where: expect.objectContaining({ branches: { some: { branchId: 'br1' } } }),
         }),
       );
     });
@@ -98,12 +97,10 @@ describe('List/Get Employees handlers', () => {
 
       const result = (await getHandler.execute({ employeeId: 'e1' })) as unknown as {
         id: string;
-        specialties: unknown[];
         availability: unknown[];
       };
 
       expect(result.id).toBe('e1');
-      expect(result.specialties).toHaveLength(1);
       expect(result.availability).toHaveLength(1);
     });
 

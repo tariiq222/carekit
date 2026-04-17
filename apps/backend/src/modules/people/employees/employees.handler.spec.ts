@@ -17,7 +17,6 @@ const mockEmployee = {
   isActive: true,
   createdAt: new Date(),
   updatedAt: new Date(),
-  specialties: [],
   branches: [],
   services: [],
 };
@@ -59,31 +58,27 @@ describe('Employees handlers', () => {
       expect(prisma.employee.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ name: 'د. سارة الأحمد' }),
-          include: { specialties: true, branches: true, services: true },
+          include: { branches: true, services: true },
         }),
       );
     });
 
-    it('creates employee with specialties + branches + services', async () => {
+    it('creates employee with branches + services', async () => {
       prisma.employee.findUnique.mockResolvedValue(null);
       prisma.employee.create.mockResolvedValue({
         ...mockEmployee,
-        specialties: [{ id: 'es1', specialtyId: 'sp1', employeeId: 'e1' }],
         branches: [{ id: 'eb1', branchId: 'br1', employeeId: 'e1' }],
       });
 
       const result = await createHandler.execute({
         name: 'د. سارة الأحمد',
-        specialtyIds: ['sp1'],
         branchIds: ['br1'],
       });
 
-      expect(result.specialties).toHaveLength(1);
       expect(result.branches).toHaveLength(1);
       expect(prisma.employee.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            specialties: { create: [{ specialtyId: 'sp1' }] },
             branches: { create: [{ branchId: 'br1' }] },
           }),
         }),

@@ -31,9 +31,6 @@ export class ListEmployeesDto extends PaginationDto {
   @ApiPropertyOptional({ description: 'Filter by onboarding status', enum: OnboardingStatus, enumName: 'OnboardingStatus', example: OnboardingStatus.COMPLETED })
   @IsOptional() @IsEnum(OnboardingStatus) onboardingStatus?: OnboardingStatus;
 
-  @ApiPropertyOptional({ description: 'Filter by specialty UUID', example: '00000000-0000-0000-0000-000000000000' })
-  @IsOptional() @IsUUID() specialtyId?: string;
-
   @ApiPropertyOptional({ description: 'Filter by branch UUID', example: '00000000-0000-0000-0000-000000000000' })
   @IsOptional() @IsUUID() branchId?: string;
 

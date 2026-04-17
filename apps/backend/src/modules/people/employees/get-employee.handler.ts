@@ -14,7 +14,6 @@ export class GetEmployeeHandler {
     const employee = await this.prisma.employee.findFirst({
       where: { id: query.employeeId },
       include: {
-        specialties: true,
         branches: true,
         services: true,
         availability: { where: { isActive: true }, orderBy: { dayOfWeek: 'asc' } },

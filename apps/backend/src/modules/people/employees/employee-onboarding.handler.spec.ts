@@ -29,7 +29,6 @@ describe('EmployeeOnboardingHandler', () => {
         findFirst: jest.fn(),
         update: jest.fn(),
       },
-      employeeSpecialty: { deleteMany: jest.fn(), createMany: jest.fn() },
       employeeBranch: { deleteMany: jest.fn(), createMany: jest.fn() },
       employeeService: { deleteMany: jest.fn(), createMany: jest.fn() },
       $transaction: jest.fn().mockImplementation((fn: (tx: unknown) => unknown) => fn(prisma)),
@@ -95,35 +94,6 @@ describe('EmployeeOnboardingHandler', () => {
     });
   });
 
-  describe('specialties step', () => {
-    it('deletes existing specialties and creates new ones inside a transaction', async () => {
-      prisma.employee.findFirst.mockResolvedValueOnce(mockEmployee);
-      prisma.employee.findUnique.mockResolvedValueOnce(mockEmployee);
-      prisma.employeeSpecialty.deleteMany.mockResolvedValue({ count: 2 });
-      prisma.employeeSpecialty.createMany.mockResolvedValue({ count: 2 });
-      prisma.employee.update.mockResolvedValue(mockEmployee);
-
-      await handler.execute({
-        employeeId: 'emp-1',
-        step: 'specialties',
-        specialtyIds: ['spec-1', 'spec-2'],
-      });
-
-      expect(prisma.$transaction).toHaveBeenCalled();
-      expect(prisma.employeeSpecialty.deleteMany).toHaveBeenCalledWith({ where: { employeeId: 'emp-1' } });
-      expect(prisma.employeeSpecialty.createMany).toHaveBeenCalledWith({
-        data: [
-          { employeeId: 'emp-1', specialtyId: 'spec-1' },
-          { employeeId: 'emp-1', specialtyId: 'spec-2' },
-        ],
-      });
-      expect(prisma.employee.update).toHaveBeenCalledWith({
-        where: { id: 'emp-1' },
-        data: { onboardingStatus: OnboardingStatus.IN_PROGRESS },
-      });
-    });
-  });
-
   describe('branches step', () => {
     it('replaces branches inside a transaction', async () => {
       prisma.employee.findFirst.mockResolvedValueOnce(mockEmployee);
@@ -143,11 +113,10 @@ describe('EmployeeOnboardingHandler', () => {
   });
 
   describe('complete step', () => {
-    it('sets onboardingStatus to COMPLETED when profile+specialties+branches+services are filled', async () => {
+    it('sets onboardingStatus to COMPLETED when profile+branches+services are filled', async () => {
       const readyEmployee = {
         ...mockEmployee,
         name: 'Ahmed',
-        specialties: [{ id: 'es1' }],
         branches: [{ id: 'eb1' }],
         services: [{ id: 'ev1' }],
         onboardingStatus: OnboardingStatus.IN_PROGRESS,
@@ -169,11 +138,10 @@ describe('EmployeeOnboardingHandler', () => {
       expect(result).toEqual(completed);
     });
 
-    it('throws BadRequestException when profile/specialties/branches/services are incomplete', async () => {
+    it('throws BadRequestException when profile/branches/services are incomplete', async () => {
       const incompleteEmployee = {
         ...mockEmployee,
         name: 'Ahmed',
-        specialties: [],
         branches: [],
         services: [],
         onboardingStatus: OnboardingStatus.IN_PROGRESS,
