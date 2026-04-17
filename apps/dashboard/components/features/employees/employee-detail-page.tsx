@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useLocale } from "@/components/locale-provider"
 import { useEmployee } from "@/hooks/use-employees"
 import {
@@ -185,41 +186,55 @@ export function EmployeeDetailPage({ employeeId }: Props) {
         />
       </StatsGrid>
 
-      <EmployeeBookingsChart employeeId={employeeId} />
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">{isAr ? "نظرة عامة" : "Overview"}</TabsTrigger>
+          <TabsTrigger value="services">{isAr ? "الخدمات" : "Services"}</TabsTrigger>
+          <TabsTrigger value="schedule">{isAr ? "الجدول" : "Schedule"}</TabsTrigger>
+          <TabsTrigger value="ratings">{isAr ? "التقييمات" : "Ratings"}</TabsTrigger>
+        </TabsList>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 lg:col-span-2">
-          <CombinedInfoCard
-            email={p.user.email}
-            phone={p.user.phone ?? null}
-            specialty={specialty ?? "—"}
-            experience={p.experience ?? null}
-            education={education ?? null}
-            createdAt={p.createdAt}
-            updatedAt={p.updatedAt}
-            locale={locale}
-            isAr={isAr}
-          />
-          <PricingCard
-            priceClinic={p.priceClinic ?? null}
-            pricePhone={p.pricePhone ?? null}
-            priceVideo={p.priceVideo ?? null}
-            locale={locale}
-            isAr={isAr}
-          />
+        <TabsContent value="overview" className="space-y-4 pt-4">
+          <EmployeeBookingsChart employeeId={employeeId} />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <CombinedInfoCard
+              email={p.user.email}
+              phone={p.user.phone ?? null}
+              specialty={specialty ?? "—"}
+              experience={p.experience ?? null}
+              education={education ?? null}
+              createdAt={p.createdAt}
+              updatedAt={p.updatedAt}
+              locale={locale}
+              isAr={isAr}
+            />
+            <PricingCard
+              priceClinic={p.priceClinic ?? null}
+              pricePhone={p.pricePhone ?? null}
+              priceVideo={p.priceVideo ?? null}
+              locale={locale}
+              isAr={isAr}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="services" className="pt-4">
+          <EmployeeServicesSectionCard employeeId={employeeId} />
+        </TabsContent>
+
+        <TabsContent value="schedule" className="space-y-4 pt-4">
+          <EmployeeAvailabilitySection employeeId={employeeId} />
+          <EmployeeVacationsSection employeeId={employeeId} />
+        </TabsContent>
+
+        <TabsContent value="ratings" className="pt-4">
           <EmployeeRatingsSection
             employeeId={employeeId}
             averageRating={p.averageRating}
             totalRatings={p._count?.ratings ?? 0}
           />
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <EmployeeAvailabilitySection employeeId={employeeId} />
-          <EmployeeVacationsSection employeeId={employeeId} />
-          <EmployeeServicesSectionCard employeeId={employeeId} />
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </ListPageShell>
   )
 }

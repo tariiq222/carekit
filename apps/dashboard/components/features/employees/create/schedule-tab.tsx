@@ -8,6 +8,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { useLocale } from "@/components/locale-provider"
+import { useOrganizationConfig } from "@/hooks/use-organization-config"
 import type { AvailabilitySlot } from "@/lib/types/employee"
 import { DAY_NAMES_EN, DAY_NAMES_AR } from "./schedule-types"
 import type { LocalBreak, LocalVacation } from "./schedule-types"
@@ -40,17 +41,44 @@ export function ScheduleTab({
 }: ScheduleTabProps) {
   const { t, locale } = useLocale()
   const isAr = locale === "ar"
+  const { weekStartDay } = useOrganizationConfig()
+
+  // JS day index: 0=Sun, 1=Mon, ..., 6=Sat. Saudi clinics default to Sat-first
+  // on AR locale; EN locale or explicit `monday` setting use Mon-Sun. Any other
+  // value keeps Sun-Sat.
+  const dayOrder = (() => {
+    if (weekStartDay === "monday") return [1, 2, 3, 4, 5, 6, 0]
+    if (isAr) return [6, 0, 1, 2, 3, 4, 5] // Sat-first for Arabic clinics
+    return [0, 1, 2, 3, 4, 5, 6]
+  })()
+
   const dayNames = isAr ? DAY_NAMES_AR : DAY_NAMES_EN
 
-  /* Schedule handlers */
-  const updateSlot = (
-    index: number,
+  /* Split-shift helpers: a day can have multiple slots. */
+  const slotsByDay = (day: number) =>
+    schedule
+      .map((s, idx) => ({ slot: s, idx }))
+      .filter(({ slot }) => slot.dayOfWeek === day)
+
+  const updateSlotAt = (
+    idx: number,
     field: keyof AvailabilitySlot,
     value: string | boolean,
   ) => {
     const updated = [...schedule]
-    updated[index] = { ...updated[index], [field]: value }
+    updated[idx] = { ...updated[idx], [field]: value }
     onScheduleChange(updated)
+  }
+
+  const addSecondWindow = (day: number) => {
+    onScheduleChange([
+      ...schedule,
+      { dayOfWeek: day, startTime: "16:00", endTime: "20:00", isActive: true },
+    ])
+  }
+
+  const removeSlotAt = (idx: number) => {
+    onScheduleChange(schedule.filter((_, i) => i !== idx))
   }
 
   /* Break handlers */
@@ -75,10 +103,7 @@ export function ScheduleTab({
     )
   }
 
-  /* Group breaks by day */
-  const breaksByDay = Array.from({ length: 7 }, (_, i) =>
-    breaks.filter((b) => b.dayOfWeek === i),
-  )
+  const breaksByDay = (day: number) => breaks.filter((b) => b.dayOfWeek === day)
 
   return (
     <div className="space-y-4">
@@ -87,7 +112,6 @@ export function ScheduleTab({
         onVacationChange={onVacationChange}
       />
 
-      {/* Weekly Schedule Card */}
       <Card
         className={vacation.enabled ? "opacity-40 pointer-events-none" : ""}
         aria-disabled={vacation.enabled || undefined}
@@ -103,19 +127,29 @@ export function ScheduleTab({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {schedule.map((slot, index) => (
-              <DayScheduleCard
-                key={slot.dayOfWeek}
-                slot={slot}
-                dayName={dayNames[index]}
-                dayBreaks={breaksByDay[index]}
-                addBreakLabel={t("employees.create.addBreak")}
-                onSlotChange={(field, value) => updateSlot(index, field, value)}
-                onAddBreak={() => addBreak(index)}
-                onRemoveBreak={removeBreak}
-                onUpdateBreak={updateBreak}
-              />
-            ))}
+            {dayOrder.map((day) => {
+              const entries = slotsByDay(day)
+              const primary = entries[0]
+              if (!primary) return null
+              return (
+                <DayScheduleCard
+                  key={day}
+                  slot={primary.slot}
+                  extraSlots={entries.slice(1).map((e) => ({ slot: e.slot, idx: e.idx }))}
+                  dayName={dayNames[day]}
+                  dayBreaks={breaksByDay(day)}
+                  addBreakLabel={t("employees.create.addBreak")}
+                  addSecondWindowLabel={isAr ? "+ فترة ثانية" : "+ Second window"}
+                  onSlotChange={(field, value) => updateSlotAt(primary.idx, field, value)}
+                  onExtraSlotChange={(idx, field, value) => updateSlotAt(idx, field, value)}
+                  onAddSecondWindow={() => addSecondWindow(day)}
+                  onRemoveExtraSlot={(idx) => removeSlotAt(idx)}
+                  onAddBreak={() => addBreak(day)}
+                  onRemoveBreak={removeBreak}
+                  onUpdateBreak={updateBreak}
+                />
+              )
+            })}
           </div>
         </CardContent>
       </Card>

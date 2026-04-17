@@ -10,10 +10,15 @@ import type { LocalBreak } from "./schedule-types"
 
 interface DayScheduleCardProps {
   slot: AvailabilitySlot
+  extraSlots?: Array<{ slot: AvailabilitySlot; idx: number }>
   dayName: string
   dayBreaks: LocalBreak[]
   addBreakLabel: string
+  addSecondWindowLabel?: string
   onSlotChange: (field: keyof AvailabilitySlot, value: string | boolean) => void
+  onExtraSlotChange?: (idx: number, field: keyof AvailabilitySlot, value: string | boolean) => void
+  onAddSecondWindow?: () => void
+  onRemoveExtraSlot?: (idx: number) => void
   onAddBreak: () => void
   onRemoveBreak: (key: string) => void
   onUpdateBreak: (key: string, field: "startTime" | "endTime", value: string) => void
@@ -21,10 +26,15 @@ interface DayScheduleCardProps {
 
 export function DayScheduleCard({
   slot,
+  extraSlots = [],
   dayName,
   dayBreaks,
   addBreakLabel,
+  addSecondWindowLabel,
   onSlotChange,
+  onExtraSlotChange,
+  onAddSecondWindow,
+  onRemoveExtraSlot,
   onAddBreak,
   onRemoveBreak,
   onUpdateBreak,
@@ -41,7 +51,7 @@ export function DayScheduleCard({
         />
       </div>
 
-      {/* Time range */}
+      {/* Primary window */}
       <div className="flex items-center gap-1.5">
         <Input
           type="time"
@@ -61,6 +71,47 @@ export function DayScheduleCard({
           onChange={(e) => onSlotChange("endTime", e.target.value)}
         />
       </div>
+
+      {/* Extra windows (split shifts) */}
+      {slot.isActive && extraSlots.map(({ slot: ex, idx }) => (
+        <div key={idx} className="flex items-center gap-1.5">
+          <Input
+            type="time"
+            className="h-9 text-xs tabular-nums"
+            value={ex.startTime}
+            onChange={(e) => onExtraSlotChange?.(idx, "startTime", e.target.value)}
+          />
+          <span className="text-[10px] text-muted-foreground shrink-0">
+            {t("schedule.to")}
+          </span>
+          <Input
+            type="time"
+            className="h-9 text-xs tabular-nums"
+            value={ex.endTime}
+            onChange={(e) => onExtraSlotChange?.(idx, "endTime", e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={() => onRemoveExtraSlot?.(idx)}
+            aria-label={t("schedule.removeBreak")}
+            className="text-xs text-destructive/80 hover:text-destructive"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+
+      {slot.isActive && onAddSecondWindow && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 w-full text-xs text-muted-foreground"
+          onClick={onAddSecondWindow}
+        >
+          {addSecondWindowLabel ?? "+ Second window"}
+        </Button>
+      )}
 
       {/* Breaks */}
       {slot.isActive && (
