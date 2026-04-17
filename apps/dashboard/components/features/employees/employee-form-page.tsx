@@ -117,13 +117,27 @@ export function EmployeeFormPage(props: Props) {
   /* ─── Render ─── */
 
   const title = isEdit ? t("employees.edit.pageTitle") : t("employees.create.pageTitle")
-  const description = isEdit
-    ? employee ? `${employee.user.firstName} ${employee.user.lastName}` : ""
-    : t("employees.create.pageDesc")
+  const employeeDisplayName = employee
+    ? (employee.nameAr ?? `${employee.user.firstName} ${employee.user.lastName}`)
+    : ""
+  const description = isEdit ? employeeDisplayName : t("employees.create.pageDesc")
+
+  const breadcrumbItems = isEdit
+    ? [
+        { label: t("nav.dashboard"), href: "/" },
+        { label: t("nav.employees"), href: "/employees" },
+        { label: employeeDisplayName, href: employeeId ? `/employees/${employeeId}` : undefined },
+        { label: t("nav.edit") },
+      ]
+    : [
+        { label: t("nav.dashboard"), href: "/" },
+        { label: t("nav.employees"), href: "/employees" },
+        { label: t("nav.create") },
+      ]
 
   return (
     <ListPageShell>
-      <Breadcrumbs />
+      <Breadcrumbs items={breadcrumbItems} />
       <PageHeader title={title} description={description} />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
@@ -138,11 +152,7 @@ export function EmployeeFormPage(props: Props) {
             <BasicInfoTab
               form={form}
               showEmail={!isEdit}
-              employeeName={
-                isEdit && employee
-                  ? `${employee.user.firstName} ${employee.user.lastName}`
-                  : undefined
-              }
+              employeeName={isEdit ? employeeDisplayName : undefined}
             />
           </TabsContent>
 

@@ -150,8 +150,16 @@ export function EmployeesListContent({
         <DataTable
           columns={columns}
           data={employees}
-          emptyTitle={t("employees.empty.title")}
-          emptyDescription={t("employees.empty.description")}
+          emptyTitle={
+            hasActiveFilters
+              ? t("employees.empty.filteredTitle")
+              : t("employees.empty.title")
+          }
+          emptyDescription={
+            hasActiveFilters
+              ? t("employees.empty.filteredDescription")
+              : t("employees.empty.description")
+          }
         />
       )}
 

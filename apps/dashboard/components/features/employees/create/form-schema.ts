@@ -4,10 +4,10 @@ import { z } from "zod"
 
 export const createEmployeeSchema = z.object({
   title: z.string().optional(),
-  nameEn: z.string().min(1, "Full name (EN) is required").max(255),
-  nameAr: z.string().min(1, "الاسم الكامل مطلوب").max(255),
+  nameEn: z.string().min(1, "الاسم الكامل بالإنجليزية مطلوب").max(255),
+  nameAr: z.string().min(1, "الاسم الكامل بالعربية مطلوب").max(255),
   email: z.string().email("البريد الإلكتروني غير صالح"),
-  specialty: z.string().min(1, "Specialty is required"),
+  specialty: z.string().min(1, "التخصص مطلوب"),
   specialtyAr: z.string().optional(),
   bio: z.string().optional(),
   bioAr: z.string().optional(),

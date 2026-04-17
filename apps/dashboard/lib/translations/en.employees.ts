@@ -44,6 +44,8 @@ export const enEmployees: Record<string, string> = {
   "employees.stats.monthBookings": "This Month's Bookings",
   "employees.empty.title": "No employees found",
   "employees.empty.description": "No employees yet. Add one to get started.",
+  "employees.empty.filteredTitle": "No matches",
+  "employees.empty.filteredDescription": "No employees match the current filters. Try adjusting them.",
   "employees.create.title": "Add Employee",
   "employees.create.description": "Add a new employee to your clinic.",
   "employees.edit.title": "Edit Employee",

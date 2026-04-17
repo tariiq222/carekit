@@ -44,6 +44,8 @@ export const arEmployees: Record<string, string> = {
   "employees.stats.monthBookings": "حجوزات الشهر",
   "employees.empty.title": "لا يوجد ممارسون",
   "employees.empty.description": "لا يوجد ممارسون حتى الآن. أضف ممارساً للبدء.",
+  "employees.empty.filteredTitle": "لا توجد نتائج",
+  "employees.empty.filteredDescription": "لا يوجد ممارسون يطابقون معايير البحث. جرّب تعديل الفلاتر.",
   "employees.create.title": "إضافة ممارس",
   "employees.create.description": "إضافة ممارس جديد إلى عيادتك.",
   "employees.edit.title": "تعديل الممارس",

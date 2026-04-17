@@ -73,9 +73,15 @@ export function EmployeeDetailPage({ employeeId }: Props) {
   const bio = (isAr ? p.bioAr : p.bio) ?? (isAr ? p.bio : p.bioAr)
   const education = (isAr ? p.educationAr : p.education) ?? (isAr ? p.education : p.educationAr)
 
+  const breadcrumbItems = [
+    { label: isAr ? "الرئيسية" : "Home", href: "/" },
+    { label: isAr ? "الممارسون" : "Employees", href: "/employees" },
+    { label: fullName },
+  ]
+
   return (
     <ListPageShell>
-      <Breadcrumbs />
+      <Breadcrumbs items={breadcrumbItems} />
 
       <PageHeader title={fullName} description={specialty ?? ""}>
         <Button

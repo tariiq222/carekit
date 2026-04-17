@@ -58,7 +58,7 @@ function splitName(full: string | null | undefined): { firstName: string; lastNa
 }
 
 function mapEmployee(raw: RawEmployee): Employee {
-  const fullName = raw.nameEn ?? raw.name ?? raw.nameAr ?? ""
+  const fullName = raw.nameAr ?? raw.name ?? raw.nameEn ?? ""
   const { firstName, lastName } = splitName(fullName)
   const user: Employee["user"] = raw.user ?? {
     id: raw.userId ?? raw.id,
