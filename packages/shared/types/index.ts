@@ -7,3 +7,4 @@ export type * from './service';
 export type * from './rating';
 export type * from './notification';
 export * from './branding';
+export * from './public-branding';
