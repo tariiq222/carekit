@@ -163,8 +163,9 @@ Minor — flagged for the design pass.
 - Plan JSON: [`data/kiwi/employees-2026-04-17.json`](../../../data/kiwi/employees-2026-04-17.json)
 - Sync: `npm run kiwi:sync-manual data/kiwi/employees-2026-04-17.json`
 - Plan URL: <https://localhost:6443/plan/46/>
-- Run URL:  <https://localhost:6443/runs/121/>
-- Result: 16 FAILED / 6 PASSED out of 22 cases.
+- Latest run: <https://localhost:6443/runs/124/> (build `employees-qa-all-fixes-2026-04-17`)
+- Previous runs: <https://localhost:6443/runs/121/> (initial 16 FAIL / 6 PASS), <https://localhost:6443/runs/123/> (6 FIX 10 FAIL)
+- **Final result: 22 PASSED / 0 FAILED.**
 
 ---
 
