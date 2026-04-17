@@ -1,8 +1,12 @@
+import { getLocale, LanguageSwitcher } from '@/features/locale/public';
+import { t } from '@/features/locale/dictionary';
 import type { ThemeLayoutProps } from '../../types';
 
-export function PremiumLayout({ children }: ThemeLayoutProps) {
+export async function PremiumLayout({ children }: ThemeLayoutProps) {
+  const locale = await getLocale();
   return (
     <div
+      dir={locale === 'ar' ? 'rtl' : 'ltr'}
       style={{
         minHeight: '100vh',
         background: '#0a0a0a',
@@ -24,10 +28,12 @@ export function PremiumLayout({ children }: ThemeLayoutProps) {
         }}
       >
         <span style={{ letterSpacing: '0.2em', fontSize: '0.75rem' }}>CAREKIT</span>
-        <nav style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem' }}>
-          <a href="/" style={{ color: '#f5f5f5' }}>Home</a>
-          <a href="/therapists" style={{ color: '#f5f5f5' }}>Therapists</a>
-          <a href="/contact" style={{ color: '#f5f5f5' }}>Contact</a>
+        <nav style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem', alignItems: 'center' }}>
+          <a href="/" style={{ color: '#f5f5f5' }}>{t(locale, 'nav.home')}</a>
+          <a href="/therapists" style={{ color: '#f5f5f5' }}>{t(locale, 'nav.therapists')}</a>
+          <a href="/burnout-test" style={{ color: '#f5f5f5' }}>{t(locale, 'nav.burnout')}</a>
+          <a href="/contact" style={{ color: '#f5f5f5' }}>{t(locale, 'nav.contact')}</a>
+          <LanguageSwitcher current={locale} />
         </nav>
       </header>
       {children}

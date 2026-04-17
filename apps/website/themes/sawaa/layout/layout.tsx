@@ -1,8 +1,12 @@
+import { getLocale, LanguageSwitcher } from '@/features/locale/public';
+import { t } from '@/features/locale/dictionary';
 import type { ThemeLayoutProps } from '../../types';
 
-export function SawaaLayout({ children }: ThemeLayoutProps) {
+export async function SawaaLayout({ children }: ThemeLayoutProps) {
+  const locale = await getLocale();
   return (
     <div
+      dir={locale === 'ar' ? 'rtl' : 'ltr'}
       style={{
         minHeight: '100vh',
         background:
@@ -19,11 +23,22 @@ export function SawaaLayout({ children }: ThemeLayoutProps) {
           zIndex: 10,
         }}
       >
-        <nav style={{ display: 'flex', gap: '1.5rem', color: 'var(--primary-dark)' }}>
-          <a href="/">الرئيسية</a>
-          <a href="/therapists">المعالجون</a>
-          <a href="/specialties">التخصصات</a>
-          <a href="/contact">تواصل معنا</a>
+        <nav
+          style={{
+            display: 'flex',
+            gap: '1.5rem',
+            color: 'var(--primary-dark)',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div style={{ display: 'flex', gap: '1.5rem' }}>
+            <a href="/">{t(locale, 'nav.home')}</a>
+            <a href="/therapists">{t(locale, 'nav.therapists')}</a>
+            <a href="/burnout-test">{t(locale, 'nav.burnout')}</a>
+            <a href="/contact">{t(locale, 'nav.contact')}</a>
+          </div>
+          <LanguageSwitcher current={locale} />
         </nav>
       </header>
       {children}
