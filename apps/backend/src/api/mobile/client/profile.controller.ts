@@ -33,7 +33,7 @@ export class MobileUpdateProfileBody {
   @ApiPropertyOptional({ description: 'Personal notes', example: 'Prefers morning appointments', nullable: true })
   @IsOptional() @IsString() notes?: string | null;
 
-  @ApiPropertyOptional({ description: 'Acquisition source', enum: ClientSource, enumName: 'ClientSource', example: ClientSource.APP })
+  @ApiPropertyOptional({ description: 'Acquisition source', enum: ClientSource, enumName: 'ClientSource', example: ClientSource.ONLINE })
   @IsOptional() @IsEnum(ClientSource) source?: ClientSource;
 
   @ApiPropertyOptional({ description: 'Whether the account is active', example: true })
