@@ -1,0 +1,95 @@
+{
+  "domain": "Services",
+  "version": "main",
+  "build": "manual-qa-2026-04-17",
+  "planName": "CareKit / Services / Manual QA",
+  "planSummary": "Manual QA walkthrough for Services list/create/edit/delete per docs/superpowers/qa/services.md (2026-04-17).",
+  "runSummary": "Chrome DevTools MCP session on localhost:5103 against backend localhost:5100. Seed: 3 services, 0 categories.",
+  "cases": [
+    {
+      "summary": "Services list initial load (GET /dashboard/organization/services)",
+      "text": "Navigate to /services. Expect 200 response, breadcrumbs, PageHeader, StatsGrid with 4 cards, FilterBar, DataTable, no console errors.",
+      "result": "PASS"
+    },
+    {
+      "summary": "StatsGrid uses dedicated listStats endpoint",
+      "text": "Expect a single stats request. Observed: 2 separate list calls used to compute Total/Active — spec divergence.",
+      "result": "FAIL"
+    },
+    {
+      "summary": "PageHeader includes Export + Add buttons",
+      "text": "Spec §2: PageHeader must show [Export outline] [+ Add primary]. Only Add button is present.",
+      "result": "FAIL"
+    },
+    {
+      "summary": "Search input is debounced 300ms",
+      "text": "Type 5 chars. Expect ≤1 request after settling. Observed: 5 requests (one per keystroke).",
+      "result": "FAIL"
+    },
+    {
+      "summary": "Status filter 'inactive' sends isActive=false and filters rows",
+      "text": "Select 'غير نشطة' → request includes isActive=false AND response contains only inactive services. Observed: request correct, response still returns 3 active services.",
+      "result": "FAIL"
+    },
+    {
+      "summary": "Status filter 'all' removes isActive param",
+      "text": "After selecting 'all', no isActive param should appear in request.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Category dropdown populated from /dashboard/categories",
+      "text": "Expect categories in dropdown. Observed: empty due to 0 seeded categories (blocks create form too).",
+      "result": "BLOCKED"
+    },
+    {
+      "summary": "Reset button clears filters and refetches",
+      "text": "Click إعادة تعيين. Expect all filters reset.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Price column displays API value in SAR",
+      "text": "API returns price '120' SAR. UI must show '120.00 ر.س'. Observed: '1.20 ر.س' (value divided by 100).",
+      "result": "FAIL"
+    },
+    {
+      "summary": "ServiceDetailSheet opens with read-only details",
+      "text": "Click view icon. Expect sheet with nameAr/nameEn/category/price/duration/booking settings/dates and Edit footer button.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Create form — empty submit shows validation errors",
+      "text": "Submit with empty fields. Expect 'الاسم (AR) مطلوب' / 'الاسم (EN) مطلوب' / 'يرجى اختيار الفئة'. Observed: errors shown but AR/EN errors are English 'Required'.",
+      "result": "FAIL"
+    },
+    {
+      "summary": "Create form — tabs are clickable",
+      "text": "Click 'التسعير وأنواع الحجز' tab. Expect Pricing panel to render. Observed: tab does not switch; price/duration inputs unreachable.",
+      "result": "FAIL"
+    },
+    {
+      "summary": "Create form — user can submit a new service end-to-end",
+      "text": "Fill names, category, price, duration → submit → redirect to /services. Blocked by missing categories + broken tab switching.",
+      "result": "BLOCKED"
+    },
+    {
+      "summary": "Edit form — loads existing service via GET /services/:id",
+      "text": "Navigate to /services/<id>/edit. Expect prefilled form. Observed: backend returns 404 for /services/:id; UI renders 'الخدمة غير موجودة'.",
+      "result": "FAIL"
+    },
+    {
+      "summary": "Delete dialog shows service name in description",
+      "text": "Click delete icon. Expect dialog description to include the specific service name. Observed: generic message with no name.",
+      "result": "FAIL"
+    },
+    {
+      "summary": "Delete dialog has destructive warning",
+      "text": "Dialog must state the action is non-recoverable. Observed: 'لا يمكن التراجع عن هذا الإجراء' present.",
+      "result": "PASS"
+    },
+    {
+      "summary": "No console errors during session",
+      "text": "list_console_messages filtered to error/warn returns empty.",
+      "result": "PASS"
+    }
+  ]
+}

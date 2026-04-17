@@ -1,0 +1,45 @@
+{
+  "domain": "Departments",
+  "version": "main",
+  "build": "manual-qa-2026-04-17",
+  "planName": "CareKit / Departments / Manual QA",
+  "planSummary": "Manual QA of /departments list + create/edit/delete dialogs.",
+  "runSummary": "Chrome DevTools MCP session on localhost:5103 with empty seed (dept created during test).",
+  "cases": [
+    {
+      "summary": "Departments list initial load",
+      "text": "Navigate to /departments. Expect 200, StatsGrid (4 cards), FilterBar, DataTable. Table renders 3 columns (Name/Categories/Status) — simpler than plan spec (7). No console errors.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Create dialog — empty submit shows Arabic validation on nameAr and nameEn",
+      "text": "Open 'إضافة قسم' and submit empty. Expect 'هذا الحقل مطلوب' on both nameAr and nameEn (both required).",
+      "result": "PASS"
+    },
+    {
+      "summary": "Create submits and row appears with StatsGrid increment",
+      "text": "Fill nameAr='قسم اختبار QA', nameEn='QA Test Dept', icon='stethoscope', sortOrder=5. Submit. Expect POST 201 and row visible.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Search input is debounced 300ms",
+      "text": "Type 6 chars 'اختبار'. Expect 1 request. Observed: 6 requests — no debounce in the departments hook.",
+      "result": "FAIL"
+    },
+    {
+      "summary": "Status filter isActive=false filters rows",
+      "text": "Select 'غير نشط'. Expect request with isActive=false and empty state.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Delete dialog shows department name",
+      "text": "Open delete dialog. Expect description contains the row name. Observed: 'هل أنت متأكد من حذف «قسم اختبار QA»؟ لا يمكن التراجع عن هذا الإجراء.'.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Delete removes the row",
+      "text": "Confirm delete. Expect row removed, StatsGrid total=0.",
+      "result": "PASS"
+    }
+  ]
+}

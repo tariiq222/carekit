@@ -1,0 +1,25 @@
+{
+  "domain": "Branches",
+  "version": "main",
+  "build": "manual-qa-2026-04-17-rerun",
+  "planName": "CareKit / Branches / Manual QA",
+  "planSummary": "Re-run after fixing the 3 Branches bugs (search debounce, set-primary atomic swap, form card titles).",
+  "runSummary": "Chrome DevTools MCP re-verification on localhost:5103 after code fixes on 2026-04-17.",
+  "cases": [
+    {
+      "summary": "Search input is debounced 300ms",
+      "text": "Type 6 chars 'الرياض'. Expect 1 request after debounce. Observed: 1 request with full term — debounce implemented in use-branches hook.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Set as primary swaps atomically",
+      "text": "Click 'تعيين كفرع رئيسي' on 'فرع الروضة' while 'الفرع الرئيسي' is main. Expect atomic swap, no 409. Observed: swap succeeded, 'فرع الروضة' gained 'رئيسي' badge, previous main lost it, StatsGrid main count remained 1.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Create/Edit form card headings render section titles",
+      "text": "Navigate to /branches/create. Expect h2 titles 'الأسماء', 'الإعدادات', 'معلومات الاتصال' with matching descriptions. Observed: all three titles render correctly with distinct descriptions.",
+      "result": "PASS"
+    }
+  ]
+}

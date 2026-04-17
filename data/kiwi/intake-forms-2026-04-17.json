@@ -1,0 +1,25 @@
+{
+  "domain": "Intake Forms",
+  "version": "main",
+  "build": "manual-qa-2026-04-17",
+  "planName": "CareKit / Intake Forms / Manual QA",
+  "planSummary": "Manual QA of /intake-forms list + create/edit/delete pages.",
+  "runSummary": "Chrome DevTools MCP session on localhost:5103 with empty seed.",
+  "cases": [
+    {
+      "summary": "Intake forms list initial load",
+      "text": "Navigate to /intake-forms. Expect 200, PageHeader, StatsGrid (3 cards — documented exception), DataTable. Observed: renders correctly but page is missing breadcrumbs (does not follow Page Anatomy Law).",
+      "result": "FAIL"
+    },
+    {
+      "summary": "Create form UI loads with info panel + one default field",
+      "text": "Click 'إنشاء نموذج'. Expect form with info panel (nameAr/nameEn/type/scope/isActive) and a default field.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Create submit succeeds for valid global pre_booking form",
+      "text": "Fill nameAr='اختبار QA', nameEn='QA Test', default field, submit. Expect POST 201. Observed: POST 400 — backend DTO (CreateIntakeFormDto) only accepts nameAr/nameEn/fields; frontend sends type, scope, isActive which backend rejects as 'property should not exist'. Major schema mismatch between backend and dashboard.",
+      "result": "FAIL"
+    }
+  ]
+}

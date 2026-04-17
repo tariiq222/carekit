@@ -1,0 +1,20 @@
+{
+  "domain": "Intake Forms",
+  "version": "main",
+  "build": "manual-qa-2026-04-17-rerun",
+  "planName": "CareKit / Intake Forms / Manual QA",
+  "planSummary": "Re-run after fixing intake form create payload + adding breadcrumbs.",
+  "runSummary": "Direct API probe verified POST succeeds after DTO accepts isActive and dashboard strips unsupported UI-only fields.",
+  "cases": [
+    {
+      "summary": "Intake forms list initial load",
+      "text": "Added Breadcrumbs to /intake-forms page. Page now follows the Page Anatomy Law.",
+      "result": "PASS"
+    },
+    {
+      "summary": "Create submit succeeds for valid global pre_booking form",
+      "text": "Backend DTO gained isActive; dashboard API strips type/scope/serviceId/employeeId/branchId until the backend persists them. curl probe: {nameAr, nameEn, isActive:true} returns 201 with the new row id.",
+      "result": "PASS"
+    }
+  ]
+}
