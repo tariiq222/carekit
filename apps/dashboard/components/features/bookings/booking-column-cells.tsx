@@ -1,18 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Tick01Icon, ViewIcon, PencilEdit01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,42 +23,7 @@ const quickStatusActions: Record<string, {
   confirmed: [],
 }
 
-/* ── Delete confirm dialog (self-contained per row) ── */
-export function DeleteConfirmDialog({
-  open,
-  onOpenChange,
-  onConfirm,
-  t,
-}: {
-  open: boolean
-  onOpenChange: (v: boolean) => void
-  onConfirm: () => void
-  t: (key: string) => string
-}) {
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("bookings.col.deleteTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("bookings.col.deleteDesc")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={onConfirm}
-          >
-            {t("common.delete")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
-}
-
-/* ── Actions cell (icon buttons + delete dialog) ── */
+/* ── Actions cell — delete opens the parent's AdminCancelDialog directly ── */
 export function ActionsCell({
   booking: _booking,
   onView,
@@ -83,38 +37,24 @@ export function ActionsCell({
   onDelete: () => void
   t: (key: string) => string
 }) {
-  const [deleteOpen, setDeleteOpen] = useState(false)
-
   const btnBase = "flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:bg-muted hover:border-border hover:text-foreground"
 
   return (
-    <>
-      <div className="flex items-center gap-1">
-        <button className={btnBase} aria-label={t("bookings.col.view")} onClick={onView}>
-          <HugeiconsIcon icon={ViewIcon} size={16} />
-        </button>
-        <button className={btnBase} aria-label={t("bookings.col.edit")} onClick={onEdit}>
-          <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
-        </button>
-        <button
-          className={cn(btnBase, "hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20")}
-          aria-label={t("bookings.col.delete")}
-          onClick={() => setDeleteOpen(true)}
-        >
-          <HugeiconsIcon icon={Delete02Icon} size={16} />
-        </button>
-      </div>
-
-      <DeleteConfirmDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        onConfirm={() => {
-          setDeleteOpen(false)
-          onDelete()
-        }}
-        t={t}
-      />
-    </>
+    <div className="flex items-center gap-1">
+      <button className={btnBase} aria-label={t("bookings.col.view")} onClick={onView}>
+        <HugeiconsIcon icon={ViewIcon} size={16} />
+      </button>
+      <button className={btnBase} aria-label={t("bookings.col.edit")} onClick={onEdit}>
+        <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
+      </button>
+      <button
+        className={cn(btnBase, "hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20")}
+        aria-label={t("bookings.col.delete")}
+        onClick={onDelete}
+      >
+        <HugeiconsIcon icon={Delete02Icon} size={16} />
+      </button>
+    </div>
   )
 }
 

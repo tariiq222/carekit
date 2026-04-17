@@ -118,6 +118,7 @@ export interface BookingListQuery {
   clientId?: string
   dateFrom?: string
   dateTo?: string
+  search?: string
 }
 
 export interface CreateBookingPayload {

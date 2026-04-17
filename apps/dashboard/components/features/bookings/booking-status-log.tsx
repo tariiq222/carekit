@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLocale } from "@/components/locale-provider"
+import { fetchBookingStatusLog } from "@/lib/api/bookings"
 import { format } from "date-fns"
 import { arSA, enUS } from "date-fns/locale"
 
@@ -29,7 +30,9 @@ export function BookingStatusLog({ bookingId }: BookingStatusLogProps) {
 
   const { data: logs, isLoading } = useQuery({
     queryKey: queryKeys.bookings.statusLog(bookingId),
-    enabled: false,
+    queryFn: () => fetchBookingStatusLog(bookingId),
+    enabled: !!bookingId,
+    staleTime: 30_000,
   })
 
   if (isLoading) {

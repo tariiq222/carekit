@@ -28,6 +28,7 @@ interface BookingFilters {
   dateFrom: string
   dateTo: string
   employeeId: string
+  search: string
 }
 
 const defaultFilters: BookingFilters = {
@@ -36,6 +37,7 @@ const defaultFilters: BookingFilters = {
   dateFrom: "",
   dateTo: "",
   employeeId: "",
+  search: "",
 }
 
 /* ─── List Hook ─── */
@@ -49,7 +51,8 @@ export function useBookings() {
     filters.type !== "all" ||
     filters.dateFrom !== "" ||
     filters.dateTo !== "" ||
-    filters.employeeId !== ""
+    filters.employeeId !== "" ||
+    filters.search !== ""
 
   const query: BookingListQuery = {
     page,
@@ -58,6 +61,7 @@ export function useBookings() {
     type: filters.type !== "all" ? filters.type : undefined,
     dateFrom: filters.dateFrom || undefined,
     dateTo: filters.dateTo || undefined,
+    search: filters.search || undefined,
     employeeId: filters.employeeId || undefined,
   }
 

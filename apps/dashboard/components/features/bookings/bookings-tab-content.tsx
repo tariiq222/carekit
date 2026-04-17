@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/features/data-table"
@@ -32,6 +32,15 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
   const { employees } = useEmployees()
   const [activeTimeTab, setActiveTimeTab] = useState("all")
   const [search, setSearch] = useState("")
+
+  // Debounce search → filters.search (300ms)
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (search !== filters.search) setFilters({ search })
+    }, 300)
+    return () => window.clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search])
 
   const [deleteTarget, setDeleteTarget] = useState<Booking | null>(null)
   const [deleteReason, setDeleteReason] = useState("")
@@ -156,8 +165,8 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
           placeholderFrom: t("bookings.filters.from"),
           placeholderTo: t("bookings.filters.to"),
         }}
-        hasFilters={hasFilters || search.length > 0}
-        onReset={() => { resetFilters(); setActiveTimeTab("all"); setSearch("") }}
+        hasFilters={hasFilters}
+        onReset={() => { setSearch(""); resetFilters(); setActiveTimeTab("all") }}
       />
 
       {error && <ErrorBanner message={error} onRetry={refresh} retryLabel={t("bookings.filters.reset")} />}
@@ -174,6 +183,7 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
           data={bookings}
           emptyTitle={t("bookings.empty.title")}
           emptyDescription={t("bookings.empty.description")}
+          serverPaginated
         />
       )}
       </div>

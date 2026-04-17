@@ -9,7 +9,9 @@ import { WizardCard } from "@/components/features/bookings/wizard-card"
 import { useLocale } from "@/components/locale-provider"
 import { queryKeys } from "@/lib/query-keys"
 import { fetchEmployees } from "@/lib/api/employees"
+import { fetchServiceEmployees } from "@/lib/api/services"
 import type { Employee } from "@/lib/types/employee"
+import type { ServiceEmployee } from "@/lib/types/service"
 
 /* ─── Helpers ─── */
 
@@ -66,18 +68,37 @@ interface StepEmployeeProps {
   onSelect: (employeeId: string, employeeName: string) => void
 }
 
-export function StepEmployee({ serviceId: _serviceId, onSelect }: StepEmployeeProps) {
+export function StepEmployee({ serviceId, onSelect }: StepEmployeeProps) {
   const { t, locale } = useLocale()
+
+  const { data: serviceEmployees, isLoading: loadingByService } = useQuery<ServiceEmployee[]>({
+    queryKey: queryKeys.services.employees(serviceId),
+    queryFn: () => fetchServiceEmployees(serviceId),
+    enabled: !!serviceId,
+    staleTime: 5 * 60 * 1000,
+  })
 
   const { data: allEmployees, isLoading: loadingAll } = useQuery({
     queryKey: queryKeys.employees.list({ isActive: true, perPage: 100 }),
     queryFn: () => fetchEmployees({ isActive: true, perPage: 100 }),
+    enabled: !serviceId,
     staleTime: 5 * 60 * 1000,
   })
 
-  if (loadingAll) return <StepEmployeeSkeleton />
+  if (loadingByService || loadingAll) return <StepEmployeeSkeleton />
 
-  const employees = (allEmployees?.items ?? []).filter((p) => p.isActive)
+  const employees: Employee[] = serviceId
+    ? (serviceEmployees ?? [])
+        .filter((e) => e.isActive && e.employee.isActive)
+        .map((e) => ({
+          id: e.employee.id,
+          nameAr: e.employee.nameAr,
+          title: e.employee.title,
+          avatarUrl: e.employee.avatarUrl,
+          isActive: e.employee.isActive,
+          user: e.employee.user,
+        } as unknown as Employee))
+    : (allEmployees?.items ?? []).filter((p) => p.isActive)
 
   return (
     <div className="flex flex-col gap-2">

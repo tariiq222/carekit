@@ -115,7 +115,7 @@ function DurationCard({
   locale: string
 }) {
   const label = locale === "ar" && option.labelAr ? option.labelAr : option.label
-  const price = Math.floor(option.price / 100)
+  const price = Number(option.price)
 
   return (
     <WizardCard onClick={onSelect} selected={selected} className="py-5">

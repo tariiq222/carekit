@@ -25,11 +25,11 @@ function buildMeta(
     parts.push(`${service.durationMins} ${t("bookings.wizard.step.typeDuration.minutes")}`)
   }
 
-  // Price
+  // Price — backend stores as Decimal(12,2); JSON gives us a string or number, already in major units (SAR).
   if (!service.hidePriceOnBooking) {
     const currency = t("bookings.wizard.step.service.currency")
-    const price = Math.floor(service.price / 100)
-    parts.push(`${price} ${currency}`)
+    const price = Number(service.price)
+    parts.push(`${price.toFixed(0)} ${currency}`)
   }
 
   return parts.join(" · ")

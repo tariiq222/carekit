@@ -26,11 +26,24 @@ export async function fetchBookings(
     clientId: query.clientId,
     fromDate: query.dateFrom,
     toDate: query.dateTo,
+    search: query.search,
   })
 }
 
 export async function fetchBooking(id: string): Promise<Booking> {
   return api.get<Booking>(`/dashboard/bookings/${id}`)
+}
+
+export interface BookingStatusLogEntry {
+  id: string
+  fromStatus: string | null
+  toStatus: string
+  createdAt: string
+  reason: string | null
+}
+
+export async function fetchBookingStatusLog(id: string): Promise<BookingStatusLogEntry[]> {
+  return api.get<BookingStatusLogEntry[]>(`/dashboard/bookings/${id}/status-log`)
 }
 
 export async function createBooking(
