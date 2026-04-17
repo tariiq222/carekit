@@ -10,16 +10,8 @@
   --font-primary: var(--font-primary);
 }
 
-:root {
-  /* Fallback values — overridden by BrandingProvider at SSR */
-  --primary: #354FD8;
-  --primary-light: #5B72E8;
-  --primary-dark: #2438B0;
-  --accent: #82CC17;
-  --accent-dark: #5A9010;
-  --bg: #EEF1F8;
-  --font-primary: 'IBM Plex Sans Arabic', system-ui, sans-serif;
-}
+/* Fallback values are emitted by <BrandingStyle /> from SSR. This file only
+   declares the Tailwind mapping and base body rules. */
 
 html {
   direction: rtl;
