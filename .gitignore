@@ -15,6 +15,9 @@ _archived_dashboard/
 # Turborepo
 .turbo/
 
+# Git worktrees
+.worktrees/
+
 # Environment variables
 *.env
 .env.*
