@@ -26,7 +26,6 @@ export async function fetchEmployees(
     sortBy: query.sortBy,
     sortOrder: query.sortOrder,
     search: query.search,
-    specialty: query.specialty,
     minRating: query.minRating,
     isActive: query.isActive,
   })
@@ -48,7 +47,6 @@ type RawEmployee = Omit<Employee, "averageRating" | "_count" | "user"> & {
   email?: string | null
   phone?: string | null
   user?: (Employee["user"] & { avatarUrl?: string | null }) | null
-  specialtyIds?: string[]
   branchIds?: string[]
   serviceIds?: string[]
 }
