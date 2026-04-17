@@ -1,16 +1,24 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
+  "testMatch": ["<rootDir>/test/**/*.e2e-spec.ts"],
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "globalSetup": "./setup/global-setup.ts",
-  "globalTeardown": "./setup/global-teardown.ts",
+  "globalSetup": "<rootDir>/test/setup/global-setup.ts",
+  "globalTeardown": "<rootDir>/test/setup/global-teardown.ts",
   "testTimeout": 30000,
   "maxWorkers": 1,
   "moduleNameMapper": {
     "^@carekit/shared$": "<rootDir>/../../packages/shared/src/index.ts"
-  }
+  },
+  "collectCoverageFrom": [
+    "src/**/*.{js,ts}",
+    "!src/**/*.dto.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/index.ts",
+    "!src/main.ts"
+  ],
+  "coverageDirectory": "coverage-e2e"
 }
