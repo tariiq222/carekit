@@ -75,10 +75,18 @@ export function useEmployeeForm({
 
   useEffect(() => {
     if (!employee) return
+    const anyEmp = employee as typeof employee & {
+      phone?: string | null
+      gender?: "MALE" | "FEMALE" | null
+      employmentType?: "FULL_TIME" | "PART_TIME" | "CONTRACT" | null
+    }
     form.reset({
       title: employee.title ?? "",
       nameEn: `${employee.user.firstName} ${employee.user.lastName}`.trim(),
       nameAr: employee.nameAr ?? "",
+      phone: anyEmp.phone ?? "",
+      gender: anyEmp.gender ?? undefined,
+      employmentType: anyEmp.employmentType ?? "FULL_TIME",
       specialty: employee.specialty ?? "",
       specialtyAr: employee.specialtyAr ?? "",
       bio: employee.bio ?? "",
@@ -130,7 +138,11 @@ export function useEmployeeForm({
       await updateMutation.mutateAsync({
         id,
         title: data.title || undefined,
+        nameEn: data.nameEn || undefined,
         nameAr: data.nameAr || undefined,
+        phone: data.phone || undefined,
+        gender: data.gender,
+        employmentType: data.employmentType,
         specialty: data.specialty || undefined,
         specialtyAr: data.specialtyAr || undefined,
         bio: data.bio || undefined,
@@ -202,6 +214,9 @@ export function useEmployeeForm({
         nameEn: data.nameEn,
         nameAr: data.nameAr,
         email: data.email,
+        phone: data.phone || undefined,
+        gender: data.gender,
+        employmentType: data.employmentType,
         specialty: data.specialty,
         specialtyAr: data.specialtyAr || undefined,
         bio: data.bio || undefined,

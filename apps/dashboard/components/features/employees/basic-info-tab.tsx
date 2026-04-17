@@ -123,6 +123,48 @@ export function BasicInfoTab({ form, showEmail = false, employeeName }: BasicInf
               </div>
             )}
 
+            {/* Phone */}
+            <div className="flex flex-col gap-1.5">
+              <Label>{t("employees.create.phoneLabel")}</Label>
+              <Input
+                {...form.register("phone")}
+                type="tel"
+                placeholder="+966500000000"
+                dir="ltr"
+              />
+              {form.formState.errors.phone && (
+                <p className="text-xs text-destructive">
+                  {String(form.formState.errors.phone.message ?? "")}
+                </p>
+              )}
+            </div>
+
+            {/* Gender + employment type */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("employees.create.genderLabel")}</Label>
+                <select
+                  {...form.register("gender")}
+                  className="h-10 rounded-md border border-border bg-background px-3 text-sm"
+                >
+                  <option value="">—</option>
+                  <option value="MALE">{t("employees.create.genderMale")}</option>
+                  <option value="FEMALE">{t("employees.create.genderFemale")}</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("employees.create.employmentTypeLabel")}</Label>
+                <select
+                  {...form.register("employmentType")}
+                  className="h-10 rounded-md border border-border bg-background px-3 text-sm"
+                >
+                  <option value="FULL_TIME">{t("employees.create.employmentFullTime")}</option>
+                  <option value="PART_TIME">{t("employees.create.employmentPartTime")}</option>
+                  <option value="CONTRACT">{t("employees.create.employmentContract")}</option>
+                </select>
+              </div>
+            </div>
+
             {/* Full Name EN */}
             <div className="flex flex-col gap-1.5">
               <Label>
