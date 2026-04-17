@@ -83,7 +83,7 @@ enum EmploymentType {
   CONTRACT
 }
 
-// Cross-BC IDs (specialtyId, branchId, serviceId) are plain strings —
+// Cross-BC IDs (branchId, serviceId) are plain strings —
 // no Prisma FK relations to Clinic BC. Referential integrity is event-driven.
 model Employee {
   id               String           @id @default(uuid())
@@ -106,26 +106,20 @@ model Employee {
   employmentType   EmploymentType   @default(FULL_TIME)
   onboardingStatus OnboardingStatus @default(PENDING)
   isActive         Boolean          @default(true)
+  slug             String?          @unique
+  isPublic         Boolean          @default(false)
+  publicBioAr      String?
+  publicBioEn      String?
+  publicImageUrl   String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  specialties  EmployeeSpecialty[]
   branches     EmployeeBranch[]
   services     EmployeeService[]
   availability EmployeeAvailability[]
   exceptions   EmployeeAvailabilityException[]
 
   @@index([userId])
-}
-
-model EmployeeSpecialty {
-  id          String   @id @default(uuid())
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  specialtyId String
-
-  @@unique([employeeId, specialtyId])
-  @@index([employeeId])
 }
 
 model EmployeeBranch {
