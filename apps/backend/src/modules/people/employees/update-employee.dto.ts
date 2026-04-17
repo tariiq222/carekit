@@ -1,5 +1,6 @@
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsInt, IsOptional, IsString, Matches, MaxLength, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { EmployeeGender, EmploymentType } from '@prisma/client';
 
 export class UpdateEmployeeDto {
   @ApiPropertyOptional({ description: 'Professional title (e.g. Dr.)', example: 'Dr.' })
@@ -10,6 +11,18 @@ export class UpdateEmployeeDto {
 
   @ApiPropertyOptional({ description: 'Full name in Arabic', example: 'خالد العتيبي' })
   @IsOptional() @IsString() @MaxLength(200) nameAr?: string;
+
+  @ApiPropertyOptional({ description: 'Email address', example: 'user@example.com' })
+  @IsOptional() @IsEmail() email?: string;
+
+  @ApiPropertyOptional({ description: 'Phone number (international format)', example: '+966501234567' })
+  @IsOptional() @IsString() @Matches(/^\+?[0-9\s-]{7,20}$/) phone?: string;
+
+  @ApiPropertyOptional({ description: 'Gender', enum: EmployeeGender, enumName: 'EmployeeGender', example: EmployeeGender.MALE })
+  @IsOptional() @IsEnum(EmployeeGender) gender?: EmployeeGender;
+
+  @ApiPropertyOptional({ description: 'Employment type', enum: EmploymentType, enumName: 'EmploymentType', example: EmploymentType.FULL_TIME })
+  @IsOptional() @IsEnum(EmploymentType) employmentType?: EmploymentType;
 
   @ApiPropertyOptional({ description: 'Specialty label in English', example: 'Physiotherapy' })
   @IsOptional() @IsString() @MaxLength(200) specialty?: string;

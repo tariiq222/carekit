@@ -1,8 +1,11 @@
-import { IsBoolean, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsEnum, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { EmployeeGender, EmploymentType, OnboardingStatus } from '@prisma/client';
 import { PaginationDto } from '../../../common/dto';
+
+export const EMPLOYEE_SORT_FIELDS = ['name', 'experience', 'isActive', 'createdAt'] as const;
+export type EmployeeSortField = (typeof EMPLOYEE_SORT_FIELDS)[number];
 
 export class ListEmployeesDto extends PaginationDto {
   @ApiPropertyOptional({ description: 'Search by name, email, or phone', example: 'Khalid' })
@@ -33,4 +36,10 @@ export class ListEmployeesDto extends PaginationDto {
 
   @ApiPropertyOptional({ description: 'Filter by branch UUID', example: '00000000-0000-0000-0000-000000000000' })
   @IsOptional() @IsUUID() branchId?: string;
+
+  @ApiPropertyOptional({ description: 'Sort field', enum: EMPLOYEE_SORT_FIELDS, example: 'name' })
+  @IsOptional() @IsIn(EMPLOYEE_SORT_FIELDS as unknown as string[]) sortBy?: EmployeeSortField;
+
+  @ApiPropertyOptional({ description: 'Sort direction', enum: ['asc', 'desc'], example: 'asc' })
+  @IsOptional() @IsIn(['asc', 'desc']) sortOrder?: 'asc' | 'desc';
 }

@@ -1,12 +1,28 @@
 import { Injectable } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
-import { ListEmployeesDto } from './list-employees.dto';
+import { ListEmployeesDto, type EmployeeSortField } from './list-employees.dto';
+import { mapEmployeeRow } from './employee-row.mapper';
 
 export type ListEmployeesQuery = ListEmployeesDto & {
   page: number;
   limit: number;
 };
+
+function buildOrderBy(
+  sortBy: EmployeeSortField | undefined,
+  sortOrder: 'asc' | 'desc' | undefined,
+): Prisma.EmployeeOrderByWithRelationInput {
+  const direction: 'asc' | 'desc' = sortOrder ?? 'asc';
+  switch (sortBy) {
+    case 'name': return { name: direction };
+    case 'experience': return { experience: direction };
+    case 'isActive': return { isActive: direction };
+    case 'createdAt': return { createdAt: direction };
+    default: return { createdAt: 'desc' };
+  }
+}
 
 @Injectable()
 export class ListEmployeesHandler {
@@ -36,7 +52,7 @@ export class ListEmployeesHandler {
         where,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: buildOrderBy(query.sortBy, query.sortOrder),
         include: {
           specialties: true,
           branches: true,
@@ -47,6 +63,6 @@ export class ListEmployeesHandler {
       this.prisma.employee.count({ where }),
     ]);
 
-    return toListResponse(items, total, query.page, query.limit);
+    return toListResponse(items.map(mapEmployeeRow), total, query.page, query.limit);
   }
 }

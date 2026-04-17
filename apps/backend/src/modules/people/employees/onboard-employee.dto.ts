@@ -1,5 +1,6 @@
-import { IsBoolean, IsEmail, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsInt, IsOptional, IsString, Matches, MaxLength, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EmployeeGender, EmploymentType } from '@prisma/client';
 
 export class OnboardEmployeeDto {
   @ApiPropertyOptional({ description: 'Professional title', example: 'Dr.' })
@@ -13,6 +14,15 @@ export class OnboardEmployeeDto {
 
   @ApiProperty({ description: 'Work email address', example: 'user@example.com' })
   @IsEmail() email!: string;
+
+  @ApiPropertyOptional({ description: 'Phone number (international format)', example: '+966501234567' })
+  @IsOptional() @IsString() @Matches(/^\+?[0-9\s-]{7,20}$/) phone?: string;
+
+  @ApiPropertyOptional({ description: 'Gender', enum: EmployeeGender, enumName: 'EmployeeGender' })
+  @IsOptional() @IsEnum(EmployeeGender) gender?: EmployeeGender;
+
+  @ApiPropertyOptional({ description: 'Employment type', enum: EmploymentType, enumName: 'EmploymentType' })
+  @IsOptional() @IsEnum(EmploymentType) employmentType?: EmploymentType;
 
   @ApiProperty({ description: 'Specialty label in English', example: 'Physiotherapy' })
   @IsString() @MaxLength(200) specialty!: string;

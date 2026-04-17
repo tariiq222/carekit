@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { mapEmployeeRow } from './employee-row.mapper';
 
 export interface GetEmployeeQuery {
   employeeId: string;
@@ -25,6 +26,9 @@ export class GetEmployeeHandler {
       throw new NotFoundException('Employee not found');
     }
 
-    return employee;
+    return {
+      ...mapEmployeeRow(employee),
+      exceptions: employee.exceptions,
+    };
   }
 }
