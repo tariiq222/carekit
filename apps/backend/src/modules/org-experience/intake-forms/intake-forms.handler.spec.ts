@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { IntakeFormType, IntakeFormScope } from '@prisma/client';
 import { CreateIntakeFormHandler } from './create-intake-form.handler';
 import { DeleteIntakeFormHandler } from './delete-intake-form.handler';
 import { GetIntakeFormHandler } from './get-intake-form.handler';
@@ -8,6 +9,9 @@ const mockForm = {
   id: 'form-1',
   nameAr: 'استمارة المريض',
   nameEn: null,
+  type: IntakeFormType.PRE_SESSION,
+  scope: IntakeFormScope.GLOBAL,
+  scopeId: null,
   isActive: true,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -27,7 +31,11 @@ describe('CreateIntakeFormHandler', () => {
   it('creates form without fields', async () => {
     const prisma = buildPrisma();
     const handler = new CreateIntakeFormHandler(prisma as never);
-    const result = await handler.execute({ nameAr: 'استمارة المريض' });
+    const result = await handler.execute({
+      nameAr: 'استمارة المريض',
+      type: IntakeFormType.PRE_SESSION,
+      scope: IntakeFormScope.GLOBAL,
+    });
     expect(result.id).toBe('form-1');
   });
 });
