@@ -46,7 +46,7 @@ npm run test:watch        # Jest watch
 npm run test:cov          # Coverage (40% branch, 50% fn/line)
 npm run test:e2e          # E2E suite (test/jest-e2e.json)
 npm run prisma:migrate    # Run pending migrations
-npm run prisma:seed       # Seed demo data
+npm run seed              # Seed demo data
 npm run prisma:studio     # Prisma Studio GUI
 
 # Dashboard (cd apps/dashboard)

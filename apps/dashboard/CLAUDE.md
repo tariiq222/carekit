@@ -102,8 +102,13 @@ lib/utils.ts                           pure utilities
 ## Development
 
 ```bash
-npm run dev          # :5001
+npm run dev          # Next.js dev server on :5103 (Turbopack)
 npm run typecheck    # tsc --noEmit
 npm run lint         # ESLint
+npm run test        # Vitest
 npm run build        # Production build
 ```
+
+## QA Gate
+
+Dashboard e2e is manual via **Chrome DevTools MCP** — this is the required pre-merge check for any page change. Playwright was removed on 2026-04-16; tagged test reports are not the source of truth for dashboard UI.
