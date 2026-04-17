@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { toListResponse } from '../../../common/dto';
 import { ListBookingsDto } from './list-bookings.dto';
+import { mapBookingRow, type BookingRelations } from '../booking-row.mapper';
 
 export type ListBookingsQuery = Omit<ListBookingsDto, 'page' | 'limit' | 'fromDate' | 'toDate'> & {
   page: number;
@@ -15,6 +16,7 @@ export class ListBookingsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: ListBookingsQuery) {
+    const searchTerm = query.search?.trim();
     const where = {
       ...(query.clientId ? { clientId: query.clientId } : {}),
       ...(query.employeeId ? { employeeId: query.employeeId } : {}),
@@ -24,6 +26,9 @@ export class ListBookingsHandler {
       ...(query.bookingType ? { bookingType: query.bookingType } : {}),
       ...(query.fromDate || query.toDate
         ? { scheduledAt: { gte: query.fromDate, lte: query.toDate } }
+        : {}),
+      ...(searchTerm
+        ? { id: { contains: searchTerm, mode: 'insensitive' as const } }
         : {}),
     };
 
@@ -37,6 +42,40 @@ export class ListBookingsHandler {
       this.prisma.booking.count({ where }),
     ]);
 
-    return toListResponse(items, total, query.page, query.limit);
+    const relations = await loadRelations(this.prisma, items);
+
+    return toListResponse(
+      items.map((row) => mapBookingRow(row, relations)),
+      total,
+      query.page,
+      query.limit,
+    );
   }
+}
+
+async function loadRelations(
+  prisma: PrismaService,
+  rows: { clientId: string; employeeId: string; serviceId: string }[],
+): Promise<BookingRelations> {
+  const clientIds = [...new Set(rows.map((r) => r.clientId))];
+  const employeeIds = [...new Set(rows.map((r) => r.employeeId))];
+  const serviceIds = [...new Set(rows.map((r) => r.serviceId))];
+
+  const [clients, employees, services] = await Promise.all([
+    clientIds.length
+      ? prisma.client.findMany({ where: { id: { in: clientIds } } })
+      : Promise.resolve([]),
+    employeeIds.length
+      ? prisma.employee.findMany({ where: { id: { in: employeeIds } } })
+      : Promise.resolve([]),
+    serviceIds.length
+      ? prisma.service.findMany({ where: { id: { in: serviceIds } } })
+      : Promise.resolve([]),
+  ]);
+
+  return {
+    clientsById: new Map(clients.map((c) => [c.id, c])),
+    employeesById: new Map(employees.map((e) => [e.id, e])),
+    servicesById: new Map(services.map((s) => [s.id, s])),
+  };
 }

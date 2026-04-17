@@ -34,6 +34,7 @@ import { ListWaitlistDto } from '../../modules/bookings/list-waitlist/list-waitl
 import { RemoveWaitlistEntryHandler } from '../../modules/bookings/remove-waitlist-entry/remove-waitlist-entry.handler';
 import { CheckAvailabilityHandler } from '../../modules/bookings/check-availability/check-availability.handler';
 import { CheckAvailabilityDto } from '../../modules/bookings/check-availability/check-availability.dto';
+import { ListBookingStatusLogHandler } from '../../modules/bookings/list-booking-status-log/list-booking-status-log.handler';
 
 @ApiTags('Dashboard / Bookings')
 @ApiBearerAuth()
@@ -56,6 +57,7 @@ export class DashboardBookingsController {
     private readonly listWaitlistHandler: ListWaitlistHandler,
     private readonly removeWaitlistHandler: RemoveWaitlistEntryHandler,
     private readonly availabilityHandler: CheckAvailabilityHandler,
+    private readonly statusLogHandler: ListBookingStatusLogHandler,
   ) {}
 
   @Post()
@@ -109,6 +111,14 @@ export class DashboardBookingsController {
       ...rest,
       date: new Date(date),
     });
+  }
+
+  @Get(':id/status-log')
+  @ApiOperation({ summary: 'Get the status transition log for a booking' })
+  @ApiParam({ name: 'id', description: 'Booking ID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Status log entries (oldest first)', schema: { type: 'array' } })
+  getBookingStatusLog(@Param('id', ParseUUIDPipe) id: string) {
+    return this.statusLogHandler.execute({ bookingId: id });
   }
 
   @Get(':id')

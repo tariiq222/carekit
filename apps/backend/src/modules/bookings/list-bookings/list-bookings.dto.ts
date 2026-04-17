@@ -1,7 +1,33 @@
 import { BookingStatus, BookingType } from '@prisma/client';
-import { IsDateString, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsDateString, IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationDto } from '../../../common/dto';
+
+/**
+ * Dashboard sends booking-type as the UI's snake_case alias (in_person / online / walk_in).
+ * The DB enum is INDIVIDUAL / ONLINE / WALK_IN / GROUP — map the UI alias before validating.
+ */
+const mapBookingType = (v: unknown) => {
+  if (typeof v !== 'string' || !v) return v;
+  const lower = v.toLowerCase();
+  if (lower === 'in_person') return 'INDIVIDUAL';
+  return v.toUpperCase();
+};
+
+/**
+ * Dashboard uses a few synonyms for booking status that do not exist in the DB enum:
+ *   pending_cancellation → CANCEL_REQUESTED
+ *   checked_in / in_progress — not modeled at the DB level, treated as undefined so
+ *   the handler omits the filter (returns empty unless no-op upstream).
+ */
+const mapBookingStatus = (v: unknown) => {
+  if (typeof v !== 'string' || !v) return v;
+  const lower = v.toLowerCase();
+  if (lower === 'pending_cancellation') return 'CANCEL_REQUESTED';
+  if (lower === 'checked_in' || lower === 'in_progress') return undefined;
+  return v.toUpperCase();
+};
 
 export class ListBookingsDto extends PaginationDto {
   @ApiPropertyOptional({ description: 'Filter by client', example: '00000000-0000-0000-0000-000000000000' })
@@ -17,14 +43,17 @@ export class ListBookingsDto extends PaginationDto {
   @IsOptional() @IsUUID() serviceId?: string;
 
   @ApiPropertyOptional({ description: 'Filter by booking status', enum: BookingStatus, enumName: 'BookingStatus', example: BookingStatus.CONFIRMED })
-  @IsOptional() @IsEnum(BookingStatus) status?: BookingStatus;
+  @IsOptional() @Transform(({ value }) => mapBookingStatus(value)) @IsEnum(BookingStatus) status?: BookingStatus;
 
   @ApiPropertyOptional({ description: 'Filter by booking type', enum: BookingType, enumName: 'BookingType', example: BookingType.INDIVIDUAL })
-  @IsOptional() @IsEnum(BookingType) bookingType?: BookingType;
+  @IsOptional() @Transform(({ value }) => mapBookingType(value)) @IsEnum(BookingType) bookingType?: BookingType;
 
   @ApiPropertyOptional({ description: 'Return bookings on or after this date (ISO 8601)', example: '2026-05-01T00:00:00.000Z' })
   @IsOptional() @IsDateString() fromDate?: string;
 
   @ApiPropertyOptional({ description: 'Return bookings on or before this date (ISO 8601)', example: '2026-05-31T23:59:59.000Z' })
   @IsOptional() @IsDateString() toDate?: string;
+
+  @ApiPropertyOptional({ description: 'Search by booking id or client name', example: 'bkg-1' })
+  @IsOptional() @IsString() @MaxLength(120) search?: string;
 }
