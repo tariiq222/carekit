@@ -2,6 +2,7 @@
 
 import { Controller } from "react-hook-form"
 import type { UseFormReturn } from "react-hook-form"
+import type { CouponFormData } from "@/lib/schemas/coupon.schema"
 import {
   DiscountIcon,
   TextAlignLeftIcon,
@@ -23,8 +24,7 @@ import { SectionHeader } from "@/components/features/section-header"
 import { useLocale } from "@/components/locale-provider"
 
 interface CouponFormFieldsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: UseFormReturn<any>
+  form: UseFormReturn<CouponFormData>
   isEdit: boolean
   mode: "create" | "edit"
 }
