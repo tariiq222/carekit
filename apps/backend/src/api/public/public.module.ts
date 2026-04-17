@@ -13,9 +13,10 @@ import { PublicEmployeesController } from './employees.controller';
 import { PublicContactMessagesController } from './contact-messages.controller';
 import { PublicOtpController } from './otp.controller';
 import { PublicAvailabilityController } from './availability.controller';
+import { PublicBookingsController } from './bookings.controller';
 
 @Module({
   imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule],
-  controllers: [AuthController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController],
+  controllers: [AuthController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController],
 })
 export class PublicModule {}

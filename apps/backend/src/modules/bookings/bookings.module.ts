@@ -28,6 +28,7 @@ import { CreateZoomMeetingHandler } from './create-zoom-meeting/create-zoom-meet
 import { GroupSessionMinReachedHandler } from './group-session-min-reached/group-session-min-reached.handler';
 import { DashboardBookingsController } from '../../api/dashboard/bookings.controller';
 import { GetPublicAvailabilityHandler } from './availability/public/get-public-availability.handler';
+import { CreateGuestBookingHandler } from './public/create-guest-booking.handler';
 
 const handlers = [
   CreateBookingHandler,
@@ -54,6 +55,7 @@ const handlers = [
   CreateZoomMeetingHandler,
   GroupSessionMinReachedHandler,
   GetPublicAvailabilityHandler,
+  CreateGuestBookingHandler,
 ];
 
 @Module({
