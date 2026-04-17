@@ -1,7 +1,8 @@
-import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsEnum, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+const HOSTNAME_REGEX = /^(?=.{1,253}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
 export class UpsertBrandingDto {
   @ApiProperty({ description: 'Organization name in Arabic', example: 'عيادة الرعاية' })
@@ -45,4 +46,16 @@ export class UpsertBrandingDto {
 
   @ApiPropertyOptional({ description: 'Custom CSS injected into the clinic app', example: ':root { --radius: 8px; }' })
   @IsOptional() @IsString() customCss?: string;
+
+  @ApiPropertyOptional({ description: 'Public website domain (hostname)', example: 'clinic.example.com' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(253)
+  @Matches(HOSTNAME_REGEX, { message: 'websiteDomain must be a valid hostname' })
+  websiteDomain?: string | null;
+
+  @ApiPropertyOptional({ description: 'Active website theme', enum: ['SAWAA', 'PREMIUM'] })
+  @IsOptional()
+  @IsEnum(['SAWAA', 'PREMIUM'])
+  activeWebsiteTheme?: 'SAWAA' | 'PREMIUM';
 }

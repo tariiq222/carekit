@@ -1091,6 +1091,11 @@
             },
             "type": "array"
           },
+          "isActive": {
+            "description": "Whether the form is active and shown to clients",
+            "example": true,
+            "type": "boolean"
+          },
           "nameAr": {
             "description": "Form name in Arabic",
             "example": "استبيان ما قبل الجلسة",
@@ -1100,10 +1105,39 @@
             "description": "Form name in English",
             "example": "Pre-session Questionnaire",
             "type": "string"
+          },
+          "scope": {
+            "description": "Form scope",
+            "enum": [
+              "GLOBAL",
+              "SERVICE",
+              "EMPLOYEE",
+              "BRANCH"
+            ],
+            "example": "GLOBAL",
+            "type": "string"
+          },
+          "scopeId": {
+            "description": "Scope entity ID (null for global scope)",
+            "example": null,
+            "type": "string"
+          },
+          "type": {
+            "description": "Form type",
+            "enum": [
+              "PRE_BOOKING",
+              "PRE_SESSION",
+              "POST_SESSION",
+              "REGISTRATION"
+            ],
+            "example": "PRE_SESSION",
+            "type": "string"
           }
         },
         "required": [
-          "nameAr"
+          "nameAr",
+          "type",
+          "scope"
         ],
         "type": "object"
       },
@@ -1977,10 +2011,26 @@
             "example": "user@example.com",
             "type": "string"
           },
+          "employmentType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmploymentType"
+              }
+            ],
+            "description": "Employment type"
+          },
           "experience": {
             "description": "Years of experience",
             "example": 10,
             "type": "number"
+          },
+          "gender": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmployeeGender"
+              }
+            ],
+            "description": "Gender"
           },
           "isActive": {
             "description": "Whether the employee is active",
@@ -1995,6 +2045,11 @@
           "nameEn": {
             "description": "Full name in English",
             "example": "Khalid Al-Otaibi",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Phone number (international format)",
+            "example": "+966501234567",
             "type": "string"
           },
           "specialty": {
@@ -2733,10 +2788,33 @@
             "example": "جامعة الملك سعود — بكالوريوس علاج طبيعي",
             "type": "string"
           },
+          "email": {
+            "description": "Email address",
+            "example": "user@example.com",
+            "type": "string"
+          },
+          "employmentType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmploymentType"
+              }
+            ],
+            "description": "Employment type",
+            "example": "FULL_TIME"
+          },
           "experience": {
             "description": "Years of experience",
             "example": 10,
             "type": "number"
+          },
+          "gender": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmployeeGender"
+              }
+            ],
+            "description": "Gender",
+            "example": "MALE"
           },
           "isActive": {
             "description": "Whether the employee is active",
@@ -2751,6 +2829,11 @@
           "nameEn": {
             "description": "Full name in English",
             "example": "Khalid Al-Otaibi",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Phone number (international format)",
+            "example": "+966501234567",
             "type": "string"
           },
           "specialty": {
@@ -2973,19 +3056,42 @@
       },
       "UpsertBrandingDto": {
         "properties": {
-          "accentColor": {
-            "description": "Accent brand color (hex)",
+          "activeWebsiteTheme": {
+            "description": "Active website theme",
+            "enum": [
+              "SAWAA",
+              "PREMIUM"
+            ],
+            "type": "string"
+          },
+          "colorAccent": {
+            "description": "Accent / highlight color (hex)",
             "example": "#82CC17",
             "type": "string"
           },
-          "clinicNameAr": {
-            "description": "Clinic name in Arabic",
-            "example": "عيادة الرعاية",
+          "colorAccentDark": {
+            "description": "Darker shade of the accent color (hex)",
+            "example": "#5A8F0F",
             "type": "string"
           },
-          "clinicNameEn": {
-            "description": "Clinic name in English",
-            "example": "CareKit Clinic",
+          "colorBackground": {
+            "description": "Default background color (hex)",
+            "example": "#F8F9FF",
+            "type": "string"
+          },
+          "colorPrimary": {
+            "description": "Primary brand color (hex)",
+            "example": "#354FD8",
+            "type": "string"
+          },
+          "colorPrimaryDark": {
+            "description": "Darker shade of the primary color (hex)",
+            "example": "#1E3AB8",
+            "type": "string"
+          },
+          "colorPrimaryLight": {
+            "description": "Lighter tint of the primary color (hex)",
+            "example": "#6B7FE3",
             "type": "string"
           },
           "customCss": {
@@ -3003,19 +3109,39 @@
             "example": "IBM Plex Sans Arabic",
             "type": "string"
           },
+          "fontUrl": {
+            "description": "Font file or stylesheet URL",
+            "example": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic",
+            "type": "string"
+          },
           "logoUrl": {
             "description": "Logo image URL",
             "example": "https://example.com/logo.png",
             "type": "string"
           },
-          "primaryColor": {
-            "description": "Primary brand color (hex)",
-            "example": "#354FD8",
+          "organizationNameAr": {
+            "description": "Organization name in Arabic",
+            "example": "عيادة الرعاية",
             "type": "string"
+          },
+          "organizationNameEn": {
+            "description": "Organization name in English",
+            "example": "CareKit Clinic",
+            "type": "string"
+          },
+          "productTagline": {
+            "description": "Product tagline shown under the organization name",
+            "example": "نحو رعاية أفضل",
+            "type": "string"
+          },
+          "websiteDomain": {
+            "description": "Public website domain (hostname)",
+            "example": "clinic.example.com",
+            "type": "object"
           }
         },
         "required": [
-          "clinicNameAr"
+          "organizationNameAr"
         ],
         "type": "object"
       },
@@ -4326,6 +4452,16 @@
               "example": "2026-05-31T23:59:59.000Z",
               "type": "string"
             }
+          },
+          {
+            "description": "Search by booking id or client name",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "example": "bkg-1",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5564,6 +5700,84 @@
           }
         ],
         "summary": "Reschedule a booking",
+        "tags": [
+          "Dashboard / Bookings"
+        ]
+      }
+    },
+    "/api/v1/dashboard/bookings/{id}/status-log": {
+      "get": {
+        "operationId": "DashboardBookingsController_getBookingStatusLog",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Status log entries (oldest first)"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the status transition log for a booking",
         "tags": [
           "Dashboard / Bookings"
         ]
@@ -12300,6 +12514,78 @@
           "Dashboard / Org Experience"
         ]
       },
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_getServiceEndpoint",
+        "parameters": [
+          {
+            "description": "Service UUID",
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service details"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "404": {
+            "description": "Service not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a service by id",
+        "tags": [
+          "Dashboard / Org Experience"
+        ]
+      },
       "patch": {
         "operationId": "DashboardOrganizationSettingsController_updateServiceEndpoint",
         "parameters": [
@@ -12534,6 +12820,77 @@
           }
         ],
         "summary": "Set booking type configs for a service",
+        "tags": [
+          "Dashboard / Org Experience"
+        ]
+      }
+    },
+    "/api/v1/dashboard/organization/services/{serviceId}/employees": {
+      "get": {
+        "operationId": "DashboardOrganizationSettingsController_listServiceEmployeesEndpoint",
+        "parameters": [
+          {
+            "description": "Service UUID",
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of employees for the service"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List active employees who offer this service",
         "tags": [
           "Dashboard / Org Experience"
         ]
@@ -13139,6 +13496,36 @@
             "required": false,
             "schema": {
               "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort field",
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "schema": {
+              "enum": [
+                "name",
+                "experience",
+                "isActive",
+                "createdAt"
+              ],
+              "example": "name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort direction",
+            "in": "query",
+            "name": "sortOrder",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "example": "asc",
               "type": "string"
             }
           },
@@ -14594,6 +14981,176 @@
           }
         ],
         "summary": "Remove a service from an employee",
+        "tags": [
+          "Dashboard / People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/services/{serviceId}/types": {
+      "get": {
+        "operationId": "DashboardPeopleController_getEmployeeServiceTypesEndpoint",
+        "parameters": [
+          {
+            "description": "Employee UUID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Service UUID",
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bookable types with duration options"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get bookable types + duration options for an employee-service pair",
+        "tags": [
+          "Dashboard / People"
+        ]
+      }
+    },
+    "/api/v1/dashboard/people/employees/{id}/slots": {
+      "get": {
+        "operationId": "DashboardPeopleController_getEmployeeSlotsEndpoint",
+        "parameters": [
+          {
+            "description": "Employee UUID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Slot duration in minutes",
+            "in": "query",
+            "name": "duration",
+            "required": false,
+            "schema": {
+              "example": 30
+            }
+          },
+          {
+            "description": "Date (ISO 8601, YYYY-MM-DD)",
+            "in": "query",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "example": "2026-05-01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available slots"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Available booking slots for an employee on a given date",
         "tags": [
           "Dashboard / People"
         ]
@@ -17370,7 +17927,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Clinic branding config"
+            "description": "PublicBranding shape"
           },
           "400": {
             "content": {

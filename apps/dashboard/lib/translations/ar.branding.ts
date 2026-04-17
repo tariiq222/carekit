@@ -53,4 +53,11 @@ export const arBranding: Record<string, string> = {
   "branding.colorAccentDark": "لون التمييز الداكن",
   "branding.colorBackground": "لون الخلفية",
   "branding.fontUrl": "رابط الخط",
+  // Website
+  "branding.website.title": "الموقع الإلكتروني",
+  "branding.website.description": "إعدادات الموقع العام للعيادة",
+  "branding.website.domain": "النطاق",
+  "branding.website.theme": "التصميم",
+  "branding.website.themes.sawaa": "ساوا",
+  "branding.website.themes.premium": "بريميوم",
 }
