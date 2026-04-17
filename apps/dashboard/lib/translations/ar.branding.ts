@@ -45,6 +45,6 @@ export const arBranding: Record<string, string> = {
   "branding.flagsModules": "الموديولات",
   "branding.flagsBooking": "ميزات الحجز",
   "branding.flagsCompliance": "الامتثال",
-  "branding.systemName": "اسم النظام (إنجليزي)",
-  "branding.systemNameAr": "اسم النظام (عربي)",
+  "branding.organizationNameEn": "اسم المنظمة (إنجليزي)",
+  "branding.organizationNameAr": "اسم المنظمة (عربي)",
 }

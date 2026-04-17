@@ -40,6 +40,6 @@ export const enBranding: Record<string, string> = {
   "branding.flagsModules": "Modules",
   "branding.flagsBooking": "Booking Features",
   "branding.flagsCompliance": "Compliance",
-  "branding.systemName": "System Name (English)",
-  "branding.systemNameAr": "System Name (Arabic)",
+  "branding.organizationNameEn": "Organization Name (English)",
+  "branding.organizationNameAr": "Organization Name (Arabic)",
 }

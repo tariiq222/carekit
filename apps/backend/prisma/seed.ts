@@ -37,10 +37,10 @@ async function main() {
     where: { id: 'default' },
     create: {
       id: 'default',
-      clinicNameAr: 'منظمتي',
-      clinicNameEn: 'My Organization',
-      primaryColor: '#354FD8',
-      accentColor:  '#82CC17',
+      organizationNameAr: 'منظمتي',
+      organizationNameEn: 'My Organization',
+      colorPrimary: '#354FD8',
+      colorAccent:  '#82CC17',
     },
     update: {},
   });

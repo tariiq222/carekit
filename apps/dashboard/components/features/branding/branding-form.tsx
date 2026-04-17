@@ -36,8 +36,8 @@ interface Props {
 
 export function BrandingForm({ branding, onSave, isPending }: Props) {
   const { t } = useLocale()
-  const [systemName, setSystemName] = useState("")
-  const [systemNameAr, setSystemNameAr] = useState("")
+  const [organizationNameEn, setOrganizationNameEn] = useState("")
+  const [organizationNameAr, setOrganizationNameAr] = useState("")
   const [productTagline, setProductTagline] = useState("")
   const [colorPrimary, setColorPrimary] = useState("")
   const [colorPrimaryLight, setColorPrimaryLight] = useState("")
@@ -56,8 +56,8 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
     if (!branding) return
     // Seed editable form fields from async-loaded server data; users edit these freely afterwards.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSystemName(branding.systemName ?? "")
-    setSystemNameAr(branding.systemNameAr ?? "")
+    setOrganizationNameEn(branding.organizationNameEn ?? "")
+    setOrganizationNameAr(branding.organizationNameAr ?? "")
     setProductTagline(branding.productTagline ?? "")
     setColorPrimary(branding.colorPrimary ?? "")
     setColorPrimaryLight(branding.colorPrimaryLight ?? "")
@@ -97,8 +97,8 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
 
   const handleSave = () => {
     onSave({
-      systemName,
-      systemNameAr,
+      organizationNameEn,
+      organizationNameAr,
       productTagline: productTagline || null,
       colorPrimary,
       colorPrimaryLight,
@@ -124,12 +124,12 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>{t("branding.systemName")}</Label>
-            <Input value={systemName} onChange={(e) => setSystemName(e.target.value)} dir="ltr" placeholder="CareKit Clinic" />
+            <Label>{t("branding.organizationNameEn")}</Label>
+            <Input value={organizationNameEn} onChange={(e) => setOrganizationNameEn(e.target.value)} dir="ltr" placeholder="CareKit Clinic" />
           </div>
           <div className="space-y-2">
-            <Label>{t("branding.systemNameAr")}</Label>
-            <Input value={systemNameAr} onChange={(e) => setSystemNameAr(e.target.value)} dir="rtl" placeholder="عيادة كيركت" />
+            <Label>{t("branding.organizationNameAr")}</Label>
+            <Input value={organizationNameAr} onChange={(e) => setOrganizationNameAr(e.target.value)} dir="rtl" placeholder="عيادة كيركت" />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>{"الشعار الفرعي"}</Label>
@@ -281,7 +281,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
                       color: pickForeground(colorPrimary),
                     }}
                   >
-                    {systemName || "CareKit"}
+                    {organizationNameEn || organizationNameAr || "CareKit"}
                   </div>
                   <ContrastBadge ratio={contrastRatio(colorPrimary, isValidHex(colorBackground) ? colorBackground : "#F2F4F8")} />
                 </div>

@@ -3,13 +3,19 @@ import { GetBrandingHandler } from './get-branding.handler';
 
 const mockConfig = {
   id: 'default',
-  clinicNameAr: 'عيادتي',
-  clinicNameEn: 'My Clinic',
+  organizationNameAr: 'عيادتي',
+  organizationNameEn: 'My Clinic',
+  productTagline: null,
   logoUrl: null,
   faviconUrl: null,
-  primaryColor: '#354FD8',
-  accentColor: null,
+  colorPrimary: '#354FD8',
+  colorPrimaryLight: null,
+  colorPrimaryDark: null,
+  colorAccent: null,
+  colorAccentDark: null,
+  colorBackground: null,
   fontFamily: null,
+  fontUrl: null,
   customCss: null,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -25,11 +31,11 @@ describe('UpsertBrandingHandler', () => {
   it('upserts branding config with singleton id', async () => {
     const prisma = buildPrisma();
     const handler = new UpsertBrandingHandler(prisma as never);
-    const result = await handler.execute({ clinicNameAr: 'عيادتي' });
+    const result = await handler.execute({ organizationNameAr: 'عيادتي' });
     expect(prisma.brandingConfig.upsert).toHaveBeenCalledWith({
       where: { id: 'default' },
-      create: expect.objectContaining({ id: 'default', clinicNameAr: 'عيادتي' }),
-      update: { clinicNameAr: 'عيادتي' },
+      create: expect.objectContaining({ id: 'default', organizationNameAr: 'عيادتي' }),
+      update: { organizationNameAr: 'عيادتي' },
     });
     expect(result.id).toBe('default');
   });
