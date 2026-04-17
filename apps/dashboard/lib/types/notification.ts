@@ -2,21 +2,24 @@
  * Notification Types — CareKit Dashboard
  */
 
-import type { PaginatedQuery, NotificationType } from "./common"
+import type { PaginatedQuery } from "./common"
 
 /* ─── Entities ─── */
 
+export type RecipientType = "CLIENT" | "EMPLOYEE"
+
 export interface Notification {
   id: string
-  userId: string
-  type: NotificationType
-  titleEn: string
-  titleAr: string
-  bodyEn: string
-  bodyAr: string
+  recipientId: string
+  recipientType: RecipientType
+  type: string
+  title: string
+  body: string
+  metadata: Record<string, unknown> | null
   isRead: boolean
-  data: Record<string, unknown> | null
+  readAt: string | null
   createdAt: string
+  updatedAt: string
 }
 
 /* ─── Query ─── */

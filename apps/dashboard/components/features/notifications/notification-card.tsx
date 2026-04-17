@@ -52,10 +52,10 @@ export function NotificationCard({
               isUnread && "font-semibold"
             )}
           >
-            {locale === "ar" ? notification.titleAr : notification.titleEn}
+            {notification.title}
           </p>
           <p className="mt-0.5 text-sm text-muted-foreground line-clamp-2">
-            {locale === "ar" ? notification.bodyAr : notification.bodyEn}
+            {notification.body}
           </p>
           <p className="mt-1 text-xs text-muted-foreground tabular-nums">
             {formatDistanceToNow(new Date(notification.createdAt), {
