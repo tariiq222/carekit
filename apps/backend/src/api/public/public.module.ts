@@ -5,6 +5,7 @@ import { OrgExperienceModule } from '../../modules/org-experience/org-experience
 import { IdentityModule } from '../../modules/identity/identity.module';
 import { PeopleModule } from '../../modules/people/people.module';
 import { CommsModule } from '../../modules/comms/comms.module';
+import { FinanceModule } from '../../modules/finance/finance.module';
 import { AuthController } from './auth.controller';
 import { PublicBrandingController } from './branding.controller';
 import { PublicCatalogController } from './catalog.controller';
@@ -14,9 +15,10 @@ import { PublicContactMessagesController } from './contact-messages.controller';
 import { PublicOtpController } from './otp.controller';
 import { PublicAvailabilityController } from './availability.controller';
 import { PublicBookingsController } from './bookings.controller';
+import { PublicPaymentsController } from './payments.controller';
 
 @Module({
-  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule],
-  controllers: [AuthController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController],
+  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule],
+  controllers: [AuthController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController],
 })
 export class PublicModule {}

@@ -24,6 +24,8 @@ import { GetPaymentStatsHandler } from './get-payment-stats/get-payment-stats.ha
 import { RefundPaymentHandler } from './refund-payment/refund-payment.handler';
 import { VerifyPaymentHandler } from './verify-payment/verify-payment.handler';
 import { GroupSessionReadyHandler } from './group-session-ready/group-session-ready.handler';
+import { MoyasarApiClient } from './moyasar-api/moyasar-api.client';
+import { InitGuestPaymentHandler } from './payments/public/init-guest-payment/init-guest-payment.handler';
 
 const handlers = [
   CreateInvoiceHandler,
@@ -46,13 +48,14 @@ const handlers = [
   RefundPaymentHandler,
   VerifyPaymentHandler,
   GroupSessionReadyHandler,
+  InitGuestPaymentHandler,
 ];
 
 @Module({
   imports: [DatabaseModule, MessagingModule, StorageModule],
   controllers: [DashboardFinanceController],
-  providers: [...handlers, BookingConfirmedHandler, GroupSessionReadyHandler],
-  exports: [...handlers],
+  providers: [...handlers, BookingConfirmedHandler, GroupSessionReadyHandler, MoyasarApiClient],
+  exports: [...handlers, MoyasarApiClient],
 })
 export class FinanceModule implements OnModuleInit {
   constructor(
