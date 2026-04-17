@@ -25,13 +25,15 @@ type TFn = (key: string) => string
 
 /* ── Actions cell ── */
 function ServiceActionsCell({
-  service: _service,
+  service,
+  locale,
   onView,
   onEdit,
   onDelete,
   t,
 }: {
   service: Service
+  locale: "en" | "ar"
   onView: () => void
   onEdit: () => void
   onDelete: () => void
@@ -39,6 +41,7 @@ function ServiceActionsCell({
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const label = (key: string, fallback: string) => t?.(key) ?? fallback
+  const displayName = (locale === "ar" ? service.nameAr : service.nameEn) ?? service.nameAr
 
   const btnBase =
     "flex size-9 items-center justify-center rounded-sm border border-transparent text-muted-foreground transition-all duration-200 hover:bg-muted hover:border-border hover:text-foreground"
@@ -81,7 +84,9 @@ function ServiceActionsCell({
           <AlertDialogHeader>
             <AlertDialogTitle>{label("services.delete.title", "Delete Service")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {label("services.delete.confirm", "Are you sure you want to delete this service? This action cannot be undone.")}
+              {label("services.delete.confirmPrefix", "Are you sure you want to delete")}{" "}
+              <span className="font-semibold text-foreground">“{displayName}”</span>
+              {label("services.delete.confirmSuffix", "? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -214,6 +219,7 @@ export function getServiceColumns(
         return (
           <ServiceActionsCell
             service={s}
+            locale={locale}
             onView={() => onRowClick?.(s)}
             onEdit={() => onEdit?.(s)}
             onDelete={() => onDelete?.(s)}

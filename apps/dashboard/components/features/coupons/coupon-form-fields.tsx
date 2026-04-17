@@ -41,8 +41,8 @@ export function CouponFormFields({ form, isEdit, mode }: CouponFormFieldsProps) 
         <CardContent className="pt-6">
           <SectionHeader
             icon={DiscountIcon}
-            title={t("coupons.create.code")}
-            description={t("coupons.create.discountType")}
+            title={t("coupons.section.basic")}
+            description={t("coupons.section.basicDescription")}
           />
           <div className="space-y-4">
             <div className="flex flex-col gap-1.5">
@@ -96,8 +96,8 @@ export function CouponFormFields({ form, isEdit, mode }: CouponFormFieldsProps) 
         <CardContent className="pt-6">
           <SectionHeader
             icon={Settings01Icon}
-            title={t("coupons.create.maxUses")}
-            description={t("coupons.create.expiresAt")}
+            title={t("coupons.section.limits")}
+            description={t("coupons.section.limitsDescription")}
           />
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -147,8 +147,8 @@ export function CouponFormFields({ form, isEdit, mode }: CouponFormFieldsProps) 
         <CardContent className="pt-6">
           <SectionHeader
             icon={TextAlignLeftIcon}
-            title={t("coupons.create.descEn")}
-            description={t("coupons.create.descAr")}
+            title={t("coupons.section.description")}
+            description={t("coupons.section.descriptionDescription")}
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">

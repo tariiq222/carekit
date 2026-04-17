@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
 import {
@@ -14,12 +14,18 @@ import type { DepartmentListQuery } from "@/lib/types/department"
 export function useDepartments() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [isActive, setIsActive] = useState<boolean | undefined>()
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const query: DepartmentListQuery = {
     page,
     perPage: 20,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     isActive,
   }
 
@@ -31,6 +37,7 @@ export function useDepartments() {
 
   const resetFilters = useCallback(() => {
     setSearch("")
+    setDebouncedSearch("")
     setIsActive(undefined)
     setPage(1)
   }, [])

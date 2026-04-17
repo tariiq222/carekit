@@ -11,6 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { ListPageShell } from "@/components/features/list-page-shell"
+import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { PageHeader } from "@/components/features/page-header"
 import { StatsGrid } from "@/components/features/stats-grid"
 import { StatCard } from "@/components/features/stat-card"
@@ -113,6 +114,7 @@ export default function IntakeFormsPage() {
 
   return (
     <ListPageShell>
+      <Breadcrumbs />
       <PageHeader
         title={t("intakeForms.title")}
         description={t("intakeForms.description")}

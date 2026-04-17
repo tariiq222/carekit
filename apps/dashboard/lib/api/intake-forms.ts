@@ -29,7 +29,16 @@ export async function fetchIntakeForm(formId: string): Promise<IntakeFormApi> {
 export async function createIntakeForm(
   payload: CreateIntakeFormApiPayload,
 ): Promise<IntakeFormApi> {
-  return api.post<IntakeFormApi>("/dashboard/organization/intake-forms", payload)
+  // Backend model currently only persists nameAr/nameEn/isActive + fields.
+  // type/scope/serviceId/employeeId/branchId are UI-level concepts until the
+  // backend schema gains matching columns — dropping them at the boundary
+  // keeps the form usable without 400s.
+  const body = {
+    nameAr: payload.nameAr,
+    nameEn: payload.nameEn,
+    isActive: payload.isActive,
+  }
+  return api.post<IntakeFormApi>("/dashboard/organization/intake-forms", body)
 }
 
 export async function updateIntakeForm(

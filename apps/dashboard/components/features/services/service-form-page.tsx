@@ -65,6 +65,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
   const searchParams = useSearchParams()
   const isEdit = mode === "edit"
   const initialTab = searchParams.get("tab") ?? "basic"
+  const [activeTab, setActiveTab] = useState(initialTab)
 
   /* ── Data fetching (edit only) ── */
   const { data: service, isLoading, isError } = useQuery({
@@ -248,7 +249,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
       />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
-        <Tabs defaultValue={initialTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="overflow-x-auto pb-1 -mb-1">
             <TabsList className="min-w-max">
               <TabsTrigger value="basic" className="text-xs sm:text-sm">{t("services.create.tabs.basic")}</TabsTrigger>

@@ -124,14 +124,14 @@ export function BasicInfoTab({ form, onImageSelect, serviceId }: BasicInfoTabPro
             <Label>{primaryNameLabel} *</Label>
             <Input {...form.register(primaryName)} dir={primaryDir} />
             {form.formState.errors[primaryName] && (
-              <p className="text-xs text-destructive">{form.formState.errors[primaryName]?.message}</p>
+              <p className="text-xs text-destructive">{t(form.formState.errors[primaryName]?.message ?? "")}</p>
             )}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>{secondaryNameLabel} *</Label>
             <Input {...form.register(secondaryName)} dir={secondaryDir} />
             {form.formState.errors[secondaryName] && (
-              <p className="text-xs text-destructive">{form.formState.errors[secondaryName]?.message}</p>
+              <p className="text-xs text-destructive">{t(form.formState.errors[secondaryName]?.message ?? "")}</p>
             )}
           </div>
         </div>

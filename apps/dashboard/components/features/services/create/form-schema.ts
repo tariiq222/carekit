@@ -3,8 +3,8 @@ import { z } from "zod"
 /* ─── Zod Schema ─── */
 
 export const createServiceSchema = z.object({
-  nameEn: z.string().min(1, "Required"),
-  nameAr: z.string().min(1, "Required"),
+  nameEn: z.string().min(1, "services.create.nameEnRequired"),
+  nameAr: z.string().min(1, "services.create.nameArRequired"),
   descriptionEn: z.string().optional(),
   descriptionAr: z.string().optional(),
   categoryId: z.string().uuid("services.create.categoryRequired"),

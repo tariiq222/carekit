@@ -44,8 +44,8 @@ export function BranchFormFields({ form, isEdit, mode }: BranchFormFieldsProps) 
         <CardContent className="pt-6">
           <SectionHeader
             icon={Building06Icon}
-            title={t("branches.field.nameEn")}
-            description={isEdit ? t("branches.edit.description") : t("branches.create.description")}
+            title={t("branches.section.names")}
+            description={t("branches.section.namesDescription")}
           />
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
@@ -71,8 +71,8 @@ export function BranchFormFields({ form, isEdit, mode }: BranchFormFieldsProps) 
         <CardContent className="pt-6">
           <SectionHeader
             icon={Settings01Icon}
-            title={t("branches.field.isActive")}
-            description={t("branches.field.timezone")}
+            title={t("branches.section.settings")}
+            description={t("branches.section.settingsDescription")}
           />
           <div className="space-y-4">
             <div className="flex flex-col gap-1.5">
@@ -105,8 +105,8 @@ export function BranchFormFields({ form, isEdit, mode }: BranchFormFieldsProps) 
         <CardContent className="pt-6">
           <SectionHeader
             icon={Location01Icon}
-            title={t("branches.field.address")}
-            description={t("branches.field.phone")}
+            title={t("branches.section.contact")}
+            description={t("branches.section.contactDescription")}
           />
           <div className="space-y-4">
             <div className="flex flex-col gap-1.5">

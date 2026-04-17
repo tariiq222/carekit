@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { queryKeys } from "@/lib/query-keys"
 import {
   fetchBranches,
@@ -19,12 +19,18 @@ import type { BranchListQuery } from "@/lib/types/branch"
 export function useBranches() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [isActive, setIsActive] = useState<boolean | undefined>()
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const query: BranchListQuery = {
     page,
     perPage: 50,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     isActive,
   }
 
@@ -36,6 +42,7 @@ export function useBranches() {
 
   const resetFilters = useCallback(() => {
     setSearch("")
+    setDebouncedSearch("")
     setIsActive(undefined)
     setPage(1)
   }, [])

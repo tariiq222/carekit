@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { queryKeys } from "@/lib/query-keys"
 import {
   fetchServices,
@@ -45,13 +45,19 @@ import type {
 export function useServices() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [categoryId, setCategoryId] = useState<string | undefined>()
   const [isActive, setIsActive] = useState<boolean | undefined>()
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const query: ServiceListQuery = {
     page,
     perPage: 20,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     categoryId,
     isActive,
     includeHidden: true, // Admin dashboard shows all services
@@ -65,6 +71,7 @@ export function useServices() {
 
   const resetFilters = useCallback(() => {
     setSearch("")
+    setDebouncedSearch("")
     setCategoryId(undefined)
     setIsActive(undefined)
     setPage(1)
@@ -116,12 +123,18 @@ export function useCategories() {
 export function useCategoriesList() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [isActive, setIsActive] = useState<boolean | undefined>()
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const query: CategoryListQuery = {
     page,
     perPage: 20,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     isActive,
   }
 
@@ -133,6 +146,7 @@ export function useCategoriesList() {
 
   const resetFilters = useCallback(() => {
     setSearch("")
+    setDebouncedSearch("")
     setIsActive(undefined)
     setPage(1)
   }, [])
