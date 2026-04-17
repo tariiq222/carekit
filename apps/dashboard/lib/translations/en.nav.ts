@@ -25,6 +25,7 @@ export const enNav: Record<string, string> = {
   "nav.coupons": "Coupons",
   "nav.reports": "Reports",
   "nav.notifications": "Notifications",
+  "nav.contactMessages": "Contact Messages",
   "nav.chatbot": "AI Chatbot",
   "nav.ratings": "Ratings",
   "nav.zatca": "ZATCA",

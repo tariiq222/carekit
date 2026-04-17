@@ -25,6 +25,7 @@ export const arNav: Record<string, string> = {
   "nav.coupons": "الكوبونات",
   "nav.reports": "التقارير",
   "nav.notifications": "الإشعارات",
+  "nav.contactMessages": "رسائل التواصل",
   "nav.chatbot": "مساعد الذكاء الاصطناعي",
   "nav.ratings": "التقييمات",
   "nav.zatca": "فاتورة",
