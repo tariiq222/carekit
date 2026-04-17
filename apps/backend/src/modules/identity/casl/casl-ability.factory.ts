@@ -18,6 +18,7 @@ const BUILT_IN: Record<string, Array<{ action: string; subject: string }>> = {
     { action: 'manage', subject: 'Category' },
     { action: 'manage', subject: 'Service' },
     { action: 'manage', subject: 'Branch' },
+    { action: 'manage', subject: 'Branding' },
   ],
   RECEPTIONIST: [
     { action: 'manage', subject: 'Booking' },

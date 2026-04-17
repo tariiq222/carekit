@@ -48,4 +48,10 @@ export const enBranding: Record<string, string> = {
   "branding.colorAccentDark": "Accent Color Dark",
   "branding.colorBackground": "Background Color",
   "branding.fontUrl": "Font URL",
+  "branding.website.title": "Website",
+  "branding.website.description": "Public website settings",
+  "branding.website.domain": "Domain",
+  "branding.website.theme": "Theme",
+  "branding.website.themes.sawaa": "Sawaa",
+  "branding.website.themes.premium": "Premium",
 }

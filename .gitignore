@@ -102,3 +102,6 @@ __pycache__/
 
 # Debug artifacts
 apps/backend/_check-admin.ts
+
+# Sawaa design source (reference only, not tracked)
+docs/superpowers/assets/sawaa-source/

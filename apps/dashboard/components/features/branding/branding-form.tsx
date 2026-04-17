@@ -7,10 +7,17 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ColorSwatchInput } from "@/components/features/shared/color-swatch-input"
 import { Separator } from "@/components/ui/separator"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useBranding } from "@/components/providers/branding-provider"
 import { isValidHex, hexToRgb, contrastRatio, pickForeground } from "@/lib/color-utils"
 import { useLocale } from "@/components/locale-provider"
-import type { BrandingConfig, UpdateBrandingPayload } from "@/lib/types/branding"
+import type { BrandingConfig, UpdateBrandingPayload, WebsiteTheme } from "@/lib/types/branding"
 
 function ContrastBadge({ ratio, label }: { ratio: number; label?: string }) {
   const pass = ratio >= 4.5
@@ -49,6 +56,8 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
   const [fontUrl, setFontUrl] = useState("")
   const [logoUrl, setLogoUrl] = useState("")
   const [faviconUrl, setFaviconUrl] = useState("")
+  const [websiteDomain, setWebsiteDomain] = useState("")
+  const [activeWebsiteTheme, setActiveWebsiteTheme] = useState<WebsiteTheme>("SAWAA")
 
   const { preview, clearPreview, apply } = useBranding()
 
@@ -69,6 +78,8 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
     setFontUrl(branding.fontUrl ?? "")
     setLogoUrl(branding.logoUrl ?? "")
     setFaviconUrl(branding.faviconUrl ?? "")
+    setWebsiteDomain(branding.websiteDomain ?? "")
+    setActiveWebsiteTheme(branding.activeWebsiteTheme ?? "SAWAA")
   }, [branding])
 
   const updatePreview = useCallback(
@@ -97,19 +108,21 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
 
   const handleSave = () => {
     onSave({
-      organizationNameEn,
+      organizationNameEn: organizationNameEn || null,
       organizationNameAr,
       productTagline: productTagline || null,
-      colorPrimary,
-      colorPrimaryLight,
-      colorPrimaryDark,
-      colorAccent,
-      colorAccentDark,
-      colorBackground,
-      fontFamily,
+      colorPrimary: colorPrimary || null,
+      colorPrimaryLight: colorPrimaryLight || null,
+      colorPrimaryDark: colorPrimaryDark || null,
+      colorAccent: colorAccent || null,
+      colorAccentDark: colorAccentDark || null,
+      colorBackground: colorBackground || null,
+      fontFamily: fontFamily || null,
       fontUrl: fontUrl || null,
       logoUrl: logoUrl || null,
       faviconUrl: faviconUrl || null,
+      websiteDomain: websiteDomain || null,
+      activeWebsiteTheme,
     })
     if (isValidHex(colorPrimary)) {
       apply({ primary: colorPrimary, accent: isValidHex(colorAccent) ? colorAccent : colorPrimary })
@@ -332,6 +345,42 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
           <div className="space-y-2">
             <Label>{t("settings.faviconUrl")}</Label>
             <Input value={faviconUrl} onChange={(e) => setFaviconUrl(e.target.value)} placeholder="https://..." dir="ltr" />
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-base font-semibold">{t("branding.website.title")}</h3>
+            <p className="text-sm text-muted-foreground">{t("branding.website.description")}</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="website-domain">{t("branding.website.domain")}</Label>
+              <Input
+                id="website-domain"
+                value={websiteDomain}
+                onChange={(e) => setWebsiteDomain(e.target.value)}
+                placeholder="clinic.example.com"
+                dir="ltr"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="website-theme">{t("branding.website.theme")}</Label>
+              <Select
+                value={activeWebsiteTheme}
+                onValueChange={(v) => setActiveWebsiteTheme(v as WebsiteTheme)}
+              >
+                <SelectTrigger id="website-theme">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SAWAA">{t("branding.website.themes.sawaa")}</SelectItem>
+                  <SelectItem value="PREMIUM">{t("branding.website.themes.premium")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 

@@ -6,6 +6,7 @@
     "apps/backend",
     "apps/mobile",
     "apps/dashboard",
+    "apps/website",
     "packages/shared",
     "packages/api-client"
   ],
@@ -13,6 +14,7 @@
     "dev:backend": "turbo run dev --filter=backend",
     "dev:mobile": "turbo run dev --filter=carekit-mobile",
     "dev:dashboard": "turbo run dev --filter=dashboard",
+    "dev:website": "turbo run dev --filter=website",
     "dev:all": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
