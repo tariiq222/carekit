@@ -18,6 +18,7 @@ import { GetServiceBookingConfigsHandler } from './services/get-service-booking-
 import { ListServiceEmployeesHandler } from './services/list-service-employees.handler';
 import { UpsertBrandingHandler } from './branding/upsert-branding.handler';
 import { GetBrandingHandler } from './branding/get-branding.handler';
+import { GetPublicBrandingHandler } from './branding/public/get-public-branding.handler';
 import { CreateIntakeFormHandler } from './intake-forms/create-intake-form.handler';
 import { GetIntakeFormHandler } from './intake-forms/get-intake-form.handler';
 import { ListIntakeFormsHandler } from './intake-forms/list-intake-forms.handler';
@@ -41,7 +42,7 @@ const serviceHandlers = [
   controllers: [DashboardOrganizationSettingsController],
   providers: [
     ...serviceHandlers,
-    UpsertBrandingHandler, GetBrandingHandler, UploadLogoHandler,
+    UpsertBrandingHandler, GetBrandingHandler, GetPublicBrandingHandler, UploadLogoHandler,
     CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler, DeleteIntakeFormHandler,
     SubmitRatingHandler, ListRatingsHandler,
     GetOrgSettingsHandler, UpsertOrgSettingsHandler,
@@ -49,7 +50,7 @@ const serviceHandlers = [
   ],
   exports: [
     ...serviceHandlers,
-    UpsertBrandingHandler, GetBrandingHandler, UploadLogoHandler,
+    UpsertBrandingHandler, GetBrandingHandler, GetPublicBrandingHandler, UploadLogoHandler,
     CreateIntakeFormHandler, GetIntakeFormHandler, ListIntakeFormsHandler, DeleteIntakeFormHandler,
     SubmitRatingHandler, ListRatingsHandler,
     GetOrgSettingsHandler, UpsertOrgSettingsHandler,
