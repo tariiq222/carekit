@@ -21,6 +21,7 @@ export function useUpdateBranding() {
     mutationFn: (data: UpdateBrandingPayload) => updateBranding(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.branding.all })
+      queryClient.invalidateQueries({ queryKey: ["branding", "public"] })
       toast.success("تم حفظ إعدادات الهوية")
     },
     onError: (err) => {

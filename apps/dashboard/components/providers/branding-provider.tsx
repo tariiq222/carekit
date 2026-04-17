@@ -4,16 +4,20 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   useCallback,
   type ReactNode,
 } from "react"
+import { useQuery } from "@tanstack/react-query"
 import {
   deriveCssVars,
   isValidHex,
   type BrandingColors,
   type CSSVarMap,
 } from "@/lib/color-utils"
+import { fetchPublicBranding } from "@/lib/api/branding"
+import type { PublicBranding } from "@/lib/types/branding"
 
 /* ─── Context ─── */
 
@@ -102,45 +106,19 @@ function applyBranding(colors: BrandingColors) {
   injectFont(colors.fontFamily, colors.fontUrl)
 }
 
-/* ─── Fetch public branding (no auth needed) ─── */
+/* ─── Map PublicBranding → BrandingColors ─── */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5100/api/v1"
-
-let brandingCache: { colors: BrandingColors | null; ts: number } | null = null
-const BRANDING_CACHE_TTL = 5 * 60_000
-
-async function fetchBranding(): Promise<BrandingColors | null> {
-  if (brandingCache && Date.now() - brandingCache.ts < BRANDING_CACHE_TTL) {
-    return brandingCache.colors
-  }
-  try {
-    const res = await fetch(`${API_BASE_URL}/public/branding`)
-    if (!res.ok) {
-      brandingCache = { colors: null, ts: Date.now() }
-      return null
-    }
-    const body = await res.json()
-    const data = body.data ?? body
-
-    const primary = data.colorPrimary ?? data.primaryColor ?? data.primary_color
-    const accent = data.colorAccent ?? data.secondaryColor ?? data.secondary_color
-
-    if (!primary || !isValidHex(primary)) {
-      brandingCache = { colors: null, ts: Date.now() }
-      return null
-    }
-    const colors: BrandingColors = {
-      primary,
-      accent:     accent && isValidHex(accent) ? accent : primary,
-      background: typeof data.colorBackground === "string" ? data.colorBackground : undefined,
-      fontFamily: typeof data.fontFamily === "string" ? data.fontFamily : undefined,
-      fontUrl:    typeof data.fontUrl === "string" ? data.fontUrl : undefined,
-    }
-    brandingCache = { colors, ts: Date.now() }
-    return colors
-  } catch {
-    brandingCache = { colors: null, ts: Date.now() }
-    return null
+function mapPublicBranding(data: PublicBranding | undefined): BrandingColors | null {
+  if (!data) return null
+  const primary = data.colorPrimary
+  if (!primary || !isValidHex(primary)) return null
+  const accent = data.colorAccent
+  return {
+    primary,
+    accent: accent && isValidHex(accent) ? accent : primary,
+    background: data.colorBackground ?? undefined,
+    fontFamily: data.fontFamily ?? undefined,
+    fontUrl: data.fontUrl ?? undefined,
   }
 }
 
@@ -150,19 +128,18 @@ interface Props {
   children: ReactNode
 }
 
-export function BrandingProvider({ children }: Props) {
-  const [savedColors, setSavedColors] = useState<BrandingColors | null>(null)
-  const [previewColors, setPreviewColors] = useState<BrandingColors | null>(null)
+export const BRANDING_PUBLIC_QUERY_KEY = ["branding", "public"] as const
 
-  /* Fetch on mount */
-  useEffect(() => {
-    fetchBranding().then((colors) => {
-      if (colors) {
-        setSavedColors(colors)
-        applyBranding(colors)
-      }
-    })
-  }, [])
+export function BrandingProvider({ children }: Props) {
+  const { data } = useQuery({
+    queryKey: BRANDING_PUBLIC_QUERY_KEY,
+    queryFn: fetchPublicBranding,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  })
+
+  const savedColors = useMemo(() => mapPublicBranding(data), [data])
+  const [previewColors, setPreviewColors] = useState<BrandingColors | null>(null)
 
   /* Apply active colors (preview takes priority) */
   const activeColors = previewColors ?? savedColors
@@ -184,7 +161,6 @@ export function BrandingProvider({ children }: Props) {
   }, [])
 
   const apply = useCallback((colors: BrandingColors) => {
-    setSavedColors(colors)
     setPreviewColors(null)
     applyBranding(colors)
   }, [])
