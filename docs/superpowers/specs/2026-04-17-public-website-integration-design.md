@@ -109,6 +109,7 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 ## 5. Prisma Schema Changes
 
 - `Branding.activeWebsiteTheme` (enum: `sawaa | premium`) — phase 1.
+- `Branding.websiteDomain` (string, unique) — phase 1. The clinic-owned domain hosting the public site; drives CORS, canonical URLs, sitemap, and email link generation.
 - `Employee`: `slug` (unique), `isPublic` (bool), `publicBio` (text), `publicImage` (string) — phase 1.
 - `Specialty`: `slug` (unique), `isPublic`, `publicDescription`, `publicImage` — phase 1.
 - `ContactMessage` model: id, orgId, name, phone, email, subject, body, createdAt, status — phase 1.
@@ -182,11 +183,11 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 ## 9. Open Questions
 
 - Arabic vs English language switching: does the clinic owner configure default, or is it auto from browser? Assume auto + manual override unless told otherwise.
-- Domain model: does each clinic bring its own domain, or does CareKit assign subdomains? Assume clinic brings domain; Nginx config templated per deployment.
 
 ## 9.1 Decided
 
 - **OTP channel (phase 2): email only.** Uses the existing `email/` (SMTP) module. SMS providers will be added later as a pluggable `NotificationChannel` adapter — the `OtpCode` model carries a `channel` column from day one to avoid a future migration.
+- **Domain model: each clinic brings its own domain.** CareKit does not own or assign subdomains. Deployment provisions Nginx + TLS (Let's Encrypt or provided cert) per clinic domain. A `Branding.websiteDomain` field stores the authoritative domain for CORS allowlisting, canonical URLs, sitemap, and email links.
 
 ## 10. Out of Scope (for this spec)
 
