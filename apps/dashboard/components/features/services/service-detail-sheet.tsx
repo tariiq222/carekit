@@ -188,7 +188,7 @@ export function ServiceDetailSheet({
                 label={t("services.detail.deposit")}
                 value={
                   service.depositEnabled
-                    ? <span className="tabular-nums">{service.depositAmount != null ? (service.depositAmount / 100).toFixed(2) : "—"}</span>
+                    ? <span className="tabular-nums">{service.depositAmount != null ? Number(service.depositAmount).toFixed(2) : "—"}</span>
                     : <StatusPill active={false} yes="" no={t("common.disabled")} />
                 }
               />

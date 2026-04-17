@@ -35,14 +35,8 @@ function NotificationRow({
   onMarkRead: (id: string) => void
 }) {
   const isUnread = !notification.isRead
-  const title =
-    locale === "ar" && notification.titleAr
-      ? notification.titleAr
-      : notification.titleEn
-  const body =
-    locale === "ar" && notification.bodyAr
-      ? notification.bodyAr
-      : notification.bodyEn
+  const title = notification.title
+  const body = notification.body
 
   return (
     <button

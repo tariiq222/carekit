@@ -44,7 +44,7 @@ export class UploadLogoHandler {
 
     await this.prisma.brandingConfig.upsert({
       where: { id: SINGLETON_ID },
-      create: { id: SINGLETON_ID, clinicNameAr: 'منظمتي', logoUrl: file.url },
+      create: { id: SINGLETON_ID, organizationNameAr: 'منظمتي', logoUrl: file.url },
       update: { logoUrl: file.url },
     });
 

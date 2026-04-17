@@ -239,17 +239,28 @@ model Holiday {
 // ─── Branding Config ─────────────────────────────────────────────────────────
 
 model BrandingConfig {
-  id           String   @id @default("default")
-  clinicNameAr String
-  clinicNameEn String?
-  logoUrl      String?
-  faviconUrl   String?
-  primaryColor String?
-  accentColor  String?
-  fontFamily   String?
-  customCss    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                    String   @id @default("default")
+
+  organizationNameAr    String
+  organizationNameEn    String?
+  productTagline        String?
+
+  logoUrl               String?
+  faviconUrl            String?
+
+  colorPrimary          String?
+  colorPrimaryLight     String?
+  colorPrimaryDark      String?
+  colorAccent           String?
+  colorAccentDark       String?
+  colorBackground       String?
+
+  fontFamily            String?
+  fontUrl               String?
+  customCss             String?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 // ─── Intake Forms ─────────────────────────────────────────────────────────────

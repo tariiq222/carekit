@@ -10,7 +10,7 @@ export class GetBrandingHandler {
   async execute() {
     return this.prisma.brandingConfig.upsert({
       where: { id: SINGLETON_ID },
-      create: { id: SINGLETON_ID, clinicNameAr: 'منظمتي' },
+      create: { id: SINGLETON_ID, organizationNameAr: 'منظمتي' },
       update: {},
     });
   }

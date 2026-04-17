@@ -63,7 +63,7 @@ describe('UploadLogoHandler', () => {
     expect(brandingUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'default' },
-        create: expect.objectContaining({ id: 'default', clinicNameAr: 'منظمتي' }),
+        create: expect.objectContaining({ id: 'default', organizationNameAr: 'منظمتي' }),
         update: { logoUrl: MOCK_FILE_ROW.url },
       }),
     );

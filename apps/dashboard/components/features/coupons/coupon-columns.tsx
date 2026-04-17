@@ -44,7 +44,7 @@ export function getCouponColumns(
         const c = row.original
         return (
           <span className="tabular-nums text-sm font-medium">
-            {c.discountType === "percentage"
+            {c.discountType === "PERCENTAGE"
               ? `${c.discountValue}%`
               : `${(c.discountValue / 100).toFixed(2)} SAR`}
           </span>

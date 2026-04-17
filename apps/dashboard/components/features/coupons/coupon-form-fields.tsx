@@ -2,6 +2,7 @@
 
 import { Controller } from "react-hook-form"
 import type { UseFormReturn } from "react-hook-form"
+import type { CouponFormData } from "@/lib/schemas/coupon.schema"
 import {
   DiscountIcon,
   TextAlignLeftIcon,
@@ -23,8 +24,7 @@ import { SectionHeader } from "@/components/features/section-header"
 import { useLocale } from "@/components/locale-provider"
 
 interface CouponFormFieldsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: UseFormReturn<any>
+  form: UseFormReturn<CouponFormData>
   isEdit: boolean
   mode: "create" | "edit"
 }
@@ -67,8 +67,8 @@ export function CouponFormFields({ form, isEdit, mode }: CouponFormFieldsProps) 
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="percentage">{t("coupons.type.percentage")}</SelectItem>
-                        <SelectItem value="fixed">{t("coupons.type.fixed")}</SelectItem>
+                        <SelectItem value="PERCENTAGE">{t("coupons.type.percentage")}</SelectItem>
+                        <SelectItem value="FIXED">{t("coupons.type.fixed")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -80,7 +80,7 @@ export function CouponFormFields({ form, isEdit, mode }: CouponFormFieldsProps) 
                   type="number"
                   min={1}
                   {...form.register("discountValue")}
-                  placeholder={discountType === "percentage" ? "10" : "50"}
+                  placeholder={discountType === "PERCENTAGE" ? "10" : "50"}
                 />
                 {form.formState.errors.discountValue && (
                   <p className="text-xs text-destructive">{form.formState.errors.discountValue.message as string}</p>
@@ -103,7 +103,7 @@ export function CouponFormFields({ form, isEdit, mode }: CouponFormFieldsProps) 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label>{t("coupons.create.minAmount")}</Label>
-                <Input type="number" min={0} step="0.01" {...form.register("minAmount")} placeholder={isEdit ? undefined : "0"} />
+                <Input type="number" min={0} step="0.01" {...form.register("minOrderAmt")} placeholder={isEdit ? undefined : "0"} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>{t("coupons.create.maxUses")}</Label>

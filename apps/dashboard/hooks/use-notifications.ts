@@ -20,6 +20,7 @@ export function useNotifications() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.notifications.list(query),
     queryFn: () => fetchNotifications(query),
+    staleTime: 60_000,
   })
 
   return {
@@ -40,6 +41,7 @@ export function useDashboardNotifications() {
   return useQuery({
     queryKey: queryKeys.notifications.list(query),
     queryFn: () => fetchNotifications(query),
+    staleTime: 60_000,
   })
 }
 
@@ -50,6 +52,7 @@ export function useUnreadCount() {
     queryKey: queryKeys.notifications.unreadCount(),
     queryFn: fetchUnreadCount,
     refetchInterval: 30_000,
+    staleTime: 30_000,
   })
 }
 

@@ -71,7 +71,7 @@ export function ActivityFeed({ notifications }: ActivityFeedProps) {
                   <span className={`size-2.5 rounded-full ${dotColor}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground">{locale === "ar" ? n.titleAr : n.titleEn}</p>
+                  <p className="text-sm text-foreground">{n.title}</p>
                   <p className="text-xs text-muted-foreground">
                     {timeAgo(n.createdAt, locale)}
                   </p>

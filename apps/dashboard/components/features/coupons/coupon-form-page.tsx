@@ -27,18 +27,18 @@ type Props =
 
 const DEFAULT_VALUES: CouponFormData = {
   code: "", descriptionEn: "", descriptionAr: "",
-  discountType: "percentage", discountValue: 10,
-  minAmount: "", maxUses: "", maxUsesPerUser: "", expiresAt: "", isActive: true,
+  discountType: "PERCENTAGE", discountValue: 10,
+  minOrderAmt: "", maxUses: "", maxUsesPerUser: "", expiresAt: "", isActive: true,
 }
 
 /* ─── Helpers ─── */
 
-function toDisplayValue(value: number, type: "percentage" | "fixed") {
-  return type === "fixed" ? value / 100 : value
+function toDisplayValue(value: number, type: "PERCENTAGE" | "FIXED") {
+  return type === "FIXED" ? value / 100 : value
 }
 
-function toStorageValue(value: number, type: "percentage" | "fixed") {
-  return type === "fixed" ? Math.round(value * 100) : value
+function toStorageValue(value: number, type: "PERCENTAGE" | "FIXED") {
+  return type === "FIXED" ? Math.round(value * 100) : value
 }
 
 /* ─── Coupon Form Page ─── */
@@ -69,9 +69,9 @@ export function CouponFormPage(props: Props) {
       code: coupon.code,
       descriptionEn: coupon.descriptionEn ?? "",
       descriptionAr: coupon.descriptionAr ?? "",
-      discountType: coupon.discountType as "percentage" | "fixed",
-      discountValue: toDisplayValue(coupon.discountValue, coupon.discountType as "percentage" | "fixed"),
-      minAmount: coupon.minAmount != null ? coupon.minAmount / 100 : "",
+      discountType: coupon.discountType as "PERCENTAGE" | "FIXED",
+      discountValue: toDisplayValue(coupon.discountValue, coupon.discountType as "PERCENTAGE" | "FIXED"),
+      minOrderAmt: coupon.minOrderAmt != null ? coupon.minOrderAmt / 100 : "",
       maxUses: coupon.maxUses ?? "",
       maxUsesPerUser: coupon.maxUsesPerUser ?? "",
       expiresAt: coupon.expiresAt ? new Date(coupon.expiresAt).toISOString().slice(0, 16) : "",
@@ -86,7 +86,7 @@ export function CouponFormPage(props: Props) {
       descriptionAr: data.descriptionAr || undefined,
       discountType: data.discountType,
       discountValue: toStorageValue(data.discountValue, data.discountType),
-      minAmount: data.minAmount !== "" && data.minAmount !== undefined ? Math.round(Number(data.minAmount) * 100) : undefined,
+      minOrderAmt: data.minOrderAmt !== "" && data.minOrderAmt !== undefined ? Math.round(Number(data.minOrderAmt) * 100) : undefined,
       maxUses: data.maxUses !== "" && data.maxUses !== undefined ? Number(data.maxUses) : undefined,
       maxUsesPerUser: data.maxUsesPerUser !== "" && data.maxUsesPerUser !== undefined ? Number(data.maxUsesPerUser) : undefined,
       expiresAt: data.expiresAt || undefined,
