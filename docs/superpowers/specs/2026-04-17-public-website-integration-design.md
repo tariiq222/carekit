@@ -1,0 +1,192 @@
+# Public Website Integration — Design Spec
+
+**Date:** 2026-04-17
+**Status:** Approved for planning
+**Author:** Tariq + brainstorming session
+
+## 1. Context
+
+CareKit is a white-label clinic management platform (backend + dashboard + mobile). A standalone Arabic/RTL marketing website (`sawaa-website`) was designed externally as a Next.js 14 app with static data and no backend. It must be integrated into CareKit so that:
+
+- Each clinic deployment includes a public-facing website.
+- Website content is controlled from the dashboard (no code changes per clinic).
+- Visitors can browse therapists/specialties, take the burnout test, contact the clinic, **and eventually book and pay online**.
+- The work doubles as a test-bed for the backend APIs and shared business logic that the mobile app will later consume, significantly reducing mobile build time.
+
+Single-organization mode holds: one deployment = one clinic. The website is part of that deployment, not a separate multi-tenant service.
+
+## 2. Goals
+
+- Deliver a conversion-driving public site per clinic (not just marketing).
+- Re-use existing CareKit backend modules (bookings, payments, branding, employees, specialties) via new `/api/public/*` endpoints.
+- Enable clinic owners to control visible content, theme, and branding from the dashboard.
+- Establish a shared layer (`@carekit/api-client`, `@carekit/shared`) rich enough for the mobile app to consume directly later.
+- Ship progressively in four phases — each phase production-releasable on its own.
+
+## 3. Non-Goals
+
+- Marketplace / multi-clinic directory. Each website serves exactly one clinic.
+- Visual page builder or drag-and-drop editor.
+- Unlimited custom themes. Exactly two themes for now: `sawaa` (current) and `premium` (new, premium/dark aesthetic).
+- Full user-generated content (blog CMS, comments, reviews) — out of scope.
+- Replacing the mobile app. Mobile remains the richest experience; website is the web equivalent.
+
+## 4. Architecture
+
+### 4.1 Monorepo placement
+
+```
+carekit/
+├── apps/
+│   ├── backend/
+│   ├── dashboard/
+│   ├── mobile/
+│   └── website/      ← new
+├── packages/
+│   ├── api-client/   (extended)
+│   └── shared/       (extended)
+```
+
+- Port: **5104** (reserved CareKit range 5000–5999).
+- Stack: Next.js 15 App Router, React 19, Tailwind 4, shadcn/ui, next-intl, framer-motion.
+- Deployed as a docker-compose service; Nginx routes `clinic.example.com` → website.
+
+### 4.2 Branding flow (dynamic, per clinic)
+
+- `org-experience/branding` model holds `primaryColor`, `accentColor`, `backgroundColor`, `foregroundColor`, `logoUrl`, `brandName`, and a new field `activeWebsiteTheme: "sawaa" | "premium"`.
+- Website root layout performs SSR fetch of `/public/branding` and injects values into `:root` as CSS custom properties (`--primary`, `--accent`, etc.).
+- All components use semantic tokens only (no hex literals, no hardcoded Tailwind color utilities). This matches the existing CLAUDE.md rule.
+- `next-themes` (light/dark) is **removed**. Dark variants, if needed later, will be handled through branding tokens, not a generic theme switcher.
+
+### 4.3 Theme variants (layout/structure)
+
+Two themes share the same data and logic but differ in visual structure.
+
+- `themes/sawaa/` — current Sawaa design, warm/emotional, glass + gradients.
+- `themes/premium/` — new dark/luxury spa-like design with full-bleed imagery, parallax, restrained micro-copy.
+- A `Theme` TypeScript interface enforces completeness: every theme must export components for every page.
+- Theme selection is read from `branding.activeWebsiteTheme` at SSR time. The dashboard exposes a dropdown for the clinic owner.
+- Shared components (`BookingForm`, `ContactForm`, `BurnoutQuiz`, shadcn primitives) live in `components/shared/` and `components/ui/`. Themes style them, not reimplement them. Rule: **logic is shared, presentation lives in the theme.**
+
+### 4.4 Shared layer (critical for mobile reuse)
+
+To make the website a true test-bed for mobile:
+
+- **`@carekit/api-client`** — framework-agnostic fetch client. No React hooks, no Next-specific features. Extended to cover all `/public/*` endpoints, auth/OTP flows, and payment init.
+- **`@carekit/shared`** — zod schemas (booking, contact, client registration), booking state machine, pricing rules, availability calendar logic, enums, types derived from Prisma.
+- Both packages are consumed by `apps/website` immediately and by `apps/mobile` later without rewrites.
+
+### 4.5 Public API surface
+
+All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
+
+| Endpoint | Phase |
+|---|---|
+| `GET /public/branding` | 1 |
+| `GET /public/specialties` + `/:slug` | 1 |
+| `GET /public/employees` + `/:slug` | 1 |
+| `GET /public/support-groups` | 1 |
+| `POST /public/contact-messages` | 1 |
+| `POST /public/otp/request` | 2 |
+| `POST /public/otp/verify` → session JWT | 2 |
+| `GET /public/employees/:id/availability` | 2 |
+| `POST /public/bookings` (guest, requires OTP session) | 2 |
+| `POST /public/payments/init` + Moyasar webhook | 2 |
+| `POST /public/auth/register|login|refresh|logout` | 3 |
+| `GET /public/me/bookings` | 3 |
+| `PATCH /public/bookings/:id/cancel|reschedule` | 3 |
+| Subscriptions, support-group bookings, ZATCA QR, refunds | 4 |
+
+### 4.6 Security
+
+- `@nestjs/throttler` per-endpoint limits: 10/min browse, 3/min OTP request, 1/min booking create.
+- hCaptcha on contact form and OTP request (phase 1+).
+- OTP → short-lived session JWT (30 min) used only for guest booking + payment init.
+- Moyasar webhook handler (existing in `payments/` module) extended to reconcile guest-bookings.
+- CORS allowlist restricted to the clinic's configured website domain.
+- No PII returned from public endpoints beyond what the clinic explicitly marked as public (`employee.isPublic`, `employee.publicBio`, etc.).
+
+## 5. Prisma Schema Changes
+
+- `Branding.activeWebsiteTheme` (enum: `sawaa | premium`) — phase 1.
+- `Employee`: `slug` (unique), `isPublic` (bool), `publicBio` (text), `publicImage` (string) — phase 1.
+- `Specialty`: `slug` (unique), `isPublic`, `publicDescription`, `publicImage` — phase 1.
+- `ContactMessage` model: id, orgId, name, phone, email, subject, body, createdAt, status — phase 1.
+- `Client.phoneVerified`, `Client.emailVerified` — phase 2.
+- `OtpCode` model: phone, codeHash, purpose, expiresAt, consumedAt — phase 2.
+- All migrations additive and immutable per CareKit rules.
+
+## 6. Phased Delivery
+
+### Phase 1 — Foundation + Marketing (2–3 weeks)
+
+**Ship criteria:** site online, branding + theme switching work, therapists/specialties pulled from backend, contact form writes to backend, both themes render all pages.
+
+- Scaffold `apps/website` with Next.js 15, Tailwind 4, next-intl, shadcn/ui.
+- Migrate current Sawaa pages into `themes/sawaa/*`, converting all hardcoded colors to semantic tokens.
+- Design and build `themes/premium/*` (a separate visual-design subtask precedes this).
+- Extend `@carekit/api-client` with phase-1 endpoints.
+- Implement `BrandingProvider` (SSR token injection).
+- Add phase-1 Prisma migrations + public controllers.
+- Dashboard: "Website" settings page — theme selector, per-employee `isPublic` toggle + public bio editor, per-specialty public fields, contact-messages inbox.
+- Docker service + Nginx routing.
+- QA via Chrome DevTools MCP; sync to Kiwi TCMS under `Product=CareKit, Category=Website, Plan=Manual QA`.
+
+### Phase 2 — Guest Booking + Payment (2–3 weeks)
+
+**Ship criteria:** a visitor can complete a real paid booking end-to-end that appears in the dashboard immediately.
+
+- `OtpCode` migration + OTP request/verify endpoints (SMS provider integration).
+- Availability endpoint (re-uses existing booking conflict logic).
+- Guest booking endpoint (creates `Client` on demand, links booking).
+- Moyasar integration: payment init + 3DS + webhook reconciliation.
+- Booking wizard pages in both themes: service → therapist → time → info+OTP → payment → confirmation.
+- Dashboard: "Guest Bookings" filter, optional manual confirmation workflow.
+- E2E Kiwi plan + QA gate.
+
+### Phase 3 — Client Accounts (2 weeks)
+
+**Ship criteria:** returning clients can log in, view history, reschedule/cancel bookings, and guest-booking records are linkable by phone number on signup.
+
+- Auth endpoints (register, login, refresh, logout) + session cookies.
+- `/account`, `/account/bookings`, `/account/profile` pages in both themes.
+- Reschedule/cancel respecting clinic policies (existing booking rules).
+- Migrate phone-linked guest bookings into the new account on signup.
+
+### Phase 4 — Advanced (2 weeks)
+
+- Subscription packages (existing backend support).
+- Support-group bookings (group capacity, waitlist).
+- ZATCA QR code on invoices (existing module).
+- Refund flow.
+- SEO polish: Schema.org `BookAction` / `MedicalBusiness`, dynamic sitemap, OG images, JSON-LD per therapist.
+
+## 7. Testing Strategy
+
+- **Unit:** zod schemas, state machines, and API-client methods in `packages/shared` and `packages/api-client` via Vitest. Reported to Kiwi under `Category=Website, Plan=Unit`.
+- **Integration (backend):** public controllers via Jest E2E against a real Postgres. Reported under `Plan=E2E`.
+- **Manual QA (dashboard + website):** Chrome DevTools MCP walkthrough per release, report saved to `docs/superpowers/qa/website-<phase>-<date>.md`, synced to Kiwi under `Plan=Manual QA` via `scripts/kiwi-sync-manual-qa.mjs`.
+- **Security:** rate-limit tests, OTP abuse tests, captcha bypass attempts in E2E.
+
+## 8. Risks & Mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Public booking endpoint becomes spam target | Throttling + OTP + captcha + bot detection on webhook patterns |
+| Moyasar webhook race with booking creation | Existing idempotency key pattern in `payments/`; extend to guest path |
+| Divergence between website and mobile flows | Force all non-visual logic into `packages/shared`; mobile and website import identical schemas and state machines |
+| Two themes doubling maintenance cost | Strict rule: shared logic + shadcn primitives. Themes only override layout and visual chrome |
+| Premium theme ships before design is ready | Treat premium theme design as a gated sub-task with its own visual spec before phase-1 implementation begins |
+| SEO impact of client-side heavy flows | Booking wizard + marketing pages stay SSR; only after-booking dashboards are client-rendered |
+
+## 9. Open Questions
+
+- SMS provider for OTP (existing integration or new)? Decide before phase 2.
+- Arabic vs English language switching: does the clinic owner configure default, or is it auto from browser? Assume auto + manual override unless told otherwise.
+- Domain model: does each clinic bring its own domain, or does CareKit assign subdomains? Assume clinic brings domain; Nginx config templated per deployment.
+
+## 10. Out of Scope (for this spec)
+
+- Detailed visual design of the `premium` theme — separate design spec.
+- Content strategy, copywriting, SEO keywords — owner-provided.
+- Marketing analytics / pixel tracking — future enhancement.
