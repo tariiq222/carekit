@@ -1,6 +1,6 @@
 import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, MaxLength, Min, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IntakeFieldType } from '@prisma/client';
+import { IntakeFieldType, IntakeFormType, IntakeFormScope } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class IntakeFieldInputDto {
@@ -29,6 +29,15 @@ export class CreateIntakeFormDto {
 
   @ApiPropertyOptional({ description: 'Form name in English', example: 'Pre-session Questionnaire' })
   @IsOptional() @IsString() @MaxLength(200) nameEn?: string;
+
+  @ApiProperty({ description: 'Form type', enum: IntakeFormType, example: IntakeFormType.PRE_SESSION })
+  @IsEnum(IntakeFormType) type!: IntakeFormType;
+
+  @ApiProperty({ description: 'Form scope', enum: IntakeFormScope, example: IntakeFormScope.GLOBAL })
+  @IsEnum(IntakeFormScope) scope!: IntakeFormScope;
+
+  @ApiPropertyOptional({ description: 'Scope entity ID (null for global scope)', example: null })
+  @IsOptional() @IsString() scopeId?: string;
 
   @ApiPropertyOptional({ description: 'Whether the form is active and shown to clients', example: true })
   @IsOptional() @IsBoolean() isActive?: boolean;

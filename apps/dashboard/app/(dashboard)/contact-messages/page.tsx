@@ -1,0 +1,147 @@
+"use client"
+
+import { useState } from "react"
+import { ListPageShell } from "@/components/features/list-page-shell"
+import { PageHeader } from "@/components/features/page-header"
+import { Breadcrumbs } from "@/components/features/breadcrumbs"
+import { ErrorBanner } from "@/components/features/error-banner"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useLocale } from "@/components/locale-provider"
+import { useContactMessages, useUpdateContactMessageStatus } from "@/hooks/use-contact-messages"
+import type { ContactMessageStatus } from "@/lib/api/contact-messages"
+
+const STATUS_OPTIONS: { value: ContactMessageStatus | "ALL"; labelAr: string; labelEn: string }[] = [
+  { value: "ALL", labelAr: "الكل", labelEn: "All" },
+  { value: "NEW", labelAr: "جديد", labelEn: "New" },
+  { value: "READ", labelAr: "مقروء", labelEn: "Read" },
+  { value: "REPLIED", labelAr: "تم الرد", labelEn: "Replied" },
+  { value: "ARCHIVED", labelAr: "مؤرشف", labelEn: "Archived" },
+]
+
+export default function ContactMessagesPage() {
+  const { locale } = useLocale()
+  const isAr = locale === "ar"
+  const [statusFilter, setStatusFilter] = useState<ContactMessageStatus | "ALL">("ALL")
+
+  const { data, isLoading, error } = useContactMessages({
+    status: statusFilter === "ALL" ? undefined : statusFilter,
+    limit: 50,
+  })
+  const update = useUpdateContactMessageStatus()
+
+  const breadcrumbItems = [
+    { label: isAr ? "الرئيسية" : "Home", href: "/" },
+    { label: isAr ? "رسائل التواصل" : "Contact Messages" },
+  ]
+
+  return (
+    <ListPageShell>
+      <Breadcrumbs items={breadcrumbItems} />
+      <PageHeader
+        title={isAr ? "رسائل التواصل" : "Contact Messages"}
+        description={isAr ? "الرسائل المرسلة من نموذج تواصل معنا" : "Messages from the public contact form"}
+      />
+      {error && <ErrorBanner message={(error as Error).message} />}
+
+      <div className="flex gap-2">
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ContactMessageStatus | "ALL")}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {isAr ? opt.labelAr : opt.labelEn}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{isAr ? "الاسم" : "Name"}</TableHead>
+            <TableHead>{isAr ? "التواصل" : "Contact"}</TableHead>
+            <TableHead>{isAr ? "الموضوع" : "Subject"}</TableHead>
+            <TableHead>{isAr ? "الرسالة" : "Body"}</TableHead>
+            <TableHead>{isAr ? "الحالة" : "Status"}</TableHead>
+            <TableHead>{isAr ? "التاريخ" : "Date"}</TableHead>
+            <TableHead>{isAr ? "إجراءات" : "Actions"}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading && (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center text-muted-foreground">
+                {isAr ? "جاري التحميل..." : "Loading..."}
+              </TableCell>
+            </TableRow>
+          )}
+          {!isLoading &&
+            data?.items?.map((msg) => (
+              <TableRow key={msg.id}>
+                <TableCell className="font-medium">{msg.name}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {msg.email ?? msg.phone ?? "—"}
+                </TableCell>
+                <TableCell>{msg.subject ?? "—"}</TableCell>
+                <TableCell className="max-w-xs truncate">{msg.body}</TableCell>
+                <TableCell>
+                  <Badge variant={msg.status === "NEW" ? "default" : "secondary"}>{msg.status}</Badge>
+                </TableCell>
+                <TableCell className="text-sm tabular-nums">
+                  {new Date(msg.createdAt).toLocaleDateString(isAr ? "ar-SA" : "en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    {msg.status === "NEW" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => update.mutate({ id: msg.id, status: "READ" })}
+                      >
+                        {isAr ? "مقروء" : "Read"}
+                      </Button>
+                    )}
+                    {msg.status !== "REPLIED" && msg.status !== "ARCHIVED" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => update.mutate({ id: msg.id, status: "REPLIED" })}
+                      >
+                        {isAr ? "تم الرد" : "Replied"}
+                      </Button>
+                    )}
+                    {msg.status !== "ARCHIVED" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => update.mutate({ id: msg.id, status: "ARCHIVED" })}
+                      >
+                        {isAr ? "أرشفة" : "Archive"}
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          {!isLoading && (data?.items?.length ?? 0) === 0 && (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center text-muted-foreground">
+                {isAr ? "لا توجد رسائل" : "No messages"}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </ListPageShell>
+  )
+}

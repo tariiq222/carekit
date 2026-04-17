@@ -27,9 +27,7 @@ export function EmployeeCard({
   const { theme, isRTL } = useTheme();
 
   const name = `${employee.user.firstName} ${employee.user.lastName}`;
-  const specialtyName = isRTL
-    ? employee.specialty?.nameAr
-    : employee.specialty?.nameEn;
+  const specialtyName = isRTL ? employee.specialtyAr : employee.specialty;
 
   if (compact) {
     return (

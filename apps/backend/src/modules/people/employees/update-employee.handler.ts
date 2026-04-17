@@ -26,7 +26,7 @@ export class UpdateEmployeeHandler {
     return this.prisma.employee.update({
       where: { id: cmd.employeeId },
       data,
-      include: { specialties: true, branches: true, services: true },
+      include: { branches: true, services: true },
     });
   }
 }

@@ -33,6 +33,7 @@ const FEATURES = [
   "zatca",
   "activity-log",
   "groups",
+  "contact-messages",
 ]
 
 /**

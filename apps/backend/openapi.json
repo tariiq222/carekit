@@ -809,6 +809,45 @@
         ],
         "type": "object"
       },
+      "CreateContactMessageDto": {
+        "properties": {
+          "body": {
+            "description": "Message body",
+            "example": "أرغب بمعرفة...",
+            "type": "string"
+          },
+          "captchaToken": {
+            "description": "hCaptcha token (required in prod)",
+            "example": "10000000-aaaa-bbbb-cccc-000000000001",
+            "type": "string"
+          },
+          "email": {
+            "description": "Email (required if no phone)",
+            "example": "user@example.com",
+            "type": "string"
+          },
+          "name": {
+            "description": "Sender name",
+            "example": "سارة أحمد",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Phone (required if no email)",
+            "example": "+966501234567",
+            "type": "string"
+          },
+          "subject": {
+            "description": "Subject",
+            "example": "استفسار عن الحجز",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "body"
+        ],
+        "type": "object"
+      },
       "CreateCouponDto": {
         "properties": {
           "code": {
@@ -1029,16 +1068,6 @@
           },
           "serviceIds": {
             "description": "Service UUIDs to assign",
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ],
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "specialtyIds": {
-            "description": "Specialty UUIDs to assign",
             "example": [
               "00000000-0000-0000-0000-000000000000"
             ],
@@ -1606,21 +1635,10 @@
             },
             "type": "array"
           },
-          "specialtyIds": {
-            "description": "Specialty UUIDs (required when step = specialties)",
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ],
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "step": {
             "description": "Onboarding step to complete",
             "enum": [
               "profile",
-              "specialties",
               "branches",
               "services",
               "complete"
@@ -2599,6 +2617,25 @@
         },
         "type": "object"
       },
+      "UpdateContactMessageStatusDto": {
+        "properties": {
+          "status": {
+            "description": "New status",
+            "enum": [
+              "NEW",
+              "READ",
+              "REPLIED",
+              "ARCHIVED"
+            ],
+            "example": "READ",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
       "UpdateCouponDto": {
         "properties": {
           "descriptionAr": {
@@ -2821,6 +2858,11 @@
             "example": true,
             "type": "boolean"
           },
+          "isPublic": {
+            "description": "Whether the employee appears in the public directory",
+            "example": true,
+            "type": "boolean"
+          },
           "nameAr": {
             "description": "Full name in Arabic",
             "example": "خالد العتيبي",
@@ -2835,6 +2877,23 @@
             "description": "Phone number (international format)",
             "example": "+966501234567",
             "type": "string"
+          },
+          "publicBioAr": {
+            "description": "Public biography (Arabic)",
+            "type": "object"
+          },
+          "publicBioEn": {
+            "description": "Public biography (English)",
+            "type": "object"
+          },
+          "publicImageUrl": {
+            "description": "Public profile image URL",
+            "type": "object"
+          },
+          "slug": {
+            "description": "Public slug (unique, URL-safe)",
+            "example": "dr-khalid",
+            "type": "object"
           },
           "specialty": {
             "description": "Specialty label in English",
@@ -6171,6 +6230,162 @@
           }
         ],
         "summary": "Send a staff message in a conversation",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/contact-messages": {
+      "get": {
+        "operationId": "DashboardCommsController_listContactMessagesEndpoint",
+        "parameters": [
+          {
+            "description": "Filter by status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "NEW",
+                "READ",
+                "REPLIED",
+                "ARCHIVED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated contact messages"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List contact messages",
+        "tags": [
+          "Dashboard / Comms"
+        ]
+      }
+    },
+    "/api/v1/dashboard/comms/contact-messages/{id}/status": {
+      "patch": {
+        "operationId": "DashboardCommsController_updateContactMessageStatusEndpoint",
+        "parameters": [
+          {
+            "description": "Contact message UUID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactMessageStatusDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated message"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update contact message status",
         "tags": [
           "Dashboard / Comms"
         ]
@@ -13480,16 +13695,6 @@
             }
           },
           {
-            "description": "Filter by specialty UUID",
-            "in": "query",
-            "name": "specialtyId",
-            "required": false,
-            "schema": {
-              "example": "00000000-0000-0000-0000-000000000000",
-              "type": "string"
-            }
-          },
-          {
             "description": "Filter by branch UUID",
             "in": "query",
             "name": "branchId",
@@ -17953,6 +18158,132 @@
         "summary": "Get clinic branding (public)",
         "tags": [
           "Public / Branding"
+        ]
+      }
+    },
+    "/api/v1/public/contact-messages": {
+      "post": {
+        "operationId": "PublicContactMessagesController_submit",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContactMessageDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Message accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Submit contact message",
+        "tags": [
+          "Public / Contact"
+        ]
+      }
+    },
+    "/api/v1/public/employees": {
+      "get": {
+        "operationId": "PublicEmployeesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Public employees with slug + bio + image"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "List public-facing employees",
+        "tags": [
+          "Public / Employees"
+        ]
+      }
+    },
+    "/api/v1/public/employees/{slug}": {
+      "get": {
+        "operationId": "PublicEmployeesController_getOne",
+        "parameters": [
+          {
+            "description": "Public slug",
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "example": "dr-ahmed",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Single public employee"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Get single public employee by slug",
+        "tags": [
+          "Public / Employees"
         ]
       }
     },

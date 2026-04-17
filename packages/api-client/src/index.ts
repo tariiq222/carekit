@@ -10,7 +10,6 @@ export * as employeesApi from './modules/employees.js'
 export * as servicesApi from './modules/services.js'
 export * as branchesApi from './modules/branches.js'
 export * as departmentsApi from './modules/departments.js'
-export * as specialtiesApi from './modules/specialties.js'
 export * as availabilityApi from './modules/availability.js'
 export * as ratingsApi from './modules/ratings.js'
 export * as paymentsApi from './modules/payments.js'
@@ -24,3 +23,5 @@ export * as groupsApi from './modules/groups.js'
 export * as usersApi from './modules/users.js'
 export * as organizationSettingsApi from "./modules/organization-settings.js"
 export type { OrganizationSettings, UpdateOrganizationSettingsPayload } from "./modules/organization-settings.js"
+export * as publicEmployeesApi from './modules/public-employees.js'
+export * as contactMessagesApi from './modules/contact-messages.js'

@@ -255,4 +255,10 @@ export const queryKeys = {
     settings: () => ["organization-settings", "public"] as const,
   },
 
+  /* ─── Contact Messages ─── */
+  contactMessages: {
+    all: ["contact-messages"] as const,
+    list: (filters?: object) => ["contact-messages", "list", filters] as const,
+  },
+
 } as const

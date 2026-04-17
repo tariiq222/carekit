@@ -43,7 +43,6 @@ export class ListEmployeesHandler {
             ],
           }
         : {}),
-      ...(query.specialtyId ? { specialties: { some: { specialtyId: query.specialtyId } } } : {}),
       ...(query.branchId ? { branches: { some: { branchId: query.branchId } } } : {}),
     };
 
@@ -54,7 +53,6 @@ export class ListEmployeesHandler {
         take: query.limit,
         orderBy: buildOrderBy(query.sortBy, query.sortOrder),
         include: {
-          specialties: true,
           branches: true,
           services: true,
           availability: { where: { isActive: true }, orderBy: { dayOfWeek: 'asc' } },

@@ -14,7 +14,7 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EmployeeGender } from '@prisma/client';
 
-export type OnboardingStep = 'profile' | 'specialties' | 'branches' | 'services' | 'complete';
+export type OnboardingStep = 'profile' | 'branches' | 'services' | 'complete';
 
 export class EmployeeOnboardingProfileDto {
   @ApiPropertyOptional({ description: 'Display name', example: 'Dr. Khalid Al-Otaibi' })
@@ -37,16 +37,13 @@ export class EmployeeOnboardingProfileDto {
 }
 
 export class EmployeeOnboardingDto {
-  @ApiProperty({ description: 'Onboarding step to complete', enum: ['profile', 'specialties', 'branches', 'services', 'complete'], example: 'profile' })
-  @IsEnum(['profile', 'specialties', 'branches', 'services', 'complete'])
+  @ApiProperty({ description: 'Onboarding step to complete', enum: ['profile', 'branches', 'services', 'complete'], example: 'profile' })
+  @IsEnum(['profile', 'branches', 'services', 'complete'])
   step!: OnboardingStep;
 
   @ApiPropertyOptional({ description: 'Profile data (required when step = profile)', type: EmployeeOnboardingProfileDto })
   @IsOptional() @ValidateNested() @Type(() => EmployeeOnboardingProfileDto)
   profile?: EmployeeOnboardingProfileDto;
-
-  @ApiPropertyOptional({ description: 'Specialty UUIDs (required when step = specialties)', example: ['00000000-0000-0000-0000-000000000000'] })
-  @IsOptional() @IsArray() @ArrayUnique() @IsUUID('all', { each: true }) specialtyIds?: string[];
 
   @ApiPropertyOptional({ description: 'Branch UUIDs (required when step = branches)', example: ['00000000-0000-0000-0000-000000000000'] })
   @IsOptional() @IsArray() @ArrayUnique() @IsUUID('all', { each: true }) branchIds?: string[];

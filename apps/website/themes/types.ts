@@ -10,5 +10,8 @@ export interface Theme {
   Layout: ComponentType<ThemeLayoutProps>;
   pages: {
     home: ComponentType;
+    therapists: ComponentType;
+    contact: ComponentType;
+    burnoutTest: ComponentType;
   };
 }

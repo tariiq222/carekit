@@ -1,7 +1,6 @@
-import type { Employee, EmployeeSpecialty, EmployeeBranch, EmployeeService, EmployeeAvailability } from '@prisma/client';
+import type { Employee, EmployeeBranch, EmployeeService, EmployeeAvailability } from '@prisma/client';
 
 type EmployeeWithRelations = Employee & {
-  specialties?: EmployeeSpecialty[];
   branches?: EmployeeBranch[];
   services?: EmployeeService[];
   availability?: EmployeeAvailability[];
@@ -30,7 +29,6 @@ export interface EmployeeListItem {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  specialtyIds: string[];
   branchIds: string[];
   serviceIds: string[];
   availability: Array<{ dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }>;
@@ -60,7 +58,6 @@ export function mapEmployeeRow(e: EmployeeWithRelations): EmployeeListItem {
     isActive: e.isActive,
     createdAt: e.createdAt,
     updatedAt: e.updatedAt,
-    specialtyIds: (e.specialties ?? []).map((s) => s.specialtyId),
     branchIds: (e.branches ?? []).map((b) => b.branchId),
     serviceIds: (e.services ?? []).map((s) => s.serviceId),
     availability: (e.availability ?? []).map((a) => ({

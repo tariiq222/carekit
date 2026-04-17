@@ -29,6 +29,10 @@ import { OnBookingReminderHandler } from './events/on-booking-reminder.handler';
 import { OnPaymentFailedHandler } from './events/on-payment-failed.handler';
 import { OnClientEnrolledHandler } from './events/on-client-enrolled.handler';
 import { OnGroupSessionPaymentLinksReadyHandler } from './events/on-group-session-payment-links-ready.handler';
+import { CreateContactMessageHandler } from './contact-messages/create-contact-message.handler';
+import { ListContactMessagesHandler } from './contact-messages/list-contact-messages.handler';
+import { UpdateContactMessageStatusHandler } from './contact-messages/update-contact-message-status.handler';
+import { CAPTCHA_VERIFIER, createCaptchaVerifier } from './contact-messages/captcha.verifier';
 
 const handlers = [
   SendPushHandler,
@@ -51,6 +55,9 @@ const handlers = [
   GetEmailTemplateHandler,
   ListEmailTemplatesHandler,
   PreviewEmailTemplateHandler,
+  CreateContactMessageHandler,
+  ListContactMessagesHandler,
+  UpdateContactMessageStatusHandler,
 ];
 
 const eventHandlers = [
@@ -64,7 +71,7 @@ const eventHandlers = [
 @Module({
   imports: [DatabaseModule, MessagingModule, MailModule],
   controllers: [DashboardCommsController],
-  providers: [...handlers, ...eventHandlers],
+  providers: [...handlers, ...eventHandlers, { provide: CAPTCHA_VERIFIER, useFactory: () => createCaptchaVerifier() }],
   exports: [...handlers],
 })
 export class CommsModule implements OnModuleInit {

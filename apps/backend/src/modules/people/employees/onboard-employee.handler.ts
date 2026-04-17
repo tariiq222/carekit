@@ -34,7 +34,7 @@ export class OnboardEmployeeHandler {
         avatarUrl: dto.avatarUrl ?? undefined,
         isActive: dto.isActive ?? true,
       },
-      include: { specialties: true, branches: true, services: true },
+      include: { branches: true, services: true },
     });
 
     return {

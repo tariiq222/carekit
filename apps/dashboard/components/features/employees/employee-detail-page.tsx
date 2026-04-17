@@ -37,6 +37,7 @@ import {
   PricingCard,
 } from "@/components/features/employees/employee-profile-helpers"
 import { EmployeeBookingsChart } from "@/components/features/employees/employee-bookings-chart"
+import { PublicProfileTab } from "@/components/features/employees/public-profile-tab"
 
 interface Props {
   employeeId: string
@@ -192,6 +193,7 @@ export function EmployeeDetailPage({ employeeId }: Props) {
           <TabsTrigger value="services">{isAr ? "الخدمات" : "Services"}</TabsTrigger>
           <TabsTrigger value="schedule">{isAr ? "الجدول" : "Schedule"}</TabsTrigger>
           <TabsTrigger value="ratings">{isAr ? "التقييمات" : "Ratings"}</TabsTrigger>
+          <TabsTrigger value="public">{isAr ? "الملف العام" : "Public"}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 pt-4">
@@ -233,6 +235,10 @@ export function EmployeeDetailPage({ employeeId }: Props) {
             averageRating={p.averageRating}
             totalRatings={p._count?.ratings ?? 0}
           />
+        </TabsContent>
+
+        <TabsContent value="public" className="pt-4">
+          <PublicProfileTab employee={p} />
         </TabsContent>
       </Tabs>
     </ListPageShell>

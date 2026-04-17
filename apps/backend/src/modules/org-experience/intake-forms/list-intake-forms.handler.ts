@@ -9,12 +9,21 @@ export class ListIntakeFormsHandler {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(dto: ListIntakeFormsCommand) {
-    return this.prisma.intakeForm.findMany({
+    const forms = await this.prisma.intakeForm.findMany({
       where: {
         ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       },
       include: { fields: { orderBy: { position: 'asc' } } },
       orderBy: { createdAt: 'desc' },
     });
+
+    return forms.map((form) => ({
+      ...form,
+      type: form.type.toLowerCase(),
+      scope: form.scope.toLowerCase(),
+      fieldsCount: form.fields.length,
+      submissionsCount: 0,
+      scopeLabel: null, // TODO: resolve service/employee/branch name when scopeId is set
+    }));
   }
 }

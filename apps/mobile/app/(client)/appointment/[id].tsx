@@ -126,7 +126,7 @@ export default function AppointmentDetailScreen() {
             <View style={{ flex: 1, gap: 2 }}>
               <ThemedText variant="subheading">{practName}</ThemedText>
               <ThemedText variant="bodySm" color={theme.colors.textSecondary}>
-                {booking.employee.specialty?.nameAr}
+                {booking.employee.specialtyAr}
               </ThemedText>
             </View>
           </View>

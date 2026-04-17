@@ -27,9 +27,6 @@ export class CreateEmployeeDto {
   @ApiPropertyOptional({ description: 'Linked user account UUID', example: '00000000-0000-0000-0000-000000000000' })
   @IsOptional() @IsUUID() userId?: string;
 
-  @ApiPropertyOptional({ description: 'Specialty UUIDs to assign', example: ['00000000-0000-0000-0000-000000000000'] })
-  @IsOptional() @IsArray() @ArrayUnique() @IsUUID('all', { each: true }) specialtyIds?: string[];
-
   @ApiPropertyOptional({ description: 'Branch UUIDs to assign', example: ['00000000-0000-0000-0000-000000000000'] })
   @IsOptional() @IsArray() @ArrayUnique() @IsUUID('all', { each: true }) branchIds?: string[];
 

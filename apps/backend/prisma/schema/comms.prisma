@@ -75,6 +75,28 @@ model CommsChatMessage {
   @@index([conversationId, createdAt])
 }
 
+enum ContactMessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+model ContactMessage {
+  id         String               @id @default(uuid())
+  name       String
+  phone      String?
+  email      String?
+  subject    String?
+  body       String
+  status     ContactMessageStatus @default(NEW)
+  createdAt  DateTime             @default(now())
+  readAt     DateTime?
+  archivedAt DateTime?
+
+  @@index([status, createdAt])
+}
+
 model EmailTemplate {
   id        String   @id @default(uuid())
   slug      String   @unique

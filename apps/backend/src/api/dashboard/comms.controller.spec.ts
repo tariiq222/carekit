@@ -16,17 +16,21 @@ function buildController() {
   const getConversation = fn({ id: 'cv-1' });
   const closeConversation = fn({ id: 'cv-1' });
   const sendStaffMessage = fn({ id: 'msg-1' });
+  const listContactMessages = fn({ data: [] });
+  const updateContactMessageStatus = fn({ id: 'cm-1' });
   const controller = new DashboardCommsController(
     listNotifications as never, getUnreadCount as never, markRead as never,
     listEmailTemplates as never, getEmailTemplate as never, createEmailTemplate as never,
     updateEmailTemplate as never, previewEmailTemplate as never,
     listConversations as never, listMessages as never,
     getConversation as never, closeConversation as never, sendStaffMessage as never,
+    listContactMessages as never, updateContactMessageStatus as never,
   );
   return {
     controller, listNotifications, getUnreadCount, markRead,
     listEmailTemplates, getEmailTemplate, createEmailTemplate, updateEmailTemplate, previewEmailTemplate,
     listConversations, listMessages, getConversation, closeConversation, sendStaffMessage,
+    listContactMessages, updateContactMessageStatus,
   };
 }
 

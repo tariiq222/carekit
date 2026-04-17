@@ -179,7 +179,6 @@ export class DashboardPeopleController {
   @ApiQuery({ name: 'gender', required: false, description: 'Filter by gender', example: 'MALE' })
   @ApiQuery({ name: 'employmentType', required: false, description: 'Filter by employment type', example: 'FULL_TIME' })
   @ApiQuery({ name: 'onboardingStatus', required: false, description: 'Filter by onboarding status', example: 'COMPLETE' })
-  @ApiQuery({ name: 'specialtyId', required: false, description: 'Filter by specialty UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiQuery({ name: 'branchId', required: false, description: 'Filter by branch UUID', example: '00000000-0000-0000-0000-000000000000' })
   @ApiQuery({ name: 'page', required: false, description: 'Page number (1-based)', example: 1 })
   @ApiQuery({ name: 'limit', required: false, description: 'Results per page', example: 20 })

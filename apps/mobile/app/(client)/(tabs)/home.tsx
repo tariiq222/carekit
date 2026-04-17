@@ -16,16 +16,14 @@ import { ThemedText } from '@/theme/components/ThemedText';
 import { ThemedButton } from '@/theme/components/ThemedButton';
 import { ThemedCard } from '@/theme/components/ThemedCard';
 import { EmployeeCard } from '@/components/features/EmployeeCard';
-import { SpecialtyCard } from '@/components/features/SpecialtyCard';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/theme/useTheme';
 import { useAppSelector } from '@/hooks/use-redux';
 import { EmailVerificationBanner } from '@/components/ui/EmailVerificationBanner';
-import { specialtiesService } from '@/services/specialties';
 import { employeesService } from '@/services/employees';
 import { bookingsService } from '@/services/bookings';
-import type { Specialty, Employee, Booking } from '@/types/models';
+import type { Employee, Booking } from '@/types/models';
 
 export default function ClientHomeScreen() {
   const { t } = useTranslation();
@@ -35,18 +33,14 @@ export default function ClientHomeScreen() {
   const user = useAppSelector((s) => s.auth.user);
 
   const [refreshing, setRefreshing] = useState(false);
-  const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [featured, setFeatured] = useState<Employee[]>([]);
   const [upcoming, setUpcoming] = useState<Booking | null>(null);
 
   const loadData = useCallback(async () => {
-    const [specRes, featRes, upRes] = await Promise.allSettled([
-      specialtiesService.getAll(),
+    const [featRes, upRes] = await Promise.allSettled([
       employeesService.getFeatured(),
       bookingsService.getUpcoming(),
     ]);
-    if (specRes.status === 'fulfilled' && specRes.value.data)
-      setSpecialties(specRes.value.data as Specialty[]);
     if (featRes.status === 'fulfilled' && featRes.value.data)
       setFeatured(featRes.value.data as Employee[]);
     if (upRes.status === 'fulfilled' && upRes.value.data) {
@@ -141,16 +135,6 @@ export default function ClientHomeScreen() {
               </ThemedButton>
             </ThemedCard>
           )}
-
-          {/* Specialties Carousel */}
-          <View style={styles.section}>
-            <SectionHeader title={t('home.specialties')} action={t('common.viewAll')} />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-              {specialties.slice(0, 8).map((spec, i) => (
-                <SpecialtyCard key={spec.id} specialty={spec} index={i} onPress={() => {}} />
-              ))}
-            </ScrollView>
-          </View>
 
           {/* Featured Employees */}
           <View style={styles.section}>

@@ -24,6 +24,11 @@ export interface Employee {
   pricePhone?: number | null
   priceVideo?: number | null
   avatarUrl?: string | null
+  slug?: string | null
+  isPublic?: boolean
+  publicBioAr?: string | null
+  publicBioEn?: string | null
+  publicImageUrl?: string | null
   createdAt: string
   updatedAt: string
   user: {
@@ -38,7 +43,6 @@ export interface Employee {
     ratings: number
   }
   averageRating?: number
-  specialtyIds?: string[]
   branchIds?: string[]
   serviceIds?: string[]
 }
@@ -133,7 +137,6 @@ export interface TimeSlot {
 export type EmployeeSortField = "name" | "experience" | "isActive" | "createdAt"
 
 export interface EmployeeListQuery extends SearchableQuery {
-  specialty?: string
   minRating?: number
   isActive?: boolean
   sortBy?: EmployeeSortField
@@ -171,6 +174,11 @@ export interface UpdateEmployeePayload {
   educationAr?: string
   isActive?: boolean
   avatarUrl?: string | null
+  slug?: string | null
+  isPublic?: boolean
+  publicBioAr?: string | null
+  publicBioEn?: string | null
+  publicImageUrl?: string | null
 }
 
 export interface SetAvailabilityPayload {

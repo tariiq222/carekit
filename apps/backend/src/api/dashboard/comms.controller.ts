@@ -32,6 +32,10 @@ import { GetConversationHandler } from '../../modules/comms/chat/get-conversatio
 import { CloseConversationHandler } from '../../modules/comms/chat/close-conversation.handler';
 import { SendStaffMessageHandler } from '../../modules/comms/chat/send-staff-message.handler';
 import { SendStaffMessageDto } from '../../modules/comms/chat/send-staff-message.dto';
+import { ListContactMessagesHandler } from '../../modules/comms/contact-messages/list-contact-messages.handler';
+import { ListContactMessagesDto } from '../../modules/comms/contact-messages/list-contact-messages.dto';
+import { UpdateContactMessageStatusHandler } from '../../modules/comms/contact-messages/update-contact-message-status.handler';
+import { UpdateContactMessageStatusDto } from '../../modules/comms/contact-messages/update-contact-message-status.dto';
 
 @ApiTags('Dashboard / Comms')
 @ApiBearerAuth()
@@ -53,7 +57,33 @@ export class DashboardCommsController {
     private readonly getConversation: GetConversationHandler,
     private readonly closeConversation: CloseConversationHandler,
     private readonly sendStaffMessage: SendStaffMessageHandler,
+    private readonly listContactMessages: ListContactMessagesHandler,
+    private readonly updateContactMessageStatus: UpdateContactMessageStatusHandler,
   ) {}
+
+  // ── Contact Messages ───────────────────────────────────────────────────────
+
+  @ApiOperation({ summary: 'List contact messages' })
+  @ApiOkResponse({ description: 'Paginated contact messages' })
+  @Get('contact-messages')
+  listContactMessagesEndpoint(@Query() query: ListContactMessagesDto) {
+    return this.listContactMessages.execute({
+      status: query.status,
+      page: query.page ?? 1,
+      limit: query.limit ?? 20,
+    });
+  }
+
+  @ApiOperation({ summary: 'Update contact message status' })
+  @ApiParam({ name: 'id', description: 'Contact message UUID' })
+  @ApiOkResponse({ description: 'Updated message' })
+  @Patch('contact-messages/:id/status')
+  updateContactMessageStatusEndpoint(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateContactMessageStatusDto,
+  ) {
+    return this.updateContactMessageStatus.execute({ id, status: dto.status });
+  }
 
   // ── Notifications ──────────────────────────────────────────────────────────
 

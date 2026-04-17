@@ -16,14 +16,6 @@ export type TransferVerificationStatus =
   | 'pending' | 'matched' | 'amount_differs' | 'suspicious'
   | 'old_date' | 'unreadable' | 'approved' | 'rejected';
 
-export interface Specialty {
-  id: string;
-  nameAr: string;
-  nameEn: string;
-  icon?: string;
-  employeeCount?: number;
-}
-
 export interface Employee {
   id: string;
   userId: string;
@@ -32,8 +24,8 @@ export interface Employee {
     lastName: string;
     avatarUrl: string | null;
   };
-  specialtyId: string;
-  specialty: Specialty;
+  specialty: string | null;
+  specialtyAr: string | null;
   bio?: string;
   bioAr?: string;
   qualifications?: string[];

@@ -57,6 +57,7 @@ export const financeNav: NavItem[] = [
 export const toolsNav: NavItem[] = [
   { titleKey: "nav.chatbot", href: "/chatbot", icon: AiChat02Icon, featureFlag: "chatbot" },
   { titleKey: "nav.notifications", href: "/notifications", icon: Notification03Icon },
+  { titleKey: "nav.contactMessages", href: "/contact-messages", icon: Notification03Icon },
 ]
 
 export const adminNav: NavItem[] = [

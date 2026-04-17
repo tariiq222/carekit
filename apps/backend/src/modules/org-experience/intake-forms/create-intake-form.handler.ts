@@ -13,6 +13,9 @@ export class CreateIntakeFormHandler {
       data: {
         nameAr: dto.nameAr,
         nameEn: dto.nameEn,
+        type: dto.type,
+        scope: dto.scope,
+        scopeId: dto.scopeId,
         isActive: dto.isActive,
         fields: dto.fields?.length
           ? {
