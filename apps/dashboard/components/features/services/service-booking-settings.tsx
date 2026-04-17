@@ -102,15 +102,15 @@ export function ServiceBookingSettings({ form, locale: _locale }: Props) {
             id="sbs-deposit"
             label={t("services.booking.deposit.label")}
             description={t("services.booking.deposit.desc")}
-            value={form.watch("depositEnabled") ? (form.watch("depositPercent") ?? 100) : null}
-            defaultValue={100}
-            unit="%"
+            value={form.watch("depositEnabled") ? (form.watch("depositAmount") ?? null) : null}
+            defaultValue={0}
+            unit=""
             globalHint={t("services.booking.disabledDefault")}
-            min={1}
-            max={100}
-            onEnable={() => { form.setValue("depositEnabled", true); form.setValue("depositPercent", 100) }}
-            onDisable={() => { form.setValue("depositEnabled", false); form.setValue("depositPercent", 100) }}
-            onChange={(v) => form.setValue("depositPercent", v ?? 100)}
+            min={0}
+            max={undefined}
+            onEnable={() => { form.setValue("depositEnabled", true); form.setValue("depositAmount", null) }}
+            onDisable={() => { form.setValue("depositEnabled", false); form.setValue("depositAmount", null) }}
+            onChange={(v) => form.setValue("depositAmount", v ?? null)}
           />
 
           {/* Row 3: Max Participants + Recurring */}

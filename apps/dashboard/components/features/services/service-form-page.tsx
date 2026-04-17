@@ -111,7 +111,7 @@ export function ServiceFormPage({ mode, serviceId }: ServiceFormPageProps) {
       imageUrl: service.imageUrl ?? null,
       bufferMinutes: service.bufferMinutes ?? undefined,
       depositEnabled: service.depositEnabled,
-      depositPercent: service.depositAmount != null ? service.depositAmount / 100 : 100,
+      depositAmount: service.depositAmount ?? null,
       allowRecurring: service.allowRecurring,
       allowedRecurringPatterns: service.allowedRecurringPatterns ?? [],
       maxRecurrences: service.maxRecurrences ?? 12,
