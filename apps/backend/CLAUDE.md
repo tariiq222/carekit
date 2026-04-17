@@ -96,6 +96,13 @@ npm run seed                         # Seed demo data
 npm run prisma:studio                # GUI
 ```
 
+## AI cluster (`src/modules/ai/`)
+
+- **ChatAdapter uses OpenRouter** (OpenAI-compatible), not Anthropic SDK directly. Models are configured via `OPENROUTER_CHAT_MODEL` (default: `anthropic/claude-3.5-haiku`).
+- **Prompt structure in `chat-completion.handler.ts`:** system + KB context first, user message last — this is the correct ordering for any cache-friendly model. Do not rearrange.
+- **To enable Anthropic native prompt caching** (cache_control breakpoints, ~10× cheaper reads): requires switching ChatAdapter from OpenRouter to `@anthropic-ai/sdk` directly. This is an intentional future decision, not an oversight.
+- **Semantic search** (`semantic-search.handler.ts`) uses `pgvector` via `PrismaService.$queryRaw`. Always pass `topK` to limit chunks; default is 5.
+
 ## Conventions that catch new contributors
 
 - **Single-organization mode.** The backend serves one clinic per deployment — there is no `tenantId`. Queries are global; do not reintroduce multi-tenant scoping.

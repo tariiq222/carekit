@@ -18,6 +18,7 @@ import { UpdateServiceHandler } from '../../modules/org-experience/services/upda
 import { UpdateServiceDto } from '../../modules/org-experience/services/update-service.dto';
 import { ListServicesHandler } from '../../modules/org-experience/services/list-services.handler';
 import { ListServicesDto } from '../../modules/org-experience/services/list-services.dto';
+import { GetServiceHandler } from '../../modules/org-experience/services/get-service.handler';
 import { ArchiveServiceHandler } from '../../modules/org-experience/services/archive-service.handler';
 import { SetServiceBookingConfigsHandler } from '../../modules/org-experience/services/set-service-booking-configs.handler';
 import { SetServiceBookingConfigsDto } from '../../modules/org-experience/services/set-service-booking-configs.dto';
@@ -53,6 +54,7 @@ export class DashboardOrganizationSettingsController {
     private readonly createService: CreateServiceHandler,
     private readonly updateService: UpdateServiceHandler,
     private readonly listServices: ListServicesHandler,
+    private readonly getService: GetServiceHandler,
     private readonly archiveService: ArchiveServiceHandler,
     private readonly upsertBranding: UpsertBrandingHandler,
     private readonly getBranding: GetBrandingHandler,
@@ -86,6 +88,15 @@ export class DashboardOrganizationSettingsController {
   @ApiOkResponse({ description: 'Paginated list of services' })
   listServicesEndpoint(@Query() query: ListServicesDto) {
     return this.listServices.execute(query);
+  }
+
+  @Get('services/:serviceId')
+  @ApiOperation({ summary: 'Get a service by id' })
+  @ApiParam({ name: 'serviceId', description: 'Service UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Service details' })
+  @ApiResponse({ status: 404, description: 'Service not found' })
+  getServiceEndpoint(@Param('serviceId', ParseUUIDPipe) serviceId: string) {
+    return this.getService.execute({ serviceId });
   }
 
   @Patch('services/:serviceId')

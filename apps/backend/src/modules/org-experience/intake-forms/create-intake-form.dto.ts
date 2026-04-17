@@ -30,6 +30,9 @@ export class CreateIntakeFormDto {
   @ApiPropertyOptional({ description: 'Form name in English', example: 'Pre-session Questionnaire' })
   @IsOptional() @IsString() @MaxLength(200) nameEn?: string;
 
+  @ApiPropertyOptional({ description: 'Whether the form is active and shown to clients', example: true })
+  @IsOptional() @IsBoolean() isActive?: boolean;
+
   @ApiPropertyOptional({ description: 'Form fields (max 100)', type: [IntakeFieldInputDto] })
   @IsOptional() @IsArray() @ArrayMaxSize(100)
   @ValidateNested({ each: true }) @Type(() => IntakeFieldInputDto)

@@ -8,6 +8,7 @@ import { UploadLogoHandler } from './branding/upload-logo/upload-logo.handler';
 import { CreateServiceHandler } from './services/create-service.handler';
 import { UpdateServiceHandler } from './services/update-service.handler';
 import { ListServicesHandler } from './services/list-services.handler';
+import { GetServiceHandler } from './services/get-service.handler';
 import { ArchiveServiceHandler } from './services/archive-service.handler';
 import { PriceResolverService } from './services/price-resolver.service';
 import { SetDurationOptionsHandler } from './services/set-duration-options.handler';
@@ -29,7 +30,7 @@ import { GetBookingSettingsHandler } from '../bookings/get-booking-settings/get-
 import { UpsertBookingSettingsHandler } from '../bookings/upsert-booking-settings/upsert-booking-settings.handler';
 
 const serviceHandlers = [
-  CreateServiceHandler, UpdateServiceHandler, ListServicesHandler, ArchiveServiceHandler,
+  CreateServiceHandler, UpdateServiceHandler, ListServicesHandler, GetServiceHandler, ArchiveServiceHandler,
   PriceResolverService, SetDurationOptionsHandler, SetEmployeeServiceOptionsHandler,
   SetServiceBookingConfigsHandler, GetServiceBookingConfigsHandler,
   ListServiceEmployeesHandler,

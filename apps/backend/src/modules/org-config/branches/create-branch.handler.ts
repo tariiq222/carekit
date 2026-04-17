@@ -17,15 +17,10 @@ export class CreateBranchHandler {
         if (existing) throw new ConflictException('Branch with this Arabic name already exists');
 
         if (dto.isMain === true) {
-          const currentMain = await tx.branch.findFirst({
+          await tx.branch.updateMany({
             where: { isMain: true },
-            select: { id: true, nameAr: true },
+            data: { isMain: false },
           });
-          if (currentMain) {
-            throw new ConflictException(
-              `Another branch is already primary (${currentMain.nameAr}). Unset it first.`,
-            );
-          }
         }
 
         return tx.branch.create({

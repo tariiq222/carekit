@@ -13,6 +13,7 @@ export class CreateIntakeFormHandler {
       data: {
         nameAr: dto.nameAr,
         nameEn: dto.nameEn,
+        isActive: dto.isActive,
         fields: dto.fields?.length
           ? {
               create: dto.fields.map((f, i) => ({

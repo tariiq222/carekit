@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { UpdateBranchDto } from './update-branch.dto';
 
@@ -17,15 +17,10 @@ export class UpdateBranchHandler {
         if (!branch) throw new NotFoundException('Branch not found');
 
         if (dto.isMain === true && !branch.isMain) {
-          const currentMain = await tx.branch.findFirst({
+          await tx.branch.updateMany({
             where: { isMain: true, NOT: { id: dto.branchId } },
-            select: { id: true, nameAr: true },
+            data: { isMain: false },
           });
-          if (currentMain) {
-            throw new ConflictException(
-              `Another branch is already primary (${currentMain.nameAr}). Unset it first.`,
-            );
-          }
         }
 
         return tx.branch.update({
