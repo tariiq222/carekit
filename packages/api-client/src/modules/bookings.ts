@@ -1,4 +1,5 @@
 import { apiRequest } from '../client.js'
+import { guestApiRequest } from './guest-client.js'
 import { buildQueryString } from '../types/api.js'
 import type {
   BookingListItem,
@@ -8,6 +9,7 @@ import type {
   CreateBookingPayload,
   UpdateBookingPayload,
 } from '../types/booking.js'
+import type { GuestBookingPayload, GuestBookingResponse } from '@carekit/shared'
 
 export async function list(query: BookingListQuery = {}): Promise<BookingListResponse> {
   return apiRequest<BookingListResponse>(
@@ -38,4 +40,13 @@ export async function update(
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
+}
+
+export async function createGuestBooking(
+  payload: GuestBookingPayload,
+): Promise<GuestBookingResponse> {
+  return guestApiRequest<GuestBookingResponse>('/public/bookings', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }

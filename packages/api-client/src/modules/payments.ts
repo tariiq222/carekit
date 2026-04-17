@@ -1,4 +1,5 @@
 import { apiRequest } from '../client.js'
+import { guestApiRequest } from './guest-client.js'
 import { buildQueryString } from '../types/api.js'
 import type {
   PaymentListItem,
@@ -6,6 +7,7 @@ import type {
   PaymentListResponse,
   PaymentStats,
 } from '../types/payment.js'
+import type { InitPaymentResponse } from '@carekit/shared'
 
 export async function list(
   query: PaymentListQuery = {},
@@ -21,4 +23,11 @@ export async function stats(): Promise<PaymentStats> {
 
 export async function get(id: string): Promise<PaymentListItem> {
   return apiRequest<PaymentListItem>(`/payments/${id}`)
+}
+
+export async function initGuestPayment(bookingId: string): Promise<InitPaymentResponse> {
+  return guestApiRequest<InitPaymentResponse>('/public/payments/init', {
+    method: 'POST',
+    body: JSON.stringify({ bookingId }),
+  });
 }
