@@ -27,6 +27,7 @@ import { RejectCancelBookingHandler } from './reject-cancel-booking/reject-cance
 import { CreateZoomMeetingHandler } from './create-zoom-meeting/create-zoom-meeting.handler';
 import { GroupSessionMinReachedHandler } from './group-session-min-reached/group-session-min-reached.handler';
 import { DashboardBookingsController } from '../../api/dashboard/bookings.controller';
+import { GetPublicAvailabilityHandler } from './availability/public/get-public-availability.handler';
 
 const handlers = [
   CreateBookingHandler,
@@ -52,13 +53,14 @@ const handlers = [
   RejectCancelBookingHandler,
   CreateZoomMeetingHandler,
   GroupSessionMinReachedHandler,
+  GetPublicAvailabilityHandler,
 ];
 
 @Module({
   imports: [DatabaseModule, MessagingModule, OrgExperienceModule],
   controllers: [DashboardBookingsController],
   providers: [...handlers, PaymentCompletedEventHandler],
-  exports: [...handlers],
+  exports: [...handlers, CheckAvailabilityHandler],
 })
 export class BookingsModule implements OnModuleInit {
   constructor(private readonly paymentCompletedHandler: PaymentCompletedEventHandler) {}
