@@ -49,7 +49,58 @@ carekit/
 
 - Port: **5104** (reserved CareKit range 5000–5999).
 - Stack: Next.js 15 App Router, React 19, Tailwind 4, shadcn/ui, next-intl, framer-motion.
-- Deployed as a docker-compose service; Nginx routes `clinic.example.com` → website.
+- Deployed as a docker-compose service; Nginx routes the clinic's domain → website.
+
+### 4.1.1 Vertical-slice structure (mirrors the backend)
+
+The frontend follows the same vertical-slice discipline as `apps/backend`: each feature owns its full stack (UI, hooks, API calls, zod schemas, types, tests) in a single folder. There is no shared "services" or "hooks" bucket that every feature dips into.
+
+```
+apps/website/
+├── app/                         # Next.js routes — thin; pick theme, delegate
+│   └── <route>/page.tsx
+├── features/                    # Vertical slices (one folder per feature)
+│   ├── branding/
+│   │   ├── branding-provider.tsx
+│   │   ├── use-branding.ts
+│   │   ├── branding.api.ts
+│   │   ├── branding.types.ts
+│   │   └── branding.test.ts
+│   ├── therapists/
+│   │   ├── therapists-list.tsx
+│   │   ├── therapist-detail.tsx
+│   │   ├── therapist-card.tsx
+│   │   ├── use-therapists.ts
+│   │   ├── therapists.api.ts
+│   │   ├── therapists.schema.ts
+│   │   ├── therapists.types.ts
+│   │   └── therapists.test.ts
+│   ├── specialties/
+│   ├── contact/
+│   ├── burnout-test/
+│   ├── support-groups/
+│   ├── booking/                 # phase 2
+│   ├── otp/                     # phase 2
+│   ├── payment/                 # phase 2
+│   └── auth/                    # phase 3
+├── themes/                      # Presentation-only; consumes features
+│   ├── registry.ts
+│   ├── types.ts
+│   ├── sawaa/{pages,layout}/
+│   └── premium/{pages,layout}/
+├── components/ui/               # shadcn primitives only
+├── lib/                         # tiny — api-client instance, i18n config, cn()
+└── messages/{ar,en}.json
+```
+
+**Rules (enforced in code review):**
+
+1. A feature is self-contained: components, hooks, API, schemas, types, and tests all live inside its folder.
+2. Themes contain zero data fetching, validation, or business logic. A theme page calls a feature hook (e.g. `useTherapists()`) and renders the result.
+3. `app/<route>/page.tsx` is a thin shell: it resolves the active theme from `branding` and renders the theme's page component. It does not know about APIs.
+4. Cross-feature imports go through a feature's explicit `public.ts` export or through the API layer. No reaching into another feature's internals.
+5. Logic that becomes useful to the mobile app (state machines, zod schemas, enums) is promoted to `@carekit/shared` the moment it has a second consumer.
+6. 350-line cap per file (existing CareKit rule); split within the same feature, never by creating a sibling "utils" bucket.
 
 ### 4.2 Branding flow (dynamic, per clinic)
 
@@ -66,7 +117,7 @@ Two themes share the same data and logic but differ in visual structure.
 - `themes/premium/` — new dark/luxury spa-like design with full-bleed imagery, parallax, restrained micro-copy.
 - A `Theme` TypeScript interface enforces completeness: every theme must export components for every page.
 - Theme selection is read from `branding.activeWebsiteTheme` at SSR time. The dashboard exposes a dropdown for the clinic owner.
-- Shared components (`BookingForm`, `ContactForm`, `BurnoutQuiz`, shadcn primitives) live in `components/shared/` and `components/ui/`. Themes style them, not reimplement them. Rule: **logic is shared, presentation lives in the theme.**
+- Forms and stateful widgets (`BookingForm`, `ContactForm`, `BurnoutQuiz`) live inside their respective feature slices under `features/`, not under themes. shadcn primitives live under `components/ui/`. Themes compose these. Rule: **logic belongs to its feature, presentation belongs to the theme.**
 
 ### 4.4 Shared layer (critical for mobile reuse)
 
