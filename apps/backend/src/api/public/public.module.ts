@@ -11,9 +11,10 @@ import { PublicCatalogController } from './catalog.controller';
 import { PublicSlotsController } from './slots.controller';
 import { PublicEmployeesController } from './employees.controller';
 import { PublicContactMessagesController } from './contact-messages.controller';
+import { PublicOtpController } from './otp.controller';
 
 @Module({
   imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule],
-  controllers: [AuthController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController],
+  controllers: [AuthController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController],
 })
 export class PublicModule {}
