@@ -87,7 +87,7 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 | `GET /public/employees` + `/:slug` | 1 |
 | `GET /public/support-groups` | 1 |
 | `POST /public/contact-messages` | 1 |
-| `POST /public/otp/request` | 2 |
+| `POST /public/otp/request` (channel: email; SMS added later) | 2 |
 | `POST /public/otp/verify` → session JWT | 2 |
 | `GET /public/employees/:id/availability` | 2 |
 | `POST /public/bookings` (guest, requires OTP session) | 2 |
@@ -113,7 +113,7 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 - `Specialty`: `slug` (unique), `isPublic`, `publicDescription`, `publicImage` — phase 1.
 - `ContactMessage` model: id, orgId, name, phone, email, subject, body, createdAt, status — phase 1.
 - `Client.phoneVerified`, `Client.emailVerified` — phase 2.
-- `OtpCode` model: phone, codeHash, purpose, expiresAt, consumedAt — phase 2.
+- `OtpCode` model: `channel` (enum: `email | sms`), `identifier` (email or phone), `codeHash`, `purpose`, `expiresAt`, `consumedAt`, `attempts` — phase 2. Designed channel-agnostic so SMS adds a row type, not a schema change.
 - All migrations additive and immutable per CareKit rules.
 
 ## 6. Phased Delivery
@@ -136,7 +136,7 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 
 **Ship criteria:** a visitor can complete a real paid booking end-to-end that appears in the dashboard immediately.
 
-- `OtpCode` migration + OTP request/verify endpoints (SMS provider integration).
+- `OtpCode` migration + OTP request/verify endpoints. **Email channel only in phase 2** using the existing `email/` module (SMTP). A `NotificationChannel` abstraction wraps the sender so that adding SMS later is one new adapter, not a refactor.
 - Availability endpoint (re-uses existing booking conflict logic).
 - Guest booking endpoint (creates `Client` on demand, links booking).
 - Moyasar integration: payment init + 3DS + webhook reconciliation.
@@ -181,9 +181,12 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 
 ## 9. Open Questions
 
-- SMS provider for OTP (existing integration or new)? Decide before phase 2.
 - Arabic vs English language switching: does the clinic owner configure default, or is it auto from browser? Assume auto + manual override unless told otherwise.
 - Domain model: does each clinic bring its own domain, or does CareKit assign subdomains? Assume clinic brings domain; Nginx config templated per deployment.
+
+## 9.1 Decided
+
+- **OTP channel (phase 2): email only.** Uses the existing `email/` (SMTP) module. SMS providers will be added later as a pluggable `NotificationChannel` adapter — the `OtpCode` model carries a `channel` column from day one to avoid a future migration.
 
 ## 10. Out of Scope (for this spec)
 
