@@ -26,6 +26,9 @@ import { ChangePasswordHandler } from './users/change-password.handler';
 import { CaslAbilityFactory } from './casl/casl-ability.factory';
 import { DashboardIdentityController } from '../../api/dashboard/identity.controller';
 import { RequestOtpHandler } from './otp/request-otp.handler';
+import { VerifyOtpHandler } from './otp/verify-otp.handler';
+import { OtpSessionService } from './otp/otp-session.service';
+import { OtpSessionGuard } from './otp/otp-session.guard';
 import { NotificationChannelModule } from '../comms/notification-channel/notification-channel.module';
 import { CAPTCHA_VERIFIER } from '../comms/contact-messages/captcha.verifier';
 
@@ -37,6 +40,7 @@ const handlers = [
   ListPermissionsHandler,
   ChangePasswordHandler,
   RequestOtpHandler,
+  VerifyOtpHandler,
 ];
 
 @Module({
@@ -58,7 +62,9 @@ const handlers = [
     JwtStrategy, PasswordService, TokenService, CaslAbilityFactory,
     { provide: CAPTCHA_VERIFIER, useFactory: () => { const { createCaptchaVerifier } = require('../comms/contact-messages/captcha.verifier'); return createCaptchaVerifier(); } },
     ...handlers,
+    OtpSessionService,
+    OtpSessionGuard,
   ],
-  exports: [CaslAbilityFactory, TokenService, PasswordService, RequestOtpHandler, ...handlers],
+  exports: [CaslAbilityFactory, TokenService, PasswordService, RequestOtpHandler, VerifyOtpHandler, OtpSessionService, OtpSessionGuard, ...handlers],
 })
 export class IdentityModule {}
