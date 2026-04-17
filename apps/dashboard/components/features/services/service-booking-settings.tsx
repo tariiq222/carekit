@@ -12,10 +12,10 @@ import { OverrideField, SwitchField } from "./booking-settings-fields"
 import { useFeatureFlagMap } from "@/hooks/use-feature-flags"
 import { useLocale } from "@/components/locale-provider"
 import type { UseFormReturn } from "react-hook-form"
+import type { CreateServiceFormData } from "./create/form-schema"
 
 interface Props {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: UseFormReturn<any>
+  form: UseFormReturn<CreateServiceFormData>
   locale?: string
 }
 

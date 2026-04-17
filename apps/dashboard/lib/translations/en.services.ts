@@ -178,7 +178,7 @@ export const enServices: Record<string, string> = {
   "services.booking.dayUnit": " days",
   "services.booking.disabledDefault": "Off by default",
   "services.booking.deposit.label": "Booking deposit",
-  "services.booking.deposit.desc": "Percentage of the service price collected at booking — reduces no-shows",
+  "services.booking.deposit.desc": "Fixed deposit amount collected at booking — reduces no-shows and confirms booking intent",
   "services.booking.recurring.label": "Allow recurring bookings",
   "services.booking.recurring.desc": "Clients can book a fixed series of appointments — e.g. weekly sessions for 3 months",
   "services.booking.recurring.patterns": "Allowed recurrence patterns",

@@ -178,7 +178,7 @@ export const arServices: Record<string, string> = {
   "services.booking.dayUnit": " يوم",
   "services.booking.disabledDefault": "معطّل افتراضياً",
   "services.booking.deposit.label": "مقدم الحجز (عربون)",
-  "services.booking.deposit.desc": "نسبة من سعر الخدمة تُدفع عند الحجز — يقلل الغيابات ويضمن جدية الحجز",
+  "services.booking.deposit.desc": "مبلغ عربون ثابت يُحصَّل عند الحجز — يقلل الغيابات ويضمن جدية الحجز",
   "services.booking.recurring.label": "السماح بالحجز المتكرر",
   "services.booking.recurring.desc": "يتيح للمستفيد حجز سلسلة مواعيد بنمط ثابت — مثل جلسة أسبوعية لمدة 3 أشهر",
   "services.booking.recurring.patterns": "أنماط التكرار المسموحة لهذه الخدمة",
