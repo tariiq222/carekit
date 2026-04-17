@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+  --color-bg: var(--bg);
+  --font-primary: var(--font-primary);
+}
+
+:root {
+  /* Fallback values — overridden by BrandingProvider at SSR */
+  --primary: #354FD8;
+  --primary-light: #5B72E8;
+  --primary-dark: #2438B0;
+  --accent: #82CC17;
+  --accent-dark: #5A9010;
+  --bg: #EEF1F8;
+  --font-primary: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+}
+
+html {
+  direction: rtl;
+}
+
+body {
+  font-family: var(--font-primary);
+  background: var(--bg);
+  color: #111;
+  margin: 0;
+}
