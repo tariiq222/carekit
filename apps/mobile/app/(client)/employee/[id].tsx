@@ -71,9 +71,7 @@ export default function EmployeeDetailScreen() {
   if (!employee) return null;
 
   const name = `${employee.user.firstName} ${employee.user.lastName}`;
-  const specialtyName = isRTL
-    ? employee.specialty?.nameAr
-    : employee.specialty?.nameEn;
+  const specialtyName = isRTL ? employee.specialtyAr : employee.specialty;
 
   const prices = [
     { icon: Building2, label: t('home.clinicVisit'), price: employee.clinicPrice, color: theme.colors.primary[500] },

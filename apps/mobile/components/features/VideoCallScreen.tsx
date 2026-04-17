@@ -103,9 +103,7 @@ export function VideoCallScreen() {
     : '';
 
   const specialtyName = booking
-    ? isRTL
-      ? booking.employee.specialty.nameAr
-      : booking.employee.specialty.nameEn
+    ? (isRTL ? booking.employee.specialtyAr : booking.employee.specialty) ?? ''
     : '';
 
   const formattedDate = booking

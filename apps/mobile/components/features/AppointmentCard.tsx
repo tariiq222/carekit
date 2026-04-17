@@ -70,7 +70,7 @@ export function AppointmentCard({ booking, onPress }: AppointmentCardProps) {
             {practName}
           </ThemedText>
           <ThemedText variant="bodySm" numberOfLines={1}>
-            {isRTL ? booking.employee.specialty?.nameAr : booking.employee.specialty?.nameEn}
+            {isRTL ? booking.employee.specialtyAr : booking.employee.specialty}
           </ThemedText>
         </View>
         <StatusPill

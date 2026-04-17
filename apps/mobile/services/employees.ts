@@ -10,7 +10,6 @@ export type EmployeeAvailability = {
 };
 
 interface GetEmployeesParams {
-  specialtyId?: string;
   search?: string;
   sort?: 'rating' | 'name' | 'price';
   page?: number;
