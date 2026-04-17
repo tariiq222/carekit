@@ -18,6 +18,8 @@ function buildController() {
   const updateEmployee = fn({ id: 'e-1' });
   const deleteEmployee = fn();
   const listEmployeeServices = fn([]);
+  const getEmployeeServiceTypes = fn([]);
+  const checkAvailability = fn([]);
   const assignEmployeeService = fn({ id: 'es-1' });
   const removeEmployeeService = fn();
   const listEmployeeExceptions = fn([]);
@@ -32,7 +34,7 @@ function buildController() {
     createEmployee as never, listEmployees as never, getEmployee as never,
     updateAvailability as never, employeeOnboarding as never,
     onboardEmployee as never, getAvailability as never, updateEmployee as never,
-    deleteEmployee as never, listEmployeeServices as never, assignEmployeeService as never,
+    deleteEmployee as never, listEmployeeServices as never, getEmployeeServiceTypes as never, checkAvailability as never, assignEmployeeService as never,
     removeEmployeeService as never, listEmployeeExceptions as never, createEmployeeException as never,
     deleteEmployeeException as never, listEmployeeRatings as never,
     employeeStats as never, uploadAvatar as never,

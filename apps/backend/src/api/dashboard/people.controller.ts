@@ -35,6 +35,10 @@ import { UpdateAvailabilityDto } from '../../modules/people/employees/update-ava
 import { EmployeeOnboardingDto } from '../../modules/people/employees/employee-onboarding.dto';
 import { DeleteEmployeeHandler } from '../../modules/people/employees/delete-employee.handler';
 import { ListEmployeeServicesHandler } from '../../modules/people/employees/list-employee-services.handler';
+import { GetEmployeeServiceTypesHandler } from '../../modules/people/employees/get-employee-service-types.handler';
+import { CheckAvailabilityHandler } from '../../modules/bookings/check-availability/check-availability.handler';
+import { Type } from 'class-transformer';
+import { IsDateString, IsInt, IsOptional, Min } from 'class-validator';
 import { AssignEmployeeServiceHandler } from '../../modules/people/employees/assign-employee-service.handler';
 import { RemoveEmployeeServiceHandler } from '../../modules/people/employees/remove-employee-service.handler';
 import { ListEmployeeExceptionsHandler } from '../../modules/people/employees/list-employee-exceptions.handler';
@@ -44,6 +48,17 @@ import { DeleteEmployeeExceptionHandler } from '../../modules/people/employees/d
 import { ListEmployeeRatingsHandler } from '../../modules/people/employees/list-employee-ratings.handler';
 import { EmployeeStatsHandler } from '../../modules/people/employees/employee-stats.handler';
 import { UploadAvatarHandler } from '../../modules/people/employees/upload-avatar/upload-avatar.handler';
+
+class EmployeeSlotsQuery {
+  @IsDateString() date!: string;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) duration?: number;
+}
+
+function formatHHmm(d: Date): string {
+  const pad = (n: number) => (n < 10 ? `0${n}` : String(n));
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
 
 @ApiTags('Dashboard / People')
 @ApiBearerAuth()
@@ -67,6 +82,8 @@ export class DashboardPeopleController {
     private readonly updateEmployee: UpdateEmployeeHandler,
     private readonly deleteEmployee: DeleteEmployeeHandler,
     private readonly listEmployeeServices: ListEmployeeServicesHandler,
+    private readonly getEmployeeServiceTypes: GetEmployeeServiceTypesHandler,
+    private readonly checkAvailability: CheckAvailabilityHandler,
     private readonly assignEmployeeService: AssignEmployeeServiceHandler,
     private readonly removeEmployeeService: RemoveEmployeeServiceHandler,
     private readonly listEmployeeExceptions: ListEmployeeExceptionsHandler,
@@ -328,6 +345,41 @@ export class DashboardPeopleController {
     @Body() body: { serviceId: string },
   ) {
     return this.assignEmployeeService.execute({ employeeId: id, serviceId: body.serviceId });
+  }
+
+  @Get('employees/:id/slots')
+  @ApiOperation({ summary: 'Available booking slots for an employee on a given date' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiQuery({ name: 'date', description: 'Date (ISO 8601, YYYY-MM-DD)', example: '2026-05-01' })
+  @ApiQuery({ name: 'duration', description: 'Slot duration in minutes', required: false, example: 30 })
+  @ApiOkResponse({ description: 'Available slots' })
+  async getEmployeeSlotsEndpoint(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() q: EmployeeSlotsQuery,
+  ) {
+    const mainBranch = 'main-branch';
+    const slots = await this.checkAvailability.execute({
+      employeeId: id,
+      branchId: mainBranch,
+      date: new Date(q.date),
+      durationMins: q.duration,
+    });
+    return slots.map((s) => ({
+      startTime: formatHHmm(s.startTime),
+      endTime: formatHHmm(s.endTime),
+    }));
+  }
+
+  @Get('employees/:id/services/:serviceId/types')
+  @ApiOperation({ summary: 'Get bookable types + duration options for an employee-service pair' })
+  @ApiParam({ name: 'id', description: 'Employee UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiParam({ name: 'serviceId', description: 'Service UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'Bookable types with duration options' })
+  getEmployeeServiceTypesEndpoint(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+  ) {
+    return this.getEmployeeServiceTypes.execute({ employeeId: id, serviceId });
   }
 
   @Delete('employees/:id/services/:serviceId')

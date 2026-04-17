@@ -14,6 +14,7 @@ import { SetDurationOptionsHandler } from './services/set-duration-options.handl
 import { SetEmployeeServiceOptionsHandler } from './services/set-employee-service-options.handler';
 import { SetServiceBookingConfigsHandler } from './services/set-service-booking-configs.handler';
 import { GetServiceBookingConfigsHandler } from './services/get-service-booking-configs.handler';
+import { ListServiceEmployeesHandler } from './services/list-service-employees.handler';
 import { UpsertBrandingHandler } from './branding/upsert-branding.handler';
 import { GetBrandingHandler } from './branding/get-branding.handler';
 import { CreateIntakeFormHandler } from './intake-forms/create-intake-form.handler';
@@ -31,6 +32,7 @@ const serviceHandlers = [
   CreateServiceHandler, UpdateServiceHandler, ListServicesHandler, ArchiveServiceHandler,
   PriceResolverService, SetDurationOptionsHandler, SetEmployeeServiceOptionsHandler,
   SetServiceBookingConfigsHandler, GetServiceBookingConfigsHandler,
+  ListServiceEmployeesHandler,
 ];
 
 @Module({

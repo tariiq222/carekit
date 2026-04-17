@@ -22,6 +22,7 @@ import { ArchiveServiceHandler } from '../../modules/org-experience/services/arc
 import { SetServiceBookingConfigsHandler } from '../../modules/org-experience/services/set-service-booking-configs.handler';
 import { SetServiceBookingConfigsDto } from '../../modules/org-experience/services/set-service-booking-configs.dto';
 import { GetServiceBookingConfigsHandler } from '../../modules/org-experience/services/get-service-booking-configs.handler';
+import { ListServiceEmployeesHandler } from '../../modules/org-experience/services/list-service-employees.handler';
 import { UpsertBrandingHandler } from '../../modules/org-experience/branding/upsert-branding.handler';
 import { UpsertBrandingDto } from '../../modules/org-experience/branding/upsert-branding.dto';
 import { GetBrandingHandler } from '../../modules/org-experience/branding/get-branding.handler';
@@ -68,6 +69,7 @@ export class DashboardOrganizationSettingsController {
     private readonly upsertBookingSettings: UpsertBookingSettingsHandler,
     private readonly setServiceBookingConfigs: SetServiceBookingConfigsHandler,
     private readonly getServiceBookingConfigs: GetServiceBookingConfigsHandler,
+    private readonly listServiceEmployees: ListServiceEmployeesHandler,
   ) {}
 
   // ── Services ─────────────────────────────────────────────────────────────
@@ -106,6 +108,14 @@ export class DashboardOrganizationSettingsController {
   @ApiResponse({ status: 404, description: 'Service not found' })
   archiveServiceEndpoint(@Param('serviceId', ParseUUIDPipe) serviceId: string) {
     return this.archiveService.execute({ serviceId });
+  }
+
+  @Get('services/:serviceId/employees')
+  @ApiOperation({ summary: 'List active employees who offer this service' })
+  @ApiParam({ name: 'serviceId', description: 'Service UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiOkResponse({ description: 'List of employees for the service' })
+  listServiceEmployeesEndpoint(@Param('serviceId', ParseUUIDPipe) serviceId: string) {
+    return this.listServiceEmployees.execute({ serviceId });
   }
 
   @Get('services/:serviceId/booking-types')
