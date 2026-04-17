@@ -23,4 +23,6 @@ export interface BrandingConfig {
 
 export type PublicBranding = Omit<BrandingConfig, "createdAt" | "updatedAt">
 
-export type UpdateBrandingPayload = Partial<Omit<BrandingConfig, "createdAt" | "updatedAt">>
+export type UpdateBrandingPayload =
+  Pick<BrandingConfig, "organizationNameAr"> &
+  Partial<Omit<BrandingConfig, "organizationNameAr" | "createdAt" | "updatedAt">>

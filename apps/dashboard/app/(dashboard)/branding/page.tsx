@@ -1,6 +1,5 @@
 "use client"
 
-import { toast } from "sonner"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -30,10 +29,7 @@ export default function BrandingPage() {
   }
 
   const handleSave = (data: UpdateBrandingPayload) => {
-    mutation.mutate(data, {
-      onSuccess: () => toast.success(t("settings.saved")),
-      onError: () => toast.error(t("settings.error")),
-    })
+    mutation.mutate(data)
   }
 
   if (isLoading) {

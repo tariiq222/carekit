@@ -47,4 +47,10 @@ export const arBranding: Record<string, string> = {
   "branding.flagsCompliance": "الامتثال",
   "branding.organizationNameEn": "اسم المنظمة (إنجليزي)",
   "branding.organizationNameAr": "اسم المنظمة (عربي)",
+  "branding.productTagline": "الشعار الفرعي",
+  "branding.colorPrimaryLight": "اللون الرئيسي الفاتح",
+  "branding.colorPrimaryDark": "اللون الرئيسي الداكن",
+  "branding.colorAccentDark": "لون التمييز الداكن",
+  "branding.colorBackground": "لون الخلفية",
+  "branding.fontUrl": "رابط الخط",
 }

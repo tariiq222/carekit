@@ -132,7 +132,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
             <Input value={organizationNameAr} onChange={(e) => setOrganizationNameAr(e.target.value)} dir="rtl" placeholder="عيادة كيركت" />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label>{"الشعار الفرعي"}</Label>
+            <Label>{t("branding.productTagline")}</Label>
             <Input value={productTagline} onChange={(e) => setProductTagline(e.target.value)} placeholder="نحو رعاية أفضل" />
           </div>
         </div>
@@ -159,7 +159,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>{"اللون الأساسي الفاتح"}</Label>
+            <Label>{t("branding.colorPrimaryLight")}</Label>
             <div className="flex items-center gap-2">
               <ColorSwatchInput
                 value={isValidHex(colorPrimaryLight) ? colorPrimaryLight : null}
@@ -177,7 +177,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>{"اللون الأساسي الداكن"}</Label>
+            <Label>{t("branding.colorPrimaryDark")}</Label>
             <div className="flex items-center gap-2">
               <ColorSwatchInput
                 value={isValidHex(colorPrimaryDark) ? colorPrimaryDark : null}
@@ -213,7 +213,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>{"لون التمييز الداكن"}</Label>
+            <Label>{t("branding.colorAccentDark")}</Label>
             <div className="flex items-center gap-2">
               <ColorSwatchInput
                 value={isValidHex(colorAccentDark) ? colorAccentDark : null}
@@ -231,7 +231,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>{"لون الخلفية"}</Label>
+            <Label>{t("branding.colorBackground")}</Label>
             <div className="flex items-center gap-2">
               <ColorSwatchInput
                 value={isValidHex(colorBackground) ? colorBackground : null}
@@ -270,7 +270,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
               {/* Live UI preview with contrast indicators */}
               <div
                 className="rounded-lg border p-4 space-y-3"
-                style={{ background: isValidHex(colorBackground) ? colorBackground : "#F2F4F8" }}
+                style={{ background: isValidHex(colorBackground) ? colorBackground : "var(--background)" }}
               >
                 {/* Primary button preview */}
                 <div className="flex items-center gap-3">
@@ -283,7 +283,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
                   >
                     {organizationNameEn || organizationNameAr || "CareKit"}
                   </div>
-                  <ContrastBadge ratio={contrastRatio(colorPrimary, isValidHex(colorBackground) ? colorBackground : "#F2F4F8")} />
+                  <ContrastBadge ratio={contrastRatio(colorPrimary, isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} />
                 </div>
 
                 {/* Accent badge preview */}
@@ -298,16 +298,16 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
                     >
                       Badge
                     </div>
-                    <ContrastBadge ratio={contrastRatio(colorAccent, isValidHex(colorBackground) ? colorBackground : "#F2F4F8")} label="Accent على الخلفية" />
+                    <ContrastBadge ratio={contrastRatio(colorAccent, isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label="Accent على الخلفية" />
                   </div>
                 )}
 
                 {/* Foreground text preview */}
                 <div className="flex items-center gap-3">
-                  <p className="text-sm font-medium" style={{ color: "#1B2026" }}>
+                  <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
                     نص أساسي — Primary text
                   </p>
-                  <ContrastBadge ratio={contrastRatio("#1B2026", isValidHex(colorBackground) ? colorBackground : "#F2F4F8")} label="نص على الخلفية" />
+                  <ContrastBadge ratio={contrastRatio("#1a1a1a", isValidHex(colorBackground) ? colorBackground : "#f8f9fa")} label="نص على الخلفية" />
                 </div>
               </div>
             </div>
@@ -322,7 +322,7 @@ export function BrandingForm({ branding, onSave, isPending }: Props) {
             <Input value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} placeholder="IBM Plex Sans Arabic" />
           </div>
           <div className="space-y-2">
-            <Label>{"رابط الخط"}</Label>
+            <Label>{t("branding.fontUrl")}</Label>
             <Input value={fontUrl} onChange={(e) => setFontUrl(e.target.value)} placeholder="https://fonts.googleapis.com/..." dir="ltr" />
           </div>
           <div className="space-y-2">

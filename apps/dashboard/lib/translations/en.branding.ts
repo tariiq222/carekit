@@ -42,4 +42,10 @@ export const enBranding: Record<string, string> = {
   "branding.flagsCompliance": "Compliance",
   "branding.organizationNameEn": "Organization Name (English)",
   "branding.organizationNameAr": "Organization Name (Arabic)",
+  "branding.productTagline": "Product Tagline",
+  "branding.colorPrimaryLight": "Primary Color Light",
+  "branding.colorPrimaryDark": "Primary Color Dark",
+  "branding.colorAccentDark": "Accent Color Dark",
+  "branding.colorBackground": "Background Color",
+  "branding.fontUrl": "Font URL",
 }
