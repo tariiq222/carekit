@@ -57,6 +57,13 @@ npm run lint              # ESLint
 npm run test              # Vitest
 # Dashboard e2e: manual QA via Chrome DevTools MCP (see memory); Playwright removed 2026-04-16
 
+# Kiwi TCMS — single source of truth (Product = "CareKit" ONLY)
+# URL https://localhost:6443  ·  admin / CareKit_2026  ·  never create a second product
+npm run test:kiwi           # unit tests → Kiwi (via /c/pro/kiwi-tcms/run-and-sync.sh)
+npm run test:kiwi:e2e       # E2E → Kiwi
+npm run test:kiwi:all       # unit + E2E
+npm run kiwi:sync-manual data/kiwi/<domain>-<date>.json   # manual QA run → Kiwi
+
 # Mobile (cd apps/mobile)
 npm run dev               # Expo start
 npm run ios / android     # Native builds
@@ -139,6 +146,37 @@ See `apps/mobile/CLAUDE.md` for Expo Router conventions.
 
 - **Owner-only** (`@tariq`): payments, ZATCA, auth, migrations, schema, CODEOWNERS
 - **Standard review**: all other modules
+
+## Kiwi TCMS — the single source of truth
+
+All automated + manual QA results land in the local Kiwi TCMS at `https://localhost:6443` (admin / `CareKit_2026`).
+
+**Hard rules (violating these is the #1 way we make a mess):**
+
+- **One Product only: `CareKit`** (id=1). Never create "CareKit Dashboard", "CareKit Mobile", etc. Domains are distinguished by **Category** (Bookings, Clients, Employees, …) and by **Plan type** (Unit, E2E, Manual QA), never by a new Product.
+- **Version `main`** is the canonical version. Reuse it for every run unless you're tagging a release.
+- **Builds name the session**, not the product: `local-dev`, `manual-qa-2026-04-17`, `bookings-qa-fixes`. Create with `Build.create` on the existing `main` version — never on a new product.
+- **One TestPlan per (domain, type)**: e.g. `CareKit / Bookings / Manual QA`, `CareKit / Bookings / Unit`, `CareKit / Bookings / E2E`. Reuse on re-runs.
+- **Test cases are idempotent** — lookup `TestCase.filter({ summary, category })` before creating.
+
+**Existing sync scripts (don't write new ones — extend these):**
+
+- Automated: `/c/pro/kiwi-tcms/run-and-sync.sh` + the Python helpers beside it. Triggered via `npm run test:kiwi{,:e2e,:all}`.
+- Manual QA: `scripts/kiwi-sync-manual-qa.mjs` — reads a plan JSON from `data/kiwi/<domain>-<date>.json` and writes under `Product="CareKit"`. Triggered via `npm run kiwi:sync-manual data/kiwi/<domain>-<date>.json`.
+
+**Manual QA workflow (authoritative):**
+
+1. Run the QA gate in Chrome DevTools MCP against the feature.
+2. Write findings to `docs/superpowers/qa/<feature>-report-<date>.md` (report + screenshots).
+3. Author a plan JSON at `data/kiwi/<domain>-<date>.json` with `{ domain, version, build, planName, planSummary, runSummary, cases: [{ summary, text, result }] }`.
+4. `npm run kiwi:sync-manual data/kiwi/<domain>-<date>.json` — idempotent, reuses Plan/Run IDs.
+5. Link Kiwi URLs (`/plan/<id>/`, `/runs/<id>/`) from the report.
+
+**When in doubt**, inspect the DB with:
+```
+docker exec kiwi_web bash -c 'cd /Kiwi && python manage.py shell < /tmp/<script>.py'
+```
+— never spin up a parallel product to "test" the import.
 
 ## Design Context
 

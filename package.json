@@ -21,7 +21,8 @@
     "docker:down": "docker compose -f docker/docker-compose.yml down",
     "openapi:sync": "npm run openapi:export --workspace=backend && npm run openapi:generate --workspace=dashboard",
     "test:report": "py test-reports/scripts/generate_html_report.py",
-    "test:report:open": "py test-reports/scripts/generate_html_report.py && start test-reports/output/test-report.html"
+    "test:report:open": "py test-reports/scripts/generate_html_report.py && start test-reports/output/test-report.html",
+    "kiwi:sync-manual": "node scripts/kiwi-sync-manual-qa.mjs --plan"
   },
   "devDependencies": {
     "lru-cache": "^11.3.3",

@@ -1,0 +1,80 @@
+{
+  "domain": "Bookings",
+  "version": "main",
+  "build": "manual-qa-2026-04-17",
+  "planName": "CareKit / Bookings / Manual QA",
+  "planSummary": "Manual Chrome DevTools MCP QA gate for /bookings. Covers 14 blockers identified and fixed in the 2026-04-17 session.",
+  "runSummary": "Bookings QA verification — 2026-04-17",
+  "cases": [
+    {
+      "summary": "B1 Relations missing in list API",
+      "text": "Steps:\n1. Seed demo data (3 employees, 3 services, 3 clients, 12 bookings).\n2. Open /bookings as admin.\n3. GET /api/v1/dashboard/bookings?page=1&limit=20.\n\nExpected:\n- API response includes nested client/employee/service (not just ids).\n- Each row shows client, practitioner, type, datetime, amount.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B2 Table cells render as —",
+      "text": "Steps:\n1. Open /bookings with seed data.\n2. Observe columns: المريض / الممارس / النوع / التاريخ والوقت / المبلغ.\n\nExpected:\n- No cell shows \"—\" when the payload carries a value.\n- Date formatted in ar-SA; amount via FormattedCurrency.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B3 Status badges render raw English enum",
+      "text": "Steps:\n1. Seed includes PENDING, CONFIRMED, COMPLETED, CANCELLED, NO_SHOW, EXPIRED, CANCEL_REQUESTED, AWAITING_PAYMENT.\n2. Open /bookings.\n\nExpected:\n- Every badge in Arabic (بالانتظار / مؤكد / مكتمل / ملغي / لم يحضر / منتهي / طلب إلغاء / بالانتظار) with semantic colors.\n- No enum identifier leaks to the UI.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B4 Detail sheet shows Unknown / undefined",
+      "text": "Steps:\n1. Click عرض التفاصيل on a pending booking.\n2. Inspect sheet body.\n\nExpected:\n- Client, practitioner, specialty, service, date, time, duration all populated.\n- No literal \"Unknown\", \"undefined — undefined\", \"0 min\".",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B5 status-log TanStack query missing queryFn",
+      "text": "Steps:\n1. Open browser devtools console.\n2. Click عرض التفاصيل.\n\nExpected:\n- No React Query warning about missing queryFn.\n- GET /dashboard/bookings/:id/status-log fires; sheet renders timeline or empty state.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B6 Delete opens generic AlertDialog instead of AdminCancelDialog",
+      "text": "Steps:\n1. Click the delete icon on a row.\n2. Observe the dialog.\n\nExpected:\n- AdminCancelDialog opens directly (no prior AlertDialog prompt).\n- Captures cancelReason, refundType, refundAmount (when partial), adminNotes.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B7 Wizard dies at step 4 (types endpoint missing)",
+      "text": "Steps:\n1. Click + حجز جديد.\n2. Walk client -> service -> employee.\n3. Observe step 4 (نوع الحجز).\n\nExpected:\n- Either the types render, or (single active type) the wizard auto-advances to datetime.\n- GET /dashboard/people/employees/:id/services/:sid/types returns 200.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B8 Service prices shown as 1 / 2 SAR in wizard",
+      "text": "Steps:\n1. Open wizard, step 2 (الخدمة).\n2. Observe the price chip next to each service.\n\nExpected:\n- Prices render as the actual SAR amount (120 / 200 / 250 ر.س) — not divided by 100.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B9 Search input does not trigger refetch",
+      "text": "Steps:\n1. Type محمد in the filter search box.\n2. Inspect Network.\n\nExpected:\n- After debounce (~300ms) a single GET /dashboard/bookings?search=... fires.\n- Table narrows to matching rows.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B10 Reset button does not clear filters or refetch",
+      "text": "Steps:\n1. Apply time tab اليوم, pick a status, type something in search.\n2. Click إعادة تعيين.\n\nExpected:\n- Search cleared, time tab back to الكل, status/type/employee back to all.\n- Fresh GET /dashboard/bookings?page=1&limit=20 fires.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B11 Pagination shows \"1 من 2\" when totalPages=1",
+      "text": "Steps:\n1. Seed 12 bookings, perPage=20.\n2. Load /bookings.\n\nExpected:\n- Server-side pagination hides when totalPages === 1.\n- DataTable is rendered with serverPaginated=true so no extra client-side pager appears.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B12 Wizard employee step not filtered by service",
+      "text": "Steps:\n1. In the wizard, pick svc-1 (linked only to emp-1).\n2. Observe employee picker at step 3.\n\nExpected:\n- GET /organization/services/:id/employees fires.\n- Only employees linked to the service are shown.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B13 # column shows full id instead of first 8 chars",
+      "text": "Steps:\n1. Seed bookings with UUID ids.\n2. Observe the # column.\n\nExpected:\n- Cell renders \"#\" + id.slice(0, 8) in monospace.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "B14 Slots endpoint returns 404 in wizard",
+      "text": "Steps:\n1. In the wizard, reach step 5 (الموعد).\n2. Pick any date.\n\nExpected:\n- GET /dashboard/people/employees/:id/slots?date=...&duration=... returns 200.\n- Response shape: [{startTime, endTime}] (HH:mm strings).\n- With availability configured, slot buttons appear; otherwise \"لا توجد مواعيد متاحة\".",
+      "result": "BLOCKED"
+    }
+  ]
+}

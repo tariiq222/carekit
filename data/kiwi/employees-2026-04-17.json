@@ -1,0 +1,120 @@
+{
+  "domain": "Employees",
+  "version": "main",
+  "build": "employees-qa-fixes-2026-04-17",
+  "planName": "CareKit / Employees / Manual QA",
+  "planSummary": "Manual Chrome DevTools MCP QA gate for /employees, /employees/create, /employees/[id], /employees/[id]/edit. Re-run after fixing 6 items (E1, E2, E5, E6, E8, E15).",
+  "runSummary": "Employees QA verification — 2026-04-17 (post-fix)",
+  "cases": [
+    {
+      "summary": "E1 List table renders nameEn instead of nameAr",
+      "text": "Steps:\n1. Seed demo data (3 employees with both nameAr + nameEn filled).\n2. Open /employees as admin.\n3. Inspect the rows in the list table.\n\nExpected:\n- Each row title uses nameAr (e.g. د. خالد السبيعي) with nameEn as fallback only.\n\nPost-fix (mapEmployee nameAr-first in apps/dashboard/lib/api/employees.ts):\n- Rows now render «د. خالد السبيعي», «د. فاطمة القحطاني», «د. أحمد الغامدي». Verified via MCP snapshot.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E2 Detail page bookings query returns 400 (limit>200)",
+      "text": "Steps:\n1. Open /employees/{id} for any seeded employee.\n2. Watch the network tab.\n\nExpected:\n- Charts (bookings by status / by type / revenue) render with data or a clean empty state.\n\nPost-fix (perPage 500 → 200 in employee-bookings-chart.tsx):\n- Three GET /api/v1/dashboard/bookings?limit=200&… all return 200/304. Charts render actual data («مكتملة 2», «عيادة 2 / مباشر 1», daily counts).",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E3 Create form missing most DTO-required fields",
+      "text": "Steps:\n1. Open /employees/create.\n2. Inspect the «المعلومات الأساسية» tab.\n\nExpected:\n- Fields for phone, gender, avatarUrl, employmentType, specialtyIds[], branchIds[], serviceIds[] per plan §6.1–6.2.\n\nActual:\n- Only title, email, nameEn, nameAr, specialty (EN/AR text), experience, education×2, bio×2. No phone/gender/avatar/type/branch/service pickers. Cannot create a complete employee through the UI.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E4 Experience spinbutton has valuemax=0",
+      "text": "Steps:\n1. Open /employees/create (or /employees/{id}/edit).\n2. Inspect the «الخبرة (سنوات)» input.\n\nExpected:\n- valuemax unbounded (or a reasonable cap like 60).\n\nActual:\n- DOM shows `spinbutton \"e.g. 5\" valuemax=\"0\" valuemin=\"0\"`. The native stepper will not advance past 0.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E5 Delete dialog uses nameEn inside Arabic copy",
+      "text": "Steps:\n1. Open /employees.\n2. Click the delete icon on any row.\n\nExpected:\n- Dialog body uses nameAr: «حذف د. خالد السبيعي نهائياً؟ ...».\n\nPost-fix (same mapEmployee change — dialog reads from the same object):\n- Dialog now reads «حذف د. خالد السبيعي نهائياً؟ ...». Verified via MCP snapshot.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E6 Breadcrumb shows truncated UUID instead of employee name",
+      "text": "Steps:\n1. Open /employees/{id} or /employees/{id}/edit.\n2. Inspect the breadcrumb trail.\n\nExpected:\n- Leaf segment renders the employee's nameAr.\n\nPost-fix (detail + form pages pass explicit Breadcrumbs items):\n- Breadcrumb now reads «الرئيسية › الممارسون › د. خالد السبيعي» on detail, and «... › د. خالد السبيعي › تعديل» on edit. Verified via MCP snapshot.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E7 Sortable column headers do not trigger backend sort",
+      "text": "Steps:\n1. Open /employees.\n2. Click the «الخبرة» column header.\n3. Observe the network call.\n\nExpected:\n- GET /dashboard/people/employees?...&sortBy=experience&sortOrder=asc (then desc on second click).\n\nActual:\n- No new network request; sort is a no-op despite the clickable affordance.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E8 Validation errors are partly English on an Arabic UI",
+      "text": "Steps:\n1. Open /employees/create.\n2. Click «إنشاء الممارس» with an empty form.\n\nExpected:\n- All four error messages in Arabic.\n\nPost-fix (Zod messages translated in create/form-schema.ts):\n- «البريد الإلكتروني غير صالح»\n- «الاسم الكامل بالإنجليزية مطلوب»\n- «الاسم الكامل بالعربية مطلوب»\n- «التخصص مطلوب»",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E9 Detail page is one long scroll — no tabs",
+      "text": "Steps:\n1. Open /employees/{id}.\n2. Compare to plan §8 (tabs: general / services / schedule / breaks / vacations / ratings).\n\nExpected:\n- Tabbed layout similar to the edit page.\n\nActual:\n- All sections stacked vertically; no tabs.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E10 Weekday grid does not respect Saudi weekStartDay",
+      "text": "Steps:\n1. Open /employees/{id}/edit → tab «الجدول والاستراحات».\n2. Inspect the day order.\n\nExpected:\n- Saturday first (Saudi default week-start).\n\nActual:\n- Sunday first, Saturday last. The weekStartDay org setting is not honored by the scheduler.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E11 Scheduler has no split-shift support",
+      "text": "Steps:\n1. Open /employees/{id}/edit → Schedule tab.\n2. Try to add a second working window for the same day (e.g. 09:00–13:00 then 16:00–20:00).\n\nExpected:\n- «إضافة فترة» / add another window per day, per plan §8.2.\n\nActual:\n- Only one window per day + an «إضافة استراحة» break button. No way to split a shift.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E12 Specialties relation empty even when specialty fields are set",
+      "text": "Steps:\n1. GET /api/v1/dashboard/people/employees.\n\nExpected:\n- `specialties: [...]` contains the specialty records that match `specialty` / `specialtyAr`.\n\nActual:\n- `specialty: \"Dentistry\"` and `specialtyAr: \"أسنان\"` are populated but `specialties: []`. The relation is never linked.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E13 Seed data is below plan spec",
+      "text": "Steps:\n1. Run seed.\n2. Compare to plan §1.2.\n\nExpected:\n- 10+ employees, mixed active/inactive, 3+ specialties, 2+ branches, 5+ services, one rated employee, one with no experience.\n\nActual:\n- 3 employees, all active, one branch, zero ratings. Filters/stats/pagination scenarios untestable.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E14 Filter state not reflected in URL",
+      "text": "Steps:\n1. Open /employees.\n2. Apply search + status filter.\n3. Check window.location.\n\nExpected:\n- /employees?search=…&status=active — reloadable / shareable.\n\nActual:\n- URL stays /employees; filter state is component-local only.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E15 Filter-empty empty-state copy is the add-first-employee copy",
+      "text": "Steps:\n1. Open /employees.\n2. Type `zzz` into the search box.\n\nExpected:\n- Copy like «لا توجد نتائج تطابق بحثك» — offer to clear the filter.\n\nPost-fix (filter-aware empty state + new i18n keys employees.empty.filtered*):\n- Copy now reads «لا توجد نتائج — لا يوجد ممارسون يطابقون معايير البحث. جرّب تعديل الفلاتر.»",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E16 List API leaks raw join-table rows",
+      "text": "Steps:\n1. GET /api/v1/dashboard/people/employees.\n\nExpected:\n- Either hydrate branches/services with the target records, or omit the relation from the list shape.\n\nActual:\n- Payload ships `branches: [{ id, employeeId, branchId }]` and `services: [{ id, employeeId, serviceId }]` — raw FK rows that the UI doesn't render.",
+      "result": "FAILED"
+    },
+    {
+      "summary": "E17 Initial load, stats, and filter requests pass",
+      "text": "Steps:\n1. Open /employees.\n2. Observe network trace on first paint.\n\nExpected:\n- GET /dashboard/people/employees + /stats both 200/304; no console errors.\n\nActual:\n- Both calls succeed; stats render `3 total / 3 active / 0 inactive / —`. No console errors.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E18 Status filter sends correct params",
+      "text": "Steps:\n1. Select `active` / `inactive` / `all` in the status combobox.\n\nExpected:\n- `isActive=true`, `isActive=false`, and no param (ghost check) respectively.\n\nActual:\n- Verified in network trace: reqid=71 `isActive=true`, reqid=67 `isActive=false`, `all` omits the param. No boolean-casting bug.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E19 Search is debounced and server-side",
+      "text": "Steps:\n1. Type `zzz` into the search input.\n2. Observe network.\n\nExpected:\n- Single debounced GET with `&search=zzz`.\n\nActual:\n- reqid=59 GET /dashboard/people/employees?...&search=zzz — single call after debounce.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E20 Empty-submit validation fires on create form",
+      "text": "Steps:\n1. Open /employees/create.\n2. Click «إنشاء الممارس» without filling anything.\n\nExpected:\n- Required fields show inline errors; submit is blocked.\n\nActual:\n- 4 inline errors displayed (email, nameEn, nameAr, specialty EN). Submit blocked. (Translation issue tracked in E8.)",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E21 Edit form tabs + isActive switch render",
+      "text": "Steps:\n1. Open /employees/{id}/edit.\n2. Verify tabs and controls.\n\nExpected:\n- Three tabs (Basic / Schedule & Breaks / Services & Pricing); isActive switch visible on Basic tab.\n\nActual:\n- All three tabs render; isActive switch present and checked for an active employee.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "E22 Dark mode toggles cleanly on the list page",
+      "text": "Steps:\n1. Open /employees.\n2. Click the «الوضع الداكن» toggle.\n\nExpected:\n- Background, stats cards, table, filter bar all switch to dark tokens; RTL preserved.\n\nActual:\n- Toggle works; screenshot list-dark-rtl.png archived for reference.",
+      "result": "PASSED"
+    }
+  ]
+}
