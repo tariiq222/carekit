@@ -21,6 +21,7 @@ import { ChangePasswordHandler } from '../../modules/identity/users/change-passw
 import { IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ApiPublicResponses, ApiErrorDto } from '../../common/swagger';
+import { flattenPermissions } from '../../modules/identity/casl/flatten-permissions';
 
 class ChangePasswordDto {
   @ApiProperty({ description: 'Current account password', example: 'P@ssw0rd123' })
@@ -69,7 +70,7 @@ export class AuthController {
     });
     return {
       ...tokens,
-      user,
+      user: user ? { ...user, permissions: flattenPermissions(user) } : user,
       expiresIn: this.parseTtlSeconds(this.config.get<string>('JWT_ACCESS_TTL') ?? '15m'),
     };
   }
@@ -130,7 +131,8 @@ export class AuthController {
   @ApiOkResponse({ description: 'Current user profile with role and permissions' })
   @ApiResponse({ status: 401, description: 'Missing or invalid JWT', type: ApiErrorDto })
   async meEndpoint(@UserId() userId: string) {
-    return this.getCurrentUser.execute({ userId } satisfies GetCurrentUserQuery);
+    const user = await this.getCurrentUser.execute({ userId } satisfies GetCurrentUserQuery);
+    return { ...user, permissions: flattenPermissions(user) };
   }
 
   @Patch('password/change')
