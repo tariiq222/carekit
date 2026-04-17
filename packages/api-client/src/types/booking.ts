@@ -34,7 +34,8 @@ export interface BookingListItem {
   employee: {
     id: string
     user: { firstName: string; lastName: string }
-    specialty: { nameAr: string; nameEn: string }
+    specialty: string | null
+    specialtyAr: string | null
   }
   service: { nameAr: string; nameEn: string; price: number; duration: number }
 }

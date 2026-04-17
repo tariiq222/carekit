@@ -17,12 +17,8 @@ export interface EmployeeListItem {
     phone: string | null
     avatarUrl: string | null
   }
-  specialty: {
-    id: string
-    nameAr: string
-    nameEn: string
-    iconUrl: string | null
-  }
+  specialty: string | null
+  specialtyAr: string | null
 }
 
 export interface EmployeeStats {
@@ -34,19 +30,20 @@ export interface EmployeeStats {
 
 export interface EmployeeListQuery extends PaginationParams {
   isActive?: boolean
-  specialtyId?: string
 }
 
 export interface CreateEmployeePayload {
   userId: string
-  specialtyId: string
+  specialty: string
+  specialtyAr?: string
   experience: number
   bio?: string
   bioAr?: string
 }
 
 export interface UpdateEmployeePayload {
-  specialtyId?: string
+  specialty?: string
+  specialtyAr?: string
   experience?: number
   bio?: string
   bioAr?: string

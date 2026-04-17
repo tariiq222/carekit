@@ -74,11 +74,6 @@ export type {
   UpdateDepartmentPayload,
 } from './department.js'
 export type {
-  SpecialtyListItem,
-  CreateSpecialtyPayload,
-  UpdateSpecialtyPayload,
-} from './specialty.js'
-export type {
   EmployeeAvailability,
   AvailabilitySlotInput,
   SetAvailabilityPayload,
@@ -156,3 +151,9 @@ export type {
   GroupListItem,
   GroupListQuery,
 } from './group.js'
+export type {
+  PublicEmployee,
+  ContactMessage,
+  ContactMessageStatus,
+  CreateContactMessagePayload,
+} from './public-directory.js'

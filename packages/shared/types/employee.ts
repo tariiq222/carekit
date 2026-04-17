@@ -1,7 +1,8 @@
 export interface Employee {
   id: string;
   userId: string;
-  specialtyId: string;
+  specialty: string | null;
+  specialtyAr: string | null;
   bio: string | null;
   bioAr: string | null;
   experience: number;
@@ -38,12 +39,6 @@ export interface EmployeeWithUser extends Employee {
     email: string;
     phone: string | null;
     avatarUrl: string | null;
-  };
-  specialty: {
-    id: string;
-    nameAr: string;
-    nameEn: string;
-    iconUrl: string | null;
   };
 }
 

@@ -42,7 +42,7 @@ export interface Booking {
 
 export interface BookingWithRelations extends Booking {
   client?: { id: string; firstName: string; lastName: string; phone: string | null };
-  employee?: { id: string; user: { firstName: string; lastName: string }; specialty: { nameAr: string; nameEn: string } };
+  employee?: { id: string; user: { firstName: string; lastName: string }; specialty: string | null; specialtyAr: string | null };
   service?: { nameAr: string; nameEn: string; price: number; duration: number };
   payment?: { status: string; totalAmount: number };
   rating?: { stars: number; comment: string | null };
