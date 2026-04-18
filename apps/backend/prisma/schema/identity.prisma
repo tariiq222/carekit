@@ -25,6 +25,14 @@ model OtpCode {
   @@index([expiresAt])
 }
 
+model UsedOtpSession {
+  jti        String   @id
+  consumedAt DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([expiresAt])
+}
+
 enum UserRole {
   SUPER_ADMIN
   ADMIN

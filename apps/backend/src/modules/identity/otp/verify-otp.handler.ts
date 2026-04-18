@@ -66,6 +66,7 @@ export class VerifyOtpHandler {
     const sessionToken = await this.otpSession.signSession({
       identifier: dto.identifier,
       purpose: dto.purpose,
+      channel: otpRecord.channel,
     });
 
     return { sessionToken };

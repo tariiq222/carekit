@@ -25,6 +25,9 @@ export class PublicBookingsController {
     return this.createGuestBookingHandler.execute({
       ...dto,
       identifier: session.identifier,
+      sessionJti: session.jti,
+      sessionExp: session.exp ?? Math.floor(Date.now() / 1000) + 1800,
+      sessionChannel: session.channel,
     });
   }
 }

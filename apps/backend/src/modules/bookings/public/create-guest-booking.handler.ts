@@ -1,12 +1,21 @@
-import { Injectable, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
 import { PriceResolverService } from '../../org-experience/services/price-resolver.service';
 import { GetBookingSettingsHandler } from '../get-booking-settings/get-booking-settings.handler';
 import { CreateGuestBookingDto } from './create-guest-booking.dto';
-import type { OtpPurpose } from '@prisma/client';
+import type { OtpChannel } from '@prisma/client';
 
 export type CreateGuestBookingCommand = CreateGuestBookingDto & {
   identifier: string;
+  sessionJti: string;
+  sessionExp: number;
+  sessionChannel: OtpChannel;
 };
 
 const DEFAULT_VAT_RATE = 0.15;
@@ -19,39 +28,57 @@ export class CreateGuestBookingHandler {
     private readonly settingsHandler: GetBookingSettingsHandler,
   ) {}
 
-  async execute(dto: CreateGuestBookingCommand) {
-    const scheduledAt = new Date(dto.startsAt);
+  async execute(cmd: CreateGuestBookingCommand) {
+    const scheduledAt = new Date(cmd.startsAt);
     if (scheduledAt <= new Date()) {
       throw new BadRequestException('Booking must be scheduled in the future');
     }
 
+    // Fix B — identifier match: session.identifier must equal the contact being booked
+    const identifierMatchesEmail = cmd.sessionChannel === 'EMAIL' && cmd.identifier === cmd.client.email;
+    const identifierMatchesPhone = cmd.sessionChannel === 'SMS' && cmd.identifier === cmd.client.phone;
+    if (!identifierMatchesEmail && !identifierMatchesPhone) {
+      throw new UnauthorizedException('Session identifier does not match booking contact');
+    }
+
     const branch = await this.prisma.branch.findFirst({
-      where: { id: dto.branchId },
+      where: { id: cmd.branchId },
       select: { id: true },
     });
     if (!branch) throw new NotFoundException('Branch not found');
 
     const employee = await this.prisma.employee.findFirst({
-      where: { id: dto.employeeId },
+      where: { id: cmd.employeeId },
       select: { id: true },
     });
     if (!employee) throw new NotFoundException('Employee not found');
 
+    // Fix D — employee must belong to the requested branch
+    const employeeBranch = await this.prisma.employeeBranch.findUnique({
+      where: {
+        employeeId_branchId: { employeeId: cmd.employeeId, branchId: cmd.branchId },
+      },
+      select: { id: true },
+    });
+    if (!employeeBranch) {
+      throw new BadRequestException('Employee is not assigned to this branch');
+    }
+
     const service = await this.prisma.service.findFirst({
-      where: { id: dto.serviceId },
+      where: { id: cmd.serviceId },
       select: { id: true },
     });
     if (!service) throw new NotFoundException('Service not found');
 
     const employeeService = await this.prisma.employeeService.findUnique({
-      where: { employeeId_serviceId: { employeeId: dto.employeeId, serviceId: dto.serviceId } },
+      where: { employeeId_serviceId: { employeeId: cmd.employeeId, serviceId: cmd.serviceId } },
     });
     if (!employeeService) {
       throw new BadRequestException('Employee does not provide this service');
     }
 
     const resolved = await this.priceResolver.resolve({
-      serviceId: dto.serviceId,
+      serviceId: cmd.serviceId,
       employeeServiceId: employeeService.id,
       durationOptionId: null,
       bookingType: null,
@@ -63,9 +90,21 @@ export class CreateGuestBookingHandler {
     const endsAt = new Date(scheduledAt.getTime() + durationMins * 60_000);
 
     const result = await this.prisma.$transaction(async (tx) => {
+      // Fix A — enforce single-use: insert UsedOtpSession or throw if already exists
+      try {
+        await tx.usedOtpSession.create({
+          data: {
+            jti: cmd.sessionJti,
+            expiresAt: new Date(cmd.sessionExp * 1000),
+          },
+        });
+      } catch {
+        throw new UnauthorizedException('OTP session already used');
+      }
+
       const conflict = await tx.booking.findFirst({
         where: {
-          employeeId: dto.employeeId,
+          employeeId: cmd.employeeId,
           status: { in: ['PENDING', 'CONFIRMED', 'AWAITING_PAYMENT'] },
           scheduledAt: { lt: endsAt },
           endsAt: { gt: scheduledAt },
@@ -78,10 +117,7 @@ export class CreateGuestBookingHandler {
 
       let client = await tx.client.findFirst({
         where: {
-          OR: [
-            { phone: dto.client.phone },
-            { email: dto.client.email },
-          ],
+          OR: [{ phone: cmd.client.phone }, { email: cmd.client.email }],
         },
       });
 
@@ -90,10 +126,10 @@ export class CreateGuestBookingHandler {
       if (!client) {
         client = await tx.client.create({
           data: {
-            name: dto.client.name,
-            phone: dto.client.phone,
-            email: dto.client.email,
-            gender: dto.client.gender,
+            name: cmd.client.name,
+            phone: cmd.client.phone,
+            email: cmd.client.email,
+            gender: cmd.client.gender,
             emailVerified: now,
             source: 'ONLINE',
             accountType: 'WALK_IN',
@@ -103,18 +139,18 @@ export class CreateGuestBookingHandler {
         await tx.client.update({
           where: { id: client.id },
           data: {
-            name: dto.client.name,
-            gender: dto.client.gender ?? client.gender,
+            name: cmd.client.name,
+            gender: cmd.client.gender ?? client.gender,
           },
         });
       }
 
       const booking = await tx.booking.create({
         data: {
-          branchId: dto.branchId,
+          branchId: cmd.branchId,
           clientId: client.id,
-          employeeId: dto.employeeId,
-          serviceId: dto.serviceId,
+          employeeId: cmd.employeeId,
+          serviceId: cmd.serviceId,
           durationOptionId: resolved.durationOptionId || null,
           scheduledAt,
           endsAt,
@@ -122,7 +158,7 @@ export class CreateGuestBookingHandler {
           price,
           currency,
           bookingType: 'INDIVIDUAL',
-          notes: dto.client.notes,
+          notes: cmd.client.notes,
           status: 'AWAITING_PAYMENT',
         },
       });
@@ -133,9 +169,9 @@ export class CreateGuestBookingHandler {
 
       const invoice = await tx.invoice.create({
         data: {
-          branchId: dto.branchId,
+          branchId: cmd.branchId,
           clientId: client.id,
-          employeeId: dto.employeeId,
+          employeeId: cmd.employeeId,
           bookingId: booking.id,
           subtotal,
           discountAmt: 0,
