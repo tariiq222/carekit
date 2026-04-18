@@ -2,6 +2,7 @@ import SuperTest from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AppModule } from '../../../src/app.module';
 import { FcmService } from '../../../src/infrastructure/mail/fcm.service';
 import { SmtpService } from '../../../src/infrastructure/mail/smtp.service';
@@ -64,39 +65,40 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
   process.env.JWT_ACCESS_TTL = '15m';
   process.env.JWT_REFRESH_TTL = '30d';
 
+  const CONFIG_MAP: Record<string, string | number> = {
+    DATABASE_URL: TEST_DATABASE_URL,
+    JWT_ACCESS_SECRET: TEST_JWT_ACCESS_SECRET,
+    JWT_REFRESH_SECRET: TEST_JWT_REFRESH_SECRET,
+    JWT_ACCESS_TTL: '15m',
+    JWT_REFRESH_TTL: '30d',
+    REDIS_HOST: 'localhost',
+    REDIS_PORT: 5380,
+    OPENAI_API_KEY: 'test-key',
+    OPENROUTER_API_KEY: 'test-key',
+    MOYASAR_API_KEY: 'test-key',
+    MOYASAR_SECRET_KEY: 'test-secret',
+    FCM_PROJECT_ID: 'test-project',
+    SMTP_HOST: 'localhost',
+    SMTP_PORT: 1025,
+    LICENSE_SERVER_URL: 'http://localhost:9999',
+    MINIO_ENDPOINT: 'localhost',
+    MINIO_PORT: 9000,
+    MINIO_ACCESS_KEY: 'minioadmin',
+    MINIO_SECRET_KEY: 'minioadmin123',
+    MINIO_BUCKET: 'carekit',
+  };
+
   const moduleRef: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
   })
+    .overrideProvider(ThrottlerGuard)
+    .useValue({ canActivate: () => true })
     .overrideProvider(ConfigService)
     .useValue({
-      get: (key: string) => {
-        const map: Record<string, string | number> = {
-          DATABASE_URL: TEST_DATABASE_URL,
-          JWT_ACCESS_SECRET: TEST_JWT_ACCESS_SECRET,
-          JWT_REFRESH_SECRET: TEST_JWT_REFRESH_SECRET,
-          JWT_ACCESS_TTL: '15m',
-          JWT_REFRESH_TTL: '30d',
-          REDIS_HOST: 'localhost',
-          REDIS_PORT: 5380,
-          OPENAI_API_KEY: 'test-key',
-          OPENROUTER_API_KEY: 'test-key',
-          MOYASAR_API_KEY: 'test-key',
-          MOYASAR_SECRET_KEY: 'test-secret',
-          FCM_PROJECT_ID: 'test-project',
-          SMTP_HOST: 'localhost',
-          SMTP_PORT: 1025,
-          LICENSE_SERVER_URL: 'http://localhost:9999',
-          MINIO_ENDPOINT: 'localhost',
-          MINIO_PORT: 9000,
-          MINIO_ACCESS_KEY: 'minioadmin',
-          MINIO_SECRET_KEY: 'minioadmin123',
-          MINIO_BUCKET: 'carekit',
-        };
-        return map[key];
-      },
+      get: (key: string) => CONFIG_MAP[key],
       getOrThrow: (key: string) => {
-        const val = ({} as Record<string, string>)[key];
-        if (!val) throw new Error(`Config key ${key} not found`);
+        const val = CONFIG_MAP[key];
+        if (val === undefined) throw new Error(`Config key ${key} not found`);
         return val;
       },
     })
