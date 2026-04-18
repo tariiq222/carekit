@@ -119,6 +119,7 @@ export interface BookingListQuery {
   dateFrom?: string
   dateTo?: string
   search?: string
+  isGuest?: boolean
 }
 
 export interface CreateBookingPayload {

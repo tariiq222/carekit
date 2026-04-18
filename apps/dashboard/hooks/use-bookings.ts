@@ -25,6 +25,7 @@ import type {
 interface BookingFilters {
   status: BookingStatus | "all"
   type: BookingType | "all"
+  isGuest: boolean | "all"
   dateFrom: string
   dateTo: string
   employeeId: string
@@ -34,6 +35,7 @@ interface BookingFilters {
 const defaultFilters: BookingFilters = {
   status: "all",
   type: "all",
+  isGuest: "all",
   dateFrom: "",
   dateTo: "",
   employeeId: "",
@@ -49,6 +51,7 @@ export function useBookings() {
   const hasFilters =
     filters.status !== "all" ||
     filters.type !== "all" ||
+    filters.isGuest !== "all" ||
     filters.dateFrom !== "" ||
     filters.dateTo !== "" ||
     filters.employeeId !== "" ||
@@ -59,6 +62,7 @@ export function useBookings() {
     perPage: 20,
     status: filters.status !== "all" ? filters.status : undefined,
     type: filters.type !== "all" ? filters.type : undefined,
+    isGuest: filters.isGuest !== "all" ? filters.isGuest : undefined,
     dateFrom: filters.dateFrom || undefined,
     dateTo: filters.dateTo || undefined,
     search: filters.search || undefined,

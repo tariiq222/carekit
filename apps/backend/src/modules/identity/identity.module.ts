@@ -25,6 +25,12 @@ import { ListPermissionsHandler } from './roles/list-permissions.handler';
 import { ChangePasswordHandler } from './users/change-password.handler';
 import { CaslAbilityFactory } from './casl/casl-ability.factory';
 import { DashboardIdentityController } from '../../api/dashboard/identity.controller';
+import { RequestOtpHandler } from './otp/request-otp.handler';
+import { VerifyOtpHandler } from './otp/verify-otp.handler';
+import { OtpSessionService } from './otp/otp-session.service';
+import { OtpSessionGuard } from './otp/otp-session.guard';
+import { NotificationChannelModule } from '../comms/notification-channel/notification-channel.module';
+import { CAPTCHA_VERIFIER } from '../comms/contact-messages/captcha.verifier';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -33,12 +39,15 @@ const handlers = [
   CreateRoleHandler, DeleteRoleHandler, AssignPermissionsHandler, ListRolesHandler,
   ListPermissionsHandler,
   ChangePasswordHandler,
+  RequestOtpHandler,
+  VerifyOtpHandler,
 ];
 
 @Module({
   imports: [
     DatabaseModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    NotificationChannelModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -49,7 +58,13 @@ const handlers = [
     }),
   ],
   controllers: [DashboardIdentityController],
-  providers: [JwtStrategy, PasswordService, TokenService, CaslAbilityFactory, ...handlers],
-  exports: [CaslAbilityFactory, TokenService, PasswordService, ...handlers],
+  providers: [
+    JwtStrategy, PasswordService, TokenService, CaslAbilityFactory,
+    { provide: CAPTCHA_VERIFIER, useFactory: () => { const { createCaptchaVerifier } = require('../comms/contact-messages/captcha.verifier'); return createCaptchaVerifier(); } },
+    ...handlers,
+    OtpSessionService,
+    OtpSessionGuard,
+  ],
+  exports: [CaslAbilityFactory, TokenService, PasswordService, RequestOtpHandler, VerifyOtpHandler, OtpSessionService, OtpSessionGuard, ...handlers],
 })
 export class IdentityModule {}

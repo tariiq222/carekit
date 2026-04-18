@@ -33,6 +33,7 @@ import { CreateContactMessageHandler } from './contact-messages/create-contact-m
 import { ListContactMessagesHandler } from './contact-messages/list-contact-messages.handler';
 import { UpdateContactMessageStatusHandler } from './contact-messages/update-contact-message-status.handler';
 import { CAPTCHA_VERIFIER, createCaptchaVerifier } from './contact-messages/captcha.verifier';
+import { NotificationChannelModule } from './notification-channel/notification-channel.module';
 
 const handlers = [
   SendPushHandler,
@@ -69,10 +70,10 @@ const eventHandlers = [
 ];
 
 @Module({
-  imports: [DatabaseModule, MessagingModule, MailModule],
+  imports: [DatabaseModule, MessagingModule, MailModule, NotificationChannelModule],
   controllers: [DashboardCommsController],
   providers: [...handlers, ...eventHandlers, { provide: CAPTCHA_VERIFIER, useFactory: () => createCaptchaVerifier() }],
-  exports: [...handlers],
+  exports: [...handlers, NotificationChannelModule],
 })
 export class CommsModule implements OnModuleInit {
   constructor(

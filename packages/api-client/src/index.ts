@@ -24,4 +24,8 @@ export * as usersApi from './modules/users.js'
 export * as organizationSettingsApi from "./modules/organization-settings.js"
 export type { OrganizationSettings, UpdateOrganizationSettingsPayload } from "./modules/organization-settings.js"
 export * as publicEmployeesApi from './modules/public-employees.js'
+export * as publicBranchesApi from './modules/public-branches.js'
 export * as contactMessagesApi from './modules/contact-messages.js'
+export * as otpApi from './modules/otp.js'
+export * as publicAvailabilityApi from './modules/public-availability.js'
+export { setOtpSessionToken, getOtpSessionToken, setGuestBaseUrl } from './modules/guest-client.js'

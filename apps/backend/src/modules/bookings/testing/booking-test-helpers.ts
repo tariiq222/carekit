@@ -8,6 +8,7 @@ export const mockBooking = {
   scheduledAt: future, endsAt: new Date(future.getTime() + 3600_000),
   durationMins: 60, price: 200, currency: 'SAR',
   status: BookingStatus.PENDING, bookingType: 'INDIVIDUAL',
+  createdAt: new Date(), updatedAt: new Date(),
 };
 
 const buildPrismaRaw = () => ({
@@ -54,10 +55,12 @@ const buildPrismaRaw = () => ({
       id: 'svc-1', durationMins: 60, price: 200, currency: 'SAR',
       minParticipants: 1, maxParticipants: 1, reserveWithoutPayment: false,
     }),
+    findMany: jest.fn().mockResolvedValue([{ id: 'svc-1', durationMins: 60, price: 200, currency: 'SAR' }]),
   },
   employee: {
     findUnique: jest.fn().mockResolvedValue({ id: 'emp-1' }),
     findFirst: jest.fn().mockResolvedValue({ id: 'emp-1' }),
+    findMany: jest.fn().mockResolvedValue([{ id: 'emp-1' }]),
   },
   employeeService: {
     findUnique: jest.fn().mockResolvedValue({ id: 'es-1', employeeId: 'emp-1', serviceId: 'svc-1' }),
@@ -67,6 +70,7 @@ const buildPrismaRaw = () => ({
   },
   client: {
     findFirst: jest.fn().mockResolvedValue({ id: 'client-1' }),
+    findMany: jest.fn().mockResolvedValue([{ id: 'client-1', source: 'ONLINE' }]),
   },
 });
 

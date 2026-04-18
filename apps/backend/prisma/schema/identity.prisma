@@ -1,4 +1,37 @@
-// Identity BC — auth, users, roles, permissions.
+// Identity BC — auth, users, roles, permissions, OTP.
+
+enum OtpChannel {
+  EMAIL
+  SMS
+}
+
+enum OtpPurpose {
+  GUEST_BOOKING
+  CLIENT_LOGIN
+}
+
+model OtpCode {
+  id          String     @id @default(uuid())
+  channel     OtpChannel
+  identifier  String
+  codeHash    String
+  purpose     OtpPurpose
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  attempts    Int        @default(0)
+  createdAt   DateTime   @default(now())
+
+  @@index([identifier, purpose])
+  @@index([expiresAt])
+}
+
+model UsedOtpSession {
+  jti        String   @id
+  consumedAt DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([expiresAt])
+}
 
 enum UserRole {
   SUPER_ADMIN

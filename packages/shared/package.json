@@ -11,6 +11,7 @@
     "./constants": "./constants/index.ts",
     "./theme": "./theme/index.ts",
     "./types/theme": "./types/theme.ts",
-    "./types/theme.js": "./types/theme.ts"
+    "./types/theme.js": "./types/theme.ts",
+    "./state-machines": "./state-machines/index.ts"
   }
 }

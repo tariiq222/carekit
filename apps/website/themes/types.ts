@@ -13,5 +13,6 @@ export interface Theme {
     therapists: ComponentType;
     contact: ComponentType;
     burnoutTest: ComponentType;
+    booking: ComponentType;
   };
 }

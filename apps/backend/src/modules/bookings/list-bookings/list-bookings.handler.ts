@@ -17,7 +17,7 @@ export class ListBookingsHandler {
 
   async execute(query: ListBookingsQuery) {
     const searchTerm = query.search?.trim();
-    const where = {
+    const where: Record<string, unknown> = {
       ...(query.clientId ? { clientId: query.clientId } : {}),
       ...(query.employeeId ? { employeeId: query.employeeId } : {}),
       ...(query.branchId ? { branchId: query.branchId } : {}),
@@ -29,6 +29,9 @@ export class ListBookingsHandler {
         : {}),
       ...(searchTerm
         ? { id: { contains: searchTerm, mode: 'insensitive' as const } }
+        : {}),
+      ...(query.isGuest !== undefined
+        ? { client: { source: query.isGuest ? 'ONLINE' : { not: 'ONLINE' } } }
         : {}),
     };
 

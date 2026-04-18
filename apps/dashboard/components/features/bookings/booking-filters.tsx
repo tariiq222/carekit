@@ -18,10 +18,12 @@ import type { BookingStatus, BookingType } from "@/lib/types/booking"
 interface BookingFiltersProps {
   status: BookingStatus | "all"
   type: BookingType | "all"
+  isGuest: boolean | "all"
   dateFrom: string
   dateTo: string
   onStatusChange: (value: BookingStatus | "all") => void
   onTypeChange: (value: BookingType | "all") => void
+  onIsGuestChange: (value: boolean | "all") => void
   onDateFromChange: (value: string) => void
   onDateToChange: (value: string) => void
   onReset: () => void
@@ -38,10 +40,12 @@ const timeTabs = [
 export function BookingFilters({
   status,
   type,
+  isGuest,
   dateFrom,
   dateTo,
   onStatusChange,
   onTypeChange,
+  onIsGuestChange,
   onDateFromChange,
   onDateToChange,
   onReset,
@@ -82,6 +86,20 @@ export function BookingFilters({
               <SelectItem value="all">{t("bookings.filters.allTypes")}</SelectItem>
               <SelectItem value="in_person">{t("bookings.filters.inPerson")}</SelectItem>
               <SelectItem value="online">{t("bookings.filters.online")}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={String(isGuest)}
+            onValueChange={(v) => onIsGuestChange(v === "all" ? "all" : v === "true")}
+          >
+            <SelectTrigger size="sm" className="w-auto min-w-[120px]">
+              <SelectValue placeholder={t("bookings.filters.source")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("bookings.filters.allSources")}</SelectItem>
+              <SelectItem value="true">{t("bookings.filters.sourceOnline")}</SelectItem>
+              <SelectItem value="false">{t("bookings.filters.sourceOther")}</SelectItem>
             </SelectContent>
           </Select>
 
