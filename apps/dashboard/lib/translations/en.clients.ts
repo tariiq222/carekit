@@ -146,6 +146,7 @@ export const enClients: Record<string, string> = {
   "clients.detail.totalPaid": "Total Paid",
   "clients.detail.accountType": "Account Type",
   "clients.detail.walkIn": "Walk-in",
+  "clients.detail.hasAccount": "Has Account",
   "clients.detail.claimedAt": "Claimed On",
   "clients.detail.notClaimed": "Not claimed yet",
   "clients.dialog.paymentStatus.paid": "Paid",
