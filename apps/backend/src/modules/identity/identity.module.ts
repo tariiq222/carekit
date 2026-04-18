@@ -34,6 +34,7 @@ import { OtpSessionGuard } from './otp/otp-session.guard';
 import { NotificationChannelModule } from '../comms/notification-channel/notification-channel.module';
 import { CAPTCHA_VERIFIER } from '../comms/contact-messages/captcha.verifier';
 import { ClientSessionGuard } from '../../common/guards/client-session.guard';
+import { RegisterHandler } from './client-auth/register.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -44,6 +45,7 @@ const handlers = [
   ChangePasswordHandler,
   RequestOtpHandler,
   VerifyOtpHandler,
+  RegisterHandler,
 ];
 
 @Module({
@@ -84,6 +86,7 @@ const handlers = [
     VerifyOtpHandler,
     OtpSessionService,
     OtpSessionGuard,
+    RegisterHandler,
     ...handlers,
   ],
 })
