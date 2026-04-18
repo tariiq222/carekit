@@ -1,8 +1,8 @@
 import SuperTest from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerGuard, getStorageToken } from '@nestjs/throttler';
 import { AppModule } from '../../../src/app.module';
 import { FcmService } from '../../../src/infrastructure/mail/fcm.service';
 import { SmtpService } from '../../../src/infrastructure/mail/smtp.service';
@@ -11,11 +11,8 @@ import { ChatAdapter } from '../../../src/infrastructure/ai/chat.adapter';
 import { SemanticSearchHandler } from '../../../src/modules/ai/semantic-search/semantic-search.handler';
 import { MinioService } from '../../../src/infrastructure/storage/minio.service';
 import { MoyasarApiClient } from '../../../src/modules/finance/moyasar-api/moyasar-api.client';
-import { NotificationChannelRegistry } from '../../../src/modules/comms/notification-channel/notification-channel-registry';
-import { RequestOtpHandler } from '../../../src/modules/identity/otp/request-otp.handler';
-import { PrismaService } from '../../../src/infrastructure/database';
-import * as bcrypt from 'bcryptjs';
-import { OtpChannel, OtpPurpose } from '@prisma/client';
+import { EmailChannelAdapter } from '../../../src/modules/comms/notification-channel/email-channel.adapter';
+import { CAPTCHA_VERIFIER } from '../../../src/modules/comms/contact-messages/captcha.verifier';
 
 const TEST_JWT_ACCESS_SECRET = 'test-access-secret-32chars-min';
 const TEST_JWT_REFRESH_SECRET = 'test-refresh-secret-32chars-min';
@@ -23,7 +20,12 @@ const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
   'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
 
-export const DETERMINISTIC_OTP = '777777';
+/**
+ * In-memory store for OTP codes captured by the stub email adapter.
+ * Key: identifier (email). Value: most-recently captured plaintext code.
+ * Tests read from here instead of using a deterministic code.
+ */
+export const capturedOtpCodes: Map<string, string> = new Map();
 
 const mockMoyasarPayment = {
   id: 'moyasar-pay-test-1',
@@ -93,6 +95,11 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
   })
     .overrideProvider(ThrottlerGuard)
     .useValue({ canActivate: () => true })
+    // Override the throttler storage so route-level @Throttle limits are never enforced.
+    .overrideProvider(getStorageToken())
+    .useValue({
+      increment: async () => ({ totalHits: 1, timeToExpire: 60, isBlocked: false, timeToBlockExpire: 0 }),
+    })
     .overrideProvider(ConfigService)
     .useValue({
       get: (key: string) => CONFIG_MAP[key],
@@ -143,12 +150,20 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
       toPaymentStatus: jest.fn().mockReturnValue('COMPLETED' as never),
       toPaymentMethod: jest.fn().mockReturnValue('ONLINE_CARD' as never),
     })
-    .overrideProvider(RequestOtpHandler)
-    .useFactory({
-      factory: (prisma: PrismaService, registry: NotificationChannelRegistry) => {
-        return new DeterministicOtpHandler(prisma, registry);
+    // Stub the email channel adapter so it captures the plaintext OTP code.
+    .overrideProvider(EmailChannelAdapter)
+    .useValue({
+      kind: 'EMAIL' as const,
+      send: jest.fn().mockImplementation(async (identifier: string, code: string) => {
+        capturedOtpCodes.set(identifier, code);
+      }),
+    })
+    // Stub the captcha verifier: accept only 'test-valid', reject everything else.
+    .overrideProvider(CAPTCHA_VERIFIER)
+    .useValue({
+      verify: async (token: string | undefined | null): Promise<boolean> => {
+        return token === 'test-valid';
       },
-      inject: [PrismaService, NotificationChannelRegistry],
     })
     .compile();
 
@@ -166,58 +181,5 @@ export async function closePublicTestApp(): Promise<void> {
   if (cachedApp) {
     await cachedApp.close();
     cachedApp = null;
-  }
-}
-
-class DeterministicOtpHandler {
-  private readonly logger = new Logger(DeterministicOtpHandler.name);
-
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly registry: NotificationChannelRegistry,
-  ) {}
-
-  async execute(dto: { identifier: string; channel: string; purpose: string }): Promise<{ success: boolean }> {
-    if (dto.channel === 'EMAIL') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(dto.identifier)) {
-        throw new BadRequestException('Invalid email address');
-      }
-    }
-
-    const rawCode = DETERMINISTIC_OTP;
-    const codeHash = await bcrypt.hash(rawCode, 10);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-    await this.prisma.$transaction(async (tx) => {
-      await tx.otpCode.updateMany({
-        where: {
-          identifier: dto.identifier,
-          purpose: dto.purpose as unknown as OtpPurpose,
-          consumedAt: null,
-          expiresAt: { gt: new Date() },
-        },
-        data: { consumedAt: new Date() },
-      });
-
-      await tx.otpCode.create({
-        data: {
-          channel: dto.channel as OtpChannel,
-          identifier: dto.identifier,
-          codeHash,
-          purpose: dto.purpose as unknown as OtpPurpose,
-          expiresAt,
-        },
-      });
-    });
-
-    try {
-      const channel = this.registry.resolve(dto.channel as OtpChannel);
-      await channel.send(dto.identifier, rawCode);
-    } catch (err) {
-      this.logger.error(`Failed to send OTP via ${dto.channel} to ${dto.identifier}`, err);
-    }
-
-    return { success: true };
   }
 }

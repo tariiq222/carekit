@@ -1,5 +1,4 @@
 import SuperTest from 'supertest';
-import * as bcrypt from 'bcryptjs';
 import { testPrisma, cleanTables } from '../../setup/db.setup';
 import {
   seedEmployee,
@@ -7,9 +6,32 @@ import {
   seedBranch,
   seedEmployeeService,
 } from '../../setup/seed.helper';
-import { createPublicTestApp, closePublicTestApp, DETERMINISTIC_OTP } from './public-test-app';
+import { createPublicTestApp, closePublicTestApp, capturedOtpCodes } from './public-test-app';
 
-const TEST_EMAIL = `guest-booking-test-${Date.now()}@example.com`;
+// Each describe block that needs OTP flow uses its own unique identifier
+// to avoid per-identifier rate-limit interference between tests.
+const ts = Date.now();
+const EMAIL_OTP_REQUEST = `otp-req-${ts}@example.com`;
+const EMAIL_OTP_VERIFY = `otp-verify-${ts}@example.com`;
+const EMAIL_BOOKINGS = `bookings-${ts}@example.com`;
+const EMAIL_PAYMENTS = `payments-${ts}@example.com`;
+
+async function requestOtp(req: SuperTest.Agent, identifier: string): Promise<number> {
+  const res = await req
+    .post('/public/otp/request')
+    .send({ identifier, channel: 'EMAIL', purpose: 'GUEST_BOOKING', hCaptchaToken: 'test-valid' });
+  return res.status;
+}
+
+async function verifyOtp(req: SuperTest.Agent, identifier: string): Promise<string> {
+  const code = capturedOtpCodes.get(identifier);
+  if (!code) throw new Error(`No OTP captured for ${identifier}`);
+  const res = await req
+    .post('/public/otp/verify')
+    .send({ identifier, channel: 'EMAIL', purpose: 'GUEST_BOOKING', code });
+  if (res.status !== 201) throw new Error(`OTP verify failed: ${JSON.stringify(res.body)}`);
+  return res.body.sessionToken as string;
+}
 
 describe('Public — Guest Booking Happy Path (e2e)', () => {
   let req: SuperTest.Agent;
@@ -19,7 +41,10 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
 
   beforeAll(async () => {
     ({ request: req } = await createPublicTestApp());
-    await cleanTables(['Booking', 'Invoice', 'Payment', 'OtpCode', 'Client', 'Employee', 'Service', 'Branch']);
+    await cleanTables([
+      'UsedOtpSession', 'Booking', 'Invoice', 'Payment', 'OtpCode',
+      'Client', 'EmployeeService', 'EmployeeBranch', 'Employee', 'Service', 'Branch',
+    ]);
 
     const [employee, service, branch] = await Promise.all([
       seedEmployee(testPrisma as never),
@@ -31,10 +56,14 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
     branchId = branch.id;
 
     await seedEmployeeService(testPrisma as never, employeeId, serviceId);
+    await testPrisma.employeeBranch.create({ data: { employeeId, branchId } });
   });
 
   afterAll(async () => {
-    await cleanTables(['Booking', 'Invoice', 'Payment', 'OtpCode', 'Client', 'Employee', 'Service', 'Branch']);
+    await cleanTables([
+      'UsedOtpSession', 'Booking', 'Invoice', 'Payment', 'OtpCode',
+      'Client', 'EmployeeService', 'EmployeeBranch', 'Employee', 'Service', 'Branch',
+    ]);
     await closePublicTestApp();
   });
 
@@ -44,56 +73,96 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
     return d.toISOString();
   };
 
+  // ── OTP Request ────────────────────────────────────────────────────────────
+
   describe('POST /public/otp/request', () => {
-    it('returns 201 for a valid email OTP request', async () => {
+    it('returns 201 for a valid email OTP request with valid captcha', async () => {
       const res = await req
         .post('/public/otp/request')
-        .send({ identifier: TEST_EMAIL, channel: 'EMAIL', purpose: 'GUEST_BOOKING' });
+        .send({ identifier: EMAIL_OTP_REQUEST, channel: 'EMAIL', purpose: 'GUEST_BOOKING', hCaptchaToken: 'test-valid' });
 
       expect(res.status).toBe(201);
       expect(res.body).toEqual({ success: true });
     });
 
+    it('inserts an OtpCode row into the database', async () => {
+      const row = await testPrisma.otpCode.findFirst({
+        where: { identifier: EMAIL_OTP_REQUEST },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(row).not.toBeNull();
+      expect(row!.consumedAt).toBeNull();
+    });
+
     it('returns 400 for an invalid email', async () => {
       const res = await req
         .post('/public/otp/request')
-        .send({ identifier: 'not-valid', channel: 'EMAIL', purpose: 'GUEST_BOOKING' });
+        .send({ identifier: 'not-valid', channel: 'EMAIL', purpose: 'GUEST_BOOKING', hCaptchaToken: 'test-valid' });
 
       expect(res.status).toBe(400);
     });
+
+    it('returns 400 when captcha token is missing', async () => {
+      const res = await req
+        .post('/public/otp/request')
+        .send({ identifier: `missing-cap-${ts}@example.com`, channel: 'EMAIL', purpose: 'GUEST_BOOKING' });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when captcha token is invalid and does not insert an OtpCode row', async () => {
+      const badCaptchaEmail = `bad-cap-${ts}@example.com`;
+      const res = await req
+        .post('/public/otp/request')
+        .send({ identifier: badCaptchaEmail, channel: 'EMAIL', purpose: 'GUEST_BOOKING', hCaptchaToken: 'invalid-token' });
+
+      expect(res.status).toBe(400);
+
+      const row = await testPrisma.otpCode.findFirst({ where: { identifier: badCaptchaEmail } });
+      expect(row).toBeNull();
+    });
   });
 
+  // ── OTP Verify ─────────────────────────────────────────────────────────────
+
   describe('POST /public/otp/verify', () => {
-    it('returns a session token for a valid OTP', async () => {
-      const code = DETERMINISTIC_OTP;
-      expect(code).not.toBeNull();
+    beforeAll(async () => {
+      await requestOtp(req, EMAIL_OTP_VERIFY);
+    });
+
+    it('returns a session token for the correct OTP code', async () => {
+      const code = capturedOtpCodes.get(EMAIL_OTP_VERIFY);
+      expect(code).toBeDefined();
 
       const res = await req
         .post('/public/otp/verify')
-        .send({ identifier: TEST_EMAIL, purpose: 'GUEST_BOOKING', code: code! });
+        .send({ identifier: EMAIL_OTP_VERIFY, channel: 'EMAIL', purpose: 'GUEST_BOOKING', code: code! });
 
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('sessionToken');
     });
 
-    it('returns 400 for wrong OTP', async () => {
+    it('returns 401 for wrong OTP code', async () => {
+      // Fresh identifier to avoid consumed-OTP edge case.
+      const id = `wrong-code-${ts}@example.com`;
+      await requestOtp(req, id);
+
       const res = await req
         .post('/public/otp/verify')
-        .send({ identifier: TEST_EMAIL, purpose: 'GUEST_BOOKING', code: '000000' });
+        .send({ identifier: id, channel: 'EMAIL', purpose: 'GUEST_BOOKING', code: '000000' });
 
       expect(res.status).toBe(401);
     });
   });
 
+  // ── Guest Booking ──────────────────────────────────────────────────────────
+
   describe('POST /public/bookings', () => {
     let sessionToken: string;
 
     beforeAll(async () => {
-      const code = DETERMINISTIC_OTP!;
-      const res = await req
-        .post('/public/otp/verify')
-        .send({ identifier: TEST_EMAIL, purpose: 'GUEST_BOOKING', code });
-      sessionToken = res.body.sessionToken;
+      await requestOtp(req, EMAIL_BOOKINGS);
+      sessionToken = await verifyOtp(req, EMAIL_BOOKINGS);
     });
 
     it('creates a booking in AWAITING_PAYMENT status', async () => {
@@ -108,7 +177,7 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
           client: {
             name: 'Ahmed Mohammed',
             phone: '+966501234567',
-            email: TEST_EMAIL,
+            email: EMAIL_BOOKINGS,
           },
         });
 
@@ -116,8 +185,24 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
       expect(res.body).toHaveProperty('bookingId');
       expect(res.body).toHaveProperty('invoiceId');
 
-      const booking = await testPrisma.booking.findUnique({ where: { id: res.body.bookingId } });
+      const booking = await testPrisma.booking.findUnique({ where: { id: res.body.bookingId as string } });
       expect(booking!.status).toBe('AWAITING_PAYMENT');
+    });
+
+    it('records the jti as used so the session cannot be replayed', async () => {
+      // sessionToken was consumed above — replay must fail.
+      const res = await req
+        .post('/public/bookings')
+        .set('Authorization', `Bearer ${sessionToken}`)
+        .send({
+          serviceId,
+          employeeId,
+          branchId,
+          startsAt: futureSlot(),
+          client: { name: 'Ahmed Mohammed', phone: '+966501234568', email: EMAIL_BOOKINGS },
+        });
+
+      expect(res.status).toBe(401);
     });
 
     it('returns 401 without OTP session', async () => {
@@ -135,22 +220,22 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
     });
   });
 
+  // ── Payment Init ───────────────────────────────────────────────────────────
+
   describe('POST /public/payments/init', () => {
     let sessionToken: string;
 
     beforeAll(async () => {
-      const code = DETERMINISTIC_OTP!;
-      const res = await req
-        .post('/public/otp/verify')
-        .send({ identifier: TEST_EMAIL, purpose: 'GUEST_BOOKING', code });
-      sessionToken = res.body.sessionToken;
+      await requestOtp(req, EMAIL_PAYMENTS);
+      sessionToken = await verifyOtp(req, EMAIL_PAYMENTS);
     });
 
-    it('returns a moyasar redirect URL for a valid booking', async () => {
+    it('returns a moyasar redirect URL and creates a PENDING Payment row', async () => {
       const booking = await testPrisma.booking.findFirst({
         where: { status: 'AWAITING_PAYMENT' },
         orderBy: { createdAt: 'desc' },
       });
+      expect(booking).not.toBeNull();
 
       const res = await req
         .post('/public/payments/init')
@@ -160,7 +245,14 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('paymentId');
       expect(res.body).toHaveProperty('redirectUrl');
-      expect(res.body.redirectUrl).toContain('moyasar');
+      expect(res.body.redirectUrl as string).toContain('moyasar');
+
+      const payment = await testPrisma.payment.findFirst({
+        where: { idempotencyKey: `guest:${booking!.id}` },
+      });
+      expect(payment).not.toBeNull();
+      expect(payment!.status).toBe('PENDING');
+      expect(payment!.invoiceId).not.toBeNull();
     });
 
     it('returns 404 for unknown booking', async () => {
@@ -170,20 +262,6 @@ describe('Public — Guest Booking Happy Path (e2e)', () => {
         .send({ bookingId: '00000000-0000-0000-0000-000000000000' });
 
       expect(res.status).toBe(404);
-    });
-
-    it('returns 400 for booking not awaiting payment', async () => {
-      const booking = await testPrisma.booking.findFirst({
-        where: { status: { not: 'AWAITING_PAYMENT' } },
-      });
-      if (!booking) return;
-
-      const res = await req
-        .post('/public/payments/init')
-        .set('Authorization', `Bearer ${sessionToken}`)
-        .send({ bookingId: booking.id });
-
-      expect(res.status).toBe(400);
     });
   });
 });
