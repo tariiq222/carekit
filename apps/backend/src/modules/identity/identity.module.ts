@@ -37,6 +37,8 @@ import { CAPTCHA_VERIFIER } from '../comms/contact-messages/captcha.verifier';
 import { ClientSessionGuard } from '../../common/guards/client-session.guard';
 import { RegisterHandler } from './client-auth/register.handler';
 import { ClientLoginHandler } from './client-auth/client-login.handler';
+import { ClientRefreshHandler } from './client-auth/client-refresh.handler';
+import { ClientLogoutHandler } from './client-auth/client-logout.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -49,6 +51,8 @@ const handlers = [
   VerifyOtpHandler,
   RegisterHandler,
   ClientLoginHandler,
+  ClientRefreshHandler,
+  ClientLogoutHandler,
 ];
 
 @Module({

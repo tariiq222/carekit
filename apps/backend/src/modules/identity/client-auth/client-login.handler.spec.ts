@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { ClientLoginHandler } from './client-login.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
-import { ClientTokenService } from '../shared/client-token.service';
 import { PasswordService } from '../shared/password.service';
 
 describe('ClientLoginHandler', () => {
@@ -14,6 +15,9 @@ describe('ClientLoginHandler', () => {
       findFirst: jest.fn(),
       update: jest.fn(),
     },
+    clientRefreshToken: {
+      create: jest.fn(),
+    },
   };
 
   const mockRedisClient = {
@@ -23,7 +27,8 @@ describe('ClientLoginHandler', () => {
   };
 
   const mockRedis = { getClient: jest.fn(() => mockRedisClient) };
-  const mockClientTokens = { issueTokenPair: jest.fn() };
+  const mockJwt = { sign: jest.fn(() => 'mock-access-token') };
+  const mockConfig = { get: jest.fn(), getOrThrow: jest.fn((k: string) => k) };
   const mockPasswords = { verify: jest.fn() };
 
   beforeEach(async () => {
@@ -34,7 +39,8 @@ describe('ClientLoginHandler', () => {
         ClientLoginHandler,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: RedisService, useValue: mockRedis },
-        { provide: ClientTokenService, useValue: mockClientTokens },
+        { provide: JwtService, useValue: mockJwt },
+        { provide: ConfigService, useValue: mockConfig },
         { provide: PasswordService, useValue: mockPasswords },
       ],
     }).compile();
@@ -53,22 +59,25 @@ describe('ClientLoginHandler', () => {
       });
       mockRedisClient.incr.mockResolvedValue(1);
       mockPasswords.verify.mockResolvedValue(true);
-      mockClientTokens.issueTokenPair.mockResolvedValue({
-        accessToken: 'at', refreshToken: 'rt',
-      });
 
       const result = await handler.execute({
         email: 'test@example.com',
         password: 'SecurePass123',
       });
 
-      expect(result.accessToken).toBe('at');
-      expect(result.refreshToken).toBe('rt');
+      expect(result.accessToken).toBe('mock-access-token');
+      expect(result.refreshToken).toBeDefined();
       expect(result.clientId).toBe('cl-1');
       expect(mockRedisClient.del).toHaveBeenCalledWith('client_login:test@example.com');
       expect(mockPrisma.client.update).toHaveBeenCalledWith({
         where: { id: 'cl-1' },
         data: { lastLoginAt: expect.any(Date) },
+      });
+      expect(mockPrisma.clientRefreshToken.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          clientId: 'cl-1',
+          tokenHash: expect.any(String),
+        }),
       });
     });
 
