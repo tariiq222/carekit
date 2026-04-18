@@ -4,8 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { DatabaseModule } from '../../infrastructure/database';
 import { JwtStrategy } from './jwt.strategy';
+import { ClientJwtStrategy } from './client-jwt.strategy';
 import { PasswordService } from './shared/password.service';
 import { TokenService } from './shared/token.service';
+import { ClientTokenService } from './shared/client-token.service';
 import { LoginHandler } from './login/login.handler';
 import { RefreshTokenHandler } from './refresh-token/refresh-token.handler';
 import { LogoutHandler } from './logout/logout.handler';
@@ -31,6 +33,7 @@ import { OtpSessionService } from './otp/otp-session.service';
 import { OtpSessionGuard } from './otp/otp-session.guard';
 import { NotificationChannelModule } from '../comms/notification-channel/notification-channel.module';
 import { CAPTCHA_VERIFIER } from '../comms/contact-messages/captcha.verifier';
+import { ClientSessionGuard } from '../../common/guards/client-session.guard';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -59,12 +62,29 @@ const handlers = [
   ],
   controllers: [DashboardIdentityController],
   providers: [
-    JwtStrategy, PasswordService, TokenService, CaslAbilityFactory,
+    JwtStrategy,
+    ClientJwtStrategy,
+    PasswordService,
+    TokenService,
+    ClientTokenService,
+    CaslAbilityFactory,
+    ClientSessionGuard,
     { provide: CAPTCHA_VERIFIER, useFactory: () => { const { createCaptchaVerifier } = require('../comms/contact-messages/captcha.verifier'); return createCaptchaVerifier(); } },
     ...handlers,
     OtpSessionService,
     OtpSessionGuard,
   ],
-  exports: [CaslAbilityFactory, TokenService, PasswordService, RequestOtpHandler, VerifyOtpHandler, OtpSessionService, OtpSessionGuard, ...handlers],
+  exports: [
+    CaslAbilityFactory,
+    TokenService,
+    ClientTokenService,
+    PasswordService,
+    ClientSessionGuard,
+    RequestOtpHandler,
+    VerifyOtpHandler,
+    OtpSessionService,
+    OtpSessionGuard,
+    ...handlers,
+  ],
 })
 export class IdentityModule {}
