@@ -454,6 +454,15 @@
         ],
         "type": "string"
       },
+      "ClientCancelBookingDto": {
+        "properties": {
+          "reason": {
+            "description": "Reason for cancellation",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ClientGender": {
         "description": "Client gender",
         "enum": [
@@ -461,6 +470,38 @@
           "FEMALE"
         ],
         "type": "string"
+      },
+      "ClientLoginDto": {
+        "properties": {
+          "email": {
+            "description": "Client email address",
+            "example": "client@example.com",
+            "type": "string"
+          },
+          "password": {
+            "description": "Account password",
+            "example": "SecurePass123",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object"
+      },
+      "ClientRescheduleBookingDto": {
+        "properties": {
+          "newDurationMins": {
+            "description": "New duration in minutes (optional — keeps existing if omitted)",
+            "type": "number"
+          },
+          "newScheduledAt": {
+            "description": "New appointment time (ISO 8601)",
+            "type": "string"
+          }
+        },
+        "type": "object"
       },
       "ClientSource": {
         "description": "Acquisition source",
@@ -1111,6 +1152,46 @@
         ],
         "type": "object"
       },
+      "CreateGuestBookingDto": {
+        "properties": {
+          "branchId": {
+            "description": "Branch ID",
+            "example": "00000000-0000-0000-0000-000000000003",
+            "type": "string"
+          },
+          "client": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GuestClientInfoDto"
+              }
+            ],
+            "description": "Client information"
+          },
+          "employeeId": {
+            "description": "Employee ID",
+            "example": "00000000-0000-0000-0000-000000000002",
+            "type": "string"
+          },
+          "serviceId": {
+            "description": "Service ID",
+            "example": "00000000-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "startsAt": {
+            "description": "Booking start time (ISO 8601)",
+            "example": "2026-04-20T09:00:00Z",
+            "type": "string"
+          }
+        },
+        "required": [
+          "serviceId",
+          "employeeId",
+          "branchId",
+          "startsAt",
+          "client"
+        ],
+        "type": "object"
+      },
       "CreateIntakeFormDto": {
         "properties": {
           "fields": {
@@ -1755,6 +1836,57 @@
         ],
         "type": "object"
       },
+      "GuestClientInfoDto": {
+        "properties": {
+          "email": {
+            "description": "Email address",
+            "example": "client@example.com",
+            "type": "string"
+          },
+          "gender": {
+            "description": "Client gender",
+            "enum": [
+              "MALE",
+              "FEMALE"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "Client full name",
+            "example": "أحمد محمد",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Additional notes for the booking",
+            "example": "First visit",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Phone number in E.164 format",
+            "example": "+966501234567",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "email"
+        ],
+        "type": "object"
+      },
+      "InitGuestPaymentDto": {
+        "properties": {
+          "bookingId": {
+            "description": "Booking UUID",
+            "example": "00000000-0000-0000-0000-000000000000",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bookingId"
+        ],
+        "type": "object"
+      },
       "IntakeFieldInputDto": {
         "properties": {
           "fieldType": {
@@ -1832,7 +1964,7 @@
       "LogoutDto": {
         "properties": {
           "refreshToken": {
-            "description": "Refresh token to revoke",
+            "description": "Client refresh token to revoke",
             "example": "a1b2c3d4-...",
             "type": "string"
           }
@@ -2224,7 +2356,7 @@
       "RefreshTokenDto": {
         "properties": {
           "refreshToken": {
-            "description": "Refresh token issued at login",
+            "description": "Client refresh token",
             "example": "a1b2c3d4-...",
             "type": "string"
           }
@@ -2249,6 +2381,63 @@
         },
         "required": [
           "reason"
+        ],
+        "type": "object"
+      },
+      "RegisterDto": {
+        "properties": {
+          "name": {
+            "description": "Full name (required if creating new account)",
+            "example": "أحمد محمد",
+            "type": "string"
+          },
+          "password": {
+            "description": "Password (min 8 chars, at least 1 upper, 1 digit)",
+            "example": "SecurePass123",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "type": "object"
+      },
+      "RequestOtpDto": {
+        "properties": {
+          "channel": {
+            "description": "OTP delivery channel",
+            "enum": [
+              "EMAIL",
+              "SMS"
+            ],
+            "example": "EMAIL",
+            "type": "string"
+          },
+          "hCaptchaToken": {
+            "description": "hCaptcha token",
+            "example": "10000000-aaaa-bbbb-cccc-000000000001",
+            "type": "string"
+          },
+          "identifier": {
+            "description": "Email address or phone number (E.164 format)",
+            "example": "user@example.com",
+            "type": "string"
+          },
+          "purpose": {
+            "description": "Purpose of the OTP",
+            "enum": [
+              "GUEST_BOOKING",
+              "CLIENT_LOGIN"
+            ],
+            "example": "GUEST_BOOKING",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "identifier",
+          "purpose",
+          "hCaptchaToken"
         ],
         "type": "object"
       },
@@ -3501,6 +3690,45 @@
         ],
         "type": "string"
       },
+      "VerifyOtpDto": {
+        "properties": {
+          "channel": {
+            "description": "OTP delivery channel",
+            "enum": [
+              "EMAIL",
+              "SMS"
+            ],
+            "example": "EMAIL",
+            "type": "string"
+          },
+          "code": {
+            "description": "6-digit OTP code",
+            "example": "123456",
+            "type": "string"
+          },
+          "identifier": {
+            "description": "Email address or phone number",
+            "example": "user@example.com",
+            "type": "string"
+          },
+          "purpose": {
+            "description": "Purpose of the OTP",
+            "enum": [
+              "GUEST_BOOKING",
+              "CLIENT_LOGIN"
+            ],
+            "example": "GUEST_BOOKING",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "identifier",
+          "code",
+          "purpose"
+        ],
+        "type": "object"
+      },
       "VerifyPaymentDto": {
         "properties": {
           "action": {
@@ -4520,6 +4748,16 @@
             "schema": {
               "example": "bkg-1",
               "type": "string"
+            }
+          },
+          {
+            "description": "Filter guest (online) vs walk-in bookings",
+            "in": "query",
+            "name": "isGuest",
+            "required": false,
+            "schema": {
+              "example": true,
+              "type": "boolean"
             }
           }
         ],
@@ -18014,6 +18252,186 @@
         ]
       }
     },
+    "/api/v1/public/auth/login": {
+      "post": {
+        "operationId": "PublicAuthController_loginEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientLoginDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Log in with email and password",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/public/auth/logout": {
+      "post": {
+        "operationId": "PublicAuthController_logoutEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Revoke a client refresh token (log out)",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/public/auth/refresh": {
+      "post": {
+        "operationId": "PublicAuthController_refreshEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Rotate a client refresh token and issue new token pair",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
+    "/api/v1/public/auth/register": {
+      "post": {
+        "operationId": "PublicAuthController_registerEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Register a client account via verified OTP session",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
     "/api/v1/public/availability": {
       "get": {
         "operationId": "PublicSlotsController_getSlots",
@@ -18123,6 +18541,86 @@
         "summary": "Get available booking slots for an employee on a given date",
         "tags": [
           "Public / Slots"
+        ]
+      }
+    },
+    "/api/v1/public/bookings": {
+      "post": {
+        "operationId": "PublicBookingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGuestBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Create a guest booking (requires OTP session)",
+        "tags": [
+          "Public / Bookings"
+        ]
+      }
+    },
+    "/api/v1/public/branches": {
+      "get": {
+        "operationId": "PublicBranchesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Array of public-safe branch records"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "List active branches for the booking wizard",
+        "tags": [
+          "Public / Branches"
         ]
       }
     },
@@ -18241,6 +18739,82 @@
         ]
       }
     },
+    "/api/v1/public/employees/{id}/availability": {
+      "get": {
+        "operationId": "PublicAvailabilityController_getAvailability",
+        "parameters": [
+          {
+            "description": "Employee ID or slug",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Date to check availability (YYYY-MM-DD)",
+            "in": "query",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "example": "2026-04-20",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Service ID to check availability for",
+            "in": "query",
+            "name": "serviceId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Branch ID",
+            "in": "query",
+            "name": "branchId",
+            "required": false,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000002",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of available time slots"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Get available time slots for an employee",
+        "tags": [
+          "Public / Employees"
+        ]
+      }
+    },
     "/api/v1/public/employees/{slug}": {
       "get": {
         "operationId": "PublicEmployeesController_getOne",
@@ -18284,6 +18858,280 @@
         "summary": "Get single public employee by slug",
         "tags": [
           "Public / Employees"
+        ]
+      }
+    },
+    "/api/v1/public/me": {
+      "get": {
+        "operationId": "PublicMeController_meEndpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the authenticated client profile",
+        "tags": [
+          "Public / Me"
+        ]
+      }
+    },
+    "/api/v1/public/me/bookings": {
+      "get": {
+        "operationId": "PublicMeController_bookingsEndpoint",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List bookings for the authenticated client",
+        "tags": [
+          "Public / Me"
+        ]
+      }
+    },
+    "/api/v1/public/me/bookings/{id}/cancel": {
+      "patch": {
+        "operationId": "PublicMeController_cancelBookingEndpoint",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientCancelBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a booking (client self-serve)",
+        "tags": [
+          "Public / Me"
+        ]
+      }
+    },
+    "/api/v1/public/me/bookings/{id}/reschedule": {
+      "patch": {
+        "operationId": "PublicMeController_rescheduleBookingEndpoint",
+        "parameters": [
+          {
+            "description": "Booking ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientRescheduleBookingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reschedule a booking (client self-serve)",
+        "tags": [
+          "Public / Me"
+        ]
+      }
+    },
+    "/api/v1/public/otp/request": {
+      "post": {
+        "operationId": "PublicOtpController_request",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestOtpDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Request an OTP code",
+        "tags": [
+          "Public / OTP"
+        ]
+      }
+    },
+    "/api/v1/public/otp/verify": {
+      "post": {
+        "operationId": "PublicOtpController_verify",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOtpDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Verify an OTP code and receive a session token",
+        "tags": [
+          "Public / OTP"
+        ]
+      }
+    },
+    "/api/v1/public/payments/init": {
+      "post": {
+        "operationId": "PublicPaymentsController_initPayment",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InitGuestPaymentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Initialize a Moyasar payment for a guest booking (requires OTP session)",
+        "tags": [
+          "Public / Payments"
         ]
       }
     },
