@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { DatabaseModule } from '../../infrastructure/database';
+import { RedisService } from '../../infrastructure/cache/redis.service';
 import { JwtStrategy } from './jwt.strategy';
 import { ClientJwtStrategy } from './client-jwt.strategy';
 import { PasswordService } from './shared/password.service';
@@ -35,6 +36,7 @@ import { NotificationChannelModule } from '../comms/notification-channel/notific
 import { CAPTCHA_VERIFIER } from '../comms/contact-messages/captcha.verifier';
 import { ClientSessionGuard } from '../../common/guards/client-session.guard';
 import { RegisterHandler } from './client-auth/register.handler';
+import { ClientLoginHandler } from './client-auth/client-login.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -46,6 +48,7 @@ const handlers = [
   RequestOtpHandler,
   VerifyOtpHandler,
   RegisterHandler,
+  ClientLoginHandler,
 ];
 
 @Module({
@@ -69,6 +72,7 @@ const handlers = [
     PasswordService,
     TokenService,
     ClientTokenService,
+    RedisService,
     CaslAbilityFactory,
     ClientSessionGuard,
     { provide: CAPTCHA_VERIFIER, useFactory: () => { const { createCaptchaVerifier } = require('../comms/contact-messages/captcha.verifier'); return createCaptchaVerifier(); } },
@@ -80,6 +84,7 @@ const handlers = [
     CaslAbilityFactory,
     TokenService,
     ClientTokenService,
+    RedisService,
     PasswordService,
     ClientSessionGuard,
     RequestOtpHandler,
