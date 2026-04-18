@@ -16,9 +16,11 @@ import { PublicOtpController } from './otp.controller';
 import { PublicAvailabilityController } from './availability.controller';
 import { PublicBookingsController } from './bookings.controller';
 import { PublicPaymentsController } from './payments.controller';
+import { PublicBranchesController } from './branches.controller';
+import { OrgConfigModule } from '../../modules/org-config/org-config.module';
 
 @Module({
-  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule],
-  controllers: [AuthController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController],
+  imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule],
+  controllers: [AuthController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController],
 })
 export class PublicModule {}

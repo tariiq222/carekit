@@ -1,3 +1,11 @@
+export interface PublicBranch {
+  id: string
+  nameAr: string
+  nameEn: string | null
+  city: string | null
+  addressAr: string | null
+}
+
 export interface PublicEmployee {
   id: string
   slug: string | null

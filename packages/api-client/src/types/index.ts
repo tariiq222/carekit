@@ -152,6 +152,7 @@ export type {
   GroupListQuery,
 } from './group.js'
 export type {
+  PublicBranch,
   PublicEmployee,
   ContactMessage,
   ContactMessageStatus,
