@@ -1,0 +1,189 @@
+import { createHmac } from 'crypto';
+import { testPrisma, cleanTables } from '../../setup/db.setup';
+import { seedEmployee, seedService, seedBranch, seedEmployeeService, seedClient } from '../../setup/seed.helper';
+import { MoyasarWebhookHandler } from '../../../src/modules/finance/moyasar-webhook/moyasar-webhook.handler';
+import { EventBusService } from '../../../src/infrastructure/events';
+import { ConfigService } from '@nestjs/config';
+import { PaymentStatus } from '@prisma/client';
+
+const TEST_SECRET = 'webhook-test-secret';
+
+function sign(rawBody: string, secret = TEST_SECRET) {
+  return createHmac('sha256', secret).update(rawBody).digest('hex');
+}
+
+describe('Moyasar Webhook — Idempotency (e2e-style)', () => {
+  let handler: MoyasarWebhookHandler;
+  let invoiceId: string;
+  let bookingId: string;
+  let clientId: string;
+  let employeeId: string;
+  let serviceId: string;
+  let branchId: string;
+
+  const buildConfig = () => ({
+    get: jest.fn().mockImplementation((key: string) => {
+      const map: Record<string, string> = {
+        MOYASAR_SECRET_KEY: TEST_SECRET,
+      };
+      return map[key];
+    }),
+  });
+
+  const buildEventBus = () => ({
+    publish: jest.fn().mockResolvedValue(undefined),
+  });
+
+  beforeEach(async () => {
+    await cleanTables(['Payment', 'Invoice', 'Booking', 'OtpCode', 'Client', 'Employee', 'Service', 'Branch']);
+
+    const [client, employee, service, branch] = await Promise.all([
+      seedClient(testPrisma as never),
+      seedEmployee(testPrisma as never),
+      seedService(testPrisma as never, { durationMins: 60, price: 200 }),
+      seedBranch(testPrisma as never),
+    ]);
+    clientId = client.id;
+    employeeId = employee.id;
+    serviceId = service.id;
+    branchId = branch.id;
+
+    const booking = await testPrisma.booking.create({
+      data: {
+        clientId,
+        employeeId,
+        serviceId,
+        branchId,
+        scheduledAt: new Date(Date.now() + 86400_000),
+        endsAt: new Date(Date.now() + 90000_000),
+        durationMins: 60,
+        price: 200,
+        currency: 'SAR',
+        status: 'CONFIRMED',
+        bookingType: 'INDIVIDUAL',
+      },
+    });
+    bookingId = booking.id;
+
+    const invoice = await testPrisma.invoice.create({
+      data: {
+        branchId,
+        clientId,
+        employeeId,
+        bookingId,
+        subtotal: 200,
+        discountAmt: 0,
+        vatRate: 0.15,
+        vatAmt: 30,
+        total: 230,
+        status: 'ISSUED',
+        issuedAt: new Date(),
+      },
+    });
+    invoiceId = invoice.id;
+
+    handler = new MoyasarWebhookHandler(
+      testPrisma as never,
+      buildEventBus() as never,
+      buildConfig() as never,
+    );
+  });
+
+  afterAll(async () => {
+    await cleanTables(['Payment', 'Invoice', 'Booking', 'OtpCode', 'Client', 'Employee', 'Service', 'Branch']);
+  });
+
+  const makeWebhookRequest = (paymentId: string, status: 'paid' | 'failed' = 'paid') => {
+    const payload = {
+      id: paymentId,
+      status,
+      amount: 23000,
+      currency: 'SAR',
+      metadata: { invoiceId },
+      message: status === 'failed' ? 'Card declined' : undefined,
+    };
+    const rawBody = JSON.stringify(payload);
+    return {
+      payload,
+      rawBody,
+      signature: sign(rawBody),
+    };
+  };
+
+  it('first webhook creates payment in COMPLETED status', async () => {
+    const { payload, rawBody, signature } = makeWebhookRequest('moyasar-pay-first');
+    const result = await handler.execute({ payload, rawBody, signature });
+
+    expect(result).toEqual({});
+
+    const payment = await testPrisma.payment.findFirst({ where: { gatewayRef: 'moyasar-pay-first' } });
+    expect(payment).not.toBeNull();
+    expect(payment!.status).toBe(PaymentStatus.COMPLETED);
+
+    const invoice = await testPrisma.invoice.findUnique({ where: { id: invoiceId } });
+    expect(invoice!.status).toBe('PAID');
+  });
+
+  it('second identical webhook is idempotent — no duplicate payment', async () => {
+    const { payload, rawBody, signature } = makeWebhookRequest('moyasar-pay-duplicate');
+
+    const result1 = await handler.execute({ payload, rawBody, signature });
+    expect(result1).toEqual({});
+
+    const result2 = await handler.execute({ payload, rawBody, signature });
+    expect(result2).toEqual({ skipped: true });
+
+    const payments = await testPrisma.payment.findMany({ where: { gatewayRef: 'moyasar-pay-duplicate' } });
+    expect(payments).toHaveLength(1);
+    expect(payments[0].status).toBe(PaymentStatus.COMPLETED);
+
+    const invoice = await testPrisma.invoice.findUnique({ where: { id: invoiceId } });
+    expect(invoice!.status).toBe('PAID');
+  });
+
+  it('webhook for unknown invoice returns skipped without error', async () => {
+    const unknownPayload: {
+    id: string;
+    status: 'paid' | 'failed' | 'refunded';
+    amount: number;
+    currency: string;
+    metadata: { invoiceId: string };
+  } = {
+      id: 'unknown-pay',
+      status: 'paid',
+      amount: 10000,
+      currency: 'SAR',
+      metadata: { invoiceId: '00000000-0000-0000-0000-000000000000' },
+    };
+    const rawBody = JSON.stringify(unknownPayload);
+
+    const result = await handler.execute({
+      payload: unknownPayload,
+      rawBody,
+      signature: sign(rawBody),
+    });
+
+    expect(result).toEqual({ skipped: true });
+  });
+
+  it('webhook for failed payment marks payment as FAILED', async () => {
+    const { payload, rawBody, signature } = makeWebhookRequest('moyasar-pay-failed', 'failed');
+
+    await handler.execute({ payload, rawBody, signature });
+
+    const payment = await testPrisma.payment.findFirst({ where: { gatewayRef: 'moyasar-pay-failed' } });
+    expect(payment).not.toBeNull();
+    expect(payment!.status).toBe(PaymentStatus.FAILED);
+
+    const invoice = await testPrisma.invoice.findUnique({ where: { id: invoiceId } });
+    expect(invoice!.status).toBe('ISSUED');
+  });
+
+  it('returns 400 for invalid signature', async () => {
+    const { payload, rawBody } = makeWebhookRequest('moyasar-pay-badsig');
+
+    await expect(
+      handler.execute({ payload, rawBody, signature: 'invalid-signature' }),
+    ).rejects.toThrow('Invalid Moyasar webhook signature');
+  });
+});
