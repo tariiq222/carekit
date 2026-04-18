@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger, Inject } from '@nestjs/common';
+import { Injectable, BadRequestException, HttpException, HttpStatus, Logger, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../../infrastructure/database';
@@ -8,6 +8,7 @@ import { RequestOtpDto } from './request-otp.dto';
 
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_OTP_CODE = 999999;
+const MAX_REQUESTS_PER_IDENTIFIER_PER_HOUR = 5;
 
 export type RequestOtpCommand = RequestOtpDto;
 
@@ -33,6 +34,19 @@ export class RequestOtpHandler {
       if (!emailRegex.test(dto.identifier)) {
         throw new BadRequestException('Invalid email address');
       }
+    }
+
+    // Fix C — per-identifier rate limit: max 5 requests per hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentCount = await this.prisma.otpCode.count({
+      where: {
+        identifier: dto.identifier,
+        purpose: dto.purpose,
+        createdAt: { gt: oneHourAgo },
+      },
+    });
+    if (recentCount >= MAX_REQUESTS_PER_IDENTIFIER_PER_HOUR) {
+      throw new HttpException('Too many OTP requests for this identifier', HttpStatus.TOO_MANY_REQUESTS);
     }
 
     const rawCode = Math.floor(Math.random() * MAX_OTP_CODE).toString().padStart(6, '0');
