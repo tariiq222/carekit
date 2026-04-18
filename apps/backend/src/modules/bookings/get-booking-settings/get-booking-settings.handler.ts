@@ -22,6 +22,7 @@ export const DEFAULT_BOOKING_SETTINGS = {
   payAtClinicEnabled: false,
   requireCancelApproval: false,
   autoRefundOnCancel: true,
+  clientRescheduleMinHoursBefore: 24,
 } as const;
 
 export type ResolvedBookingSettings = typeof DEFAULT_BOOKING_SETTINGS;

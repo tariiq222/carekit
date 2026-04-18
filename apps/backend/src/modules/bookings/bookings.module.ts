@@ -30,6 +30,8 @@ import { DashboardBookingsController } from '../../api/dashboard/bookings.contro
 import { GetPublicAvailabilityHandler } from './availability/public/get-public-availability.handler';
 import { CreateGuestBookingHandler } from './public/create-guest-booking.handler';
 import { ListClientBookingsHandler } from './client/list-client-bookings.handler';
+import { ClientCancelBookingHandler } from './client/client-cancel-booking.handler';
+import { ClientRescheduleBookingHandler } from './client/client-reschedule-booking.handler';
 
 const handlers = [
   CreateBookingHandler,
@@ -58,13 +60,15 @@ const handlers = [
   GetPublicAvailabilityHandler,
   CreateGuestBookingHandler,
   ListClientBookingsHandler,
+  ClientCancelBookingHandler,
+  ClientRescheduleBookingHandler,
 ];
 
 @Module({
   imports: [DatabaseModule, MessagingModule, OrgExperienceModule],
   controllers: [DashboardBookingsController],
   providers: [...handlers, PaymentCompletedEventHandler],
-  exports: [...handlers, CheckAvailabilityHandler, ListClientBookingsHandler],
+  exports: [...handlers, CheckAvailabilityHandler, ListClientBookingsHandler, ClientCancelBookingHandler, ClientRescheduleBookingHandler],
 })
 export class BookingsModule implements OnModuleInit {
   constructor(private readonly paymentCompletedHandler: PaymentCompletedEventHandler) {}

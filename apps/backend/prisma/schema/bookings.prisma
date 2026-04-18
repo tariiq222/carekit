@@ -201,6 +201,8 @@ model BookingSettings {
   requireCancelApproval Boolean @default(false)
   autoRefundOnCancel    Boolean @default(true)
 
+  clientRescheduleMinHoursBefore Int @default(24)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
