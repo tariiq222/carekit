@@ -52,6 +52,8 @@ export const enBookings: Record<string, string> = {
   "bookings.filters.source": "Source",
   "bookings.filters.allSources": "All Sources",
   "bookings.filters.guest": "Guest",
+  "bookings.filters.sourceOnline": "Online (website)",
+  "bookings.filters.sourceOther": "Other",
   "bookings.filters.employee": "Employee",
   "bookings.filters.allEmployees": "All Employees",
   "bookings.filters.reset": "Reset",

@@ -98,8 +98,8 @@ export function BookingFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("bookings.filters.allSources")}</SelectItem>
-              <SelectItem value="true">{t("bookings.filters.guest")}</SelectItem>
-              <SelectItem value="false">{t("bookings.filters.walkIn")}</SelectItem>
+              <SelectItem value="true">{t("bookings.filters.sourceOnline")}</SelectItem>
+              <SelectItem value="false">{t("bookings.filters.sourceOther")}</SelectItem>
             </SelectContent>
           </Select>
 

@@ -131,8 +131,8 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
             placeholder: t("bookings.filters.source"),
             options: [
               { value: "all", label: t("bookings.filters.allSources") },
-              { value: "true", label: t("bookings.filters.guest") },
-              { value: "false", label: t("bookings.filters.walkIn") },
+              { value: "true", label: t("bookings.filters.sourceOnline") },
+              { value: "false", label: t("bookings.filters.sourceOther") },
             ],
             onValueChange: (v) =>
               setFilters({ isGuest: v === "all" ? "all" : v === "true" }),

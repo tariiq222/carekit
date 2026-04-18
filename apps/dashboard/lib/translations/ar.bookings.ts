@@ -52,6 +52,8 @@ export const arBookings: Record<string, string> = {
   "bookings.filters.source": "المصدر",
   "bookings.filters.allSources": "جميع المصادر",
   "bookings.filters.guest": "ضيف",
+  "bookings.filters.sourceOnline": "عبر الموقع",
+  "bookings.filters.sourceOther": "أخرى",
   "bookings.filters.employee": "الممارس",
   "bookings.filters.allEmployees": "جميع الممارسين",
   "bookings.filters.reset": "إعادة تعيين",
