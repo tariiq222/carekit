@@ -2,31 +2,37 @@
 
 import { useReducer, useState, useEffect } from 'react';
 import { reduce, INITIAL_WIZARD_STATE, WizardStep } from '@carekit/shared';
-import type { Service, EmployeeWithUser, AvailableSlot, GuestClientInfo } from '@carekit/shared';
+import type { Service, EmployeeWithUser, AvailableSlot } from '@carekit/shared';
 import { ServicePicker } from '@/features/booking/service-picker';
 import { TherapistPicker } from '@/features/booking/therapist-picker';
 import { SlotPicker } from '@/features/booking/slot-picker';
 import { BookingSummary } from '@/features/booking/booking-summary';
-import { OtpRequestForm } from '@/features/otp/otp-request-form';
-import { OtpVerifyForm } from '@/features/otp/otp-verify-form';
+import { BranchStep } from '@/features/booking/branch-step';
+import { ClientInfoStep } from '@/features/booking/client-info-step';
 import { useOtpSession } from '@/features/otp/use-otp-session';
-import { getPublicAvailability, createGuestBooking, initGuestPayment } from '@/features/booking/booking.api';
-import type { PublicEmployee } from '@carekit/api-client';
+import {
+  getPublicAvailability,
+  getPublicBranches,
+  createGuestBooking,
+  initGuestPayment,
+  type PublicBranch,
+} from '@/features/booking/booking.api';
 import { PaymentRedirect } from '@/features/payment/payment-redirect';
 
-function ProgressBar({ step }: { step: string }) {
-  const steps = ['SERVICE', 'THERAPIST', 'SLOT', 'INFO_OTP', 'PAYMENT'];
-  const current = steps.indexOf(step);
+function ProgressBar({ current, total }: { current: number; total: number }) {
   return (
     <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
-      {steps.map((s, i) => (
+      {Array.from({ length: total }).map((_, i) => (
         <div
-          key={s}
+          key={i}
           style={{
             flex: 1,
             height: '4px',
             borderRadius: '2px',
-            background: i <= current ? 'var(--primary)' : 'color-mix(in srgb, var(--primary) 15%, transparent)',
+            background:
+              i <= current
+                ? 'var(--primary)'
+                : 'color-mix(in srgb, var(--primary) 15%, transparent)',
           }}
         />
       ))}
@@ -36,42 +42,80 @@ function ProgressBar({ step }: { step: string }) {
 
 export default function BookingWizardPage() {
   const [state, dispatch] = useReducer(reduce, INITIAL_WIZARD_STATE);
+  // Whether we are on the intermediate branch-selection step (between THERAPIST and SLOT).
+  const [awaitingBranch, setAwaitingBranch] = useState(false);
+  const [pendingEmployee, setPendingEmployee] = useState<EmployeeWithUser | null>(null);
+
   const [services, setServices] = useState<Service[]>([]);
   const [employees, setEmployees] = useState<EmployeeWithUser[]>([]);
   const [slots, setSlots] = useState<AvailableSlot[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [branches, setBranches] = useState<PublicBranch[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<PublicBranch | null>(null);
+
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split('T')[0],
+  );
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<string | null>(null);
-  const { token, storeToken } = useOtpSession();
+  const { token } = useOtpSession();
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5100'}/public/employees`)
-      .then(r => r.ok ? r.json() : null)
-      .then(json => {
+    const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5100';
+    fetch(`${base}/public/employees`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
         if (!json) return;
-        const emps = (json.data ?? json) as PublicEmployee[];
-        setEmployees(emps as unknown as EmployeeWithUser[]);
+        setEmployees(json.data ?? json);
       })
       .catch(() => {});
-    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5100'}/public/catalog`)
-      .then(r => r.ok ? r.json() : null)
-      .then(json => {
+    fetch(`${base}/public/catalog`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
         if (!json) return;
-        const svcs = (json.data ?? json).services as Service[];
-        setServices(svcs ?? []);
+        setServices(((json.data ?? json).services as Service[]) ?? []);
       })
       .catch(() => {});
+    getPublicBranches().then((bs) => {
+      setBranches(bs);
+      if (bs.length === 1) setSelectedBranch(bs[0]);
+    });
   }, []);
 
-  const service = state.step === WizardStep.THERAPIST || state.step === WizardStep.SLOT
-    || state.step === WizardStep.INFO_OTP || state.step === WizardStep.PAYMENT
-    ? state.service : null;
-  const employee = state.step === WizardStep.SLOT || state.step === WizardStep.INFO_OTP
-    || state.step === WizardStep.PAYMENT ? state.employee : null;
-  const slot = state.step === WizardStep.INFO_OTP || state.step === WizardStep.PAYMENT ? state.slot : null;
+  const service =
+    state.step === WizardStep.THERAPIST ||
+    state.step === WizardStep.SLOT ||
+    state.step === WizardStep.INFO_OTP ||
+    state.step === WizardStep.PAYMENT
+      ? state.service
+      : null;
+  const employee =
+    state.step === WizardStep.SLOT ||
+    state.step === WizardStep.INFO_OTP ||
+    state.step === WizardStep.PAYMENT
+      ? state.employee
+      : null;
+  const slot =
+    state.step === WizardStep.INFO_OTP || state.step === WizardStep.PAYMENT
+      ? state.slot
+      : null;
+
+  const hasBranchStep = branches.length > 1;
+  const totalSteps = hasBranchStep ? 6 : 5;
+
+  const stepIndex = (() => {
+    if (awaitingBranch) return 2;
+    switch (state.step) {
+      case WizardStep.SERVICE: return 0;
+      case WizardStep.THERAPIST: return 1;
+      case WizardStep.SLOT: return hasBranchStep ? 3 : 2;
+      case WizardStep.INFO_OTP: return hasBranchStep ? 4 : 3;
+      case WizardStep.PAYMENT: return hasBranchStep ? 5 : 4;
+      default: return totalSteps - 1;
+    }
+  })();
 
   useEffect(() => {
     if (state.step === WizardStep.SLOT && employee) {
@@ -87,12 +131,52 @@ export default function BookingWizardPage() {
     return <PaymentRedirect redirectUrl={redirectUrl} bookingId={bookingId} />;
   }
 
+  const handleEmployeeSelect = (emp: EmployeeWithUser) => {
+    if (hasBranchStep) {
+      setPendingEmployee(emp);
+      setAwaitingBranch(true);
+    } else {
+      dispatch({ type: 'SELECT_EMPLOYEE', employee: emp });
+    }
+  };
+
+  const handleBranchSelect = (branch: PublicBranch) => {
+    setSelectedBranch(branch);
+    setAwaitingBranch(false);
+    dispatch({ type: 'SELECT_EMPLOYEE', employee: pendingEmployee! });
+  };
+
+  const backBtn = (onClick: () => void) => (
+    <button
+      onClick={onClick}
+      style={{
+        background: 'transparent',
+        border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)',
+        borderRadius: 'var(--radius)',
+        padding: '0.5rem 1rem',
+        cursor: 'pointer',
+        alignSelf: 'start',
+      }}
+    >
+      Back
+    </button>
+  );
+
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem 1rem' }}>
-      <ProgressBar step={state.step} />
+      <ProgressBar current={stepIndex} total={totalSteps} />
 
       {submitError && (
-        <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'color-mix(in srgb, var(--destructive) 10%, transparent)', borderRadius: 'var(--radius)', color: 'var(--destructive)', fontSize: '0.875rem' }}>
+        <div
+          style={{
+            marginBottom: '1rem',
+            padding: '0.75rem',
+            background: 'color-mix(in srgb, var(--destructive) 10%, transparent)',
+            borderRadius: 'var(--radius)',
+            color: 'var(--destructive)',
+            fontSize: '0.875rem',
+          }}
+        >
           {submitError}
         </div>
       )}
@@ -105,38 +189,48 @@ export default function BookingWizardPage() {
         />
       )}
 
-      {state.step === WizardStep.THERAPIST && service && (
+      {state.step === WizardStep.THERAPIST && !awaitingBranch && service && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <button
-            onClick={() => dispatch({ type: 'RESET' })}
-            style={{ background: 'transparent', border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)', borderRadius: 'var(--radius)', padding: '0.5rem 1rem', cursor: 'pointer', alignSelf: 'start' }}
-          >
-            Back
-          </button>
-          <TherapistPicker
-            therapists={employees}
-            selected={null}
-            onSelect={(emp) => dispatch({ type: 'SELECT_EMPLOYEE', employee: emp })}
-          />
+          {backBtn(() => dispatch({ type: 'RESET' }))}
+          <TherapistPicker therapists={employees} selected={null} onSelect={handleEmployeeSelect} />
         </div>
       )}
 
-      {state.step === WizardStep.SLOT && service && employee && (
+      {awaitingBranch && (
+        <BranchStep
+          branches={branches}
+          onSelect={handleBranchSelect}
+          onBack={() => {
+            setAwaitingBranch(false);
+            setPendingEmployee(null);
+          }}
+        />
+      )}
+
+      {state.step === WizardStep.SLOT && !awaitingBranch && service && employee && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <button
-            onClick={() => dispatch({ type: 'SELECT_EMPLOYEE', employee })}
-            style={{ background: 'transparent', border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)', borderRadius: 'var(--radius)', padding: '0.5rem 1rem', cursor: 'pointer', alignSelf: 'start' }}
-          >
-            Back
-          </button>
+          {backBtn(() => {
+            if (hasBranchStep) {
+              setPendingEmployee(employee);
+              setAwaitingBranch(true);
+            } else {
+              dispatch({ type: 'SELECT_EMPLOYEE', employee });
+            }
+          })}
           <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Date</label>
+            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+              Date
+            </label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               min={new Date().toISOString().split('T')[0]}
-              style={{ padding: '0.5rem', border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)', borderRadius: 'var(--radius)' }}
+              style={{
+                padding: '0.5rem',
+                border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)',
+                borderRadius: 'var(--radius)',
+              }}
             />
           </div>
           <SlotPicker
@@ -161,7 +255,7 @@ export default function BookingWizardPage() {
                 {
                   serviceId: service.id,
                   employeeId: employee.id,
-                  branchId: '',
+                  branchId: selectedBranch?.id ?? '',
                   startsAt: slot.startTime,
                   client,
                 },
@@ -182,12 +276,7 @@ export default function BookingWizardPage() {
 
       {state.step === WizardStep.PAYMENT && service && employee && slot && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <button
-            onClick={() => dispatch({ type: 'SELECT_SLOT', slot })}
-            style={{ background: 'transparent', border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)', borderRadius: 'var(--radius)', padding: '0.5rem 1rem', cursor: 'pointer', alignSelf: 'start' }}
-          >
-            Back
-          </button>
+          {backBtn(() => dispatch({ type: 'SELECT_SLOT', slot }))}
           <BookingSummary
             service={service}
             employee={employee}
@@ -204,96 +293,39 @@ export default function BookingWizardPage() {
           {state.status === 'success' ? (
             <>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>Booking Confirmed!</h2>
-              <p style={{ opacity: 0.7, marginBottom: '2rem' }}>You will receive a confirmation email shortly.</p>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+                Booking Confirmed!
+              </h2>
+              <p style={{ opacity: 0.7, marginBottom: '2rem' }}>
+                You will receive a confirmation email shortly.
+              </p>
             </>
           ) : (
             <>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>Payment Failed</h2>
-              <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Your booking was not confirmed. Please try again.</p>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+                Payment Failed
+              </h2>
+              <p style={{ opacity: 0.7, marginBottom: '2rem' }}>
+                Your booking was not confirmed. Please try again.
+              </p>
             </>
           )}
           <button
             onClick={() => dispatch({ type: 'RESET' })}
-            style={{ padding: '0.875rem 2rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: 'var(--radius)', fontWeight: 600, cursor: 'pointer' }}
+            style={{
+              padding: '0.875rem 2rem',
+              background: 'var(--primary)',
+              color: 'var(--primary-foreground)',
+              border: 'none',
+              borderRadius: 'var(--radius)',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
           >
             {state.status === 'success' ? 'Book Another' : 'Try Again'}
           </button>
         </div>
-      )}
-    </div>
-  );
-}
-
-function ClientInfoStep({
-  slot,
-  onBack,
-  onSubmitInfo,
-  isSubmitting,
-}: {
-  slot: AvailableSlot;
-  onBack: () => void;
-  onSubmitInfo: (client: GuestClientInfo) => void;
-  isSubmitting: boolean;
-}) {
-  const [client, setClient] = useState<GuestClientInfo>({ name: '', phone: '', email: '' });
-  const [otpStep, setOtpStep] = useState<'form' | 'request' | 'verify'>('form');
-  const { token, storeToken } = useOtpSession();
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <button
-        onClick={onBack}
-        style={{ background: 'transparent', border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)', borderRadius: 'var(--radius)', padding: '0.5rem 1rem', cursor: 'pointer', alignSelf: 'start' }}
-      >
-        Back
-      </button>
-
-      <div style={{ display: 'grid', gap: '0.75rem' }}>
-        <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Full Name</label>
-          <input type="text" value={client.name} onChange={(e) => setClient(c => ({ ...c, name: e.target.value }))}
-            style={{ padding: '0.75rem', border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)', borderRadius: 'var(--radius)', width: '100%' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Phone</label>
-          <input type="tel" value={client.phone} onChange={(e) => setClient(c => ({ ...c, phone: e.target.value }))}
-            placeholder="+966..." style={{ padding: '0.75rem', border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)', borderRadius: 'var(--radius)', width: '100%' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Email</label>
-          <input type="email" value={client.email} onChange={(e) => setClient(c => ({ ...c, email: e.target.value }))}
-            style={{ padding: '0.75rem', border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)', borderRadius: 'var(--radius)', width: '100%' }} />
-        </div>
-      </div>
-
-      {otpStep === 'request' && (
-        <OtpRequestForm client={client} hcaptchaToken="dummy-token" onRequestSent={() => setOtpStep('verify')} />
-      )}
-
-      {otpStep === 'verify' && (
-        <OtpVerifyForm client={client} onVerified={(t) => { storeToken(t); setOtpStep('form'); }} />
-      )}
-
-      {otpStep === 'form' && !token && (
-        <button onClick={() => setOtpStep('request')} style={{ padding: '0.875rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: 'var(--radius)', fontWeight: 600, cursor: 'pointer' }}>
-          Verify Email to Continue
-        </button>
-      )}
-
-      {otpStep === 'form' && token && (
-        <button
-          onClick={() => onSubmitInfo(client)}
-          disabled={isSubmitting || !client.name || !client.phone || !client.email}
-          style={{
-            padding: '0.875rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: 'var(--radius)', fontWeight: 600,
-            cursor: isSubmitting || !client.name || !client.phone || !client.email ? 'not-allowed' : 'pointer',
-            opacity: isSubmitting || !client.name || !client.phone || !client.email ? 0.6 : 1,
-          }}
-        >
-          {isSubmitting ? 'Processing...' : 'Continue to Payment'}
-        </button>
       )}
     </div>
   );

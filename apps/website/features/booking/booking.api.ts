@@ -3,6 +3,31 @@ import type { PublicEmployee } from '@carekit/api-client';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5100';
 
+export interface PublicBranch {
+  id: string;
+  nameAr: string;
+  nameEn: string | null;
+  city: string | null;
+  addressAr: string | null;
+}
+
+/**
+ * Fetches active branches from GET /public/branches.
+ * NOTE: This endpoint does not yet exist in the backend (backend gap — needs a
+ * PublicBranchesController under src/api/public/).
+ * Returns [] on any non-OK response so the wizard can fall back gracefully.
+ */
+export async function getPublicBranches(): Promise<PublicBranch[]> {
+  try {
+    const res = await fetch(`${API_BASE}/public/branches`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.data ?? json) as PublicBranch[];
+  } catch {
+    return [];
+  }
+}
+
 export async function getPublicAvailability(
   employeeId: string,
   date: string,
