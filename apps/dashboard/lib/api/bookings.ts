@@ -27,6 +27,7 @@ export async function fetchBookings(
     fromDate: query.dateFrom,
     toDate: query.dateTo,
     search: query.search,
+    isGuest: query.isGuest,
   })
 }
 

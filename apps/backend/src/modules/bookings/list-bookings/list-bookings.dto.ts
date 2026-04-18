@@ -56,4 +56,7 @@ export class ListBookingsDto extends PaginationDto {
 
   @ApiPropertyOptional({ description: 'Search by booking id or client name', example: 'bkg-1' })
   @IsOptional() @IsString() @MaxLength(120) search?: string;
+
+  @ApiPropertyOptional({ description: 'Filter guest (online) vs walk-in bookings', example: true })
+  @IsOptional() isGuest?: boolean;
 }

@@ -126,6 +126,18 @@ export function BookingsTabContent({ onRowClick, onEditClick }: BookingsTabConte
             onValueChange: (v) => setFilters({ type: v as typeof filters.type }),
           },
           {
+            key: "isGuest",
+            value: String(filters.isGuest),
+            placeholder: t("bookings.filters.source"),
+            options: [
+              { value: "all", label: t("bookings.filters.allSources") },
+              { value: "true", label: t("bookings.filters.guest") },
+              { value: "false", label: t("bookings.filters.walkIn") },
+            ],
+            onValueChange: (v) =>
+              setFilters({ isGuest: v === "all" ? "all" : v === "true" }),
+          },
+          {
             key: "employeeId",
             value: filters.employeeId || "all",
             placeholder: t("bookings.filters.employee"),
