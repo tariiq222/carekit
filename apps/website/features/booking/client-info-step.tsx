@@ -13,7 +13,7 @@ interface ClientInfoStepProps {
   isSubmitting: boolean;
 }
 
-export function ClientInfoStep({ slot: _slot, onBack, onSubmitInfo, isSubmitting }: ClientInfoStepProps) {
+export function ClientInfoStep({ onBack, onSubmitInfo, isSubmitting }: ClientInfoStepProps) {
   const [client, setClient] = useState<GuestClientInfo>({ name: '', phone: '', email: '' });
   const [otpStep, setOtpStep] = useState<'form' | 'request' | 'verify'>('form');
   const [hcaptchaToken, setHcaptchaToken] = useState<string | null>(null);
