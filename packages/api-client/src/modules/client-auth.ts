@@ -92,3 +92,13 @@ export async function clientLogout(): Promise<void> {
     body: JSON.stringify({ refreshToken: rawToken }),
   });
 }
+
+export async function clientResetPassword(payload: {
+  sessionToken: string;
+  newPassword: string;
+}): Promise<void> {
+  return clientFetch<void>('/public/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
