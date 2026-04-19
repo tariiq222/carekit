@@ -44,3 +44,4 @@ export {
   cancelMyBooking,
   rescheduleMyBooking,
 } from './modules/me.js'
+export * as subscriptionsApi from './modules/subscriptions.js'

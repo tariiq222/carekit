@@ -24,6 +24,15 @@ export interface MoyasarPayment {
   updatedAt: string;
 }
 
+export interface MoyasarRefund {
+  id: string;
+  amount: number;
+  currency: string;
+  status: 'refunded';
+  paymentId: string;
+  createdAt: string;
+}
+
 interface MoyasarApiResponse {
   id: string;
   object: string;
@@ -127,5 +136,33 @@ export class MoyasarApiClient {
 
   toPaymentMethod(): PaymentMethod {
     return PaymentMethod.ONLINE_CARD;
+  }
+
+  async createRefund(params: { paymentId: string; amount: number }): Promise<MoyasarRefund> {
+    const body = {
+      payment_id: params.paymentId,
+      amount: params.amount,
+    };
+
+    const data = await this.request<{
+      id: string;
+      amount: number;
+      currency: string;
+      status: string;
+      payment_id: string;
+      created_at: string;
+    }>('/refunds', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+
+    return {
+      id: data.id,
+      amount: data.amount,
+      currency: data.currency,
+      status: 'refunded',
+      paymentId: data.payment_id,
+      createdAt: data.created_at,
+    };
   }
 }

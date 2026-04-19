@@ -153,3 +153,34 @@ model ZatcaSubmission {
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
 }
+
+// ─── Refund Request ──────────────────────────────────────────────────────────────
+
+enum RefundStatus {
+  PENDING_REVIEW
+  APPROVED
+  DENIED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model RefundRequest {
+  id              String        @id @default(uuid())
+  invoiceId       String
+  paymentId       String
+  clientId        String
+  amount          Decimal       @db.Decimal(12, 2)
+  reason          String?
+  status          RefundStatus  @default(PENDING_REVIEW)
+  processedAt     DateTime?
+  processedBy     String?
+  denialReason    String?
+  gatewayRef      String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([clientId])
+  @@index([invoiceId])
+  @@index([status])
+}

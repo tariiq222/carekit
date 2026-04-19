@@ -1,5 +1,6 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { DashboardFinanceController } from '../../api/dashboard/finance.controller';
+import { RefundsController } from '../../api/dashboard/refunds.controller';
 import { DatabaseModule } from '../../infrastructure/database';
 import { MessagingModule } from '../../infrastructure/messaging.module';
 import { StorageModule } from '../../infrastructure/storage';
@@ -11,6 +12,7 @@ import { BankTransferUploadHandler } from './bank-transfer-upload/bank-transfer-
 import { ApplyCouponHandler } from './apply-coupon/apply-coupon.handler';
 import { ZatcaSubmitHandler } from './zatca-submit/zatca-submit.handler';
 import { GetInvoiceHandler } from './get-invoice/get-invoice.handler';
+import { GetPublicInvoiceHandler } from './get-invoice/get-public-invoice.handler';
 import { ListPaymentsHandler } from './list-payments/list-payments.handler';
 import { ListCouponsHandler } from './coupons/list-coupons.handler';
 import { GetCouponHandler } from './coupons/get-coupon.handler';
@@ -26,6 +28,10 @@ import { VerifyPaymentHandler } from './verify-payment/verify-payment.handler';
 import { GroupSessionReadyHandler } from './group-session-ready/group-session-ready.handler';
 import { MoyasarApiClient } from './moyasar-api/moyasar-api.client';
 import { InitGuestPaymentHandler } from './payments/public/init-guest-payment/init-guest-payment.handler';
+import { RequestRefundHandler } from './refund-payment/request-refund.handler';
+import { ApproveRefundHandler } from './refund-payment/approve-refund.handler';
+import { DenyRefundHandler } from './refund-payment/deny-refund.handler';
+import { ListRefundsHandler } from './refund-payment/list-refunds.handler';
 
 const handlers = [
   CreateInvoiceHandler,
@@ -35,6 +41,7 @@ const handlers = [
   ApplyCouponHandler,
   ZatcaSubmitHandler,
   GetInvoiceHandler,
+  GetPublicInvoiceHandler,
   ListPaymentsHandler,
   ListCouponsHandler,
   GetCouponHandler,
@@ -49,11 +56,15 @@ const handlers = [
   VerifyPaymentHandler,
   GroupSessionReadyHandler,
   InitGuestPaymentHandler,
+  RequestRefundHandler,
+  ApproveRefundHandler,
+  DenyRefundHandler,
+  ListRefundsHandler,
 ];
 
 @Module({
   imports: [DatabaseModule, MessagingModule, StorageModule],
-  controllers: [DashboardFinanceController],
+  controllers: [DashboardFinanceController, RefundsController],
   providers: [...handlers, BookingConfirmedHandler, GroupSessionReadyHandler, MoyasarApiClient],
   exports: [...handlers, MoyasarApiClient],
 })
