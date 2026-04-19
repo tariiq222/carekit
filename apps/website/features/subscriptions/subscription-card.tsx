@@ -1,4 +1,3 @@
-import { useTranslations } from 'next-intl';
 import type { SubscriptionPlan } from './subscriptions.api';
 
 interface SubscriptionCardProps {
@@ -8,8 +7,6 @@ interface SubscriptionCardProps {
 }
 
 export function SubscriptionCard({ plan, onSelect, isSelected }: SubscriptionCardProps) {
-  const t = useTranslations();
-
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('ar-SA', {
       style: 'currency',

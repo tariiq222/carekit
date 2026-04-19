@@ -1,4 +1,3 @@
-import { useTranslations } from 'next-intl';
 import type { SupportGroup } from './support-groups.api';
 
 interface SupportGroupCardProps {
@@ -8,8 +7,6 @@ interface SupportGroupCardProps {
 }
 
 export function SupportGroupCard({ group, onSelect, isSelected }: SupportGroupCardProps) {
-  const t = useTranslations();
-
   const formatPrice = (price: number, currency: string) => {
     if (price === 0) return 'Free';
     return new Intl.NumberFormat('ar-SA', {
