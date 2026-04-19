@@ -2,12 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
 import { SupportGroupsList } from '@/features/support-groups/support-groups-list';
 import type { SupportGroup } from '@/features/support-groups/support-groups.api';
 
 export default function SupportGroupsPage() {
-  const t = useTranslations();
   const router = useRouter();
   const [selectedGroup, setSelectedGroup] = useState<SupportGroup | null>(null);
 

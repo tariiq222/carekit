@@ -2,12 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
 import { SubscriptionsList } from '@/features/subscriptions/subscriptions-list';
 import type { SubscriptionPlan } from '@/features/subscriptions/subscriptions.api';
 
 export default function SubscriptionsPage() {
-  const t = useTranslations();
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
 
