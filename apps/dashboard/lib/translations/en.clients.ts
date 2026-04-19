@@ -88,6 +88,20 @@ export const enClients: Record<string, string> = {
   "clients.form.chronicConditions": "Chronic Conditions",
   "clients.form.chronicPlaceholder": "e.g. Diabetes, hypertension...",
 
+  // ── Account status toggle ──
+  "clients.account.status": "Account status",
+  "clients.account.active": "Active",
+  "clients.account.disabled": "Disabled",
+  "clients.account.disableButton": "Disable account",
+  "clients.account.enableButton": "Re-enable account",
+  "clients.account.disableTitle": "Disable this account?",
+  "clients.account.disableDescription": "The client will be signed out of all devices and unable to log in. Existing bookings are unaffected.",
+  "clients.account.enableTitle": "Re-enable this account?",
+  "clients.account.enableDescription": "The client will be able to log in again.",
+  "clients.account.reason": "Reason (optional)",
+  "clients.account.disableSuccess": "Account disabled",
+  "clients.account.enableSuccess": "Account re-enabled",
+
   // ── Toggle active ──
   "clients.deactivated": "Client account deactivated",
   "clients.deactivateError": "Failed to deactivate client",
