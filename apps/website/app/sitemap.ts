@@ -8,7 +8,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/therapists',
     '/booking',
     '/support-groups',
-    '/subscriptions',
     '/contact',
     '/burnout-test',
     '/login',

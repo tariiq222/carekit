@@ -13,7 +13,6 @@ import { SawaaResetPasswordPage } from './sawaa/pages/reset-password';
 import { SawaaAccountPage } from './sawaa/pages/account';
 import { SawaaAccountBookingsPage } from './sawaa/pages/account-bookings';
 import { SawaaAccountBookingDetailPage } from './sawaa/pages/account-booking-detail';
-import { SawaaSubscriptionsPage } from './sawaa/pages/subscriptions';
 import { SawaaSupportGroupsPage } from './sawaa/pages/support-groups';
 import { PremiumLayout } from './premium/layout/layout';
 import { PremiumHomePage } from './premium/pages/home';
@@ -28,7 +27,6 @@ import { PremiumResetPasswordPage } from './premium/pages/reset-password';
 import { PremiumAccountPage } from './premium/pages/account';
 import { PremiumAccountBookingsPage } from './premium/pages/account-bookings';
 import { PremiumAccountBookingDetailPage } from './premium/pages/account-booking-detail';
-import { PremiumSubscriptionsPage } from './premium/pages/subscriptions';
 import { PremiumSupportGroupsPage } from './premium/pages/support-groups';
 
 export const themes: Record<WebsiteTheme, Theme> = {
@@ -48,7 +46,6 @@ export const themes: Record<WebsiteTheme, Theme> = {
       account: SawaaAccountPage,
       accountBookings: SawaaAccountBookingsPage,
       accountBookingDetail: SawaaAccountBookingDetailPage,
-      subscriptions: SawaaSubscriptionsPage,
       supportGroups: SawaaSupportGroupsPage,
     },
   },
@@ -68,7 +65,6 @@ export const themes: Record<WebsiteTheme, Theme> = {
       account: PremiumAccountPage,
       accountBookings: PremiumAccountBookingsPage,
       accountBookingDetail: PremiumAccountBookingDetailPage,
-      subscriptions: PremiumSubscriptionsPage,
       supportGroups: PremiumSupportGroupsPage,
     },
   },

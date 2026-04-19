@@ -21,7 +21,6 @@ export interface Theme {
     account: ComponentType;
     accountBookings: ComponentType<{ searchParams: Promise<Record<string, string | undefined>> }>;
     accountBookingDetail: ComponentType<{ bookingId: string }>;
-    subscriptions: ComponentType;
     supportGroups: ComponentType;
   };
 }

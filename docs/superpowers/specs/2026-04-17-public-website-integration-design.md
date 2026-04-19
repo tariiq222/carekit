@@ -146,7 +146,7 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 | `POST /public/auth/register|login|refresh|logout` | 3 |
 | `GET /public/me/bookings` | 3 |
 | `PATCH /public/bookings/:id/cancel|reschedule` | 3 |
-| Subscriptions, support-group bookings, ZATCA QR, refunds | 4 |
+| ~~Subscriptions~~ (removed from scope, see PR #13), support-group bookings, ZATCA QR, refunds | 4 |
 
 ### 4.6 Security
 
@@ -207,7 +207,7 @@ All under `/api/public/*`, throttled, CORS-restricted, no admin auth required.
 
 ### Phase 4 — Advanced (2 weeks)
 
-- Subscription packages (existing backend support).
+- ~~Subscription packages~~ — removed from scope 2026-04-19; CareKit is a booking platform, not a subscription system. See PR #13 (`chore/remove-subscription-feature`). Future "packages" will be modelled as service bundles.
 - Support-group bookings (group capacity, waitlist).
 - ZATCA QR code on invoices (existing module).
 - Refund flow.
