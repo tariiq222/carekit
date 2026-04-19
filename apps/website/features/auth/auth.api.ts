@@ -122,3 +122,18 @@ export async function clientLogoutApi(): Promise<void> {
     credentials: 'include',
   });
 }
+
+export async function clientResetPasswordApi(payload: {
+  sessionToken: string;
+  newPassword: string;
+}): Promise<void> {
+  const res = await fetch(`${API_BASE}/public/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: 'Password reset failed' }));
+    throw new Error((err as { message?: string }).message ?? 'Password reset failed');
+  }
+}

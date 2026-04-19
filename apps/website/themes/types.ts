@@ -16,8 +16,12 @@ export interface Theme {
     booking: ComponentType;
     login: ComponentType;
     register: ComponentType;
+    forgotPassword: ComponentType;
+    resetPassword: ComponentType;
     account: ComponentType;
     accountBookings: ComponentType<{ searchParams: Promise<Record<string, string | undefined>> }>;
     accountBookingDetail: ComponentType<{ bookingId: string }>;
+    subscriptions: ComponentType;
+    supportGroups: ComponentType;
   };
 }

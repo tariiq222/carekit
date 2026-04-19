@@ -18,12 +18,13 @@ export async function requestOtp(payload: OtpRequestPayload): Promise<void> {
 export async function verifyOtp(
   identifier: string,
   code: string,
+  purpose: OtpPurpose = OtpPurpose.GUEST_BOOKING,
 ): Promise<OtpVerifyResponse> {
   const payload: OtpVerifyPayload = {
     channel: OtpChannel.EMAIL,
     identifier,
     code,
-    purpose: OtpPurpose.GUEST_BOOKING,
+    purpose,
   };
   const res = await fetch(`${API_BASE}/public/otp/verify`, {
     method: 'POST',
