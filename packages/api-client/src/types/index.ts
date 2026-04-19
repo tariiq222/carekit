@@ -158,10 +158,3 @@ export type {
   ContactMessageStatus,
   CreateContactMessagePayload,
 } from './public-directory.js'
-export type {
-  SubscriptionPlan,
-  ClientSubscription,
-  SubscriptionBenefit,
-  SubscriptionBenefitType,
-  SubscriptionStatus,
-} from './subscription.js'
