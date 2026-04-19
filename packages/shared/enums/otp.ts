@@ -6,4 +6,5 @@ export enum OtpChannel {
 export enum OtpPurpose {
   GUEST_BOOKING = 'GUEST_BOOKING',
   CLIENT_LOGIN = 'CLIENT_LOGIN',
+  CLIENT_PASSWORD_RESET = 'CLIENT_PASSWORD_RESET',
 }

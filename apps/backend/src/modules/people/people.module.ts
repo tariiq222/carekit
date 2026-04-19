@@ -30,10 +30,13 @@ import { ListEmployeeRatingsHandler } from './employees/list-employee-ratings.ha
 import { EmployeeStatsHandler } from './employees/employee-stats.handler';
 import { ListPublicEmployeesHandler } from './employees/public/list-public-employees.handler';
 import { GetPublicEmployeeHandler } from './employees/public/get-public-employee.handler';
+import { SetClientActiveHandler } from './clients/set-client-active/set-client-active.handler';
+import { LogActivityHandler } from '../ops/log-activity/log-activity.handler';
 import { DashboardPeopleController } from '../../api/dashboard/people.controller';
 
 const handlers = [
   CreateClientHandler, UpdateClientHandler, ListClientsHandler, GetClientHandler, DeleteClientHandler,
+  SetClientActiveHandler, LogActivityHandler,
   CreateEmployeeHandler, UpdateAvailabilityHandler, EmployeeOnboardingHandler, OnboardEmployeeHandler, GetAvailabilityHandler, UpdateEmployeeHandler,
   ListEmployeesHandler, GetEmployeeHandler,
   DeleteEmployeeHandler, ListEmployeeServicesHandler, GetEmployeeServiceTypesHandler, AssignEmployeeServiceHandler,

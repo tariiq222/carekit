@@ -90,7 +90,7 @@ export class RegisterHandler {
 
     return {
       accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      refreshToken: tokens.rawRefresh,
       clientId,
     };
   }

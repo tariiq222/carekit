@@ -88,6 +88,20 @@ export const arClients: Record<string, string> = {
   "clients.form.chronicConditions": "الأمراض المزمنة",
   "clients.form.chronicPlaceholder": "مثال: السكري، ضغط الدم...",
 
+  // ── Account status toggle ──
+  "clients.account.status": "حالة الحساب",
+  "clients.account.active": "نشط",
+  "clients.account.disabled": "معطَّل",
+  "clients.account.disableButton": "تعطيل الحساب",
+  "clients.account.enableButton": "تفعيل الحساب",
+  "clients.account.disableTitle": "تعطيل هذا الحساب؟",
+  "clients.account.disableDescription": "سيتم تسجيل خروج العميل من جميع الأجهزة ولن يتمكن من تسجيل الدخول. لن تتأثر الحجوزات الحالية.",
+  "clients.account.enableTitle": "تفعيل هذا الحساب؟",
+  "clients.account.enableDescription": "سيتمكّن العميل من تسجيل الدخول مرة أخرى.",
+  "clients.account.reason": "السبب (اختياري)",
+  "clients.account.disableSuccess": "تم تعطيل الحساب",
+  "clients.account.enableSuccess": "تم تفعيل الحساب",
+
   // ── Toggle active ──
   "clients.deactivated": "تم تعطيل حساب المستفيد",
   "clients.deactivateError": "فشل تعطيل الحساب",

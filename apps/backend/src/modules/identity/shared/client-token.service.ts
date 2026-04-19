@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
+import * as bcrypt from 'bcryptjs';
+import { PrismaService } from '../../../infrastructure/database';
 
 export interface ClientTokenPair {
   accessToken: string;
-  refreshToken: string;
+  accessMaxAgeMs: number;
+  rawRefresh: string;
+  refreshMaxAgeMs: number;
 }
 
 export interface ClientJwtPayload {
@@ -15,11 +19,25 @@ export interface ClientJwtPayload {
   jti: string;
 }
 
+function parseTtlMs(ttl: string): number {
+  const match = /^(\d+)([smhd])$/.exec(ttl);
+  if (!match) return 7 * 24 * 60 * 60 * 1000;
+  const n = parseInt(match[1], 10);
+  const multipliers: Record<string, number> = {
+    s: 1_000,
+    m: 60_000,
+    h: 3_600_000,
+    d: 86_400_000,
+  };
+  return n * multipliers[match[2]];
+}
+
 @Injectable()
 export class ClientTokenService {
   constructor(
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async issueTokenPair(client: {
@@ -34,12 +52,26 @@ export class ClientTokenService {
       jti,
     };
 
+    const accessTtl = (this.config.get<string>('JWT_CLIENT_ACCESS_TTL') ?? '15m') as `${number}${'s' | 'm' | 'h' | 'd'}`;
     const accessToken = this.jwt.sign(payload, {
       secret: this.config.getOrThrow('JWT_CLIENT_ACCESS_SECRET'),
-      expiresIn: this.config.get('JWT_CLIENT_ACCESS_TTL') ?? '7d',
+      expiresIn: accessTtl,
+    });
+    const accessMaxAgeMs = parseTtlMs(accessTtl);
+
+    const refreshTtl = this.config.get<string>('JWT_CLIENT_REFRESH_TTL') ?? '7d';
+    const refreshMaxAgeMs = parseTtlMs(refreshTtl);
+
+    const rawRefresh = randomUUID();
+    const tokenSelector = rawRefresh.slice(0, 8);
+    const tokenHash = await bcrypt.hash(rawRefresh, 10);
+    const expiresAt = new Date(Date.now() + refreshMaxAgeMs);
+
+    await this.prisma.clientRefreshToken.create({
+      data: { clientId: client.id, tokenSelector, tokenHash, expiresAt },
     });
 
-    return { accessToken, refreshToken: jti };
+    return { accessToken, accessMaxAgeMs, rawRefresh, refreshMaxAgeMs };
   }
 
   verifyToken(token: string): ClientJwtPayload | null {

@@ -40,6 +40,7 @@ import { ClientLoginHandler } from './client-auth/client-login.handler';
 import { ClientRefreshHandler } from './client-auth/client-refresh.handler';
 import { ClientLogoutHandler } from './client-auth/client-logout.handler';
 import { GetMeHandler } from './client-auth/get-me.handler';
+import { ResetPasswordHandler } from './client-auth/reset-password/reset-password.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -55,6 +56,7 @@ const handlers = [
   ClientRefreshHandler,
   ClientLogoutHandler,
   GetMeHandler,
+  ResetPasswordHandler,
 ];
 
 @Module({

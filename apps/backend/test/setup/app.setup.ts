@@ -42,6 +42,10 @@ export async function createTestApp(): Promise<{
   process.env.JWT_REFRESH_SECRET = TEST_JWT_REFRESH_SECRET;
   process.env.JWT_ACCESS_TTL = '15m';
   process.env.JWT_REFRESH_TTL = '30d';
+  process.env.JWT_CLIENT_ACCESS_SECRET = 'test-client-access-secret-32chars';
+  process.env.JWT_CLIENT_REFRESH_SECRET = 'test-client-refresh-secret-32chars';
+  process.env.JWT_CLIENT_ACCESS_TTL = '15m';
+  process.env.JWT_CLIENT_REFRESH_TTL = '30d';
 
   await ensureTestUsers();
 
@@ -61,6 +65,10 @@ export async function createTestApp(): Promise<{
           JWT_REFRESH_SECRET: TEST_JWT_REFRESH_SECRET,
           JWT_ACCESS_TTL: '15m',
           JWT_REFRESH_TTL: '30d',
+          JWT_CLIENT_ACCESS_SECRET: 'test-client-access-secret-32chars',
+          JWT_CLIENT_REFRESH_SECRET: 'test-client-refresh-secret-32chars',
+          JWT_CLIENT_ACCESS_TTL: '15m',
+          JWT_CLIENT_REFRESH_TTL: '30d',
           REDIS_HOST: 'localhost',
           REDIS_PORT: '5380',
           OPENAI_API_KEY: 'test-key',
@@ -85,6 +93,10 @@ export async function createTestApp(): Promise<{
           JWT_REFRESH_SECRET: TEST_JWT_REFRESH_SECRET,
           JWT_ACCESS_TTL: '15m',
           JWT_REFRESH_TTL: '30d',
+          JWT_CLIENT_ACCESS_SECRET: 'test-client-access-secret-32chars',
+          JWT_CLIENT_REFRESH_SECRET: 'test-client-refresh-secret-32chars',
+          JWT_CLIENT_ACCESS_TTL: '15m',
+          JWT_CLIENT_REFRESH_TTL: '30d',
           REDIS_HOST: 'localhost',
           REDIS_PORT: '5380',
           OPENAI_API_KEY: 'test-key',

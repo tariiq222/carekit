@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useLocale } from "@/components/locale-provider"
 import { useOrganizationConfig } from "@/hooks/use-organization-config"
 import { useClient } from "@/hooks/use-clients"
+import { ClientAccountToggle } from "@/components/features/clients/client-account-toggle"
 import { BLOOD_LABELS, type BloodType } from "@/lib/schemas/client.schema"
 
 /* ─── Props ─── */
@@ -215,6 +216,9 @@ export function ClientDetailPage({ clientId }: Props) {
                     </>
                   )}
                 </DetailSection>
+                <div className="mt-4">
+                  <ClientAccountToggle client={client} />
+                </div>
               </CardContent>
             </Card>
           </div>

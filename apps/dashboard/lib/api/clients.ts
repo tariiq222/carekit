@@ -90,3 +90,23 @@ export async function updateClient(
 export async function deleteClient(id: string): Promise<void> {
   return api.delete<void>(`/dashboard/people/clients/${id}`)
 }
+
+export interface SetClientActivePayload {
+  isActive: boolean
+  reason?: string
+}
+
+export interface SetClientActiveResult {
+  id: string
+  isActive: boolean
+}
+
+export async function setClientActive(
+  id: string,
+  payload: SetClientActivePayload,
+): Promise<SetClientActiveResult> {
+  return api.patch<SetClientActiveResult>(
+    `/dashboard/clients/${id}/active`,
+    payload,
+  )
+}
