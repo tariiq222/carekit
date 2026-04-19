@@ -4,10 +4,9 @@
 >
 > **🛑 Track A (Subscriptions) REMOVED from scope (2026-04-19).** CareKit is strictly a booking platform — appointment booking + recurring bookings + future session packages (service bundles). Subscription plans were never the product. The code that landed via Phase 4 Track A was removed in `chore/remove-subscription-feature` (PR #13). Tasks A1–A5, Q1, and any §5/§6 references below should be treated as historical context, not work items. When a "packages" requirement arrives, model it as a service-level bundle attached to `Service`, not as a resurrected Subscription system.
 
-**Goal:** Ship the advanced capabilities that turn the public website from a booking tool into a full client-facing commerce + compliance surface: subscription packages, support-group bookings, ZATCA QR on invoices, refund flow, and SEO infrastructure (Schema.org, sitemap, OG images, JSON-LD).
+**Goal:** Ship the advanced capabilities that turn the public website from a booking tool into a full client-facing compliance + commerce surface: support-group bookings, ZATCA QR on invoices, refund flow, and SEO infrastructure (Schema.org, sitemap, OG images, JSON-LD).
 
 **Architecture:** Each feature is an existing-module extension:
-- **Subscriptions** → existing `subscriptions/` backend module + new public endpoints + website pages
 - **Support groups** → existing `group-sessions/` module + public listing/booking
 - **ZATCA QR** → existing `zatca/` module + rendering on client-facing invoice view
 - **Refunds** → existing `payments/` module + Moyasar refund API + client-facing status
@@ -15,44 +14,13 @@
 
 **Reference Spec:** [`docs/superpowers/specs/2026-04-17-public-website-integration-design.md`](../specs/2026-04-17-public-website-integration-design.md) §6 Phase 4.
 
-**Branch:** `feat/website-phase-4` from `main` after Phase 3 merges. Given size, consider splitting into three sub-branches: `feat/website-phase-4a-subscriptions`, `-4b-zatca-refunds`, `-4c-seo`.
+**Branch:** `feat/website-phase-4` from `main` after Phase 3 merges. Given size, consider splitting into two sub-branches: `feat/website-phase-4b-zatca-refunds`, `-4c-seo`.
 
 ---
 
-## Track A — Subscriptions (5 tasks)
+## ~~Track A — Subscriptions~~
 
-### Task A1: Verify existing subscriptions module + extend schema if needed
-
-- [ ] **A1.1** Read `apps/backend/src/modules/subscriptions/` and `prisma/schema/*.prisma` (wherever `Subscription` lives).
-- [ ] **A1.2** Confirm existing admin flow for creating subscription packages (plan templates) + assigning to clients.
-- [ ] **A1.3** Identify schema gaps for public surface: is there a `Subscription.isPublic` flag? `Subscription.publicDescriptionAr/En`? Add if missing (additive migration).
-- [ ] **A1.4** Commit: `feat(backend): subscription public fields` (if migration needed)
-
-### Task A2: Backend — `GET /public/subscriptions` + `POST /public/subscriptions/purchase`
-
-- [ ] **A2.1** `ListPublicSubscriptions`: filter `isPublic = true`; returns plan summaries + pricing.
-- [ ] **A2.2** `PurchaseSubscription` (guest/client): creates invoice + initializes Moyasar payment, similar to Phase 2 booking flow. OTP or client session required.
-- [ ] **A2.3** Moyasar webhook extension: on success, activate subscription + apply its benefits (discount, session credits).
-- [ ] **A2.4** Controller under `/api/v1/public/subscriptions`. Throttled.
-- [ ] **A2.5** Specs + OpenAPI.
-- [ ] **A2.6** Commit: `feat(backend): public subscription listing + purchase`
-
-### Task A3: api-client — Subscription endpoints
-
-- [ ] **A3.1** `getPublicSubscriptions`, `purchaseSubscription`, `getMySubscriptions` (client-authed).
-- [ ] **A3.2** Commit: `feat(api-client): subscription endpoints`
-
-### Task A4: Website — features/subscriptions slice + pages
-
-- [ ] **A4.1** Slice files + both theme pages (`/subscriptions`, `/subscriptions/[slug]`).
-- [ ] **A4.2** Purchase wizard reuses OTP + payment flow from Phase 2.
-- [ ] **A4.3** `/account/subscriptions` in both themes (list + status).
-- [ ] **A4.4** Commit: `feat(website): subscriptions listing + purchase`
-
-### Task A5: Dashboard — Subscription public toggle
-
-- [ ] **A5.1** Add "Public" toggle + `publicDescriptionAr/En` fields to existing subscription edit page.
-- [ ] **A5.2** Commit: `feat(dashboard): subscription public fields editor`
+**REMOVED from scope 2026-04-19.** See PR #13 (`chore/remove-subscription-feature`). CareKit is a booking platform — appointment booking + recurring bookings + future session packages (service bundles). Subscription plans were never the product. Tasks A1–A5 deleted from this plan. When a "packages" requirement arrives, model it as a service-level bundle attached to `Service`, not as a resurrected Subscription system.
 
 ---
 
@@ -143,7 +111,7 @@
 
 ### Task E2: Dynamic sitemap.xml + robots.txt
 
-- [ ] **E2.1** `apps/website/app/sitemap.ts` — lists all therapists, specialties, subscriptions (public only).
+- [ ] **E2.1** `apps/website/app/sitemap.ts` — lists all therapists and specialties (public only).
 - [ ] **E2.2** `apps/website/app/robots.ts` — allow all, point to sitemap, disallow `/account/*`.
 - [ ] **E2.3** Uses `BrandingConfig.websiteDomain` for canonical URLs.
 - [ ] **E2.4** Commit: `feat(website): sitemap + robots`
@@ -174,7 +142,6 @@
 
 **Cases (one per track):**
 
-- [ ] **Q1** Subscription: browse plans → purchase → subscription active in `/account/subscriptions`.
 - [ ] **Q2** Support group: book a session → appears in account → cancel → refund request PENDING.
 - [ ] **Q3** Support group: book when full → placed on waitlist → admin promotes → booking confirmed.
 - [ ] **Q4** ZATCA: visit `/account/bookings/[id]/invoice` → QR visible → download PDF → QR scannable.
@@ -189,7 +156,6 @@
 
 ## Ship criteria (from spec §6 Phase 4)
 
-- ✅ Subscriptions purchasable publicly.
 - ✅ Support groups bookable publicly with capacity + waitlist.
 - ✅ ZATCA QR renders on client invoice views.
 - ✅ Refund flow end-to-end.
@@ -201,7 +167,6 @@
 
 | Risk | Mitigation |
 |---|---|
-| Subscription + booking state machine conflicts (benefit application) | Unit tests in `@carekit/shared` covering every benefit-application case |
 | Group waitlist race (two users grab last spot) | DB transaction + row-level lock on `GroupSession.enrolledCount` |
 | ZATCA QR renders wrong data after invoice edit | Regenerate QR on every invoice state transition; snapshot test on QR payload |
 | Moyasar refund partial / failure | Webhook-driven; never mark refunded until webhook confirms |
@@ -213,7 +178,6 @@
 
 - Analytics integration (GA4, Meta Pixel, etc.) — future tracked separately with privacy/consent layer.
 - Multi-currency (all SAR per current scope).
-- Admin-side subscription analytics dashboards — admin sees transactions, full analytics is post-Phase-4.
 - Loyalty / referral programs.
 - Native mobile app features parity — separate track.
 
@@ -221,6 +185,6 @@
 
 ## Post-Phase 4 — open questions for follow-up planning
 
-- Do we consolidate the four sub-branches into one Phase 4 PR, or ship as 3 PRs (A+B, C+D, E)? Recommendation: **3 PRs** — each is a shippable increment, reviewers can focus.
+- Do we consolidate the remaining tracks into one Phase 4 PR, or ship as 2 PRs (B+C+D, E)? Recommendation: **2 PRs** — each is a shippable increment, reviewers can focus.
 - Do we add a `v1.0` Git tag on main after Phase 4 merges? Recommendation: **yes** — first production-ready milestone.
 - Does the product need a public changelog at this point? Probably yes — add a minimal `CHANGELOG.md` during Phase 4.c SEO track.
