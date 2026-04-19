@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { BrandingProvider, BrandingStyle, getPublicBrandingForSsr } from '@/features/branding/public';
 import './globals.css';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const branding = await getPublicBrandingForSsr();

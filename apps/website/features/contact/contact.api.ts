@@ -1,6 +1,9 @@
 import type { CreateContactMessagePayload } from '@carekit/api-client';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5100';
+const API_BASE =
+  process.env.INTERNAL_API_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:5100';
 
 export async function submitContactMessage(payload: CreateContactMessagePayload): Promise<void> {
   const res = await fetch(`${API_BASE}/api/v1/public/contact-messages`, {

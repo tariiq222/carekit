@@ -6,7 +6,10 @@ import type {
   ClientBookingListResponse,
 } from '@carekit/shared';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5100';
+const API_BASE =
+  process.env.INTERNAL_API_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:5100';
 
 export async function clientLoginApi(
   payload: ClientLoginPayload,
