@@ -52,7 +52,7 @@ export class ClientTokenService {
       jti,
     };
 
-    const accessTtl = this.config.get<string>('JWT_CLIENT_ACCESS_TTL') ?? '15m';
+    const accessTtl = (this.config.get<string>('JWT_CLIENT_ACCESS_TTL') ?? '15m') as `${number}${'s' | 'm' | 'h' | 'd'}`;
     const accessToken = this.jwt.sign(payload, {
       secret: this.config.getOrThrow('JWT_CLIENT_ACCESS_SECRET'),
       expiresIn: accessTtl,
