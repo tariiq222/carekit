@@ -119,38 +119,60 @@ enum GroupSessionStatus {
 }
 
 model GroupSession {
-  id            String             @id @default(uuid())
-  branchId      String
-  employeeId    String
-  serviceId     String
-  title         String
-  scheduledAt   DateTime
-  durationMins  Int
-  maxCapacity   Int
-  enrolledCount Int                @default(0)
-  price         Decimal            @db.Decimal(12, 2)
-  currency      String             @default("SAR")
-  status        GroupSessionStatus @default(OPEN)
-  cancelReason  String?
-  cancelledAt   DateTime?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  id                  String             @id @default(uuid())
+  branchId            String
+  employeeId          String
+  serviceId           String
+  title               String
+  descriptionAr       String?
+  descriptionEn       String?
+  scheduledAt         DateTime
+  durationMins        Int
+  maxCapacity         Int
+  enrolledCount       Int                @default(0)
+  price               Decimal            @db.Decimal(12, 2)
+  currency            String             @default("SAR")
+  status              GroupSessionStatus @default(OPEN)
+  isPublic            Boolean            @default(false)
+  publicDescriptionAr String?
+  publicDescriptionEn String?
+  waitlistEnabled     Boolean            @default(true)
+  waitlistCount       Int                @default(0)
+  cancelReason        String?
+  cancelledAt         DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
-  enrollments GroupEnrollment[]
+  enrollments  GroupEnrollment[]
+  waitlistEntries GroupSessionWaitlist[]
 
   @@index([employeeId])
   @@index([scheduledAt])
+  @@index([isPublic])
 }
 
 model GroupEnrollment {
   id             String       @id @default(uuid())
   groupSessionId String
   groupSession   GroupSession @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
-  clientId       String
+  clientId      String
   bookingId      String       @unique
   enrolledAt     DateTime     @default(now())
 
   @@unique([groupSessionId, clientId])
+  @@index([clientId])
+}
+
+model GroupSessionWaitlist {
+  id             String   @id @default(uuid())
+  groupSessionId String
+  groupSession   GroupSession @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
+  clientId       String
+  position       Int
+  createdAt      DateTime @default(now())
+
+  @@unique([groupSessionId, clientId])
+  @@index([groupSessionId])
   @@index([clientId])
 }
 

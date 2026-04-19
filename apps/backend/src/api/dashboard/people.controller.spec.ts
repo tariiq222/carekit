@@ -8,6 +8,7 @@ function buildController() {
   const listClients = fn({ data: [], meta: {} });
   const getClient = fn({ id: 'c-1' });
   const deleteClient = fn();
+  const setClientActive = fn({ id: 'c-1' });
   const createEmployee = fn({ id: 'e-1' });
   const listEmployees = fn({ data: [], meta: {} });
   const getEmployee = fn({ id: 'e-1' });
@@ -31,6 +32,7 @@ function buildController() {
   const controller = new DashboardPeopleController(
     createClient as never, updateClient as never, listClients as never, getClient as never,
     deleteClient as never,
+    setClientActive as never,
     createEmployee as never, listEmployees as never, getEmployee as never,
     updateAvailability as never, employeeOnboarding as never,
     onboardEmployee as never, getAvailability as never, updateEmployee as never,

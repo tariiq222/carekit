@@ -113,6 +113,7 @@ describe('VerifyOtpHandler', () => {
     expect(otpSession.signSession).toHaveBeenCalledWith({
       identifier: 'test@example.com',
       purpose: OtpPurpose.GUEST_BOOKING,
+      channel: 'EMAIL',
     });
   });
 });

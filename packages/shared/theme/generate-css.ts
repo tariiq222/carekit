@@ -1,4 +1,4 @@
-import type { BrandingConfig, DerivedTokens } from '../types/branding.js'
+import type { BrandingConfig, DerivedTokens } from '../types/branding'
 
 function hexToRgbParts(hex: string): string {
   const clean = hex.replace('#', '')

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { BrandingProvider, BrandingStyle, getPublicBrandingForSsr } from '@/features/branding/public';
 import './globals.css';
+import { generateMedicalBusinessSchema } from '@/lib/seo/schema';
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -25,6 +26,15 @@ export default async function RootLayout({
 }) {
   const branding = await getPublicBrandingForSsr();
 
+  const medicalBusinessSchema = generateMedicalBusinessSchema({
+    '@context': 'https://schema.org',
+    '@type': 'MedicalBusiness',
+    name: branding.organizationNameAr,
+    description: branding.productTagline ?? undefined,
+    url: process.env.NEXT_PUBLIC_WEBSITE_URL,
+    medicalSpecialty: 'MentalHealth',
+  });
+
   return (
     <html lang="ar" dir="rtl">
       <head>
@@ -37,6 +47,10 @@ export default async function RootLayout({
             href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap"
           />
         )}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: medicalBusinessSchema }}
+        />
       </head>
       <body>
         <BrandingProvider branding={branding}>{children}</BrandingProvider>

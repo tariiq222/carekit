@@ -32,6 +32,9 @@ import { CreateGuestBookingHandler } from './public/create-guest-booking.handler
 import { ListClientBookingsHandler } from './client/list-client-bookings.handler';
 import { ClientCancelBookingHandler } from './client/client-cancel-booking.handler';
 import { ClientRescheduleBookingHandler } from './client/client-reschedule-booking.handler';
+import { ListPublicGroupSessionsHandler } from './public/list-public-group-sessions.handler';
+import { GetPublicGroupSessionHandler } from './public/get-public-group-session.handler';
+import { BookGroupSessionHandler } from './public/book-group-session.handler';
 
 const handlers = [
   CreateBookingHandler,
@@ -62,6 +65,9 @@ const handlers = [
   ListClientBookingsHandler,
   ClientCancelBookingHandler,
   ClientRescheduleBookingHandler,
+  ListPublicGroupSessionsHandler,
+  GetPublicGroupSessionHandler,
+  BookGroupSessionHandler,
 ];
 
 @Module({

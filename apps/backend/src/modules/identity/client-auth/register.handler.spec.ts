@@ -53,7 +53,7 @@ describe('RegisterHandler', () => {
       mockPasswords.hash.mockResolvedValue('hashed_pw');
       mockPrisma.client.create.mockResolvedValue({ id: 'cl-new' });
       mockClientTokens.issueTokenPair.mockResolvedValue({
-        accessToken: 'at', refreshToken: 'rt',
+        accessToken: 'at', accessMaxAgeMs: 900_000, rawRefresh: 'rt', refreshMaxAgeMs: 604_800_000,
       });
 
       const result = await handler.execute(
@@ -91,7 +91,7 @@ describe('RegisterHandler', () => {
       mockPasswords.hash.mockResolvedValue('hashed_pw');
       mockPrisma.client.update.mockResolvedValue({ id: 'cl-guest' });
       mockClientTokens.issueTokenPair.mockResolvedValue({
-        accessToken: 'at2', refreshToken: 'rt2',
+        accessToken: 'at2', accessMaxAgeMs: 900_000, rawRefresh: 'rt2', refreshMaxAgeMs: 604_800_000,
       });
 
       const result = await handler.execute(
