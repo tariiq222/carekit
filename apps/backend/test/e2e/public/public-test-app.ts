@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, getStorageToken } from '@nestjs/throttler';
+import cookieParser from 'cookie-parser';
 import { AppModule } from '../../../src/app.module';
 import { FcmService } from '../../../src/infrastructure/mail/fcm.service';
 import { SmtpService } from '../../../src/infrastructure/mail/smtp.service';
@@ -16,6 +17,8 @@ import { CAPTCHA_VERIFIER } from '../../../src/modules/comms/contact-messages/ca
 
 const TEST_JWT_ACCESS_SECRET = 'test-access-secret-32chars-min';
 const TEST_JWT_REFRESH_SECRET = 'test-refresh-secret-32chars-min';
+export const TEST_JWT_CLIENT_ACCESS_SECRET = 'test-client-access-secret-32chars';
+export const TEST_JWT_CLIENT_REFRESH_TTL = '14d';
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
   'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
@@ -43,6 +46,8 @@ let cachedApp: INestApplication | null = null;
 
 export interface PublicTestApp {
   request: SuperTest.Agent;
+  /** Raw http.Server — use SuperTest.agent(httpServer) when you need cookie persistence. */
+  httpServer: ReturnType<INestApplication['getHttpServer']>;
 }
 
 export async function createPublicTestApp(): Promise<PublicTestApp> {
@@ -73,6 +78,9 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
     JWT_REFRESH_SECRET: TEST_JWT_REFRESH_SECRET,
     JWT_ACCESS_TTL: '15m',
     JWT_REFRESH_TTL: '30d',
+    JWT_CLIENT_ACCESS_SECRET: TEST_JWT_CLIENT_ACCESS_SECRET,
+    JWT_CLIENT_ACCESS_TTL: '15m',
+    JWT_CLIENT_REFRESH_TTL: TEST_JWT_CLIENT_REFRESH_TTL,
     REDIS_HOST: 'localhost',
     REDIS_PORT: 5380,
     OPENAI_API_KEY: 'test-key',
@@ -168,13 +176,15 @@ export async function createPublicTestApp(): Promise<PublicTestApp> {
     .compile();
 
   const app = moduleRef.createNestApplication();
+  app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
   await app.init();
   cachedApp = app;
 
-  return { request: SuperTest(app.getHttpServer()) };
+  const httpServer = app.getHttpServer() as ReturnType<INestApplication['getHttpServer']>;
+  return { request: SuperTest(httpServer), httpServer };
 }
 
 export async function closePublicTestApp(): Promise<void> {
