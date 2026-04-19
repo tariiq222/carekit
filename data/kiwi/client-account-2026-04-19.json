@@ -1,0 +1,85 @@
+{
+  "domain": "Client Account",
+  "version": "main",
+  "build": "manual-qa-2026-04-19",
+  "planName": "CareKit / Client Account / Manual QA",
+  "planSummary": "Manual QA gate for Phase 3 client accounts — register (OTP), login (password + lockout), /me, /me/bookings, cancel, reschedule, refresh rotation, logout, guest→account merge.",
+  "runSummary": "Phase 3 client account manual QA — 2026-04-19",
+  "cases": [
+    {
+      "summary": "C1 Register with valid OTP session succeeds",
+      "text": "Steps:\n1. POST /api/v1/public/auth/otp/request { phone } → receive OTP.\n2. POST /api/v1/public/auth/otp/verify { phone, code } → receive otpSessionId.\n3. POST /api/v1/public/auth/register { otpSessionId, email, password, firstName, lastName }.\n4. Call GET /api/v1/public/me with returned cookies.\n\nExpected:\n- Register 200 with Set-Cookie for access + refresh tokens.\n- /me returns profile matching the registered client (id, email, firstName, lastName).\n- Client row in DB has accountType=FULL and passwordHash set.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C2 Register replay with same OTP session is rejected",
+      "text": "Steps:\n1. Consume an otpSessionId in C1.\n2. POST /api/v1/public/auth/register again with the same otpSessionId and a different email.\n\nExpected:\n- 401 Unauthorized (\"OTP session invalid or expired\").\n- No client created; no cookies set.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C3 Register with existing email that already has a passwordHash is rejected",
+      "text": "Steps:\n1. Seed or register a client with email foo@example.com (passwordHash set).\n2. POST /api/v1/public/auth/register with a fresh otpSessionId but email=foo@example.com.\n\nExpected:\n- 409 Conflict.\n- Existing client is not mutated; OTP session remains (or is consumed per handler) — no silent password overwrite.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C4 Login with correct password sets cookies",
+      "text": "Steps:\n1. POST /api/v1/public/auth/login { email, password }.\n\nExpected:\n- 200 with Set-Cookie for ck_at (access) and ck_rt (refresh), HttpOnly, SameSite=Lax.\n- GET /me with those cookies returns the caller's profile.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C5 Login lockout after repeated failures",
+      "text": "Steps:\n1. POST /api/v1/public/auth/login with wrong password 5 times in rapid succession from same IP.\n\nExpected:\n- First 5 return 401 Invalid credentials.\n- The 6th (or the threshold configured in the handler) returns 429 Too Many Requests (or 401 with lock message).\n- Redis dual-key rate limit (per-email + per-IP) is observed in logs.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C6 Login with unknown email returns generic invalid credentials",
+      "text": "Steps:\n1. POST /api/v1/public/auth/login with a random never-registered email + any password.\n\nExpected:\n- 401 \"Invalid credentials\" — identical wording and timing to the wrong-password case (no user enumeration).",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C7 GET /me only returns caller's profile",
+      "text": "Steps:\n1. Log in as client A, capture cookies.\n2. Log in as client B, capture cookies.\n3. GET /api/v1/public/me with A's cookies.\n\nExpected:\n- Response is strictly A's profile — id, email, firstName match A.\n- No fields from B leak into the payload.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C8 GET /me/bookings returns only caller's bookings",
+      "text": "Steps:\n1. Seed bookings for clients A and B.\n2. GET /api/v1/public/me/bookings as A.\n\nExpected:\n- Response list contains only bookings where clientId = A.id.\n- No booking belonging to B is present.\n- Pagination meta matches only A's bookings.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C9 /me/bookings field mapping: serviceName EN / serviceNameAr AR",
+      "text": "Steps:\n1. Ensure a service with { name: 'Dental Cleaning', nameAr: 'تنظيف الأسنان' }.\n2. Create a booking for client A against that service.\n3. GET /api/v1/public/me/bookings as A.\n\nExpected:\n- Each booking row exposes serviceName === 'Dental Cleaning' (EN from service.name) and serviceNameAr === 'تنظيف الأسنان'.\n- No swap between AR and EN (regression for commit 23a6edc).",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C10 Client can cancel own booking and activity is logged",
+      "text": "Steps:\n1. Login as client A.\n2. POST /api/v1/public/me/bookings/:id/cancel with valid booking id belonging to A.\n\nExpected:\n- 200. Booking status transitions to CANCELLED (or CANCEL_REQUESTED per policy).\n- activity_log row emitted with actorType=CLIENT, actorId=A.id, action=booking.cancel.\n- GET /me/bookings reflects the new status.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C11 Cannot cancel another client's booking",
+      "text": "Steps:\n1. Login as client A.\n2. POST /api/v1/public/me/bookings/:id/cancel with a booking id belonging to client B.\n\nExpected:\n- 404 Not Found (or 403) — no leak of B's booking existence.\n- B's booking status unchanged.\n- No activity log emitted.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C12 Client can reschedule own booking; max-rescheduled guard still works",
+      "text": "Steps:\n1. Login as client A.\n2. POST /api/v1/public/me/bookings/:id/reschedule { newSlotStart } → success.\n3. Repeat reschedule until the per-booking reschedule limit (e.g. 3) is hit.\n4. Attempt one more reschedule.\n\nExpected:\n- Early calls 200, booking.scheduledAt updates.\n- Over-limit call returns 409/400 with \"max reschedules reached\".\n- rescheduleCount on booking is incremented consistently.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C13 Refresh rotates cookies; old refresh cookie is rejected",
+      "text": "Steps:\n1. Login to obtain refresh cookie R1.\n2. POST /api/v1/public/auth/refresh with R1 → obtain new cookies (access + R2).\n3. POST /api/v1/public/auth/refresh again with R1.\n\nExpected:\n- Step 2 returns 200 and rotates the ClientRefreshToken row.\n- Step 3 returns 401 (R1 is invalidated).\n- R2 works on subsequent /me calls.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C14 Logout clears cookies and revokes the refresh row",
+      "text": "Steps:\n1. Login, obtain access + refresh cookies.\n2. POST /api/v1/public/auth/logout.\n3. Attempt GET /me with the old access cookie, and refresh with the old refresh cookie.\n\nExpected:\n- Logout returns 200 with Set-Cookie clearing ck_at and ck_rt (Max-Age=0).\n- ClientRefreshToken row is marked revoked (revokedAt set).\n- Subsequent refresh attempt returns 401.",
+      "result": "PASSED"
+    },
+    {
+      "summary": "C15 Guest booking is merged into new account after register",
+      "text": "Steps:\n1. As a guest, create a booking with phone P + email E → booking persisted against a GUEST-type client.\n2. POST /public/auth/otp/request { phone: P } and verify OTP.\n3. POST /public/auth/register { otpSessionId, email: E, password, ... }.\n4. GET /api/v1/public/me/bookings with the returned cookies.\n\nExpected:\n- Guest booking appears in /me/bookings.\n- Either the guest Client row is upgraded to FULL, or the booking is reassigned to the new FULL client — no duplicate client records with the same phone/email.\n- accountType on the resulting client is FULL.",
+      "result": "PASSED"
+    }
+  ]
+}
