@@ -1,21 +1,23 @@
 import {
   Controller, Get, Post, Put, Patch, Delete, Body, Param, Query,
   UseGuards, ParseUUIDPipe, HttpCode, HttpStatus,
-  UseInterceptors, UploadedFile, BadRequestException,
+  UseInterceptors, UploadedFile, BadRequestException, Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery,
-  ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse, ApiConsumes,
+  ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse, ApiConsumes, ApiBody,
 } from '@nestjs/swagger';
 import { ApiStandardResponses } from '../../common/swagger';
 import { JwtGuard } from '../../common/guards/jwt.guard';
-import { CaslGuard } from '../../common/guards/casl.guard';
+import { CaslGuard, CheckPermissions } from '../../common/guards/casl.guard';
 import { CreateClientHandler } from '../../modules/people/clients/create-client.handler';
 import { UpdateClientHandler } from '../../modules/people/clients/update-client.handler';
 import { ListClientsHandler } from '../../modules/people/clients/list-clients.handler';
 import { GetClientHandler } from '../../modules/people/clients/get-client.handler';
 import { DeleteClientHandler } from '../../modules/people/clients/delete-client.handler';
+import { SetClientActiveHandler } from '../../modules/people/clients/set-client-active/set-client-active.handler';
+import { SetClientActiveDto } from '../../modules/people/clients/set-client-active/set-client-active.dto';
 import { CreateClientDto } from '../../modules/people/clients/create-client.dto';
 import { UpdateClientDto } from '../../modules/people/clients/update-client.dto';
 import { ListClientsDto } from '../../modules/people/clients/list-clients.dto';
@@ -72,6 +74,7 @@ export class DashboardPeopleController {
     private readonly listClients: ListClientsHandler,
     private readonly getClient: GetClientHandler,
     private readonly deleteClient: DeleteClientHandler,
+    private readonly setClientActive: SetClientActiveHandler,
     private readonly createEmployee: CreateEmployeeHandler,
     private readonly listEmployees: ListEmployeesHandler,
     private readonly getEmployee: GetEmployeeHandler,
@@ -154,6 +157,25 @@ export class DashboardPeopleController {
   @ApiNoContentResponse({ description: 'Client deleted' })
   async deleteClientEndpoint(@Param('id', ParseUUIDPipe) id: string) {
     await this.deleteClient.execute({ clientId: id });
+  }
+
+  @Patch('clients/:id/active')
+  @CheckPermissions({ action: 'update', subject: 'Client' })
+  @ApiOperation({ summary: 'Enable or disable a client account' })
+  @ApiParam({ name: 'id', description: 'Client UUID', example: '00000000-0000-0000-0000-000000000000' })
+  @ApiBody({ type: SetClientActiveDto })
+  @ApiOkResponse({ description: 'Client account status updated — returns { id, isActive }' })
+  setClientActiveEndpoint(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: SetClientActiveDto,
+    @Request() req: { user?: { id?: string } },
+  ) {
+    return this.setClientActive.execute({
+      clientId: id,
+      isActive: body.isActive,
+      reason: body.reason,
+      actorUserId: req.user?.id,
+    });
   }
   // ── Employees ──────────────────────────────────────────────────────────────
   @Post('employees')

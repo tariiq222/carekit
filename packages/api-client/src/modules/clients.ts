@@ -9,6 +9,16 @@ import type {
   UpdateClientPayload,
 } from '../types/client.js'
 
+export interface SetClientActivePayload {
+  isActive: boolean
+  reason?: string
+}
+
+export interface SetClientActiveResult {
+  id: string
+  isActive: boolean
+}
+
 export async function list(query: ClientListQuery = {}): Promise<ClientListResponse> {
   return apiRequest<ClientListResponse>(
     `/clients${buildQueryString(query as Record<string, unknown>)}`,
@@ -38,6 +48,16 @@ export async function createWalkIn(
 ): Promise<ClientListItem> {
   return apiRequest<ClientListItem>('/clients/walk-in', {
     method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function setClientActive(
+  id: string,
+  payload: SetClientActivePayload,
+): Promise<SetClientActiveResult> {
+  return apiRequest<SetClientActiveResult>(`/clients/${id}/active`, {
+    method: 'PATCH',
     body: JSON.stringify(payload),
   })
 }
