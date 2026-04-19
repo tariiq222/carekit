@@ -149,6 +149,10 @@
         ],
         "type": "object"
       },
+      "ApproveRefundDto": {
+        "properties": {},
+        "type": "object"
+      },
       "AssignEmployeeToBranchDto": {
         "properties": {
           "employeeId": {
@@ -1678,6 +1682,10 @@
         ],
         "type": "object"
       },
+      "DenyRefundDto": {
+        "properties": {},
+        "type": "object"
+      },
       "EmployeeGender": {
         "description": "Gender",
         "enum": [
@@ -2344,6 +2352,10 @@
         ],
         "type": "object"
       },
+      "PurchaseSubscriptionDto": {
+        "properties": {},
+        "type": "object"
+      },
       "RecurringFrequency": {
         "description": "Recurrence frequency",
         "enum": [
@@ -2427,7 +2439,8 @@
             "description": "Purpose of the OTP",
             "enum": [
               "GUEST_BOOKING",
-              "CLIENT_LOGIN"
+              "CLIENT_LOGIN",
+              "CLIENT_PASSWORD_RESET"
             ],
             "example": "GUEST_BOOKING",
             "type": "string"
@@ -2439,6 +2452,10 @@
           "purpose",
           "hCaptchaToken"
         ],
+        "type": "object"
+      },
+      "RequestRefundDto": {
+        "properties": {},
         "type": "object"
       },
       "RescheduleBookingDto": {
@@ -2456,6 +2473,25 @@
         },
         "required": [
           "newScheduledAt"
+        ],
+        "type": "object"
+      },
+      "ResetPasswordDto": {
+        "properties": {
+          "newPassword": {
+            "description": "New password (min 8 chars, at least 1 uppercase letter, at least 1 digit)",
+            "example": "NewSecurePass1",
+            "type": "string"
+          },
+          "sessionToken": {
+            "description": "OTP session JWT received after verifying the CLIENT_PASSWORD_RESET OTP",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionToken",
+          "newPassword"
         ],
         "type": "object"
       },
@@ -2490,6 +2526,25 @@
         "required": [
           "branchId",
           "schedule"
+        ],
+        "type": "object"
+      },
+      "SetClientActiveDto": {
+        "properties": {
+          "isActive": {
+            "description": "Set to true to enable the account, false to disable it",
+            "example": false,
+            "type": "boolean"
+          },
+          "reason": {
+            "description": "Optional reason recorded in the activity log",
+            "example": "Requested by client",
+            "maxLength": 500,
+            "type": "string"
+          }
+        },
+        "required": [
+          "isActive"
         ],
         "type": "object"
       },
@@ -3715,7 +3770,8 @@
             "description": "Purpose of the OTP",
             "enum": [
               "GUEST_BOOKING",
-              "CLIENT_LOGIN"
+              "CLIENT_LOGIN",
+              "CLIENT_PASSWORD_RESET"
             ],
             "example": "GUEST_BOOKING",
             "type": "string"
@@ -13881,6 +13937,87 @@
         ]
       }
     },
+    "/api/v1/dashboard/people/clients/{id}/active": {
+      "patch": {
+        "operationId": "DashboardPeopleController_setClientActiveEndpoint",
+        "parameters": [
+          {
+            "description": "Client UUID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "00000000-0000-0000-0000-000000000000",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetClientActiveDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Client account status updated — returns { id, isActive }"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Action denied by permission policy"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Enable or disable a client account",
+        "tags": [
+          "Dashboard / People"
+        ]
+      }
+    },
     "/api/v1/dashboard/people/employees": {
       "get": {
         "operationId": "DashboardPeopleController_listEmployeesEndpoint",
@@ -18432,6 +18569,51 @@
         ]
       }
     },
+    "/api/v1/public/auth/reset-password": {
+      "post": {
+        "operationId": "PublicAuthController_resetPasswordEndpoint",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Reset client password using a verified OTP session token",
+        "tags": [
+          "Public / Auth"
+        ]
+      }
+    },
     "/api/v1/public/availability": {
       "get": {
         "operationId": "PublicSlotsController_getSlots",
@@ -18584,6 +18766,143 @@
           }
         },
         "summary": "Create a guest booking (requires OTP session)",
+        "tags": [
+          "Public / Bookings"
+        ]
+      }
+    },
+    "/api/v1/public/bookings/group-sessions": {
+      "get": {
+        "operationId": "PublicBookingsController_listGroupSessionsEndpoint",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "List public group sessions",
+        "tags": [
+          "Public / Bookings"
+        ]
+      }
+    },
+    "/api/v1/public/bookings/group-sessions/{id}": {
+      "get": {
+        "operationId": "PublicBookingsController_getGroupSessionEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Get a public group session",
+        "tags": [
+          "Public / Bookings"
+        ]
+      }
+    },
+    "/api/v1/public/bookings/group-sessions/{id}/book": {
+      "post": {
+        "operationId": "PublicBookingsController_bookGroupSessionEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Book a group session or join waitlist (requires client auth)",
         "tags": [
           "Public / Bookings"
         ]
@@ -18861,6 +19180,55 @@
         ]
       }
     },
+    "/api/v1/public/invoices/{id}": {
+      "get": {
+        "operationId": "PublicInvoicesController_getInvoice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get invoice details with ZATCA QR code (requires client auth)",
+        "tags": [
+          "Public / Invoices"
+        ]
+      }
+    },
     "/api/v1/public/me": {
       "get": {
         "operationId": "PublicMeController_meEndpoint",
@@ -19135,6 +19503,56 @@
         ]
       }
     },
+    "/api/v1/public/refunds/request": {
+      "post": {
+        "operationId": "PublicRefundsController_requestRefund",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestRefundDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Request a refund for an invoice (requires client auth)",
+        "tags": [
+          "Public / Refunds"
+        ]
+      }
+    },
     "/api/v1/public/services": {
       "get": {
         "operationId": "PublicCatalogController_getCatalog",
@@ -19167,6 +19585,209 @@
         "summary": "Get public service catalog (departments, categories, services)",
         "tags": [
           "Public / Catalog"
+        ]
+      }
+    },
+    "/api/v1/public/subscriptions": {
+      "get": {
+        "operationId": "PublicSubscriptionsController_listPublicSubscriptions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "branchId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "List all public subscription plans",
+        "tags": [
+          "Public / Subscriptions"
+        ]
+      }
+    },
+    "/api/v1/public/subscriptions/my": {
+      "get": {
+        "operationId": "PublicSubscriptionsController_getMySubscriptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get my subscriptions (requires client auth)",
+        "tags": [
+          "Public / Subscriptions"
+        ]
+      }
+    },
+    "/api/v1/public/subscriptions/purchase": {
+      "post": {
+        "operationId": "PublicSubscriptionsController_purchaseSubscription",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseSubscriptionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            },
+            "description": "Unhandled server error"
+          }
+        },
+        "summary": "Purchase a subscription plan (requires client session)",
+        "tags": [
+          "Public / Subscriptions"
+        ]
+      }
+    },
+    "/api/v1/refunds": {
+      "get": {
+        "operationId": "RefundsController_listRefunds",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "List all refund requests",
+        "tags": [
+          "Dashboard / Refunds"
+        ]
+      }
+    },
+    "/api/v1/refunds/approve": {
+      "post": {
+        "operationId": "RefundsController_approveRefund",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRefundDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Approve a refund request",
+        "tags": [
+          "Dashboard / Refunds"
+        ]
+      }
+    },
+    "/api/v1/refunds/deny": {
+      "post": {
+        "operationId": "RefundsController_denyRefund",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DenyRefundDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Deny a refund request",
+        "tags": [
+          "Dashboard / Refunds"
         ]
       }
     }

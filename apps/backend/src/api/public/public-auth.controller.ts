@@ -12,6 +12,8 @@ import { ClientLoginDto } from '../../modules/identity/client-auth/client-login.
 import { ClientRefreshHandler } from '../../modules/identity/client-auth/client-refresh.handler';
 import { ClientLogoutHandler } from '../../modules/identity/client-auth/client-logout.handler';
 import { RefreshTokenDto, LogoutDto } from '../../modules/identity/client-auth/client-tokens.dto';
+import { ResetPasswordHandler } from '../../modules/identity/client-auth/reset-password/reset-password.handler';
+import { ResetPasswordDto } from '../../modules/identity/client-auth/reset-password/reset-password.dto';
 import { Request } from 'express';
 
 @ApiTags('Public / Auth')
@@ -23,6 +25,7 @@ export class PublicAuthController {
     private readonly login: ClientLoginHandler,
     private readonly refresh: ClientRefreshHandler,
     private readonly logout: ClientLogoutHandler,
+    private readonly resetPassword: ResetPasswordHandler,
   ) {}
 
   @Public()
@@ -63,5 +66,14 @@ export class PublicAuthController {
     @ClientSession() session: { id: string },
   ) {
     await this.logout.execute(dto.refreshToken, session.id);
+  }
+
+  @Public()
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset client password using a verified OTP session token' })
+  async resetPasswordEndpoint(@Body() dto: ResetPasswordDto): Promise<void> {
+    await this.resetPassword.execute(dto);
   }
 }

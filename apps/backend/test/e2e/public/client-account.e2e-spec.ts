@@ -718,7 +718,115 @@ describe('Client Account Phase 3 — body token auth (e2e)', () => {
     });
   });
 
-  // ── 19. Guest merge: booking visible after merge ──────────────────────────
+  // ── 19. Password reset flow ───────────────────────────────────────────────
+
+  describe('POST /public/auth/reset-password — full flow', () => {
+    /** Sign a CLIENT_PASSWORD_RESET OTP session token for tests. */
+    function signResetSession(identifier: string): { token: string; jti: string } {
+      const jti = uuidv4();
+      const token = jwt.sign(
+        { identifier, purpose: OtpPurpose.CLIENT_PASSWORD_RESET, channel: OtpChannel.EMAIL, jti },
+        TEST_JWT_ACCESS_SECRET,
+        { expiresIn: '30m' },
+      );
+      return { token, jti };
+    }
+
+    it('resets password; old refresh tokens are revoked; login with new password succeeds', async () => {
+      const email = `pw-reset-${Date.now()}@test.com`;
+      // Register and login to get a DB-backed refresh token
+      await httpRegister(req, email, 'OldPass1');
+      const { tokens: oldTokens, body } = await httpLogin(req, email, 'OldPass1');
+      const clientId = body.clientId as string;
+
+      // Confirm a live refresh token exists
+      const liveToken = await testPrisma.clientRefreshToken.findFirst({
+        where: { clientId, revokedAt: null },
+      });
+      expect(liveToken).not.toBeNull();
+
+      // Reset password via signed OTP session
+      const { token: resetToken } = signResetSession(email);
+      const resetRes = await req
+        .post('/public/auth/reset-password')
+        .send({ sessionToken: resetToken, newPassword: 'NewPass1' });
+      expect(resetRes.status).toBe(204);
+
+      // All previous refresh tokens must now be revoked
+      const revokedToken = await testPrisma.clientRefreshToken.findUnique({
+        where: { id: liveToken!.id },
+      });
+      expect(revokedToken!.revokedAt).not.toBeNull();
+
+      // Old access token still works for guard (it's stateless), but old refresh token is dead
+      const oldRefreshRes = await req
+        .post('/public/auth/refresh')
+        .set('Authorization', `Bearer ${oldTokens.accessToken}`)
+        .send({ refreshToken: oldTokens.refreshToken });
+      expect(oldRefreshRes.status).toBe(401);
+
+      // Login with new password succeeds
+      const newLoginRes = await req
+        .post('/public/auth/login')
+        .send({ email, password: 'NewPass1' });
+      expect(newLoginRes.status).toBe(200);
+      expect(newLoginRes.body).toHaveProperty('clientId', clientId);
+
+      // Login with old password fails
+      const oldLoginRes = await req
+        .post('/public/auth/login')
+        .send({ email, password: 'OldPass1' });
+      expect(oldLoginRes.status).toBe(401);
+    });
+
+    it('returns 401 when session token is expired or invalid', async () => {
+      const res = await req
+        .post('/public/auth/reset-password')
+        .send({ sessionToken: 'not-a-valid-jwt', newPassword: 'NewPass1' });
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 401 when session jti is replayed (already burned)', async () => {
+      const email = `pw-replay-${Date.now()}@test.com`;
+      await httpRegister(req, email, 'OldPass1');
+
+      const { token: resetToken, jti } = signResetSession(email);
+
+      // Burn the jti manually to simulate replay
+      await testPrisma.usedOtpSession.create({
+        data: { jti, consumedAt: new Date(), expiresAt: new Date(Date.now() + 30 * 60 * 1000) },
+      });
+
+      const res = await req
+        .post('/public/auth/reset-password')
+        .send({ sessionToken: resetToken, newPassword: 'NewPass1' });
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 401 when session purpose is wrong (CLIENT_LOGIN session used for reset)', async () => {
+      const email = `pw-wrong-purpose-${Date.now()}@test.com`;
+      await httpRegister(req, email, 'OldPass1');
+
+      // Sign with CLIENT_LOGIN purpose
+      const { token: loginSessionToken } = signLoginSession(email);
+
+      const res = await req
+        .post('/public/auth/reset-password')
+        .send({ sessionToken: loginSessionToken, newPassword: 'NewPass1' });
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 400 when newPassword fails validation', async () => {
+      const { token } = signResetSession('any@example.com');
+      const res = await req
+        .post('/public/auth/reset-password')
+        .send({ sessionToken: token, newPassword: 'weak' });
+      // class-validator returns 400
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // ── 20. Guest merge: booking visible after merge ──────────────────────────
 
   describe('Guest-to-account merge', () => {
     it('guest booking is visible after merge via register', async () => {
