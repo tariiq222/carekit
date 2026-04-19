@@ -81,6 +81,19 @@ model RefreshToken {
   @@index([tokenSelector])
 }
 
+model ClientRefreshToken {
+  id            String    @id @default(uuid())
+  clientId      String
+  tokenHash     String    @unique
+  tokenSelector String
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([clientId])
+  @@index([tokenSelector])
+}
+
 model CustomRole {
   id          String       @id @default(uuid())
   name        String       @unique

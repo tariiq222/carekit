@@ -29,6 +29,9 @@ import { GroupSessionMinReachedHandler } from './group-session-min-reached/group
 import { DashboardBookingsController } from '../../api/dashboard/bookings.controller';
 import { GetPublicAvailabilityHandler } from './availability/public/get-public-availability.handler';
 import { CreateGuestBookingHandler } from './public/create-guest-booking.handler';
+import { ListClientBookingsHandler } from './client/list-client-bookings.handler';
+import { ClientCancelBookingHandler } from './client/client-cancel-booking.handler';
+import { ClientRescheduleBookingHandler } from './client/client-reschedule-booking.handler';
 
 const handlers = [
   CreateBookingHandler,
@@ -56,13 +59,16 @@ const handlers = [
   GroupSessionMinReachedHandler,
   GetPublicAvailabilityHandler,
   CreateGuestBookingHandler,
+  ListClientBookingsHandler,
+  ClientCancelBookingHandler,
+  ClientRescheduleBookingHandler,
 ];
 
 @Module({
   imports: [DatabaseModule, MessagingModule, OrgExperienceModule],
   controllers: [DashboardBookingsController],
   providers: [...handlers, PaymentCompletedEventHandler],
-  exports: [...handlers, CheckAvailabilityHandler],
+  exports: [...handlers, CheckAvailabilityHandler, ListClientBookingsHandler, ClientCancelBookingHandler, ClientRescheduleBookingHandler],
 })
 export class BookingsModule implements OnModuleInit {
   constructor(private readonly paymentCompletedHandler: PaymentCompletedEventHandler) {}

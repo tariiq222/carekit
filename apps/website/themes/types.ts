@@ -14,5 +14,10 @@ export interface Theme {
     contact: ComponentType;
     burnoutTest: ComponentType;
     booking: ComponentType;
+    login: ComponentType;
+    register: ComponentType;
+    account: ComponentType;
+    accountBookings: ComponentType<{ searchParams: Promise<Record<string, string | undefined>> }>;
+    accountBookingDetail: ComponentType<{ bookingId: string }>;
   };
 }

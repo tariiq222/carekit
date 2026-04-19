@@ -29,3 +29,18 @@ export * as contactMessagesApi from './modules/contact-messages.js'
 export * as otpApi from './modules/otp.js'
 export * as publicAvailabilityApi from './modules/public-availability.js'
 export { setOtpSessionToken, getOtpSessionToken, setGuestBaseUrl } from './modules/guest-client.js'
+export {
+  setClientBaseUrl,
+  initClientAuth,
+  clientLogin,
+  clientRegister,
+  clientRefresh,
+  clientLogout,
+} from './modules/client-auth.js'
+export {
+  setMeBaseUrl,
+  getMe,
+  getMyBookings,
+  cancelMyBooking,
+  rescheduleMyBooking,
+} from './modules/me.js'

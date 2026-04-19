@@ -83,6 +83,11 @@ export function ClientDetailPage({ clientId }: Props) {
                   {t("clients.detail.walkIn")}
                 </Badge>
               )}
+              {client.accountType === "FULL" && (
+                <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
+                  {t("clients.detail.hasAccount")}
+                </Badge>
+              )}
               <Badge
                 variant="outline"
                 className={

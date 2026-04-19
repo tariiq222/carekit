@@ -146,6 +146,7 @@ export const arClients: Record<string, string> = {
   "clients.detail.totalPaid": "إجمالي المدفوع",
   "clients.detail.accountType": "نوع الحساب",
   "clients.detail.walkIn": "مستفيد بدون حساب",
+  "clients.detail.hasAccount": "لديه حساب",
   "clients.detail.claimedAt": "تاريخ التفعيل",
   "clients.detail.notClaimed": "لم يُفعَّل بعد",
   "clients.dialog.paymentStatus.paid": "مدفوع",

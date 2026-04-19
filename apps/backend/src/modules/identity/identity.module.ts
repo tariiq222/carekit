@@ -3,9 +3,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { DatabaseModule } from '../../infrastructure/database';
+import { RedisService } from '../../infrastructure/cache/redis.service';
 import { JwtStrategy } from './jwt.strategy';
+import { ClientJwtStrategy } from './client-jwt.strategy';
 import { PasswordService } from './shared/password.service';
 import { TokenService } from './shared/token.service';
+import { ClientTokenService } from './shared/client-token.service';
 import { LoginHandler } from './login/login.handler';
 import { RefreshTokenHandler } from './refresh-token/refresh-token.handler';
 import { LogoutHandler } from './logout/logout.handler';
@@ -31,6 +34,12 @@ import { OtpSessionService } from './otp/otp-session.service';
 import { OtpSessionGuard } from './otp/otp-session.guard';
 import { NotificationChannelModule } from '../comms/notification-channel/notification-channel.module';
 import { CAPTCHA_VERIFIER } from '../comms/contact-messages/captcha.verifier';
+import { ClientSessionGuard } from '../../common/guards/client-session.guard';
+import { RegisterHandler } from './client-auth/register.handler';
+import { ClientLoginHandler } from './client-auth/client-login.handler';
+import { ClientRefreshHandler } from './client-auth/client-refresh.handler';
+import { ClientLogoutHandler } from './client-auth/client-logout.handler';
+import { GetMeHandler } from './client-auth/get-me.handler';
 
 const handlers = [
   LoginHandler, RefreshTokenHandler, LogoutHandler,
@@ -41,6 +50,11 @@ const handlers = [
   ChangePasswordHandler,
   RequestOtpHandler,
   VerifyOtpHandler,
+  RegisterHandler,
+  ClientLoginHandler,
+  ClientRefreshHandler,
+  ClientLogoutHandler,
+  GetMeHandler,
 ];
 
 @Module({
@@ -59,12 +73,32 @@ const handlers = [
   ],
   controllers: [DashboardIdentityController],
   providers: [
-    JwtStrategy, PasswordService, TokenService, CaslAbilityFactory,
+    JwtStrategy,
+    ClientJwtStrategy,
+    PasswordService,
+    TokenService,
+    ClientTokenService,
+    RedisService,
+    CaslAbilityFactory,
+    ClientSessionGuard,
     { provide: CAPTCHA_VERIFIER, useFactory: () => { const { createCaptchaVerifier } = require('../comms/contact-messages/captcha.verifier'); return createCaptchaVerifier(); } },
     ...handlers,
     OtpSessionService,
     OtpSessionGuard,
   ],
-  exports: [CaslAbilityFactory, TokenService, PasswordService, RequestOtpHandler, VerifyOtpHandler, OtpSessionService, OtpSessionGuard, ...handlers],
+  exports: [
+    CaslAbilityFactory,
+    TokenService,
+    ClientTokenService,
+    RedisService,
+    PasswordService,
+    ClientSessionGuard,
+    RequestOtpHandler,
+    VerifyOtpHandler,
+    OtpSessionService,
+    OtpSessionGuard,
+    RegisterHandler,
+    ...handlers,
+  ],
 })
 export class IdentityModule {}

@@ -7,6 +7,8 @@ import { PeopleModule } from '../../modules/people/people.module';
 import { CommsModule } from '../../modules/comms/comms.module';
 import { FinanceModule } from '../../modules/finance/finance.module';
 import { AuthController } from './auth.controller';
+import { PublicAuthController } from './public-auth.controller';
+import { PublicMeController } from './me.controller';
 import { PublicBrandingController } from './branding.controller';
 import { PublicCatalogController } from './catalog.controller';
 import { PublicSlotsController } from './slots.controller';
@@ -21,6 +23,6 @@ import { OrgConfigModule } from '../../modules/org-config/org-config.module';
 
 @Module({
   imports: [DatabaseModule, BookingsModule, OrgExperienceModule, IdentityModule, PeopleModule, CommsModule, FinanceModule, OrgConfigModule],
-  controllers: [AuthController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController],
+  controllers: [AuthController, PublicAuthController, PublicMeController, PublicBrandingController, PublicCatalogController, PublicSlotsController, PublicEmployeesController, PublicContactMessagesController, PublicOtpController, PublicAvailabilityController, PublicBookingsController, PublicPaymentsController, PublicBranchesController],
 })
 export class PublicModule {}

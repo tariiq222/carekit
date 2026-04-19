@@ -111,6 +111,24 @@ npm run prisma:studio                # GUI
 - **Payments, ZATCA, auth, and migrations are owner-only** (see root CLAUDE.md "Security Sensitivity Tiers").
 - **Migrations are immutable** — never edit or squash existing ones; add a new migration instead.
 
+## Client Auth (Phase 3 — separate token namespace)
+
+Client auth (website users) is **fully isolated** from admin JWT auth:
+
+| | Admin/Dashboard JWT | Client JWT |
+|---|---|---|
+| Namespace claim | `role`, `permissions` | `client` namespace via `aud` or custom claim |
+| Secret | `JWT_ACCESS_SECRET` | `JWT_CLIENT_ACCESS_SECRET` |
+| Guard | `JwtGuard` + `CaslGuard` | `ClientSessionGuard` |
+| Token delivery | `Authorization: Bearer` | `httpOnly cookie` (XSS-safe) |
+| Stored in | Memory/API calls | Browser cookie jar |
+
+**Password policy:** minimum 8 chars, at least 1 uppercase letter, at least 1 digit.
+
+**Login modes:**
+- **Password login** — primary path. Client submits phone + password → `POST /api/v1/public/auth/login`.
+- **OTP-only login** — escape hatch for clients who forgot password. Uses existing `CLIENT_LOGIN` purpose via `POST /api/v1/public/otp/request` + `verify`. No password required.
+
 ## API Documentation (Standard level)
 
 Every HTTP endpoint in `src/api/**` MUST have:
