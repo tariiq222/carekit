@@ -1,11 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import { ClientLoginHandler } from './client-login.handler';
 import { PrismaService } from '../../../infrastructure/database';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { PasswordService } from '../shared/password.service';
+import { ClientTokenService } from '../shared/client-token.service';
 
 describe('ClientLoginHandler', () => {
   let handler: ClientLoginHandler;
@@ -27,21 +26,32 @@ describe('ClientLoginHandler', () => {
   };
 
   const mockRedis = { getClient: jest.fn(() => mockRedisClient) };
-  const mockJwt = { sign: jest.fn(() => 'mock-access-token') };
-  const mockConfig = { get: jest.fn(), getOrThrow: jest.fn((k: string) => k) };
   const mockPasswords = { verify: jest.fn() };
+  const mockClientTokens = {
+    issueTokenPair: jest.fn().mockResolvedValue({
+      accessToken: 'mock-access-token',
+      accessMaxAgeMs: 900_000,
+      rawRefresh: 'mock-raw-refresh',
+      refreshMaxAgeMs: 604_800_000,
+    }),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockClientTokens.issueTokenPair.mockResolvedValue({
+      accessToken: 'mock-access-token',
+      accessMaxAgeMs: 900_000,
+      rawRefresh: 'mock-raw-refresh',
+      refreshMaxAgeMs: 604_800_000,
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ClientLoginHandler,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: RedisService, useValue: mockRedis },
-        { provide: JwtService, useValue: mockJwt },
-        { provide: ConfigService, useValue: mockConfig },
         { provide: PasswordService, useValue: mockPasswords },
+        { provide: ClientTokenService, useValue: mockClientTokens },
       ],
     }).compile();
 
@@ -59,25 +69,25 @@ describe('ClientLoginHandler', () => {
       });
       mockRedisClient.incr.mockResolvedValue(1);
       mockPasswords.verify.mockResolvedValue(true);
+      mockPrisma.client.update.mockResolvedValue({ id: 'cl-1' });
 
-      const result = await handler.execute({
-        email: 'test@example.com',
-        password: 'SecurePass123',
-      });
+      const result = await handler.execute(
+        { email: 'test@example.com', password: 'SecurePass123' },
+        '1.2.3.4',
+      );
 
       expect(result.accessToken).toBe('mock-access-token');
-      expect(result.refreshToken).toBeDefined();
+      expect(result.refreshToken).toBe('mock-raw-refresh');
       expect(result.clientId).toBe('cl-1');
-      expect(mockRedisClient.del).toHaveBeenCalledWith('client_login:test@example.com');
+      expect(mockRedisClient.del).toHaveBeenCalledWith('client_login:email:test@example.com');
+      expect(mockRedisClient.del).toHaveBeenCalledWith('client_login:ip:1.2.3.4');
       expect(mockPrisma.client.update).toHaveBeenCalledWith({
         where: { id: 'cl-1' },
         data: { lastLoginAt: expect.any(Date) },
       });
-      expect(mockPrisma.clientRefreshToken.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          clientId: 'cl-1',
-          tokenHash: expect.any(String),
-        }),
+      expect(mockClientTokens.issueTokenPair).toHaveBeenCalledWith({
+        id: 'cl-1',
+        email: 'test@example.com',
       });
     });
 
@@ -85,7 +95,7 @@ describe('ClientLoginHandler', () => {
       mockPrisma.client.findFirst.mockResolvedValue(null);
 
       await expect(
-        handler.execute({ email: 'nobody@example.com', password: 'WrongPass1' }),
+        handler.execute({ email: 'nobody@example.com', password: 'WrongPass1' }, '1.2.3.4'),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -98,7 +108,7 @@ describe('ClientLoginHandler', () => {
       });
 
       await expect(
-        handler.execute({ email: 'locked@example.com', password: 'SecurePass123' }),
+        handler.execute({ email: 'locked@example.com', password: 'SecurePass123' }, '1.2.3.4'),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -115,7 +125,7 @@ describe('ClientLoginHandler', () => {
       mockPrisma.client.update.mockResolvedValue({ id: 'cl-3' });
 
       await expect(
-        handler.execute({ email: 'test@example.com', password: 'WrongPass1' }),
+        handler.execute({ email: 'test@example.com', password: 'WrongPass1' }, '1.2.3.4'),
       ).rejects.toThrow(UnauthorizedException);
 
       expect(mockPrisma.client.update).toHaveBeenCalledWith({
@@ -137,7 +147,7 @@ describe('ClientLoginHandler', () => {
       mockPrisma.client.update.mockResolvedValue({ id: 'cl-4' });
 
       await expect(
-        handler.execute({ email: 'test@example.com', password: 'WrongPass1' }),
+        handler.execute({ email: 'test@example.com', password: 'WrongPass1' }, '1.2.3.4'),
       ).rejects.toThrow(UnauthorizedException);
 
       expect(mockPrisma.client.update).toHaveBeenCalledWith({
@@ -149,17 +159,37 @@ describe('ClientLoginHandler', () => {
       });
     });
 
-    it('throws Unauthorized when rate limit exceeded', async () => {
+    it('throws Unauthorized when per-email rate limit exceeded', async () => {
       mockPrisma.client.findFirst.mockResolvedValue({
         id: 'cl-5',
         email: 'test@example.com',
         passwordHash: 'hashed_pw',
         lockoutUntil: null,
       });
-      mockRedisClient.incr.mockResolvedValue(6);
+      // email key returns 6 (over limit of 5), IP key returns 1
+      mockRedisClient.incr
+        .mockResolvedValueOnce(6)
+        .mockResolvedValueOnce(1);
 
       await expect(
-        handler.execute({ email: 'test@example.com', password: 'WrongPass1' }),
+        handler.execute({ email: 'test@example.com', password: 'WrongPass1' }, '1.2.3.4'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('throws Unauthorized when per-IP rate limit exceeded', async () => {
+      mockPrisma.client.findFirst.mockResolvedValue({
+        id: 'cl-6',
+        email: 'test@example.com',
+        passwordHash: 'hashed_pw',
+        lockoutUntil: null,
+      });
+      // email key returns 1 (fine), IP key returns 21 (over limit of 20)
+      mockRedisClient.incr
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(21);
+
+      await expect(
+        handler.execute({ email: 'test@example.com', password: 'WrongPass1' }, '5.5.5.5'),
       ).rejects.toThrow(UnauthorizedException);
     });
   });

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Req, Ip, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../../common/guards/jwt.guard';
@@ -39,8 +39,8 @@ export class PublicAuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log in with email and password' })
-  async loginEndpoint(@Body() dto: ClientLoginDto) {
-    return this.login.execute(dto);
+  async loginEndpoint(@Body() dto: ClientLoginDto, @Ip() ip: string) {
+    return this.login.execute(dto, ip);
   }
 
   @UseGuards(ClientSessionGuard)
