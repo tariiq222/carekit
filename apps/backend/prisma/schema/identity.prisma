@@ -8,6 +8,7 @@ enum OtpChannel {
 enum OtpPurpose {
   GUEST_BOOKING
   CLIENT_LOGIN
+  CLIENT_PASSWORD_RESET
 }
 
 model OtpCode {
