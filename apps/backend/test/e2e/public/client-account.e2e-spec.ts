@@ -262,7 +262,7 @@ describe('Client Account Phase 3 — body token auth (e2e)', () => {
 
       const oldRow = await testPrisma.clientRefreshToken.findFirst({
         where: { clientId, revokedAt: null },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: 'desc' },
       });
       expect(oldRow).not.toBeNull();
 
@@ -692,11 +692,7 @@ describe('Client Account Phase 3 — body token auth (e2e)', () => {
 
   describe('GET /public/me/bookings — AR/EN field mapping', () => {
     // NOTE: ListClientBookingsHandler maps serviceName → service.nameAr and
-    // serviceNameAr → service.nameEn. The field names are swapped relative to
-    // what one would expect. This test documents the actual production behavior.
-    // TODO: requires production change — serviceName should map to nameEn,
-    //   serviceNameAr should map to nameAr in list-client-bookings.handler.ts
-    it('serviceName contains nameAr and serviceNameAr contains nameEn (production field swap)', async () => {
+    it('serviceName contains nameEn and serviceNameAr contains nameAr', async () => {
       // The service seeded in beforeAll has nameEn='Cleaning', nameAr='تنظيف'
       const email = `ar-en-${Date.now()}@test.com`;
       const { clientId, accessToken } = await httpRegister(req, email, 'SecurePass1');
@@ -717,9 +713,8 @@ describe('Client Account Phase 3 — body token auth (e2e)', () => {
       expect(res.status).toBe(200);
       const items = res.body.items as Array<{ serviceName: string; serviceNameAr: string }>;
       expect(items.length).toBeGreaterThan(0);
-      // Production swaps EN/AR: serviceName gets nameAr, serviceNameAr gets nameEn
-      expect(items[0].serviceName).toBe('تنظيف');
-      expect(items[0].serviceNameAr).toBe('Cleaning');
+      expect(items[0].serviceName).toBe('Cleaning');
+      expect(items[0].serviceNameAr).toBe('تنظيف');
     });
   });
 
