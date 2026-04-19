@@ -105,3 +105,11 @@ apps/backend/_check-admin.ts
 
 # Sawaa design source (reference only, not tracked)
 docs/superpowers/assets/sawaa-source/
+
+# Mobile app paused — source kept but excluded from active dev workflow
+# until active development resumes (re-add to root package.json workspaces
+# + ci.yml, then run `npm install` to regenerate package-lock.json).
+apps/mobile/node_modules/
+apps/mobile/.expo/
+apps/mobile/ios/
+apps/mobile/android/
