@@ -9,15 +9,19 @@ COPY apps/website/package.json ./apps/website/
 COPY packages/api-client/package.json ./packages/api-client/
 COPY packages/shared/package.json ./packages/shared/
 # npm ci keeps the package-lock platform selection, which on Windows hosts
-# omits linux-x64-gnu optional binaries (lightningcss, tailwindcss). Force
-# them in so Tailwind v4's native CSS engine can load.
-RUN npm ci --workspaces --include-workspace-root \
+# omits the target linux optional binaries (lightningcss, tailwindcss).
+# Force them in for the image's actual arch so Tailwind v4's native CSS
+# engine can load on both x64 runners (CI) and arm64 hosts (Apple Silicon).
+RUN ARCH=$(uname -m | sed 's/aarch64/arm64/;s/x86_64/x64/') \
+ && npm ci --workspaces --include-workspace-root \
  && npm install --no-save --ignore-scripts=false \
-      lightningcss-linux-x64-gnu \
-      @tailwindcss/oxide-linux-x64-gnu
+      lightningcss-linux-${ARCH}-gnu \
+      @tailwindcss/oxide-linux-${ARCH}-gnu
 
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build --workspace=@carekit/shared --if-present
