@@ -1,5 +1,6 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { CreateCouponDto } from './create-coupon.dto';
 import type { DiscountType } from '@prisma/client';
 
@@ -7,16 +8,21 @@ export type CreateCouponCommand = CreateCouponDto;
 
 @Injectable()
 export class CreateCouponHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(cmd: CreateCouponCommand) {
-    const exists = await this.prisma.coupon.findUnique({
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+    const exists = await this.prisma.coupon.findFirst({
       where: { code: cmd.code },
     });
     if (exists) throw new ConflictException(`Coupon code '${cmd.code}' already exists`);
 
     return this.prisma.coupon.create({
       data: {
+        organizationId,
         code: cmd.code,
         descriptionAr: cmd.descriptionAr,
         descriptionEn: cmd.descriptionEn,

@@ -70,6 +70,7 @@ describe('Moyasar Webhook — Idempotency (e2e-style)', () => {
 
     const invoice = await testPrisma.invoice.create({
       data: {
+        organizationId: DEFAULT_ORG_ID,
         branchId,
         clientId,
         employeeId,

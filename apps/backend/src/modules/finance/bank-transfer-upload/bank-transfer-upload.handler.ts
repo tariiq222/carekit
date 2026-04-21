@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant/tenant-context.service';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
 import { BankTransferUploadDto } from './bank-transfer-upload.dto';
 
@@ -22,10 +23,12 @@ export type BankTransferUploadCommand = BankTransferUploadDto & {
 export class BankTransferUploadHandler {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
     private readonly storage: MinioService,
   ) {}
 
   async execute(cmd: BankTransferUploadCommand) {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
     if (!ALLOWED_MIME_TYPES.has(cmd.mimetype)) {
       throw new BadRequestException(`File type ${cmd.mimetype} not allowed. Use JPEG, PNG, WebP, or PDF.`);
     }
@@ -44,6 +47,7 @@ export class BankTransferUploadHandler {
 
     const payment = await this.prisma.payment.create({
       data: {
+        organizationId,
         invoiceId: cmd.invoiceId,
         amount: cmd.amount,
         currency: invoice.currency,

@@ -174,9 +174,9 @@ export class CreateGuestBookingHandler {
       const vatAmt = parseFloat((subtotal * DEFAULT_VAT_RATE).toFixed(2));
       const total = subtotal + vatAmt;
 
-      // TODO(02e): add organizationId once Finance cluster is scoped
       const invoice = await tx.invoice.create({
         data: {
+          organizationId, // SaaS-02e — resolves TODO(02d→02e)
           branchId: cmd.branchId,
           clientId: client.id,
           employeeId: cmd.employeeId,
