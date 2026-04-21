@@ -10,10 +10,17 @@ import {
 import { TenantEnforcementMode } from '../../common/tenant/tenant.constants';
 
 /**
- * Plan 02 populates this set cluster-by-cluster. Empty here is intentional —
- * every model is treated as un-scoped, matching current single-tenant behavior.
+ * Populated cluster-by-cluster as each cluster gains `organizationId` columns.
+ * Each model listed here is auto-scoped by the tenant extension: every
+ * `findFirst/findUnique/findMany/count/updateMany/deleteMany/etc.` gets
+ * `organizationId = ctx.organizationId` injected into its where clause.
  */
-const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>();
+const SCOPED_MODELS: TenantScopedModelRegistry = new Set<string>([
+  // SaaS-02a — identity cluster.
+  'RefreshToken',
+  'CustomRole',
+  'Permission',
+]);
 
 /**
  * Single PrismaClient instance shared across all Bounded Contexts.
