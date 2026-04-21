@@ -261,4 +261,10 @@ export const queryKeys = {
     list: (filters?: object) => ["contact-messages", "list", filters] as const,
   },
 
+  /* ─── Site Settings (Website CMS) ─── */
+  siteSettings: {
+    all: ["site-settings"] as const,
+    list: (prefix?: string) => ["site-settings", "list", prefix ?? ""] as const,
+  },
+
 } as const
