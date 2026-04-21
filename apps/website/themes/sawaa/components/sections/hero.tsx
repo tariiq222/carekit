@@ -1,9 +1,14 @@
 import Link from 'next/link';
 import { ArrowLeft, BadgeCheck, Calendar, Sparkles } from 'lucide-react';
-import { SITE, STATS } from '../../lib/constants';
+import type { HeroContent } from '@/features/site-content/public';
+import { STATS } from '../../lib/constants';
 import { AnimatedSection } from '../ui/animated-section';
 
-export function Hero() {
+interface Props {
+  content: HeroContent;
+}
+
+export function Hero({ content }: Props) {
   return (
     <section id="hero" className="pt-32 pb-12 text-center relative">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -43,7 +48,7 @@ export function Hero() {
                 style={{ background: 'var(--sw-primary-500)' }}
               />
             </span>
-            مركز معتمد للاستشارات النفسية والأسرية
+            {content.badgeText}
           </span>
 
           <h1
@@ -53,12 +58,12 @@ export function Hero() {
               color: 'var(--sw-secondary-700)',
             }}
           >
-            رحلتك نحو{' '}
+            {content.titlePrefix}{' '}
             <span
               className="relative inline-block"
               style={{ color: 'var(--sw-primary-500)' }}
             >
-              السواء
+              {content.titleHighlight}
               <svg
                 className="absolute -bottom-2 left-0 w-full h-3"
                 viewBox="0 0 200 12"
@@ -75,7 +80,7 @@ export function Hero() {
               </svg>
             </span>
             <br />
-            تبدأ اليوم
+            {content.titleSuffix}
           </h1>
 
           <p
@@ -85,13 +90,12 @@ export function Hero() {
               color: 'var(--sw-neutral-600)',
             }}
           >
-            معالج يفهم ثقافتك، بيئة آمنة لا تحاسب، وسرّية مهنية تامة. جلسات حضورية
-            في الرياض أو عن بُعد — متى ما كنت جاهزاً.
+            {content.subtitle}
           </p>
 
           <div className="flex gap-3.5 justify-center flex-wrap mb-12">
             <Link
-              href="/booking"
+              href={content.ctaPrimaryHref}
               className="group inline-flex items-center gap-2.5 font-bold px-8 py-4 rounded-full transition-all hover:-translate-y-[3px]"
               style={{
                 background: 'var(--sw-primary-500)',
@@ -100,7 +104,7 @@ export function Hero() {
                 boxShadow: 'var(--sw-shadow-primary)',
               }}
             >
-              احجز موعدك
+              {content.ctaPrimaryText}
               <span
                 className="w-7 h-7 rounded-full flex items-center justify-center"
                 style={{ background: 'rgba(255,255,255,0.2)' }}
@@ -109,7 +113,7 @@ export function Hero() {
               </span>
             </Link>
             <Link
-              href="/therapists"
+              href={content.ctaSecondaryHref}
               className="inline-flex items-center gap-2 bg-white font-bold px-8 py-4 rounded-full transition-all hover:-translate-y-[3px]"
               style={{
                 fontSize: '0.938rem',
@@ -118,7 +122,7 @@ export function Hero() {
                   'var(--sw-shadow-sm), inset 0 0 0 1px var(--sw-neutral-200)',
               }}
             >
-              استكشف المعالجين <ArrowLeft className="w-[17px] h-[17px]" />
+              {content.ctaSecondaryText} <ArrowLeft className="w-[17px] h-[17px]" />
             </Link>
           </div>
         </AnimatedSection>
@@ -141,7 +145,7 @@ export function Hero() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={SITE.heroImage}
+                src={content.heroImageUrl}
                 alt="مركز سواء"
                 className="w-full h-[280px] sm:h-[350px] md:h-[420px] object-cover"
               />
@@ -164,10 +168,10 @@ export function Hero() {
                 </div>
                 <div className="text-start">
                   <div className="text-[0.625rem] font-semibold" style={{ color: 'var(--sw-neutral-500)' }}>
-                    خبرة تتجاوز
+                    {content.badgeFloatTopLabel}
                   </div>
                   <div className="text-sm font-extrabold" style={{ color: 'var(--sw-secondary-700)' }}>
-                    15 عاماً
+                    {content.badgeFloatTopValue}
                   </div>
                 </div>
               </div>
@@ -183,10 +187,10 @@ export function Hero() {
                 </div>
                 <div className="text-start">
                   <div className="text-[0.625rem] font-semibold" style={{ color: 'var(--sw-neutral-500)' }}>
-                    مؤهلون من
+                    {content.badgeFloatBottomLabel}
                   </div>
                   <div className="text-sm font-extrabold" style={{ color: 'var(--sw-secondary-700)' }}>
-                    هيئة التخصصات
+                    {content.badgeFloatBottomValue}
                   </div>
                 </div>
               </div>

@@ -1,5 +1,14 @@
+import { listPublicEmployees } from '@/features/therapists/public';
+import { getPublicCatalog } from '@/features/public-catalog/public';
+import {
+  fetchSiteSettingsMap,
+  resolveHeroContent,
+  type HeroContent,
+  type SiteSettingsMap,
+} from '@/features/site-content/public';
+import type { PublicEmployee } from '@carekit/api-client';
 import { Blog } from '../components/sections/blog';
-import { Clinics } from '../components/sections/clinics';
+import { Clinics, type ClinicItem } from '../components/sections/clinics';
 import { CTA } from '../components/sections/cta';
 import { FAQ } from '../components/sections/faq';
 import { Features } from '../components/sections/features';
@@ -8,14 +17,38 @@ import { SupportGroups } from '../components/sections/support-groups';
 import { Team } from '../components/sections/team';
 import { Testimonials } from '../components/sections/testimonials';
 
-export function SawaaHomePage() {
+async function safeFetch<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await fn();
+  } catch {
+    return fallback;
+  }
+}
+
+export async function SawaaHomePage() {
+  const [therapists, catalog, settings] = await Promise.all([
+    safeFetch<PublicEmployee[]>(() => listPublicEmployees(), []),
+    safeFetch(() => getPublicCatalog(), { departments: [], categories: [], services: [] }),
+    safeFetch<SiteSettingsMap>(() => fetchSiteSettingsMap('home.'), new Map()),
+  ]);
+
+  const hero: HeroContent = resolveHeroContent(settings);
+
+  const clinics: ClinicItem[] = catalog.departments.map((d) => ({
+    id: d.id,
+    nameAr: d.nameAr,
+    descriptionAr: d.descriptionAr,
+    icon: d.icon,
+    image: null,
+  }));
+
   return (
     <>
-      <Hero />
+      <Hero content={hero} />
       <Features />
-      <Clinics />
+      <Clinics clinics={clinics} />
       <SupportGroups />
-      <Team />
+      <Team therapists={therapists} />
       <Testimonials />
       <Blog />
       <CTA />
