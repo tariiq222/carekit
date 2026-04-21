@@ -1,8 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/database';
+import { TenantContextService } from '../../../../common/tenant';
 import { UploadFileHandler } from '../../../media/files/upload-file.handler';
-
-const SINGLETON_ID = 'default';
 
 export const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 export const ALLOWED_LOGO_MIMETYPES: ReadonlySet<string> = new Set([
@@ -22,6 +21,7 @@ export class UploadLogoHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadFile: UploadFileHandler,
+    private readonly tenant: TenantContextService,
   ) {}
 
   async execute(cmd: UploadLogoCommand, buffer: Buffer): Promise<{ fileId: string; url: string }> {
@@ -42,9 +42,10 @@ export class UploadLogoHandler {
       buffer,
     );
 
+    const organizationId = this.tenant.requireOrganizationId();
     await this.prisma.brandingConfig.upsert({
-      where: { id: SINGLETON_ID },
-      create: { id: SINGLETON_ID, organizationNameAr: 'منظمتي', logoUrl: file.url },
+      where: { organizationId },
+      create: { organizationId, organizationNameAr: 'منظمتي', logoUrl: file.url },
       update: { logoUrl: file.url },
     });
 

@@ -1,7 +1,11 @@
 import { GetPublicBrandingHandler } from './get-public-branding.handler';
+import { TenantContextService } from '../../../../common/tenant';
+
+const DEFAULT_ORG = '00000000-0000-0000-0000-000000000001';
 
 const mockRow = {
-  id: 'default',
+  id: 'some-uuid',
+  organizationId: DEFAULT_ORG,
   organizationNameAr: 'عيادتي',
   organizationNameEn: 'My Clinic',
   productTagline: null,
@@ -28,10 +32,15 @@ const buildPrisma = () => ({
   },
 });
 
+const buildTenant = (organizationId = DEFAULT_ORG) =>
+  ({
+    requireOrganizationIdOrDefault: jest.fn().mockReturnValue(organizationId),
+  }) as unknown as TenantContextService;
+
 describe('GetPublicBrandingHandler', () => {
   it('maps the Prisma row to PublicBranding shape', async () => {
     const prisma = buildPrisma();
-    const handler = new GetPublicBrandingHandler(prisma as never);
+    const handler = new GetPublicBrandingHandler(prisma as never, buildTenant());
 
     const result = await handler.execute();
 
@@ -56,15 +65,15 @@ describe('GetPublicBrandingHandler', () => {
     expect(result).not.toHaveProperty('id');
   });
 
-  it('creates a default row on first call', async () => {
+  it('uses upsert-on-read scoped by organizationId', async () => {
     const prisma = buildPrisma();
-    const handler = new GetPublicBrandingHandler(prisma as never);
+    const handler = new GetPublicBrandingHandler(prisma as never, buildTenant());
 
     await handler.execute();
 
     expect(prisma.brandingConfig.upsert).toHaveBeenCalledWith({
-      where: { id: 'default' },
-      create: { id: 'default', organizationNameAr: 'منظمتي' },
+      where: { organizationId: DEFAULT_ORG },
+      create: { organizationId: DEFAULT_ORG, organizationNameAr: 'منظمتي' },
       update: {},
     });
   });

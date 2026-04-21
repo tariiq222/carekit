@@ -1,18 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { UpsertOrgSettingsDto } from './upsert-org-settings.dto';
-
-const SINGLETON_ID = 'default';
 
 @Injectable()
 export class UpsertOrgSettingsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(dto: UpsertOrgSettingsDto) {
+    const organizationId = this.tenant.requireOrganizationId();
     return this.prisma.organizationSettings.upsert({
-      where: { id: SINGLETON_ID },
-      create: { id: SINGLETON_ID, ...dto },
+      where: { organizationId },
       update: dto,
+      create: { organizationId, ...dto },
     });
   }
 }
