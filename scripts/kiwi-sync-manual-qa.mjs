@@ -79,23 +79,87 @@ function ensure(model, filter, createPayload) {
   return rpc(`${model}.create`, [createPayload]);
 }
 
+function planFromJestOutput(jestFile, opts) {
+  /** @type {{testResults: {name: string, assertionResults: {ancestorTitles: string[], title: string, status: string, duration?: number}[]}[]}} */
+  const report = JSON.parse(readFileSync(jestFile, 'utf8'));
+  const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+  const cases = [];
+  for (const f of report.testResults ?? []) {
+    const rel = (f.name || '').replace(repoRoot + '/', '');
+    for (const a of f.assertionResults ?? []) {
+      const suite = (a.ancestorTitles || []).join(' > ');
+      cases.push({
+        summary: `[${opts.tag}] ${suite} — ${a.title}`,
+        text: [
+          `File: ${rel}`,
+          `Suite: ${suite || '(root)'}`,
+          `Test: ${a.title}`,
+          `Duration: ${Math.round(a.duration ?? 0)}ms`,
+        ].join('\n'),
+        result: a.status === 'passed' ? 'PASSED' : a.status === 'pending' ? 'BLOCKED' : 'FAILED',
+      });
+    }
+  }
+  return {
+    domain: opts.domain,
+    version: 'main',
+    build: opts.build,
+    planType: 'Unit',
+    isAutomated: true,
+    planName: opts.planName,
+    planSummary: opts.planSummary,
+    runSummary: opts.runSummary,
+    cases,
+  };
+}
+
 function main() {
   const { values } = parseArgs({
-    options: { plan: { type: 'string', short: 'p' } },
+    options: {
+      plan: { type: 'string', short: 'p' },
+      jest: { type: 'string' },
+      domain: { type: 'string' },
+      'plan-name': { type: 'string' },
+      'plan-summary': { type: 'string' },
+      'run-summary': { type: 'string' },
+      build: { type: 'string' },
+      tag: { type: 'string' },
+    },
     strict: true,
   });
-  if (!values.plan) {
-    console.error('Usage: node scripts/kiwi-sync-manual-qa.mjs --plan <path-to-json>');
+
+  if (!values.plan && !values.jest) {
+    console.error('Usage:');
+    console.error('  --plan <path-to-json>');
+    console.error('  --jest <path-to-jest-json> --domain <name> --plan-name <name> --build <name> [--tag backend]');
     process.exit(1);
   }
 
-  const planFile = path.resolve(values.plan);
-  if (!existsSync(planFile)) {
-    console.error(`Plan file not found: ${planFile}`);
-    process.exit(1);
+  /** @type {{ domain:string, version:string, build:string, planName:string, planSummary:string, runSummary:string, planType?:string, isAutomated?:boolean, cases:{summary:string,text:string,result:'PASSED'|'FAILED'|'BLOCKED'}[] }} */
+  let plan;
+  if (values.jest) {
+    const jestFile = path.resolve(values.jest);
+    if (!existsSync(jestFile)) {
+      console.error(`Jest JSON file not found: ${jestFile}`);
+      process.exit(1);
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    plan = planFromJestOutput(jestFile, {
+      domain: values.domain ?? 'Settings',
+      tag: values.tag ?? 'backend',
+      build: values.build ?? `${values.tag ?? 'backend'}-unit-${today}`,
+      planName: values['plan-name'] ?? `CareKit / ${values.domain ?? 'Settings'} / Unit`,
+      planSummary: values['plan-summary'] ?? `Automated unit tests — ${values.tag ?? 'backend'}.`,
+      runSummary: values['run-summary'] ?? `${values.tag ?? 'backend'} unit-test run — ${today}`,
+    });
+  } else {
+    const planFile = path.resolve(values.plan);
+    if (!existsSync(planFile)) {
+      console.error(`Plan file not found: ${planFile}`);
+      process.exit(1);
+    }
+    plan = JSON.parse(readFileSync(planFile, 'utf8'));
   }
-  /** @type {{ domain:string, version:string, build:string, planName:string, planSummary:string, runSummary:string, cases:{summary:string,text:string,result:'PASSED'|'FAILED'|'BLOCKED'}[] }} */
-  const plan = JSON.parse(readFileSync(planFile, 'utf8'));
 
   login();
 
@@ -114,8 +178,9 @@ function main() {
     { version: version.id, name: plan.build });
   console.log(`Product=${product.name} Version=${version.value} Build=${build.name} Category=${category.name}`);
 
-  const planType = rpc('PlanType.filter', [{ name: 'Manual QA' }])[0]
-    ?? rpc('PlanType.create', [{ name: 'Manual QA' }]);
+  const planTypeName = plan.planType ?? 'Manual QA';
+  const planType = rpc('PlanType.filter', [{ name: planTypeName }])[0]
+    ?? rpc('PlanType.create', [{ name: planTypeName }]);
   const caseStatus = rpc('TestCaseStatus.filter', [{ name: 'CONFIRMED' }])[0];
   const priority = rpc('Priority.filter', [{ value: 'P1' }])[0] ?? rpc('Priority.filter', [{}])[0];
 
@@ -140,7 +205,7 @@ function main() {
       product: product.id,
       priority: priority.id,
       case_status: caseStatus.id,
-      is_automated: false,
+      is_automated: plan.isAutomated ?? false,
     }]);
     try { rpc('TestPlan.add_case', [tp.id, tc.id]); } catch { /* already linked */ }
     rows.push({ caseId: tc.id, summary: c.summary, result: c.result });
