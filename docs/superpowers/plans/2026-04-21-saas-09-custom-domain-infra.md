@@ -32,6 +32,7 @@ The Nginx→Caddy swap keeps Nginx running in a parallel docker-compose service 
 4. **Wildcard cert renewal needs DNS-01**, not HTTP-01. Cloudflare token scoped to `Zone: DNS: Edit` on `carekit.app` only.
 5. **Never put the API origin behind the custom-domain cert.** `api.carekit.app` only. Tenants never see `yourdomain.com/api/*` — CORS + cross-origin is the pattern.
 6. **Rollback plan is not optional.** Document the DNS flip-back steps.
+7. **Caddy must NOT emit CORS headers** (BLOCKER). An earlier draft had `header Access-Control-Allow-Origin "https://{http.request.header.Origin}"` on `api.carekit.app` — that reflects any origin and, combined with credentialed requests, lets any site call the API as the logged-in user. CORS lives in the NestJS app (`app.enableCors`) and validates origins against a per-tenant allowlist before echoing. Caddy proxies only.
 
 ---
 
@@ -523,7 +524,12 @@ carekit.app, www.carekit.app {
 
 api.carekit.app {
     reverse_proxy backend:5100
-    header Access-Control-Allow-Origin "https://{http.request.header.Origin}"
+    # CORS is handled by the NestJS app (see apps/backend/src/main.ts — `app.enableCors({ origin: <dynamic-allowlist> })`).
+    # Do NOT reflect the Origin header here. Reflecting `{http.request.header.Origin}` unconditionally
+    # (especially with credentials) is a well-known CORS vulnerability — any site can make authenticated
+    # requests on behalf of the user. The backend validates the origin against a per-tenant allowlist
+    # (the tenant's registered custom domain + `{slug}.carekit.app` + `admin.carekit.app` + `carekit.app`)
+    # before echoing `Access-Control-Allow-Origin`. Caddy only proxies; it never writes CORS headers.
 }
 
 admin.carekit.app {

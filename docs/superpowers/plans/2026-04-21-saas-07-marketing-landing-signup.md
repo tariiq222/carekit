@@ -20,6 +20,7 @@
 4. **Subdomain cookie strategy:** the signup endpoint returns a JWT cookie on `.carekit.app` (parent domain) so `{slug}.carekit.app/dashboard` can read it without a second login. Document this in the plan body.
 5. **Public endpoints are rate-limited.** All `/api/v1/public/signup` + `slug-available` endpoints go through `@nestjs/throttler` with stricter limits than the dashboard bucket (plan 10 tunes these; this plan sets baseline defaults).
 6. **Slug regex + reservation list:** reserve `www`, `api`, `admin`, `app`, `dashboard`, `carekit`, `cdn`, `static`, `assets`, `signup`, `login`, `support` from signup.
+7. **Charge-before-tx requires compensating refund** (BLOCKER). Moyasar is charged *before* the `$transaction` (step 2), so any tx failure after a successful charge leaves the customer with money taken and no Organization. The handler MUST wrap `$transaction` in try/catch and call `moyasar.refund(charge.id, { reason: 'signup_tx_failed' })` on failure. If the refund call itself throws, enqueue a BullMQ retry (`signup-refund-retry`, `jobId: refund-<chargeId>` for idempotency) and re-raise the original tx error. Pre-requisites for this plan: (a) `MoyasarAdapter.refund(paymentId, opts)` method must exist (extend the adapter in Step 3.1 if missing — owner-review required, payments module), (b) `BullModule.registerQueue({ name: 'signup-refund-retry' })` must be added to the signup module imports, (c) a consumer/processor for that queue that re-attempts `moyasar.refund` with exponential backoff and alerts ops after max attempts.
 
 ---
 
@@ -296,6 +297,8 @@ export class CreateOrganizationHandler {
     private readonly moyasar: MoyasarAdapter,
     private readonly jwt: JwtService,
     private readonly seed: SeedFromVerticalService,
+    @InjectQueue('signup-refund-retry') private readonly signupRefundRetryQueue: Queue,
+    private readonly logger: Logger,
   ) {}
 
   async execute(cmd: CreateOrganizationCommand) {
@@ -320,7 +323,16 @@ export class CreateOrganizationHandler {
     if (!vertical) throw new BadRequestException('invalid_vertical');
 
     // 4. Transactional creation. tx bypasses the Proxy — set organizationId explicitly on every scoped create.
-    const result = await this.prisma.$transaction(async (tx) => {
+    //    CRITICAL: Moyasar was already charged in step 2. If $transaction throws (DB failure,
+    //    slug race, seed failure, etc.), we MUST refund the charge or the customer loses money
+    //    with no Organization to show for it. Wrap the tx in try/catch and issue a compensating
+    //    refund via `this.moyasar.refund(charge.id, { reason: 'signup_failed' })` before rethrowing.
+    //    The refund call itself must be best-effort: if it also fails, log+alert + enqueue a
+    //    BullMQ retry job (`signup-refund-retry`) keyed by `charge.id` (idempotent) so ops can
+    //    reconcile manually. Never swallow the original tx error — rethrow after refund attempt.
+    let result;
+    try {
+      result = await this.prisma.$transaction(async (tx) => {
       const org = await tx.organization.create({
         data: {
           slug: cmd.organization.slug,
@@ -390,8 +402,23 @@ export class CreateOrganizationHandler {
         },
       });
 
-      return { org, user };
-    });
+        return { org, user };
+      });
+    } catch (txError) {
+      // Compensating refund — customer must not be charged without an account.
+      try {
+        await this.moyasar.refund(charge.id, { reason: 'signup_tx_failed' });
+      } catch (refundError) {
+        // Refund itself failed — enqueue retry + alert. Do NOT swallow the original error.
+        await this.signupRefundRetryQueue.add(
+          'signup-refund-retry',
+          { moyasarPaymentId: charge.id, reason: 'signup_tx_failed' },
+          { jobId: `refund-${charge.id}`, attempts: 10, backoff: { type: 'exponential', delay: 60000 } },
+        );
+        this.logger.error({ chargeId: charge.id, refundError, txError }, 'signup refund failed — retry enqueued');
+      }
+      throw txError;
+    }
 
     // 5. Issue JWT (same as normal login path)
     const tokens = await this.jwt.issueTokenPair({
@@ -553,6 +580,35 @@ describe('Public signup (07)', () => {
       .expect(400);
     const org = await prisma.organization.findUnique({ where: { slug: 'declined-07' } });
     expect(org).toBeNull();
+  });
+
+  it('tx-failure after charge triggers compensating refund', async () => {
+    // Charge succeeds, but seed fails mid-tx — refund must be called with the charge id.
+    moyasar.chargeSignup.mockResolvedValue({ id: 'pay_126', status: 'PAID' });
+    moyasar.refund.mockResolvedValue({ id: 'ref_126', status: 'REFUNDED' });
+    jest.spyOn(SeedFromVerticalService.prototype, 'seedTransactional').mockRejectedValueOnce(new Error('seed boom'));
+    await request(app.getHttpServer())
+      .post('/api/v1/public/signup')
+      .send({ /* body with slug tx-fail-07 */ })
+      .expect(500);
+    expect(moyasar.refund).toHaveBeenCalledWith('pay_126', expect.objectContaining({ reason: 'signup_tx_failed' }));
+    const org = await prisma.organization.findUnique({ where: { slug: 'tx-fail-07' } });
+    expect(org).toBeNull();
+  });
+
+  it('refund failure enqueues retry job and still surfaces original error', async () => {
+    moyasar.chargeSignup.mockResolvedValue({ id: 'pay_127', status: 'PAID' });
+    moyasar.refund.mockRejectedValue(new Error('moyasar refund 500'));
+    jest.spyOn(SeedFromVerticalService.prototype, 'seedTransactional').mockRejectedValueOnce(new Error('seed boom'));
+    await request(app.getHttpServer())
+      .post('/api/v1/public/signup')
+      .send({ /* body with slug tx-fail-retry-07 */ })
+      .expect(500);
+    expect(signupRefundRetryQueue.add).toHaveBeenCalledWith(
+      'signup-refund-retry',
+      expect.objectContaining({ moyasarPaymentId: 'pay_127' }),
+      expect.objectContaining({ jobId: 'refund-pay_127' }),
+    );
   });
 
   afterAll(async () => {

@@ -733,7 +733,65 @@ Add to `apps/landing/package.json` scripts: `"build:widget": "tsx widget-src/bui
 
 - [ ] **Step 9.3: Widget route in website**
 
-Create `apps/website/app/[locale]/widget/book/page.tsx` — a stripped-down booking flow, no layout chrome, iframe-friendly (no `X-Frame-Options: DENY`). Add per-route response headers or root `next.config.mjs` to allow framing from `carekit.app` subdomains.
+Create `apps/website/app/[locale]/widget/book/page.tsx` — a stripped-down booking flow, no layout chrome, iframe-friendly.
+
+**Framing policy — MUST implement exactly as shown below.** Removing `X-Frame-Options: DENY` without replacing it opens the widget to clickjacking from any site. We replace it with a CSP `frame-ancestors` allowlist scoped to `/widget/*` only. The rest of the site keeps `X-Frame-Options: DENY`.
+
+Add to `apps/website/next.config.mjs`:
+
+```js
+// apps/website/next.config.mjs
+export default {
+  async headers() {
+    return [
+      {
+        // Widget routes: allow framing only from carekit.app + *.carekit.app + the
+        // tenant's registered custom domains. No X-Frame-Options (deprecated and
+        // conflicts with frame-ancestors; modern browsers prefer CSP).
+        source: '/:locale/widget/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self' https://carekit.app https://*.carekit.app;",
+          },
+          // Explicitly remove X-Frame-Options for this route (Next.js default may
+          // inject it via middleware/hosting). If the hosting layer adds one, strip
+          // it in middleware.ts for /widget/* — never fall back to ALLOWALL.
+        ],
+      },
+      {
+        // Everything else: keep strict deny.
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none';" },
+        ],
+      },
+    ];
+  },
+};
+```
+
+**Per-tenant custom domain support:** when a tenant has a verified custom domain (Plan 09), `frame-ancestors` must also include that origin. Implement this in `apps/website/middleware.ts` by reading the resolved tenant for the current Host and appending their custom domain to the CSP header dynamically:
+
+```ts
+// apps/website/middleware.ts (excerpt)
+if (req.nextUrl.pathname.match(/^\/[a-z]{2}\/widget\//)) {
+  const tenant = await resolveTenantFromHost(req.headers.get('host'));
+  const extra = tenant?.customDomain ? ` https://${tenant.customDomain}` : '';
+  res.headers.set(
+    'Content-Security-Policy',
+    `frame-ancestors 'self' https://carekit.app https://*.carekit.app${extra};`,
+  );
+  res.headers.delete('X-Frame-Options');
+}
+```
+
+**FORBIDDEN alternatives** — do not implement any of these even if they look simpler:
+- `frame-ancestors *` / `frame-ancestors 'unsafe-any'` — equivalent to ALLOWALL, reopens clickjacking.
+- `X-Frame-Options: ALLOWALL` (not a real value; browsers ignore it, leaving no protection).
+- Removing `X-Frame-Options: DENY` site-wide instead of per-route.
+- Echoing the `Origin`/`Referer` header into `frame-ancestors` (same class of bug as the Caddy CORS reflection issue in Plan 09).
 
 - [ ] **Step 9.4: Widget tracking endpoint**
 
@@ -741,7 +799,12 @@ Create `apps/backend/src/api/public/widget/widget-track.controller.ts` — `POST
 
 - [ ] **Step 9.5: Integration test**
 
-Create `apps/website/__tests__/widget-integration.test.ts` — spins up Next.js in test mode, asserts `/widget/book` returns HTML without `<header>`/`<footer>` and without `X-Frame-Options: DENY`.
+Create `apps/website/__tests__/widget-integration.test.ts` — spins up Next.js in test mode and asserts:
+- `/widget/book` returns HTML without `<header>`/`<footer>`.
+- `/widget/book` response has NO `X-Frame-Options` header.
+- `/widget/book` response has `Content-Security-Policy` containing `frame-ancestors 'self' https://carekit.app https://*.carekit.app` (plus the tenant's custom domain if one is registered for the test fixture).
+- CSP does NOT contain `*`, `'unsafe-any'`, or reflect the request's Origin/Referer header.
+- A non-widget route (e.g. `/ar/services`) still returns `X-Frame-Options: DENY` and `frame-ancestors 'none'`.
 
 - [ ] **Step 9.6: Commit**
 
