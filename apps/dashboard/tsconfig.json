@@ -26,6 +26,12 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@carekit/ui": [
+        "../../packages/ui/src/index.ts"
+      ],
+      "@carekit/ui/*": [
+        "../../packages/ui/src/*"
       ]
     }
   },

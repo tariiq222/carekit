@@ -16,6 +16,7 @@
     "openapi:generate": "openapi-typescript ../../apps/backend/openapi.json -o lib/types/api.generated.ts"
   },
   "dependencies": {
+    "@carekit/ui": "*",
     "@hookform/resolvers": "^5.2.2",
     "@hugeicons/core-free-icons": "^4.0.0",
     "@hugeicons/react": "^1.1.6",
