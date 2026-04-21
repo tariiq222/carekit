@@ -1,18 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/database';
+import { TenantContextService } from '../../../common/tenant';
 import { AssignPermissionsDto } from './assign-permissions.dto';
 
 export type AssignPermissionsCommand = AssignPermissionsDto;
 
 @Injectable()
 export class AssignPermissionsHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tenant: TenantContextService,
+  ) {}
 
   async execute(cmd: AssignPermissionsCommand): Promise<void> {
+    const organizationId = this.tenant.requireOrganizationIdOrDefault();
+
+    // Verify the role belongs to the current org before we touch its permissions.
+    const role = await this.prisma.customRole.findFirst({
+      where: { id: cmd.customRoleId, organizationId },
+      select: { id: true },
+    });
+    if (!role) throw new NotFoundException(`Role ${cmd.customRoleId} not found`);
+
     await this.prisma.permission.deleteMany({ where: { customRoleId: cmd.customRoleId } });
     await this.prisma.permission.createMany({
       data: cmd.permissions.map((p) => ({
         customRoleId: cmd.customRoleId,
+        organizationId,
         action: p.action,
         subject: p.subject,
       })),
