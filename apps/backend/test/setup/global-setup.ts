@@ -5,6 +5,9 @@ import * as path from 'path';
 const execFileAsync = promisify(execFile);
 
 export default async function globalSetup() {
+  process.env.TENANT_ENFORCEMENT ??= 'permissive';
+  process.env.DEFAULT_ORGANIZATION_ID ??= '00000000-0000-0000-0000-000000000001';
+
   process.env.TEST_DATABASE_URL =
     process.env.TEST_DATABASE_URL ??
     'postgresql://carekit:carekit_dev_password@127.0.0.1:5999/carekit_test?schema=public';
