@@ -13,6 +13,7 @@ import { ApplyCouponHandler } from './apply-coupon/apply-coupon.handler';
 import { ZatcaSubmitHandler } from './zatca-submit/zatca-submit.handler';
 import { GetInvoiceHandler } from './get-invoice/get-invoice.handler';
 import { GetPublicInvoiceHandler } from './get-invoice/get-public-invoice.handler';
+import { GetBookingInvoiceHandler } from './get-invoice/get-booking-invoice.handler';
 import { ListPaymentsHandler } from './list-payments/list-payments.handler';
 import { ListCouponsHandler } from './coupons/list-coupons.handler';
 import { GetCouponHandler } from './coupons/get-coupon.handler';
@@ -42,6 +43,7 @@ const handlers = [
   ZatcaSubmitHandler,
   GetInvoiceHandler,
   GetPublicInvoiceHandler,
+  GetBookingInvoiceHandler,
   ListPaymentsHandler,
   ListCouponsHandler,
   GetCouponHandler,
