@@ -180,7 +180,7 @@ async function main() {
         lastName: c.lastName,
         phone: c.phone,
         email: c.email,
-        emailVerified: c.emailVerified,
+        emailVerified: c.emailVerified ? new Date() : null,
         gender: c.gender,
         source: 'ONLINE' as any,
         accountType: c.accountType as any,
@@ -188,7 +188,7 @@ async function main() {
         updatedAt: new Date(),
       },
       update: {
-        emailVerified: c.emailVerified,
+        emailVerified: c.emailVerified ? new Date() : null,
         accountType: c.accountType as any,
         isActive: c.isActive,
       },
