@@ -9,8 +9,8 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from "@carekit/ui"
+import { Button } from "@carekit/ui"
 
 import { useUserMutations } from "@/hooks/use-users"
 import { useLocale } from "@/components/locale-provider"

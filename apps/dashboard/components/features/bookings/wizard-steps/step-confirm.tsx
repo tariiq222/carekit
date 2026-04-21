@@ -3,7 +3,7 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PencilEdit01Icon } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import { useOrganizationConfig } from "@/hooks/use-organization-config"

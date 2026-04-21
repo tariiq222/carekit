@@ -17,9 +17,9 @@ import {
   FileUploadIcon,
 } from "@hugeicons/core-free-icons"
 import type { IconSvgElement } from "@hugeicons/react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import {
   Select,

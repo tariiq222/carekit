@@ -5,7 +5,7 @@ import { useState } from "react"
 import { DataTable } from "@/components/features/data-table"
 import { ErrorBanner } from "@/components/features/error-banner"
 import { FilterBar } from "@/components/features/filter-bar"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@carekit/ui"
 
 import { getCategoryColumns } from "./category-columns"
 import { EditCategoryDialog } from "./edit-category-dialog"

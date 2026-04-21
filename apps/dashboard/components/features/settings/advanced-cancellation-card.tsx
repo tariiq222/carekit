@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import {

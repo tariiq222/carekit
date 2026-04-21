@@ -14,7 +14,7 @@ import { getPaymentColumns } from "@/components/features/payments/payment-column
 import { PaymentDetailSheet } from "@/components/features/payments/payment-detail-sheet"
 import { FilterBar } from "@/components/features/filter-bar"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@carekit/ui"
 import { usePayments, usePaymentStats } from "@/hooks/use-payments"
 import { useLocale } from "@/components/locale-provider"
 import type { Payment } from "@/lib/types/payment"

@@ -3,8 +3,8 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@carekit/ui"
+import { Badge } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { DraftService } from "./services-tab"
 

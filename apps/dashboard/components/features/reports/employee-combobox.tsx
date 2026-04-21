@@ -4,7 +4,7 @@ import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowDown01Icon, CheckmarkCircle01Icon } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   Popover,
   PopoverContent,

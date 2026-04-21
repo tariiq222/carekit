@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
+import { Separator } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {

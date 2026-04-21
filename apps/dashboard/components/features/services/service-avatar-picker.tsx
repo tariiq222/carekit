@@ -7,7 +7,7 @@ import { Add01Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { ServiceAvatar } from "./service-avatar"
 import { cn } from "@/lib/utils"
 

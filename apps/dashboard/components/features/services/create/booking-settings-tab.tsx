@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import {
   Card,
@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card"
+} from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { fetchBookingSettings, RECURRING_PATTERNS } from "@/lib/api/booking-settings"
 

@@ -12,8 +12,8 @@ import {
   UserBlock01Icon,
 } from "@hugeicons/core-free-icons"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,

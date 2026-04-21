@@ -11,9 +11,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Separator } from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 import {

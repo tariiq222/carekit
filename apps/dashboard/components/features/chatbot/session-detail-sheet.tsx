@@ -13,10 +13,10 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@carekit/ui"
 import { useChatSession, useChatbotMutations } from "@/hooks/use-chatbot"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"

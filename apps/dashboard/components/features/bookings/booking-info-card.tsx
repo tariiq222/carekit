@@ -1,5 +1,5 @@
 import { UserIcon } from "@hugeicons/core-free-icons"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@carekit/ui"
 import { BookingTypeBadge } from "@/components/features/status-badge"
 import { SectionHeader } from "@/components/features/section-header"
 import { useLocale } from "@/components/locale-provider"

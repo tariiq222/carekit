@@ -4,8 +4,8 @@ import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { Button } from "@carekit/ui"
+import { Label } from "@carekit/ui"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
   Select,

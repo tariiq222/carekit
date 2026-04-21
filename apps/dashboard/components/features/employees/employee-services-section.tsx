@@ -8,9 +8,9 @@ import {
   Delete02Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 import { useEmployeeServices } from "@/hooks/use-employees"
 import { useLocale } from "@/components/locale-provider"
 import { AssignServiceSheet } from "./assign-service-sheet"

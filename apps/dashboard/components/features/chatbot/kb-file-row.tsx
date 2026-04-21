@@ -2,7 +2,7 @@ import { format } from "date-fns"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import type { KnowledgeBaseFile } from "@/lib/types/chatbot"
 
 interface KbFileRowProps {

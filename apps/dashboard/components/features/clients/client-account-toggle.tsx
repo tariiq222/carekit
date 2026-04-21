@@ -12,11 +12,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+} from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Badge } from "@carekit/ui"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useSetClientActiveWithToast } from "@/hooks/use-set-client-active"
 import type { Client } from "@/lib/types/client"

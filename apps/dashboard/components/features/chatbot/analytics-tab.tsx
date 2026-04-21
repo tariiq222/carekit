@@ -8,8 +8,8 @@ import {
 } from "@hugeicons/core-free-icons"
 
 import { StatCard } from "@/components/features/stat-card"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useChatbotAnalytics, useTopQuestions } from "@/hooks/use-chatbot"
 

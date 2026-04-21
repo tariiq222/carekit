@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   Dialog,
   DialogContent,
@@ -13,8 +13,8 @@ import {
   DialogDescription,
   DialogBody,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+} from "@carekit/ui"
+import { Label } from "@carekit/ui"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,

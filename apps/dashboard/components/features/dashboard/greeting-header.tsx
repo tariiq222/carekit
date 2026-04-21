@@ -8,7 +8,7 @@ import {
   Add01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { Input } from "@/components/ui/input"
 import { useLocale } from "@/components/locale-provider"
 

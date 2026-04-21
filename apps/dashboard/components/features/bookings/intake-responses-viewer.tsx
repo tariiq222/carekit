@@ -4,7 +4,7 @@ import { DetailSection, DetailRow } from "@/components/features/detail-sheet-par
 import { useLocale } from "@/components/locale-provider"
 import { useQuery } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@carekit/ui"
 import { format } from "date-fns"
 
 interface Props {

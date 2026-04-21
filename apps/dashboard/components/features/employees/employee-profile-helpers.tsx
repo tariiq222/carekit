@@ -23,8 +23,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { ListPageShell } from "@/components/features/list-page-shell"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@carekit/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
 import { FormattedCurrency } from "@/components/features/shared/sar-symbol"
 
 /* ─── ProfileSkeleton ─── */

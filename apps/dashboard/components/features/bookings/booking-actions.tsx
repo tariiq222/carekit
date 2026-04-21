@@ -13,7 +13,7 @@ import {
   CheckmarkCircle01Icon,
   EyeIcon,
 } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   DropdownMenu,
   DropdownMenuContent,

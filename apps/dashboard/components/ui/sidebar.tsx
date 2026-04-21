@@ -4,9 +4,9 @@ import * as React from "react"
 import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@carekit/ui"
 import {
   Sheet,
   SheetContent,

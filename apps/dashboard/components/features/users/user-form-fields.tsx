@@ -10,8 +10,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Input } from "@/components/ui/input"
 import { PhoneInput } from "@/components/ui/phone-input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@carekit/ui"
+import { Card, CardContent } from "@carekit/ui"
 import {
   Select,
   SelectContent,

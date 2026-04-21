@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@carekit/ui"
 import {
   Select,
   SelectContent,

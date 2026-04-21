@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useLocale } from "@/components/locale-provider"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import type { IconSvgElement } from "@hugeicons/react"
 

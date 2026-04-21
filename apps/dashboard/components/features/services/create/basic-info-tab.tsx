@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card"
+} from "@carekit/ui"
 import {
   Select,
   SelectContent,

@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
+import { Separator } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons"
 import { fetchBookingSettings } from "@/lib/api/booking-settings"

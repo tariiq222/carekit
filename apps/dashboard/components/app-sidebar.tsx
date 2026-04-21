@@ -26,7 +26,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import { useSidebarNav } from "@/hooks/use-sidebar-nav"

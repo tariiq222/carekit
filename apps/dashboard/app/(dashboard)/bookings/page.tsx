@@ -6,7 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon } from "@hugeicons/core-free-icons"
 
 import { ListPageShell } from "@/components/features/list-page-shell"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { PageHeader } from "@/components/features/page-header"

@@ -12,8 +12,8 @@ import {
   Clock01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { Button } from "@carekit/ui"
+import { Label } from "@carekit/ui"
 import {
   Select,
   SelectContent,

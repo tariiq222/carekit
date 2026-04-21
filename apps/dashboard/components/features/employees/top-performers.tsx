@@ -3,7 +3,7 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { StarIcon, Award01Icon } from "@hugeicons/core-free-icons"
 
-import { Card } from "@/components/ui/card"
+import { Card } from "@carekit/ui"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"

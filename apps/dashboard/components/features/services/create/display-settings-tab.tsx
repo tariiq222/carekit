@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
+import { Button } from "@carekit/ui"
+import { Label } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import {
   Card,
@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card"
+} from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { UseFormReturn } from "react-hook-form"
 import type { CreateServiceFormData } from "./form-schema"

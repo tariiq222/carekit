@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   Sheet,
   SheetContent,
@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import { Textarea } from "@/components/ui/textarea"
 import type { RefundType } from "@/lib/types/booking"
 import { useLocale } from "@/components/locale-provider"

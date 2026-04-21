@@ -1,7 +1,7 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
@@ -9,7 +9,7 @@ import {
   CardContent,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card"
+} from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { LocalVacation } from "./schedule-types"
 

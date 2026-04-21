@@ -2,9 +2,9 @@
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import {
   Select,
   SelectContent,
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import type { FormField, ConditionOperator } from "@/lib/types/intake-form"
 import { CONDITION_OPERATOR_LABELS } from "@/lib/types/intake-form"

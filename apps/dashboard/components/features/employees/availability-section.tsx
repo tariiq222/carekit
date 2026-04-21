@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { useEmployeeAvailability } from "@/hooks/use-employees"
 import { AvailabilityEditor } from "./availability-editor"
 

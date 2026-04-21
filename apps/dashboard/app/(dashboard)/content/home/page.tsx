@@ -3,7 +3,7 @@
 import { Breadcrumbs } from "@/components/features/breadcrumbs"
 import { ListPageShell } from "@/components/features/list-page-shell"
 import { PageHeader } from "@/components/features/page-header"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@carekit/ui"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HeroForm } from "@/components/features/content/hero-form"
 import { FeatureCardsForm } from "@/components/features/content/feature-cards-form"

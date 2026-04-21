@@ -10,9 +10,9 @@ import {
 } from "@hugeicons/core-free-icons"
 
 import { DataTable } from "@/components/features/data-table"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import {
   useKnowledgeBase,

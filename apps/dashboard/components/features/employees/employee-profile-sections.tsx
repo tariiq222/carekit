@@ -14,8 +14,8 @@ import {
   Cancel01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader, CardTitle } from "@carekit/ui"
+import { Skeleton } from "@carekit/ui"
 import {
   useEmployeeAvailability,
   useEmployeeVacations,

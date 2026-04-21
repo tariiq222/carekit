@@ -10,10 +10,10 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+} from "@carekit/ui"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
+import { Separator } from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { format } from "date-fns"
 import { ar } from "date-fns/locale"

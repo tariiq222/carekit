@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   Sheet,
   SheetContent,
@@ -14,7 +14,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import {
   useEmployeeBreaks,
   useSetBreaks,

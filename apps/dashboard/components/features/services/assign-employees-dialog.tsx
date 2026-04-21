@@ -28,10 +28,10 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@carekit/ui"
 import { cn } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
 import { fetchEmployees } from "@/lib/api/employees"

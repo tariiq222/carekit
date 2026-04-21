@@ -6,14 +6,14 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card"
+} from "@carekit/ui"
 import { useLocale } from "@/components/locale-provider"
 import { useServices } from "@/hooks/use-services"
 import type { EmployeeTypeConfigPayload } from "@/lib/types/employee"

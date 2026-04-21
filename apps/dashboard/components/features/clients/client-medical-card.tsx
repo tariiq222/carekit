@@ -3,7 +3,7 @@
 import { Controller } from "react-hook-form"
 import type { UseFormReturn } from "react-hook-form"
 import { HeartCheckIcon } from "@hugeicons/core-free-icons"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@carekit/ui"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"

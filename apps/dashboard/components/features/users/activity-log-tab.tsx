@@ -2,8 +2,8 @@
 
 import { DataTable } from "@/components/features/data-table"
 import { ErrorBanner } from "@/components/features/error-banner"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Button } from "@/components/ui/button"
+import { Skeleton } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import {
   Select,
   SelectContent,

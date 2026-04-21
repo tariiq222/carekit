@@ -5,11 +5,11 @@ import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Add01Icon, Delete02Icon } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@carekit/ui"
 import {
   useDurationOptions,
   useDurationOptionsMutation,

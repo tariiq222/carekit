@@ -9,10 +9,10 @@ import {
   Settings01Icon,
 } from "@hugeicons/core-free-icons"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import { DateTimeInput } from "@/components/ui/date-time-input"
 import { Switch } from "@/components/ui/switch"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@carekit/ui"
 import {
   Select,
   SelectContent,

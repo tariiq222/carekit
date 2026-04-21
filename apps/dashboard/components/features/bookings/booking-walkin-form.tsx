@@ -17,10 +17,10 @@ import {
   ArrowLeft01Icon,
 } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { Input } from "@/components/ui/input"
 import { NationalitySelect } from "@/components/ui/nationality-select"
-import { Label } from "@/components/ui/label"
+import { Label } from "@carekit/ui"
 import { PhoneInput } from "@/components/ui/phone-input"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Textarea } from "@/components/ui/textarea"

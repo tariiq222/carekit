@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { Button } from "@carekit/ui"
 import { EmptyState } from "@/components/features/empty-state"
 import { useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@carekit/ui"
+import { Separator } from "@carekit/ui"
 import {
   useServiceBookingTypes,
   useServiceBookingTypesMutation,

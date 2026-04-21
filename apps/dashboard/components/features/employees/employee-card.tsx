@@ -7,10 +7,10 @@ import {
   StarIcon,
 } from "@hugeicons/core-free-icons"
 
-import { Card } from "@/components/ui/card"
+import { Card } from "@carekit/ui"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@carekit/ui"
+import { Button } from "@carekit/ui"
 import { cn, formatName, getInitials, getAvatarGradientStyle } from "@/lib/utils"
 import { useLocale } from "@/components/locale-provider"
 import type { Employee } from "@/lib/types/employee"
