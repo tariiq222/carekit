@@ -7,6 +7,7 @@ import { ClientTokenService } from '../shared/client-token.service';
 import { PasswordService } from '../shared/password.service';
 import { RegisterDto } from './register.dto';
 import { OtpPurpose, OtpChannel } from '@prisma/client';
+import { DEFAULT_ORGANIZATION_ID } from '../../../common/tenant';
 
 @Injectable()
 export class RegisterHandler {
@@ -83,10 +84,10 @@ export class RegisterHandler {
       this.logger.log(`New client registration: ${clientId} (${identifier})`);
     }
 
-    const tokens = await this.clientTokens.issueTokenPair({
-      id: clientId,
-      email: isEmailChannel ? identifier : null,
-    });
+    const tokens = await this.clientTokens.issueTokenPair(
+      { id: clientId, email: isEmailChannel ? identifier : null },
+      { organizationId: DEFAULT_ORGANIZATION_ID },
+    );
 
     return {
       accessToken: tokens.accessToken,

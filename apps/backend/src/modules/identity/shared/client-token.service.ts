@@ -17,6 +17,11 @@ export interface ClientJwtPayload {
   email: string;
   namespace: 'client';
   jti: string;
+  organizationId: string;
+}
+
+export interface ClientTenantClaims {
+  organizationId: string;
 }
 
 function parseTtlMs(ttl: string): number {
@@ -40,16 +45,20 @@ export class ClientTokenService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async issueTokenPair(client: {
-    id: string;
-    email: string | null;
-  }): Promise<ClientTokenPair> {
+  async issueTokenPair(
+    client: {
+      id: string;
+      email: string | null;
+    },
+    tenantClaims: ClientTenantClaims,
+  ): Promise<ClientTokenPair> {
     const jti = randomUUID();
     const payload: ClientJwtPayload = {
       sub: client.id,
       email: client.email ?? '',
       namespace: 'client',
       jti,
+      organizationId: tenantClaims.organizationId,
     };
 
     const accessTtl = (this.config.get<string>('JWT_CLIENT_ACCESS_TTL') ?? '15m') as `${number}${'s' | 'm' | 'h' | 'd'}`;
@@ -68,7 +77,13 @@ export class ClientTokenService {
     const expiresAt = new Date(Date.now() + refreshMaxAgeMs);
 
     await this.prisma.clientRefreshToken.create({
-      data: { clientId: client.id, tokenSelector, tokenHash, expiresAt },
+      data: {
+        clientId: client.id,
+        organizationId: tenantClaims.organizationId,
+        tokenSelector,
+        tokenHash,
+        expiresAt,
+      },
     });
 
     return { accessToken, accessMaxAgeMs, rawRefresh, refreshMaxAgeMs };

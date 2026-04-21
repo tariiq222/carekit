@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../../infrastructure/database';
 import { ClientTokenService } from '../shared/client-token.service';
+import { DEFAULT_ORGANIZATION_ID } from '../../../common/tenant';
 
 @Injectable()
 export class ClientRefreshHandler {
@@ -42,10 +43,10 @@ export class ClientRefreshHandler {
       throw new UnauthorizedException('Client not found or inactive');
     }
 
-    const tokens = await this.clientTokens.issueTokenPair({
-      id: clientId,
-      email: client.email,
-    });
+    const tokens = await this.clientTokens.issueTokenPair(
+      { id: clientId, email: client.email },
+      { organizationId: matched.organizationId ?? client.organizationId ?? DEFAULT_ORGANIZATION_ID },
+    );
 
     return {
       accessToken: tokens.accessToken,
