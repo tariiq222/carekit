@@ -1,75 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import type { InvoiceDetail } from './invoice.api';
 
 interface InvoiceViewProps {
-  invoiceId: string;
-  accessToken: string;
+  invoice: InvoiceDetail;
 }
 
-export function InvoiceView({ invoiceId, accessToken }: InvoiceViewProps) {
-  const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchInvoice() {
-      try {
-        const res = await fetch(`/api/proxy/public/invoices/${encodeURIComponent(invoiceId)}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          credentials: 'include',
-        });
-        if (!res.ok) throw new Error('Failed to fetch invoice');
-        const data = await res.json();
-        setInvoice(data.data ?? data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load invoice');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchInvoice();
-  }, [invoiceId, accessToken]);
-
-  if (isLoading) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <div style={{ opacity: 0.6 }}>Loading invoice...</div>
-      </div>
-    );
+const PRINT_STYLES = `
+@media print {
+  body { background: white !important; }
+  .invoice-view-chrome { display: none !important; }
+  .invoice-view-card {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    break-inside: avoid;
   }
+}
+`;
 
-  if (error || !invoice) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--destructive)' }}>
-        {error || 'Invoice not found'}
-      </div>
-    );
-  }
-
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return 'N/A';
-    return new Date(dateStr).toLocaleDateString('ar-SA', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('ar-SA', {
-      style: 'currency',
-      currency,
-    }).format(amount);
-  };
-
+export function InvoiceView({ invoice }: InvoiceViewProps) {
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
+      <style dangerouslySetInnerHTML={{ __html: PRINT_STYLES }} />
       <div
+        className="invoice-view-card"
         style={{
           background: 'var(--card)',
           borderRadius: '16px',
@@ -99,18 +53,7 @@ export function InvoiceView({ invoiceId, accessToken }: InvoiceViewProps) {
             </div>
             <div>
               <span style={{ opacity: 0.6, display: 'block' }}>Status</span>
-              <span
-                style={{
-                  color:
-                    invoice.status === 'PAID'
-                      ? 'var(--success)'
-                      : invoice.status === 'PENDING'
-                      ? 'var(--warning)'
-                      : 'var(--muted-foreground)',
-                }}
-              >
-                {invoice.status}
-              </span>
+              <span style={{ color: statusColor(invoice.status) }}>{invoice.status}</span>
             </div>
           </div>
 
@@ -166,8 +109,12 @@ export function InvoiceView({ invoiceId, accessToken }: InvoiceViewProps) {
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', paddingTop: '0.5rem' }}>
+          <div
+            className="invoice-view-chrome"
+            style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', paddingTop: '0.5rem' }}
+          >
             <button
+              type="button"
               onClick={() => window.print()}
               style={{
                 padding: '0.5rem 1rem',
@@ -186,4 +133,26 @@ export function InvoiceView({ invoiceId, accessToken }: InvoiceViewProps) {
       </div>
     </div>
   );
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return 'N/A';
+  return new Date(dateStr).toLocaleDateString('ar-SA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function formatCurrency(amount: number, currency: string): string {
+  return new Intl.NumberFormat('ar-SA', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+}
+
+function statusColor(status: string): string {
+  if (status === 'PAID') return 'var(--success)';
+  if (status === 'PENDING') return 'var(--warning)';
+  return 'var(--muted-foreground)';
 }

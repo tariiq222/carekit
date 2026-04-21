@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getInvoice, type InvoiceDetail } from './invoice.api';
+import { getMyBookingInvoice, type InvoiceDetail } from './invoice.api';
 
 const sample: InvoiceDetail = {
   id: 'inv_abc',
@@ -22,7 +22,7 @@ const sample: InvoiceDetail = {
   zatcaStatus: null,
 };
 
-describe('invoice.api — getInvoice', () => {
+describe('invoice.api — getMyBookingInvoice', () => {
   const fetchMock = vi.fn();
 
   beforeEach(() => {
@@ -34,18 +34,18 @@ describe('invoice.api — getInvoice', () => {
     vi.restoreAllMocks();
   });
 
-  it('sends Bearer token and credentials:include to the backend', async () => {
+  it('forwards the incoming cookie header to the backend by-booking endpoint', async () => {
     fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(sample) });
-    await getInvoice('inv_abc', 'tok-xyz');
+    await getMyBookingInvoice('bk1', 'ck_access=abc');
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toMatch(/\/public\/invoices\/inv_abc$/);
-    expect(init.headers).toMatchObject({ Authorization: 'Bearer tok-xyz' });
-    expect(init.credentials).toBe('include');
+    expect(url).toMatch(/\/api\/v1\/public\/me\/bookings\/bk1\/invoice$/);
+    expect(init.cache).toBe('no-store');
+    expect(init.headers).toMatchObject({ cookie: 'ck_access=abc' });
   });
 
-  it('URL-encodes the invoice id', async () => {
+  it('URL-encodes the booking id', async () => {
     fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(sample) });
-    await getInvoice('a/b c', 'tok');
+    await getMyBookingInvoice('a/b c', '');
     const [url] = fetchMock.mock.calls[0];
     expect(url).toContain(encodeURIComponent('a/b c'));
   });
@@ -54,8 +54,8 @@ describe('invoice.api — getInvoice', () => {
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ data: sample }) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(sample) });
-    expect(await getInvoice('i', 'tok')).toEqual(sample);
-    expect(await getInvoice('i', 'tok')).toEqual(sample);
+    expect(await getMyBookingInvoice('bk1', '')).toEqual(sample);
+    expect(await getMyBookingInvoice('bk1', '')).toEqual(sample);
   });
 
   it('throws the backend-provided message on non-ok response', async () => {
@@ -64,7 +64,7 @@ describe('invoice.api — getInvoice', () => {
       statusText: 'Bad Request',
       json: () => Promise.resolve({ message: 'Invoice not found' }),
     });
-    await expect(getInvoice('i', 'tok')).rejects.toThrow('Invoice not found');
+    await expect(getMyBookingInvoice('bk1', '')).rejects.toThrow('Invoice not found');
   });
 
   it('falls back to statusText when the error body has no message', async () => {
@@ -73,6 +73,6 @@ describe('invoice.api — getInvoice', () => {
       statusText: 'Gateway Timeout',
       json: () => Promise.reject(new Error('not json')),
     });
-    await expect(getInvoice('i', 'tok')).rejects.toThrow('Gateway Timeout');
+    await expect(getMyBookingInvoice('bk1', '')).rejects.toThrow('Gateway Timeout');
   });
 });
